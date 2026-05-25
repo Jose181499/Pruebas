@@ -252,11 +252,11 @@ function agregarPuntoNuevo(data = {}) {
                 <input type="text" class="form-control buscar-departamento" placeholder="Buscar departamento...">
                 <select class="form-select mt-2" data-field="departamento">
                     <option value="">Seleccione</option>
-                    <option value="Lima" ${data.departamento === 'Lima' ? 'selected' : ''}>Lima</option>
-                    <option value="Arequipa" ${data.departamento === 'Arequipa' ? 'selected' : ''}>Arequipa</option>
-                    <option value="Cusco" ${data.departamento === 'Cusco' ? 'selected' : ''}>Cusco</option>
-                    <option value="LaLibertad" ${data.departamento === 'LaLibertad' ? 'selected' : ''}>La Libertad</option>
-                    <option value="Piura" ${data.departamento === 'Piura' ? 'selected' : ''}>Piura</option>
+                    <option value="Lima">Lima</option>
+                    <option value="Arequipa">Arequipa</option>
+                    <option value="Cusco">Cusco</option>
+                    <option value="LaLibertad">La Libertad</option>
+                    <option value="Piura">Piura</option>
                 </select>
             </div>
             <div class="col-md-4 mb-3"><label>Provincia</label>
@@ -287,7 +287,7 @@ function agregarPuntoNuevo(data = {}) {
         <div class="checkbox-group"><input type="checkbox" data-field="principal_punto" ${data.principal_punto ? 'checked' : ''}> <label>Principal</label></div>
     `;
     container.appendChild(div);
-    inicializarEventosPunto(div);
+    inicializarEventosPunto(div, data);
 }
 
 // =========================================
@@ -336,11 +336,11 @@ function agregarPuntoEdicion(data = {}) {
                 <input type="text" class="form-control buscar-departamento" placeholder="Buscar departamento...">
                 <select class="form-select mt-2" data-field="edit_departamento">
                     <option value="">Seleccione</option>
-                    <option value="Lima" ${data.departamento === 'Lima' ? 'selected' : ''}>Lima</option>
-                    <option value="Arequipa" ${data.departamento === 'Arequipa' ? 'selected' : ''}>Arequipa</option>
-                    <option value="Cusco" ${data.departamento === 'Cusco' ? 'selected' : ''}>Cusco</option>
-                    <option value="LaLibertad" ${data.departamento === 'LaLibertad' ? 'selected' : ''}>La Libertad</option>
-                    <option value="Piura" ${data.departamento === 'Piura' ? 'selected' : ''}>Piura</option>
+                    <option value="Lima">Lima</option>
+                    <option value="Arequipa">Arequipa</option>
+                    <option value="Cusco">Cusco</option>
+                    <option value="LaLibertad">La Libertad</option>
+                    <option value="Piura">Piura</option>
                 </select>
             </div>
             <div class="col-md-4 mb-3"><label>Provincia</label>
@@ -371,21 +371,54 @@ function agregarPuntoEdicion(data = {}) {
         <div class="checkbox-group"><input type="checkbox" data-field="principal_punto" ${data.principal_punto ? 'checked' : ''}> <label>Principal</label></div>
     `;
     container.appendChild(div);
-    inicializarEventosPunto(div);
+
+    // Inicializar eventos pasando data para evitar que dispatchEvent pise los valores
+    inicializarEventosPunto(div, data);
+
+    // ─── CARGAR PROVINCIA Y DISTRITO SI YA EXISTEN ───
+    if (data.departamento) {
+        const selDep  = div.querySelector('[data-field="edit_departamento"]');
+        const selProv = div.querySelector('[data-field="edit_provincia"]');
+        const selDist = div.querySelector('[data-field="edit_distrito"]');
+
+        selDep.value = data.departamento;
+
+        if (ubigeo[data.departamento]) {
+            selProv.innerHTML = '<option value="">Seleccione</option>';
+            Object.keys(ubigeo[data.departamento]).forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p;
+                opt.textContent = p;
+                if (p === data.provincia) opt.selected = true;
+                selProv.appendChild(opt);
+            });
+        }
+
+        if (data.provincia && ubigeo[data.departamento]?.[data.provincia]) {
+            selDist.innerHTML = '<option value="">Seleccione</option>';
+            ubigeo[data.departamento][data.provincia].forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = d;
+                if (d === data.distrito) opt.selected = true;
+                selDist.appendChild(opt);
+            });
+        }
+    }
 }
 
 // =========================================
 // INICIALIZAR EVENTOS DE PUNTO
 // =========================================
-function inicializarEventosPunto(div) {
-    const selectDepartamento = div.querySelector('[data-field="departamento"], [data-field="edit_departamento"]');
-    const selectProvincia = div.querySelector('[data-field="provincia"], [data-field="edit_provincia"]');
-    const selectDistrito = div.querySelector('[data-field="distrito"], [data-field="edit_distrito"]');
-    const buscarDepartamento = div.querySelector('.buscar-departamento');
-    const buscarProvincia = div.querySelector('.buscar-provincia');
-    const buscarDistrito = div.querySelector('.buscar-distrito');
+function inicializarEventosPunto(div, data = {}) {
+    const selectDepartamento  = div.querySelector('[data-field="departamento"], [data-field="edit_departamento"]');
+    const selectProvincia     = div.querySelector('[data-field="provincia"], [data-field="edit_provincia"]');
+    const selectDistrito      = div.querySelector('[data-field="distrito"], [data-field="edit_distrito"]');
+    const buscarDepartamento  = div.querySelector('.buscar-departamento');
+    const buscarProvincia     = div.querySelector('.buscar-provincia');
+    const buscarDistrito      = div.querySelector('.buscar-distrito');
     const selectCondicionPago = div.querySelector('.select-condicion-pago');
-    const campoCredito = div.querySelector('.campo-credito');
+    const campoCredito        = div.querySelector('.campo-credito');
 
     if (buscarDepartamento && selectDepartamento) {
         buscarDepartamento.addEventListener('input', function() {
@@ -421,19 +454,23 @@ function inicializarEventosPunto(div) {
         selectDepartamento.addEventListener('change', function() {
             const departamento = this.value;
             if (selectProvincia) selectProvincia.innerHTML = '<option value="">Seleccione</option>';
-            if (selectDistrito) selectDistrito.innerHTML = '<option value="">Seleccione</option>';
+            if (selectDistrito)  selectDistrito.innerHTML  = '<option value="">Seleccione</option>';
             if (!ubigeo[departamento]) return;
             Object.keys(ubigeo[departamento]).forEach(provincia => {
                 if (selectProvincia) selectProvincia.innerHTML += `<option value="${provincia}">${provincia}</option>`;
             });
         });
-        selectDepartamento.dispatchEvent(new Event('change'));
+
+        // ✅ Solo disparar si NO hay datos precargados
+        if (!data.departamento) {
+            selectDepartamento.dispatchEvent(new Event('change'));
+        }
     }
 
     if (selectProvincia) {
         selectProvincia.addEventListener('change', function() {
             const departamento = selectDepartamento ? selectDepartamento.value : '';
-            const provincia = this.value;
+            const provincia    = this.value;
             if (selectDistrito) selectDistrito.innerHTML = '<option value="">Seleccione</option>';
             if (!ubigeo[departamento] || !ubigeo[departamento][provincia]) return;
             ubigeo[departamento][provincia].forEach(distrito => {
