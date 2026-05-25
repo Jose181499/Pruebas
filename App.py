@@ -330,10 +330,10 @@ def api_buscar_clientes():
     API para buscar clientes por RUC, nombre comercial o razón social
     """
     try:
-        from database import buscar_clientes_mejorado, buscar_clientes_paginado
+        from database import buscar_clientes_paginado
         
         tipo_documento = request.args.get('tipo_documento', '')
-        busqueda = request.args.get('busqueda', '').strip()
+        busqueda = request.args.get('q', request.args.get('busqueda', '')).strip()
         pagina = request.args.get('pagina', 1, type=int)
         por_pagina = request.args.get('por_pagina', 100, type=int)
         
@@ -349,7 +349,7 @@ def api_buscar_clientes():
         
         # Convertir contactos y puntos a formato JSON serializable
         for cliente in resultado['data']:
-            if 'contactos' in cliente:
+            if 'contactos' in cliente and cliente['contactos']:
                 cliente['contactos'] = [
                     {
                         'id': c.get('id'),
@@ -359,10 +359,12 @@ def api_buscar_clientes():
                         'cargo': c.get('cargo'),
                         'principal': c.get('principal', False)
                     }
-                    for c in cliente.get('contactos', [])
+                    for c in cliente.get('contactos', []) if c
                 ]
+            else:
+                cliente['contactos'] = []
             
-            if 'puntos_entrega' in cliente:
+            if 'puntos_entrega' in cliente and cliente['puntos_entrega']:
                 cliente['puntos_entrega'] = [
                     {
                         'id': p.get('id'),
@@ -377,8 +379,10 @@ def api_buscar_clientes():
                         'tiempo_credito': p.get('tiempo_credito'),
                         'principal': p.get('principal', False)
                     }
-                    for p in cliente.get('puntos_entrega', [])
+                    for p in cliente.get('puntos_entrega', []) if p
                 ]
+            else:
+                cliente['puntos_entrega'] = []
         
         print(f"✅ Se encontraron {len(resultado['data'])} clientes (Total: {resultado['total']})")
         
@@ -397,6 +401,8 @@ def api_buscar_clientes():
         
     except Exception as e:
         print(f"❌ Error en api_buscar_clientes: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
             'error': str(e),
@@ -427,6 +433,9 @@ def api_obtener_cliente(id):
             'nombre_comercial': cliente.get('nombre_comercial'),
             'direccion_fiscal': cliente.get('direccion_fiscal'),
             'codigo_cliente': cliente.get('codigo_cliente'),
+            'telefono_contacto': cliente.get('telefono_contacto'),
+            'email_contacto': cliente.get('email_contacto'),
+            'nombre_contacto': cliente.get('nombre_contacto'),
             'contactos': [
                 {
                     'id': c.get('id'),
@@ -436,7 +445,7 @@ def api_obtener_cliente(id):
                     'cargo': c.get('cargo'),
                     'principal': c.get('principal', False)
                 }
-                for c in cliente.get('contactos', [])
+                for c in cliente.get('contactos', []) if c
             ],
             'puntos_entrega': [
                 {
@@ -446,13 +455,13 @@ def api_obtener_cliente(id):
                     'departamento': p.get('departamento'),
                     'provincia': p.get('provincia'),
                     'distrito': p.get('distrito'),
-                    'telefono': p.get('telefono_contacto'),
+                    'telefono_contacto': p.get('telefono_contacto'),
                     'responsable': p.get('responsable'),
                     'condicion_pago': p.get('condicion_pago'),
                     'tiempo_credito': p.get('tiempo_credito'),
                     'principal': p.get('principal', False)
                 }
-                for p in cliente.get('puntos_entrega', [])
+                for p in cliente.get('puntos_entrega', []) if p
             ]
         }
         
@@ -463,20 +472,44 @@ def api_obtener_cliente(id):
         
     except Exception as e:
         print(f"❌ Error en api_obtener_cliente: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
             'error': str(e)
         }), 500
 
 
-@app.route('/api/clientes/guardar', methods=['POST'])
-def api_guardar_cliente():
-    """Guardar un nuevo cliente"""
+@app.route('/api/clientes/<int:id>/direcciones', methods=['GET'])
+def api_obtener_direcciones_cliente(id):
+    """Obtener las direcciones guardadas de un cliente"""
     try:
-        data = request.get_json()
+        from database import obtener_direcciones_cliente
+        
+        direcciones = obtener_direcciones_cliente(id)
+        
+        return jsonify({
+            'success': True,
+            'data': direcciones
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en api_obtener_direcciones_cliente: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'data': []
+        }), 500
+
+
+@app.route('/api/clientes/crear', methods=['POST'])
+def api_crear_cliente():
+    """Crear un nuevo cliente"""
+    try:
         from database import insertar_cliente_completo
         
-        print(f"📝 Guardando nuevo cliente: {data.get('razon_social')}")
+        data = request.get_json()
+        print(f"📝 Creando nuevo cliente: {data.get('razon_social')}")
         
         resultado = insertar_cliente_completo(data)
         
@@ -487,16 +520,18 @@ def api_guardar_cliente():
                     'id': resultado.get('id'),
                     'codigo_cliente': resultado.get('codigo_cliente')
                 },
-                'message': 'Cliente guardado exitosamente'
+                'message': 'Cliente creado exitosamente'
             }), 201
         else:
             return jsonify({
                 'success': False,
-                'error': resultado.get('error', 'Error al guardar cliente')
+                'error': resultado.get('error', 'Error al crear cliente')
             }), 400
         
     except Exception as e:
-        print(f"❌ Error en api_guardar_cliente: {e}")
+        print(f"❌ Error en api_crear_cliente: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
             'error': str(e)
@@ -507,9 +542,9 @@ def api_guardar_cliente():
 def api_actualizar_cliente(id):
     """Actualizar un cliente existente"""
     try:
-        data = request.get_json()
         from database import actualizar_cliente_completo
         
+        data = request.get_json()
         print(f"✏️ Actualizando cliente ID: {id}")
         
         resultado = actualizar_cliente_completo(id, data)
@@ -560,6 +595,48 @@ def api_eliminar_cliente(id):
             'success': False,
             'error': str(e)
         }), 500
+
+
+# Ruta para buscar productos
+@app.route('/api/productos/buscar', methods=['GET'])
+def api_buscar_productos():
+    """Buscar productos por código o descripción"""
+    try:
+        q = request.args.get('q', '').strip()
+        
+        if not q or len(q) < 2:
+            return jsonify({'success': True, 'data': []})
+        
+        from sqlalchemy import or_
+        
+        productos = Producto.query.filter(
+            or_(
+                Producto.codigo.ilike(f'%{q}%'),
+                Producto.descripcion.ilike(f'%{q}%'),
+                Producto.marca.ilike(f'%{q}%'),
+                Producto.modelo.ilike(f'%{q}%')
+            )
+        ).limit(20).all()
+        
+        resultado = []
+        for p in productos:
+            resultado.append({
+                'id': p.id,
+                'codigo': p.codigo if hasattr(p, 'codigo') else '',
+                'descripcion': p.descripcion if hasattr(p, 'descripcion') else '',
+                'marca': p.marca if hasattr(p, 'marca') else '',
+                'modelo': p.modelo if hasattr(p, 'modelo') else '',
+                'unidad_medida': p.unidad if hasattr(p, 'unidad') else 'UNIDAD',
+                'stock': p.stock if hasattr(p, 'stock') else 0,
+                'precio_unitario': float(p.precio_unitario) if hasattr(p, 'precio_unitario') and p.precio_unitario else 0
+            })
+        
+        print(f"🔎 Búsqueda de productos '{q}': {len(resultado)} encontrados")
+        return jsonify({'success': True, 'data': resultado})
+        
+    except Exception as e:
+        print(f"❌ Error en api_buscar_productos: {e}")
+        return jsonify({'success': False, 'error': str(e), 'data': []}), 500
 
 
 # Ruta de prueba

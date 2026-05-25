@@ -277,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // CONFIGURAR DIRECCIÓN DE ENTREGA (NUEVO)
+    // CONFIGURAR DIRECCIÓN DE ENTREGA
     // =========================
     function configurarDireccionEntrega() {
         const select = document.getElementById('direccion_entrega_select');
@@ -327,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // CARGAR DIRECCIONES DEL CLIENTE (NUEVO)
+    // CARGAR DIRECCIONES DEL CLIENTE
     // =========================
     async function cargarDireccionesCliente(clienteId) {
         const select = document.getElementById('direccion_entrega_select');
@@ -659,8 +659,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 marca: getInput('.marca') || '',
                 unidad_medida: getInput('.unidad_medida') || '',
                 cantidad: Number(getInput('.cantidad')),
-                valor_venta_unit: Number(getInput('.precio_venta_unitario')),
-                valor_venta_total: Number(getText('.valor_venta_total')),
+                precio_venta_unitario: Number(getInput('.precio_venta_unitario')),
                 subtotal: Number(getText('.subtotal')),
                 total_pagar: Number(getText('.total_pagar'))
             };
@@ -723,7 +722,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // GUARDAR COTIZACIÓN
+    // GUARDAR COTIZACIÓN - CORREGIDO (eliminado almacen)
     // =========================
     async function guardarCotizacion() {
         const cliente_id = Number(document.getElementById('cliente_id')?.value || 0);
@@ -744,10 +743,11 @@ document.addEventListener('DOMContentLoaded', () => {
             cliente_id: cliente_id,
             usuario_id: Number(document.getElementById("usuario_id")?.value || 0),
             estado: document.getElementById("estado")?.value || "En Proceso",
-            subtotal: subtotal, igv: igv, total: total,
+            subtotal: subtotal,
+            igv: igv,
+            total: total,
             condicion_pago: document.getElementById("condicion_pago")?.value || "",
             tiempo_entrega: document.getElementById("tiempo_entrega")?.value || "",
-            almacen: document.getElementById("almacen")?.value || "",
             validez_oferta: document.getElementById("validez_oferta")?.value || "",
             direccion_entrega: document.getElementById("direccion_entrega")?.value || "",
             requerimiento: document.getElementById("requerimiento")?.value || "",
@@ -825,6 +825,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (listaProductos.length === 0) {
             mostrarNotificacion("⚠️ Debe agregar al menos un producto antes de convertir a oficial", "warning");
             return;
+        }
+        
+        // Verificar que todos los productos tengan precio
+        for (let i = 0; i < listaProductos.length; i++) {
+            if (!listaProductos[i].precio_venta_unitario || listaProductos[i].precio_venta_unitario <= 0) {
+                mostrarNotificacion(`⚠️ El producto ${listaProductos[i].codigo || 'sin código'} no tiene precio de venta válido`, "warning");
+                return;
+            }
         }
         
         if (!confirm("¿Convertir este borrador a cotización oficial?\n\nEsta acción generará un código único y definitivo.")) return;
@@ -1096,7 +1104,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // AGREGAR ITEMS - VERSIÓN FINAL
+    // AGREGAR ITEMS
     // =========================
     function addItem() {
         if (cotizacionBloqueada) { 
@@ -1194,7 +1202,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const el = document.getElementById(id);
             if (el) el.disabled = disabled;
         });
-        ['asesor_comercial', 'email_contacto', 'telefono_contacto_user', 'condicion_pago', 'tiempo_entrega', 'validez_oferta', 'nota_cotizacion', 'notas', 'almacen'].forEach(id => {
+        ['asesor_comercial', 'email_contacto', 'telefono_contacto_user', 'condicion_pago', 'tiempo_entrega', 'validez_oferta', 'nota_cotizacion', 'notas'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.disabled = disabled;
         });
@@ -1244,7 +1252,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('telefono_contacto_user').value = data.telefono || '';
             document.getElementById('condicion_pago').value = data.condicion_pago || 'Contado';
             document.getElementById('tiempo_entrega').value = data.tiempo_entrega || '';
-            document.getElementById('almacen').value = data.almacen || '';
             document.getElementById('validez_oferta').value = data.validez_oferta || '15 días';
             document.getElementById('direccion_entrega').value = data.direccion_entrega || '';
             document.getElementById('nota_cotizacion').value = data.nota_cotizacion || '';
