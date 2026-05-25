@@ -127,12 +127,20 @@ def guardar_cliente():
                 ))
 
             # =========================================
-            # INSERTAR PUNTOS DE ENTREGA (CORREGIDO)
+            # INSERTAR NUEVOS PUNTOS DE ENTREGA
             # =========================================
             for p in puntos:
-                nombre_punto = p.get("nombre_punto") or p.get("nombre")
-                if not nombre_punto:  # Validación importante
-                    continue  # Saltar puntos sin nombre
+                nombre_punto = p.get("nombre_punto") or p.get("nombre") or p.get("edit_nombre_punto") or ""
+                if not nombre_punto.strip():
+                    continue
+
+                telefono = (
+                    p.get("telefono") or 
+                    p.get("telefono_punto") or 
+                    p.get("telefono_contacto") or 
+                    p.get("edit_telefono_punto") or 
+                    ""
+                )
 
                 cur.execute("""
                     INSERT INTO clientes_puntos_entrega (
@@ -141,17 +149,17 @@ def guardar_cliente():
                         principal, condicion_pago, tiempo_credito
                     ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (
-                    cliente_id,
-                    nombre_punto,
-                    p.get("direccion"),
-                    p.get("departamento"),
-                    p.get("provincia"),
-                    p.get("distrito"),
-                    p.get("responsable"),
-                    p.get("telefono") or p.get("telefono_punto") or p.get("telefono_contacto"),
-                    p.get("principal", False),
-                    p.get("condicion_pago"),
-                    p.get("tiempo_credito")
+                    id,
+                    nombre_punto.strip(),
+                    p.get("direccion") or p.get("edit_direccion") or "",
+                    p.get("departamento") or p.get("edit_departamento") or "",
+                    p.get("provincia") or p.get("edit_provincia") or "",
+                    p.get("distrito") or p.get("edit_distrito") or "",
+                    p.get("responsable") or p.get("edit_responsable") or "",
+                    telefono.strip(),
+                    bool(p.get("principal")),
+                    p.get("condicion_pago") or "Contado",
+                    p.get("tiempo_credito") or ""
                 ))
 
         return jsonify({
@@ -238,31 +246,47 @@ def editar_cliente(id):
                 ))
 
             # =========================================
-            # INSERTAR NUEVOS PUNTOS DE ENTREGA
+            # 5. INSERTAR NUEVOS PUNTOS DE ENTREGA (CORREGIDO)
             # =========================================
             for p in puntos:
-                nombre_punto = p.get("nombre_punto") or p.get("nombre")
+                nombre_punto = p.get("nombre_punto") or p.get("nombre") or ""
                 if not nombre_punto:
-                    continue
+                    continue  # Saltar si no tiene nombre de punto
+
+                # Obtener teléfono (probando diferentes nombres posibles del frontend)
+                telefono = (
+                    p.get("telefono") or 
+                    p.get("telefono_punto") or 
+                    p.get("telefono_contacto") or 
+                    ""
+                )
 
                 cur.execute("""
                     INSERT INTO clientes_puntos_entrega (
-                        cliente_id, nombre_punto, direccion, departamento,
-                        provincia, distrito, responsable, telefono_contacto,
-                        principal, condicion_pago, tiempo_credito
+                        cliente_id,
+                        nombre_punto,
+                        direccion,
+                        departamento,
+                        provincia,
+                        distrito,
+                        responsable,
+                        telefono_contacto,
+                        principal,
+                        condicion_pago,
+                        tiempo_credito
                     ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (
                     id,
                     nombre_punto,
-                    p.get("direccion"),
-                    p.get("departamento"),
-                    p.get("provincia"),
-                    p.get("distrito"),
-                    p.get("responsable"),
-                    p.get("telefono") or p.get("telefono_punto") or p.get("telefono_contacto"),
+                    p.get("direccion") or p.get("edit_direccion") or "",
+                    p.get("departamento") or p.get("edit_departamento") or "",
+                    p.get("provincia") or p.get("edit_provincia") or "",
+                    p.get("distrito") or p.get("edit_distrito") or "",
+                    p.get("responsable") or p.get("edit_responsable") or "",
+                    telefono,                          # ← Teléfono corregido
                     p.get("principal", False),
-                    p.get("condicion_pago"),
-                    p.get("tiempo_credito")
+                    p.get("condicion_pago") or "",
+                    p.get("tiempo_credito") or ""
                 ))
 
         return jsonify({
