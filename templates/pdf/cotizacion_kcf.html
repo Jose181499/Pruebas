@@ -84,6 +84,12 @@
             margin-top: 4px;
         }
 
+        .hora {
+            font-size: 9px;
+            margin-top: 2px;
+            color: #666;
+        }
+
         /* LAYOUT PRINCIPAL */
         .layout-principal {
             display: flex;
@@ -124,14 +130,21 @@
             flex: 1;
         }
 
-        /* TEXTO INTRODUCTORIO */
+        /* TEXTO INTRODUCTORIO - ESTIMADO CLIENTE */
         .texto-introductorio {
             margin: 15px 0;
-            padding: 10px 15px;
-            background: #FFF3E0;
-            border-left: 4px solid #D32F2F;
-            font-size: 10px;
+            padding: 15px 20px;
+            background: #FFF8E1;
+            border-left: 5px solid #D32F2F;
+            font-size: 11px;
+            line-height: 1.6;
+            text-align: justify;
+        }
+
+        .texto-introductorio .saludo {
+            font-size: 12px;
             font-weight: bold;
+            margin-bottom: 8px;
         }
 
         /* TABLA DE PRODUCTOS */
@@ -260,32 +273,28 @@
             color: #D32F2F;
         }
 
-        /* NOTAS */
-        .seccion-notas {
+        /* SECCIÓN DE NOTAS - AHORA ES ACLARATORIA */
+        .seccion-aclaratoria {
             margin-top: 20px;
-            border: 1px solid #D32F2F;
             padding: 12px 15px;
+            background: #e9ecef;
             border-radius: 6px;
             font-size: 9px;
-            background: #f8f9fa;
+            text-align: center;
+            font-style: italic;
         }
 
-        .seccion-notas h3 {
-            color: #D32F2F;
-            border-bottom: 1px solid #D32F2F;
-            padding-bottom: 4px;
-            font-size: 11px;
-            margin-top: 0;
-            margin-bottom: 10px;
-        }
-
-        .nota-item {
+        .seccion-aclaratoria .titulo {
+            font-weight: bold;
+            font-size: 10px;
             margin-bottom: 5px;
+            font-style: normal;
         }
 
-        .separador-final {
-            border-top: 1px dashed #D32F2F;
-            margin: 10px 0;
+        .seccion-aclaratoria .web-link {
+            color: #D32F2F;
+            text-decoration: none;
+            font-weight: bold;
         }
 
         /* CUENTAS BANCARIAS */
@@ -336,23 +345,18 @@
             text-decoration: none;
         }
 
-        /* NOTA ACLARATORIA */
-        .nota-aclaratoria {
-            margin-top: 15px;
-            padding: 6px 10px;
-            background: #e9ecef;
-            border-radius: 4px;
-            font-size: 8px;
-            font-style: italic;
-            text-align: center;
-        }
-
         .fw-bold {
             font-weight: bold;
         }
         
         .bg-warning {
             background: #FFF8E1;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px dashed #ddd;
+            margin: 10px 0;
         }
     </style>
 </head>
@@ -374,6 +378,7 @@
         <div class="cotizacion-info">
             <div class="numero-cotizacion"><strong>COTIZACIÓN N°:</strong> {{ numero_cotizacion }}</div>
             <div class="fecha"><strong>Fecha de Emisión:</strong> {{ fecha_actual }}</div>
+            <div class="hora"><strong>Hora de Emisión:</strong> {{ hora_actual }}</div>
         </div>
     </div>
 
@@ -440,10 +445,10 @@
         </div>
     </div>
 
-    <!-- TEXTO INTRODUCTORIO -->
+    <!-- TEXTO INTRODUCTORIO - ESTIMADO CLIENTE -->
     <div class="texto-introductorio">
-        Estimado Cliente,<br>
-        La presente tiene como objeto poner a su consideración nuestra oferta detallada según su requerimiento, agradecemos por confiar en nuestros productos.
+        <div class="saludo">Estimado Cliente,</div>
+        La presente tiene como objeto poner a su consideración nuestra oferta detallada según su requerimiento, agradecemos por confiar en nuestros productos:
     </div>
 
     <!-- TABLA DE PRODUCTOS -->
@@ -530,23 +535,12 @@
         <div class="cuenta-line"><strong>BBVA CONTINENTAL DÓLARES:</strong> 0011-0335-01-00019134 | N. 001103350100019134</div>
     </div>
 
-    <!-- NOTAS COMERCIALES -->
-    <div class="seccion-notas">
-        <h3>NOTAS COMERCIALES</h3>
-        {% if nota_cotizacion and nota_cotizacion.strip() %}
-        <div class="nota-item"><strong>• Nota del documento:</strong> {{ nota_cotizacion }}</div>
-        {% endif %}
-        <div class="nota-item">• Los precios incluyen IGV (18%).</div>
-        <div class="nota-item">• No se aceptan devoluciones después de 7 días de recibida la mercadería.</div>
-        <div class="nota-item">• Los precios son válidos por {{ validez_oferta }} días a partir de la fecha de emisión.</div>
-        <div class="separador-final"></div>
-        <div class="nota-item">Les agradecemos la oportunidad de presentarles nuestra oferta. Quedamos a la espera de sus gratas órdenes de compra.</div>
-        <div class="nota-item">Sin otro particular, quedamos a su entera disposición para cualquier consulta adicional.</div>
-    </div>
-
-    <!-- NOTA ACLARATORIA -->
-    <div class="nota-aclaratoria">
-        La validez de esta oferta está sujeta a la disponibilidad de inventario. Para más información sobre nuestros productos visítenos en www.kcfcorporacion.com
+    <!-- SECCIÓN ACLARATORIA - VALIDEZ Y DISPONIBILIDAD -->
+    <div class="seccion-aclaratoria">
+        <div class="titulo">📌 Nota Aclaratoria</div>
+        La validez de esta oferta está sujeta a la disponibilidad de inventario.<br>
+        Para más información sobre nuestros productos visítanos en 
+        <a href="https://kcfcorporacion.com" class="web-link">https://kcfcorporacion.com</a>
     </div>
 
     <!-- PIE DE PÁGINA - CONTACTO HELLEN -->
@@ -556,8 +550,8 @@
         <div class="contacto-line">Ejecutiva Comercial</div>
         <div class="contacto-line">KCF CORPORACIÓN</div>
         <div class="contacto-line">📞 Celular: (+51) 999932051</div>
-        <div class="contacto-line">✉ Email: hcastillo@kcfcorporacion.com</div>
-        <div class="contacto-line">🌐 <a href="http://www.kcfcorporacion.com" class="web-link">www.kcfcorporacion.com</a></div>
+        <div class="contacto-line">✉ Email: Ventas@kcfcorporacion.com</div>
+        <div class="contacto-line">🌐 <a href="https://kcfcorporacion.com" class="web-link">www.kcfcorporacion.com</a></div>
     </div>
 
 </body>
