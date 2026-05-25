@@ -354,7 +354,7 @@ function agregarPuntoEdicion(data = {}) {
         </div>
         <div class="row">
             <div class="col-md-6 mb-3"><label>Contacto de Entrega</label><input class="form-control" data-field="edit_responsable" value="${escapeHtml(data.responsable || '')}"></div>
-            <div class="col-md-6 mb-3"><label>Teléfono</label><input class="form-control" data-field="edit_telefono_punto" value="${escapeHtml(data.telefono_punto || '')}"></div>
+            <div class="col-md-6 mb-3"><label>Teléfono</label><input class="form-control" data-field="edit_telefono_punto" value="${escapeHtml(data.telefono_contacto || '')}"></div>
         </div>
         <div class="row">
             <div class="col-md-6 mb-3"><label>Condición de Pago</label>

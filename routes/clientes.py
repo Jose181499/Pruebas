@@ -126,7 +126,7 @@ def guardar_cliente():
                     c.get("principal", False)
                 ))
 
-            # =========================================
+            # MARTIN ERES UNA MAQUINA , DE MAQUINAS UN CRACK =========================================
             # INSERTAR NUEVOS PUNTOS DE ENTREGA
             # =========================================
             for p in puntos:
