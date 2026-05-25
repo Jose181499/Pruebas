@@ -7,14 +7,11 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet
 from io import BytesIO
-# 🛠️ Quitamos la importación de pdfkit para evitar conflictos en producción
 from weasyprint import HTML  
 import base64
 import logging
 import os
 from datetime import datetime
-
-# 🛠️ Eliminamos el bloque 'config = pdfkit.configuration(...)' que causaba el crash de Linux
 
 cotizaciones_bp = Blueprint("cotizaciones", __name__)
 
@@ -211,7 +208,7 @@ def buscar_clientes():
             query = """
                 SELECT id, razon_social, numero_documento, 
                        direccion_fiscal, telefono_contacto, nombre_contacto, 
-                       tipo_documento
+                       tipo_documento, email_contacto
                 FROM clientes 
                 WHERE razon_social ILIKE %s OR numero_documento ILIKE %s
                 LIMIT 20
@@ -221,7 +218,7 @@ def buscar_clientes():
             query = """
                 SELECT id, razon_social, numero_documento, 
                        direccion_fiscal, telefono_contacto, nombre_contacto,
-                       tipo_documento
+                       tipo_documento, email_contacto
                 FROM clientes 
                 LIMIT 20
             """
@@ -289,8 +286,8 @@ def obtener_cliente(id):
     try:
         query = """
             SELECT id, razon_social, numero_documento, direccion_fiscal, 
-                   telefono_contacto, nombre_contacto, tipo_documento
-        FROM clientes 
+                   telefono_contacto, nombre_contacto, tipo_documento, email_contacto
+            FROM clientes 
             WHERE id = %s
         """
         cliente = db_query(query, (id,))
@@ -385,7 +382,7 @@ def buscar_productos():
         if q and q.strip():
             query = """
                 SELECT id, codigo, descripcion, marca, modelo, unidad,
-                       costo_unitario as ultimo_costo
+                       costo_unitario, precio_unitario
                 FROM productos 
                 WHERE codigo ILIKE %s OR descripcion ILIKE %s
                 LIMIT 20
@@ -394,7 +391,7 @@ def buscar_productos():
         else:
             query = """
                 SELECT id, codigo, descripcion, marca, modelo, unidad,
-                       costo_unitario as ultimo_costo
+                       costo_unitario, precio_unitario
                 FROM productos 
                 LIMIT 20
             """
@@ -507,7 +504,7 @@ def crear_cliente():
 
 
 # ==========================================
-# GUARDAR COTIZACIÓN
+# GUARDAR COTIZACIÓN - CORREGIDO (eliminado almacen)
 # ==========================================
 
 @cotizaciones_bp.route("/api/cotizacion/guardar", methods=["POST"])
@@ -522,10 +519,12 @@ def guardar_cotizacion():
         total = data.get("total", 0)
         notas = data.get("notas")
         usuario_id = data.get("usuario_id")
-        forma_pago = data.get("forma_pago")
+        condicion_pago = data.get("condicion_pago", "Contado")
         tiempo_entrega = data.get("tiempo_entrega")
-        almacen = data.get("almacen", "Almacen Breña")
         validez_oferta = data.get("validez_oferta")
+        direccion_entrega = data.get("direccion_entrega")
+        requerimiento = data.get("requerimiento")
+        nota_cotizacion = data.get("nota_cotizacion")
         
         codigo_cotizacion = data.get("codigo_cotizacion")
         correlativo = data.get("correlativo")
@@ -566,6 +565,7 @@ def guardar_cotizacion():
         with db_tx() as conn:
             cur = conn.cursor()
 
+            # Insertar con los nuevos campos
             cur.execute("""
                 INSERT INTO cotizaciones (
                     numero_cotizacion,
@@ -575,16 +575,18 @@ def guardar_cotizacion():
                     subtotal,
                     igv,
                     total,
-                    forma_pago,
+                    condicion_pago,
                     tiempo_entrega,
-                    almacen,
                     validez_oferta,
+                    direccion_entrega,
+                    requerimiento,
+                    nota_cotizacion,
                     usuario_id,
                     notas,
                     codigo_cotizacion,
                     correlativo
                 )
-                VALUES (%s, %s, NOW(), %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, NOW(), %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """, (
                 numero,
@@ -593,10 +595,12 @@ def guardar_cotizacion():
                 subtotal,
                 igv,
                 total,
-                forma_pago,
+                condicion_pago,
                 tiempo_entrega,
-                almacen,
                 validez_oferta,
+                direccion_entrega,
+                requerimiento,
+                nota_cotizacion,
                 usuario_id,
                 notas,
                 codigo_cotizacion,
@@ -627,16 +631,16 @@ def guardar_cotizacion():
                     cotizacion_id,
                     p["producto_id"],
                     p["cantidad"],
-                    p["costo_unitario"],
-                    p["subtotal_costo"],
-                    p["margen_porcentaje"],
+                    p.get("costo_unitario", 0),
+                    p.get("subtotal_costo", 0),
+                    p.get("margen_porcentaje", 20),
                     p["precio_venta_unitario"],
-                    p["subtotal_venta"],
-                    p["descuento_porcentaje"],
-                    p["precio_venta_con_descuento"],
-                    p["subtotal_venta_con_descuento"],
-                    p["descuento_total"],
-                    p["margen_final"]
+                    p.get("subtotal_venta", 0),
+                    p.get("descuento_porcentaje", 0),
+                    p.get("precio_venta_con_descuento", p["precio_venta_unitario"]),
+                    p.get("subtotal_venta_con_descuento", p.get("subtotal_venta", 0)),
+                    p.get("descuento_total", 0),
+                    p.get("margen_final", 20)
                 ))
 
         return jsonify({
@@ -651,6 +655,8 @@ def guardar_cotizacion():
 
     except Exception as e:
         print("🔥 ERROR:", e)
+        import traceback
+        traceback.print_exc()
         return jsonify({
             "success": False,
             "error": str(e)
@@ -707,21 +713,18 @@ def api_get_cotizacion(cotizacion_id):
 
 
 # ==========================================
-# LISTAR COTIZACIONES (CORREGIDO)
+# LISTAR COTIZACIONES
 # ==========================================
 
 @cotizaciones_bp.route("/api/cotizacion_comercial")
 def listar_cotizaciones():
     try:
-        # 🔥 OBTENER PARÁMETRO DE BÚSQUEDA
         buscar = request.args.get('buscar', '')
         
-        # 🔥 LIMPIAR VALOR INVÁLIDO :1
         if buscar == ':1' or buscar == ':' or buscar is None:
             print(f"⚠️ Limpiando parámetro inválido: '{buscar}'")
             buscar = ''
         
-        # 🔥 CONSTRUIR QUERY BASE
         query = """
             SELECT 
                 c.id,
@@ -744,7 +747,6 @@ def listar_cotizaciones():
         
         params = []
         
-        # 🔥 AGREGAR FILTRO SI HAY BÚSQUEDA
         if buscar and buscar.strip():
             query += """
                 WHERE (
@@ -758,10 +760,8 @@ def listar_cotizaciones():
             params = [like_param, like_param, like_param, like_param]
             print(f"🔍 Filtrando por: '{buscar}'")
         
-        # 🔥 ORDENAR
         query += " ORDER BY c.id DESC"
         
-        # 🔥 EJECUTAR QUERY
         rows = db_query(query, tuple(params) if params else None)
         
         print(f"✅ Encontradas {len(rows)} cotizaciones")
@@ -805,9 +805,9 @@ def eliminar_cotizacion(id):
         }), 500
 
 
-# =====================================================
+# ==========================================
 # API PARA PRODUCTOS - EDITAR Y ELIMINAR
-# =====================================================
+# ==========================================
 
 @cotizaciones_bp.route("/api/productos/<int:id>", methods=["PUT"])
 def actualizar_producto(id):
@@ -815,19 +815,16 @@ def actualizar_producto(id):
     try:
         data = request.json
         
-        # Validar datos requeridos
         if not data.get('familia'):
             return jsonify({"success": False, "error": "La familia es requerida"}), 400
         
         if not data.get('descripcion'):
             return jsonify({"success": False, "error": "La descripción es requerida"}), 400
         
-        # Verificar si el producto existe
         existe = db_query("SELECT id FROM productos WHERE id = %s", (id,))
         if not existe:
             return jsonify({"success": False, "error": "Producto no encontrado"}), 404
         
-        # Actualizar producto
         query = """
             UPDATE productos 
             SET familia = %s,
@@ -881,12 +878,10 @@ def actualizar_producto(id):
 def eliminar_producto_api(id):
     """Eliminar un producto"""
     try:
-        # Verificar si el producto existe
         existe = db_query("SELECT id, descripcion FROM productos WHERE id = %s", (id,))
         if not existe:
             return jsonify({"success": False, "error": "Producto no encontrado"}), 404
         
-        # Verificar si el producto está en alguna cotización
         en_cotizacion = db_query("SELECT id FROM cotizacion_detalle WHERE producto_id = %s LIMIT 1", (id,))
         if en_cotizacion:
             return jsonify({
@@ -894,7 +889,6 @@ def eliminar_producto_api(id):
                 "error": "No se puede eliminar el producto porque está asociado a una o más cotizaciones"
             }), 400
         
-        # Eliminar producto
         db_execute("DELETE FROM productos WHERE id = %s", (id,))
         
         return jsonify({
@@ -911,7 +905,7 @@ def eliminar_producto_api(id):
 
 
 # ==========================================
-# 🔥 GENERAR PDF (MIGRADO A WEASYPRINT)
+# GENERAR PDF
 # ==========================================
 
 @cotizaciones_bp.route("/api/cotizacion/pdf/<int:cotizacion_id>")
@@ -972,13 +966,13 @@ def generar_pdf(cotizacion_id):
         cliente_direccion=cabecera.get("direccion") or "",
         cliente_contacto=cabecera.get("nombre_contacto") or "",
         cliente_telefono=cabecera.get("telefono_contacto") or "",
-        numero_requerimiento="REQ-001",
+        numero_requerimiento=cabecera.get("requerimiento") or "REQ-001",
         asesor_comercial=cabecera.get("nombre_completo") or "Himer Castillo",
         email_contacto=cabecera.get("email") or "ventas@kcf.com",
         telefono_contacto=cabecera.get("telefono"),
-        forma_pago=cabecera.get("forma_pago") or "Contado",
+        condicion_pago=cabecera.get("condicion_pago") or "Contado",
         tiempo_entrega=cabecera.get("tiempo_entrega") or "Inmediato",
-        lugar_entrega="Lima",
+        direccion_entrega=cabecera.get("direccion_entrega") or "Lima",
         validez_oferta=cabecera.get("validez_oferta") or "15 días",
         productos=productos,
         total_subtotal_venta=total_subtotal_venta,
@@ -987,10 +981,9 @@ def generar_pdf(cotizacion_id):
         hay_descuentos=hay_descuentos,
         summary_igv=cabecera.get("igv", 0),
         summary_total_venta=cabecera.get("total", 0),
-        nota_cotizacion=cabecera.get("notas", "")
+        nota_cotizacion=cabecera.get("nota_cotizacion") or cabecera.get("notas", "")
     )
 
-    # 🛠️ Reemplazo de pdfkit por Weasyprint
     try:
         pdf = HTML(string=html).write_pdf()
     except Exception as e:
