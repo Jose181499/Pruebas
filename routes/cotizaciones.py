@@ -936,6 +936,13 @@ def eliminar_producto_api(id):
 
 @cotizaciones_bp.route("/api/cotizacion/pdf/<int:cotizacion_id>")
 def generar_pdf(cotizacion_id):
+    # 🔥 OBTENER DATOS DEL FORMULARIO (los que el usuario editó en vivo)
+    telefono_contacto_form = request.args.get('telefono_contacto', '')
+    cliente_contacto_form = request.args.get('cliente_contacto', '')
+    email_contacto_cliente_form = request.args.get('email_contacto_cliente', '')
+    requerimiento_form = request.args.get('requerimiento', '')
+    direccion_entrega_form = request.args.get('direccion_entrega', '')
+    
     data = obtener_cotizacion_completa(cotizacion_id)
     if not data:
         return jsonify({"success": False, "error": "No encontrada"}), 404
@@ -983,20 +990,17 @@ def generar_pdf(cotizacion_id):
 
     hay_descuentos = total_descuento_subtotal > 0
     
-    # 🔥 EXTRAER LA HORA DE LA FECHA_CREACION
+    # Extraer hora de fecha_creacion
     fecha_creacion = cabecera.get("fecha_creacion", "")
     
     if fecha_creacion:
         try:
-            # Si es string con formato "YYYY-MM-DD HH:MM:SS"
             if isinstance(fecha_creacion, str) and ' ' in fecha_creacion:
                 partes = fecha_creacion.split(' ')
                 fecha_parte = partes[0]
                 hora_parte = partes[1]
-                # Formatear fecha: YYYY-MM-DD a DD/MM/YYYY
                 fecha_actual = '/'.join(fecha_parte.split('-')[::-1])
-                # La hora ya viene en formato 24 horas de la BD
-                hora_actual = hora_parte[:5]  # Solo HH:MM
+                hora_actual = hora_parte[:5]
             else:
                 fecha_actual = datetime.now().strftime("%d/%m/%Y")
                 hora_actual = datetime.now().strftime("%H:%M")
@@ -1007,19 +1011,20 @@ def generar_pdf(cotizacion_id):
         fecha_actual = datetime.now().strftime("%d/%m/%Y")
         hora_actual = datetime.now().strftime("%H:%M")
 
-    # 🔥 DEBUG: Imprimir para verificar
+    # 🔥 USAR LOS DATOS DEL FORMULARIO (prioridad sobre los de BD)
+    # Si el usuario escribió algo en el formulario, usar eso; si no, usar lo de BD
+    telefono_final = telefono_contacto_form if telefono_contacto_form else cabecera.get("telefono_contacto", "")
+    contacto_final = cliente_contacto_form if cliente_contacto_form else cabecera.get("nombre_contacto", "")
+    email_final = email_contacto_cliente_form if email_contacto_cliente_form else cabecera.get("email_contacto", "")
+    requerimiento_final = requerimiento_form if requerimiento_form else cabecera.get("requerimiento", "")
+    direccion_entrega_final = direccion_entrega_form if direccion_entrega_form else cabecera.get("direccion_entrega", "")
+
     print("=" * 50)
     print("📄 DATOS ENVIADOS AL PDF:")
-    print(f"cliente_razon_social: {cabecera.get('razon_social')}")
-    print(f"cliente_ruc: {cabecera.get('numero_documento')}")
-    print(f"cliente_direccion: {cabecera.get('direccion_fiscal')}")
-    print(f"telefono_contacto (CLIENTE): {cabecera.get('telefono_contacto')}")
-    print(f"cliente_contacto (ATENCION): {cabecera.get('nombre_contacto')}")
-    print(f"email_contacto_cliente (CORREO): {cabecera.get('email_contacto')}")
-    print(f"requerimiento: {cabecera.get('requerimiento')}")
-    print(f"fecha_creacion: {fecha_creacion}")
-    print(f"fecha_actual: {fecha_actual}")
-    print(f"hora_actual: {hora_actual}")
+    print(f"Teléfono (formulario): '{telefono_contacto_form}' -> FINAL: '{telefono_final}'")
+    print(f"Atención (formulario): '{cliente_contacto_form}' -> FINAL: '{contacto_final}'")
+    print(f"Correo (formulario): '{email_contacto_cliente_form}' -> FINAL: '{email_final}'")
+    print(f"Requerimiento (formulario): '{requerimiento_form}' -> FINAL: '{requerimiento_final}'")
     print("=" * 50)
 
     html = render_template(
@@ -1027,16 +1032,17 @@ def generar_pdf(cotizacion_id):
         logo_base64=logo_base64,
         codigo_cotizacion=cabecera.get("codigo_cotizacion") or cabecera.get("numero_cotizacion") or "N/A",
         fecha_actual=fecha_actual,
-        hora_actual=hora_actual,  # 🔥 AHORA VIENE DE LA BD (HORA DE CREACIÓN)
+        hora_actual=hora_actual,
         
-        # 🔥 DATOS DEL CLIENTE (AHORA CON LOS CAMPOS CORRECTOS)
+        # 🔥 DATOS DEL CLIENTE (priorizando los del formulario)
         cliente_razon_social=cabecera.get("razon_social") or "",
         cliente_ruc=cabecera.get("numero_documento") or "",
         cliente_direccion=cabecera.get("direccion_fiscal") or "",
-        telefono_contacto=cabecera.get("telefono_contacto") or "",      # ← TELÉFONO
-        cliente_contacto=cabecera.get("nombre_contacto") or "",          # ← ATENCIÓN
-        email_contacto_cliente=cabecera.get("email_contacto") or "",     # ← CORREO
-        numero_requerimiento=cabecera.get("requerimiento") or "",
+        telefono_contacto=telefono_final,              # ← TELÉFONO (del formulario o BD)
+        cliente_contacto=contacto_final,               # ← ATENCIÓN (del formulario o BD)
+        email_contacto_cliente=email_final,            # ← CORREO (del formulario o BD)
+        numero_requerimiento=requerimiento_final,      # ← REQUERIMIENTO (del formulario o BD)
+        direccion_entrega=direccion_entrega_final,     # ← DIRECCIÓN (del formulario o BD)
         
         # 🔥 DATOS DEL ASESOR
         asesor_comercial=cabecera.get("nombre_completo") or "Hellen Blas Principe",
@@ -1046,7 +1052,6 @@ def generar_pdf(cotizacion_id):
         # 🔥 CONDICIONES COMERCIALES
         condicion_pago=cabecera.get("condicion_pago") or "Contado",
         tiempo_entrega=cabecera.get("tiempo_entrega") or "Inmediato",
-        direccion_entrega=cabecera.get("direccion_entrega") or "A convenir",
         validez_oferta=cabecera.get("validez_oferta") or "15 días",
         
         # 🔥 PRODUCTOS Y TOTALES
@@ -1065,7 +1070,7 @@ def generar_pdf(cotizacion_id):
     except Exception as e:
         print("🔥 ERROR EN WEASYPRINT:", e)
         import traceback
-        traceback.print_trace()
+        traceback.print_exc()
         return jsonify({"success": False, "error": f"Error al generar PDF: {str(e)}"}), 500
 
     return Response(

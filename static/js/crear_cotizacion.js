@@ -858,28 +858,41 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================
     // GENERAR PDF
     // =========================
-    function generatePdf() {
-        const cotId = document.getElementById('cotizacion_id')?.value;
-        
-        if (!cotId || cotId === '' || cotId === 'None') {
-            mostrarNotificacion("⚠️ Debe guardar la cotización primero", "warning");
-            return;
-        }
-        
-        if (esBorrador) {
-            mostrarNotificacion("⚠️ Debe convertir la cotización a OFICIAL antes de generar PDF", "warning");
-            return;
-        }
-        
-        try {
-            mostrarNotificacion("📄 Generando PDF, espere...", "info");
-            const pdfUrl = `/api/cotizacion/pdf/${cotId}`;
-            window.open(pdfUrl, '_blank');
-        } catch (error) {
-            console.error('Error al generar PDF:', error);
-            mostrarNotificacion("❌ Error al generar el PDF", "danger");
-        }
+  // Función para generar PDF con los datos actuales del formulario
+function generatePdf() {
+    const cotId = document.getElementById('cotizacion_id')?.value;
+    
+    if (!cotId || cotId === '' || cotId === 'None') {
+        mostrarNotificacion("⚠️ Debe guardar la cotización primero", "warning");
+        return;
     }
+    
+    if (esBorrador) {
+        mostrarNotificacion("⚠️ Debe convertir la cotización a OFICIAL antes de generar PDF", "warning");
+        return;
+    }
+    
+    // 🔥 OBTENER DATOS ACTUALES DEL FORMULARIO
+    const datosActuales = {
+        telefono_contacto: document.getElementById('telefono_contacto')?.value || '',
+        cliente_contacto: document.getElementById('cliente_contacto')?.value || '',
+        email_contacto_cliente: document.getElementById('email_contacto_cliente')?.value || '',
+        requerimiento: document.getElementById('requerimiento')?.value || '',
+        direccion_entrega: document.getElementById('direccion_entrega')?.value || ''
+    };
+    
+    // Construir URL con los parámetros
+    const params = new URLSearchParams(datosActuales);
+    const pdfUrl = `/api/cotizacion/pdf/${cotId}?${params.toString()}`;
+    
+    try {
+        mostrarNotificacion("📄 Generando PDF, espere...", "info");
+        window.open(pdfUrl, '_blank');
+    } catch (error) {
+        console.error('Error al generar PDF:', error);
+        mostrarNotificacion("❌ Error al generar el PDF", "danger");
+    }
+}
 
     // =========================
     // SET PRODUCTO EN FILA - ACTUALIZADO
