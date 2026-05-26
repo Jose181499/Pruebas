@@ -486,13 +486,11 @@
     </div>
 
     <div class="container-fluid py-4">
-        <!-- 🔥 CORREGIDO: Ahora recibe el ID del backend -->
         <input type="hidden" id="cotizacion_id" value="{{ cotizacion_id if cotizacion_id else '' }}">
         <input type="hidden" id="modo_consulta" value="">
         <input type="hidden" id="usuario_id" value="">
         <input type="hidden" id="descuento_porcentaje" value="10">
 
-        <!-- LOG DE DEPURACIÓN -->
         <script>
             console.log("🔍 Template - cotizacion_id recibido:", "{{ cotizacion_id if cotizacion_id else 'No hay ID' }}");
         </script>
@@ -576,7 +574,7 @@
                             </div>
                         </div>
 
-                        <!-- DATOS DEL CLIENTE - NUEVO ORDEN -->
+                        <!-- DATOS DEL CLIENTE -->
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label"><i class="bi bi-card-text"></i> RUC / DNI</label>
@@ -588,7 +586,7 @@
                             </div>
                             <div class="col-12">
                                 <label class="form-label"><i class="bi bi-geo-alt"></i> Dirección Fiscal</label>
-                                <input type="text" class="form-control custom-input" id="cliente_direccion" placeholder="Ej: Av. Principal 123, Urbanización, Distrito, Provincia">
+                                <input type="text" class="form-control custom-input" id="cliente_direccion" placeholder="Ej: Av. Principal 123">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label"><i class="bi bi-person"></i> Contacto</label>
@@ -617,7 +615,6 @@
                             </div>
                         </div>
 
-                        <!-- BOTÓN CREAR CLIENTE -->
                         <div class="mt-4">
                             <button class="btn btn-success w-100" id="btnCrearCliente">
                                 <i class="bi bi-person-plus-fill"></i> Crear nuevo cliente
@@ -676,17 +673,30 @@
                                     <option value="30 días">📅 30 días</option>
                                 </select>
                             </div>
+                            
+                            <!-- 🔥 CONDICIÓN DE PAGO - MODIFICADA CON OPCIÓN 7 DÍAS Y PERSONALIZADO -->
                             <div class="col-md-6">
                                 <label class="form-label"><i class="bi bi-credit-card"></i> Condición de Pago</label>
-                                <select class="form-select custom-input" id="condicion_pago">
-                                    <option value="Contado">💵 Contado</option>
-                                    <option value="Crédito 15 días">📆 Crédito 15 días</option>
-                                    <option value="Crédito 30 días">📆 Crédito 30 días</option>
-                                    <option value="Crédito 45 días">📆 Crédito 45 días</option>
-                                    <option value="Crédito 60 días">📆 Crédito 60 días</option>
-                                    <option value="Crédito 90 días">📆 Crédito 90 días</option>
-                                </select>
+                                <div class="condicion-pago-wrapper">
+                                    <select class="form-select custom-input" id="condicion_pago_select">
+                                        <option value="">-- Seleccionar opción --</option>
+                                        <option value="Contado">💵 Contado</option>
+                                        <option value="Crédito 7 días">📆 Crédito 7 días</option>
+                                        <option value="Crédito 15 días">📆 Crédito 15 días</option>
+                                        <option value="Crédito 30 días">📆 Crédito 30 días</option>
+                                        <option value="Crédito 45 días">📆 Crédito 45 días</option>
+                                        <option value="Crédito 60 días">📆 Crédito 60 días</option>
+                                        <option value="Crédito 90 días">📆 Crédito 90 días</option>
+                                        <option value="personalizado">✏️ Personalizado (escribir)</option>
+                                    </select>
+                                    <input type="text" 
+                                           class="form-control custom-input mt-2" 
+                                           id="condicion_pago" 
+                                           placeholder="Ej: Crédito 20 días, 50% adelanto, etc."
+                                           style="display: none;">
+                                </div>
                             </div>
+                            
                             <div class="col-md-6">
                                 <label class="form-label"><i class="bi bi-truck"></i> Dirección de Entrega</label>
                                 <div class="d-flex gap-2">
@@ -717,7 +727,7 @@
             </div>
         </div>
 
-        <!-- TABLA PRODUCTOS - VERSIÓN SIMPLIFICADA -->
+        <!-- TABLA PRODUCTOS -->
         <div class="erp-card mt-4">
             <div class="card-header-custom green">
                 <i class="bi bi-box-seam-fill"></i> Detalle de Productos
@@ -925,6 +935,52 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Función para manejar la condición de pago personalizada
+        function configurarCondicionPago() {
+            const select = document.getElementById('condicion_pago_select');
+            const input = document.getElementById('condicion_pago');
+            
+            if (select && input) {
+                select.addEventListener('change', function() {
+                    const valor = this.value;
+                    if (valor === 'personalizado') {
+                        input.style.display = 'block';
+                        input.value = '';
+                        input.placeholder = 'Ej: Crédito 20 días, 50% adelanto, etc.';
+                        input.focus();
+                    } else if (valor === '') {
+                        input.style.display = 'none';
+                        input.value = '';
+                    } else {
+                        input.style.display = 'none';
+                        input.value = valor;
+                    }
+                });
+                
+                input.addEventListener('focus', function() {
+                    select.value = 'personalizado';
+                    this.style.display = 'block';
+                });
+                
+                // Si ya hay un valor en el input, mostrar el select correspondiente
+                if (input.value && input.value.trim() !== '') {
+                    let encontrado = false;
+                    for (let i = 0; i < select.options.length; i++) {
+                        if (select.options[i].value === input.value) {
+                            select.value = input.value;
+                            input.style.display = 'none';
+                            encontrado = true;
+                            break;
+                        }
+                    }
+                    if (!encontrado && input.value !== '') {
+                        select.value = 'personalizado';
+                        input.style.display = 'block';
+                    }
+                }
+            }
+        }
+
         // Función para manejar la dirección de entrega personalizada
         function configurarDireccionEntrega() {
             const select = document.getElementById('direccion_entrega_select');
@@ -958,7 +1014,6 @@
             const select = document.getElementById('direccion_entrega_select');
             if (!select) return;
             
-            // Limpiar opciones excepto las primeras
             while (select.options.length > 2) {
                 select.remove(2);
             }
@@ -987,9 +1042,9 @@
         
         // Inicializar cuando el DOM esté listo
         document.addEventListener('DOMContentLoaded', function() {
+            configurarCondicionPago();
             configurarDireccionEntrega();
             
-            // Escuchar cambios en cliente_id para cargar sus direcciones
             const clienteIdInput = document.getElementById('cliente_id');
             if (clienteIdInput) {
                 const observer = new MutationObserver(function() {

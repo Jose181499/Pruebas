@@ -449,7 +449,7 @@ async function verDetalle(id) {
                             <table class="table table-sm">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Código</th><th>Descripción</th><th>Marca</th>
+                                       <th>Código<br>Producto</th><th>Descripción</th><th>Marca</th>
                                         <th class="text-center">Cant</th><th class="text-end">P.Unit</th><th class="text-end">Subtotal</th>
                                      </tr>
                                 </thead>

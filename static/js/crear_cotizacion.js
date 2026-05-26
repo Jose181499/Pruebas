@@ -327,6 +327,57 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
+    // CONFIGURAR CONDICIÓN DE PAGO PERSONALIZADA (NUEVA)
+    // =========================
+    function configurarCondicionPago() {
+        const select = document.getElementById('condicion_pago_select');
+        const input = document.getElementById('condicion_pago');
+        
+        if (!select || !input) {
+            console.warn('⚠️ Elementos de condición de pago no encontrados');
+            return;
+        }
+        
+        select.addEventListener('change', function() {
+            const valor = this.value;
+            if (valor === 'personalizado') {
+                input.style.display = 'block';
+                input.value = '';
+                input.placeholder = 'Ej: Crédito 20 días, 50% adelanto, etc.';
+                input.focus();
+            } else if (valor === '') {
+                input.style.display = 'none';
+                input.value = '';
+            } else {
+                input.style.display = 'none';
+                input.value = valor;
+            }
+        });
+        
+        input.addEventListener('focus', function() {
+            select.value = 'personalizado';
+            this.style.display = 'block';
+        });
+        
+        // Si ya hay un valor en el input al cargar, mostrar el select correspondiente
+        if (input.value && input.value.trim() !== '') {
+            let encontrado = false;
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].value === input.value) {
+                    select.value = input.value;
+                    input.style.display = 'none';
+                    encontrado = true;
+                    break;
+                }
+            }
+            if (!encontrado && input.value !== '') {
+                select.value = 'personalizado';
+                input.style.display = 'block';
+            }
+        }
+    }
+
+    // =========================
     // CARGAR DIRECCIONES DEL CLIENTE
     // =========================
     async function cargarDireccionesCliente(clienteId) {
@@ -1437,6 +1488,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnBuscarSunat) {
         btnBuscarSunat.addEventListener('click', autocompletarConSunat);
     }
+
+    // =========================
+    // CONFIGURAR CONDICIÓN DE PAGO (NUEVO)
+    // =========================
+    configurarCondicionPago();
 
     // =========================
     // INIT
