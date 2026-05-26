@@ -22,6 +22,7 @@ body {
     background: linear-gradient(to bottom, #f8fafc, #eef2f7);
     font-family: 'Inter', sans-serif;
     color: var(--negro);
+    font-size: 13px;
 }
 
 /* =========================================
@@ -86,9 +87,8 @@ HERO
 .hero-card {
     background: white;
     border-radius: 24px;
-    padding: 18px 24px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.04);
-    margin-bottom: 28px;
+    padding: 18px 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.04);
 }
 
 .hero-content {
@@ -100,14 +100,14 @@ HERO
 }
 
 .hero-title {
-    font-size: 24px;
-    font-weight: 800;
-    margin-bottom: 4px;
+    font-size: 24px;      /* antes: 40px */
+    font-weight: 900;
+    margin-bottom: 5px;
 }
 
 .hero-subtitle {
     color: var(--gris);
-    font-size: 14px;
+    font-size: 13px;
 }
 
 .hero-actions {
@@ -160,7 +160,7 @@ CARDS
 .card-header-custom {
     background: linear-gradient(135deg, #111827, #1f2937);
     color: white;
-    padding: 12px 20px;
+    padding: 10px 18px;
     font-size: 13px;
     display: flex;
     align-items: center;

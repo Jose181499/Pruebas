@@ -1054,70 +1054,64 @@ def crear_cotizacion_transaccional(payload: dict, usuario_id: int):
 
 
 # ==========================
-# Obtener cotización completa
+# Obtener cotización completa - CORREGIDO
 # ==========================
 def obtener_cotizacion_completa(cotizacion_id):
-
-    # cabecera de la cotización
+    # cabecera de la cotización (sin JOINs problemáticos)
     rows = db_query("""
-    SELECT 
-        c.*,
-                    
-        cl.razon_social,
-        cl.numero_documento AS cliente_ruc,
-        cl.direccion_fiscal,
-                    
-        co.nombre_contacto,
-        
-        de.descuento_porcentaje,
-                    
-        pe.nombre_punto,
-        pe.direccion,
-        pe.telefono_contacto,
-                    
-        u.nombre_completo,
-        u.email,
-        u.telefono,
-                    
-        c.forma_pago,
-        c.tiempo_entrega,
-        c.almacen,
-        c.validez_oferta
-                    
-    FROM cotizaciones c
-                    
-    JOIN clientes cl 
-        ON c.cliente_id = cl.id
-                    
-    LEFT JOIN clientes_puntos_entrega pe 
-        ON pe.cliente_id = cl.id
-        
-    JOIN usuarios u 
-        ON u.id = c.usuario_id
-    
-    LEFT JOIN clientes_contactos co
-        ON co.cliente_id = cl.id
-                    
-    LEFT JOIN cotizacion_detalle de
-        ON de.cotizacion_id = de.producto_id
-                    
-    WHERE c.id = %s
-    LIMIT 1
+        SELECT 
+            c.id,
+            c.numero_cotizacion,
+            c.codigo_cotizacion,
+            c.correlativo,
+            c.fecha_creacion,
+            c.estado,
+            c.subtotal,
+            c.igv,
+            c.total,
+            c.usuario_id,
+            c.notas,
+            c.condicion_pago,
+            c.tiempo_entrega,
+            c.validez_oferta,
+            c.direccion_entrega,
+            c.requerimiento,
+            c.nota_cotizacion,
+            cl.razon_social,
+            cl.numero_documento AS cliente_ruc,
+            cl.direccion_fiscal,
+            cl.telefono_contacto,
+            cl.nombre_contacto,
+            cl.email_contacto,
+            u.nombre_completo,
+            u.email,
+            u.telefono
+        FROM cotizaciones c
+        LEFT JOIN clientes cl ON c.cliente_id = cl.id
+        LEFT JOIN usuarios u ON c.usuario_id = u.id
+        WHERE c.id = %s
+        LIMIT 1
     """, (cotizacion_id,))
     
     if not rows:
         return None
 
     cotizacion = dict(rows[0])
+    
+    # 🔥 Formatear fecha_creacion para que tenga hora
+    if cotizacion.get('fecha_creacion'):
+        if hasattr(cotizacion['fecha_creacion'], 'strftime'):
+            cotizacion['fecha_creacion'] = cotizacion['fecha_creacion'].strftime('%Y-%m-%d %H:%M:%S')
 
     # detalle de productos
     detalle = db_query("""
         SELECT 
             d.*,
-            p.descripcion,
             p.codigo,
+            p.descripcion,
             p.marca,
-            p.modelo
+            p.modelo,
+            p.unidad
         FROM cotizacion_detalle d
         JOIN productos p ON p.id = d.producto_id
         WHERE d.cotizacion_id = %s
@@ -1129,7 +1123,6 @@ def obtener_cotizacion_completa(cotizacion_id):
         "cabecera": cotizacion,
         "detalle": cotizacion["detalle"]
     }
-
 
 # =========================
 # Crear usuario
