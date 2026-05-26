@@ -634,7 +634,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // OBTENER LISTA DE PRODUCTOS
+    // OBTENER LISTA DE PRODUCTOS - VERSIÓN SIMPLIFICADA
     // =========================
     function obtenerListaProductos() {
         const filas = document.querySelectorAll("#table-body tr");
@@ -646,10 +646,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return el ? el.value : 0;
             };
 
-            const getText = (selector) => {
-                const el = row.querySelector(selector);
-                return el ? el.textContent : 0;
-            };
+            const cantidad = Number(getInput('.cantidad')) || 0;
+            const precio_venta_unitario = Number(getInput('.precio_venta_unitario')) || 0;
+            const valor_venta_total = cantidad * precio_venta_unitario;
 
             const producto = {
                 producto_id: Number(getInput('.producto_id')) || null,
@@ -658,10 +657,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 modelo: getInput('.modelo') || '',
                 marca: getInput('.marca') || '',
                 unidad_medida: getInput('.unidad_medida') || '',
-                cantidad: Number(getInput('.cantidad')),
-                precio_venta_unitario: Number(getInput('.precio_venta_unitario')),
-                subtotal: Number(getText('.subtotal')),
-                total_pagar: Number(getText('.total_pagar'))
+                cantidad: cantidad,
+                precio_venta_unitario: precio_venta_unitario,
+                subtotal_venta: valor_venta_total,
+                costo_unitario: Number(getInput('.costo_unitario')) || 0,
+                subtotal_costo: cantidad * (Number(getInput('.costo_unitario')) || 0),
+                margen_porcentaje: 20,
+                descuento_porcentaje: 0,
+                precio_venta_con_descuento: precio_venta_unitario,
+                subtotal_venta_con_descuento: valor_venta_total,
+                descuento_total: 0,
+                margen_final: 20
             };
 
             listaProductos.push(producto);
@@ -722,7 +728,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // GUARDAR COTIZACIÓN - CORREGIDO (eliminado almacen)
+    // GUARDAR COTIZACIÓN - VERSIÓN SIMPLIFICADA
     // =========================
     async function guardarCotizacion() {
         const cliente_id = Number(document.getElementById('cliente_id')?.value || 0);
@@ -735,7 +741,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!listaProductos[i].producto_id) { mostrarNotificacion(`⚠️ Falta seleccionar producto en la fila ${i + 1}`, "warning"); return; }
         }
         
-        const total = Number(document.getElementById('total_total_pagar')?.textContent || 0);
+        const total = Number(document.getElementById('total_valor_venta')?.textContent || 0);
         const igv = total * 0.18;
         const subtotal = total - igv;
         
@@ -876,7 +882,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // SET PRODUCTO EN FILA
+    // SET PRODUCTO EN FILA - ACTUALIZADO
     // =========================
     function setProductoEnFila(row, p) {  
         const productoIdInput = row.querySelector('.producto_id');
@@ -885,6 +891,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const modeloInput = row.querySelector('.modelo');
         const marcaInput = row.querySelector('.marca');
         const unidadMedidaInput = row.querySelector('.unidad_medida');
+        const costoUnitarioInput = row.querySelector('.costo_unitario');
+        const precioVentaInput = row.querySelector('.precio_venta_unitario');
         
         if (productoIdInput) productoIdInput.value = p.id;
         if (codigoInput) codigoInput.value = p.codigo || "";
@@ -892,6 +900,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (modeloInput) modeloInput.value = p.modelo || "";
         if (marcaInput) marcaInput.value = p.marca || "";
         if (unidadMedidaInput) unidadMedidaInput.value = p.unidad_medida || "UNIDAD";
+        if (costoUnitarioInput && p.costo_unitario) costoUnitarioInput.value = p.costo_unitario;
+        if (precioVentaInput && p.precio_unitario) precioVentaInput.value = p.precio_unitario;
         
         console.log('✅ Producto seleccionado:', p.codigo, p.descripcion);
     }
@@ -965,7 +975,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return; 
                 }
 
-                const html = productos.map(p => `<div class="item" data-id="${p.id}" data-codigo="${p.codigo}" data-descripcion="${p.descripcion}" data-modelo="${p.modelo || ''}" data-marca="${p.marca || ''}" data-unidad="${p.unidad_medida || 'UNIDAD'}">
+                const html = productos.map(p => `<div class="item" data-id="${p.id}" data-codigo="${p.codigo}" data-descripcion="${p.descripcion}" data-modelo="${p.modelo || ''}" data-marca="${p.marca || ''}" data-unidad="${p.unidad_medida || 'UNIDAD'}" data-costo="${p.costo_unitario || 0}" data-precio="${p.precio_unitario || 0}">
                     <strong>📦 ${p.codigo}</strong> - ${p.descripcion}<div class="meta">${p.marca || ''} • Stock: ${p.stock || 0}</div></div>`).join('');
                 portalShow(input, html);
 
@@ -977,7 +987,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             descripcion: el.dataset.descripcion,
                             modelo: el.dataset.modelo,
                             marca: el.dataset.marca,
-                            unidad_medida: el.dataset.unidad
+                            unidad_medida: el.dataset.unidad,
+                            costo_unitario: el.dataset.costo,
+                            precio_unitario: el.dataset.precio
                         };
                         setProductoEnFila(row, productoData);
                         portalHide();
@@ -1051,60 +1063,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // RECALCULAR
+    // RECALCULAR - VERSIÓN SIMPLIFICADA
     // =========================
     function recalculateAll() {
         const rows = document.querySelectorAll("#table-body tr");
-        let totalSubtotal = 0;
-        let totalTotalPagar = 0;
+        let totalValorVenta = 0;
 
         rows.forEach(r => {
             const cantidad = Number(r.querySelector('.cantidad')?.value || 0);
             const precioVenta = Number(r.querySelector('.precio_venta_unitario')?.value || 0);
             
             const valorVentaTotal = cantidad * precioVenta;
-            const subtotal = valorVentaTotal;
-            const totalPagar = valorVentaTotal;
             
             const valorVentaTotalElem = r.querySelector('.valor_venta_total');
             if (valorVentaTotalElem) valorVentaTotalElem.textContent = valorVentaTotal.toFixed(2);
             
-            const subtotalElem = r.querySelector('.subtotal');
-            if (subtotalElem) subtotalElem.textContent = subtotal.toFixed(2);
-            
-            const totalPagarElem = r.querySelector('.total_pagar');
-            if (totalPagarElem) totalPagarElem.textContent = totalPagar.toFixed(2);
-            
-            totalSubtotal += subtotal;
-            totalTotalPagar += totalPagar;
+            totalValorVenta += valorVentaTotal;
         });
 
         // Actualizar footer
-        const totalSubtotalElem = document.getElementById('total_subtotal');
-        if (totalSubtotalElem) totalSubtotalElem.textContent = totalSubtotal.toFixed(2);
-        
-        const totalTotalPagarElem = document.getElementById('total_total_pagar');
-        if (totalTotalPagarElem) totalTotalPagarElem.textContent = totalTotalPagar.toFixed(2);
+        const totalValorVentaElem = document.getElementById('total_valor_venta');
+        if (totalValorVentaElem) totalValorVentaElem.textContent = totalValorVenta.toFixed(2);
         
         // Actualizar resumen de venta
         const summarySubtotal = document.getElementById('summary_subtotal_venta');
-        if (summarySubtotal) summarySubtotal.textContent = totalTotalPagar.toFixed(2);
+        if (summarySubtotal) summarySubtotal.textContent = totalValorVenta.toFixed(2);
         
         const summaryDescuento = document.getElementById('summary_descuento');
-        if (summaryDescuento) summaryDescuento.textContent = (totalTotalPagar * 0.10).toFixed(2);
+        if (summaryDescuento) summaryDescuento.textContent = (totalValorVenta * 0.10).toFixed(2);
         
         const summarySubtotalDescuento = document.getElementById('summary_subtotal_descuento');
-        if (summarySubtotalDescuento) summarySubtotalDescuento.textContent = (totalTotalPagar * 0.90).toFixed(2);
+        if (summarySubtotalDescuento) summarySubtotalDescuento.textContent = (totalValorVenta * 0.90).toFixed(2);
         
         const summaryIgv = document.getElementById('summary_igv');
-        if (summaryIgv) summaryIgv.textContent = (totalTotalPagar * 0.90 * 0.18).toFixed(2);
+        if (summaryIgv) summaryIgv.textContent = (totalValorVenta * 0.90 * 0.18).toFixed(2);
         
         const summaryTotal = document.getElementById('summary_total_venta');
-        if (summaryTotal) summaryTotal.textContent = (totalTotalPagar * 0.90 * 1.18).toFixed(2);
+        if (summaryTotal) summaryTotal.textContent = (totalValorVenta * 0.90 * 1.18).toFixed(2);
     }
 
     // =========================
-    // AGREGAR ITEMS
+    // AGREGAR ITEMS - VERSIÓN SIMPLIFICADA
     // =========================
     function addItem() {
         if (cotizacionBloqueada) { 
@@ -1118,6 +1117,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <td class="col-codigo">
                 <input type="text" class="codigo_producto" placeholder="Buscar producto..." style="width:100%; min-width:120px;">
                 <input type="hidden" class="producto_id">
+                <input type="hidden" class="costo_unitario" value="0">
             </td>
             <td class="col-desc"><input type="text" class="descripcion" readonly style="width:100%;"></td>
             <td class="col-modelo"><input type="text" class="modelo" readonly style="width:100%;"></td>
@@ -1126,8 +1126,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <td class="col-cantidad"><input type="number" class="cantidad" value="1" step="0.01" style="width:100%;"></td>
             <td class="col-precio"><input type="number" class="precio_venta_unitario" value="0" step="0.01" style="width:100%;"></td>
             <td class="valor_venta_total">0.00</td>
-            <td class="subtotal">0.00</td>
-            <td class="total_pagar">0.00</td>
             <td><button class="btn-del">🗑</button></td>
         `;
         
@@ -1260,8 +1258,8 @@ document.addEventListener('DOMContentLoaded', () => {
             await cargarDireccionesCliente(data.cliente_id);
             
             const total = Number(data.total || 0);
-            const totalTotalPagarElem = document.getElementById('total_total_pagar');
-            if (totalTotalPagarElem) totalTotalPagarElem.textContent = total.toFixed(2);
+            const totalValorVentaElem = document.getElementById('total_valor_venta');
+            if (totalValorVentaElem) totalValorVentaElem.textContent = total.toFixed(2);
             
             const summarySubtotal = document.getElementById('summary_subtotal_venta');
             if (summarySubtotal) summarySubtotal.textContent = total.toFixed(2);

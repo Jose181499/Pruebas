@@ -241,7 +241,7 @@ def buscar_clientes():
 
 
 # ==========================================
-# NUEVO ENDPOINT: BUSCAR CLIENTE POR RUC EXACTO
+# ENDPOINT: BUSCAR CLIENTE POR RUC EXACTO
 # ==========================================
 
 @cotizaciones_bp.route("/api/clientes/buscar-por-ruc", methods=["GET"])
@@ -256,7 +256,6 @@ def buscar_cliente_por_ruc_api():
         if len(ruc) != 11:
             return jsonify({"success": False, "error": "El RUC debe tener 11 dígitos"}), 400
         
-        # Buscar en la base de datos usando la función importada
         cliente = buscar_cliente_por_ruc(ruc)
         
         if cliente:
@@ -295,7 +294,6 @@ def obtener_cliente(id):
         if not cliente:
             return jsonify({'success': False, 'error': 'Cliente no encontrado'}), 404
         
-        # Obtener puntos de entrega
         query_puntos = """
             SELECT id, nombre_punto, direccion, telefono_contacto, nombre_contacto,
                    condicion_pago
@@ -321,7 +319,7 @@ def obtener_cliente(id):
 
 @cotizaciones_bp.route("/api/clientes/<int:cliente_id>/contactos", methods=["GET"])
 def buscar_contactos_cliente(cliente_id):
-    """Buscar contactos de un cliente específico (para el campo Atención)"""
+    """Buscar contactos de un cliente específico"""
     try:
         q = request.args.get('q', '')
         
@@ -370,7 +368,7 @@ def buscar_contactos_cliente(cliente_id):
 
 
 # ==========================================
-# 🔥 CORREGIDO: CAMBIADO precio_costo por costo_unitario
+# ENDPOINT: BUSCAR PRODUCTOS
 # ==========================================
 
 @cotizaciones_bp.route("/api/productos/buscar", methods=["GET"])
@@ -423,7 +421,6 @@ def verificar_codigo_cotizacion():
         if not codigo:
             return jsonify({"exists": False, "error": "No se proporcionó código"}), 400
         
-        # Verificar si el código existe
         resultado = db_query("SELECT id FROM cotizaciones WHERE codigo_cotizacion = %s", (codigo,))
         
         existe = len(resultado) > 0
@@ -457,14 +454,12 @@ def crear_cliente():
         email_contacto = data.get('email_contacto', '')
         nombre_contacto = data.get('nombre_contacto', '')
         
-        # Validaciones
         if not numero_documento:
             return jsonify({'success': False, 'error': 'Número de documento requerido'}), 400
         
         if not razon_social:
             return jsonify({'success': False, 'error': 'Razón social requerida'}), 400
         
-        # Verificar si ya existe un cliente con ese documento
         existente = db_query("""
             SELECT id FROM clientes WHERE numero_documento = %s
         """, (numero_documento,))
@@ -504,7 +499,7 @@ def crear_cliente():
 
 
 # ==========================================
-# GUARDAR COTIZACIÓN - CORREGIDO (eliminado almacen)
+# GUARDAR COTIZACIÓN - VERSIÓN SIMPLIFICADA
 # ==========================================
 
 @cotizaciones_bp.route("/api/cotizacion/guardar", methods=["POST"])
@@ -565,7 +560,6 @@ def guardar_cotizacion():
         with db_tx() as conn:
             cur = conn.cursor()
 
-            # Insertar con los nuevos campos
             cur.execute("""
                 INSERT INTO cotizaciones (
                     numero_cotizacion,
@@ -738,6 +732,10 @@ def listar_cotizaciones():
                 c.total,
                 c.usuario_id,
                 c.notas,
+                c.condicion_pago,
+                c.tiempo_entrega,
+                c.direccion_entrega,
+                c.requerimiento,
                 COALESCE(cl.razon_social, 'Sin cliente') AS cliente,
                 u.nombre_completo as vendedor
             FROM cotizaciones c
@@ -764,9 +762,22 @@ def listar_cotizaciones():
         
         rows = db_query(query, tuple(params) if params else None)
         
-        print(f"✅ Encontradas {len(rows)} cotizaciones")
+        resultado = []
+        for row in rows:
+            resultado.append({
+                'id': row['id'],
+                'numero_cotizacion': row['numero_cotizacion'],
+                'codigo_cotizacion': row['codigo_cotizacion'],
+                'fecha_creacion': row['fecha_creacion'].strftime('%Y-%m-%d %H:%M:%S') if row['fecha_creacion'] else '',
+                'estado': row['estado'],
+                'cliente': row['cliente'],
+                'vendedor': row['vendedor'],
+                'total': float(row['total']) if row['total'] else 0
+            })
         
-        return jsonify({"success": True, "data": rows})
+        print(f"✅ Encontradas {len(resultado)} cotizaciones")
+        
+        return jsonify({"success": True, "data": resultado})
         
     except Exception as e:
         print(f"🔥 ERROR LISTAR: {str(e)}")
@@ -938,6 +949,7 @@ def generar_pdf(cotizacion_id):
 
         productos.append({
             "item": i,
+            "codigo": p.get("codigo", ""),
             "descripcion": p.get("descripcion", ""),
             "marca": p.get("marca", ""),
             "modelo": p.get("modelo", ""),
@@ -955,24 +967,26 @@ def generar_pdf(cotizacion_id):
         total_subtotal_venta_desc += subtotal_desc
 
     hay_descuentos = total_descuento_subtotal > 0
+    hora_actual = datetime.now().strftime("%I:%M %p")
 
     html = render_template(
         "pdf/cotizacion_kcf.html",
         logo_base64=logo_base64,
         numero_cotizacion=cabecera.get("codigo_cotizacion") or cabecera.get("numero_cotizacion"),
-        fecha_actual=cabecera.get("fecha_creacion") or datetime.now().strftime("%d/%m/%Y"),
-        cliente_razon_social=cabecera.get("nombre_empresa") or cabecera.get("razon_social") or "",
+        fecha_actual=cabecera.get("fecha_creacion").strftime("%d/%m/%Y") if cabecera.get("fecha_creacion") else datetime.now().strftime("%d/%m/%Y"),
+        hora_actual=hora_actual,
+        cliente_razon_social=cabecera.get("razon_social") or cabecera.get("nombre_empresa") or "",
         cliente_ruc=cabecera.get("ruc") or cabecera.get("cliente_ruc") or "",
-        cliente_direccion=cabecera.get("direccion") or "",
+        cliente_direccion=cabecera.get("direccion") or cabecera.get("direccion_fiscal") or "",
         cliente_contacto=cabecera.get("nombre_contacto") or "",
         cliente_telefono=cabecera.get("telefono_contacto") or "",
         numero_requerimiento=cabecera.get("requerimiento") or "REQ-001",
-        asesor_comercial=cabecera.get("nombre_completo") or "Himer Castillo",
-        email_contacto=cabecera.get("email") or "ventas@kcf.com",
-        telefono_contacto=cabecera.get("telefono"),
+        asesor_comercial=cabecera.get("nombre_completo") or "Hellen Castillo",
+        email_contacto=cabecera.get("email") or "ventas@kcfcorporacion.com",
+        telefono_contacto=cabecera.get("telefono") or "999932051",
         condicion_pago=cabecera.get("condicion_pago") or "Contado",
         tiempo_entrega=cabecera.get("tiempo_entrega") or "Inmediato",
-        direccion_entrega=cabecera.get("direccion_entrega") or "Lima",
+        direccion_entrega=cabecera.get("direccion_entrega") or "A convenir",
         validez_oferta=cabecera.get("validez_oferta") or "15 días",
         productos=productos,
         total_subtotal_venta=total_subtotal_venta,

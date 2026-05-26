@@ -6,7 +6,7 @@
     <style>
         @page {
             size: A4;
-            margin: 1.5cm;
+            margin: 1.2cm;
         }
 
         * {
@@ -18,20 +18,20 @@
 
         body {
             font-family: 'Cambria', Cochin, Georgia, Times, 'Times New Roman', serif;
-            font-size: 11px;
+            font-size: 10px;
             color: #1a1a1a;
-            line-height: 1.4;
+            line-height: 1.3;
             background: white;
         }
 
-        /* HEADER */
+        /* HEADER - más compacto */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 20px;
-            border-bottom: 3px solid #D32F2F;
-            padding-bottom: 15px;
+            margin-bottom: 12px;
+            border-bottom: 2px solid #D32F2F;
+            padding-bottom: 10px;
         }
 
         .logo-section {
@@ -39,7 +39,7 @@
         }
 
         .logo {
-            max-width: 180px;
+            max-width: 140px;
         }
 
         .logo img {
@@ -54,13 +54,13 @@
 
         .empresa-info h1 {
             color: #D32F2F;
-            margin: 0 0 5px 0;
-            font-size: 22px;
+            margin: 0 0 3px 0;
+            font-size: 18px;
             font-weight: bold;
         }
 
         .empresa-info .slogan {
-            font-size: 10px;
+            font-size: 9px;
             color: #666;
             letter-spacing: 1px;
         }
@@ -69,38 +69,33 @@
             flex: 1;
             text-align: right;
             background: #f8f9fa;
-            padding: 8px 12px;
+            padding: 6px 10px;
             border-radius: 6px;
         }
 
         .numero-cotizacion {
-            font-size: 13px;
+            font-size: 11px;
             font-weight: bold;
             color: #D32F2F;
         }
 
-        .fecha {
-            font-size: 9px;
-            margin-top: 4px;
-        }
-
-        .hora {
-            font-size: 9px;
+        .fecha, .hora {
+            font-size: 8px;
             margin-top: 2px;
             color: #666;
         }
 
-        /* LAYOUT PRINCIPAL */
+        /* LAYOUT PRINCIPAL - más compacto */
         .layout-principal {
             display: flex;
-            gap: 20px;
-            margin-bottom: 20px;
+            gap: 15px;
+            margin-bottom: 12px;
         }
 
         .seccion-cliente, .seccion-condiciones {
             flex: 1;
             background: #f8f9fa;
-            padding: 12px 15px;
+            padding: 8px 12px;
             border-radius: 6px;
             border: 1px solid #D32F2F;
         }
@@ -108,21 +103,21 @@
         .seccion-cliente h3, .seccion-condiciones h3 {
             color: #D32F2F;
             border-bottom: 1px solid #D32F2F;
-            padding-bottom: 4px;
-            font-size: 11px;
+            padding-bottom: 3px;
+            font-size: 10px;
             margin-top: 0;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
             font-weight: bold;
         }
 
         .info-line, .condicion-line {
             display: flex;
-            margin-bottom: 5px;
-            font-size: 9px;
+            margin-bottom: 3px;
+            font-size: 8.5px;
         }
 
         .info-label, .condicion-label {
-            width: 100px;
+            width: 90px;
             font-weight: bold;
         }
 
@@ -130,93 +125,85 @@
             flex: 1;
         }
 
-        /* TEXTO INTRODUCTORIO - ESTIMADO CLIENTE */
+        /* TEXTO INTRODUCTORIO - más compacto */
         .texto-introductorio {
-            margin: 15px 0;
-            padding: 15px 20px;
+            margin: 10px 0;
+            padding: 8px 15px;
             background: #FFF8E1;
-            border-left: 5px solid #D32F2F;
-            font-size: 11px;
-            line-height: 1.6;
+            border-left: 4px solid #D32F2F;
+            font-size: 9px;
+            line-height: 1.4;
             text-align: justify;
         }
 
         .texto-introductorio .saludo {
-            font-size: 12px;
+            font-size: 10px;
             font-weight: bold;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
         }
 
-        /* TABLA DE PRODUCTOS */
+        /* TABLA DE PRODUCTOS - más compacta */
         .tabla-productos {
             width: 100%;
             border-collapse: collapse;
-            margin: 15px 0;
-            font-size: 9px;
+            margin: 10px 0;
+            font-size: 8.5px;
         }
 
         .tabla-productos th {
             background: #D32F2F;
             color: white;
-            padding: 8px 6px;
+            padding: 5px 4px;
             border: 1px solid #B71C1C;
             font-weight: bold;
             text-align: center;
         }
 
         .tabla-productos td {
-            padding: 6px;
+            padding: 4px;
             border: 1px solid #ddd;
             vertical-align: top;
-        }
-
-        .tabla-productos tr:hover {
-            background: #f5f5f5;
         }
 
         /* ALINEACIÓN DE COLUMNAS */
         .col-item {
             text-align: center;
-            width: 35px;
+            width: 30px;
         }
         .col-codigo {
             text-align: left;
-            width: 80px;
+            width: 70px;
         }
         .col-descripcion {
             text-align: left;
         }
         .col-modelo {
             text-align: left;
-            width: 70px;
+            width: 60px;
         }
         .col-marca {
             text-align: left;
-            width: 70px;
+            width: 60px;
         }
         .col-cantidad {
             text-align: center;
-            width: 50px;
+            width: 40px;
         }
         .col-unidad {
             text-align: center;
-            width: 60px;
+            width: 45px;
         }
         .col-valor-unitario {
             text-align: right;
-            width: 90px;
+            width: 75px;
         }
-        .col-subtotal {
+        .col-valor-total {
             text-align: right;
-            width: 90px;
-        }
-        .col-total-pagar {
-            text-align: right;
-            width: 90px;
+            width: 85px;
             background: #FFF8E1;
+            font-weight: bold;
         }
 
-        /* NÚMEROS A LA DERECHA */
         .numero-formateado {
             text-align: right;
             font-family: 'Courier New', monospace;
@@ -227,17 +214,14 @@
             text-align: center;
         }
 
-        .text-right {
-            text-align: right;
-        }
-
         /* SECCIÓN DE TOTALES */
         .seccion-totales {
-            width: 320px;
+            width: 280px;
             margin-left: auto;
-            margin-top: 15px;
+            margin-top: 10px;
+            margin-bottom: 10px;
             border: 1px solid #D32F2F;
-            padding: 12px 15px;
+            padding: 8px 12px;
             border-radius: 6px;
             background: #f8f9fa;
         }
@@ -245,27 +229,27 @@
         .total-line {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 10px;
+            margin-bottom: 5px;
+            font-size: 9px;
         }
 
         .total-final {
             border-top: 2px solid #D32F2F;
-            padding-top: 8px;
-            margin-top: 8px;
+            padding-top: 5px;
+            margin-top: 5px;
             font-weight: bold;
-            font-size: 13px;
+            font-size: 11px;
             color: #D32F2F;
         }
 
         /* SECCIÓN IMPORTANTE */
         .seccion-importante {
-            margin: 15px 0;
-            padding: 8px 12px;
+            margin: 10px 0;
+            padding: 5px 10px;
             background: #FFF8E1;
             border: 1px solid #FFC107;
             border-radius: 4px;
-            font-size: 8px;
+            font-size: 7.5px;
             color: #856404;
         }
 
@@ -273,21 +257,44 @@
             color: #D32F2F;
         }
 
-        /* SECCIÓN DE NOTAS - AHORA ES ACLARATORIA */
+        /* CUENTAS BANCARIAS - más compacto */
+        .cuentas-bancarias {
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border: 1px solid #D32F2F;
+            border-radius: 6px;
+            font-size: 7.5px;
+        }
+
+        .cuentas-bancarias h3 {
+            color: #D32F2F;
+            border-bottom: 1px solid #D32F2F;
+            padding-bottom: 3px;
+            font-size: 9px;
+            margin-top: 0;
+            margin-bottom: 6px;
+        }
+
+        .cuenta-line {
+            margin-bottom: 2px;
+        }
+
+        /* SECCIÓN ACLARATORIA - más compacto */
         .seccion-aclaratoria {
-            margin-top: 20px;
-            padding: 12px 15px;
+            margin-top: 10px;
+            padding: 6px 10px;
             background: #e9ecef;
             border-radius: 6px;
-            font-size: 9px;
+            font-size: 8px;
             text-align: center;
             font-style: italic;
         }
 
         .seccion-aclaratoria .titulo {
             font-weight: bold;
-            font-size: 10px;
-            margin-bottom: 5px;
+            font-size: 9px;
+            margin-bottom: 3px;
             font-style: normal;
         }
 
@@ -297,47 +304,24 @@
             font-weight: bold;
         }
 
-        /* CUENTAS BANCARIAS */
-        .cuentas-bancarias {
-            margin-top: 20px;
-            padding: 12px 15px;
-            background: #f8f9fa;
-            border: 1px solid #D32F2F;
-            border-radius: 6px;
+        /* CONTACTO FINAL - más compacto */
+        .seccion-contacto {
+            margin-top: 10px;
+            border-top: 2px solid #D32F2F;
+            padding-top: 8px;
+            text-align: center;
             font-size: 8px;
         }
 
-        .cuentas-bancarias h3 {
-            color: #D32F2F;
-            border-bottom: 1px solid #D32F2F;
-            padding-bottom: 4px;
-            font-size: 11px;
-            margin-top: 0;
-            margin-bottom: 10px;
-        }
-
-        .cuenta-line {
-            margin-bottom: 3px;
-        }
-
-        /* CONTACTO FINAL */
-        .seccion-contacto {
-            margin-top: 20px;
-            border-top: 2px solid #D32F2F;
-            padding-top: 15px;
-            text-align: center;
-            font-size: 9px;
-        }
-
         .contacto-nombre {
-            font-size: 12px;
+            font-size: 10px;
             font-weight: bold;
             color: #D32F2F;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
         }
 
         .contacto-line {
-            margin-bottom: 3px;
+            margin-bottom: 2px;
         }
 
         .web-link {
@@ -353,10 +337,14 @@
             background: #FFF8E1;
         }
 
-        hr {
-            border: none;
-            border-top: 1px dashed #ddd;
-            margin: 10px 0;
+        /* Evitar saltos de página */
+        .seccion-totales, .cuentas-bancarias, .seccion-aclaratoria, .seccion-contacto {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        
+        .tabla-productos {
+            page-break-inside: avoid;
         }
     </style>
 </head>
@@ -377,8 +365,8 @@
         </div>
         <div class="cotizacion-info">
             <div class="numero-cotizacion"><strong>COTIZACIÓN N°:</strong> {{ numero_cotizacion }}</div>
-            <div class="fecha"><strong>Fecha de Emisión:</strong> {{ fecha_actual }}</div>
-            <div class="hora"><strong>Hora de Emisión:</strong> {{ hora_actual }}</div>
+            <div class="fecha"><strong>Fecha:</strong> {{ fecha_actual }}</div>
+            <div class="hora"><strong>Hora:</strong> {{ hora_actual }}</div>
         </div>
     </div>
 
@@ -415,7 +403,7 @@
         <div class="seccion-condiciones">
             <h3>CONDICIONES COMERCIALES</h3>
             <div class="condicion-line">
-                <span class="condicion-label">Ejecutiva Comercial:</span>
+                <span class="condicion-label">Ejecutiva:</span>
                 <span class="condicion-value">{{ asesor_comercial }}</span>
             </div>
             <div class="condicion-line">
@@ -427,25 +415,25 @@
                 <span class="condicion-value">{{ telefono_contacto }}</span>
             </div>
             <div class="condicion-line">
-                <span class="condicion-label">Condición de Pago:</span>
+                <span class="condicion-label">Condición Pago:</span>
                 <span class="condicion-value">{{ condicion_pago }}</span>
             </div>
             <div class="condicion-line">
-                <span class="condicion-label">Tiempo de Entrega:</span>
+                <span class="condicion-label">Tiempo Entrega:</span>
                 <span class="condicion-value">{{ tiempo_entrega }}</span>
             </div>
             <div class="condicion-line">
-                <span class="condicion-label">Dirección de Entrega:</span>
+                <span class="condicion-label">Dirección Entrega:</span>
                 <span class="condicion-value">{{ direccion_entrega }}</span>
             </div>
             <div class="condicion-line">
-                <span class="condicion-label">Validez de Oferta:</span>
+                <span class="condicion-label">Validez Oferta:</span>
                 <span class="condicion-value">{{ validez_oferta }}</span>
             </div>
         </div>
     </div>
 
-    <!-- TEXTO INTRODUCTORIO - ESTIMADO CLIENTE -->
+    <!-- TEXTO INTRODUCTORIO -->
     <div class="texto-introductorio">
         <div class="saludo">Estimado Cliente,</div>
         La presente tiene como objeto poner a su consideración nuestra oferta detallada según su requerimiento, agradecemos por confiar en nuestros productos:
@@ -463,8 +451,7 @@
                 <th class="col-cantidad">CANT</th>
                 <th class="col-unidad">UND</th>
                 <th class="col-valor-unitario">P.UNITARIO<br>S/.</th>
-                <th class="col-subtotal">SUBTOTAL<br>S/.</th>
-                <th class="col-total-pagar">TOTAL A<br>PAGAR S/.</th>
+                <th class="col-valor-total">TOTAL S/.</th>
             </tr>
         </thead>
         <tbody>
@@ -479,7 +466,6 @@
                     <td class="text-center">{{ "%.0f"|format(producto.cantidad|default(0)) }}</td>
                     <td class="text-center">{{ producto.unidad|default('Unid') }}</td>
                     <td class="numero-formateado">{{ "%.2f"|format(producto.precio_venta_unitario|default(0)) }}</td>
-                    <td class="numero-formateado">{{ "%.2f"|format(producto.subtotal_venta|default(0)) }}</td>
                     <td class="numero-formateado fw-bold bg-warning">
                         {{ "%.2f"|format(producto.subtotal_venta_desc|default(producto.subtotal_venta|default(0))) }}
                     </td>
@@ -487,7 +473,7 @@
                 {% endfor %}
             {% else %}
                 <tr>
-                    <td colspan="10" class="text-center" style="padding: 20px;">
+                    <td colspan="9" class="text-center" style="padding: 15px;">
                         No hay productos registrados en esta cotización
                     </td>
                 </tr>
@@ -531,27 +517,27 @@
         <h3>CUENTAS BANCARIAS</h3>
         <div class="cuenta-line"><strong>BCP SOLES:</strong> 191-1889375-0-94 | N. 1911889375094</div>
         <div class="cuenta-line"><strong>BCP DÓLARES:</strong> 191-1881449-1-53 | N. 1911881449153</div>
-        <div class="cuenta-line"><strong>BBVA CONTINENTAL SOLES:</strong> 0011-0335-01-00019126 | N. 001103350100019126</div>
-        <div class="cuenta-line"><strong>BBVA CONTINENTAL DÓLARES:</strong> 0011-0335-01-00019134 | N. 001103350100019134</div>
+        <div class="cuenta-line"><strong>BBVA SOLES:</strong> 0011-0335-01-00019126 | N. 001103350100019126</div>
+        <div class="cuenta-line"><strong>BBVA DÓLARES:</strong> 0011-0335-01-00019134 | N. 001103350100019134</div>
     </div>
 
-    <!-- SECCIÓN ACLARATORIA - VALIDEZ Y DISPONIBILIDAD -->
+    <!-- SECCIÓN ACLARATORIA -->
     <div class="seccion-aclaratoria">
         <div class="titulo">📌 Nota Aclaratoria</div>
         La validez de esta oferta está sujeta a la disponibilidad de inventario.<br>
-        Para más información sobre nuestros productos visítanos en 
-        <a href="https://kcfcorporacion.com" class="web-link">https://kcfcorporacion.com</a>
+        Para más información visítanos en 
+        <a href="https://kcfcorporacion.com" class="web-link">www.kcfcorporacion.com</a>
     </div>
 
     <!-- PIE DE PÁGINA - CONTACTO HELLEN -->
     <div class="seccion-contacto">
-        <div class="contacto-nombre"><strong>Cordialmente,</strong></div>
+        <div class="contacto-nombre">Cordialmente,</div>
         <div class="contacto-nombre">HELLEN CASTILLO</div>
         <div class="contacto-line">Ejecutiva Comercial</div>
         <div class="contacto-line">KCF CORPORACIÓN</div>
-        <div class="contacto-line">📞 Celular: (+51) 999932051</div>
-        <div class="contacto-line">✉ Email: Ventas@kcfcorporacion.com</div>
-        <div class="contacto-line">🌐 <a href="https://kcfcorporacion.com" class="web-link">www.kcfcorporacion.com</a></div>
+        <div class="contacto-line">📞 (+51) 999932051</div>
+        <div class="contacto-line">✉ Ventas@kcfcorporacion.com</div>
+        <div class="contacto-line">🌐 www.kcfcorporacion.com</div>
     </div>
 
 </body>

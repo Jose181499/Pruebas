@@ -708,48 +708,45 @@
             </div>
         </div>
 
-        <!-- TABLA PRODUCTOS -->
-        <div class="erp-card mt-4">
-            <div class="card-header-custom green">
-                <i class="bi bi-box-seam-fill"></i> Detalle de Productos
-            </div>
-            <div class="card-body-custom p-0">
-                <div class="table-responsive">
-                    <table class="table table-modern" id="products-table">
-                        <thead>
-                            <tr>
-                                <th style="width:40px">Item</th>
-                                <th style="width:130px">Código/Producto</th>
-                                <th style="width:220px">Descripción</th>
-                                <th style="width:80px">Modelo</th>
-                                <th style="width:80px">Marca</th>
-                                <th style="width:100px">Unidad de Medida</th>
-                                <th style="width:70px">Cantidad</th>
-                                <th style="width:110px">Valor Venta Unit S/.</th>
-                                <th style="width:110px">Valor Venta Total S/.</th>
-                                <th style="width:100px">Subtotal</th>
-                                <th style="width:110px">Total a Pagar</th>
-                                <th style="width:60px">Eliminar</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-body"></tbody>
-                        <tfoot>
-                            <tr class="fw-bold bg-light">
-                                <td colspan="9" class="text-end">Totales:</td>
-                                <td id="total_subtotal">0.00</td>
-                                <td id="total_total_pagar">0.00</td>
-                                <td></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-                <div class="p-4">
-                    <button class="btn btn-success" type="button" id="btnAgregarItem">
-                        <i class="bi bi-plus-circle-fill"></i> Agregar Producto
-                    </button>
-                </div>
-            </div>
+  <!-- TABLA PRODUCTOS - VERSIÓN SIMPLIFICADA -->
+<div class="erp-card mt-4">
+    <div class="card-header-custom green">
+        <i class="bi bi-box-seam-fill"></i> Detalle de Productos
+    </div>
+    <div class="card-body-custom p-0">
+        <div class="table-responsive">
+            <table class="table table-modern" id="products-table">
+                <thead>
+                    <tr>
+                        <th style="width:40px">Item</th>
+                        <th style="width:130px">Código/Producto</th>
+                        <th style="width:220px">Descripción</th>
+                        <th style="width:80px">Modelo</th>
+                        <th style="width:80px">Marca</th>
+                        <th style="width:100px">Unidad de Medida</th>
+                        <th style="width:70px">Cantidad</th>
+                        <th style="width:110px">Valor Venta Unit S/.</th>
+                        <th style="width:130px">Valor Venta Total S/.</th>
+                        <th style="width:60px">Eliminar</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body"></tbody>
+                <tfoot>
+                    <tr class="fw-bold bg-light">
+                        <td colspan="8" class="text-end">TOTAL: </td>
+                        <td id="total_valor_venta">0.00</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
         </div>
+        <div class="p-4">
+            <button class="btn btn-success" type="button" id="btnAgregarItem">
+                <i class="bi bi-plus-circle-fill"></i> Agregar Producto
+            </button>
+        </div>
+    </div>
+</div>
 
         <!-- RESUMEN -->
         <div class="row mt-4">
