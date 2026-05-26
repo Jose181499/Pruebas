@@ -24,7 +24,7 @@
             background: white;
         }
 
-        /* HEADER - más compacto */
+        /* HEADER - compacto */
         .header {
             display: flex;
             justify-content: space-between;
@@ -85,7 +85,7 @@
             color: #666;
         }
 
-        /* LAYOUT PRINCIPAL - más compacto */
+        /* LAYOUT PRINCIPAL */
         .layout-principal {
             display: flex;
             gap: 15px;
@@ -125,7 +125,7 @@
             flex: 1;
         }
 
-        /* TEXTO INTRODUCTORIO - más compacto */
+        /* TEXTO INTRODUCTORIO */
         .texto-introductorio {
             margin: 10px 0;
             padding: 8px 15px;
@@ -142,33 +142,35 @@
             margin-bottom: 5px;
         }
 
-        /* TABLA DE PRODUCTOS - más compacta */
+        /* ========= NUEVA TABLA CON ESTRUCTURA SOLICITADA ========= */
         .tabla-productos {
             width: 100%;
             border-collapse: collapse;
             margin: 10px 0;
-            font-size: 8.5px;
+            font-size: 8.2px;
         }
 
         .tabla-productos th {
             background: #D32F2F;
             color: white;
-            padding: 5px 4px;
+            padding: 6px 4px;
             border: 1px solid #B71C1C;
             font-weight: bold;
             text-align: center;
+            vertical-align: middle;
         }
 
         .tabla-productos td {
-            padding: 4px;
+            padding: 5px 4px;
             border: 1px solid #ddd;
-            vertical-align: top;
+            vertical-align: middle;
         }
 
-        /* ALINEACIÓN DE COLUMNAS */
+        /* Definición de anchos y alineaciones según el nuevo orden:
+           Item, Código Producto, Descripción, Modelo, Marca, Unidad Medida, Cantidad, Valor Venta Unit S/., Valor Venta Total S/. */
         .col-item {
             text-align: center;
-            width: 30px;
+            width: 35px;
         }
         .col-codigo {
             text-align: left;
@@ -183,23 +185,23 @@
         }
         .col-marca {
             text-align: left;
-            width: 60px;
+            width: 65px;
+        }
+        .col-unidad-medida {
+            text-align: center;
+            width: 55px;
         }
         .col-cantidad {
-            text-align: center;
-            width: 40px;
-        }
-        .col-unidad {
             text-align: center;
             width: 45px;
         }
         .col-valor-unitario {
             text-align: right;
-            width: 75px;
+            width: 85px;
         }
         .col-valor-total {
             text-align: right;
-            width: 85px;
+            width: 90px;
             background: #FFF8E1;
             font-weight: bold;
         }
@@ -214,12 +216,12 @@
             text-align: center;
         }
 
-        /* SECCIÓN DE TOTALES */
+        /* SECCIÓN DE TOTALES - más pegada a la izquierda, sin grandes separaciones */
         .seccion-totales {
-            width: 280px;
-            margin-left: auto;
-            margin-top: 10px;
-            margin-bottom: 10px;
+            width: 290px;
+            margin-left: 0;          /* Pegado a la izquierda */
+            margin-top: 8px;
+            margin-bottom: 12px;
             border: 1px solid #D32F2F;
             padding: 8px 12px;
             border-radius: 6px;
@@ -229,8 +231,16 @@
         .total-line {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             margin-bottom: 5px;
             font-size: 9px;
+            gap: 15px;               /* separación controlada, no excesiva */
+        }
+        .total-line span:first-child {
+            white-space: nowrap;
+        }
+        .total-line .numero-formateado {
+            font-weight: 500;
         }
 
         .total-final {
@@ -244,7 +254,7 @@
 
         /* SECCIÓN IMPORTANTE */
         .seccion-importante {
-            margin: 10px 0;
+            margin: 8px 0;
             padding: 5px 10px;
             background: #FFF8E1;
             border: 1px solid #FFC107;
@@ -257,7 +267,7 @@
             color: #D32F2F;
         }
 
-        /* CUENTAS BANCARIAS - más compacto */
+        /* CUENTAS BANCARIAS */
         .cuentas-bancarias {
             margin-top: 10px;
             padding: 8px 12px;
@@ -280,22 +290,27 @@
             margin-bottom: 2px;
         }
 
-        /* SECCIÓN ACLARATORIA - más compacto */
+        /* NOTA ACLARATORIA (con descuento añadido + simetría derecha) */
         .seccion-aclaratoria {
-            margin-top: 10px;
-            padding: 6px 10px;
-            background: #e9ecef;
-            border-radius: 6px;
-            font-size: 8px;
-            text-align: center;
-            font-style: italic;
+            margin-top: 12px;
+            padding: 8px 16px;
+            background: #eef2f5;
+            border-radius: 8px;
+            font-size: 8.5px;
+            text-align: right;        /* Alineado a la derecha (simétrico) */
+            border-left: 4px solid #D32F2F;
+            border-right: 1px solid #ccc;
+            font-style: normal;
+            line-height: 1.4;
         }
 
         .seccion-aclaratoria .titulo {
             font-weight: bold;
             font-size: 9px;
-            margin-bottom: 3px;
+            margin-bottom: 4px;
             font-style: normal;
+            color: #b85c00;
+            text-align: right;
         }
 
         .seccion-aclaratoria .web-link {
@@ -304,20 +319,20 @@
             font-weight: bold;
         }
 
-        /* CONTACTO FINAL - más compacto */
+        /* CORDIALMENTE / FIRMA: todo a la derecha y simétrico */
         .seccion-contacto {
-            margin-top: 10px;
+            margin-top: 14px;
             border-top: 2px solid #D32F2F;
-            padding-top: 8px;
-            text-align: center;
-            font-size: 8px;
+            padding-top: 12px;
+            text-align: right;        /* Simetría a la derecha */
+            font-size: 8.5px;
         }
 
         .contacto-nombre {
-            font-size: 10px;
+            font-size: 10.5px;
             font-weight: bold;
             color: #D32F2F;
-            margin-bottom: 3px;
+            margin-bottom: 4px;
         }
 
         .contacto-line {
@@ -346,6 +361,11 @@
         .tabla-productos {
             page-break-inside: avoid;
         }
+        
+        /* Ajuste para que la línea de total no tenga espacios enormes */
+        .total-line span:first-child {
+            min-width: 130px;
+        }
     </style>
 </head>
 <body>
@@ -366,7 +386,7 @@
         <div class="cotizacion-info">
             <div class="numero-cotizacion"><strong>COTIZACIÓN N°:</strong> {{ numero_cotizacion }}</div>
             <div class="fecha"><strong>Fecha:</strong> {{ fecha_actual }}</div>
-            <div class="hora"><strong>Hora:</strong> {{ hora_actual }}</div>
+            <div class="hora"><strong>Hora:</strong> {{ hora_actual|default('00:00') }}</div>
         </div>
     </div>
 
@@ -439,19 +459,19 @@
         La presente tiene como objeto poner a su consideración nuestra oferta detallada según su requerimiento, agradecemos por confiar en nuestros productos:
     </div>
 
-    <!-- TABLA DE PRODUCTOS -->
+    <!-- TABLA DE PRODUCTOS con nuevo orden: Item | Código Producto | Descripción | Modelo | Marca | Unidad Medida | Cantidad | Valor Venta Unit S/. | Valor Venta Total S/. -->
     <table class="tabla-productos">
         <thead>
             <tr>
-                <th class="col-item">#</th>
-                <th class="col-codigo">CÓDIGO</th>
-                <th class="col-descripcion">DESCRIPCIÓN DEL PRODUCTO</th>
-                <th class="col-modelo">MODELO</th>
-                <th class="col-marca">MARCA</th>
-                <th class="col-cantidad">CANT</th>
-                <th class="col-unidad">UND</th>
-                <th class="col-valor-unitario">P.UNITARIO<br>S/.</th>
-                <th class="col-valor-total">TOTAL S/.</th>
+                <th class="col-item">Item</th>
+                <th class="col-codigo">Código Producto</th>
+                <th class="col-descripcion">Descripción</th>
+                <th class="col-modelo">Modelo</th>
+                <th class="col-marca">Marca</th>
+                <th class="col-unidad-medida">Unidad Medida</th>
+                <th class="col-cantidad">Cantidad</th>
+                <th class="col-valor-unitario">Valor Venta Unit S/.</th>
+                <th class="col-valor-total">Valor Venta Total S/.</th>
             </tr>
         </thead>
         <tbody>
@@ -463,8 +483,8 @@
                     <td class="descripcion">{{ producto.descripcion }}</td>
                     <td>{{ producto.modelo|default('-') }}</td>
                     <td>{{ producto.marca|default('-') }}</td>
-                    <td class="text-center">{{ "%.0f"|format(producto.cantidad|default(0)) }}</td>
                     <td class="text-center">{{ producto.unidad|default('Unid') }}</td>
+                    <td class="text-center">{{ "%.0f"|format(producto.cantidad|default(0)) }}</td>
                     <td class="numero-formateado">{{ "%.2f"|format(producto.precio_venta_unitario|default(0)) }}</td>
                     <td class="numero-formateado fw-bold bg-warning">
                         {{ "%.2f"|format(producto.subtotal_venta_desc|default(producto.subtotal_venta|default(0))) }}
@@ -481,12 +501,12 @@
         </tbody>
     </table>
 
-    <!-- SECCIÓN IMPORTANTE -->
+    <!-- IMPORTANTE (imágenes referenciales) -->
     <div class="seccion-importante">
         <strong>Importante:</strong> Las imágenes son referenciales, colores, acabados o especificaciones técnicas deben ser verificadas en la descripción del producto.
     </div>
 
-    <!-- TOTALES -->
+    <!-- TOTALES: más pegados a la izquierda, sin espacios desproporcionados. Subtotal y montos juntos -->
     <div class="seccion-totales">
         <div class="total-line">
             <span>Subtotal (S/):</span>
@@ -517,19 +537,20 @@
         <h3>CUENTAS BANCARIAS</h3>
         <div class="cuenta-line"><strong>BCP SOLES:</strong> 191-1889375-0-94 | N. 1911889375094</div>
         <div class="cuenta-line"><strong>BCP DÓLARES:</strong> 191-1881449-1-53 | N. 1911881449153</div>
-        <div class="cuenta-line"><strong>BBVA SOLES:</strong> 0011-0335-01-00019126 | N. 001103350100019126</div>
-        <div class="cuenta-line"><strong>BBVA DÓLARES:</strong> 0011-0335-01-00019134 | N. 001103350100019134</div>
+        <div class="cuenta-line"><strong>BBVA SOLES:</strong> 0011-0335-01-00019126 | N. 00110335100019126</div>
+        <div class="cuenta-line"><strong>BBVA DÓLARES:</strong> 0011-0335-01-00019134 | N. 00110335100019134</div>
     </div>
 
-    <!-- SECCIÓN ACLARATORIA -->
+    <!-- NOTA ACLARATORIA: ahora con adición del 10% de descuento, alineada a la derecha de forma simétrica -->
     <div class="seccion-aclaratoria">
         <div class="titulo">📌 Nota Aclaratoria</div>
         La validez de esta oferta está sujeta a la disponibilidad de inventario.<br>
+        <strong>Este producto cuenta con el 10% de descuento aplicado directamente en el valor de venta.</strong><br>
         Para más información visítanos en 
         <a href="https://kcfcorporacion.com" class="web-link">www.kcfcorporacion.com</a>
     </div>
 
-    <!-- PIE DE PÁGINA - CONTACTO HELLEN -->
+    <!-- SECCIÓN CORDIALMENTE - completamente a la derecha y simétrico -->
     <div class="seccion-contacto">
         <div class="contacto-nombre">Cordialmente,</div>
         <div class="contacto-nombre">HELLEN BLAS PRINCIPE</div>
