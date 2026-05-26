@@ -201,9 +201,7 @@ CARDS
     color: white;
 
     padding: 12px 18px;
-
-    font-weight: 700;
-    font-size: 14px;
+    font-size: 13px;
 
     display: flex;
     align-items: center;
@@ -320,6 +318,11 @@ TABLA
     border-color: #f1f1f1;
 
     font-size: 12px;
+
+    white-space: nowrap;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .table-modern tbody tr{
