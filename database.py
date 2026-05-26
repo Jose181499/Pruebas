@@ -1054,7 +1054,7 @@ def crear_cotizacion_transaccional(payload: dict, usuario_id: int):
 
 
 # ==========================
-# Obtener cotización completa - CORREGIDO (con cliente_id explícito)
+# Obtener cotización completa - CORREGIDO
 # ==========================
 def obtener_cotizacion_completa(cotizacion_id):
     # cabecera de la cotización con campos explícitos
@@ -1077,11 +1077,10 @@ def obtener_cotizacion_completa(cotizacion_id):
             c.direccion_entrega,
             c.requerimiento,
             c.nota_cotizacion,
-            c.cliente_id,  -- 🔥 EXPLÍCITAMENTE incluido
+            c.cliente_id,
             cl.razon_social,
             cl.numero_documento,
             cl.direccion_fiscal,
-            cl.telefono_contacto,
             cl.nombre_contacto,
             cl.email_contacto,
             u.nombre_completo,
@@ -1125,7 +1124,6 @@ def obtener_cotizacion_completa(cotizacion_id):
         "cabecera": cotizacion,
         "detalle": cotizacion["detalle"]
     }
-
 # =========================
 # Crear usuario
 # =========================
