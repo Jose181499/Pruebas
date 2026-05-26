@@ -367,35 +367,29 @@ def insertar_proveedor(
 # =========================
 # Obtener proveedores (VERSIÓN ANTIGUA)
 # =========================
-def obtener_proveedores():
-
-    return db_query("""
-
-        SELECT
-
-            id,
-            razon_social,
-            ruc,
-            direccion,
-            telefono,
-            contacto,
-            email,
-            razon_comercial,
-            codigo_proveedor,
-            lugar_recojo,
-            condicion_pago,
-            tiempo_credito,
-            banco,
-            numero_cuenta_cci
-
+def obtener_proveedores(busqueda=None, tipo_documento=None):
+    query = """
+        SELECT id, razon_social, ruc, direccion, telefono, contacto,
+               email, razon_comercial, codigo_proveedor, lugar_recojo,
+               condicion_pago, tiempo_credito, banco, numero_cuenta_cci
         FROM proveedores
-
         WHERE activo = TRUE
+    """
+    params = []
 
-        ORDER BY razon_social
+    if busqueda:
+        query += """ AND (
+            razon_social ILIKE %s OR
+            ruc ILIKE %s OR
+            contacto ILIKE %s OR
+            email ILIKE %s
+        )"""
+        like = f"%{busqueda}%"
+        params.extend([like, like, like, like])
 
-    """)
+    query += " ORDER BY razon_social"
 
+    return db_query(query, params if params else None)
 
 # =========================
 # Obtener Clientes
