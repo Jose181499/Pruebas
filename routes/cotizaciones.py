@@ -26,9 +26,13 @@ def cotizacion_principal():
 
 @cotizaciones_bp.route("/crear_cotizacion")
 def cotizacion():
+    """Nueva cotización - sin ID"""
+    print(f"🆕 NUEVA COTIZACIÓN - Sin ID")
     cotizaciones = obtener_cotizaciones_recientes(limit=300)
     return render_template("cotizacion_oc/crear_cotizacion.html",
-                          cotizaciones=cotizaciones)
+                          cotizaciones=cotizaciones,
+                          cotizacion_id=None,
+                          modo='nuevo')
 
 
 @cotizaciones_bp.route("/cotizacion/nueva")
@@ -43,8 +47,11 @@ def nueva_orden():
 
 @cotizaciones_bp.route("/cotizacion/consultar/<int:cotizacion_id>")
 def cotizacion_consultar(cotizacion_id):
+    """Editar cotización existente - con ID"""
+    print(f"✏️ EDITAR COTIZACIÓN - ID: {cotizacion_id}")
     return render_template("cotizacion_oc/crear_cotizacion.html",
-                          cotizacion_id=cotizacion_id)
+                          cotizacion_id=cotizacion_id,
+                          modo='editar')
 
 
 # ==========================================
@@ -700,7 +707,7 @@ def api_get_cotizacion(cotizacion_id):
             "data": {
                 **cabecera,
                 "fecha_creacion": fecha_creacion_str,
-                "cliente_id": cabecera.get("cliente_id"),  # 🔥 IMPORTANTE: Asegurar que cliente_id esté presente
+                "cliente_id": cabecera.get("cliente_id"),
                 "cliente": cabecera.get("razon_social") or cabecera.get("nombre_empresa"),
                 "cliente_ruc": cabecera.get("numero_documento") or cabecera.get("cliente_ruc") or "",
                 "codigo_cotizacion": cabecera.get("codigo_cotizacion"),
