@@ -934,7 +934,6 @@ def eliminar_producto_api(id):
             "error": str(e)
         }), 500
 
-
 @cotizaciones_bp.route("/api/cotizacion/pdf/<int:cotizacion_id>")
 def generar_pdf(cotizacion_id):
     data = obtener_cotizacion_completa(cotizacion_id)
@@ -984,51 +983,65 @@ def generar_pdf(cotizacion_id):
 
     hay_descuentos = total_descuento_subtotal > 0
     
-    # 🔥 CORRECCIÓN: Formatear hora correctamente (convertir 08:11 PM a 20:11)
-    hora_raw = datetime.now().strftime("%I:%M %p")
-    # Convertir a formato 24 horas para el PDF
-    try:
-        from datetime import datetime as dt
-        hora_obj = dt.strptime(hora_raw, "%I:%M %p")
-        hora_actual = hora_obj.strftime("%H:%M")
-    except:
-        hora_actual = datetime.now().strftime("%H:%M")
-    
-    # Formatear fecha
+    # 🔥 EXTRAER LA HORA DE LA FECHA_CREACION
     fecha_creacion = cabecera.get("fecha_creacion", "")
-    if fecha_creacion and isinstance(fecha_creacion, str):
-        if ' ' in fecha_creacion:
-            fecha_parte = fecha_creacion.split(' ')[0]
-            partes = fecha_parte.split('-')
-            if len(partes) == 3:
-                fecha_actual = f"{partes[2]}/{partes[1]}/{partes[0]}"
+    
+    if fecha_creacion:
+        try:
+            # Si es string con formato "YYYY-MM-DD HH:MM:SS"
+            if isinstance(fecha_creacion, str) and ' ' in fecha_creacion:
+                partes = fecha_creacion.split(' ')
+                fecha_parte = partes[0]
+                hora_parte = partes[1]
+                # Formatear fecha: YYYY-MM-DD a DD/MM/YYYY
+                fecha_actual = '/'.join(fecha_parte.split('-')[::-1])
+                # La hora ya viene en formato 24 horas de la BD
+                hora_actual = hora_parte[:5]  # Solo HH:MM
             else:
                 fecha_actual = datetime.now().strftime("%d/%m/%Y")
-        else:
+                hora_actual = datetime.now().strftime("%H:%M")
+        except:
             fecha_actual = datetime.now().strftime("%d/%m/%Y")
+            hora_actual = datetime.now().strftime("%H:%M")
     else:
         fecha_actual = datetime.now().strftime("%d/%m/%Y")
+        hora_actual = datetime.now().strftime("%H:%M")
+
+    # 🔥 DEBUG: Imprimir para verificar
+    print("=" * 50)
+    print("📄 DATOS ENVIADOS AL PDF:")
+    print(f"cliente_razon_social: {cabecera.get('razon_social')}")
+    print(f"cliente_ruc: {cabecera.get('numero_documento')}")
+    print(f"cliente_direccion: {cabecera.get('direccion_fiscal')}")
+    print(f"telefono_contacto (CLIENTE): {cabecera.get('telefono_contacto')}")
+    print(f"cliente_contacto (ATENCION): {cabecera.get('nombre_contacto')}")
+    print(f"email_contacto_cliente (CORREO): {cabecera.get('email_contacto')}")
+    print(f"requerimiento: {cabecera.get('requerimiento')}")
+    print(f"fecha_creacion: {fecha_creacion}")
+    print(f"fecha_actual: {fecha_actual}")
+    print(f"hora_actual: {hora_actual}")
+    print("=" * 50)
 
     html = render_template(
         "pdf/cotizacion_kcf.html",
         logo_base64=logo_base64,
         codigo_cotizacion=cabecera.get("codigo_cotizacion") or cabecera.get("numero_cotizacion") or "N/A",
         fecha_actual=fecha_actual,
-        hora_actual=hora_actual,  # Ahora viene en formato 24 horas Ej: "20:11"
+        hora_actual=hora_actual,  # 🔥 AHORA VIENE DE LA BD (HORA DE CREACIÓN)
         
-        # 🔥 DATOS DEL CLIENTE (corregidos)
+        # 🔥 DATOS DEL CLIENTE (AHORA CON LOS CAMPOS CORRECTOS)
         cliente_razon_social=cabecera.get("razon_social") or "",
         cliente_ruc=cabecera.get("numero_documento") or "",
         cliente_direccion=cabecera.get("direccion_fiscal") or "",
-        telefono_contacto=cabecera.get("telefono_contacto") or "",  # ← TELÉFONO DEL CLIENTE
-        cliente_contacto=cabecera.get("nombre_contacto") or "",      # ← ATENCIÓN/CONTACTO
-        email_contacto_cliente=cabecera.get("email_contacto") or "", # ← CORREO DEL CLIENTE
-        requerimiento=cabecera.get("requerimiento") or "",
+        telefono_contacto=cabecera.get("telefono_contacto") or "",      # ← TELÉFONO
+        cliente_contacto=cabecera.get("nombre_contacto") or "",          # ← ATENCIÓN
+        email_contacto_cliente=cabecera.get("email_contacto") or "",     # ← CORREO
+        numero_requerimiento=cabecera.get("requerimiento") or "",
         
-        # 🔥 DATOS DEL ASESOR COMERCIAL
-        asesor_comercial=cabecera.get("nombre_completo") or "Hellen Castillo",
+        # 🔥 DATOS DEL ASESOR
+        asesor_comercial=cabecera.get("nombre_completo") or "Hellen Blas Principe",
         email_contacto=cabecera.get("email") or "ventas@kcfcorporacion.com",
-        telefono_contacto_user=cabecera.get("telefono") or "999932051",  # ← TELÉFONO DEL ASESOR
+        telefono_contacto_user=cabecera.get("telefono") or "999932051",
         
         # 🔥 CONDICIONES COMERCIALES
         condicion_pago=cabecera.get("condicion_pago") or "Contado",
@@ -1052,7 +1065,7 @@ def generar_pdf(cotizacion_id):
     except Exception as e:
         print("🔥 ERROR EN WEASYPRINT:", e)
         import traceback
-        traceback.print_exc()
+        traceback.print_trace()
         return jsonify({"success": False, "error": f"Error al generar PDF: {str(e)}"}), 500
 
     return Response(

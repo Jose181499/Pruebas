@@ -1076,6 +1076,10 @@ def obtener_cotizacion_completa(cotizacion_id):
             cl.razon_social,
             cl.numero_documento,
             cl.direccion_fiscal,
+            -- 🔥 AGREGAR ESTOS TRES CAMPOS DEL CLIENTE
+            cl.telefono_contacto,      -- Teléfono del cliente
+            cl.nombre_contacto,        -- Atención/Contacto
+            cl.email_contacto,         -- Correo del cliente
             u.nombre_completo,
             u.email,
             u.telefono
