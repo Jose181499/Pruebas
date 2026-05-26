@@ -215,10 +215,11 @@
             text-align: center;
         }
 
-        /* SECCIÓN DE TOTALES - Espacio reducido entre etiqueta y monto */
+        /* SECCIÓN DE TOTALES - AHORA ALINEADA A LA DERECHA */
         .seccion-totales {
             width: 280px;
-            margin-left: 0;          /* Pegado a la izquierda */
+            margin-left: auto;
+            margin-right: 0;
             margin-top: 8px;
             margin-bottom: 12px;
             border: 1px solid #D32F2F;
@@ -233,14 +234,11 @@
             align-items: center;
             margin-bottom: 5px;
             font-size: 9px;
-            /* Reducimos el gap por defecto, y controlamos el espacio mediante max-width */
-            gap: 8px;   /* espacio más reducido, pero flexible */
+            gap: 8px;
         }
         
-        /* Para forzar que la etiqueta ocupe sólo lo necesario y el número se pegue */
         .total-line span:first-child {
             white-space: nowrap;
-            /* No forzamos un ancho mínimo excesivo, dejamos que el contenido defina */
         }
         
         .total-line .numero-formateado {
@@ -295,14 +293,14 @@
             margin-bottom: 2px;
         }
 
-        /* NOTA ACLARATORIA con descuento 10% + alineada a la derecha (simétrica) */
+        /* NOTA ACLARATORIA - AHORA ALINEADA A LA IZQUIERDA */
         .seccion-aclaratoria {
             margin-top: 12px;
             padding: 8px 16px;
             background: #eef2f5;
             border-radius: 8px;
             font-size: 8.5px;
-            text-align: right;        /* Alineado a la derecha */
+            text-align: left;
             border-left: 4px solid #D32F2F;
             border-right: 1px solid #ccc;
             font-style: normal;
@@ -315,7 +313,7 @@
             margin-bottom: 4px;
             font-style: normal;
             color: #b85c00;
-            text-align: right;
+            text-align: left;
         }
 
         .seccion-aclaratoria .web-link {
@@ -324,12 +322,12 @@
             font-weight: bold;
         }
 
-        /* CORDIALMENTE / FIRMA completamente a la derecha y simétrico */
+        /* CORDIALMENTE / FIRMA - AHORA ALINEADA A LA IZQUIERDA */
         .seccion-contacto {
             margin-top: 14px;
             border-top: 2px solid #D32F2F;
             padding-top: 12px;
-            text-align: right;
+            text-align: left;
             font-size: 8.5px;
         }
 
@@ -386,7 +384,6 @@
         <div class="cotizacion-info">
             <div class="numero-cotizacion"><strong>COTIZACIÓN N°:</strong> {{ numero_cotizacion }}</div>
             <div class="fecha"><strong>Fecha:</strong> {{ fecha_actual }}</div>
-            <!-- Se lee correctamente la hora, sin errores, si no hay variable se muestra por defecto -->
             <div class="hora"><strong>Hora:</strong> {{ hora_actual|default('00:00') }}</div>
         </div>
     </div>
@@ -409,15 +406,19 @@
             </div>
             <div class="info-line">
                 <span class="info-label">Teléfono:</span>
-                <span class="info-value">{{ cliente_telefono }}</span>
+                <span class="info-value">{{ telefono_contacto|default('-') }}</span>
             </div>
             <div class="info-line">
                 <span class="info-label">Atención:</span>
-                <span class="info-value">{{ cliente_contacto }}</span>
+                <span class="info-value">{{ cliente_contacto|default('-') }}</span>
+            </div>
+            <div class="info-line">
+                <span class="info-label">Correo:</span>
+                <span class="info-value">{{ email_contacto_cliente|default('-') }}</span>
             </div>
             <div class="info-line">
                 <span class="info-label">N° Requerimiento:</span>
-                <span class="info-value">{{ numero_requerimiento }}</span>
+                <span class="info-value">{{ numero_requerimiento|default('-') }}</span>
             </div>
         </div>
 
@@ -433,7 +434,7 @@
             </div>
             <div class="condicion-line">
                 <span class="condicion-label">Teléfono:</span>
-                <span class="condicion-value">{{ telefono_contacto }}</span>
+                <span class="condicion-value">{{ telefono_contacto_user }}</span>
             </div>
             <div class="condicion-line">
                 <span class="condicion-label">Condición Pago:</span>
@@ -460,7 +461,7 @@
         La presente tiene como objeto poner a su consideración nuestra oferta detallada según su requerimiento, agradecemos por confiar en nuestros productos:
     </div>
 
-    <!-- TABLA DE PRODUCTOS: Orden exacto Item, Código Producto, Descripción, Modelo, Marca, Unidad Medida, Cantidad, Valor Venta Unit S/., Valor Venta Total S/. -->
+    <!-- TABLA DE PRODUCTOS -->
     <table class="tabla-productos">
         <thead>
             <tr>
@@ -507,7 +508,7 @@
         <strong>Importante:</strong> Las imágenes son referenciales, colores, acabados o especificaciones técnicas deben ser verificadas en la descripción del producto.
     </div>
 
-    <!-- TOTALES con espacio reducido entre etiqueta y monto: Subtotal (S/): [monto] sin gran separación -->
+    <!-- TOTALES ALINEADO A LA DERECHA -->
     <div class="seccion-totales">
         <div class="total-line">
             <span>Subtotal (S/):</span>
@@ -542,7 +543,7 @@
         <div class="cuenta-line"><strong>BBVA DÓLARES:</strong> 0011-0335-01-00019134 | N. 00110335100019134</div>
     </div>
 
-    <!-- NOTA ACLARATORIA con la frase de descuento del 10% y todo alineado a la derecha -->
+    <!-- NOTA ACLARATORIA - ALINEADA A LA IZQUIERDA -->
     <div class="seccion-aclaratoria">
         <div class="titulo">📌 Nota Aclaratoria</div>
         La validez de esta oferta está sujeta a la disponibilidad de inventario.<br>
@@ -551,7 +552,7 @@
         <a href="https://kcfcorporacion.com" class="web-link">www.kcfcorporacion.com</a>
     </div>
 
-    <!-- SECCIÓN CORDIALMENTE - completamente a la derecha, simétrico -->
+    <!-- SECCIÓN CORDIALMENTE - ALINEADA A LA IZQUIERDA -->
     <div class="seccion-contacto">
         <div class="contacto-nombre">Cordialmente,</div>
         <div class="contacto-nombre">HELLEN BLAS PRINCIPE</div>
