@@ -286,58 +286,45 @@
     </div>
 
     <!-- FILTROS -->
-    <div class="card-erp mt-4">
+<div class="card-erp mt-4">
 
-        <div class="card-header">
+    <div class="card-header">
+        <i class="bi bi-funnel-fill"></i>
+        Filtros
+    </div>
 
-            <i class="bi bi-funnel-fill"></i>
-            Filtros
+    <div class="card-body">
 
-        </div>
+        <div class="row g-3">
 
-        <div class="card-body">
+            <div class="col-md-4">
 
-            <div class="row g-3">
+                <label>Condición de Pago</label>
 
-                <div class="col-md-4">
+                <select id="filtro-tipo" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="Contado">Contado</option>
+                    <option value="Credito">Crédito</option>
+                </select>
 
-                    <label>Tipo</label>
+            </div>
 
-                    <select id="filtro-tipo"
-                    class="form-select">
+            <div class="col-md-6">
 
-                        <option value="">
-                            Todos
-                        </option>
+                <label>Buscar por RUC o Razón Social</label>
 
-                        <option value="RUC">
-                            RUC
-                        </option>
-
-                        <option value="DNI">
-                            DNI
-                        </option>
-
-                    </select>
-
-                </div>
-
-                <div class="col-md-6">
-
-                    <label>Buscar</label>
-
-                    <input type="text"
-                    id="filtro-busqueda"
-                    class="form-control"
-                    placeholder="Buscar proveedor...">
-
-                </div>
+                <input type="text"
+                id="filtro-busqueda"
+                class="form-control"
+                placeholder="Buscar por RUC o razón social...">
 
             </div>
 
         </div>
 
     </div>
+
+</div>
 
     <!-- TABLA -->
     <div class="card-erp mt-4">

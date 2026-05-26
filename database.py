@@ -380,12 +380,14 @@ def obtener_proveedores(busqueda=None, tipo_documento=None):
     if busqueda:
         query += """ AND (
             razon_social ILIKE %s OR
-            ruc ILIKE %s OR
-            contacto ILIKE %s OR
-            email ILIKE %s
+            ruc ILIKE %s
         )"""
         like = f"%{busqueda}%"
-        params.extend([like, like, like, like])
+        params.extend([like, like])
+
+    if tipo_documento:
+        query += " AND condicion_pago = %s"
+        params.append(tipo_documento)
 
     query += " ORDER BY razon_social"
 

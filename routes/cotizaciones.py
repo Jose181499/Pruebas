@@ -506,7 +506,7 @@ def crear_cliente():
 
 
 # ==========================================
-# GUARDAR COTIZACIÓN - VERSIÓN SIMPLIFICADA
+# GUARDAR COTIZACIÓN - VERSIÓN SIMPLIFICADA CON HORA PERÚ
 # ==========================================
 
 @cotizaciones_bp.route("/api/cotizacion/guardar", methods=["POST"])
@@ -567,6 +567,7 @@ def guardar_cotizacion():
         with db_tx() as conn:
             cur = conn.cursor()
 
+            # 🔥 CORREGIDO: Usar hora de Perú (UTC-5)
             cur.execute("""
                 INSERT INTO cotizaciones (
                     numero_cotizacion,
@@ -587,7 +588,7 @@ def guardar_cotizacion():
                     codigo_cotizacion,
                     correlativo
                 )
-                VALUES (%s, %s, NOW(), %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, (NOW() AT TIME ZONE 'America/Lima'), %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """, (
                 numero,
