@@ -1057,7 +1057,6 @@ def crear_cotizacion_transaccional(payload: dict, usuario_id: int):
 # Obtener cotización completa - CORREGIDO
 # ==========================
 def obtener_cotizacion_completa(cotizacion_id):
-    # cabecera de la cotización con campos explícitos
     rows = db_query("""
         SELECT 
             c.id,
@@ -1081,7 +1080,6 @@ def obtener_cotizacion_completa(cotizacion_id):
             cl.razon_social,
             cl.numero_documento,
             cl.direccion_fiscal,
-            cl.nombre_contacto,
             cl.email_contacto,
             u.nombre_completo,
             u.email,
@@ -1098,7 +1096,7 @@ def obtener_cotizacion_completa(cotizacion_id):
 
     cotizacion = dict(rows[0])
     
-    # 🔥 Formatear fecha_creacion para que tenga hora
+    # Formatear fecha_creacion para que tenga hora
     if cotizacion.get('fecha_creacion'):
         if hasattr(cotizacion['fecha_creacion'], 'strftime'):
             cotizacion['fecha_creacion'] = cotizacion['fecha_creacion'].strftime('%Y-%m-%d %H:%M:%S')
