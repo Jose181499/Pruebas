@@ -405,11 +405,18 @@ select.custom-input {
     vertical-align: middle;
 }
 
-.table-modern tbody td {
-    padding: 10px 8px;
-    vertical-align: middle;
-    border-color: #f1f1f1;
-    text-align: center;
+/* Dirección fiscal más ancha */
+.table-modern tbody td:nth-child(6) {
+    max-width: 200px;
+}
+
+/* Razón social más ancha */
+.table-modern tbody td:nth-child(4) {
+    max-width: 180px;
+}
+
+.table-modern tbody tr {
+    transition: all 0.2s ease;
 }
 
 .table-modern tbody tr:hover {
