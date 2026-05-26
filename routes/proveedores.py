@@ -11,7 +11,7 @@ proveedores_bp = Blueprint("proveedores", __name__)
 # =========================================
 # LISTAR PROVEEDORES
 # =========================================
-@proveedores_bp.route("/api/proveedores")
+@proveedores_bp.route("/api/proveedores/listar")
 def api_proveedores():
 
     try:
