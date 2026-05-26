@@ -1054,10 +1054,10 @@ def crear_cotizacion_transaccional(payload: dict, usuario_id: int):
 
 
 # ==========================
-# Obtener cotización completa - CORREGIDO
+# Obtener cotización completa - CORREGIDO (con cliente_id explícito)
 # ==========================
 def obtener_cotizacion_completa(cotizacion_id):
-    # cabecera de la cotización (sin JOINs problemáticos)
+    # cabecera de la cotización con campos explícitos
     rows = db_query("""
         SELECT 
             c.id,
@@ -1077,8 +1077,9 @@ def obtener_cotizacion_completa(cotizacion_id):
             c.direccion_entrega,
             c.requerimiento,
             c.nota_cotizacion,
+            c.cliente_id,  -- 🔥 EXPLÍCITAMENTE incluido
             cl.razon_social,
-            cl.numero_documento AS cliente_ruc,
+            cl.numero_documento,
             cl.direccion_fiscal,
             cl.telefono_contacto,
             cl.nombre_contacto,
@@ -1111,7 +1112,8 @@ def obtener_cotizacion_completa(cotizacion_id):
             p.descripcion,
             p.marca,
             p.modelo,
-            p.unidad
+            p.unidad,
+            p.costo_unitario
         FROM cotizacion_detalle d
         JOIN productos p ON p.id = d.producto_id
         WHERE d.cotizacion_id = %s

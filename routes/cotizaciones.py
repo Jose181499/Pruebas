@@ -658,7 +658,7 @@ def guardar_cotizacion():
 
 
 # ==========================================
-# OBTENER COTIZACIÓN
+# OBTENER COTIZACIÓN - CORREGIDO (con hora y cliente_id)
 # ==========================================
 
 logging.basicConfig(filename='app.log', level=logging.ERROR)
@@ -684,13 +684,25 @@ def api_get_cotizacion(cotizacion_id):
         detalle = data.get("detalle", [])
 
         es_borrador = cabecera.get("codigo_cotizacion", "").startswith("TMP-")
+        
+        # 🔥 Formatear fecha_creacion con hora
+        fecha_creacion = cabecera.get("fecha_creacion")
+        if fecha_creacion:
+            if hasattr(fecha_creacion, 'strftime'):
+                fecha_creacion_str = fecha_creacion.strftime('%Y-%m-%d %H:%M:%S')
+            else:
+                fecha_creacion_str = str(fecha_creacion)
+        else:
+            fecha_creacion_str = ''
 
         return jsonify({
             "success": True,
             "data": {
                 **cabecera,
+                "fecha_creacion": fecha_creacion_str,
+                "cliente_id": cabecera.get("cliente_id"),  # 🔥 IMPORTANTE: Asegurar que cliente_id esté presente
                 "cliente": cabecera.get("razon_social") or cabecera.get("nombre_empresa"),
-                "cliente_ruc": cabecera.get("ruc") or cabecera.get("cliente_ruc") or "",
+                "cliente_ruc": cabecera.get("numero_documento") or cabecera.get("cliente_ruc") or "",
                 "codigo_cotizacion": cabecera.get("codigo_cotizacion"),
                 "correlativo": cabecera.get("correlativo"),
                 "es_borrador": es_borrador,
@@ -976,8 +988,8 @@ def generar_pdf(cotizacion_id):
         fecha_actual=cabecera.get("fecha_creacion").strftime("%d/%m/%Y") if cabecera.get("fecha_creacion") else datetime.now().strftime("%d/%m/%Y"),
         hora_actual=hora_actual,
         cliente_razon_social=cabecera.get("razon_social") or cabecera.get("nombre_empresa") or "",
-        cliente_ruc=cabecera.get("ruc") or cabecera.get("cliente_ruc") or "",
-        cliente_direccion=cabecera.get("direccion") or cabecera.get("direccion_fiscal") or "",
+        cliente_ruc=cabecera.get("numero_documento") or cabecera.get("cliente_ruc") or "",
+        cliente_direccion=cabecera.get("direccion_fiscal") or "",
         cliente_contacto=cabecera.get("nombre_contacto") or "",
         cliente_telefono=cabecera.get("telefono_contacto") or "",
         numero_requerimiento=cabecera.get("requerimiento") or "REQ-001",

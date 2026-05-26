@@ -1225,38 +1225,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function cargarCotizacion(id) {
         try {
+            console.log("🔍 Cargando cotización ID:", id);
             const res = await fetch(`/api/cotizacion/${id}`);
             const json = await res.json();
-            if (!json.success) { mostrarNotificacion("Error al cargar cotización", "danger"); return; }
+            console.log("📦 Datos recibidos:", json);
+            
+            if (!json.success) { 
+                mostrarNotificacion("Error al cargar cotización", "danger"); 
+                return; 
+            }
+            
             const data = json.data;
+            console.log("✅ Datos de cotización:", data);
+            
+            // Cargar código de cotización
             if (data.codigo_cotizacion) {
                 codigoCotizacionActual = data.codigo_cotizacion;
                 correlativoActual = data.correlativo || 0;
                 esBorrador = data.codigo_cotizacion.startsWith('TMP-');
                 actualizarNumeroCotizacionUI(data.codigo_cotizacion, esBorrador);
             }
-            document.getElementById('cliente_id').value = data.cliente_id || '';
-            document.getElementById('cliente_razon_social').value = data.cliente || '';
-            document.getElementById('estado').value = data.estado || '';
-            document.getElementById('notas').value = data.notas || '';
-            document.getElementById('cliente_doc').value = data.numero_documento || '';
+            
+            // Cargar datos del cliente
+            if (data.cliente_id) {
+                document.getElementById('cliente_id').value = data.cliente_id;
+            }
+            document.getElementById('cliente_razon_social').value = data.cliente || data.razon_social || '';
+            document.getElementById('cliente_doc').value = data.numero_documento || data.cliente_ruc || '';
             document.getElementById('cliente_direccion').value = data.direccion_fiscal || '';
             document.getElementById('cliente_contacto').value = data.nombre_contacto || '';
             document.getElementById('email_contacto_cliente').value = data.email_contacto || '';
+            document.getElementById('telefono_contacto').value = data.telefono_contacto || '';
+            
+            // Cargar datos de la cotización
+            document.getElementById('estado').value = data.estado || 'En Proceso';
+            document.getElementById('notas').value = data.notas || '';
             document.getElementById('requerimiento').value = data.requerimiento || '';
-            document.getElementById('usuario_id').value = data.usuario_id || '';
-            document.getElementById('asesor_comercial').value = data.nombre_completo || '';
-            document.getElementById('email_contacto').value = data.email || '';
-            document.getElementById('telefono_contacto_user').value = data.telefono || '';
             document.getElementById('condicion_pago').value = data.condicion_pago || 'Contado';
             document.getElementById('tiempo_entrega').value = data.tiempo_entrega || '';
             document.getElementById('validez_oferta').value = data.validez_oferta || '15 días';
             document.getElementById('direccion_entrega').value = data.direccion_entrega || '';
             document.getElementById('nota_cotizacion').value = data.nota_cotizacion || '';
             
-            // Cargar direcciones del cliente
-            await cargarDireccionesCliente(data.cliente_id);
+            // Cargar datos del asesor
+            document.getElementById('usuario_id').value = data.usuario_id || '';
+            document.getElementById('asesor_comercial').value = data.nombre_completo || '';
+            document.getElementById('email_contacto').value = data.email || '';
+            document.getElementById('telefono_contacto_user').value = data.telefono || '';
             
+            // Cargar totales
             const total = Number(data.total || 0);
             const totalValorVentaElem = document.getElementById('total_valor_venta');
             if (totalValorVentaElem) totalValorVentaElem.textContent = total.toFixed(2);
@@ -1270,28 +1287,45 @@ document.addEventListener('DOMContentLoaded', () => {
             const summaryTotal = document.getElementById('summary_total_venta');
             if (summaryTotal) summaryTotal.textContent = total.toFixed(2);
             
+            // Cargar productos
             document.getElementById('table-body').innerHTML = '';
             itemCounter = 0;
-            (data.detalle || []).forEach(item => {
-                addItem();
-                const row = document.querySelector("#table-body tr:last-child");
-                if (row) {
-                    row.querySelector('.producto_id').value = item.producto_id || '';
-                    row.querySelector('.cantidad').value = item.cantidad || 0;
-                    row.querySelector('.precio_venta_unitario').value = item.precio_venta_unitario || 0;
-                    row.querySelector('.codigo_producto').value = item.codigo || '';
-                    row.querySelector('.descripcion').value = item.descripcion || '';
-                    row.querySelector('.modelo').value = item.modelo || '';
-                    row.querySelector('.marca').value = item.marca || '';
-                    row.querySelector('.unidad_medida').value = item.unidad_medida || 'UNIDAD';
-                }
-            });
+            
+            if (data.detalle && data.detalle.length > 0) {
+                data.detalle.forEach(item => {
+                    addItem();
+                    const row = document.querySelector("#table-body tr:last-child");
+                    if (row) {
+                        row.querySelector('.producto_id').value = item.producto_id || '';
+                        row.querySelector('.cantidad').value = item.cantidad || 0;
+                        row.querySelector('.precio_venta_unitario').value = item.precio_venta_unitario || 0;
+                        row.querySelector('.codigo_producto').value = item.codigo || '';
+                        row.querySelector('.descripcion').value = item.descripcion || '';
+                        row.querySelector('.modelo').value = item.modelo || '';
+                        row.querySelector('.marca').value = item.marca || '';
+                        row.querySelector('.unidad_medida').value = item.unidad_medida || 'UNIDAD';
+                        if (row.querySelector('.costo_unitario')) {
+                            row.querySelector('.costo_unitario').value = item.costo_unitario || 0;
+                        }
+                    }
+                });
+            }
+            
             recalculateAll();
             configurarTiempoEntrega();
             configurarDireccionEntrega();
             
+            // Cargar direcciones del cliente
+            if (data.cliente_id) {
+                await cargarDireccionesCliente(data.cliente_id);
+            }
+            
             actualizarEstadoBotonPDF();
-        } catch (err) { console.error(err); mostrarNotificacion("Error cargando cotización", "danger"); }
+            
+        } catch (err) { 
+            console.error("🔥 ERROR en cargarCotizacion:", err); 
+            mostrarNotificacion("Error cargando cotización", "danger"); 
+        }
     }
 
     // =========================
