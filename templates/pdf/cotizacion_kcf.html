@@ -142,7 +142,7 @@
             margin-bottom: 5px;
         }
 
-        /* ========= NUEVA TABLA CON ESTRUCTURA SOLICITADA ========= */
+        /* TABLA CON NUEVA ESTRUCTURA SOLICITADA */
         .tabla-productos {
             width: 100%;
             border-collapse: collapse;
@@ -166,8 +166,7 @@
             vertical-align: middle;
         }
 
-        /* Definición de anchos y alineaciones según el nuevo orden:
-           Item, Código Producto, Descripción, Modelo, Marca, Unidad Medida, Cantidad, Valor Venta Unit S/., Valor Venta Total S/. */
+        /* Definición de anchos según orden: Item, Código Producto, Descripción, Modelo, Marca, Unidad Medida, Cantidad, Valor Venta Unit S/., Valor Venta Total S/. */
         .col-item {
             text-align: center;
             width: 35px;
@@ -216,9 +215,9 @@
             text-align: center;
         }
 
-        /* SECCIÓN DE TOTALES - más pegada a la izquierda, sin grandes separaciones */
+        /* SECCIÓN DE TOTALES - Espacio reducido entre etiqueta y monto */
         .seccion-totales {
-            width: 290px;
+            width: 280px;
             margin-left: 0;          /* Pegado a la izquierda */
             margin-top: 8px;
             margin-bottom: 12px;
@@ -234,13 +233,19 @@
             align-items: center;
             margin-bottom: 5px;
             font-size: 9px;
-            gap: 15px;               /* separación controlada, no excesiva */
+            /* Reducimos el gap por defecto, y controlamos el espacio mediante max-width */
+            gap: 8px;   /* espacio más reducido, pero flexible */
         }
+        
+        /* Para forzar que la etiqueta ocupe sólo lo necesario y el número se pegue */
         .total-line span:first-child {
             white-space: nowrap;
+            /* No forzamos un ancho mínimo excesivo, dejamos que el contenido defina */
         }
+        
         .total-line .numero-formateado {
             font-weight: 500;
+            white-space: nowrap;
         }
 
         .total-final {
@@ -252,7 +257,7 @@
             color: #D32F2F;
         }
 
-        /* SECCIÓN IMPORTANTE */
+        /* SECCIÓN IMPORTANTE (imágenes referenciales) */
         .seccion-importante {
             margin: 8px 0;
             padding: 5px 10px;
@@ -290,14 +295,14 @@
             margin-bottom: 2px;
         }
 
-        /* NOTA ACLARATORIA (con descuento añadido + simetría derecha) */
+        /* NOTA ACLARATORIA con descuento 10% + alineada a la derecha (simétrica) */
         .seccion-aclaratoria {
             margin-top: 12px;
             padding: 8px 16px;
             background: #eef2f5;
             border-radius: 8px;
             font-size: 8.5px;
-            text-align: right;        /* Alineado a la derecha (simétrico) */
+            text-align: right;        /* Alineado a la derecha */
             border-left: 4px solid #D32F2F;
             border-right: 1px solid #ccc;
             font-style: normal;
@@ -319,12 +324,12 @@
             font-weight: bold;
         }
 
-        /* CORDIALMENTE / FIRMA: todo a la derecha y simétrico */
+        /* CORDIALMENTE / FIRMA completamente a la derecha y simétrico */
         .seccion-contacto {
             margin-top: 14px;
             border-top: 2px solid #D32F2F;
             padding-top: 12px;
-            text-align: right;        /* Simetría a la derecha */
+            text-align: right;
             font-size: 8.5px;
         }
 
@@ -361,11 +366,6 @@
         .tabla-productos {
             page-break-inside: avoid;
         }
-        
-        /* Ajuste para que la línea de total no tenga espacios enormes */
-        .total-line span:first-child {
-            min-width: 130px;
-        }
     </style>
 </head>
 <body>
@@ -386,6 +386,7 @@
         <div class="cotizacion-info">
             <div class="numero-cotizacion"><strong>COTIZACIÓN N°:</strong> {{ numero_cotizacion }}</div>
             <div class="fecha"><strong>Fecha:</strong> {{ fecha_actual }}</div>
+            <!-- Se lee correctamente la hora, sin errores, si no hay variable se muestra por defecto -->
             <div class="hora"><strong>Hora:</strong> {{ hora_actual|default('00:00') }}</div>
         </div>
     </div>
@@ -459,7 +460,7 @@
         La presente tiene como objeto poner a su consideración nuestra oferta detallada según su requerimiento, agradecemos por confiar en nuestros productos:
     </div>
 
-    <!-- TABLA DE PRODUCTOS con nuevo orden: Item | Código Producto | Descripción | Modelo | Marca | Unidad Medida | Cantidad | Valor Venta Unit S/. | Valor Venta Total S/. -->
+    <!-- TABLA DE PRODUCTOS: Orden exacto Item, Código Producto, Descripción, Modelo, Marca, Unidad Medida, Cantidad, Valor Venta Unit S/., Valor Venta Total S/. -->
     <table class="tabla-productos">
         <thead>
             <tr>
@@ -501,12 +502,12 @@
         </tbody>
     </table>
 
-    <!-- IMPORTANTE (imágenes referenciales) -->
+    <!-- SECCIÓN IMPORTANTE referencial -->
     <div class="seccion-importante">
         <strong>Importante:</strong> Las imágenes son referenciales, colores, acabados o especificaciones técnicas deben ser verificadas en la descripción del producto.
     </div>
 
-    <!-- TOTALES: más pegados a la izquierda, sin espacios desproporcionados. Subtotal y montos juntos -->
+    <!-- TOTALES con espacio reducido entre etiqueta y monto: Subtotal (S/): [monto] sin gran separación -->
     <div class="seccion-totales">
         <div class="total-line">
             <span>Subtotal (S/):</span>
@@ -541,7 +542,7 @@
         <div class="cuenta-line"><strong>BBVA DÓLARES:</strong> 0011-0335-01-00019134 | N. 00110335100019134</div>
     </div>
 
-    <!-- NOTA ACLARATORIA: ahora con adición del 10% de descuento, alineada a la derecha de forma simétrica -->
+    <!-- NOTA ACLARATORIA con la frase de descuento del 10% y todo alineado a la derecha -->
     <div class="seccion-aclaratoria">
         <div class="titulo">📌 Nota Aclaratoria</div>
         La validez de esta oferta está sujeta a la disponibilidad de inventario.<br>
@@ -550,7 +551,7 @@
         <a href="https://kcfcorporacion.com" class="web-link">www.kcfcorporacion.com</a>
     </div>
 
-    <!-- SECCIÓN CORDIALMENTE - completamente a la derecha y simétrico -->
+    <!-- SECCIÓN CORDIALMENTE - completamente a la derecha, simétrico -->
     <div class="seccion-contacto">
         <div class="contacto-nombre">Cordialmente,</div>
         <div class="contacto-nombre">HELLEN BLAS PRINCIPE</div>
