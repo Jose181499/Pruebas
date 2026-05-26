@@ -935,10 +935,6 @@ def eliminar_producto_api(id):
         }), 500
 
 
-# ==========================================
-# GENERAR PDF - CORREGIDO
-# ==========================================
-
 @cotizaciones_bp.route("/api/cotizacion/pdf/<int:cotizacion_id>")
 def generar_pdf(cotizacion_id):
     data = obtener_cotizacion_completa(cotizacion_id)
@@ -987,12 +983,20 @@ def generar_pdf(cotizacion_id):
         total_subtotal_venta_desc += subtotal_desc
 
     hay_descuentos = total_descuento_subtotal > 0
-    hora_actual = datetime.now().strftime("%I:%M %p")
     
-    # 🔥 CORRECCIÓN: fecha_creacion ya es string, no podemos usar strftime
+    # 🔥 CORRECCIÓN: Formatear hora correctamente (convertir 08:11 PM a 20:11)
+    hora_raw = datetime.now().strftime("%I:%M %p")
+    # Convertir a formato 24 horas para el PDF
+    try:
+        from datetime import datetime as dt
+        hora_obj = dt.strptime(hora_raw, "%I:%M %p")
+        hora_actual = hora_obj.strftime("%H:%M")
+    except:
+        hora_actual = datetime.now().strftime("%H:%M")
+    
+    # Formatear fecha
     fecha_creacion = cabecera.get("fecha_creacion", "")
     if fecha_creacion and isinstance(fecha_creacion, str):
-        # Si es string con formato "YYYY-MM-DD HH:MM:SS", extraer solo la fecha
         if ' ' in fecha_creacion:
             fecha_parte = fecha_creacion.split(' ')[0]
             partes = fecha_parte.split('-')
@@ -1008,22 +1012,31 @@ def generar_pdf(cotizacion_id):
     html = render_template(
         "pdf/cotizacion_kcf.html",
         logo_base64=logo_base64,
-        numero_cotizacion=cabecera.get("codigo_cotizacion") or cabecera.get("numero_cotizacion") or "N/A",
+        codigo_cotizacion=cabecera.get("codigo_cotizacion") or cabecera.get("numero_cotizacion") or "N/A",
         fecha_actual=fecha_actual,
-        hora_actual=hora_actual,
+        hora_actual=hora_actual,  # Ahora viene en formato 24 horas Ej: "20:11"
+        
+        # 🔥 DATOS DEL CLIENTE (corregidos)
         cliente_razon_social=cabecera.get("razon_social") or "",
         cliente_ruc=cabecera.get("numero_documento") or "",
         cliente_direccion=cabecera.get("direccion_fiscal") or "",
-        cliente_contacto=cabecera.get("nombre_contacto") or "",
-        cliente_telefono=cabecera.get("telefono_contacto") or "",
-        numero_requerimiento=cabecera.get("requerimiento") or "",
+        telefono_contacto=cabecera.get("telefono_contacto") or "",  # ← TELÉFONO DEL CLIENTE
+        cliente_contacto=cabecera.get("nombre_contacto") or "",      # ← ATENCIÓN/CONTACTO
+        email_contacto_cliente=cabecera.get("email_contacto") or "", # ← CORREO DEL CLIENTE
+        requerimiento=cabecera.get("requerimiento") or "",
+        
+        # 🔥 DATOS DEL ASESOR COMERCIAL
         asesor_comercial=cabecera.get("nombre_completo") or "Hellen Castillo",
         email_contacto=cabecera.get("email") or "ventas@kcfcorporacion.com",
-        telefono_contacto=cabecera.get("telefono") or "999932051",
+        telefono_contacto_user=cabecera.get("telefono") or "999932051",  # ← TELÉFONO DEL ASESOR
+        
+        # 🔥 CONDICIONES COMERCIALES
         condicion_pago=cabecera.get("condicion_pago") or "Contado",
         tiempo_entrega=cabecera.get("tiempo_entrega") or "Inmediato",
         direccion_entrega=cabecera.get("direccion_entrega") or "A convenir",
         validez_oferta=cabecera.get("validez_oferta") or "15 días",
+        
+        # 🔥 PRODUCTOS Y TOTALES
         productos=productos,
         total_subtotal_venta=total_subtotal_venta,
         total_descuento_subtotal=total_descuento_subtotal,
