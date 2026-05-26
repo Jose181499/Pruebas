@@ -858,8 +858,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================
     // GENERAR PDF
     // =========================
-  // Función para generar PDF con los datos actuales del formulario
-function generatePdf() {
+ function generatePdf() {
     const cotId = document.getElementById('cotizacion_id')?.value;
     
     if (!cotId || cotId === '' || cotId === 'None') {
@@ -873,17 +872,30 @@ function generatePdf() {
     }
     
     // 🔥 OBTENER DATOS ACTUALES DEL FORMULARIO
-    const datosActuales = {
-        telefono_contacto: document.getElementById('telefono_contacto')?.value || '',
-        cliente_contacto: document.getElementById('cliente_contacto')?.value || '',
-        email_contacto_cliente: document.getElementById('email_contacto_cliente')?.value || '',
-        requerimiento: document.getElementById('requerimiento')?.value || '',
-        direccion_entrega: document.getElementById('direccion_entrega')?.value || ''
-    };
+    const telefono = document.getElementById('telefono_contacto')?.value || '';
+    const atencion = document.getElementById('cliente_contacto')?.value || '';
+    const correo = document.getElementById('email_contacto_cliente')?.value || '';
+    const requerimiento = document.getElementById('requerimiento')?.value || '';
+    const direccionEntrega = document.getElementById('direccion_entrega')?.value || '';
+    
+    // 🔥 LOGS PARA VERIFICAR
+    console.log("🔍 VALORES DEL FORMULARIO:");
+    console.log("  telefono_contacto:", telefono);
+    console.log("  cliente_contacto:", atencion);
+    console.log("  email_contacto_cliente:", correo);
+    console.log("  requerimiento:", requerimiento);
     
     // Construir URL con los parámetros
-    const params = new URLSearchParams(datosActuales);
+    const params = new URLSearchParams({
+        telefono_contacto: telefono,
+        cliente_contacto: atencion,
+        email_contacto_cliente: correo,
+        requerimiento: requerimiento,
+        direccion_entrega: direccionEntrega
+    });
+    
     const pdfUrl = `/api/cotizacion/pdf/${cotId}?${params.toString()}`;
+    console.log("📄 URL del PDF:", pdfUrl);
     
     try {
         mostrarNotificacion("📄 Generando PDF, espere...", "info");
