@@ -665,13 +665,26 @@
                                            style="display: none;">
                                 </div>
                             </div>
+                            
+                            <!-- 🔥 VALIDEZ OFERTA - MODIFICADA CON OPCIÓN PERSONALIZADA -->
                             <div class="col-md-6">
                                 <label class="form-label"><i class="bi bi-calendar-check"></i> Validez Oferta</label>
-                                <select class="form-select custom-input" id="validez_oferta">
-                                    <option value="7 días">📅 7 días</option>
-                                    <option value="15 días" selected>📅 15 días</option>
-                                    <option value="30 días">📅 30 días</option>
-                                </select>
+                                <div class="validez-oferta-wrapper">
+                                    <select class="form-select custom-input" id="validez_oferta_select">
+                                        <option value="">-- Seleccionar opción --</option>
+                                        <option value="7 días">📅 7 días</option>
+                                        <option value="15 días" selected>📅 15 días</option>
+                                        <option value="30 días">📅 30 días</option>
+                                        <option value="45 días">📅 45 días</option>
+                                        <option value="60 días">📅 60 días</option>
+                                        <option value="personalizado">✏️ Personalizado (escribir)</option>
+                                    </select>
+                                    <input type="text" 
+                                           class="form-control custom-input mt-2" 
+                                           id="validez_oferta" 
+                                           placeholder="Ej: 20 días, 1 mes, etc."
+                                           style="display: none;">
+                                </div>
                             </div>
                             
                             <!-- 🔥 CONDICIÓN DE PAGO - MODIFICADA CON OPCIÓN 7 DÍAS Y PERSONALIZADO -->
@@ -935,6 +948,52 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Función para manejar la validez de oferta personalizada
+        function configurarValidezOferta() {
+            const select = document.getElementById('validez_oferta_select');
+            const input = document.getElementById('validez_oferta');
+            
+            if (select && input) {
+                select.addEventListener('change', function() {
+                    const valor = this.value;
+                    if (valor === 'personalizado') {
+                        input.style.display = 'block';
+                        input.value = '';
+                        input.placeholder = 'Ej: 20 días, 1 mes, etc.';
+                        input.focus();
+                    } else if (valor === '') {
+                        input.style.display = 'none';
+                        input.value = '';
+                    } else {
+                        input.style.display = 'none';
+                        input.value = valor;
+                    }
+                });
+                
+                input.addEventListener('focus', function() {
+                    select.value = 'personalizado';
+                    this.style.display = 'block';
+                });
+                
+                // Si ya hay un valor en el input, mostrar el select correspondiente
+                if (input.value && input.value.trim() !== '') {
+                    let encontrado = false;
+                    for (let i = 0; i < select.options.length; i++) {
+                        if (select.options[i].value === input.value) {
+                            select.value = input.value;
+                            input.style.display = 'none';
+                            encontrado = true;
+                            break;
+                        }
+                    }
+                    if (!encontrado && input.value !== '') {
+                        select.value = 'personalizado';
+                        input.style.display = 'block';
+                    }
+                }
+            }
+        }
+
         // Función para manejar la condición de pago personalizada
         function configurarCondicionPago() {
             const select = document.getElementById('condicion_pago_select');
@@ -1042,6 +1101,7 @@
         
         // Inicializar cuando el DOM esté listo
         document.addEventListener('DOMContentLoaded', function() {
+            configurarValidezOferta();
             configurarCondicionPago();
             configurarDireccionEntrega();
             

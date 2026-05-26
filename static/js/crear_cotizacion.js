@@ -327,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // CONFIGURAR CONDICIÓN DE PAGO PERSONALIZADA (NUEVA)
+    // CONFIGURAR CONDICIÓN DE PAGO PERSONALIZADA
     // =========================
     function configurarCondicionPago() {
         const select = document.getElementById('condicion_pago_select');
@@ -359,7 +359,56 @@ document.addEventListener('DOMContentLoaded', () => {
             this.style.display = 'block';
         });
         
-        // Si ya hay un valor en el input al cargar, mostrar el select correspondiente
+        if (input.value && input.value.trim() !== '') {
+            let encontrado = false;
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].value === input.value) {
+                    select.value = input.value;
+                    input.style.display = 'none';
+                    encontrado = true;
+                    break;
+                }
+            }
+            if (!encontrado && input.value !== '') {
+                select.value = 'personalizado';
+                input.style.display = 'block';
+            }
+        }
+    }
+
+    // =========================
+    // CONFIGURAR VALIDEZ DE OFERTA PERSONALIZADA (NUEVA)
+    // =========================
+    function configurarValidezOferta() {
+        const select = document.getElementById('validez_oferta_select');
+        const input = document.getElementById('validez_oferta');
+        
+        if (!select || !input) {
+            console.warn('⚠️ Elementos de validez de oferta no encontrados');
+            return;
+        }
+        
+        select.addEventListener('change', function() {
+            const valor = this.value;
+            if (valor === 'personalizado') {
+                input.style.display = 'block';
+                input.value = '';
+                input.placeholder = 'Ej: 20 días, 1 mes, etc.';
+                input.focus();
+            } else if (valor === '') {
+                input.style.display = 'none';
+                input.value = '';
+            } else {
+                input.style.display = 'none';
+                input.value = valor;
+            }
+        });
+        
+        input.addEventListener('focus', function() {
+            select.value = 'personalizado';
+            this.style.display = 'block';
+        });
+        
         if (input.value && input.value.trim() !== '') {
             let encontrado = false;
             for (let i = 0; i < select.options.length; i++) {
@@ -384,7 +433,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const select = document.getElementById('direccion_entrega_select');
         if (!select) return;
         
-        // Limpiar opciones excepto las primeras (-- Seleccionar -- y personalizado)
         while (select.options.length > 2) {
             select.remove(2);
         }
@@ -467,7 +515,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Botón para limpiar cliente
     if (btnLimpiarCliente) {
         btnLimpiarCliente.addEventListener('click', function() {
             document.getElementById('cliente_id').value = '';
@@ -610,7 +657,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('cliente_contacto').value = cliente.nombre_contacto || '';
                 document.getElementById('email_contacto_cliente').value = cliente.email_contacto || '';
                 
-                // Cargar direcciones guardadas del cliente
                 await cargarDireccionesCliente(cliente.id);
                 
                 mostrarNotificacion('✅ Cliente cargado correctamente', 'success');
@@ -621,20 +667,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // MODAL DE CONFIRMACIÓN - CORREGIDO
+    // MODAL DE CONFIRMACIÓN
     // =========================
     function mostrarModalConfirmacion(datos) {
         const modalBody = document.getElementById('modalConfirmacionBody');
         if (!modalBody) return;
         
-        // 🔥 OBTENER DATOS ACTUALES DEL FORMULARIO para el PDF
         const telefonoActual = document.getElementById('telefono_contacto')?.value || '';
         const atencionActual = document.getElementById('cliente_contacto')?.value || '';
         const correoActual = document.getElementById('email_contacto_cliente')?.value || '';
         const requerimientoActual = document.getElementById('requerimiento')?.value || '';
         const direccionActual = document.getElementById('direccion_entrega')?.value || '';
         
-        // Fecha y hora actual para mostrar en el modal
         const ahora = new Date();
         const fechaActual = ahora.toLocaleDateString('es-PE');
         const horaActual = ahora.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
@@ -669,11 +713,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
         modal.show();
         
-        // 🔥 BOTÓN DESCARGAR PDF - AHORA CON LOS DATOS DEL FORMULARIO
         document.getElementById('btnDescargarPDFModal').onclick = () => {
             const cotId = document.getElementById('cotizacion_id')?.value;
             if (cotId && !esBorrador) {
-                // Construir URL con los datos actuales del formulario
                 const params = new URLSearchParams({
                     telefono_contacto: telefonoActual,
                     cliente_contacto: atencionActual,
@@ -723,7 +765,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // OBTENER LISTA DE PRODUCTOS - VERSIÓN SIMPLIFICADA
+    // OBTENER LISTA DE PRODUCTOS
     // =========================
     function obtenerListaProductos() {
         const filas = document.querySelectorAll("#table-body tr");
@@ -817,7 +859,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // GUARDAR COTIZACIÓN - VERSIÓN SIMPLIFICADA
+    // GUARDAR COTIZACIÓN
     // =========================
     async function guardarCotizacion() {
         const cliente_id = Number(document.getElementById('cliente_id')?.value || 0);
@@ -902,7 +944,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // CONVERTIR A OFICIAL - CORREGIDO
+    // CONVERTIR A OFICIAL
     // =========================
     async function convertirAOficial() {
         if (!esBorrador) { 
@@ -922,7 +964,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        // Verificar que todos los productos tengan precio
         for (let i = 0; i < listaProductos.length; i++) {
             if (!listaProductos[i].precio_venta_unitario || listaProductos[i].precio_venta_unitario <= 0) {
                 mostrarNotificacion(`⚠️ El producto ${listaProductos[i].codigo || 'sin código'} no tiene precio de venta válido`, "warning");
@@ -937,11 +978,7 @@ document.addEventListener('DOMContentLoaded', () => {
             esBorrador = false;
             actualizarNumeroCotizacionUI(nuevoCodigo, false);
             document.getElementById('estado').value = 'Generada';
-            
-            // 🔥 Guardar la cotización
             await guardarCotizacion();
-            
-            // Mostrar notificación adicional
             mostrarNotificacion(`✅ Cotización convertida a OFICIAL\nNúmero: ${nuevoCodigo}`, "success");
         } else {
             mostrarNotificacion("❌ Error al generar código oficial. Intente nuevamente.", "danger");
@@ -949,7 +986,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // GENERAR PDF - CON DATOS DEL FORMULARIO EN VIVO
+    // GENERAR PDF
     // =========================
     function generatePdf() {
         const cotId = document.getElementById('cotizacion_id')?.value;
@@ -964,7 +1001,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        // 🔥 OBTENER DATOS ACTUALES DEL FORMULARIO
         const telefono = document.getElementById('telefono_contacto')?.value || '';
         const atencion = document.getElementById('cliente_contacto')?.value || '';
         const correo = document.getElementById('email_contacto_cliente')?.value || '';
@@ -975,7 +1011,6 @@ document.addEventListener('DOMContentLoaded', () => {
             telefono, atencion, correo, requerimiento, direccionEntrega
         });
         
-        // Construir URL con los parámetros
         const params = new URLSearchParams({
             telefono_contacto: telefono,
             cliente_contacto: atencion,
@@ -996,7 +1031,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // SET PRODUCTO EN FILA - ACTUALIZADO
+    // SET PRODUCTO EN FILA
     // =========================
     function setProductoEnFila(row, p) {  
         const productoIdInput = row.querySelector('.producto_id');
@@ -1177,7 +1212,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // RECALCULAR - VERSIÓN SIMPLIFICADA
+    // RECALCULAR
     // =========================
     function recalculateAll() {
         const rows = document.querySelectorAll("#table-body tr");
@@ -1195,11 +1230,9 @@ document.addEventListener('DOMContentLoaded', () => {
             totalValorVenta += valorVentaTotal;
         });
 
-        // Actualizar footer
         const totalValorVentaElem = document.getElementById('total_valor_venta');
         if (totalValorVentaElem) totalValorVentaElem.textContent = totalValorVenta.toFixed(2);
         
-        // Actualizar resumen de venta
         const summarySubtotal = document.getElementById('summary_subtotal_venta');
         if (summarySubtotal) summarySubtotal.textContent = totalValorVenta.toFixed(2);
         
@@ -1217,7 +1250,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // AGREGAR ITEMS - VERSIÓN SIMPLIFICADA
+    // AGREGAR ITEMS
     // =========================
     function addItem() {
         if (cotizacionBloqueada) { 
@@ -1245,10 +1278,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (tableBody) tableBody.appendChild(row);
         
-        // Inicializar autocomplete para esta fila
         attachProductoAutocomplete(row);
         
-        // Configurar eventos de recálculo
         const rec = () => { 
             if (!modoConsulta) { 
                 recalculateAll(); 
@@ -1352,7 +1383,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = json.data;
             console.log("✅ Datos de cotización:", data);
             
-            // Cargar código de cotización
             if (data.codigo_cotizacion) {
                 codigoCotizacionActual = data.codigo_cotizacion;
                 correlativoActual = data.correlativo || 0;
@@ -1360,7 +1390,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 actualizarNumeroCotizacionUI(data.codigo_cotizacion, esBorrador);
             }
             
-            // Cargar datos del cliente
             if (data.cliente_id) {
                 document.getElementById('cliente_id').value = data.cliente_id;
             }
@@ -1371,7 +1400,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('email_contacto_cliente').value = data.email_contacto || '';
             document.getElementById('telefono_contacto').value = data.telefono_contacto || '';
             
-            // Cargar datos de la cotización
             document.getElementById('estado').value = data.estado || 'En Proceso';
             document.getElementById('notas').value = data.notas || '';
             document.getElementById('requerimiento').value = data.requerimiento || '';
@@ -1381,13 +1409,11 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('direccion_entrega').value = data.direccion_entrega || '';
             document.getElementById('nota_cotizacion').value = data.nota_cotizacion || '';
             
-            // Cargar datos del asesor
             document.getElementById('usuario_id').value = data.usuario_id || '';
             document.getElementById('asesor_comercial').value = data.nombre_completo || '';
             document.getElementById('email_contacto').value = data.email || '';
             document.getElementById('telefono_contacto_user').value = data.telefono || '';
             
-            // Cargar totales
             const total = Number(data.total || 0);
             const totalValorVentaElem = document.getElementById('total_valor_venta');
             if (totalValorVentaElem) totalValorVentaElem.textContent = total.toFixed(2);
@@ -1401,7 +1427,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const summaryTotal = document.getElementById('summary_total_venta');
             if (summaryTotal) summaryTotal.textContent = total.toFixed(2);
             
-            // Cargar productos
             document.getElementById('table-body').innerHTML = '';
             itemCounter = 0;
             
@@ -1429,7 +1454,6 @@ document.addEventListener('DOMContentLoaded', () => {
             configurarTiempoEntrega();
             configurarDireccionEntrega();
             
-            // Cargar direcciones del cliente
             if (data.cliente_id) {
                 await cargarDireccionesCliente(data.cliente_id);
             }
@@ -1490,9 +1514,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // CONFIGURAR CONDICIÓN DE PAGO (NUEVO)
+    // CONFIGURACIONES
     // =========================
     configurarCondicionPago();
+    configurarValidezOferta();  // ← NUEVA FUNCIÓN AGREGADA
 
     // =========================
     // INIT
