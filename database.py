@@ -976,7 +976,7 @@ def obtener_cotizaciones_recientes(limit: int = 200):
 
 
 # ==============================
-# Crear o guardar cotización transaccional
+# Crear o guardar cotización transaccional - CON HORA PERÚ
 # ==============================
 def crear_cotizacion_transaccional(payload: dict, usuario_id: int):
 
@@ -1014,10 +1014,11 @@ def crear_cotizacion_transaccional(payload: dict, usuario_id: int):
 
         numero = f"{prefix}{nuevo:04d}"
 
+        # 🔥 CORREGIDO: Usar hora de Perú (UTC-5)
         cur.execute("""
             INSERT INTO cotizaciones
-            (numero_cotizacion, cliente_id, estado, subtotal, igv, total, usuario_id, notas)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+            (numero_cotizacion, cliente_id, estado, subtotal, igv, total, usuario_id, notas, fecha_creacion)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, (NOW() AT TIME ZONE 'America/Lima'))
             RETURNING id
         """, (
             numero,
@@ -1047,7 +1048,6 @@ def crear_cotizacion_transaccional(payload: dict, usuario_id: int):
             "cotizacion_id": cotizacion_id,
             "numero_cotizacion": numero
         }
-
 
 # ==========================
 # Obtener cotización completa - CORREGIDO (sin columnas que no existen)
