@@ -570,30 +570,68 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // MODAL DE CONFIRMACIÓN
+    // MODAL DE CONFIRMACIÓN - CORREGIDO
     // =========================
     function mostrarModalConfirmacion(datos) {
         const modalBody = document.getElementById('modalConfirmacionBody');
         if (!modalBody) return;
         
-        const fecha = new Date();
+        // 🔥 OBTENER DATOS ACTUALES DEL FORMULARIO para el PDF
+        const telefonoActual = document.getElementById('telefono_contacto')?.value || '';
+        const atencionActual = document.getElementById('cliente_contacto')?.value || '';
+        const correoActual = document.getElementById('email_contacto_cliente')?.value || '';
+        const requerimientoActual = document.getElementById('requerimiento')?.value || '';
+        const direccionActual = document.getElementById('direccion_entrega')?.value || '';
+        
+        // Fecha y hora actual para mostrar en el modal
+        const ahora = new Date();
+        const fechaActual = ahora.toLocaleDateString('es-PE');
+        const horaActual = ahora.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+        
         modalBody.innerHTML = `
             <div class="text-center mb-3"><i class="bi bi-check-circle-fill" style="font-size: 48px; color: #10b981;"></i></div>
             <div class="alert alert-success"><strong>✅ ¡Cotización guardada exitosamente!</strong></div>
-            <div class="row"><div class="col-6"><strong>Número:</strong></div><div class="col-6">${datos.numero || datos.codigo_cotizacion}</div></div>
-            <div class="row mt-2"><div class="col-6"><strong>Tipo:</strong></div><div class="col-6">${datos.tipo || (esBorrador ? 'BORRADOR' : 'OFICIAL')}</div></div>
-            <div class="row mt-2"><div class="col-6"><strong>Asesor:</strong></div><div class="col-6">${usuarioActual?.nombre_completo || 'No asignado'}</div></div>
-            <div class="row mt-2"><div class="col-6"><strong>Fecha:</strong></div><div class="col-6">${fecha.toLocaleDateString()}</div></div>
-            <hr><div class="text-muted small"><i class="bi bi-info-circle"></i> El código es único y quedará registrado.</div>
+            <div class="row">
+                <div class="col-6"><strong>Número:</strong></div>
+                <div class="col-6">${datos.numero || datos.codigo_cotizacion}</div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-6"><strong>Tipo:</strong></div>
+                <div class="col-6">${datos.tipo || (esBorrador ? 'BORRADOR' : 'OFICIAL')}</div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-6"><strong>Asesor:</strong></div>
+                <div class="col-6">${usuarioActual?.nombre_completo || 'No asignado'}</div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-6"><strong>Fecha:</strong></div>
+                <div class="col-6">${fechaActual}</div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-6"><strong>Hora:</strong></div>
+                <div class="col-6">${horaActual}</div>
+            </div>
+            <hr>
+            <div class="text-muted small"><i class="bi bi-info-circle"></i> El código es único y quedará registrado.</div>
         `;
         
         const modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
         modal.show();
         
+        // 🔥 BOTÓN DESCARGAR PDF - AHORA CON LOS DATOS DEL FORMULARIO
         document.getElementById('btnDescargarPDFModal').onclick = () => {
             const cotId = document.getElementById('cotizacion_id')?.value;
             if (cotId && !esBorrador) {
-                window.open(`/api/cotizacion/pdf/${cotId}`, '_blank');
+                // Construir URL con los datos actuales del formulario
+                const params = new URLSearchParams({
+                    telefono_contacto: telefonoActual,
+                    cliente_contacto: atencionActual,
+                    email_contacto_cliente: correoActual,
+                    requerimiento: requerimientoActual,
+                    direccion_entrega: direccionActual
+                });
+                const pdfUrl = `/api/cotizacion/pdf/${cotId}?${params.toString()}`;
+                window.open(pdfUrl, '_blank');
             } else {
                 mostrarNotificacion('⚠️ Debe convertir a oficial antes de generar PDF', 'warning');
             }
@@ -813,7 +851,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // CONVERTIR A OFICIAL
+    // CONVERTIR A OFICIAL - CORREGIDO
     // =========================
     async function convertirAOficial() {
         if (!esBorrador) { 
@@ -848,63 +886,63 @@ document.addEventListener('DOMContentLoaded', () => {
             esBorrador = false;
             actualizarNumeroCotizacionUI(nuevoCodigo, false);
             document.getElementById('estado').value = 'Generada';
-            mostrarNotificacion(`✅ Cotización convertida a OFICIAL\nNúmero: ${nuevoCodigo}`, "success");
+            
+            // 🔥 Guardar la cotización
             await guardarCotizacion();
+            
+            // Mostrar notificación adicional
+            mostrarNotificacion(`✅ Cotización convertida a OFICIAL\nNúmero: ${nuevoCodigo}`, "success");
         } else {
             mostrarNotificacion("❌ Error al generar código oficial. Intente nuevamente.", "danger");
         }
     }
 
     // =========================
-    // GENERAR PDF
+    // GENERAR PDF - CON DATOS DEL FORMULARIO EN VIVO
     // =========================
- function generatePdf() {
-    const cotId = document.getElementById('cotizacion_id')?.value;
-    
-    if (!cotId || cotId === '' || cotId === 'None') {
-        mostrarNotificacion("⚠️ Debe guardar la cotización primero", "warning");
-        return;
+    function generatePdf() {
+        const cotId = document.getElementById('cotizacion_id')?.value;
+        
+        if (!cotId || cotId === '' || cotId === 'None') {
+            mostrarNotificacion("⚠️ Debe guardar la cotización primero", "warning");
+            return;
+        }
+        
+        if (esBorrador) {
+            mostrarNotificacion("⚠️ Debe convertir la cotización a OFICIAL antes de generar PDF", "warning");
+            return;
+        }
+        
+        // 🔥 OBTENER DATOS ACTUALES DEL FORMULARIO
+        const telefono = document.getElementById('telefono_contacto')?.value || '';
+        const atencion = document.getElementById('cliente_contacto')?.value || '';
+        const correo = document.getElementById('email_contacto_cliente')?.value || '';
+        const requerimiento = document.getElementById('requerimiento')?.value || '';
+        const direccionEntrega = document.getElementById('direccion_entrega')?.value || '';
+        
+        console.log("📄 Generando PDF con datos:", {
+            telefono, atencion, correo, requerimiento, direccionEntrega
+        });
+        
+        // Construir URL con los parámetros
+        const params = new URLSearchParams({
+            telefono_contacto: telefono,
+            cliente_contacto: atencion,
+            email_contacto_cliente: correo,
+            requerimiento: requerimiento,
+            direccion_entrega: direccionEntrega
+        });
+        
+        const pdfUrl = `/api/cotizacion/pdf/${cotId}?${params.toString()}`;
+        
+        try {
+            mostrarNotificacion("📄 Generando PDF, espere...", "info");
+            window.open(pdfUrl, '_blank');
+        } catch (error) {
+            console.error('Error al generar PDF:', error);
+            mostrarNotificacion("❌ Error al generar el PDF", "danger");
+        }
     }
-    
-    if (esBorrador) {
-        mostrarNotificacion("⚠️ Debe convertir la cotización a OFICIAL antes de generar PDF", "warning");
-        return;
-    }
-    
-    // 🔥 OBTENER DATOS ACTUALES DEL FORMULARIO
-    const telefono = document.getElementById('telefono_contacto')?.value || '';
-    const atencion = document.getElementById('cliente_contacto')?.value || '';
-    const correo = document.getElementById('email_contacto_cliente')?.value || '';
-    const requerimiento = document.getElementById('requerimiento')?.value || '';
-    const direccionEntrega = document.getElementById('direccion_entrega')?.value || '';
-    
-    // 🔥 LOGS PARA VERIFICAR
-    console.log("🔍 VALORES DEL FORMULARIO:");
-    console.log("  telefono_contacto:", telefono);
-    console.log("  cliente_contacto:", atencion);
-    console.log("  email_contacto_cliente:", correo);
-    console.log("  requerimiento:", requerimiento);
-    
-    // Construir URL con los parámetros
-    const params = new URLSearchParams({
-        telefono_contacto: telefono,
-        cliente_contacto: atencion,
-        email_contacto_cliente: correo,
-        requerimiento: requerimiento,
-        direccion_entrega: direccionEntrega
-    });
-    
-    const pdfUrl = `/api/cotizacion/pdf/${cotId}?${params.toString()}`;
-    console.log("📄 URL del PDF:", pdfUrl);
-    
-    try {
-        mostrarNotificacion("📄 Generando PDF, espere...", "info");
-        window.open(pdfUrl, '_blank');
-    } catch (error) {
-        console.error('Error al generar PDF:', error);
-        mostrarNotificacion("❌ Error al generar el PDF", "danger");
-    }
-}
 
     // =========================
     // SET PRODUCTO EN FILA - ACTUALIZADO
