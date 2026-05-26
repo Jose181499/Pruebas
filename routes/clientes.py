@@ -149,7 +149,7 @@ def guardar_cliente():
                         principal, condicion_pago, tiempo_credito
                     ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (
-                    id,
+                    cliente_id,
                     nombre_punto.strip(),
                     p.get("direccion") or p.get("edit_direccion") or "",
                     p.get("departamento") or p.get("edit_departamento") or "",
