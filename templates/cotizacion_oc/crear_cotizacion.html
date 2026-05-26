@@ -486,10 +486,16 @@
     </div>
 
     <div class="container-fluid py-4">
-        <input type="hidden" id="cotizacion_id" value="">
+        <!-- 🔥 CORREGIDO: Ahora recibe el ID del backend -->
+        <input type="hidden" id="cotizacion_id" value="{{ cotizacion_id if cotizacion_id else '' }}">
         <input type="hidden" id="modo_consulta" value="">
         <input type="hidden" id="usuario_id" value="">
         <input type="hidden" id="descuento_porcentaje" value="10">
+
+        <!-- LOG DE DEPURACIÓN -->
+        <script>
+            console.log("🔍 Template - cotizacion_id recibido:", "{{ cotizacion_id if cotizacion_id else 'No hay ID' }}");
+        </script>
 
         <!-- HERO -->
         <div class="hero-card mb-4">
