@@ -146,7 +146,7 @@ async function autocompletarConSunatListado() {
 }
 
 // ===========================
-// CARGAR COTIZACIONES (CORREGIDO)
+// CARGAR COTIZACIONES
 // ===========================
 async function cargarCotizaciones() {
     const tbody = document.getElementById('tbodyCotizaciones');
@@ -177,7 +177,6 @@ async function cargarCotizaciones() {
         
         const response = await fetch(url);
         
-        // 🔥 Verificar si la respuesta es OK
         if (!response.ok) {
             const errorText = await response.text();
             console.error("❌ Error response:", response.status, errorText.substring(0, 200));
@@ -275,7 +274,42 @@ function aplicarFiltros() {
 }
 
 // ===========================
-// RENDERIZAR TABLA
+// FORMATEAR FECHA (DD/MM/YYYY)
+// ===========================
+function formatearFecha(fechaStr) {
+    if (!fechaStr) return '-';
+    // El string viene como "2025-05-26 15:30:00"
+    const partes = fechaStr.split(' ');
+    if (partes.length >= 1) {
+        const fechaParte = partes[0];
+        const fechaParts = fechaParte.split('-');
+        if (fechaParts.length === 3) {
+            return `${fechaParts[2]}/${fechaParts[1]}/${fechaParts[0]}`;
+        }
+    }
+    return fechaStr.substring(0, 10) || '-';
+}
+
+// ===========================
+// FORMATEAR HORA (HH:MM)
+// ===========================
+function formatearHora(fechaStr) {
+    if (!fechaStr) return '-';
+    // El string viene como "2025-05-26 15:30:00"
+    const partes = fechaStr.split(' ');
+    if (partes.length >= 2) {
+        const horaParte = partes[1];
+        const horaParts = horaParte.split(':');
+        if (horaParts.length >= 2) {
+            return `${horaParts[0]}:${horaParts[1]}`;
+        }
+        return horaParte.substring(0, 5);
+    }
+    return '-';
+}
+
+// ===========================
+// RENDERIZAR TABLA CON FECHA Y HORA
 // ===========================
 function renderizarTabla(cotizaciones) {
     const tbody = document.getElementById('tbodyCotizaciones');
@@ -295,7 +329,8 @@ function renderizarTabla(cotizaciones) {
     }
     
     tbody.innerHTML = cotizaciones.map(c => {
-        const fecha = c.fecha_creacion ? formatearFecha(c.fecha_creacion) : '-';
+        const fecha = formatearFecha(c.fecha_creacion);
+        const hora = formatearHora(c.fecha_creacion);
         const total = Number(c.total || 0).toFixed(2);
         const esBorrador = c.codigo_cotizacion && c.codigo_cotizacion.startsWith('TMP-');
         const codigoMostrar = c.codigo_cotizacion || c.numero_cotizacion;
@@ -306,12 +341,17 @@ function renderizarTabla(cotizaciones) {
                 <td class="codigo-cell">
                     <strong>${escapeHtml(codigoMostrar || '-')}</strong>
                     ${c.correlativo ? `<br><small class="text-muted">Correl: ${c.correlativo}</small>` : ''}
-                </td>
-                <td class="fecha-cell">${fecha}</td>
+                 </td>
+                <td class="fecha-cell">
+                    <div class="fecha-hora">
+                        <div class="fecha"><strong>${fecha}</strong></div>
+                        <div class="hora small text-muted">${hora}</div>
+                    </div>
+                 </td>
                 <td class="cliente-cell">
                     <strong>${escapeHtml(c.cliente || 'Sin cliente')}</strong>
                     ${c.vendedor ? `<br><small class="text-muted"><i class="bi bi-person"></i> ${escapeHtml(c.vendedor)}</small>` : ''}
-                </td>
+                 </td>
                 <td class="estado-cell">${estadoHtml}</td>
                 <td class="monto text-end">S/ ${Number(total).toLocaleString('es-PE', { minimumFractionDigits: 2 })}</td>
                 <td class="acciones text-center">
@@ -324,8 +364,8 @@ function renderizarTabla(cotizaciones) {
                     <button class="btn-mini btn-eliminar" onclick="mostrarModalEliminar(${c.id}, '${escapeHtml(codigoMostrar)}')" title="Eliminar">
                         <i class="bi bi-trash"></i>
                     </button>
-                </td>
-            </tr>
+                 </td>
+             </tr>
         `;
     }).join('');
 }
@@ -355,7 +395,8 @@ async function verDetalle(id) {
         if (result.success && result.data) {
             const data = result.data;
             const esBorrador = data.codigo_cotizacion && data.codigo_cotizacion.startsWith('TMP-');
-            const fecha = data.fecha_creacion ? formatearFecha(data.fecha_creacion) : '-';
+            const fecha = formatearFecha(data.fecha_creacion);
+            const hora = formatearHora(data.fecha_creacion);
             const total = Number(data.total || 0).toFixed(2);
             let estadoBadge = renderEstado(data.estado, esBorrador);
             
@@ -367,7 +408,7 @@ async function verDetalle(id) {
                     <td class="text-center">${p.cantidad || 0}</td>
                     <td class="text-end">S/ ${Number(p.precio_venta_unitario || 0).toLocaleString('es-PE', { minimumFractionDigits: 2 })}</td>
                     <td class="text-end">S/ ${Number(p.subtotal_venta_con_descuento || 0).toLocaleString('es-PE', { minimumFractionDigits: 2 })}</td>
-                </tr>
+                 </tr>
             `).join('');
             
             const modalBody = document.getElementById('detalleBody');
@@ -386,8 +427,8 @@ async function verDetalle(id) {
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <div class="text-muted small">FECHA</div>
-                            <strong>${fecha}</strong>
+                            <div class="text-muted small">FECHA Y HORA</div>
+                            <strong>${fecha} - ${hora}</strong>
                         </div>
                         <div class="col-md-6">
                             <div class="text-muted small">TOTAL</div>
@@ -410,17 +451,18 @@ async function verDetalle(id) {
                                     <tr>
                                         <th>Código</th><th>Descripción</th><th>Marca</th>
                                         <th class="text-center">Cant</th><th class="text-end">P.Unit</th><th class="text-end">Subtotal</th>
-                                    </tr>
+                                     </tr>
                                 </thead>
                                 <tbody>${productosHtml || '<tr><td colspan="6" class="text-center">Sin productos</td></tr>'}</tbody>
-                            </table>
+                             </table>
                         </div>
                     </div>
-                    ${data.forma_pago ? `<div class="row mb-2"><div class="col-4 text-muted small">Forma Pago:</div><div class="col-8">${escapeHtml(data.forma_pago)}</div></div>` : ''}
+                    ${data.condicion_pago ? `<div class="row mb-2"><div class="col-4 text-muted small">Condición Pago:</div><div class="col-8">${escapeHtml(data.condicion_pago)}</div></div>` : ''}
                     ${data.tiempo_entrega ? `<div class="row mb-2"><div class="col-4 text-muted small">Tiempo Entrega:</div><div class="col-8">${escapeHtml(data.tiempo_entrega)}</div></div>` : ''}
-                    ${data.almacen ? `<div class="row mb-2"><div class="col-4 text-muted small">Almacén:</div><div class="col-8">${escapeHtml(data.almacen)}</div></div>` : ''}
+                    ${data.direccion_entrega ? `<div class="row mb-2"><div class="col-4 text-muted small">Dirección Entrega:</div><div class="col-8">${escapeHtml(data.direccion_entrega)}</div></div>` : ''}
                     ${data.validez_oferta ? `<div class="row mb-2"><div class="col-4 text-muted small">Validez Oferta:</div><div class="col-8">${escapeHtml(data.validez_oferta)}</div></div>` : ''}
-                    ${data.notas ? `<hr><div class="mb-2"><div class="text-muted small">NOTAS</div>${escapeHtml(data.notas)}</div>` : ''}
+                    ${data.nota_cotizacion ? `<hr><div class="mb-2"><div class="text-muted small">NOTA COMERCIAL</div>${escapeHtml(data.nota_cotizacion)}</div>` : ''}
+                    ${data.notas ? `<hr><div class="mb-2"><div class="text-muted small">NOTAS INTERNAS</div>${escapeHtml(data.notas)}</div>` : ''}
                 `;
             }
             
@@ -480,20 +522,6 @@ async function eliminarCotizacionConfirmado() {
         mostrarNotificacion('❌ Error de conexión', 'danger');
     }
     cotizacionAEliminar = null;
-}
-
-// ===========================
-// FORMATEAR FECHA
-// ===========================
-function formatearFecha(fecha) {
-    if (!fecha) return '-';
-    const f = new Date(fecha);
-    if (isNaN(f.getTime())) return '-';
-    return f.toLocaleDateString('es-PE', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-    });
 }
 
 // ===========================
@@ -628,5 +656,7 @@ style.textContent = `
     .monto { font-weight: 700; color: #111827; }
     .acciones { white-space: nowrap; }
     .codigo-cell, .fecha-cell, .cliente-cell, .estado-cell, .monto, .acciones { vertical-align: middle; }
+    .fecha-hora .fecha { font-weight: 600; color: #111827; }
+    .fecha-hora .hora { font-size: 11px; color: #6b7280; }
 `;
 document.head.appendChild(style);

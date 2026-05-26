@@ -1,4 +1,4 @@
-:root{
+:root {
     --rojo: #d90429;
     --rojo-dark: #a1031e;
     --negro: #111827;
@@ -12,21 +12,14 @@
 /* =========================================
 GENERAL
 ========================================= */
-
-*{
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-body{
-    background:
-    linear-gradient(
-        to bottom,
-        #f8fafc,
-        #eef2f7
-    );
-
+body {
+    background: linear-gradient(to bottom, #f8fafc, #eef2f7);
     font-family: 'Inter', sans-serif;
     color: var(--negro);
 }
@@ -34,121 +27,90 @@ body{
 /* =========================================
 NAVBAR
 ========================================= */
-
-.erp-navbar{
-
-    background:
-    linear-gradient(
-        135deg,
-        #111827,
-        #1f2937
-    );
-
-    padding: 18px 30px;
-
+.erp-navbar {
+    background: linear-gradient(135deg, #111827, #1f2937);
+    padding: 14px 28px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-
-    box-shadow:
-    0 4px 20px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
-.navbar-left{
+.navbar-left {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
 }
 
-.logo-box{
-
-    width: 58px;
-    height: 58px;
-
-    border-radius: 18px;
-
-    background:
-    linear-gradient(
-        135deg,
-        var(--rojo),
-        #ef233c
-    );
-
+.logo-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--rojo), #ef233c);
     display: flex;
     align-items: center;
     justify-content: center;
-
-    color: white;
-    font-size: 24px;
-}
-
-.empresa-title{
     color: white;
     font-size: 22px;
+}
+
+.empresa-title {
+    color: white;
+    font-size: 20px;
     font-weight: 800;
+    line-height: 1.2;
 }
 
-.empresa-subtitle{
+.empresa-subtitle {
     color: rgba(255,255,255,0.7);
-    font-size: 13px;
+    font-size: 12px;
 }
 
-.user-badge{
-
+.user-badge {
     background: rgba(255,255,255,0.1);
-
-    padding: 12px 18px;
-
-    border-radius: 14px;
-
+    padding: 8px 16px;
+    border-radius: 40px;
     color: white;
     font-weight: 600;
-    font-size: 14px;
-
+    font-size: 13px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 
 /* =========================================
 HERO
 ========================================= */
-
-.hero-card{
-
+.hero-card {
     background: white;
-
     border-radius: 24px;
-
-    padding: 20px 25px; 
-
-    box-shadow:
-    0 10px 30px rgba(0,0,0,0.05);
+    padding: 18px 24px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+    margin-bottom: 28px;
 }
 
-.hero-content{
-
+.hero-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
-
-    gap: 20px;
-
+    gap: 16px;
     flex-wrap: wrap;
 }
 
-.hero-title{
-    font-size: 26px;
-    font-weight: 900;
-    margin-bottom: 5px;
+.hero-title {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 4px;
 }
 
-.hero-subtitle{
+.hero-subtitle {
     color: var(--gris);
-    font-size: 15px;
+    font-size: 14px;
 }
 
-.hero-actions{
+.hero-actions {
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
@@ -157,131 +119,121 @@ HERO
 /* =========================================
 BOTONES
 ========================================= */
-
-.btn-erp{
-
-    border-radius: 14px;
-
-    padding: 12px 22px;
-
+.btn-erp {
+    border-radius: 40px;
+    padding: 10px 20px;
     font-weight: 700;
-
     border: none;
-
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 10px;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.btn-erp-primary {
+    background: var(--rojo);
+    color: white;
+}
+
+.btn-erp-primary:hover {
+    background: var(--rojo-dark);
+    transform: translateY(-1px);
+}
+
+.btn-erp-outline {
+    background: transparent;
+    border: 1px solid var(--borde);
+    color: var(--negro);
 }
 
 /* =========================================
 CARDS
 ========================================= */
-
-.erp-card{
-
+.erp-card {
     background: white;
-
     border-radius: 24px;
-
     overflow: hidden;
-
-    box-shadow:
-    0 10px 30px rgba(0,0,0,0.05);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.04);
 }
 
-.card-header-custom{
-
-    background:
-    linear-gradient(
-        135deg,
-        #111827,
-        #1f2937
-    );
-
+.card-header-custom {
+    background: linear-gradient(135deg, #111827, #1f2937);
     color: white;
-
-    padding: 12px 18px;
+    padding: 12px 20px;
     font-size: 13px;
-
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+    font-weight: 600;
 }
 
-.card-header-custom.red{
-
-    background:
-    linear-gradient(
-        135deg,
-        var(--rojo),
-        #ef233c
-    );
+.card-header-custom.red {
+    background: linear-gradient(135deg, var(--rojo), #ef233c);
 }
 
-.card-body-custom{
-    padding: 25px;
+.card-body-custom {
+    padding: 20px;
 }
 
 /* =========================================
 INPUTS
 ========================================= */
-
-.form-label{
-
-    font-size: 13px;
-    font-weight: 700;
-
+.form-label {
+    font-weight: 600;
+    font-size: 12px;
+    margin-bottom: 4px;
     color: #374151;
-
-    margin-bottom: 6px;
 }
 
-.custom-input{
-
+.custom-input {
     border-radius: 14px;
-
     border: 1px solid var(--borde);
-
-    min-height: 48px;
-
-    padding: 12px 15px;
-
+    min-height: 44px;
+    padding: 10px 15px;
     font-size: 14px;
-
     transition: all 0.2s ease;
+    width: 100%;
 }
 
-.custom-input:focus{
-
+.custom-input:focus {
     border-color: var(--rojo);
-
-    box-shadow:
-    0 0 0 4px rgba(217,4,41,0.08);
+    box-shadow: 0 0 0 3px rgba(217,4,41,0.1);
+    outline: none;
 }
 
 /* =========================================
 SEARCH
 ========================================= */
-
-.search-box{
+.search-box {
     position: relative;
+    max-width: 280px;
 }
 
-.search-box i{
-
+.search-box i {
     position: absolute;
-
     left: 14px;
     top: 50%;
-
     transform: translateY(-50%);
-
     color: #9ca3af;
+    font-size: 14px;
 }
 
-.search-input{
-    padding-left: 42px;
+.search-input {
+    padding-left: 40px;
+    border-radius: 40px;
+    border: 1px solid var(--borde);
+    height: 44px;
+    font-size: 14px;
+    width: 100%;
 }
+
+.search-input:focus {
+    border-color: var(--rojo);
+    box-shadow: 0 0 0 3px rgba(217,4,41,0.1);
+    outline: none;
+}
+
 /* =========================================
 TABLA
 ========================================= */
@@ -334,379 +286,239 @@ TABLA
 /* =========================================
 BADGES
 ========================================= */
-
-.badge-erp{
-
-    background: rgba(217,4,41,0.08);
-
+.badge-erp {
+    background: rgba(217,4,41,0.1);
     color: var(--rojo);
-
-    padding: 8px 12px;
-
-    border-radius: 10px;
-
-    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 40px;
+    font-size: 11px;
     font-weight: 700;
+    display: inline-block;
 }
 
 /* =========================================
-BOTONES TABLA
+BOTONES ACCIÓN TABLA
 ========================================= */
+.btn-action-group {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    flex-wrap: nowrap;
+}
 
-.btn-action{
-
-    width: 38px;
-    height: 38px;
-
+.btn-action {
+    width: 32px;
+    height: 32px;
     border-radius: 10px;
-
     border: none;
-
     display: inline-flex;
     align-items: center;
     justify-content: center;
-
     color: white;
-
-    margin: 0 2px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
-.btn-edit{
+.btn-edit {
     background: #f59e0b;
 }
 
-.btn-delete{
+.btn-delete {
     background: var(--rojo);
 }
 
-.btn-view{
+.btn-view {
     background: #2563eb;
+}
+
+.btn-action:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
 }
 
 /* =========================================
 MODAL NUEVO CLIENTE
 ========================================= */
-
-#modalCliente .modal-content{
-
-    border: none;
-
-    border-radius: 22px;
-
-    overflow: hidden;
-
-    box-shadow:
-    0 20px 50px rgba(0,0,0,0.15);
-}
-
-/* HEADER */
-
-#modalCliente .modal-header{
-
-    background:
-    linear-gradient(
-        135deg,
-        #111827,
-        #1f2937
-    );
-
-    padding: 20px 25px;
-
+.modal-content {
+    border-radius: 24px !important;
     border: none;
 }
 
-#modalCliente .modal-title{
-
-    font-weight: 800;
-
-    font-size: 20px;
+.modal-header {
+    background: linear-gradient(135deg, #111827, #1f2937);
+    color: white;
+    border-bottom: none;
+    padding: 16px 24px;
 }
 
-/* BODY */
-
-#modalCliente .modal-body{
-
-    padding: 28px;
-
-    background: #f8fafc;
+.modal-header .btn-close {
+    filter: brightness(0) invert(1);
 }
 
-/* SECCIONES */
+.modal-title {
+    font-weight: 700;
+    font-size: 1.2rem;
+}
 
-#modalCliente .erp-section{
-
-    background: white;
-
-    border-radius: 18px;
-
+.modal-body {
+    background: #f9fafb;
     padding: 24px;
-
-    margin-bottom: 24px;
-
-    border: 1px solid #e5e7eb;
-
-    box-shadow:
-    0 4px 12px rgba(0,0,0,0.04);
 }
 
-#modalCliente .erp-section-title{
-
-    font-size: 17px;
-
-    font-weight: 800;
-
-    color: #111827;
-
-    margin-bottom: 20px;
-
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.modal-footer {
+    border-top: none;
+    padding: 16px 24px;
 }
 
-/* INPUTS MODAL */
-
-#modalCliente .form-control,
-#modalCliente .form-select{
-
-    min-height: 48px;
-
+/* Formularios en modales */
+.form-control,
+.form-select {
     border-radius: 14px;
-
-    border: 1px solid #d1d5db;
-
-    padding: 12px 14px;
-
-    font-size: 14px;
-
-    transition: all 0.2s ease;
+    border: 1px solid #e2e8f0;
+    padding: 10px 14px;
+    font-size: 13px;
+    width: 100%;
 }
 
-#modalCliente textarea.form-control{
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--rojo);
+    box-shadow: 0 0 0 3px rgba(217,4,41,0.1);
+    outline: none;
+}
+
+textarea.form-control {
     min-height: 90px;
 }
 
-#modalCliente .form-control:focus,
-#modalCliente .form-select:focus{
-
-    border-color: var(--rojo);
-
-    box-shadow:
-    0 0 0 4px rgba(217,4,41,0.08);
-}
-
-/* ITEMS DINÁMICOS */
-
-#modalCliente .item-agregable{
-
+/* Items dinámicos en modal */
+.item-agregable {
+    background: white;
+    border-radius: 20px;
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid #edf2f7;
     position: relative;
-
-    background: #f9fafb;
-
-    border: 1px solid #e5e7eb;
-
-    border-radius: 16px;
-
-    padding: 20px;
-
-    margin-bottom: 18px;
 }
 
-/* BOTÓN ELIMINAR */
-
-#modalCliente .btn-eliminar{
-
+.btn-eliminar-item {
     position: absolute;
-
-    top: 12px;
-    right: 12px;
-
-    width: 34px;
-    height: 34px;
-
-    border: none;
-
-    border-radius: 10px;
-
+    top: 10px;
+    right: 10px;
     background: #dc2626;
-
+    border: none;
     color: white;
-
-    font-size: 14px;
-
+    border-radius: 30px;
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
     cursor: pointer;
-
-    transition: all 0.2s ease;
+    transition: all 0.2s;
 }
 
-#modalCliente .btn-eliminar:hover{
+.btn-eliminar-item:hover {
     transform: scale(1.05);
 }
 
-/* FOOTER */
-
-#modalCliente .modal-footer{
-
-    border: none;
-
-    padding: 20px 28px;
-
-    background: white;
+.btn-agregar {
+    background: #f1f5f9;
+    border-radius: 40px;
+    padding: 8px 16px;
+    font-weight: 500;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s;
 }
 
-/* BOTONES MODAL */
-
-#modalCliente .btn{
-
-    border-radius: 12px;
-
-    padding: 10px 18px;
-
-    font-weight: 700;
+.btn-agregar:hover {
+    background: #e2e8f0;
 }
 
 /* =========================================
-RESPONSIVE
+MODAL ELIMINAR CLIENTE
 ========================================= */
-
-@media(max-width: 992px){
-
-    .hero-content{
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-}
-
-@media(max-width: 768px){
-
-    .erp-navbar{
-
-        flex-direction: column;
-
-        gap: 15px;
-
-        padding: 20px;
-    }
-
-    .hero-title{
-        font-size: 28px;
-    }
-
-    .hero-actions{
-        width: 100%;
-    }
-
-    .btn-erp{
-
-        width: 100%;
-
-        justify-content: center;
-    }
-
-    #modalCliente .modal-body{
-        padding: 18px;
-    }
-
-    #modalCliente .erp-section{
-        padding: 18px;
-    }
-
-}
-/* =========================================
-   MODAL EDITAR CLIENTE
-========================================= */
-
-#modalEditarCliente .modal-content {
-    border: none;
-    border-radius: 18px;
-    overflow: hidden;
-    box-shadow: 0 10px 35px rgba(0,0,0,0.18);
-}
-
-#modalEditarCliente .modal-header {
-    background: linear-gradient(135deg, #1f2937, #111827);
-    border-bottom: none;
-    padding: 18px 24px;
-}
-
-#modalEditarCliente .modal-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: white;
-}
-
-#modalEditarCliente .modal-body {
-    background: #f8fafc;
-    padding: 24px;
-}
-
-#modalEditarCliente .modal-footer {
-    border-top: none;
-    padding: 18px 24px;
-}
-
-#modalEditarCliente .form-control,
-#modalEditarCliente .form-select {
-    border-radius: 12px;
-    border: 1px solid #d1d5db;
-    padding: 10px 14px;
-}
-
-#modalEditarCliente .form-control:focus,
-#modalEditarCliente .form-select:focus {
-    border-color: #dc2626;
-    box-shadow: 0 0 0 3px rgba(220,38,38,0.15);
-}
-
-/* =========================================
-   MODAL ELIMINAR CLIENTE
-========================================= */
-
-#modalEliminarCliente .modal-content {
-    border: none;
-    border-radius: 18px;
-    overflow: hidden;
-    box-shadow: 0 10px 35px rgba(0,0,0,0.18);
-}
-
 #modalEliminarCliente .modal-header {
     background: linear-gradient(135deg, #dc2626, #991b1b);
-    border-bottom: none;
-    padding: 18px 24px;
-}
-
-#modalEliminarCliente .modal-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: white;
 }
 
 #modalEliminarCliente .modal-body {
-    background: #fff;
-    padding: 30px 24px;
     text-align: center;
-    font-size: 16px;
-    color: #374151;
-}
-
-#modalEliminarCliente .modal-footer {
-    border-top: none;
-    padding: 18px 24px;
-    justify-content: center;
-    gap: 10px;
+    padding: 30px 24px;
 }
 
 #modalEliminarCliente .btn-danger {
     background: linear-gradient(135deg, #dc2626, #991b1b);
     border: none;
     border-radius: 12px;
-    padding: 10px 18px;
+    padding: 10px 20px;
     font-weight: 600;
 }
 
-#modalEliminarCliente .btn-secondary {
-    border-radius: 12px;
-    padding: 10px 18px;
-    font-weight: 600;
+/* =========================================
+RESPONSIVE
+========================================= */
+@media (max-width: 992px) {
+    .hero-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 768px) {
+    .erp-navbar {
+        flex-direction: column;
+        gap: 15px;
+        padding: 16px;
+    }
+
+    .hero-title {
+        font-size: 22px;
+    }
+
+    .hero-actions {
+        width: 100%;
+    }
+
+    .btn-erp {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .table-modern thead th,
+    .table-modern tbody td {
+        padding: 10px 12px;
+        font-size: 11px;
+    }
+
+    .btn-action {
+        width: 28px;
+        height: 28px;
+        font-size: 11px;
+    }
+
+    .modal-body {
+        padding: 18px;
+    }
+
+    .item-agregable {
+        padding: 12px;
+    }
+}
+
+@media (max-width: 576px) {
+    .table-modern thead th,
+    .table-modern tbody td {
+        padding: 8px 10px;
+        font-size: 10px;
+    }
+
+    .btn-action-group {
+        gap: 4px;
+    }
+
+    .btn-action {
+        width: 26px;
+        height: 26px;
+        font-size: 10px;
+    }
 }
