@@ -1080,7 +1080,6 @@ def obtener_cotizacion_completa(cotizacion_id):
             cl.razon_social,
             cl.numero_documento,
             cl.direccion_fiscal,
-            cl.email_contacto,
             u.nombre_completo,
             u.email,
             u.telefono
