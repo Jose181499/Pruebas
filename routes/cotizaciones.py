@@ -935,7 +935,7 @@ def eliminar_producto_api(id):
 
 
 # ==========================================
-# GENERAR PDF
+# GENERAR PDF - CORREGIDO
 # ==========================================
 
 @cotizaciones_bp.route("/api/cotizacion/pdf/<int:cotizacion_id>")
@@ -987,19 +987,35 @@ def generar_pdf(cotizacion_id):
 
     hay_descuentos = total_descuento_subtotal > 0
     hora_actual = datetime.now().strftime("%I:%M %p")
+    
+    # 🔥 CORRECCIÓN: fecha_creacion ya es string, no podemos usar strftime
+    fecha_creacion = cabecera.get("fecha_creacion", "")
+    if fecha_creacion and isinstance(fecha_creacion, str):
+        # Si es string con formato "YYYY-MM-DD HH:MM:SS", extraer solo la fecha
+        if ' ' in fecha_creacion:
+            fecha_parte = fecha_creacion.split(' ')[0]
+            partes = fecha_parte.split('-')
+            if len(partes) == 3:
+                fecha_actual = f"{partes[2]}/{partes[1]}/{partes[0]}"
+            else:
+                fecha_actual = datetime.now().strftime("%d/%m/%Y")
+        else:
+            fecha_actual = datetime.now().strftime("%d/%m/%Y")
+    else:
+        fecha_actual = datetime.now().strftime("%d/%m/%Y")
 
     html = render_template(
         "pdf/cotizacion_kcf.html",
         logo_base64=logo_base64,
-        numero_cotizacion=cabecera.get("codigo_cotizacion") or cabecera.get("numero_cotizacion"),
-        fecha_actual=cabecera.get("fecha_creacion").strftime("%d/%m/%Y") if cabecera.get("fecha_creacion") else datetime.now().strftime("%d/%m/%Y"),
+        numero_cotizacion=cabecera.get("codigo_cotizacion") or cabecera.get("numero_cotizacion") or "N/A",
+        fecha_actual=fecha_actual,
         hora_actual=hora_actual,
-        cliente_razon_social=cabecera.get("razon_social") or cabecera.get("nombre_empresa") or "",
-        cliente_ruc=cabecera.get("numero_documento") or cabecera.get("cliente_ruc") or "",
+        cliente_razon_social=cabecera.get("razon_social") or "",
+        cliente_ruc=cabecera.get("numero_documento") or "",
         cliente_direccion=cabecera.get("direccion_fiscal") or "",
         cliente_contacto=cabecera.get("nombre_contacto") or "",
         cliente_telefono=cabecera.get("telefono_contacto") or "",
-        numero_requerimiento=cabecera.get("requerimiento") or "REQ-001",
+        numero_requerimiento=cabecera.get("requerimiento") or "",
         asesor_comercial=cabecera.get("nombre_completo") or "Hellen Castillo",
         email_contacto=cabecera.get("email") or "ventas@kcfcorporacion.com",
         telefono_contacto=cabecera.get("telefono") or "999932051",
@@ -1014,13 +1030,15 @@ def generar_pdf(cotizacion_id):
         hay_descuentos=hay_descuentos,
         summary_igv=cabecera.get("igv", 0),
         summary_total_venta=cabecera.get("total", 0),
-        nota_cotizacion=cabecera.get("nota_cotizacion") or cabecera.get("notas", "")
+        nota_cotizacion=cabecera.get("nota_cotizacion") or ""
     )
 
     try:
         pdf = HTML(string=html).write_pdf()
     except Exception as e:
         print("🔥 ERROR EN WEASYPRINT:", e)
+        import traceback
+        traceback.print_exc()
         return jsonify({"success": False, "error": f"Error al generar PDF: {str(e)}"}), 500
 
     return Response(

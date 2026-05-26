@@ -1054,7 +1054,7 @@ def crear_cotizacion_transaccional(payload: dict, usuario_id: int):
 
 
 # ==========================
-# Obtener cotización completa - CORREGIDO
+# Obtener cotización completa - CORREGIDO (sin columnas que no existen)
 # ==========================
 def obtener_cotizacion_completa(cotizacion_id):
     rows = db_query("""
@@ -1121,19 +1121,6 @@ def obtener_cotizacion_completa(cotizacion_id):
         "cabecera": cotizacion,
         "detalle": cotizacion["detalle"]
     }
-# =========================
-# Crear usuario
-# =========================
-def crear_usuario(usuario: str, password: str, rol: str, nombre_completo: str, email: str = ""):
-
-    pwd_hash = generate_password_hash(password)
-
-    with db_tx() as conn:
-        cur = conn.cursor()
-        cur.execute("""
-            INSERT INTO usuarios (usuario, password, rol, nombre_completo, email)
-            VALUES (%s,%s,%s,%s,%s)
-        """, (usuario, pwd_hash, rol, nombre_completo, email))
 
 
 # =========================================
