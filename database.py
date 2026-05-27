@@ -420,7 +420,7 @@ def obtener_clientes():
 
             WHERE activo = TRUE
 
-            ORDER BY razon_social
+            ORDER BY id DESC
 
         """)
 
