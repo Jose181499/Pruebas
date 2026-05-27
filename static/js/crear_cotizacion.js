@@ -9,6 +9,21 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // =========================
+    // FORMATEAR CANTIDAD (elimina .000)
+    // =========================
+    function formatCantidad(cant) {
+        if (cant === null || cant === undefined) return '0';
+        let numero = parseFloat(cant);
+        if (isNaN(numero)) return '0';
+        // Si es entero, mostrar sin decimales
+        if (numero % 1 === 0) {
+            return numero.toString();
+        }
+        // Si tiene decimales, mostrarlos sin ceros innecesarios
+        return numero.toFixed(3).replace(/\.?0+$/, '');
+    }
+
+    // =========================
     // GENERACIÓN DE CÓDIGOS PERSONALIZADOS
     // =========================
     let codigoCotizacionActual = '';
@@ -427,7 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // CONFIGURAR DESCUENTO PERSONALIZABLE (NUEVO)
+    // CONFIGURAR DESCUENTO PERSONALIZABLE
     // =========================
     function configurarDescuentoPersonalizable() {
         const descuentoInput = document.getElementById('descuento_porcentaje_input');
@@ -481,7 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const option = document.createElement('option');
                     option.value = dir.direccion;
                     option.textContent = dir.direccion.length > 50 ? dir.direccion.substring(0, 47) + '...' : dir.direccion;
-                    if (dir.es_principal) {
+                    if (dir.principal) {
                         option.textContent += ' (Principal)';
                     }
                     select.appendChild(option);
@@ -1288,16 +1303,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const valorVentaTotal = cantidad * precioVenta;
             
             const valorVentaTotalElem = r.querySelector('.valor_venta_total');
-            if (valorVentaTotalElem) valorVentaTotalElem.textContent = valorVentaTotal.toFixed(2);
+            if (valorVentaTotalElem) valorVentaTotalElem.textContent = formatCantidad(valorVentaTotal);
             
             totalValorVenta += valorVentaTotal;
         });
 
         const totalValorVentaElem = document.getElementById('total_valor_venta');
-        if (totalValorVentaElem) totalValorVentaElem.textContent = totalValorVenta.toFixed(2);
+        if (totalValorVentaElem) totalValorVentaElem.textContent = formatCantidad(totalValorVenta);
         
         const summarySubtotal = document.getElementById('summary_subtotal_venta');
-        if (summarySubtotal) summarySubtotal.textContent = totalValorVenta.toFixed(2);
+        if (summarySubtotal) summarySubtotal.textContent = formatCantidad(totalValorVenta);
         
         // 🔥 NUEVO: OBTENER DESCUENTO PERSONALIZADO
         const descuentoInput = document.getElementById('descuento_porcentaje_input');
@@ -1320,16 +1335,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalVenta = subtotalConDescuento + igv;
         
         const summaryDescuento = document.getElementById('summary_descuento');
-        if (summaryDescuento) summaryDescuento.textContent = descuentoMonto.toFixed(2);
+        if (summaryDescuento) summaryDescuento.textContent = formatCantidad(descuentoMonto);
         
         const summarySubtotalDescuento = document.getElementById('summary_subtotal_descuento');
-        if (summarySubtotalDescuento) summarySubtotalDescuento.textContent = subtotalConDescuento.toFixed(2);
+        if (summarySubtotalDescuento) summarySubtotalDescuento.textContent = formatCantidad(subtotalConDescuento);
         
         const summaryIgv = document.getElementById('summary_igv');
-        if (summaryIgv) summaryIgv.textContent = igv.toFixed(2);
+        if (summaryIgv) summaryIgv.textContent = formatCantidad(igv);
         
         const summaryTotal = document.getElementById('summary_total_venta');
-        if (summaryTotal) summaryTotal.textContent = totalVenta.toFixed(2);
+        if (summaryTotal) summaryTotal.textContent = formatCantidad(totalVenta);
         
         // Actualizar el campo oculto con el valor del descuento
         const descuentoHidden = document.getElementById('descuento_porcentaje');
@@ -1489,11 +1504,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('cliente_razon_social').value = data.cliente || data.razon_social || '';
             document.getElementById('cliente_doc').value = data.numero_documento || data.cliente_ruc || '';
             document.getElementById('cliente_direccion').value = data.direccion_fiscal || '';
-            // document.getElementById('cliente_contacto').value = data.nombre_contacto || '';
-            // document.getElementById('email_contacto_cliente').value = data.email_contacto || '';
-            // document.getElementById('telefono_contacto').value = data.telefono_contacto || '';
-            // Cargar contacto, teléfono y correo desde el cliente (no desde la cotización)
-       // Cargar contacto, teléfono y correo desde la cotización (ya se guardan en la tabla cotizaciones)
         document.getElementById('cliente_contacto').value = data.cliente_contacto || '';
         document.getElementById('email_contacto_cliente').value = data.email_contacto_cliente || '';
         document.getElementById('telefono_contacto').value = data.telefono_contacto || '';
@@ -1522,16 +1532,16 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const total = Number(data.total || 0);
             const totalValorVentaElem = document.getElementById('total_valor_venta');
-            if (totalValorVentaElem) totalValorVentaElem.textContent = total.toFixed(2);
+            if (totalValorVentaElem) totalValorVentaElem.textContent = formatCantidad(total);
             
             const summarySubtotal = document.getElementById('summary_subtotal_venta');
-            if (summarySubtotal) summarySubtotal.textContent = total.toFixed(2);
+            if (summarySubtotal) summarySubtotal.textContent = formatCantidad(total);
             
             const summaryIgv = document.getElementById('summary_igv');
-            if (summaryIgv) summaryIgv.textContent = Number(data.igv || 0).toFixed(2);
+            if (summaryIgv) summaryIgv.textContent = formatCantidad(Number(data.igv || 0));
             
             const summaryTotal = document.getElementById('summary_total_venta');
-            if (summaryTotal) summaryTotal.textContent = total.toFixed(2);
+            if (summaryTotal) summaryTotal.textContent = formatCantidad(total);
             
             document.getElementById('table-body').innerHTML = '';
             itemCounter = 0;
@@ -1542,7 +1552,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const row = document.querySelector("#table-body tr:last-child");
                     if (row) {
                         row.querySelector('.producto_id').value = item.producto_id || '';
-                        row.querySelector('.cantidad').value = item.cantidad || 0;
+                        row.querySelector('.cantidad').value = formatCantidad(item.cantidad || 0);
                         row.querySelector('.precio_venta_unitario').value = item.precio_venta_unitario || 0;
                         row.querySelector('.codigo_producto').value = item.codigo || '';
                         row.querySelector('.descripcion').value = item.descripcion || '';
@@ -1620,7 +1630,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
       // =========================
-    // BOTÓN CONFIRMAR MODIFICAR (AGREGAR ESTO)
+    // BOTÓN CONFIRMAR MODIFICAR
     // =========================
     document.getElementById('btn-confirmar-modificar')?.addEventListener('click', function() {
         const modalElement = document.getElementById('modalModificar');
@@ -1634,7 +1644,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================
     configurarCondicionPago();
     configurarValidezOferta();
-    configurarDescuentoPersonalizable(); // NUEVA CONFIGURACIÓN
+    configurarDescuentoPersonalizable();
 
     // =========================
     // INIT

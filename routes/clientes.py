@@ -386,7 +386,7 @@ def consultar_sunat():
                 "success": True,
                 "tipo_documento": "RUC",
                 "numero_documento": numero,
-                "razon_social": data.get("razonSocial", ""),
+                "razon_social": data.get("nombre", ""),
                 "nombre_comercial": data.get("nombreComercial", ""),
                 "direccion": data.get("direccion", "")
             })

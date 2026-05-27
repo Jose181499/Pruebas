@@ -1,4 +1,25 @@
 // =========================================
+// DATOS DE UBIGEO (PERÚ)
+// =========================================
+const ubigeo = {
+    Lima: {
+        Lima: ["Lima", "Barranco", "Breña", "Chorrillos", "Comas", "El Agustino", "Jesús María", "La Molina", "La Victoria", "Lince", "Los Olivos", "Magdalena del Mar", "Miraflores", "Pueblo Libre", "Puente Piedra", "Rímac", "San Borja", "San Isidro", "San Juan de Lurigancho", "San Juan de Miraflores", "San Luis", "San Martín de Porres", "San Miguel", "Santa Anita", "Santiago de Surco", "Surquillo", "Villa El Salvador", "Villa María del Triunfo"]
+    },
+    Arequipa: {
+        Arequipa: ["Arequipa", "Alto Selva Alegre", "Cayma", "Cerro Colorado", "Characato", "Chiguata", "Jacobo Hunter", "José Luis Bustamante y Rivero", "La Joya", "Mariano Melgar", "Miraflores", "Paucarpata", "Pocsi", "Polobaya", "Quequeña", "Sabandía", "Sachaca", "San Juan de Siguas", "San Juan de Tarucani", "Santa Isabel de Siguas", "Santa Rita de Siguas", "Socabaya", "Tiabaya", "Uchumayo", "Vitor", "Yanahuara", "Yarabamba", "Yura"]
+    },
+    Cusco: {
+        Cusco: ["Cusco", "San Jerónimo", "San Sebastián", "Santiago", "Wanchaq"]
+    },
+    LaLibertad: {
+        Trujillo: ["Trujillo", "El Porvenir", "Florencia de Mora", "Huanchaco", "La Esperanza", "Laredo", "Moche", "Poroto", "Salaverry", "Simbal", "Víctor Larco Herrera"]
+    },
+    Piura: {
+        Piura: ["Piura", "Castilla", "Catacaos", "Cura Mori", "El Tallán", "La Arena", "La Unión", "Las Lomas", "Tambo Grande"]
+    }
+};
+
+// =========================================
 // SISTEMA DE NOTIFICACIONES
 // =========================================
 function mostrarNotificacion(mensaje, tipo = 'exito') {
@@ -90,9 +111,8 @@ function mostrarNotificacion(mensaje, tipo = 'exito') {
     }, 4000);
 }
 
-
 // =========================================
-// FUNCIONES DE ESCAPE
+// FUNCIONES DE ESCAPE Y VALIDACIÓN
 // =========================================
 function escapeHtml(text) {
     if (!text) return '';
@@ -110,19 +130,19 @@ function actualizarPlaceholderDocumento(prefix = '') {
 
     if (tipo.value === 'RUC') {
         input.placeholder = '11 dígitos';
-        input.maxLength = 11;          // ← AGREGA
+        input.maxLength = 11;
         if (label) label.innerHTML = 'RUC *:';
     } else if (tipo.value === 'DNI') {
         input.placeholder = '8 dígitos';
-        input.maxLength = 8;           // ← AGREGA
+        input.maxLength = 8;
         if (label) label.innerHTML = 'DNI *:';
     } else if (tipo.value === 'CE') {
         input.placeholder = '9 dígitos';
-        input.maxLength = 9;           // ← AGREGA
+        input.maxLength = 9;
         if (label) label.innerHTML = 'CE *:';
     } else {
         input.placeholder = 'Ingrese el número';
-        input.maxLength = 20;          // ← AGREGA
+        input.maxLength = 20;
         if (label) label.innerHTML = 'Número de Documento *:';
     }
 }
@@ -131,10 +151,9 @@ function validarNumeroDocumento(input, prefix = '') {
     const tipo = document.getElementById(`${prefix}tipo_documento`);
     if (!tipo) return;
 
-    const limites = { RUC: 11, DNI: 8 ,CE: 9};
+    const limites = { RUC: 11, DNI: 8, CE: 9 };
     const max = limites[tipo.value];
 
-    // Solo permite números
     input.value = input.value.replace(/\D/g, '');
 
     if (max && input.value.length > max) {
@@ -142,6 +161,175 @@ function validarNumeroDocumento(input, prefix = '') {
         mostrarNotificacion(`El ${tipo.value} solo permite ${max} dígitos como máximo.`, 'warning');
     }
 }
+
+// =========================================
+// FORMATO DE FECHA Y HORA
+// =========================================
+function formatearFechaHora(fechaISO) {
+    if (!fechaISO) return 'No registrada';
+    try {
+        const fecha = new Date(fechaISO);
+        const opcionesFecha = { year: 'numeric', month: 'long', day: 'numeric' };
+        const opcionesHora = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+        const fechaFormateada = fecha.toLocaleDateString('es-PE', opcionesFecha);
+        const horaFormateada = fecha.toLocaleTimeString('es-PE', opcionesHora);
+        return `${fechaFormateada} - ${horaFormateada}`;
+    } catch (e) {
+        return 'Fecha inválida';
+    }
+}
+
+// =========================================
+// ABRIR MODAL VER CLIENTE (CON FECHA Y HORA)
+// =========================================
+window.abrirModalVer = async function(id) {
+    if (!id) {
+        mostrarNotificacion("ID de cliente no válido", 'error');
+        return;
+    }
+    
+    const modalBody = document.getElementById('modalVerBody');
+    if (!modalBody) {
+        mostrarNotificacion("Modal de visualización no encontrado", 'error');
+        return;
+    }
+    
+    modalBody.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2">Cargando datos del cliente...</p></div>`;
+    
+    try {
+        const res = await fetch(`/api/clientes/${id}`);
+        const json = await res.json();
+        
+        if (!json.success || !json.data) {
+            throw new Error(json.error || "Error al cargar los datos");
+        }
+        
+        const c = json.data;
+        const fechaRegistro = formatearFechaHora(c.created_at || c.fecha_registro);
+        
+        let html = `
+            <div class="fecha-registro-box" style="background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%); border-radius: 16px; padding: 15px; text-align: center; margin-bottom: 20px;">
+                <i class="bi bi-calendar-clock-fill" style="font-size: 2rem; color: #667eea;"></i>
+                <div class="mt-2">
+                    <small class="text-muted" style="font-size: 0.7rem;">FECHA Y HORA DE REGISTRO</small>
+                    <h5 class="mb-0 fw-bold" style="color: #667eea;">${fechaRegistro}</h5>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="info-row-ver" style="background: #f8f9fa; border-radius: 12px; padding: 12px 16px; margin-bottom: 12px;">
+                        <div class="info-label-ver" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #6c757d;">CÓDIGO DE CLIENTE</div>
+                        <div class="info-value-ver" style="font-size: 0.95rem; font-weight: 500;"><strong class="text-primary">${escapeHtml(c.codigo_cliente || '---')}</strong></div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-row-ver" style="background: #f8f9fa; border-radius: 12px; padding: 12px 16px; margin-bottom: 12px;">
+                        <div class="info-label-ver" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #6c757d;">TIPO DOCUMENTO</div>
+                        <div class="info-value-ver" style="font-size: 0.95rem; font-weight: 500;">${escapeHtml(c.tipo_documento || '-')}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="info-row-ver" style="background: #f8f9fa; border-radius: 12px; padding: 12px 16px; margin-bottom: 12px;">
+                        <div class="info-label-ver" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #6c757d;">NÚMERO DE DOCUMENTO</div>
+                        <div class="info-value-ver" style="font-size: 0.95rem; font-weight: 500;"><strong>${escapeHtml(c.numero_documento || '-')}</strong></div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-row-ver" style="background: #f8f9fa; border-radius: 12px; padding: 12px 16px; margin-bottom: 12px;">
+                        <div class="info-label-ver" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #6c757d;">RAZÓN SOCIAL</div>
+                        <div class="info-value-ver" style="font-size: 0.95rem; font-weight: 500;">${escapeHtml(c.razon_social || '-')}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="info-row-ver" style="background: #f8f9fa; border-radius: 12px; padding: 12px 16px; margin-bottom: 12px;">
+                        <div class="info-label-ver" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #6c757d;">NOMBRE COMERCIAL</div>
+                        <div class="info-value-ver" style="font-size: 0.95rem; font-weight: 500;">${escapeHtml(c.nombre_comercial || '-')}</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-row-ver" style="background: #f8f9fa; border-radius: 12px; padding: 12px 16px; margin-bottom: 12px;">
+                        <div class="info-label-ver" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #6c757d;">DIRECCIÓN FISCAL</div>
+                        <div class="info-value-ver" style="font-size: 0.95rem; font-weight: 500;">${escapeHtml(c.direccion_fiscal || '-')}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Contactos
+        html += `<div class="erp-section-title mt-3" style="font-size: 1rem; font-weight: 700; margin: 20px 0 12px 0; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb;"><i class="bi bi-person-badge"></i> Contactos Asociados</div>`;
+        if (c.contactos && c.contactos.length > 0) {
+            c.contactos.forEach(contacto => {
+                html += `
+                    <div class="contact-card-ver" style="background: #f0fdf4; border-left: 4px solid #10b981; border-radius: 12px; padding: 12px; margin-bottom: 10px;">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>${escapeHtml(contacto.nombre_contacto || 'Sin nombre')}</strong>
+                                ${contacto.principal ? '<span class="badge-principal ms-2" style="background: #fef3c7; color: #d97706; font-size: 0.7rem; padding: 2px 10px; border-radius: 20px;"><i class="bi bi-star-fill"></i> Principal</span>' : ''}
+                                <div class="small text-muted mt-1">
+                                    ${contacto.cargo ? `<i class="bi bi-briefcase"></i> ${escapeHtml(contacto.cargo)}<br>` : ''}
+                                    ${contacto.email ? `<i class="bi bi-envelope"></i> ${escapeHtml(contacto.email)}<br>` : ''}
+                                    ${contacto.telefono ? `<i class="bi bi-telephone"></i> ${escapeHtml(contacto.telefono)}` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            html += `<p class="text-muted">No hay contactos registrados</p>`;
+        }
+        
+        // Puntos de entrega
+        html += `<div class="erp-section-title mt-3" style="font-size: 1rem; font-weight: 700; margin: 20px 0 12px 0; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb;"><i class="bi bi-geo-alt-fill"></i> Puntos de Entrega</div>`;
+        if (c.puntos_entrega && c.puntos_entrega.length > 0) {
+            c.puntos_entrega.forEach(punto => {
+                html += `
+                    <div class="punto-card-ver" style="background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 12px; padding: 12px; margin-bottom: 10px;">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>${escapeHtml(punto.nombre_punto || 'Sin nombre')}</strong>
+                                ${punto.principal_punto ? '<span class="badge-principal ms-2" style="background: #fef3c7; color: #d97706; font-size: 0.7rem; padding: 2px 10px; border-radius: 20px;"><i class="bi bi-star-fill"></i> Principal</span>' : ''}
+                                <div class="small text-muted mt-1">
+                                    ${punto.direccion ? `<i class="bi bi-pin-map"></i> ${escapeHtml(punto.direccion)}<br>` : ''}
+                                    ${punto.departamento ? `<i class="bi bi-building"></i> ${escapeHtml(punto.departamento)}` : ''}
+                                    ${punto.provincia ? ` - ${escapeHtml(punto.provincia)}` : ''}
+                                    ${punto.distrito ? ` - ${escapeHtml(punto.distrito)}<br>` : '<br>'}
+                                    ${punto.responsable ? `<i class="bi bi-person"></i> Contacto: ${escapeHtml(punto.responsable)}<br>` : ''}
+                                    ${punto.telefono_punto ? `<i class="bi bi-telephone"></i> ${escapeHtml(punto.telefono_punto)}<br>` : ''}
+                                    ${punto.condicion_pago ? `<i class="bi bi-credit-card"></i> Condición: ${escapeHtml(punto.condicion_pago)}` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            html += `<p class="text-muted">No hay puntos de entrega registrados</p>`;
+        }
+        
+        modalBody.innerHTML = html;
+        const modalElement = document.getElementById('modalVerCliente');
+        if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        }
+        
+    } catch (error) {
+        console.error("Error al cargar cliente:", error);
+        modalBody.innerHTML = `<div class="text-center py-5 text-danger">
+            <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem;"></i>
+            <p class="mt-2">Error al cargar los datos: ${error.message}</p>
+        </div>`;
+        mostrarNotificacion("Error cargando cliente: " + error.message, 'error');
+    }
+};
 
 // =========================================
 // INICIALIZACIÓN
@@ -233,7 +421,7 @@ function agregarContactoNuevo(data = {}) {
 }
 
 // =========================================
-// AGREGAR PUNTO - NUEVO CLIENTE
+// AGREGAR PUNTO - NUEVO CLIENTE (CON SELECT MEJORADO)
 // =========================================
 function agregarPuntoNuevo(data = {}) {
     const container = document.getElementById('listaPuntos');
@@ -278,17 +466,34 @@ function agregarPuntoNuevo(data = {}) {
                 <select data-field="condicion_pago" class="form-select select-condicion-pago">
                     <option value="">Seleccione</option>
                     <option value="Contado" ${data.condicion_pago === 'Contado' ? 'selected' : ''}>Contado</option>
-                    <option value="Credito" ${data.condicion_pago === 'Credito' ? 'selected' : ''}>Crédito</option>
+                    <option value="Crédito 7 días" ${data.condicion_pago === 'Crédito 7 días' ? 'selected' : ''}>Crédito 7 días</option>
+                    <option value="Crédito 15 días" ${data.condicion_pago === 'Crédito 15 días' ? 'selected' : ''}>Crédito 15 días</option>
+                    <option value="Crédito 30 días" ${data.condicion_pago === 'Crédito 30 días' ? 'selected' : ''}>Crédito 30 días</option>
+                    <option value="Crédito 45 días" ${data.condicion_pago === 'Crédito 45 días' ? 'selected' : ''}>Crédito 45 días</option>
+                    <option value="Crédito 60 días" ${data.condicion_pago === 'Crédito 60 días' ? 'selected' : ''}>Crédito 60 días</option>
+                    <option value="Crédito 90 días" ${data.condicion_pago === 'Crédito 90 días' ? 'selected' : ''}>Crédito 90 días</option>
+                    <option value="Personalizado" ${data.condicion_pago === 'Personalizado' ? 'selected' : ''}>Personalizado (escribir)</option>
                 </select>
             </div>
-            <div class="col-md-6 mb-3 campo-credito" style="display:${data.condicion_pago === 'Credito' ? 'block' : 'none'}">
-                <label>Tiempo de Crédito</label><input type="text" class="form-control" data-field="tiempo_credito" placeholder="Ej: 30 días" value="${escapeHtml(data.tiempo_credito || '')}">
+            <div class="col-md-6 mb-3 campo-credito-personalizado" style="display:${data.condicion_pago === 'Personalizado' ? 'block' : 'none'}">
+                <label>Escribir condición</label>
+                <input type="text" class="form-control" data-field="tiempo_credito" placeholder="Ej: Crédito 20 días, 50% adelanto..." value="${escapeHtml(data.tiempo_credito || '')}">
             </div>
         </div>
         <div class="checkbox-group"><input type="checkbox" data-field="principal_punto" ${data.principal_punto ? 'checked' : ''}> <label>Principal</label></div>
     `;
     container.appendChild(div);
+    
     inicializarEventosPunto(div, data);
+    
+    // Evento para mostrar/ocultar campo personalizado
+    const selectCondicion = div.querySelector('.select-condicion-pago');
+    const campoPersonalizado = div.querySelector('.campo-credito-personalizado');
+    if (selectCondicion && campoPersonalizado) {
+        selectCondicion.addEventListener('change', function() {
+            campoPersonalizado.style.display = this.value === 'Personalizado' ? 'block' : 'none';
+        });
+    }
 }
 
 // =========================================
@@ -317,7 +522,7 @@ function agregarContactoEdicion(data = {}) {
 }
 
 // =========================================
-// AGREGAR PUNTO - EDITAR CLIENTE
+// AGREGAR PUNTO - EDITAR CLIENTE (CON SELECT MEJORADO)
 // =========================================
 function agregarPuntoEdicion(data = {}) {
     const container = document.getElementById('edit_listaPuntos');
@@ -355,36 +560,51 @@ function agregarPuntoEdicion(data = {}) {
         </div>
         <div class="row">
             <div class="col-md-6 mb-3"><label>Contacto de Entrega</label><input class="form-control" data-field="edit_responsable" value="${escapeHtml(data.responsable || '')}"></div>
-            <div class="col-md-6 mb-3"><label>Teléfono</label><input class="form-control" data-field="edit_telefono_punto" value="${escapeHtml(data.telefono_contacto || '')}"></div>
+            <div class="col-md-6 mb-3"><label>Teléfono</label><input class="form-control" data-field="edit_telefono_punto" value="${escapeHtml(data.telefono_punto || '')}"></div>
         </div>
         <div class="row">
             <div class="col-md-6 mb-3"><label>Condición de Pago</label>
                 <select data-field="edit_condicion_pago" class="form-select select-condicion-pago">
                     <option value="">Seleccione</option>
                     <option value="Contado" ${data.condicion_pago === 'Contado' ? 'selected' : ''}>Contado</option>
-                    <option value="Credito" ${data.condicion_pago === 'Credito' ? 'selected' : ''}>Crédito</option>
+                    <option value="Crédito 7 días" ${data.condicion_pago === 'Crédito 7 días' ? 'selected' : ''}>Crédito 7 días</option>
+                    <option value="Crédito 15 días" ${data.condicion_pago === 'Crédito 15 días' ? 'selected' : ''}>Crédito 15 días</option>
+                    <option value="Crédito 30 días" ${data.condicion_pago === 'Crédito 30 días' ? 'selected' : ''}>Crédito 30 días</option>
+                    <option value="Crédito 45 días" ${data.condicion_pago === 'Crédito 45 días' ? 'selected' : ''}>Crédito 45 días</option>
+                    <option value="Crédito 60 días" ${data.condicion_pago === 'Crédito 60 días' ? 'selected' : ''}>Crédito 60 días</option>
+                    <option value="Crédito 90 días" ${data.condicion_pago === 'Crédito 90 días' ? 'selected' : ''}>Crédito 90 días</option>
+                    <option value="Personalizado" ${data.condicion_pago === 'Personalizado' ? 'selected' : ''}>Personalizado (escribir)</option>
                 </select>
             </div>
-            <div class="col-md-6 mb-3 campo-credito" style="display:${data.condicion_pago === 'Credito' ? 'block' : 'none'}">
-                <label>Tiempo de Crédito</label><input type="text" class="form-control" data-field="edit_tiempo_credito" placeholder="Ej: 30 días" value="${escapeHtml(data.tiempo_credito || '')}">
+            <div class="col-md-6 mb-3 campo-credito-personalizado" style="display:${data.condicion_pago === 'Personalizado' ? 'block' : 'none'}">
+                <label>Escribir condición</label>
+                <input type="text" class="form-control" data-field="edit_tiempo_credito" placeholder="Ej: Crédito 20 días, 50% adelanto..." value="${escapeHtml(data.tiempo_credito || '')}">
             </div>
         </div>
         <div class="checkbox-group"><input type="checkbox" data-field="principal_punto" ${data.principal_punto ? 'checked' : ''}> <label>Principal</label></div>
     `;
     container.appendChild(div);
-
-    // Inicializar eventos pasando data para evitar que dispatchEvent pise los valores
+    
     inicializarEventosPunto(div, data);
+    
+    // Evento para mostrar/ocultar campo personalizado
+    const selectCondicion = div.querySelector('.select-condicion-pago');
+    const campoPersonalizado = div.querySelector('.campo-credito-personalizado');
+    if (selectCondicion && campoPersonalizado) {
+        selectCondicion.addEventListener('change', function() {
+            campoPersonalizado.style.display = this.value === 'Personalizado' ? 'block' : 'none';
+        });
+    }
 
-    // ─── CARGAR PROVINCIA Y DISTRITO SI YA EXISTEN ───
+    // Cargar provincia y distrito si ya existen
     if (data.departamento) {
-        const selDep  = div.querySelector('[data-field="edit_departamento"]');
+        const selDep = div.querySelector('[data-field="edit_departamento"]');
         const selProv = div.querySelector('[data-field="edit_provincia"]');
         const selDist = div.querySelector('[data-field="edit_distrito"]');
 
-        selDep.value = data.departamento;
+        if (selDep) selDep.value = data.departamento;
 
-        if (ubigeo[data.departamento]) {
+        if (ubigeo[data.departamento] && selProv) {
             selProv.innerHTML = '<option value="">Seleccione</option>';
             Object.keys(ubigeo[data.departamento]).forEach(p => {
                 const opt = document.createElement('option');
@@ -395,7 +615,7 @@ function agregarPuntoEdicion(data = {}) {
             });
         }
 
-        if (data.provincia && ubigeo[data.departamento]?.[data.provincia]) {
+        if (data.provincia && ubigeo[data.departamento]?.[data.provincia] && selDist) {
             selDist.innerHTML = '<option value="">Seleccione</option>';
             ubigeo[data.departamento][data.provincia].forEach(d => {
                 const opt = document.createElement('option');
@@ -412,14 +632,12 @@ function agregarPuntoEdicion(data = {}) {
 // INICIALIZAR EVENTOS DE PUNTO
 // =========================================
 function inicializarEventosPunto(div, data = {}) {
-    const selectDepartamento  = div.querySelector('[data-field="departamento"], [data-field="edit_departamento"]');
-    const selectProvincia     = div.querySelector('[data-field="provincia"], [data-field="edit_provincia"]');
-    const selectDistrito      = div.querySelector('[data-field="distrito"], [data-field="edit_distrito"]');
-    const buscarDepartamento  = div.querySelector('.buscar-departamento');
-    const buscarProvincia     = div.querySelector('.buscar-provincia');
-    const buscarDistrito      = div.querySelector('.buscar-distrito');
-    const selectCondicionPago = div.querySelector('.select-condicion-pago');
-    const campoCredito        = div.querySelector('.campo-credito');
+    const selectDepartamento = div.querySelector('[data-field="departamento"], [data-field="edit_departamento"]');
+    const selectProvincia = div.querySelector('[data-field="provincia"], [data-field="edit_provincia"]');
+    const selectDistrito = div.querySelector('[data-field="distrito"], [data-field="edit_distrito"]');
+    const buscarDepartamento = div.querySelector('.buscar-departamento');
+    const buscarProvincia = div.querySelector('.buscar-provincia');
+    const buscarDistrito = div.querySelector('.buscar-distrito');
 
     if (buscarDepartamento && selectDepartamento) {
         buscarDepartamento.addEventListener('input', function() {
@@ -455,14 +673,13 @@ function inicializarEventosPunto(div, data = {}) {
         selectDepartamento.addEventListener('change', function() {
             const departamento = this.value;
             if (selectProvincia) selectProvincia.innerHTML = '<option value="">Seleccione</option>';
-            if (selectDistrito)  selectDistrito.innerHTML  = '<option value="">Seleccione</option>';
+            if (selectDistrito) selectDistrito.innerHTML = '<option value="">Seleccione</option>';
             if (!ubigeo[departamento]) return;
             Object.keys(ubigeo[departamento]).forEach(provincia => {
                 if (selectProvincia) selectProvincia.innerHTML += `<option value="${provincia}">${provincia}</option>`;
             });
         });
 
-        // ✅ Solo disparar si NO hay datos precargados
         if (!data.departamento) {
             selectDepartamento.dispatchEvent(new Event('change'));
         }
@@ -471,7 +688,7 @@ function inicializarEventosPunto(div, data = {}) {
     if (selectProvincia) {
         selectProvincia.addEventListener('change', function() {
             const departamento = selectDepartamento ? selectDepartamento.value : '';
-            const provincia    = this.value;
+            const provincia = this.value;
             if (selectDistrito) selectDistrito.innerHTML = '<option value="">Seleccione</option>';
             if (!ubigeo[departamento] || !ubigeo[departamento][provincia]) return;
             ubigeo[departamento][provincia].forEach(distrito => {
@@ -479,21 +696,13 @@ function inicializarEventosPunto(div, data = {}) {
             });
         });
     }
-
-    if (selectCondicionPago && campoCredito) {
-        selectCondicionPago.addEventListener('change', function() {
-            campoCredito.style.display = this.value === 'Credito' ? 'block' : 'none';
-        });
-    }
 }
 
 // =========================================
-// FILTROS Y BÚSQUEDA DE CLIENTES (VERSIÓN LIMPIA)
+// FILTROS Y BÚSQUEDA DE CLIENTES
 // =========================================
-
 let timeoutBusqueda = null;
 
-// Cargar clientes (principal)
 async function cargarClientes(filtros = {}) {
     const tbody = document.getElementById("tbody-clientes");
     if (!tbody) return;
@@ -514,12 +723,8 @@ async function cargarClientes(filtros = {}) {
 
         if (params.toString()) url += "?" + params.toString();
 
-        console.log("🔍 Buscando →", url);
-
         const res = await fetch(url);
         const json = await res.json();
-
-        console.log("📥 Respuesta:", json);
 
         if (!json.success) {
             throw new Error(json.error || "Error al cargar clientes");
@@ -537,7 +742,6 @@ async function cargarClientes(filtros = {}) {
             return;
         }
 
-        // Rellenar tabla
         clientes.forEach(c => {
             const contactos = (c.contactos?.length) 
                 ? c.contactos.map(ct => `📞 ${escapeHtml(ct.nombre_contacto || '')}`).join('<br>') 
@@ -562,12 +766,9 @@ async function cargarClientes(filtros = {}) {
                     <td>${contactos}</td>
                     <td>${puntos}</td>
                     <td class="text-center">
-                        <button class="btn-action btn-edit" onclick="abrirModalEditar(${c.id})" title="Editar">
-                            <i class="bi bi-pencil-square"></i>
-                        </button>
-                        <button class="btn-action btn-delete" onclick="abrirModalEliminar(${c.id})" title="Eliminar">
-                            <i class="bi bi-trash-fill"></i>
-                        </button>
+                        <button class="btn-action btn-view" onclick="abrirModalVer(${c.id})" title="Ver cliente" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#0dcaf0;padding:5px 8px;">👁️</button>
+                        <button class="btn-action btn-edit" onclick="abrirModalEditar(${c.id})" title="Editar" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#0d6efd;padding:5px 8px;">✏️</button>
+                        <button class="btn-action btn-delete" onclick="abrirModalEliminar(${c.id})" title="Eliminar" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#dc3545;padding:5px 8px;">🗑️</button>
                     </td>
                 </tr>
             `;
@@ -580,8 +781,6 @@ async function cargarClientes(filtros = {}) {
         </td></tr>`;
     }
 }
-
-
 
 // =========================================
 // INICIALIZAR FILTROS
@@ -604,18 +803,11 @@ function inicializarFiltros() {
             if (e.key === "Enter") aplicarFiltros();
         });
     }
-
-    // Carga inicial
-    cargarClientes();
 }
 
-// =========================================
-// APLICAR FILTROS
-// =========================================
 function aplicarFiltros() {
     const tipo = document.getElementById("filtro-tipo")?.value || "";
     const busqueda = document.getElementById("filtro-busqueda")?.value || "";
-
     cargarClientes({ tipo, busqueda });
 }
 
@@ -640,11 +832,9 @@ window.abrirModalEditar = async function(id) {
         
         const c = json.data;
         
-        // Limpiar contenedores
         document.getElementById('edit_listaContactos').innerHTML = '';
         document.getElementById('edit_listaPuntos').innerHTML = '';
         
-        // Llenar datos básicos
         document.getElementById('edit_id').value = c.id;
         document.getElementById('edit_tipo_documento').value = c.tipo_documento || '';
         document.getElementById('edit_numero_documento').value = c.numero_documento || '';
@@ -653,18 +843,16 @@ window.abrirModalEditar = async function(id) {
         document.getElementById('edit_direccion_fiscal').value = c.direccion_fiscal || '';
         actualizarPlaceholderDocumento('edit_');
         
-        // Cargar contactos
         if (c.contactos && c.contactos.length > 0) {
             c.contactos.forEach(contacto => agregarContactoEdicion(contacto));
         } else {
-            agregarContactoEdicion(); // Agregar uno vacío por defecto
+            agregarContactoEdicion();
         }
         
-        // Cargar puntos de entrega
         if (c.puntos_entrega && c.puntos_entrega.length > 0) {
             c.puntos_entrega.forEach(punto => agregarPuntoEdicion(punto));
         } else {
-            agregarPuntoEdicion(); // Agregar uno vacío por defecto
+            agregarPuntoEdicion();
         }
         
         const modal = new bootstrap.Modal(document.getElementById('modalEditarCliente'));
@@ -688,7 +876,6 @@ document.getElementById('formEditarCliente')?.addEventListener('submit', async f
         return;
     }
     
-    // Validar campos requeridos
     const tipoDoc = document.getElementById('edit_tipo_documento').value;
     const numDoc = document.getElementById('edit_numero_documento').value;
     const razonSocial = document.getElementById('edit_razon_social').value;
@@ -716,10 +903,9 @@ document.getElementById('formEditarCliente')?.addEventListener('submit', async f
         puntos_entrega: []
     };
     
-    // Recoger contactos
     document.querySelectorAll('#edit_listaContactos .item-agregable').forEach(item => {
         const nombreContacto = item.querySelector('[data-field="edit_nombre_contacto"]')?.value.trim();
-        if (nombreContacto) { // Solo agregar si tiene nombre
+        if (nombreContacto) {
             data.contactos.push({
                 nombre_contacto: nombreContacto,
                 cargo: item.querySelector('[data-field="edit_cargo"]')?.value.trim() || '',
@@ -730,10 +916,11 @@ document.getElementById('formEditarCliente')?.addEventListener('submit', async f
         }
     });
     
-    // Recoger puntos de entrega
     document.querySelectorAll('#edit_listaPuntos .item-agregable').forEach(item => {
         const nombrePunto = item.querySelector('[data-field="edit_nombre_punto"]')?.value.trim();
-        if (nombrePunto) { // Solo agregar si tiene nombre
+        if (nombrePunto) {
+            const condicionPago = item.querySelector('[data-field="edit_condicion_pago"]')?.value || '';
+            const tiempoCredito = item.querySelector('[data-field="edit_tiempo_credito"]')?.value.trim() || '';
             data.puntos_entrega.push({
                 nombre_punto: nombrePunto,
                 direccion: item.querySelector('[data-field="edit_direccion"]')?.value.trim() || '',
@@ -742,8 +929,8 @@ document.getElementById('formEditarCliente')?.addEventListener('submit', async f
                 distrito: item.querySelector('[data-field="edit_distrito"]')?.value || '',
                 responsable: item.querySelector('[data-field="edit_responsable"]')?.value.trim() || '',
                 telefono: item.querySelector('[data-field="edit_telefono_punto"]')?.value.trim() || '',
-                condicion_pago: item.querySelector('[data-field="edit_condicion_pago"]')?.value || '',
-                tiempo_credito: item.querySelector('[data-field="edit_tiempo_credito"]')?.value.trim() || '',
+                condicion_pago: condicionPago === 'Personalizado' ? tiempoCredito : condicionPago,
+                tiempo_credito: condicionPago === 'Personalizado' ? '' : tiempoCredito,
                 principal: item.querySelector('[data-field="principal_punto"]')?.checked || false
             });
         }
@@ -777,7 +964,6 @@ document.getElementById('formEditarCliente')?.addEventListener('submit', async f
 document.getElementById('formCliente')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    // Validar campos requeridos
     const tipoDoc = document.getElementById('tipo_documento').value;
     const numDoc = document.getElementById('numero_documento').value;
     const razonSocial = document.getElementById('razon_social').value;
@@ -805,10 +991,9 @@ document.getElementById('formCliente')?.addEventListener('submit', async functio
         puntos_entrega: []
     };
     
-    // Recoger contactos
     document.querySelectorAll('#listaContactos .item-agregable').forEach(item => {
         const nombreContacto = item.querySelector('[data-field="nombre_contacto"]')?.value.trim();
-        if (nombreContacto) { // Solo agregar si tiene nombre
+        if (nombreContacto) {
             data.contactos.push({
                 nombre_contacto: nombreContacto,
                 cargo: item.querySelector('[data-field="cargo"]')?.value.trim() || '',
@@ -819,10 +1004,11 @@ document.getElementById('formCliente')?.addEventListener('submit', async functio
         }
     });
     
-    // Recoger puntos de entrega
     document.querySelectorAll('#listaPuntos .item-agregable').forEach(item => {
         const nombrePunto = item.querySelector('[data-field="nombre_punto"]')?.value.trim();
-        if (nombrePunto) { // Solo agregar si tiene nombre
+        if (nombrePunto) {
+            const condicionPago = item.querySelector('[data-field="condicion_pago"]')?.value || '';
+            const tiempoCredito = item.querySelector('[data-field="tiempo_credito"]')?.value.trim() || '';
             data.puntos_entrega.push({
                 nombre_punto: nombrePunto,
                 direccion: item.querySelector('[data-field="direccion"]')?.value.trim() || '',
@@ -831,8 +1017,8 @@ document.getElementById('formCliente')?.addEventListener('submit', async functio
                 distrito: item.querySelector('[data-field="distrito"]')?.value || '',
                 responsable: item.querySelector('[data-field="responsable"]')?.value.trim() || '',
                 telefono: item.querySelector('[data-field="telefono_punto"]')?.value.trim() || '',
-                condicion_pago: item.querySelector('[data-field="condicion_pago"]')?.value || '',
-                tiempo_credito: item.querySelector('[data-field="tiempo_credito"]')?.value.trim() || '',
+                condicion_pago: condicionPago === 'Personalizado' ? tiempoCredito : condicionPago,
+                tiempo_credito: condicionPago === 'Personalizado' ? '' : tiempoCredito,
                 principal: item.querySelector('[data-field="principal_punto"]')?.checked || false
             });
         }
@@ -853,16 +1039,13 @@ document.getElementById('formCliente')?.addEventListener('submit', async functio
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalCliente'));
             if (modal) modal.hide();
             
-            // Limpiar formulario
             document.getElementById('formCliente').reset();
             document.getElementById('listaContactos').innerHTML = '';
             document.getElementById('listaPuntos').innerHTML = '';
             
-            // Agregar items por defecto
             agregarContactoNuevo();
             agregarPuntoNuevo();
             
-            // Recargar tabla
             await cargarClientes();
         } else {
             mostrarNotificacion("❌ Error: " + json.error, 'error');
@@ -905,7 +1088,7 @@ document.getElementById('btnConfirmarEliminar')?.addEventListener('click', async
     }
 });
 
-// Inicializar items por defecto en los modales
+// Inicializar items por defecto
 setTimeout(() => {
     if (document.getElementById('listaContactos') && document.getElementById('listaContactos').children.length === 0) {
         agregarContactoNuevo();
@@ -913,11 +1096,4 @@ setTimeout(() => {
     if (document.getElementById('listaPuntos') && document.getElementById('listaPuntos').children.length === 0) {
         agregarPuntoNuevo();
     }
-    if (document.getElementById('edit_listaContactos') && document.getElementById('edit_listaContactos').children.length === 0) {
-        // No inicializar aquí para no interferir con la carga de datos
-    }
 }, 100);
-// =========================================
-// INICIALIZAR AL CARGAR LA PÁGINA
-// =========================================
-document.addEventListener("DOMContentLoaded", inicializarFiltros);
