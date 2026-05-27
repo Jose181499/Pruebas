@@ -1,5 +1,5 @@
 // =========================================
-// DATOS DE UBIGEO (PERÚ)
+// UBIGEO PERÚ (Departamentos, Provincias, Distritos)
 // =========================================
 const ubigeo = {
     Lima: {
@@ -39,19 +39,8 @@ function mostrarNotificacion(mensaje, tipo = 'exito') {
         document.body.appendChild(container);
     }
     
-    const colores = {
-        exito: '#4CAF50',
-        error: '#f44336',
-        info: '#2196F3',
-        warning: '#ff9800'
-    };
-    
-    const iconos = {
-        exito: '✅',
-        error: '❌',
-        info: 'ℹ️',
-        warning: '⚠️'
-    };
+    const colores = { exito: '#4CAF50', error: '#f44336', info: '#2196F3', warning: '#ff9800' };
+    const iconos = { exito: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
     
     const notificacion = document.createElement('div');
     notificacion.style.cssText = `
@@ -85,14 +74,8 @@ function mostrarNotificacion(mensaje, tipo = 'exito') {
         const styles = document.createElement('style');
         styles.id = 'notificacionesStyles';
         styles.textContent = `
-            @keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            @keyframes slideOut {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(100%); opacity: 0; }
-            }
+            @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+            @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
         `;
         document.head.appendChild(styles);
     }
@@ -150,12 +133,9 @@ function actualizarPlaceholderDocumento(prefix = '') {
 function validarNumeroDocumento(input, prefix = '') {
     const tipo = document.getElementById(`${prefix}tipo_documento`);
     if (!tipo) return;
-
     const limites = { RUC: 11, DNI: 8, CE: 9 };
     const max = limites[tipo.value];
-
     input.value = input.value.replace(/\D/g, '');
-
     if (max && input.value.length > max) {
         input.value = input.value.slice(0, max);
         mostrarNotificacion(`El ${tipo.value} solo permite ${max} dígitos como máximo.`, 'warning');
@@ -176,6 +156,304 @@ function formatearFechaHora(fechaISO) {
         return `${fechaFormateada} - ${horaFormateada}`;
     } catch (e) {
         return 'Fecha inválida';
+    }
+}
+
+// =========================================
+// INICIALIZAR EVENTOS DE PUNTO (Departamento, Provincia, Distrito)
+// =========================================
+function inicializarEventosPunto(div, data = {}) {
+    const selectDepartamento = div.querySelector('[data-field="departamento"], [data-field="edit_departamento"]');
+    const selectProvincia = div.querySelector('[data-field="provincia"], [data-field="edit_provincia"]');
+    const selectDistrito = div.querySelector('[data-field="distrito"], [data-field="edit_distrito"]');
+    const buscarDepartamento = div.querySelector('.buscar-departamento');
+    const buscarProvincia = div.querySelector('.buscar-provincia');
+    const buscarDistrito = div.querySelector('.buscar-distrito');
+
+    if (buscarDepartamento && selectDepartamento) {
+        buscarDepartamento.addEventListener('input', function() {
+            const filtro = this.value.toLowerCase();
+            Array.from(selectDepartamento.options).forEach(opt => {
+                if (opt.value === '') return;
+                opt.style.display = opt.text.toLowerCase().includes(filtro) ? '' : 'none';
+            });
+        });
+    }
+
+    if (buscarProvincia && selectProvincia) {
+        buscarProvincia.addEventListener('input', function() {
+            const filtro = this.value.toLowerCase();
+            Array.from(selectProvincia.options).forEach(opt => {
+                if (opt.value === '') return;
+                opt.style.display = opt.text.toLowerCase().includes(filtro) ? '' : 'none';
+            });
+        });
+    }
+
+    if (buscarDistrito && selectDistrito) {
+        buscarDistrito.addEventListener('input', function() {
+            const filtro = this.value.toLowerCase();
+            Array.from(selectDistrito.options).forEach(opt => {
+                if (opt.value === '') return;
+                opt.style.display = opt.text.toLowerCase().includes(filtro) ? '' : 'none';
+            });
+        });
+    }
+
+    if (selectDepartamento) {
+        selectDepartamento.addEventListener('change', function() {
+            const departamento = this.value;
+            if (selectProvincia) selectProvincia.innerHTML = '<option value="">Seleccione</option>';
+            if (selectDistrito) selectDistrito.innerHTML = '<option value="">Seleccione</option>';
+            if (!ubigeo[departamento]) return;
+            Object.keys(ubigeo[departamento]).forEach(provincia => {
+                if (selectProvincia) selectProvincia.innerHTML += `<option value="${provincia}">${provincia}</option>`;
+            });
+        });
+        if (!data.departamento) {
+            selectDepartamento.dispatchEvent(new Event('change'));
+        }
+    }
+
+    if (selectProvincia) {
+        selectProvincia.addEventListener('change', function() {
+            const departamento = selectDepartamento ? selectDepartamento.value : '';
+            const provincia = this.value;
+            if (selectDistrito) selectDistrito.innerHTML = '<option value="">Seleccione</option>';
+            if (!ubigeo[departamento] || !ubigeo[departamento][provincia]) return;
+            ubigeo[departamento][provincia].forEach(distrito => {
+                if (selectDistrito) selectDistrito.innerHTML += `<option value="${distrito}">${distrito}</option>`;
+            });
+        });
+    }
+}
+
+// =========================================
+// AGREGAR CONTACTO - NUEVO CLIENTE
+// =========================================
+function agregarContactoNuevo(data = {}) {
+    const container = document.getElementById('listaContactos');
+    if (!container) return;
+    
+    const div = document.createElement('div');
+    div.classList.add('item-agregable');
+    div.style.cssText = `border:1px solid #ddd;padding:15px;margin-bottom:15px;border-radius:8px;position:relative;background:#f9f9f9;`;
+    div.innerHTML = `
+        <button type="button" class="btn-eliminar" style="position:absolute;top:10px;right:10px;background:#ff4444;color:white;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;">🗑️</button>
+        <div class="row">
+            <div class="col-md-6 mb-3"><label>Nombre</label><input class="form-control" data-field="nombre_contacto" value="${escapeHtml(data.nombre_contacto || '')}"></div>
+            <div class="col-md-6 mb-3"><label>Cargo</label><input class="form-control" data-field="cargo" value="${escapeHtml(data.cargo || '')}"></div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3"><label>Email</label><input class="form-control" data-field="email" value="${escapeHtml(data.email || '')}"></div>
+            <div class="col-md-6 mb-3"><label>Teléfono</label><input class="form-control" data-field="telefono" value="${escapeHtml(data.telefono || '')}"></div>
+        </div>
+        <div class="checkbox-group"><input type="checkbox" data-field="principal" ${data.principal ? 'checked' : ''}> <label>Principal</label></div>
+    `;
+    container.appendChild(div);
+}
+
+// =========================================
+// AGREGAR PUNTO - NUEVO CLIENTE (CON SELECT MEJORADO)
+// =========================================
+function agregarPuntoNuevo(data = {}) {
+    const container = document.getElementById('listaPuntos');
+    if (!container) return;
+    
+    const div = document.createElement('div');
+    div.classList.add('item-agregable');
+    div.style.cssText = `border:1px solid #ddd;padding:15px;margin-bottom:15px;border-radius:8px;position:relative;background:#f9f9f9;`;
+    div.innerHTML = `
+        <button type="button" class="btn-eliminar" style="position:absolute;top:10px;right:10px;background:#ff4444;color:white;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;">🗑️</button>
+        <div class="row">
+            <div class="col-md-6 mb-3"><label>Punto de Entrega</label><input class="form-control" data-field="nombre_punto" value="${escapeHtml(data.nombre_punto || '')}"></div>
+            <div class="col-md-6 mb-3"><label>Dirección</label><input class="form-control" data-field="direccion" value="${escapeHtml(data.direccion || '')}"></div>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-3"><label>Departamento</label>
+                <input type="text" class="form-control buscar-departamento" placeholder="Buscar departamento...">
+                <select class="form-select mt-2" data-field="departamento">
+                    <option value="">Seleccione</option>
+                    <option value="Lima">Lima</option>
+                    <option value="Arequipa">Arequipa</option>
+                    <option value="Cusco">Cusco</option>
+                    <option value="LaLibertad">La Libertad</option>
+                    <option value="Piura">Piura</option>
+                </select>
+            </div>
+            <div class="col-md-4 mb-3"><label>Provincia</label>
+                <input type="text" class="form-control buscar-provincia" placeholder="Buscar provincia...">
+                <select class="form-select mt-2" data-field="provincia"><option value="">Seleccione</option></select>
+            </div>
+            <div class="col-md-4 mb-3"><label>Distrito</label>
+                <input type="text" class="form-control buscar-distrito" placeholder="Buscar distrito...">
+                <select class="form-select mt-2" data-field="distrito"><option value="">Seleccione</option></select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3"><label>Contacto de Entrega</label><input class="form-control" data-field="responsable" value="${escapeHtml(data.responsable || '')}"></div>
+            <div class="col-md-6 mb-3"><label>Teléfono</label><input class="form-control" data-field="telefono_punto" value="${escapeHtml(data.telefono_punto || '')}"></div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3"><label>Condición de Pago</label>
+                <select data-field="condicion_pago" class="form-select select-condicion-pago">
+                    <option value="">Seleccione</option>
+                    <option value="Contado" ${data.condicion_pago === 'Contado' ? 'selected' : ''}>Contado</option>
+                    <option value="Crédito 7 días" ${data.condicion_pago === 'Crédito 7 días' ? 'selected' : ''}>Crédito 7 días</option>
+                    <option value="Crédito 15 días" ${data.condicion_pago === 'Crédito 15 días' ? 'selected' : ''}>Crédito 15 días</option>
+                    <option value="Crédito 30 días" ${data.condicion_pago === 'Crédito 30 días' ? 'selected' : ''}>Crédito 30 días</option>
+                    <option value="Crédito 45 días" ${data.condicion_pago === 'Crédito 45 días' ? 'selected' : ''}>Crédito 45 días</option>
+                    <option value="Crédito 60 días" ${data.condicion_pago === 'Crédito 60 días' ? 'selected' : ''}>Crédito 60 días</option>
+                    <option value="Crédito 90 días" ${data.condicion_pago === 'Crédito 90 días' ? 'selected' : ''}>Crédito 90 días</option>
+                    <option value="Personalizado" ${data.condicion_pago === 'Personalizado' ? 'selected' : ''}>Personalizado (escribir)</option>
+                </select>
+            </div>
+            <div class="col-md-6 mb-3 campo-credito-personalizado" style="display:${data.condicion_pago === 'Personalizado' ? 'block' : 'none'}">
+                <label>Escribir condición</label>
+                <input type="text" class="form-control" data-field="tiempo_credito" placeholder="Ej: Crédito 20 días, 50% adelanto..." value="${escapeHtml(data.tiempo_credito || '')}">
+            </div>
+        </div>
+        <div class="checkbox-group"><input type="checkbox" data-field="principal_punto" ${data.principal_punto ? 'checked' : ''}> <label>Principal</label></div>
+    `;
+    container.appendChild(div);
+    
+    inicializarEventosPunto(div, data);
+    
+    const selectCondicion = div.querySelector('.select-condicion-pago');
+    const campoPersonalizado = div.querySelector('.campo-credito-personalizado');
+    if (selectCondicion && campoPersonalizado) {
+        selectCondicion.addEventListener('change', function() {
+            campoPersonalizado.style.display = this.value === 'Personalizado' ? 'block' : 'none';
+        });
+    }
+}
+
+// =========================================
+// AGREGAR CONTACTO - EDITAR CLIENTE
+// =========================================
+function agregarContactoEdicion(data = {}) {
+    const container = document.getElementById('edit_listaContactos');
+    if (!container) return;
+    
+    const div = document.createElement('div');
+    div.classList.add('item-agregable');
+    div.style.cssText = `border:1px solid #ddd;padding:15px;margin-bottom:15px;border-radius:8px;position:relative;background:#f9f9f9;`;
+    div.innerHTML = `
+        <button type="button" class="btn-eliminar" style="position:absolute;top:10px;right:10px;background:#ff4444;color:white;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;">🗑️</button>
+        <div class="row">
+            <div class="col-md-6 mb-3"><label>Nombre</label><input class="form-control" data-field="edit_nombre_contacto" value="${escapeHtml(data.nombre_contacto || '')}"></div>
+            <div class="col-md-6 mb-3"><label>Cargo</label><input class="form-control" data-field="edit_cargo" value="${escapeHtml(data.cargo || '')}"></div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3"><label>Email</label><input class="form-control" data-field="edit_email" value="${escapeHtml(data.email || '')}"></div>
+            <div class="col-md-6 mb-3"><label>Teléfono</label><input class="form-control" data-field="edit_telefono" value="${escapeHtml(data.telefono || '')}"></div>
+        </div>
+        <div class="checkbox-group"><input type="checkbox" data-field="principal" ${data.principal ? 'checked' : ''}> <label>Principal</label></div>
+    `;
+    container.appendChild(div);
+}
+
+// =========================================
+// AGREGAR PUNTO - EDITAR CLIENTE (CON SELECT MEJORADO)
+// =========================================
+function agregarPuntoEdicion(data = {}) {
+    const container = document.getElementById('edit_listaPuntos');
+    if (!container) return;
+    
+    const div = document.createElement('div');
+    div.classList.add('item-agregable');
+    div.style.cssText = `border:1px solid #ddd;padding:15px;margin-bottom:15px;border-radius:8px;position:relative;background:#f9f9f9;`;
+    div.innerHTML = `
+        <button type="button" class="btn-eliminar" style="position:absolute;top:10px;right:10px;background:#ff4444;color:white;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;">🗑️</button>
+        <div class="row">
+            <div class="col-md-6 mb-3"><label>Punto de Entrega</label><input class="form-control" data-field="edit_nombre_punto" value="${escapeHtml(data.nombre_punto || '')}"></div>
+            <div class="col-md-6 mb-3"><label>Dirección</label><input class="form-control" data-field="edit_direccion" value="${escapeHtml(data.direccion || '')}"></div>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-3"><label>Departamento</label>
+                <input type="text" class="form-control buscar-departamento" placeholder="Buscar departamento...">
+                <select class="form-select mt-2" data-field="edit_departamento">
+                    <option value="">Seleccione</option>
+                    <option value="Lima">Lima</option>
+                    <option value="Arequipa">Arequipa</option>
+                    <option value="Cusco">Cusco</option>
+                    <option value="LaLibertad">La Libertad</option>
+                    <option value="Piura">Piura</option>
+                </select>
+            </div>
+            <div class="col-md-4 mb-3"><label>Provincia</label>
+                <input type="text" class="form-control buscar-provincia" placeholder="Buscar provincia...">
+                <select class="form-select mt-2" data-field="edit_provincia"><option value="">Seleccione</option></select>
+            </div>
+            <div class="col-md-4 mb-3"><label>Distrito</label>
+                <input type="text" class="form-control buscar-distrito" placeholder="Buscar distrito...">
+                <select class="form-select mt-2" data-field="edit_distrito"><option value="">Seleccione</option></select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3"><label>Contacto de Entrega</label><input class="form-control" data-field="edit_responsable" value="${escapeHtml(data.responsable || '')}"></div>
+            <div class="col-md-6 mb-3"><label>Teléfono</label><input class="form-control" data-field="edit_telefono_punto" value="${escapeHtml(data.telefono_punto || '')}"></div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3"><label>Condición de Pago</label>
+                <select data-field="edit_condicion_pago" class="form-select select-condicion-pago">
+                    <option value="">Seleccione</option>
+                    <option value="Contado" ${data.condicion_pago === 'Contado' ? 'selected' : ''}>Contado</option>
+                    <option value="Crédito 7 días" ${data.condicion_pago === 'Crédito 7 días' ? 'selected' : ''}>Crédito 7 días</option>
+                    <option value="Crédito 15 días" ${data.condicion_pago === 'Crédito 15 días' ? 'selected' : ''}>Crédito 15 días</option>
+                    <option value="Crédito 30 días" ${data.condicion_pago === 'Crédito 30 días' ? 'selected' : ''}>Crédito 30 días</option>
+                    <option value="Crédito 45 días" ${data.condicion_pago === 'Crédito 45 días' ? 'selected' : ''}>Crédito 45 días</option>
+                    <option value="Crédito 60 días" ${data.condicion_pago === 'Crédito 60 días' ? 'selected' : ''}>Crédito 60 días</option>
+                    <option value="Crédito 90 días" ${data.condicion_pago === 'Crédito 90 días' ? 'selected' : ''}>Crédito 90 días</option>
+                    <option value="Personalizado" ${data.condicion_pago === 'Personalizado' ? 'selected' : ''}>Personalizado (escribir)</option>
+                </select>
+            </div>
+            <div class="col-md-6 mb-3 campo-credito-personalizado" style="display:${data.condicion_pago === 'Personalizado' ? 'block' : 'none'}">
+                <label>Escribir condición</label>
+                <input type="text" class="form-control" data-field="edit_tiempo_credito" placeholder="Ej: Crédito 20 días, 50% adelanto..." value="${escapeHtml(data.tiempo_credito || '')}">
+            </div>
+        </div>
+        <div class="checkbox-group"><input type="checkbox" data-field="principal_punto" ${data.principal_punto ? 'checked' : ''}> <label>Principal</label></div>
+    `;
+    container.appendChild(div);
+    
+    inicializarEventosPunto(div, data);
+    
+    const selectCondicion = div.querySelector('.select-condicion-pago');
+    const campoPersonalizado = div.querySelector('.campo-credito-personalizado');
+    if (selectCondicion && campoPersonalizado) {
+        selectCondicion.addEventListener('change', function() {
+            campoPersonalizado.style.display = this.value === 'Personalizado' ? 'block' : 'none';
+        });
+    }
+
+    // Cargar provincia y distrito si ya existen
+    if (data.departamento) {
+        const selDep = div.querySelector('[data-field="edit_departamento"]');
+        const selProv = div.querySelector('[data-field="edit_provincia"]');
+        const selDist = div.querySelector('[data-field="edit_distrito"]');
+
+        if (selDep) selDep.value = data.departamento;
+        if (ubigeo[data.departamento] && selProv) {
+            selProv.innerHTML = '<option value="">Seleccione</option>';
+            Object.keys(ubigeo[data.departamento]).forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p;
+                opt.textContent = p;
+                if (p === data.provincia) opt.selected = true;
+                selProv.appendChild(opt);
+            });
+        }
+        if (data.provincia && ubigeo[data.departamento]?.[data.provincia] && selDist) {
+            selDist.innerHTML = '<option value="">Seleccione</option>';
+            ubigeo[data.departamento][data.provincia].forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = d;
+                if (d === data.distrito) opt.selected = true;
+                selDist.appendChild(opt);
+            });
+        }
     }
 }
 
@@ -332,27 +610,6 @@ window.abrirModalVer = async function(id) {
 };
 
 // =========================================
-// INICIALIZACIÓN
-// =========================================
-document.addEventListener("DOMContentLoaded", () => {
-    cargarClientes();
-    inicializarFiltros();
-    inicializarContactosPuntos();
-    
-    const tipoDocumento = document.getElementById('tipo_documento');
-    if (tipoDocumento) {
-        tipoDocumento.addEventListener('change', () => actualizarPlaceholderDocumento(''));
-        actualizarPlaceholderDocumento('');
-    }
-    
-    const editTipoDocumento = document.getElementById('edit_tipo_documento');
-    if (editTipoDocumento) {
-        editTipoDocumento.addEventListener('change', () => actualizarPlaceholderDocumento('edit_'));
-        actualizarPlaceholderDocumento('edit_');
-    }
-});
-
-// =========================================
 // INICIALIZAR CONTACTOS Y PUNTOS
 // =========================================
 function inicializarContactosPuntos() {
@@ -396,310 +653,7 @@ function inicializarContactosPuntos() {
 }
 
 // =========================================
-// AGREGAR CONTACTO - NUEVO CLIENTE
-// =========================================
-function agregarContactoNuevo(data = {}) {
-    const container = document.getElementById('listaContactos');
-    if (!container) return;
-    
-    const div = document.createElement('div');
-    div.classList.add('item-agregable');
-    div.style.cssText = `border:1px solid #ddd;padding:15px;margin-bottom:15px;border-radius:8px;position:relative;background:#f9f9f9;`;
-    div.innerHTML = `
-        <button type="button" class="btn-eliminar" style="position:absolute;top:10px;right:10px;background:#ff4444;color:white;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;">🗑️</button>
-        <div class="row">
-            <div class="col-md-6 mb-3"><label>Nombre</label><input class="form-control" data-field="nombre_contacto" value="${escapeHtml(data.nombre_contacto || '')}"></div>
-            <div class="col-md-6 mb-3"><label>Cargo</label><input class="form-control" data-field="cargo" value="${escapeHtml(data.cargo || '')}"></div>
-        </div>
-        <div class="row">
-            <div class="col-md-6 mb-3"><label>Email</label><input class="form-control" data-field="email" value="${escapeHtml(data.email || '')}"></div>
-            <div class="col-md-6 mb-3"><label>Teléfono</label><input class="form-control" data-field="telefono" value="${escapeHtml(data.telefono || '')}"></div>
-        </div>
-        <div class="checkbox-group"><input type="checkbox" data-field="principal" ${data.principal ? 'checked' : ''}> <label>Principal</label></div>
-    `;
-    container.appendChild(div);
-}
-
-// =========================================
-// AGREGAR PUNTO - NUEVO CLIENTE (CON SELECT MEJORADO)
-// =========================================
-function agregarPuntoNuevo(data = {}) {
-    const container = document.getElementById('listaPuntos');
-    if (!container) return;
-    
-    const div = document.createElement('div');
-    div.classList.add('item-agregable');
-    div.style.cssText = `border:1px solid #ddd;padding:15px;margin-bottom:15px;border-radius:8px;position:relative;background:#f9f9f9;`;
-    div.innerHTML = `
-        <button type="button" class="btn-eliminar" style="position:absolute;top:10px;right:10px;background:#ff4444;color:white;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;">🗑️</button>
-        <div class="row">
-            <div class="col-md-6 mb-3"><label>Punto de Entrega</label><input class="form-control" data-field="nombre_punto" value="${escapeHtml(data.nombre_punto || '')}"></div>
-            <div class="col-md-6 mb-3"><label>Dirección</label><input class="form-control" data-field="direccion" value="${escapeHtml(data.direccion || '')}"></div>
-        </div>
-        <div class="row">
-            <div class="col-md-4 mb-3"><label>Departamento</label>
-                <input type="text" class="form-control buscar-departamento" placeholder="Buscar departamento...">
-                <select class="form-select mt-2" data-field="departamento">
-                    <option value="">Seleccione</option>
-                    <option value="Lima">Lima</option>
-                    <option value="Arequipa">Arequipa</option>
-                    <option value="Cusco">Cusco</option>
-                    <option value="LaLibertad">La Libertad</option>
-                    <option value="Piura">Piura</option>
-                </select>
-            </div>
-            <div class="col-md-4 mb-3"><label>Provincia</label>
-                <input type="text" class="form-control buscar-provincia" placeholder="Buscar provincia...">
-                <select class="form-select mt-2" data-field="provincia"><option value="">Seleccione</option></select>
-            </div>
-            <div class="col-md-4 mb-3"><label>Distrito</label>
-                <input type="text" class="form-control buscar-distrito" placeholder="Buscar distrito...">
-                <select class="form-select mt-2" data-field="distrito"><option value="">Seleccione</option></select>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-6 mb-3"><label>Contacto de Entrega</label><input class="form-control" data-field="responsable" value="${escapeHtml(data.responsable || '')}"></div>
-            <div class="col-md-6 mb-3"><label>Teléfono</label><input class="form-control" data-field="telefono_punto" value="${escapeHtml(data.telefono_punto || '')}"></div>
-        </div>
-        <div class="row">
-            <div class="col-md-6 mb-3"><label>Condición de Pago</label>
-                <select data-field="condicion_pago" class="form-select select-condicion-pago">
-                    <option value="">Seleccione</option>
-                    <option value="Contado" ${data.condicion_pago === 'Contado' ? 'selected' : ''}>Contado</option>
-                    <option value="Crédito 7 días" ${data.condicion_pago === 'Crédito 7 días' ? 'selected' : ''}>Crédito 7 días</option>
-                    <option value="Crédito 15 días" ${data.condicion_pago === 'Crédito 15 días' ? 'selected' : ''}>Crédito 15 días</option>
-                    <option value="Crédito 30 días" ${data.condicion_pago === 'Crédito 30 días' ? 'selected' : ''}>Crédito 30 días</option>
-                    <option value="Crédito 45 días" ${data.condicion_pago === 'Crédito 45 días' ? 'selected' : ''}>Crédito 45 días</option>
-                    <option value="Crédito 60 días" ${data.condicion_pago === 'Crédito 60 días' ? 'selected' : ''}>Crédito 60 días</option>
-                    <option value="Crédito 90 días" ${data.condicion_pago === 'Crédito 90 días' ? 'selected' : ''}>Crédito 90 días</option>
-                    <option value="Personalizado" ${data.condicion_pago === 'Personalizado' ? 'selected' : ''}>Personalizado (escribir)</option>
-                </select>
-            </div>
-            <div class="col-md-6 mb-3 campo-credito-personalizado" style="display:${data.condicion_pago === 'Personalizado' ? 'block' : 'none'}">
-                <label>Escribir condición</label>
-                <input type="text" class="form-control" data-field="tiempo_credito" placeholder="Ej: Crédito 20 días, 50% adelanto..." value="${escapeHtml(data.tiempo_credito || '')}">
-            </div>
-        </div>
-        <div class="checkbox-group"><input type="checkbox" data-field="principal_punto" ${data.principal_punto ? 'checked' : ''}> <label>Principal</label></div>
-    `;
-    container.appendChild(div);
-    
-    inicializarEventosPunto(div, data);
-    
-    // Evento para mostrar/ocultar campo personalizado
-    const selectCondicion = div.querySelector('.select-condicion-pago');
-    const campoPersonalizado = div.querySelector('.campo-credito-personalizado');
-    if (selectCondicion && campoPersonalizado) {
-        selectCondicion.addEventListener('change', function() {
-            campoPersonalizado.style.display = this.value === 'Personalizado' ? 'block' : 'none';
-        });
-    }
-}
-
-// =========================================
-// AGREGAR CONTACTO - EDITAR CLIENTE
-// =========================================
-function agregarContactoEdicion(data = {}) {
-    const container = document.getElementById('edit_listaContactos');
-    if (!container) return;
-    
-    const div = document.createElement('div');
-    div.classList.add('item-agregable');
-    div.style.cssText = `border:1px solid #ddd;padding:15px;margin-bottom:15px;border-radius:8px;position:relative;background:#f9f9f9;`;
-    div.innerHTML = `
-        <button type="button" class="btn-eliminar" style="position:absolute;top:10px;right:10px;background:#ff4444;color:white;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;">🗑️</button>
-        <div class="row">
-            <div class="col-md-6 mb-3"><label>Nombre</label><input class="form-control" data-field="edit_nombre_contacto" value="${escapeHtml(data.nombre_contacto || '')}"></div>
-            <div class="col-md-6 mb-3"><label>Cargo</label><input class="form-control" data-field="edit_cargo" value="${escapeHtml(data.cargo || '')}"></div>
-        </div>
-        <div class="row">
-            <div class="col-md-6 mb-3"><label>Email</label><input class="form-control" data-field="edit_email" value="${escapeHtml(data.email || '')}"></div>
-            <div class="col-md-6 mb-3"><label>Teléfono</label><input class="form-control" data-field="edit_telefono" value="${escapeHtml(data.telefono || '')}"></div>
-        </div>
-        <div class="checkbox-group"><input type="checkbox" data-field="principal" ${data.principal ? 'checked' : ''}> <label>Principal</label></div>
-    `;
-    container.appendChild(div);
-}
-
-// =========================================
-// AGREGAR PUNTO - EDITAR CLIENTE (CON SELECT MEJORADO)
-// =========================================
-function agregarPuntoEdicion(data = {}) {
-    const container = document.getElementById('edit_listaPuntos');
-    if (!container) return;
-    
-    const div = document.createElement('div');
-    div.classList.add('item-agregable');
-    div.style.cssText = `border:1px solid #ddd;padding:15px;margin-bottom:15px;border-radius:8px;position:relative;background:#f9f9f9;`;
-    div.innerHTML = `
-        <button type="button" class="btn-eliminar" style="position:absolute;top:10px;right:10px;background:#ff4444;color:white;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;">🗑️</button>
-        <div class="row">
-            <div class="col-md-6 mb-3"><label>Punto de Entrega</label><input class="form-control" data-field="edit_nombre_punto" value="${escapeHtml(data.nombre_punto || '')}"></div>
-            <div class="col-md-6 mb-3"><label>Dirección</label><input class="form-control" data-field="edit_direccion" value="${escapeHtml(data.direccion || '')}"></div>
-        </div>
-        <div class="row">
-            <div class="col-md-4 mb-3"><label>Departamento</label>
-                <input type="text" class="form-control buscar-departamento" placeholder="Buscar departamento...">
-                <select class="form-select mt-2" data-field="edit_departamento">
-                    <option value="">Seleccione</option>
-                    <option value="Lima">Lima</option>
-                    <option value="Arequipa">Arequipa</option>
-                    <option value="Cusco">Cusco</option>
-                    <option value="LaLibertad">La Libertad</option>
-                    <option value="Piura">Piura</option>
-                </select>
-            </div>
-            <div class="col-md-4 mb-3"><label>Provincia</label>
-                <input type="text" class="form-control buscar-provincia" placeholder="Buscar provincia...">
-                <select class="form-select mt-2" data-field="edit_provincia"><option value="">Seleccione</option></select>
-            </div>
-            <div class="col-md-4 mb-3"><label>Distrito</label>
-                <input type="text" class="form-control buscar-distrito" placeholder="Buscar distrito...">
-                <select class="form-select mt-2" data-field="edit_distrito"><option value="">Seleccione</option></select>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-6 mb-3"><label>Contacto de Entrega</label><input class="form-control" data-field="edit_responsable" value="${escapeHtml(data.responsable || '')}"></div>
-            <div class="col-md-6 mb-3"><label>Teléfono</label><input class="form-control" data-field="edit_telefono_punto" value="${escapeHtml(data.telefono_punto || '')}"></div>
-        </div>
-        <div class="row">
-            <div class="col-md-6 mb-3"><label>Condición de Pago</label>
-                <select data-field="edit_condicion_pago" class="form-select select-condicion-pago">
-                    <option value="">Seleccione</option>
-                    <option value="Contado" ${data.condicion_pago === 'Contado' ? 'selected' : ''}>Contado</option>
-                    <option value="Crédito 7 días" ${data.condicion_pago === 'Crédito 7 días' ? 'selected' : ''}>Crédito 7 días</option>
-                    <option value="Crédito 15 días" ${data.condicion_pago === 'Crédito 15 días' ? 'selected' : ''}>Crédito 15 días</option>
-                    <option value="Crédito 30 días" ${data.condicion_pago === 'Crédito 30 días' ? 'selected' : ''}>Crédito 30 días</option>
-                    <option value="Crédito 45 días" ${data.condicion_pago === 'Crédito 45 días' ? 'selected' : ''}>Crédito 45 días</option>
-                    <option value="Crédito 60 días" ${data.condicion_pago === 'Crédito 60 días' ? 'selected' : ''}>Crédito 60 días</option>
-                    <option value="Crédito 90 días" ${data.condicion_pago === 'Crédito 90 días' ? 'selected' : ''}>Crédito 90 días</option>
-                    <option value="Personalizado" ${data.condicion_pago === 'Personalizado' ? 'selected' : ''}>Personalizado (escribir)</option>
-                </select>
-            </div>
-            <div class="col-md-6 mb-3 campo-credito-personalizado" style="display:${data.condicion_pago === 'Personalizado' ? 'block' : 'none'}">
-                <label>Escribir condición</label>
-                <input type="text" class="form-control" data-field="edit_tiempo_credito" placeholder="Ej: Crédito 20 días, 50% adelanto..." value="${escapeHtml(data.tiempo_credito || '')}">
-            </div>
-        </div>
-        <div class="checkbox-group"><input type="checkbox" data-field="principal_punto" ${data.principal_punto ? 'checked' : ''}> <label>Principal</label></div>
-    `;
-    container.appendChild(div);
-    
-    inicializarEventosPunto(div, data);
-    
-    // Evento para mostrar/ocultar campo personalizado
-    const selectCondicion = div.querySelector('.select-condicion-pago');
-    const campoPersonalizado = div.querySelector('.campo-credito-personalizado');
-    if (selectCondicion && campoPersonalizado) {
-        selectCondicion.addEventListener('change', function() {
-            campoPersonalizado.style.display = this.value === 'Personalizado' ? 'block' : 'none';
-        });
-    }
-
-    // Cargar provincia y distrito si ya existen
-    if (data.departamento) {
-        const selDep = div.querySelector('[data-field="edit_departamento"]');
-        const selProv = div.querySelector('[data-field="edit_provincia"]');
-        const selDist = div.querySelector('[data-field="edit_distrito"]');
-
-        if (selDep) selDep.value = data.departamento;
-
-        if (ubigeo[data.departamento] && selProv) {
-            selProv.innerHTML = '<option value="">Seleccione</option>';
-            Object.keys(ubigeo[data.departamento]).forEach(p => {
-                const opt = document.createElement('option');
-                opt.value = p;
-                opt.textContent = p;
-                if (p === data.provincia) opt.selected = true;
-                selProv.appendChild(opt);
-            });
-        }
-
-        if (data.provincia && ubigeo[data.departamento]?.[data.provincia] && selDist) {
-            selDist.innerHTML = '<option value="">Seleccione</option>';
-            ubigeo[data.departamento][data.provincia].forEach(d => {
-                const opt = document.createElement('option');
-                opt.value = d;
-                opt.textContent = d;
-                if (d === data.distrito) opt.selected = true;
-                selDist.appendChild(opt);
-            });
-        }
-    }
-}
-
-// =========================================
-// INICIALIZAR EVENTOS DE PUNTO
-// =========================================
-function inicializarEventosPunto(div, data = {}) {
-    const selectDepartamento = div.querySelector('[data-field="departamento"], [data-field="edit_departamento"]');
-    const selectProvincia = div.querySelector('[data-field="provincia"], [data-field="edit_provincia"]');
-    const selectDistrito = div.querySelector('[data-field="distrito"], [data-field="edit_distrito"]');
-    const buscarDepartamento = div.querySelector('.buscar-departamento');
-    const buscarProvincia = div.querySelector('.buscar-provincia');
-    const buscarDistrito = div.querySelector('.buscar-distrito');
-
-    if (buscarDepartamento && selectDepartamento) {
-        buscarDepartamento.addEventListener('input', function() {
-            const filtro = this.value.toLowerCase();
-            Array.from(selectDepartamento.options).forEach(opt => {
-                if (opt.value === '') return;
-                opt.style.display = opt.text.toLowerCase().includes(filtro) ? '' : 'none';
-            });
-        });
-    }
-
-    if (buscarProvincia && selectProvincia) {
-        buscarProvincia.addEventListener('input', function() {
-            const filtro = this.value.toLowerCase();
-            Array.from(selectProvincia.options).forEach(opt => {
-                if (opt.value === '') return;
-                opt.style.display = opt.text.toLowerCase().includes(filtro) ? '' : 'none';
-            });
-        });
-    }
-
-    if (buscarDistrito && selectDistrito) {
-        buscarDistrito.addEventListener('input', function() {
-            const filtro = this.value.toLowerCase();
-            Array.from(selectDistrito.options).forEach(opt => {
-                if (opt.value === '') return;
-                opt.style.display = opt.text.toLowerCase().includes(filtro) ? '' : 'none';
-            });
-        });
-    }
-
-    if (selectDepartamento) {
-        selectDepartamento.addEventListener('change', function() {
-            const departamento = this.value;
-            if (selectProvincia) selectProvincia.innerHTML = '<option value="">Seleccione</option>';
-            if (selectDistrito) selectDistrito.innerHTML = '<option value="">Seleccione</option>';
-            if (!ubigeo[departamento]) return;
-            Object.keys(ubigeo[departamento]).forEach(provincia => {
-                if (selectProvincia) selectProvincia.innerHTML += `<option value="${provincia}">${provincia}</option>`;
-            });
-        });
-
-        if (!data.departamento) {
-            selectDepartamento.dispatchEvent(new Event('change'));
-        }
-    }
-
-    if (selectProvincia) {
-        selectProvincia.addEventListener('change', function() {
-            const departamento = selectDepartamento ? selectDepartamento.value : '';
-            const provincia = this.value;
-            if (selectDistrito) selectDistrito.innerHTML = '<option value="">Seleccione</option>';
-            if (!ubigeo[departamento] || !ubigeo[departamento][provincia]) return;
-            ubigeo[departamento][provincia].forEach(distrito => {
-                if (selectDistrito) selectDistrito.innerHTML += `<option value="${distrito}">${distrito}</option>`;
-            });
-        });
-    }
-}
-
-// =========================================
-// FILTROS Y BÚSQUEDA DE CLIENTES
+// CARGAR CLIENTES
 // =========================================
 let timeoutBusqueda = null;
 
@@ -1085,6 +1039,27 @@ document.getElementById('btnConfirmarEliminar')?.addEventListener('click', async
     } catch (error) {
         console.error("Error al eliminar:", error);
         mostrarNotificacion("Error al eliminar: " + error.message, 'error');
+    }
+});
+
+// =========================================
+// INICIALIZACIÓN
+// =========================================
+document.addEventListener("DOMContentLoaded", () => {
+    cargarClientes();
+    inicializarFiltros();
+    inicializarContactosPuntos();
+    
+    const tipoDocumento = document.getElementById('tipo_documento');
+    if (tipoDocumento) {
+        tipoDocumento.addEventListener('change', () => actualizarPlaceholderDocumento(''));
+        actualizarPlaceholderDocumento('');
+    }
+    
+    const editTipoDocumento = document.getElementById('edit_tipo_documento');
+    if (editTipoDocumento) {
+        editTipoDocumento.addEventListener('change', () => actualizarPlaceholderDocumento('edit_'));
+        actualizarPlaceholderDocumento('edit_');
     }
 });
 

@@ -347,90 +347,43 @@ def eliminar_cliente(cliente_id):
             "error": str(e)
         }), 500
     
-# =========================================
-# CONSULTAR SUNAT
-# =========================================
-@clientes_bp.route("/api/sunat/consultar")
-def consultar_sunat():
+@clientes_bp.route('/api/sunat/buscar', methods=['POST'])
+def buscar_sunat():
+
+    data = request.get_json()
+
+    tipo = data.get("tipo_documento")
+    numero = data.get("numero_documento")
 
     try:
-        numero = request.args.get("numero")
-        tipo = request.args.get("tipo")
 
-        if not numero:
-            return jsonify({
-                "success": False,
-                "error": "Número requerido"
-            }), 400
-
-        # =========================================
-        # CONSULTAR RUC
-        # =========================================
+        # ejemplo fake
         if tipo == "6":
 
-            url = f"https://api.apis.net.pe/v2/sunat/ruc?numero={numero}"
-
-            headers = {"Referer": "http://localhost:5000"}
-
-            response = requests.get(url, headers=headers, timeout=10)
-
-            if response.status_code != 200:
-                return jsonify({
-                    "success": False,
-                    "error": "Error consultando SUNAT"
-                }), 500
-
-            data = response.json()
-
             return jsonify({
                 "success": True,
-                "tipo_documento": "RUC",
-                "numero_documento": numero,
-                "razon_social": data.get("nombre", ""),
-                "nombre_comercial": data.get("nombreComercial", ""),
-                "direccion": data.get("direccion", "")
+                "data": {
+                    "razon_social": "EMPRESA DEMO SAC",
+                    "nombre_comercial": "EMPRESA DEMO",
+                    "direccion": "LIMA - PERU"
+                }
             })
 
-        # =========================================
-        # CONSULTAR DNI
-        # =========================================
         elif tipo == "1":
-
-            url = f"https://api.apis.net.pe/v2/sunat/dni?numero={numero}"
-
-            headers = {"Referer": "http://localhost:5000"}
-
-            response = requests.get(url, headers=headers, timeout=10)
-
-            if response.status_code != 200:
-                return jsonify({
-                    "success": False,
-                    "error": "Error consultando RENIEC"
-                }), 500
-
-            data = response.json()
-
-            nombres = f"{data.get('nombres', '')} {data.get('apellidoPaterno', '')} {data.get('apellidoMaterno', '')}"
 
             return jsonify({
                 "success": True,
-                "tipo_documento": "DNI",
-                "numero_documento": numero,
-                "razon_social": nombres.strip(),
-                "nombre_comercial": "",
-                "direccion": ""
+                "data": {
+                    "nombre": "JUAN PEREZ"
+                }
             })
 
         return jsonify({
             "success": False,
-            "error": "Tipo documento inválido"
-        }), 400
+            "error": "Tipo inválido"
+        })
 
     except Exception as e:
-        import traceback
-
-        print("🔥 ERROR SUNAT:")
-        traceback.print_exc()
 
         return jsonify({
             "success": False,

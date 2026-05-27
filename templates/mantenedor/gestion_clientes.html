@@ -636,6 +636,9 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- JS -->
+    <script src="{{ url_for('static', filename='js/gestion_clientes.js') }}"></script>
+
     <script>
         // =========================================
         // SISTEMA DE NOTIFICACIONES
@@ -784,102 +787,7 @@
             }
             // ====================== SUNAT INTEGRATION ======================
             inicializarSunat();
-        });
-// =========================================
-// SUNAT INTEGRATION (Nueva función)
-// =========================================
-function inicializarSunat() {
-    const btnSunat = document.getElementById('btn-sunat');
-    const btnManual = document.getElementById('btn-manual');
-    const panelSunat = document.getElementById('panel-sunat');
-    const panelManual = document.getElementById('panel-manual');
-
-    if (!btnSunat || !btnManual) return;
-
-    // Configuración inicial: SUNAT visible por defecto
-    btnSunat.classList.add('active');
-    btnManual.classList.remove('active');
-    panelSunat.style.display = 'block';
-    panelManual.style.display = 'none';
-
-    // Cambiar entre paneles
-    btnSunat.addEventListener('click', () => {
-        btnSunat.classList.add('active');
-        btnManual.classList.remove('active');
-        panelSunat.style.display = 'block';
-        panelManual.style.display = 'none';
-    });
-
-    btnManual.addEventListener('click', () => {
-        btnManual.classList.add('active');
-        btnSunat.classList.remove('active');
-        panelSunat.style.display = 'none';
-        panelManual.style.display = 'block';
-    });
-
-    // Buscar en SUNAT
-    const btnBuscarSunat = document.getElementById('btn-buscar-sunat');
-    if (btnBuscarSunat) {
-        btnBuscarSunat.addEventListener('click', async () => {
-            const numero = document.getElementById('sunat_numero_documento').value.trim();
-            const tipo = document.getElementById('sunat_tipo_documento').value;
-
-            if (!numero) {
-                mostrarNotificacion("Ingrese un número de documento", 'warning');
-                return;
-            }
-
-            btnBuscarSunat.disabled = true;
-            btnBuscarSunat.innerHTML = `<i class="bi bi-hourglass-split"></i> Buscando...`;
-
-            try {
-                const res = await fetch(`/api/sunat/consultar?numero=${numero}&tipo=${tipo}`);
-                if (!res.ok) {
-                    throw new Error(`HTTP ${res.status}`);
-                }
-
-                const data = await res.json();
-
-                const resultadoDiv = document.getElementById('resultado-sunat');
-
-                if (data.success && data.razon_social) {
-                    // Autocompletar
-                    document.getElementById('tipo_documento').value = data.tipo_documento || (numero.length === 11 ? 'RUC' : 'DNI');
-                    document.getElementById('numero_documento').value = data.numero_documento || numero;
-                    document.getElementById('razon_social').value = data.razon_social || '';
-                    document.getElementById('nombre_comercial').value = data.nombre_comercial || '';
-                    document.getElementById('direccion_fiscal').value = data.direccion || data.direccion_fiscal || '';
-
-                    actualizarPlaceholderDocumento('');
-
-                    resultadoDiv.innerHTML = `
-                        <div class="alert alert-success">
-                            <strong>✅ Datos encontrados desde SUNAT:</strong><br>
-                            <b>${data.razon_social}</b><br>
-                            ${data.direccion || data.direccion_fiscal || ''}
-                        </div>
-                    `;
-
-                    // Cambiar al modo manual
-                    btnManual.click();
-                } else {
-                    resultadoDiv.innerHTML = `
-                        <div class="alert alert-warning">
-                            No se encontraron datos en SUNAT.<br>
-                            Puede registrar el cliente manualmente.
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                console.error(error);
-                mostrarNotificacion("Error de conexión con SUNAT", 'error');
-            } finally {
-                btnBuscarSunat.disabled = false;
-                btnBuscarSunat.innerHTML = `<i class="bi bi-search"></i> Buscar`;
-            }
-        });
-    }
-}
+        });   
 
         // =========================================
         // INICIALIZAR CONTACTOS Y PUNTOS
@@ -1340,6 +1248,143 @@ function inicializarSunat() {
                 agregarPuntoNuevo();
             }
         }, 100);
+
+// =========================================
+// SUNAT
+// =========================================
+function inicializarSunat() {
+
+    const btnSunat = document.getElementById("btn-sunat");
+    const btnManual = document.getElementById("btn-manual");
+
+    const panelSunat = document.getElementById("panel-sunat");
+    const panelManual = document.getElementById("panel-manual");
+
+    const btnBuscar = document.getElementById("btn-buscar-sunat");
+
+    // ocultar manual al inicio
+    panelManual.style.display = "none";
+
+    // modo SUNAT
+    btnSunat.addEventListener("click", () => {
+
+        panelSunat.style.display = "block";
+        panelManual.style.display = "none";
+
+        btnSunat.classList.add("active", "btn-primary");
+        btnSunat.classList.remove("btn-outline-primary");
+
+        btnManual.classList.remove("active", "btn-primary");
+        btnManual.classList.add("btn-outline-primary");
+    });
+
+    // modo manual
+    btnManual.addEventListener("click", () => {
+
+        panelSunat.style.display = "none";
+        panelManual.style.display = "block";
+
+        btnManual.classList.add("active", "btn-primary");
+        btnManual.classList.remove("btn-outline-primary");
+
+        btnSunat.classList.remove("active", "btn-primary");
+        btnSunat.classList.add("btn-outline-primary");
+    });
+
+    // buscar SUNAT
+    btnBuscar.addEventListener("click", buscarSunat);
+}
+
+
+// =========================================
+// BUSCAR SUNAT
+// =========================================
+async function buscarSunat() {
+
+    const tipo = document.getElementById("sunat_tipo_documento").value;
+    const numero = document.getElementById("sunat_numero_documento").value.trim();
+
+    const resultado = document.getElementById("resultado-sunat");
+
+    if (!numero) {
+        mostrarNotificacion("Ingrese un número de documento", "warning");
+        return;
+    }
+
+    try {
+
+        resultado.innerHTML = `
+            <div class="alert alert-info">
+                Buscando información...
+            </div>
+        `;
+
+        const res = await fetch("/api/sunat/buscar", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                tipo_documento: tipo,
+                numero_documento: numero
+            })
+        });
+
+        const json = await res.json();
+
+        if (!json.success) {
+
+            resultado.innerHTML = `
+                <div class="alert alert-danger">
+                    ${json.error || "No se encontró información"}
+                </div>
+            `;
+
+            return;
+        }
+
+        const data = json.data;
+
+        // llenar formulario manual
+        document.getElementById("tipo_documento").value =
+            tipo === "6" ? "RUC" : "DNI";
+
+        document.getElementById("numero_documento").value =
+            numero;
+
+        document.getElementById("razon_social").value =
+            data.razon_social || data.nombre || "";
+
+        document.getElementById("nombre_comercial").value =
+            data.nombre_comercial || "";
+
+        document.getElementById("direccion_fiscal").value =
+            data.direccion || "";
+
+        // cambiar a panel manual automáticamente
+        document.getElementById("btn-manual").click();
+
+        resultado.innerHTML = `
+            <div class="alert alert-success">
+                Datos encontrados correctamente
+            </div>
+        `;
+
+        mostrarNotificacion("Datos cargados desde SUNAT", "exito");
+
+    } catch (error) {
+
+        console.error(error);
+
+        resultado.innerHTML = `
+            <div class="alert alert-danger">
+                Error al consultar SUNAT
+            </div>
+        `;
+
+        mostrarNotificacion("Error al consultar SUNAT", "error");
+    }
+}
     </script>
 </body>
 </html>
