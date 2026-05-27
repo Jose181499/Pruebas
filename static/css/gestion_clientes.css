@@ -522,3 +522,102 @@ RESPONSIVE
         font-size: 10px;
     }
 }
+/* =========================================
+MODAL VER CLIENTE
+========================================= */
+.fecha-registro-box {
+    background: linear-gradient(135deg, #2563eb10 0%, #7c3aed10 100%);
+    border-radius: 20px;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.fecha-registro-box i {
+    font-size: 2rem;
+    color: #2563eb;
+}
+
+.fecha-registro-box small {
+    font-size: 0.7rem;
+    color: #6b7280;
+}
+
+.fecha-registro-box h5 {
+    color: #2563eb;
+    margin-top: 8px;
+    font-weight: 700;
+}
+
+.info-row-ver {
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.info-label-ver {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #6b7280;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.info-value-ver {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.badge-principal {
+    background: #fef3c7;
+    color: #d97706;
+    font-size: 0.65rem;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.contact-card-ver {
+    background: #f0fdf4;
+    border-left: 4px solid #10b981;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 10px;
+    border: 1px solid #dcfce7;
+}
+
+.punto-card-ver {
+    background: #eff6ff;
+    border-left: 4px solid #3b82f6;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 10px;
+    border: 1px solid #dbeafe;
+}
+
+/* Modal Ver Cliente - Header */
+#modalVerCliente .modal-header {
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+}
+
+/* Contenedor scroll para contenido largo */
+.modal-body-scroll {
+    max-height: 65vh;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+/* Mejora para secciones */
+.erp-section-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin: 20px 0 12px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e2e8f0;
+    color: #334155;
+}
