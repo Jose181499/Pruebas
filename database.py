@@ -1073,13 +1073,18 @@ def obtener_cotizacion_completa(cotizacion_id):
             c.requerimiento,
             c.nota_cotizacion,
             c.cliente_id,
+            -- 🔥 AGREGAR ESTOS TRES CAMPOS DE LA TABLA COTIZACIONES
+            c.contacto_cliente,
+            c.telefono_cliente,
+            c.email_cliente,
+            -- Datos del cliente
             cl.razon_social,
             cl.numero_documento,
             cl.direccion_fiscal,
-            -- 🔥 AGREGAR ESTOS TRES CAMPOS DEL CLIENTE
-            cl.telefono_contacto,      -- Teléfono del cliente
-            cl.nombre_contacto,        -- Atención/Contacto
-            cl.email_contacto,         -- Correo del cliente
+            cl.telefono_contacto,
+            cl.nombre_contacto,
+            cl.email_contacto,
+            -- Datos del usuario
             u.nombre_completo,
             u.email,
             u.telefono
@@ -1121,7 +1126,6 @@ def obtener_cotizacion_completa(cotizacion_id):
         "cabecera": cotizacion,
         "detalle": cotizacion["detalle"]
     }
-
 
 # =========================================
 # CLIENTES - NUEVAS FUNCIONES

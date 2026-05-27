@@ -90,28 +90,6 @@ function mostrarNotificacion(mensaje, tipo = 'exito') {
     }, 4000);
 }
 
-// =========================================
-// UBIGEO PERÚ COMPLETO
-// =========================================
-const ubigeo = {
-    Lima: {
-        Lima: ['Ancón', 'Ate', 'Barranco', 'Breña', 'Carabayllo', 'Chaclacayo', 'Chorrillos', 'Cieneguilla', 'Comas', 'El Agustino', 'Independencia', 'Jesús María', 'La Molina', 'La Victoria', 'Lince', 'Los Olivos', 'Lurigancho', 'Lurín', 'Magdalena del Mar', 'Miraflores', 'Pachacámac', 'Pueblo Libre', 'Puente Piedra', 'Rímac', 'San Borja', 'San Isidro', 'San Juan de Lurigancho', 'San Juan de Miraflores', 'San Martín de Porres', 'San Miguel', 'Santa Anita', 'Santiago de Surco', 'Surquillo', 'Villa El Salvador', 'Villa María del Triunfo'],
-        Huaura: ['Huacho', 'Hualmay', 'Vegueta'],
-        Huaral: ['Huaral', 'Chancay', 'Aucallama']
-    },
-    Arequipa: {
-        Arequipa: ['Cerro Colorado', 'Yanahuara', 'Cayma', 'Miraflores', 'Socabaya', 'José Luis Bustamante y Rivero']
-    },
-    Cusco: {
-        Cusco: ['Wanchaq', 'Santiago', 'San Sebastián', 'San Jerónimo']
-    },
-    LaLibertad: {
-        Trujillo: ['Trujillo', 'Víctor Larco', 'Moche', 'Huanchaco']
-    },
-    Piura: {
-        Piura: ['Piura', 'Castilla', 'Catacaos']
-    }
-};
 
 // =========================================
 // FUNCIONES DE ESCAPE
@@ -138,6 +116,10 @@ function actualizarPlaceholderDocumento(prefix = '') {
         input.placeholder = '8 dígitos';
         input.maxLength = 8;           // ← AGREGA
         if (label) label.innerHTML = 'DNI *:';
+    } else if (tipo.value === 'CE') {
+        input.placeholder = '9 dígitos';
+        input.maxLength = 9;           // ← AGREGA
+        if (label) label.innerHTML = 'CE *:';
     } else {
         input.placeholder = 'Ingrese el número';
         input.maxLength = 20;          // ← AGREGA

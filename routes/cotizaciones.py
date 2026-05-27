@@ -865,26 +865,27 @@ def api_get_cotizacion(cotizacion_id):
             fecha_creacion_str = ''
 
         return jsonify({
-            "success": True,
-            "data": {
-                **cabecera,
-                "fecha_creacion": fecha_creacion_str,
-                "cliente_id": cabecera.get("cliente_id"),
-                "cliente": cabecera.get("razon_social") or cabecera.get("nombre_empresa"),
-                "cliente_ruc": cabecera.get("numero_documento") or cabecera.get("cliente_ruc") or "",
-                "codigo_cotizacion": cabecera.get("codigo_cotizacion"),
-                "correlativo": cabecera.get("correlativo"),
-                "es_borrador": es_borrador,
-                "detalle": detalle,
-                "descuento_porcentaje": cabecera.get("descuento_porcentaje", 0),
-                "descuento_monto": cabecera.get("descuento_monto", 0),
-                "descuento_tipo": cabecera.get("descuento_tipo", "porcentaje"),
-                # 🔥 AGREGAR ESTAS TRES LÍNEAS
-                "cliente_contacto": cabecera.get("contacto_cliente", ""),
-                "telefono_contacto": cabecera.get("telefono_cliente", ""),
-                "email_contacto_cliente": cabecera.get("email_cliente", "")
-            }
-        })
+    "success": True,
+    "data": {
+        **cabecera,
+        "fecha_creacion": fecha_creacion_str,
+        "cliente_id": cabecera.get("cliente_id"),
+        "cliente": cabecera.get("razon_social") or cabecera.get("nombre_empresa"),
+        "cliente_ruc": cabecera.get("numero_documento") or cabecera.get("cliente_ruc") or "",
+        "codigo_cotizacion": cabecera.get("codigo_cotizacion"),
+        "correlativo": cabecera.get("correlativo"),
+        "es_borrador": es_borrador,
+        "detalle": detalle,
+        "descuento_porcentaje": cabecera.get("descuento_porcentaje", 0),
+        "descuento_monto": cabecera.get("descuento_monto", 0),
+        "descuento_tipo": cabecera.get("descuento_tipo", "porcentaje"),
+        # 🔥 CORREGIDO: Usar los campos de la cotización (contacto_cliente, telefono_cliente, email_cliente)
+        # NO usar nombre_contacto, telefono_contacto, email_contacto (esos son del cliente)
+        "cliente_contacto": cabecera.get("contacto_cliente") or "",
+        "telefono_contacto": cabecera.get("telefono_cliente") or "",
+        "email_contacto_cliente": cabecera.get("email_cliente") or ""
+    }
+})
 
     except Exception as e:
         print("🔥 ERROR REAL:", e)
