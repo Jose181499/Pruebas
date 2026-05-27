@@ -387,17 +387,19 @@ def buscar_productos():
         if q and q.strip():
             query = """
                 SELECT id, codigo, descripcion, marca, modelo, unidad,
-                       costo_unitario, precio_unitario
+                       costo_unitario, precio_unitario, stock
                 FROM productos 
                 WHERE codigo ILIKE %s OR descripcion ILIKE %s
+                ORDER BY codigo
                 LIMIT 20
             """
             productos = db_query(query, (f'%{q}%', f'%{q}%'))
         else:
             query = """
                 SELECT id, codigo, descripcion, marca, modelo, unidad,
-                       costo_unitario, precio_unitario
+                       costo_unitario, precio_unitario, stock
                 FROM productos 
+                ORDER BY codigo
                 LIMIT 20
             """
             productos = db_query(query)
@@ -506,7 +508,36 @@ def crear_cliente():
 
 
 # ==========================================
-# GUARDAR COTIZACIÓN - VERSIÓN SIMPLIFICADA CON HORA PERÚ
+# ENDPOINT: CLIENTES PUNTOS DE ENTREGA
+# ==========================================
+
+@cotizaciones_bp.route("/api/clientes/<int:cliente_id>/direcciones", methods=["GET"])
+def obtener_direcciones_cliente(cliente_id):
+    """Obtener direcciones/puntos de entrega de un cliente"""
+    try:
+        query = """
+            SELECT id, direccion, nombre_punto, es_principal, telefono_contacto
+            FROM clientes_puntos_entrega
+            WHERE cliente_id = %s
+            ORDER BY es_principal DESC, nombre_punto
+        """
+        direcciones = db_query(query, (cliente_id,))
+        
+        return jsonify({
+            'success': True,
+            'data': direcciones
+        })
+        
+    except Exception as e:
+        print(f"Error en /api/clientes/{cliente_id}/direcciones: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+# ==========================================
+# GUARDAR COTIZACIÓN - CON DESCUENTO PERSONALIZADO
 # ==========================================
 
 @cotizaciones_bp.route("/api/cotizacion/guardar", methods=["POST"])
@@ -527,6 +558,11 @@ def guardar_cotizacion():
         direccion_entrega = data.get("direccion_entrega")
         requerimiento = data.get("requerimiento")
         nota_cotizacion = data.get("nota_cotizacion")
+        
+        # 🔥 NUEVOS CAMPOS DE DESCUENTO
+        descuento_porcentaje = data.get("descuento_porcentaje", 0)
+        descuento_monto = data.get("descuento_monto", 0)
+        descuento_tipo = data.get("descuento_tipo", "porcentaje")
         
         codigo_cotizacion = data.get("codigo_cotizacion")
         correlativo = data.get("correlativo")
@@ -567,7 +603,7 @@ def guardar_cotizacion():
         with db_tx() as conn:
             cur = conn.cursor()
 
-            # 🔥 CORREGIDO: Usar hora de Perú (UTC-5)
+            # 🔥 INSERT con nuevos campos de descuento
             cur.execute("""
                 INSERT INTO cotizaciones (
                     numero_cotizacion,
@@ -586,9 +622,12 @@ def guardar_cotizacion():
                     usuario_id,
                     notas,
                     codigo_cotizacion,
-                    correlativo
+                    correlativo,
+                    descuento_porcentaje,
+                    descuento_monto,
+                    descuento_tipo
                 )
-                VALUES (%s, %s, (NOW() AT TIME ZONE 'America/Lima'), %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, (NOW() AT TIME ZONE 'America/Lima'), %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """, (
                 numero,
@@ -606,7 +645,10 @@ def guardar_cotizacion():
                 usuario_id,
                 notas,
                 codigo_cotizacion,
-                correlativo
+                correlativo,
+                descuento_porcentaje,
+                descuento_monto,
+                descuento_tipo
             ))
 
             cotizacion_id = cur.fetchone()[0]
@@ -666,7 +708,7 @@ def guardar_cotizacion():
 
 
 # ==========================================
-# OBTENER COTIZACIÓN - CORREGIDO (con hora y cliente_id)
+# OBTENER COTIZACIÓN - CON DESCUENTO
 # ==========================================
 
 logging.basicConfig(filename='app.log', level=logging.ERROR)
@@ -693,7 +735,6 @@ def api_get_cotizacion(cotizacion_id):
 
         es_borrador = cabecera.get("codigo_cotizacion", "").startswith("TMP-")
         
-        # 🔥 Formatear fecha_creacion con hora
         fecha_creacion = cabecera.get("fecha_creacion")
         if fecha_creacion:
             if hasattr(fecha_creacion, 'strftime'):
@@ -714,7 +755,10 @@ def api_get_cotizacion(cotizacion_id):
                 "codigo_cotizacion": cabecera.get("codigo_cotizacion"),
                 "correlativo": cabecera.get("correlativo"),
                 "es_borrador": es_borrador,
-                "detalle": detalle
+                "detalle": detalle,
+                "descuento_porcentaje": cabecera.get("descuento_porcentaje", 0),
+                "descuento_monto": cabecera.get("descuento_monto", 0),
+                "descuento_tipo": cabecera.get("descuento_tipo", "porcentaje")
             }
         })
 
@@ -934,9 +978,13 @@ def eliminar_producto_api(id):
             "error": str(e)
         }), 500
 
+
+# ==========================================
+# GENERAR PDF - CON DESCUENTO
+# ==========================================
+
 @cotizaciones_bp.route("/api/cotizacion/pdf/<int:cotizacion_id>")
 def generar_pdf(cotizacion_id):
-    # 🔥 OBTENER DATOS DEL FORMULARIO (los que el usuario editó en vivo)
     telefono_contacto_form = request.args.get('telefono_contacto', '')
     cliente_contacto_form = request.args.get('cliente_contacto', '')
     email_contacto_cliente_form = request.args.get('email_contacto_cliente', '')
@@ -988,9 +1036,13 @@ def generar_pdf(cotizacion_id):
         total_descuento_subtotal += descuento
         total_subtotal_venta_desc += subtotal_desc
 
-    hay_descuentos = total_descuento_subtotal > 0
+    # 🔥 OBTENER DESCUENTO DE CABECERA
+    descuento_global_porcentaje = cabecera.get("descuento_porcentaje", 0)
+    descuento_global_monto = cabecera.get("descuento_monto", 0)
+    descuento_global_tipo = cabecera.get("descuento_tipo", "porcentaje")
     
-    # Extraer hora de fecha_creacion
+    hay_descuentos = total_descuento_subtotal > 0 or descuento_global_porcentaje > 0 or descuento_global_monto > 0
+    
     fecha_creacion = cabecera.get("fecha_creacion", "")
     
     if fecha_creacion:
@@ -1011,21 +1063,11 @@ def generar_pdf(cotizacion_id):
         fecha_actual = datetime.now().strftime("%d/%m/%Y")
         hora_actual = datetime.now().strftime("%H:%M")
 
-    # 🔥 USAR LOS DATOS DEL FORMULARIO (prioridad sobre los de BD)
-    # Si el usuario escribió algo en el formulario, usar eso; si no, usar lo de BD
     telefono_final = telefono_contacto_form if telefono_contacto_form else cabecera.get("telefono_contacto", "")
     contacto_final = cliente_contacto_form if cliente_contacto_form else cabecera.get("nombre_contacto", "")
     email_final = email_contacto_cliente_form if email_contacto_cliente_form else cabecera.get("email_contacto", "")
     requerimiento_final = requerimiento_form if requerimiento_form else cabecera.get("requerimiento", "")
     direccion_entrega_final = direccion_entrega_form if direccion_entrega_form else cabecera.get("direccion_entrega", "")
-
-    print("=" * 50)
-    print("📄 DATOS ENVIADOS AL PDF:")
-    print(f"Teléfono (formulario): '{telefono_contacto_form}' -> FINAL: '{telefono_final}'")
-    print(f"Atención (formulario): '{cliente_contacto_form}' -> FINAL: '{contacto_final}'")
-    print(f"Correo (formulario): '{email_contacto_cliente_form}' -> FINAL: '{email_final}'")
-    print(f"Requerimiento (formulario): '{requerimiento_form}' -> FINAL: '{requerimiento_final}'")
-    print("=" * 50)
 
     html = render_template(
         "pdf/cotizacion_kcf.html",
@@ -1034,27 +1076,23 @@ def generar_pdf(cotizacion_id):
         fecha_actual=fecha_actual,
         hora_actual=hora_actual,
         
-        # 🔥 DATOS DEL CLIENTE (priorizando los del formulario)
         cliente_razon_social=cabecera.get("razon_social") or "",
         cliente_ruc=cabecera.get("numero_documento") or "",
         cliente_direccion=cabecera.get("direccion_fiscal") or "",
-        telefono_contacto=telefono_final,              # ← TELÉFONO (del formulario o BD)
-        cliente_contacto=contacto_final,               # ← ATENCIÓN (del formulario o BD)
-        email_contacto_cliente=email_final,            # ← CORREO (del formulario o BD)
-        numero_requerimiento=requerimiento_final,      # ← REQUERIMIENTO (del formulario o BD)
-        direccion_entrega=direccion_entrega_final,     # ← DIRECCIÓN (del formulario o BD)
+        telefono_contacto=telefono_final,
+        cliente_contacto=contacto_final,
+        email_contacto_cliente=email_final,
+        numero_requerimiento=requerimiento_final,
+        direccion_entrega=direccion_entrega_final,
         
-        # 🔥 DATOS DEL ASESOR
         asesor_comercial=cabecera.get("nombre_completo") or "Hellen Blas Principe",
         email_contacto=cabecera.get("email") or "ventas@kcfcorporacion.com",
         telefono_contacto_user=cabecera.get("telefono") or "999932051",
         
-        # 🔥 CONDICIONES COMERCIALES
         condicion_pago=cabecera.get("condicion_pago") or "Contado",
         tiempo_entrega=cabecera.get("tiempo_entrega") or "Inmediato",
         validez_oferta=cabecera.get("validez_oferta") or "15 días",
         
-        # 🔥 PRODUCTOS Y TOTALES
         productos=productos,
         total_subtotal_venta=total_subtotal_venta,
         total_descuento_subtotal=total_descuento_subtotal,
@@ -1062,7 +1100,12 @@ def generar_pdf(cotizacion_id):
         hay_descuentos=hay_descuentos,
         summary_igv=cabecera.get("igv", 0),
         summary_total_venta=cabecera.get("total", 0),
-        nota_cotizacion=cabecera.get("nota_cotizacion") or ""
+        nota_cotizacion=cabecera.get("nota_cotizacion") or "",
+        
+        # 🔥 NUEVOS CAMPOS PARA DESCUENTO GLOBAL
+        descuento_global_porcentaje=descuento_global_porcentaje,
+        descuento_global_monto=descuento_global_monto,
+        descuento_global_tipo=descuento_global_tipo
     )
 
     try:
