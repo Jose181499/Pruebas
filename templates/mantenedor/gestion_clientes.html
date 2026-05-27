@@ -1301,88 +1301,84 @@ function inicializarSunat() {
 // =========================================
 async function buscarSunat() {
 
-    const tipo = document.getElementById("sunat_tipo_documento").value;
-    const numero = document.getElementById("sunat_numero_documento").value.trim();
-
-    const resultado = document.getElementById("resultado-sunat");
+    const numero = document
+        .getElementById('sunat_numero_documento')
+        .value
+        .trim();
 
     if (!numero) {
-        mostrarNotificacion("Ingrese un número de documento", "warning");
+        mostrarNotificacion(
+            'Ingrese un RUC',
+            'warning'
+        );
+        return;
+    }
+
+    if (numero.length !== 11) {
+        mostrarNotificacion(
+            'El RUC debe tener 11 dígitos',
+            'warning'
+        );
         return;
     }
 
     try {
 
-        resultado.innerHTML = `
-            <div class="alert alert-info">
-                Buscando información...
-            </div>
-        `;
+        mostrarNotificacion(
+            'Consultando SUNAT...',
+            'info'
+        );
 
-        const res = await fetch("/api/sunat/buscar", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                tipo_documento: tipo,
-                numero_documento: numero
-            })
-        });
+        // =====================================
+        // CONSULTA REAL
+        // =====================================
+        const response = await fetch(
+            `/api/sunat/consulta?ruc=${numero}`
+        );
 
-        const json = await res.json();
+        const data = await response.json();
 
-        if (!json.success) {
+        console.log(data);
 
-            resultado.innerHTML = `
-                <div class="alert alert-danger">
-                    ${json.error || "No se encontró información"}
-                </div>
-            `;
-
-            return;
+        if (!data.success) {
+            throw new Error(data.error);
         }
 
-        const data = json.data;
+        // =====================================
+        // LLENAR FORMULARIO
+        // =====================================
+        document.getElementById('tipo_documento').value = 'RUC';
 
-        // llenar formulario manual
-        document.getElementById("tipo_documento").value =
-            tipo === "6" ? "RUC" : "DNI";
-
-        document.getElementById("numero_documento").value =
+        document.getElementById('numero_documento').value =
             numero;
 
-        document.getElementById("razon_social").value =
-            data.razon_social || data.nombre || "";
+        document.getElementById('razon_social').value =
+            data.razon_social || '';
 
-        document.getElementById("nombre_comercial").value =
-            data.nombre_comercial || "";
+        document.getElementById('nombre_comercial').value =
+            data.nombre_comercial || '';
 
-        document.getElementById("direccion_fiscal").value =
-            data.direccion || "";
+        document.getElementById('direccion_fiscal').value =
+            data.direccion || '';
 
-        // cambiar a panel manual automáticamente
-        document.getElementById("btn-manual").click();
+        // =====================================
+        // CAMBIAR A MODO MANUAL
+        // =====================================
+        document.getElementById('btn-manual').click();
 
-        resultado.innerHTML = `
-            <div class="alert alert-success">
-                Datos encontrados correctamente
-            </div>
-        `;
-
-        mostrarNotificacion("Datos cargados desde SUNAT", "exito");
+        mostrarNotificacion(
+            '✅ Datos reales cargados desde SUNAT',
+            'exito'
+        );
 
     } catch (error) {
 
         console.error(error);
 
-        resultado.innerHTML = `
-            <div class="alert alert-danger">
-                Error al consultar SUNAT
-            </div>
-        `;
-
-        mostrarNotificacion("Error al consultar SUNAT", "error");
+        mostrarNotificacion(
+            '❌ ' + error.message,
+            'error'
+        );
     }
 }
     </script>

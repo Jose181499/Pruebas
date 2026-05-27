@@ -347,47 +347,6 @@ def eliminar_cliente(cliente_id):
             "error": str(e)
         }), 500
     
-@clientes_bp.route('/api/sunat/buscar', methods=['POST'])
-def buscar_sunat():
 
-    data = request.get_json()
-
-    tipo = data.get("tipo_documento")
-    numero = data.get("numero_documento")
-
-    try:
-
-        # ejemplo fake
-        if tipo == "6":
-
-            return jsonify({
-                "success": True,
-                "data": {
-                    "razon_social": "EMPRESA DEMO SAC",
-                    "nombre_comercial": "EMPRESA DEMO",
-                    "direccion": "LIMA - PERU"
-                }
-            })
-
-        elif tipo == "1":
-
-            return jsonify({
-                "success": True,
-                "data": {
-                    "nombre": "JUAN PEREZ"
-                }
-            })
-
-        return jsonify({
-            "success": False,
-            "error": "Tipo inválido"
-        })
-
-    except Exception as e:
-
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
 
    
