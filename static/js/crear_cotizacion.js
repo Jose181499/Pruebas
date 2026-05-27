@@ -932,32 +932,32 @@ document.addEventListener('DOMContentLoaded', () => {
     // 🔥 OBTENER EL ID DE LA COTIZACIÓN (si existe)
     const cotizacion_id = document.getElementById('cotizacion_id')?.value;
     
-    const payload = {
-        id: cotizacion_id && cotizacion_id !== '' && cotizacion_id !== 'None' ? parseInt(cotizacion_id) : null,  // ← CLAVE: enviar ID si existe
-        cliente_id: cliente_id,
-        usuario_id: Number(document.getElementById("usuario_id")?.value || 0),
-        estado: document.getElementById("estado")?.value || "En Proceso",
-        subtotal: subtotal,
-        igv: igv,
-        total: totalConDescuento,
-        condicion_pago: document.getElementById("condicion_pago")?.value || "",
-        tiempo_entrega: document.getElementById("tiempo_entrega")?.value || "",
-        validez_oferta: document.getElementById("validez_oferta")?.value || "",
-        direccion_entrega: document.getElementById("direccion_entrega")?.value || "",
-        requerimiento: document.getElementById("requerimiento")?.value || "",
-        nota_cotizacion: document.getElementById("nota_cotizacion")?.value || "",
-        notas: document.getElementById('notas')?.value || "",
-        productos: listaProductos,
-        codigo_cotizacion: codigoCotizacionActual,
-        correlativo: esBorrador ? 0 : correlativoActual,
-        es_borrador: esBorrador,
-        descuento_porcentaje: descuentoPorcentaje,
-        descuento_monto: descuentoMonto,
-        descuento_tipo: descuentoTipo?.value || 'porcentaje'
-        cliente_contacto: document.getElementById('cliente_contacto')?.value || '',
-        telefono_contacto: document.getElementById('telefono_contacto')?.value || '',
-         email_contacto_cliente: document.getElementById('email_contacto_cliente')?.value || ''
-    };
+   const payload = {
+    id: cotizacion_id && cotizacion_id !== '' && cotizacion_id !== 'None' ? parseInt(cotizacion_id) : null,
+    cliente_id: cliente_id,
+    usuario_id: Number(document.getElementById("usuario_id")?.value || 0),
+    estado: document.getElementById("estado")?.value || "En Proceso",
+    subtotal: subtotal,
+    igv: igv,
+    total: totalConDescuento,
+    condicion_pago: document.getElementById("condicion_pago")?.value || "",
+    tiempo_entrega: document.getElementById("tiempo_entrega")?.value || "",
+    validez_oferta: document.getElementById("validez_oferta")?.value || "",
+    direccion_entrega: document.getElementById("direccion_entrega")?.value || "",
+    requerimiento: document.getElementById("requerimiento")?.value || "",
+    nota_cotizacion: document.getElementById("nota_cotizacion")?.value || "",
+    notas: document.getElementById('notas')?.value || "",
+    productos: listaProductos,
+    codigo_cotizacion: codigoCotizacionActual,
+    correlativo: esBorrador ? 0 : correlativoActual,
+    es_borrador: esBorrador,
+    descuento_porcentaje: descuentoPorcentaje,
+    descuento_monto: descuentoMonto,
+    descuento_tipo: descuentoTipo?.value || 'porcentaje',
+    cliente_contacto: document.getElementById('cliente_contacto') ? document.getElementById('cliente_contacto').value : '',
+    telefono_contacto: document.getElementById('telefono_contacto')?.value || '',
+    email_contacto_cliente: document.getElementById('email_contacto_cliente')?.value || ''
+};
 
         const btnGuardar = esBorrador ? document.getElementById('btnGuardarBorrador') : document.getElementById('btnGuardarOficial');
         const textoOriginal = btnGuardar?.innerHTML;
