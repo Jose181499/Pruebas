@@ -834,6 +834,10 @@ function inicializarSunat() {
 
             try {
                 const res = await fetch(`/api/sunat/consultar?numero=${numero}&tipo=${tipo}`);
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}`);
+                }
+
                 const data = await res.json();
 
                 const resultadoDiv = document.getElementById('resultado-sunat');

@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+import requests
 from database import buscar_clientes, obtener_cliente_completo_por_id,db_tx,obtener_clientes,db_execute
 
 clientes_bp = Blueprint("clientes", __name__)
@@ -341,6 +342,92 @@ def eliminar_cliente(cliente_id):
         print("🔥 ERROR al eliminar cliente:")
         traceback.print_exc()
         
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+    
+# =========================================
+# CONSULTAR SUNAT
+# =========================================
+@clientes_bp.route("/api/sunat/consultar")
+def consultar_sunat():
+
+    try:
+        numero = request.args.get("numero")
+        tipo = request.args.get("tipo")
+
+        if not numero:
+            return jsonify({
+                "success": False,
+                "error": "Número requerido"
+            }), 400
+
+        # =========================================
+        # CONSULTAR RUC
+        # =========================================
+        if tipo == "6":
+
+            url = f"https://dniruc.apisperu.com/api/v1/ruc/{numero}?token=demo"
+
+            response = requests.get(url, timeout=10)
+
+            if response.status_code != 200:
+                return jsonify({
+                    "success": False,
+                    "error": "Error consultando SUNAT"
+                }), 500
+
+            data = response.json()
+
+            return jsonify({
+                "success": True,
+                "tipo_documento": "RUC",
+                "numero_documento": numero,
+                "razon_social": data.get("razonSocial", ""),
+                "nombre_comercial": data.get("nombreComercial", ""),
+                "direccion": data.get("direccion", "")
+            })
+
+        # =========================================
+        # CONSULTAR DNI
+        # =========================================
+        elif tipo == "1":
+
+            url = f"https://dniruc.apisperu.com/api/v1/dni/{numero}?token=demo"
+
+            response = requests.get(url, timeout=10)
+
+            if response.status_code != 200:
+                return jsonify({
+                    "success": False,
+                    "error": "Error consultando RENIEC"
+                }), 500
+
+            data = response.json()
+
+            nombres = f"{data.get('nombres', '')} {data.get('apellidoPaterno', '')} {data.get('apellidoMaterno', '')}"
+
+            return jsonify({
+                "success": True,
+                "tipo_documento": "DNI",
+                "numero_documento": numero,
+                "razon_social": nombres.strip(),
+                "nombre_comercial": "",
+                "direccion": ""
+            })
+
+        return jsonify({
+            "success": False,
+            "error": "Tipo documento inválido"
+        }), 400
+
+    except Exception as e:
+        import traceback
+
+        print("🔥 ERROR SUNAT:")
+        traceback.print_exc()
+
         return jsonify({
             "success": False,
             "error": str(e)
