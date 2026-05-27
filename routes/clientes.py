@@ -13,6 +13,9 @@ def api_buscar_clientes():
         # Obtener todos los clientes primero
         data = obtener_clientes()
 
+        # ✅ Agregar esta línea:
+        data.sort(key=lambda c: c.get('id', 0), reverse=True)
+
         # Aplicar filtros si hay búsqueda
         if busqueda:
             busqueda = busqueda.lower()
