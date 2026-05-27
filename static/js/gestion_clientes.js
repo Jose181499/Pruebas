@@ -149,7 +149,7 @@ function validarNumeroDocumento(input, prefix = '') {
     const tipo = document.getElementById(`${prefix}tipo_documento`);
     if (!tipo) return;
 
-    const limites = { RUC: 11, DNI: 8 };
+    const limites = { RUC: 11, DNI: 8 ,CE: 9};
     const max = limites[tipo.value];
 
     // Solo permite números

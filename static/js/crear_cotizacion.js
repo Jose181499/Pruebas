@@ -1485,9 +1485,35 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('cliente_razon_social').value = data.cliente || data.razon_social || '';
             document.getElementById('cliente_doc').value = data.numero_documento || data.cliente_ruc || '';
             document.getElementById('cliente_direccion').value = data.direccion_fiscal || '';
+            // document.getElementById('cliente_contacto').value = data.nombre_contacto || '';
+            // document.getElementById('email_contacto_cliente').value = data.email_contacto || '';
+            // document.getElementById('telefono_contacto').value = data.telefono_contacto || '';
+            // Cargar contacto, teléfono y correo desde el cliente (no desde la cotización)
+        if (data.cliente_id) {
+          try {
+        const clienteResponse = await fetch(`/api/clientes/${data.cliente_id}`);
+        const clienteResult = await clienteResponse.json();
+        if (clienteResult.success && clienteResult.data) {
+            const cliente = clienteResult.data;
+            document.getElementById('cliente_contacto').value = cliente.nombre_contacto || '';
+            document.getElementById('email_contacto_cliente').value = cliente.email_contacto || '';
+            document.getElementById('telefono_contacto').value = cliente.telefono_contacto || '';
+        } else {
             document.getElementById('cliente_contacto').value = data.nombre_contacto || '';
             document.getElementById('email_contacto_cliente').value = data.email_contacto || '';
             document.getElementById('telefono_contacto').value = data.telefono_contacto || '';
+        }
+        } catch (err) {
+        console.error('Error cargando datos de contacto del cliente:', err);
+        document.getElementById('cliente_contacto').value = data.nombre_contacto || '';
+        document.getElementById('email_contacto_cliente').value = data.email_contacto || '';
+        document.getElementById('telefono_contacto').value = data.telefono_contacto || '';
+        }
+        } else {
+         document.getElementById('cliente_contacto').value = data.nombre_contacto || '';
+        document.getElementById('email_contacto_cliente').value = data.email_contacto || '';
+        document.getElementById('telefono_contacto').value = data.telefono_contacto || '';
+            }
             
             document.getElementById('estado').value = data.estado || 'En Proceso';
             document.getElementById('notas').value = data.notas || '';
