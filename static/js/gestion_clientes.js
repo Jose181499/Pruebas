@@ -1,4 +1,25 @@
 // =========================================
+// UBIGEO PERÚ (Departamentos, Provincias, Distritos)
+// =========================================
+const ubigeo = {
+    Lima: {
+        Lima: ["Lima", "Barranco", "Breña", "Chorrillos", "Comas", "El Agustino", "Jesús María", "La Molina", "La Victoria", "Lince", "Los Olivos", "Magdalena del Mar", "Miraflores", "Pueblo Libre", "Puente Piedra", "Rímac", "San Borja", "San Isidro", "San Juan de Lurigancho", "San Juan de Miraflores", "San Luis", "San Martín de Porres", "San Miguel", "Santa Anita", "Santiago de Surco", "Surquillo", "Villa El Salvador", "Villa María del Triunfo"]
+    },
+    Arequipa: {
+        Arequipa: ["Arequipa", "Alto Selva Alegre", "Cayma", "Cerro Colorado", "Characato", "Chiguata", "Jacobo Hunter", "José Luis Bustamante y Rivero", "La Joya", "Mariano Melgar", "Miraflores", "Paucarpata", "Pocsi", "Polobaya", "Quequeña", "Sabandía", "Sachaca", "San Juan de Siguas", "San Juan de Tarucani", "Santa Isabel de Siguas", "Santa Rita de Siguas", "Socabaya", "Tiabaya", "Uchumayo", "Vitor", "Yanahuara", "Yarabamba", "Yura"]
+    },
+    Cusco: {
+        Cusco: ["Cusco", "San Jerónimo", "San Sebastián", "Santiago", "Wanchaq"]
+    },
+    LaLibertad: {
+        Trujillo: ["Trujillo", "El Porvenir", "Florencia de Mora", "Huanchaco", "La Esperanza", "Laredo", "Moche", "Poroto", "Salaverry", "Simbal", "Víctor Larco Herrera"]
+    },
+    Piura: {
+        Piura: ["Piura", "Castilla", "Catacaos", "Cura Mori", "El Tallán", "La Arena", "La Unión", "Las Lomas", "Tambo Grande"]
+    }
+};
+
+// =========================================
 // SISTEMA DE NOTIFICACIONES
 // =========================================
 function mostrarNotificacion(mensaje, tipo = 'exito') {
@@ -139,7 +160,7 @@ function formatearFechaHora(fechaISO) {
 }
 
 // =========================================
-// INICIALIZAR EVENTOS DE PUNTO (Departamento, Provincia, Distrito)
+// INICIALIZAR EVENTOS DE PUNTO
 // =========================================
 function inicializarEventosPunto(div, data = {}) {
     const selectDepartamento = div.querySelector('[data-field="departamento"], [data-field="edit_departamento"]');
@@ -233,7 +254,7 @@ function agregarContactoNuevo(data = {}) {
 }
 
 // =========================================
-// AGREGAR PUNTO - NUEVO CLIENTE (CON SELECT MEJORADO)
+// AGREGAR PUNTO - NUEVO CLIENTE
 // =========================================
 function agregarPuntoNuevo(data = {}) {
     const container = document.getElementById('listaPuntos');
@@ -247,27 +268,6 @@ function agregarPuntoNuevo(data = {}) {
         <div class="row">
             <div class="col-md-6 mb-3"><label>Punto de Entrega</label><input class="form-control" data-field="nombre_punto" value="${escapeHtml(data.nombre_punto || '')}"></div>
             <div class="col-md-6 mb-3"><label>Dirección</label><input class="form-control" data-field="direccion" value="${escapeHtml(data.direccion || '')}"></div>
-        </div>
-        <div class="row">
-            <div class="col-md-4 mb-3"><label>Departamento</label>
-                <input type="text" class="form-control buscar-departamento" placeholder="Buscar departamento...">
-                <select class="form-select mt-2" data-field="departamento">
-                    <option value="">Seleccione</option>
-                    <option value="Lima">Lima</option>
-                    <option value="Arequipa">Arequipa</option>
-                    <option value="Cusco">Cusco</option>
-                    <option value="LaLibertad">La Libertad</option>
-                    <option value="Piura">Piura</option>
-                </select>
-            </div>
-            <div class="col-md-4 mb-3"><label>Provincia</label>
-                <input type="text" class="form-control buscar-provincia" placeholder="Buscar provincia...">
-                <select class="form-select mt-2" data-field="provincia"><option value="">Seleccione</option></select>
-            </div>
-            <div class="col-md-4 mb-3"><label>Distrito</label>
-                <input type="text" class="form-control buscar-distrito" placeholder="Buscar distrito...">
-                <select class="form-select mt-2" data-field="distrito"><option value="">Seleccione</option></select>
-            </div>
         </div>
         <div class="row">
             <div class="col-md-6 mb-3"><label>Contacto de Entrega</label><input class="form-control" data-field="responsable" value="${escapeHtml(data.responsable || '')}"></div>
@@ -333,7 +333,7 @@ function agregarContactoEdicion(data = {}) {
 }
 
 // =========================================
-// AGREGAR PUNTO - EDITAR CLIENTE (CON SELECT MEJORADO)
+// AGREGAR PUNTO - EDITAR CLIENTE
 // =========================================
 function agregarPuntoEdicion(data = {}) {
     const container = document.getElementById('edit_listaPuntos');
@@ -347,27 +347,6 @@ function agregarPuntoEdicion(data = {}) {
         <div class="row">
             <div class="col-md-6 mb-3"><label>Punto de Entrega</label><input class="form-control" data-field="edit_nombre_punto" value="${escapeHtml(data.nombre_punto || '')}"></div>
             <div class="col-md-6 mb-3"><label>Dirección</label><input class="form-control" data-field="edit_direccion" value="${escapeHtml(data.direccion || '')}"></div>
-        </div>
-        <div class="row">
-            <div class="col-md-4 mb-3"><label>Departamento</label>
-                <input type="text" class="form-control buscar-departamento" placeholder="Buscar departamento...">
-                <select class="form-select mt-2" data-field="edit_departamento">
-                    <option value="">Seleccione</option>
-                    <option value="Lima">Lima</option>
-                    <option value="Arequipa">Arequipa</option>
-                    <option value="Cusco">Cusco</option>
-                    <option value="LaLibertad">La Libertad</option>
-                    <option value="Piura">Piura</option>
-                </select>
-            </div>
-            <div class="col-md-4 mb-3"><label>Provincia</label>
-                <input type="text" class="form-control buscar-provincia" placeholder="Buscar provincia...">
-                <select class="form-select mt-2" data-field="edit_provincia"><option value="">Seleccione</option></select>
-            </div>
-            <div class="col-md-4 mb-3"><label>Distrito</label>
-                <input type="text" class="form-control buscar-distrito" placeholder="Buscar distrito...">
-                <select class="form-select mt-2" data-field="edit_distrito"><option value="">Seleccione</option></select>
-            </div>
         </div>
         <div class="row">
             <div class="col-md-6 mb-3"><label>Contacto de Entrega</label><input class="form-control" data-field="edit_responsable" value="${escapeHtml(data.responsable || '')}"></div>
@@ -437,7 +416,7 @@ function agregarPuntoEdicion(data = {}) {
 }
 
 // =========================================
-// ABRIR MODAL VER CLIENTE (CON FECHA Y HORA)
+// ABRIR MODAL VER CLIENTE
 // =========================================
 window.abrirModalVer = async function(id) {
     if (!id) {
@@ -465,70 +444,70 @@ window.abrirModalVer = async function(id) {
         const fechaRegistro = formatearFechaHora(c.created_at || c.fecha_registro);
         
         let html = `
-            <div class="fecha-registro-box" style="background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%); border-radius: 16px; padding: 15px; text-align: center; margin-bottom: 20px;">
-                <i class="bi bi-calendar-clock-fill" style="font-size: 2rem; color: #667eea;"></i>
+            <div class="fecha-registro-box">
+                <i class="bi bi-calendar-clock-fill"></i>
                 <div class="mt-2">
-                    <small class="text-muted" style="font-size: 0.7rem;">FECHA Y HORA DE REGISTRO</small>
+                    <small class="text-muted">FECHA Y HORA DE REGISTRO</small>
                     <h5 class="mb-0 fw-bold" style="color: #667eea;">${fechaRegistro}</h5>
                 </div>
             </div>
             
             <div class="row">
                 <div class="col-md-6">
-                    <div class="info-row-ver" style="background: #f8f9fa; border-radius: 12px; padding: 12px 16px; margin-bottom: 12px;">
-                        <div class="info-label-ver" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #6c757d;">CÓDIGO DE CLIENTE</div>
-                        <div class="info-value-ver" style="font-size: 0.95rem; font-weight: 500;"><strong class="text-primary">${escapeHtml(c.codigo_cliente || '---')}</strong></div>
+                    <div class="info-row-ver">
+                        <div class="info-label-ver">CÓDIGO DE CLIENTE</div>
+                        <div class="info-value-ver"><strong class="text-primary">${escapeHtml(c.codigo_cliente || '---')}</strong></div>
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="info-row-ver" style="background: #f8f9fa; border-radius: 12px; padding: 12px 16px; margin-bottom: 12px;">
-                        <div class="info-label-ver" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #6c757d;">TIPO DOCUMENTO</div>
-                        <div class="info-value-ver" style="font-size: 0.95rem; font-weight: 500;">${escapeHtml(c.tipo_documento || '-')}</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="info-row-ver" style="background: #f8f9fa; border-radius: 12px; padding: 12px 16px; margin-bottom: 12px;">
-                        <div class="info-label-ver" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #6c757d;">NÚMERO DE DOCUMENTO</div>
-                        <div class="info-value-ver" style="font-size: 0.95rem; font-weight: 500;"><strong>${escapeHtml(c.numero_documento || '-')}</strong></div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="info-row-ver" style="background: #f8f9fa; border-radius: 12px; padding: 12px 16px; margin-bottom: 12px;">
-                        <div class="info-label-ver" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #6c757d;">RAZÓN SOCIAL</div>
-                        <div class="info-value-ver" style="font-size: 0.95rem; font-weight: 500;">${escapeHtml(c.razon_social || '-')}</div>
+                    <div class="info-row-ver">
+                        <div class="info-label-ver">TIPO DOCUMENTO</div>
+                        <div class="info-value-ver">${escapeHtml(c.tipo_documento || '-')}</div>
                     </div>
                 </div>
             </div>
             
             <div class="row">
                 <div class="col-md-6">
-                    <div class="info-row-ver" style="background: #f8f9fa; border-radius: 12px; padding: 12px 16px; margin-bottom: 12px;">
-                        <div class="info-label-ver" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #6c757d;">NOMBRE COMERCIAL</div>
-                        <div class="info-value-ver" style="font-size: 0.95rem; font-weight: 500;">${escapeHtml(c.nombre_comercial || '-')}</div>
+                    <div class="info-row-ver">
+                        <div class="info-label-ver">NÚMERO DE DOCUMENTO</div>
+                        <div class="info-value-ver"><strong>${escapeHtml(c.numero_documento || '-')}</strong></div>
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="info-row-ver" style="background: #f8f9fa; border-radius: 12px; padding: 12px 16px; margin-bottom: 12px;">
-                        <div class="info-label-ver" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #6c757d;">DIRECCIÓN FISCAL</div>
-                        <div class="info-value-ver" style="font-size: 0.95rem; font-weight: 500;">${escapeHtml(c.direccion_fiscal || '-')}</div>
+                    <div class="info-row-ver">
+                        <div class="info-label-ver">RAZÓN SOCIAL</div>
+                        <div class="info-value-ver">${escapeHtml(c.razon_social || '-')}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="info-row-ver">
+                        <div class="info-label-ver">NOMBRE COMERCIAL</div>
+                        <div class="info-value-ver">${escapeHtml(c.nombre_comercial || '-')}</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-row-ver">
+                        <div class="info-label-ver">DIRECCIÓN FISCAL</div>
+                        <div class="info-value-ver">${escapeHtml(c.direccion_fiscal || '-')}</div>
                     </div>
                 </div>
             </div>
         `;
         
         // Contactos
-        html += `<div class="erp-section-title mt-3" style="font-size: 1rem; font-weight: 700; margin: 20px 0 12px 0; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb;"><i class="bi bi-person-badge"></i> Contactos Asociados</div>`;
+        html += `<div class="erp-section-title mt-3"><i class="bi bi-person-badge"></i> Contactos Asociados</div>`;
         if (c.contactos && c.contactos.length > 0) {
             c.contactos.forEach(contacto => {
                 html += `
-                    <div class="contact-card-ver" style="background: #f0fdf4; border-left: 4px solid #10b981; border-radius: 12px; padding: 12px; margin-bottom: 10px;">
+                    <div class="contact-card-ver">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <strong>${escapeHtml(contacto.nombre_contacto || 'Sin nombre')}</strong>
-                                ${contacto.principal ? '<span class="badge-principal ms-2" style="background: #fef3c7; color: #d97706; font-size: 0.7rem; padding: 2px 10px; border-radius: 20px;"><i class="bi bi-star-fill"></i> Principal</span>' : ''}
+                                ${contacto.principal ? '<span class="badge-principal ms-2"><i class="bi bi-star-fill"></i> Principal</span>' : ''}
                                 <div class="small text-muted mt-1">
                                     ${contacto.cargo ? `<i class="bi bi-briefcase"></i> ${escapeHtml(contacto.cargo)}<br>` : ''}
                                     ${contacto.email ? `<i class="bi bi-envelope"></i> ${escapeHtml(contacto.email)}<br>` : ''}
@@ -544,23 +523,20 @@ window.abrirModalVer = async function(id) {
         }
         
         // Puntos de entrega
-        html += `<div class="erp-section-title mt-3" style="font-size: 1rem; font-weight: 700; margin: 20px 0 12px 0; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb;"><i class="bi bi-geo-alt-fill"></i> Puntos de Entrega</div>`;
+        html += `<div class="erp-section-title mt-3"><i class="bi bi-geo-alt-fill"></i> Puntos de Entrega</div>`;
         if (c.puntos_entrega && c.puntos_entrega.length > 0) {
             c.puntos_entrega.forEach(punto => {
                 html += `
-                    <div class="punto-card-ver" style="background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 12px; padding: 12px; margin-bottom: 10px;">
+                    <div class="punto-card-ver">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <strong>${escapeHtml(punto.nombre_punto || 'Sin nombre')}</strong>
-                                ${punto.principal_punto ? '<span class="badge-principal ms-2" style="background: #fef3c7; color: #d97706; font-size: 0.7rem; padding: 2px 10px; border-radius: 20px;"><i class="bi bi-star-fill"></i> Principal</span>' : ''}
+                                ${punto.principal_punto ? '<span class="badge-principal ms-2"><i class="bi bi-star-fill"></i> Principal</span>' : ''}
                                 <div class="small text-muted mt-1">
                                     ${punto.direccion ? `<i class="bi bi-pin-map"></i> ${escapeHtml(punto.direccion)}<br>` : ''}
-                                    ${punto.departamento ? `<i class="bi bi-building"></i> ${escapeHtml(punto.departamento)}` : ''}
-                                    ${punto.provincia ? ` - ${escapeHtml(punto.provincia)}` : ''}
-                                    ${punto.distrito ? ` - ${escapeHtml(punto.distrito)}<br>` : '<br>'}
                                     ${punto.responsable ? `<i class="bi bi-person"></i> Contacto: ${escapeHtml(punto.responsable)}<br>` : ''}
                                     ${punto.telefono_punto ? `<i class="bi bi-telephone"></i> ${escapeHtml(punto.telefono_punto)}<br>` : ''}
-                                    ${punto.condicion_pago ? `<i class="bi bi-credit-card"></i> Condición: ${escapeHtml(punto.condicion_pago)}` : ''}
+                                    ${punto.condicion_pago ? `<i class="bi bi-credit-card"></i> Condición: <strong>${escapeHtml(punto.condicion_pago)}</strong>` : ''}
                                 </div>
                             </div>
                         </div>
@@ -643,7 +619,7 @@ async function cargarClientes(filtros = {}) {
     tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5">
         <div class="spinner-border text-primary" role="status"></div>
         <br>Cargando clientes...
-    </td></tr>`;
+     </tr>`;
 
     try {
         let url = "/api/clientes/buscar";
@@ -671,7 +647,7 @@ async function cargarClientes(filtros = {}) {
             tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5 text-muted">
                 <i class="bi bi-search" style="font-size: 3rem;"></i><br>
                 No se encontraron resultados
-            </td></tr>`;
+             </tr>`;
             return;
         }
 
@@ -699,9 +675,9 @@ async function cargarClientes(filtros = {}) {
                     <td>${contactos}</td>
                     <td>${puntos}</td>
                     <td class="text-center">
-                        <button class="btn-action btn-view" onclick="abrirModalVer(${c.id})" title="Ver cliente" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#0dcaf0;padding:5px 8px;">👁️</button>
-                        <button class="btn-action btn-edit" onclick="abrirModalEditar(${c.id})" title="Editar" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#0d6efd;padding:5px 8px;">✏️</button>
-                        <button class="btn-action btn-delete" onclick="abrirModalEliminar(${c.id})" title="Eliminar" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#dc3545;padding:5px 8px;">🗑️</button>
+                        <button class="btn-action btn-view" onclick="abrirModalVer(${c.id})" title="Ver cliente">👁️</button>
+                        <button class="btn-action btn-edit" onclick="abrirModalEditar(${c.id})" title="Editar">✏️</button>
+                        <button class="btn-action btn-delete" onclick="abrirModalEliminar(${c.id})" title="Eliminar">🗑️</button>
                     </td>
                 </tr>
             `;
@@ -709,9 +685,9 @@ async function cargarClientes(filtros = {}) {
 
     } catch (e) {
         console.error("Error:", e);
-        tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5 text-danger">
+        tbody.innerHTML = `<td><td colspan="10" class="text-center py-5 text-danger">
             Error al cargar clientes: ${e.message}
-        </td></tr>`;
+         </tr>`;
     }
 }
 
@@ -857,9 +833,6 @@ document.getElementById('formEditarCliente')?.addEventListener('submit', async f
             data.puntos_entrega.push({
                 nombre_punto: nombrePunto,
                 direccion: item.querySelector('[data-field="edit_direccion"]')?.value.trim() || '',
-                departamento: item.querySelector('[data-field="edit_departamento"]')?.value || '',
-                provincia: item.querySelector('[data-field="edit_provincia"]')?.value || '',
-                distrito: item.querySelector('[data-field="edit_distrito"]')?.value || '',
                 responsable: item.querySelector('[data-field="edit_responsable"]')?.value.trim() || '',
                 telefono: item.querySelector('[data-field="edit_telefono_punto"]')?.value.trim() || '',
                 condicion_pago: condicionPago === 'Personalizado' ? tiempoCredito : condicionPago,
@@ -945,9 +918,6 @@ document.getElementById('formCliente')?.addEventListener('submit', async functio
             data.puntos_entrega.push({
                 nombre_punto: nombrePunto,
                 direccion: item.querySelector('[data-field="direccion"]')?.value.trim() || '',
-                departamento: item.querySelector('[data-field="departamento"]')?.value || '',
-                provincia: item.querySelector('[data-field="provincia"]')?.value || '',
-                distrito: item.querySelector('[data-field="distrito"]')?.value || '',
                 responsable: item.querySelector('[data-field="responsable"]')?.value.trim() || '',
                 telefono: item.querySelector('[data-field="telefono_punto"]')?.value.trim() || '',
                 condicion_pago: condicionPago === 'Personalizado' ? tiempoCredito : condicionPago,
@@ -1025,6 +995,7 @@ document.getElementById('btnConfirmarEliminar')?.addEventListener('click', async
 // INICIALIZACIÓN
 // =========================================
 document.addEventListener("DOMContentLoaded", () => {
+    console.log("🚀 Inicializando sistema de gestión de clientes...");
     cargarClientes();
     inicializarFiltros();
     inicializarContactosPuntos();
