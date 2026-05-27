@@ -731,6 +731,7 @@
 
             if (tipo.value === 'RUC') {
                 input.placeholder = '11 dígitos';
+                input.maxLength = 11;
                 if (label) label.innerHTML = 'RUC *:';
             } else if (tipo.value === 'DNI') {
                 input.placeholder = '8 dígitos';
