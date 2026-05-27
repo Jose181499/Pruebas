@@ -445,6 +445,7 @@
                                         <option value="">Seleccione</option>
                                         <option value="RUC">RUC</option>
                                         <option value="DNI">DNI</option>
+                                        <option value="CE">Carnet de Extranjería</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">
@@ -517,6 +518,7 @@
                                         <option value="">Seleccione</option>
                                         <option value="RUC">RUC</option>
                                         <option value="DNI">DNI</option>
+                                        <option value="CE">Carnet de Extranjería</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">
@@ -692,6 +694,10 @@
             } else if (tipo.value === 'DNI') {
                 input.placeholder = '8 dígitos';
                 if (label) label.innerHTML = 'DNI *:';
+             } else if (tipo.value === 'CE') {
+                input.placeholder = '9 dígitos';
+                input.maxLength = 9;
+                if (label) label.innerHTML = 'CE *:';
             } else {
                 input.placeholder = 'Ingrese el número';
                 input.maxLength = 20;          // ← NUEVO
@@ -703,10 +709,11 @@
             const tipo = document.getElementById(`${prefix}tipo_documento`);
             if (!tipo) return;
 
-            const limites = { RUC: 11, DNI: 8 };
+            const limites = { RUC: 11, DNI: 8, CE: 9 };
             const max = limites[tipo.value];
 
-            input.value = input.value.replace(/\D/g, ''); // solo números
+            // RUC y DNI solo números, CE también solo números
+            input.value = input.value.replace(/\D/g, '');
 
             if (max && input.value.length > max) {
                input.value = input.value.slice(0, max);
@@ -715,7 +722,7 @@
         }
 
         // =========================================
-        // INICIALIZACIÓN
+        // INICIALIZACIÓN 
         // =========================================
         document.addEventListener("DOMContentLoaded", () => {
             cargarClientes();
