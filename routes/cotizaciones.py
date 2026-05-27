@@ -516,10 +516,10 @@ def obtener_direcciones_cliente(cliente_id):
     """Obtener direcciones/puntos de entrega de un cliente"""
     try:
         query = """
-            SELECT id, direccion, nombre_punto, es_principal, telefono_contacto
+            SELECT id, direccion, nombre_punto, principal, telefono_contacto
             FROM clientes_puntos_entrega
             WHERE cliente_id = %s
-            ORDER BY es_principal DESC, nombre_punto
+            ORDER BY principal DESC, nombre_punto
         """
         direcciones = db_query(query, (cliente_id,))
         
@@ -557,6 +557,11 @@ def guardar_cotizacion():
         direccion_entrega = data.get("direccion_entrega")
         requerimiento = data.get("requerimiento")
         nota_cotizacion = data.get("nota_cotizacion")
+        
+        # 🔥 AGREGAR ESTAS TRES LÍNEAS
+        contacto_cliente = data.get("cliente_contacto", "")
+        telefono_cliente = data.get("telefono_contacto", "")
+        email_cliente = data.get("email_contacto_cliente", "")
         
         # Campos de descuento
         descuento_porcentaje = data.get("descuento_porcentaje", 0)
@@ -599,7 +604,10 @@ def guardar_cotizacion():
                         notas = %s,
                         descuento_porcentaje = %s,
                         descuento_monto = %s,
-                        descuento_tipo = %s
+                        descuento_tipo = %s,
+                        contacto_cliente = %s,
+                        telefono_cliente = %s,
+                        email_cliente = %s
                     WHERE id = %s
                 """, (
                     cliente_id,
@@ -618,6 +626,9 @@ def guardar_cotizacion():
                     descuento_porcentaje,
                     descuento_monto,
                     descuento_tipo,
+                    contacto_cliente,
+                    telefono_cliente,
+                    email_cliente,
                     cotizacion_id
                 ))
                 
@@ -728,9 +739,12 @@ def guardar_cotizacion():
                         correlativo,
                         descuento_porcentaje,
                         descuento_monto,
-                        descuento_tipo
+                        descuento_tipo,
+                        contacto_cliente,
+                        telefono_cliente,
+                        email_cliente
                     )
-                    VALUES (%s, %s, (NOW() AT TIME ZONE 'America/Lima'), %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    VALUES (%s, %s, (NOW() AT TIME ZONE 'America/Lima'), %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     RETURNING id
                 """, (
                     numero,
@@ -751,7 +765,10 @@ def guardar_cotizacion():
                     correlativo,
                     descuento_porcentaje,
                     descuento_monto,
-                    descuento_tipo
+                    descuento_tipo,
+                    contacto_cliente,
+                    telefono_cliente,
+                    email_cliente
                 ))
 
                 nuevo_id = cur.fetchone()[0]
@@ -809,8 +826,9 @@ def guardar_cotizacion():
             "error": str(e)
         }), 500
 
+
 # ==========================================
-# OBTENER COTIZACIÓN - CON DESCUENTO
+# OBTENER COTIZACIÓN - CON DESCUENTO Y CAMPOS DE CONTACTO
 # ==========================================
 
 logging.basicConfig(filename='app.log', level=logging.ERROR)
@@ -860,7 +878,11 @@ def api_get_cotizacion(cotizacion_id):
                 "detalle": detalle,
                 "descuento_porcentaje": cabecera.get("descuento_porcentaje", 0),
                 "descuento_monto": cabecera.get("descuento_monto", 0),
-                "descuento_tipo": cabecera.get("descuento_tipo", "porcentaje")
+                "descuento_tipo": cabecera.get("descuento_tipo", "porcentaje"),
+                # 🔥 AGREGAR ESTAS TRES LÍNEAS
+                "cliente_contacto": cabecera.get("contacto_cliente", ""),
+                "telefono_contacto": cabecera.get("telefono_cliente", ""),
+                "email_contacto_cliente": cabecera.get("email_cliente", "")
             }
         })
 

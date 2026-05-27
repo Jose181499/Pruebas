@@ -646,6 +646,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 telefono_contacto: document.getElementById('nuevo_telefono')?.value.trim() || '',
                 email_contacto: document.getElementById('nuevo_email')?.value.trim() || '',
                 nombre_contacto: document.getElementById('nuevo_nombre_contacto')?.value.trim() || ''
+                
             };
             
             const response = await fetch('/api/clientes/crear', {
@@ -953,6 +954,9 @@ document.addEventListener('DOMContentLoaded', () => {
         descuento_porcentaje: descuentoPorcentaje,
         descuento_monto: descuentoMonto,
         descuento_tipo: descuentoTipo?.value || 'porcentaje'
+        cliente_contacto: document.getElementById('cliente_contacto')?.value || '',
+        telefono_contacto: document.getElementById('telefono_contacto')?.value || '',
+         email_contacto_cliente: document.getElementById('email_contacto_cliente')?.value || ''
     };
 
         const btnGuardar = esBorrador ? document.getElementById('btnGuardarBorrador') : document.getElementById('btnGuardarOficial');
@@ -1489,31 +1493,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // document.getElementById('email_contacto_cliente').value = data.email_contacto || '';
             // document.getElementById('telefono_contacto').value = data.telefono_contacto || '';
             // Cargar contacto, teléfono y correo desde el cliente (no desde la cotización)
-        if (data.cliente_id) {
-          try {
-        const clienteResponse = await fetch(`/api/clientes/${data.cliente_id}`);
-        const clienteResult = await clienteResponse.json();
-        if (clienteResult.success && clienteResult.data) {
-            const cliente = clienteResult.data;
-            document.getElementById('cliente_contacto').value = cliente.nombre_contacto || '';
-            document.getElementById('email_contacto_cliente').value = cliente.email_contacto || '';
-            document.getElementById('telefono_contacto').value = cliente.telefono_contacto || '';
-        } else {
-            document.getElementById('cliente_contacto').value = data.nombre_contacto || '';
-            document.getElementById('email_contacto_cliente').value = data.email_contacto || '';
-            document.getElementById('telefono_contacto').value = data.telefono_contacto || '';
-        }
-        } catch (err) {
-        console.error('Error cargando datos de contacto del cliente:', err);
-        document.getElementById('cliente_contacto').value = data.nombre_contacto || '';
-        document.getElementById('email_contacto_cliente').value = data.email_contacto || '';
+       // Cargar contacto, teléfono y correo desde la cotización (ya se guardan en la tabla cotizaciones)
+        document.getElementById('cliente_contacto').value = data.cliente_contacto || '';
+        document.getElementById('email_contacto_cliente').value = data.email_contacto_cliente || '';
         document.getElementById('telefono_contacto').value = data.telefono_contacto || '';
-        }
-        } else {
-         document.getElementById('cliente_contacto').value = data.nombre_contacto || '';
-        document.getElementById('email_contacto_cliente').value = data.email_contacto || '';
-        document.getElementById('telefono_contacto').value = data.telefono_contacto || '';
-            }
             
             document.getElementById('estado').value = data.estado || 'En Proceso';
             document.getElementById('notas').value = data.notas || '';

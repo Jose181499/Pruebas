@@ -435,37 +435,78 @@
                 <div class="modal-body">
                     <form id="formCliente">
                         <div class="erp-section">
-                            <div class="erp-section-title">
-                                📋 Información General
-                            </div>
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label class="form-label fw-semibold" id="label_documento">Tipo Documento *:</label>
-                                    <select class="form-select" id="tipo_documento" required>
-                                        <option value="">Seleccione</option>
-                                        <option value="RUC">RUC</option>
-                                        <option value="DNI">DNI</option>
-                                        <option value="CE">Carnet de Extranjería</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-semibold">Número Documento *:</label>
-                                    <input type="text" class="form-control" id="numero_documento" placeholder="Ingrese número" required oninput="validarNumeroDocumento(this, '')">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-semibold">Razón Social *:</label>
-                                    <input type="text" class="form-control" id="razon_social" placeholder="Nombre del cliente" required>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Nombre Comercial</label>
-                                    <input type="text" class="form-control" id="nombre_comercial" placeholder="Nombre comercial">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Dirección Fiscal</label>
-                                    <textarea class="form-control" id="direccion_fiscal" rows="2" placeholder="Dirección completa"></textarea>
-                                </div>
-                            </div>
-                            <hr class="my-3">
+    <div class="erp-section-title">
+        📋 Información General
+    </div>
+
+    <!-- Selector SUNAT / Manual -->
+    <div class="mb-4">
+        <div class="btn-group w-100" role="group">
+            <button id="btn-sunat" class="btn btn-primary active" type="button">
+                <i class="bi bi-search"></i> Buscar en SUNAT (Recomendado)
+            </button>
+            <button id="btn-manual" class="btn btn-outline-primary" type="button">
+                <i class="bi bi-pencil-square"></i> Ingreso Manual
+            </button>
+        </div>
+    </div>
+
+    <!-- PANEL SUNAT -->
+    <div id="panel-sunat">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Tipo Documento</label>
+                <select class="form-select" id="sunat_tipo_documento">
+                    <option value="6">RUC</option>
+                    <option value="1">DNI</option>
+                </select>
+            </div>
+            <div class="col-md-5">
+                <label class="form-label fw-semibold">Número Documento *</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="sunat_numero_documento" 
+                           placeholder="Ingrese RUC o DNI" maxlength="11">
+                    <button class="btn btn-success" id="btn-buscar-sunat" type="button">
+                        <i class="bi bi-search"></i> Buscar
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="resultado-sunat" class="mt-3"></div>
+    </div>
+
+    <!-- PANEL MANUAL (tu formulario original) -->
+    <div id="panel-manual">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold" id="label_documento">Tipo Documento *:</label>
+                <select class="form-select" id="tipo_documento" required>
+                    <option value="">Seleccione</option>
+                    <option value="RUC">RUC</option>
+                    <option value="DNI">DNI</option>
+                    <option value="CE">Carnet de Extranjería</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Número Documento *:</label>
+                <input type="text" class="form-control" id="numero_documento" placeholder="Ingrese número" required oninput="validarNumeroDocumento(this, '')">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Razón Social *:</label>
+                <input type="text" class="form-control" id="razon_social" placeholder="Nombre del cliente" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Nombre Comercial</label>
+                <input type="text" class="form-control" id="nombre_comercial" placeholder="Nombre comercial">
+            </div>
+            <div class="col-12">
+                <label class="form-label">Dirección Fiscal</label>
+                <textarea class="form-control" id="direccion_fiscal" rows="2" placeholder="Dirección completa"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <hr class="my-3">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h6 class="mb-0 fw-bold">📞 Contactos</h6>
                                 <button type="button" class="btn btn-sm btn-success" id="btnAgregarContacto">
@@ -740,7 +781,100 @@
                 editTipoDocumento.addEventListener('change', () => actualizarPlaceholderDocumento('edit_'));
                 actualizarPlaceholderDocumento('edit_');
             }
+            // ====================== SUNAT INTEGRATION ======================
+            inicializarSunat();
         });
+// =========================================
+// SUNAT INTEGRATION (Nueva función)
+// =========================================
+function inicializarSunat() {
+    const btnSunat = document.getElementById('btn-sunat');
+    const btnManual = document.getElementById('btn-manual');
+    const panelSunat = document.getElementById('panel-sunat');
+    const panelManual = document.getElementById('panel-manual');
+
+    if (!btnSunat || !btnManual) return;
+
+    // Configuración inicial: SUNAT visible por defecto
+    btnSunat.classList.add('active');
+    btnManual.classList.remove('active');
+    panelSunat.style.display = 'block';
+    panelManual.style.display = 'none';
+
+    // Cambiar entre paneles
+    btnSunat.addEventListener('click', () => {
+        btnSunat.classList.add('active');
+        btnManual.classList.remove('active');
+        panelSunat.style.display = 'block';
+        panelManual.style.display = 'none';
+    });
+
+    btnManual.addEventListener('click', () => {
+        btnManual.classList.add('active');
+        btnSunat.classList.remove('active');
+        panelSunat.style.display = 'none';
+        panelManual.style.display = 'block';
+    });
+
+    // Buscar en SUNAT
+    const btnBuscarSunat = document.getElementById('btn-buscar-sunat');
+    if (btnBuscarSunat) {
+        btnBuscarSunat.addEventListener('click', async () => {
+            const numero = document.getElementById('sunat_numero_documento').value.trim();
+            const tipo = document.getElementById('sunat_tipo_documento').value;
+
+            if (!numero) {
+                mostrarNotificacion("Ingrese un número de documento", 'warning');
+                return;
+            }
+
+            btnBuscarSunat.disabled = true;
+            btnBuscarSunat.innerHTML = `<i class="bi bi-hourglass-split"></i> Buscando...`;
+
+            try {
+                const res = await fetch(`/api/sunat/consultar?numero=${numero}&tipo=${tipo}`);
+                const data = await res.json();
+
+                const resultadoDiv = document.getElementById('resultado-sunat');
+
+                if (data.success && data.razon_social) {
+                    // Autocompletar
+                    document.getElementById('tipo_documento').value = data.tipo_documento || (numero.length === 11 ? 'RUC' : 'DNI');
+                    document.getElementById('numero_documento').value = data.numero_documento || numero;
+                    document.getElementById('razon_social').value = data.razon_social || '';
+                    document.getElementById('nombre_comercial').value = data.nombre_comercial || '';
+                    document.getElementById('direccion_fiscal').value = data.direccion || data.direccion_fiscal || '';
+
+                    actualizarPlaceholderDocumento('');
+
+                    resultadoDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <strong>✅ Datos encontrados desde SUNAT:</strong><br>
+                            <b>${data.razon_social}</b><br>
+                            ${data.direccion || data.direccion_fiscal || ''}
+                        </div>
+                    `;
+
+                    // Cambiar al modo manual
+                    btnManual.click();
+                } else {
+                    resultadoDiv.innerHTML = `
+                        <div class="alert alert-warning">
+                            No se encontraron datos en SUNAT.<br>
+                            Puede registrar el cliente manualmente.
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error(error);
+                mostrarNotificacion("Error de conexión con SUNAT", 'error');
+            } finally {
+                btnBuscarSunat.disabled = false;
+                btnBuscarSunat.innerHTML = `<i class="bi bi-search"></i> Buscar`;
+            }
+        });
+    }
+}
 
         // =========================================
         // INICIALIZAR CONTACTOS Y PUNTOS
