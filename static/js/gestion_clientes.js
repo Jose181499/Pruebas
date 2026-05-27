@@ -132,13 +132,32 @@ function actualizarPlaceholderDocumento(prefix = '') {
 
     if (tipo.value === 'RUC') {
         input.placeholder = '11 dígitos';
+        input.maxLength = 11;          // ← AGREGA
         if (label) label.innerHTML = 'RUC *:';
     } else if (tipo.value === 'DNI') {
         input.placeholder = '8 dígitos';
+        input.maxLength = 8;           // ← AGREGA
         if (label) label.innerHTML = 'DNI *:';
     } else {
         input.placeholder = 'Ingrese el número';
+        input.maxLength = 20;          // ← AGREGA
         if (label) label.innerHTML = 'Número de Documento *:';
+    }
+}
+
+function validarNumeroDocumento(input, prefix = '') {
+    const tipo = document.getElementById(`${prefix}tipo_documento`);
+    if (!tipo) return;
+
+    const limites = { RUC: 11, DNI: 8 };
+    const max = limites[tipo.value];
+
+    // Solo permite números
+    input.value = input.value.replace(/\D/g, '');
+
+    if (max && input.value.length > max) {
+        input.value = input.value.slice(0, max);
+        mostrarNotificacion(`El ${tipo.value} solo permite ${max} dígitos como máximo.`, 'warning');
     }
 }
 

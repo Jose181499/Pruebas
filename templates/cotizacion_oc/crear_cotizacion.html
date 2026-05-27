@@ -354,15 +354,11 @@
             color: var(--rojo);
         }
 
-        .descuento-nota {
-            background: linear-gradient(135deg, #fef3c7, #fde68a);
+        .descuento-personalizado {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
             border-radius: 12px;
             padding: 12px 16px;
             margin-top: 15px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #92400e;
-            text-align: center;
         }
 
         .btn-del {
@@ -489,7 +485,7 @@
         <input type="hidden" id="cotizacion_id" value="{{ cotizacion_id if cotizacion_id else '' }}">
         <input type="hidden" id="modo_consulta" value="">
         <input type="hidden" id="usuario_id" value="">
-        <input type="hidden" id="descuento_porcentaje" value="10">
+        <input type="hidden" id="descuento_porcentaje" value="0">
 
         <script>
             console.log("🔍 Template - cotizacion_id recibido:", "{{ cotizacion_id if cotizacion_id else 'No hay ID' }}");
@@ -538,6 +534,9 @@
                 </button>
                 <button class="btn btn-success btn-toolbar" id="btnAceptada" disabled>
                     <i class="bi bi-check-circle-fill"></i> Aceptada
+                </button>
+                <button class="btn btn-secondary btn-toolbar" id="btnDiagnostico">
+                    <i class="bi bi-bug-fill"></i> Diagnóstico
                 </button>
             </div>
         </div>
@@ -666,7 +665,7 @@
                                 </div>
                             </div>
                             
-                            <!-- 🔥 VALIDEZ OFERTA - MODIFICADA CON OPCIÓN PERSONALIZADA -->
+                            <!-- VALIDEZ OFERTA CON OPCIÓN PERSONALIZADA -->
                             <div class="col-md-6">
                                 <label class="form-label"><i class="bi bi-calendar-check"></i> Validez Oferta</label>
                                 <div class="validez-oferta-wrapper">
@@ -687,7 +686,7 @@
                                 </div>
                             </div>
                             
-                            <!-- 🔥 CONDICIÓN DE PAGO - MODIFICADA CON OPCIÓN 7 DÍAS Y PERSONALIZADO -->
+                            <!-- CONDICIÓN DE PAGO CON OPCIÓN PERSONALIZADA -->
                             <div class="col-md-6">
                                 <label class="form-label"><i class="bi bi-credit-card"></i> Condición de Pago</label>
                                 <div class="condicion-pago-wrapper">
@@ -726,9 +725,34 @@
                             </div>
                         </div>
                         
-                        <!-- DESCUENTO FIJO -->
-                        <div class="descuento-nota mt-3">
-                            <i class="bi bi-tag-fill"></i> Esta cotización cuenta con 10% descuento
+                        <!-- DESCUENTO PERSONALIZABLE -->
+                        <div class="descuento-personalizado mt-3">
+                            <label class="form-label mb-2">
+                                <i class="bi bi-tag-fill text-danger"></i> Descuento Especial
+                            </label>
+                            <div class="row g-2 align-items-end">
+                                <div class="col-8">
+                                    <div class="input-group">
+                                        <input type="number" 
+                                               class="form-control custom-input" 
+                                               id="descuento_porcentaje_input" 
+                                               min="0" 
+                                               step="0.01" 
+                                               value="0"
+                                               placeholder="0">
+                                        <span class="input-group-text bg-danger text-white" id="descuento_simbolo">%</span>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <select class="form-select custom-input" id="descuento_tipo">
+                                        <option value="porcentaje">% Porcentaje</option>
+                                        <option value="monto">S/ Monto fijo</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <small class="text-muted mt-2 d-block">
+                                <i class="bi bi-info-circle"></i> Aplica descuento personalizado sobre el subtotal
+                            </small>
                         </div>
                         
                         <div class="mt-3">
@@ -789,8 +813,8 @@
                         <span>Subtotal:</span>
                         <strong>S/. <span id="summary_subtotal_venta">0.00</span></strong>
                     </div>
-                    <div class="summary-row">
-                        <span>Descuento (10%):</span>
+                    <div class="summary-row" id="descuento_row">
+                        <span>Descuento:</span>
                         <strong class="text-danger">- S/. <span id="summary_descuento">0.00</span></strong>
                     </div>
                     <div class="summary-row">
@@ -975,7 +999,6 @@
                     this.style.display = 'block';
                 });
                 
-                // Si ya hay un valor en el input, mostrar el select correspondiente
                 if (input.value && input.value.trim() !== '') {
                     let encontrado = false;
                     for (let i = 0; i < select.options.length; i++) {
@@ -1021,7 +1044,6 @@
                     this.style.display = 'block';
                 });
                 
-                // Si ya hay un valor en el input, mostrar el select correspondiente
                 if (input.value && input.value.trim() !== '') {
                     let encontrado = false;
                     for (let i = 0; i < select.options.length; i++) {
@@ -1068,6 +1090,31 @@
             }
         }
         
+        // Función para manejar el descuento personalizable
+        function configurarDescuentoPersonalizable() {
+            const descuentoInput = document.getElementById('descuento_porcentaje_input');
+            const descuentoTipo = document.getElementById('descuento_tipo');
+            const descuentoSymbol = document.getElementById('descuento_simbolo');
+            
+            if (descuentoTipo && descuentoSymbol) {
+                descuentoTipo.addEventListener('change', function() {
+                    if (this.value === 'monto') {
+                        descuentoSymbol.textContent = 'S/';
+                        if (descuentoInput) {
+                            descuentoInput.max = '';
+                            descuentoInput.placeholder = '0.00';
+                        }
+                    } else {
+                        descuentoSymbol.textContent = '%';
+                        if (descuentoInput) {
+                            descuentoInput.max = '100';
+                            descuentoInput.placeholder = '0';
+                        }
+                    }
+                });
+            }
+        }
+        
         // Función para cargar direcciones guardadas del cliente
         async function cargarDireccionesCliente(clienteId) {
             const select = document.getElementById('direccion_entrega_select');
@@ -1104,6 +1151,7 @@
             configurarValidezOferta();
             configurarCondicionPago();
             configurarDireccionEntrega();
+            configurarDescuentoPersonalizable();
             
             const clienteIdInput = document.getElementById('cliente_id');
             if (clienteIdInput) {

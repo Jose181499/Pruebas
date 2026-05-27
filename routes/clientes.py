@@ -265,22 +265,16 @@ def editar_cliente(id):
                         cliente_id,
                         nombre_punto,
                         direccion,
-                        departamento,
-                        provincia,
-                        distrito,
                         responsable,
                         telefono_contacto,
                         principal,
                         condicion_pago,
                         tiempo_credito
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 """, (
                     id,
                     nombre_punto,
                     p.get("direccion") or p.get("edit_direccion") or "",
-                    p.get("departamento") or p.get("edit_departamento") or "",
-                    p.get("provincia") or p.get("edit_provincia") or "",
-                    p.get("distrito") or p.get("edit_distrito") or "",
                     p.get("responsable") or p.get("edit_responsable") or "",
                     telefono,                          # ← Teléfono corregido
                     p.get("principal", False),

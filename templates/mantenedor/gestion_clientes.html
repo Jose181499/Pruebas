@@ -449,7 +449,7 @@
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label fw-semibold">Número Documento *:</label>
-                                    <input type="text" class="form-control" id="numero_documento" placeholder="Ingrese número" required>
+                                    <input type="text" class="form-control" id="numero_documento" placeholder="Ingrese número" required oninput="validarNumeroDocumento(this, '')">
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label fw-semibold">Razón Social *:</label>
@@ -521,7 +521,7 @@
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label fw-semibold">Número Documento *:</label>
-                                    <input type="text" class="form-control" id="edit_numero_documento" placeholder="Ingrese número">
+                                    <input type="text" class="form-control" id="edit_numero_documento" placeholder="Ingrese número" oninput="validarNumeroDocumento(this, 'edit_')">
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label fw-semibold">Razón Social *:</label>

@@ -377,7 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // CONFIGURAR VALIDEZ DE OFERTA PERSONALIZADA (NUEVA)
+    // CONFIGURAR VALIDEZ DE OFERTA PERSONALIZADA
     // =========================
     function configurarValidezOferta() {
         const select = document.getElementById('validez_oferta_select');
@@ -423,6 +423,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 select.value = 'personalizado';
                 input.style.display = 'block';
             }
+        }
+    }
+
+    // =========================
+    // CONFIGURAR DESCUENTO PERSONALIZABLE (NUEVO)
+    // =========================
+    function configurarDescuentoPersonalizable() {
+        const descuentoInput = document.getElementById('descuento_porcentaje_input');
+        const descuentoTipo = document.getElementById('descuento_tipo');
+        
+        if (descuentoInput) {
+            descuentoInput.addEventListener('input', function() {
+                recalculateAll();
+                datosModificados = true;
+            });
+        }
+        
+        if (descuentoTipo) {
+            descuentoTipo.addEventListener('change', function() {
+                if (descuentoInput) {
+                    if (this.value === 'monto') {
+                        descuentoInput.placeholder = '0.00';
+                        descuentoInput.step = '0.01';
+                        descuentoInput.max = '';
+                    } else {
+                        descuentoInput.placeholder = '0';
+                        descuentoInput.step = '0.01';
+                        descuentoInput.max = '100';
+                    }
+                }
+                recalculateAll();
+                datosModificados = true;
+            });
         }
     }
 
@@ -859,7 +892,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // GUARDAR COTIZACIÓN
+    // GUARDAR COTIZACIÓN CON DESCUENTO PERSONALIZADO
     // =========================
     async function guardarCotizacion() {
         const cliente_id = Number(document.getElementById('cliente_id')?.value || 0);
@@ -872,9 +905,29 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!listaProductos[i].producto_id) { mostrarNotificacion(`⚠️ Falta seleccionar producto en la fila ${i + 1}`, "warning"); return; }
         }
         
-        const total = Number(document.getElementById('total_valor_venta')?.textContent || 0);
-        const igv = total * 0.18;
-        const subtotal = total - igv;
+        const totalSinDescuento = Number(document.getElementById('total_valor_venta')?.textContent || 0);
+        
+        // 🔥 OBTENER DESCUENTO PERSONALIZADO
+        const descuentoInput = document.getElementById('descuento_porcentaje_input');
+        const descuentoTipo = document.getElementById('descuento_tipo');
+        let descuentoPorcentaje = 0;
+        let descuentoMonto = 0;
+        
+        if (descuentoInput && descuentoInput.value) {
+            const valorDescuento = parseFloat(descuentoInput.value) || 0;
+            
+            if (descuentoTipo && descuentoTipo.value === 'monto') {
+                descuentoMonto = Math.min(valorDescuento, totalSinDescuento);
+                descuentoPorcentaje = (descuentoMonto / totalSinDescuento) * 100;
+            } else {
+                descuentoPorcentaje = valorDescuento;
+                descuentoMonto = totalSinDescuento * (descuentoPorcentaje / 100);
+            }
+        }
+        
+        const totalConDescuento = totalSinDescuento - descuentoMonto;
+        const igv = totalConDescuento * 0.18;
+        const subtotal = totalConDescuento - igv;
         
         const payload = {
             cliente_id: cliente_id,
@@ -882,7 +935,7 @@ document.addEventListener('DOMContentLoaded', () => {
             estado: document.getElementById("estado")?.value || "En Proceso",
             subtotal: subtotal,
             igv: igv,
-            total: total,
+            total: totalConDescuento,
             condicion_pago: document.getElementById("condicion_pago")?.value || "",
             tiempo_entrega: document.getElementById("tiempo_entrega")?.value || "",
             validez_oferta: document.getElementById("validez_oferta")?.value || "",
@@ -893,7 +946,10 @@ document.addEventListener('DOMContentLoaded', () => {
             productos: listaProductos,
             codigo_cotizacion: codigoCotizacionActual,
             correlativo: esBorrador ? 0 : correlativoActual,
-            es_borrador: esBorrador
+            es_borrador: esBorrador,
+            descuento_porcentaje: descuentoPorcentaje,
+            descuento_monto: descuentoMonto,
+            descuento_tipo: descuentoTipo?.value || 'porcentaje'
         };
 
         const btnGuardar = esBorrador ? document.getElementById('btnGuardarBorrador') : document.getElementById('btnGuardarOficial');
@@ -1212,7 +1268,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // RECALCULAR
+    // RECALCULAR CON DESCUENTO PERSONALIZABLE
     // =========================
     function recalculateAll() {
         const rows = document.querySelectorAll("#table-body tr");
@@ -1236,17 +1292,47 @@ document.addEventListener('DOMContentLoaded', () => {
         const summarySubtotal = document.getElementById('summary_subtotal_venta');
         if (summarySubtotal) summarySubtotal.textContent = totalValorVenta.toFixed(2);
         
+        // 🔥 NUEVO: OBTENER DESCUENTO PERSONALIZADO
+        const descuentoInput = document.getElementById('descuento_porcentaje_input');
+        const descuentoTipo = document.getElementById('descuento_tipo');
+        let descuentoValor = 0;
+        let descuentoMonto = 0;
+        
+        if (descuentoInput && descuentoInput.value) {
+            descuentoValor = parseFloat(descuentoInput.value) || 0;
+            
+            if (descuentoTipo && descuentoTipo.value === 'monto') {
+                descuentoMonto = Math.min(descuentoValor, totalValorVenta);
+            } else {
+                descuentoMonto = totalValorVenta * (descuentoValor / 100);
+            }
+        }
+        
+        const subtotalConDescuento = totalValorVenta - descuentoMonto;
+        const igv = subtotalConDescuento * 0.18;
+        const totalVenta = subtotalConDescuento + igv;
+        
         const summaryDescuento = document.getElementById('summary_descuento');
-        if (summaryDescuento) summaryDescuento.textContent = (totalValorVenta * 0.10).toFixed(2);
+        if (summaryDescuento) summaryDescuento.textContent = descuentoMonto.toFixed(2);
         
         const summarySubtotalDescuento = document.getElementById('summary_subtotal_descuento');
-        if (summarySubtotalDescuento) summarySubtotalDescuento.textContent = (totalValorVenta * 0.90).toFixed(2);
+        if (summarySubtotalDescuento) summarySubtotalDescuento.textContent = subtotalConDescuento.toFixed(2);
         
         const summaryIgv = document.getElementById('summary_igv');
-        if (summaryIgv) summaryIgv.textContent = (totalValorVenta * 0.90 * 0.18).toFixed(2);
+        if (summaryIgv) summaryIgv.textContent = igv.toFixed(2);
         
         const summaryTotal = document.getElementById('summary_total_venta');
-        if (summaryTotal) summaryTotal.textContent = (totalValorVenta * 0.90 * 1.18).toFixed(2);
+        if (summaryTotal) summaryTotal.textContent = totalVenta.toFixed(2);
+        
+        // Actualizar el campo oculto con el valor del descuento
+        const descuentoHidden = document.getElementById('descuento_porcentaje');
+        if (descuentoHidden) {
+            if (descuentoTipo && descuentoTipo.value === 'monto') {
+                descuentoHidden.value = descuentoValor;
+            } else {
+                descuentoHidden.value = descuentoValor;
+            }
+        }
     }
 
     // =========================
@@ -1345,7 +1431,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const el = document.getElementById(id);
             if (el) el.disabled = disabled;
         });
-        ['asesor_comercial', 'email_contacto', 'telefono_contacto_user', 'condicion_pago', 'tiempo_entrega', 'validez_oferta', 'nota_cotizacion', 'notas'].forEach(id => {
+        ['asesor_comercial', 'email_contacto', 'telefono_contacto_user', 'condicion_pago', 'tiempo_entrega', 'validez_oferta', 'nota_cotizacion', 'notas', 'descuento_porcentaje_input', 'descuento_tipo'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.disabled = disabled;
         });
@@ -1413,6 +1499,14 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('asesor_comercial').value = data.nombre_completo || '';
             document.getElementById('email_contacto').value = data.email || '';
             document.getElementById('telefono_contacto_user').value = data.telefono || '';
+            
+            // Cargar descuento si existe
+            if (data.descuento_porcentaje !== undefined && data.descuento_porcentaje !== null) {
+                const descuentoInput = document.getElementById('descuento_porcentaje_input');
+                const descuentoTipo = document.getElementById('descuento_tipo');
+                if (descuentoInput) descuentoInput.value = data.descuento_porcentaje;
+                if (descuentoTipo && data.descuento_tipo) descuentoTipo.value = data.descuento_tipo;
+            }
             
             const total = Number(data.total || 0);
             const totalValorVentaElem = document.getElementById('total_valor_venta');
@@ -1517,7 +1611,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // CONFIGURACIONES
     // =========================
     configurarCondicionPago();
-    configurarValidezOferta();  // ← NUEVA FUNCIÓN AGREGADA
+    configurarValidezOferta();
+    configurarDescuentoPersonalizable(); // NUEVA CONFIGURACIÓN
 
     // =========================
     // INIT
