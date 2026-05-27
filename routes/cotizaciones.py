@@ -539,7 +539,6 @@ def obtener_direcciones_cliente(cliente_id):
 # ==========================================
 # GUARDAR COTIZACIÓN - CON DESCUENTO PERSONALIZADO
 # ==========================================
-
 @cotizaciones_bp.route("/api/cotizacion/guardar", methods=["POST"])
 def guardar_cotizacion():
     data = request.json
@@ -559,7 +558,7 @@ def guardar_cotizacion():
         requerimiento = data.get("requerimiento")
         nota_cotizacion = data.get("nota_cotizacion")
         
-        # 🔥 NUEVOS CAMPOS DE DESCUENTO
+        # Campos de descuento
         descuento_porcentaje = data.get("descuento_porcentaje", 0)
         descuento_monto = data.get("descuento_monto", 0)
         descuento_tipo = data.get("descuento_tipo", "porcentaje")
@@ -567,48 +566,175 @@ def guardar_cotizacion():
         codigo_cotizacion = data.get("codigo_cotizacion")
         correlativo = data.get("correlativo")
         es_borrador = data.get("es_borrador", False)
+        
+        # 🔥 OBTENER EL ID DE LA COTIZACIÓN (si existe)
+        cotizacion_id = data.get("id") or request.args.get('id')
+        
+        # Si no viene en data, buscar en el objeto
+        if not cotizacion_id:
+            cotizacion_id = data.get("cotizacion_id")
 
-        if not codigo_cotizacion:
-            if es_borrador:
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                codigo_vendedor = "TMP"
-                codigo_cotizacion = f"TMP-{codigo_vendedor}-{timestamp}"
-                correlativo = 0
-            else:
-                usuario_query = "SELECT codigo_vendedor FROM usuarios WHERE id = %s"
-                usuario = db_query(usuario_query, (usuario_id,))
-                codigo_vendedor = usuario[0]['codigo_vendedor'] if usuario else f"V{str(usuario_id).zfill(3)}"
-                
-                corr_query = "SELECT MAX(correlativo) as ultimo FROM cotizaciones WHERE usuario_id = %s"
-                ultimo_corr = db_query(corr_query, (usuario_id,))
-                nuevo_corr = (ultimo_corr[0]['ultimo'] or 0) + 1
-                
-                fecha = datetime.now()
-                codigo_cotizacion = f"COT-{codigo_vendedor}-{fecha.year}{str(fecha.month).zfill(2)}{str(fecha.day).zfill(2)}-{str(nuevo_corr).zfill(4)}"
-                correlativo = nuevo_corr
-
-        row = db_query("""
-            SELECT numero_cotizacion 
-            FROM cotizaciones 
-            ORDER BY id DESC 
-            LIMIT 1
-        """)
-        if row:
-            ultimo = row[0]["numero_cotizacion"]
-            numero_int = int(ultimo.split("-")[1]) + 1
-        else:
-            numero_int = 1
-        numero = f"COT-{str(numero_int).zfill(5)}"
-       
         with db_tx() as conn:
             cur = conn.cursor()
-
-            # 🔥 INSERT con nuevos campos de descuento
-            cur.execute("""
-                INSERT INTO cotizaciones (
-                    numero_cotizacion,
+            
+            # 🔥 VERIFICAR SI ES ACTUALIZACIÓN O NUEVA COTIZACIÓN
+            if cotizacion_id:
+                print(f"✏️ ACTUALIZANDO cotización ID: {cotizacion_id}")
+                
+                # ACTUALIZAR cabecera
+                cur.execute("""
+                    UPDATE cotizaciones 
+                    SET cliente_id = %s,
+                        estado = %s,
+                        subtotal = %s,
+                        igv = %s,
+                        total = %s,
+                        condicion_pago = %s,
+                        tiempo_entrega = %s,
+                        validez_oferta = %s,
+                        direccion_entrega = %s,
+                        requerimiento = %s,
+                        nota_cotizacion = %s,
+                        usuario_id = %s,
+                        notas = %s,
+                        descuento_porcentaje = %s,
+                        descuento_monto = %s,
+                        descuento_tipo = %s
+                    WHERE id = %s
+                """, (
                     cliente_id,
-                    fecha_creacion,
+                    estado,
+                    subtotal,
+                    igv,
+                    total,
+                    condicion_pago,
+                    tiempo_entrega,
+                    validez_oferta,
+                    direccion_entrega,
+                    requerimiento,
+                    nota_cotizacion,
+                    usuario_id,
+                    notas,
+                    descuento_porcentaje,
+                    descuento_monto,
+                    descuento_tipo,
+                    cotizacion_id
+                ))
+                
+                # ELIMINAR detalles antiguos
+                cur.execute("DELETE FROM cotizacion_detalle WHERE cotizacion_id = %s", (cotizacion_id,))
+                
+                # INSERTAR nuevos detalles
+                for p in data.get("productos", []):
+                    cur.execute("""
+                        INSERT INTO cotizacion_detalle (
+                            cotizacion_id,
+                            producto_id,
+                            cantidad,
+                            costo_unitario,
+                            subtotal_costo,
+                            margen_porcentaje,
+                            precio_venta_unitario,
+                            subtotal_venta,
+                            descuento_porcentaje,
+                            precio_venta_con_descuento,
+                            subtotal_venta_con_descuento,
+                            descuento_total,
+                            margen_final
+                        )
+                        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                    """, (
+                        cotizacion_id,
+                        p["producto_id"],
+                        p["cantidad"],
+                        p.get("costo_unitario", 0),
+                        p.get("subtotal_costo", 0),
+                        p.get("margen_porcentaje", 20),
+                        p["precio_venta_unitario"],
+                        p.get("subtotal_venta", 0),
+                        p.get("descuento_porcentaje", 0),
+                        p.get("precio_venta_con_descuento", p["precio_venta_unitario"]),
+                        p.get("subtotal_venta_con_descuento", p.get("subtotal_venta", 0)),
+                        p.get("descuento_total", 0),
+                        p.get("margen_final", 20)
+                    ))
+                
+                return jsonify({
+                    "success": True,
+                    "data": {
+                        "id": cotizacion_id,
+                        "codigo_cotizacion": codigo_cotizacion,
+                        "correlativo": correlativo,
+                        "actualizado": True
+                    }
+                })
+            
+            else:
+                # 🔥 NUEVA COTIZACIÓN - INSERT
+                print(f"🆕 Creando NUEVA cotización")
+                
+                # Generar número de cotización secuencial
+                row = db_query("""
+                    SELECT numero_cotizacion 
+                    FROM cotizaciones 
+                    ORDER BY id DESC 
+                    LIMIT 1
+                """)
+                if row:
+                    ultimo = row[0]["numero_cotizacion"]
+                    numero_int = int(ultimo.split("-")[1]) + 1
+                else:
+                    numero_int = 1
+                numero = f"COT-{str(numero_int).zfill(5)}"
+                
+                # Generar código personalizado si no viene
+                if not codigo_cotizacion:
+                    if es_borrador:
+                        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                        codigo_vendedor = "TMP"
+                        codigo_cotizacion = f"TMP-{codigo_vendedor}-{timestamp}"
+                        correlativo = 0
+                    else:
+                        usuario_query = "SELECT codigo_vendedor FROM usuarios WHERE id = %s"
+                        usuario = db_query(usuario_query, (usuario_id,))
+                        codigo_vendedor = usuario[0]['codigo_vendedor'] if usuario else f"V{str(usuario_id).zfill(3)}"
+                        
+                        corr_query = "SELECT MAX(correlativo) as ultimo FROM cotizaciones WHERE usuario_id = %s"
+                        ultimo_corr = db_query(corr_query, (usuario_id,))
+                        nuevo_corr = (ultimo_corr[0]['ultimo'] or 0) + 1
+                        
+                        fecha = datetime.now()
+                        codigo_cotizacion = f"COT-{codigo_vendedor}-{fecha.year}{str(fecha.month).zfill(2)}{str(fecha.day).zfill(2)}-{str(nuevo_corr).zfill(4)}"
+                        correlativo = nuevo_corr
+
+                cur.execute("""
+                    INSERT INTO cotizaciones (
+                        numero_cotizacion,
+                        cliente_id,
+                        fecha_creacion,
+                        estado,
+                        subtotal,
+                        igv,
+                        total,
+                        condicion_pago,
+                        tiempo_entrega,
+                        validez_oferta,
+                        direccion_entrega,
+                        requerimiento,
+                        nota_cotizacion,
+                        usuario_id,
+                        notas,
+                        codigo_cotizacion,
+                        correlativo,
+                        descuento_porcentaje,
+                        descuento_monto,
+                        descuento_tipo
+                    )
+                    VALUES (%s, %s, (NOW() AT TIME ZONE 'America/Lima'), %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    RETURNING id
+                """, (
+                    numero,
+                    cliente_id,
                     estado,
                     subtotal,
                     igv,
@@ -626,76 +752,53 @@ def guardar_cotizacion():
                     descuento_porcentaje,
                     descuento_monto,
                     descuento_tipo
-                )
-                VALUES (%s, %s, (NOW() AT TIME ZONE 'America/Lima'), %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                RETURNING id
-            """, (
-                numero,
-                cliente_id,
-                estado,
-                subtotal,
-                igv,
-                total,
-                condicion_pago,
-                tiempo_entrega,
-                validez_oferta,
-                direccion_entrega,
-                requerimiento,
-                nota_cotizacion,
-                usuario_id,
-                notas,
-                codigo_cotizacion,
-                correlativo,
-                descuento_porcentaje,
-                descuento_monto,
-                descuento_tipo
-            ))
-
-            cotizacion_id = cur.fetchone()[0]
-
-            for p in data.get("productos", []):
-                cur.execute("""
-                    INSERT INTO cotizacion_detalle (
-                        cotizacion_id,
-                        producto_id,
-                        cantidad,
-                        costo_unitario,
-                        subtotal_costo,
-                        margen_porcentaje,
-                        precio_venta_unitario,
-                        subtotal_venta,
-                        descuento_porcentaje,
-                        precio_venta_con_descuento,
-                        subtotal_venta_con_descuento,
-                        descuento_total,
-                        margen_final
-                    )
-                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-                """, (
-                    cotizacion_id,
-                    p["producto_id"],
-                    p["cantidad"],
-                    p.get("costo_unitario", 0),
-                    p.get("subtotal_costo", 0),
-                    p.get("margen_porcentaje", 20),
-                    p["precio_venta_unitario"],
-                    p.get("subtotal_venta", 0),
-                    p.get("descuento_porcentaje", 0),
-                    p.get("precio_venta_con_descuento", p["precio_venta_unitario"]),
-                    p.get("subtotal_venta_con_descuento", p.get("subtotal_venta", 0)),
-                    p.get("descuento_total", 0),
-                    p.get("margen_final", 20)
                 ))
 
-        return jsonify({
-            "success": True,
-            "data": {
-                "id": cotizacion_id,
-                "numero": numero,
-                "codigo_cotizacion": codigo_cotizacion,
-                "correlativo": correlativo
-            }
-        })
+                nuevo_id = cur.fetchone()[0]
+
+                for p in data.get("productos", []):
+                    cur.execute("""
+                        INSERT INTO cotizacion_detalle (
+                            cotizacion_id,
+                            producto_id,
+                            cantidad,
+                            costo_unitario,
+                            subtotal_costo,
+                            margen_porcentaje,
+                            precio_venta_unitario,
+                            subtotal_venta,
+                            descuento_porcentaje,
+                            precio_venta_con_descuento,
+                            subtotal_venta_con_descuento,
+                            descuento_total,
+                            margen_final
+                        )
+                        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                    """, (
+                        nuevo_id,
+                        p["producto_id"],
+                        p["cantidad"],
+                        p.get("costo_unitario", 0),
+                        p.get("subtotal_costo", 0),
+                        p.get("margen_porcentaje", 20),
+                        p["precio_venta_unitario"],
+                        p.get("subtotal_venta", 0),
+                        p.get("descuento_porcentaje", 0),
+                        p.get("precio_venta_con_descuento", p["precio_venta_unitario"]),
+                        p.get("subtotal_venta_con_descuento", p.get("subtotal_venta", 0)),
+                        p.get("descuento_total", 0),
+                        p.get("margen_final", 20)
+                    ))
+
+                return jsonify({
+                    "success": True,
+                    "data": {
+                        "id": nuevo_id,
+                        "numero": numero,
+                        "codigo_cotizacion": codigo_cotizacion,
+                        "correlativo": correlativo
+                    }
+                })
 
     except Exception as e:
         print("🔥 ERROR:", e)
@@ -705,7 +808,6 @@ def guardar_cotizacion():
             "success": False,
             "error": str(e)
         }), 500
-
 
 # ==========================================
 # OBTENER COTIZACIÓN - CON DESCUENTO
