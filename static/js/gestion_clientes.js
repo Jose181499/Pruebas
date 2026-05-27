@@ -1,4 +1,15 @@
 // =========================================
+// UBIGEO PERÚ (MOVER AL PRINCIPIO)
+// =========================================
+const ubigeo = {
+    Lima: { Lima: ["Lima", "Barranco", "Breña", "Chorrillos", "Comas", "El Agustino", "Jesús María", "La Molina", "La Victoria", "Lince", "Los Olivos", "Magdalena del Mar", "Miraflores", "Pueblo Libre", "Puente Piedra", "Rímac", "San Borja", "San Isidro", "San Juan de Lurigancho", "San Juan de Miraflores", "San Luis", "San Martín de Porres", "San Miguel", "Santa Anita", "Santiago de Surco", "Surquillo", "Villa El Salvador", "Villa María del Triunfo"] },
+    Arequipa: { Arequipa: ["Arequipa", "Alto Selva Alegre", "Cayma", "Cerro Colorado", "Characato", "Chiguata", "Jacobo Hunter", "José Luis Bustamante y Rivero", "La Joya", "Mariano Melgar", "Miraflores", "Paucarpata", "Pocsi", "Polobaya", "Quequeña", "Sabandía", "Sachaca", "San Juan de Siguas", "San Juan de Tarucani", "Santa Isabel de Siguas", "Santa Rita de Siguas", "Socabaya", "Tiabaya", "Uchumayo", "Vitor", "Yanahuara", "Yarabamba", "Yura"] },
+    Cusco: { Cusco: ["Cusco", "San Jerónimo", "San Sebastián", "Santiago", "Wanchaq"] },
+    LaLibertad: { Trujillo: ["Trujillo", "El Porvenir", "Florencia de Mora", "Huanchaco", "La Esperanza", "Laredo", "Moche", "Poroto", "Salaverry", "Simbal", "Víctor Larco Herrera"] },
+    Piura: { Piura: ["Piura", "Castilla", "Catacaos", "Cura Mori", "El Tallán", "La Arena", "La Unión", "Las Lomas", "Tambo Grande"] }
+};
+
+// =========================================
 // SISTEMA DE NOTIFICACIONES
 // =========================================
 function mostrarNotificacion(mensaje, tipo = 'exito') {
@@ -128,11 +139,7 @@ function formatearFechaHora(fechaISO) {
     if (!fechaISO) return 'No registrada';
     try {
         const fecha = new Date(fechaISO);
-        const opcionesFecha = { year: 'numeric', month: 'long', day: 'numeric' };
-        const opcionesHora = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
-        const fechaFormateada = fecha.toLocaleDateString('es-PE', opcionesFecha);
-        const horaFormateada = fecha.toLocaleTimeString('es-PE', opcionesHora);
-        return `${fechaFormateada} - ${horaFormateada}`;
+        return fecha.toLocaleString('es-PE', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     } catch (e) {
         return 'Fecha inválida';
     }
@@ -233,7 +240,7 @@ function agregarContactoNuevo(data = {}) {
 }
 
 // =========================================
-// AGREGAR PUNTO - NUEVO CLIENTE
+// AGREGAR PUNTO - NUEVO CLIENTE (CON SELECT MEJORADO)
 // =========================================
 function agregarPuntoNuevo(data = {}) {
     const container = document.getElementById('listaPuntos');
@@ -312,7 +319,7 @@ function agregarContactoEdicion(data = {}) {
 }
 
 // =========================================
-// AGREGAR PUNTO - EDITAR CLIENTE
+// AGREGAR PUNTO - EDITAR CLIENTE (CON SELECT MEJORADO)
 // =========================================
 function agregarPuntoEdicion(data = {}) {
     const container = document.getElementById('edit_listaPuntos');
@@ -587,7 +594,7 @@ function inicializarContactosPuntos() {
 }
 
 // =========================================
-// CARGAR CLIENTES
+// CARGAR CLIENTES (VERSIÓN CORREGIDA CON 3 BOTONES)
 // =========================================
 let timeoutBusqueda = null;
 
@@ -598,7 +605,7 @@ async function cargarClientes(filtros = {}) {
     tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5">
         <div class="spinner-border text-primary" role="status"></div>
         <br>Cargando clientes...
-     </tr>`;
+     </td>`;
 
     try {
         let url = "/api/clientes/buscar";
@@ -626,7 +633,7 @@ async function cargarClientes(filtros = {}) {
             tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5 text-muted">
                 <i class="bi bi-search" style="font-size: 3rem;"></i><br>
                 No se encontraron resultados
-             </tr>`;
+              </div></tr>`;
             return;
         }
 
@@ -642,6 +649,7 @@ async function cargarClientes(filtros = {}) {
             const condicionPago = c.puntos_entrega?.[0]?.condicion_pago || '-';
             const codigoCliente = c.codigo_cliente || `---`;
 
+            // ⭐ AHORA CON 3 BOTONES VISIBLES CON BOOTSTRAP ⭐
             tbody.innerHTML += `
                 <tr>
                     <td class="text-center">${c.id || '-'}</td>
@@ -654,19 +662,25 @@ async function cargarClientes(filtros = {}) {
                     <td>${contactos}</td>
                     <td>${puntos}</td>
                     <td class="text-center">
-                        <button class="btn-action btn-view" onclick="abrirModalVer(${c.id})" title="Ver cliente">👁️</button>
-                        <button class="btn-action btn-edit" onclick="abrirModalEditar(${c.id})" title="Editar">✏️</button>
-                        <button class="btn-action btn-delete" onclick="abrirModalEliminar(${c.id})" title="Eliminar">🗑️</button>
-                    </td>
+                        <button class="btn btn-sm btn-primary me-1" onclick="abrirModalVer(${c.id})" title="Ver cliente">
+                            <i class="bi bi-eye-fill"></i> Ver
+                        </button>
+                        <button class="btn btn-sm btn-warning me-1" onclick="abrirModalEditar(${c.id})" title="Editar cliente">
+                            <i class="bi bi-pencil-fill"></i> Editar
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="abrirModalEliminar(${c.id})" title="Eliminar cliente">
+                            <i class="bi bi-trash-fill"></i> Eliminar
+                        </button>
+                    </div>
                 </tr>
             `;
         });
 
     } catch (e) {
         console.error("Error:", e);
-        tbody.innerHTML = `<td><td colspan="10" class="text-center py-5 text-danger">
+        tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5 text-danger">
             Error al cargar clientes: ${e.message}
-         </tr>`;
+        </div></tr>`;
     }
 }
 
