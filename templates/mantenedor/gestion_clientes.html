@@ -694,7 +694,23 @@
                 if (label) label.innerHTML = 'DNI *:';
             } else {
                 input.placeholder = 'Ingrese el número';
+                input.maxLength = 20;          // ← NUEVO
                 if (label) label.innerHTML = 'Número de Documento *:';
+            }
+      }
+      
+        function validarNumeroDocumento(input, prefix = '') {
+            const tipo = document.getElementById(`${prefix}tipo_documento`);
+            if (!tipo) return;
+
+            const limites = { RUC: 11, DNI: 8 };
+            const max = limites[tipo.value];
+
+            input.value = input.value.replace(/\D/g, ''); // solo números
+
+            if (max && input.value.length > max) {
+               input.value = input.value.slice(0, max);
+               mostrarNotificacion(`El ${tipo.value} solo permite ${max} dígitos como máximo.`, 'warning');
             }
         }
 
