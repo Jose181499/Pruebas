@@ -368,9 +368,11 @@ def consultar_sunat():
         # =========================================
         if tipo == "6":
 
-            url = f"https://dniruc.apisperu.com/api/v1/ruc/{numero}?token=demo"
+            url = f"https://api.apis.net.pe/v2/sunat/ruc?numero={numero}"
 
-            response = requests.get(url, timeout=10)
+            headers = {"Referer": "http://localhost:5000"}
+
+            response = requests.get(url, headers=headers, timeout=10)
 
             if response.status_code != 200:
                 return jsonify({
@@ -394,9 +396,11 @@ def consultar_sunat():
         # =========================================
         elif tipo == "1":
 
-            url = f"https://dniruc.apisperu.com/api/v1/dni/{numero}?token=demo"
+            url = f"https://api.apis.net.pe/v2/sunat/dni?numero={numero}"
 
-            response = requests.get(url, timeout=10)
+            headers = {"Referer": "http://localhost:5000"}
+
+            response = requests.get(url, headers=headers, timeout=10)
 
             if response.status_code != 200:
                 return jsonify({
