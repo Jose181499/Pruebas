@@ -76,6 +76,22 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ===========================
+// FUNCIÓN PARA FORMATEAR CANTIDAD (elimina .000)
+// ===========================
+function formatCantidad(cant) {
+    if (cant === null || cant === undefined) return '0';
+    // Convertir a número
+    let numero = parseFloat(cant);
+    if (isNaN(numero)) return '0';
+    // Si es entero (incluyendo .000), mostrar sin decimales
+    if (numero % 1 === 0) {
+        return numero.toString();
+    }
+    // Si tiene decimales, mostrarlos sin ceros innecesarios al final
+    return numero.toFixed(3).replace(/\.?0+$/, '');
+}
+
+// ===========================
 // CONSULTA A SUNAT
 // ===========================
 async function consultarSunatListado(ruc) {
@@ -400,12 +416,13 @@ async function verDetalle(id) {
             const total = Number(data.total || 0).toFixed(2);
             let estadoBadge = renderEstado(data.estado, esBorrador);
             
+            // 🔥 USAR formatCantidad para eliminar los .000
             const productosHtml = (data.detalle || []).map(p => `
                 <tr>
                     <td>${escapeHtml(p.codigo || '-')}</td>
                     <td>${escapeHtml(p.descripcion || '-')}</td>
                     <td>${escapeHtml(p.marca || '-')}</td>
-                    <td class="text-center">${p.cantidad || 0}</td>
+                    <td class="text-center">${formatCantidad(p.cantidad || 0)}</td>
                     <td class="text-end">S/ ${Number(p.precio_venta_unitario || 0).toLocaleString('es-PE', { minimumFractionDigits: 2 })}</td>
                     <td class="text-end">S/ ${Number(p.subtotal_venta_con_descuento || 0).toLocaleString('es-PE', { minimumFractionDigits: 2 })}</td>
                  </tr>
@@ -453,7 +470,7 @@ async function verDetalle(id) {
                                         <th class="text-center">Cant</th><th class="text-end">P.Unit</th><th class="text-end">Subtotal</th>
                                      </tr>
                                 </thead>
-                                <tbody>${productosHtml || '<tr><td colspan="6" class="text-center">Sin productos</td></tr>'}</tbody>
+                                <tbody>${productosHtml || '</tr><td colspan="6" class="text-center">Sin productos</td></tr>'}</tbody>
                              </table>
                         </div>
                     </div>

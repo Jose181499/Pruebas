@@ -669,30 +669,6 @@
                 }
             }, 4000);
         }
-
-        // =========================================
-        // UBIGEO PERÚ COMPLETO
-        // =========================================
-        const ubigeo = {
-            Lima: {
-                Lima: ['Ancón', 'Ate', 'Barranco', 'Breña', 'Carabayllo', 'Chaclacayo', 'Chorrillos', 'Cieneguilla', 'Comas', 'El Agustino', 'Independencia', 'Jesús María', 'La Molina', 'La Victoria', 'Lince', 'Los Olivos', 'Lurigancho', 'Lurín', 'Magdalena del Mar', 'Miraflores', 'Pachacámac', 'Pueblo Libre', 'Puente Piedra', 'Rímac', 'San Borja', 'San Isidro', 'San Juan de Lurigancho', 'San Juan de Miraflores', 'San Martín de Porres', 'San Miguel', 'Santa Anita', 'Santiago de Surco', 'Surquillo', 'Villa El Salvador', 'Villa María del Triunfo'],
-                Huaura: ['Huacho', 'Hualmay', 'Vegueta'],
-                Huaral: ['Huaral', 'Chancay', 'Aucallama']
-            },
-            Arequipa: {
-                Arequipa: ['Cerro Colorado', 'Yanahuara', 'Cayma', 'Miraflores', 'Socabaya', 'José Luis Bustamante y Rivero']
-            },
-            Cusco: {
-                Cusco: ['Wanchaq', 'Santiago', 'San Sebastián', 'San Jerónimo']
-            },
-            LaLibertad: {
-                Trujillo: ['Trujillo', 'Víctor Larco', 'Moche', 'Huanchaco']
-            },
-            Piura: {
-                Piura: ['Piura', 'Castilla', 'Catacaos']
-            }
-        };
-
         // =========================================
         // FUNCIONES DE ESCAPE
         // =========================================
@@ -826,24 +802,6 @@
                     <div class="col-md-6 mb-3"><label>Dirección</label><input class="form-control" data-field="direccion" value="${escapeHtml(data.direccion || '')}"></div>
                 </div>
                 <div class="row">
-                    <div class="col-md-4 mb-3"><label>Departamento</label>
-                        <select class="form-select" data-field="departamento">
-                            <option value="">Seleccione</option>
-                            <option value="Lima" ${data.departamento === 'Lima' ? 'selected' : ''}>Lima</option>
-                            <option value="Arequipa" ${data.departamento === 'Arequipa' ? 'selected' : ''}>Arequipa</option>
-                            <option value="Cusco" ${data.departamento === 'Cusco' ? 'selected' : ''}>Cusco</option>
-                            <option value="LaLibertad" ${data.departamento === 'LaLibertad' ? 'selected' : ''}>La Libertad</option>
-                            <option value="Piura" ${data.departamento === 'Piura' ? 'selected' : ''}>Piura</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4 mb-3"><label>Provincia</label>
-                        <select class="form-select" data-field="provincia"><option value="">Seleccione</option></select>
-                    </div>
-                    <div class="col-md-4 mb-3"><label>Distrito</label>
-                        <select class="form-select" data-field="distrito"><option value="">Seleccione</option></select>
-                    </div>
-                </div>
-                <div class="row">
                     <div class="col-md-6 mb-3"><label>Contacto de Entrega</label><input class="form-control" data-field="responsable" value="${escapeHtml(data.responsable || '')}"></div>
                     <div class="col-md-6 mb-3"><label>Teléfono</label><input class="form-control" data-field="telefono_punto" value="${escapeHtml(data.telefono_punto || '')}"></div>
                 </div>
@@ -862,7 +820,6 @@
                 <div class="checkbox-group"><input type="checkbox" data-field="principal_punto" ${data.principal_punto ? 'checked' : ''}> <label>Punto Principal</label></div>
             `;
             container.appendChild(div);
-            inicializarEventosPunto(div);
         }
 
         // =========================================
@@ -905,24 +862,6 @@
                     <div class="col-md-6 mb-3"><label>Dirección</label><input class="form-control" data-field="edit_direccion" value="${escapeHtml(data.direccion || '')}"></div>
                 </div>
                 <div class="row">
-                    <div class="col-md-4 mb-3"><label>Departamento</label>
-                        <select class="form-select" data-field="edit_departamento">
-                            <option value="">Seleccione</option>
-                            <option value="Lima" ${data.departamento === 'Lima' ? 'selected' : ''}>Lima</option>
-                            <option value="Arequipa" ${data.departamento === 'Arequipa' ? 'selected' : ''}>Arequipa</option>
-                            <option value="Cusco" ${data.departamento === 'Cusco' ? 'selected' : ''}>Cusco</option>
-                            <option value="LaLibertad" ${data.departamento === 'LaLibertad' ? 'selected' : ''}>La Libertad</option>
-                            <option value="Piura" ${data.departamento === 'Piura' ? 'selected' : ''}>Piura</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4 mb-3"><label>Provincia</label>
-                        <select class="form-select" data-field="edit_provincia"><option value="">Seleccione</option></select>
-                    </div>
-                    <div class="col-md-4 mb-3"><label>Distrito</label>
-                        <select class="form-select" data-field="edit_distrito"><option value="">Seleccione</option></select>
-                    </div>
-                </div>
-                <div class="row">
                     <div class="col-md-6 mb-3"><label>Contacto de Entrega</label><input class="form-control" data-field="edit_responsable" value="${escapeHtml(data.responsable || '')}"></div>
                     <div class="col-md-6 mb-3"><label>Teléfono</label><input class="form-control" data-field="edit_telefono_punto" value="${escapeHtml(data.telefono_punto || '')}"></div>
                 </div>
@@ -941,49 +880,6 @@
                 <div class="checkbox-group"><input type="checkbox" data-field="principal_punto" ${data.principal_punto ? 'checked' : ''}> <label>Punto Principal</label></div>
             `;
             container.appendChild(div);
-            inicializarEventosPunto(div, 'edit_');
-        }
-
-        // =========================================
-        // INICIALIZAR EVENTOS DE PUNTO
-        // =========================================
-        function inicializarEventosPunto(div, prefix = '') {
-            const selectDepartamento = div.querySelector(`[data-field="${prefix}departamento"]`);
-            const selectProvincia = div.querySelector(`[data-field="${prefix}provincia"]`);
-            const selectDistrito = div.querySelector(`[data-field="${prefix}distrito"]`);
-            const selectCondicionPago = div.querySelector('.select-condicion-pago');
-            const campoCredito = div.querySelector('.campo-credito');
-
-            if (selectDepartamento) {
-                selectDepartamento.addEventListener('change', function() {
-                    const departamento = this.value;
-                    if (selectProvincia) selectProvincia.innerHTML = '<option value="">Seleccione</option>';
-                    if (selectDistrito) selectDistrito.innerHTML = '<option value="">Seleccione</option>';
-                    if (!ubigeo[departamento]) return;
-                    Object.keys(ubigeo[departamento]).forEach(provincia => {
-                        if (selectProvincia) selectProvincia.innerHTML += `<option value="${provincia}">${provincia}</option>`;
-                    });
-                });
-                selectDepartamento.dispatchEvent(new Event('change'));
-            }
-
-            if (selectProvincia) {
-                selectProvincia.addEventListener('change', function() {
-                    const departamento = selectDepartamento ? selectDepartamento.value : '';
-                    const provincia = this.value;
-                    if (selectDistrito) selectDistrito.innerHTML = '<option value="">Seleccione</option>';
-                    if (!ubigeo[departamento] || !ubigeo[departamento][provincia]) return;
-                    ubigeo[departamento][provincia].forEach(distrito => {
-                        if (selectDistrito) selectDistrito.innerHTML += `<option value="${distrito}">${distrito}</option>`;
-                    });
-                });
-            }
-
-            if (selectCondicionPago && campoCredito) {
-                selectCondicionPago.addEventListener('change', function() {
-                    campoCredito.style.display = this.value === 'Credito' ? 'block' : 'none';
-                });
-            }
         }
 
         // =========================================
@@ -1156,9 +1052,6 @@
                 data.puntos_entrega.push({
                     nombre_punto: item.querySelector('[data-field="edit_nombre_punto"]')?.value.trim() || '',
                     direccion: item.querySelector('[data-field="edit_direccion"]')?.value.trim() || '',
-                    departamento: item.querySelector('[data-field="edit_departamento"]')?.value || '',
-                    provincia: item.querySelector('[data-field="edit_provincia"]')?.value || '',
-                    distrito: item.querySelector('[data-field="edit_distrito"]')?.value || '',
                     responsable: item.querySelector('[data-field="edit_responsable"]')?.value.trim() || '',
                     telefono: item.querySelector('[data-field="edit_telefono_punto"]')?.value.trim() || '',
                     condicion_pago: item.querySelector('[data-field="edit_condicion_pago"]')?.value || '',
@@ -1217,9 +1110,6 @@
                 data.puntos_entrega.push({
                     nombre_punto: item.querySelector('[data-field="nombre_punto"]')?.value.trim() || '',
                     direccion: item.querySelector('[data-field="direccion"]')?.value.trim() || '',
-                    departamento: item.querySelector('[data-field="departamento"]')?.value || '',
-                    provincia: item.querySelector('[data-field="provincia"]')?.value || '',
-                    distrito: item.querySelector('[data-field="distrito"]')?.value || '',
                     responsable: item.querySelector('[data-field="responsable"]')?.value.trim() || '',
                     telefono: item.querySelector('[data-field="telefono_punto"]')?.value.trim() || '',
                     condicion_pago: item.querySelector('[data-field="condicion_pago"]')?.value || '',
