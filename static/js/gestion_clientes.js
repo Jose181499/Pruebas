@@ -833,11 +833,12 @@ document.getElementById('formEditarCliente')?.addEventListener('submit', async f
         const json = await res.json();
         
         if (json.success) {
-            mostrarNotificacion(`✅ Cliente actualizado exitosamente`, 'exito');
-            const modal = bootstrap.Modal.getInstance(document.getElementById('modalEditarCliente'));
-            if (modal) modal.hide();
-            await cargarClientes();
-        } else {
+    bootstrap.Modal.getInstance(document.getElementById('modalEditarCliente'))?.hide();
+    await cargarClientes();
+    mostrarModalConfirmacionEdicion(data); // ✅ línea nueva
+    }
+        
+        else {
             mostrarNotificacion("❌ Error: " + json.error, 'error');
         }
     } catch (error) {
@@ -918,21 +919,16 @@ document.getElementById('formCliente')?.addEventListener('submit', async functio
         const json = await res.json();
         
         if (json.success) {
-            const codigoGenerado = json.data?.codigo_cliente || 'Generado';
-            mostrarNotificacion(`✅ Cliente guardado exitosamente\nCódigo: ${codigoGenerado}\nRazón Social: ${data.razon_social}\nDocumento: ${data.tipo_documento}: ${data.numero_documento}`, 'exito');
-            
-            const modal = bootstrap.Modal.getInstance(document.getElementById('modalCliente'));
-            if (modal) modal.hide();
-            
-            document.getElementById('formCliente').reset();
-            document.getElementById('listaContactos').innerHTML = '';
-            document.getElementById('listaPuntos').innerHTML = '';
-            
-            agregarContactoNuevo();
-            agregarPuntoNuevo();
-            
-            await cargarClientes();
-        } else {
+    bootstrap.Modal.getInstance(document.getElementById('modalCliente'))?.hide();
+    document.getElementById('formCliente').reset();
+    document.getElementById('listaContactos').innerHTML = '';
+    document.getElementById('listaPuntos').innerHTML = '';
+    agregarContactoNuevo();
+    agregarPuntoNuevo();
+    await cargarClientes();
+    mostrarModalConfirmacionCliente(json, data); // ✅ línea nueva
+    }
+        else {
             mostrarNotificacion("❌ Error: " + json.error, 'error');
         }
     } catch (error) {
@@ -940,6 +936,162 @@ document.getElementById('formCliente')?.addEventListener('submit', async functio
         mostrarNotificacion("Error al guardar: " + error.message, 'error');
     }
 });
+
+// =========================================
+// MODAL DE CONFIRMACIÓN - NUEVO CLIENTE
+// =========================================
+function mostrarModalConfirmacionCliente(json, data) {
+    const modalBody = document.getElementById('modalConfirmacionBody');
+    if (!modalBody) return;
+
+    const ahora      = new Date();
+    const fecha      = ahora.toLocaleDateString('es-PE');
+    const hora       = ahora.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+
+    const codigoCliente  = json.data?.codigo_cliente || '-';
+    const contactoPpal   = data.contactos?.find(c => c.principal) || data.contactos?.[0];
+    const puntoPpal      = data.puntos_entrega?.find(p => p.principal) || data.puntos_entrega?.[0];
+
+    modalBody.innerHTML = `
+        <div class="text-center mb-3">
+            <i class="bi bi-person-check-fill" style="font-size: 48px; color: #10b981;"></i>
+        </div>
+
+        <div class="alert alert-success text-center mb-3">
+            <strong>✅ ¡Cliente registrado exitosamente!</strong>
+        </div>
+
+        <div class="row"><div class="col-6"><strong>Código:</strong></div>
+            <div class="col-6"><span class="badge bg-secondary">${escapeHtml(codigoCliente)}</span></div>
+        </div>
+        <div class="row mt-2"><div class="col-6"><strong>Tipo Documento:</strong></div>
+            <div class="col-6">${escapeHtml(data.tipo_documento)}</div>
+        </div>
+        <div class="row mt-2"><div class="col-6"><strong>RUC / DNI:</strong></div>
+            <div class="col-6"><span class="badge bg-info text-dark">${escapeHtml(data.numero_documento)}</span></div>
+        </div>
+        <div class="row mt-2"><div class="col-6"><strong>Razón Social:</strong></div>
+            <div class="col-6">${escapeHtml(data.razon_social)}</div>
+        </div>
+        ${data.nombre_comercial ? `
+        <div class="row mt-2"><div class="col-6"><strong>Nombre Comercial:</strong></div>
+            <div class="col-6">${escapeHtml(data.nombre_comercial)}</div>
+        </div>` : ''}
+        ${data.direccion_fiscal ? `
+        <div class="row mt-2"><div class="col-6"><strong>Dirección Fiscal:</strong></div>
+            <div class="col-6">${escapeHtml(data.direccion_fiscal)}</div>
+        </div>` : ''}
+
+        <hr>
+
+        ${contactoPpal ? `
+        <div class="row mt-2"><div class="col-6"><strong>Contacto Principal:</strong></div>
+            <div class="col-6">${escapeHtml(contactoPpal.nombre_contacto)}
+                ${contactoPpal.telefono ? `<br><small class="text-muted"><i class="bi bi-telephone"></i> ${escapeHtml(contactoPpal.telefono)}</small>` : ''}
+            </div>
+        </div>` : ''}
+        ${puntoPpal ? `
+        <div class="row mt-2"><div class="col-6"><strong>Punto de Entrega:</strong></div>
+            <div class="col-6">${escapeHtml(puntoPpal.nombre_punto)}
+                ${puntoPpal.condicion_pago ? `<br><small class="text-muted"><i class="bi bi-credit-card"></i> ${escapeHtml(puntoPpal.condicion_pago)}</small>` : ''}
+            </div>
+        </div>` : ''}
+
+        <hr>
+
+        <div class="row mt-2"><div class="col-6"><strong>Registrado por:</strong></div>
+            <div class="col-6">${escapeHtml(usuarioActual?.nombre_completo || 'No asignado')}</div>
+        </div>
+        <div class="row mt-2"><div class="col-6"><strong>Fecha:</strong></div>
+            <div class="col-6">${fecha}</div>
+        </div>
+        <div class="row mt-2"><div class="col-6"><strong>Hora:</strong></div>
+            <div class="col-6">${hora}</div>
+        </div>
+
+        <hr>
+        <div class="text-muted small">
+            <i class="bi bi-info-circle"></i>
+            El código <strong>${escapeHtml(codigoCliente)}</strong> es único y quedará registrado en el sistema.
+        </div>
+    `;
+
+    const modalEl = document.getElementById('modalConfirmacionCliente');
+    if (modalEl) new bootstrap.Modal(modalEl).show();
+}
+
+// =========================================
+// MODAL DE CONFIRMACIÓN - EDITAR CLIENTE
+// =========================================
+function mostrarModalConfirmacionEdicion(data) {
+    const modalBody = document.getElementById('modalConfirmacionBody');
+    if (!modalBody) return;
+
+    const ahora = new Date();
+    const fecha = ahora.toLocaleDateString('es-PE');
+    const hora  = ahora.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+
+    const contactoPpal = data.contactos?.find(c => c.principal) || data.contactos?.[0];
+    const puntoPpal    = data.puntos_entrega?.find(p => p.principal) || data.puntos_entrega?.[0];
+
+    modalBody.innerHTML = `
+        <div class="text-center mb-3">
+            <i class="bi bi-pencil-square" style="font-size: 48px; color: #f59e0b;"></i>
+        </div>
+
+        <div class="alert alert-warning text-center mb-3">
+            <strong>✏️ ¡Cliente actualizado exitosamente!</strong>
+        </div>
+
+        <div class="row mt-2"><div class="col-6"><strong>Tipo Documento:</strong></div>
+            <div class="col-6">${escapeHtml(data.tipo_documento)}</div>
+        </div>
+        <div class="row mt-2"><div class="col-6"><strong>RUC / DNI:</strong></div>
+            <div class="col-6"><span class="badge bg-info text-dark">${escapeHtml(data.numero_documento)}</span></div>
+        </div>
+        <div class="row mt-2"><div class="col-6"><strong>Razón Social:</strong></div>
+            <div class="col-6">${escapeHtml(data.razon_social)}</div>
+        </div>
+        ${data.nombre_comercial ? `
+        <div class="row mt-2"><div class="col-6"><strong>Nombre Comercial:</strong></div>
+            <div class="col-6">${escapeHtml(data.nombre_comercial)}</div>
+        </div>` : ''}
+        ${data.direccion_fiscal ? `
+        <div class="row mt-2"><div class="col-6"><strong>Dirección Fiscal:</strong></div>
+            <div class="col-6">${escapeHtml(data.direccion_fiscal)}</div>
+        </div>` : ''}
+
+        <hr>
+
+        ${contactoPpal ? `
+        <div class="row mt-2"><div class="col-6"><strong>Contacto Principal:</strong></div>
+            <div class="col-6">${escapeHtml(contactoPpal.nombre_contacto)}
+                ${contactoPpal.telefono ? `<br><small class="text-muted"><i class="bi bi-telephone"></i> ${escapeHtml(contactoPpal.telefono)}</small>` : ''}
+            </div>
+        </div>` : ''}
+        ${puntoPpal ? `
+        <div class="row mt-2"><div class="col-6"><strong>Punto de Entrega:</strong></div>
+            <div class="col-6">${escapeHtml(puntoPpal.nombre_punto)}
+                ${puntoPpal.condicion_pago ? `<br><small class="text-muted"><i class="bi bi-credit-card"></i> ${escapeHtml(puntoPpal.condicion_pago)}</small>` : ''}
+            </div>
+        </div>` : ''}
+
+        <hr>
+
+        <div class="row mt-2"><div class="col-6"><strong>Actualizado por:</strong></div>
+            <div class="col-6">${escapeHtml(usuarioActual?.nombre_completo || 'No asignado')}</div>
+        </div>
+        <div class="row mt-2"><div class="col-6"><strong>Fecha:</strong></div>
+            <div class="col-6">${fecha}</div>
+        </div>
+        <div class="row mt-2"><div class="col-6"><strong>Hora:</strong></div>
+            <div class="col-6">${hora}</div>
+        </div>
+    `;
+
+    const modalEl = document.getElementById('modalConfirmacionCliente');
+    if (modalEl) new bootstrap.Modal(modalEl).show();
+}
 
 // =========================================
 // ELIMINAR CLIENTE
