@@ -581,7 +581,7 @@ def api_listar_productos():
         print(f"❌ Error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@app.route("/gestor_compras")
+@app.route("/compras")
 def gestor_compras_directo():
     try:
         return render_template("compras.html")

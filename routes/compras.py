@@ -20,10 +20,9 @@ compras_bp = Blueprint("compras", __name__)
 # RUTAS DE VISTAS (HTML)
 # ==========================================
 
-@compras_bp.route("/gestor_compras")
-def gestor_compras_principal():
+@compras_bp.route("/compras")
+def compras_principal():
     return render_template("compras.html")
-
 
 
 @compras_bp.route("/crear_compra")
