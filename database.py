@@ -1359,11 +1359,12 @@ def insertar_proveedor_completo(data):
                 condicion_pago,
                 tiempo_credito,
                 banco,
-                numero_cuenta_cci,
+                numero_cuenta, 
+                cci,
                 lugar_recojo,
                 activo
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE)
             RETURNING id, codigo_proveedor
         """, (
             data.get('razon_social'),
@@ -1376,7 +1377,8 @@ def insertar_proveedor_completo(data):
             data.get('condicion_pago'),
             data.get('tiempo_credito'),
             data.get('banco'),
-            data.get('numero_cuenta_cci'),
+            data.get('numero_cuenta'),   
+            data.get('cci'),
             data.get('lugar_recojo')
         ))
         
@@ -1406,7 +1408,8 @@ def obtener_todos_proveedores():
             condicion_pago,
             tiempo_credito,
             banco,
-            numero_cuenta_cci,
+            numero_cuenta, 
+            cci,
             lugar_recojo,
             activo,
             fecha_creacion
@@ -1432,7 +1435,8 @@ def obtener_proveedor_por_id(proveedor_id):
             condicion_pago,
             tiempo_credito,
             banco,
-            numero_cuenta_cci,
+            numero_cuenta, 
+            cci,
             lugar_recojo
         FROM proveedores
         WHERE id = %s AND activo = TRUE
@@ -1455,7 +1459,8 @@ def actualizar_proveedor(proveedor_id, data):
             condicion_pago = %s,
             tiempo_credito = %s,
             banco = %s,
-            numero_cuenta_cci = %s,
+            numero_cuenta = %s,   
+            cci = %s, 
             lugar_recojo = %s
         WHERE id = %s
     """, (
@@ -1469,7 +1474,8 @@ def actualizar_proveedor(proveedor_id, data):
         data.get('condicion_pago'),
         data.get('tiempo_credito'),
         data.get('banco'),
-        data.get('numero_cuenta_cci'),
+        data.get('numero_cuenta'),  
+        data.get('cci'),
         data.get('lugar_recojo'),
         proveedor_id
     ))

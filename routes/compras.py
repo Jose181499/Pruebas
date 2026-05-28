@@ -32,102 +32,45 @@ def compras_principal():
 
 @compras_bp.route("/crear_compra")
 def crear_compra():
-    """Nueva orden de compra - sin ID - Versión que lee el archivo directamente"""
+    """Nueva orden de compra - sin ID"""
+    import traceback
     try:
         print(f"🆕 NUEVA ORDEN DE COMPRA - Sin ID")
         
-        # Buscar el archivo crear_compra.html
-        posibles_rutas = [
-            '/opt/render/project/src/templates/crear_compra.html',  # Ruta absoluta en Render
-            os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates', 'crear_compra.html'),
-            os.path.join(os.getcwd(), 'templates', 'crear_compra.html'),
-            'templates/crear_compra.html',
-            'crear_compra.html'
-        ]
-        
-        template_content = None
-        template_path = None
-        
-        for ruta in posibles_rutas:
-            if os.path.exists(ruta):
-                template_path = ruta
-                with open(ruta, 'r', encoding='utf-8') as f:
-                    template_content = f.read()
-                print(f"✅ Template encontrado en: {ruta}")
-                break
-        
-        if not template_content:
-            # Si no encuentra el template, crear uno básico
-            template_content = """<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crear Orden de Compra</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-    <div class="container mt-5">
-        <div class="alert alert-warning">
-            <h4>⚠️ Template no encontrado</h4>
-            <p>No se encontró el archivo crear_compra.html en las siguientes ubicaciones:</p>
-            <ul>
-                {% for ruta in rutas_buscadas %}
-                <li>{{ ruta }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-        <div class="card">
-            <div class="card-header">
-                <h3>Crear Orden de Compra (Versión de Emergencia)</h3>
-            </div>
-            <div class="card-body">
-                <p>Modo: {{ modo }}</p>
-                <p>Órdenes encontradas: {{ ordenes|length }}</p>
-                <a href="/compras" class="btn btn-secondary">Volver</a>
-            </div>
-        </div>
-    </div>
-</body>
-</html>"""
-            print("⚠️ Usando template de emergencia")
-        
-        # Obtener datos
+        # Obtener órdenes recientes
         ordenes = obtener_ordenes_recientes(limit=300)
         
-        # Reemplazar variables manualmente
-        html = template_content
-        html = html.replace('{{ modo }}', 'nuevo')
-        html = html.replace('{{ ordenes|length }}', str(len(ordenes)))
-        
-        # Crear tabla de órdenes simple
-        ordenes_html = '<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Código</th><th>Proveedor</th><th>Estado</th></tr></thead><tbody>'
-        for o in ordenes[:10]:
-            ordenes_html += f'<tr><td>{o.get("codigo_orden", "N/A")}</td><td>{o.get("proveedor", "Sin proveedor")}</td><td>{o.get("estado", "-")}</td></tr>'
-        ordenes_html += '</tbody></table></div>'
-        
-        html = html.replace('{{ ordenes }}', ordenes_html)
-        
-        # Manejar bloques if (simplificado)
-        import re
-        html = re.sub(r'{% if .*? %}', '', html)
-        html = re.sub(r'{% endif %}', '', html)
-        
-        return html
-        
+        # SIMPLEMENTE USAR RENDER_TEMPLATE
+        return render_template("crear_compra.html",
+                              ordenes=ordenes,
+                              orden_compra_id=None,
+                              modo='nuevo')
+                              
     except Exception as e:
-        import traceback
         error_detalle = traceback.format_exc()
         print(f"🔥 Error en crear_compra: {error_detalle}")
-        return f"""
+        
+        # Mostrar información de depuración
+        debug_info = f"""
         <html>
-        <head><title>Error</title></head>
+        <head><title>Error - Debug</title></head>
         <body style="font-family: Arial; padding: 20px;">
             <h1>Error al cargar crear_compra</h1>
             <p><strong>Error:</strong> {str(e)}</p>
             <h2>Información de depuración:</h2>
-            <p>Directorio actual: {os.getcwd()}</p>
-            <p>Archivos en directorio actual: {os.listdir('.') if os.path.exists('.') else 'No se puede listar'}</p>
+            <p><strong>Directorio actual:</strong> {os.getcwd()}</p>
+            <p><strong>¿Existe templates/crear_compra.html?</strong> {os.path.exists('templates/crear_compra.html')}</p>
+            <h3>Archivos en templates/:</h3>
+            <ul>
+        """
+        try:
+            for f in os.listdir('templates'):
+                debug_info += f"<li>{f}</li>"
+        except Exception as ex:
+            debug_info += f"<li>Error al listar: {ex}</li>"
+        
+        debug_info += f"""
+            </ul>
             <details>
                 <summary>Ver traceback completo</summary>
                 <pre style="background: #f4f4f4; padding: 10px; overflow: auto;">{error_detalle}</pre>
@@ -136,20 +79,25 @@ def crear_compra():
             <a href="/compras">← Volver a Compras</a>
         </body>
         </html>
-        """, 500
+        """
+        return debug_info, 500
 
 @compras_bp.route("/compra/nueva")
 def nueva_compra():
-    return crear_compra()  # Reutilizar la misma función
+    return render_template("crear_compra.html", ordenes=[], orden_compra_id=None, modo='nuevo')
 
 @compras_bp.route("/editar_compra/<int:orden_id>")
 def editar_compra(orden_id):
     """Editar orden de compra existente - con ID"""
     print(f"✏️ EDITAR ORDEN DE COMPRA - ID: {orden_id}")
-    return crear_compra()  # Reutilizar la misma función por ahora
+    ordenes = obtener_ordenes_recientes(limit=300)
+    return render_template("crear_compra.html",
+                          ordenes=ordenes,
+                          orden_compra_id=orden_id,
+                          modo='editar')
 
 # ==========================================
-# FUNCIONES AUXILIARES (el resto igual)
+# FUNCIONES AUXILIARES
 # ==========================================
 
 def obtener_ordenes_recientes(limit=100):
@@ -187,5 +135,24 @@ def obtener_ordenes_recientes(limit=100):
         traceback.print_exc()
         return []
 
-# El resto de tus funciones (API endpoints) se mantienen igual...
-# (desde @compras_bp.route("/api/usuarios/actual") hasta el final)
+
+# ==========================================
+# API ENDPOINTS - Mantén todo tu código original aquí
+# ==========================================
+
+@compras_bp.route("/api/usuarios/actual", methods=["GET"])
+def obtener_usuario_actual():
+    # ... tu código original ...
+    pass
+
+# ... todos los demás @compras_bp.route("/api/...") ...
+
+
+# ==========================================
+# GENERAR PDF - ORDEN DE COMPRA
+# ==========================================
+
+@compras_bp.route("/api/orden_compra/pdf/<int:orden_id>")
+def generar_pdf_orden_compra(orden_id):
+    # ... tu código original ...
+    pass
