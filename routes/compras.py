@@ -22,9 +22,17 @@ compras_bp = Blueprint("compras", __name__)
 
 @compras_bp.route("/gestor_compras")
 def gestor_compras_principal():
-    return render_template("compras.html")
-
-
+    try:
+        from flask import current_app
+        import os
+        print("🔍 Template folder:", current_app.template_folder)
+        print("📁 Archivos en templates:", os.listdir(current_app.template_folder))
+        return render_template("compras.html")
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        import traceback
+        traceback.print_exc()
+        return f"Error: {e}", 500
 @compras_bp.route("/crear_compra")
 def crear_compra():
     """Nueva orden de compra - sin ID"""
