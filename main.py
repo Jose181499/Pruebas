@@ -581,14 +581,16 @@ def api_listar_productos():
         print(f"❌ Error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
-# RUTA DIRECTA PARA PRUEBA (agrega esto en main.py)
-@app.route("/gestor_compras_directo")
+@app.route("/gestor_compras")
 def gestor_compras_directo():
     try:
         return render_template("compras.html")
     except Exception as e:
-        return f"Error: {e}", 500
+        return f"Error al cargar template: {str(e)}", 500
+
+        @app.route("/test_compras")
+def test_compras():
+    return "Funciona!"
 
 
 # =========================
