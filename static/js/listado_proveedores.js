@@ -205,15 +205,10 @@ async function cargarProveedores(filtros = {}) {
 // INICIALIZAR FILTROS
 // =========================================
 function inicializarFiltros() {
-    const filtroTipo = document.getElementById("filtro-tipo");
     const filtroBusqueda = document.getElementById("filtro-busqueda");
+    const searchCodigo = document.getElementById("search-codigo");
     
-    if (filtroTipo) {
-        filtroTipo.addEventListener("change", () => {
-            aplicarFiltros();
-        });
-    }
-    
+    // Buscador RUC / Razón Social (con debounce)
     if (filtroBusqueda) {
         let timeout;
         filtroBusqueda.addEventListener("input", () => {
@@ -223,15 +218,29 @@ function inicializarFiltros() {
             }, 500);
         });
     }
+
+    // Buscador Código de Proveedor (con debounce)
+    if (searchCodigo) {
+        let timeout;
+        searchCodigo.addEventListener("input", () => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                aplicarFiltros();
+            }, 500);
+        });
+    }
 }
 
+// =========================================
+// APLICAR FILTROS
+// =========================================
 function aplicarFiltros() {
-    const tipo = document.getElementById("filtro-tipo")?.value || "";
-    const busqueda = document.getElementById("filtro-busqueda")?.value || "";
-    
+    const busqueda = document.getElementById("filtro-busqueda")?.value.trim() || "";
+    const codigo = document.getElementById("search-codigo")?.value.trim() || "";
+
     cargarProveedores({
-        tipo: tipo,
-        busqueda: busqueda
+        busqueda: busqueda,      // RUC o Razón Social
+        codigo: codigo           // Código de Proveedor
     });
 }
 

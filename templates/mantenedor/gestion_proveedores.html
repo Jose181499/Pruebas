@@ -295,34 +295,31 @@
 
     <div class="card-body">
 
-        <div class="row g-3">
+    <div class="row g-3 align-items-end">
 
-            <div class="col-md-4">
-
-                <label>Condición de Pago</label>
-
-                <select id="filtro-tipo" class="form-select">
-                    <option value="">Todos</option>
-                    <option value="Contado">Contado</option>
-                    <option value="Credito">Crédito</option>
-                </select>
-
-            </div>
-
-            <div class="col-md-6">
-
-                <label>Buscar por RUC o Razón Social</label>
-
-                <input type="text"
+        <!-- Buscador RUC / Razón Social -->
+        <div class="col-md-7">
+            <label class="form-label fw-bold small">Buscar por RUC o Razón Social</label>
+            <input 
+                type="text"
                 id="filtro-busqueda"
                 class="form-control"
                 placeholder="Buscar por RUC o razón social...">
-
-            </div>
-
         </div>
 
-    </div>
+        <!-- Buscador Código de Proveedor -->
+        <div class="col-md-5">
+            <label class="form-label fw-bold small">Buscar por Código de Proveedor</label>
+            <input 
+                type="text"
+                id="search-codigo"
+                class="form-control"
+                placeholder="Ej: PROV-00003">
+        </div>
+
+    </div>  
+
+</div>
 
 </div>
 
