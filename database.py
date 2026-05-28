@@ -1543,3 +1543,418 @@ def buscar_cliente_por_ruc(ruc: str):
     """, (ruc,))
     
     return rows[0] if rows else None
+
+    # =========================================
+# ÓRDENES DE COMPRA - FUNCIONES
+# =========================================
+
+def obtener_orden_completa(orden_id):
+    """Obtener orden de compra completa con cabecera y detalles"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Obtener cabecera de la orden
+        cursor.execute("""
+            SELECT 
+                o.id,
+                o.numero_orden,
+                o.codigo_orden,
+                o.correlativo,
+                o.fecha_creacion,
+                o.estado,
+                o.subtotal,
+                o.igv,
+                o.total,
+                o.condicion_pago,
+                o.tiempo_entrega,
+                o.fecha_requerida,
+                o.lugar_entrega,
+                o.num_cotizacion,
+                o.nota_compra,
+                o.usuario_id,
+                o.notas,
+                o.descuento_porcentaje,
+                o.descuento_monto,
+                o.descuento_tipo,
+                o.contacto_proveedor,
+                o.telefono_proveedor,
+                o.email_proveedor,
+                p.razon_social,
+                p.numero_documento as ruc,
+                p.direccion as direccion_fiscal,
+                p.contacto as nombre_contacto,
+                p.telefono as telefono_contacto,
+                p.email as email_contacto,
+                u.nombre_completo,
+                u.email,
+                u.telefono
+            FROM ordenes_compra o
+            LEFT JOIN proveedores p ON o.proveedor_id = p.id
+            LEFT JOIN usuarios u ON o.usuario_id = u.id
+            WHERE o.id = %s
+        """, (orden_id,))
+        
+        cabecera = cursor.fetchone()
+        if not cabecera:
+            return None
+        
+        # Obtener detalles de la orden
+        cursor.execute("""
+            SELECT 
+                d.id,
+                d.orden_id,
+                d.producto_id,
+                d.cantidad,
+                d.costo_unitario,
+                d.subtotal_costo,
+                d.margen_porcentaje,
+                d.precio_venta_unitario,
+                d.subtotal_venta,
+                d.descuento_porcentaje,
+                d.precio_venta_con_descuento,
+                d.subtotal_venta_con_descuento,
+                d.descuento_total,
+                d.margen_final,
+                pr.codigo,
+                pr.descripcion,
+                pr.marca,
+                pr.modelo,
+                pr.unidad
+            FROM orden_compra_detalle d
+            LEFT JOIN productos pr ON d.producto_id = pr.id
+            WHERE d.orden_id = %s
+        """, (orden_id,))
+        
+        detalles = cursor.fetchall()
+        
+        conn.close()
+        
+        return {
+            "cabecera": cabecera,
+            "detalle": detalles
+        }
+        
+    except Exception as e:
+        print(f"Error en obtener_orden_completa: {str(e)}")
+        return None
+
+
+def obtener_ordenes_recientes(limit=100):
+    """Obtener órdenes de compra recientes"""
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    cursor.execute("""
+        SELECT 
+            o.id,
+            o.numero_orden,
+            o.codigo_orden,
+            o.correlativo,
+            o.fecha_creacion,
+            o.estado,
+            COALESCE(p.razon_social, 'Sin proveedor') AS proveedor,
+            COALESCE(p.ruc, '') AS proveedor_ruc,
+            COALESCE(SUM(d.subtotal_venta_con_descuento), 0) AS total
+        FROM ordenes_compra o
+        LEFT JOIN proveedores p ON o.proveedor_id = p.id
+        LEFT JOIN orden_compra_detalle d ON o.id = d.orden_id
+        GROUP BY o.id, p.razon_social, p.ruc, o.numero_orden, o.codigo_orden, o.correlativo, o.fecha_creacion, o.estado
+        ORDER BY o.id DESC
+        LIMIT %s
+    """, (limit,))
+
+    ordenes = cursor.fetchall()
+    conn.close()
+    return ordenes
+
+
+def buscar_proveedor_por_ruc(ruc):
+    """Buscar proveedor por RUC exacto"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        cursor.execute("""
+            SELECT 
+                id, 
+                razon_social, 
+                ruc as numero_documento, 
+                direccion, 
+                telefono as telefono_contacto, 
+                contacto as nombre_contacto, 
+                email as email_contacto
+            FROM proveedores 
+            WHERE ruc = %s AND activo = TRUE
+        """, (ruc,))
+        
+        proveedor = cursor.fetchone()
+        conn.close()
+        
+        return proveedor
+        
+    except Exception as e:
+        print(f"Error en buscar_proveedor_por_ruc: {str(e)}")
+        return None
+
+
+def crear_orden_compra_transaccional(payload: dict, usuario_id: int):
+    """Crear una nueva orden de compra"""
+    try:
+        proveedor_id = payload.get("proveedor_id")
+        productos = payload.get("productos", [])
+
+        if not proveedor_id:
+            raise ValueError("proveedor_id es requerido")
+
+        if not productos:
+            raise ValueError("Debe enviar productos")
+
+        with db_tx() as conn:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+
+            # Generar número de orden automático
+            cur.execute("""
+                SELECT numero_orden FROM ordenes_compra 
+                WHERE numero_orden LIKE 'OC-%' 
+                ORDER BY id DESC LIMIT 1
+            """)
+            row = cur.fetchone()
+            
+            if row:
+                try:
+                    nuevo_numero = int(row["numero_orden"][3:]) + 1
+                except:
+                    nuevo_numero = 1
+            else:
+                nuevo_numero = 1
+            
+            numero_orden = f"OC-{nuevo_numero:05d}"
+            
+            # Insertar orden
+            cur.execute("""
+                INSERT INTO ordenes_compra (
+                    numero_orden,
+                    codigo_orden,
+                    proveedor_id,
+                    usuario_id,
+                    estado,
+                    subtotal,
+                    igv,
+                    total,
+                    condicion_pago,
+                    tiempo_entrega,
+                    fecha_requerida,
+                    lugar_entrega,
+                    num_cotizacion,
+                    nota_compra,
+                    notas,
+                    contacto_proveedor,
+                    telefono_proveedor,
+                    email_proveedor,
+                    fecha_creacion
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                RETURNING id, codigo_orden
+            """, (
+                numero_orden,
+                payload.get("codigo_orden", numero_orden),
+                proveedor_id,
+                usuario_id,
+                payload.get("estado", "pendiente"),
+                float(payload.get("subtotal", 0)),
+                float(payload.get("igv", 0)),
+                float(payload.get("total", 0)),
+                payload.get("condicion_pago"),
+                payload.get("tiempo_entrega"),
+                payload.get("fecha_requerida"),
+                payload.get("lugar_entrega"),
+                payload.get("num_cotizacion"),
+                payload.get("nota_compra"),
+                payload.get("notas", ""),
+                payload.get("contacto_proveedor"),
+                payload.get("telefono_proveedor"),
+                payload.get("email_proveedor")
+            ))
+            
+            resultado = cur.fetchone()
+            orden_id = resultado["id"]
+            codigo_orden = resultado["codigo_orden"]
+            
+            # Insertar detalles
+            for item in productos:
+                cur.execute("""
+                    INSERT INTO orden_compra_detalle (
+                        orden_id,
+                        producto_id,
+                        cantidad,
+                        costo_unitario,
+                        subtotal_costo,
+                        margen_porcentaje,
+                        precio_venta_unitario,
+                        subtotal_venta,
+                        descuento_porcentaje,
+                        precio_venta_con_descuento,
+                        subtotal_venta_con_descuento,
+                        descuento_total,
+                        margen_final
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (
+                    orden_id,
+                    item.get("producto_id"),
+                    float(item.get("cantidad", 0)),
+                    float(item.get("costo_unitario", 0)),
+                    float(item.get("subtotal_costo", 0)),
+                    float(item.get("margen_porcentaje", 0)),
+                    float(item.get("precio_venta_unitario", 0)),
+                    float(item.get("subtotal_venta", 0)),
+                    float(item.get("descuento_porcentaje", 0)),
+                    float(item.get("precio_venta_con_descuento", 0)),
+                    float(item.get("subtotal_venta_con_descuento", 0)),
+                    float(item.get("descuento_total", 0)),
+                    float(item.get("margen_final", 0))
+                ))
+            
+            return {
+                "orden_id": orden_id,
+                "numero_orden": numero_orden,
+                "codigo_orden": codigo_orden,
+                "success": True
+            }
+            
+    except Exception as e:
+        print(f"Error en crear_orden_compra_transaccional: {str(e)}")
+        raise
+
+
+def actualizar_orden_compra(orden_id: int, payload: dict):
+    """Actualizar una orden de compra existente"""
+    try:
+        with db_tx() as conn:
+            cur = conn.cursor()
+            
+            # Actualizar cabecera
+            cur.execute("""
+                UPDATE ordenes_compra 
+                SET proveedor_id = %s,
+                    estado = %s,
+                    subtotal = %s,
+                    igv = %s,
+                    total = %s,
+                    condicion_pago = %s,
+                    tiempo_entrega = %s,
+                    fecha_requerida = %s,
+                    lugar_entrega = %s,
+                    num_cotizacion = %s,
+                    nota_compra = %s,
+                    notas = %s,
+                    contacto_proveedor = %s,
+                    telefono_proveedor = %s,
+                    email_proveedor = %s,
+                    updated_at = NOW()
+                WHERE id = %s
+            """, (
+                payload.get("proveedor_id"),
+                payload.get("estado", "pendiente"),
+                float(payload.get("subtotal", 0)),
+                float(payload.get("igv", 0)),
+                float(payload.get("total", 0)),
+                payload.get("condicion_pago"),
+                payload.get("tiempo_entrega"),
+                payload.get("fecha_requerida"),
+                payload.get("lugar_entrega"),
+                payload.get("num_cotizacion"),
+                payload.get("nota_compra"),
+                payload.get("notas", ""),
+                payload.get("contacto_proveedor"),
+                payload.get("telefono_proveedor"),
+                payload.get("email_proveedor"),
+                orden_id
+            ))
+            
+            # Eliminar detalles antiguos
+            cur.execute("DELETE FROM orden_compra_detalle WHERE orden_id = %s", (orden_id,))
+            
+            # Insertar nuevos detalles
+            for item in payload.get("productos", []):
+                cur.execute("""
+                    INSERT INTO orden_compra_detalle (
+                        orden_id,
+                        producto_id,
+                        cantidad,
+                        costo_unitario,
+                        subtotal_costo,
+                        margen_porcentaje,
+                        precio_venta_unitario,
+                        subtotal_venta,
+                        descuento_porcentaje,
+                        precio_venta_con_descuento,
+                        subtotal_venta_con_descuento,
+                        descuento_total,
+                        margen_final
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (
+                    orden_id,
+                    item.get("producto_id"),
+                    float(item.get("cantidad", 0)),
+                    float(item.get("costo_unitario", 0)),
+                    float(item.get("subtotal_costo", 0)),
+                    float(item.get("margen_porcentaje", 0)),
+                    float(item.get("precio_venta_unitario", 0)),
+                    float(item.get("subtotal_venta", 0)),
+                    float(item.get("descuento_porcentaje", 0)),
+                    float(item.get("precio_venta_con_descuento", 0)),
+                    float(item.get("subtotal_venta_con_descuento", 0)),
+                    float(item.get("descuento_total", 0)),
+                    float(item.get("margen_final", 0))
+                ))
+            
+            return {"success": True}
+            
+    except Exception as e:
+        print(f"Error en actualizar_orden_compra: {str(e)}")
+        raise
+
+
+def eliminar_orden_compra_db(orden_id: int):
+    """Eliminar una orden de compra"""
+    try:
+        with db_tx() as conn:
+            cur = conn.cursor()
+            
+            # Primero eliminar detalles
+            cur.execute("DELETE FROM orden_compra_detalle WHERE orden_id = %s", (orden_id,))
+            
+            # Luego eliminar cabecera
+            cur.execute("DELETE FROM ordenes_compra WHERE id = %s", (orden_id,))
+            
+            return {"success": True}
+            
+    except Exception as e:
+        print(f"Error en eliminar_orden_compra_db: {str(e)}")
+        raise
+
+
+def obtener_direcciones_proveedor(proveedor_id: int):
+    """Obtener direcciones guardadas de un proveedor"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        cursor.execute("""
+            SELECT id, nombre_punto, direccion, telefono_contacto, principal
+            FROM proveedores_direcciones
+            WHERE proveedor_id = %s
+            ORDER BY principal DESC, nombre_punto
+        """, (proveedor_id,))
+        
+        direcciones = cursor.fetchall()
+        conn.close()
+        
+        return direcciones
+        
+    except Exception as e:
+        print(f"Error en obtener_direcciones_proveedor: {str(e)}")
+        return []

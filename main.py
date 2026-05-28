@@ -10,6 +10,7 @@ from flask import (
 from functools import wraps
 from routes.clientes import clientes_bp
 from routes.cotizaciones import cotizaciones_bp
+from routes.compras import compras_bp  # ✅ NUEVO: Importar compras
 from routes.proveedores import proveedores_bp
 from routes.mantenedor_productos import mantenedor_productos_bp
 from routes.usuarios import usuarios_bp
@@ -37,15 +38,21 @@ from database import (
 from pdf_generator import pdf_generator
 
 app = Flask(__name__)
+
+# ==========================================
+# REGISTRO DE BLUEPRINTS
+# ==========================================
 app.register_blueprint(clientes_bp)
 app.register_blueprint(proveedores_bp)
 app.register_blueprint(cotizaciones_bp)
+app.register_blueprint(compras_bp)  # ✅ NUEVO: Registrar blueprint de compras
 app.register_blueprint(mantenedor_productos_bp)
 app.register_blueprint(usuarios_bp)
 app.register_blueprint(mantenedor_principal_bp)
 app.register_blueprint(mantenedor_clientes_bp)
 app.register_blueprint(mantenedor_usuarios_bp)
 app.register_blueprint(mantenedor_proveedores_bp)
+
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-only-change-me")
 
 
@@ -576,6 +583,15 @@ def api_listar_productos():
 
 
 # =========================
+# RUTA PARA GESTOR DE COMPRAS (opcional - redirección)
+# =========================
+@app.route("/compras")
+def compras_redirect():
+    """Redirección a gestor de compras"""
+    return redirect(url_for("compras.gestor_compras_principal"))
+
+
+# =========================
 # Ejecutar
 # =========================
 if __name__ == "__main__":
@@ -586,6 +602,10 @@ if __name__ == "__main__":
     print(f"🚀 Servidor corriendo en:")
     print(f"👉 http://localhost:{port}")
     print(f"👉 http://127.0.0.1:{port}")
+    print(f"\n📋 Rutas disponibles:")
+    print(f"   - Cotizaciones: http://localhost:{port}/cotizacion")
+    print(f"   - Gestor Compras: http://localhost:{port}/gestor_compras")
+    print(f"   - Crear Compra: http://localhost:{port}/crear_compra")
 
     app.run(
         debug=True,
