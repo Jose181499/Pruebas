@@ -29,6 +29,7 @@ def compras_principal():
         error_msg = f"Error en /compras: {str(e)}\n{traceback.format_exc()}"
         print(error_msg)  # Esto saldrá en los logs de Render
         return error_msg, 500
+        
 @compras_bp.route("/crear_compra")
 def crear_compra():
     """Nueva orden de compra - sin ID"""

@@ -975,7 +975,7 @@ function mostrarModalConfirmacionCliente(json, data) {
         </div>
 
         <div class="row g-2">
-            <div class="col-6"><strong>Código:</strong></div>
+            <div class="col-6"><strong>Código De Martin Cliente:</strong></div>
             <div class="col-6"><span class="badge bg-secondary">${escapeHtml(codigoCliente)}</span></div>
         </div>
         <div class="row g-2 mt-1"><div class="col-6"><strong>Tipo Documento:</strong></div>
