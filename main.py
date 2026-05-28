@@ -589,8 +589,8 @@ def gestor_compras_directo():
         return f"Error al cargar template: {str(e)}", 500
 
         @app.route("/test_compras")
-def test_compras():
-    return "Funciona!"
+        def test_compras():
+         return "Funciona!"
 
 
 # =========================
