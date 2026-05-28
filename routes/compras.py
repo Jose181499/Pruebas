@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, jsonify, request, session, send_file, make_response, Response
 from psycopg2.extras import RealDictCursor, DictCursor
+import os
 
 from database import (obtener_ordenes_recientes, obtener_orden_completa, crear_orden_compra_transaccional,
                     db_query, db_execute, db_tx, get_connection, buscar_proveedor_por_ruc)
@@ -11,13 +12,23 @@ from io import BytesIO
 from weasyprint import HTML  
 import base64
 import logging
-import os
 from datetime import datetime
 
 # ==========================================
-# CREACIÓN DEL BLUEPRINT (SIMPLIFICADO)
+# CREACIÓN DEL BLUEPRINT CON TEMPLATE_FOLDER CORRECTO
 # ==========================================
-compras_bp = Blueprint("compras", __name__)
+# Obtener la ruta absoluta de la carpeta templates
+# Esto asume que routes/compras.py está en una subcarpeta y templates está al mismo nivel
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
+
+print(f"📁 BASE_DIR: {BASE_DIR}")
+print(f"📁 TEMPLATES_DIR: {TEMPLATES_DIR}")
+print(f"📁 ¿Existe templates? {os.path.exists(TEMPLATES_DIR)}")
+print(f"📁 ¿Existe crear_compra.html? {os.path.exists(os.path.join(TEMPLATES_DIR, 'crear_compra.html'))}")
+
+compras_bp = Blueprint("compras", __name__, template_folder=TEMPLATES_DIR)
+
 
 # ==========================================
 # RUTAS DE VISTAS (HTML)

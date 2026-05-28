@@ -631,28 +631,34 @@ MODAL EDITAR PROVEEDOR
 
                     <div class="erp-section">
 
-                        <div class="erp-section-title">
-                            💳 Información Bancaria
+                       <div class="erp-section-title">
+                            <i class="ti ti-building-bank" style="color: #e53935;"></i> Información Bancaria
                         </div>
 
                         <div class="row g-4">
 
                             <div class="col-md-4">
-                                <label class="form-label">Banco</label>
-                                <select class="form-select" id="edit_banco_proveedor">
-                                    <option value="">Seleccione banco</option>
-                                    <option value="BCP">BCP</option>
-                                    <option value="BBVA">BBVA</option>
-                                    <option value="Interbank">Interbank</option>
-                                    <option value="Scotiabank">Scotiabank</option>
-                                </select>
+                             <label class="form-label">Banco</label>
+                             <select class="form-select" id="edit_banco_proveedor">
+                             <option value="">Seleccione banco</option>
+                             <option value="BCP">BCP</option>
+                             <option value="BBVA">BBVA</option>
+                             <option value="Interbank">Interbank</option>
+                             <option value="Scotiabank">Scotiabank</option>
+                             </select>
                             </div>
 
-                            <div class="col-md-8">
-                                <label class="form-label">Número de Cuenta / CCI</label>
-                                <input type="text" class="form-control" id="edit_numero_cuenta_cci_proveedor">
-                                <small class="text-muted">Cuenta bancaria o código interbancario</small>
+                           <div class="col-md-4">
+                             <label class="form-label">Número de Cuenta</label>
+                             <input type="text" class="form-control" id="edit_numero_cuenta_proveedor" placeholder="Ingrese número de cuenta">
+                             <small class="text-muted">Número de cuenta bancaria</small>
                             </div>
+
+                           <div class="col-md-4">
+                             <label class="form-label">CCI</label>
+                             <input type="text" class="form-control" id="edit_cci_proveedor" placeholder="Ingrese código CCI">
+                             <small class="text-muted">Código de cuenta interbancario</small>
+                                </div>
 
                         </div>
 
