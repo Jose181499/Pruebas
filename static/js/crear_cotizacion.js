@@ -1154,40 +1154,84 @@ function setProductoEnFila(row, p) {
     // =========================
     // AUTOCOMPLETES
     // =========================
-    function attachClienteAutocomplete(idInput) {
-        const input = document.getElementById(idInput);
-        if (!input) return;
-        let timeoutId = null;
+  function attachClienteAutocomplete(idInput) {
+    const input = document.getElementById(idInput);
+    if (!input) return;
+    let timeoutId = null;
 
-        input.addEventListener('input', async () => {
-            const q = input.value.trim();
-            if (timeoutId) clearTimeout(timeoutId);
-            if (q.length < 2) { portalHide(); return; }
-            
-            timeoutId = setTimeout(async () => {
-                const clientes = await buscarClientes(q);
-                if (!clientes.length) { portalShow(input, `<div class="empty">No encontrado</div>`); return; }
+    input.addEventListener('input', async () => {
+        const q = input.value.trim();
+        if (timeoutId) clearTimeout(timeoutId);
+        if (q.length < 2) { portalHide(); return; }
+        
+        timeoutId = setTimeout(async () => {
+            const clientes = await buscarClientes(q);
+            if (!clientes.length) { 
+                portalShow(input, `<div class="empty">No encontrado</div>`); 
+                return; 
+            }
 
-                const html = clientes.map(c => `<div class="item" data-id="${c.id}" data-razon="${c.razon_social}" data-doc="${c.numero_documento || ''}" data-direccion="${c.direccion_fiscal || ''}" data-telefono="${c.telefono_contacto || ''}" data-contacto="${c.nombre_contacto || ''}" data-email="${c.email_contacto || ''}">
-                    <strong>🏢 ${c.razon_social}</strong><div class="meta">${c.tipo_documento || 'DNI/RUC'} • ${c.numero_documento || 'Sin documento'}</div></div>`).join('');
-                portalShow(input, html);
+            // 🔥 Asegurar que todos los datos estén en el HTML
+            const html = clientes.map(c => `<div class="item" 
+                data-id="${c.id || ''}" 
+                data-razon="${c.razon_social || ''}" 
+                data-doc="${c.numero_documento || ''}" 
+                data-direccion="${c.direccion_fiscal || ''}" 
+                data-telefono="${c.telefono_contacto || ''}" 
+                data-contacto="${c.nombre_contacto || ''}" 
+                data-email="${c.email_contacto || ''}">
+                    <strong>🏢 ${c.razon_social || ''}</strong>
+                    <div class="meta">📄 ${c.numero_documento || 'Sin documento'}</div>
+                    <div class="meta">📞 ${c.telefono_contacto || 'Sin teléfono'} • ✉️ ${c.email_contacto || 'Sin email'}</div>
+                    <div class="meta">👤 Contacto: ${c.nombre_contacto || 'No especificado'}</div>
+                </div>`).join('');
+            portalShow(input, html);
 
-                portal.querySelectorAll('.item').forEach(el => {
-                    el.addEventListener('click', async () => {
-                        document.getElementById('cliente_id').value = el.dataset.id;
-                        document.getElementById('cliente_razon_social').value = el.dataset.razon;
-                        document.getElementById('cliente_doc').value = el.dataset.doc || '';
-                        document.getElementById('cliente_direccion').value = el.dataset.direccion || '';
-                        document.getElementById('telefono_contacto').value = el.dataset.telefono || '';
-                        document.getElementById('cliente_contacto').value = el.dataset.contacto || '';
-                        document.getElementById('email_contacto_cliente').value = el.dataset.email || '';
-                        await cargarDireccionesCliente(el.dataset.id);
-                        portalHide();
+            portal.querySelectorAll('.item').forEach(el => {
+                el.addEventListener('click', async () => {
+                    console.log("📦 Cliente seleccionado:", {
+                        id: el.dataset.id,
+                        razon: el.dataset.razon,
+                        doc: el.dataset.doc,
+                        direccion: el.dataset.direccion,
+                        telefono: el.dataset.telefono,
+                        contacto: el.dataset.contacto,
+                        email: el.dataset.email
                     });
+                    
+                    // 🔥 ASIGNAR VALORES A TODOS LOS CAMPOS
+                    const clienteIdInput = document.getElementById('cliente_id');
+                    if (clienteIdInput) clienteIdInput.value = el.dataset.id || '';
+                    
+                    const razonSocialInput = document.getElementById('cliente_razon_social');
+                    if (razonSocialInput) razonSocialInput.value = el.dataset.razon || '';
+                    
+                    const docInput = document.getElementById('cliente_doc');
+                    if (docInput) docInput.value = el.dataset.doc || '';
+                    
+                    const direccionInput = document.getElementById('cliente_direccion');
+                    if (direccionInput) direccionInput.value = el.dataset.direccion || '';
+                    
+                    const telefonoInput = document.getElementById('telefono_contacto');
+                    if (telefonoInput) telefonoInput.value = el.dataset.telefono || '';
+                    
+                    const contactoInput = document.getElementById('cliente_contacto');
+                    if (contactoInput) contactoInput.value = el.dataset.contacto || '';
+                    
+                    const emailInput = document.getElementById('email_contacto_cliente');
+                    if (emailInput) emailInput.value = el.dataset.email || '';
+                    
+                    // Cargar direcciones guardadas
+                    if (el.dataset.id) {
+                        await cargarDireccionesCliente(el.dataset.id);
+                    }
+                    
+                    portalHide();
                 });
-            }, 300);
-        });
-    }
+            });
+        }, 300);
+    });
+}
 
   function attachProductoAutocomplete(row) {
     const input = row.querySelector('.codigo_producto');
