@@ -762,74 +762,46 @@
         </div>
 
         <!-- TABLA PRODUCTOS -->
-        <div class="erp-card mt-4">
-            <div class="card-header-custom green">
-                <i class="bi bi-box-seam-fill"></i> Detalle de Productos
-            </div>
-            <div class="card-body-custom p-0">
-                <div class="table-responsive">
-                    <table class="table table-modern" id="products-table">
-                        <thead>
-                            <tr>
-                                <th style="width:40px">Item</th>
-                                <th style="width:130px">Código<br>Producto</th>
-                                <th style="width:220px">Descripción</th>
-                                <th style="width:80px">Modelo</th>
-                                <th style="width:80px">Marca</th>
-                                <th style="width:80px">Unidad<br>Medida</th>
-                                <th style="width:70px">Cantidad</th>
-                                <th style="width:110px">Valor Venta<br>Unit S/.</th>
-                                <th style="width:130px">Valor Venta<br>Total S/.</th>
-                                <th style="width:60px">Eliminar</th>
-                                <th style="width:70px">Stock</th> 
-                            </tr>
-                        </thead>
-                        <tbody id="table-body"></tbody>
-                        <tfoot>
-                            <tr class="fw-bold bg-light">
-                                <td colspan="10" class="text-end">TOTAL: </td>
-                                <td id="total_valor_venta">0.00</td>
-                                <td></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-                <div class="p-4">
-                    <button class="btn btn-success" type="button" id="btnAgregarItem">
-                        <i class="bi bi-plus-circle-fill"></i> Agregar Producto
-                    </button>
-                </div>
-            </div>
+        <!-- TABLA PRODUCTOS -->
+<div class="erp-card mt-4">
+    <div class="card-header-custom green">
+        <i class="bi bi-box-seam-fill"></i> Detalle de Productos
+    </div>
+    <div class="card-body-custom p-0">
+        <div class="table-responsive">
+            <table class="table table-modern" id="products-table">
+                <thead>
+                    <tr>
+                        <th style="width:40px">Item</th>
+                        <th style="width:130px">Código<br>Producto</th>
+                        <th style="width:220px">Descripción</th>
+                        <th style="width:80px">Modelo</th>
+                        <th style="width:80px">Marca</th>
+                        <th style="width:80px">Unidad<br>Medida</th>
+                        <th style="width:70px">Cantidad</th>
+                        <th style="width:110px">Valor Venta<br>Unit S/.</th>
+                        <th style="width:130px">Valor Venta<br>Total S/.</th>
+                        <th style="width:60px">Eliminar</th>
+                        <th style="width:70px">Stock</th> 
+                    </tr>
+                </thead>
+                <tbody id="table-body"></tbody>
+                <tfoot>
+                    <tr class="fw-bold bg-light">
+                        <td colspan="9" class="text-end">TOTAL: </td>
+                        <td id="total_valor_venta">0.00</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
         </div>
-
-        <!-- RESUMEN -->
-        <div class="row mt-4">
-            <div class="col-lg-4 ms-auto">
-                <div class="summary-card">
-                    <h4><i class="bi bi-calculator-fill"></i> Resumen Venta</h4>
-                    <div class="summary-row">
-                        <span>Subtotal:</span>
-                        <strong>S/. <span id="summary_subtotal_venta">0.00</span></strong>
-                    </div>
-                    <div class="summary-row" id="descuento_row">
-                        <span>Descuento:</span>
-                        <strong class="text-danger">- S/. <span id="summary_descuento">0.00</span></strong>
-                    </div>
-                    <div class="summary-row">
-                        <span>Subtotal con descuento:</span>
-                        <strong>S/. <span id="summary_subtotal_descuento">0.00</span></strong>
-                    </div>
-                    <div class="summary-row">
-                        <span>IGV 18%:</span>
-                        <strong>S/. <span id="summary_igv">0.00</span></strong>
-                    </div>
-                    <div class="summary-row total">
-                        <span>Total Venta:</span>
-                        <strong>S/. <span id="summary_total_venta">0.00</span></strong>
-                    </div>
-                </div>
-            </div>
+        <div class="p-4">
+            <button class="btn btn-success" type="button" id="btnAgregarItem">
+                <i class="bi bi-plus-circle-fill"></i> Agregar Producto
+            </button>
         </div>
+    </div>
+</div>
 
         <!-- NOTAS INTERNAS -->
         <div class="erp-card mt-4">
