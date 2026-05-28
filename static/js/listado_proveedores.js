@@ -127,8 +127,20 @@ async function cargarProveedores(filtros = {}) {
         let url = "/api/proveedores/listar";
         const params = new URLSearchParams();
         
-        if (filtros.tipo) params.append("tipo_documento", filtros.tipo);
-        if (filtros.busqueda) params.append("busqueda", filtros.busqueda);
+        // Filtros actuales
+        if (filtros.busqueda) {
+            params.append("busqueda", filtros.busqueda);
+        }
+        
+        // Nuevo filtro: Código de Proveedor
+        if (filtros.codigo) {
+            params.append("codigo", filtros.codigo);
+        }
+
+        // (Opcional) Si en el futuro vuelves a usar tipo_documento
+        if (filtros.tipo) {
+            params.append("tipo_documento", filtros.tipo);
+        }
         
         if (params.toString()) {
             url += "?" + params.toString();
@@ -147,7 +159,7 @@ async function cargarProveedores(filtros = {}) {
                 <tr>
                     <td colspan="9" class="text-center py-5">
                         <i class="bi bi-inbox" style="font-size: 2rem;"></i>
-                        <p class="mt-2">No hay proveedores registrados</p>
+                        <p class="mt-2">No se encontraron proveedores</p>
                     </td>
                 </tr>
             `;
@@ -157,7 +169,6 @@ async function cargarProveedores(filtros = {}) {
         proveedores.forEach(p => {
             const codigoProveedor = p.codigo_proveedor || '---';
             
-            // 9 columnas: ID, Código, Razón Social, RUC, Dirección, Teléfono, Contacto, Email, Acciones
             const fila = `
                 <tr>
                     <td class="text-center">${p.id || '-'}</td>
@@ -239,8 +250,8 @@ function aplicarFiltros() {
     const codigo = document.getElementById("search-codigo")?.value.trim() || "";
 
     cargarProveedores({
-        busqueda: busqueda,      // RUC o Razón Social
-        codigo: codigo           // Código de Proveedor
+        busqueda: busqueda,
+        codigo: codigo
     });
 }
 

@@ -365,9 +365,9 @@ def insertar_proveedor(
 
 
 # =========================
-# Obtener proveedores (VERSIÓN ANTIGUA)
+# Obtener proveedores
 # =========================
-def obtener_proveedores(busqueda=None, tipo_documento=None):
+def obtener_proveedores(busqueda=None, codigo=None, tipo_documento=None):
     query = """
         SELECT id, razon_social, ruc, direccion, telefono, contacto,
                email, razon_comercial, codigo_proveedor, lugar_recojo,
@@ -377,14 +377,22 @@ def obtener_proveedores(busqueda=None, tipo_documento=None):
     """
     params = []
 
+    # Filtro por Código de Proveedor
+    if codigo:
+        query += " AND codigo_proveedor ILIKE %s"
+        params.append(f"%{codigo}%")
+
+    # Filtro por Búsqueda (RUC o Razón Social)
     if busqueda:
         query += """ AND (
             razon_social ILIKE %s OR
-            ruc ILIKE %s
+            ruc ILIKE %s OR
+            codigo_proveedor ILIKE %s
         )"""
         like = f"%{busqueda}%"
-        params.extend([like, like])
+        params.extend([like, like, like])
 
+    # Filtro por Tipo de Documento / Condición de Pago
     if tipo_documento:
         query += " AND condicion_pago = %s"
         params.append(tipo_documento)

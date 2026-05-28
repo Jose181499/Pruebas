@@ -15,11 +15,13 @@ proveedores_bp = Blueprint("proveedores", __name__)
 def api_proveedores():
 
     try:
-        busqueda = request.args.get("busqueda", "")
-        tipo_documento = request.args.get("tipo_documento", "")
+        busqueda = request.args.get("busqueda", "").strip()
+        codigo = request.args.get("codigo", "").strip()          # ← NUEVO
+        tipo_documento = request.args.get("tipo_documento", "").strip()
 
         data = obtener_proveedores(
             busqueda=busqueda or None,
+            codigo=codigo or None,                               # ← NUEVO
             tipo_documento=tipo_documento or None
         )
 
