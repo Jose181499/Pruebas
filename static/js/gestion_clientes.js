@@ -931,7 +931,7 @@
         await cargarClientes();
         setTimeout(() => {
             mostrarModalConfirmacionCliente(json, data);
-        }, 500);
+        }, 400);
        
         }
             else {
@@ -943,94 +943,95 @@
         }
     });
 
-    // =========================================
-    // MODAL DE CONFIRMACIÓN - NUEVO CLIENTE
-    // =========================================
-    function mostrarModalConfirmacionCliente(json, data) {
-        console.log("🔔 mostrarModalConfirmacionCliente llamada");
-        const modalBody = document.getElementById('modalConfirmacionBody');
-        console.log("modalBody:", modalBody);
-        if (!modalBody) return;
+// =========================================
+// MODAL DE CONFIRMACIÓN - NUEVO CLIENTE
+// =========================================
+function mostrarModalConfirmacionCliente(json, data) {
+    console.log("🔔 mostrarModalConfirmacionCliente llamada");
 
-        const ahora      = new Date();
-        const fecha      = ahora.toLocaleDateString('es-PE');
-        const hora       = ahora.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
-
-        const codigoCliente = json.data?.codigo_cliente 
-        || (json.cliente_id ? `CLI-${String(json.cliente_id).padStart(6,'0')}` : '-');
-        const contactoPpal   = data.contactos?.find(c => c.principal) || data.contactos?.[0];
-        const puntoPpal      = data.puntos_entrega?.find(p => p.principal) || data.puntos_entrega?.[0];
-
-        modalBody.innerHTML = `
-            <div class="text-center mb-3">
-                <i class="bi bi-person-check-fill" style="font-size: 48px; color: #10b981;"></i>
-            </div>
-
-            <div class="alert alert-success text-center mb-3">
-                <strong>✅ ¡Cliente registrado exitosamente!</strong>
-            </div>
-
-            <div class="row"><div class="col-6"><strong>Código:</strong></div>
-                <div class="col-6"><span class="badge bg-secondary">${escapeHtml(codigoCliente)}</span></div>
-            </div>
-            <div class="row mt-2"><div class="col-6"><strong>Tipo Documento:</strong></div>
-                <div class="col-6">${escapeHtml(data.tipo_documento)}</div>
-            </div>
-            <div class="row mt-2"><div class="col-6"><strong>RUC / DNI:</strong></div>
-                <div class="col-6"><span class="badge bg-info text-dark">${escapeHtml(data.numero_documento)}</span></div>
-            </div>
-            <div class="row mt-2"><div class="col-6"><strong>Razón Social:</strong></div>
-                <div class="col-6">${escapeHtml(data.razon_social)}</div>
-            </div>
-            ${data.nombre_comercial ? `
-            <div class="row mt-2"><div class="col-6"><strong>Nombre Comercial:</strong></div>
-                <div class="col-6">${escapeHtml(data.nombre_comercial)}</div>
-            </div>` : ''}
-            ${data.direccion_fiscal ? `
-            <div class="row mt-2"><div class="col-6"><strong>Dirección Fiscal:</strong></div>
-                <div class="col-6">${escapeHtml(data.direccion_fiscal)}</div>
-            </div>` : ''}
-
-            <hr>
-
-            ${contactoPpal ? `
-            <div class="row mt-2"><div class="col-6"><strong>Contacto Principal:</strong></div>
-                <div class="col-6">${escapeHtml(contactoPpal.nombre_contacto)}
-                    ${contactoPpal.telefono ? `<br><small class="text-muted"><i class="bi bi-telephone"></i> ${escapeHtml(contactoPpal.telefono)}</small>` : ''}
-                </div>
-            </div>` : ''}
-            ${puntoPpal ? `
-            <div class="row mt-2"><div class="col-6"><strong>Punto de Entrega:</strong></div>
-                <div class="col-6">${escapeHtml(puntoPpal.nombre_punto)}
-                    ${puntoPpal.condicion_pago ? `<br><small class="text-muted"><i class="bi bi-credit-card"></i> ${escapeHtml(puntoPpal.condicion_pago)}</small>` : ''}
-                </div>
-            </div>` : ''}
-
-            <hr>
-
-            <div class="row mt-2"><div class="col-6"><strong>Registrado por:</strong></div>
-                <div class="col-6">${escapeHtml(usuarioActual?.nombre_completo || 'No asignado')}</div>
-            </div>
-            <div class="row mt-2"><div class="col-6"><strong>Fecha:</strong></div>
-                <div class="col-6">${fecha}</div>
-            </div>
-            <div class="row mt-2"><div class="col-6"><strong>Hora:</strong></div>
-                <div class="col-6">${hora}</div>
-            </div>
-
-            <hr>
-            <div class="text-muted small">
-                <i class="bi bi-info-circle"></i>
-                El código <strong>${escapeHtml(codigoCliente)}</strong> es único y quedará registrado en el sistema.
-            </div>
-        `;
-
-        const modalEl = document.getElementById('modalConfirmacionCliente');
-        console.log("modalEl:", modalEl);
-        if (modalEl) 
-           console.log("✅ Intentando abrir modal...");
-           new bootstrap.Modal(modalEl).show();
+    const modalBody = document.getElementById('modalConfirmacionBody');
+    if (!modalBody) {
+        console.error("No se encontró el modalBody");
+        return;
     }
+
+    const ahora = new Date();
+    const fecha = ahora.toLocaleDateString('es-PE');
+    const hora = ahora.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+
+    const codigoCliente = json.data?.codigo_cliente || 
+                         (json.cliente_id ? `CLI-${String(json.cliente_id).padStart(6,'0')}` : '---');
+    
+    const contactoPpal = data.contactos?.find(c => c.principal) || data.contactos?.[0];
+    const puntoPpal = data.puntos_entrega?.find(p => p.principal) || data.puntos_entrega?.[0];
+
+    modalBody.innerHTML = `
+        <div class="text-center mb-3">
+            <i class="bi bi-person-check-fill" style="font-size: 48px; color: #10b981;"></i>
+        </div>
+
+        <div class="alert alert-success text-center mb-3">
+            <strong>✅ ¡Cliente registrado exitosamente!</strong>
+        </div>
+
+        <div class="row g-2">
+            <div class="col-6"><strong>Código:</strong></div>
+            <div class="col-6"><span class="badge bg-secondary">${escapeHtml(codigoCliente)}</span></div>
+        </div>
+        <div class="row g-2 mt-1"><div class="col-6"><strong>Tipo Documento:</strong></div>
+            <div class="col-6">${escapeHtml(data.tipo_documento)}</div>
+        </div>
+        <div class="row g-2 mt-1"><div class="col-6"><strong>RUC / DNI:</strong></div>
+            <div class="col-6"><span class="badge bg-info">${escapeHtml(data.numero_documento)}</span></div>
+        </div>
+        <div class="row g-2 mt-1"><div class="col-6"><strong>Razón Social:</strong></div>
+            <div class="col-6">${escapeHtml(data.razon_social)}</div>
+        </div>
+        ${data.nombre_comercial ? `
+        <div class="row g-2 mt-1"><div class="col-6"><strong>Nombre Comercial:</strong></div>
+            <div class="col-6">${escapeHtml(data.nombre_comercial)}</div>
+        </div>` : ''}
+        ${data.direccion_fiscal ? `
+        <div class="row g-2 mt-1"><div class="col-6"><strong>Dirección Fiscal:</strong></div>
+            <div class="col-6">${escapeHtml(data.direccion_fiscal)}</div>
+        </div>` : ''}
+
+        <hr class="my-3">
+
+        ${contactoPpal ? `
+        <div class="row g-2 mt-1"><div class="col-6"><strong>Contacto Principal:</strong></div>
+            <div class="col-6">${escapeHtml(contactoPpal.nombre_contacto)}
+                ${contactoPpal.telefono ? `<br><small><i class="bi bi-telephone"></i> ${escapeHtml(contactoPpal.telefono)}</small>` : ''}
+            </div>
+        </div>` : ''}
+
+        ${puntoPpal ? `
+        <div class="row g-2 mt-1"><div class="col-6"><strong>Punto de Entrega:</strong></div>
+            <div class="col-6">${escapeHtml(puntoPpal.nombre_punto)}
+                ${puntoPpal.condicion_pago ? `<br><small><i class="bi bi-credit-card"></i> ${escapeHtml(puntoPpal.condicion_pago)}</small>` : ''}
+            </div>
+        </div>` : ''}
+
+        <hr class="my-3">
+
+        <div class="row g-2 mt-1"><div class="col-6"><strong>Fecha:</strong></div>
+            <div class="col-6">${fecha} ${hora}</div>
+        </div>
+    `;
+
+    // Abrir el modal correctamente
+    const modalEl = document.getElementById('modalConfirmacionCliente');
+    if (modalEl) {
+        const modal = new bootstrap.Modal(modalEl, {
+            backdrop: 'static',
+            keyboard: true
+        });
+        modal.show();
+        console.log("✅ Modal de confirmación abierto");
+    } else {
+        console.error("❌ No se encontró el modal #modalConfirmacionCliente");
+    }
+}
 
     // =========================================
     // MODAL DE CONFIRMACIÓN - EDITAR CLIENTE
