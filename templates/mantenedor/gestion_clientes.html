@@ -403,23 +403,79 @@
         // =========================================
         
         function mostrarNotificacion(mensaje, tipo = 'exito') {
-            let container = document.getElementById('notificacionesContainer');
-            if (!container) {
-                container = document.createElement('div');
-                container.id = 'notificacionesContainer';
-                container.style.cssText = 'position:fixed;top:20px;right:20px;z-index:10000;display:flex;flex-direction:column;gap:10px;';
-                document.body.appendChild(container);
-            }
-            const colores = { exito: '#4CAF50', error: '#f44336', info: '#2196F3', warning: '#ff9800' };
-            const iconos = { exito: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
-            const notificacion = document.createElement('div');
-            notificacion.style.cssText = `background:${colores[tipo]};color:white;padding:15px 20px;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:space-between;gap:15px;min-width:300px;animation:slideIn 0.3s ease;font-family:Inter;font-size:14px;`;
-            notificacion.innerHTML = `<div style="display:flex;align-items:center;gap:10px;"><span style="font-size:20px;">${iconos[tipo]}</span><span>${mensaje}</span></div><button style="background:none;border:none;color:white;font-size:20px;cursor:pointer;">&times;</button>`;
-            container.appendChild(notificacion);
-            const cerrarBtn = notificacion.querySelector('button');
-            cerrarBtn.onclick = () => { notificacion.style.animation = 'slideOut 0.3s ease'; setTimeout(() => notificacion.remove(), 300); };
-            setTimeout(() => { if (notificacion.parentNode) { notificacion.style.animation = 'slideOut 0.3s ease'; setTimeout(() => notificacion.remove(), 300); } }, 4000);
+    let container = document.getElementById('notificacionesContainer');
+    
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'notificacionesContainer';
+        container.style.cssText = `
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            z-index: 99999; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px;
+        `;
+        document.body.appendChild(container);
+    }
+
+    const colores = { 
+        exito: '#4CAF50', 
+        error: '#f44336', 
+        info: '#2196F3', 
+        warning: '#ff9800' 
+    };
+    
+    const iconos = { 
+        exito: '✅', 
+        error: '❌', 
+        info: 'ℹ️', 
+        warning: '⚠️' 
+    };
+
+    const notificacion = document.createElement('div');
+    notificacion.style.cssText = `
+        background: ${colores[tipo]};
+        color: white;
+        padding: 16px 20px;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        min-width: 320px;
+        animation: slideIn 0.4s ease;
+        font-family: 'Inter', sans-serif;
+        font-size: 15px;
+        font-weight: 500;
+    `;
+
+    notificacion.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:22px;">${iconos[tipo]}</span>
+            <span>${mensaje}</span>
+        </div>
+        <button style="background:none;border:none;color:white;font-size:24px;cursor:pointer;line-height:1;padding:0 4px;">×</button>
+    `;
+
+    container.appendChild(notificacion);
+
+    // Cerrar manual
+    notificacion.querySelector('button').onclick = () => {
+        notificacion.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notificacion.remove(), 300);
+    };
+
+    // Auto-cerrar
+    setTimeout(() => {
+        if (notificacion.parentNode) {
+            notificacion.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => notificacion.remove(), 300);
         }
+    }, 4500);
+}
 
         function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
 
@@ -776,34 +832,89 @@
         });
 
         document.getElementById('formCliente')?.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const data = {
-                tipo_documento: document.getElementById('tipo_documento').value,
-                numero_documento: document.getElementById('numero_documento').value,
-                razon_social: document.getElementById('razon_social').value,
-                nombre_comercial: document.getElementById('nombre_comercial').value,
-                direccion_fiscal: document.getElementById('direccion_fiscal').value,
-                contactos: [], puntos_entrega: []
-            };
-            document.querySelectorAll('#listaContactos .item-agregable').forEach(item => {
-                const nombre = item.querySelector('[data-field="nombre_contacto"]')?.value.trim();
-                if (nombre) data.contactos.push({ nombre_contacto: nombre, cargo: item.querySelector('[data-field="cargo"]')?.value.trim() || '', email: item.querySelector('[data-field="email"]')?.value.trim() || '', telefono: item.querySelector('[data-field="telefono"]')?.value.trim() || '', principal: item.querySelector('[data-field="principal"]')?.checked || false });
-            });
-            document.querySelectorAll('#listaPuntos .item-agregable').forEach(item => {
-                const nombre = item.querySelector('[data-field="nombre_punto"]')?.value.trim();
-                if (nombre) {
-                    const condicionPago = item.querySelector('[data-field="condicion_pago"]')?.value || '';
-                    const tiempoCredito = item.querySelector('[data-field="tiempo_credito"]')?.value.trim() || '';
-                    data.puntos_entrega.push({ nombre_punto: nombre, direccion: item.querySelector('[data-field="direccion"]')?.value.trim() || '', responsable: item.querySelector('[data-field="responsable"]')?.value.trim() || '', telefono: item.querySelector('[data-field="telefono_punto"]')?.value.trim() || '', condicion_pago: condicionPago === 'Personalizado' ? tiempoCredito : condicionPago, tiempo_credito: condicionPago === 'Personalizado' ? '' : tiempoCredito, principal: item.querySelector('[data-field="principal_punto"]')?.checked || false });
-                }
-            });
-            try {
-                const res = await fetch('/api/clientes/guardar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-                const json = await res.json();
-                if (json.success) { mostrarNotificacion("✅ Cliente guardado", 'exito'); bootstrap.Modal.getInstance(document.getElementById('modalCliente')).hide(); cargarClientes(); document.getElementById('formCliente').reset(); document.getElementById('listaContactos').innerHTML = ''; document.getElementById('listaPuntos').innerHTML = ''; agregarContactoNuevo(); agregarPuntoNuevo(); }
-                else mostrarNotificacion("❌ Error: " + json.error, 'error');
-            } catch(error) { mostrarNotificacion("Error: " + error.message, 'error'); }
+    e.preventDefault();
+    
+    const btnGuardar = this.querySelector('button[type="submit"]');
+    const textoOriginal = btnGuardar.innerHTML;
+    
+    btnGuardar.disabled = true;
+    btnGuardar.innerHTML = '<i class="bi bi-hourglass-split"></i> Guardando...';
+
+    try {
+        const data = {
+            tipo_documento: document.getElementById('tipo_documento').value,
+            numero_documento: document.getElementById('numero_documento').value,
+            razon_social: document.getElementById('razon_social').value,
+            nombre_comercial: document.getElementById('nombre_comercial').value,
+            direccion_fiscal: document.getElementById('direccion_fiscal').value,
+            contactos: [],
+            puntos_entrega: []
+        };
+
+        // Recolectar contactos
+        document.querySelectorAll('#listaContactos .item-agregable').forEach(item => {
+            const nombre = item.querySelector('[data-field="nombre_contacto"]')?.value.trim();
+            if (nombre) {
+                data.contactos.push({
+                    nombre_contacto: nombre,
+                    cargo: item.querySelector('[data-field="cargo"]')?.value.trim() || '',
+                    email: item.querySelector('[data-field="email"]')?.value.trim() || '',
+                    telefono: item.querySelector('[data-field="telefono"]')?.value.trim() || '',
+                    principal: item.querySelector('[data-field="principal"]')?.checked || false
+                });
+            }
         });
+
+        // Recolectar puntos de entrega
+        document.querySelectorAll('#listaPuntos .item-agregable').forEach(item => {
+            const nombre = item.querySelector('[data-field="nombre_punto"]')?.value.trim();
+            if (nombre) {
+                const condicionPago = item.querySelector('[data-field="condicion_pago"]')?.value || '';
+                const tiempoCredito = item.querySelector('[data-field="tiempo_credito"]')?.value.trim() || '';
+                data.puntos_entrega.push({
+                    nombre_punto: nombre,
+                    direccion: item.querySelector('[data-field="direccion"]')?.value.trim() || '',
+                    responsable: item.querySelector('[data-field="responsable"]')?.value.trim() || '',
+                    telefono: item.querySelector('[data-field="telefono_punto"]')?.value.trim() || '',
+                    condicion_pago: condicionPago === 'Personalizado' ? tiempoCredito : condicionPago,
+                    tiempo_credito: condicionPago === 'Personalizado' ? '' : tiempoCredito,
+                    principal: item.querySelector('[data-field="principal_punto"]')?.checked || false
+                });
+            }
+        });
+
+        const res = await fetch('/api/clientes/guardar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        const json = await res.json();
+
+        if (json.success) {
+            mostrarNotificacion("✅ Cliente guardado correctamente", 'exito');
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalCliente'));
+            if (modal) modal.hide();
+
+            this.reset();
+            document.getElementById('listaContactos').innerHTML = '';
+            document.getElementById('listaPuntos').innerHTML = '';
+            agregarContactoNuevo();
+            agregarPuntoNuevo();
+
+            cargarClientes();
+        } else {
+            mostrarNotificacion("❌ " + (json.error || "Error al guardar el cliente"), 'error');
+        }
+    } catch (error) {
+        console.error(error);
+        mostrarNotificacion("❌ Error de conexión: " + error.message, 'error');
+    } finally {
+        btnGuardar.disabled = false;
+        btnGuardar.innerHTML = textoOriginal;
+    }
+});
 
         window.abrirModalEliminar = function(id) { document.getElementById('delete_id').value = id; new bootstrap.Modal(document.getElementById('modalEliminarCliente')).show(); };
         document.getElementById('btnConfirmarEliminar')?.addEventListener('click', async function() {

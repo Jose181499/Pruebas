@@ -22,7 +22,7 @@ compras_bp = Blueprint("compras", __name__)
 
 @compras_bp.route("/gestor_compras")
 def gestor_compras_principal():
-    return render_template("compras_minimo.html")
+    return render_template("compras.html")
 
 
 

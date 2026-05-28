@@ -582,13 +582,13 @@ def api_listar_productos():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-# =========================
-# RUTA PARA GESTOR DE COMPRAS (opcional - redirección)
-# =========================
-@app.route("/compras")
-def compras_redirect():
-    """Redirección a gestor de compras"""
-    return redirect(url_for("compras.gestor_compras_principal"))
+# RUTA DIRECTA PARA PRUEBA (agrega esto en main.py)
+@app.route("/gestor_compras_directo")
+def gestor_compras_directo():
+    try:
+        return render_template("compras.html")
+    except Exception as e:
+        return f"Error: {e}", 500
 
 
 # =========================
