@@ -762,15 +762,28 @@ async function cargarOrdenes() {
     mostrarLoading(true);
     
     try {
-        // Endpoint para obtener las órdenes de compra
         const response = await fetch('/api/ordenes_compra');
         
         if (!response.ok) {
             throw new Error(`Error HTTP: ${response.status}`);
         }
         
-        const data = await response.json();
-        ordenesData = data;
+        const result = await response.json();
+        
+        // 🔥 CRÍTICO: Verificar la estructura de la respuesta
+        console.log("Datos recibidos:", result);
+        
+        // ✅ SOLUCIÓN: Extraer el arreglo correctamente
+        if (result.success && Array.isArray(result.data)) {
+            ordenesData = result.data;
+        } else if (Array.isArray(result)) {
+            ordenesData = result;
+        } else {
+            console.error("Formato de respuesta inválido:", result);
+            ordenesData = [];
+            mostrarNotificacion('Formato de datos inválido del servidor', 'error');
+        }
+        
         ordenesFiltradas = [...ordenesData];
         
         renderTable();
@@ -779,8 +792,6 @@ async function cargarOrdenes() {
     } catch (error) {
         console.error('Error al cargar órdenes:', error);
         mostrarNotificacion('Error al cargar las órdenes de compra', 'error');
-        
-        // Mostrar tabla vacía en caso de error
         mostrarTablaVacia();
     } finally {
         mostrarLoading(false);
@@ -844,7 +855,7 @@ function mostrarTablaVacia() {
 function renderTable() {
     const tbody = document.getElementById('tbodyOrdenes');
     
-    if (ordenesFiltradas.length === 0) {
+    if (!ordenesFiltradas || ordenesFiltradas.length === 0) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="6" class="text-center py-5">
@@ -858,22 +869,26 @@ function renderTable() {
     
     tbody.innerHTML = ordenesFiltradas.map(orden => {
         const estado = estadoMap[orden.estado] || estadoMap.pendiente;
+        const codigoMostrar = orden.codigo_orden || orden.numero_orden || orden.codigo || '-';
+        const fechaMostrar = orden.fecha_creacion || orden.fecha;
+        const proveedorMostrar = orden.proveedor || 'Sin proveedor';
+        const montoMostrar = orden.monto || orden.total || 0;
         
         return `
             <tr>
-                <td><span class="order-code">${escapeHtml(orden.codigo)}</span></td>
+                <td><span class="order-code">${escapeHtml(codigoMostrar)}</span></td>
                 <td class="datetime-cell">
-                    <div class="fecha">${formatFecha(orden.fecha)}</div>
-                    <div class="hora"><i class="bi bi-clock"></i> ${orden.hora || '00:00:00'}</div>
+                    <div class="fecha">${formatFecha(fechaMostrar)}</div>
+                    <div class="hora"><i class="bi bi-clock"></i> ${formatHora(fechaMostrar)}</div>
                 </td>
-                <td class="fw-medium">${escapeHtml(orden.proveedor)}</td>
+                <td class="fw-medium">${escapeHtml(proveedorMostrar)}</td>
                 <td>
                     <span class="badge-status ${estado.class}">
                         <i class="bi ${estado.icon}"></i>
                         ${estado.text}
                     </span>
                 </td>
-                <td class="text-end"><span class="amount">S/ ${formatMonto(orden.monto)}</span></td>
+                <td class="text-end"><span class="amount">S/ ${formatMonto(montoMostrar)}</span></td>
                 <td>
                     <div class="action-icons">
                         <button class="action-icon action-view" onclick="verDetalle(${orden.id})" title="Ver detalle">
@@ -898,12 +913,16 @@ function renderTable() {
 // Actualizar estadísticas
 function actualizarStats() {
     const total = ordenesData.length;
-    const pendientes = ordenesData.filter(o => o.estado === 'pendiente').length;
-    const aprobadas = ordenesData.filter(o => o.estado === 'aprobado').length;
+    const pendientes = ordenesData.filter(o => o && o.estado === 'pendiente').length;
+    const aprobadas = ordenesData.filter(o => o && o.estado === 'aprobado').length;
     
-    document.getElementById('totalActivas').innerText = total;
-    document.getElementById('totalPendientes').innerText = pendientes;
-    document.getElementById('totalAprobadas').innerText = aprobadas;
+    const totalSpan = document.getElementById('totalActivas');
+    const pendientesSpan = document.getElementById('totalPendientes');
+    const aprobadasSpan = document.getElementById('totalAprobadas');
+    
+    if (totalSpan) totalSpan.innerText = total;
+    if (pendientesSpan) pendientesSpan.innerText = pendientes;
+    if (aprobadasSpan) aprobadasSpan.innerText = aprobadas;
 }
 
 // Aplicar filtros
@@ -915,31 +934,19 @@ function aplicarFiltros() {
     const busqueda = document.getElementById('buscador').value.toLowerCase();
     
     ordenesFiltradas = ordenesData.filter(orden => {
-        // Filtro por estado
-        if (estadoFiltro !== 'todas' && orden.estado !== estadoFiltro) {
-            return false;
-        }
+        if (!orden) return false;
         
-        // Filtro por proveedor
-        if (proveedorFiltro && !orden.proveedor.toLowerCase().includes(proveedorFiltro)) {
-            return false;
-        }
+        if (estadoFiltro !== 'todas' && orden.estado !== estadoFiltro) return false;
+        if (proveedorFiltro && !orden.proveedor.toLowerCase().includes(proveedorFiltro)) return false;
         
-        // Filtro por fecha desde
-        if (fechaDesde && orden.fecha < fechaDesde) {
-            return false;
-        }
+        const fechaOrden = orden.fecha_creacion || orden.fecha;
+        if (fechaDesde && fechaOrden && fechaOrden.split(' ')[0] < fechaDesde) return false;
+        if (fechaHasta && fechaOrden && fechaOrden.split(' ')[0] > fechaHasta) return false;
         
-        // Filtro por fecha hasta
-        if (fechaHasta && orden.fecha > fechaHasta) {
-            return false;
-        }
-        
-        // Búsqueda general
         if (busqueda) {
-            return orden.codigo.toLowerCase().includes(busqueda) || 
-                   orden.proveedor.toLowerCase().includes(busqueda) ||
-                   (orden.productos && orden.productos.toLowerCase().includes(busqueda));
+            const codigo = orden.codigo_orden || orden.numero_orden || orden.codigo || '';
+            return codigo.toLowerCase().includes(busqueda) || 
+                   orden.proveedor.toLowerCase().includes(busqueda);
         }
         
         return true;
@@ -950,12 +957,21 @@ function aplicarFiltros() {
 
 // Funciones de utilidad
 function formatFecha(fecha) {
-    if (!fecha) return '';
+    if (!fecha) return '-';
     const date = new Date(fecha);
+    if (isNaN(date.getTime())) return '-';
     return date.toLocaleDateString('es-PE');
 }
 
+function formatHora(fecha) {
+    if (!fecha) return '--:--';
+    const date = new Date(fecha);
+    if (isNaN(date.getTime())) return '--:--';
+    return date.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+}
+
 function formatMonto(monto) {
+    if (!monto) return '0.00';
     return parseFloat(monto).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
@@ -969,39 +985,72 @@ function escapeHtml(text) {
 // Funciones de acciones
 window.verDetalle = async function(id) {
     try {
-        const response = await fetch(`/api/ordenes_compra/${id}`);
+        const response = await fetch(`/api/orden_compra/${id}`);
         
         if (!response.ok) {
             throw new Error('Error al obtener el detalle');
         }
         
-        const orden = await response.json();
+        const result = await response.json();
+        
+        if (!result.success || !result.data) {
+            throw new Error('Datos inválidos');
+        }
+        
+        const orden = result.data;
         const estado = estadoMap[orden.estado] || estadoMap.pendiente;
+        const codigoMostrar = orden.codigo_orden || orden.numero_orden || '-';
+        const fechaMostrar = orden.fecha_creacion || orden.fecha;
         
         document.getElementById('detalleBody').innerHTML = `
             <div class="p-3">
                 <div class="row mb-3 pb-2 border-bottom">
                     <div class="col-6">
                         <small class="text-muted text-uppercase">N° Orden de Compra</small>
-                        <h5 class="mb-0">${escapeHtml(orden.codigo)}</h5>
+                        <h5 class="mb-0">${escapeHtml(codigoMostrar)}</h5>
                     </div>
                     <div class="col-6 text-end">
                         <small class="text-muted text-uppercase">Fecha y Hora</small>
-                        <h5 class="mb-0">${formatFecha(orden.fecha)} - ${orden.hora || '00:00:00'}</h5>
+                        <h5 class="mb-0">${formatFecha(fechaMostrar)} - ${formatHora(fechaMostrar)}</h5>
                     </div>
                 </div>
                 
                 <div class="row mb-3">
                     <div class="col-12">
                         <small class="text-muted text-uppercase">Proveedor</small>
-                        <p class="fw-bold mb-0">${escapeHtml(orden.proveedor)}</p>
+                        <p class="fw-bold mb-0">${escapeHtml(orden.proveedor || 'Sin proveedor')}</p>
+                        ${orden.proveedor_ruc ? `<p class="text-muted small mb-0">RUC: ${escapeHtml(orden.proveedor_ruc)}</p>` : ''}
                     </div>
                 </div>
                 
                 <div class="row mb-3">
                     <div class="col-12">
                         <small class="text-muted text-uppercase">Productos / Servicios</small>
-                        <p>${escapeHtml(orden.productos || 'No especificado')}</p>
+                        <div class="table-responsive mt-2">
+                            <table class="table table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Descripción</th>
+                                        <th class="text-center">Cantidad</th>
+                                        <th class="text-end">Precio</th>
+                                        <th class="text-end">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${(orden.detalle || []).map(p => `
+                                        <tr>
+                                            <td>${escapeHtml(p.codigo || '-')}</td>
+                                            <td>${escapeHtml(p.descripcion || '-')}</td>
+                                            <td class="text-center">${p.cantidad || 0}</td>
+                                            <td class="text-end">S/ ${formatMonto(p.precio_venta_unitario || 0)}</td>
+                                            <td class="text-end">S/ ${formatMonto(p.subtotal_venta_con_descuento || 0)}</td>
+                                        </tr>
+                                    `).join('')}
+                                    ${(!orden.detalle || orden.detalle.length === 0) ? '<tr><td colspan="5" class="text-center">Sin productos</td></tr>' : ''}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
                 
@@ -1012,9 +1061,18 @@ window.verDetalle = async function(id) {
                     </div>
                     <div class="col-6 text-end">
                         <small class="text-muted text-uppercase">Monto Total</small>
-                        <h4 class="text-success mb-0">S/ ${formatMonto(orden.monto)}</h4>
+                        <h4 class="text-success mb-0">S/ ${formatMonto(orden.total || orden.monto || 0)}</h4>
                     </div>
                 </div>
+                
+                ${orden.nota_compra ? `
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <small class="text-muted text-uppercase">Nota de Compra</small>
+                        <p class="mb-0">${escapeHtml(orden.nota_compra)}</p>
+                    </div>
+                </div>
+                ` : ''}
             </div>
         `;
         
@@ -1032,9 +1090,8 @@ window.editarOrden = function(id) {
 
 window.generarPDF = async function(id) {
     mostrarNotificacion('Generando orden de compra en PDF...', 'info');
-    
     try {
-        window.open(`/api/ordenes_compra/${id}/pdf`, '_blank');
+        window.open(`/api/orden_compra/pdf/${id}`, '_blank');
         mostrarNotificacion('PDF generado exitosamente', 'success');
     } catch (error) {
         console.error('Error:', error);
@@ -1043,22 +1100,20 @@ window.generarPDF = async function(id) {
 };
 
 window.eliminarOrden = function(id) {
-    const orden = ordenesData.find(o => o.id === id);
-    document.getElementById('eliminarInfo').innerHTML = `Orden: ${orden?.codigo} - ${orden?.proveedor}`;
+    const orden = ordenesData.find(o => o && o.id === id);
+    const codigo = orden ? (orden.codigo_orden || orden.numero_orden || orden.codigo || 'N/A') : 'N/A';
+    document.getElementById('eliminarInfo').innerHTML = `Orden: ${codigo} - ${orden?.proveedor || ''}`;
     const modal = new bootstrap.Modal(document.getElementById('modalEliminar'));
     modal.show();
     
     document.getElementById('btnConfirmarEliminar').onclick = async function() {
         try {
-            const response = await fetch(`/api/ordenes_compra/${id}`, {
-                method: 'DELETE'
-            });
+            const response = await fetch(`/api/ordenes_compra/${id}`, { method: 'DELETE' });
             
             if (!response.ok) {
                 throw new Error('Error al eliminar');
             }
             
-            // Recargar datos
             await cargarOrdenes();
             mostrarNotificacion('Orden de compra eliminada correctamente', 'success');
             modal.hide();
@@ -1073,6 +1128,8 @@ window.eliminarOrden = function(id) {
 // Notificaciones
 function mostrarNotificacion(mensaje, tipo) {
     const container = document.getElementById('notificacionesContainer');
+    if (!container) return;
+    
     const notification = document.createElement('div');
     notification.className = `notification notification-${tipo}`;
     notification.innerHTML = `
@@ -1088,39 +1145,49 @@ function mostrarNotificacion(mensaje, tipo) {
 }
 
 // Event listeners
-document.getElementById('filtroEstado').addEventListener('change', aplicarFiltros);
-document.getElementById('filtroProveedor').addEventListener('input', aplicarFiltros);
-document.getElementById('fechaDesde').addEventListener('change', aplicarFiltros);
-document.getElementById('fechaHasta').addEventListener('change', aplicarFiltros);
-document.getElementById('buscador').addEventListener('input', aplicarFiltros);
+const filtroEstado = document.getElementById('filtroEstado');
+const filtroProveedor = document.getElementById('filtroProveedor');
+const fechaDesde = document.getElementById('fechaDesde');
+const fechaHasta = document.getElementById('fechaHasta');
+const buscador = document.getElementById('buscador');
+const btnRefrescar = document.getElementById('btnRefrescar');
+const btnExportar = document.getElementById('btnExportar');
 
-document.getElementById('btnRefrescar').addEventListener('click', () => {
-    document.getElementById('filtroEstado').value = 'todas';
-    document.getElementById('filtroProveedor').value = '';
-    document.getElementById('fechaDesde').value = '';
-    document.getElementById('fechaHasta').value = '';
-    document.getElementById('buscador').value = '';
-    cargarOrdenes();
-    mostrarNotificacion('Datos actualizados correctamente', 'success');
-});
+if (filtroEstado) filtroEstado.addEventListener('change', aplicarFiltros);
+if (filtroProveedor) filtroProveedor.addEventListener('input', aplicarFiltros);
+if (fechaDesde) fechaDesde.addEventListener('change', aplicarFiltros);
+if (fechaHasta) fechaHasta.addEventListener('change', aplicarFiltros);
+if (buscador) buscador.addEventListener('input', aplicarFiltros);
 
-document.getElementById('btnExportar').addEventListener('click', async () => {
-    mostrarNotificacion('Exportando datos a Excel...', 'info');
-    
-    try {
-        window.open('/api/ordenes_compra/exportar/excel', '_blank');
-        mostrarNotificacion('Exportación completada', 'success');
-    } catch (error) {
-        console.error('Error:', error);
-        mostrarNotificacion('Error al exportar los datos', 'error');
-    }
-});
+if (btnRefrescar) {
+    btnRefrescar.addEventListener('click', () => {
+        if (filtroEstado) filtroEstado.value = 'todas';
+        if (filtroProveedor) filtroProveedor.value = '';
+        if (fechaDesde) fechaDesde.value = '';
+        if (fechaHasta) fechaHasta.value = '';
+        if (buscador) buscador.value = '';
+        cargarOrdenes();
+        mostrarNotificacion('Datos actualizados correctamente', 'success');
+    });
+}
+
+if (btnExportar) {
+    btnExportar.addEventListener('click', async () => {
+        mostrarNotificacion('Exportando datos a Excel...', 'info');
+        try {
+            window.open('/api/ordenes_compra/exportar/excel', '_blank');
+            mostrarNotificacion('Exportación completada', 'success');
+        } catch (error) {
+            console.error('Error:', error);
+            mostrarNotificacion('Error al exportar los datos', 'error');
+        }
+    });
+}
 
 // Inicializar
 document.addEventListener('DOMContentLoaded', () => {
     cargarOrdenes();
 });
 </script>
-
 </body>
 </html>
