@@ -835,11 +835,10 @@
             if (json.success) {
         bootstrap.Modal.getInstance(document.getElementById('modalEditarCliente'))?.hide();
         await cargarClientes();
-        // ✅ Esperar que el modal anterior termine de cerrarse
-    modalEditarEl.addEventListener('hidden.bs.modal', function handler() {
-        modalEditarEl.removeEventListener('hidden.bs.modal', handler);
-        mostrarModalConfirmacionEdicion(data);
-         });
+        setTimeout(() => {
+           mostrarModalConfirmacionEdicion(data);
+        }, 500);
+        
         }
             
             else {
@@ -930,11 +929,9 @@
         agregarContactoNuevo();
         agregarPuntoNuevo();
         await cargarClientes();
-         // ✅ Esperar que el modal anterior termine de cerrarse
-        modalClienteEl.addEventListener('hidden.bs.modal', function handler() {
-        modalClienteEl.removeEventListener('hidden.bs.modal', handler);
-        mostrarModalConfirmacionCliente(json, data);
-         });
+        setTimeout(() => {
+            mostrarModalConfirmacionCliente(json, data);
+        }, 500);
        
         }
             else {
