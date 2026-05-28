@@ -1112,8 +1112,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // SET PRODUCTO EN FILA
     // =========================
    // =========================
-// SET PRODUCTO EN FILA (CON STOCK)
-// =========================
 function setProductoEnFila(row, p) {  
     const productoIdInput = row.querySelector('.producto_id');
     const codigoInput = row.querySelector('.codigo_producto');
@@ -1136,7 +1134,7 @@ function setProductoEnFila(row, p) {
     if (costoUnitarioInput && p.costo_unitario) costoUnitarioInput.value = p.costo_unitario;
     if (precioVentaInput && p.precio_unitario) precioVentaInput.value = p.precio_unitario;
     
-    // 🔥 NUEVO: Mostrar stock
+    // 🔥 CAMBIO 3: Mostrar stock en el badge
     const stock = p.stock || 0;
     if (stockActualInput) stockActualInput.value = stock;
     if (stockBadge) {
@@ -1145,15 +1143,13 @@ function setProductoEnFila(row, p) {
         stockBadge.style.color = stock < 5 ? '#dc2626' : '#065f46';
     }
     
-    // Validar stock con la cantidad actual
+    // 🔥 CAMBIO 4: Validar stock con cantidad actual
     let cantidadActual = cantidadInput ? parseFloat(cantidadInput.value) || 1 : 1;
     if (cantidadActual > stock && stock > 0) {
         mostrarNotificacion(`⚠️ Stock insuficiente. Solo hay ${stock} unidades disponibles`, "warning");
         if (cantidadInput) cantidadInput.value = stock;
         setTimeout(() => recalculateAll(), 50);
     }
-    
-    console.log('✅ Producto seleccionado:', p.codigo, p.descripcion, 'Stock:', stock);
 }
     // =========================
     // AUTOCOMPLETES
@@ -1193,61 +1189,73 @@ function setProductoEnFila(row, p) {
         });
     }
 
-    function attachProductoAutocomplete(row) {
-        const input = row.querySelector('.codigo_producto');
+  function attachProductoAutocomplete(row) {
+    const input = row.querySelector('.codigo_producto');
+    
+    if (!input) {
+        console.error('❌ No se encontró input .codigo_producto en la fila');
+        return;
+    }
+    
+    let timeoutId = null;
+
+    input.addEventListener('input', async () => {
+        const q = input.value.trim();
         
-        if (!input) {
-            console.error('❌ No se encontró input .codigo_producto en la fila');
-            return;
+        if (timeoutId) clearTimeout(timeoutId);
+        if (q.length < 2) { 
+            portalHide(); 
+            return; 
         }
         
-        console.log('✅ Autocomplete de producto inicializado para fila');
-        let timeoutId = null;
-
-        input.addEventListener('input', async () => {
-            const q = input.value.trim();
-            console.log('📝 Escribiendo en producto:', q);
+        timeoutId = setTimeout(async () => {
+            const productos = await buscarProductos(q);
             
-            if (timeoutId) clearTimeout(timeoutId);
-            if (q.length < 2) { 
-                portalHide(); 
+            if (!productos.length) { 
+                portalShow(input, `<div class="empty">❌ No se encontraron productos</div>`); 
                 return; 
             }
-            
-            timeoutId = setTimeout(async () => {
-                console.log('🔎 Buscando producto:', q);
-                const productos = await buscarProductos(q);
-                console.log('📦 Productos encontrados:', productos.length);
-                
-                if (!productos.length) { 
-                    portalShow(input, `<div class="empty">❌ No se encontraron productos</div>`); 
-                    return; 
-                }
 
-                const html = productos.map(p => `<div class="item" data-id="${p.id}" data-codigo="${p.codigo}" data-descripcion="${p.descripcion}" data-modelo="${p.modelo || ''}" data-marca="${p.marca || ''}" data-unidad="${p.unidad_medida || 'UNIDAD'}" data-costo="${p.costo_unitario || 0}" data-precio="${p.precio_unitario || 0}">
-                    <strong>📦 ${p.codigo}</strong> - ${p.descripcion}<div class="meta">${p.marca || ''} • Stock: ${p.stock || 0}</div></div>`).join('');
-                portalShow(input, html);
+            // 🔥 CAMBIO 1: Agregar data-stock en cada item
+            const html = productos.map(p => `<div class="item" 
+                data-id="${p.id}" 
+                data-codigo="${p.codigo}" 
+                data-descripcion="${p.descripcion}" 
+                data-modelo="${p.modelo || ''}" 
+                data-marca="${p.marca || ''}" 
+                data-unidad="${p.unidad || 'UNIDAD'}" 
+                data-costo="${p.costo_unitario || 0}" 
+                data-precio="${p.precio_unitario || 0}"
+                data-stock="${p.stock || 0}">
+                    <strong>📦 ${p.codigo}</strong> - ${p.descripcion}
+                    <div class="meta">${p.marca || ''} • Stock: ${p.stock || 0}</div>
+                </div>`).join('');
+            portalShow(input, html);
 
-                portal.querySelectorAll('.item').forEach(el => {
-                    el.addEventListener('click', () => {
-                        const productoData = {
-                            id: el.dataset.id,
-                            codigo: el.dataset.codigo,
-                            descripcion: el.dataset.descripcion,
-                            modelo: el.dataset.modelo,
-                            marca: el.dataset.marca,
-                            unidad_medida: el.dataset.unidad,
-                            costo_unitario: el.dataset.costo,
-                            precio_unitario: el.dataset.precio
-                        };
-                        setProductoEnFila(row, productoData);
-                        portalHide();
-                        recalculateAll();
-                    });
+            portal.querySelectorAll('.item').forEach(el => {
+                el.addEventListener('click', () => {
+                    // 🔥 CAMBIO 2: Leer el stock del dataset
+                    const stockValue = parseInt(el.dataset.stock) || 0;
+                    
+                    const productoData = {
+                        id: el.dataset.id,
+                        codigo: el.dataset.codigo,
+                        descripcion: el.dataset.descripcion,
+                        modelo: el.dataset.modelo,
+                        marca: el.dataset.marca,
+                        unidad_medida: el.dataset.unidad,
+                        costo_unitario: parseFloat(el.dataset.costo) || 0,
+                        precio_unitario: parseFloat(el.dataset.precio) || 0,
+                        stock: stockValue  // 🔥 CLAVE: asignar el stock
+                    };
+                    setProductoEnFila(row, productoData);
+                    portalHide();
+                    recalculateAll();
                 });
-            }, 300);
-        });
-    }
+            });
+        }, 300);
+    });
+}
 
     function attachAsesorAutocomplete() {
         const input = document.getElementById('asesor_comercial');
@@ -1323,13 +1331,12 @@ function recalculateAll() {
         const cantidad = Number(r.querySelector('.cantidad')?.value || 0);
         const precioVenta = Number(r.querySelector('.precio_venta_unitario')?.value || 0);
         
-        // 🔥 VALIDAR STOCK
+        // 🔥 CAMBIO 6: Obtener stock actual del badge
         const stockBadge = r.querySelector('.stock-badge');
         let stockActual = 0;
         if (stockBadge) {
             stockActual = parseInt(stockBadge.textContent) || 0;
         } else {
-            // Si no hay badge, buscar el hidden input stock_actual
             const stockHidden = r.querySelector('.stock_actual');
             if (stockHidden) stockActual = parseInt(stockHidden.value) || 0;
         }
@@ -1337,14 +1344,13 @@ function recalculateAll() {
         const cantidadInput = r.querySelector('.cantidad');
         const codigoProducto = r.querySelector('.codigo_producto')?.value || 'producto';
         
-        // Validar que cantidad no supere stock (solo si hay stock > 0)
+        // 🔥 CAMBIO 7: Validar cantidad vs stock
         if (stockActual > 0 && cantidad > stockActual) {
             if (!hayErrorStock) {
                 mostrarNotificacion(`⚠️ Stock insuficiente para "${codigoProducto}". Máximo disponible: ${stockActual}`, "warning");
                 hayErrorStock = true;
             }
             if (cantidadInput) cantidadInput.value = stockActual;
-            // Recalcular con el nuevo valor
             const cantidadCorregida = stockActual;
             const valorVentaTotalCorregido = cantidadCorregida * precioVenta;
             const valorVentaTotalElem = r.querySelector('.valor_venta_total');
@@ -1354,20 +1360,19 @@ function recalculateAll() {
         }
         
         const valorVentaTotal = cantidad * precioVenta;
-        
         const valorVentaTotalElem = r.querySelector('.valor_venta_total');
         if (valorVentaTotalElem) valorVentaTotalElem.textContent = formatCantidad(valorVentaTotal);
-        
         totalValorVenta += valorVentaTotal;
     });
 
+    // ... el resto de tu código de descuento y totales sigue igual
     const totalValorVentaElem = document.getElementById('total_valor_venta');
     if (totalValorVentaElem) totalValorVentaElem.textContent = formatCantidad(totalValorVenta);
     
     const summarySubtotal = document.getElementById('summary_subtotal_venta');
     if (summarySubtotal) summarySubtotal.textContent = formatCantidad(totalValorVenta);
     
-    // OBTENER DESCUENTO PERSONALIZADO
+    // ... resto del código de descuento (no cambia)
     const descuentoInput = document.getElementById('descuento_porcentaje_input');
     const descuentoTipo = document.getElementById('descuento_tipo');
     let descuentoValor = 0;
@@ -1375,7 +1380,6 @@ function recalculateAll() {
     
     if (descuentoInput && descuentoInput.value) {
         descuentoValor = parseFloat(descuentoInput.value) || 0;
-        
         if (descuentoTipo && descuentoTipo.value === 'monto') {
             descuentoMonto = Math.min(descuentoValor, totalValorVenta);
         } else {
@@ -1399,7 +1403,6 @@ function recalculateAll() {
     const summaryTotal = document.getElementById('summary_total_venta');
     if (summaryTotal) summaryTotal.textContent = formatCantidad(totalVenta);
     
-    // Actualizar el campo oculto con el valor del descuento
     const descuentoHidden = document.getElementById('descuento_porcentaje');
     if (descuentoHidden) {
         if (descuentoTipo && descuentoTipo.value === 'monto') {
@@ -1409,7 +1412,6 @@ function recalculateAll() {
         }
     }
 }
-
     
    // =========================
 // AGREGAR ITEMS (CON STOCK)
@@ -1436,7 +1438,8 @@ function addItem() {
         <td class="col-cantidad"><input type="number" class="cantidad" value="1" step="0.01" style="width:100%;"></td>
         <td class="col-precio"><input type="number" class="precio_venta_unitario" value="0" step="0.01" style="width:100%;"></td>
         <td class="valor_venta_total">0.00</td>
-        <td><button class="btn-del">🗑</button></td>
+        <td class="col-eliminar"><button class="btn-del">🗑</button></td>
+        <!-- 🔥 CAMBIO 5: Agregar badge de stock -->
         <td class="col-stock" style="text-align:center;">
             <span class="stock-badge" style="display:inline-block; padding:4px 8px; border-radius:12px; font-size:12px; font-weight:600;">0</span>
         </td>
