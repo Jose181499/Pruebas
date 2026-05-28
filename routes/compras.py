@@ -29,17 +29,33 @@ def compras_principal():
         error_msg = f"Error en /compras: {str(e)}\n{traceback.format_exc()}"
         print(error_msg)  # Esto saldrá en los logs de Render
         return error_msg, 500
-        
+
 @compras_bp.route("/crear_compra")
 def crear_compra():
     """Nueva orden de compra - sin ID"""
-    print(f"🆕 NUEVA ORDEN DE COMPRA - Sin ID")
-    ordenes = obtener_ordenes_recientes(limit=300)
-    return render_template("crear_compra.html",
-                          ordenes=ordenes,
-                          orden_compra_id=None,
-                          modo='nuevo')
-
+    import traceback
+    try:
+        print(f"🆕 NUEVA ORDEN DE COMPRA - Sin ID")
+        print("📊 Intentando obtener órdenes recientes...")
+        
+        ordenes = obtener_ordenes_recientes(limit=300)
+        print(f"✅ Órdenes obtenidas: {len(ordenes)}")
+        
+        print("🎨 Renderizando template crear_compra.html...")
+        return render_template("crear_compra.html",
+                              ordenes=ordenes,
+                              orden_compra_id=None,
+                              modo='nuevo')
+                              
+    except Exception as e:
+        print(f"🔥 ERROR en crear_compra: {str(e)}")
+        print(traceback.format_exc())
+        return f"""
+        <h1>Error en crear_compra</h1>
+        <p><strong>Error:</strong> {str(e)}</p>
+        <pre>{traceback.format_exc()}</pre>
+        <a href="/compras">Volver a Compras</a>
+        """, 500
 
 @compras_bp.route("/compra/nueva")
 def nueva_compra():
