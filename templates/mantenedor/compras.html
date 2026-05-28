@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Compras | KCF CORPORACION</title>
+    
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', 'Roboto', sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+        
+        /* Barra superior corporativa */
+        .corporate-header {
+            background: #0a2540;
+            color: white;
+            padding: 0.75rem 0;
+            border-bottom: 3px solid #2c5f8a;
+        }
+        
+        .corporate-header .container-fluid {
+            padding: 0 2rem;
+        }
+        
+        .logo-area h2 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+        
+        .logo-area p {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            margin: 0;
+        }
+        
+        .header-stats {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .header-stat {
+            text-align: right;
+        }
+        
+        .header-stat .label {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .header-stat .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        
+        /* Contenedor principal */
+        .main-container {
+            padding: 1.5rem 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        /* Panel de control */
+        .control-panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+            border: 1px solid #e4e7eb;
+        }
+        
+        .panel-title {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e4e7eb;
+            background: #fafbfc;
+        }
+        
+        .panel-title h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1a3a4f;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .panel-title h3 i {
+            color: #2c5f8a;
+            margin-right: 0.5rem;
+        }
+        
+        .panel-content {
+            padding: 1.25rem 1.5rem;
+        }
+        
+        /* Filtros corporativos */
+        .filter-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        
+        .filter-item {
+            flex: 1;
+            min-width: 180px;
+        }
+        
+        .filter-item label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #5a6e7c;
+            margin-bottom: 0.25rem;
+            display: block;
+            letter-spacing: 0.3px;
+        }
+        
+        .filter-control {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #d1d6dc;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            background: white;
+        }
+        
+        .filter-control:focus {
+            outline: none;
+            border-color: #2c5f8a;
+            box-shadow: 0 0 0 2px rgba(44,95,138,0.1);
+        }
+        
+        .search-wrapper {
+            position: relative;
+        }
+        
+        .search-wrapper i {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #8a9aa8;
+            font-size: 0.9rem;
+        }
+        
+        .search-wrapper input {
+            padding-left: 2rem;
+        }
+        
+        /* Botones corporativos */
+        .btn-corporate {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-corporate-primary {
+            background: #0a2540;
+            color: white;
+        }
+        
+        .btn-corporate-primary:hover {
+            background: #1a3a4f;
+            transform: translateY(-1px);
+        }
+        
+        .btn-corporate-secondary {
+            background: #eef2f5;
+            color: #1a3a4f;
+            border: 1px solid #d1d6dc;
+        }
+        
+        .btn-corporate-secondary:hover {
+            background: #e4e8ec;
+        }
+        
+        .btn-corporate-success {
+            background: #1e7f5e;
+            color: white;
+        }
+        
+        .btn-corporate-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        /* Tabla corporativa */
+        .table-corporate {
+            width: 100%;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #e4e7eb;
+        }
+        
+        .table-corporate thead th {
+            background: #f8f9fa;
+            padding: 0.875rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #4a6276;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e4e7eb;
+        }
+        
+        .table-corporate tbody td {
+            padding: 1rem;
+            font-size: 0.85rem;
+            vertical-align: middle;
+            border-bottom: 1px solid #f0f2f5;
+            color: #2c3e4e;
+        }
+        
+        .table-corporate tbody tr:hover {
+            background: #fafcfd;
+        }
+        
+        /* Código de orden */
+        .order-code {
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #1a3a4f;
+            background: #f0f2f5;
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        
+        /* Fecha y hora */
+        .datetime-cell {
+            min-width: 100px;
+        }
+        
+        .fecha {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #1a3a4f;
+        }
+        
+        .hora {
+            font-size: 0.7rem;
+            color: #8a9aa8;
+            margin-top: 2px;
+        }
+        
+        /* Badges de estado corporativos */
+        .badge-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        .status-pendiente {
+            background: #fff3e0;
+            color: #cc7b00;
+            border-left: 3px solid #ff9800;
+        }
+        
+        .status-aprobado {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-left: 3px solid #4caf50;
+        }
+        
+        .status-cotizando {
+            background: #e3f2fd;
+            color: #1565c0;
+            border-left: 3px solid #2196f3;
+        }
+        
+        .status-rechazado {
+            background: #ffebee;
+            color: #c62828;
+            border-left: 3px solid #f44336;
+        }
+        
+        .status-ordenado {
+            background: #e8eaf6;
+            color: #283593;
+            border-left: 3px solid #3f51b5;
+        }
+        
+        .status-recibido {
+            background: #e0f2f1;
+            color: #00695c;
+            border-left: 3px solid #009688;
+        }
+        
+        /* Montos */
+        .amount {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #1a3a4f;
+        }
+        
+        /* Acciones */
+        .action-icons {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+        
+        .action-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+        }
+        
+        .action-icon:hover {
+            transform: translateY(-2px);
+        }
+        
+        .action-view {
+            color: #1565c0;
+            background: #e3f2fd;
+        }
+        
+        .action-edit {
+            color: #e65100;
+            background: #fff3e0;
+        }
+        
+        .action-pdf {
+            color: #c62828;
+            background: #ffebee;
+        }
+        
+        .action-delete {
+            color: #c62828;
+            background: #ffebee;
+        }
+        
+        /* Modal corporativo */
+        .modal-corporate .modal-content {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .modal-corporate .modal-header {
+            background: #0a2540;
+            color: white;
+            border: none;
+            padding: 1rem 1.5rem;
+        }
+        
+        /* Skeleton loader */
+        .skeleton-loader {
+            padding: 1rem;
+        }
+        
+        .skeleton-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .skeleton-cell {
+            height: 50px;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 4px;
+            flex: 1;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* Notificaciones */
+        #notificacionesContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .notification {
+            padding: 0.875rem 1.25rem;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-width: 320px;
+            animation: slideIn 0.3s ease;
+            border-left: 4px solid;
+        }
+        
+        .notification-success {
+            border-left-color: #1e7f5e;
+        }
+        .notification-success i { color: #1e7f5e; }
+        
+        .notification-error {
+            border-left-color: #dc3545;
+        }
+        .notification-error i { color: #dc3545; }
+        
+        .notification-info {
+            border-left-color: #0a2540;
+        }
+        .notification-info i { color: #0a2540; }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            .main-container {
+                padding: 1rem;
+            }
+            
+            .header-stats {
+                display: none;
+            }
+            
+            .filter-group {
+                flex-direction: column;
+            }
+            
+            .filter-item {
+                width: 100%;
+            }
+            
+            .action-icons {
+                flex-wrap: wrap;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .corporate-header .container-fluid {
+                padding: 0 1rem;
+            }
+            
+            .logo-area h2 {
+                font-size: 1rem;
+            }
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #bdc1c6;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #8a9aa8;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Header Corporativo -->
+<div class="corporate-header">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="logo-area">
+                <h2>KCF CORPORACION</h2>
+                <p>SISTEMA INTEGRADO DE GESTIÓN</p>
+            </div>
+            <div class="header-stats">
+                <div class="header-stat">
+                    <div class="label">ÓRDENES ACTIVAS</div>
+                    <div class="value" id="totalActivas">0</div>
+                </div>
+                <div class="header-stat">
+                    <div class="label">PENDIENTES</div>
+                    <div class="value" id="totalPendientes">0</div>
+                </div>
+                <div class="header-stat">
+                    <div class="label">APROBADAS</div>
+                    <div class="value" id="totalAprobadas">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contenedor Principal -->
+<div class="main-container">
+    
+    <!-- Panel de Control -->
+    <div class="control-panel">
+        <div class="panel-title">
+            <h3>
+                <i class="bi bi-sliders2"></i>
+                PANEL DE CONTROL DE COMPRAS
+            </h3>
+        </div>
+        <div class="panel-content">
+            <div class="filter-group">
+                <div class="filter-item">
+                    <label>ESTADO</label>
+                    <select id="filtroEstado" class="filter-control">
+                        <option value="todas">TODAS LAS ÓRDENES</option>
+                        <option value="pendiente">PENDIENTE</option>
+                        <option value="cotizando">EN COTIZACIÓN</option>
+                        <option value="aprobado">APROBADO</option>
+                        <option value="ordenado">ORDENADO</option>
+                        <option value="recibido">RECIBIDO</option>
+                        <option value="rechazado">RECHAZADO</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label>PROVEEDOR</label>
+                    <input type="text" id="filtroProveedor" class="filter-control" placeholder="Buscar proveedor...">
+                </div>
+                <div class="filter-item">
+                    <label>FECHA DESDE</label>
+                    <input type="date" id="fechaDesde" class="filter-control">
+                </div>
+                <div class="filter-item">
+                    <label>FECHA HASTA</label>
+                    <input type="date" id="fechaHasta" class="filter-control">
+                </div>
+                <div class="filter-item">
+                    <label>BUSCAR</label>
+                    <div class="search-wrapper">
+                        <i class="bi bi-search"></i>
+                        <input type="text" id="buscador" class="filter-control" placeholder="N° Orden / Producto...">
+                    </div>
+                </div>
+                <div class="filter-item" style="flex: 0 0 auto;">
+                    <label>&nbsp;</label>
+                    <button class="btn-corporate btn-corporate-secondary" id="btnRefrescar" style="width: 100%;">
+                        <i class="bi bi-arrow-repeat"></i> REFRESCAR
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Botones de Acción Rápida -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex gap-2">
+            <a href="/index" class="btn-corporate btn-corporate-secondary">
+                <i class="bi bi-arrow-left"></i> VOLVER
+            </a>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn-corporate btn-corporate-secondary" id="btnExportar">
+                <i class="bi bi-download"></i> EXPORTAR
+            </button>
+            <a href="/crear_compra" class="btn-corporate btn-corporate-primary">
+                <i class="bi bi-plus-circle"></i> NUEVA ORDEN DE COMPRA
+            </a>
+        </div>
+    </div>
+    
+    <!-- Tabla de Órdenes de Compra -->
+    <div class="table-corporate">
+        <table style="width: 100%;">
+            <thead>
+                <tr>
+                    <th>N° ORDEN</th>
+                    <th>FECHA / HORA</th>
+                    <th>PROVEEDOR</th>
+                    <th>ESTADO</th>
+                    <th class="text-end">MONTO TOTAL</th>
+                    <th class="text-center">ACCIONES</th>
+                </tr>
+            </thead>
+            <tbody id="tbodyOrdenes">
+                <tr>
+                    <td colspan="6" class="text-center py-5">
+                        <div class="spinner-border text-primary mb-3" style="color: #0a2540;"></div>
+                        <div class="text-muted">Cargando órdenes de compra...</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Crear Proveedor -->
+<div class="modal fade modal-corporate" id="modalNuevoProveedor" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-building-add me-2"></i>
+                    REGISTRAR PROVEEDOR
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="formNuevoProveedor">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">TIPO DOCUMENTO *</label>
+                            <select class="form-select" id="nuevo_tipo_documento" required>
+                                <option value="RUC">RUC</option>
+                                <option value="DNI">DNI</option>
+                                <option value="CE">CARNET EXTRANJERÍA</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">N° DOCUMENTO *</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="nuevo_numero_documento" required placeholder="Número de documento">
+                                <button class="btn btn-primary" type="button" id="btnBuscarSunat" style="background: #0a2540; border: none;">
+                                    <i class="bi bi-search"></i> BUSCAR
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold">RAZÓN SOCIAL *</label>
+                            <input type="text" class="form-control" id="nuevo_razon_social" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold">DIRECCIÓN FISCAL</label>
+                            <input type="text" class="form-control" id="nuevo_direccion">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">TELÉFONO</label>
+                            <input type="text" class="form-control" id="nuevo_telefono">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">EMAIL</label>
+                            <input type="email" class="form-control" id="nuevo_email">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0 pt-0 pb-4 px-4">
+                <button type="button" class="btn-corporate btn-corporate-secondary" data-bs-dismiss="modal">CANCELAR</button>
+                <button type="button" class="btn-corporate btn-corporate-primary" id="btnGuardarProveedor">GUARDAR PROVEEDOR</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Eliminar -->
+<div class="modal fade modal-corporate" id="modalEliminar" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    CONFIRMAR ELIMINACIÓN
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p>¿Está seguro que desea eliminar esta orden de compra?</p>
+                <p class="text-muted small mt-2" id="eliminarInfo">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer border-0 pt-0 pb-4 px-4">
+                <button type="button" class="btn-corporate btn-corporate-secondary" data-bs-dismiss="modal">CANCELAR</button>
+                <button type="button" class="btn-corporate btn-corporate-danger" id="btnConfirmarEliminar">ELIMINAR</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Detalle -->
+<div class="modal fade modal-corporate" id="modalDetalle" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-receipt me-2"></i>
+                    DETALLE DE ORDEN DE COMPRA
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4" id="detalleBody"></div>
+            <div class="modal-footer border-0 pt-0 pb-4 px-4">
+                <button type="button" class="btn-corporate btn-corporate-secondary" data-bs-dismiss="modal">CERRAR</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="notificacionesContainer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// Variables globales
+let ordenesData = [];
+let ordenesFiltradas = [];
+
+// Mapeo de estados
+const estadoMap = {
+    'pendiente': { class: 'status-pendiente', icon: 'bi-clock-history', text: 'PENDIENTE' },
+    'cotizando': { class: 'status-cotizando', icon: 'bi-arrow-repeat', text: 'EN COTIZACIÓN' },
+    'aprobado': { class: 'status-aprobado', icon: 'bi-check-circle', text: 'APROBADO' },
+    'rechazado': { class: 'status-rechazado', icon: 'bi-x-circle', text: 'RECHAZADO' },
+    'ordenado': { class: 'status-ordenado', icon: 'bi-cart-check', text: 'ORDENADO' },
+    'recibido': { class: 'status-recibido', icon: 'bi-box-seam', text: 'RECIBIDO' }
+};
+
+// Cargar datos desde la base de datos
+async function cargarOrdenes() {
+    mostrarLoading(true);
+    
+    try {
+        // Endpoint para obtener las órdenes de compra
+        const response = await fetch('/api/ordenes_compra');
+        
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        ordenesData = data;
+        ordenesFiltradas = [...ordenesData];
+        
+        renderTable();
+        actualizarStats();
+        
+    } catch (error) {
+        console.error('Error al cargar órdenes:', error);
+        mostrarNotificacion('Error al cargar las órdenes de compra', 'error');
+        
+        // Mostrar tabla vacía en caso de error
+        mostrarTablaVacia();
+    } finally {
+        mostrarLoading(false);
+    }
+}
+
+// Mostrar skeleton loader
+function mostrarLoading(mostrar) {
+    const tbody = document.getElementById('tbodyOrdenes');
+    
+    if (mostrar) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="p-0">
+                    <div class="skeleton-loader">
+                        <div class="skeleton-row">
+                            <div class="skeleton-cell"></div>
+                            <div class="skeleton-cell"></div>
+                            <div class="skeleton-cell"></div>
+                            <div class="skeleton-cell"></div>
+                            <div class="skeleton-cell"></div>
+                            <div class="skeleton-cell"></div>
+                        </div>
+                        <div class="skeleton-row">
+                            <div class="skeleton-cell"></div>
+                            <div class="skeleton-cell"></div>
+                            <div class="skeleton-cell"></div>
+                            <div class="skeleton-cell"></div>
+                            <div class="skeleton-cell"></div>
+                            <div class="skeleton-cell"></div>
+                        </div>
+                        <div class="skeleton-row">
+                            <div class="skeleton-cell"></div>
+                            <div class="skeleton-cell"></div>
+                            <div class="skeleton-cell"></div>
+                            <div class="skeleton-cell"></div>
+                            <div class="skeleton-cell"></div>
+                            <div class="skeleton-cell"></div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+}
+
+// Mostrar tabla vacía
+function mostrarTablaVacia() {
+    const tbody = document.getElementById('tbodyOrdenes');
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="6" class="text-center py-5">
+                <i class="bi bi-inbox fs-1 text-muted"></i>
+                <p class="text-muted mt-2">No hay órdenes de compra registradas</p>
+            </td>
+        </tr>
+    `;
+}
+
+// Renderizar tabla
+function renderTable() {
+    const tbody = document.getElementById('tbodyOrdenes');
+    
+    if (ordenesFiltradas.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center py-5">
+                    <i class="bi bi-inbox fs-1 text-muted"></i>
+                    <p class="text-muted mt-2">No se encontraron órdenes de compra</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = ordenesFiltradas.map(orden => {
+        const estado = estadoMap[orden.estado] || estadoMap.pendiente;
+        
+        return `
+            <tr>
+                <td><span class="order-code">${escapeHtml(orden.codigo)}</span></td>
+                <td class="datetime-cell">
+                    <div class="fecha">${formatFecha(orden.fecha)}</div>
+                    <div class="hora"><i class="bi bi-clock"></i> ${orden.hora || '00:00:00'}</div>
+                </td>
+                <td class="fw-medium">${escapeHtml(orden.proveedor)}</td>
+                <td>
+                    <span class="badge-status ${estado.class}">
+                        <i class="bi ${estado.icon}"></i>
+                        ${estado.text}
+                    </span>
+                </td>
+                <td class="text-end"><span class="amount">S/ ${formatMonto(orden.monto)}</span></td>
+                <td>
+                    <div class="action-icons">
+                        <button class="action-icon action-view" onclick="verDetalle(${orden.id})" title="Ver detalle">
+                            <i class="bi bi-eye-fill"></i>
+                        </button>
+                        <button class="action-icon action-edit" onclick="editarOrden(${orden.id})" title="Editar">
+                            <i class="bi bi-pencil-fill"></i>
+                        </button>
+                        <button class="action-icon action-pdf" onclick="generarPDF(${orden.id})" title="Generar PDF">
+                            <i class="bi bi-file-pdf-fill"></i>
+                        </button>
+                        <button class="action-icon action-delete" onclick="eliminarOrden(${orden.id})" title="Eliminar">
+                            <i class="bi bi-trash-fill"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Actualizar estadísticas
+function actualizarStats() {
+    const total = ordenesData.length;
+    const pendientes = ordenesData.filter(o => o.estado === 'pendiente').length;
+    const aprobadas = ordenesData.filter(o => o.estado === 'aprobado').length;
+    
+    document.getElementById('totalActivas').innerText = total;
+    document.getElementById('totalPendientes').innerText = pendientes;
+    document.getElementById('totalAprobadas').innerText = aprobadas;
+}
+
+// Aplicar filtros
+function aplicarFiltros() {
+    const estadoFiltro = document.getElementById('filtroEstado').value;
+    const proveedorFiltro = document.getElementById('filtroProveedor').value.toLowerCase();
+    const fechaDesde = document.getElementById('fechaDesde').value;
+    const fechaHasta = document.getElementById('fechaHasta').value;
+    const busqueda = document.getElementById('buscador').value.toLowerCase();
+    
+    ordenesFiltradas = ordenesData.filter(orden => {
+        // Filtro por estado
+        if (estadoFiltro !== 'todas' && orden.estado !== estadoFiltro) {
+            return false;
+        }
+        
+        // Filtro por proveedor
+        if (proveedorFiltro && !orden.proveedor.toLowerCase().includes(proveedorFiltro)) {
+            return false;
+        }
+        
+        // Filtro por fecha desde
+        if (fechaDesde && orden.fecha < fechaDesde) {
+            return false;
+        }
+        
+        // Filtro por fecha hasta
+        if (fechaHasta && orden.fecha > fechaHasta) {
+            return false;
+        }
+        
+        // Búsqueda general
+        if (busqueda) {
+            return orden.codigo.toLowerCase().includes(busqueda) || 
+                   orden.proveedor.toLowerCase().includes(busqueda) ||
+                   (orden.productos && orden.productos.toLowerCase().includes(busqueda));
+        }
+        
+        return true;
+    });
+    
+    renderTable();
+}
+
+// Funciones de utilidad
+function formatFecha(fecha) {
+    if (!fecha) return '';
+    const date = new Date(fecha);
+    return date.toLocaleDateString('es-PE');
+}
+
+function formatMonto(monto) {
+    return parseFloat(monto).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Funciones de acciones
+window.verDetalle = async function(id) {
+    try {
+        const response = await fetch(`/api/ordenes_compra/${id}`);
+        
+        if (!response.ok) {
+            throw new Error('Error al obtener el detalle');
+        }
+        
+        const orden = await response.json();
+        const estado = estadoMap[orden.estado] || estadoMap.pendiente;
+        
+        document.getElementById('detalleBody').innerHTML = `
+            <div class="p-3">
+                <div class="row mb-3 pb-2 border-bottom">
+                    <div class="col-6">
+                        <small class="text-muted text-uppercase">N° Orden de Compra</small>
+                        <h5 class="mb-0">${escapeHtml(orden.codigo)}</h5>
+                    </div>
+                    <div class="col-6 text-end">
+                        <small class="text-muted text-uppercase">Fecha y Hora</small>
+                        <h5 class="mb-0">${formatFecha(orden.fecha)} - ${orden.hora || '00:00:00'}</h5>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <small class="text-muted text-uppercase">Proveedor</small>
+                        <p class="fw-bold mb-0">${escapeHtml(orden.proveedor)}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <small class="text-muted text-uppercase">Productos / Servicios</small>
+                        <p>${escapeHtml(orden.productos || 'No especificado')}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <small class="text-muted text-uppercase">Estado</small>
+                        <div><span class="badge-status ${estado.class}"><i class="bi ${estado.icon}"></i> ${estado.text}</span></div>
+                    </div>
+                    <div class="col-6 text-end">
+                        <small class="text-muted text-uppercase">Monto Total</small>
+                        <h4 class="text-success mb-0">S/ ${formatMonto(orden.monto)}</h4>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        new bootstrap.Modal(document.getElementById('modalDetalle')).show();
+        
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarNotificacion('Error al cargar el detalle de la orden', 'error');
+    }
+};
+
+window.editarOrden = function(id) {
+    window.location.href = `/editar_compra/${id}`;
+};
+
+window.generarPDF = async function(id) {
+    mostrarNotificacion('Generando orden de compra en PDF...', 'info');
+    
+    try {
+        window.open(`/api/ordenes_compra/${id}/pdf`, '_blank');
+        mostrarNotificacion('PDF generado exitosamente', 'success');
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarNotificacion('Error al generar el PDF', 'error');
+    }
+};
+
+window.eliminarOrden = function(id) {
+    const orden = ordenesData.find(o => o.id === id);
+    document.getElementById('eliminarInfo').innerHTML = `Orden: ${orden?.codigo} - ${orden?.proveedor}`;
+    const modal = new bootstrap.Modal(document.getElementById('modalEliminar'));
+    modal.show();
+    
+    document.getElementById('btnConfirmarEliminar').onclick = async function() {
+        try {
+            const response = await fetch(`/api/ordenes_compra/${id}`, {
+                method: 'DELETE'
+            });
+            
+            if (!response.ok) {
+                throw new Error('Error al eliminar');
+            }
+            
+            // Recargar datos
+            await cargarOrdenes();
+            mostrarNotificacion('Orden de compra eliminada correctamente', 'success');
+            modal.hide();
+            
+        } catch (error) {
+            console.error('Error:', error);
+            mostrarNotificacion('Error al eliminar la orden', 'error');
+        }
+    };
+};
+
+// Notificaciones
+function mostrarNotificacion(mensaje, tipo) {
+    const container = document.getElementById('notificacionesContainer');
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${tipo}`;
+    notification.innerHTML = `
+        <i class="bi ${tipo === 'success' ? 'bi-check-circle-fill' : tipo === 'error' ? 'bi-x-circle-fill' : 'bi-info-circle-fill'} fs-5"></i>
+        <span>${mensaje}</span>
+    `;
+    container.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Event listeners
+document.getElementById('filtroEstado').addEventListener('change', aplicarFiltros);
+document.getElementById('filtroProveedor').addEventListener('input', aplicarFiltros);
+document.getElementById('fechaDesde').addEventListener('change', aplicarFiltros);
+document.getElementById('fechaHasta').addEventListener('change', aplicarFiltros);
+document.getElementById('buscador').addEventListener('input', aplicarFiltros);
+
+document.getElementById('btnRefrescar').addEventListener('click', () => {
+    document.getElementById('filtroEstado').value = 'todas';
+    document.getElementById('filtroProveedor').value = '';
+    document.getElementById('fechaDesde').value = '';
+    document.getElementById('fechaHasta').value = '';
+    document.getElementById('buscador').value = '';
+    cargarOrdenes();
+    mostrarNotificacion('Datos actualizados correctamente', 'success');
+});
+
+document.getElementById('btnExportar').addEventListener('click', async () => {
+    mostrarNotificacion('Exportando datos a Excel...', 'info');
+    
+    try {
+        window.open('/api/ordenes_compra/exportar/excel', '_blank');
+        mostrarNotificacion('Exportación completada', 'success');
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarNotificacion('Error al exportar los datos', 'error');
+    }
+});
+
+// Inicializar
+document.addEventListener('DOMContentLoaded', () => {
+    cargarOrdenes();
+});
+</script>
+
+</body>
+</html>
