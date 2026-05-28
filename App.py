@@ -645,16 +645,21 @@ def home():
     return jsonify({'message': 'Servidor funcionando', 'status': 'ok'})
 
 
-# ==================== BLUEPRINTS ORIGINALES ====================
+# ==================== BLUEPRINTS ====================
 from routes.usuarios import usuarios_bp
 from routes.cotizaciones import cotizaciones_bp
 from routes.mantenedor_productos import productos_bp
 from routes.mantenedor_clientes import mantenedor_clientes_bp
+from routes.compras import compras_bp  # ← AGREGADO: Importar blueprint de compras
+from routes.proveedores import proveedores_bp  # ← AGREGADO: Importar blueprint de proveedores
 
+# Registrar blueprints
 app.register_blueprint(usuarios_bp)
 app.register_blueprint(cotizaciones_bp)
 app.register_blueprint(productos_bp)
 app.register_blueprint(mantenedor_clientes_bp)
+app.register_blueprint(compras_bp)  # ← AGREGADO: Registrar blueprint de compras
+app.register_blueprint(proveedores_bp)  # ← AGREGADO: Registrar blueprint de proveedores
 
 print("🔵 Blueprints registrados:", list(app.blueprints.keys()))
 print("🚀 Servidor Flask iniciado")

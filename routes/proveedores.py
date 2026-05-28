@@ -46,7 +46,8 @@ def api_proveedores():
                 "lugar_recojo": p["lugar_recojo"],
 
                 "banco": p["banco"],
-                "numero_cuenta_cci": p["numero_cuenta_cci"]
+                "numero_cuenta": p["numero_cuenta"],   # ← antes numero_cuenta_cci
+                "cci": p["cci"]
 
             })
 
@@ -92,7 +93,8 @@ def crear_proveedor():
             tiempo_credito=data.get("tiempo_credito"),
 
             banco=data.get("banco"),
-            numero_cuenta_cci=data.get("numero_cuenta_cci")
+            numero_cuenta=data.get("numero_cuenta"),   # ← antes numero_cuenta_cci
+            cci=data.get("cci") 
 
         )
 

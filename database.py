@@ -313,54 +313,24 @@ def insertar_proveedor(
     condicion_pago="",
     tiempo_credito="",
     banco="",
-    numero_cuenta_cci=""
+    numero_cuenta="",      # ← reemplaza numero_cuenta_cci
+    cci=""                 # ← nuevo
 ):
-
     with db_tx() as conn:
-
         cur = conn.cursor()
-
         cur.execute("""
-
             INSERT INTO proveedores (
-
-                razon_social,
-                ruc,
-                direccion,
-                telefono,
-                contacto,
-                email,
-                razon_comercial,
-                codigo_proveedor,
-                lugar_recojo,
-                condicion_pago,
-                tiempo_credito,
-                banco,
-                numero_cuenta_cci
-
+                razon_social, ruc, direccion, telefono, contacto,
+                email, razon_comercial, codigo_proveedor, lugar_recojo,
+                condicion_pago, tiempo_credito, banco,
+                numero_cuenta, cci
             )
-
-            VALUES (
-                %s,%s,%s,%s,%s,%s,%s,
-                %s,%s,%s,%s,%s,%s
-            )
-
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
         """, (
-
-            razon_social,
-            ruc,
-            direccion,
-            telefono,
-            contacto,
-            email,
-            razon_comercial,
-            codigo_proveedor,
-            lugar_recojo,
-            condicion_pago,
-            tiempo_credito,
-            banco,
-            numero_cuenta_cci
-
+            razon_social, ruc, direccion, telefono, contacto,
+            email, razon_comercial, codigo_proveedor, lugar_recojo,
+            condicion_pago, tiempo_credito, banco,
+            numero_cuenta, cci
         ))
 
 
@@ -371,10 +341,12 @@ def obtener_proveedores(busqueda=None, codigo=None, tipo_documento=None):
     query = """
         SELECT id, razon_social, ruc, direccion, telefono, contacto,
                email, razon_comercial, codigo_proveedor, lugar_recojo,
-               condicion_pago, tiempo_credito, banco, numero_cuenta_cci
+               condicion_pago, tiempo_credito, banco,
+               numero_cuenta, cci        
         FROM proveedores
         WHERE activo = TRUE
     """
+    # ... resto igual
     params = []
 
     # Filtro por Código de Proveedor

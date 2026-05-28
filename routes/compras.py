@@ -14,6 +14,9 @@ import logging
 import os
 from datetime import datetime
 
+# ==========================================
+# CREACIÓN DEL BLUEPRINT (SIMPLIFICADO)
+# ==========================================
 compras_bp = Blueprint("compras", __name__)
 
 # ==========================================
@@ -27,40 +30,44 @@ def compras_principal():
         return render_template("compras.html")
     except Exception as e:
         error_msg = f"Error en /compras: {str(e)}\n{traceback.format_exc()}"
-        print(error_msg)  # Esto saldrá en los logs de Render
+        print(error_msg)
         return error_msg, 500
 
 @compras_bp.route("/crear_compra")
 def crear_compra():
     """Nueva orden de compra - sin ID"""
-    import traceback
     try:
         print(f"🆕 NUEVA ORDEN DE COMPRA - Sin ID")
-        print("📊 Intentando obtener órdenes recientes...")
-        
         ordenes = obtener_ordenes_recientes(limit=300)
-        print(f"✅ Órdenes obtenidas: {len(ordenes)}")
         
-        print("🎨 Renderizando template crear_compra.html...")
         return render_template("crear_compra.html",
                               ordenes=ordenes,
                               orden_compra_id=None,
                               modo='nuevo')
                               
     except Exception as e:
-        print(f"🔥 ERROR en crear_compra: {str(e)}")
-        print(traceback.format_exc())
+        import traceback
+        error_detalle = traceback.format_exc()
+        print(f"🔥 Error en crear_compra: {error_detalle}")
         return f"""
-        <h1>Error en crear_compra</h1>
-        <p><strong>Error:</strong> {str(e)}</p>
-        <pre>{traceback.format_exc()}</pre>
-        <a href="/compras">Volver a Compras</a>
+        <html>
+        <head><title>Error</title></head>
+        <body style="font-family: Arial; padding: 20px;">
+            <h1>Error al cargar crear_compra</h1>
+            <p><strong>Error:</strong> {str(e)}</p>
+            <details>
+                <summary>Ver detalles</summary>
+                <pre style="background: #f4f4f4; padding: 10px; overflow: auto;">{error_detalle}</pre>
+            </details>
+            <br>
+            <a href="/compras">← Volver a Compras</a>
+        </body>
+        </html>
         """, 500
 
 @compras_bp.route("/compra/nueva")
 def nueva_compra():
     return render_template("crear_compra.html")
-
 
 @compras_bp.route("/editar_compra/<int:orden_id>")
 def editar_compra(orden_id):
@@ -70,39 +77,44 @@ def editar_compra(orden_id):
                           orden_compra_id=orden_id,
                           modo='editar')
 
-
 # ==========================================
 # FUNCIONES AUXILIARES
 # ==========================================
 
 def obtener_ordenes_recientes(limit=100):
-    conn = get_connection()
-    cursor = conn.cursor()
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
 
-    cursor.execute("""
-        SELECT 
-            o.id,
-            o.numero_orden,
-            o.codigo_orden,
-            o.correlativo,
-            o.fecha_creacion,
-            o.estado,
-            COALESCE(p.razon_social, 'Sin proveedor') AS proveedor,
-            COALESCE(SUM(d.subtotal_venta_con_descuento), 0) AS total
-        FROM ordenes_compra o
-        LEFT JOIN proveedores p ON o.proveedor_id = p.id
-        LEFT JOIN orden_compra_detalle d ON o.id = d.orden_id
-        GROUP BY o.id, p.razon_social, o.numero_orden, o.codigo_orden, o.correlativo, o.fecha_creacion, o.estado
-        ORDER BY o.id DESC
-        LIMIT %s
-    """, (limit,))
+        cursor.execute("""
+            SELECT 
+                o.id,
+                o.numero_orden,
+                o.codigo_orden,
+                o.correlativo,
+                o.fecha_creacion,
+                o.estado,
+                COALESCE(p.razon_social, 'Sin proveedor') AS proveedor,
+                COALESCE(SUM(d.subtotal_venta_con_descuento), 0) AS total
+            FROM ordenes_compra o
+            LEFT JOIN proveedores p ON o.proveedor_id = p.id
+            LEFT JOIN orden_compra_detalle d ON o.id = d.orden_id
+            GROUP BY o.id, p.razon_social, o.numero_orden, o.codigo_orden, o.correlativo, o.fecha_creacion, o.estado
+            ORDER BY o.id DESC
+            LIMIT %s
+        """, (limit,))
 
-    columnas = [col[0] for col in cursor.description]
-    ordenes = [dict(zip(columnas, row)) for row in cursor.fetchall()]
+        columnas = [col[0] for col in cursor.description]
+        ordenes = [dict(zip(columnas, row)) for row in cursor.fetchall()]
 
-    conn.close()
-    return ordenes
-
+        conn.close()
+        return ordenes
+        
+    except Exception as e:
+        print(f"🔥 Error en obtener_ordenes_recientes: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return []  # Retorna lista vacía en caso de error
 
 # ==========================================
 # ENDPOINTS PARA CÓDIGOS DE ORDEN PERSONALIZADOS
@@ -148,7 +160,6 @@ def obtener_usuario_actual():
             'error': str(e)
         }), 500
 
-
 @compras_bp.route("/api/orden_compra/ultimo-correlativo", methods=["GET"])
 def obtener_ultimo_correlativo_compra():
     """Obtener el último correlativo de órdenes de compra por usuario"""
@@ -181,7 +192,6 @@ def obtener_ultimo_correlativo_compra():
             'success': False,
             'error': str(e)
         }), 500
-
 
 @compras_bp.route("/api/usuarios/buscar", methods=["GET"])
 def buscar_usuarios():
@@ -220,7 +230,6 @@ def buscar_usuarios():
             'success': False,
             'error': str(e)
         }), 500
-
 
 @compras_bp.route("/api/proveedores/buscar", methods=["GET"])
 def buscar_proveedores():
@@ -263,7 +272,6 @@ def buscar_proveedores():
             'error': str(e)
         }), 500
 
-
 # ==========================================
 # ENDPOINT: BUSCAR PROVEEDOR POR RUC EXACTO
 # ==========================================
@@ -302,7 +310,6 @@ def buscar_proveedor_por_ruc_api():
             "error": str(e)
         }), 500
 
-
 @compras_bp.route("/api/proveedores/<int:id>", methods=["GET"])
 def obtener_proveedor(id):
     """Obtener proveedor por ID"""
@@ -329,7 +336,6 @@ def obtener_proveedor(id):
             'success': False,
             'error': str(e)
         }), 500
-
 
 # ==========================================
 # ENDPOINT: BUSCAR PRODUCTOS
@@ -373,7 +379,6 @@ def buscar_productos():
             'error': str(e)
         }), 500
 
-
 # ==========================================
 # ENDPOINT: VERIFICAR CÓDIGO DE ORDEN
 # ==========================================
@@ -399,7 +404,6 @@ def verificar_codigo_orden():
     except Exception as e:
         print(f"🔥 Error verificando código: {str(e)}")
         return jsonify({"exists": False, "error": str(e)}), 500
-
 
 # ==========================================
 # ENDPOINT: CREAR PROVEEDOR
@@ -463,7 +467,6 @@ def crear_proveedor():
         print(f"Error en /api/proveedores/crear: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
 # ==========================================
 # ENDPOINT: PROVEEDORES DIRECCIONES
 # ==========================================
@@ -492,7 +495,6 @@ def obtener_direcciones_proveedor(proveedor_id):
             'error': str(e)
         }), 500
 
-
 # ==========================================
 # GUARDAR ORDEN DE COMPRA
 # ==========================================
@@ -516,12 +518,10 @@ def guardar_orden_compra():
         num_cotizacion = data.get("num_cotizacion")
         nota_compra = data.get("nota_compra")
         
-        # Contacto proveedor
         contacto_proveedor = data.get("proveedor_contacto", "")
         telefono_proveedor = data.get("telefono_contacto", "")
         email_proveedor = data.get("email_contacto_proveedor", "")
         
-        # Campos de descuento
         descuento_porcentaje = data.get("descuento_porcentaje", 0)
         descuento_monto = data.get("descuento_monto", 0)
         descuento_tipo = data.get("descuento_tipo", "porcentaje")
@@ -541,7 +541,6 @@ def guardar_orden_compra():
             if orden_id:
                 print(f"✏️ ACTUALIZANDO orden de compra ID: {orden_id}")
                 
-                # ACTUALIZAR cabecera
                 cur.execute("""
                     UPDATE ordenes_compra 
                     SET proveedor_id = %s,
@@ -587,10 +586,8 @@ def guardar_orden_compra():
                     orden_id
                 ))
                 
-                # ELIMINAR detalles antiguos
                 cur.execute("DELETE FROM orden_compra_detalle WHERE orden_id = %s", (orden_id,))
                 
-                # INSERTAR nuevos detalles
                 for p in data.get("productos", []):
                     cur.execute("""
                         INSERT INTO orden_compra_detalle (
@@ -636,10 +633,8 @@ def guardar_orden_compra():
                 })
             
             else:
-                # NUEVA ORDEN - INSERT
                 print(f"🆕 Creando NUEVA orden de compra")
                 
-                # Generar número de orden secuencial
                 row = db_query("""
                     SELECT numero_orden 
                     FROM ordenes_compra 
@@ -653,7 +648,6 @@ def guardar_orden_compra():
                     numero_int = 1
                 numero = f"OC-{str(numero_int).zfill(5)}"
                 
-                # Generar código personalizado si no viene
                 if not codigo_orden:
                     if es_borrador:
                         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -781,9 +775,8 @@ def guardar_orden_compra():
             "error": str(e)
         }), 500
 
-
 # ==========================================
-# OBTENER ORDEN DE COMPRA - CON DESCUENTO Y CAMPOS DE CONTACTO
+# OBTENER ORDEN DE COMPRA
 # ==========================================
 
 logging.basicConfig(filename='app.log', level=logging.ERROR)
@@ -846,7 +839,6 @@ def api_get_orden_compra(orden_id):
             "success": False,
             "error": str(e)
         }), 500
-
 
 # ==========================================
 # LISTAR ÓRDENES DE COMPRA
@@ -927,7 +919,6 @@ def listar_ordenes():
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
-
 # ==========================================
 # ELIMINAR ORDEN DE COMPRA
 # ==========================================
@@ -956,7 +947,6 @@ def eliminar_orden_compra(id):
             "success": False,
             "error": str(e)
         }), 500
-
 
 # ==========================================
 # GENERAR PDF - ORDEN DE COMPRA
@@ -1015,7 +1005,6 @@ def generar_pdf_orden_compra(orden_id):
         total_descuento_subtotal += descuento
         total_subtotal_venta_desc += subtotal_desc
 
-    # OBTENER DESCUENTO DE CABECERA
     descuento_global_porcentaje = cabecera.get("descuento_porcentaje", 0)
     descuento_global_monto = cabecera.get("descuento_monto", 0)
     descuento_global_tipo = cabecera.get("descuento_tipo", "porcentaje")
