@@ -344,7 +344,7 @@ function renderizarTabla(cotizaciones) {
         return;
     }
     
-    tbody.innerHTML = cotizaciones.map(c => {
+    tbody.innerHTML = cotizaciones.map((c, index) => {
         const fecha = formatearFecha(c.fecha_creacion);
         const hora = formatearHora(c.fecha_creacion);
         const total = Number(c.total || 0).toFixed(2);
@@ -354,6 +354,7 @@ function renderizarTabla(cotizaciones) {
         
         return `
             <tr data-id="${c.id}" data-codigo="${codigoMostrar}">
+                <td class="text-center fw-bold" style="width:50px">${index + 1}</td>
                 <td class="codigo-cell">
                     <strong>${escapeHtml(codigoMostrar || '-')}</strong>
                     ${c.correlativo ? `<br><small class="text-muted">Correl: ${c.correlativo}</small>` : ''}
@@ -380,8 +381,8 @@ function renderizarTabla(cotizaciones) {
                     <button class="btn-mini btn-eliminar" onclick="mostrarModalEliminar(${c.id}, '${escapeHtml(codigoMostrar)}')" title="Eliminar">
                         <i class="bi bi-trash"></i>
                     </button>
-                 </td>
-             </tr>
+                  </td>
+               </tr>
         `;
     }).join('');
 }
