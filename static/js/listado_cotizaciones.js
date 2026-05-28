@@ -400,7 +400,7 @@ function escapeHtml(str) {
 }
 
 // ===========================
-// VER DETALLE
+// VER DETALLE - MODIFICADO CON ITEM, VALOR TOTAL SIN IG Y PRECIO TOTAL CON IG
 // ===========================
 async function verDetalle(id) {
     try {
@@ -416,17 +416,27 @@ async function verDetalle(id) {
             const total = Number(data.total || 0).toFixed(2);
             let estadoBadge = renderEstado(data.estado, esBorrador);
             
-            // 🔥 USAR formatCantidad para eliminar los .000
-            const productosHtml = (data.detalle || []).map(p => `
-                <tr>
-                    <td>${escapeHtml(p.codigo || '-')}</td>
-                    <td>${escapeHtml(p.descripcion || '-')}</td>
-                    <td>${escapeHtml(p.marca || '-')}</td>
-                    <td class="text-center">${formatCantidad(p.cantidad || 0)}</td>
-                    <td class="text-end">S/ ${Number(p.precio_venta_unitario || 0).toLocaleString('es-PE', { minimumFractionDigits: 2 })}</td>
-                    <td class="text-end">S/ ${Number(p.subtotal_venta_con_descuento || 0).toLocaleString('es-PE', { minimumFractionDigits: 2 })}</td>
-                 </tr>
-            `).join('');
+            // 🔥 PRODUCTOS HTML - Con número de item correlativo, Valor total sin IG y Precio total con IG
+            const productosHtml = (data.detalle || []).map((p, index) => {
+                // Calcular subtotal sin IGV (asumiendo que subtotal_venta_con_descuento es el neto sin IGV)
+                const subtotalSinIGV = Number(p.subtotal_venta_con_descuento || 0);
+                // Calcular IGV (18% sobre el subtotal sin IGV)
+                const igv = subtotalSinIGV * 0.18;
+                // Calcular precio total con IGV
+                const precioTotalConIGV = subtotalSinIGV + igv;
+                
+                return `
+                    <tr>
+                        <td class="text-center">${index + 1}</td>
+                        <td>${escapeHtml(p.codigo || '-')}</td>
+                        <td>${escapeHtml(p.descripcion || '-')}</td>
+                        <td>${escapeHtml(p.marca || '-')}</td>
+                        <td class="text-center">${formatCantidad(p.cantidad || 0)}</td>
+                        <td class="text-end">S/ ${subtotalSinIGV.toLocaleString('es-PE', { minimumFractionDigits: 2 })}</td>
+                        <td class="text-end">S/ ${precioTotalConIGV.toLocaleString('es-PE', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                `;
+            }).join('');
             
             const modalBody = document.getElementById('detalleBody');
             if (modalBody) {
@@ -466,12 +476,17 @@ async function verDetalle(id) {
                             <table class="table table-sm">
                                 <thead class="table-light">
                                     <tr>
-                                       <th>Código<br>Producto</th><th>Descripción</th><th>Marca</th>
-                                        <th class="text-center">Cant</th><th class="text-end">P.Unit</th><th class="text-end">Subtotal</th>
-                                     </tr>
+                                        <th class="text-center">Item</th>
+                                        <th>Código<br>Producto</th>
+                                        <th>Descripción</th>
+                                        <th>Marca</th>
+                                        <th class="text-center">Cant</th>
+                                        <th class="text-end">Valor total (sin IG)</th>
+                                        <th class="text-end">Precio total (con IG)</th>
+                                    </tr>
                                 </thead>
-                                <tbody>${productosHtml || '</tr><td colspan="6" class="text-center">Sin productos</td></tr>'}</tbody>
-                             </table>
+                                <tbody>${productosHtml || '<tr><td colspan="7" class="text-center">Sin productos</td></tr>'}</tbody>
+                            </table>
                         </div>
                     </div>
                     ${data.condicion_pago ? `<div class="row mb-2"><div class="col-4 text-muted small">Condición Pago:</div><div class="col-8">${escapeHtml(data.condicion_pago)}</div></div>` : ''}

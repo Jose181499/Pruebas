@@ -1,15 +1,4 @@
 // =========================================
-// UBIGEO PERÚ (MOVER AL PRINCIPIO)
-// =========================================
-const ubigeo = {
-    Lima: { Lima: ["Lima", "Barranco", "Breña", "Chorrillos", "Comas", "El Agustino", "Jesús María", "La Molina", "La Victoria", "Lince", "Los Olivos", "Magdalena del Mar", "Miraflores", "Pueblo Libre", "Puente Piedra", "Rímac", "San Borja", "San Isidro", "San Juan de Lurigancho", "San Juan de Miraflores", "San Luis", "San Martín de Porres", "San Miguel", "Santa Anita", "Santiago de Surco", "Surquillo", "Villa El Salvador", "Villa María del Triunfo"] },
-    Arequipa: { Arequipa: ["Arequipa", "Alto Selva Alegre", "Cayma", "Cerro Colorado", "Characato", "Chiguata", "Jacobo Hunter", "José Luis Bustamante y Rivero", "La Joya", "Mariano Melgar", "Miraflores", "Paucarpata", "Pocsi", "Polobaya", "Quequeña", "Sabandía", "Sachaca", "San Juan de Siguas", "San Juan de Tarucani", "Santa Isabel de Siguas", "Santa Rita de Siguas", "Socabaya", "Tiabaya", "Uchumayo", "Vitor", "Yanahuara", "Yarabamba", "Yura"] },
-    Cusco: { Cusco: ["Cusco", "San Jerónimo", "San Sebastián", "Santiago", "Wanchaq"] },
-    LaLibertad: { Trujillo: ["Trujillo", "El Porvenir", "Florencia de Mora", "Huanchaco", "La Esperanza", "Laredo", "Moche", "Poroto", "Salaverry", "Simbal", "Víctor Larco Herrera"] },
-    Piura: { Piura: ["Piura", "Castilla", "Catacaos", "Cura Mori", "El Tallán", "La Arena", "La Unión", "Las Lomas", "Tambo Grande"] }
-};
-
-// =========================================
 // SISTEMA DE NOTIFICACIONES
 // =========================================
 function mostrarNotificacion(mensaje, tipo = 'exito') {

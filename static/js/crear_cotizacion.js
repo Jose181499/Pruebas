@@ -1111,28 +1111,50 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================
     // SET PRODUCTO EN FILA
     // =========================
-    function setProductoEnFila(row, p) {  
-        const productoIdInput = row.querySelector('.producto_id');
-        const codigoInput = row.querySelector('.codigo_producto');
-        const descripcionInput = row.querySelector('.descripcion');
-        const modeloInput = row.querySelector('.modelo');
-        const marcaInput = row.querySelector('.marca');
-        const unidadMedidaInput = row.querySelector('.unidad_medida');
-        const costoUnitarioInput = row.querySelector('.costo_unitario');
-        const precioVentaInput = row.querySelector('.precio_venta_unitario');
-        
-        if (productoIdInput) productoIdInput.value = p.id;
-        if (codigoInput) codigoInput.value = p.codigo || "";
-        if (descripcionInput) descripcionInput.value = p.descripcion || "";
-        if (modeloInput) modeloInput.value = p.modelo || "";
-        if (marcaInput) marcaInput.value = p.marca || "";
-        if (unidadMedidaInput) unidadMedidaInput.value = p.unidad_medida || "UNIDAD";
-        if (costoUnitarioInput && p.costo_unitario) costoUnitarioInput.value = p.costo_unitario;
-        if (precioVentaInput && p.precio_unitario) precioVentaInput.value = p.precio_unitario;
-        
-        console.log('✅ Producto seleccionado:', p.codigo, p.descripcion);
+   // =========================
+// SET PRODUCTO EN FILA (CON STOCK)
+// =========================
+function setProductoEnFila(row, p) {  
+    const productoIdInput = row.querySelector('.producto_id');
+    const codigoInput = row.querySelector('.codigo_producto');
+    const descripcionInput = row.querySelector('.descripcion');
+    const modeloInput = row.querySelector('.modelo');
+    const marcaInput = row.querySelector('.marca');
+    const unidadMedidaInput = row.querySelector('.unidad_medida');
+    const costoUnitarioInput = row.querySelector('.costo_unitario');
+    const precioVentaInput = row.querySelector('.precio_venta_unitario');
+    const stockActualInput = row.querySelector('.stock_actual');
+    const stockBadge = row.querySelector('.stock-badge');
+    const cantidadInput = row.querySelector('.cantidad');
+    
+    if (productoIdInput) productoIdInput.value = p.id;
+    if (codigoInput) codigoInput.value = p.codigo || "";
+    if (descripcionInput) descripcionInput.value = p.descripcion || "";
+    if (modeloInput) modeloInput.value = p.modelo || "";
+    if (marcaInput) marcaInput.value = p.marca || "";
+    if (unidadMedidaInput) unidadMedidaInput.value = p.unidad_medida || "UNIDAD";
+    if (costoUnitarioInput && p.costo_unitario) costoUnitarioInput.value = p.costo_unitario;
+    if (precioVentaInput && p.precio_unitario) precioVentaInput.value = p.precio_unitario;
+    
+    // 🔥 NUEVO: Mostrar stock
+    const stock = p.stock || 0;
+    if (stockActualInput) stockActualInput.value = stock;
+    if (stockBadge) {
+        stockBadge.textContent = stock;
+        stockBadge.style.backgroundColor = stock < 5 ? '#fee2e2' : '#d1fae5';
+        stockBadge.style.color = stock < 5 ? '#dc2626' : '#065f46';
     }
-
+    
+    // Validar stock con la cantidad actual
+    let cantidadActual = cantidadInput ? parseFloat(cantidadInput.value) || 1 : 1;
+    if (cantidadActual > stock && stock > 0) {
+        mostrarNotificacion(`⚠️ Stock insuficiente. Solo hay ${stock} unidades disponibles`, "warning");
+        if (cantidadInput) cantidadInput.value = stock;
+        setTimeout(() => recalculateAll(), 50);
+    }
+    
+    console.log('✅ Producto seleccionado:', p.codigo, p.descripcion, 'Stock:', stock);
+}
     // =========================
     // AUTOCOMPLETES
     // =========================
@@ -1289,121 +1311,157 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // =========================
-    // RECALCULAR CON DESCUENTO PERSONALIZABLE
-    // =========================
-    function recalculateAll() {
-        const rows = document.querySelectorAll("#table-body tr");
-        let totalValorVenta = 0;
+  // =========================
+// RECALCULAR CON DESCUENTO PERSONALIZABLE Y VALIDACIÓN DE STOCK
+// =========================
+function recalculateAll() {
+    const rows = document.querySelectorAll("#table-body tr");
+    let totalValorVenta = 0;
+    let hayErrorStock = false;
 
-        rows.forEach(r => {
-            const cantidad = Number(r.querySelector('.cantidad')?.value || 0);
-            const precioVenta = Number(r.querySelector('.precio_venta_unitario')?.value || 0);
-            
-            const valorVentaTotal = cantidad * precioVenta;
-            
+    rows.forEach(r => {
+        const cantidad = Number(r.querySelector('.cantidad')?.value || 0);
+        const precioVenta = Number(r.querySelector('.precio_venta_unitario')?.value || 0);
+        
+        // 🔥 VALIDAR STOCK
+        const stockBadge = r.querySelector('.stock-badge');
+        let stockActual = 0;
+        if (stockBadge) {
+            stockActual = parseInt(stockBadge.textContent) || 0;
+        } else {
+            // Si no hay badge, buscar el hidden input stock_actual
+            const stockHidden = r.querySelector('.stock_actual');
+            if (stockHidden) stockActual = parseInt(stockHidden.value) || 0;
+        }
+        
+        const cantidadInput = r.querySelector('.cantidad');
+        const codigoProducto = r.querySelector('.codigo_producto')?.value || 'producto';
+        
+        // Validar que cantidad no supere stock (solo si hay stock > 0)
+        if (stockActual > 0 && cantidad > stockActual) {
+            if (!hayErrorStock) {
+                mostrarNotificacion(`⚠️ Stock insuficiente para "${codigoProducto}". Máximo disponible: ${stockActual}`, "warning");
+                hayErrorStock = true;
+            }
+            if (cantidadInput) cantidadInput.value = stockActual;
+            // Recalcular con el nuevo valor
+            const cantidadCorregida = stockActual;
+            const valorVentaTotalCorregido = cantidadCorregida * precioVenta;
             const valorVentaTotalElem = r.querySelector('.valor_venta_total');
-            if (valorVentaTotalElem) valorVentaTotalElem.textContent = formatCantidad(valorVentaTotal);
-            
-            totalValorVenta += valorVentaTotal;
-        });
-
-        const totalValorVentaElem = document.getElementById('total_valor_venta');
-        if (totalValorVentaElem) totalValorVentaElem.textContent = formatCantidad(totalValorVenta);
-        
-        const summarySubtotal = document.getElementById('summary_subtotal_venta');
-        if (summarySubtotal) summarySubtotal.textContent = formatCantidad(totalValorVenta);
-        
-        // 🔥 NUEVO: OBTENER DESCUENTO PERSONALIZADO
-        const descuentoInput = document.getElementById('descuento_porcentaje_input');
-        const descuentoTipo = document.getElementById('descuento_tipo');
-        let descuentoValor = 0;
-        let descuentoMonto = 0;
-        
-        if (descuentoInput && descuentoInput.value) {
-            descuentoValor = parseFloat(descuentoInput.value) || 0;
-            
-            if (descuentoTipo && descuentoTipo.value === 'monto') {
-                descuentoMonto = Math.min(descuentoValor, totalValorVenta);
-            } else {
-                descuentoMonto = totalValorVenta * (descuentoValor / 100);
-            }
+            if (valorVentaTotalElem) valorVentaTotalElem.textContent = formatCantidad(valorVentaTotalCorregido);
+            totalValorVenta += valorVentaTotalCorregido;
+            return;
         }
         
-        const subtotalConDescuento = totalValorVenta - descuentoMonto;
-        const igv = subtotalConDescuento * 0.18;
-        const totalVenta = subtotalConDescuento + igv;
+        const valorVentaTotal = cantidad * precioVenta;
         
-        const summaryDescuento = document.getElementById('summary_descuento');
-        if (summaryDescuento) summaryDescuento.textContent = formatCantidad(descuentoMonto);
+        const valorVentaTotalElem = r.querySelector('.valor_venta_total');
+        if (valorVentaTotalElem) valorVentaTotalElem.textContent = formatCantidad(valorVentaTotal);
         
-        const summarySubtotalDescuento = document.getElementById('summary_subtotal_descuento');
-        if (summarySubtotalDescuento) summarySubtotalDescuento.textContent = formatCantidad(subtotalConDescuento);
+        totalValorVenta += valorVentaTotal;
+    });
+
+    const totalValorVentaElem = document.getElementById('total_valor_venta');
+    if (totalValorVentaElem) totalValorVentaElem.textContent = formatCantidad(totalValorVenta);
+    
+    const summarySubtotal = document.getElementById('summary_subtotal_venta');
+    if (summarySubtotal) summarySubtotal.textContent = formatCantidad(totalValorVenta);
+    
+    // OBTENER DESCUENTO PERSONALIZADO
+    const descuentoInput = document.getElementById('descuento_porcentaje_input');
+    const descuentoTipo = document.getElementById('descuento_tipo');
+    let descuentoValor = 0;
+    let descuentoMonto = 0;
+    
+    if (descuentoInput && descuentoInput.value) {
+        descuentoValor = parseFloat(descuentoInput.value) || 0;
         
-        const summaryIgv = document.getElementById('summary_igv');
-        if (summaryIgv) summaryIgv.textContent = formatCantidad(igv);
-        
-        const summaryTotal = document.getElementById('summary_total_venta');
-        if (summaryTotal) summaryTotal.textContent = formatCantidad(totalVenta);
-        
-        // Actualizar el campo oculto con el valor del descuento
-        const descuentoHidden = document.getElementById('descuento_porcentaje');
-        if (descuentoHidden) {
-            if (descuentoTipo && descuentoTipo.value === 'monto') {
-                descuentoHidden.value = descuentoValor;
-            } else {
-                descuentoHidden.value = descuentoValor;
-            }
+        if (descuentoTipo && descuentoTipo.value === 'monto') {
+            descuentoMonto = Math.min(descuentoValor, totalValorVenta);
+        } else {
+            descuentoMonto = totalValorVenta * (descuentoValor / 100);
         }
     }
-
-    // =========================
-    // AGREGAR ITEMS
-    // =========================
-    function addItem() {
-        if (cotizacionBloqueada) { 
-            mostrarNotificacion("⚠️ La cotización está bloqueada.", "warning"); 
-            return; 
+    
+    const subtotalConDescuento = totalValorVenta - descuentoMonto;
+    const igv = subtotalConDescuento * 0.18;
+    const totalVenta = subtotalConDescuento + igv;
+    
+    const summaryDescuento = document.getElementById('summary_descuento');
+    if (summaryDescuento) summaryDescuento.textContent = formatCantidad(descuentoMonto);
+    
+    const summarySubtotalDescuento = document.getElementById('summary_subtotal_descuento');
+    if (summarySubtotalDescuento) summarySubtotalDescuento.textContent = formatCantidad(subtotalConDescuento);
+    
+    const summaryIgv = document.getElementById('summary_igv');
+    if (summaryIgv) summaryIgv.textContent = formatCantidad(igv);
+    
+    const summaryTotal = document.getElementById('summary_total_venta');
+    if (summaryTotal) summaryTotal.textContent = formatCantidad(totalVenta);
+    
+    // Actualizar el campo oculto con el valor del descuento
+    const descuentoHidden = document.getElementById('descuento_porcentaje');
+    if (descuentoHidden) {
+        if (descuentoTipo && descuentoTipo.value === 'monto') {
+            descuentoHidden.value = descuentoValor;
+        } else {
+            descuentoHidden.value = descuentoValor;
         }
-        itemCounter++;
-        const row = document.createElement("tr");
-        row.innerHTML = `
-            <td class="col-item">${itemCounter}</td>
-            <td class="col-codigo">
-                <input type="text" class="codigo_producto" placeholder="Buscar producto..." style="width:100%; min-width:120px;">
-                <input type="hidden" class="producto_id">
-                <input type="hidden" class="costo_unitario" value="0">
-            </td>
-            <td class="col-desc"><input type="text" class="descripcion" readonly style="width:100%;"></td>
-            <td class="col-modelo"><input type="text" class="modelo" readonly style="width:100%;"></td>
-            <td class="col-marca"><input type="text" class="marca" readonly style="width:100%;"></td>
-            <td class="col-unidad"><input type="text" class="unidad_medida" value="UNIDAD" style="width:100%;"></td>
-            <td class="col-cantidad"><input type="number" class="cantidad" value="1" step="0.01" style="width:100%;"></td>
-            <td class="col-precio"><input type="number" class="precio_venta_unitario" value="0" step="0.01" style="width:100%;"></td>
-            <td class="valor_venta_total">0.00</td>
-            <td><button class="btn-del">🗑</button></td>
-        `;
-        
-        if (tableBody) tableBody.appendChild(row);
-        
-        attachProductoAutocomplete(row);
-        
-        const rec = () => { 
-            if (!modoConsulta) { 
-                recalculateAll(); 
-                datosModificados = true; 
-            } 
-        };
-        
-        row.querySelector('.cantidad')?.addEventListener('input', rec);
-        row.querySelector('.precio_venta_unitario')?.addEventListener('input', rec);
-        row.querySelector('.btn-del')?.addEventListener('click', () => { 
-            row.remove(); 
+    }
+}
+
+    
+   // =========================
+// AGREGAR ITEMS (CON STOCK)
+// =========================
+function addItem() {
+    if (cotizacionBloqueada) { 
+        mostrarNotificacion("⚠️ La cotización está bloqueada.", "warning"); 
+        return; 
+    }
+    itemCounter++;
+    const row = document.createElement("tr");
+    row.innerHTML = `
+        <td class="col-item">${itemCounter}</td>
+        <td class="col-codigo">
+            <input type="text" class="codigo_producto" placeholder="Buscar producto..." style="width:100%; min-width:120px;">
+            <input type="hidden" class="producto_id">
+            <input type="hidden" class="costo_unitario" value="0">
+            <input type="hidden" class="stock_actual" value="0">
+        </td>
+        <td class="col-desc"><input type="text" class="descripcion" readonly style="width:100%;"></td>
+        <td class="col-modelo"><input type="text" class="modelo" readonly style="width:100%;"></td>
+        <td class="col-marca"><input type="text" class="marca" readonly style="width:100%;"></td>
+        <td class="col-unidad"><input type="text" class="unidad_medida" value="UNIDAD" style="width:100%;"></td>
+        <td class="col-cantidad"><input type="number" class="cantidad" value="1" step="0.01" style="width:100%;"></td>
+        <td class="col-precio"><input type="number" class="precio_venta_unitario" value="0" step="0.01" style="width:100%;"></td>
+        <td class="valor_venta_total">0.00</td>
+        <td><button class="btn-del">🗑</button></td>
+        <td class="col-stock" style="text-align:center;">
+            <span class="stock-badge" style="display:inline-block; padding:4px 8px; border-radius:12px; font-size:12px; font-weight:600;">0</span>
+        </td>
+    `;
+    
+    if (tableBody) tableBody.appendChild(row);
+    
+    attachProductoAutocomplete(row);
+    
+    const rec = () => { 
+        if (!modoConsulta) { 
             recalculateAll(); 
-        });
-        
-        setTimeout(recalculateAll, 50);
-    }
+            datosModificados = true; 
+        } 
+    };
+    
+    row.querySelector('.cantidad')?.addEventListener('input', rec);
+    row.querySelector('.precio_venta_unitario')?.addEventListener('input', rec);
+    row.querySelector('.btn-del')?.addEventListener('click', () => { 
+        row.remove(); 
+        recalculateAll(); 
+    });
+    
+    setTimeout(recalculateAll, 50);
+}
 
     // =========================
     // ESTADO VISUAL

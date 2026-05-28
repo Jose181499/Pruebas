@@ -258,9 +258,6 @@ document.addEventListener('DOMContentLoaded', () => {
             puntos.push({
                 nombre: item.querySelector('[data-field="nombre_punto"]')?.value.trim() || '',
                 direccion: item.querySelector('[data-field="direccion"]')?.value.trim() || '',
-                departamento: item.querySelector('[data-field="departamento"]')?.value || '',
-                provincia: item.querySelector('[data-field="provincia"]')?.value.trim() || '',
-                distrito: item.querySelector('[data-field="distrito"]')?.value.trim() || '',
                 responsable: item.querySelector('[data-field="responsable"]')?.value.trim() || '',
                 telefono: item.querySelector('[data-field="telefono_punto"]')?.value.trim() || '',
                 condicion_pago: item.querySelector('[data-field="condicion_pago"]')?.value || '',
