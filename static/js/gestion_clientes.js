@@ -947,7 +947,9 @@
     // MODAL DE CONFIRMACIÓN - NUEVO CLIENTE
     // =========================================
     function mostrarModalConfirmacionCliente(json, data) {
+        console.log("🔔 mostrarModalConfirmacionCliente llamada");
         const modalBody = document.getElementById('modalConfirmacionBody');
+        console.log("modalBody:", modalBody);
         if (!modalBody) return;
 
         const ahora      = new Date();
@@ -1024,7 +1026,10 @@
         `;
 
         const modalEl = document.getElementById('modalConfirmacionCliente');
-        if (modalEl) new bootstrap.Modal(modalEl).show();
+        console.log("modalEl:", modalEl);
+        if (modalEl) 
+           console.log("✅ Intentando abrir modal...");
+           new bootstrap.Modal(modalEl).show();
     }
 
     // =========================================
