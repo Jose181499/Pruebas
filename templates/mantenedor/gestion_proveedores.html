@@ -16,6 +16,9 @@
     <link rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
+    <link rel="stylesheet" 
+    href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+
     <!-- Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap"
     rel="stylesheet">
@@ -459,26 +462,32 @@ MODAL NUEVO PROVEEDOR
                     <div class="erp-section">
 
                         <div class="erp-section-title">
-                            💳 Información Bancaria
+                         <i class="ti ti-building-bank" style="color: #e53935;"></i> Información Bancaria
                         </div>
 
                         <div class="row g-4">
 
-                            <div class="col-md-4">
-                                <label class="form-label">Banco</label>
-                                <select class="form-select" id="banco" name="banco">
-                                    <option value="">Seleccione banco</option>
-                                    <option value="BCP">BCP</option>
-                                    <option value="BBVA">BBVA</option>
-                                    <option value="Interbank">Interbank</option>
-                                    <option value="Scotiabank">Scotiabank</option>
-                                </select>
+                           <div class="col-md-4">
+                              <label class="form-label">Banco</label>
+                              <select class="form-select" id="banco" name="banco">
+                                   <option value="">Seleccione banco</option>
+                                   <option value="BCP">BCP</option>
+                                   <option value="BBVA">BBVA</option>
+                                   <option value="Interbank">Interbank</option>
+                                   <option value="Scotiabank">Scotiabank</option>
+                              </select>
                             </div>
 
-                            <div class="col-md-8">
-                                <label class="form-label">Número de Cuenta / CCI</label>
-                                <input type="text" class="form-control" id="numero_cuenta_cci" name="numero_cuenta_cci" placeholder="Ingrese cuenta bancaria o CCI">
-                                <small class="text-muted">Cuenta bancaria o código interbancario</small>
+                            <div class="col-md-4">
+                               <label class="form-label">Número de Cuenta</label>
+                               <input type="text" class="form-control" id="numero_cuenta" name="numero_cuenta" placeholder="Ingrese número de cuenta">
+                               <small class="text-muted">Número de cuenta bancaria</small>
+                            </div>
+
+                        <div class="col-md-4">
+                               <label class="form-label">CCI</label>
+                               <input type="text" class="form-control" id="cci" name="cci" placeholder="Ingrese código CCI">
+                               <small class="text-muted">Código de cuenta interbancario</small>
                             </div>
 
                         </div>
