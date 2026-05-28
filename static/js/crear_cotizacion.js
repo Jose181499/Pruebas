@@ -1608,24 +1608,31 @@ function addItem() {
             itemCounter = 0;
             
             if (data.detalle && data.detalle.length > 0) {
-                data.detalle.forEach(item => {
-                    addItem();
-                    const row = document.querySelector("#table-body tr:last-child");
-                    if (row) {
-                        row.querySelector('.producto_id').value = item.producto_id || '';
-                        row.querySelector('.cantidad').value = formatCantidad(item.cantidad || 0);
-                        row.querySelector('.precio_venta_unitario').value = item.precio_venta_unitario || 0;
-                        row.querySelector('.codigo_producto').value = item.codigo || '';
-                        row.querySelector('.descripcion').value = item.descripcion || '';
-                        row.querySelector('.modelo').value = item.modelo || '';
-                        row.querySelector('.marca').value = item.marca || '';
-                        row.querySelector('.unidad_medida').value = item.unidad_medida || 'UNIDAD';
-                        if (row.querySelector('.costo_unitario')) {
-                            row.querySelector('.costo_unitario').value = item.costo_unitario || 0;
-                        }
-                    }
-                });
+            data.detalle.forEach(item => {
+            addItem();
+            const row = document.querySelector("#table-body tr:last-child");
+            if (row) {
+            row.querySelector('.producto_id').value = item.producto_id || '';
+            row.querySelector('.cantidad').value = formatCantidad(item.cantidad || 0);
+            row.querySelector('.precio_venta_unitario').value = item.precio_venta_unitario || 0;
+            row.querySelector('.codigo_producto').value = item.codigo || '';
+            row.querySelector('.descripcion').value = item.descripcion || '';
+            row.querySelector('.modelo').value = item.modelo || '';
+            row.querySelector('.marca').value = item.marca || '';
+            row.querySelector('.unidad_medida').value = item.unidad_medida || 'UNIDAD';
+            if (row.querySelector('.costo_unitario')) {
+                row.querySelector('.costo_unitario').value = item.costo_unitario || 0;
             }
+            // 🔥 AGREGAR ESTAS 4 LÍNEAS PARA RESTAURAR STOCK
+            const stockBadge = row.querySelector('.stock-badge');
+            if (stockBadge && item.stock !== undefined) {
+                stockBadge.textContent = item.stock;
+                stockBadge.style.backgroundColor = item.stock < 5 ? '#fee2e2' : '#d1fae5';
+                stockBadge.style.color = item.stock < 5 ? '#dc2626' : '#065f46';
+            }
+        }
+             });
+                }
             
             recalculateAll();
             configurarTiempoEntrega();
