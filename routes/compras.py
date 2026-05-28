@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, jsonify, request, session, send_file, make_response, Response
 from psycopg2.extras import RealDictCursor, DictCursor
-from database import (obtener_ordenes_recientes, crear_orden_transaccional, obtener_orden_completa,
+
+from database import (obtener_ordenes_recientes, obtener_orden_completa, crear_orden_compra_transaccional,
                     db_query, db_execute, db_tx, get_connection, buscar_proveedor_por_ruc)
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer
 from reportlab.lib import colors
