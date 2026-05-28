@@ -313,8 +313,8 @@ def insertar_proveedor(
     condicion_pago="",
     tiempo_credito="",
     banco="",
-    numero_cuenta="",      # ← reemplaza numero_cuenta_cci
-    cci=""                 # ← nuevo
+    numero_cuenta="",    
+    cci=""                 
 ):
     with db_tx() as conn:
         cur = conn.cursor()

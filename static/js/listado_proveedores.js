@@ -331,7 +331,8 @@ window.abrirModalEditarProveedor = async function(id) {
         setValue('edit_condicion_pago_proveedor', p.condicion_pago);
         setValue('edit_tiempo_credito_proveedor', p.tiempo_credito);
         setValue('edit_banco_proveedor', p.banco);
-        setValue('edit_numero_cuenta_cci_proveedor', p.numero_cuenta_cci);
+        setValue('edit_numero_cuenta_proveedor', p.numero_cuenta);
+        setValue('edit_cci_proveedor', p.cci);
         setValue('edit_lugar_recojo_proveedor', p.lugar_recojo);
         
         // Mostrar/ocultar campo tiempo crédito según la condición
@@ -376,7 +377,8 @@ if (formEditar) {
             condicion_pago: document.getElementById('edit_condicion_pago_proveedor')?.value || '',
             tiempo_credito: document.getElementById('edit_tiempo_credito_proveedor')?.value || '',
             banco: document.getElementById('edit_banco_proveedor')?.value || '',
-            numero_cuenta_cci: document.getElementById('edit_numero_cuenta_cci_proveedor')?.value || '',
+            numero_cuenta: document.getElementById('edit_numero_cuenta_proveedor')?.value || '',
+            cci: document.getElementById('edit_cci_proveedor')?.value || '',
             lugar_recojo: document.getElementById('edit_lugar_recojo_proveedor')?.value || ''
         };
         

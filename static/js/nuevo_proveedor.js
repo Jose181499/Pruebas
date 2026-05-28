@@ -289,7 +289,8 @@ if (btnGuardarProveedor) {
                 condicion_pago: document.getElementById('condicion_pago')?.value || '',
                 tiempo_credito: document.getElementById('tiempo_credito')?.value || '',
                 banco: document.querySelector('[name="banco"]')?.value || '',
-                numero_cuenta_cci: document.getElementById('numero_cuenta_cci')?.value || '',
+                numero_cuenta: document.getElementById('numero_cuenta')?.value || '',
+                cci: document.getElementById('cci')?.value || '',
                 lugar_recojo: lugarRecojo
             };
 
