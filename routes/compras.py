@@ -22,9 +22,13 @@ compras_bp = Blueprint("compras", __name__)
 
 @compras_bp.route("/compras")
 def compras_principal():
-    return render_template("compras.html")
-
-
+    import traceback
+    try:
+        return render_template("compras.html")
+    except Exception as e:
+        error_msg = f"Error en /compras: {str(e)}\n{traceback.format_exc()}"
+        print(error_msg)  # Esto saldrá en los logs de Render
+        return error_msg, 500
 @compras_bp.route("/crear_compra")
 def crear_compra():
     """Nueva orden de compra - sin ID"""
