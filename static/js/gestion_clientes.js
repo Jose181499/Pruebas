@@ -948,7 +948,8 @@ function mostrarModalConfirmacionCliente(json, data) {
     const fecha      = ahora.toLocaleDateString('es-PE');
     const hora       = ahora.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
 
-    const codigoCliente  = json.data?.codigo_cliente || '-';
+    const codigoCliente = json.data?.codigo_cliente 
+    || (json.cliente_id ? `CLI-${String(json.cliente_id).padStart(6,'0')}` : '-');
     const contactoPpal   = data.contactos?.find(c => c.principal) || data.contactos?.[0];
     const puntoPpal      = data.puntos_entrega?.find(p => p.principal) || data.puntos_entrega?.[0];
 
