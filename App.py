@@ -330,98 +330,29 @@ def api_buscar_clientes():
     API para buscar clientes por RUC, nombre comercial o razón social
     """
     try:
-        from database import buscar_clientes_paginado
+        from database import buscar_clientes_completo  # ← Usar la función nueva
         
-        tipo_documento = request.args.get('tipo_documento', '')
         busqueda = request.args.get('q', request.args.get('busqueda', '')).strip()
-        pagina = request.args.get('pagina', 1, type=int)
-        por_pagina = request.args.get('por_pagina', 100, type=int)
         
-        print(f"🔍 Buscando clientes - Tipo: {tipo_documento or 'todos'}, Búsqueda: '{busqueda or 'vacía'}'")
+        print(f"🔍 Buscando clientes - Búsqueda: '{busqueda or 'vacía'}'")
         
-        # Usar versión mejorada con paginación
-        resultado = buscar_clientes_paginado(
-            tipo_documento=tipo_documento,
-            busqueda=busqueda,
-            pagina=pagina,
-            por_pagina=por_pagina
-        )
+        # Usar la función CORREGIDA que incluye todos los campos
+        clientes = buscar_clientes_completo(busqueda, limit=50)
         
-        # 🔥 LOG DE DEPURACIÓN - Ver qué datos trae la base de datos
-        print("=" * 60)
-        print("📊 DATOS RECIBIDOS DE buscar_clientes_paginado:")
-        if resultado['data']:
-            for i, cliente in enumerate(resultado['data'][:3]):
-                print(f"Cliente {i+1}: {cliente.get('razon_social')}")
-                print(f"  - telefono_contacto: '{cliente.get('telefono_contacto')}'")
-                print(f"  - email_contacto: '{cliente.get('email_contacto')}'")
-                print(f"  - nombre_contacto: '{cliente.get('nombre_contacto')}'")
-        else:
-            print("⚠️ No se encontraron clientes")
-        print("=" * 60)
+        print(f"✅ Se encontraron {len(clientes)} clientes")
         
-        # 🔥 IMPORTANTE: NO ELIMINAR los campos de contacto del cliente principal
-        # Solo procesamos contactos y puntos_entrega, pero conservamos los campos originales
-        for cliente in resultado['data']:
-            # Procesar contactos (no tocar los campos principales)
-            if 'contactos' in cliente and cliente['contactos']:
-                cliente['contactos'] = [
-                    {
-                        'id': c.get('id'),
-                        'nombre_contacto': c.get('nombre'),
-                        'email': c.get('email'),
-                        'telefono': c.get('telefono'),
-                        'cargo': c.get('cargo'),
-                        'principal': c.get('principal', False)
-                    }
-                    for c in cliente.get('contactos', []) if c
-                ]
-            else:
-                cliente['contactos'] = []
-            
-            # Procesar puntos de entrega
-            if 'puntos_entrega' in cliente and cliente['puntos_entrega']:
-                cliente['puntos_entrega'] = [
-                    {
-                        'id': p.get('id'),
-                        'nombre_punto': p.get('nombre_punto'),
-                        'direccion': p.get('direccion'),
-                        'departamento': p.get('departamento'),
-                        'provincia': p.get('provincia'),
-                        'distrito': p.get('distrito'),
-                        'telefono': p.get('telefono_contacto'),
-                        'responsable': p.get('responsable'),
-                        'condicion_pago': p.get('condicion_pago'),
-                        'tiempo_credito': p.get('tiempo_credito'),
-                        'principal': p.get('principal', False)
-                    }
-                    for p in cliente.get('puntos_entrega', []) if p
-                ]
-            else:
-                cliente['puntos_entrega'] = []
-        
-        # 🔥 Verificar que los campos de contacto NO se perdieron
-        print("📋 VERIFICACIÓN FINAL - Primeros 3 clientes:")
-        if resultado['data']:
-            for i, cliente in enumerate(resultado['data'][:3]):
-                print(f"  Cliente {i+1}: {cliente.get('razon_social')}")
-                print(f"    telefono_contacto: '{cliente.get('telefono_contacto')}'")
-                print(f"    email_contacto: '{cliente.get('email_contacto')}'")
-                print(f"    nombre_contacto: '{cliente.get('nombre_contacto')}'")
-        
-        print(f"✅ Se encontraron {len(resultado['data'])} clientes (Total: {resultado['total']})")
+        # Asegurar que los campos existan
+        for cliente in clientes:
+            if 'telefono_contacto' not in cliente or cliente['telefono_contacto'] is None:
+                cliente['telefono_contacto'] = ''
+            if 'email_contacto' not in cliente or cliente['email_contacto'] is None:
+                cliente['email_contacto'] = ''
+            if 'nombre_contacto' not in cliente or cliente['nombre_contacto'] is None:
+                cliente['nombre_contacto'] = ''
         
         return jsonify({
             'success': True,
-            'data': resultado['data'],
-            'total': resultado['total'],
-            'pagina': resultado['pagina'],
-            'por_pagina': resultado['por_pagina'],
-            'total_paginas': resultado['total_paginas'],
-            'filtros': {
-                'tipo_documento': tipo_documento if tipo_documento else 'todos',
-                'busqueda': busqueda if busqueda else 'ninguna'
-            }
+            'data': clientes
         })
         
     except Exception as e:
@@ -433,76 +364,6 @@ def api_buscar_clientes():
             'error': str(e),
             'data': []
         }), 500
-
-@app.route('/api/clientes/<int:id>', methods=['GET'])
-def api_obtener_cliente(id):
-    """Obtener un cliente por ID con todos sus detalles"""
-    try:
-        from database import obtener_cliente_completo_por_id
-        
-        cliente = obtener_cliente_completo_por_id(id)
-        
-        if not cliente:
-            return jsonify({
-                'success': False,
-                'error': 'Cliente no encontrado'
-            }), 404
-        
-        # Formatear respuesta
-        resultado = {
-            'id': cliente.get('id'),
-            'tipo_documento': cliente.get('tipo_documento'),
-            'numero_documento': cliente.get('numero_documento'),
-            'razon_social': cliente.get('razon_social'),
-            'nombre_comercial': cliente.get('nombre_comercial'),
-            'direccion_fiscal': cliente.get('direccion_fiscal'),
-            'codigo_cliente': cliente.get('codigo_cliente'),
-            'telefono_contacto': cliente.get('telefono_contacto'),
-            'email_contacto': cliente.get('email_contacto'),
-            'nombre_contacto': cliente.get('nombre_contacto'),
-            'contactos': [
-                {
-                    'id': c.get('id'),
-                    'nombre_contacto': c.get('nombre'),
-                    'email': c.get('email'),
-                    'telefono': c.get('telefono'),
-                    'cargo': c.get('cargo'),
-                    'principal': c.get('principal', False)
-                }
-                for c in cliente.get('contactos', []) if c
-            ],
-            'puntos_entrega': [
-                {
-                    'id': p.get('id'),
-                    'nombre_punto': p.get('nombre_punto'),
-                    'direccion': p.get('direccion'),
-                    'departamento': p.get('departamento'),
-                    'provincia': p.get('provincia'),
-                    'distrito': p.get('distrito'),
-                    'telefono_contacto': p.get('telefono_contacto'),
-                    'responsable': p.get('responsable'),
-                    'condicion_pago': p.get('condicion_pago'),
-                    'tiempo_credito': p.get('tiempo_credito'),
-                    'principal': p.get('principal', False)
-                }
-                for p in cliente.get('puntos_entrega', []) if p
-            ]
-        }
-        
-        return jsonify({
-            'success': True,
-            'data': resultado
-        })
-        
-    except Exception as e:
-        print(f"❌ Error en api_obtener_cliente: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
 
 @app.route('/api/clientes/<int:id>/direcciones', methods=['GET'])
 def api_obtener_direcciones_cliente(id):

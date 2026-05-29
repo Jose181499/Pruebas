@@ -317,7 +317,7 @@ def insertar_proveedor(
 ):
     try:
         with db_tx() as conn:
-            cur = conn.cursor()
+            cur = conn.cursor(cursor_factory=RealDictCursor)
 
             # Generar código automáticamente (PROV-00001, PROV-00002...)
             cur.execute("""
@@ -833,6 +833,42 @@ def buscar_clientes_paginado(tipo_documento='', busqueda='', pagina=1, por_pagin
             'por_pagina': por_pagina,
             'total_paginas': 0
         }
+
+
+        # =========================
+# Buscar clientes con todos los campos (VERSIÓN CORREGIDA)
+# =========================
+def buscar_clientes_completo(q: str, limit: int = 20):
+    """
+    Buscar clientes por texto con TODOS los campos incluyendo contactos
+    """
+    q = (q or "").strip()
+    
+    if len(q) < 2:
+        return []
+    
+    return db_query("""
+        SELECT 
+            id,
+            tipo_documento,
+            numero_documento,
+            razon_social,
+            nombre_comercial,
+            direccion_fiscal,
+            codigo_cliente,
+            telefono_contacto,
+            email_contacto,
+            nombre_contacto
+        FROM clientes
+        WHERE activo = TRUE
+        AND (
+            numero_documento ILIKE %s OR 
+            razon_social ILIKE %s OR 
+            nombre_comercial ILIKE %s
+        )
+        ORDER BY razon_social
+        LIMIT %s
+    """, (f"%{q}%", f"%{q}%", f"%{q}%", limit))
 
 # =========================
 # Buscar clientes (versión antigua - mantener compatibilidad)

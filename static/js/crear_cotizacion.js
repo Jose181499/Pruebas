@@ -864,27 +864,20 @@ document.addEventListener('DOMContentLoaded', () => {
         return listaProductos;
     }
 
-  async function buscarClientes(q) {
+ async function buscarClientes(q) {
     try {
         const res = await fetch(`/api/clientes/buscar?q=${encodeURIComponent(q)}`);
         const json = await res.json();
         
-        // 🔥 DEBUG: Ver qué datos llegan realmente
-        console.log('🔍 Buscando:', q);
-        console.log('📦 Datos completos:', json);
+        console.log('🔍 Clientes encontrados:', json.data);
         
         if (json.data && json.data.length > 0) {
             json.data.forEach((cliente, idx) => {
                 console.log(`Cliente ${idx + 1}:`, {
-                    id: cliente.id,
-                    razon_social: cliente.razon_social,
-                    telefono_contacto: cliente.telefono_contacto,
-                    email_contacto: cliente.email_contacto,
-                    nombre_contacto: cliente.nombre_contacto,
-                    // Verificar si son null explícitamente
-                    telefono_es_null: cliente.telefono_contacto === null,
-                    email_es_null: cliente.email_contacto === null,
-                    contacto_es_null: cliente.nombre_contacto === null
+                    razon: cliente.razon_social,
+                    telefono: cliente.telefono_contacto,
+                    email: cliente.email_contacto,
+                    contacto: cliente.nombre_contacto
                 });
             });
         }
@@ -1197,7 +1190,6 @@ function setProductoEnFila(row, p) {
                 return; 
             }
 
-            // 🔥 Asegurar que todos los datos estén en el HTML
             const html = clientes.map(c => `<div class="item" 
                 data-id="${c.id || ''}" 
                 data-razon="${c.razon_social || ''}" 
@@ -1218,14 +1210,12 @@ function setProductoEnFila(row, p) {
                     console.log("📦 Cliente seleccionado:", {
                         id: el.dataset.id,
                         razon: el.dataset.razon,
-                        doc: el.dataset.doc,
-                        direccion: el.dataset.direccion,
                         telefono: el.dataset.telefono,
                         contacto: el.dataset.contacto,
                         email: el.dataset.email
                     });
                     
-                    // 🔥 ASIGNAR VALORES A TODOS LOS CAMPOS
+                    // 🔥 ASIGNAR VALORES - Versión CORREGIDA
                     const clienteIdInput = document.getElementById('cliente_id');
                     if (clienteIdInput) clienteIdInput.value = el.dataset.id || '';
                     
@@ -1238,6 +1228,7 @@ function setProductoEnFila(row, p) {
                     const direccionInput = document.getElementById('cliente_direccion');
                     if (direccionInput) direccionInput.value = el.dataset.direccion || '';
                     
+                    // 🔥 LAS 3 LÍNEAS CLAVE - CORREGIDAS
                     const telefonoInput = document.getElementById('telefono_contacto');
                     if (telefonoInput) telefonoInput.value = el.dataset.telefono || '';
                     
@@ -1246,6 +1237,8 @@ function setProductoEnFila(row, p) {
                     
                     const emailInput = document.getElementById('email_contacto_cliente');
                     if (emailInput) emailInput.value = el.dataset.email || '';
+                    
+                    console.log("✅ Asignados - Teléfono:", telefonoInput?.value, "Contacto:", contactoInput?.value, "Email:", emailInput?.value);
                     
                     // Cargar direcciones guardadas
                     if (el.dataset.id) {
