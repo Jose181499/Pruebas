@@ -39,7 +39,7 @@ def crear_compra():
         
         ordenes = obtener_ordenes_recientes(limit=300)
         
-        return render_template("crear_compra.html",
+        return render_template("Crear_compra.html",
                               ordenes=ordenes,
                               orden_compra_id=None,
                               modo='nuevo')
