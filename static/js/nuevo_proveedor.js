@@ -1,5 +1,5 @@
 // =========================================
-// NUEVO PROVEEDOR ERP
+// NUEVO PROVEEDOR ERP - Versión Mejorada
 // =========================================
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // =====================================================
     // CONDICIÓN DE PAGO
     // =====================================================
-    const condicionPago     = document.getElementById('condicion_pago');
+    const condicionPago = document.getElementById('condicion_pago');
     const campoTiempoCredito = document.getElementById('campo_tiempo_credito');
 
     if (condicionPago) {
@@ -16,8 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 campoTiempoCredito.style.display = 'block';
             } else {
                 campoTiempoCredito.style.display = 'none';
-                const tiempoCredito = document.getElementById('tiempo_credito');
-                if (tiempoCredito) tiempoCredito.value = '';
+                document.getElementById('tiempo_credito').value = '';
             }
         });
     }
@@ -36,40 +35,38 @@ document.addEventListener('DOMContentLoaded', function () {
         "Villa María del Triunfo"
     ].sort();
 
-    const tipoRecojo  = document.getElementById('tipo_recojo');
+    const tipoRecojo = document.getElementById('tipo_recojo');
     const bloqueLista = document.getElementById('bloque_lista_distritos');
     const bloqueManual = document.getElementById('bloque_manual');
-    const buscador    = document.getElementById('buscarDistrito');
+    const buscador = document.getElementById('buscarDistrito');
     const selectDistrito = document.getElementById('lugar_recojo');
 
-    // =====================================================
-    // CAMBIO TIPO RECOJO
-    // =====================================================
+    // Cambio de tipo de recojo
     if (tipoRecojo) {
         tipoRecojo.addEventListener('change', function () {
             if (this.value === 'lista') {
-                bloqueLista.style.display  = 'block';
+                bloqueLista.style.display = 'block';
                 bloqueManual.style.display = 'none';
                 renderDistritos();
             } else if (this.value === 'manual') {
-                bloqueLista.style.display  = 'none';
+                bloqueLista.style.display = 'none';
                 bloqueManual.style.display = 'block';
             } else {
-                bloqueLista.style.display  = 'none';
+                bloqueLista.style.display = 'none';
                 bloqueManual.style.display = 'none';
             }
         });
     }
 
-    // =====================================================
-    // RENDER LISTA DE DISTRITOS
-    // =====================================================
+    // Renderizar distritos
     function renderDistritos(filtro = '') {
         if (!selectDistrito) return;
         selectDistrito.innerHTML = '';
-        const filtrados = distritos.filter(d =>
+
+        const filtrados = distritos.filter(d => 
             d.toLowerCase().includes(filtro.toLowerCase())
         );
+
         if (filtrados.length === 0) {
             const opt = document.createElement('option');
             opt.textContent = 'No se encontraron resultados';
@@ -77,6 +74,7 @@ document.addEventListener('DOMContentLoaded', function () {
             selectDistrito.appendChild(opt);
             return;
         }
+
         filtrados.forEach(d => {
             const opt = document.createElement('option');
             opt.value = d;
@@ -85,12 +83,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // =====================================================
-    // BUSCADOR DISTRITOS
-    // =====================================================
+    // Buscador de distritos
     if (buscador) {
-        buscador.addEventListener('focus', function () { renderDistritos(this.value); });
-        buscador.addEventListener('input', function () { renderDistritos(this.value); });
+        buscador.addEventListener('input', () => renderDistritos(buscador.value));
+        buscador.addEventListener('focus', () => renderDistritos(buscador.value));
     }
 
     if (selectDistrito) {
@@ -99,9 +95,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // =====================================================
-    // VALIDACIÓN RUC — solo dígitos, máx 11
-    // =====================================================
+    // Validación RUC
     const rucInput = document.getElementById('ruc');
     if (rucInput) {
         rucInput.addEventListener('input', function () {
@@ -109,9 +103,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // =====================================================
-    // VALIDACIÓN TELÉFONO
-    // =====================================================
+    // Validación Teléfono
     const telefonoInput = document.getElementById('telefono');
     if (telefonoInput) {
         telefonoInput.addEventListener('input', function () {
@@ -120,15 +112,21 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // =====================================================
-    // GUARDAR NUEVO PROVEEDOR  ✅ CORREGIDO: dentro del DOMContentLoaded
+    // GUARDAR NUEVO PROVEEDOR (Versión Mejorada)
     // =====================================================
-    const btnGuardarProveedor = document.getElementById('btnGuardarProveedor');
+    const btnGuardar = document.getElementById('btnGuardarProveedor');
 
-    if (btnGuardarProveedor) {
-        btnGuardarProveedor.addEventListener('click', async function () {
+    if (btnGuardar) {
+        btnGuardar.addEventListener('click', async function () {
+
+            const btn = this;
+            const textoOriginal = btn.innerHTML;
 
             try {
-                // Determinar lugar de recojo según tipo seleccionado
+                btn.disabled = true;
+                btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Guardando...`;
+
+                // Determinar lugar de recojo
                 let lugarRecojo = '';
                 if (tipoRecojo?.value === 'lista') {
                     lugarRecojo = document.getElementById('lugar_recojo')?.value || '';
@@ -137,86 +135,72 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 const razonSocial = document.getElementById('razon_social')?.value.trim() || '';
-                const ruc         = document.getElementById('ruc')?.value.trim()          || '';
-                const direccion   = document.getElementById('direccion')?.value.trim()    || '';
+                const ruc = document.getElementById('ruc')?.value.trim() || '';
+                const direccion = document.getElementById('direccion')?.value.trim() || '';
+                const email = document.getElementById('email')?.value.trim() || '';
 
-                // ── Validaciones ──────────────────────────────────
-                if (!razonSocial) {
-                    mostrarNotificacion('La razón social es obligatoria', 'error');
-                    return;
-                }
-                if (!ruc || ruc.length !== 11) {
-                    mostrarNotificacion('El RUC debe tener exactamente 11 dígitos', 'error');
-                    return;
-                }
-                if (!direccion) {
-                    mostrarNotificacion('La dirección es obligatoria', 'error');
-                    return;
+                // Validaciones
+                if (!razonSocial) return mostrarNotificacion('La razón social es obligatoria', 'error');
+                if (!ruc || ruc.length !== 11) return mostrarNotificacion('El RUC debe tener exactamente 11 dígitos', 'error');
+                if (!direccion) return mostrarNotificacion('La dirección fiscal es obligatoria', 'error');
+                if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    return mostrarNotificacion('El correo electrónico no tiene un formato válido', 'error');
                 }
 
                 const data = {
-                    razon_social:    razonSocial,
-                    razon_comercial: document.getElementById('razon_comercial')?.value  || '',
-                    direccion:       direccion,
-                    contacto:        document.getElementById('contacto')?.value         || '',
-                    ruc:             ruc,
-                    telefono:        document.getElementById('telefono')?.value         || '',
-                    email:           document.getElementById('email')?.value            || '',
-                    condicion_pago:  document.getElementById('condicion_pago')?.value  || '',
-                    tiempo_credito:  document.getElementById('tiempo_credito')?.value  || '',
-                    banco:           document.getElementById('banco')?.value            || '',  // ✅ CORREGIDO: getElementById
-                    numero_cuenta:   document.getElementById('numero_cuenta')?.value   || '',
-                    cci:             document.getElementById('cci')?.value              || '',
-                    lugar_recojo:    lugarRecojo
+                    razon_social: razonSocial,
+                    razon_comercial: document.getElementById('razon_comercial')?.value.trim() || '',
+                    direccion: direccion,
+                    contacto: document.getElementById('contacto')?.value.trim() || '',
+                    ruc: ruc,
+                    telefono: document.getElementById('telefono')?.value.trim() || '',
+                    email: email,
+                    condicion_pago: document.getElementById('condicion_pago')?.value || '',
+                    tiempo_credito: document.getElementById('tiempo_credito')?.value.trim() || '',
+                    banco: document.getElementById('banco')?.value || '',
+                    numero_cuenta: document.getElementById('numero_cuenta')?.value.trim() || '',
+                    cci: document.getElementById('cci')?.value.trim() || '',
+                    lugar_recojo: lugarRecojo
                 };
 
                 const response = await fetch('/api/proveedores/guardar', {
-                    method:  'POST',
+                    method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body:    JSON.stringify(data)
+                    body: JSON.stringify(data)
                 });
 
                 const result = await response.json();
 
                 if (result.success) {
-                    const codigoGenerado = result.data?.codigo_proveedor || 'Generado';
+                    mostrarNotificacion(`✅ Proveedor creado correctamente\nCódigo: ${result.data?.codigo_proveedor || 'N/A'}`, 'exito');
 
-                    mostrarNotificacion(
-                        `PROVEEDOR CREADO EXITOSAMENTE\n\n` +
-                        `Código: ${codigoGenerado}\n` +
-                        `Razón Social: ${razonSocial}\n` +
-                        `RUC: ${ruc}`,
-                        'exito'
-                    );
-
-                    // ✅ CORREGIDO: cerrar modal y recargar tabla en vez de confirm() + redirect raro
                     setTimeout(() => {
-                        const modalEl = document.getElementById('modalNuevoProveedor');
-                        const modal   = bootstrap.Modal.getInstance(modalEl);
-                        if (modal) modal.hide();
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('modalNuevoProveedor'));
+                        modal?.hide();
 
-                        document.getElementById('formProveedor')?.reset();
+                        document.getElementById('formProveedor').reset();
 
-                        // Limpiar campos que reset() no limpia completamente
-                        if (tipoRecojo)   tipoRecojo.value = '';
-                        if (bloqueLista)  bloqueLista.style.display  = 'none';
+                        // Limpiar estados
+                        if (tipoRecojo) tipoRecojo.value = '';
+                        if (bloqueLista) bloqueLista.style.display = 'none';
                         if (bloqueManual) bloqueManual.style.display = 'none';
                         if (campoTiempoCredito) campoTiempoCredito.style.display = 'none';
 
-                        // Recargar la tabla
                         if (typeof cargarProveedores === 'function') cargarProveedores();
-
-                    }, 1500);
+                    }, 1300);
 
                 } else {
-                    mostrarNotificacion('Error: ' + (result.error || 'No se pudo guardar'), 'error');
+                    mostrarNotificacion(result.error || 'No se pudo guardar el proveedor', 'error');
                 }
 
             } catch (error) {
-                console.error("Error al guardar proveedor:", error);
-                mostrarNotificacion('Error del servidor: ' + error.message, 'error');
+                console.error(error);
+                mostrarNotificacion('Error de conexión con el servidor', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = textoOriginal;
             }
         });
     }
 
-}); // fin DOMContentLoaded
+});

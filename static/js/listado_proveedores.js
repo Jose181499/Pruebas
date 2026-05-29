@@ -93,10 +93,83 @@ let proveedoresCache = [];
 document.addEventListener("DOMContentLoaded", () => {
     cargarProveedores();
     inicializarFiltros();
-    inicializarEventosCondicionPago();
     inicializarModalEliminar();
     inicializarFormEditar();   // ✅ CORREGIDO: ahora dentro del DOMContentLoaded
 });
+
+// =========================================
+// CARGAR PROVEEDORES
+// =========================================
+async function cargarProveedores(filtros = {}) {
+    const tbody = document.getElementById("tbody-proveedores");
+    if (!tbody) return;
+
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="9" class="text-center py-5">
+                <div class="spinner-border text-primary"></div>
+                <p class="mt-2">Cargando proveedores...</p>
+            </td>
+        </tr>`;
+
+    try {
+        let url = "/api/proveedores/listar";
+        const params = new URLSearchParams();
+
+        if (filtros.busqueda) params.append("busqueda", filtros.busqueda);
+        if (filtros.codigo)   params.append("codigo", filtros.codigo);
+
+        if (params.toString()) url += "?" + params.toString();
+
+        const res = await fetch(url);
+        const json = await res.json();
+
+        const proveedores = json.data || [];
+        proveedoresCache = proveedores;
+        tbody.innerHTML = "";
+
+        if (proveedores.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="text-center py-5">
+                        <i class="bi bi-inbox" style="font-size: 2.5rem;"></i>
+                        <p class="mt-3">No se encontraron proveedores</p>
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        proveedores.forEach(p => {
+            const codigo = p.codigo_proveedor || '---';
+            tbody.innerHTML += `
+                <tr>
+                    <td class="text-center">${p.id || '-'}</td>
+                    <td class="text-center"><strong>${escapeHtml(codigo)}</strong></td>
+                    <td>${escapeHtml(p.razon_social) || '-'}</td>
+                    <td class="text-center">${p.ruc || p.numero_documento || '-'}</td>
+                    <td>${escapeHtml(p.direccion) || '-'}</td>
+                    <td>${p.telefono || '-'}</td>
+                    <td>${escapeHtml(p.contacto) || '-'}</td>
+                    <td>${p.email || '-'}</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-info me-1" onclick="abrirModalVerProveedor(${p.id})" title="Ver detalle">👁️</button>
+                        <button class="btn btn-sm btn-warning me-1" onclick="abrirModalEditarProveedor(${p.id})" title="Editar">✏️</button>
+                        <button class="btn btn-sm btn-danger" onclick="abrirModalEliminarProveedor(${p.id})" title="Eliminar">🗑️</button>
+                    </td>
+                </tr>`;
+        });
+
+    } catch (error) {
+        console.error("Error al cargar proveedores:", error);
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" class="text-center py-5 text-danger">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <p class="mt-2">Error al cargar los proveedores</p>
+                </td>
+            </tr>`;
+    }
+}
 
 // =========================================
 // LISTAR PROVEEDORES
@@ -181,27 +254,22 @@ async function cargarProveedores(filtros = {}) {
 }
 
 // =========================================
-// INICIALIZAR FILTROS
+// FILTROS
 // =========================================
 function inicializarFiltros() {
     const filtroBusqueda = document.getElementById("filtro-busqueda");
-    const searchCodigo   = document.getElementById("search-codigo");
+    const searchCodigo = document.getElementById("search-codigo");
 
-    if (filtroBusqueda) {
+    const debounce = (func, delay) => {
         let timeout;
-        filtroBusqueda.addEventListener("input", () => {
+        return (...args) => {
             clearTimeout(timeout);
-            timeout = setTimeout(aplicarFiltros, 500);
-        });
-    }
+            timeout = setTimeout(() => func(...args), delay);
+        };
+    };
 
-    if (searchCodigo) {
-        let timeout;
-        searchCodigo.addEventListener("input", () => {
-            clearTimeout(timeout);
-            timeout = setTimeout(aplicarFiltros, 500);
-        });
-    }
+    if (filtroBusqueda) filtroBusqueda.addEventListener("input", debounce(aplicarFiltros, 500));
+    if (searchCodigo) searchCodigo.addEventListener("input", debounce(aplicarFiltros, 500));
 }
 
 // =========================================
@@ -209,29 +277,8 @@ function inicializarFiltros() {
 // =========================================
 function aplicarFiltros() {
     const busqueda = document.getElementById("filtro-busqueda")?.value.trim() || "";
-    const codigo   = document.getElementById("search-codigo")?.value.trim() || "";
+    const codigo = document.getElementById("search-codigo")?.value.trim() || "";
     cargarProveedores({ busqueda, codigo });
-}
-
-// =========================================
-// CONDICIÓN DE PAGO
-// =========================================
-function inicializarEventosCondicionPago() {
-    const condicionPago = document.getElementById('condicion_pago');
-    const campoTiempo   = document.getElementById('campo_tiempo_credito');
-    if (condicionPago && campoTiempo) {
-        condicionPago.addEventListener('change', function () {
-            campoTiempo.style.display = this.value === 'Credito' ? 'block' : 'none';
-        });
-    }
-
-    const editCondicion = document.getElementById('edit_condicion_pago_proveedor');
-    const editCampo     = document.getElementById('edit_campo_tiempo_credito_proveedor');
-    if (editCondicion && editCampo) {
-        editCondicion.addEventListener('change', function () {
-            editCampo.style.display = this.value === 'Credito' ? 'block' : 'none';
-        });
-    }
 }
 
 // =========================================

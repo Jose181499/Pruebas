@@ -298,7 +298,7 @@ def obtener_productos():
 
 
 # =========================
-# Insertar proveedor (VERSIÓN ANTIGUA - mantener para compatibilidad)
+# Insertar nuevo proveedor (Versión Actualizada)
 # =========================
 def insertar_proveedor(
     razon_social,
@@ -308,70 +308,130 @@ def insertar_proveedor(
     contacto="",
     email="",
     razon_comercial="",
-    codigo_proveedor="",
-    lugar_recojo="",
     condicion_pago="",
     tiempo_credito="",
     banco="",
-    numero_cuenta="",    
-    cci=""                 
+    numero_cuenta="",
+    cci="",
+    lugar_recojo=""
 ):
-    with db_tx() as conn:
-        cur = conn.cursor()
-        cur.execute("""
-            INSERT INTO proveedores (
-                razon_social, ruc, direccion, telefono, contacto,
-                email, razon_comercial, codigo_proveedor, lugar_recojo,
-                condicion_pago, tiempo_credito, banco,
-                numero_cuenta, cci
-            )
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-        """, (
-            razon_social, ruc, direccion, telefono, contacto,
-            email, razon_comercial, codigo_proveedor, lugar_recojo,
-            condicion_pago, tiempo_credito, banco,
-            numero_cuenta, cci
-        ))
+    try:
+        with db_tx() as conn:
+            cur = conn.cursor()
+
+            # Generar código automáticamente (PROV-00001, PROV-00002...)
+            cur.execute("""
+                SELECT COUNT(*) + 1 as siguiente 
+                FROM proveedores 
+                WHERE codigo_proveedor LIKE 'PROV-%'
+            """)
+            siguiente = cur.fetchone()['siguiente']
+            codigo_proveedor = f"PROV-{siguiente:05d}"
+
+            cur.execute("""
+                INSERT INTO proveedores (
+                    codigo_proveedor,
+                    razon_social,
+                    razon_comercial,
+                    ruc,
+                    direccion,
+                    telefono,
+                    contacto,
+                    email,
+                    condicion_pago,
+                    tiempo_credito,
+                    banco,
+                    numero_cuenta,
+                    cci,
+                    lugar_recojo,
+                    activo,
+                    fecha_creacion
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE, NOW())
+                RETURNING id
+            """, (
+                codigo_proveedor,
+                razon_social,
+                razon_comercial,
+                ruc,
+                direccion,
+                telefono,
+                contacto,
+                email,
+                condicion_pago,
+                tiempo_credito,
+                banco,
+                numero_cuenta,
+                cci,
+                lugar_recojo
+            ))
+
+            nuevo_id = cur.fetchone()['id']
+            conn.commit()  # Por si db_tx no hace commit automático
+
+            return nuevo_id   # ← Muy importante
+
+    except Exception as e:
+        print(f"Error insertando proveedor: {e}")
+        raise  # Para que la API lo capture
 
 
 # =========================
 # Obtener proveedores
 # =========================
 def obtener_proveedores(busqueda=None, codigo=None, tipo_documento=None):
-    query = """
-        SELECT id, razon_social, ruc, direccion, telefono, contacto,
-               email, razon_comercial, codigo_proveedor, lugar_recojo,
-               condicion_pago, tiempo_credito, banco,
-               numero_cuenta, cci        
-        FROM proveedores
-        WHERE activo = TRUE
-    """
-    # ... resto igual
-    params = []
+    try:
+        query = """
+            SELECT 
+                id, 
+                codigo_proveedor,
+                razon_social, 
+                razon_comercial,
+                ruc, 
+                direccion, 
+                telefono, 
+                contacto,
+                email, 
+                condicion_pago, 
+                tiempo_credito, 
+                banco,
+                numero_cuenta, 
+                cci,
+                lugar_recojo,
+                fecha_creacion,
+                activo
+            FROM proveedores
+            WHERE activo = TRUE
+        """
+        params = []
 
-    # Filtro por Código de Proveedor
-    if codigo:
-        query += " AND codigo_proveedor ILIKE %s"
-        params.append(f"%{codigo}%")
+        # Filtro por Código de Proveedor
+        if codigo:
+            query += " AND codigo_proveedor ILIKE %s"
+            params.append(f"%{codigo}%")
 
-    # Filtro por Búsqueda (RUC o Razón Social)
-    if busqueda:
-        query += """ AND (
-            razon_social ILIKE %s OR
-            ruc ILIKE %s OR
-            codigo_proveedor ILIKE %s
-        )"""
-        like = f"%{busqueda}%"
-        params.extend([like, like, like])
+        # Filtro por Búsqueda general
+        if busqueda:
+            query += """ AND (
+                razon_social ILIKE %s 
+                OR ruc ILIKE %s 
+                OR codigo_proveedor ILIKE %s
+                OR contacto ILIKE %s
+            )"""
+            like = f"%{busqueda}%"
+            params.extend([like, like, like, like])
 
-    # Filtro por Tipo de Documento / Condición de Pago
-    if tipo_documento:
-        query += " AND condicion_pago = %s"
-        params.append(tipo_documento)
+        # Filtro por Condición de Pago
+        if tipo_documento:
+            query += " AND condicion_pago = %s"
+            params.append(tipo_documento)
 
-    query += " ORDER BY razon_social"
+        query += " ORDER BY razon_social ASC"
 
-    return db_query(query, params if params else None)
+        return db_query(query, params if params else None)
+
+    except Exception as e:
+        print(f"Error en obtener_proveedores: {e}")
+        return []
 
 # =========================
 # Obtener Clientes
@@ -1420,11 +1480,75 @@ def obtener_todos_proveedores():
 
 
 def obtener_proveedor_por_id(proveedor_id):
-    """Obtener proveedor por ID"""
-    rows = db_query("""
-        SELECT 
-            id,
-            codigo_proveedor,
+    """Obtener un proveedor por su ID"""
+    try:
+        rows = db_query("""
+            SELECT 
+                id,
+                codigo_proveedor,
+                razon_social,
+                razon_comercial,
+                ruc,
+                direccion,
+                telefono,
+                contacto,
+                email,
+                condicion_pago,
+                tiempo_credito,
+                banco,
+                numero_cuenta, 
+                cci,
+                lugar_recojo,
+                activo,
+                fecha_creacion,
+                fecha_actualizacion
+            FROM proveedores
+            WHERE id = %s AND activo = TRUE
+        """, (proveedor_id,))
+        
+        return rows[0] if rows else None
+
+    except Exception as e:
+        print(f"Error en obtener_proveedor_por_id({proveedor_id}): {e}")
+        return None
+
+
+def actualizar_proveedor(
+    proveedor_id,
+    razon_social,
+    razon_comercial="",
+    ruc="",
+    direccion="",
+    telefono="",
+    contacto="",
+    email="",
+    condicion_pago="",
+    tiempo_credito="",
+    banco="",
+    numero_cuenta="",
+    cci="",
+    lugar_recojo=""
+):
+    """Actualizar proveedor"""
+    try:
+        db_execute("""
+            UPDATE proveedores 
+            SET razon_social = %s,
+                razon_comercial = %s,
+                ruc = %s,
+                direccion = %s,
+                telefono = %s,
+                contacto = %s,
+                email = %s,
+                condicion_pago = %s,
+                tiempo_credito = %s,
+                banco = %s,
+                numero_cuenta = %s,   
+                cci = %s, 
+                lugar_recojo = %s,
+                fecha_actualizacion = NOW()
+            WHERE id = %s AND activo = TRUE
+        """, (
             razon_social,
             razon_comercial,
             ruc,
@@ -1435,51 +1559,16 @@ def obtener_proveedor_por_id(proveedor_id):
             condicion_pago,
             tiempo_credito,
             banco,
-            numero_cuenta, 
+            numero_cuenta,
             cci,
-            lugar_recojo
-        FROM proveedores
-        WHERE id = %s AND activo = TRUE
-    """, (proveedor_id,))
-    
-    return rows[0] if rows else None
+            lugar_recojo,
+            proveedor_id
+        ))
+        return True
 
-
-def actualizar_proveedor(proveedor_id, data):
-    """Actualizar proveedor"""
-    db_execute("""
-        UPDATE proveedores 
-        SET razon_social = %s,
-            razon_comercial = %s,
-            ruc = %s,
-            direccion = %s,
-            telefono = %s,
-            contacto = %s,
-            email = %s,
-            condicion_pago = %s,
-            tiempo_credito = %s,
-            banco = %s,
-            numero_cuenta = %s,   
-            cci = %s, 
-            lugar_recojo = %s
-        WHERE id = %s
-    """, (
-        data.get('razon_social'),
-        data.get('razon_comercial'),
-        data.get('ruc'),
-        data.get('direccion'),
-        data.get('telefono'),
-        data.get('contacto'),
-        data.get('email'),
-        data.get('condicion_pago'),
-        data.get('tiempo_credito'),
-        data.get('banco'),
-        data.get('numero_cuenta'),  
-        data.get('cci'),
-        data.get('lugar_recojo'),
-        proveedor_id
-    ))
-    return {'success': True}
+    except Exception as e:
+        print(f"Error actualizando proveedor {proveedor_id}: {e}")
+        raise
 
 
 def eliminar_proveedor_db(proveedor_id):
