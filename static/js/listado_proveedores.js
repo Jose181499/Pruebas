@@ -285,6 +285,13 @@ function aplicarFiltros() {
 // MODAL VER PROVEEDOR  ✅ NUEVO
 // =========================================
 window.abrirModalVerProveedor = async function(id) {
+    // ✅ Limpiar foco e instancias previas
+    document.activeElement?.blur();
+    document.querySelectorAll('.modal').forEach(m => {
+        const inst = bootstrap.Modal.getInstance(m);
+        if (inst) inst.dispose();
+    });
+
     const modalElement = document.getElementById('modalVerProveedor');
     const modalBody    = document.getElementById('modalVerBody');
 
@@ -293,16 +300,16 @@ window.abrirModalVerProveedor = async function(id) {
         return;
     }
 
-    // Mostrar spinner mientras carga
     modalBody.innerHTML = `
         <div class="text-center py-5">
             <div class="spinner-border text-primary"></div>
             <p class="mt-2">Cargando...</p>
         </div>`;
 
-     // ✅ Reutiliza la instancia existente si ya existe
     const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
     modal.show();
+
+    // ... resto igual
 
     try {
         const res  = await fetch(`/api/proveedores/${id}`);
