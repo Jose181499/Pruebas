@@ -226,7 +226,9 @@ function mostrarNotificacion(mensaje, tipo) {
         </div>
     `;
 
-    // Cerrar modal activo primero, luego abrir confirmación
+    // ✅ Antes de mostrar cualquier modal, quitar el foco del elemento activo
+    document.activeElement?.blur();
+    
     const modalActivo = document.querySelector('.modal.show');
     if (modalActivo) {
         const instancia = bootstrap.Modal.getInstance(modalActivo);

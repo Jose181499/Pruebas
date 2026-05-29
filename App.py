@@ -322,48 +322,48 @@ def ultimo_codigo():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-# ==================== CLIENTES API ROUTES ====================
+# # ==================== CLIENTES API ROUTES ====================
 
-@app.route('/api/clientes/buscar', methods=['GET'])
-def api_buscar_clientes():
-    """
-    API para buscar clientes por RUC, nombre comercial o razón social
-    """
-    try:
-        from database import buscar_clientes_completo  # ← Usar la función nueva
+# @app.route('/api/clientes/buscar', methods=['GET'])
+# def api_buscar_clientes():
+#     """
+#     API para buscar clientes por RUC, nombre comercial o razón social
+#     """
+#     try:
+#         from database import buscar_clientes_completo  # ← Usar la función nueva
         
-        busqueda = request.args.get('q', request.args.get('busqueda', '')).strip()
+#         busqueda = request.args.get('q', request.args.get('busqueda', '')).strip()
         
-        print(f"🔍 Buscando clientes - Búsqueda: '{busqueda or 'vacía'}'")
+#         print(f"🔍 Buscando clientes - Búsqueda: '{busqueda or 'vacía'}'")
         
-        # Usar la función CORREGIDA que incluye todos los campos
-        clientes = buscar_clientes_completo(busqueda, limit=50)
+#         # Usar la función CORREGIDA que incluye todos los campos
+#         clientes = buscar_clientes_completo(busqueda, limit=50)
         
-        print(f"✅ Se encontraron {len(clientes)} clientes")
+#         print(f"✅ Se encontraron {len(clientes)} clientes")
         
-        # Asegurar que los campos existan
-        for cliente in clientes:
-            if 'telefono_contacto' not in cliente or cliente['telefono_contacto'] is None:
-                cliente['telefono_contacto'] = ''
-            if 'email_contacto' not in cliente or cliente['email_contacto'] is None:
-                cliente['email_contacto'] = ''
-            if 'nombre_contacto' not in cliente or cliente['nombre_contacto'] is None:
-                cliente['nombre_contacto'] = ''
+#         # Asegurar que los campos existan
+#         for cliente in clientes:
+#             if 'telefono_contacto' not in cliente or cliente['telefono_contacto'] is None:
+#                 cliente['telefono_contacto'] = ''
+#             if 'email_contacto' not in cliente or cliente['email_contacto'] is None:
+#                 cliente['email_contacto'] = ''
+#             if 'nombre_contacto' not in cliente or cliente['nombre_contacto'] is None:
+#                 cliente['nombre_contacto'] = ''
         
-        return jsonify({
-            'success': True,
-            'data': clientes
-        })
+#         return jsonify({
+#             'success': True,
+#             'data': clientes
+#         })
         
-    except Exception as e:
-        print(f"❌ Error en api_buscar_clientes: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({
-            'success': False,
-            'error': str(e),
-            'data': []
-        }), 500
+#     except Exception as e:
+#         print(f"❌ Error en api_buscar_clientes: {e}")
+#         import traceback
+#         traceback.print_exc()
+#         return jsonify({
+#             'success': False,
+#             'error': str(e),
+#             'data': []
+#         }), 500
 
 @app.route('/api/clientes/<int:id>/direcciones', methods=['GET'])
 def api_obtener_direcciones_cliente(id):

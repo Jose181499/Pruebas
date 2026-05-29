@@ -300,7 +300,8 @@ window.abrirModalVerProveedor = async function(id) {
             <p class="mt-2">Cargando...</p>
         </div>`;
 
-    const modal = new bootstrap.Modal(modalElement);
+     // ✅ Reutiliza la instancia existente si ya existe
+    const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
     modal.show();
 
     try {
