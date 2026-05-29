@@ -130,17 +130,26 @@ def obtener_ordenes_recientes(limit=100):
         traceback.print_exc()
         return []
 
+# 🔥 FUNCIÓN CORREGIDA - Usa los nombres correctos de columnas de proveedores
 def obtener_orden_completa(orden_id):
     """Obtener orden de compra completa con cabecera y detalle"""
     try:
         conn = get_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
-        # Obtener cabecera
+        # 🔥 CORREGIDO: Usar los nombres correctos de columnas de proveedores
         cursor.execute("""
-            SELECT o.*, p.razon_social as proveedor, p.numero_documento as proveedor_ruc,
-                   p.direccion_fiscal, p.telefono_contacto, p.nombre_contacto, p.email_contacto,
-                   u.nombre_completo, u.email, u.telefono
+            SELECT 
+                o.*,
+                p.razon_social as proveedor,
+                p.ruc as proveedor_ruc,
+                p.direccion,
+                p.telefono,
+                p.contacto,
+                p.email,
+                u.nombre_completo,
+                u.email as user_email,
+                u.telefono as user_telefono
             FROM ordenes_compra o
             LEFT JOIN proveedores p ON o.proveedor_id = p.id
             LEFT JOIN usuarios u ON o.usuario_id = u.id
@@ -150,11 +159,20 @@ def obtener_orden_completa(orden_id):
         cabecera = cursor.fetchone()
         if not cabecera:
             conn.close()
+            print(f"❌ No se encontró la orden con ID: {orden_id}")
             return None
         
-        # Obtener detalle
+        print(f"✅ Orden {orden_id} encontrada")
+        
+        # Obtener detalle de productos
         cursor.execute("""
-            SELECT d.*, pr.codigo, pr.descripcion, pr.modelo, pr.marca, pr.unidad as unidad_medida
+            SELECT 
+                d.*,
+                pr.codigo,
+                pr.descripcion,
+                pr.modelo,
+                pr.marca,
+                pr.unidad as unidad_medida
             FROM orden_compra_detalle d
             LEFT JOIN productos pr ON d.producto_id = pr.id
             WHERE d.orden_id = %s
@@ -164,13 +182,27 @@ def obtener_orden_completa(orden_id):
         
         conn.close()
         
+        # Convertir a diccionario
+        cabecera_dict = dict(cabecera)
+        
+        # Renombrar campos para el frontend
+        if 'direccion' in cabecera_dict:
+            cabecera_dict['direccion_fiscal'] = cabecera_dict['direccion']
+        if 'telefono' in cabecera_dict:
+            cabecera_dict['telefono_proveedor'] = cabecera_dict['telefono']
+        if 'contacto' in cabecera_dict:
+            cabecera_dict['contacto_proveedor'] = cabecera_dict['contacto']
+        if 'email' in cabecera_dict:
+            cabecera_dict['email_proveedor'] = cabecera_dict['email']
+        
         return {
-            "cabecera": dict(cabecera),
+            "cabecera": cabecera_dict,
             "detalle": [dict(row) for row in detalle]
         }
         
     except Exception as e:
         print(f"🔥 Error en obtener_orden_completa: {str(e)}")
+        import traceback
         traceback.print_exc()
         return None
 
@@ -178,10 +210,10 @@ def buscar_proveedor_por_ruc(ruc):
     """Buscar proveedor por RUC"""
     try:
         query = """
-            SELECT id, razon_social, numero_documento, direccion_fiscal, 
-                   telefono_contacto, nombre_contacto, tipo_documento, email_contacto
+            SELECT id, razon_social, ruc as numero_documento, direccion, 
+                   telefono as telefono_contacto, contacto as nombre_contacto, email as email_contacto
             FROM proveedores 
-            WHERE numero_documento = %s
+            WHERE ruc = %s
         """
         resultado = db_query(query, (ruc,))
         return resultado[0] if resultado else None
@@ -438,26 +470,29 @@ def buscar_proveedores():
         
         if q and q.strip():
             query = """
-                SELECT id, razon_social, numero_documento, 
-                       direccion_fiscal, telefono_contacto, nombre_contacto, 
-                       tipo_documento, email_contacto
+                SELECT id, razon_social, ruc, direccion, 
+                       telefono, contacto, email
                 FROM proveedores 
-                WHERE razon_social ILIKE %s OR numero_documento ILIKE %s
+                WHERE razon_social ILIKE %s OR ruc ILIKE %s
                 LIMIT 20
             """
             proveedores = db_query(query, (f'%{q}%', f'%{q}%'))
         else:
             query = """
-                SELECT id, razon_social, numero_documento, 
-                       direccion_fiscal, telefono_contacto, nombre_contacto,
-                       tipo_documento, email_contacto
+                SELECT id, razon_social, ruc, direccion, 
+                       telefono, contacto, email
                 FROM proveedores 
                 LIMIT 20
             """
             proveedores = db_query(query)
         
         for proveedor in proveedores:
-            proveedor['proveedor_ruc'] = proveedor['numero_documento']
+            proveedor['proveedor_ruc'] = proveedor['ruc']
+            proveedor['numero_documento'] = proveedor['ruc']
+            proveedor['telefono_contacto'] = proveedor['telefono']
+            proveedor['nombre_contacto'] = proveedor['contacto']
+            proveedor['email_contacto'] = proveedor['email']
+            proveedor['direccion_fiscal'] = proveedor['direccion']
         
         return jsonify({
             'success': True,
@@ -633,7 +668,6 @@ def crear_proveedor():
         with db_tx() as conn:
             cur = conn.cursor()
             
-            # 🔥 CORREGIDO: Usar SOLO las columnas que existen en la tabla
             cur.execute("""
                 INSERT INTO proveedores 
                 (ruc, razon_social, razon_comercial, direccion, 
@@ -727,7 +761,7 @@ def guardar_orden_compra():
             total_sin_descuento = 0
             for p in productos:
                 cantidad = float(p.get("cantidad", 1))
-                precio = float(p.get("precio_unitario", 0))
+                precio = float(p.get("precio_venta_unitario", p.get("precio_unitario", 0)))
                 total_sin_descuento += cantidad * precio
             
             descuento = float(data.get("descuento_monto", 0))
@@ -798,7 +832,7 @@ def guardar_orden_compra():
                 # Insertar nuevos detalles
                 for idx, p in enumerate(productos):
                     cantidad = float(p.get("cantidad", 1))
-                    precio_unitario = float(p.get("precio_unitario", 0))
+                    precio_unitario = float(p.get("precio_venta_unitario", p.get("precio_unitario", 0)))
                     subtotal_producto = cantidad * precio_unitario
                     
                     cur.execute("""
@@ -901,7 +935,7 @@ def guardar_orden_compra():
                 # Insertar detalles
                 for idx, p in enumerate(productos):
                     cantidad = float(p.get("cantidad", 1))
-                    precio_unitario = float(p.get("precio_unitario", 0))
+                    precio_unitario = float(p.get("precio_venta_unitario", p.get("precio_unitario", 0)))
                     subtotal_producto = cantidad * precio_unitario
                     
                     cur.execute("""
@@ -944,11 +978,12 @@ def guardar_orden_compra():
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
+
+# 🔥 ENDPOINT API GET ORDEN CORREGIDO
 @compras_bp.route("/api/orden_compra/<int:orden_id>", methods=["GET"])
 def api_get_orden_compra(orden_id):
     """Obtener orden de compra por ID"""
     try:
-        # 🔥 LOG PARA DIAGNÓSTICO
         print(f"🔍 Buscando orden con ID: {orden_id}")
         
         data = obtener_orden_completa(orden_id)
@@ -961,22 +996,39 @@ def api_get_orden_compra(orden_id):
         detalle = data.get("detalle", [])
         
         print(f"✅ Orden {orden_id} encontrada. Proveedor: {cabecera.get('proveedor', 'N/A')}")
-        print(f"📦 Detalles: {len(detalle)} productos")
         
-        # Renombrar campos para que coincidan con el frontend
-        for item in detalle:
-            if 'precio_venta_unitario' in item:
-                item['precio_unitario'] = item['precio_venta_unitario']
-        
+        # Preparar respuesta para el frontend
         return jsonify({
             "success": True, 
             "data": {
-                **cabecera,
-                "detalle": detalle,
-                "proveedor": cabecera.get("proveedor", ""),
-                "proveedor_contacto": cabecera.get("contacto_proveedor", ""),
-                "email_contacto_proveedor": cabecera.get("email_proveedor", ""),
-                "telefono_contacto": cabecera.get("telefono_proveedor", "")
+                "id": cabecera.get("id"),
+                "numero_orden": cabecera.get("numero_orden"),
+                "codigo_orden": cabecera.get("codigo_orden"),
+                "correlativo": cabecera.get("correlativo"),
+                "fecha_creacion": cabecera.get("fecha_creacion"),
+                "estado": cabecera.get("estado"),
+                "subtotal": cabecera.get("subtotal"),
+                "igv": cabecera.get("igv"),
+                "total": cabecera.get("total"),
+                "proveedor_id": cabecera.get("proveedor_id"),
+                "proveedor": cabecera.get("proveedor"),
+                "proveedor_ruc": cabecera.get("proveedor_ruc"),
+                "proveedor_direccion": cabecera.get("direccion"),
+                "proveedor_contacto": cabecera.get("contacto"),
+                "telefono_contacto": cabecera.get("telefono"),
+                "email_contacto_proveedor": cabecera.get("email"),
+                "usuario_id": cabecera.get("usuario_id"),
+                "nombre_completo": cabecera.get("nombre_completo"),
+                "email": cabecera.get("user_email"),
+                "telefono": cabecera.get("user_telefono"),
+                "condicion_pago": cabecera.get("condicion_pago"),
+                "tiempo_entrega": cabecera.get("tiempo_entrega"),
+                "fecha_requerida": cabecera.get("fecha_requerida"),
+                "lugar_entrega": cabecera.get("lugar_entrega"),
+                "num_cotizacion": cabecera.get("num_cotizacion"),
+                "nota_compra": cabecera.get("nota_compra"),
+                "notas": cabecera.get("notas"),
+                "detalle": detalle
             }
         })
     except Exception as e:
@@ -1106,13 +1158,13 @@ def generar_pdf_orden_compra(orden_id):
             hora_actual=hora_actual,
             proveedor_razon_social=cabecera.get("proveedor") or cabecera.get("razon_social") or "",
             proveedor_ruc=cabecera.get("proveedor_ruc") or cabecera.get("numero_documento") or "",
-            proveedor_direccion=cabecera.get("direccion_fiscal") or "",
-            telefono_contacto=cabecera.get("telefono_proveedor") or "",
-            proveedor_contacto=cabecera.get("contacto_proveedor") or "",
-            email_contacto_proveedor=cabecera.get("email_proveedor") or "",
+            proveedor_direccion=cabecera.get("direccion") or "",
+            telefono_contacto=cabecera.get("telefono") or "",
+            proveedor_contacto=cabecera.get("contacto") or "",
+            email_contacto_proveedor=cabecera.get("email") or "",
             comprador_responsable=cabecera.get("nombre_completo") or "No asignado",
-            email_contacto_user=cabecera.get("email") or "",
-            telefono_contacto_user=cabecera.get("telefono") or "",
+            email_contacto_user=cabecera.get("user_email") or "",
+            telefono_contacto_user=cabecera.get("user_telefono") or "",
             condicion_pago=cabecera.get("condicion_pago") or "Contado",
             tiempo_entrega=cabecera.get("tiempo_entrega") or "No especificado",
             fecha_requerida=cabecera.get("fecha_requerida") or "No especificada",
@@ -1144,6 +1196,7 @@ def generar_pdf_orden_compra(orden_id):
         print("🔥 ERROR PDF:", e)
         return jsonify({"success": False, "error": str(e)}), 500
 
+
 @compras_bp.route("/api/sunat/consulta_proveedor", methods=["GET"])
 def consultar_sunat_proveedor():
     """Consulta a SUNAT para proveedores"""
@@ -1157,7 +1210,6 @@ def consultar_sunat_proveedor():
         return jsonify({'success': False, 'error': 'RUC inválido, debe tener 11 dígitos'}), 400
     
     try:
-        # API de apis.net.pe
         url = f'https://api.apis.net.pe/v1/ruc?numero={ruc}'
         
         headers = {
