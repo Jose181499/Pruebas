@@ -203,42 +203,104 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-// =====================================================
-// MOSTRAR CONFIRMACIÓN
-// =====================================================
-function mostrarNotificacion(mensaje, tipo) {
-    const body = document.getElementById('modalConfirmacionBody');
-    const modalEl = document.getElementById('modalConfirmacionProveedor');
+// =========================================
+// MODAL DE CONFIRMACIÓN - NUEVO PROVEEDOR
+// =========================================
+function mostrarModalConfirmacionProveedor(json, data) {
+    console.log("🔔 mostrarModalConfirmacionProveedor llamada");
 
-    if (!body || !modalEl) {
-        alert(mensaje);
+    const modalBody = document.getElementById('modalConfirmacionBody');
+    if (!modalBody) {
+        console.error("No se encontró el modalBody");
         return;
     }
 
-    const icono = tipo === 'exito'
-        ? `<i class="bi bi-check-circle-fill text-success fs-1"></i>`
-        : `<i class="bi bi-x-circle-fill text-danger fs-1"></i>`;
+    const ahora = new Date();
+    const fecha = ahora.toLocaleDateString('es-PE');
+    const hora = ahora.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
 
-    body.innerHTML = `
-        <div class="text-center py-3">
-            ${icono}
-            <p class="mt-3 fw-bold" style="white-space: pre-line;">${mensaje}</p>
+    const codigoProveedor = json.data?.codigo_proveedor || '---';
+    
+    modalBody.innerHTML = `
+        <div class="text-center mb-3">
+            <i class="bi bi-truck" style="font-size: 48px; color: #10b981;"></i>
+        </div>
+
+        <div class="alert alert-success text-center mb-3">
+            <strong>✅ ¡Proveedor registrado exitosamente!</strong>
+        </div>
+
+        <div class="row g-2">
+            <div class="col-6"><strong>Código Proveedor:</strong></div>
+            <div class="col-6"><span class="badge bg-secondary">${escapeHtml(codigoProveedor)}</span></div>
+        </div>
+        <div class="row g-2 mt-1">
+            <div class="col-6"><strong>RUC:</strong></div>
+            <div class="col-6"><span class="badge bg-info">${escapeHtml(data.ruc)}</span></div>
+        </div>
+        <div class="row g-2 mt-1">
+            <div class="col-6"><strong>Razón Social:</strong></div>
+            <div class="col-6">${escapeHtml(data.razon_social)}</div>
+        </div>
+        ${data.razon_comercial ? `
+        <div class="row g-2 mt-1">
+            <div class="col-6"><strong>Razón Comercial:</strong></div>
+            <div class="col-6">${escapeHtml(data.razon_comercial)}</div>
+        </div>` : ''}
+        ${data.direccion ? `
+        <div class="row g-2 mt-1">
+            <div class="col-6"><strong>Dirección Fiscal:</strong></div>
+            <div class="col-6">${escapeHtml(data.direccion)}</div>
+        </div>` : ''}
+
+        <hr class="my-3">
+
+        ${data.contacto ? `
+        <div class="row g-2 mt-1">
+            <div class="col-6"><strong>Persona de Contacto:</strong></div>
+            <div class="col-6">${escapeHtml(data.contacto)}
+                ${data.telefono ? `<br><small><i class="bi bi-telephone"></i> ${escapeHtml(data.telefono)}</small>` : ''}
+            </div>
+        </div>` : ''}
+
+        ${data.email ? `
+        <div class="row g-2 mt-1">
+            <div class="col-6"><strong>Email:</strong></div>
+            <div class="col-6">${escapeHtml(data.email)}</div>
+        </div>` : ''}
+
+        ${data.condicion_pago ? `
+        <div class="row g-2 mt-1">
+            <div class="col-6"><strong>Condición de Pago:</strong></div>
+            <div class="col-6">${escapeHtml(data.condicion_pago)}
+                ${data.tiempo_credito ? `<br><small>${escapeHtml(data.tiempo_credito)}</small>` : ''}
+            </div>
+        </div>` : ''}
+
+        <hr class="my-3">
+
+        <div class="row g-2 mt-1">
+            <div class="col-6"><strong>Fecha de Registro:</strong></div>
+            <div class="col-6">${fecha} ${hora}</div>
         </div>
     `;
 
-    // ✅ Antes de mostrar cualquier modal, quitar el foco del elemento activo
-    document.activeElement?.blur();
-    
-    const modalActivo = document.querySelector('.modal.show');
-    if (modalActivo) {
-        const instancia = bootstrap.Modal.getInstance(modalActivo);
-        instancia?.hide();
-        modalActivo.addEventListener('hidden.bs.modal', () => {
-            new bootstrap.Modal(modalEl).show();
-        }, { once: true });
+    // Abrir el modal correctamente
+    const modalEl = document.getElementById('modalConfirmacionProveedor'); // Asegúrate que este ID exista en tu HTML
+    if (modalEl) {
+        const modal = new bootstrap.Modal(modalEl, {
+            backdrop: 'static',
+            keyboard: true
+        });
+        modal.show();
+        console.log("✅ Modal de confirmación de proveedor abierto");
     } else {
-        new bootstrap.Modal(modalEl).show();
+        console.error("❌ No se encontró el modal #modalConfirmacionProveedor");
+        // Fallback: usar el modal genérico si existe
+        if (document.getElementById('modalConfirmacionProveedor')) {
+            mostrarNotificacion("Proveedor registrado correctamente", 'exito');
+        }
     }
- }
+}
 
 });
