@@ -512,8 +512,8 @@ def obtener_proveedor(id):
     """Obtener proveedor por ID"""
     try:
         query = """
-            SELECT id, razon_social, numero_documento, direccion_fiscal, 
-                   telefono_contacto, nombre_contacto, tipo_documento, email_contacto
+            SELECT id, razon_social, ruc as numero_documento, direccion, 
+                   telefono as telefono_contacto, contacto as nombre_contacto, email as email_contacto
             FROM proveedores 
             WHERE id = %s
         """
@@ -604,51 +604,50 @@ def crear_proveedor():
         data = request.json
         print(f"📝 Datos recibidos para crear proveedor: {data}")
         
-        tipo_documento = data.get('tipo_documento', 'RUC')
-        numero_documento = data.get('numero_documento')
+        # Obtener datos del frontend
+        ruc = data.get('numero_documento')  # RUC
         razon_social = data.get('razon_social')
-        nombre_comercial = data.get('nombre_comercial', '')
-        direccion_fiscal = data.get('direccion_fiscal', '')
-        telefono_contacto = data.get('telefono_contacto', '')
-        email_contacto = data.get('email_contacto', '')
-        nombre_contacto = data.get('nombre_contacto', '')
+        razon_comercial = data.get('nombre_comercial', '') or razon_social
+        direccion = data.get('direccion_fiscal', '')
+        telefono = data.get('telefono_contacto', '')
+        contacto = data.get('nombre_contacto', '')
+        email = data.get('email_contacto', '')
         
-        if not numero_documento:
-            return jsonify({'success': False, 'error': 'Número de documento requerido'}), 400
+        if not ruc:
+            return jsonify({'success': False, 'error': 'RUC requerido'}), 400
         
         if not razon_social:
             return jsonify({'success': False, 'error': 'Razón social requerida'}), 400
         
-        # 🔥 CORREGIDO: Usar 'ruc' en lugar de 'numero_documento' y 'direccion' en lugar de 'direccion_fiscal'
+        # Verificar si ya existe proveedor con ese RUC
         existente = db_query("""
             SELECT id FROM proveedores WHERE ruc = %s
-        """, (numero_documento,))
+        """, (ruc,))
         
         if existente:
             return jsonify({
                 'success': False, 
-                'error': f'Ya existe un proveedor con el RUC {numero_documento}'
+                'error': f'Ya existe un proveedor con el RUC {ruc}'
             }), 400
         
         with db_tx() as conn:
             cur = conn.cursor()
             
-            # 🔥 CORREGIDO: Usar los nombres correctos de columnas
+            # 🔥 CORREGIDO: Usar SOLO las columnas que existen en la tabla
             cur.execute("""
                 INSERT INTO proveedores 
-                (tipo_documento, ruc, razon_social, nombre_comercial, 
-                 direccion, telefono, contacto, email, activo)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, TRUE)
+                (ruc, razon_social, razon_comercial, direccion, 
+                 telefono, contacto, email, activo)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, TRUE)
                 RETURNING id
             """, (
-                tipo_documento, 
-                numero_documento,  # Esto va a la columna 'ruc'
-                razon_social, 
-                nombre_comercial,
-                direccion_fiscal,  # Esto va a la columna 'direccion'
-                telefono_contacto,  # Esto va a la columna 'telefono'
-                nombre_contacto,    # Esto va a la columna 'contacto'
-                email_contacto      # Esto va a la columna 'email'
+                ruc,
+                razon_social,
+                razon_comercial,
+                direccion,
+                telefono,
+                contacto,
+                email
             ))
             
             proveedor_id = cur.fetchone()[0]
@@ -660,7 +659,7 @@ def crear_proveedor():
             'data': {
                 'id': proveedor_id, 
                 'razon_social': razon_social,
-                'numero_documento': numero_documento
+                'numero_documento': ruc
             }
         })
         
@@ -669,6 +668,7 @@ def crear_proveedor():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
 @compras_bp.route("/api/proveedores/<int:proveedor_id>/direcciones", methods=["GET"])
 def obtener_direcciones_proveedor(proveedor_id):
     """Obtener direcciones de un proveedor"""
