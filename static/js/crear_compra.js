@@ -461,45 +461,54 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================
     // MODAL DE CONFIRMACIÓN
     // =========================
-    function mostrarModalConfirmacion(datos) {
-        const modalBody = document.getElementById('modalConfirmacionBody');
-        if (!modalBody) return;
-        
-        const ahora = new Date();
-        const fechaActual = ahora.toLocaleDateString('es-PE');
-        const horaActual = ahora.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
-        
-        modalBody.innerHTML = `
-            <div class="text-center mb-3"><i class="bi bi-check-circle-fill" style="font-size: 48px; color: #10b981;"></i></div>
-            <div class="alert alert-success"><strong>✅ ¡Orden de Compra guardada exitosamente!</strong></div>
-            <div class="row">
-                <div class="col-6"><strong>Número:</strong></div>
-                <div class="col-6">${datos.numero || datos.codigo_orden}</div>
-            </div>
-            <div class="row mt-2">
-                <div class="col-6"><strong>Tipo:</strong></div>
-                <div class="col-6">${datos.tipo || (esBorrador ? 'BORRADOR' : 'OFICIAL')}</div>
-            </div>
-            <div class="row mt-2">
-                <div class="col-6"><strong>Comprador:</strong></div>
-                <div class="col-6">${usuarioActual?.nombre_completo || 'No asignado'}</div>
-            </div>
-            <div class="row mt-2">
-                <div class="col-6"><strong>Fecha:</strong></div>
-                <div class="col-6">${fechaActual}</div>
-            </div>
-            <div class="row mt-2">
-                <div class="col-6"><strong>Hora:</strong></div>
-                <div class="col-6">${horaActual}</div>
-            </div>
-            <hr>
-            <div class="text-muted small"><i class="bi bi-info-circle"></i> El código es único y quedará registrado.</div>
-        `;
-        
-        const modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
-        modal.show();
-        
-        document.getElementById('btnDescargarPDFModal').onclick = () => {
+   function mostrarModalConfirmacion(datos) {
+    const modalBody = document.getElementById('modalConfirmacionBody');
+    if (!modalBody) return;
+    
+    const ahora = new Date();
+    const fechaActual = ahora.toLocaleDateString('es-PE');
+    const horaActual = ahora.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+    
+    modalBody.innerHTML = `
+        <div class="text-center mb-3">
+            <i class="bi bi-check-circle-fill" style="font-size: 48px; color: #10b981;"></i>
+        </div>
+        <div class="alert alert-success">
+            <strong>✅ ¡Orden de Compra guardada exitosamente!</strong>
+        </div>
+        <div class="row">
+            <div class="col-6"><strong>Número:</strong></div>
+            <div class="col-6">${datos.numero || datos.codigo_orden || 'N/A'}</div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-6"><strong>Tipo:</strong></div>
+            <div class="col-6">${datos.tipo || (esBorrador ? 'BORRADOR' : 'OFICIAL')}</div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-6"><strong>Comprador:</strong></div>
+            <div class="col-6">${usuarioActual?.nombre_completo || 'No asignado'}</div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-6"><strong>Fecha:</strong></div>
+            <div class="col-6">${fechaActual}</div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-6"><strong>Hora:</strong></div>
+            <div class="col-6">${horaActual}</div>
+        </div>
+        <hr>
+        <div class="text-muted small">
+            <i class="bi bi-info-circle"></i> El código es único y quedará registrado.
+        </div>
+    `;
+    
+    const modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
+    modal.show();
+    
+    // Botón para descargar PDF
+    const btnPDF = document.getElementById('btnDescargarPDFModal');
+    if (btnPDF) {
+        btnPDF.onclick = () => {
             const ordenId = document.getElementById('orden_compra_id')?.value;
             if (ordenId && !esBorrador) {
                 window.open(`/api/orden_compra/pdf/${ordenId}`, '_blank');
@@ -507,11 +516,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 mostrarNotificacion('⚠️ Debe convertir a oficial antes de generar PDF', 'warning');
             }
         };
-        
-        document.getElementById('btnNuevaOrdenModal').onclick = () => {
+    }
+    
+    // Botón para nueva orden
+    const btnNueva = document.getElementById('btnNuevaOrdenModal');
+    if (btnNueva) {
+        btnNueva.onclick = () => {
             window.location.href = '/crear_compra';
         };
     }
+}
 
     // =========================
     // ESTADO GLOBAL

@@ -696,45 +696,53 @@ def obtener_direcciones_proveedor(proveedor_id):
 
 @compras_bp.route("/api/orden_compra/guardar", methods=["POST"])
 def guardar_orden_compra():
-    """Guardar orden de compra"""
+    """Guardar orden de compra - VERSIÓN CORREGIDA"""
     data = request.json
+    print("📦 Datos recibidos en guardar_orden_compra:", data)
+    
     try:
+        # Validar datos requeridos
         proveedor_id = data.get("proveedor_id")
-        subtotal = data.get("subtotal", 0)
-        estado = data.get("estado", "pendiente")
-        igv = data.get("igv", 0)
-        total = data.get("total", 0)
-        notas = data.get("notas")
+        if not proveedor_id:
+            return jsonify({"success": False, "error": "proveedor_id es requerido"}), 400
+        
         usuario_id = data.get("usuario_id")
-        condicion_pago = data.get("condicion_pago", "Contado")
-        tiempo_entrega = data.get("tiempo_entrega")
-        fecha_requerida = data.get("fecha_requerida")
-        lugar_entrega = data.get("lugar_entrega")
-        num_cotizacion = data.get("num_cotizacion")
-        nota_compra = data.get("nota_compra")
+        if not usuario_id:
+            # Intentar obtener de la sesión
+            usuario_id = session.get('usuario_id')
+            if not usuario_id:
+                return jsonify({"success": False, "error": "usuario_id es requerido"}), 400
         
-        contacto_proveedor = data.get("proveedor_contacto", "")
-        telefono_proveedor = data.get("telefono_contacto", "")
-        email_proveedor = data.get("email_contacto_proveedor", "")
+        productos = data.get("productos", [])
+        if not productos:
+            return jsonify({"success": False, "error": "Debe agregar al menos un producto"}), 400
         
-        descuento_porcentaje = data.get("descuento_porcentaje", 0)
-        descuento_monto = data.get("descuento_monto", 0)
-        descuento_tipo = data.get("descuento_tipo", "porcentaje")
+        # Calcular totales si no vienen
+        subtotal = float(data.get("subtotal", 0))
+        igv = float(data.get("igv", 0))
+        total = float(data.get("total", 0))
         
-        codigo_orden = data.get("codigo_orden")
-        correlativo = data.get("correlativo")
-        es_borrador = data.get("es_borrador", False)
+        # Si los totales son 0, calcularlos
+        if total == 0 and productos:
+            total_sin_descuento = 0
+            for p in productos:
+                cantidad = float(p.get("cantidad", 1))
+                precio = float(p.get("precio_unitario", 0))
+                total_sin_descuento += cantidad * precio
+            
+            descuento = float(data.get("descuento_monto", 0))
+            total_con_descuento = total_sin_descuento - descuento
+            igv = total_con_descuento * 0.18
+            subtotal = total_con_descuento - igv
+            total = total_con_descuento
         
-        orden_id = data.get("id") or request.args.get('id')
+        orden_id = data.get("id")
         
-        if not orden_id:
-            orden_id = data.get("orden_compra_id")
-
         with db_tx() as conn:
             cur = conn.cursor()
             
             if orden_id:
-                # Actualizar orden existente
+                # ACTUALIZAR orden existente
                 cur.execute("""
                     UPDATE ordenes_compra 
                     SET proveedor_id = %s,
@@ -755,23 +763,44 @@ def guardar_orden_compra():
                         descuento_tipo = %s,
                         contacto_proveedor = %s,
                         telefono_proveedor = %s,
-                        email_proveedor = %s
+                        email_proveedor = %s,
+                        updated_at = NOW()
                     WHERE id = %s
+                    RETURNING id, codigo_orden, numero_orden
                 """, (
-                    proveedor_id, estado, subtotal, igv, total,
-                    condicion_pago, tiempo_entrega, fecha_requerida,
-                    lugar_entrega, num_cotizacion, nota_compra,
-                    usuario_id, notas, descuento_porcentaje,
-                    descuento_monto, descuento_tipo,
-                    contacto_proveedor, telefono_proveedor,
-                    email_proveedor, orden_id
+                    proveedor_id,
+                    data.get("estado", "pendiente"),
+                    subtotal,
+                    igv,
+                    total,
+                    data.get("condicion_pago", ""),
+                    data.get("tiempo_entrega", ""),
+                    data.get("fecha_requerida", ""),
+                    data.get("lugar_entrega", ""),
+                    data.get("num_cotizacion", ""),
+                    data.get("nota_compra", ""),
+                    usuario_id,
+                    data.get("notas", ""),
+                    float(data.get("descuento_porcentaje", 0)),
+                    float(data.get("descuento_monto", 0)),
+                    data.get("descuento_tipo", "porcentaje"),
+                    data.get("proveedor_contacto", ""),
+                    data.get("telefono_contacto", ""),
+                    data.get("email_contacto_proveedor", ""),
+                    orden_id
                 ))
+                
+                result = cur.fetchone()
                 
                 # Eliminar detalles antiguos
                 cur.execute("DELETE FROM orden_compra_detalle WHERE orden_id = %s", (orden_id,))
                 
                 # Insertar nuevos detalles
-                for p in data.get("productos", []):
+                for idx, p in enumerate(productos):
+                    cantidad = float(p.get("cantidad", 1))
+                    precio_unitario = float(p.get("precio_unitario", 0))
+                    subtotal_producto = cantidad * precio_unitario
+                    
                     cur.execute("""
                         INSERT INTO orden_compra_detalle (
                             orden_id, producto_id, cantidad, costo_unitario,
@@ -779,75 +808,102 @@ def guardar_orden_compra():
                             subtotal_venta, descuento_porcentaje,
                             precio_venta_con_descuento, subtotal_venta_con_descuento,
                             descuento_total, margen_final
-                        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     """, (
-                        orden_id, p["producto_id"], p["cantidad"],
-                        p.get("costo_unitario", 0), p.get("subtotal_costo", 0),
-                        p.get("margen_porcentaje", 20), p["precio_venta_unitario"],
-                        p.get("subtotal_venta", 0), p.get("descuento_porcentaje", 0),
-                        p.get("precio_venta_con_descuento", p["precio_venta_unitario"]),
-                        p.get("subtotal_venta_con_descuento", p.get("subtotal_venta", 0)),
-                        p.get("descuento_total", 0), p.get("margen_final", 20)
+                        orden_id,
+                        p.get("producto_id"),
+                        cantidad,
+                        p.get("costo_unitario", 0),
+                        p.get("subtotal_costo", 0),
+                        20,  # margen_porcentaje por defecto
+                        precio_unitario,
+                        subtotal_producto,
+                        0,  # descuento_porcentaje
+                        precio_unitario,
+                        subtotal_producto,
+                        0,  # descuento_total
+                        20   # margen_final
                     ))
                 
                 return jsonify({
                     "success": True,
-                    "data": {"id": orden_id, "actualizado": True}
+                    "data": {
+                        "id": orden_id,
+                        "codigo_orden": result[1] if result else None,
+                        "numero_orden": result[2] if result else None,
+                        "actualizado": True
+                    }
                 })
             
             else:
-                # Crear nueva orden
-                # Generar número de orden secuencial
-                row = db_query("SELECT numero_orden FROM ordenes_compra ORDER BY id DESC LIMIT 1")
-                if row:
-                    ultimo = row[0]["numero_orden"]
-                    numero_int = int(ultimo.split("-")[1]) + 1
-                else:
-                    numero_int = 1
-                numero = f"OC-{str(numero_int).zfill(5)}"
+                # CREAR nueva orden
+                # Obtener último número de orden
+                cur.execute("SELECT MAX(id) as ultimo FROM ordenes_compra")
+                row = cur.fetchone()
+                nuevo_numero = (row[0] or 0) + 1
+                numero_orden = f"OC-{nuevo_numero:05d}"
                 
-                # Generar código personalizado
+                # Generar código de orden
+                codigo_orden = data.get("codigo_orden")
                 if not codigo_orden:
-                    if es_borrador:
+                    if data.get("es_borrador", True):
                         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                         codigo_orden = f"TMP-COMPRA-{timestamp}"
                         correlativo = 0
                     else:
-                        usuario_query = "SELECT codigo_vendedor FROM usuarios WHERE id = %s"
-                        usuario = db_query(usuario_query, (usuario_id,))
-                        codigo_comprador = usuario[0]['codigo_vendedor'] if usuario else f"C{str(usuario_id).zfill(3)}"
-                        
-                        corr_query = "SELECT MAX(correlativo) as ultimo FROM ordenes_compra WHERE usuario_id = %s"
-                        ultimo_corr = db_query(corr_query, (usuario_id,))
-                        nuevo_corr = (ultimo_corr[0]['ultimo'] or 0) + 1
-                        
+                        # Código oficial
                         fecha = datetime.now()
-                        codigo_orden = f"OC-{codigo_comprador}-{fecha.year}{str(fecha.month).zfill(2)}{str(fecha.day).zfill(2)}-{str(nuevo_corr).zfill(4)}"
-                        correlativo = nuevo_corr
-
+                        codigo_orden = f"OC-{fecha.year}{str(fecha.month).zfill(2)}{str(fecha.day).zfill(2)}-{str(nuevo_numero).zfill(4)}"
+                        correlativo = nuevo_numero
+                
                 cur.execute("""
                     INSERT INTO ordenes_compra (
-                        numero_orden, proveedor_id, fecha_creacion, estado,
-                        subtotal, igv, total, condicion_pago, tiempo_entrega,
-                        fecha_requerida, lugar_entrega, num_cotizacion,
-                        nota_compra, usuario_id, notas, codigo_orden,
-                        correlativo, descuento_porcentaje, descuento_monto,
-                        descuento_tipo, contacto_proveedor, telefono_proveedor,
-                        email_proveedor
-                    ) VALUES (%s, %s, (NOW() AT TIME ZONE 'America/Lima'), %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    RETURNING id
+                        numero_orden, codigo_orden, correlativo, proveedor_id, usuario_id,
+                        estado, subtotal, igv, total, condicion_pago, tiempo_entrega,
+                        fecha_requerida, lugar_entrega, num_cotizacion, nota_compra,
+                        notas, descuento_porcentaje, descuento_monto, descuento_tipo,
+                        contacto_proveedor, telefono_proveedor, email_proveedor,
+                        fecha_creacion
+                    ) VALUES (
+                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                        %s, %s, %s, %s, %s, %s, %s, (NOW() AT TIME ZONE 'America/Lima')
+                    )
+                    RETURNING id, codigo_orden, numero_orden
                 """, (
-                    numero, proveedor_id, estado, subtotal, igv, total,
-                    condicion_pago, tiempo_entrega, fecha_requerida,
-                    lugar_entrega, num_cotizacion, nota_compra, usuario_id,
-                    notas, codigo_orden, correlativo, descuento_porcentaje,
-                    descuento_monto, descuento_tipo, contacto_proveedor,
-                    telefono_proveedor, email_proveedor
+                    numero_orden,
+                    codigo_orden,
+                    data.get("correlativo", nuevo_numero),
+                    proveedor_id,
+                    usuario_id,
+                    data.get("estado", "pendiente"),
+                    subtotal,
+                    igv,
+                    total,
+                    data.get("condicion_pago", ""),
+                    data.get("tiempo_entrega", ""),
+                    data.get("fecha_requerida", ""),
+                    data.get("lugar_entrega", ""),
+                    data.get("num_cotizacion", ""),
+                    data.get("nota_compra", ""),
+                    data.get("notas", ""),
+                    float(data.get("descuento_porcentaje", 0)),
+                    float(data.get("descuento_monto", 0)),
+                    data.get("descuento_tipo", "porcentaje"),
+                    data.get("proveedor_contacto", ""),
+                    data.get("telefono_contacto", ""),
+                    data.get("email_contacto_proveedor", "")
                 ))
-
-                nuevo_id = cur.fetchone()[0]
-
-                for p in data.get("productos", []):
+                
+                result = cur.fetchone()
+                nueva_orden_id = result[0]
+                codigo_generado = result[1]
+                
+                # Insertar detalles
+                for idx, p in enumerate(productos):
+                    cantidad = float(p.get("cantidad", 1))
+                    precio_unitario = float(p.get("precio_unitario", 0))
+                    subtotal_producto = cantidad * precio_unitario
+                    
                     cur.execute("""
                         INSERT INTO orden_compra_detalle (
                             orden_id, producto_id, cantidad, costo_unitario,
@@ -855,27 +911,38 @@ def guardar_orden_compra():
                             subtotal_venta, descuento_porcentaje,
                             precio_venta_con_descuento, subtotal_venta_con_descuento,
                             descuento_total, margen_final
-                        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     """, (
-                        nuevo_id, p["producto_id"], p["cantidad"],
-                        p.get("costo_unitario", 0), p.get("subtotal_costo", 0),
-                        p.get("margen_porcentaje", 20), p["precio_venta_unitario"],
-                        p.get("subtotal_venta", 0), p.get("descuento_porcentaje", 0),
-                        p.get("precio_venta_con_descuento", p["precio_venta_unitario"]),
-                        p.get("subtotal_venta_con_descuento", p.get("subtotal_venta", 0)),
-                        p.get("descuento_total", 0), p.get("margen_final", 20)
+                        nueva_orden_id,
+                        p.get("producto_id"),
+                        cantidad,
+                        p.get("costo_unitario", 0),
+                        p.get("subtotal_costo", 0),
+                        20,
+                        precio_unitario,
+                        subtotal_producto,
+                        0,
+                        precio_unitario,
+                        subtotal_producto,
+                        0,
+                        20
                     ))
-
+                
                 return jsonify({
                     "success": True,
-                    "data": {"id": nuevo_id, "numero": numero, "codigo_orden": codigo_orden}
+                    "data": {
+                        "id": nueva_orden_id,
+                        "codigo_orden": codigo_generado,
+                        "numero_orden": numero_orden,
+                        "nuevo": True
+                    }
                 })
-
+    
     except Exception as e:
-        print("🔥 ERROR:", e)
+        print("🔥 ERROR en guardar_orden_compra:", e)
+        import traceback
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
-
 
 @compras_bp.route("/api/orden_compra/<int:orden_id>", methods=["GET"])
 def api_get_orden_compra(orden_id):
