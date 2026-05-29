@@ -856,19 +856,37 @@ document.addEventListener('DOMContentLoaded', () => {
         return listaProductos;
     }
 
-    // =========================
-    // FUNCIONES DE BÚSQUEDA
-    // =========================
-    async function buscarClientes(q) {
-        try {
-            const res = await fetch(`/api/clientes/buscar?q=${encodeURIComponent(q)}`);
-            const json = await res.json();
-            return json.data || [];
-        } catch (error) {
-            console.error('Error buscando clientes:', error);
-            return [];
+  async function buscarClientes(q) {
+    try {
+        const res = await fetch(`/api/clientes/buscar?q=${encodeURIComponent(q)}`);
+        const json = await res.json();
+        
+        // 🔥 DEBUG: Ver qué datos llegan realmente
+        console.log('🔍 Buscando:', q);
+        console.log('📦 Datos completos:', json);
+        
+        if (json.data && json.data.length > 0) {
+            json.data.forEach((cliente, idx) => {
+                console.log(`Cliente ${idx + 1}:`, {
+                    id: cliente.id,
+                    razon_social: cliente.razon_social,
+                    telefono_contacto: cliente.telefono_contacto,
+                    email_contacto: cliente.email_contacto,
+                    nombre_contacto: cliente.nombre_contacto,
+                    // Verificar si son null explícitamente
+                    telefono_es_null: cliente.telefono_contacto === null,
+                    email_es_null: cliente.email_contacto === null,
+                    contacto_es_null: cliente.nombre_contacto === null
+                });
+            });
         }
+        
+        return json.data || [];
+    } catch (error) {
+        console.error('Error buscando clientes:', error);
+        return [];
     }
+}
 
     async function buscarProductos(q) {
         try {
