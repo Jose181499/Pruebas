@@ -93,7 +93,6 @@ function mostrarNotificacion(mensaje, tipo = 'exito') {
 // =========================================
 // NUEVO PROVEEDOR ERP
 // =========================================
-console.log("🔥 nuevo_proveedor.js cargado");
 
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -239,14 +238,14 @@ document.addEventListener('DOMContentLoaded', function () {
             this.value = this.value.replace(/[^\d+]/g, '');
         });
     }
-});
 
-// ========================================
-// GUARDAR PROVEEDOR (MODIFICADO con notificación y sin ID manual)
-// ========================================
-const btnGuardarProveedor = document.getElementById('btnGuardarProveedor');
 
-if (btnGuardarProveedor) {
+    // ========================================
+   // GUARDAR PROVEEDOR (MODIFICADO con notificación y sin ID manual)
+   // ========================================
+  const btnGuardarProveedor = document.getElementById('btnGuardarProveedor');
+
+  if (btnGuardarProveedor) {
     btnGuardarProveedor.addEventListener('click', async function () {
         console.log("🔥 CLICK GUARDAR");
 
@@ -288,7 +287,7 @@ if (btnGuardarProveedor) {
                 email: document.getElementById('email')?.value || '',
                 condicion_pago: document.getElementById('condicion_pago')?.value || '',
                 tiempo_credito: document.getElementById('tiempo_credito')?.value || '',
-                banco: document.querySelector('[name="banco"]')?.value || '',
+                banco: document.getElementById('banco')?.value || '',
                 numero_cuenta: document.getElementById('numero_cuenta')?.value || '',
                 cci: document.getElementById('cci')?.value || '',
                 lugar_recojo: lugarRecojo
@@ -328,4 +327,5 @@ if (btnGuardarProveedor) {
             mostrarNotificacion('❌ Error del servidor: ' + error.message, 'error');
         }
     });
-}
+  }
+});

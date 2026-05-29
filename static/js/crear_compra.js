@@ -461,71 +461,69 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================
     // MODAL DE CONFIRMACIÓN
     // =========================
-   function mostrarModalConfirmacion(datos) {
-    const modalBody = document.getElementById('modalConfirmacionBody');
-    if (!modalBody) return;
-    
-    const ahora = new Date();
-    const fechaActual = ahora.toLocaleDateString('es-PE');
-    const horaActual = ahora.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
-    
-    modalBody.innerHTML = `
-        <div class="text-center mb-3">
-            <i class="bi bi-check-circle-fill" style="font-size: 48px; color: #10b981;"></i>
-        </div>
-        <div class="alert alert-success">
-            <strong>✅ ¡Orden de Compra guardada exitosamente!</strong>
-        </div>
-        <div class="row">
-            <div class="col-6"><strong>Número:</strong></div>
-            <div class="col-6">${datos.numero || datos.codigo_orden || 'N/A'}</div>
-        </div>
-        <div class="row mt-2">
-            <div class="col-6"><strong>Tipo:</strong></div>
-            <div class="col-6">${datos.tipo || (esBorrador ? 'BORRADOR' : 'OFICIAL')}</div>
-        </div>
-        <div class="row mt-2">
-            <div class="col-6"><strong>Comprador:</strong></div>
-            <div class="col-6">${usuarioActual?.nombre_completo || 'No asignado'}</div>
-        </div>
-        <div class="row mt-2">
-            <div class="col-6"><strong>Fecha:</strong></div>
-            <div class="col-6">${fechaActual}</div>
-        </div>
-        <div class="row mt-2">
-            <div class="col-6"><strong>Hora:</strong></div>
-            <div class="col-6">${horaActual}</div>
-        </div>
-        <hr>
-        <div class="text-muted small">
-            <i class="bi bi-info-circle"></i> El código es único y quedará registrado.
-        </div>
-    `;
-    
-    const modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
-    modal.show();
-    
-    // Botón para descargar PDF
-    const btnPDF = document.getElementById('btnDescargarPDFModal');
-    if (btnPDF) {
-        btnPDF.onclick = () => {
-            const ordenId = document.getElementById('orden_compra_id')?.value;
-            if (ordenId && !esBorrador) {
-                window.open(`/api/orden_compra/pdf/${ordenId}`, '_blank');
-            } else {
-                mostrarNotificacion('⚠️ Debe convertir a oficial antes de generar PDF', 'warning');
-            }
-        };
+    function mostrarModalConfirmacion(datos) {
+        const modalBody = document.getElementById('modalConfirmacionBody');
+        if (!modalBody) return;
+        
+        const ahora = new Date();
+        const fechaActual = ahora.toLocaleDateString('es-PE');
+        const horaActual = ahora.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+        
+        modalBody.innerHTML = `
+            <div class="text-center mb-3">
+                <i class="bi bi-check-circle-fill" style="font-size: 48px; color: #10b981;"></i>
+            </div>
+            <div class="alert alert-success">
+                <strong>✅ ¡Orden de Compra guardada exitosamente!</strong>
+            </div>
+            <div class="row">
+                <div class="col-6"><strong>Número:</strong></div>
+                <div class="col-6">${datos.numero || datos.codigo_orden || 'N/A'}</div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-6"><strong>Tipo:</strong></div>
+                <div class="col-6">${datos.tipo || (esBorrador ? 'BORRADOR' : 'OFICIAL')}</div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-6"><strong>Comprador:</strong></div>
+                <div class="col-6">${usuarioActual?.nombre_completo || 'No asignado'}</div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-6"><strong>Fecha:</strong></div>
+                <div class="col-6">${fechaActual}</div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-6"><strong>Hora:</strong></div>
+                <div class="col-6">${horaActual}</div>
+            </div>
+            <hr>
+            <div class="text-muted small">
+                <i class="bi bi-info-circle"></i> El código es único y quedará registrado.
+            </div>
+        `;
+        
+        const modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
+        modal.show();
+        
+        const btnPDF = document.getElementById('btnDescargarPDFModal');
+        if (btnPDF) {
+            btnPDF.onclick = () => {
+                const ordenId = document.getElementById('orden_compra_id')?.value;
+                if (ordenId && !esBorrador) {
+                    window.open(`/api/orden_compra/pdf/${ordenId}`, '_blank');
+                } else {
+                    mostrarNotificacion('⚠️ Debe convertir a oficial antes de generar PDF', 'warning');
+                }
+            };
+        }
+        
+        const btnNueva = document.getElementById('btnNuevaOrdenModal');
+        if (btnNueva) {
+            btnNueva.onclick = () => {
+                window.location.href = '/crear_compra';
+            };
+        }
     }
-    
-    // Botón para nueva orden
-    const btnNueva = document.getElementById('btnNuevaOrdenModal');
-    if (btnNueva) {
-        btnNueva.onclick = () => {
-            window.location.href = '/crear_compra';
-        };
-    }
-}
 
     // =========================
     // ESTADO GLOBAL
@@ -557,7 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // OBTENER LISTA DE PRODUCTOS
+    // OBTENER LISTA DE PRODUCTOS - CORREGIDO
     // =========================
     function obtenerListaProductos() {
         const filas = document.querySelectorAll("#table-body tr");
@@ -570,8 +568,8 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             const cantidad = Number(getInput('.cantidad')) || 0;
-            const precio_unitario = Number(getInput('.precio_venta_unitario')) || 0;
-            const valor_total = cantidad * precio_unitario;
+            const precio_venta_unitario = Number(getInput('.precio_venta_unitario')) || 0;
+            const subtotal_venta = cantidad * precio_venta_unitario;
 
             const producto = {
                 producto_id: Number(getInput('.producto_id')) || null,
@@ -579,10 +577,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 descripcion: getInput('.descripcion') || '',
                 modelo: getInput('.modelo') || '',
                 marca: getInput('.marca') || '',
-                unidad_medida: getInput('.unidad_medida') || '',
+                unidad_medida: getInput('.unidad_medida') || 'UNIDAD',
                 cantidad: cantidad,
-                precio_unitario: precio_unitario,
-                valor_total: valor_total
+                precio_venta_unitario: precio_venta_unitario,
+                subtotal_venta: subtotal_venta,
+                costo_unitario: 0,
+                subtotal_costo: 0,
+                margen_porcentaje: 20,
+                descuento_porcentaje: 0,
+                precio_venta_con_descuento: precio_venta_unitario,
+                subtotal_venta_con_descuento: subtotal_venta,
+                descuento_total: 0,
+                margen_final: 20
             };
 
             listaProductos.push(producto);
@@ -605,7 +611,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 🔥 FUNCIÓN CORREGIDA: Convertir valores a números
     async function buscarProductos(q) {
         try {
             console.log('🔎 Buscando productos con:', q);
@@ -615,7 +620,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const productos = json.data || [];
             
-            // 🔥 Asegurar que los valores sean números
             return productos.map(p => ({
                 id: p.id,
                 codigo: p.codigo || '',
@@ -634,7 +638,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // GUARDAR ORDEN DE COMPRA
+    // GUARDAR ORDEN DE COMPRA - CORREGIDO
     // =========================
     async function guardarOrdenCompra() {
         const proveedor_id = Number(document.getElementById('proveedor_id')?.value || 0);
@@ -644,10 +648,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (listaProductos.length === 0) { mostrarNotificacion("⚠️ Agregue items", "warning"); return; }
         
         for (let i = 0; i < listaProductos.length; i++) {
-            if (!listaProductos[i].producto_id) { mostrarNotificacion(`⚠️ Falta seleccionar producto en la fila ${i + 1}`, "warning"); return; }
+            if (!listaProductos[i].producto_id) { 
+                mostrarNotificacion(`⚠️ Falta seleccionar producto en la fila ${i + 1}`, "warning"); 
+                return; 
+            }
         }
         
-        const totalSinDescuento = Number(document.getElementById('total_valor_venta')?.textContent || 0);
+        // Calcular total basado en los productos
+        let totalSinDescuento = 0;
+        for (const p of listaProductos) {
+            totalSinDescuento += p.subtotal_venta;
+        }
         
         const descuentoInput = document.getElementById('descuento_porcentaje_input');
         const descuentoTipo = document.getElementById('descuento_tipo');
@@ -659,7 +670,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (descuentoTipo && descuentoTipo.value === 'monto') {
                 descuentoMonto = Math.min(valorDescuento, totalSinDescuento);
-                descuentoPorcentaje = (descuentoMonto / totalSinDescuento) * 100;
+                descuentoPorcentaje = totalSinDescuento > 0 ? (descuentoMonto / totalSinDescuento) * 100 : 0;
             } else {
                 descuentoPorcentaje = valorDescuento;
                 descuentoMonto = totalSinDescuento * (descuentoPorcentaje / 100);
@@ -698,6 +709,8 @@ document.addEventListener('DOMContentLoaded', () => {
             telefono_contacto: document.getElementById('telefono_contacto')?.value || '',
             email_contacto_proveedor: document.getElementById('email_contacto_proveedor')?.value || ''
         };
+
+        console.log("📦 Payload enviado:", payload);
 
         const btnGuardar = esBorrador ? document.getElementById('btnGuardarBorrador') : document.getElementById('btnGuardarOficial');
         const textoOriginal = btnGuardar?.innerHTML;
@@ -749,93 +762,91 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================
     // CONVERTIR A OFICIAL
     // =========================
-  async function convertirAOficial() {
-    if (!esBorrador) { 
-        mostrarNotificacion("⚠️ Esta orden de compra ya es oficial", "warning"); 
-        return; 
-    }
-    
-    // 🔥 CAMBIO: Verificar que haya datos del proveedor (pueden ser de SUNAT sin guardar)
-    const proveedor_razon_social = document.getElementById('proveedor_razon_social')?.value.trim();
-    const proveedor_doc = document.getElementById('proveedor_doc')?.value.trim();
-    
-    if (!proveedor_razon_social) {
-        mostrarNotificacion("⚠️ Debe ingresar los datos del proveedor (Razón Social)", "warning");
-        return;
-    }
-    
-    if (!proveedor_doc) {
-        mostrarNotificacion("⚠️ Debe ingresar el RUC del proveedor", "warning");
-        return;
-    }
-    
-    const listaProductos = obtenerListaProductos();
-    if (listaProductos.length === 0) {
-        mostrarNotificacion("⚠️ Debe agregar al menos un producto antes de convertir a oficial", "warning");
-        return;
-    }
-    
-    for (let i = 0; i < listaProductos.length; i++) {
-        if (!listaProductos[i].precio_unitario || listaProductos[i].precio_unitario <= 0) {
-            mostrarNotificacion(`⚠️ El producto ${listaProductos[i].codigo || 'sin código'} no tiene precio válido`, "warning");
+    async function convertirAOficial() {
+        if (!esBorrador) { 
+            mostrarNotificacion("⚠️ Esta orden de compra ya es oficial", "warning"); 
+            return; 
+        }
+        
+        const proveedor_razon_social = document.getElementById('proveedor_razon_social')?.value.trim();
+        const proveedor_doc = document.getElementById('proveedor_doc')?.value.trim();
+        
+        if (!proveedor_razon_social) {
+            mostrarNotificacion("⚠️ Debe ingresar los datos del proveedor (Razón Social)", "warning");
             return;
         }
-    }
-    
-    if (!confirm("¿Convertir este borrador a orden de compra oficial?\n\nEsta acción generará un código único y definitivo.")) return;
-    
-    // 🔥 Si el proveedor no está guardado en BD, primero lo creamos automáticamente
-    let proveedor_id = document.getElementById('proveedor_id')?.value;
-    
-    if (!proveedor_id || proveedor_id === '') {
-        mostrarNotificacion("📝 Registrando proveedor automáticamente...", "info");
         
-        try {
-            const payload = {
-                tipo_documento: 'RUC',
-                numero_documento: proveedor_doc,
-                razon_social: proveedor_razon_social,
-                nombre_comercial: proveedor_razon_social,
-                direccion_fiscal: document.getElementById('proveedor_direccion')?.value || '',
-                telefono_contacto: document.getElementById('telefono_contacto')?.value || '',
-                email_contacto: document.getElementById('email_contacto_proveedor')?.value || '',
-                nombre_contacto: document.getElementById('proveedor_contacto')?.value || ''
-            };
-            
-            const response = await fetch('/api/proveedores/crear', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                proveedor_id = result.data.id;
-                document.getElementById('proveedor_id').value = proveedor_id;
-                mostrarNotificacion('✅ Proveedor registrado automáticamente', 'success');
-            } else {
-                mostrarNotificacion('❌ Error al registrar proveedor: ' + (result.error || 'Error desconocido'), 'danger');
+        if (!proveedor_doc) {
+            mostrarNotificacion("⚠️ Debe ingresar el RUC del proveedor", "warning");
+            return;
+        }
+        
+        const listaProductos = obtenerListaProductos();
+        if (listaProductos.length === 0) {
+            mostrarNotificacion("⚠️ Debe agregar al menos un producto antes de convertir a oficial", "warning");
+            return;
+        }
+        
+        for (let i = 0; i < listaProductos.length; i++) {
+            if (!listaProductos[i].precio_venta_unitario || listaProductos[i].precio_venta_unitario <= 0) {
+                mostrarNotificacion(`⚠️ El producto ${listaProductos[i].codigo || 'sin código'} no tiene precio válido`, "warning");
                 return;
             }
-        } catch (error) {
-            console.error('Error registrando proveedor:', error);
-            mostrarNotificacion('❌ Error al registrar proveedor automáticamente', 'danger');
-            return;
+        }
+        
+        if (!confirm("¿Convertir este borrador a orden de compra oficial?\n\nEsta acción generará un código único y definitivo.")) return;
+        
+        let proveedor_id = document.getElementById('proveedor_id')?.value;
+        
+        if (!proveedor_id || proveedor_id === '') {
+            mostrarNotificacion("📝 Registrando proveedor automáticamente...", "info");
+            
+            try {
+                const payload = {
+                    tipo_documento: 'RUC',
+                    numero_documento: proveedor_doc,
+                    razon_social: proveedor_razon_social,
+                    nombre_comercial: proveedor_razon_social,
+                    direccion_fiscal: document.getElementById('proveedor_direccion')?.value || '',
+                    telefono_contacto: document.getElementById('telefono_contacto')?.value || '',
+                    email_contacto: document.getElementById('email_contacto_proveedor')?.value || '',
+                    nombre_contacto: document.getElementById('proveedor_contacto')?.value || ''
+                };
+                
+                const response = await fetch('/api/proveedores/crear', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    proveedor_id = result.data.id;
+                    document.getElementById('proveedor_id').value = proveedor_id;
+                    mostrarNotificacion('✅ Proveedor registrado automáticamente', 'success');
+                } else {
+                    mostrarNotificacion('❌ Error al registrar proveedor: ' + (result.error || 'Error desconocido'), 'danger');
+                    return;
+                }
+            } catch (error) {
+                console.error('Error registrando proveedor:', error);
+                mostrarNotificacion('❌ Error al registrar proveedor automáticamente', 'danger');
+                return;
+            }
+        }
+        
+        const nuevoCodigo = await generarCodigoOficial();
+        if (nuevoCodigo) {
+            esBorrador = false;
+            actualizarNumeroOrdenUI(nuevoCodigo, false);
+            document.getElementById('estado').value = 'pendiente';
+            await guardarOrdenCompra();
+            mostrarNotificacion(`✅ Orden de compra convertida a OFICIAL\nNúmero: ${nuevoCodigo}`, "success");
+        } else {
+            mostrarNotificacion("❌ Error al generar código oficial. Intente nuevamente.", "danger");
         }
     }
-    
-    const nuevoCodigo = await generarCodigoOficial();
-    if (nuevoCodigo) {
-        esBorrador = false;
-        actualizarNumeroOrdenUI(nuevoCodigo, false);
-        document.getElementById('estado').value = 'pendiente';
-        await guardarOrdenCompra();
-        mostrarNotificacion(`✅ Orden de compra convertida a OFICIAL\nNúmero: ${nuevoCodigo}`, "success");
-    } else {
-        mostrarNotificacion("❌ Error al generar código oficial. Intente nuevamente.", "danger");
-    }
-}
 
     // =========================
     // GENERAR PDF
@@ -865,7 +876,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // SET PRODUCTO EN FILA - CORREGIDO
+    // SET PRODUCTO EN FILA
     // =========================
     function setProductoEnFila(row, p) {  
         const productoIdInput = row.querySelector('.producto_id');
@@ -884,7 +895,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (marcaInput) marcaInput.value = p.marca || "";
         if (unidadMedidaInput) unidadMedidaInput.value = p.unidad_medida || "UNIDAD";
         
-        // 🔥 CORREGIDO: Convertir a número y validar
         if (precioVentaInput) {
             let precio = parseFloat(p.precio_unitario);
             precioVentaInput.value = isNaN(precio) ? 0 : precio;
@@ -935,9 +945,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // =========================
-    // AUTOCOMPLETE PRODUCTOS - CORREGIDO
-    // =========================
     function attachProductoAutocomplete(row) {
         const input = row.querySelector('.codigo_producto');
         
@@ -965,7 +972,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     return; 
                 }
 
-                // 🔥 CORREGIDO: Usar parseFloat para mostrar el precio correctamente
                 const html = productos.map(p => {
                     const precio = parseFloat(p.precio_unitario) || 0;
                     return `<div class="item" 
@@ -1446,7 +1452,6 @@ document.addEventListener('DOMContentLoaded', () => {
         btnBuscarSunat.addEventListener('click', autocompletarConSunat);
     }
 
-    // Botón confirmar modificar
     document.getElementById('btn-confirmar-modificar')?.addEventListener('click', function() {
         const modalElement = document.getElementById('modalModificar');
         const modal = bootstrap.Modal.getInstance(modalElement);
@@ -1456,7 +1461,6 @@ document.addEventListener('DOMContentLoaded', () => {
         mostrarNotificacion('✅ Orden habilitada para modificación', 'success');
     });
 
-    // Botón aprobar
     document.getElementById('btnAprobado')?.addEventListener('click', async function() {
         const ordenId = document.getElementById('orden_compra_id')?.value;
         if (!ordenId || ordenId === 'None') {
@@ -1473,7 +1477,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Escuchar cambios en el select de estado
     const estadoSelect = document.getElementById('estado');
     if (estadoSelect) {
         estadoSelect.addEventListener('change', function() {
