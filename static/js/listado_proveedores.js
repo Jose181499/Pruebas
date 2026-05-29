@@ -285,12 +285,12 @@ function aplicarFiltros() {
 // MODAL VER PROVEEDOR  ✅ NUEVO
 // =========================================
 window.abrirModalVerProveedor = async function(id) {
-    // ✅ Limpiar foco e instancias previas
     document.activeElement?.blur();
-    document.querySelectorAll('.modal').forEach(m => {
-        const inst = bootstrap.Modal.getInstance(m);
-        if (inst) inst.hide();
-    });
+    
+    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('padding-right');
 
     const modalElement = document.getElementById('modalVerProveedor');
     const modalBody    = document.getElementById('modalVerBody');
@@ -306,85 +306,81 @@ window.abrirModalVerProveedor = async function(id) {
             <p class="mt-2">Cargando...</p>
         </div>`;
 
-    const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
-    modal.show();
+    setTimeout(async () => {
+        const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+        modal.show();
 
-    // ... resto igual
+        try {
+            const res  = await fetch(`/api/proveedores/${id}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    try {
-        const res  = await fetch(`/api/proveedores/${id}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const json = await res.json();
+            if (!json.success || !json.data) throw new Error(json.error || "Sin datos");
 
-        const json = await res.json();
-        if (!json.success || !json.data) throw new Error(json.error || "Sin datos");
+            const p = json.data;
 
-        const p = json.data;
+            const fila = (label, valor) => `
+                <div class="col-md-4 mb-3">
+                    <small class="text-muted d-block fw-bold">${label}</small>
+                    <span>${escapeHtml(valor) || '<span class="text-muted">—</span>'}</span>
+                </div>`;
 
-        const fila = (label, valor) => `
-            <div class="col-md-4 mb-3">
-                <small class="text-muted d-block fw-bold">${label}</small>
-                <span>${escapeHtml(valor) || '<span class="text-muted">—</span>'}</span>
-            </div>`;
-
-        modalBody.innerHTML = `
-            <!-- Encabezado del proveedor -->
-            <div class="d-flex align-items-center gap-3 mb-4 p-3"
-                 style="background: linear-gradient(135deg,#111827,#1f2937); border-radius:12px; color:white;">
-                <div style="width:55px;height:55px;border-radius:12px;
-                            background:linear-gradient(135deg,#d90429,#ef233c);
-                            display:flex;align-items:center;justify-content:center;font-size:22px;">
-                    🏢
+            modalBody.innerHTML = `
+                <div class="d-flex align-items-center gap-3 mb-4 p-3"
+                     style="background: linear-gradient(135deg,#111827,#1f2937); border-radius:12px; color:white;">
+                    <div style="width:55px;height:55px;border-radius:12px;
+                                background:linear-gradient(135deg,#d90429,#ef233c);
+                                display:flex;align-items:center;justify-content:center;font-size:22px;">
+                        🏢
+                    </div>
+                    <div>
+                        <h5 class="mb-0">${escapeHtml(p.razon_social)}</h5>
+                        <small style="color:#cbd5e1;">
+                            ${escapeHtml(p.codigo_proveedor) || ''} · RUC: ${p.ruc || p.numero_documento || '—'}
+                        </small>
+                    </div>
                 </div>
-                <div>
-                    <h5 class="mb-0">${escapeHtml(p.razon_social)}</h5>
-                    <small style="color:#cbd5e1;">
-                        ${escapeHtml(p.codigo_proveedor) || ''} · RUC: ${p.ruc || p.numero_documento || '—'}
-                    </small>
+
+                <h6 class="fw-bold mb-3" style="border-bottom:2px solid #d90429; padding-bottom:6px; display:inline-block;">
+                    📋 Información General
+                </h6>
+                <div class="row mb-4">
+                    ${fila('Razón Social',    p.razon_social)}
+                    ${fila('Razón Comercial', p.razon_comercial)}
+                    ${fila('RUC',             p.ruc || p.numero_documento)}
+                    ${fila('Dirección',       p.direccion)}
+                    ${fila('Contacto',        p.contacto)}
+                    ${fila('Teléfono',        p.telefono)}
+                    ${fila('Email',           p.email)}
+                    ${fila('Condición Pago',  p.condicion_pago)}
+                    ${p.condicion_pago === 'Credito' ? fila('Tiempo Crédito', p.tiempo_credito) : ''}
                 </div>
-            </div>
 
-            <!-- Información General -->
-            <h6 class="fw-bold mb-3" style="border-bottom:2px solid #d90429; padding-bottom:6px; display:inline-block;">
-                📋 Información General
-            </h6>
-            <div class="row mb-4">
-                ${fila('Razón Social',    p.razon_social)}
-                ${fila('Razón Comercial', p.razon_comercial)}
-                ${fila('RUC',             p.ruc || p.numero_documento)}
-                ${fila('Dirección',       p.direccion)}
-                ${fila('Contacto',        p.contacto)}
-                ${fila('Teléfono',        p.telefono)}
-                ${fila('Email',           p.email)}
-                ${fila('Condición Pago',  p.condicion_pago)}
-                ${p.condicion_pago === 'Credito' ? fila('Tiempo Crédito', p.tiempo_credito) : ''}
-            </div>
+                <h6 class="fw-bold mb-3" style="border-bottom:2px solid #d90429; padding-bottom:6px; display:inline-block;">
+                    🏦 Información Bancaria
+                </h6>
+                <div class="row mb-4">
+                    ${fila('Banco',       p.banco)}
+                    ${fila('Nro. Cuenta', p.numero_cuenta)}
+                    ${fila('CCI',         p.cci)}
+                </div>
 
-            <!-- Información Bancaria -->
-            <h6 class="fw-bold mb-3" style="border-bottom:2px solid #d90429; padding-bottom:6px; display:inline-block;">
-                🏦 Información Bancaria
-            </h6>
-            <div class="row mb-4">
-                ${fila('Banco',          p.banco)}
-                ${fila('Nro. Cuenta',    p.numero_cuenta)}
-                ${fila('CCI',            p.cci)}
-            </div>
+                <h6 class="fw-bold mb-3" style="border-bottom:2px solid #d90429; padding-bottom:6px; display:inline-block;">
+                    🚚 Información Logística
+                </h6>
+                <div class="row">
+                    ${fila('Lugar de Recojo', p.lugar_recojo)}
+                </div>`;
 
-            <!-- Información Logística -->
-            <h6 class="fw-bold mb-3" style="border-bottom:2px solid #d90429; padding-bottom:6px; display:inline-block;">
-                🚚 Información Logística
-            </h6>
-            <div class="row">
-                ${fila('Lugar de Recojo', p.lugar_recojo)}
-            </div>`;
-
-    } catch (error) {
-        console.error("Error al cargar detalle:", error);
-        modalBody.innerHTML = `
-            <div class="text-center py-5 text-danger">
-                <i class="bi bi-exclamation-triangle-fill fs-1"></i>
-                <p class="mt-2">Error al cargar el detalle del proveedor</p>
-            </div>`;
-    }
+        } catch (error) {
+            console.error("Error al cargar detalle:", error);
+            modalBody.innerHTML = `
+                <div class="text-center py-5 text-danger">
+                    <i class="bi bi-exclamation-triangle-fill fs-1"></i>
+                    <p class="mt-2">Error al cargar el detalle del proveedor</p>
+                </div>`;
+        }
+    }, 300);
 };
 
 // =========================================
