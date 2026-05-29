@@ -726,7 +726,7 @@ def buscar_clientes_paginado(tipo_documento='', busqueda='', pagina=1, por_pagin
             """
             count_params = []
             
-            # 🔥 CORREGIDO: Añadir los campos de contacto del cliente principal
+            # 🔥 IMPORTANTE: Seleccionar TODOS los campos necesarios
             data_query = """
                 SELECT 
                     id,
@@ -738,9 +738,9 @@ def buscar_clientes_paginado(tipo_documento='', busqueda='', pagina=1, por_pagin
                     codigo_cliente,
                     activo,
                     fecha_creacion,
-                    telefono_contacto,     -- ← AGREGADO
-                    email_contacto,        -- ← AGREGADO  
-                    nombre_contacto        -- ← AGREGADO
+                    telefono_contacto,
+                    email_contacto,
+                    nombre_contacto
                 FROM clientes
                 WHERE activo = TRUE
             """
@@ -777,8 +777,15 @@ def buscar_clientes_paginado(tipo_documento='', busqueda='', pagina=1, por_pagin
             data_query += " ORDER BY id DESC LIMIT %s OFFSET %s"
             params.extend([por_pagina, offset])
             
+            print(f"🔍 EJECUTANDO QUERY: {data_query}")
+            print(f"📊 PARAMS: {params}")
+            
             cur.execute(data_query, params)
             clientes = cur.fetchall()
+            
+            print(f"📋 CLIENTES ENCONTRADOS: {len(clientes)}")
+            for c in clientes:
+                print(f"  - {c.get('razon_social')}: tel={c.get('telefono_contacto')}, email={c.get('email_contacto')}, contacto={c.get('nombre_contacto')}")
             
             # Obtener contactos y puntos para cada cliente
             resultado = []
@@ -817,6 +824,8 @@ def buscar_clientes_paginado(tipo_documento='', busqueda='', pagina=1, por_pagin
             
     except Exception as e:
         print(f"❌ Error en buscar_clientes_paginado: {e}")
+        import traceback
+        traceback.print_exc()
         return {
             'data': [],
             'total': 0,
