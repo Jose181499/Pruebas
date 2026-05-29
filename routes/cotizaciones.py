@@ -208,6 +208,10 @@ def buscar_usuarios():
 @cotizaciones_bp.route("/api/clientes/buscar", methods=["GET"])
 def buscar_clientes():
     """Buscar clientes por nombre o documento - VERSIÓN CORREGIDA"""
+    print("=" * 60)
+    print("🎯 ESTA ES LA VERSIÓN CORREGIDA DE cotizaciones.py")
+    print("=" * 60)
+    
     try:
         q = request.args.get('q', '')
         
@@ -255,6 +259,10 @@ def buscar_clientes():
             cliente['cliente_ruc'] = cliente['numero_documento']
         
         print(f"📊 PRIMER CLIENTE:", clientes[0] if clientes else "Ninguno")
+        if clientes:
+            print(f"   - telefono_contacto: {clientes[0].get('telefono_contacto')}")
+            print(f"   - nombre_contacto: {clientes[0].get('nombre_contacto')}")
+            print(f"   - email_contacto: {clientes[0].get('email_contacto')}")
         
         return jsonify({
             'success': True,
@@ -269,8 +277,6 @@ def buscar_clientes():
             'success': False,
             'error': str(e)
         }), 500
-
-
 # ==========================================
 # ENDPOINT: BUSCAR CLIENTE POR RUC EXACTO
 # ==========================================
