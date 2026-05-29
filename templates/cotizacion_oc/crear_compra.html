@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Cotización - ERP KCF</title>
+
+    <!-- BOOTSTRAP -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- ICONOS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- FUENTE -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --rojo: #d90429;
+            --rojo-oscuro: #b00223;
+            --negro: #111827;
+            --gris: #6b7280;
+            --gris-claro: #f3f4f6;
+            --fondo: #f8fafc;
+            --verde: #10b981;
+            --azul: #3b82f6;
+            --amarillo: #f59e0b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+            min-height: 100vh;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--rojo);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--rojo-oscuro);
+        }
+
+        .erp-navbar {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .erp-logo-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .erp-logo {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--rojo), #ff4d6d);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            transition: transform 0.3s ease;
+        }
+        .erp-logo:hover {
+            transform: scale(1.05);
+        }
+
+        .erp-company {
+            color: white;
+            font-weight: 800;
+            font-size: 22px;
+            letter-spacing: -0.5px;
+        }
+
+        .erp-system {
+            color: #94a3b8;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        .erp-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .erp-status {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 8px 20px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .estado-en-proceso {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        .estado-generada {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        .estado-aceptada {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .estado-rechazada {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .hero-card {
+            background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
+            padding: 32px;
+            border-radius: 24px;
+            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .hero-title {
+            font-weight: 800;
+            font-size: 28px;
+            margin: 0;
+            background: linear-gradient(135deg, var(--negro), #374151);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            color: var(--gris);
+            margin-top: 8px;
+            font-size: 14px;
+        }
+
+        .hero-number {
+            text-align: right;
+            background: var(--gris-claro);
+            padding: 15px 25px;
+            border-radius: 20px;
+        }
+
+        .number-label {
+            font-size: 11px;
+            color: var(--gris);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .number-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--negro);
+        }
+
+        .badge-warning {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            color: #92400e;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #065f46;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .btn-toolbar {
+            border-radius: 12px;
+            padding: 10px 24px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            border: none;
+        }
+        .btn-toolbar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .btn-toolbar:disabled {
+            opacity: 0.5;
+            transform: none;
+        }
+
+        .erp-card {
+            background: white;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            height: 100%;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .erp-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header-custom {
+            background: linear-gradient(135deg, #1f2937, #111827);
+            color: white;
+            padding: 16px 24px;
+            font-weight: 700;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-header-custom i {
+            font-size: 20px;
+        }
+        .card-header-custom.red {
+            background: linear-gradient(135deg, var(--rojo), #ef233c);
+        }
+        .card-header-custom.green {
+            background: linear-gradient(135deg, #059669, var(--verde));
+        }
+        .card-header-custom.dark {
+            background: linear-gradient(135deg, #1f2937, #0f172a);
+        }
+
+        .card-body-custom {
+            padding: 24px;
+        }
+
+        .custom-input {
+            border-radius: 12px !important;
+            border: 1.5px solid #e5e7eb;
+            padding: 10px 14px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        .custom-input:focus {
+            border-color: var(--rojo);
+            box-shadow: 0 0 0 3px rgba(217, 4, 41, 0.1);
+            outline: none;
+        }
+        .custom-input:disabled {
+            background-color: #f3f4f6;
+            opacity: 0.7;
+        }
+
+        .table-modern {
+            margin: 0;
+            width: 100%;
+        }
+        .table-modern thead th {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: white;
+            border: none;
+            padding: 12px 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+        .table-modern tbody td {
+            padding: 8px 4px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+            text-align: center;
+            font-size: 12px;
+        }
+        .table-modern tbody tr:hover {
+            background: linear-gradient(90deg, rgba(217, 4, 41, 0.03), rgba(217, 4, 41, 0.06));
+        }
+        .table-modern input, .table-modern select {
+            width: 100%;
+            padding: 6px 6px;
+            border-radius: 8px;
+            border: 1.5px solid #e5e7eb;
+            font-size: 12px;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        .table-modern input:focus, .table-modern select:focus {
+            border-color: var(--rojo);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(217, 4, 41, 0.1);
+        }
+        .table-modern input:disabled {
+            background-color: #f3f4f6;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #ffffff, #fefefe);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .summary-card h4 {
+            font-weight: 800;
+            margin-bottom: 20px;
+            font-size: 18px;
+            color: var(--negro);
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .summary-row.total {
+            border-bottom: none;
+            font-size: 18px;
+            margin-top: 10px;
+            padding-top: 18px;
+            border-top: 2px solid var(--rojo);
+            color: var(--rojo);
+        }
+
+        .descuento-personalizado {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-top: 15px;
+        }
+
+        .btn-del {
+            background: #fee2e2;
+            border: none;
+            border-radius: 8px;
+            padding: 5px 10px;
+            color: var(--rojo);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+        }
+        .btn-del:hover {
+            background: #fecaca;
+            transform: scale(1.05);
+        }
+
+        #portalSuggestions {
+            position: fixed;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.2);
+            z-index: 10000;
+            display: none;
+            max-height: 350px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+        }
+        #portalSuggestions .item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background 0.2s ease;
+        }
+        #portalSuggestions .item:hover {
+            background: linear-gradient(90deg, #fef2f2, #fee2e2);
+        }
+        #portalSuggestions .item strong {
+            display: block;
+            font-size: 14px;
+            color: var(--negro);
+        }
+        #portalSuggestions .item .meta {
+            font-size: 12px;
+            color: var(--gris);
+            margin-top: 4px;
+        }
+        #portalSuggestions .empty {
+            padding: 16px;
+            text-align: center;
+            color: var(--gris);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .opacity-50 {
+            opacity: 0.5;
+        }
+
+        .form-label {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 6px;
+            color: var(--negro);
+        }
+
+        @media (max-width: 768px) {
+            .erp-navbar {
+                padding: 12px 16px;
+                flex-direction: column;
+                gap: 12px;
+            }
+            .hero-card {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+            .hero-number {
+                text-align: center;
+                width: 100%;
+            }
+            .table-modern {
+                font-size: 10px;
+            }
+            .table-modern thead th,
+            .table-modern tbody td {
+                padding: 6px 2px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR ERP -->
+    <div class="erp-navbar">
+        <div class="erp-logo-section">
+            <div class="erp-logo"><i class="bi bi-building"></i></div>
+            <div>
+                <div class="erp-company">KCF CORPORACION</div>
+                <div class="erp-system">ERP Comercial · Gestión de Cotizaciones</div>
+            </div>
+        </div>
+        <div class="erp-right">
+            <div class="erp-status estado-en-proceso" id="estado_fixed">
+                <i class="bi bi-circle-fill"></i>
+                <span id="estado_texto">EN PROCESO</span>
+            </div>
+            <a href="/cotizacion" class="btn btn-dark">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="container-fluid py-4">
+        <input type="hidden" id="cotizacion_id" value="{{ cotizacion_id if cotizacion_id else '' }}">
+        <input type="hidden" id="modo_consulta" value="">
+        <input type="hidden" id="usuario_id" value="">
+        <input type="hidden" id="descuento_porcentaje" value="0">
+
+        <script>
+            console.log("🔍 Template - cotizacion_id recibido:", "{{ cotizacion_id if cotizacion_id else 'No hay ID' }}");
+        </script>
+
+        <!-- HERO -->
+        <div class="hero-card mb-4">
+            <div class="hero-content">
+                <h1 class="hero-title">Crear Cotización</h1>
+                <div class="hero-subtitle">
+                    <i class="bi bi-building"></i> Sistema ERP Comercial · Gestión moderna de ventas
+                </div>
+            </div>
+            <div class="hero-number">
+                <div class="number-label">
+                    <i class="bi bi-hash"></i> NÚMERO DE COTIZACIÓN
+                </div>
+                <div class="number-value" id="numero_cotizacion">Se asigna automáticamente</div>
+                <div class="number-label mt-2">
+                    <i class="bi bi-person-badge"></i> CÓDIGO VENDEDOR
+                </div>
+                <div class="number-value small" id="codigo_vendedor">---</div>
+                <div class="number-label mt-2">
+                    <i class="bi bi-file-text"></i> TIPO DOCUMENTO
+                </div>
+                <div class="number-value small" id="tipo_documento">
+                    <span class="badge-warning"><i class="bi bi-pencil"></i> BORRADOR</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTONES DE ACCIÓN -->
+        <div class="action-toolbar mb-4">
+            <div class="d-flex flex-wrap gap-2">
+                <button class="btn btn-warning btn-toolbar" id="btnGuardarBorrador">
+                    <i class="bi bi-save-fill"></i> Guardar Borrador
+                </button>
+                <button class="btn btn-danger btn-toolbar" id="btnGuardarOficial">
+                    <i class="bi bi-file-check-fill"></i> Convertir a Oficial
+                </button>
+                <button class="btn btn-primary btn-toolbar" id="btnPdf" disabled>
+                    <i class="bi bi-file-earmark-pdf-fill"></i> PDF
+                </button>
+                <button class="btn btn-warning btn-toolbar" id="btnModificar" disabled>
+                    <i class="bi bi-pencil-square"></i> Modificar
+                </button>
+                <button class="btn btn-success btn-toolbar" id="btnAceptada" disabled>
+                    <i class="bi bi-check-circle-fill"></i> Aceptada
+                </button>
+            </div>
+        </div>
+
+        <!-- SECCIÓN DE DOS COLUMNAS: CLIENTE + CONDICIONES -->
+        <div class="row g-4">
+            <!-- COLUMNA IZQUIERDA: INFORMACIÓN DEL CLIENTE -->
+            <div class="col-xl-6">
+                <div class="erp-card">
+                    <div class="card-header-custom">
+                        <i class="bi bi-people-fill"></i> Información del Cliente
+                    </div>
+                    <div class="card-body-custom">
+                        <input type="hidden" id="cliente_id" value="">
+                        
+                        <!-- BUSCADOR POR RUC -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <label class="form-label">
+                                    <i class="bi bi-search"></i> Buscar Cliente por RUC
+                                </label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control custom-input" id="buscar_ruc" placeholder="Ingrese RUC de 11 dígitos">
+                                    <button class="btn btn-primary" type="button" id="btnBuscarClientePorRuc">
+                                        <i class="bi bi-search"></i> Buscar
+                                    </button>
+                                    <button class="btn btn-outline-secondary" type="button" id="btnLimpiarCliente" title="Limpiar cliente">
+                                        <i class="bi bi-x-circle"></i> Limpiar
+                                    </button>
+                                </div>
+                                <small class="text-muted mt-2 d-block">
+                                    <i class="bi bi-info-circle"></i> Ingrese el RUC y presione buscar para autocompletar los datos del cliente desde SUNAT
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- DATOS DEL CLIENTE -->
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="bi bi-card-text"></i> RUC / DNI</label>
+                                <input type="text" class="form-control custom-input" id="cliente_doc" placeholder="Documento">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="bi bi-building"></i> Razón Social <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control custom-input" id="cliente_razon_social" placeholder="Escriba para buscar cliente..." autocomplete="off">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label"><i class="bi bi-geo-alt"></i> Dirección Fiscal</label>
+                                <input type="text" class="form-control custom-input" id="cliente_direccion" placeholder="Ej: Av. Principal 123">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="bi bi-person"></i> Contacto</label>
+                                <input type="text" class="form-control custom-input" id="cliente_contacto" placeholder="Nombre del contacto">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="bi bi-envelope"></i> Correo</label>
+                                <input type="email" class="form-control custom-input" id="email_contacto_cliente" placeholder="cliente@empresa.com">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="bi bi-telephone"></i> Teléfono</label>
+                                <input type="text" class="form-control custom-input" id="telefono_contacto" placeholder="Ej: 987654321">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="bi bi-file-text"></i> Requerimiento</label>
+                                <input type="text" class="form-control custom-input" id="requerimiento" placeholder="N° Requerimiento o Proyecto">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="bi bi-flag"></i> Estado</label>
+                                <select class="form-select custom-input" id="estado">
+                                    <option value="En Proceso">🟡 En Proceso</option>
+                                    <option value="Generada">🔵 Generada</option>
+                                    <option value="Aceptada por Cliente">🟢 Aceptada</option>
+                                    <option value="Rechazada">🔴 Rechazada</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <button class="btn btn-success w-100" id="btnCrearCliente">
+                                <i class="bi bi-person-plus-fill"></i> Crear nuevo cliente
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMNA DERECHA: CONDICIONES COMERCIALES -->
+            <div class="col-xl-6">
+                <div class="erp-card">
+                    <div class="card-header-custom red">
+                        <i class="bi bi-journal-check"></i> Condiciones Comerciales
+                    </div>
+                    <div class="card-body-custom">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="bi bi-person-circle"></i> Ejecutiva Comercial</label>
+                                <input type="text" class="form-control custom-input" id="asesor_comercial" placeholder="Seleccione asesor">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="bi bi-envelope"></i> E-mail Asesor</label>
+                                <input type="text" class="form-control custom-input" id="email_contacto" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="bi bi-telephone"></i> Teléfono Asesor</label>
+                                <input type="text" class="form-control custom-input" id="telefono_contacto_user" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="bi bi-clock"></i> Tiempo Entrega</label>
+                                <div class="tiempo-entrega-wrapper">
+                                    <select class="form-select custom-input" id="tiempo_entrega_select">
+                                        <option value="">-- Seleccionar opción --</option>
+                                        <option value="Inmediato">⚡ Inmediato (24 horas)</option>
+                                        <option value="1 día">📦 1 día hábil</option>
+                                        <option value="2 días">📦 2 días hábiles</option>
+                                        <option value="3 días">📦 3 días hábiles</option>
+                                        <option value="5 días">📦 5 días hábiles</option>
+                                        <option value="7 días">📦 7 días hábiles</option>
+                                        <option value="15 días">📦 15 días hábiles</option>
+                                        <option value="personalizado">✏️ Personalizado (escribir)</option>
+                                    </select>
+                                    <input type="text" 
+                                           class="form-control custom-input mt-2" 
+                                           id="tiempo_entrega" 
+                                           placeholder="Ej: 10 días, 2 semanas, etc."
+                                           style="display: none;">
+                                </div>
+                            </div>
+                            
+                            <!-- VALIDEZ OFERTA CON OPCIÓN PERSONALIZADA -->
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="bi bi-calendar-check"></i> Validez Oferta</label>
+                                <div class="validez-oferta-wrapper">
+                                    <select class="form-select custom-input" id="validez_oferta_select">
+                                        <option value="">-- Seleccionar opción --</option>
+                                        <option value="7 días">📅 7 días</option>
+                                        <option value="15 días" selected>📅 15 días</option>
+                                        <option value="30 días">📅 30 días</option>
+                                        <option value="45 días">📅 45 días</option>
+                                        <option value="60 días">📅 60 días</option>
+                                        <option value="personalizado">✏️ Personalizado (escribir)</option>
+                                    </select>
+                                    <input type="text" 
+                                           class="form-control custom-input mt-2" 
+                                           id="validez_oferta" 
+                                           placeholder="Ej: 20 días, 1 mes, etc."
+                                           style="display: none;">
+                                </div>
+                            </div>
+                            
+                            <!-- CONDICIÓN DE PAGO CON OPCIÓN PERSONALIZADA -->
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="bi bi-credit-card"></i> Condición de Pago</label>
+                                <div class="condicion-pago-wrapper">
+                                    <select class="form-select custom-input" id="condicion_pago_select">
+                                        <option value="">-- Seleccionar opción --</option>
+                                        <option value="Contado">💵 Contado</option>
+                                        <option value="Crédito 7 días">📆 Crédito 7 días</option>
+                                        <option value="Crédito 15 días">📆 Crédito 15 días</option>
+                                        <option value="Crédito 30 días">📆 Crédito 30 días</option>
+                                        <option value="Crédito 45 días">📆 Crédito 45 días</option>
+                                        <option value="Crédito 60 días">📆 Crédito 60 días</option>
+                                        <option value="Crédito 90 días">📆 Crédito 90 días</option>
+                                        <option value="personalizado">✏️ Personalizado (escribir)</option>
+                                    </select>
+                                    <input type="text" 
+                                           class="form-control custom-input mt-2" 
+                                           id="condicion_pago" 
+                                           placeholder="Ej: Crédito 20 días, 50% adelanto, etc."
+                                           style="display: none;">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="bi bi-truck"></i> Dirección de Entrega</label>
+                                <div class="d-flex gap-2">
+                                    <select class="form-select custom-input" id="direccion_entrega_select">
+                                        <option value="">-- Seleccionar dirección guardada --</option>
+                                        <option value="personalizado">✏️ Personalizar dirección</option>
+                                    </select>
+                                </div>
+                                <input type="text" 
+                                       class="form-control custom-input mt-2" 
+                                       id="direccion_entrega" 
+                                       placeholder="Escriba la dirección de entrega"
+                                       style="display: none;">
+                            </div>
+                        </div>
+                        
+                        <!-- DESCUENTO PERSONALIZABLE -->
+                        <div class="descuento-personalizado mt-3">
+                            <label class="form-label mb-2">
+                                <i class="bi bi-tag-fill text-danger"></i> Descuento Especial
+                            </label>
+                            <div class="row g-2 align-items-end">
+                                <div class="col-8">
+                                    <div class="input-group">
+                                        <input type="number" 
+                                               class="form-control custom-input" 
+                                               id="descuento_porcentaje_input" 
+                                               min="0" 
+                                               step="0.01" 
+                                               value="0"
+                                               placeholder="0">
+                                        <span class="input-group-text bg-danger text-white" id="descuento_simbolo">%</span>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <select class="form-select custom-input" id="descuento_tipo">
+                                        <option value="porcentaje">% Porcentaje</option>
+                                        <option value="monto">S/ Monto fijo</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <small class="text-muted mt-2 d-block">
+                                <i class="bi bi-info-circle"></i> Aplica descuento personalizado sobre el subtotal
+                            </small>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <label class="form-label"><i class="bi bi-chat-text"></i> Nota Comercial</label>
+                            <textarea class="form-control custom-input" id="nota_cotizacion" rows="2" placeholder="Escriba notas adicionales..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABLA PRODUCTOS -->
+        <!-- TABLA PRODUCTOS -->
+<div class="erp-card mt-4">
+    <div class="card-header-custom green">
+        <i class="bi bi-box-seam-fill"></i> Detalle de Productos
+    </div>
+    <div class="card-body-custom p-0">
+        <div class="table-responsive">
+            <table class="table table-modern" id="products-table">
+                <thead>
+                    <tr>
+                        <th style="width:40px">Item</th>
+                        <th style="width:130px">Código<br>Producto</th>
+                        <th style="width:220px">Descripción</th>
+                        <th style="width:80px">Modelo</th>
+                        <th style="width:80px">Marca</th>
+                        <th style="width:80px">Unidad<br>Medida</th>
+                        <th style="width:70px">Cantidad</th>
+                        <th style="width:110px">Valor Venta<br>Unit S/.</th>
+                        <th style="width:130px">Valor Venta<br>Total S/.</th>
+                        <th style="width:60px">Eliminar</th>
+                        <th style="width:70px">Stock</th> 
+                    </tr>
+                </thead>
+                <tbody id="table-body"></tbody>
+                <tfoot>
+                    <tr class="fw-bold bg-light">
+                        <td colspan="9" class="text-end">TOTAL: </td>
+                        <td id="total_valor_venta">0.00</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <div class="p-4">
+            <button class="btn btn-success" type="button" id="btnAgregarItem">
+                <i class="bi bi-plus-circle-fill"></i> Agregar Producto
+            </button>
+        </div>
+    </div>
+</div>
+
+        <!-- NOTAS INTERNAS -->
+        <div class="erp-card mt-4">
+            <div class="card-header-custom dark">
+                <i class="bi bi-journal-text"></i> Notas Internas ERP
+            </div>
+            <div class="card-body-custom">
+                <textarea class="form-control custom-input" id="notas" rows="3" placeholder="Notas internas u observaciones..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALES -->
+    <div class="modal fade" id="modalConfirmacion" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-check-circle-fill text-success"></i> Cotización Guardada</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modalConfirmacionBody"></div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" id="btnDescargarPDFModal">📄 Descargar PDF</button>
+                    <button class="btn btn-success" id="btnNuevaCotizacionModal">➕ Nueva Cotización</button>
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalNuevoCliente" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-person-plus-fill text-success"></i> Nuevo Cliente</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formNuevoCliente">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Tipo Documento <span class="text-danger">*</span></label>
+                                <select class="form-select custom-input" id="nuevo_tipo_documento" required>
+                                    <option value="RUC">📄 RUC</option>
+                                    <option value="DNI">🪪 DNI</option>
+                                    <option value="CE">🛂 Carnet de Extranjería</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Número Documento <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control custom-input" id="nuevo_numero_documento" required placeholder="11 dígitos">
+                                    <button class="btn btn-primary" type="button" id="btnBuscarSunat">
+                                        <i class="bi bi-search"></i> Buscar
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Razón Social / Nombre <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control custom-input" id="nuevo_razon_social" required>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Nombre Comercial</label>
+                                <input type="text" class="form-control custom-input" id="nuevo_nombre_comercial">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Dirección Fiscal</label>
+                                <input type="text" class="form-control custom-input" id="nuevo_direccion_fiscal">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Teléfono Contacto</label>
+                                <input type="text" class="form-control custom-input" id="nuevo_telefono">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email Contacto</label>
+                                <input type="email" class="form-control custom-input" id="nuevo_email">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Nombre Contacto</label>
+                                <input type="text" class="form-control custom-input" id="nuevo_nombre_contacto">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" id="btnGuardarNuevoCliente">Guardar Cliente</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalAceptada" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-check-circle-fill text-success"></i> Confirmar Cotización</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Pedido / Orden Cliente</label>
+                        <input type="text" class="form-control custom-input" id="pedido_cliente">
+                    </div>
+                    <div>
+                        <label class="form-label">Fecha Confirmación</label>
+                        <input type="date" class="form-control custom-input" id="fecha_confirmacion">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-success" id="btn-registrar">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalModificar" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-pencil-square text-warning"></i> Habilitar Modificación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <i class="bi bi-question-circle-fill fs-1 text-warning mb-3 d-block"></i>
+                    ¿Desea habilitar nuevamente esta cotización?
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-warning" id="btn-confirmar-modificar">Sí, habilitar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="portalSuggestions"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Función para manejar la validez de oferta personalizada
+        function configurarValidezOferta() {
+            const select = document.getElementById('validez_oferta_select');
+            const input = document.getElementById('validez_oferta');
+            
+            if (select && input) {
+                select.addEventListener('change', function() {
+                    const valor = this.value;
+                    if (valor === 'personalizado') {
+                        input.style.display = 'block';
+                        input.value = '';
+                        input.placeholder = 'Ej: 20 días, 1 mes, etc.';
+                        input.focus();
+                    } else if (valor === '') {
+                        input.style.display = 'none';
+                        input.value = '';
+                    } else {
+                        input.style.display = 'none';
+                        input.value = valor;
+                    }
+                });
+                
+                input.addEventListener('focus', function() {
+                    select.value = 'personalizado';
+                    this.style.display = 'block';
+                });
+                
+                if (input.value && input.value.trim() !== '') {
+                    let encontrado = false;
+                    for (let i = 0; i < select.options.length; i++) {
+                        if (select.options[i].value === input.value) {
+                            select.value = input.value;
+                            input.style.display = 'none';
+                            encontrado = true;
+                            break;
+                        }
+                    }
+                    if (!encontrado && input.value !== '') {
+                        select.value = 'personalizado';
+                        input.style.display = 'block';
+                    }
+                }
+            }
+        }
+
+        // Función para manejar la condición de pago personalizada
+        function configurarCondicionPago() {
+            const select = document.getElementById('condicion_pago_select');
+            const input = document.getElementById('condicion_pago');
+            
+            if (select && input) {
+                select.addEventListener('change', function() {
+                    const valor = this.value;
+                    if (valor === 'personalizado') {
+                        input.style.display = 'block';
+                        input.value = '';
+                        input.placeholder = 'Ej: Crédito 20 días, 50% adelanto, etc.';
+                        input.focus();
+                    } else if (valor === '') {
+                        input.style.display = 'none';
+                        input.value = '';
+                    } else {
+                        input.style.display = 'none';
+                        input.value = valor;
+                    }
+                });
+                
+                input.addEventListener('focus', function() {
+                    select.value = 'personalizado';
+                    this.style.display = 'block';
+                });
+                
+                if (input.value && input.value.trim() !== '') {
+                    let encontrado = false;
+                    for (let i = 0; i < select.options.length; i++) {
+                        if (select.options[i].value === input.value) {
+                            select.value = input.value;
+                            input.style.display = 'none';
+                            encontrado = true;
+                            break;
+                        }
+                    }
+                    if (!encontrado && input.value !== '') {
+                        select.value = 'personalizado';
+                        input.style.display = 'block';
+                    }
+                }
+            }
+        }
+
+        // Función para manejar la dirección de entrega personalizada
+        function configurarDireccionEntrega() {
+            const select = document.getElementById('direccion_entrega_select');
+            const input = document.getElementById('direccion_entrega');
+            
+            if (select && input) {
+                select.addEventListener('change', function() {
+                    if (this.value === 'personalizado') {
+                        input.style.display = 'block';
+                        input.value = '';
+                        input.placeholder = 'Escriba la dirección completa...';
+                        input.focus();
+                    } else if (this.value === '') {
+                        input.style.display = 'none';
+                        input.value = '';
+                    } else {
+                        input.style.display = 'none';
+                        input.value = this.value;
+                    }
+                });
+                
+                input.addEventListener('focus', function() {
+                    select.value = 'personalizado';
+                    this.style.display = 'block';
+                });
+            }
+        }
+        
+        // Función para manejar el descuento personalizable
+        function configurarDescuentoPersonalizable() {
+            const descuentoInput = document.getElementById('descuento_porcentaje_input');
+            const descuentoTipo = document.getElementById('descuento_tipo');
+            const descuentoSymbol = document.getElementById('descuento_simbolo');
+            
+            if (descuentoTipo && descuentoSymbol) {
+                descuentoTipo.addEventListener('change', function() {
+                    if (this.value === 'monto') {
+                        descuentoSymbol.textContent = 'S/';
+                        if (descuentoInput) {
+                            descuentoInput.max = '';
+                            descuentoInput.placeholder = '0.00';
+                        }
+                    } else {
+                        descuentoSymbol.textContent = '%';
+                        if (descuentoInput) {
+                            descuentoInput.max = '100';
+                            descuentoInput.placeholder = '0';
+                        }
+                    }
+                });
+            }
+        }
+        
+        // Función para cargar direcciones guardadas del cliente
+        async function cargarDireccionesCliente(clienteId) {
+            const select = document.getElementById('direccion_entrega_select');
+            if (!select) return;
+            
+            while (select.options.length > 2) {
+                select.remove(2);
+            }
+            
+            if (!clienteId) return;
+            
+            try {
+                const response = await fetch(`/api/clientes/${clienteId}/direcciones`);
+                const result = await response.json();
+                
+                if (result.success && result.data && result.data.length > 0) {
+                    result.data.forEach(dir => {
+                        const option = document.createElement('option');
+                        option.value = dir.direccion;
+                        option.textContent = dir.direccion;
+                        if (dir.es_principal) {
+                            option.textContent += ' (Principal)';
+                        }
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error cargando direcciones:', error);
+            }
+        }
+        
+        // Inicializar cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            configurarValidezOferta();
+            configurarCondicionPago();
+            configurarDireccionEntrega();
+            configurarDescuentoPersonalizable();
+            
+            const clienteIdInput = document.getElementById('cliente_id');
+            if (clienteIdInput) {
+                const observer = new MutationObserver(function() {
+                    if (clienteIdInput.value) {
+                        cargarDireccionesCliente(clienteIdInput.value);
+                    }
+                });
+                observer.observe(clienteIdInput, { attributes: true, attributeFilter: ['value'] });
+            }
+        });
+    </script>
+    <script src="/static/js/crear_cotizacion.js"></script>
+</body>
+</html>

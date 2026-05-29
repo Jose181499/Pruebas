@@ -29,7 +29,6 @@ def compras_principal():
         error_msg = f"Error en /compras: {str(e)}\n{traceback.format_exc()}"
         print(error_msg)
         return error_msg, 500
-
 @compras_bp.route("/crear_compra")
 def crear_compra():
     """Nueva orden de compra - sin ID"""
@@ -39,7 +38,8 @@ def crear_compra():
         
         ordenes = obtener_ordenes_recientes(limit=300)
         
-        return render_template("Crear_compra.html",
+        # 🔥 CAMBIO AQUÍ: "Crear_compra.html" → "cotizacion_oc/crear_compra.html"
+        return render_template("cotizacion_oc/crear_compra.html",
                               ordenes=ordenes,
                               orden_compra_id=None,
                               modo='nuevo')
@@ -56,7 +56,7 @@ def crear_compra():
             <p><strong>Error:</strong> {str(e)}</p>
             <h2>Información de depuración:</h2>
             <p><strong>Directorio actual:</strong> {os.getcwd()}</p>
-            <p><strong>¿Existe templates/crear_compra.html?</strong> {os.path.exists('templates/crear_compra.html')}</p>
+            <p><strong>¿Existe templates/cotizacion_oc/crear_compra.html?</strong> {os.path.exists('templates/cotizacion_oc/crear_compra.html')}</p>
             <h3>Archivos en templates/:</h3>
             <ul>
         """
@@ -81,7 +81,8 @@ def crear_compra():
 
 @compras_bp.route("/compra/nueva")
 def nueva_compra():
-    return render_template("crear_compra.html", ordenes=[], orden_compra_id=None, modo='nuevo')
+    # 🔥 CAMBIO AQUÍ TAMBIÉN
+    return render_template("cotizacion_oc/crear_compra.html", ordenes=[], orden_compra_id=None, modo='nuevo')
 
 @compras_bp.route("/editar_compra/<int:orden_id>")
 def editar_compra(orden_id):
