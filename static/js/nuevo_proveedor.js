@@ -172,24 +172,30 @@ document.addEventListener('DOMContentLoaded', function () {
                 const result = await response.json();
 
                 if (result.success) {
-                    mostrarNotificacion(`✅ Proveedor creado correctamente\nCódigo: ${result.data?.codigo_proveedor || 'N/A'}`, 'exito');
+                    // Mostrar modal bonito de confirmación
+                    mostrarModalConfirmacionProveedor(result, data);
 
+                    // Cerrar modal de nuevo proveedor
                     setTimeout(() => {
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('modalNuevoProveedor'));
-                        modal?.hide();
+                        const modalEl = document.getElementById('modalNuevoProveedor');
+                        const modal = bootstrap.Modal.getInstance(modalEl);
+                        if (modal) modal.hide();
 
+                        // Resetear formulario
                         document.getElementById('formProveedor').reset();
 
-                        // Limpiar estados
+                        // Limpiar estados visuales
                         if (tipoRecojo) tipoRecojo.value = '';
                         if (bloqueLista) bloqueLista.style.display = 'none';
                         if (bloqueManual) bloqueManual.style.display = 'none';
                         if (campoTiempoCredito) campoTiempoCredito.style.display = 'none';
 
+                        // Recargar la tabla
                         if (typeof cargarProveedores === 'function') cargarProveedores();
-                    }, 1300);
+                    }, 800);
+                }
 
-                } else {
+                else {
                     mostrarNotificacion(result.error || 'No se pudo guardar el proveedor', 'error');
                 }
 
