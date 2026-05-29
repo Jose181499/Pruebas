@@ -195,34 +195,35 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================
     // CONSULTA A SUNAT (PROVEEDORES)
     // =========================
-    async function consultarSunat(ruc) {
-        try {
-            mostrarNotificacion(`🔍 Consultando RUC ${ruc} en SUNAT...`, 'info');
-            
-            const response = await fetch(`https://api.apis.net.pe/v2/sunat/ruc?numero=${ruc}`);
-            
-            if (!response.ok) {
-                throw new Error('Error al consultar SUNAT');
-            }
-            
-            const data = await response.json();
-            
-            if (data && data.razonSocial) {
-                return {
-                    success: true,
-                    razon_social: data.razonSocial || '',
-                    nombre_comercial: data.nombreComercial || '',
-                    direccion: data.direccion || '',
-                    estado: data.estado || ''
-                };
-            } else {
-                return { success: false, error: 'No se encontraron datos' };
-            }
-        } catch (error) {
-            console.error('Error consultando SUNAT:', error);
-            return { success: false, error: error.message };
+  async function consultarSunat(ruc) {
+    try {
+        mostrarNotificacion(`🔍 Consultando RUC ${ruc} en SUNAT...`, 'info');
+        
+        // 🔥 CAMBIO: Usar tu propio backend en lugar de llamar directamente a la API externa
+        const response = await fetch(`/api/sunat/consulta_proveedor?ruc=${ruc}`);
+        
+        if (!response.ok) {
+            throw new Error('Error al consultar SUNAT');
         }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            return {
+                success: true,
+                razon_social: data.razon_social || '',
+                nombre_comercial: data.nombre_comercial || '',
+                direccion: data.direccion || '',
+                estado: data.estado || ''
+            };
+        } else {
+            return { success: false, error: data.error || 'No se encontraron datos' };
+        }
+    } catch (error) {
+        console.error('Error consultando SUNAT:', error);
+        return { success: false, error: error.message };
     }
+}
 
     async function autocompletarConSunat() {
         const tipoDocumento = document.getElementById('nuevo_tipo_documento')?.value;

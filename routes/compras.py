@@ -932,3 +932,57 @@ def generar_pdf_orden_compra(orden_id):
     except Exception as e:
         print("🔥 ERROR PDF:", e)
         return jsonify({"success": False, "error": str(e)}), 500
+
+@compras_bp.route("/api/sunat/consulta_proveedor", methods=["GET"])
+def consultar_sunat_proveedor():
+    """Consulta a SUNAT para proveedores"""
+    import requests
+    
+    ruc = request.args.get('ruc', '')
+    
+    print(f"🔍 Consultando SUNAT para RUC: {ruc}")
+    
+    if not ruc or len(ruc) != 11:
+        return jsonify({'success': False, 'error': 'RUC inválido, debe tener 11 dígitos'}), 400
+    
+    try:
+        # API de apis.net.pe
+        url = f'https://api.apis.net.pe/v1/ruc?numero={ruc}'
+        
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'application/json'
+        }
+        
+        response = requests.get(url, timeout=15, headers=headers)
+        
+        print(f"📡 Status code SUNAT: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"✅ Datos SUNAT recibidos: {data}")
+            
+            if data and data.get('nombre'):
+                return jsonify({
+                    'success': True,
+                    'razon_social': data.get('nombre', ''),
+                    'nombre_comercial': data.get('nombre', ''),
+                    'direccion': data.get('direccion', ''),
+                    'estado': data.get('estado', ''),
+                    'condicion': data.get('condicion', '')
+                })
+            else:
+                return jsonify({'success': False, 'error': 'No se encontraron datos para este RUC'})
+                
+        elif response.status_code == 404:
+            return jsonify({'success': False, 'error': 'RUC no encontrado en SUNAT'})
+        else:
+            return jsonify({'success': False, 'error': f'Error en la consulta: Código {response.status_code}'})
+            
+    except requests.exceptions.Timeout:
+        return jsonify({'success': False, 'error': 'Tiempo de espera agotado. Intente nuevamente.'})
+    except requests.exceptions.ConnectionError:
+        return jsonify({'success': False, 'error': 'Error de conexión. Verifique su internet.'})
+    except Exception as e:
+        print(f"❌ Error en consulta SUNAT: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
