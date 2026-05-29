@@ -203,4 +203,40 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+// =====================================================
+// MOSTRAR CONFIRMACIÓN
+// =====================================================
+function mostrarNotificacion(mensaje, tipo) {
+    const body = document.getElementById('modalConfirmacionBody');
+    const modalEl = document.getElementById('modalConfirmacionProveedor');
+
+    if (!body || !modalEl) {
+        alert(mensaje);
+        return;
+    }
+
+    const icono = tipo === 'exito'
+        ? `<i class="bi bi-check-circle-fill text-success fs-1"></i>`
+        : `<i class="bi bi-x-circle-fill text-danger fs-1"></i>`;
+
+    body.innerHTML = `
+        <div class="text-center py-3">
+            ${icono}
+            <p class="mt-3 fw-bold" style="white-space: pre-line;">${mensaje}</p>
+        </div>
+    `;
+
+    // Cerrar modal activo primero, luego abrir confirmación
+    const modalActivo = document.querySelector('.modal.show');
+    if (modalActivo) {
+        const instancia = bootstrap.Modal.getInstance(modalActivo);
+        instancia?.hide();
+        modalActivo.addEventListener('hidden.bs.modal', () => {
+            new bootstrap.Modal(modalEl).show();
+        }, { once: true });
+    } else {
+        new bootstrap.Modal(modalEl).show();
+    }
+ }
+
 });
