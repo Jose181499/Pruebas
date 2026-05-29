@@ -2,8 +2,8 @@ from flask import Blueprint, render_template, jsonify, request, session, send_fi
 from psycopg2.extras import RealDictCursor, DictCursor
 import os
 
-from database import (obtener_ordenes_recientes, obtener_orden_completa, crear_orden_compra_transaccional,
-                    db_query, db_execute, db_tx, get_connection, buscar_proveedor_por_ruc)
+from database import (obtener_ordenes_recientes, crear_orden_compra_transaccional,
+                    db_query, db_execute, db_tx, get_connection)
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
@@ -29,6 +29,7 @@ def compras_principal():
         error_msg = f"Error en /compras: {str(e)}\n{traceback.format_exc()}"
         print(error_msg)
         return error_msg, 500
+
 @compras_bp.route("/crear_compra")
 def crear_compra():
     """Nueva orden de compra - sin ID"""
@@ -38,7 +39,6 @@ def crear_compra():
         
         ordenes = obtener_ordenes_recientes(limit=300)
         
-        # 🔥 CAMBIO AQUÍ: "Crear_compra.html" → "cotizacion_oc/crear_compra.html"
         return render_template("cotizacion_oc/crear_compra.html",
                               ordenes=ordenes,
                               orden_compra_id=None,
@@ -81,7 +81,6 @@ def crear_compra():
 
 @compras_bp.route("/compra/nueva")
 def nueva_compra():
-    # 🔥 CAMBIO AQUÍ TAMBIÉN
     return render_template("cotizacion_oc/crear_compra.html", ordenes=[], orden_compra_id=None, modo='nuevo')
 
 @compras_bp.route("/editar_compra/<int:orden_id>")
@@ -89,7 +88,7 @@ def editar_compra(orden_id):
     """Editar orden de compra existente - con ID"""
     print(f"✏️ EDITAR ORDEN DE COMPRA - ID: {orden_id}")
     ordenes = obtener_ordenes_recientes(limit=300)
-    return render_template("crear_compra.html",
+    return render_template("cotizacion_oc/crear_compra.html",
                           ordenes=ordenes,
                           orden_compra_id=orden_id,
                           modo='editar')
@@ -133,6 +132,65 @@ def obtener_ordenes_recientes(limit=100):
         traceback.print_exc()
         return []
 
+def obtener_orden_completa(orden_id):
+    """Obtener orden de compra completa con cabecera y detalle"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Obtener cabecera
+        cursor.execute("""
+            SELECT o.*, p.razon_social as proveedor, p.numero_documento as proveedor_ruc,
+                   p.direccion_fiscal, p.telefono_contacto, p.nombre_contacto, p.email_contacto,
+                   u.nombre_completo, u.email, u.telefono
+            FROM ordenes_compra o
+            LEFT JOIN proveedores p ON o.proveedor_id = p.id
+            LEFT JOIN usuarios u ON o.usuario_id = u.id
+            WHERE o.id = %s
+        """, (orden_id,))
+        
+        cabecera = cursor.fetchone()
+        if not cabecera:
+            conn.close()
+            return None
+        
+        # Obtener detalle
+        cursor.execute("""
+            SELECT d.*, pr.codigo, pr.descripcion, pr.modelo, pr.marca, pr.unidad as unidad_medida
+            FROM orden_compra_detalle d
+            LEFT JOIN productos pr ON d.producto_id = pr.id
+            WHERE d.orden_id = %s
+        """, (orden_id,))
+        
+        detalle = cursor.fetchall()
+        
+        conn.close()
+        
+        return {
+            "cabecera": dict(cabecera),
+            "detalle": [dict(row) for row in detalle]
+        }
+        
+    except Exception as e:
+        print(f"🔥 Error en obtener_orden_completa: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+def buscar_proveedor_por_ruc(ruc):
+    """Buscar proveedor por RUC"""
+    try:
+        query = """
+            SELECT id, razon_social, numero_documento, direccion_fiscal, 
+                   telefono_contacto, nombre_contacto, tipo_documento, email_contacto
+            FROM proveedores 
+            WHERE numero_documento = %s
+        """
+        resultado = db_query(query, (ruc,))
+        return resultado[0] if resultado else None
+    except Exception as e:
+        print(f"Error buscando proveedor por RUC: {e}")
+        return None
 
 # ==========================================
 # API ENDPOINTS
@@ -694,7 +752,26 @@ def api_get_orden_compra(orden_id):
         data = obtener_orden_completa(orden_id)
         if not data:
             return jsonify({"success": False, "error": "No encontrada"}), 404
-        return jsonify({"success": True, "data": data})
+        
+        cabecera = data.get("cabecera", {})
+        detalle = data.get("detalle", [])
+        
+        # Renombrar campos para que coincidan con el frontend
+        for item in detalle:
+            if 'precio_venta_unitario' in item:
+                item['precio_unitario'] = item['precio_venta_unitario']
+        
+        return jsonify({
+            "success": True, 
+            "data": {
+                **cabecera,
+                "detalle": detalle,
+                "proveedor": cabecera.get("proveedor", ""),
+                "proveedor_contacto": cabecera.get("contacto_proveedor", ""),
+                "email_contacto_proveedor": cabecera.get("email_proveedor", ""),
+                "telefono_contacto": cabecera.get("telefono_proveedor", "")
+            }
+        })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -766,11 +843,92 @@ def generar_pdf_orden_compra(orden_id):
         cabecera = data.get("cabecera", {})
         detalle = data.get("detalle", [])
         
-        # Aquí va la generación del PDF con weasyprint
-        # Por ahora devolvemos un placeholder
-        return Response("PDF generado - Funcionalidad en desarrollo", 
-                       content_type='application/pdf',
-                       headers={"Content-Disposition": f"inline; filename=orden_compra_{orden_id}.pdf"})
+        BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        ruta_logo = os.path.join(BASE_DIR, "templates", "pdf", "logo-kcf.png")
+
+        try:
+            with open(ruta_logo, "rb") as img:
+                logo_base64 = base64.b64encode(img.read()).decode('utf-8')
+        except Exception:
+            logo_base64 = ""
+
+        productos = []
+        total_subtotal = 0
+
+        for i, p in enumerate(detalle, start=1):
+            cantidad = p.get("cantidad", 0)
+            precio = p.get("precio_venta_unitario", 0)
+            subtotal = cantidad * precio
+
+            productos.append({
+                "item": i,
+                "codigo": p.get("codigo", ""),
+                "descripcion": p.get("descripcion", ""),
+                "marca": p.get("marca", ""),
+                "modelo": p.get("modelo", ""),
+                "cantidad": cantidad,
+                "unidad": p.get("unidad_medida", "Unid"),
+                "precio_unitario": precio,
+                "subtotal": subtotal
+            })
+            total_subtotal += subtotal
+
+        descuento = cabecera.get("descuento_monto", 0)
+        subtotal_con_descuento = total_subtotal - descuento
+        igv = subtotal_con_descuento * 0.18
+        total_venta = subtotal_con_descuento + igv
+
+        fecha_creacion = cabecera.get("fecha_creacion", datetime.now())
+        if isinstance(fecha_creacion, str):
+            fecha_actual = fecha_creacion.split()[0] if ' ' in fecha_creacion else fecha_creacion
+            hora_actual = fecha_creacion.split()[1][:5] if ' ' in fecha_creacion and len(fecha_creacion.split()) > 1 else datetime.now().strftime("%H:%M")
+        else:
+            fecha_actual = fecha_creacion.strftime("%d/%m/%Y") if fecha_creacion else datetime.now().strftime("%d/%m/%Y")
+            hora_actual = fecha_creacion.strftime("%H:%M") if fecha_creacion else datetime.now().strftime("%H:%M")
+
+        html = render_template(
+            "pdf/orden_compra_kcf.html",
+            logo_base64=logo_base64,
+            codigo_orden=cabecera.get("codigo_orden") or cabecera.get("numero_orden") or "N/A",
+            fecha_actual=fecha_actual,
+            hora_actual=hora_actual,
+            proveedor_razon_social=cabecera.get("proveedor") or cabecera.get("razon_social") or "",
+            proveedor_ruc=cabecera.get("proveedor_ruc") or cabecera.get("numero_documento") or "",
+            proveedor_direccion=cabecera.get("direccion_fiscal") or "",
+            telefono_contacto=cabecera.get("telefono_proveedor") or "",
+            proveedor_contacto=cabecera.get("contacto_proveedor") or "",
+            email_contacto_proveedor=cabecera.get("email_proveedor") or "",
+            comprador_responsable=cabecera.get("nombre_completo") or "No asignado",
+            email_contacto_user=cabecera.get("email") or "",
+            telefono_contacto_user=cabecera.get("telefono") or "",
+            condicion_pago=cabecera.get("condicion_pago") or "Contado",
+            tiempo_entrega=cabecera.get("tiempo_entrega") or "No especificado",
+            fecha_requerida=cabecera.get("fecha_requerida") or "No especificada",
+            lugar_entrega=cabecera.get("lugar_entrega") or "No especificado",
+            num_cotizacion=cabecera.get("num_cotizacion") or "",
+            productos=productos,
+            total_subtotal=total_subtotal,
+            descuento=descuento,
+            subtotal_con_descuento=subtotal_con_descuento,
+            igv=igv,
+            total_venta=total_venta,
+            nota_compra=cabecera.get("nota_compra") or "",
+            notas=cabecera.get("notas") or ""
+        )
+
+        try:
+            pdf = HTML(string=html).write_pdf()
+        except Exception as e:
+            print("🔥 ERROR EN WEASYPRINT:", e)
+            import traceback
+            traceback.print_exc()
+            return jsonify({"success": False, "error": f"Error al generar PDF: {str(e)}"}), 500
+
+        return Response(
+            pdf,
+            content_type='application/pdf',
+            headers={"Content-Disposition": f"inline; filename=orden_compra_{orden_id}.pdf"}
+        )
     except Exception as e:
         print("🔥 ERROR PDF:", e)
         return jsonify({"success": False, "error": str(e)}), 500
