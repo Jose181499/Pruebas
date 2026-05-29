@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, jsonify, request, session, send_file, make_response, Response
 from psycopg2.extras import RealDictCursor, DictCursor
 import os
+import traceback
 
 from database import (obtener_ordenes_recientes, crear_orden_compra_transaccional,
                     db_query, db_execute, db_tx, get_connection)
@@ -22,7 +23,6 @@ compras_bp = Blueprint("compras", __name__)
 
 @compras_bp.route("/compras")
 def compras_principal():
-    import traceback
     try:
         return render_template("compras.html")
     except Exception as e:
@@ -33,7 +33,6 @@ def compras_principal():
 @compras_bp.route("/crear_compra")
 def crear_compra():
     """Nueva orden de compra - sin ID"""
-    import traceback
     try:
         print(f"🆕 NUEVA ORDEN DE COMPRA - Sin ID")
         
@@ -128,7 +127,6 @@ def obtener_ordenes_recientes(limit=100):
         
     except Exception as e:
         print(f"🔥 Error en obtener_ordenes_recientes: {str(e)}")
-        import traceback
         traceback.print_exc()
         return []
 
@@ -173,7 +171,6 @@ def obtener_orden_completa(orden_id):
         
     except Exception as e:
         print(f"🔥 Error en obtener_orden_completa: {str(e)}")
-        import traceback
         traceback.print_exc()
         return None
 
@@ -193,7 +190,130 @@ def buscar_proveedor_por_ruc(ruc):
         return None
 
 # ==========================================
-# API ENDPOINTS
+# 🔥 ENDPOINTS DE DIAGNÓSTICO 🔥
+# ==========================================
+
+@compras_bp.route("/api/diagnostico/blueprint", methods=["GET"])
+def diagnostico_blueprint():
+    """Verificar que el blueprint está funcionando"""
+    return jsonify({
+        "success": True,
+        "message": "Blueprint de compras funcionando correctamente",
+        "blueprint_name": "compras_bp",
+        "routes_disponibles": [
+            "/compras",
+            "/crear_compra", 
+            "/editar_compra/<id>",
+            "/api/orden_compra/<id>",
+            "/api/ordenes_compra",
+            "/api/test_conexion"
+        ]
+    })
+
+@compras_bp.route("/api/diagnostico/ordenes", methods=["GET"])
+def diagnostico_listar_ordenes():
+    """Diagnóstico: Listar todas las órdenes de compra"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Contar órdenes
+        cursor.execute("SELECT COUNT(*) as total FROM ordenes_compra")
+        count = cursor.fetchone()
+        
+        # Listar órdenes básicas
+        cursor.execute("""
+            SELECT id, numero_orden, codigo_orden, estado, fecha_creacion 
+            FROM ordenes_compra 
+            ORDER BY id DESC 
+            LIMIT 10
+        """)
+        ordenes = cursor.fetchall()
+        
+        conn.close()
+        
+        return jsonify({
+            "success": True,
+            "total_ordenes": count['total'] if count else 0,
+            "ordenes": ordenes,
+            "mensaje": f"Se encontraron {count['total'] if count else 0} órdenes en total"
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "success": False, 
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }), 500
+
+@compras_bp.route("/api/diagnostico/orden/<int:orden_id>", methods=["GET"])
+def diagnostico_orden_especifica(orden_id):
+    """Diagnóstico: Ver detalles de una orden específica"""
+    try:
+        # Verificar si existe la orden
+        conn = get_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        cursor.execute("SELECT * FROM ordenes_compra WHERE id = %s", (orden_id,))
+        orden = cursor.fetchone()
+        
+        if not orden:
+            return jsonify({
+                "success": False,
+                "error": f"No existe la orden con ID {orden_id}",
+                "sugerencia": "Verifica que el ID sea correcto o crea una orden primero"
+            }), 404
+        
+        # Obtener detalles de productos
+        cursor.execute("""
+            SELECT d.*, pr.codigo, pr.descripcion 
+            FROM orden_compra_detalle d
+            LEFT JOIN productos pr ON d.producto_id = pr.id
+            WHERE d.orden_id = %s
+        """, (orden_id,))
+        detalles = cursor.fetchall()
+        
+        conn.close()
+        
+        return jsonify({
+            "success": True,
+            "orden": orden,
+            "detalles": detalles,
+            "cantidad_detalles": len(detalles),
+            "mensaje": f"Orden {orden_id} encontrada correctamente"
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "success": False, 
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }), 500
+
+@compras_bp.route("/api/test_conexion", methods=["GET"])
+def test_conexion():
+    """Prueba de conexión a la base de datos"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1 as test")
+        result = cursor.fetchone()
+        conn.close()
+        
+        return jsonify({
+            "success": True,
+            "message": "Conexión a base de datos exitosa",
+            "test_result": result[0] if result else None
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "message": "Error de conexión a la base de datos"
+        }), 500
+
+# ==========================================
+# API ENDPOINTS PRINCIPALES
 # ==========================================
 
 @compras_bp.route("/api/usuarios/actual", methods=["GET"])
@@ -740,7 +860,6 @@ def guardar_orden_compra():
 
     except Exception as e:
         print("🔥 ERROR:", e)
-        import traceback
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -749,12 +868,20 @@ def guardar_orden_compra():
 def api_get_orden_compra(orden_id):
     """Obtener orden de compra por ID"""
     try:
+        # 🔥 LOG PARA DIAGNÓSTICO
+        print(f"🔍 Buscando orden con ID: {orden_id}")
+        
         data = obtener_orden_completa(orden_id)
+        
         if not data:
-            return jsonify({"success": False, "error": "No encontrada"}), 404
+            print(f"❌ Orden {orden_id} no encontrada")
+            return jsonify({"success": False, "error": f"No encontrada la orden con ID {orden_id}"}), 404
         
         cabecera = data.get("cabecera", {})
         detalle = data.get("detalle", [])
+        
+        print(f"✅ Orden {orden_id} encontrada. Proveedor: {cabecera.get('proveedor', 'N/A')}")
+        print(f"📦 Detalles: {len(detalle)} productos")
         
         # Renombrar campos para que coincidan con el frontend
         for item in detalle:
@@ -773,6 +900,8 @@ def api_get_orden_compra(orden_id):
             }
         })
     except Exception as e:
+        print(f"🔥 Error en api_get_orden_compra: {str(e)}")
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -811,10 +940,12 @@ def listar_ordenes():
                 'total': float(row['total']) if row['total'] else 0
             })
         
+        print(f"📋 Listando {len(resultado)} órdenes de compra")
         return jsonify({"success": True, "data": resultado})
         
     except Exception as e:
         print(f"🔥 ERROR LISTAR: {str(e)}")
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -826,6 +957,7 @@ def eliminar_orden_compra(id):
             cur = conn.cursor()
             cur.execute("DELETE FROM orden_compra_detalle WHERE orden_id = %s", (id,))
             cur.execute("DELETE FROM ordenes_compra WHERE id = %s", (id,))
+        print(f"🗑️ Orden {id} eliminada")
         return jsonify({"success": True})
     except Exception as e:
         print("🔥 ERROR ELIMINAR:", e)
@@ -920,7 +1052,6 @@ def generar_pdf_orden_compra(orden_id):
             pdf = HTML(string=html).write_pdf()
         except Exception as e:
             print("🔥 ERROR EN WEASYPRINT:", e)
-            import traceback
             traceback.print_exc()
             return jsonify({"success": False, "error": f"Error al generar PDF: {str(e)}"}), 500
 
