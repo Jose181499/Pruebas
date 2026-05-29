@@ -26,6 +26,7 @@ from database import (
     actualizar_cliente_completo,
     eliminar_cliente_db,
     obtener_ultimo_codigo_cliente,
+    buscar_clientes_completo,
     # Funciones para proveedores
     insertar_proveedor_completo,
     obtener_todos_proveedores,
@@ -219,33 +220,33 @@ def api_guardar_cliente():
 
 @app.route("/api/clientes/buscar", methods=["GET"])
 def api_buscar_clientes():
-    """Buscar clientes con filtros"""
+    """Buscar clientes por nombre o documento - VERSIÓN CORREGIDA"""
     try:
-        tipo_documento = request.args.get("tipo_documento", "")
-        busqueda = request.args.get("busqueda", "")
+        from database import buscar_clientes_completo  # ← Importar la función correcta
         
-        clientes = obtener_todos_clientes_con_detalles()
+        busqueda = request.args.get('q', request.args.get('busqueda', '')).strip()
         
-        # Aplicar filtros
-        if tipo_documento:
-            clientes = [c for c in clientes if c.get("tipo_documento") == tipo_documento]
+        print(f"🔍 Buscando clientes: '{busqueda}'")
         
-        if busqueda:
-            busqueda_lower = busqueda.lower()
-            clientes = [
-                c for c in clientes 
-                if busqueda_lower in c.get("razon_social", "").lower()
-                or busqueda_lower in c.get("nombre_comercial", "").lower()
-                or busqueda_lower in c.get("numero_documento", "")
-                or busqueda_lower in c.get("codigo_cliente", "").lower()
-            ]
+        if not busqueda or len(busqueda) < 2:
+            return jsonify({"success": True, "data": []})
+        
+        # Usar la función que SÍ incluye teléfono, email y contacto
+        clientes = buscar_clientes_completo(busqueda, limit=50)
+        
+        print(f"✅ Encontrados {len(clientes)} clientes")
+        if clientes:
+            print(f"Ejemplo - Teléfono: {clientes[0].get('telefono_contacto')}")
+            print(f"Ejemplo - Email: {clientes[0].get('email_contacto')}")
+            print(f"Ejemplo - Contacto: {clientes[0].get('nombre_contacto')}")
         
         return jsonify({"success": True, "data": clientes})
         
     except Exception as e:
-        print(f"Error al buscar clientes: {e}")
-        return jsonify({"success": False, "data": [], "error": str(e)})
-
+        print(f"❌ Error en api_buscar_clientes: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e), "data": []}), 500
 
 @app.route("/api/clientes/<int:cliente_id>", methods=["GET"])
 def api_obtener_cliente(cliente_id):
