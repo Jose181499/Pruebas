@@ -1189,7 +1189,10 @@ function setProductoEnFila(row, p) {
                 portalShow(input, `<div class="empty">No encontrado</div>`); 
                 return; 
             }
-            
+            console.log("📊 CLIENTES RECIBIDOS PARA AUTOCOMPLETE:", clientes);
+clientes.forEach(c => {
+    console.log(`  - ${c.razon_social}: tel=${c.telefono_contacto}, email=${c.email_contacto}, contacto=${c.nombre_contacto}`);
+});
           const html = clientes.map(c => `<div class="item" 
     data-id="${c.id || ''}" 
     data-razon="${c.razon_social || ''}" 

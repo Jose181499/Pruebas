@@ -289,7 +289,7 @@ window.abrirModalVerProveedor = async function(id) {
     document.activeElement?.blur();
     document.querySelectorAll('.modal').forEach(m => {
         const inst = bootstrap.Modal.getInstance(m);
-        if (inst) inst.dispose();
+        if (inst) inst.hide();
     });
 
     const modalElement = document.getElementById('modalVerProveedor');
