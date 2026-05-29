@@ -602,7 +602,7 @@ def crear_proveedor():
     """Crear un nuevo proveedor desde el formulario de orden de compra"""
     try:
         data = request.json
-        print(f"📝 Datos recibidos para crear proveedor: {data}")  # 🔥 DIAGNÓSTICO
+        print(f"📝 Datos recibidos para crear proveedor: {data}")
         
         tipo_documento = data.get('tipo_documento', 'RUC')
         numero_documento = data.get('numero_documento')
@@ -613,35 +613,43 @@ def crear_proveedor():
         email_contacto = data.get('email_contacto', '')
         nombre_contacto = data.get('nombre_contacto', '')
         
-        # 🔥 VALIDACIONES
         if not numero_documento:
             return jsonify({'success': False, 'error': 'Número de documento requerido'}), 400
         
         if not razon_social:
             return jsonify({'success': False, 'error': 'Razón social requerida'}), 400
         
-        # 🔥 Verificar si ya existe
+        # 🔥 CORREGIDO: Usar 'ruc' en lugar de 'numero_documento' y 'direccion' en lugar de 'direccion_fiscal'
         existente = db_query("""
-            SELECT id FROM proveedores WHERE numero_documento = %s
+            SELECT id FROM proveedores WHERE ruc = %s
         """, (numero_documento,))
         
         if existente:
             return jsonify({
                 'success': False, 
-                'error': f'Ya existe un proveedor con el documento {numero_documento}'
+                'error': f'Ya existe un proveedor con el RUC {numero_documento}'
             }), 400
         
         with db_tx() as conn:
             cur = conn.cursor()
             
+            # 🔥 CORREGIDO: Usar los nombres correctos de columnas
             cur.execute("""
                 INSERT INTO proveedores 
-                (tipo_documento, numero_documento, razon_social, nombre_comercial, 
-                 direccion_fiscal, telefono_contacto, email_contacto, nombre_contacto, activo)
+                (tipo_documento, ruc, razon_social, nombre_comercial, 
+                 direccion, telefono, contacto, email, activo)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, TRUE)
                 RETURNING id
-            """, (tipo_documento, numero_documento, razon_social, nombre_comercial,
-                  direccion_fiscal, telefono_contacto, email_contacto, nombre_contacto))
+            """, (
+                tipo_documento, 
+                numero_documento,  # Esto va a la columna 'ruc'
+                razon_social, 
+                nombre_comercial,
+                direccion_fiscal,  # Esto va a la columna 'direccion'
+                telefono_contacto,  # Esto va a la columna 'telefono'
+                nombre_contacto,    # Esto va a la columna 'contacto'
+                email_contacto      # Esto va a la columna 'email'
+            ))
             
             proveedor_id = cur.fetchone()[0]
         
@@ -661,8 +669,6 @@ def crear_proveedor():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
-
 @compras_bp.route("/api/proveedores/<int:proveedor_id>/direcciones", methods=["GET"])
 def obtener_direcciones_proveedor(proveedor_id):
     """Obtener direcciones de un proveedor"""

@@ -735,44 +735,93 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================
     // CONVERTIR A OFICIAL
     // =========================
-    async function convertirAOficial() {
-        if (!esBorrador) { 
-            mostrarNotificacion("⚠️ Esta orden de compra ya es oficial", "warning"); 
-            return; 
-        }
-        
-        const proveedor_id = Number(document.getElementById('proveedor_id')?.value || 0);
-        if (!proveedor_id) {
-            mostrarNotificacion("⚠️ Debe seleccionar un proveedor antes de convertir a oficial", "warning");
+  async function convertirAOficial() {
+    if (!esBorrador) { 
+        mostrarNotificacion("⚠️ Esta orden de compra ya es oficial", "warning"); 
+        return; 
+    }
+    
+    // 🔥 CAMBIO: Verificar que haya datos del proveedor (pueden ser de SUNAT sin guardar)
+    const proveedor_razon_social = document.getElementById('proveedor_razon_social')?.value.trim();
+    const proveedor_doc = document.getElementById('proveedor_doc')?.value.trim();
+    
+    if (!proveedor_razon_social) {
+        mostrarNotificacion("⚠️ Debe ingresar los datos del proveedor (Razón Social)", "warning");
+        return;
+    }
+    
+    if (!proveedor_doc) {
+        mostrarNotificacion("⚠️ Debe ingresar el RUC del proveedor", "warning");
+        return;
+    }
+    
+    const listaProductos = obtenerListaProductos();
+    if (listaProductos.length === 0) {
+        mostrarNotificacion("⚠️ Debe agregar al menos un producto antes de convertir a oficial", "warning");
+        return;
+    }
+    
+    for (let i = 0; i < listaProductos.length; i++) {
+        if (!listaProductos[i].precio_unitario || listaProductos[i].precio_unitario <= 0) {
+            mostrarNotificacion(`⚠️ El producto ${listaProductos[i].codigo || 'sin código'} no tiene precio válido`, "warning");
             return;
-        }
-        
-        const listaProductos = obtenerListaProductos();
-        if (listaProductos.length === 0) {
-            mostrarNotificacion("⚠️ Debe agregar al menos un producto antes de convertir a oficial", "warning");
-            return;
-        }
-        
-        for (let i = 0; i < listaProductos.length; i++) {
-            if (!listaProductos[i].precio_unitario || listaProductos[i].precio_unitario <= 0) {
-                mostrarNotificacion(`⚠️ El producto ${listaProductos[i].codigo || 'sin código'} no tiene precio válido`, "warning");
-                return;
-            }
-        }
-        
-        if (!confirm("¿Convertir este borrador a orden de compra oficial?\n\nEsta acción generará un código único y definitivo.")) return;
-        
-        const nuevoCodigo = await generarCodigoOficial();
-        if (nuevoCodigo) {
-            esBorrador = false;
-            actualizarNumeroOrdenUI(nuevoCodigo, false);
-            document.getElementById('estado').value = 'pendiente';
-            await guardarOrdenCompra();
-            mostrarNotificacion(`✅ Orden de compra convertida a OFICIAL\nNúmero: ${nuevoCodigo}`, "success");
-        } else {
-            mostrarNotificacion("❌ Error al generar código oficial. Intente nuevamente.", "danger");
         }
     }
+    
+    if (!confirm("¿Convertir este borrador a orden de compra oficial?\n\nEsta acción generará un código único y definitivo.")) return;
+    
+    // 🔥 Si el proveedor no está guardado en BD, primero lo creamos automáticamente
+    let proveedor_id = document.getElementById('proveedor_id')?.value;
+    
+    if (!proveedor_id || proveedor_id === '') {
+        mostrarNotificacion("📝 Registrando proveedor automáticamente...", "info");
+        
+        try {
+            const payload = {
+                tipo_documento: 'RUC',
+                numero_documento: proveedor_doc,
+                razon_social: proveedor_razon_social,
+                nombre_comercial: proveedor_razon_social,
+                direccion_fiscal: document.getElementById('proveedor_direccion')?.value || '',
+                telefono_contacto: document.getElementById('telefono_contacto')?.value || '',
+                email_contacto: document.getElementById('email_contacto_proveedor')?.value || '',
+                nombre_contacto: document.getElementById('proveedor_contacto')?.value || ''
+            };
+            
+            const response = await fetch('/api/proveedores/crear', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                proveedor_id = result.data.id;
+                document.getElementById('proveedor_id').value = proveedor_id;
+                mostrarNotificacion('✅ Proveedor registrado automáticamente', 'success');
+            } else {
+                mostrarNotificacion('❌ Error al registrar proveedor: ' + (result.error || 'Error desconocido'), 'danger');
+                return;
+            }
+        } catch (error) {
+            console.error('Error registrando proveedor:', error);
+            mostrarNotificacion('❌ Error al registrar proveedor automáticamente', 'danger');
+            return;
+        }
+    }
+    
+    const nuevoCodigo = await generarCodigoOficial();
+    if (nuevoCodigo) {
+        esBorrador = false;
+        actualizarNumeroOrdenUI(nuevoCodigo, false);
+        document.getElementById('estado').value = 'pendiente';
+        await guardarOrdenCompra();
+        mostrarNotificacion(`✅ Orden de compra convertida a OFICIAL\nNúmero: ${nuevoCodigo}`, "success");
+    } else {
+        mostrarNotificacion("❌ Error al generar código oficial. Intente nuevamente.", "danger");
+    }
+}
 
     // =========================
     // GENERAR PDF
