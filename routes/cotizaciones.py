@@ -207,32 +207,54 @@ def buscar_usuarios():
 
 @cotizaciones_bp.route("/api/clientes/buscar", methods=["GET"])
 def buscar_clientes():
-    """Buscar clientes por nombre o documento"""
+    """Buscar clientes por nombre o documento - VERSIÓN CORREGIDA"""
     try:
         q = request.args.get('q', '')
         
+        # Conexión directa para asegurar los campos
+        conn = get_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
         if q and q.strip():
             query = """
-                SELECT id, razon_social, numero_documento, 
-                       direccion_fiscal, telefono_contacto, nombre_contacto, 
-                       tipo_documento, email_contacto
+                SELECT 
+                    id, 
+                    razon_social, 
+                    numero_documento, 
+                    direccion_fiscal, 
+                    COALESCE(telefono_contacto, '') as telefono_contacto,
+                    COALESCE(nombre_contacto, '') as nombre_contacto, 
+                    tipo_documento, 
+                    COALESCE(email_contacto, '') as email_contacto
                 FROM clientes 
                 WHERE razon_social ILIKE %s OR numero_documento ILIKE %s
                 LIMIT 20
             """
-            clientes = db_query(query, (f'%{q}%', f'%{q}%'))
+            cur.execute(query, (f'%{q}%', f'%{q}%'))
         else:
             query = """
-                SELECT id, razon_social, numero_documento, 
-                       direccion_fiscal, telefono_contacto, nombre_contacto,
-                       tipo_documento, email_contacto
+                SELECT 
+                    id, 
+                    razon_social, 
+                    numero_documento, 
+                    direccion_fiscal, 
+                    COALESCE(telefono_contacto, '') as telefono_contacto,
+                    COALESCE(nombre_contacto, '') as nombre_contacto, 
+                    tipo_documento, 
+                    COALESCE(email_contacto, '') as email_contacto
                 FROM clientes 
                 LIMIT 20
             """
-            clientes = db_query(query)
+            cur.execute(query)
+        
+        clientes = cur.fetchall()
+        cur.close()
+        conn.close()
         
         for cliente in clientes:
             cliente['cliente_ruc'] = cliente['numero_documento']
+        
+        print(f"📊 PRIMER CLIENTE:", clientes[0] if clientes else "Ninguno")
         
         return jsonify({
             'success': True,
@@ -240,7 +262,9 @@ def buscar_clientes():
         })
         
     except Exception as e:
-        print(f"Error en /api/clientes/buscar: {str(e)}")
+        print(f"❌ Error en /api/clientes/buscar: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
             'error': str(e)
