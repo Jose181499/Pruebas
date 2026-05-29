@@ -7,7 +7,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const x = Number(String(v ?? '').replace(',', '.'));
         return Number.isFinite(x) ? x : 0;
     };
-
+    // =========================
+    // FUNCIÓN ESCAPE HTML (NECESARIA)
+    // =========================
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
     // =========================
     // FORMATEAR CANTIDAD (elimina .000)
     // =========================

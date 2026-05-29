@@ -654,14 +654,13 @@ def insertar_producto(
 # =========================
 def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=100):
     """
-    Buscar clientes por tipo de documento y texto de búsqueda
-    La búsqueda incluye: numero_documento (RUC/DNI), razon_social, nombre_comercial
+    Buscar clientes por tipo de documento y texto de búsqueda - CORREGIDO
     """
     try:
         with db_tx() as conn:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             
-            # Construir consulta base
+            # 🔥 CORREGIDO: Incluir campos de contacto
             query = """
                 SELECT 
                     id,
@@ -672,18 +671,19 @@ def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=100):
                     direccion_fiscal,
                     codigo_cliente,
                     activo,
-                    fecha_creacion
+                    fecha_creacion,
+                    telefono_contacto,     -- ← AGREGADO
+                    email_contacto,        -- ← AGREGADO
+                    nombre_contacto        -- ← AGREGADO
                 FROM clientes
                 WHERE activo = TRUE
             """
             params = []
             
-            # Filtrar por tipo de documento
             if tipo_documento and tipo_documento.strip():
                 query += " AND tipo_documento = %s"
                 params.append(tipo_documento)
             
-            # Búsqueda por texto (RUC, razón social o nombre comercial)
             if busqueda and busqueda.strip():
                 busqueda_like = f"%{busqueda.strip()}%"
                 query += """ AND (
@@ -693,53 +693,24 @@ def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=100):
                 )"""
                 params.extend([busqueda_like, busqueda_like, busqueda_like])
             
-            # Ordenar por ID descendente (más recientes primero)
             query += " ORDER BY id DESC LIMIT %s"
             params.append(limit)
             
             cur.execute(query, params)
             clientes = cur.fetchall()
             
-            # Para cada cliente, obtener contactos y puntos
-            resultado = []
-            for cliente in clientes:
-                cliente_id = cliente['id']
-                
-                # Obtener contactos
-                cur.execute("""
-                    SELECT id, nombre, email, telefono, cargo, principal
-                    FROM clientes_contactos
-                    WHERE cliente_id = %s
-                """, (cliente_id,))
-                contactos = cur.fetchall()
-                
-                # Obtener puntos de entrega
-                cur.execute("""
-                    SELECT id, nombre_punto, direccion, departamento, provincia, 
-                           distrito, telefono_contacto, responsable, condicion_pago, 
-                           tiempo_credito, principal
-                    FROM clientes_puntos_entrega
-                    WHERE cliente_id = %s
-                """, (cliente_id,))
-                puntos = cur.fetchall()
-                
-                cliente['contactos'] = contactos
-                cliente['puntos_entrega'] = puntos
-                resultado.append(cliente)
-            
-            return resultado
+            return clientes
             
     except Exception as e:
         print(f"❌ Error en buscar_clientes_mejorado: {e}")
         return []
-
 
 # =========================
 # BUSCAR CLIENTES CON PAGINACIÓN
 # =========================
 def buscar_clientes_paginado(tipo_documento='', busqueda='', pagina=1, por_pagina=20):
     """
-    Buscar clientes con paginación
+    Buscar clientes con paginación - CORREGIDO con campos de contacto
     """
     try:
         offset = (pagina - 1) * por_pagina
@@ -755,7 +726,7 @@ def buscar_clientes_paginado(tipo_documento='', busqueda='', pagina=1, por_pagin
             """
             count_params = []
             
-            # Consulta para obtener datos
+            # 🔥 CORREGIDO: Añadir los campos de contacto del cliente principal
             data_query = """
                 SELECT 
                     id,
@@ -766,7 +737,10 @@ def buscar_clientes_paginado(tipo_documento='', busqueda='', pagina=1, por_pagin
                     direccion_fiscal,
                     codigo_cliente,
                     activo,
-                    fecha_creacion
+                    fecha_creacion,
+                    telefono_contacto,     -- ← AGREGADO
+                    email_contacto,        -- ← AGREGADO  
+                    nombre_contacto        -- ← AGREGADO
                 FROM clientes
                 WHERE activo = TRUE
             """
@@ -811,6 +785,7 @@ def buscar_clientes_paginado(tipo_documento='', busqueda='', pagina=1, por_pagin
             for cliente in clientes:
                 cliente_id = cliente['id']
                 
+                # Obtener contactos adicionales
                 cur.execute("""
                     SELECT id, nombre, email, telefono, cargo, principal
                     FROM clientes_contactos
@@ -818,6 +793,7 @@ def buscar_clientes_paginado(tipo_documento='', busqueda='', pagina=1, por_pagin
                 """, (cliente_id,))
                 contactos = cur.fetchall()
                 
+                # Obtener puntos de entrega
                 cur.execute("""
                     SELECT id, nombre_punto, direccion, departamento, provincia, 
                            distrito, telefono_contacto, responsable, condicion_pago, 
@@ -848,7 +824,6 @@ def buscar_clientes_paginado(tipo_documento='', busqueda='', pagina=1, por_pagin
             'por_pagina': por_pagina,
             'total_paginas': 0
         }
-
 
 # =========================
 # Buscar clientes (versión antigua - mantener compatibilidad)
@@ -1480,7 +1455,7 @@ def obtener_todos_proveedores():
 
 
 def obtener_proveedor_por_id(proveedor_id):
-    """Obtener un proveedor por su ID"""
+    """Obtener proveedor por ID"""
     try:
         rows = db_query("""
             SELECT 
@@ -1500,16 +1475,18 @@ def obtener_proveedor_por_id(proveedor_id):
                 cci,
                 lugar_recojo,
                 activo,
-                fecha_creacion,
-                fecha_actualizacion
+                fecha_creacion
             FROM proveedores
             WHERE id = %s AND activo = TRUE
         """, (proveedor_id,))
         
-        return rows[0] if rows else None
+        if not rows:
+            return None
+            
+        return rows[0]   # Retorna el primer (y único) registro
 
     except Exception as e:
-        print(f"Error en obtener_proveedor_por_id({proveedor_id}): {e}")
+        print(f"❌ Error en obtener_proveedor_por_id({proveedor_id}): {e}")
         return None
 
 

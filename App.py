@@ -347,8 +347,23 @@ def api_buscar_clientes():
             por_pagina=por_pagina
         )
         
-        # Convertir contactos y puntos a formato JSON serializable
+        # 🔥 LOG DE DEPURACIÓN - Ver qué datos trae la base de datos
+        print("=" * 60)
+        print("📊 DATOS RECIBIDOS DE buscar_clientes_paginado:")
+        if resultado['data']:
+            for i, cliente in enumerate(resultado['data'][:3]):
+                print(f"Cliente {i+1}: {cliente.get('razon_social')}")
+                print(f"  - telefono_contacto: '{cliente.get('telefono_contacto')}'")
+                print(f"  - email_contacto: '{cliente.get('email_contacto')}'")
+                print(f"  - nombre_contacto: '{cliente.get('nombre_contacto')}'")
+        else:
+            print("⚠️ No se encontraron clientes")
+        print("=" * 60)
+        
+        # 🔥 IMPORTANTE: NO ELIMINAR los campos de contacto del cliente principal
+        # Solo procesamos contactos y puntos_entrega, pero conservamos los campos originales
         for cliente in resultado['data']:
+            # Procesar contactos (no tocar los campos principales)
             if 'contactos' in cliente and cliente['contactos']:
                 cliente['contactos'] = [
                     {
@@ -364,6 +379,7 @@ def api_buscar_clientes():
             else:
                 cliente['contactos'] = []
             
+            # Procesar puntos de entrega
             if 'puntos_entrega' in cliente and cliente['puntos_entrega']:
                 cliente['puntos_entrega'] = [
                     {
@@ -383,6 +399,15 @@ def api_buscar_clientes():
                 ]
             else:
                 cliente['puntos_entrega'] = []
+        
+        # 🔥 Verificar que los campos de contacto NO se perdieron
+        print("📋 VERIFICACIÓN FINAL - Primeros 3 clientes:")
+        if resultado['data']:
+            for i, cliente in enumerate(resultado['data'][:3]):
+                print(f"  Cliente {i+1}: {cliente.get('razon_social')}")
+                print(f"    telefono_contacto: '{cliente.get('telefono_contacto')}'")
+                print(f"    email_contacto: '{cliente.get('email_contacto')}'")
+                print(f"    nombre_contacto: '{cliente.get('nombre_contacto')}'")
         
         print(f"✅ Se encontraron {len(resultado['data'])} clientes (Total: {resultado['total']})")
         
@@ -408,7 +433,6 @@ def api_buscar_clientes():
             'error': str(e),
             'data': []
         }), 500
-
 
 @app.route('/api/clientes/<int:id>', methods=['GET'])
 def api_obtener_cliente(id):
