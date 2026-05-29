@@ -847,7 +847,10 @@ def buscar_clientes_completo(q: str, limit: int = 20):
     if len(q) < 2:
         return []
     
-    return db_query("""
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    query = """
         SELECT 
             id,
             tipo_documento,
@@ -868,7 +871,22 @@ def buscar_clientes_completo(q: str, limit: int = 20):
         )
         ORDER BY razon_social
         LIMIT %s
-    """, (f"%{q}%", f"%{q}%", f"%{q}%", limit))
+    """
+    
+    print(f"🔍 DEBUG - Buscando: {q}")
+    cur.execute(query, (f"%{q}%", f"%{q}%", f"%{q}%", limit))
+    result = cur.fetchall()
+    
+    if result:
+        print(f"✅ DEBUG - Campos devueltos: {list(result[0].keys())}")
+        print(f"✅ DEBUG - teléfono: {result[0].get('telefono_contacto')}")
+        print(f"✅ DEBUG - email: {result[0].get('email_contacto')}")
+        print(f"✅ DEBUG - contacto: {result[0].get('nombre_contacto')}")
+    
+    cur.close()
+    conn.close()
+    
+    return result
 
 # =========================
 # Buscar clientes (versión antigua - mantener compatibilidad)
