@@ -1189,20 +1189,20 @@ function setProductoEnFila(row, p) {
                 portalShow(input, `<div class="empty">No encontrado</div>`); 
                 return; 
             }
-
-            const html = clientes.map(c => `<div class="item" 
-                data-id="${c.id || ''}" 
-                data-razon="${c.razon_social || ''}" 
-                data-doc="${c.numero_documento || ''}" 
-                data-direccion="${c.direccion_fiscal || ''}" 
-                data-telefono="${c.telefono_contacto || ''}" 
-                data-contacto="${c.nombre_contacto || ''}" 
-                data-email="${c.email_contacto || ''}">
-                    <strong>🏢 ${c.razon_social || ''}</strong>
-                    <div class="meta">📄 ${c.numero_documento || 'Sin documento'}</div>
-                    <div class="meta">📞 ${c.telefono_contacto || 'Sin teléfono'} • ✉️ ${c.email_contacto || 'Sin email'}</div>
-                    <div class="meta">👤 Contacto: ${c.nombre_contacto || 'No especificado'}</div>
-                </div>`).join('');
+            
+          const html = clientes.map(c => `<div class="item" 
+    data-id="${c.id || ''}" 
+    data-razon="${c.razon_social || ''}" 
+    data-doc="${c.numero_documento || ''}" 
+    data-direccion="${c.direccion_fiscal || ''}" 
+    data-telefono="${c.telefono_contacto || ''}" 
+    data-contacto="${c.nombre_contacto || ''}" 
+    data-email="${c.email_contacto || ''}">
+        <strong>🏢 ${c.razon_social || ''}</strong>
+        <div class="meta">📄 ${c.numero_documento || 'Sin documento'}</div>
+        <div class="meta">📞 ${c.telefono_contacto || 'Sin teléfono'} • ✉️ ${c.email_contacto || 'Sin email'}</div>
+        <div class="meta">👤 Contacto: ${c.nombre_contacto || 'No especificado'}</div>
+    </div>`).join('');
             portalShow(input, html);
 
             portal.querySelectorAll('.item').forEach(el => {
