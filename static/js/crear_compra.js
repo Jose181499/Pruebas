@@ -195,35 +195,34 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================
     // CONSULTA A SUNAT (PROVEEDORES)
     // =========================
-  async function consultarSunat(ruc) {
-    try {
-        mostrarNotificacion(`🔍 Consultando RUC ${ruc} en SUNAT...`, 'info');
-        
-        // 🔥 CAMBIO: Usar tu propio backend en lugar de llamar directamente a la API externa
-        const response = await fetch(`/api/sunat/consulta_proveedor?ruc=${ruc}`);
-        
-        if (!response.ok) {
-            throw new Error('Error al consultar SUNAT');
+    async function consultarSunat(ruc) {
+        try {
+            mostrarNotificacion(`🔍 Consultando RUC ${ruc} en SUNAT...`, 'info');
+            
+            const response = await fetch(`/api/sunat/consulta_proveedor?ruc=${ruc}`);
+            
+            if (!response.ok) {
+                throw new Error('Error al consultar SUNAT');
+            }
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                return {
+                    success: true,
+                    razon_social: data.razon_social || '',
+                    nombre_comercial: data.nombre_comercial || '',
+                    direccion: data.direccion || '',
+                    estado: data.estado || ''
+                };
+            } else {
+                return { success: false, error: data.error || 'No se encontraron datos' };
+            }
+        } catch (error) {
+            console.error('Error consultando SUNAT:', error);
+            return { success: false, error: error.message };
         }
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            return {
-                success: true,
-                razon_social: data.razon_social || '',
-                nombre_comercial: data.nombre_comercial || '',
-                direccion: data.direccion || '',
-                estado: data.estado || ''
-            };
-        } else {
-            return { success: false, error: data.error || 'No se encontraron datos' };
-        }
-    } catch (error) {
-        console.error('Error consultando SUNAT:', error);
-        return { success: false, error: error.message };
     }
-}
 
     async function autocompletarConSunat() {
         const tipoDocumento = document.getElementById('nuevo_tipo_documento')?.value;
@@ -592,13 +591,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // 🔥 FUNCIÓN CORREGIDA: Convertir valores a números
     async function buscarProductos(q) {
         try {
             console.log('🔎 Buscando productos con:', q);
             const res = await fetch(`/api/productos/buscar?q=${encodeURIComponent(q)}`);
             const json = await res.json();
             console.log('📦 Productos encontrados:', json);
-            return json.data || [];
+            
+            const productos = json.data || [];
+            
+            // 🔥 Asegurar que los valores sean números
+            return productos.map(p => ({
+                id: p.id,
+                codigo: p.codigo || '',
+                descripcion: p.descripcion || '',
+                modelo: p.modelo || '',
+                marca: p.marca || '',
+                unidad_medida: p.unidad_medida || 'UNIDAD',
+                costo_unitario: parseFloat(p.costo_unitario) || 0,
+                precio_unitario: parseFloat(p.precio_unitario) || 0,
+                stock: parseInt(p.stock) || 0
+            }));
         } catch (error) {
             console.error('Error buscando productos:', error);
             return [];
@@ -788,7 +802,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // SET PRODUCTO EN FILA
+    // SET PRODUCTO EN FILA - CORREGIDO
     // =========================
     function setProductoEnFila(row, p) {  
         const productoIdInput = row.querySelector('.producto_id');
@@ -806,9 +820,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (modeloInput) modeloInput.value = p.modelo || "";
         if (marcaInput) marcaInput.value = p.marca || "";
         if (unidadMedidaInput) unidadMedidaInput.value = p.unidad_medida || "UNIDAD";
-        if (precioVentaInput && p.precio_unitario) precioVentaInput.value = p.precio_unitario;
         
-        if (cantidadInput && cantidadInput.value === '0' || !cantidadInput.value) {
+        // 🔥 CORREGIDO: Convertir a número y validar
+        if (precioVentaInput) {
+            let precio = parseFloat(p.precio_unitario);
+            precioVentaInput.value = isNaN(precio) ? 0 : precio;
+        }
+        
+        if (cantidadInput && (cantidadInput.value === '0' || !cantidadInput.value)) {
             cantidadInput.value = 1;
         }
         
@@ -853,6 +872,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // =========================
+    // AUTOCOMPLETE PRODUCTOS - CORREGIDO
+    // =========================
     function attachProductoAutocomplete(row) {
         const input = row.querySelector('.codigo_producto');
         
@@ -880,17 +902,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     return; 
                 }
 
-                const html = productos.map(p => `<div class="item" 
-                    data-id="${p.id}" 
-                    data-codigo="${p.codigo}" 
-                    data-descripcion="${p.descripcion}" 
-                    data-modelo="${p.modelo || ''}" 
-                    data-marca="${p.marca || ''}" 
-                    data-unidad="${p.unidad || 'UNIDAD'}" 
-                    data-precio="${p.precio_unitario || 0}">
-                        <strong>📦 ${p.codigo}</strong> - ${p.descripcion}
-                        <div class="meta">${p.marca || ''} • Precio: S/ ${(p.precio_unitario || 0).toFixed(2)}</div>
-                    </div>`).join('');
+                // 🔥 CORREGIDO: Usar parseFloat para mostrar el precio correctamente
+                const html = productos.map(p => {
+                    const precio = parseFloat(p.precio_unitario) || 0;
+                    return `<div class="item" 
+                        data-id="${p.id}" 
+                        data-codigo="${p.codigo}" 
+                        data-descripcion="${p.descripcion}" 
+                        data-modelo="${p.modelo || ''}" 
+                        data-marca="${p.marca || ''}" 
+                        data-unidad="${p.unidad_medida || 'UNIDAD'}" 
+                        data-precio="${precio}">
+                            <strong>📦 ${p.codigo}</strong> - ${p.descripcion}
+                            <div class="meta">${p.marca || ''} • Precio: S/ ${precio.toFixed(2)}</div>
+                        </div>`;
+                }).join('');
                 portalShow(input, html);
 
                 portal.querySelectorAll('.item').forEach(el => {

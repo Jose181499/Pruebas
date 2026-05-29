@@ -602,6 +602,7 @@ def crear_proveedor():
     """Crear un nuevo proveedor desde el formulario de orden de compra"""
     try:
         data = request.json
+        print(f"📝 Datos recibidos para crear proveedor: {data}")  # 🔥 DIAGNÓSTICO
         
         tipo_documento = data.get('tipo_documento', 'RUC')
         numero_documento = data.get('numero_documento')
@@ -612,12 +613,14 @@ def crear_proveedor():
         email_contacto = data.get('email_contacto', '')
         nombre_contacto = data.get('nombre_contacto', '')
         
+        # 🔥 VALIDACIONES
         if not numero_documento:
             return jsonify({'success': False, 'error': 'Número de documento requerido'}), 400
         
         if not razon_social:
             return jsonify({'success': False, 'error': 'Razón social requerida'}), 400
         
+        # 🔥 Verificar si ya existe
         existente = db_query("""
             SELECT id FROM proveedores WHERE numero_documento = %s
         """, (numero_documento,))
@@ -642,6 +645,8 @@ def crear_proveedor():
             
             proveedor_id = cur.fetchone()[0]
         
+        print(f"✅ Proveedor creado con ID: {proveedor_id}")
+        
         return jsonify({
             'success': True,
             'data': {
@@ -652,7 +657,9 @@ def crear_proveedor():
         })
         
     except Exception as e:
-        print(f"Error en /api/proveedores/crear: {str(e)}")
+        print(f"❌ Error en /api/proveedores/crear: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
