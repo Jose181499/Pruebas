@@ -24,26 +24,7 @@ def api_listar_proveedores():
             codigo=codigo or None
         )
 
-        proveedores = []
-        for p in data:
-            proveedores.append({
-                "id": p["id"],
-                "codigo_proveedor": p["codigo_proveedor"],
-                "razon_social": p["razon_social"],
-                "razon_comercial": p["razon_comercial"],
-                "ruc": p["ruc"],
-                "direccion": p["direccion"],
-                "telefono": p["telefono"],
-                "contacto": p["contacto"],
-                "email": p["email"],
-                "condicion_pago": p["condicion_pago"],
-                "tiempo_credito": p["tiempo_credito"],
-                "lugar_recojo": p["lugar_recojo"],
-                "banco": p["banco"],
-                "numero_cuenta": p["numero_cuenta"],
-                "cci": p["cci"],
-                "activo": p.get("activo", True)
-            })
+        proveedores = [dict(p) for p in data]   # Mejor conversión
 
         return jsonify({
             "success": True,
@@ -59,21 +40,19 @@ def api_listar_proveedores():
 
 
 # =========================================
-# CREAR PROVEEDOR (Ajustado al frontend)
+# CREAR PROVEEDOR
 # =========================================
-@proveedores_bp.route("/api/proveedores/guardar", methods=["POST"])   # ← Cambiado para coincidir con JS
+@proveedores_bp.route("/api/proveedores/guardar", methods=["POST"])
 def api_guardar_proveedor():
     try:
         data = request.get_json()
 
-        # Validaciones básicas
         if not data.get("razon_social") or not data.get("ruc"):
             return jsonify({"success": False, "error": "Razón social y RUC son obligatorios"}), 400
 
-        if len(str(data.get("ruc"))) != 11:
+        if len(str(data.get("ruc", "")).strip()) != 11:
             return jsonify({"success": False, "error": "El RUC debe tener 11 dígitos"}), 400
 
-        # Insertar (la función insertar_proveedor debería generar el código internamente)
         nuevo_id = insertar_proveedor(
             razon_social=data.get("razon_social"),
             razon_comercial=data.get("razon_comercial"),
@@ -90,7 +69,6 @@ def api_guardar_proveedor():
             lugar_recojo=data.get("lugar_recojo")
         )
 
-        # Obtener el proveedor recién creado para retornar el código
         proveedor = obtener_proveedor_por_id(nuevo_id)
 
         return jsonify({
@@ -104,14 +82,11 @@ def api_guardar_proveedor():
 
     except Exception as e:
         current_app.logger.error(f"Error creando proveedor: {e}")
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 # =========================================
-# OBTENER UN PROVEEDOR (Ver + Editar)
+# OBTENER UN PROVEEDOR
 # =========================================
 @proveedores_bp.route("/api/proveedores/<int:id>", methods=["GET"])
 def api_obtener_proveedor(id):
@@ -123,7 +98,7 @@ def api_obtener_proveedor(id):
 
         return jsonify({
             "success": True,
-            "data": proveedor
+            "data": dict(proveedor)   # Asegurar formato dict
         })
 
     except Exception as e:
@@ -140,21 +115,21 @@ def api_actualizar_proveedor(id):
         data = request.get_json()
 
         actualizar_proveedor(
-        id=id,
-        razon_social=data.get("razon_social"),
-        razon_comercial=data.get("razon_comercial"),
-        direccion=data.get("direccion"),
-        ruc=data.get("ruc"),
-        contacto=data.get("contacto"),
-        telefono=data.get("telefono"),
-        email=data.get("email"),
-        condicion_pago=data.get("condicion_pago"),
-        tiempo_credito=data.get("tiempo_credito"),
-        banco=data.get("banco"),
-        numero_cuenta=data.get("numero_cuenta"),
-        cci=data.get("cci"),
-        lugar_recojo=data.get("lugar_recojo")
-       )
+            proveedor_id=id,                     # ← CORREGIDO
+            razon_social=data.get("razon_social"),
+            razon_comercial=data.get("razon_comercial"),
+            direccion=data.get("direccion"),
+            ruc=data.get("ruc"),
+            contacto=data.get("contacto"),
+            telefono=data.get("telefono"),
+            email=data.get("email"),
+            condicion_pago=data.get("condicion_pago"),
+            tiempo_credito=data.get("tiempo_credito"),
+            banco=data.get("banco"),
+            numero_cuenta=data.get("numero_cuenta"),
+            cci=data.get("cci"),
+            lugar_recojo=data.get("lugar_recojo")
+        )
 
         return jsonify({
             "success": True,
@@ -167,7 +142,7 @@ def api_actualizar_proveedor(id):
 
 
 # =========================================
-# ELIMINAR PROVEEDOR (Soft Delete)
+# ELIMINAR PROVEEDOR
 # =========================================
 @proveedores_bp.route("/api/proveedores/<int:id>", methods=["DELETE"])
 def api_eliminar_proveedor(id):
