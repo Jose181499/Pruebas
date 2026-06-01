@@ -321,7 +321,7 @@ def insertar_proveedor(
 
             # Generar código automáticamente (PROV-00001, PROV-00002...)
             cur.execute("""
-                SELECT COUNT(*) + 1 as siguiente 
+                SELECT COALESCE(MAX(CAST(SUBSTRING(codigo_proveedor FROM 6) AS INTEGER)), 0) + 1 as siguiente
                 FROM proveedores 
                 WHERE codigo_proveedor LIKE 'PROV-%'
             """)

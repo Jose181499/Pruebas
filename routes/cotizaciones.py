@@ -205,9 +205,13 @@ def buscar_usuarios():
         }), 500
 
 
+# ==========================================
+# ENDPOINT: BUSCAR CLIENTES (CORREGIDO)
+# ==========================================
+
 @cotizaciones_bp.route("/api/clientes/buscar", methods=["GET"])
 def buscar_clientes():
-    """Buscar clientes por nombre o documento - VERSIÓN DEFINITIVA CORREGIDA"""
+    """Buscar clientes por nombre o documento - VERSIÓN CORREGIDA CON TODOS LOS CAMPOS"""
     print("=" * 60)
     print("🎯 BUSCANDO CLIENTES - VERSIÓN CORREGIDA")
     print("=" * 60)
@@ -215,12 +219,10 @@ def buscar_clientes():
     try:
         q = request.args.get('q', '')
         
-        # Usar conexión directa con RealDictCursor
         conn = get_connection()
         cur = conn.cursor(cursor_factory=RealDictCursor)
         
         if q and q.strip():
-            # 🔥 IMPORTANTE: Incluir explícitamente TODOS los campos
             query = """
                 SELECT 
                     id, 
@@ -258,7 +260,6 @@ def buscar_clientes():
         cur.close()
         conn.close()
         
-        # Debug para verificar
         print(f"📊 Se encontraron {len(clientes)} clientes")
         if clientes:
             print(f"📋 PRIMER CLIENTE:")
@@ -267,7 +268,6 @@ def buscar_clientes():
             print(f"   - email_contacto: '{clientes[0].get('email_contacto', '')}'")
             print(f"   - nombre_contacto: '{clientes[0].get('nombre_contacto', '')}'")
         
-        # Asegurar que ningún campo sea None
         for cliente in clientes:
             if cliente.get('telefono_contacto') is None:
                 cliente['telefono_contacto'] = ''
@@ -289,6 +289,8 @@ def buscar_clientes():
             'success': False,
             'error': str(e)
         }), 500
+
+
 # ==========================================
 # ENDPOINT: BUSCAR CLIENTE POR RUC EXACTO
 # ==========================================
@@ -328,6 +330,10 @@ def buscar_cliente_por_ruc_api():
         }), 500
 
 
+# ==========================================
+# ENDPOINT: OBTENER CLIENTE POR ID
+# ==========================================
+
 @cotizaciones_bp.route("/api/clientes/<int:id>", methods=["GET"])
 def obtener_cliente(id):
     """Obtener cliente por ID con sus puntos de entrega"""
@@ -365,6 +371,43 @@ def obtener_cliente(id):
             'error': str(e)
         }), 500
 
+
+# ==========================================
+# ENDPOINT: OBTENER DIRECCIONES DEL CLIENTE
+# ==========================================
+
+@cotizaciones_bp.route("/api/clientes/<int:cliente_id>/direcciones", methods=["GET"])
+def obtener_direcciones_cliente(cliente_id):
+    """Obtener direcciones/puntos de entrega de un cliente"""
+    try:
+        query = """
+            SELECT id, direccion, nombre_punto, principal, telefono_contacto
+            FROM clientes_puntos_entrega
+            WHERE cliente_id = %s
+            ORDER BY principal DESC, nombre_punto
+        """
+        direcciones = db_query(query, (cliente_id,))
+        
+        if not direcciones:
+            direcciones = []
+        
+        return jsonify({
+            'success': True,
+            'data': direcciones
+        })
+        
+    except Exception as e:
+        print(f"Error en /api/clientes/{cliente_id}/direcciones: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'data': []
+        }), 500
+
+
+# ==========================================
+# ENDPOINT: BUSCAR CONTACTOS DEL CLIENTE
+# ==========================================
 
 @cotizaciones_bp.route("/api/clientes/<int:cliente_id>/contactos", methods=["GET"])
 def buscar_contactos_cliente(cliente_id):
@@ -414,6 +457,69 @@ def buscar_contactos_cliente(cliente_id):
             'success': False,
             'error': str(e)
         }), 500
+
+
+# ==========================================
+# ENDPOINT: CREAR CLIENTE
+# ==========================================
+
+@cotizaciones_bp.route("/api/clientes/crear", methods=["POST"])
+def crear_cliente():
+    """Crear un nuevo cliente desde el formulario de cotización"""
+    try:
+        data = request.json
+        
+        tipo_documento = data.get('tipo_documento', 'RUC')
+        numero_documento = data.get('numero_documento')
+        razon_social = data.get('razon_social')
+        nombre_comercial = data.get('nombre_comercial', '')
+        direccion_fiscal = data.get('direccion_fiscal', '')
+        telefono_contacto = data.get('telefono_contacto', '')
+        email_contacto = data.get('email_contacto', '')
+        nombre_contacto = data.get('nombre_contacto', '')
+        
+        if not numero_documento:
+            return jsonify({'success': False, 'error': 'Número de documento requerido'}), 400
+        
+        if not razon_social:
+            return jsonify({'success': False, 'error': 'Razón social requerida'}), 400
+        
+        existente = db_query("""
+            SELECT id FROM clientes WHERE numero_documento = %s
+        """, (numero_documento,))
+        
+        if existente:
+            return jsonify({
+                'success': False, 
+                'error': f'Ya existe un cliente con el documento {numero_documento}'
+            }), 400
+        
+        with db_tx() as conn:
+            cur = conn.cursor()
+            
+            cur.execute("""
+                INSERT INTO clientes 
+                (tipo_documento, numero_documento, razon_social, nombre_comercial, 
+                 direccion_fiscal, telefono_contacto, email_contacto, nombre_contacto, activo)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, TRUE)
+                RETURNING id
+            """, (tipo_documento, numero_documento, razon_social, nombre_comercial,
+                  direccion_fiscal, telefono_contacto, email_contacto, nombre_contacto))
+            
+            cliente_id = cur.fetchone()[0]
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'id': cliente_id, 
+                'razon_social': razon_social,
+                'numero_documento': numero_documento
+            }
+        })
+        
+    except Exception as e:
+        print(f"Error en /api/clientes/crear: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 # ==========================================
@@ -487,100 +593,9 @@ def verificar_codigo_cotizacion():
 
 
 # ==========================================
-# ENDPOINT: CREAR CLIENTE
+# GUARDAR COTIZACIÓN
 # ==========================================
 
-@cotizaciones_bp.route("/api/clientes/crear", methods=["POST"])
-def crear_cliente():
-    """Crear un nuevo cliente desde el formulario de cotización"""
-    try:
-        data = request.json
-        
-        tipo_documento = data.get('tipo_documento', 'RUC')
-        numero_documento = data.get('numero_documento')
-        razon_social = data.get('razon_social')
-        nombre_comercial = data.get('nombre_comercial', '')
-        direccion_fiscal = data.get('direccion_fiscal', '')
-        telefono_contacto = data.get('telefono_contacto', '')
-        email_contacto = data.get('email_contacto', '')
-        nombre_contacto = data.get('nombre_contacto', '')
-        
-        if not numero_documento:
-            return jsonify({'success': False, 'error': 'Número de documento requerido'}), 400
-        
-        if not razon_social:
-            return jsonify({'success': False, 'error': 'Razón social requerida'}), 400
-        
-        existente = db_query("""
-            SELECT id FROM clientes WHERE numero_documento = %s
-        """, (numero_documento,))
-        
-        if existente:
-            return jsonify({
-                'success': False, 
-                'error': f'Ya existe un cliente con el documento {numero_documento}'
-            }), 400
-        
-        with db_tx() as conn:
-            cur = conn.cursor()
-            
-            cur.execute("""
-                INSERT INTO clientes 
-                (tipo_documento, numero_documento, razon_social, nombre_comercial, 
-                 direccion_fiscal, telefono_contacto, email_contacto, nombre_contacto, activo)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, TRUE)
-                RETURNING id
-            """, (tipo_documento, numero_documento, razon_social, nombre_comercial,
-                  direccion_fiscal, telefono_contacto, email_contacto, nombre_contacto))
-            
-            cliente_id = cur.fetchone()[0]
-        
-        return jsonify({
-            'success': True,
-            'data': {
-                'id': cliente_id, 
-                'razon_social': razon_social,
-                'numero_documento': numero_documento
-            }
-        })
-        
-    except Exception as e:
-        print(f"Error en /api/clientes/crear: {str(e)}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-
-# ==========================================
-# ENDPOINT: CLIENTES PUNTOS DE ENTREGA
-# ==========================================
-
-@cotizaciones_bp.route("/api/clientes/<int:cliente_id>/direcciones", methods=["GET"])
-def obtener_direcciones_cliente(cliente_id):
-    """Obtener direcciones/puntos de entrega de un cliente"""
-    try:
-        query = """
-            SELECT id, direccion, nombre_punto, principal, telefono_contacto
-            FROM clientes_puntos_entrega
-            WHERE cliente_id = %s
-            ORDER BY principal DESC, nombre_punto
-        """
-        direcciones = db_query(query, (cliente_id,))
-        
-        return jsonify({
-            'success': True,
-            'data': direcciones
-        })
-        
-    except Exception as e:
-        print(f"Error en /api/clientes/{cliente_id}/direcciones: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-
-# ==========================================
-# GUARDAR COTIZACIÓN - CON DESCUENTO PERSONALIZADO
-# ==========================================
 @cotizaciones_bp.route("/api/cotizacion/guardar", methods=["POST"])
 def guardar_cotizacion():
     data = request.json
@@ -600,12 +615,10 @@ def guardar_cotizacion():
         requerimiento = data.get("requerimiento")
         nota_cotizacion = data.get("nota_cotizacion")
         
-        # 🔥 AGREGAR ESTAS TRES LÍNEAS
         contacto_cliente = data.get("cliente_contacto", "")
         telefono_cliente = data.get("telefono_contacto", "")
         email_cliente = data.get("email_contacto_cliente", "")
         
-        # Campos de descuento
         descuento_porcentaje = data.get("descuento_porcentaje", 0)
         descuento_monto = data.get("descuento_monto", 0)
         descuento_tipo = data.get("descuento_tipo", "porcentaje")
@@ -614,21 +627,17 @@ def guardar_cotizacion():
         correlativo = data.get("correlativo")
         es_borrador = data.get("es_borrador", False)
         
-        # 🔥 OBTENER EL ID DE LA COTIZACIÓN (si existe)
         cotizacion_id = data.get("id") or request.args.get('id')
         
-        # Si no viene en data, buscar en el objeto
         if not cotizacion_id:
             cotizacion_id = data.get("cotizacion_id")
 
         with db_tx() as conn:
             cur = conn.cursor()
             
-            # 🔥 VERIFICAR SI ES ACTUALIZACIÓN O NUEVA COTIZACIÓN
             if cotizacion_id:
                 print(f"✏️ ACTUALIZANDO cotización ID: {cotizacion_id}")
                 
-                # ACTUALIZAR cabecera
                 cur.execute("""
                     UPDATE cotizaciones 
                     SET cliente_id = %s,
@@ -674,10 +683,8 @@ def guardar_cotizacion():
                     cotizacion_id
                 ))
                 
-                # ELIMINAR detalles antiguos
                 cur.execute("DELETE FROM cotizacion_detalle WHERE cotizacion_id = %s", (cotizacion_id,))
                 
-                # INSERTAR nuevos detalles
                 for p in data.get("productos", []):
                     cur.execute("""
                         INSERT INTO cotizacion_detalle (
@@ -723,10 +730,8 @@ def guardar_cotizacion():
                 })
             
             else:
-                # 🔥 NUEVA COTIZACIÓN - INSERT
                 print(f"🆕 Creando NUEVA cotización")
                 
-                # Generar número de cotización secuencial
                 row = db_query("""
                     SELECT numero_cotizacion 
                     FROM cotizaciones 
@@ -740,7 +745,6 @@ def guardar_cotizacion():
                     numero_int = 1
                 numero = f"COT-{str(numero_int).zfill(5)}"
                 
-                # Generar código personalizado si no viene
                 if not codigo_cotizacion:
                     if es_borrador:
                         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -870,7 +874,7 @@ def guardar_cotizacion():
 
 
 # ==========================================
-# OBTENER COTIZACIÓN - CON DESCUENTO Y CAMPOS DE CONTACTO
+# OBTENER COTIZACIÓN COMPLETA
 # ==========================================
 
 logging.basicConfig(filename='app.log', level=logging.ERROR)
@@ -907,27 +911,25 @@ def api_get_cotizacion(cotizacion_id):
             fecha_creacion_str = ''
 
         return jsonify({
-    "success": True,
-    "data": {
-        **cabecera,
-        "fecha_creacion": fecha_creacion_str,
-        "cliente_id": cabecera.get("cliente_id"),
-        "cliente": cabecera.get("razon_social") or cabecera.get("nombre_empresa"),
-        "cliente_ruc": cabecera.get("numero_documento") or cabecera.get("cliente_ruc") or "",
-        "codigo_cotizacion": cabecera.get("codigo_cotizacion"),
-        "correlativo": cabecera.get("correlativo"),
-        "es_borrador": es_borrador,
-        "detalle": detalle,
-        "descuento_porcentaje": cabecera.get("descuento_porcentaje", 0),
-        "descuento_monto": cabecera.get("descuento_monto", 0),
-        "descuento_tipo": cabecera.get("descuento_tipo", "porcentaje"),
-        # 🔥 CORREGIDO: Usar los campos de la cotización (contacto_cliente, telefono_cliente, email_cliente)
-        # NO usar nombre_contacto, telefono_contacto, email_contacto (esos son del cliente)
-        "cliente_contacto": cabecera.get("contacto_cliente") or "",
-        "telefono_contacto": cabecera.get("telefono_cliente") or "",
-        "email_contacto_cliente": cabecera.get("email_cliente") or ""
-    }
-})
+            "success": True,
+            "data": {
+                **cabecera,
+                "fecha_creacion": fecha_creacion_str,
+                "cliente_id": cabecera.get("cliente_id"),
+                "cliente": cabecera.get("razon_social") or cabecera.get("nombre_empresa"),
+                "cliente_ruc": cabecera.get("numero_documento") or cabecera.get("cliente_ruc") or "",
+                "codigo_cotizacion": cabecera.get("codigo_cotizacion"),
+                "correlativo": cabecera.get("correlativo"),
+                "es_borrador": es_borrador,
+                "detalle": detalle,
+                "descuento_porcentaje": cabecera.get("descuento_porcentaje", 0),
+                "descuento_monto": cabecera.get("descuento_monto", 0),
+                "descuento_tipo": cabecera.get("descuento_tipo", "porcentaje"),
+                "cliente_contacto": cabecera.get("contacto_cliente") or "",
+                "telefono_contacto": cabecera.get("telefono_cliente") or "",
+                "email_contacto_cliente": cabecera.get("email_cliente") or ""
+            }
+        })
 
     except Exception as e:
         print("🔥 ERROR REAL:", e)
@@ -1147,7 +1149,7 @@ def eliminar_producto_api(id):
 
 
 # ==========================================
-# GENERAR PDF - CON DESCUENTO
+# GENERAR PDF
 # ==========================================
 
 @cotizaciones_bp.route("/api/cotizacion/pdf/<int:cotizacion_id>")
@@ -1203,7 +1205,6 @@ def generar_pdf(cotizacion_id):
         total_descuento_subtotal += descuento
         total_subtotal_venta_desc += subtotal_desc
 
-    # 🔥 OBTENER DESCUENTO DE CABECERA
     descuento_global_porcentaje = cabecera.get("descuento_porcentaje", 0)
     descuento_global_monto = cabecera.get("descuento_monto", 0)
     descuento_global_tipo = cabecera.get("descuento_tipo", "porcentaje")
@@ -1269,7 +1270,6 @@ def generar_pdf(cotizacion_id):
         summary_total_venta=cabecera.get("total", 0),
         nota_cotizacion=cabecera.get("nota_cotizacion") or "",
         
-        # 🔥 NUEVOS CAMPOS PARA DESCUENTO GLOBAL
         descuento_global_porcentaje=descuento_global_porcentaje,
         descuento_global_monto=descuento_global_monto,
         descuento_global_tipo=descuento_global_tipo
