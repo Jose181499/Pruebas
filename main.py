@@ -263,7 +263,40 @@ def api_obtener_cliente(cliente_id):
         print(f"Error al obtener cliente: {e}")
         return jsonify({"success": False, "error": str(e)})
 
-
+@app.route("/api/clientes/<int:cliente_id>/direcciones", methods=["GET"])
+def api_obtener_direcciones_cliente(cliente_id):
+    """Obtener direcciones/puntos de entrega de un cliente"""
+    try:
+        from database import db_query
+        
+        query = """
+            SELECT id, direccion, nombre_punto, principal, telefono_contacto
+            FROM clientes_puntos_entrega
+            WHERE cliente_id = %s
+            ORDER BY principal DESC, nombre_punto
+        """
+        direcciones = db_query(query, (cliente_id,))
+        
+        if not direcciones:
+            direcciones = []
+        
+        print(f"📦 Direcciones encontradas para cliente {cliente_id}: {len(direcciones)}")
+        
+        return jsonify({
+            'success': True,
+            'data': direcciones
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en /api/clientes/{cliente_id}/direcciones: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'data': []
+        }), 500
+        
 @app.route("/api/clientes/<int:cliente_id>", methods=["PUT"])
 def api_actualizar_cliente(cliente_id):
     """Actualizar cliente existente"""
