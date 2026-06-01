@@ -207,31 +207,33 @@ def buscar_usuarios():
 
 @cotizaciones_bp.route("/api/clientes/buscar", methods=["GET"])
 def buscar_clientes():
-    """Buscar clientes por nombre o documento - VERSIÓN CORREGIDA"""
+    """Buscar clientes por nombre o documento - VERSIÓN DEFINITIVA CORREGIDA"""
     print("=" * 60)
-    print("🎯 ESTA ES LA VERSIÓN CORREGIDA DE cotizaciones.py")
+    print("🎯 BUSCANDO CLIENTES - VERSIÓN CORREGIDA")
     print("=" * 60)
     
     try:
         q = request.args.get('q', '')
         
-        # Conexión directa para asegurar los campos
+        # Usar conexión directa con RealDictCursor
         conn = get_connection()
         cur = conn.cursor(cursor_factory=RealDictCursor)
         
         if q and q.strip():
+            # 🔥 IMPORTANTE: Incluir explícitamente TODOS los campos
             query = """
                 SELECT 
                     id, 
                     razon_social, 
                     numero_documento, 
-                    direccion_fiscal, 
+                    direccion_fiscal,
+                    tipo_documento,
                     COALESCE(telefono_contacto, '') as telefono_contacto,
-                    COALESCE(nombre_contacto, '') as nombre_contacto, 
-                    tipo_documento, 
-                    COALESCE(email_contacto, '') as email_contacto
+                    COALESCE(email_contacto, '') as email_contacto,
+                    COALESCE(nombre_contacto, '') as nombre_contacto
                 FROM clientes 
                 WHERE razon_social ILIKE %s OR numero_documento ILIKE %s
+                ORDER BY razon_social
                 LIMIT 20
             """
             cur.execute(query, (f'%{q}%', f'%{q}%'))
@@ -241,12 +243,13 @@ def buscar_clientes():
                     id, 
                     razon_social, 
                     numero_documento, 
-                    direccion_fiscal, 
+                    direccion_fiscal,
+                    tipo_documento,
                     COALESCE(telefono_contacto, '') as telefono_contacto,
-                    COALESCE(nombre_contacto, '') as nombre_contacto, 
-                    tipo_documento, 
-                    COALESCE(email_contacto, '') as email_contacto
+                    COALESCE(email_contacto, '') as email_contacto,
+                    COALESCE(nombre_contacto, '') as nombre_contacto
                 FROM clientes 
+                ORDER BY razon_social
                 LIMIT 20
             """
             cur.execute(query)
@@ -255,14 +258,23 @@ def buscar_clientes():
         cur.close()
         conn.close()
         
-        for cliente in clientes:
-            cliente['cliente_ruc'] = cliente['numero_documento']
-        
-        print(f"📊 PRIMER CLIENTE:", clientes[0] if clientes else "Ninguno")
+        # Debug para verificar
+        print(f"📊 Se encontraron {len(clientes)} clientes")
         if clientes:
-            print(f"   - telefono_contacto: {clientes[0].get('telefono_contacto')}")
-            print(f"   - nombre_contacto: {clientes[0].get('nombre_contacto')}")
-            print(f"   - email_contacto: {clientes[0].get('email_contacto')}")
+            print(f"📋 PRIMER CLIENTE:")
+            print(f"   - razon_social: {clientes[0].get('razon_social')}")
+            print(f"   - telefono_contacto: '{clientes[0].get('telefono_contacto', '')}'")
+            print(f"   - email_contacto: '{clientes[0].get('email_contacto', '')}'")
+            print(f"   - nombre_contacto: '{clientes[0].get('nombre_contacto', '')}'")
+        
+        # Asegurar que ningún campo sea None
+        for cliente in clientes:
+            if cliente.get('telefono_contacto') is None:
+                cliente['telefono_contacto'] = ''
+            if cliente.get('email_contacto') is None:
+                cliente['email_contacto'] = ''
+            if cliente.get('nombre_contacto') is None:
+                cliente['nombre_contacto'] = ''
         
         return jsonify({
             'success': True,

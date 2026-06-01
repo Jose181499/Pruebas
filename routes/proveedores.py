@@ -4,7 +4,7 @@ from database import (
     insertar_proveedor,
     actualizar_proveedor,
     obtener_proveedor_por_id,
-    db_tx
+    db_tx,db_execute
 )
 
 proveedores_bp = Blueprint("proveedores", __name__)
@@ -147,14 +147,12 @@ def api_actualizar_proveedor(id):
 @proveedores_bp.route("/api/proveedores/<int:id>", methods=["DELETE"])
 def api_eliminar_proveedor(id):
     try:
-        with db_tx() as conn:
-            cur = conn.cursor()
-            cur.execute("""
-                UPDATE proveedores 
-                SET activo = FALSE, 
-                    fecha_eliminacion = NOW()
-                WHERE id = %s
-            """, (id,))
+        db_execute("""
+            UPDATE proveedores 
+            SET activo = FALSE, 
+                fecha_eliminacion = NOW()
+            WHERE id = %s AND activo = TRUE
+        """, (id,))
 
         return jsonify({
             "success": True,
