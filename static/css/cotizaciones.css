@@ -354,3 +354,239 @@ body{
         content: "Acciones";
     }
 }
+/* ==========================================
+   NUEVOS ESTILOS PARA COLUMNAS ADICIONALES
+   ========================================== */
+
+/* Badge para códigos */
+.badge-codigo {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    background: #f3f4f6;
+    padding: 5px 10px;
+    border-radius: 8px;
+    color: #374151;
+    display: inline-block;
+    letter-spacing: 0.5px;
+}
+
+/* Fecha y hora */
+.fecha-hora {
+    line-height: 1.4;
+}
+
+.fecha-hora .fecha {
+    font-weight: 700;
+    color: var(--negro);
+    font-size: 13px;
+}
+
+.fecha-hora .hora {
+    font-size: 11px;
+    color: var(--gris);
+}
+
+/* Jale producto badge */
+.badge-jaleado {
+    background: #10b981;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-block;
+}
+
+.badge-no-jaleado {
+    background: #9ca3af;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-block;
+}
+
+/* Dropdown de acciones */
+.dropdown {
+    position: relative;
+}
+
+.dropdown-toggle {
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    color: var(--negro);
+    padding: 8px 12px;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+.dropdown-toggle:hover {
+    background: var(--rojo);
+    color: white;
+    border-color: var(--rojo);
+}
+
+.dropdown-menu {
+    border-radius: 14px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    border: 1px solid var(--borde);
+    padding: 8px 0;
+    min-width: 180px;
+}
+
+.dropdown-item {
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(217, 4, 41, 0.08);
+    color: var(--rojo);
+}
+
+.dropdown-item i {
+    margin-right: 10px;
+    width: 16px;
+    font-size: 14px;
+}
+
+.dropdown-item.text-danger:hover {
+    background-color: rgba(217, 4, 41, 0.12);
+    color: var(--rojo) !important;
+}
+
+.dropdown-divider {
+    margin: 6px 0;
+    border-color: var(--borde);
+}
+
+/* Scroll horizontal para tabla grande */
+.table-responsive {
+    overflow-x: auto;
+    border-radius: 22px;
+}
+
+.table {
+    min-width: 1400px;
+}
+
+/* Columnas específicas */
+.col-ruc, .col-codigo-cliente {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+}
+
+.col-descripcion {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.col-nota, .col-condicion {
+    font-size: 12px;
+}
+
+/* Texto truncado */
+.text-truncate-custom {
+    max-width: 180px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ==========================================
+   RESPONSIVE PARA NUEVAS COLUMNAS
+   ========================================== */
+
+@media(max-width: 992px) {
+    .table {
+        min-width: 1300px;
+    }
+}
+
+@media(max-width: 768px) {
+    /* Para móvil, las nuevas columnas también se muestran como bloque */
+    .table tbody td:nth-child(1)::before { content: "Ítems"; }
+    .table tbody td:nth-child(2)::before { content: "Fecha/Hora"; }
+    .table tbody td:nth-child(3)::before { content: "Jale Producto"; }
+    .table tbody td:nth-child(4)::before { content: "Estado"; }
+    .table tbody td:nth-child(5)::before { content: "Nombre Estado"; }
+    .table tbody td:nth-child(6)::before { content: "N° Cotización"; }
+    .table tbody td:nth-child(7)::before { content: "RUC"; }
+    .table tbody td:nth-child(8)::before { content: "Código Cliente"; }
+    .table tbody td:nth-child(9)::before { content: "R Comercial"; }
+    .table tbody td:nth-child(10)::before { content: "R Social"; }
+    .table tbody td:nth-child(11)::before { content: "Descripción"; }
+    .table tbody td:nth-child(12)::before { content: "Monto"; }
+    .table tbody td:nth-child(13)::before { content: "Nota Aclaratoria"; }
+    .table tbody td:nth-child(14)::before { content: "Condición Pago"; }
+    .table tbody td:nth-child(15)::before { content: "Acciones"; }
+}
+
+/* ==========================================
+   ANIMACIONES ADICIONALES
+   ========================================== */
+
+/* Efecto hover en filas */
+.table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.table tbody tr:hover {
+    background: rgba(217, 4, 41, 0.03);
+    transform: scale(1.002);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* Badges de estado con íconos */
+.badge-estado i {
+    margin-right: 5px;
+    font-size: 11px;
+}
+
+/* Mejora de botones en acciones */
+.acciones .btn-mini {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+}
+
+.acciones .btn-mini:hover {
+    background: var(--rojo);
+    color: white;
+    transform: scale(1.05);
+}
+
+/* Tooltip personalizado */
+[data-tooltip] {
+    position: relative;
+    cursor: pointer;
+}
+
+[data-tooltip]:before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--negro);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    white-space: nowrap;
+    display: none;
+    z-index: 1000;
+}
+
+[data-tooltip]:hover:before {
+    display: block;
+}

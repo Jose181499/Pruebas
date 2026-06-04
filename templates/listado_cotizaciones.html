@@ -377,37 +377,42 @@
         </div>
     </div>
 
-    <!-- TABLA -->
-    <div class="card card-custom">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th style="width:50px">Item</th> 
-                            <th>N° Cotización </th>
-                            <th>Fecha <br> Hora</th>
-                            <th>Cliente</th>
-                            <th>Estado</th>
-                            <th class="text-end">Total (S/.)</th>
-                            <th class="text-center">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbodyCotizaciones">
-                        <tr>
-                            <td colspan="6" class="text-center py-5">
-                                <div class="spinner-border text-primary mb-3"></div>
-                                <div class="text-muted">Cargando cotizaciones...</div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+   <!-- TABLA MODIFICADA -->
+<div class="card card-custom">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="width:50px">Ítems</th>
+                        <th>Fecha y Hora</th>
+                        <th>Jale 1 items producto</th>
+                        <th>Estado</th>
+                        <th>Nombre Estado</th>
+                        <th>N° Cotización</th>
+                        <th>RUC</th>
+                        <th>Código Cliente</th>
+                        <th>R comercial</th>
+                        <th>R social</th>
+                        <th>Descripción</th>
+                        <th class="text-end">Monto (Con IGV)</th>
+                        <th>Nota aclaratoria</th>
+                        <th>Condición pago</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyCotizaciones">
+                    <tr>
+                        <td colspan="15" class="text-center py-5">
+                            <div class="spinner-border text-primary mb-3"></div>
+                            <div class="text-muted">Cargando cotizaciones...</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
-
 </div>
-
 <!-- MODAL CREAR NUEVO CLIENTE (desde listado) CON BOTÓN SUNAT -->
 <div class="modal fade" id="modalNuevoClienteListado" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
