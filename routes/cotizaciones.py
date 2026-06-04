@@ -442,7 +442,15 @@ def crear_cliente():
             return jsonify({'success': False, 'error': 'Razón social requerida'}), 400
         
         existente = db_query("""
-            SELECT id FROM clientes WHERE numero_documento = %s
+            SELECT c.id, c.numero_documento, c.razon_social, c.nombre_comercial,
+                   c.direccion_fiscal,
+                   cc.telefono AS telefono_contacto,
+                   cc.email AS email,
+                   cc.nombre AS nombre_contacto
+            FROM clientes c
+            LEFT JOIN clientes_contactos cc ON cc.cliente_id = c.id
+            WHERE c.numero_documento = %s
+            LIMIT 1
         """, (numero_documento,))
         
         if existente:
