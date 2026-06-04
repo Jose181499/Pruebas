@@ -1072,6 +1072,80 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
+// AUTOCOMPLETAR PRODUCTO EN FILA
+// =========================
+function attachProductoAutocomplete(row) {
+    const input = row.querySelector('.codigo_producto');
+    
+    if (!input) {
+        console.error('❌ No se encontró input .codigo_producto en la fila');
+        return;
+    }
+    
+    let timeoutId = null;
+
+    input.addEventListener('input', async () => {
+        const q = input.value.trim();
+        
+        if (timeoutId) clearTimeout(timeoutId);
+        if (q.length < 2) { 
+            portalHide(); 
+            return; 
+        }
+        
+        timeoutId = setTimeout(async () => {
+            try {
+                const productos = await buscarProductos(q);
+                
+                if (!productos || productos.length === 0) {
+                    portalShow(input, `<div class="empty">❌ No se encontraron productos</div>`);
+                    return;
+                }
+
+                const html = productos.map(p => `
+                    <div class="item" 
+                        data-id="${p.id}" 
+                        data-codigo="${p.codigo || ''}" 
+                        data-descripcion="${p.descripcion || ''}" 
+                        data-modelo="${p.modelo || ''}" 
+                        data-marca="${p.marca || ''}" 
+                        data-unidad="${p.unidad_medida || 'UNIDAD'}" 
+                        data-costo="${p.costo_unitario || 0}" 
+                        data-precio="${p.precio_unitario || 0}"
+                        data-stock="${p.stock || 0}">
+                        <strong>📦 ${p.codigo}</strong> - ${p.descripcion}
+                        <div class="meta">${p.marca || ''} • Stock: ${p.stock || 0}</div>
+                    </div>
+                `).join('');
+                
+                portalShow(input, html);
+
+                portal.querySelectorAll('.item').forEach(el => {
+                    el.addEventListener('click', () => {
+                        const productoData = {
+                            id: el.dataset.id,
+                            codigo: el.dataset.codigo,
+                            descripcion: el.dataset.descripcion,
+                            modelo: el.dataset.modelo,
+                            marca: el.dataset.marca,
+                            unidad_medida: el.dataset.unidad,
+                            costo_unitario: parseFloat(el.dataset.costo) || 0,
+                            precio_unitario: parseFloat(el.dataset.precio) || 0,
+                            stock: parseInt(el.dataset.stock) || 0
+                        };
+                        setProductoEnFila(row, productoData);
+                        portalHide();
+                        recalculateAll();
+                    });
+                });
+            } catch (error) {
+                console.error('Error en autocomplete de producto:', error);
+                portalShow(input, `<div class="empty">Error al buscar productos</div>`);
+            }
+        }, 300);
+    });
+}
+    // =========================
     // AGREGAR ITEMS
     // =========================
     function addItem() {

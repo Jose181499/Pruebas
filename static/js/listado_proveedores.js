@@ -94,7 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
     cargarProveedores();
     inicializarFiltros();
     inicializarModalEliminar();
-    inicializarFormEditar();   // ✅ CORREGIDO: ahora dentro del DOMContentLoaded
+    inicializarFormEditar();
 });
 
 // =========================================
@@ -172,88 +172,6 @@ async function cargarProveedores(filtros = {}) {
 }
 
 // =========================================
-// LISTAR PROVEEDORES
-// =========================================
-async function cargarProveedores(filtros = {}) {
-    const tbody = document.getElementById("tbody-proveedores");
-    if (!tbody) return;
-
-    try {
-        let url = "/api/proveedores/listar";
-        const params = new URLSearchParams();
-
-        if (filtros.busqueda) params.append("busqueda", filtros.busqueda);
-        if (filtros.codigo)   params.append("codigo", filtros.codigo);
-        if (filtros.tipo)     params.append("tipo_documento", filtros.tipo);
-
-        if (params.toString()) url += "?" + params.toString();
-
-        const res  = await fetch(url);
-        const json = await res.json();
-
-        const proveedores = json.data || [];
-        proveedoresCache  = proveedores;
-        tbody.innerHTML   = "";
-
-        if (proveedores.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="9" class="text-center py-5">
-                        <i class="bi bi-inbox" style="font-size: 2rem;"></i>
-                        <p class="mt-2">No se encontraron proveedores</p>
-                    </td>
-                </tr>`;
-            return;
-        }
-
-        proveedores.forEach(p => {
-            const codigoProveedor = p.codigo_proveedor || '---';
-            tbody.innerHTML += `
-                <tr>
-                    <td class="text-center">${p.id || '-'}</td>
-                    <td class="text-center"><strong>${escapeHtml(codigoProveedor)}</strong></td>
-                    <td>${escapeHtml(p.razon_social) || '-'}</td>
-                    <td class="text-center">${p.ruc || p.numero_documento || '-'}</td>
-                    <td>${escapeHtml(p.direccion) || '-'}</td>
-                    <td>${p.telefono || '-'}</td>
-                    <td>${escapeHtml(p.contacto) || '-'}</td>
-                    <td>${p.email || '-'}</td>
-                    <td class="text-center">
-                        <button class="btn btn-sm btn-info me-1"
-                            onclick="abrirModalVerProveedor(${p.id})"
-                            title="Ver detalle">
-                            👁️
-                        </button>
-                        <button class="btn btn-sm btn-warning me-1"
-                            onclick="abrirModalEditarProveedor(${p.id})"
-                            title="Editar proveedor">
-                            ✏️
-                        </button>
-                        <button class="btn btn-sm btn-danger"
-                            onclick="abrirModalEliminarProveedor(${p.id})"
-                            title="Eliminar proveedor">
-                            🗑️
-                        </button>
-                    </td>
-                </tr>`;
-        });
-
-    } catch (error) {
-        console.error("Error al cargar proveedores:", error);
-        // ✅ CORREGIDO: ya no redeclara tbody con const dentro del catch
-        if (tbody) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="9" class="text-center py-5 text-danger">
-                        <i class="bi bi-exclamation-triangle-fill"></i>
-                        <p class="mt-2">Error al cargar los proveedores</p>
-                    </td>
-                </tr>`;
-        }
-    }
-}
-
-// =========================================
 // FILTROS
 // =========================================
 function inicializarFiltros() {
@@ -282,7 +200,7 @@ function aplicarFiltros() {
 }
 
 // =========================================
-// MODAL VER PROVEEDOR - VERSIÓN CORREGIDA
+// MODAL VER PROVEEDOR
 // =========================================
 window.abrirModalVerProveedor = async function(id) {
     const modalElement = document.getElementById('modalVerProveedor');
@@ -293,14 +211,12 @@ window.abrirModalVerProveedor = async function(id) {
         return;
     }
 
-    // Limpiar modal anterior
     modalBody.innerHTML = `
         <div class="text-center py-5">
             <div class="spinner-border text-primary"></div>
             <p class="mt-2">Cargando detalle del proveedor...</p>
         </div>`;
 
-    // Mostrar el modal
     const modal = new bootstrap.Modal(modalElement, {
         backdrop: true,
         keyboard: true
@@ -329,7 +245,6 @@ window.abrirModalVerProveedor = async function(id) {
             </div>`;
 
         modalBody.innerHTML = `
-            <!-- Encabezado -->
             <div class="d-flex align-items-center gap-3 mb-4 p-3"
                  style="background: linear-gradient(135deg,#111827,#1f2937); border-radius:12px; color:white;">
                 <div style="width:55px;height:55px;border-radius:12px;
@@ -345,7 +260,6 @@ window.abrirModalVerProveedor = async function(id) {
                 </div>
             </div>
 
-            <!-- Información General -->
             <h6 class="fw-bold mb-3" style="border-bottom:2px solid #d90429; padding-bottom:6px;">
                 📋 Información General
             </h6>
@@ -361,7 +275,6 @@ window.abrirModalVerProveedor = async function(id) {
                 ${p.condicion_pago === 'Credito' ? fila('Tiempo Crédito', p.tiempo_credito) : ''}
             </div>
 
-            <!-- Información Bancaria -->
             <h6 class="fw-bold mb-3" style="border-bottom:2px solid #d90429; padding-bottom:6px;">
                 🏦 Información Bancaria
             </h6>
@@ -371,7 +284,6 @@ window.abrirModalVerProveedor = async function(id) {
                 ${fila('CCI', p.cci)}
             </div>
 
-            <!-- Información Logística -->
             <h6 class="fw-bold mb-3" style="border-bottom:2px solid #d90429; padding-bottom:6px;">
                 🚚 Información Logística
             </h6>
@@ -391,7 +303,7 @@ window.abrirModalVerProveedor = async function(id) {
 };
 
 // =========================================
-// MODAL EDITAR — ABRIR  ✅ CORREGIDO
+// MODAL EDITAR — ABRIR
 // =========================================
 window.abrirModalEditarProveedor = async function(id) {
     const modalElement = document.getElementById('modalEditarProveedor');
@@ -444,13 +356,17 @@ window.abrirModalEditarProveedor = async function(id) {
 };
 
 // =========================================
-// MODAL EDITAR — GUARDAR  ✅ CORREGIDO: ahora en función separada
+// MODAL EDITAR — GUARDAR
 // =========================================
 function inicializarFormEditar() {
     const formEditar = document.getElementById('formEditarProveedor');
     if (!formEditar) return;
 
-    formEditar.addEventListener('submit', async function(e) {
+    // Eliminar listeners anteriores
+    const newForm = formEditar.cloneNode(true);
+    formEditar.parentNode.replaceChild(newForm, formEditar);
+
+    newForm.addEventListener('submit', async function(e) {
         e.preventDefault();
 
         const id = document.getElementById('edit_id_proveedor')?.value;
@@ -463,7 +379,7 @@ function inicializarFormEditar() {
             razon_social:    document.getElementById('edit_razon_social_proveedor')?.value   || '',
             razon_comercial: document.getElementById('edit_razon_comercial_proveedor')?.value || '',
             direccion:       document.getElementById('edit_direccion_proveedor')?.value       || '',
-            ruc:             document.getElementById('edit_ruc_proveedor')?.value             || '',  // ✅ clave unificada
+            ruc:             document.getElementById('edit_ruc_proveedor')?.value             || '',
             contacto:        document.getElementById('edit_contacto_proveedor')?.value        || '',
             telefono:        document.getElementById('edit_telefono_proveedor')?.value        || '',
             email:           document.getElementById('edit_email_proveedor')?.value           || '',
@@ -475,6 +391,14 @@ function inicializarFormEditar() {
             lugar_recojo:    document.getElementById('edit_lugar_recojo_proveedor')?.value    || ''
         };
 
+        // Deshabilitar botón
+        const btnGuardar = document.querySelector('#formEditarProveedor button[type="submit"]');
+        const textoOriginal = btnGuardar?.innerHTML;
+        if (btnGuardar) {
+            btnGuardar.disabled = true;
+            btnGuardar.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Guardando...';
+        }
+
         try {
             const res  = await fetch(`/api/proveedores/${id}`, {
                 method:  'PUT',
@@ -485,7 +409,7 @@ function inicializarFormEditar() {
             const json = await res.json();
 
             if (json.success) {
-                mostrarNotificacion('Proveedor actualizado correctamente', 'exito');
+                mostrarNotificacion('✅ Proveedor actualizado correctamente', 'exito');
 
                 const modal = bootstrap.Modal.getInstance(
                     document.getElementById('modalEditarProveedor')
@@ -494,35 +418,93 @@ function inicializarFormEditar() {
 
                 await cargarProveedores();
             } else {
-                mostrarNotificacion("Error: " + (json.error || "No se pudo actualizar"), 'error');
+                mostrarNotificacion("❌ Error: " + (json.error || "No se pudo actualizar"), 'error');
             }
 
         } catch (error) {
             console.error("Error en actualización:", error);
-            mostrarNotificacion("Error al actualizar: " + error.message, 'error');
+            mostrarNotificacion("❌ Error al actualizar: " + error.message, 'error');
+        } finally {
+            if (btnGuardar) {
+                btnGuardar.disabled = false;
+                btnGuardar.innerHTML = textoOriginal;
+            }
         }
     });
 }
 
 // =========================================
-// MODAL ELIMINAR — ABRIR
+// MODAL ELIMINAR — ABRIR (MEJORADO)
 // =========================================
-window.abrirModalEliminarProveedor = function(id) {
-    const deleteInput  = document.getElementById('delete_id_proveedor');
+window.abrirModalEliminarProveedor = async function(id) {
+    const deleteInput = document.getElementById('delete_id_proveedor');
     const modalElement = document.getElementById('modalEliminarProveedor');
+    const proveedorInfoDiv = document.getElementById('proveedorAEliminarInfo');
 
     if (!deleteInput || !modalElement) {
         mostrarNotificacion("Error: Elemento no encontrado", 'error');
         return;
     }
 
+    // Mostrar loading
+    if (proveedorInfoDiv) {
+        proveedorInfoDiv.innerHTML = `
+            <div class="text-center py-2">
+                <div class="spinner-border spinner-border-sm text-danger"></div>
+                <span class="ms-2">Cargando información...</span>
+            </div>
+        `;
+    }
+    
     deleteInput.value = id;
+    
+    // Intentar obtener los datos del proveedor para mostrar su nombre
+    try {
+        const res = await fetch(`/api/proveedores/${id}`);
+        const json = await res.json();
+        
+        if (json.success && json.data) {
+            const p = json.data;
+            const nombreProveedor = p.razon_social || `ID: ${id}`;
+            const codigoProveedor = p.codigo_proveedor || '---';
+            
+            if (proveedorInfoDiv) {
+                proveedorInfoDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-building fs-4 me-2"></i>
+                        <strong>${escapeHtml(nombreProveedor)}</strong><br>
+                        <small>Código: ${escapeHtml(codigoProveedor)} | RUC: ${p.ruc || '---'}</small>
+                    </div>
+                `;
+            }
+        } else {
+            if (proveedorInfoDiv) {
+                proveedorInfoDiv.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        No se pudo cargar la información del proveedor ID: ${id}
+                    </div>
+                `;
+            }
+        }
+    } catch (error) {
+        console.error("Error cargando proveedor:", error);
+        if (proveedorInfoDiv) {
+            proveedorInfoDiv.innerHTML = `
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Proveedor ID: ${id}
+                </div>
+            `;
+        }
+    }
+    
     const modal = new bootstrap.Modal(modalElement);
     modal.show();
 };
 
 // =========================================
-// MODAL ELIMINAR — CONFIRMAR
+// MODAL ELIMINAR — CONFIRMAR (MEJORADO)
 // =========================================
 function inicializarModalEliminar() {
     const btnConfirmar = document.getElementById('btnConfirmarEliminarProveedor');
@@ -539,12 +521,38 @@ function inicializarModalEliminar() {
             return;
         }
 
-        try {
-            const res  = await fetch(`/api/proveedores/${id}`, { method: 'DELETE' });
-            const json = await res.json();
+        // Guardar referencia del botón
+        const btnOriginal = this;
+        const textoOriginal = btnOriginal.innerHTML;
+        
+        // Deshabilitar botón y mostrar loading
+        btnOriginal.disabled = true;
+        btnOriginal.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Eliminando...';
 
-            if (json.success) {
-                mostrarNotificacion('Proveedor eliminado correctamente', 'exito');
+        try {
+            console.log(`🔍 Intentando eliminar proveedor ID: ${id}`);
+            
+            const res = await fetch(`/api/proveedores/${id}`, { 
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            console.log(`📡 Status code: ${res.status}`);
+            
+            let json;
+            try {
+                const textResponse = await res.text();
+                console.log(`📄 Respuesta: ${textResponse}`);
+                json = JSON.parse(textResponse);
+            } catch (e) {
+                console.error('❌ Error parseando JSON:', e);
+                json = { success: false, error: 'Error en la respuesta del servidor' };
+            }
+
+            if (res.ok && json.success) {
+                mostrarNotificacion('✅ Proveedor eliminado correctamente', 'exito');
 
                 const modal = bootstrap.Modal.getInstance(
                     document.getElementById('modalEliminarProveedor')
@@ -553,12 +561,17 @@ function inicializarModalEliminar() {
 
                 await cargarProveedores();
             } else {
-                mostrarNotificacion("Error: " + (json.error || "No se pudo eliminar"), 'error');
+                const errorMsg = json.error || json.message || `Error HTTP ${res.status}`;
+                mostrarNotificacion(`❌ Error: ${errorMsg}`, 'error');
+                console.error('❌ Error detallado:', json);
             }
 
         } catch (error) {
-            console.error("Error eliminando:", error);
-            mostrarNotificacion("Error al eliminar: " + error.message, 'error');
+            console.error("❌ Error en petición:", error);
+            mostrarNotificacion(`❌ Error de conexión: ${error.message}`, 'error');
+        } finally {
+            btnOriginal.disabled = false;
+            btnOriginal.innerHTML = textoOriginal;
         }
     });
 }

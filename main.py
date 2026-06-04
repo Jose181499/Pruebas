@@ -129,6 +129,26 @@ def require_login():
             return redirect(url_for("login"))
 
 
+
+# ==========================================
+# ENDPOINT DE DIAGNÓSTICO
+# ==========================================
+
+@app.route("/api/diagnostico/clientes", methods=["GET"])
+def api_diagnostico_clientes():
+    """Endpoint para diagnosticar problemas con clientes"""
+    try:
+        from database import diagnosticar_clientes
+        diagnosticar_clientes()
+        return jsonify({
+            'success': True,
+            'message': 'Diagnóstico completado. Revisa la consola del servidor para ver los resultados.'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 # =========================
 # Auth
 # =========================
@@ -218,35 +238,35 @@ def api_guardar_cliente():
         return jsonify({"success": False, "error": str(e)})
 
 
-# @app.route("/api/clientes/buscar", methods=["GET"])
-# def api_buscar_clientes():
-#     """Buscar clientes por nombre o documento - VERSIÓN CORREGIDA"""
-#     try:
-#         from database import buscar_clientes_completo  # ← Importar la función correcta
+@app.route("/api/clientes/buscar", methods=["GET"])
+def api_buscar_clientes():
+    """Buscar clientes por nombre o documento - VERSIÓN CORREGIDA"""
+    try:
+        from database import buscar_clientes_completo  # ← Importar la función correcta
         
-#         busqueda = request.args.get('q', request.args.get('busqueda', '')).strip()
+        busqueda = request.args.get('q', request.args.get('busqueda', '')).strip()
         
-#         print(f"🔍 Buscando clientes: '{busqueda}'")
+        print(f"🔍 Buscando clientes: '{busqueda}'")
         
-#         if not busqueda or len(busqueda) < 2:
-#             return jsonify({"success": True, "data": []})
+        if not busqueda or len(busqueda) < 2:
+            return jsonify({"success": True, "data": []})
         
-#         # Usar la función que SÍ incluye teléfono, email y contacto
-#         clientes = buscar_clientes_completo(busqueda, limit=50)
+        # Usar la función que SÍ incluye teléfono, email y contacto
+        clientes = buscar_clientes_completo(busqueda, limit=50)
         
-#         print(f"✅ Encontrados {len(clientes)} clientes")
-#         if clientes:
-#             print(f"Ejemplo - Teléfono: {clientes[0].get('telefono_contacto')}")
-#             print(f"Ejemplo - Email: {clientes[0].get('email_contacto')}")
-#             print(f"Ejemplo - Contacto: {clientes[0].get('nombre_contacto')}")
+        print(f"✅ Encontrados {len(clientes)} clientes")
+        if clientes:
+            print(f"Ejemplo - Teléfono: {clientes[0].get('telefono_contacto')}")
+            print(f"Ejemplo - Email: {clientes[0].get('email_contacto')}")
+            print(f"Ejemplo - Contacto: {clientes[0].get('nombre_contacto')}")
         
-#         return jsonify({"success": True, "data": clientes})
+        return jsonify({"success": True, "data": clientes})
         
-#     except Exception as e:
-#         print(f"❌ Error en api_buscar_clientes: {e}")
-#         import traceback
-#         traceback.print_exc()
-#         return jsonify({"success": False, "error": str(e), "data": []}), 500
+    except Exception as e:
+        print(f"❌ Error en api_buscar_clientes: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e), "data": []}), 500
 
 @app.route("/api/clientes/<int:cliente_id>", methods=["GET"])
 def api_obtener_cliente(cliente_id):

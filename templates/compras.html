@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Gestor de Compras | KCF CORPORACION</title>
     
     <!-- Bootstrap -->
@@ -21,22 +21,83 @@
             box-sizing: border-box;
         }
         
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow-x: auto; /* Permitir scroll horizontal si es necesario */
+        }
+        
         body {
             font-family: 'Inter', 'Roboto', sans-serif;
             background: #f0f2f5;
             min-height: 100vh;
+            width: 100%;
         }
         
-        /* Barra superior corporativa */
+        /* CONTENEDOR PRINCIPAL - AHORA OCUPA TODO EL ANCHO */
+        .main-container {
+            width: 100%;
+            padding: 1.5rem 2rem;
+            margin: 0;
+            /* Eliminamos max-width para que ocupe toda la pantalla */
+        }
+        
+        /* La tabla ahora ocupa el 100% del ancho disponible */
+        .table-corporate {
+            width: 100%;
+            background: white;
+            border-radius: 8px;
+            overflow-x: auto;  /* Scroll horizontal si la tabla es muy ancha */
+            border: 1px solid #e4e7eb;
+        }
+        
+        /* Aseguramos que la tabla interna use el ancho completo */
+        .table-corporate table {
+            width: 100%;
+            min-width: 800px; /* Para que en pantallas muy pequeñas haya scroll horizontal */
+        }
+        
+        /* Barra superior ahora ocupa todo el ancho */
+        .corporate-header .container-fluid {
+            width: 100%;
+            padding: 0 2rem;
+            margin: 0;
+        }
+        
+        /* Ajustes responsivos */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem;
+            }
+            
+            .corporate-header .container-fluid {
+                padding: 0 1rem;
+            }
+        }
+        
+        /* Mejoramos el ancho de las celdas de la tabla */
+        .table-corporate thead th,
+        .table-corporate tbody td {
+            white-space: nowrap; /* Evita saltos de línea no deseados */
+        }
+        
+        /* Para móviles permitimos que el texto se ajuste */
+        @media (max-width: 768px) {
+            .table-corporate thead th,
+            .table-corporate tbody td {
+                white-space: normal;
+            }
+        }
+        
+        /* El resto de estilos se mantienen igual */
         .corporate-header {
             background: #0a2540;
             color: white;
             padding: 0.75rem 0;
             border-bottom: 3px solid #2c5f8a;
-        }
-        
-        .corporate-header .container-fluid {
-            padding: 0 2rem;
+            width: 100%;
         }
         
         .logo-area h2 {
@@ -74,13 +135,6 @@
             line-height: 1;
         }
         
-        /* Contenedor principal */
-        .main-container {
-            padding: 1.5rem 2rem;
-            max-width: 1600px;
-            margin: 0 auto;
-        }
-        
         /* Panel de control */
         .control-panel {
             background: white;
@@ -88,6 +142,7 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.08);
             margin-bottom: 1.5rem;
             border: 1px solid #e4e7eb;
+            width: 100%;
         }
         
         .panel-title {
@@ -114,17 +169,18 @@
             padding: 1.25rem 1.5rem;
         }
         
-        /* Filtros corporativos */
+        /* Filtros corporativos - se adaptan al ancho */
         .filter-group {
             display: flex;
             gap: 1rem;
             flex-wrap: wrap;
             align-items: flex-end;
+            width: 100%;
         }
         
         .filter-item {
             flex: 1;
-            min-width: 180px;
+            min-width: 160px;
         }
         
         .filter-item label {
@@ -213,15 +269,7 @@
             color: white;
         }
         
-        /* Tabla corporativa */
-        .table-corporate {
-            width: 100%;
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid #e4e7eb;
-        }
-        
+        /* Estilos de la tabla mejorados */
         .table-corporate thead th {
             background: #f8f9fa;
             padding: 0.875rem 1rem;
@@ -495,6 +543,17 @@
             }
         }
         
+        @media (max-width: 640px) {
+            .table-corporate {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .table-corporate table {
+                min-width: 700px;
+            }
+        }
+        
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -542,7 +601,7 @@
     </div>
 </div>
 
-<!-- Contenedor Principal -->
+<!-- Contenedor Principal - AHORA SIN max-width -->
 <div class="main-container">
     
     <!-- Panel de Control -->
@@ -613,7 +672,7 @@
         </div>
     </div>
     
-    <!-- Tabla de Órdenes de Compra -->
+    <!-- Tabla de Órdenes de Compra - AHORA OCUPA TODO EL ANCHO -->
     <div class="table-corporate">
         <table style="width: 100%;">
             <thead>

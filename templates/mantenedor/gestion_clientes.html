@@ -237,7 +237,7 @@
             <div class="table-responsive">
                 <table class="table table-modern align-middle">
                     <thead>
-                        <tr><th>ID</th><th>Código Cliente</th><th>Nombre Comercial</th><th>Razón Social</th><th>RUC/DNI</th><th>Dirección Fiscal</th><th>Condición Pago</th><th>Contactos</th><th>Puntos Entrega</th><th class="text-center">Acciones</th></tr>
+                        <tr><th>Item</th><th>Código Cliente</th><th>Nombre Comercial</th><th>Razón Social</th><th>RUC/DNI</th><th>Dirección Fiscal</th><th>Condición Pago</th><th>Contactos</th><th>Puntos Entrega</th><th class="text-center">Acciones</th></tr>
                     </thead>
                     <tbody id="tbody-clientes"></tbody>
                 </table>
@@ -247,7 +247,7 @@
 
     <!-- MODAL NUEVO CLIENTE -->
     <div class="modal fade" id="modalCliente" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-dark text-white"><h5 class="modal-title"><i class="bi bi-person-plus-fill"></i> Nuevo Cliente</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body">
@@ -279,7 +279,7 @@
                                 <div class="col-md-3"><label class="form-label">Nombre Comercial</label>
                                     <input type="text" class="form-control" id="nombre_comercial" placeholder="Nombre comercial">
                                 </div>
-                                <div class="col-12"><label class="form-label">Dirección Fiscal</label>
+                                <div class="col-md-3"><label class="form-label">Dirección Fiscal</label>
                                     <textarea class="form-control" id="direccion_fiscal" rows="2" placeholder="Dirección completa"></textarea>
                                 </div>
                             </div>
@@ -684,44 +684,93 @@
         // CARGAR CLIENTES
         // =========================================
         async function cargarClientes(filtros = {}) {
-            const tbody = document.getElementById("tbody-clientes");
-            if (!tbody) return;
-            tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5"><div class="spinner-border text-primary"></div><br>Cargando...</div></tr>`;
-            try {
-                let url = "/api/clientes/buscar";
-                const params = new URLSearchParams();
-                if (filtros.tipo) params.append("tipo_documento", filtros.tipo);
-                if (filtros.busqueda) params.append("busqueda", filtros.busqueda);
-                if (params.toString()) url += "?" + params.toString();
-                const res = await fetch(url);
-                const json = await res.json();
-                const clientes = json.data || [];
-                tbody.innerHTML = "";
-                if (clientes.length === 0) { tbody.innerHTML = `<td><td colspan="10" class="text-center py-5"><i class="bi bi-emoji-frown"></i><br>No hay clientes</div></table>`; return; }
-                clientes.forEach(c => {
-                    const contactos = (c.contactos?.length) ? c.contactos.map(ct => `📞 ${escapeHtml(ct.nombre_contacto || '')}`).join('<br>') : '<em>Sin contactos</em>';
-                    const puntos = (c.puntos_entrega?.length) ? c.puntos_entrega.map(p => `📦 ${escapeHtml(p.nombre_punto || '')}`).join('<br>') : '<em>Sin puntos</em>';
-                    const condicionPago = c.puntos_entrega?.[0]?.condicion_pago || '-';
-                    const codigoCliente = c.codigo_cliente || '---';
-                    tbody.innerHTML += `<tr>
+        const tbody = document.getElementById("tbody-clientes");
+        if (!tbody) return;
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="10" class="text-center py-5">
+                    <div class="spinner-border text-primary"></div>
+                    <br>Cargando...
+                </td>
+            </tr>`;
+
+        try {
+            let url = "/api/clientes/buscar";
+            const params = new URLSearchParams();
+            if (filtros.tipo) params.append("tipo_documento", filtros.tipo);
+            if (filtros.busqueda) params.append("busqueda", filtros.busqueda);
+            if (params.toString()) url += "?" + params.toString();
+
+            const res = await fetch(url);
+            const json = await res.json();
+            const clientes = json.data || [];
+
+            tbody.innerHTML = "";
+
+            if (clientes.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10" class="text-center py-5">
+                            <i class="bi bi-emoji-frown"></i><br>No hay clientes
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            clientes.forEach(c => {
+                const contactos = (c.contactos?.length)
+                    ? c.contactos.map(ct => ` ${escapeHtml(ct.nombre_contacto || '')}`).join('<br>')
+                    : '<em>Sin contactos</em>';
+
+                const puntos = (c.puntos_entrega?.length)
+                    ? c.puntos_entrega.map(p => ` ${escapeHtml(p.nombre_punto || '')}`).join('<br>')
+                    : '<em>Sin puntos</em>';
+
+                const condicionPago = c.puntos_entrega?.[0]?.condicion_pago || '-';
+                const codigoCliente = c.codigo_cliente || '---';
+                // ⚠️ Estabas usando "codigoMostrar" pero la variable se llama "codigoCliente"
+                const codigoMostrar = codigoCliente;
+
+                tbody.innerHTML += `
+                    <tr>
                         <td class="text-center">${c.id}</td>
-                        <td class="text-center"><span class="badge bg-secondary">${escapeHtml(codigoCliente)}</span></td>
+                        <td class="text-center">
+                            <span class="badge bg-secondary">${escapeHtml(codigoCliente)}</span>
+                        </td>
                         <td>${escapeHtml(c.nombre_comercial) || '-'}</td>
                         <td><strong>${escapeHtml(c.razon_social) || '-'}</strong></td>
-                        <td class="text-center"><span class="badge bg-info">${c.numero_documento || '-'}</span></td>
+                        <td class="text-center">
+                            <span class="badge bg-info">${c.numero_documento || '-'}</span>
+                        </td>
                         <td>${escapeHtml(c.direccion_fiscal) || '-'}</td>
                         <td class="text-center">${condicionPago}</td>
                         <td>${contactos}</td>
                         <td>${puntos}</td>
-                        <td class="text-center">
-                            <button class="btn btn-sm btn-primary me-1" onclick="abrirModalVer(${c.id})"><i class="bi bi-eye-fill"></i> Ver</button>
-                            <button class="btn btn-sm btn-warning me-1" onclick="abrirModalEditar(${c.id})"><i class="bi bi-pencil-fill"></i> Editar</button>
-                            <button class="btn btn-sm btn-danger" onclick="abrirModalEliminar(${c.id})"><i class="bi bi-trash-fill"></i> Eliminar</button>
-                        </div>
+                        <td class="acciones text-center">
+                            <button class="btn-mini btn-ver" onclick="abrirModalVer(${c.id})" title="Ver Detalle">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn-mini btn-editar" onclick="abrirModalEditar(${c.id})" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn-mini btn-eliminar" onclick="abrirModalEliminar(${c.id})" title="Eliminar">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
                     </tr>`;
-                });
-            } catch(e) { console.error(e); tbody.innerHTML = `<tr><td colspan="10" class="text-center text-danger">Error: ${e.message}</div></tr>`; }
-        }
+               });
+
+                } catch (e) {
+                    console.error(e);
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="10" class="text-center text-danger">
+                                Error: ${e.message}
+                            </td>
+                        </tr>`;
+                }
+            } 
 
         function inicializarFiltros() {
             const filtroTipo = document.getElementById("filtro-tipo");
@@ -745,36 +794,87 @@
             });
         }
 
-        window.abrirModalVer = async function(id) {
-            if (!id) { mostrarNotificacion("ID no válido", 'error'); return; }
-            const modalBody = document.getElementById('modalVerBody');
-            if (!modalBody) { mostrarNotificacion("Modal no encontrado", 'error'); return; }
-            modalBody.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div><p>Cargando...</p></div>`;
-            try {
-                const res = await fetch(`/api/clientes/${id}`);
-                const json = await res.json();
-                if (!json.success) throw new Error(json.error);
-                const c = json.data;
-                const fechaRegistro = c.created_at ? new Date(c.created_at).toLocaleString('es-PE') : 'No registrada';
-                let html = `<div class="fecha-registro-box"><i class="bi bi-calendar-clock-fill"></i><div><small>FECHA Y HORA DE REGISTRO</small><h5>${fechaRegistro}</h5></div></div>
-                    <div class="row"><div class="col-md-6"><div class="info-row-ver"><div class="info-label-ver">CÓDIGO</div><div><strong>${escapeHtml(c.codigo_cliente || '---')}</strong></div></div></div>
-                    <div class="col-md-6"><div class="info-row-ver"><div class="info-label-ver">TIPO DOCUMENTO</div><div>${escapeHtml(c.tipo_documento || '-')}</div></div></div></div>
-                    <div class="row"><div class="col-md-6"><div class="info-row-ver"><div class="info-label-ver">NÚMERO DOCUMENTO</div><div><strong>${escapeHtml(c.numero_documento || '-')}</strong></div></div></div>
-                    <div class="col-md-6"><div class="info-row-ver"><div class="info-label-ver">RAZÓN SOCIAL</div><div>${escapeHtml(c.razon_social || '-')}</div></div></div></div>
-                    <div class="row"><div class="col-md-6"><div class="info-row-ver"><div class="info-label-ver">NOMBRE COMERCIAL</div><div>${escapeHtml(c.nombre_comercial || '-')}</div></div></div>
-                    <div class="col-md-6"><div class="info-row-ver"><div class="info-label-ver">DIRECCIÓN FISCAL</div><div>${escapeHtml(c.direccion_fiscal || '-')}</div></div></div></div>
-                    <div class="erp-section-title mt-3"><i class="bi bi-person-badge"></i> Contactos</div>`;
-                if (c.contactos?.length) {
-                    c.contactos.forEach(contacto => { html += `<div class="contact-card-ver"><strong>${escapeHtml(contacto.nombre_contacto || 'Sin nombre')}</strong>${contacto.principal ? '<span class="badge-principal ms-2">⭐ Principal</span>' : ''}<div class="small">${contacto.cargo ? `<i class="bi bi-briefcase"></i> ${escapeHtml(contacto.cargo)}<br>` : ''}${contacto.email ? `<i class="bi bi-envelope"></i> ${escapeHtml(contacto.email)}<br>` : ''}${contacto.telefono ? `<i class="bi bi-telephone"></i> ${escapeHtml(contacto.telefono)}` : ''}</div></div>`; });
-                } else { html += `<p>No hay contactos</p>`; }
-                html += `<div class="erp-section-title mt-3"><i class="bi bi-geo-alt-fill"></i> Puntos de Entrega</div>`;
-                if (c.puntos_entrega?.length) {
-                    c.puntos_entrega.forEach(punto => { html += `<div class="punto-card-ver"><strong>${escapeHtml(punto.nombre_punto || 'Sin nombre')}</strong>${punto.principal_punto ? '<span class="badge-principal ms-2">⭐ Principal</span>' : ''}<div class="small">${punto.direccion ? `<i class="bi bi-pin-map"></i> ${escapeHtml(punto.direccion)}<br>` : ''}${punto.responsable ? `<i class="bi bi-person"></i> ${escapeHtml(punto.responsable)}<br>` : ''}${punto.telefono_punto ? `<i class="bi bi-telephone"></i> ${escapeHtml(punto.telefono_punto)}<br>` : ''}${punto.condicion_pago ? `<i class="bi bi-credit-card"></i> <strong>${escapeHtml(punto.condicion_pago)}</strong>` : ''}</div></div>`; });
-                } else { html += `<p>No hay puntos de entrega</p>`; }
-                modalBody.innerHTML = html;
-                new bootstrap.Modal(document.getElementById('modalVerCliente')).show();
-            } catch(error) { modalBody.innerHTML = `<div class="text-center py-5 text-danger"><i class="bi bi-exclamation-triangle-fill"></i><p>Error: ${error.message}</p></div>`; mostrarNotificacion("Error cargando cliente", 'error'); }
-        };
+            window.abrirModalVer = async function(id) {
+        if (!id) { mostrarNotificacion("ID no válido", 'error'); return; }
+        const modalBody = document.getElementById('modalVerBody');
+        if (!modalBody) { mostrarNotificacion("Modal no encontrado", 'error'); return; }
+        
+        modalBody.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div><p>Cargando...</p></div>`;
+        
+        try {
+            const res = await fetch(`/api/clientes/${id}`);
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+            const c = json.data;
+            const fechaRegistro = c.created_at ? new Date(c.created_at).toLocaleString('es-PE') : 'No registrada';
+            
+            // 1. CAJA SUPERIOR CON FLEXBOX (Código a la izquierda, Fecha a la derecha)
+            let html = `
+                <div class="fecha-registro-box d-flex justify-content-between align-items-center p-3 mb-3">
+                    <div class="info-row-ver m-0 p-0" style="background: transparent; border: none; box-shadow: none;">
+                        <div class="info-label-ver mb-1" style="font-size: 0.75rem;">CÓDIGO CLIENTE</div>
+                        <h5 class="fw-bold mb-0 text-dark" style="font-size: 1.15rem;">${escapeHtml(c.codigo_cliente || '---')}</h5>
+                    </div>
+                    
+                    <div class="text-end">
+                        <small class="text-muted fw-bold text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">FECHA Y HORA DE REGISTRO</small>
+                        <h5 class="fw-bold mb-0 mt-1 text-dark" style="font-size: 1.15rem;">${fechaRegistro}</h5>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-row-ver"><div class="info-label-ver">TIPO DOCUMENTO</div><div>${escapeHtml(c.tipo_documento || '-')}</div></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-row-ver"><div class="info-label-ver">NÚMERO DOCUMENTO</div><div><strong>${escapeHtml(c.numero_documento || '-')}</strong></div></div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="info-row-ver"><div class="info-label-ver">RAZÓN SOCIAL</div><div>${escapeHtml(c.razon_social || '-')}</div></div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-row-ver"><div class="info-label-ver">NOMBRE COMERCIAL</div><div>${escapeHtml(c.nombre_comercial || '-')}</div></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-row-ver"><div class="info-label-ver">DIRECCIÓN FISCAL</div><div>${escapeHtml(c.direccion_fiscal || '-')}</div></div>
+                    </div>
+                </div>
+                
+                <div class="erp-section-title mt-3"><i class="bi bi-person-badge"></i> Contactos</div>`;
+                
+            // 3. SECCIÓN DE CONTACTOS
+            if (c.contactos?.length) {
+                c.contactos.forEach(contacto => { 
+                    html += `<div class="contact-card-ver"><strong>${escapeHtml(contacto.nombre_contacto || 'Sin nombre')}</strong>${contacto.principal ? '<span class="badge-principal ms-2">⭐ Principal</span>' : ''}<div class="small">${contacto.cargo ? `<i class="bi bi-briefcase"></i> ${escapeHtml(contacto.cargo)}<br>` : ''}${contacto.email ? `<i class="bi bi-envelope"></i> ${escapeHtml(contacto.email)}<br>` : ''}${contacto.telefono ? `<i class="bi bi-telephone"></i> ${escapeHtml(contacto.telefono)}` : ''}</div></div>`; 
+                });
+            } else { 
+                html += `<p class="text-muted ps-2">No hay contactos</p>`; 
+            }
+            
+            // 4. SECCIÓN DE PUNTOS DE ENTREGA
+            html += `<div class="erp-section-title mt-3"><i class="bi bi-geo-alt-fill"></i> Puntos de Entrega</div>`;
+            if (c.puntos_entrega?.length) {
+                c.puntos_entrega.forEach(punto => { 
+                    html += `<div class="punto-card-ver"><strong>${escapeHtml(punto.nombre_punto || 'Sin nombre')}</strong>${punto.principal_punto ? '<span class="badge-principal ms-2">⭐ Principal</span>' : ''}<div class="small">${punto.direccion ? `<i class="bi bi-pin-map"></i> ${escapeHtml(punto.direccion)}<br>` : ''}${punto.responsable ? `<i class="bi bi-person"></i> ${escapeHtml(punto.responsable)}<br>` : ''}${punto.telefono_punto ? `<i class="bi bi-telephone"></i> ${escapeHtml(punto.telefono_punto)}<br>` : ''}${punto.condicion_pago ? `<i class="bi bi-credit-card"></i> <strong>${escapeHtml(punto.condicion_pago)}</strong>` : ''}</div></div>`; 
+                });
+            } else { 
+                html += `<p class="text-muted ps-2">No hay puntos de entrega</p>`; 
+            }
+            
+            modalBody.innerHTML = html;
+            new bootstrap.Modal(document.getElementById('modalVerCliente')).show();
+            
+        } catch(error) { 
+            modalBody.innerHTML = `<div class="text-center py-5 text-danger"><i class="bi bi-exclamation-triangle-fill"></i><p>Error: ${error.message}</p></div>`; 
+            mostrarNotificacion("Error cargando cliente", 'error'); 
+        }
+    };
 
         window.abrirModalEditar = async function(id) {
             try {
@@ -940,7 +1040,40 @@
                 if (document.getElementById('listaContactos')?.children.length === 0) agregarContactoNuevo();
                 if (document.getElementById('listaPuntos')?.children.length === 0) agregarPuntoNuevo();
             }, 100);
+            // ===========================
+// ESTILOS ADICIONALES
+// ===========================
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+    .estado-borrador { background: #fef3c7; color: #92400e; border-left: 3px solid #f59e0b; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+    .estado-proceso { background: #e0e7ff; color: #3730a3; border-left: 3px solid #6366f1; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+    .estado-generada { background: #dbeafe; color: #1e40af; border-left: 3px solid #3b82f6; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+    .estado-aceptada { background: #d1fae5; color: #065f46; border-left: 3px solid #10b981; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+    .estado-rechazada { background: #fee2e2; color: #991b1b; border-left: 3px solid #ef4444; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+    .btn-mini { background: none; border: none; font-size: 1.1rem; padding: 6px 10px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; margin: 0 2px; }
+    .btn-mini:hover { transform: scale(1.05); }
+    .btn-ver { color: #3b82f6; }
+    .btn-ver:hover { background: rgba(59, 130, 246, 0.1); }
+    .btn-editar { color: #f59e0b; }
+    .btn-editar:hover { background: rgba(245, 158, 11, 0.1); }
+    .btn-eliminar { color: #ef4444; }
+    .btn-eliminar:hover { background: rgba(239, 68, 68, 0.1); }
+    .monto { font-weight: 700; color: #111827; }
+    .acciones { white-space: nowrap; }
+    .codigo-cell, .fecha-cell, .cliente-cell, .estado-cell, .monto, .acciones { vertical-align: middle; }
+    .fecha-hora .fecha { font-weight: 600; color: #111827; }
+    .fecha-hora .hora { font-size: 11px; color: #6b7280; }
+`;
+document.head.appendChild(style);
         });
     </script>
 </body>
-</html>
+</html> 

@@ -71,7 +71,7 @@ def load_seed(path: str):
             familia=pr["familia"],
             descripcion=pr["descripcion"],
             descripcion_larga=pr.get("descripcion_larga", ""),
-            marca=pr.get("marca", ""),
+            marca=pr.get("marca", ""),git add .
             modelo=pr.get("modelo", ""),
             unidad=pr.get("unidad", "Unidad")
         )

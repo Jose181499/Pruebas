@@ -46,7 +46,7 @@ function mostrarNotificacion(mensaje, tipo = 'exito') {
         min-width: 300px;
         max-width: 500px;
         animation: slideIn 0.3s ease;
-        font-family: Arial, sans-serif;
+        font-family: 'Inter', sans-serif;
         font-size: 14px;
     `;
     
@@ -91,6 +91,16 @@ function mostrarNotificacion(mensaje, tipo = 'exito') {
 }
 
 // =========================================
+// FUNCIONES DE ESCAPE
+// =========================================
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// =========================================
 // PLACEHOLDER DOCUMENTO
 // =========================================
 function actualizarPlaceholderDocumento() {
@@ -100,12 +110,19 @@ function actualizarPlaceholderDocumento() {
 
     if (tipo === 'RUC') {
         input.placeholder = '11 dígitos';
+        input.maxLength = 11;
         if (label) label.innerHTML = 'RUC *:';
     } else if (tipo === 'DNI') {
         input.placeholder = '8 dígitos';
+        input.maxLength = 8;
         if (label) label.innerHTML = 'DNI *:';
+    } else if (tipo === 'CE') {
+        input.placeholder = '9 dígitos';
+        input.maxLength = 9;
+        if (label) label.innerHTML = 'CE *:';
     } else {
         input.placeholder = 'Ingrese el número';
+        input.maxLength = 20;
         if (label) label.innerHTML = 'Número de Documento *:';
     }
 }
@@ -118,8 +135,79 @@ function validarDocumento(tipo, numero) {
         return /^\d{11}$/.test(numero);
     } else if (tipo === 'DNI') {
         return /^\d{8}$/.test(numero);
+    } else if (tipo === 'CE') {
+        return /^\d{9}$/.test(numero);
     }
     return true;
+}
+
+// =========================================
+// CONSULTAR SUNAT
+// =========================================
+async function consultarSunat() {
+    const tipoDoc = document.getElementById('tipo_documento').value;
+    const numDoc = document.getElementById('numero_documento').value;
+    const resultadoSpan = document.getElementById('sunat-resultado');
+    
+    if (tipoDoc !== 'RUC') {
+        mostrarNotificacion(`⚠️ La consulta a Sunat solo está disponible para RUC`, 'warning');
+        return;
+    }
+    
+    if (!numDoc || numDoc.length !== 11) {
+        mostrarNotificacion(`Ingrese un RUC válido de 11 dígitos`, 'warning');
+        return;
+    }
+    
+    const btn = document.getElementById('btnConsultarSunat');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Consultando...';
+    btn.disabled = true;
+    
+    if (resultadoSpan) {
+        resultadoSpan.innerHTML = '<i class="bi bi-hourglass-split text-info"></i> Consultando Sunat...';
+    }
+    
+    try {
+        const url = `/api/sunat/consulta?ruc=${numDoc}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.success) {
+            if (data.razon_social) {
+                document.getElementById('razon_social').value = data.razon_social;
+            }
+            if (data.nombre_comercial) {
+                document.getElementById('nombre_comercial').value = data.nombre_comercial;
+            }
+            if (data.direccion) {
+                document.getElementById('direccion_fiscal').value = data.direccion;
+            }
+            
+            if (resultadoSpan) {
+                resultadoSpan.innerHTML = `<i class="bi bi-check-circle-fill text-success"></i> ✅ Datos cargados desde Sunat`;
+                setTimeout(() => { if (resultadoSpan) resultadoSpan.innerHTML = ''; }, 5000);
+            }
+            mostrarNotificacion(`✅ Datos cargados desde Sunat: ${data.razon_social}`, 'exito');
+        } else {
+            const errorMsg = data.error || 'No se encontraron datos para este RUC';
+            if (resultadoSpan) {
+                resultadoSpan.innerHTML = `<i class="bi bi-exclamation-triangle-fill text-danger"></i> ❌ ${errorMsg}`;
+                setTimeout(() => { if (resultadoSpan) resultadoSpan.innerHTML = ''; }, 5000);
+            }
+            mostrarNotificacion(`❌ ${errorMsg}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error consultando Sunat:', error);
+        if (resultadoSpan) {
+            resultadoSpan.innerHTML = `<i class="bi bi-exclamation-triangle-fill text-danger"></i> Error de conexión`;
+            setTimeout(() => { if (resultadoSpan) resultadoSpan.innerHTML = ''; }, 5000);
+        }
+        mostrarNotificacion(`❌ Error al consultar Sunat`, 'error');
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -136,77 +224,111 @@ document.addEventListener('DOMContentLoaded', () => {
         if (puntosCount) puntosCount.textContent = contadorPuntos;
     }
 
+    // =========================================
+    // AGREGAR CONTACTO - VERSIÓN TARJETA MODERNA
+    // =========================================
     function agregarContacto(data = {}) {
         contadorContactos++;
         const div = document.createElement('div');
-        div.classList.add('item-agregable');
-        div.style.cssText = `border:1px solid #ddd;padding:15px;margin-bottom:15px;border-radius:8px;position:relative;background:#f9f9f9;`;
+        div.className = 'col-md-6';
         div.innerHTML = `
-            <button type="button" class="btn-eliminar" style="position:absolute;top:10px;right:10px;background:#ff4444;color:white;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;">🗑️</button>
-            <div class="row">
-                <div class="col-md-6 mb-3"><label>Nombre *</label><input type="text" class="form-control" data-field="nombre_contacto" value="${data.nombre_contacto || ''}" required></div>
-                <div class="col-md-6 mb-3"><label>Cargo</label><input type="text" class="form-control" data-field="cargo" value="${data.cargo || ''}"></div>
+            <div class="item-agregable h-100" style="border:1px solid #e5e7eb;border-radius:16px;padding:20px;margin-bottom:16px;position:relative;background:#ffffff;transition:all 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                <button type="button" class="btn-eliminar" style="position:absolute;top:12px;right:12px;background:#fee2e2;color:#dc2626;border:none;border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;">
+                    <i class="bi bi-trash3"></i> Eliminar
+                </button>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label fw-semibold small text-muted">Nombre Completo <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control custom-input" data-field="nombre_contacto" value="${escapeHtml(data.nombre_contacto || '')}" placeholder="Ej: Juan Pérez" style="border-radius:10px;border:1.5px solid #e5e7eb;">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold small text-muted">Cargo</label>
+                        <input type="text" class="form-control custom-input" data-field="cargo" value="${escapeHtml(data.cargo || '')}" placeholder="Ej: Gerente de Compras" style="border-radius:10px;border:1.5px solid #e5e7eb;">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small text-muted">Email</label>
+                        <input type="email" class="form-control custom-input" data-field="email" value="${escapeHtml(data.email || '')}" placeholder="correo@empresa.com" style="border-radius:10px;border:1.5px solid #e5e7eb;">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small text-muted">Teléfono</label>
+                        <input type="text" class="form-control custom-input" data-field="telefono" value="${escapeHtml(data.telefono || '')}" placeholder="Ej: 987654321" style="border-radius:10px;border:1.5px solid #e5e7eb;">
+                    </div>
+                    <div class="col-12">
+                        <div class="checkbox-group d-flex align-items-center gap-2 pt-2 border-top" style="border-top:1px solid #f0f0f0;">
+                            <input class="form-check-input" type="checkbox" data-field="principal" ${data.principal ? 'checked' : ''} id="principal_${Date.now()}" style="width:18px;height:18px;">
+                            <label class="form-check-label small" style="color:#374151;">⭐ Marcar como contacto principal</label>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="row">
-                <div class="col-md-6 mb-3"><label>Email</label><input type="email" class="form-control" data-field="email" value="${data.email || ''}"></div>
-                <div class="col-md-6 mb-3"><label>Teléfono</label><input type="text" class="form-control" data-field="telefono" value="${data.telefono || ''}"></div>
-            </div>
-            <div class="checkbox-group"><input type="checkbox" data-field="principal" ${data.principal ? 'checked' : ''}> <label>Principal</label></div>
         `;
         listaContactos.appendChild(div);
         actualizarContadores();
     }
 
+    // =========================================
+    // AGREGAR PUNTO DE ENTREGA - VERSIÓN TARJETA MODERNA
+    // =========================================
     function agregarPunto(data = {}) {
         contadorPuntos++;
         const div = document.createElement('div');
-        div.classList.add('item-agregable');
-        div.style.cssText = `border:1px solid #ddd;padding:15px;margin-bottom:15px;border-radius:8px;position:relative;background:#f9f9f9;`;
+        div.className = 'col-md-6';
         div.innerHTML = `
-            <button type="button" class="btn-eliminar" style="position:absolute;top:10px;right:10px;background:#ff4444;color:white;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;">🗑️</button>
-            <div class="row">
-                <div class="col-md-6 mb-3"><label>Punto de Entrega *</label><input type="text" class="form-control" data-field="nombre_punto" value="${data.nombre_punto || ''}" required></div>
-                <div class="col-md-6 mb-3"><label>Dirección *</label><input type="text" class="form-control" data-field="direccion" value="${data.direccion || ''}" required></div>
+            <div class="item-agregable h-100" style="border:1px solid #e5e7eb;border-radius:16px;padding:20px;margin-bottom:16px;position:relative;background:#ffffff;transition:all 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                <button type="button" class="btn-eliminar" style="position:absolute;top:12px;right:12px;background:#fee2e2;color:#dc2626;border:none;border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;">
+                    <i class="bi bi-trash3"></i> Eliminar
+                </button>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label fw-semibold small text-muted">Nombre del Punto <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control custom-input" data-field="nombre_punto" value="${escapeHtml(data.nombre_punto || '')}" placeholder="Ej: Oficina Principal" style="border-radius:10px;border:1.5px solid #e5e7eb;">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold small text-muted">Dirección Completa</label>
+                        <input type="text" class="form-control custom-input" data-field="direccion" value="${escapeHtml(data.direccion || '')}" placeholder="Calle, número, urbanización" style="border-radius:10px;border:1.5px solid #e5e7eb;">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small text-muted">Contacto de Entrega</label>
+                        <input type="text" class="form-control custom-input" data-field="responsable" value="${escapeHtml(data.responsable || '')}" placeholder="Nombre del responsable" style="border-radius:10px;border:1.5px solid #e5e7eb;">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small text-muted">Teléfono de Contacto</label>
+                        <input type="text" class="form-control custom-input" data-field="telefono_punto" value="${escapeHtml(data.telefono_punto || data.telefono || '')}" placeholder="Teléfono del punto" style="border-radius:10px;border:1.5px solid #e5e7eb;">
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label fw-semibold small text-muted">Condición de Pago</label>
+                        <select data-field="condicion_pago" class="form-select custom-input select-condicion-pago" style="border-radius:10px;border:1.5px solid #e5e7eb;">
+                            <option value="">-- Seleccione --</option>
+                            <option value="Contado" ${data.condicion_pago === 'Contado' ? 'selected' : ''}>💵 Contado</option>
+                            <option value="Crédito 7 días" ${data.condicion_pago === 'Crédito 7 días' ? 'selected' : ''}>📆 Crédito 7 días</option>
+                            <option value="Crédito 15 días" ${data.condicion_pago === 'Crédito 15 días' ? 'selected' : ''}>📆 Crédito 15 días</option>
+                            <option value="Crédito 30 días" ${data.condicion_pago === 'Crédito 30 días' ? 'selected' : ''}>📆 Crédito 30 días</option>
+                            <option value="Crédito 45 días" ${data.condicion_pago === 'Crédito 45 días' ? 'selected' : ''}>📆 Crédito 45 días</option>
+                            <option value="Crédito 60 días" ${data.condicion_pago === 'Crédito 60 días' ? 'selected' : ''}>📆 Crédito 60 días</option>
+                            <option value="Crédito 90 días" ${data.condicion_pago === 'Crédito 90 días' ? 'selected' : ''}>📆 Crédito 90 días</option>
+                            <option value="Personalizado" ${data.condicion_pago === 'Personalizado' ? 'selected' : ''}>✏️ Personalizado</option>
+                        </select>
+                    </div>
+                    <div class="col-md-12 campo-credito-personalizado" style="display:${data.condicion_pago === 'Personalizado' ? 'block' : 'none'};">
+                        <label class="form-label fw-semibold small text-muted">Condición Personalizada</label>
+                        <input type="text" class="form-control custom-input" data-field="tiempo_credito" value="${escapeHtml(data.tiempo_credito || '')}" placeholder="Ej: Crédito 20 días, 50% adelanto" style="border-radius:10px;border:1.5px solid #e5e7eb;">
+                    </div>
+                    <div class="col-12">
+                        <div class="checkbox-group d-flex align-items-center gap-2 pt-2 border-top" style="border-top:1px solid #f0f0f0;">
+                            <input class="form-check-input" type="checkbox" data-field="principal_punto" ${data.principal ? 'checked' : ''} id="punto_principal_${Date.now()}" style="width:18px;height:18px;">
+                            <label class="form-check-label small" style="color:#374151;">⭐ Marcar como punto de entrega principal</label>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="row">
-                <div class="col-md-4 mb-3"><label>Departamento *</label><select class="form-select" data-field="departamento" required>
-                    <option value="">Seleccione</option>
-                    <option value="Amazonas">Amazonas</option><option value="Áncash">Áncash</option><option value="Apurímac">Apurímac</option>
-                    <option value="Arequipa">Arequipa</option><option value="Ayacucho">Ayacucho</option><option value="Cajamarca">Cajamarca</option>
-                    <option value="Callao">Callao</option><option value="Cusco">Cusco</option><option value="Huancavelica">Huancavelica</option>
-                    <option value="Huánuco">Huánuco</option><option value="Ica">Ica</option><option value="Junín">Junín</option>
-                    <option value="La Libertad">La Libertad</option><option value="Lambayeque">Lambayeque</option><option value="Lima">Lima</option>
-                    <option value="Loreto">Loreto</option><option value="Madre de Dios">Madre de Dios</option><option value="Moquegua">Moquegua</option>
-                    <option value="Pasco">Pasco</option><option value="Piura">Piura</option><option value="Puno">Puno</option>
-                    <option value="San Martín">San Martín</option><option value="Tacna">Tacna</option><option value="Tumbes">Tumbes</option>
-                    <option value="Ucayali">Ucayali</option>
-                </select></div>
-                <div class="col-md-4 mb-3"><label>Provincia *</label><input type="text" class="form-control" data-field="provincia" value="${data.provincia || ''}" required></div>
-                <div class="col-md-4 mb-3"><label>Distrito *</label><input type="text" class="form-control" data-field="distrito" value="${data.distrito || ''}" required></div>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-3"><label>Contacto de Entrega</label><input type="text" class="form-control" data-field="responsable" value="${data.responsable || ''}"></div>
-                <div class="col-md-6 mb-3"><label>Teléfono</label><input type="text" class="form-control" data-field="telefono_punto" value="${data.telefono || ''}"></div>
-            </div>
-            <div class="col-md-6 mb-3"><label>Condición de Pago</label>
-                <select data-field="condicion_pago" class="form-select select-condicion-pago">
-                    <option value="">Seleccione</option>
-                    <option value="Contado" ${data.condicion_pago === 'Contado' ? 'selected' : ''}>Contado</option>
-                    <option value="Credito" ${data.condicion_pago === 'Credito' ? 'selected' : ''}>Crédito</option>
-                </select>
-            </div>
-            <div class="form-group campo-credito" style="display:${data.condicion_pago === 'Credito' ? 'block' : 'none'};">
-                <label>Tiempo de Crédito</label><input type="text" class="form-control" data-field="tiempo_credito" placeholder="Ej: 30 días" value="${data.tiempo_credito || ''}">
-            </div>
-            <div class="checkbox-group"><input type="checkbox" data-field="principal" ${data.principal ? 'checked' : ''}> <label>Principal</label></div>
         `;
         listaPuntos.appendChild(div);
 
         const selectCondicionPago = div.querySelector('.select-condicion-pago');
-        const campoCredito = div.querySelector('.campo-credito');
-        if (selectCondicionPago) {
+        const campoPersonalizado = div.querySelector('.campo-credito-personalizado');
+        if (selectCondicionPago && campoPersonalizado) {
             selectCondicionPago.addEventListener('change', function() {
-                campoCredito.style.display = this.value === 'Credito' ? 'block' : 'none';
+                campoPersonalizado.style.display = this.value === 'Personalizado' ? 'block' : 'none';
             });
         }
         actualizarContadores();
@@ -219,56 +341,82 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnAgregarPunto = document.getElementById('btnAgregarPunto');
     if (btnAgregarPunto) btnAgregarPunto.addEventListener('click', () => agregarPunto());
 
+    // Botón consultar Sunat
+    const btnConsultarSunat = document.getElementById('btnConsultarSunat');
+    if (btnConsultarSunat) btnConsultarSunat.addEventListener('click', consultarSunat);
+
     // Eliminar items
     document.addEventListener('click', (e) => {
-        if (e.target.classList.contains('btn-eliminar')) {
-            const item = e.target.closest('.item-agregable');
-            const container = item.parentElement;
-            item.remove();
-            if (container === listaContactos) contadorContactos--;
-            if (container === listaPuntos) contadorPuntos--;
-            actualizarContadores();
-            mostrarNotificacion('Elemento eliminado', 'info');
+        if (e.target.classList.contains('btn-eliminar') || e.target.closest('.btn-eliminar')) {
+            const btn = e.target.closest('.btn-eliminar');
+            if (btn) {
+                const tarjeta = btn.closest('.col-md-6');
+                if (tarjeta) {
+                    const container = tarjeta.parentElement;
+                    tarjeta.remove();
+                    if (container === listaContactos) contadorContactos--;
+                    if (container === listaPuntos) contadorPuntos--;
+                    actualizarContadores();
+                    mostrarNotificacion('Elemento eliminado', 'info');
+                }
+            }
         }
     });
 
-    // Solo 1 principal
+    // Solo 1 principal (contactos)
     document.addEventListener('change', (e) => {
         if (e.target.dataset.field === 'principal') {
-            const container = e.target.closest('#listaContactos') ? listaContactos : listaPuntos;
-            const checkboxes = container.querySelectorAll('[data-field="principal"]');
+            const checkboxes = listaContactos.querySelectorAll('[data-field="principal"]');
+            checkboxes.forEach(cb => { if (cb !== e.target) cb.checked = false; });
+        }
+        if (e.target.dataset.field === 'principal_punto') {
+            const checkboxes = listaPuntos.querySelectorAll('[data-field="principal_punto"]');
             checkboxes.forEach(cb => { if (cb !== e.target) cb.checked = false; });
         }
     });
 
     function obtenerData() {
         const contactos = [];
-        listaContactos.querySelectorAll('.item-agregable').forEach(item => {
-            contactos.push({
-                nombre_contacto: item.querySelector('[data-field="nombre_contacto"]')?.value.trim() || '',
-                cargo: item.querySelector('[data-field="cargo"]')?.value.trim() || '',
-                email: item.querySelector('[data-field="email"]')?.value.trim() || '',
-                telefono: item.querySelector('[data-field="telefono"]')?.value.trim() || '',
-                principal: item.querySelector('[data-field="principal"]')?.checked || false
-            });
+        listaContactos.querySelectorAll('.col-md-6').forEach(tarjeta => {
+            const item = tarjeta.querySelector('.item-agregable');
+            if (item) {
+                const nombre = item.querySelector('[data-field="nombre_contacto"]')?.value.trim();
+                if (nombre) {
+                    contactos.push({
+                        nombre_contacto: nombre,
+                        cargo: item.querySelector('[data-field="cargo"]')?.value.trim() || '',
+                        email: item.querySelector('[data-field="email"]')?.value.trim() || '',
+                        telefono: item.querySelector('[data-field="telefono"]')?.value.trim() || '',
+                        principal: item.querySelector('[data-field="principal"]')?.checked || false
+                    });
+                }
+            }
         });
 
         const puntos = [];
-        listaPuntos.querySelectorAll('.item-agregable').forEach(item => {
-            puntos.push({
-                nombre: item.querySelector('[data-field="nombre_punto"]')?.value.trim() || '',
-                direccion: item.querySelector('[data-field="direccion"]')?.value.trim() || '',
-                responsable: item.querySelector('[data-field="responsable"]')?.value.trim() || '',
-                telefono: item.querySelector('[data-field="telefono_punto"]')?.value.trim() || '',
-                condicion_pago: item.querySelector('[data-field="condicion_pago"]')?.value || '',
-                tiempo_credito: item.querySelector('[data-field="tiempo_credito"]')?.value.trim() || '',
-                principal: item.querySelector('[data-field="principal"]')?.checked || false
-            });
+        listaPuntos.querySelectorAll('.col-md-6').forEach(tarjeta => {
+            const item = tarjeta.querySelector('.item-agregable');
+            if (item) {
+                const nombre = item.querySelector('[data-field="nombre_punto"]')?.value.trim();
+                if (nombre) {
+                    const condicionPago = item.querySelector('[data-field="condicion_pago"]')?.value || '';
+                    const tiempoCredito = item.querySelector('[data-field="tiempo_credito"]')?.value.trim() || '';
+                    puntos.push({
+                        nombre_punto: nombre,
+                        direccion: item.querySelector('[data-field="direccion"]')?.value.trim() || '',
+                        responsable: item.querySelector('[data-field="responsable"]')?.value.trim() || '',
+                        telefono: item.querySelector('[data-field="telefono_punto"]')?.value.trim() || '',
+                        condicion_pago: condicionPago === 'Personalizado' ? tiempoCredito : condicionPago,
+                        tiempo_credito: condicionPago === 'Personalizado' ? '' : tiempoCredito,
+                        principal: item.querySelector('[data-field="principal_punto"]')?.checked || false
+                    });
+                }
+            }
         });
         return { contactos, puntos_entrega: puntos };
     }
 
-    // Submit form - MODIFICADO: Ya no envía ID manual
+    // Submit form
     const formCliente = document.getElementById('formCliente');
     if (formCliente) {
         formCliente.addEventListener('submit', async (e) => {
@@ -303,7 +451,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
-            // NOTA: NO enviamos id, Supabase lo genera automáticamente con el trigger
             const clienteCompleto = {
                 tipo_documento: tipoDocumento,
                 numero_documento: numeroDocumento,
@@ -324,15 +471,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const json = await res.json();
                 
                 if (json.success) {
-                    // Mostrar notificación con el código generado
                     const codigoGenerado = json.data?.codigo_cliente || 'Generado automáticamente';
                     mostrarNotificacion(
                         `✅ CLIENTE CREADO EXITOSAMENTE\n\n` +
                         `Código: ${codigoGenerado}\n` +
                         `Razón Social: ${razonSocial}\n` +
-                        `Documento: ${tipoDocumento}: ${numeroDocumento}\n` +
-                        `Contactos: ${data.contactos.length}\n` +
-                        `Puntos de Entrega: ${data.puntos_entrega.length}`,
+                        `Documento: ${tipoDocumento}: ${numeroDocumento}`,
                         'exito'
                     );
                     setTimeout(() => {
@@ -357,8 +501,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (tipoDocumento) tipoDocumento.addEventListener('change', actualizarPlaceholderDocumento);
     actualizarPlaceholderDocumento();
 
-    // Inicializar
-    agregarContacto();
-    agregarPunto();
-    actualizarContadores();
+    // Inicializar con un contacto y un punto por defecto
+    setTimeout(() => {
+        if (listaContactos && listaContactos.children.length === 0) {
+            agregarContacto();
+        }
+        if (listaPuntos && listaPuntos.children.length === 0) {
+            agregarPunto();
+        }
+    }, 100);
 });

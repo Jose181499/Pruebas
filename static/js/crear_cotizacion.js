@@ -31,13 +31,14 @@ document.addEventListener('DOMContentLoaded', () => {
         return numero.toFixed(3).replace(/\.?0+$/, '');
     }
 
-    // =========================
-    // GENERACIÓN DE CÓDIGOS PERSONALIZADOS
-    // =========================
-    let codigoCotizacionActual = '';
-    let correlativoActual = 0;
-    let usuarioActual = null;
-    let esBorrador = true;
+    
+        // =========================
+        // GENERACIÓN DE CÓDIGOS PERSONALIZADOS
+        // =========================
+        let codigoCotizacionActual = '';
+        let correlativoActual = 0;
+        let usuarioActual = null;
+        let esBorrador = true;
 
     // Obtener usuario actual
     async function obtenerUsuarioActual() {
@@ -639,64 +640,277 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================
     // CREAR NUEVO CLIENTE
     // =========================
-    async function guardarNuevoCliente() {
-        const tipoDocumento = document.getElementById('nuevo_tipo_documento')?.value;
-        const numeroDocumento = document.getElementById('nuevo_numero_documento')?.value.trim();
-        const razonSocial = document.getElementById('nuevo_razon_social')?.value.trim();
+  async function guardarNuevoCliente() {
+    const tipoDocumento = document.getElementById('nuevo_tipo_documento')?.value;
+    const numeroDocumento = document.getElementById('nuevo_numero_documento')?.value.trim();
+    const razonSocial = document.getElementById('nuevo_razon_social')?.value.trim();
+    
+    if (!numeroDocumento) {
+        mostrarNotificacion('⚠️ Ingrese el número de documento', 'warning');
+        return;
+    }
+    
+    if (!razonSocial) {
+        mostrarNotificacion('⚠️ Ingrese la razón social', 'warning');
+        return;
+    }
+    
+    const btnGuardar = document.getElementById('btnGuardarNuevoCliente');
+    const textoOriginal = btnGuardar.innerHTML;
+    btnGuardar.innerHTML = '<i class="bi bi-hourglass-split"></i> Guardando...';
+    btnGuardar.disabled = true;
+    
+    try {
+        const payload = {
+            tipo_documento: tipoDocumento,
+            numero_documento: numeroDocumento,
+            razon_social: razonSocial,
+            nombre_comercial: document.getElementById('nuevo_nombre_comercial')?.value.trim() || '',
+            direccion_fiscal: document.getElementById('nuevo_direccion_fiscal')?.value.trim() || '',
+            telefono_contacto: document.getElementById('nuevo_telefono')?.value.trim() || '',
+            email_contacto: document.getElementById('nuevo_email')?.value.trim() || '',
+            nombre_contacto: document.getElementById('nuevo_nombre_contacto')?.value.trim() || ''
+        };
         
-        if (!numeroDocumento) {
-            mostrarNotificacion('⚠️ Ingrese el número de documento', 'warning');
-            return;
-        }
+        const response = await fetch('/api/clientes/crear', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
         
-        if (!razonSocial) {
-            mostrarNotificacion('⚠️ Ingrese la razón social', 'warning');
-            return;
-        }
+        const result = await response.json();
         
-        const btnGuardar = document.getElementById('btnGuardarNuevoCliente');
-        const textoOriginal = btnGuardar.innerHTML;
-        btnGuardar.innerHTML = '<i class="bi bi-hourglass-split"></i> Guardando...';
-        btnGuardar.disabled = true;
-        
-        try {
-            const payload = {
+        if (result.success) {
+            document.getElementById('formNuevoCliente')?.reset();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalNuevoCliente'));
+            modal.hide();
+            
+            // 🔥 CAMBIO AQUÍ - Notificación GRANDE en lugar de la pequeña
+            mostrarNotificacionClienteGuardadoGrande({
+                razon_social: razonSocial,
                 tipo_documento: tipoDocumento,
                 numero_documento: numeroDocumento,
-                razon_social: razonSocial,
-                nombre_comercial: document.getElementById('nuevo_nombre_comercial')?.value.trim() || '',
-                direccion_fiscal: document.getElementById('nuevo_direccion_fiscal')?.value.trim() || '',
-                telefono_contacto: document.getElementById('nuevo_telefono')?.value.trim() || '',
-                email_contacto: document.getElementById('nuevo_email')?.value.trim() || '',
-                nombre_contacto: document.getElementById('nuevo_nombre_contacto')?.value.trim() || ''
-                
-            };
-            
-            const response = await fetch('/api/clientes/crear', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                nombre_contacto: payload.nombre_contacto,
+                telefono: payload.telefono_contacto,
+                email: payload.email_contacto
             });
             
-            const result = await response.json();
-            
-            if (result.success) {
-                document.getElementById('formNuevoCliente')?.reset();
-                const modal = bootstrap.Modal.getInstance(document.getElementById('modalNuevoCliente'));
-                modal.hide();
-                mostrarNotificacion('✅ Cliente creado exitosamente', 'success');
-                await cargarClienteEnCotizacion(result.data.id);
-            } else {
-                mostrarNotificacion('❌ Error: ' + (result.error || 'No se pudo crear el cliente'), 'danger');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            mostrarNotificacion('❌ Error de conexión', 'danger');
-        } finally {
-            btnGuardar.innerHTML = textoOriginal;
-            btnGuardar.disabled = false;
+            await cargarClienteEnCotizacion(result.data.id);
+        } else {
+            mostrarNotificacion('❌ Error: ' + (result.error || 'No se pudo crear el cliente'), 'danger');
         }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarNotificacion('❌ Error de conexión', 'danger');
+    } finally {
+        btnGuardar.innerHTML = textoOriginal;
+        btnGuardar.disabled = false;
     }
+    }
+    // NOTIFICACIÓN GRANDE Y DESTACADA (con fecha/hora y sin auto-cierre)
+    function mostrarNotificacionClienteGuardadoGrande(datosCliente) {
+        // Obtener fecha y hora actual
+        const ahora = new Date();
+        const fecha = ahora.toLocaleDateString('es-PE', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        const hora = ahora.toLocaleTimeString('es-PE', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+        });
+        
+        // Crear overlay de fondo
+        const overlay = document.createElement('div');
+        overlay.id = 'notification-overlay-grande';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease-out;
+        `;
+        
+        // Crear la notificación grande
+        const notificacion = document.createElement('div');
+        notificacion.style.cssText = `
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+            border-radius: 24px;
+            padding: 40px 48px;
+            max-width: 550px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: scaleIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        `;
+        
+        // Icono de éxito grande
+        const iconoCheck = `
+            <div style="margin-bottom: 20px;">
+                <div style="background: rgba(255, 255, 255, 0.2); border-radius: 50%; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                    <svg style="width: 50px; height: 50px; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+            </div>
+        `;
+    
+    // Título grande
+    const titulo = `
+        <h2 style="color: white; font-size: 28px; font-weight: 700; margin: 0 0 8px 0; font-family: inherit;">
+            ✅ ¡CLIENTE GUARDADO!
+        </h2>
+        <p style="color: rgba(255,255,255,0.9); font-size: 14px; margin: 0 0 20px 0;">
+            El cliente se ha registrado exitosamente en el sistema
+        </p>
+    `;
+    
+    // Fecha y hora
+    const fechaHora = `
+        <div style="background: rgba(255,255,255,0.15); border-radius: 12px; padding: 10px; margin-bottom: 20px;">
+            <div style="color: white; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 20px;">
+                <span>📅 ${fecha}</span>
+                <span>⏰ ${hora}</span>
+            </div>
+        </div>
+    `;
+    
+    // Información del cliente en tarjeta blanca
+    const tipoDocTexto = datosCliente.tipo_documento === 'RUC' ? 'RUC' : 'DNI';
+    const tipoIcono = datosCliente.tipo_documento === 'RUC' ? '🏢' : '👤';
+    
+    const infoCliente = `
+        <div style="background: white; border-radius: 16px; padding: 24px; margin: 0 0 20px 0; text-align: left;">
+            <div style="border-bottom: 2px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 16px;">
+                <span style="font-size: 20px; font-weight: 700; color: #1f2937;">📋 DATOS DEL CLIENTE</span>
+            </div>
+            <div style="margin-bottom: 16px;">
+                <div style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">RAZÓN SOCIAL</div>
+                <div style="font-size: 20px; font-weight: 700; color: #111827;">${escapeHtml(datosCliente.razon_social)}</div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div>
+                    <div style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">${tipoDocTexto}</div>
+                    <div style="font-size: 18px; font-weight: 600; color: #111827;">${tipoIcono} ${datosCliente.numero_documento}</div>
+                </div>
+                ${datosCliente.nombre_contacto ? `
+                <div>
+                    <div style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">CONTACTO</div>
+                    <div style="font-size: 16px; font-weight: 600; color: #111827;">👤 ${escapeHtml(datosCliente.nombre_contacto)}</div>
+                </div>
+                ` : ''}
+            </div>
+            ${datosCliente.telefono || datosCliente.email ? `
+            <div style="background: #f3f4f6; border-radius: 12px; padding: 12px; margin-top: 12px;">
+                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                    ${datosCliente.telefono ? `<div><span style="font-size: 13px; color: #6b7280;">📞 TELÉFONO</span><br><span style="font-weight: 600;">${escapeHtml(datosCliente.telefono)}</span></div>` : ''}
+                    ${datosCliente.email ? `<div><span style="font-size: 13px; color: #6b7280;">✉️ EMAIL</span><br><span style="font-weight: 600; font-size: 13px;">${escapeHtml(datosCliente.email)}</span></div>` : ''}
+                </div>
+            </div>
+            ` : ''}
+        </div>
+    `;
+    
+    // Botón de cerrar grande
+    const botonCerrar = `
+        <button id="btnCerrarNotificacionGrande" style="
+            background: white;
+            color: #047857;
+            border: none;
+            padding: 14px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 40px;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            width: auto;
+            min-width: 180px;
+        " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.2)';" 
+        onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)';">
+            ✕ CERRAR
+        </button>
+    `;
+    
+    notificacion.innerHTML = iconoCheck + titulo + fechaHora + infoCliente + botonCerrar;
+    overlay.appendChild(notificacion);
+    document.body.appendChild(overlay);
+    
+    // Agregar estilos de animación si no existen
+    if (!document.querySelector('#notification-grande-styles')) {
+        const style = document.createElement('style');
+        style.id = 'notification-grande-styles';
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes scaleIn {
+                from {
+                    transform: scale(0.7);
+                    opacity: 0;
+                }
+                to {
+                    transform: scale(1);
+                    opacity: 1;
+                }
+            }
+            @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+            @keyframes scaleOut {
+                from {
+                    transform: scale(1);
+                    opacity: 1;
+                }
+                to {
+                    transform: scale(0.7);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    // Función para cerrar la notificación
+    const cerrarNotificacion = () => {
+        overlay.style.animation = 'fadeOut 0.2s ease-out';
+        notificacion.style.animation = 'scaleOut 0.2s ease-out';
+        setTimeout(() => {
+            if (overlay && overlay.parentNode) {
+                overlay.remove();
+            }
+        }, 200);
+    };
+    
+    // Evento del botón cerrar
+    const btnCerrar = document.getElementById('btnCerrarNotificacionGrande');
+    if (btnCerrar) {
+        btnCerrar.addEventListener('click', cerrarNotificacion);
+    }
+    
+    // Cerrar al hacer clic en el overlay (fuera de la notificación)
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            cerrarNotificacion();
+        }
+    });
+    
+    // ❌ ELIMINADO el setTimeout de auto-cierre - ahora solo se cierra con el botón
+ }
 
     async function cargarClienteEnCotizacion(clienteId) {
         try {
@@ -722,6 +936,32 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error cargando cliente:', error);
         }
     }
+
+    // Función para autocompletar contacto y correo automáticamente cuando se selecciona un cliente
+async function autoCompletarContactoYCorreo(clienteId) {
+    if (!clienteId) return;
+    
+    try {
+        const response = await fetch(`/api/clientes/${clienteId}/contacto`);
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            const contacto = result.data.nombre_contacto || '';
+            const email = result.data.email_contacto || '';
+            const telefono = result.data.telefono_contacto || '';
+            
+            if (contacto) document.getElementById('cliente_contacto').value = contacto;
+            if (email) document.getElementById('email_contacto_cliente').value = email;
+            if (telefono) document.getElementById('telefono_contacto').value = telefono;
+            
+            if (contacto || email || telefono) {
+                console.log('✅ Contacto autocompletado:', { contacto, email, telefono });
+            }
+        }
+    } catch (error) {
+        console.error('Error autocompletando contacto:', error);
+    }
+}
 
     // =========================
     // MODAL DE CONFIRMACIÓN
@@ -802,21 +1042,24 @@ document.addEventListener('DOMContentLoaded', () => {
     let modoConsulta = false;
 
     const tableBody = document.getElementById('table-body');
+
+    // =========================
+    // AUTOCOMPLETE PORTAL
+    // =========================
     const portal = document.getElementById('portalSuggestions');
+    let portalActive = null;
 
     function portalHide() {
-        if (portal) {
-            portal.style.display = 'none';
-            portal.innerHTML = '';
-        }
+        portal.style.display = 'none';
+        portal.innerHTML = '';
+        portalActive = null;
     }
 
     function portalShow(inputEl, html) {
-        if (!portal) return;
         const rect = inputEl.getBoundingClientRect();
         portal.style.left = rect.left + 'px';
         portal.style.top = (rect.bottom + 4) + 'px';
-        portal.style.minWidth = Math.max(rect.width, 280) + 'px';
+        portal.style.minWidth = rect.width + 'px';
         portal.innerHTML = html;
         portal.style.display = 'block';
     }
@@ -863,31 +1106,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return listaProductos;
     }
+    // =========================// =========================
+    async function cargarClientes(clienteId) {
+    const select = document.getElementById('punto_entrega');
 
- async function buscarClientes(q) {
+    select.innerHTML = `<option value="">Seleccione punto</option>`;
+
     try {
-        const res = await fetch(`/api/clientes/buscar?q=${encodeURIComponent(q)}`);
+        const res = await fetch(`/api/clientes/${clienteId}`);
         const json = await res.json();
-        
-        console.log('🔍 Clientes encontrados:', json.data);
-        
-        if (json.data && json.data.length > 0) {
-            json.data.forEach((cliente, idx) => {
-                console.log(`Cliente ${idx + 1}:`, {
-                    razon: cliente.razon_social,
-                    telefono: cliente.telefono_contacto,
-                    email: cliente.email_contacto,
-                    contacto: cliente.nombre_contacto
-                });
-            });
-        }
-        
-        return json.data || [];
-    } catch (error) {
-        console.error('Error buscando clientes:', error);
-        return [];
+
+        const clientes = json.data?.clientes_contactos || [];
+
+        clientes.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.dataset.nombre = c.nombre_contacto;
+        opt.dataset.email = c.email || '';
+        opt.dataset.telefono = c.telefono || '';
+        select.appendChild(opt);
+        });
+
+    } catch (e) {
+        console.error("Error cargando puntos", e);
     }
-}
+    }
+
+    async function buscarClientes(q) {
+    const res = await fetch(`/api/clientes/buscar?q=${encodeURIComponent(q)}`);
+    const json = await res.json();
+    return json.data || [];
+    }
 
     async function buscarProductos(q) {
         try {
@@ -929,15 +1178,34 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================
     // GUARDAR COTIZACIÓN CON DESCUENTO PERSONALIZADO
     // =========================
-   async function guardarCotizacion() {
-    const cliente_id = Number(document.getElementById('cliente_id')?.value || 0);
-    if (!cliente_id) { mostrarNotificacion("⚠️ Selecciona cliente", "warning"); return; }
-
+ async function guardarCotizacion() {
+    // 🔥 NUEVO: Obtener datos del cliente de los campos visibles, no del ID
+    const clienteData = {
+        razon_social: document.getElementById('cliente_razon_social')?.value.trim() || '',
+        numero_documento: document.getElementById('cliente_doc')?.value.trim() || '',
+        direccion_fiscal: document.getElementById('cliente_direccion')?.value.trim() || '',
+        telefono_contacto: document.getElementById('telefono_contacto')?.value.trim() || '',
+        email_contacto: document.getElementById('email_contacto_cliente')?.value.trim() || '',
+        nombre_contacto: document.getElementById('cliente_contacto')?.value.trim() || ''
+    };
+    
+    // Validar datos mínimos del cliente
+    if (!clienteData.razon_social || !clienteData.numero_documento) {
+        mostrarNotificacion("⚠️ Complete los datos del cliente (Razón Social y RUC/DNI)", "warning");
+        return;
+    }
+    
     const listaProductos = obtenerListaProductos();
-    if (listaProductos.length === 0) { mostrarNotificacion("⚠️ Agrega items", "warning"); return; }
+    if (listaProductos.length === 0) { 
+        mostrarNotificacion("⚠️ Agrega items", "warning"); 
+        return; 
+    }
     
     for (let i = 0; i < listaProductos.length; i++) {
-        if (!listaProductos[i].producto_id) { mostrarNotificacion(`⚠️ Falta seleccionar producto en la fila ${i + 1}`, "warning"); return; }
+        if (!listaProductos[i].producto_id) { 
+            mostrarNotificacion(`⚠️ Falta seleccionar producto en la fila ${i + 1}`, "warning"); 
+            return; 
+        }
     }
     
     const totalSinDescuento = Number(document.getElementById('total_valor_venta')?.textContent || 0);
@@ -952,7 +1220,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (descuentoTipo && descuentoTipo.value === 'monto') {
             descuentoMonto = Math.min(valorDescuento, totalSinDescuento);
-            descuentoPorcentaje = (descuentoMonto / totalSinDescuento) * 100;
+            descuentoPorcentaje = totalSinDescuento > 0 ? (descuentoMonto / totalSinDescuento) * 100 : 0;
         } else {
             descuentoPorcentaje = valorDescuento;
             descuentoMonto = totalSinDescuento * (descuentoPorcentaje / 100);
@@ -963,125 +1231,140 @@ document.addEventListener('DOMContentLoaded', () => {
     const igv = totalConDescuento * 0.18;
     const subtotal = totalConDescuento - igv;
     
-    // 🔥 OBTENER EL ID DE LA COTIZACIÓN (si existe)
     const cotizacion_id = document.getElementById('cotizacion_id')?.value;
     
-   const payload = {
-    id: cotizacion_id && cotizacion_id !== '' && cotizacion_id !== 'None' ? parseInt(cotizacion_id) : null,
-    cliente_id: cliente_id,
-    usuario_id: Number(document.getElementById("usuario_id")?.value || 0),
-    estado: document.getElementById("estado")?.value || "En Proceso",
-    subtotal: subtotal,
-    igv: igv,
-    total: totalConDescuento,
-    condicion_pago: document.getElementById("condicion_pago")?.value || "",
-    tiempo_entrega: document.getElementById("tiempo_entrega")?.value || "",
-    validez_oferta: document.getElementById("validez_oferta")?.value || "",
-    direccion_entrega: document.getElementById("direccion_entrega")?.value || "",
-    requerimiento: document.getElementById("requerimiento")?.value || "",
-    nota_cotizacion: document.getElementById("nota_cotizacion")?.value || "",
-    notas: document.getElementById('notas')?.value || "",
-    productos: listaProductos,
-    codigo_cotizacion: codigoCotizacionActual,
-    correlativo: esBorrador ? 0 : correlativoActual,
-    es_borrador: esBorrador,
-    descuento_porcentaje: descuentoPorcentaje,
-    descuento_monto: descuentoMonto,
-    descuento_tipo: descuentoTipo?.value || 'porcentaje',
-    cliente_contacto: document.getElementById('cliente_contacto') ? document.getElementById('cliente_contacto').value : '',
-    telefono_contacto: document.getElementById('telefono_contacto')?.value || '',
-    email_contacto_cliente: document.getElementById('email_contacto_cliente')?.value || ''
-};
-
-        const btnGuardar = esBorrador ? document.getElementById('btnGuardarBorrador') : document.getElementById('btnGuardarOficial');
-        const textoOriginal = btnGuardar?.innerHTML;
-        if (btnGuardar) {
-            btnGuardar.innerHTML = '<i class="bi bi-hourglass-split"></i> Guardando...';
-            btnGuardar.disabled = true;
-        }
-        
-        try {
-            const res = await fetch('/api/cotizacion/guardar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            const json = await res.json();
-            
-            if (!json.success) { 
-                mostrarNotificacion("❌ Error: " + (json.error || "Error desconocido"), "danger");
-                return; 
-            }
-            
-            document.getElementById('cotizacion_id').value = json.data.id;
-            
-            if (!esBorrador) {
-                correlativoActual++;
-            }
-            
-            if (!esBorrador) {
-                actualizarEstadoBotonPDF();
-            }
-            
-            mostrarModalConfirmacion({ 
-                id: json.data.id, 
-                numero: json.data.codigo_cotizacion, 
-                tipo: esBorrador ? 'BORRADOR' : 'OFICIAL' 
-            });
-            
-        } catch (err) { 
-            console.error(err); 
-            mostrarNotificacion("❌ Error de conexión con el servidor", "danger");
-        } finally {
-            if (btnGuardar) {
-                btnGuardar.innerHTML = textoOriginal;
-                btnGuardar.disabled = false;
-            }
-        }
+    // 🔥 NUEVO: Incluir los datos del cliente directamente en el payload
+    const payload = {
+        id: cotizacion_id && cotizacion_id !== '' && cotizacion_id !== 'None' ? parseInt(cotizacion_id) : null,
+        cliente_id: Number(document.getElementById('cliente_id')?.value || 0), // Puede ser 0 si no existe
+        // 🔥 DATOS DEL CLIENTE (para crear cliente si no existe)
+        cliente_data: {
+            razon_social: clienteData.razon_social,
+            numero_documento: clienteData.numero_documento,
+            direccion_fiscal: clienteData.direccion_fiscal,
+            telefono_contacto: clienteData.telefono_contacto,
+            email_contacto: clienteData.email_contacto,
+            nombre_contacto: clienteData.nombre_contacto,
+            tipo_documento: clienteData.numero_documento.length === 11 ? 'RUC' : 'DNI'
+        },
+        usuario_id: Number(document.getElementById("usuario_id")?.value || 0),
+        estado: document.getElementById("estado")?.value || "En Proceso",
+        subtotal: subtotal,
+        igv: igv,
+        total: totalConDescuento,
+        condicion_pago: document.getElementById("condicion_pago")?.value || "",
+        tiempo_entrega: document.getElementById("tiempo_entrega")?.value || "",
+        validez_oferta: document.getElementById("validez_oferta")?.value || "",
+        direccion_entrega: document.getElementById("direccion_entrega")?.value || "",
+        requerimiento: document.getElementById("requerimiento")?.value || "",
+        nota_cotizacion: document.getElementById("nota_cotizacion")?.value || "",
+        notas: document.getElementById('notas')?.value || "",
+        productos: listaProductos,
+        codigo_cotizacion: codigoCotizacionActual,
+        correlativo: esBorrador ? 0 : correlativoActual,
+        es_borrador: esBorrador,
+        descuento_porcentaje: descuentoPorcentaje,
+        descuento_monto: descuentoMonto,
+        descuento_tipo: descuentoTipo?.value || 'porcentaje',
+        cliente_contacto: document.getElementById('cliente_contacto') ? document.getElementById('cliente_contacto').value : '',
+        telefono_contacto: document.getElementById('telefono_contacto')?.value || '',
+        email_contacto_cliente: document.getElementById('email_contacto_cliente')?.value || ''
+    };
+    
+    const btnGuardar = esBorrador ? document.getElementById('btnGuardarBorrador') : document.getElementById('btnGuardarOficial');
+    const textoOriginal = btnGuardar?.innerHTML;
+    if (btnGuardar) {
+        btnGuardar.innerHTML = '<i class="bi bi-hourglass-split"></i> Guardando...';
+        btnGuardar.disabled = true;
     }
-
-    // =========================
-    // CONVERTIR A OFICIAL
-    // =========================
-    async function convertirAOficial() {
-        if (!esBorrador) { 
-            mostrarNotificacion("⚠️ Esta cotización ya es oficial", "warning"); 
+    
+    try {
+        const res = await fetch('/api/cotizacion/guardar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        
+        if (!json.success) { 
+            mostrarNotificacion("❌ Error: " + (json.error || "Error desconocido"), "danger");
             return; 
         }
         
-        const cliente_id = Number(document.getElementById('cliente_id')?.value || 0);
-        if (!cliente_id) {
-            mostrarNotificacion("⚠️ Debe seleccionar un cliente antes de convertir a oficial", "warning");
-            return;
+        document.getElementById('cotizacion_id').value = json.data.id;
+        
+        // Si el servidor devolvió un cliente_id, actualizamos el campo
+        if (json.data.cliente_id) {
+            document.getElementById('cliente_id').value = json.data.cliente_id;
         }
         
-        const listaProductos = obtenerListaProductos();
-        if (listaProductos.length === 0) {
-            mostrarNotificacion("⚠️ Debe agregar al menos un producto antes de convertir a oficial", "warning");
-            return;
+        if (!esBorrador) {
+            correlativoActual++;
         }
         
-        for (let i = 0; i < listaProductos.length; i++) {
-            if (!listaProductos[i].precio_venta_unitario || listaProductos[i].precio_venta_unitario <= 0) {
-                mostrarNotificacion(`⚠️ El producto ${listaProductos[i].codigo || 'sin código'} no tiene precio de venta válido`, "warning");
-                return;
-            }
+        if (!esBorrador) {
+            actualizarEstadoBotonPDF();
         }
         
-        if (!confirm("¿Convertir este borrador a cotización oficial?\n\nEsta acción generará un código único y definitivo.")) return;
+        mostrarModalConfirmacion({ 
+            id: json.data.id, 
+            numero: json.data.codigo_cotizacion, 
+            tipo: esBorrador ? 'BORRADOR' : 'OFICIAL' 
+        });
         
-        const nuevoCodigo = await generarCodigoOficial();
-        if (nuevoCodigo) {
-            esBorrador = false;
-            actualizarNumeroCotizacionUI(nuevoCodigo, false);
-            document.getElementById('estado').value = 'Generada';
-            await guardarCotizacion();
-            mostrarNotificacion(`✅ Cotización convertida a OFICIAL\nNúmero: ${nuevoCodigo}`, "success");
-        } else {
-            mostrarNotificacion("❌ Error al generar código oficial. Intente nuevamente.", "danger");
+    } catch (err) { 
+        console.error(err); 
+        mostrarNotificacion("❌ Error de conexión con el servidor", "danger");
+    } finally {
+        if (btnGuardar) {
+            btnGuardar.innerHTML = textoOriginal;
+            btnGuardar.disabled = false;
         }
     }
+ }
 
+  async function convertirAOficial() {
+    if (!esBorrador) { 
+        mostrarNotificacion("⚠️ Esta cotización ya es oficial", "warning"); 
+        return; 
+    }
+    
+    // 🔥 CAMBIO: Ya no validamos que cliente_id exista
+    // Solo validamos que haya datos del cliente en los campos
+    const razonSocial = document.getElementById('cliente_razon_social')?.value.trim();
+    const numeroDocumento = document.getElementById('cliente_doc')?.value.trim();
+    
+    if (!razonSocial || !numeroDocumento) {
+        mostrarNotificacion("⚠️ Complete los datos del cliente (Razón Social y RUC)", "warning");
+        return;
+    }
+    
+    const listaProductos = obtenerListaProductos();
+    if (listaProductos.length === 0) {
+        mostrarNotificacion("⚠️ Debe agregar al menos un producto antes de convertir a oficial", "warning");
+        return;
+    }
+    
+    for (let i = 0; i < listaProductos.length; i++) {
+        if (!listaProductos[i].precio_venta_unitario || listaProductos[i].precio_venta_unitario <= 0) {
+            mostrarNotificacion(`⚠️ El producto ${listaProductos[i].codigo || 'sin código'} no tiene precio de venta válido`, "warning");
+            return;
+        }
+    }
+    
+    if (!confirm("¿Convertir este borrador a cotización oficial?\n\nEsta acción generará un código único y definitivo.")) return;
+    
+    const nuevoCodigo = await generarCodigoOficial();
+    if (nuevoCodigo) {
+        esBorrador = false;
+        actualizarNumeroCotizacionUI(nuevoCodigo, false);
+        document.getElementById('estado').value = 'Generada';
+        await guardarCotizacion();
+        mostrarNotificacion(`✅ Cotización convertida a OFICIAL\nNúmero: ${nuevoCodigo}`, "success");
+    } else {
+        mostrarNotificacion("❌ Error al generar código oficial. Intente nuevamente.", "danger");
+    }
+ }
     // =========================
     // GENERAR PDF
     // =========================
@@ -1131,7 +1414,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // SET PRODUCTO EN FILA
     // =========================
    // =========================
-function setProductoEnFila(row, p) {  
+ function setProductoEnFila(row, p) {  
     const productoIdInput = row.querySelector('.producto_id');
     const codigoInput = row.querySelector('.codigo_producto');
     const descripcionInput = row.querySelector('.descripcion');
@@ -1169,93 +1452,438 @@ function setProductoEnFila(row, p) {
         if (cantidadInput) cantidadInput.value = stock;
         setTimeout(() => recalculateAll(), 50);
     }
-}
-    // =========================
-    // AUTOCOMPLETES
-    // =========================
-  function attachClienteAutocomplete(idInput) {
-    const input = document.getElementById(idInput);
-    if (!input) return;
+ }
+   // Reemplaza la función attachClienteAutocomplete completa con esta versión mejorada
+function attachClienteAutocomplete(inputId) {
+    const input = document.getElementById(inputId);
+    if (!input) {
+        console.warn(`Input no encontrado: #${inputId}`);
+        return;
+    }
+
+    // Crear contenedor relativo si no existe
+    let container = input.parentElement;
+    if (getComputedStyle(container).position !== 'relative') {
+        const newContainer = document.createElement('div');
+        newContainer.style.position = 'relative';
+        newContainer.style.width = '100%';
+        input.parentNode.insertBefore(newContainer, input);
+        newContainer.appendChild(input);
+        container = newContainer;
+    }
+
+    // Crear dropdown específico para este input
+    const dropdownId = `dropdown_${inputId}`;
+    let dropdown = document.getElementById(dropdownId);
+    
+    if (!dropdown) {
+        dropdown = document.createElement('div');
+        dropdown.id = dropdownId;
+        dropdown.className = 'custom-autocomplete-dropdown';
+        dropdown.style.cssText = `
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 10000;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            border: 1px solid #e5e7eb;
+            margin-top: 4px;
+        `;
+        container.appendChild(dropdown);
+    }
+
     let timeoutId = null;
 
     input.addEventListener('input', async () => {
         const q = input.value.trim();
-        if (timeoutId) clearTimeout(timeoutId);
-        if (q.length < 2) { portalHide(); return; }
         
-        timeoutId = setTimeout(async () => {
-            const clientes = await buscarClientes(q);
-            if (!clientes.length) { 
-                portalShow(input, `<div class="empty">No encontrado</div>`); 
-                return; 
-            }
-            console.log("📊 CLIENTES RECIBIDOS PARA AUTOCOMPLETE:", clientes);
-clientes.forEach(c => {
-    console.log(`  - ${c.razon_social}: tel=${c.telefono_contacto}, email=${c.email_contacto}, contacto=${c.nombre_contacto}`);
-});
-          const html = clientes.map(c => `<div class="item" 
-    data-id="${c.id || ''}" 
-    data-razon="${c.razon_social || ''}" 
-    data-doc="${c.numero_documento || ''}" 
-    data-direccion="${c.direccion_fiscal || ''}" 
-    data-telefono="${c.telefono_contacto || ''}" 
-    data-contacto="${c.nombre_contacto || ''}" 
-    data-email="${c.email_contacto || ''}">
-        <strong>🏢 ${c.razon_social || ''}</strong>
-        <div class="meta">📄 ${c.numero_documento || 'Sin documento'}</div>
-        <div class="meta">📞 ${c.telefono_contacto || 'Sin teléfono'} • ✉️ ${c.email_contacto || 'Sin email'}</div>
-        <div class="meta">👤 Contacto: ${c.nombre_contacto || 'No especificado'}</div>
-    </div>`).join('');
-            portalShow(input, html);
+        if (timeoutId) clearTimeout(timeoutId);
+        if (q.length < 2) {
+            dropdown.style.display = 'none';
+            return;
+        }
 
-            portal.querySelectorAll('.item').forEach(el => {
+        timeoutId = setTimeout(async () => {
+            try {
+                const clientes = await buscarClientes(q);
+                
+                if (!clientes || clientes.length === 0) {
+                    dropdown.innerHTML = `<div class="empty" style="padding: 12px; text-align: center; color: #6b7280;">No se encontraron clientes</div>`;
+                    dropdown.style.display = 'block';
+                    return;
+                }
+
+                dropdown.innerHTML = clientes.map(c => `
+                    <div class="item" 
+                        style="padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #f1f5f9; transition: background 0.2s ease;"
+                        onmouseover="this.style.background='#fef2f2'"
+                        onmouseout="this.style.background='white'"
+                        data-id="${c.id || ''}"
+                        data-razon="${escapeHtml(c.razon_social || '')}"
+                        data-doc="${c.numero_documento || ''}"
+                        data-direccion="${escapeHtml(c.direccion_fiscal || '')}"
+                        data-contacto="${escapeHtml(c.nombre_contacto || '')}"
+                        data-email="${c.email_contacto || ''}"
+                        data-telefono="${c.telefono_contacto || ''}">
+                        <strong style="display: block; font-size: 14px; color: #111827;">🏢 ${escapeHtml(c.razon_social || c.nombre_comercial || '')}</strong>
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">📄 ${c.numero_documento || ''}</div>
+                        <div style="font-size: 12px; color: #6b7280;">📞 ${c.telefono_contacto || ''} • ✉️ ${c.email_contacto || ''}</div>
+                    </div>
+                `).join('');
+
+                dropdown.style.display = 'block';
+
+                // Asignar eventos click a los items
+                dropdown.querySelectorAll('.item').forEach(el => {
                 el.addEventListener('click', async () => {
-                    console.log("📦 Cliente seleccionado:", {
-                        id: el.dataset.id,
-                        razon: el.dataset.razon,
-                        telefono: el.dataset.telefono,
-                        contacto: el.dataset.contacto,
-                        email: el.dataset.email
-                    });
-                    
-                    // 🔥 ASIGNAR VALORES - Versión CORREGIDA
-                    const clienteIdInput = document.getElementById('cliente_id');
-                    if (clienteIdInput) clienteIdInput.value = el.dataset.id || '';
-                    
-                    const razonSocialInput = document.getElementById('cliente_razon_social');
-                    if (razonSocialInput) razonSocialInput.value = el.dataset.razon || '';
-                    
-                    const docInput = document.getElementById('cliente_doc');
-                    if (docInput) docInput.value = el.dataset.doc || '';
-                    
-                    const direccionInput = document.getElementById('cliente_direccion');
-                    if (direccionInput) direccionInput.value = el.dataset.direccion || '';
-                    
-                    // 🔥 LAS 3 LÍNEAS CLAVE - CORREGIDAS
-                    const telefonoInput = document.getElementById('telefono_contacto');
-                    if (telefonoInput) telefonoInput.value = el.dataset.telefono || '';
-                    
-                    const contactoInput = document.getElementById('cliente_contacto');
-                    if (contactoInput) contactoInput.value = el.dataset.contacto || '';
-                    
-                    const emailInput = document.getElementById('email_contacto_cliente');
-                    if (emailInput) emailInput.value = el.dataset.email || '';
-                    
-                    console.log("✅ Asignados - Teléfono:", telefonoInput?.value, "Contacto:", contactoInput?.value, "Email:", emailInput?.value);
-                    
-                    // Cargar direcciones guardadas
-                    if (el.dataset.id) {
-                        await cargarDireccionesCliente(el.dataset.id);
-                    }
-                    
-                    portalHide();
-                });
-            });
-        }, 300);
+                const clienteId = el.dataset.id;
+        
+                 // Asignar datos básicos del cliente
+                document.getElementById('cliente_id').value = clienteId;
+                document.getElementById('cliente_razon_social').value = el.dataset.razon;
+                document.getElementById('cliente_doc').value = el.dataset.doc;
+                document.getElementById('cliente_direccion').value = el.dataset.direccion;
+        
+                dropdown.style.display = 'none';
+        
+             if (clienteId) {
+                 // 🔥 OBTENER CONTACTO, EMAIL Y TELÉFONO DESDE LA BASE DE DATOS
+                 await autoCompletarContactoYCorreo(clienteId);
+                await cargarDireccionesCliente(clienteId);
+        }
+        
+        mostrarNotificacion('✅ Cliente seleccionado', 'success');
+        datosModificados = true;
     });
+});
+
+            } catch (error) {
+                console.error('Error en autocomplete:', error);
+                dropdown.innerHTML = `<div class="empty" style="padding: 12px; text-align: center; color: #ef4444;">Error al buscar clientes</div>`;
+                dropdown.style.display = 'block';
+            }
+        }, 350);
+    });
+
+    // Cerrar dropdown al hacer clic fuera
+    document.addEventListener('click', (e) => {
+        if (!container.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+    
+    // Teclas de navegación
+    input.addEventListener('keydown', (e) => {
+        if (dropdown.style.display === 'block') {
+            const items = dropdown.querySelectorAll('.item');
+            let currentFocus = -1;
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                currentFocus = (currentFocus + 1) % items.length;
+                highlightItem(items, currentFocus);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                currentFocus = (currentFocus - 1 + items.length) % items.length;
+                highlightItem(items, currentFocus);
+            } else if (e.key === 'Enter' && currentFocus >= 0) {
+                e.preventDefault();
+                items[currentFocus].click();
+            } else if (e.key === 'Escape') {
+                dropdown.style.display = 'none';
+            }
+        }
+    });
+    
+    function highlightItem(items, index) {
+        items.forEach(item => item.style.background = '');
+        if (items[index]) {
+            items[index].style.background = '#fef2f2';
+            items[index].scrollIntoView({ block: 'nearest' });
+        }
+    }
 }
 
-  function attachProductoAutocomplete(row) {
+   function attachAsesorAutocomplete() {
+    const input = document.getElementById('asesor_comercial');
+    if (!input) {
+        console.warn('❌ Input asesor_comercial no encontrado');
+        return;
+    }
+
+    // Crear contenedor relativo si no existe
+    let container = input.parentElement;
+    if (getComputedStyle(container).position !== 'relative') {
+        const newContainer = document.createElement('div');
+        newContainer.style.position = 'relative';
+        newContainer.style.width = '100%';
+        input.parentNode.insertBefore(newContainer, input);
+        newContainer.appendChild(input);
+        container = newContainer;
+    }
+
+    // Crear dropdown específico para asesores
+    const dropdownId = 'dropdown_asesores';
+    let dropdown = document.getElementById(dropdownId);
+    
+    if (!dropdown) {
+        dropdown = document.createElement('div');
+        dropdown.id = dropdownId;
+        dropdown.className = 'custom-autocomplete-dropdown';
+        dropdown.style.cssText = `
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 10000;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            border: 1px solid #e5e7eb;
+            margin-top: 4px;
+        `;
+        container.appendChild(dropdown);
+    }
+
+    let timeoutId = null;
+
+    input.addEventListener('input', async () => {
+        const q = input.value.trim();
+        
+        if (timeoutId) clearTimeout(timeoutId);
+        
+        if (q.length < 2) {
+            dropdown.style.display = 'none';
+            return;
+        }
+
+        timeoutId = setTimeout(async () => {
+            try {
+                console.log('🔍 Buscando asesores:', q);
+                const response = await fetch(`/api/usuarios/buscar?q=${encodeURIComponent(q)}`);
+                const result = await response.json();
+                
+                if (!result.success || !result.data || result.data.length === 0) {
+                    dropdown.innerHTML = `<div class="empty" style="padding: 12px; text-align: center; color: #6b7280;">No se encontraron asesores</div>`;
+                    dropdown.style.display = 'block';
+                    return;
+                }
+
+                dropdown.innerHTML = result.data.map(asesor => `
+                    <div class="item" 
+                        style="padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #f1f5f9; transition: background 0.2s ease;"
+                        onmouseover="this.style.background='#fef2f2'"
+                        onmouseout="this.style.background='white'"
+                        data-id="${asesor.id}"
+                        data-nombre="${escapeHtml(asesor.nombre_completo)}"
+                        data-email="${asesor.email || ''}"
+                        data-telefono="${asesor.telefono || ''}"
+                        data-codigo="${asesor.codigo_vendedor || ''}">
+                        <strong style="display: block; font-size: 14px; color: #111827;">👨‍💼 ${escapeHtml(asesor.nombre_completo)}</strong>
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+                            📧 ${asesor.email || 'Sin email'} • 📞 ${asesor.telefono || 'Sin teléfono'}
+                        </div>
+                        <div style="font-size: 11px; color: #9ca3af;">Código: ${asesor.codigo_vendedor || 'N/A'} • Rol: ${asesor.rol || 'Asesor'}</div>
+                    </div>
+                `).join('');
+
+                dropdown.style.display = 'block';
+
+                // Asignar eventos click
+                dropdown.querySelectorAll('.item').forEach(el => {
+                    el.addEventListener('click', () => {
+                        document.getElementById('usuario_id').value = el.dataset.id;
+                        document.getElementById('asesor_comercial').value = el.dataset.nombre;
+                        document.getElementById('email_contacto').value = el.dataset.email;
+                        document.getElementById('telefono_contacto_user').value = el.dataset.telefono;
+                        dropdown.style.display = 'none';
+                        mostrarNotificacion(`✅ Asesor: ${el.dataset.nombre}`, 'success');
+                    });
+                });
+
+            } catch (error) {
+                console.error('Error buscando asesores:', error);
+                dropdown.innerHTML = `<div class="empty" style="padding: 12px; text-align: center; color: #ef4444;">Error al buscar asesores</div>`;
+                dropdown.style.display = 'block';
+            }
+        }, 300);
+    });
+
+    // Cerrar dropdown al hacer clic fuera
+    document.addEventListener('click', (e) => {
+        if (!container.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+
+    // Teclas de navegación
+    input.addEventListener('keydown', (e) => {
+        if (dropdown.style.display === 'block') {
+            const items = dropdown.querySelectorAll('.item');
+            let currentFocus = -1;
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                currentFocus = (currentFocus + 1) % items.length;
+                highlightItem(items, currentFocus);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                currentFocus = (currentFocus - 1 + items.length) % items.length;
+                highlightItem(items, currentFocus);
+            } else if (e.key === 'Enter' && currentFocus >= 0) {
+                e.preventDefault();
+                items[currentFocus].click();
+            } else if (e.key === 'Escape') {
+                dropdown.style.display = 'none';
+            }
+        }
+    });
+    
+    function highlightItem(items, index) {
+        items.forEach(item => item.style.background = '');
+        if (items[index]) {
+            items[index].style.background = '#fef2f2';
+            items[index].scrollIntoView({ block: 'nearest' });
+        }
+    }
+}
+    // function attachContactoAutocomplete() {
+    //     const input = document.getElementById('cliente_contacto');
+    //     if (!input) return;
+    //     let timeoutId = null;
+        
+    //     input.addEventListener('input', async () => {
+    //         const q = input.value.trim();
+    //         const clienteId = document.getElementById('cliente_id')?.value;
+    //         if (timeoutId) clearTimeout(timeoutId);
+            
+    //         if (!clienteId) {
+    //             portalShow(input, `<div class="item" data-value="A tratar"><strong>📝 A tratar</strong><div class="meta">Contacto por definir</div></div>`);
+    //             return;
+    //         }
+            
+    //         timeoutId = setTimeout(async () => {
+    //             const contactos = await buscarContactos(clienteId, q);
+    //             let html = '';
+    //             if (contactos.length > 0) {
+    //                 html = contactos.map(c => `<div class="item" data-value="${c.nombre_contacto}"><strong>👤 ${c.nombre_contacto}</strong><div class="meta">${c.cargo || 'Contacto'} • ${c.telefono || ''}</div></div>`).join('');
+    //             }
+    //             html += `<div class="item" data-value="A tratar"><strong>📝 A tratar</strong><div class="meta">Negociación</div></div>`;
+    //             portalShow(input, html);
+                
+    //             portal.querySelectorAll('.item').forEach(el => {
+    //                 el.addEventListener('click', () => { input.value = el.dataset.value; portalHide(); });
+    //             });
+    //         }, 300);
+    //     });
+    // }
+
+    // =========================
+    // RECALCULAR CON DESCUENTO PERSONALIZABLE Y VALIDACIÓN DE STOCK
+    // =========================
+    function recalculateAll() {
+        const rows = document.querySelectorAll("#table-body tr");
+        let totalValorVenta = 0;
+        let hayErrorStock = false;
+
+        rows.forEach(r => {
+            const cantidad = Number(r.querySelector('.cantidad')?.value || 0);
+            const precioVenta = Number(r.querySelector('.precio_venta_unitario')?.value || 0);
+            
+            // 🔥 CAMBIO 6: Obtener stock actual del badge
+            const stockBadge = r.querySelector('.stock-badge');
+            let stockActual = 0;
+            if (stockBadge) {
+                stockActual = parseInt(stockBadge.textContent) || 0;
+            } else {
+                const stockHidden = r.querySelector('.stock_actual');
+                if (stockHidden) stockActual = parseInt(stockHidden.value) || 0;
+            }
+            
+            const cantidadInput = r.querySelector('.cantidad');
+            const codigoProducto = r.querySelector('.codigo_producto')?.value || 'producto';
+            
+            // 🔥 CAMBIO 7: Validar cantidad vs stock
+            if (stockActual > 0 && cantidad > stockActual) {
+                if (!hayErrorStock) {
+                    mostrarNotificacion(`⚠️ Stock insuficiente para "${codigoProducto}". Máximo disponible: ${stockActual}`, "warning");
+                    hayErrorStock = true;
+                }
+                if (cantidadInput) cantidadInput.value = stockActual;
+                const cantidadCorregida = stockActual;
+                const valorVentaTotalCorregido = cantidadCorregida * precioVenta;
+                const valorVentaTotalElem = r.querySelector('.valor_venta_total');
+                if (valorVentaTotalElem) valorVentaTotalElem.textContent = formatCantidad(valorVentaTotalCorregido);
+                totalValorVenta += valorVentaTotalCorregido;
+                return;
+            }
+            
+            const valorVentaTotal = cantidad * precioVenta;
+            const valorVentaTotalElem = r.querySelector('.valor_venta_total');
+            if (valorVentaTotalElem) valorVentaTotalElem.textContent = formatCantidad(valorVentaTotal);
+            totalValorVenta += valorVentaTotal;
+        });
+
+        // ... el resto de tu código de descuento y totales sigue igual
+        const totalValorVentaElem = document.getElementById('total_valor_venta');
+        if (totalValorVentaElem) totalValorVentaElem.textContent = formatCantidad(totalValorVenta);
+        
+        const summarySubtotal = document.getElementById('summary_subtotal_venta');
+        if (summarySubtotal) summarySubtotal.textContent = formatCantidad(totalValorVenta);
+        
+        // ... resto del código de descuento (no cambia)
+        const descuentoInput = document.getElementById('descuento_porcentaje_input');
+        const descuentoTipo = document.getElementById('descuento_tipo');
+        let descuentoValor = 0;
+        let descuentoMonto = 0;
+        
+        if (descuentoInput && descuentoInput.value) {
+            descuentoValor = parseFloat(descuentoInput.value) || 0;
+            if (descuentoTipo && descuentoTipo.value === 'monto') {
+                descuentoMonto = Math.min(descuentoValor, totalValorVenta);
+            } else {
+                descuentoMonto = totalValorVenta * (descuentoValor / 100);
+            }
+        }
+        
+        const subtotalConDescuento = totalValorVenta - descuentoMonto;
+        const igv = subtotalConDescuento * 0.18;
+        const totalVenta = subtotalConDescuento + igv;
+        
+        const summaryDescuento = document.getElementById('summary_descuento');
+        if (summaryDescuento) summaryDescuento.textContent = formatCantidad(descuentoMonto);
+        
+        const summarySubtotalDescuento = document.getElementById('summary_subtotal_descuento');
+        if (summarySubtotalDescuento) summarySubtotalDescuento.textContent = formatCantidad(subtotalConDescuento);
+        
+        const summaryIgv = document.getElementById('summary_igv');
+        if (summaryIgv) summaryIgv.textContent = formatCantidad(igv);
+        
+        const summaryTotal = document.getElementById('summary_total_venta');
+        if (summaryTotal) summaryTotal.textContent = formatCantidad(totalVenta);
+        
+        const descuentoHidden = document.getElementById('descuento_porcentaje');
+        if (descuentoHidden) {
+            if (descuentoTipo && descuentoTipo.value === 'monto') {
+                descuentoHidden.value = descuentoValor;
+            } else {
+                descuentoHidden.value = descuentoValor;
+            }
+        }
+    }
+    // =========================
+// AUTOCOMPLETAR PRODUCTO EN FILA
+// =========================
+function attachProductoAutocomplete(row) {
     const input = row.querySelector('.codigo_producto');
     
     if (!input) {
@@ -1275,262 +1903,109 @@ clientes.forEach(c => {
         }
         
         timeoutId = setTimeout(async () => {
-            const productos = await buscarProductos(q);
-            
-            if (!productos.length) { 
-                portalShow(input, `<div class="empty">❌ No se encontraron productos</div>`); 
-                return; 
-            }
+            try {
+                const productos = await buscarProductos(q);
+                
+                if (!productos || productos.length === 0) {
+                    portalShow(input, `<div class="empty">❌ No se encontraron productos</div>`);
+                    return;
+                }
 
-            // 🔥 CAMBIO 1: Agregar data-stock en cada item
-            const html = productos.map(p => `<div class="item" 
-                data-id="${p.id}" 
-                data-codigo="${p.codigo}" 
-                data-descripcion="${p.descripcion}" 
-                data-modelo="${p.modelo || ''}" 
-                data-marca="${p.marca || ''}" 
-                data-unidad="${p.unidad || 'UNIDAD'}" 
-                data-costo="${p.costo_unitario || 0}" 
-                data-precio="${p.precio_unitario || 0}"
-                data-stock="${p.stock || 0}">
-                    <strong>📦 ${p.codigo}</strong> - ${p.descripcion}
-                    <div class="meta">${p.marca || ''} • Stock: ${p.stock || 0}</div>
-                </div>`).join('');
-            portalShow(input, html);
-
-            portal.querySelectorAll('.item').forEach(el => {
-                el.addEventListener('click', () => {
-                    // 🔥 CAMBIO 2: Leer el stock del dataset
-                    const stockValue = parseInt(el.dataset.stock) || 0;
-                    
-                    const productoData = {
-                        id: el.dataset.id,
-                        codigo: el.dataset.codigo,
-                        descripcion: el.dataset.descripcion,
-                        modelo: el.dataset.modelo,
-                        marca: el.dataset.marca,
-                        unidad_medida: el.dataset.unidad,
-                        costo_unitario: parseFloat(el.dataset.costo) || 0,
-                        precio_unitario: parseFloat(el.dataset.precio) || 0,
-                        stock: stockValue  // 🔥 CLAVE: asignar el stock
-                    };
-                    setProductoEnFila(row, productoData);
-                    portalHide();
-                    recalculateAll();
-                });
-            });
-        }, 300);
-    });
-}
-
-    function attachAsesorAutocomplete() {
-        const input = document.getElementById('asesor_comercial');
-        if (!input) return;
-        let timeoutId = null;
-
-        input.addEventListener('input', async () => {
-            const q = input.value.trim();
-            if (timeoutId) clearTimeout(timeoutId);
-            if (q.length < 2) { portalHide(); return; }
-            
-            timeoutId = setTimeout(async () => {
-                const asesores = await buscarAsesores(q);
-                if (!asesores.length) { portalShow(input, `<div class="empty">Asesor no encontrado</div>`); return; }
-
-                const html = asesores.map(a => `<div class="item" data-id="${a.id}" data-nombre="${a.nombre_completo}" data-email="${a.email || ''}" data-telefono="${a.telefono || ''}">
-                    <strong>👨‍💼 ${a.nombre_completo}</strong><div class="meta">${a.rol || 'Asesor'} • ${a.codigo_vendedor || ''}</div></div>`).join('');
+                const html = productos.map(p => `
+                    <div class="item" 
+                        data-id="${p.id}" 
+                        data-codigo="${p.codigo || ''}" 
+                        data-descripcion="${p.descripcion || ''}" 
+                        data-modelo="${p.modelo || ''}" 
+                        data-marca="${p.marca || ''}" 
+                        data-unidad="${p.unidad_medida || 'UNIDAD'}" 
+                        data-costo="${p.costo_unitario || 0}" 
+                        data-precio="${p.precio_unitario || 0}"
+                        data-stock="${p.stock || 0}">
+                        <strong>📦 ${p.codigo}</strong> - ${p.descripcion}
+                        <div class="meta">${p.marca || ''} • Stock: ${p.stock || 0}</div>
+                    </div>
+                `).join('');
+                
                 portalShow(input, html);
 
                 portal.querySelectorAll('.item').forEach(el => {
                     el.addEventListener('click', () => {
-                        document.getElementById("usuario_id").value = el.dataset.id;
-                        document.getElementById('asesor_comercial').value = el.dataset.nombre;
-                        document.getElementById('email_contacto').value = el.dataset.email;
-                        document.getElementById('telefono_contacto_user').value = el.dataset.telefono;
+                        const productoData = {
+                            id: el.dataset.id,
+                            codigo: el.dataset.codigo,
+                            descripcion: el.dataset.descripcion,
+                            modelo: el.dataset.modelo,
+                            marca: el.dataset.marca,
+                            unidad_medida: el.dataset.unidad,
+                            costo_unitario: parseFloat(el.dataset.costo) || 0,
+                            precio_unitario: parseFloat(el.dataset.precio) || 0,
+                            stock: parseInt(el.dataset.stock) || 0
+                        };
+                        setProductoEnFila(row, productoData);
                         portalHide();
+                        recalculateAll();
                     });
                 });
-            }, 300);
-        });
-    }
-
-    function attachContactoAutocomplete() {
-        const input = document.getElementById('cliente_contacto');
-        if (!input) return;
-        let timeoutId = null;
-        
-        input.addEventListener('input', async () => {
-            const q = input.value.trim();
-            const clienteId = document.getElementById('cliente_id')?.value;
-            if (timeoutId) clearTimeout(timeoutId);
-            
-            if (!clienteId) {
-                portalShow(input, `<div class="item" data-value="A tratar"><strong>📝 A tratar</strong><div class="meta">Contacto por definir</div></div>`);
-                return;
+            } catch (error) {
+                console.error('Error en autocomplete de producto:', error);
+                portalShow(input, `<div class="empty">Error al buscar productos</div>`);
             }
-            
-            timeoutId = setTimeout(async () => {
-                const contactos = await buscarContactos(clienteId, q);
-                let html = '';
-                if (contactos.length > 0) {
-                    html = contactos.map(c => `<div class="item" data-value="${c.nombre_contacto}"><strong>👤 ${c.nombre_contacto}</strong><div class="meta">${c.cargo || 'Contacto'} • ${c.telefono || ''}</div></div>`).join('');
-                }
-                html += `<div class="item" data-value="A tratar"><strong>📝 A tratar</strong><div class="meta">Negociación</div></div>`;
-                portalShow(input, html);
-                
-                portal.querySelectorAll('.item').forEach(el => {
-                    el.addEventListener('click', () => { input.value = el.dataset.value; portalHide(); });
-                });
-            }, 300);
-        });
-    }
-
-  // =========================
-// RECALCULAR CON DESCUENTO PERSONALIZABLE Y VALIDACIÓN DE STOCK
-// =========================
-function recalculateAll() {
-    const rows = document.querySelectorAll("#table-body tr");
-    let totalValorVenta = 0;
-    let hayErrorStock = false;
-
-    rows.forEach(r => {
-        const cantidad = Number(r.querySelector('.cantidad')?.value || 0);
-        const precioVenta = Number(r.querySelector('.precio_venta_unitario')?.value || 0);
-        
-        // 🔥 CAMBIO 6: Obtener stock actual del badge
-        const stockBadge = r.querySelector('.stock-badge');
-        let stockActual = 0;
-        if (stockBadge) {
-            stockActual = parseInt(stockBadge.textContent) || 0;
-        } else {
-            const stockHidden = r.querySelector('.stock_actual');
-            if (stockHidden) stockActual = parseInt(stockHidden.value) || 0;
-        }
-        
-        const cantidadInput = r.querySelector('.cantidad');
-        const codigoProducto = r.querySelector('.codigo_producto')?.value || 'producto';
-        
-        // 🔥 CAMBIO 7: Validar cantidad vs stock
-        if (stockActual > 0 && cantidad > stockActual) {
-            if (!hayErrorStock) {
-                mostrarNotificacion(`⚠️ Stock insuficiente para "${codigoProducto}". Máximo disponible: ${stockActual}`, "warning");
-                hayErrorStock = true;
-            }
-            if (cantidadInput) cantidadInput.value = stockActual;
-            const cantidadCorregida = stockActual;
-            const valorVentaTotalCorregido = cantidadCorregida * precioVenta;
-            const valorVentaTotalElem = r.querySelector('.valor_venta_total');
-            if (valorVentaTotalElem) valorVentaTotalElem.textContent = formatCantidad(valorVentaTotalCorregido);
-            totalValorVenta += valorVentaTotalCorregido;
-            return;
-        }
-        
-        const valorVentaTotal = cantidad * precioVenta;
-        const valorVentaTotalElem = r.querySelector('.valor_venta_total');
-        if (valorVentaTotalElem) valorVentaTotalElem.textContent = formatCantidad(valorVentaTotal);
-        totalValorVenta += valorVentaTotal;
+        }, 300);
     });
-
-    // ... el resto de tu código de descuento y totales sigue igual
-    const totalValorVentaElem = document.getElementById('total_valor_venta');
-    if (totalValorVentaElem) totalValorVentaElem.textContent = formatCantidad(totalValorVenta);
-    
-    const summarySubtotal = document.getElementById('summary_subtotal_venta');
-    if (summarySubtotal) summarySubtotal.textContent = formatCantidad(totalValorVenta);
-    
-    // ... resto del código de descuento (no cambia)
-    const descuentoInput = document.getElementById('descuento_porcentaje_input');
-    const descuentoTipo = document.getElementById('descuento_tipo');
-    let descuentoValor = 0;
-    let descuentoMonto = 0;
-    
-    if (descuentoInput && descuentoInput.value) {
-        descuentoValor = parseFloat(descuentoInput.value) || 0;
-        if (descuentoTipo && descuentoTipo.value === 'monto') {
-            descuentoMonto = Math.min(descuentoValor, totalValorVenta);
-        } else {
-            descuentoMonto = totalValorVenta * (descuentoValor / 100);
-        }
-    }
-    
-    const subtotalConDescuento = totalValorVenta - descuentoMonto;
-    const igv = subtotalConDescuento * 0.18;
-    const totalVenta = subtotalConDescuento + igv;
-    
-    const summaryDescuento = document.getElementById('summary_descuento');
-    if (summaryDescuento) summaryDescuento.textContent = formatCantidad(descuentoMonto);
-    
-    const summarySubtotalDescuento = document.getElementById('summary_subtotal_descuento');
-    if (summarySubtotalDescuento) summarySubtotalDescuento.textContent = formatCantidad(subtotalConDescuento);
-    
-    const summaryIgv = document.getElementById('summary_igv');
-    if (summaryIgv) summaryIgv.textContent = formatCantidad(igv);
-    
-    const summaryTotal = document.getElementById('summary_total_venta');
-    if (summaryTotal) summaryTotal.textContent = formatCantidad(totalVenta);
-    
-    const descuentoHidden = document.getElementById('descuento_porcentaje');
-    if (descuentoHidden) {
-        if (descuentoTipo && descuentoTipo.value === 'monto') {
-            descuentoHidden.value = descuentoValor;
-        } else {
-            descuentoHidden.value = descuentoValor;
-        }
-    }
 }
-    
-   // =========================
-// AGREGAR ITEMS (CON STOCK)
-// =========================
-function addItem() {
-    if (cotizacionBloqueada) { 
-        mostrarNotificacion("⚠️ La cotización está bloqueada.", "warning"); 
-        return; 
-    }
-    itemCounter++;
-    const row = document.createElement("tr");
-    row.innerHTML = `
-        <td class="col-item">${itemCounter}</td>
-        <td class="col-codigo">
-            <input type="text" class="codigo_producto" placeholder="Buscar producto..." style="width:100%; min-width:120px;">
-            <input type="hidden" class="producto_id">
-            <input type="hidden" class="costo_unitario" value="0">
-            <input type="hidden" class="stock_actual" value="0">
-        </td>
-        <td class="col-desc"><input type="text" class="descripcion" readonly style="width:100%;"></td>
-        <td class="col-modelo"><input type="text" class="modelo" readonly style="width:100%;"></td>
-        <td class="col-marca"><input type="text" class="marca" readonly style="width:100%;"></td>
-        <td class="col-unidad"><input type="text" class="unidad_medida" value="UNIDAD" style="width:100%;"></td>
-        <td class="col-cantidad"><input type="number" class="cantidad" value="1" step="0.01" style="width:100%;"></td>
-        <td class="col-precio"><input type="number" class="precio_venta_unitario" value="0" step="0.01" style="width:100%;"></td>
-        <td class="valor_venta_total">0.00</td>
-        <td class="col-eliminar"><button class="btn-del">🗑</button></td>
-        <!-- 🔥 CAMBIO 5: Agregar badge de stock -->
-        <td class="col-stock" style="text-align:center;">
-            <span class="stock-badge" style="display:inline-block; padding:4px 8px; border-radius:12px; font-size:12px; font-weight:600;">0</span>
-        </td>
-    `;
-    
-    if (tableBody) tableBody.appendChild(row);
-    
-    attachProductoAutocomplete(row);
-    
-    const rec = () => { 
-        if (!modoConsulta) { 
+    // =========================
+    // AGREGAR ITEMS (CON STOCK)
+    // =========================
+    function addItem() {
+        if (cotizacionBloqueada) { 
+            mostrarNotificacion("⚠️ La cotización está bloqueada.", "warning"); 
+            return; 
+        }
+        itemCounter++;
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td class="col-item">${itemCounter}</td>
+            <td class="col-codigo">
+                <input type="text" class="codigo_producto" placeholder="Buscar producto..." style="width:100%; min-width:120px;">
+                <input type="hidden" class="producto_id">
+                <input type="hidden" class="costo_unitario" value="0">
+                <input type="hidden" class="stock_actual" value="0">
+            </td>
+            <td class="col-desc"><input type="text" class="descripcion" readonly style="width:100%;"></td>
+            <td class="col-modelo"><input type="text" class="modelo" readonly style="width:100%;"></td>
+            <td class="col-marca"><input type="text" class="marca" readonly style="width:100%;"></td>
+            <td class="col-unidad"><input type="text" class="unidad_medida" value="UNIDAD" style="width:100%;"></td>
+            <td class="col-cantidad"><input type="number" class="cantidad" value="1" step="0.01" style="width:100%;"></td>
+            <td class="col-precio"><input type="number" class="precio_venta_unitario" value="0" step="0.01" style="width:100%;"></td>
+            <td class="valor_venta_total">0.00</td>
+            <td class="col-eliminar"><button class="btn-del">🗑</button></td>
+            <!-- 🔥 CAMBIO 5: Agregar badge de stock -->
+            <td class="col-stock" style="text-align:center;">
+                <span class="stock-badge" style="display:inline-block; padding:4px 8px; border-radius:12px; font-size:12px; font-weight:600;">0</span>
+            </td>
+        `;
+        
+        if (tableBody) tableBody.appendChild(row);
+        
+        attachProductoAutocomplete(row);
+        
+        const rec = () => { 
+            if (!modoConsulta) { 
+                recalculateAll(); 
+                datosModificados = true; 
+            } 
+        };
+        
+        row.querySelector('.cantidad')?.addEventListener('input', rec);
+        row.querySelector('.precio_venta_unitario')?.addEventListener('input', rec);
+        row.querySelector('.btn-del')?.addEventListener('click', () => { 
+            row.remove(); 
             recalculateAll(); 
-            datosModificados = true; 
-        } 
-    };
-    
-    row.querySelector('.cantidad')?.addEventListener('input', rec);
-    row.querySelector('.precio_venta_unitario')?.addEventListener('input', rec);
-    row.querySelector('.btn-del')?.addEventListener('click', () => { 
-        row.remove(); 
-        recalculateAll(); 
-    });
-    
-    setTimeout(recalculateAll, 50);
-}
+        });
+        
+        setTimeout(recalculateAll, 50);
+    }
 
     // =========================
     // ESTADO VISUAL
@@ -1717,32 +2192,6 @@ function addItem() {
     }
 
     // =========================
-    // DIAGNÓSTICO
-    // =========================
-    function diagnosticar() {
-        console.log('=== DIAGNÓSTICO ===');
-        console.log('Estado cotización:', estadoCotizacion);
-        console.log('Bloqueada:', cotizacionBloqueada);
-        console.log('Modo consulta:', modoConsulta);
-        console.log('Es borrador:', esBorrador);
-        console.log('Item counter:', itemCounter);
-        
-        const filas = document.querySelectorAll("#table-body tr");
-        console.log('Filas en tabla:', filas.length);
-        
-        filas.forEach((fila, idx) => {
-            const codigoInput = fila.querySelector('.codigo_producto');
-            console.log(`Fila ${idx + 1} - Input código:`, codigoInput ? '✅ Encontrado' : '❌ NO ENCONTRADO');
-            if (codigoInput) {
-                console.log(`  - Value: ${codigoInput.value}`);
-                console.log(`  - Placeholder: ${codigoInput.placeholder}`);
-            }
-        });
-        
-        mostrarNotificacion('Diagnóstico completo. Revisa la consola (F12)', 'info');
-    }
-    
-    // =========================
     // EVENTOS
     // =========================
     document.getElementById('btnGuardarBorrador')?.addEventListener('click', guardarCotizacion);
@@ -1751,7 +2200,6 @@ function addItem() {
     document.getElementById('btnModificar')?.addEventListener('click', showModificarModal);
     document.getElementById('btnAceptada')?.addEventListener('click', showAceptadaModal);
     document.getElementById('btnAgregarItem')?.addEventListener('click', addItem);
-    document.getElementById('btnDiagnostico')?.addEventListener('click', diagnosticar);
     document.getElementById('btnCrearCliente')?.addEventListener('click', () => {
         document.getElementById('formNuevoCliente')?.reset();
         new bootstrap.Modal(document.getElementById('modalNuevoCliente')).show();
@@ -1788,11 +2236,17 @@ function addItem() {
     attachClienteAutocomplete('cliente_doc');
     attachClienteAutocomplete('cliente_razon_social');
     attachAsesorAutocomplete();
-    attachContactoAutocomplete();
+    
     configurarTiempoEntrega();
     configurarDireccionEntrega();
     addItem();
     inicializarCodigo();
+    
+    // =============================================
+    // 🔥 FUNCIÓN DE AUTOCOMPLETADO AUTOMÁTICO ELIMINADA 🔥
+    // Ya no se ejecuta setupLiveRazonSocialAutocomplete()
+    // Ahora NO aparece desplegable al escribir en Razón Social
+    // =============================================
 
     const cotId = document.getElementById('cotizacion_id')?.value;
     if (cotId && cotId !== 'None') { 

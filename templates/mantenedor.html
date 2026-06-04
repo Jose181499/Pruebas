@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Lista maestra ERP - KCF CORPORACION</title>
+    <title>Mantenedor ERP - KCF CORPORACION</title>
 
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -21,56 +21,299 @@
     <!-- CSS -->
     <link rel="stylesheet"
         href="{{ url_for('static', filename='css/mantenedor.css') }}">
+        
+    <style>
+        /* Estilos para el menú con desplegables */
+        .menu {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: #e2e8f0;
+            text-decoration: none;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .menu-item.active {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .dropdown-toggle {
+            justify-content: space-between;
+        }
+        
+        .dropdown-toggle::after {
+            content: '\f282';
+            font-family: 'bootstrap-icons';
+            border: none;
+            font-size: 0.875rem;
+            transition: transform 0.2s;
+        }
+        
+        .dropdown-toggle[aria-expanded="true"]::after {
+            transform: rotate(180deg);
+        }
+        
+        .submenu {
+            padding-left: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            margin-top: 0.25rem;
+        }
+        
+        .submenu-item {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            color: #cbd5e1;
+            text-decoration: none;
+            border-radius: 0.375rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .submenu-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            padding-left: 1rem;
+        }
+        
+        .menu-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 0.75rem 0;
+        }
+        
+        .badge-custom {
+            font-size: 0.65rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            margin-left: auto;
+        }
+        
+        .badge-comercial {
+            background: #f59e0b;
+            color: #1e293b;
+        }
+        
+        .badge-activo {
+            background: #10b981;
+            color: white;
+        }
+        
+        .badge-admin {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-atras {
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .btn-atras .menu-item {
+            color: #f87171;
+        }
+        
+        .btn-atras .menu-item:hover {
+            background: rgba(248, 113, 113, 0.1);
+            color: #fecaca;
+        }
+
+        /* Estilo para los nuevos botones directos (Mis Cotizaciones / Mis Compras) */
+        .menu-item-direct {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: #e2e8f0;
+            text-decoration: none;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            cursor: pointer;
+            background: rgba(59,130,246,0.15);
+            border-left: 3px solid #3b82f6;
+            margin: 0.25rem 0;
+        }
+
+        .menu-item-direct:hover {
+            background: rgba(59,130,246,0.3);
+            color: white;
+            transform: translateX(2px);
+        }
+
+        .menu-item-direct i {
+            font-size: 1.2rem;
+        }
+    </style>
 </head>
 
 <body>
 
 <div class="layout">
 
-    <!-- SIDEBAR -->
+    <!-- SIDEBAR MODIFICADO - SECCIÓN CLIENTES ELIMINADA PERO CON BOTONES DE MIS COTIZACIONES Y MIS COMPRAS -->
     <aside class="sidebar">
 
         <div class="logo">
             <h3>KCF ERP</h3>
         </div>
 
-        <nav class="menu">
+        <nav class="menu" style="flex: 1;">
 
+            <!-- Dashboard -->
             <a href="/" class="menu-item active">
                 <i class="bi bi-grid"></i>
                 Dashboard
             </a>
 
-            <button
-    class="menu-item border-0 bg-transparent text-start w-100"
-    data-bs-toggle="modal"
-    data-bs-target="#modalProductos"
->
-    <i class="bi bi-box-seam"></i>
-    Productos
-</button>
-
-            <a href="/mantenedor/clientes" class="menu-item">
-                <i class="bi bi-people"></i>
-                Clientes
+            <!-- ============================================ -->
+            <!-- NUEVO: BOTÓN PARA MIS COTIZACIONES (VENTAS)   -->
+            <!-- ============================================ -->
+            <a href="/cotizacion" class="menu-item-direct">
+                <i class="bi bi-receipt"></i>
+                Mis Cotizaciones
+                <span class="badge-custom badge-comercial ms-auto">Ventas</span>
             </a>
 
-            <a href="/mantenedor/proveedores" class="menu-item">
-                <i class="bi bi-truck"></i>
-                Proveedores
+            <!-- ============================================ -->
+            <!-- NUEVO: BOTÓN PARA MIS COMPRAS (COMPRAS)       -->
+            <!-- ============================================ -->
+            <a href="/compras" class="menu-item-direct">
+                <i class="bi bi-cart-check"></i>
+                Mis Compras
+                <span class="badge-custom badge-activo ms-auto">Compras</span>
             </a>
 
-            {% if session.rol == 'administrador' %}
-            <a href="/mantenedor/usuarios" class="menu-item">
-                <i class="bi bi-person-gear"></i>
-                Usuarios
-            </a>
-            {% endif %}
+            <!-- Separador visual después de las nuevas opciones -->
+            <div class="menu-divider"></div>
 
+            <!-- Listas de Precios - 1 opción funcional -->
+            <div class="dropdown">
+                <button class="menu-item dropdown-toggle w-100 text-start border-0 bg-transparent"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#submenuPrecios"
+                        aria-expanded="false">
+                    <i class="bi bi-currency-dollar"></i>
+                    Listas de Precios
+                    <span class="badge-custom badge-comercial ms-auto">Comercial</span>
+                </button>
+                <div class="collapse submenu" id="submenuPrecios">
+                    <a href="/mantenedor/precios" class="submenu-item">
+                        <i class="bi bi-list-ul me-2"></i>Gestión de Precios Comerciales
+                    </a>
+                </div>
+            </div>
+
+            <!-- Comercial - 1 opción funcional -->
+            <div class="dropdown">
+                <button class="menu-item dropdown-toggle w-100 text-start border-0 bg-transparent"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#submenuComercial"
+                        aria-expanded="false">
+                    <i class="bi bi-briefcase"></i>
+                    Comercial
+                </button>
+                <div class="collapse submenu" id="submenuComercial">
+                    <a href="/mantenedor/clientes/gestion" class="submenu-item">
+                        <i class="bi bi-people me-2"></i>Gestión de Clientes
+                    </a>
+                </div>
+            </div>
+
+            <!-- SECCIÓN CLIENTES ELIMINADA COMPLETAMENTE -->
+
+            <!-- Gestión de Proveedores - 1 opción funcional -->
+            <div class="dropdown">
+                <button class="menu-item dropdown-toggle w-100 text-start border-0 bg-transparent"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#submenuProveedores"
+                        aria-expanded="false">
+                    <i class="bi bi-truck"></i>
+                    Gestión de Proveedores
+                    <span class="badge-custom badge-activo ms-auto">Activo</span>
+                </button>
+                <div class="collapse submenu" id="submenuProveedores">
+                    <a href="/mantenedor/proveedores" class="submenu-item">
+                        <i class="bi bi-card-list me-2"></i>Información de Proveedores
+                    </a>
+                </div>
+            </div>
+
+            <!-- Productos - 1 opción funcional -->
+            <div class="dropdown">
+                <button class="menu-item dropdown-toggle w-100 text-start border-0 bg-transparent"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#submenuProductos"
+                        aria-expanded="false">
+                    <i class="bi bi-box-seam"></i>
+                    Productos
+                </button>
+                <div class="collapse submenu" id="submenuProductos">
+                    <a href="#" class="submenu-item" data-bs-toggle="modal" data-bs-target="#modalProductos">
+                        <i class="bi bi-list-ul me-2"></i>Lista de Productos
+                    </a>
+                </div>
+            </div>
+
+            <!-- Separador -->
+            <div class="menu-divider"></div>
+
+            <!-- Reportes -->
             <a href="#" class="menu-item">
                 <i class="bi bi-bar-chart"></i>
                 Reportes
             </a>
+
+            <!-- Gestión de Usuarios - Solo Admin con 1 opción funcional -->
+            {% if session.rol == 'administrador' %}
+            <div class="dropdown">
+                <button class="menu-item dropdown-toggle w-100 text-start border-0 bg-transparent"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#submenuUsuarios"
+                        aria-expanded="false">
+                    <i class="bi bi-person-gear"></i>
+                    Gestión de Usuarios
+                    <span class="badge-custom badge-admin ms-auto">Admin</span>
+                </button>
+                <div class="collapse submenu" id="submenuUsuarios">
+                    <a href="#" class="submenu-item" data-bs-toggle="modal" data-bs-target="#modalListaUsuarios">
+                        <i class="bi bi-people me-2"></i>Administración de Usuarios
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- BOTÓN DE ATRÁS (no salir de todo) -->
+            <div class="btn-atras">
+                <a href="javascript:void(0);" class="menu-item" onclick="goBack()">
+                    <i class="bi bi-arrow-left"></i>
+                    Atrás
+                </a>
+            </div>
 
         </nav>
 
@@ -84,7 +327,7 @@
 
             <div>
                 <h2 class="page-title">
-                    Mantenedor ERP
+                   Lista Maestra - ERP
                 </h2>
 
                 <p class="page-subtitle">
@@ -110,7 +353,7 @@
 
         </div>
 
-        <!-- GRID -->
+        <!-- GRID DE TARJETAS -->
         <div class="dashboard-grid">
             <!-- PRECIOS -->
             <div class="erp-card">
@@ -169,7 +412,7 @@
 
             </div>
 
-            <!-- CLIENTES -->
+            <!-- CLIENTES (tarjeta) -->
             <div class="erp-card">
 
                 <div class="card-header-custom">
@@ -225,6 +468,7 @@
                 </div>
 
             </div>
+            
             <!-- PROVEEDORES -->
             <div class="erp-card">
 
@@ -282,7 +526,7 @@
 
             </div>
  
-            <!-- ADMIN -->
+            <!-- ADMIN - USUARIOS -->
             {% if session.rol == 'administrador' %}
 
             <div class="erp-card">
@@ -308,25 +552,23 @@
 
                 <div class="card-buttons">
 
-    <!-- NUEVO -->
-    <button
-        class="btn btn-primary"
-        data-bs-toggle="modal"
-        data-bs-target="#modalUsuario"
-    >
-        Nuevo
-    </button>
+                    <button
+                        class="btn btn-primary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalUsuario"
+                    >
+                        Nuevo
+                    </button>
 
-    <!-- USUARIOS -->
-    <button
-        class="btn btn-light"
-        data-bs-toggle="modal"
-        data-bs-target="#modalListaUsuarios"
-    >
-        Usuarios
-    </button>
+                    <button
+                        class="btn btn-light"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalListaUsuarios"
+                    >
+                        Usuarios
+                    </button>
 
-    </div>
+                </div>
                 
             </div>
             {% endif %}
@@ -336,15 +578,6 @@
     </main>
 
 </div>
-<!-- =====================================================
-BOOTSTRAP
-===================================================== -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-<link rel="stylesheet" href="/static/css/usuarios.css">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/usuarios.css') }}">
-
-
 
 <!-- =====================================================
 MODAL REGISTRAR USUARIO
@@ -355,160 +588,49 @@ MODAL REGISTRAR USUARIO
 
         <div class="modal-content shadow-lg border-0">
 
-            <!-- HEADER -->
             <div class="modal-header bg-danger text-white">
-
-                <h5 class="modal-title">
-                    👤 Registrar Usuario
-                </h5>
-
-                <button 
-                    type="button"
-                    class="btn-close btn-close-white"
-                    data-bs-dismiss="modal"
-                ></button>
-
+                <h5 class="modal-title">👤 Registrar Usuario</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
-            <!-- BODY -->
             <div class="modal-body">
-
                 <form id="formUsuario">
-
                     <div class="row">
-
-                        <!-- NOMBRE -->
                         <div class="col-md-6 mb-3">
-
-                            <label class="form-label">
-                                Nombre Completo
-                            </label>
-
-                            <input 
-                                type="text"
-                                class="form-control"
-                                id="nombre_completo"
-                                required
-                            >
-
+                            <label class="form-label">Nombre Completo</label>
+                            <input type="text" class="form-control" id="nombre_completo" required>
                         </div>
-
-                        <!-- USUARIO -->
                         <div class="col-md-6 mb-3">
-
-                            <label class="form-label">
-                                Usuario
-                            </label>
-
-                            <input 
-                                type="text"
-                                class="form-control"
-                                id="usuario"
-                                required
-                            >
-
+                            <label class="form-label">Usuario</label>
+                            <input type="text" class="form-control" id="usuario" required>
                         </div>
-
-                        <!-- PASSWORD -->
                         <div class="col-md-6 mb-3">
-
-                            <label class="form-label">
-                                Contraseña
-                            </label>
-
-                            <input 
-                                type="password"
-                                class="form-control"
-                                id="password"
-                                required
-                            >
-
+                            <label class="form-label">Contraseña</label>
+                            <input type="password" class="form-control" id="password" required>
                         </div>
-
-                        <!-- ROL -->
                         <div class="col-md-6 mb-3">
-
-                            <label class="form-label">
-                                Rol
-                            </label>
-
-                            <select 
-                                class="form-select"
-                                id="rol"
-                            >
-
-                                <option value="">
-                                    Seleccione
-                                </option>
-
-                                <option value="administrador">
-                                    administrador
-                                </option>
-
-                                <option value="usuario">
-                                    usuario
-                                </option>
-
+                            <label class="form-label">Rol</label>
+                            <select class="form-select" id="rol">
+                                <option value="">Seleccione</option>
+                                <option value="administrador">Administrador</option>
+                                <option value="usuario">Usuario</option>
                             </select>
-
                         </div>
-
-                        <!-- EMAIL -->
                         <div class="col-md-6 mb-3">
-
-                            <label class="form-label">
-                                Email
-                            </label>
-
-                            <input 
-                                type="email"
-                                class="form-control"
-                                id="email"
-                                required
-                            >
-
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" required>
                         </div>
-
-                        <!-- TELEFONO -->
                         <div class="col-md-6 mb-3">
-
-                            <label class="form-label">
-                                Teléfono
-                            </label>
-
-                            <input 
-                                type="text"
-                                class="form-control"
-                                id="telefono"
-                            >
-
+                            <label class="form-label">Teléfono</label>
+                            <input type="text" class="form-control" id="telefono">
                         </div>
-
                     </div>
-
                 </form>
-
             </div>
 
-            <!-- FOOTER -->
             <div class="modal-footer">
-
-                <button 
-                    type="button"
-                    class="btn btn-secondary"
-                    data-bs-dismiss="modal"
-                >
-                    Cancelar
-                </button>
-
-                <button 
-                    type="submit"
-                    form="formUsuario"
-                    class="btn btn-danger"
-                >
-                    💾 Guardar Usuario
-                </button>
-
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" form="formUsuario" class="btn btn-danger">💾 Guardar Usuario</button>
             </div>
 
         </div>
@@ -516,7 +638,6 @@ MODAL REGISTRAR USUARIO
     </div>
 
 </div>
-
 
 <!-- =====================================================
 MODAL LISTA USUARIOS
@@ -527,32 +648,16 @@ MODAL LISTA USUARIOS
 
         <div class="modal-content shadow-lg border-0">
 
-            <!-- HEADER -->
             <div class="modal-header bg-dark text-white">
-
-                <h5 class="modal-title">
-                    👥 Usuarios Registrados
-                </h5>
-
-                <button 
-                    type="button"
-                    class="btn-close btn-close-white"
-                    data-bs-dismiss="modal"
-                ></button>
-
+                <h5 class="modal-title">👥 Usuarios Registrados</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
-            <!-- BODY -->
             <div class="modal-body">
-
                 <div class="table-responsive">
-
                     <table class="table table-hover align-middle">
-
                         <thead class="table-danger">
-
                             <tr>
-
                                 <th>ID</th>
                                 <th>Usuario</th>
                                 <th>Nombre Completo</th>
@@ -561,19 +666,11 @@ MODAL LISTA USUARIOS
                                 <th>Teléfono</th>
                                 <th>Estado</th>
                                 <th>Acciones</th>
-
                             </tr>
-
                         </thead>
-
-                        <tbody id="tablaUsuarios">
-
-                        </tbody>
-
+                        <tbody id="tablaUsuarios"></tbody>
                     </table>
-
                 </div>
-
             </div>
 
         </div>
@@ -581,6 +678,7 @@ MODAL LISTA USUARIOS
     </div>
 
 </div>
+
 <!-- =====================================================
 MODAL PRODUCTOS
 ===================================================== -->
@@ -590,55 +688,21 @@ MODAL PRODUCTOS
 
         <div class="modal-content border-0">
 
-            <!-- HEADER -->
             <div class="modal-header bg-primary text-white">
-
-                <h4 class="modal-title">
-                    📦 Lista de Productos
-                </h4>
-
-                <button
-                    type="button"
-                    class="btn-close btn-close-white"
-                    data-bs-dismiss="modal"
-                ></button>
-
+                <h4 class="modal-title">📦 Lista de Productos</h4>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
-            <!-- BODY -->
             <div class="modal-body bg-light">
-
                 <div class="card p-4 shadow-sm border-0">
-
-                    <!-- TOP -->
                     <div class="d-flex justify-content-between align-items-center mb-3">
-
-                        <h5 class="mb-0">
-                            Productos Registrados
-                        </h5>
-
-                        <div class="d-flex gap-2">
-
-                            <a href="/mantenedor/productos/nuevo"
-                               class="btn btn-success">
-
-                                ➕ Nuevo Producto
-
-                            </a>
-
-                        </div>
-
+                        <h5 class="mb-0">Productos Registrados</h5>
+                        <a href="/mantenedor/productos/nuevo" class="btn btn-success">➕ Nuevo Producto</a>
                     </div>
-
-                    <!-- TABLA -->
                     <div class="table-responsive">
-
                         <table class="table table-hover align-middle">
-
                             <thead class="table-primary">
-
                                 <tr>
-
                                     <th>ID</th>
                                     <th>Código</th>
                                     <th>Familia</th>
@@ -648,49 +712,26 @@ MODAL PRODUCTOS
                                     <th>Presentación</th>
                                     <th>Peso</th>
                                     <th>Transporte</th>
-
                                 </tr>
-
                             </thead>
-
                             <tbody>
-
                                 {% for p in productos %}
-
                                 <tr>
-
                                     <td>{{ p.id }}</td>
-
-                                    <td>
-                                        <strong>{{ p.codigo }}</strong>
-                                    </td>
-
+                                    <td><strong>{{ p.codigo }}</strong></td>
                                     <td>{{ p.familia }}</td>
-
                                     <td>{{ p.descripcion }}</td>
-
                                     <td>{{ p.modelo }}</td>
-
                                     <td>{{ p.marca }}</td>
-
                                     <td>{{ p.unidad }}</td>
-
                                     <td>{{ p.peso }}</td>
-
                                     <td>{{ p.transporte }}</td>
-
                                 </tr>
-
                                 {% endfor %}
-
                             </tbody>
-
                         </table>
-
                     </div>
-
                 </div>
-
             </div>
 
         </div>
@@ -699,33 +740,27 @@ MODAL PRODUCTOS
 
 </div>
 
-
 <!-- =====================================================
 BOOTSTRAP JS
 ===================================================== -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-<!-- TU JS -->
 <script src="{{ url_for('static', filename='js/nuevo_usuario.js') }}"></script> 
-<!-- JS -->
+
 <script>
 
-
+// Función para ir atrás (sin cerrar sesión)
+function goBack() {
+    window.history.back();
+}
 
 document.querySelectorAll('.btn-deshabilitado').forEach(btn => {
-
     btn.addEventListener('click', (e) => {
-
         e.preventDefault();
-
         alert('⛔ Esta función está disponible solo para administradores');
-
     });
-
 });
 
 </script>
 
 </body>
 </html>
-

@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, jsonify, request, session, send_file, make_response, Response
 from psycopg2.extras import RealDictCursor, DictCursor
 from database import (obtener_cotizaciones_recientes, crear_cotizacion_transaccional, obtener_cotizacion_completa,
-                    db_query, db_execute, db_tx, get_connection, buscar_cliente_por_ruc)
+                    db_query, db_execute, db_tx, get_connection, buscar_cliente_por_ruc,buscar_clientes_mejorado)
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
@@ -52,6 +52,7 @@ def cotizacion_consultar(cotizacion_id):
     return render_template("cotizacion_oc/crear_cotizacion.html",
                           cotizacion_id=cotizacion_id,
                           modo='editar')
+
 
 
 # ==========================================
@@ -211,70 +212,26 @@ def buscar_usuarios():
 
 @cotizaciones_bp.route("/api/clientes/buscar", methods=["GET"])
 def buscar_clientes():
-    """Buscar clientes por nombre o documento - VERSIÓN CORREGIDA CON TODOS LOS CAMPOS"""
+    """Buscar clientes por nombre o documento - VERSIÓN FINAL CON JOIN"""
     print("=" * 60)
-    print("🎯 BUSCANDO CLIENTES - VERSIÓN CORREGIDA")
+    print("🎯 BUSCANDO CLIENTES - VERSIÓN FINAL CON CONTACTO")
     print("=" * 60)
     
     try:
-        q = request.args.get('q', '')
+        q = request.args.get('q', '').strip()
         
-        conn = get_connection()
-        cur = conn.cursor(cursor_factory=RealDictCursor)
-        
-        if q and q.strip():
-            query = """
-                SELECT 
-                    id, 
-                    razon_social, 
-                    numero_documento, 
-                    direccion_fiscal,
-                    tipo_documento,
-                    COALESCE(telefono_contacto, '') as telefono_contacto,
-                    COALESCE(email_contacto, '') as email_contacto,
-                    COALESCE(nombre_contacto, '') as nombre_contacto
-                FROM clientes 
-                WHERE razon_social ILIKE %s OR numero_documento ILIKE %s
-                ORDER BY razon_social
-                LIMIT 20
-            """
-            cur.execute(query, (f'%{q}%', f'%{q}%'))
-        else:
-            query = """
-                SELECT 
-                    id, 
-                    razon_social, 
-                    numero_documento, 
-                    direccion_fiscal,
-                    tipo_documento,
-                    COALESCE(telefono_contacto, '') as telefono_contacto,
-                    COALESCE(email_contacto, '') as email_contacto,
-                    COALESCE(nombre_contacto, '') as nombre_contacto
-                FROM clientes 
-                ORDER BY razon_social
-                LIMIT 20
-            """
-            cur.execute(query)
-        
-        clientes = cur.fetchall()
-        cur.close()
-        conn.close()
+        # Usamos la función mejorada con JOIN
+        clientes = buscar_clientes_mejorado(busqueda=q, limit=20)
         
         print(f"📊 Se encontraron {len(clientes)} clientes")
+        
         if clientes:
             print(f"📋 PRIMER CLIENTE:")
             print(f"   - razon_social: {clientes[0].get('razon_social')}")
             print(f"   - telefono_contacto: '{clientes[0].get('telefono_contacto', '')}'")
             print(f"   - email_contacto: '{clientes[0].get('email_contacto', '')}'")
             print(f"   - nombre_contacto: '{clientes[0].get('nombre_contacto', '')}'")
-        
-        for cliente in clientes:
-            if cliente.get('telefono_contacto') is None:
-                cliente['telefono_contacto'] = ''
-            if cliente.get('email_contacto') is None:
-                cliente['email_contacto'] = ''
-            if cliente.get('nombre_contacto') is None:
-                cliente['nombre_contacto'] = ''
+            print(f"   - principal: {clientes[0].get('principal')}")
         
         return jsonify({
             'success': True,
@@ -591,17 +548,127 @@ def verificar_codigo_cotizacion():
         print(f"🔥 Error verificando código: {str(e)}")
         return jsonify({"exists": False, "error": str(e)}), 500
 
-
 # ==========================================
-# GUARDAR COTIZACIÓN
+# FUNCIÓN AUXILIAR: OBTENER CLIENTE POR DOCUMENTO
 # ==========================================
 
+def obtener_cliente_por_documento(numero_documento):
+    """Buscar cliente por número de documento (RUC/DNI)"""
+    try:
+        if not numero_documento:
+            return None
+        
+        query = """
+            SELECT id, razon_social, numero_documento, telefono_contacto, 
+                   email_contacto, nombre_contacto, direccion_fiscal
+            FROM clientes 
+            WHERE numero_documento = %s AND activo = TRUE
+            LIMIT 1
+        """
+        clientes = db_query(query, (numero_documento,))
+        
+        if clientes:
+            return clientes[0]
+        return None
+    except Exception as e:
+        print(f"Error en obtener_cliente_por_documento: {e}")
+        return None
 @cotizaciones_bp.route("/api/cotizacion/guardar", methods=["POST"])
 def guardar_cotizacion():
     data = request.json
 
     try:
         cliente_id = data.get("cliente_id")
+        
+        # ==========================================
+        # 🔥 NUEVO: Crear cliente automáticamente si no existe
+        # ==========================================
+        cliente_data = data.get("cliente_data")
+        
+        # Si no hay cliente_id pero tenemos cliente_data, crear/obtener cliente
+        if (not cliente_id or cliente_id == 0) and cliente_data:
+            numero_documento = cliente_data.get('numero_documento', '').strip()
+            
+            if numero_documento:
+                # Verificar si ya existe un cliente con ese documento
+                cliente_existente = obtener_cliente_por_documento(numero_documento)
+                
+                if cliente_existente:
+                    cliente_id = cliente_existente['id']
+                    print(f"✅ Cliente existente encontrado: {cliente_existente['razon_social']} (ID: {cliente_id})")
+                else:
+                    # Crear nuevo cliente
+                    print(f"🆕 Creando nuevo cliente: {cliente_data.get('razon_social')}")
+                    
+                    # Verificar si ya existe la función insertar_cliente_completo
+                    from database import insertar_cliente_completo
+                    
+                    nuevo_cliente = {
+                        'tipo_documento': cliente_data.get('tipo_documento', 'RUC'),
+                        'numero_documento': numero_documento,
+                        'razon_social': cliente_data.get('razon_social', ''),
+                        'nombre_comercial': cliente_data.get('nombre_comercial', ''),
+                        'direccion_fiscal': cliente_data.get('direccion_fiscal', ''),
+                        'contactos': [],
+                        'puntos_entrega': []
+                    }
+                    
+                    # Agregar contacto si tiene datos
+                    if cliente_data.get('nombre_contacto') or cliente_data.get('telefono_contacto') or cliente_data.get('email_contacto'):
+                        nuevo_cliente['contactos'].append({
+                            'nombre_contacto': cliente_data.get('nombre_contacto', ''),
+                            'telefono_contacto': cliente_data.get('telefono_contacto', ''),
+                            'email_contacto': cliente_data.get('email_contacto', ''),
+                            'principal': True
+                        })
+                    
+                    # Agregar punto de entrega si tiene dirección
+                    if cliente_data.get('direccion_fiscal'):
+                        nuevo_cliente['puntos_entrega'].append({
+                            'direccion': cliente_data.get('direccion_fiscal', ''),
+                            'nombre_punto': 'Principal',
+                            'principal': True
+                        })
+                    
+                    try:
+                        resultado = insertar_cliente_completo(nuevo_cliente)
+                        if resultado and resultado.get('id'):
+                            cliente_id = resultado['id']
+                            print(f"✅ Nuevo cliente creado exitosamente (ID: {cliente_id})")
+                        else:
+                            print(f"⚠️ Error al crear cliente: {resultado}")
+                    except Exception as e:
+                        print(f"❌ Error en insertar_cliente_completo: {e}")
+                        # Fallback: Insertar cliente directamente
+                        with db_tx() as conn:
+                            cur = conn.cursor()
+                            cur.execute("""
+                                INSERT INTO clientes 
+                                (tipo_documento, numero_documento, razon_social, nombre_comercial, 
+                                 direccion_fiscal, telefono_contacto, email_contacto, nombre_contacto, activo)
+                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, TRUE)
+                                RETURNING id
+                            """, (
+                                cliente_data.get('tipo_documento', 'RUC'),
+                                numero_documento,
+                                cliente_data.get('razon_social', ''),
+                                cliente_data.get('nombre_comercial', ''),
+                                cliente_data.get('direccion_fiscal', ''),
+                                cliente_data.get('telefono_contacto', ''),
+                                cliente_data.get('email_contacto', ''),
+                                cliente_data.get('nombre_contacto', '')
+                            ))
+                            cliente_id = cur.fetchone()[0]
+                            print(f"✅ Cliente creado con fallback (ID: {cliente_id})")
+        
+        # Si aún no tenemos cliente_id, error
+        if not cliente_id or cliente_id == 0:
+            return jsonify({
+                'success': False, 
+                'error': 'Se requiere un cliente para guardar la cotización. Complete los datos del cliente.'
+            }), 400
+        
+        # Continuar con el resto del código...
         subtotal = data.get("subtotal", 0)
         estado = data.get("estado", "En Proceso")
         igv = data.get("igv", 0)
@@ -723,6 +790,7 @@ def guardar_cotizacion():
                     "success": True,
                     "data": {
                         "id": cotizacion_id,
+                        "cliente_id": cliente_id,
                         "codigo_cotizacion": codigo_cotizacion,
                         "correlativo": correlativo,
                         "actualizado": True
@@ -857,6 +925,7 @@ def guardar_cotizacion():
                     "success": True,
                     "data": {
                         "id": nuevo_id,
+                        "cliente_id": cliente_id,
                         "numero": numero,
                         "codigo_cotizacion": codigo_cotizacion,
                         "correlativo": correlativo
@@ -1148,6 +1217,42 @@ def eliminar_producto_api(id):
         }), 500
 
 
+# ==========================================
+# ENDPOINT: OBTENER CONTACTO DEL CLIENTE
+# ==========================================
+
+@cotizaciones_bp.route("/api/clientes/<int:cliente_id>/contacto", methods=["GET"])
+def obtener_contacto_cliente(cliente_id):
+    """Obtener nombre_contacto, email_contacto y telefono_contacto de un cliente"""
+    try:
+        query = """
+            SELECT nombre_contacto, email_contacto, telefono_contacto 
+            FROM clientes 
+            WHERE id = %s
+        """
+        cliente = db_query(query, (cliente_id,))
+        
+        if not cliente:
+            return jsonify({
+                'success': False,
+                'error': 'Cliente no encontrado'
+            }), 404
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'nombre_contacto': cliente[0].get('nombre_contacto') or '',
+                'email_contacto': cliente[0].get('email_contacto') or '',
+                'telefono_contacto': cliente[0].get('telefono_contacto') or ''
+            }
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en /api/clientes/{cliente_id}/contacto: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 # ==========================================
 # GENERAR PDF
 # ==========================================

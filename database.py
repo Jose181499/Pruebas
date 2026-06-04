@@ -654,55 +654,71 @@ def insertar_producto(
 # =========================
 def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=100):
     """
-    Buscar clientes por tipo de documento y texto de búsqueda - CORREGIDO
+    Buscar clientes - AHORA usando los campos DIRECTOS de la tabla clientes
     """
     try:
         with db_tx() as conn:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             
-            # 🔥 CORREGIDO: Incluir campos de contacto
             query = """
                 SELECT 
-                    id,
-                    tipo_documento,
-                    numero_documento,
-                    razon_social,
-                    nombre_comercial,
-                    direccion_fiscal,
-                    codigo_cliente,
-                    activo,
-                    fecha_creacion,
-                    telefono_contacto,     -- ← AGREGADO
-                    email_contacto,        -- ← AGREGADO
-                    nombre_contacto        -- ← AGREGADO
-                FROM clientes
-                WHERE activo = TRUE
+                    c.id,
+                    c.tipo_documento,
+                    c.numero_documento,
+                    c.razon_social,
+                    c.nombre_comercial,
+                    c.direccion_fiscal,
+                    c.codigo_cliente,
+                    c.activo,
+                    c.fecha_creacion,
+                    -- 🔥 CAMBIO IMPORTANTE: Usar los campos DIRECTOS de la tabla clientes
+                    c.nombre_contacto,
+                    c.email_contacto,
+                    c.telefono_contacto
+                FROM clientes c
+                WHERE c.activo = TRUE
             """
             params = []
             
             if tipo_documento and tipo_documento.strip():
-                query += " AND tipo_documento = %s"
+                query += " AND c.tipo_documento = %s"
                 params.append(tipo_documento)
             
             if busqueda and busqueda.strip():
                 busqueda_like = f"%{busqueda.strip()}%"
                 query += """ AND (
-                    numero_documento ILIKE %s OR 
-                    razon_social ILIKE %s OR 
-                    nombre_comercial ILIKE %s
+                    c.numero_documento ILIKE %s OR 
+                    c.razon_social ILIKE %s OR 
+                    c.nombre_comercial ILIKE %s
                 )"""
                 params.extend([busqueda_like, busqueda_like, busqueda_like])
             
-            query += " ORDER BY id DESC LIMIT %s"
+            query += " ORDER BY c.id DESC LIMIT %s"
             params.append(limit)
             
             cur.execute(query, params)
             clientes = cur.fetchall()
             
+            # Limpiar valores None
+            for cliente in clientes:
+                cliente['email_contacto'] = cliente.get('email_contacto') or ''
+                cliente['telefono_contacto'] = cliente.get('telefono_contacto') or ''
+                cliente['nombre_contacto'] = cliente.get('nombre_contacto') or ''
+            
+            # Debug
+            if clientes:
+                print(f"✅ Primer cliente encontrado:")
+                print(f"   - razon_social: {clientes[0].get('razon_social')}")
+                print(f"   - telefono_contacto: '{clientes[0].get('telefono_contacto')}'")
+                print(f"   - email_contacto: '{clientes[0].get('email_contacto')}'")
+                print(f"   - nombre_contacto: '{clientes[0].get('nombre_contacto')}'")
+            
             return clientes
             
     except Exception as e:
         print(f"❌ Error en buscar_clientes_mejorado: {e}")
+        import traceback
+        traceback.print_exc()
         return []
 
 # =========================
@@ -1435,7 +1451,31 @@ def eliminar_cliente_db(cliente_id):
     """, (cliente_id,))
     return {'success': True}
 
-
+def obtener_cliente_por_documento(numero_documento):
+    """Buscar cliente por número de documento (RUC/DNI)"""
+    try:
+        if not numero_documento:
+            return None
+        
+        rows = db_query("""
+            SELECT 
+                id, 
+                razon_social, 
+                numero_documento, 
+                telefono_contacto, 
+                email_contacto, 
+                nombre_contacto, 
+                direccion_fiscal
+            FROM clientes 
+            WHERE numero_documento = %s AND activo = TRUE
+            LIMIT 1
+        """, (numero_documento,))
+        
+        return rows[0] if rows else None
+        
+    except Exception as e:
+        print(f"❌ Error en obtener_cliente_por_documento: {e}")
+        return None
 # =========================================
 # PROVEEDORES - NUEVAS FUNCIONES
 # =========================================
@@ -1553,23 +1593,8 @@ def obtener_proveedor_por_id(proveedor_id):
         return None
 
 
-def actualizar_proveedor(
-    proveedor_id,
-    razon_social,
-    razon_comercial="",
-    ruc="",
-    direccion="",
-    telefono="",
-    contacto="",
-    email="",
-    condicion_pago="",
-    tiempo_credito="",
-    banco="",
-    numero_cuenta="",
-    cci="",
-    lugar_recojo=""
-):
-    """Actualizar proveedor"""
+def actualizar_proveedor(proveedor_id, data):
+    """Actualizar proveedor - VERSIÓN CORREGIDA que recibe un diccionario"""
     try:
         db_execute("""
             UPDATE proveedores 
@@ -1589,22 +1614,22 @@ def actualizar_proveedor(
                 fecha_actualizacion = NOW()
             WHERE id = %s AND activo = TRUE
         """, (
-            razon_social,
-            razon_comercial,
-            ruc,
-            direccion,
-            telefono,
-            contacto,
-            email,
-            condicion_pago,
-            tiempo_credito,
-            banco,
-            numero_cuenta,
-            cci,
-            lugar_recojo,
+            data.get('razon_social'),
+            data.get('razon_comercial'),
+            data.get('ruc'),
+            data.get('direccion'),
+            data.get('telefono'),
+            data.get('contacto'),
+            data.get('email'),
+            data.get('condicion_pago'),
+            data.get('tiempo_credito'),
+            data.get('banco'),
+            data.get('numero_cuenta'),
+            data.get('cci'),
+            data.get('lugar_recojo'),
             proveedor_id
         ))
-        return True
+        return {'success': True}
 
     except Exception as e:
         print(f"Error actualizando proveedor {proveedor_id}: {e}")
@@ -2073,3 +2098,91 @@ def obtener_direcciones_proveedor(proveedor_id: int):
     except Exception as e:
         print(f"Error en obtener_direcciones_proveedor: {str(e)}")
         return []
+
+
+        # ==========================================
+# FUNCIÓN DE DIAGNÓSTICO PARA CLIENTES
+# ==========================================
+
+def diagnosticar_clientes():
+    """Función para diagnosticar problemas con los campos de clientes"""
+    print("\n" + "=" * 80)
+    print("🔬 DIAGNÓSTICO DE CLIENTES")
+    print("=" * 80)
+    
+    try:
+        conn = get_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Verificar estructura de la tabla
+        print("\n📋 ESTRUCTURA DE LA TABLA clientes:")
+        cur.execute("""
+            SELECT column_name, data_type, is_nullable
+            FROM information_schema.columns 
+            WHERE table_name = 'clientes'
+            ORDER BY ordinal_position
+        """)
+        columnas = cur.fetchall()
+        for col in columnas:
+            print(f"   - {col['column_name']}: {col['data_type']} (nullable: {col['is_nullable']})")
+        
+        # Verificar si las columnas de contacto existen
+        print("\n🔍 VERIFICANDO COLUMNAS DE CONTACTO:")
+        columnas_requeridas = ['telefono_contacto', 'email_contacto', 'nombre_contacto']
+        for col_req in columnas_requeridas:
+            existe = any(col['column_name'] == col_req for col in columnas)
+            if existe:
+                print(f"   ✅ Columna '{col_req}' EXISTE")
+            else:
+                print(f"   ❌ Columna '{col_req}' NO EXISTE - Debes crearla")
+        
+        # Verificar datos de un cliente específico
+        print("\n📊 DATOS DE CLIENTE ID 84:")
+        cur.execute("""
+            SELECT id, razon_social, telefono_contacto, email_contacto, nombre_contacto
+            FROM clientes 
+            WHERE id = 84
+        """)
+        cliente = cur.fetchone()
+        if cliente:
+            print(f"   - razon_social: {cliente.get('razon_social')}")
+            print(f"   - telefono_contacto: '{cliente.get('telefono_contacto')}'")
+            print(f"   - email_contacto: '{cliente.get('email_contacto')}'")
+            print(f"   - nombre_contacto: '{cliente.get('nombre_contacto')}'")
+            
+            if cliente.get('telefono_contacto') is None:
+                print(f"   ⚠️ teléfono_contacto es NULL")
+            if cliente.get('email_contacto') is None:
+                print(f"   ⚠️ email_contacto es NULL")
+            if cliente.get('nombre_contacto') is None:
+                print(f"   ⚠️ nombre_contacto es NULL")
+        else:
+            print(f"   ❌ No existe cliente con ID 84")
+        
+        # Contar clientes con datos completos
+        print("\n📈 ESTADÍSTICAS GENERALES:")
+        cur.execute("SELECT COUNT(*) as total FROM clientes")
+        total = cur.fetchone()['total']
+        print(f"   - Total clientes: {total}")
+        
+        cur.execute("SELECT COUNT(*) as total FROM clientes WHERE telefono_contacto IS NOT NULL AND telefono_contacto != ''")
+        con_telefono = cur.fetchone()['total']
+        print(f"   - Con teléfono: {con_telefono} ({con_telefono*100/total if total > 0 else 0:.1f}%)")
+        
+        cur.execute("SELECT COUNT(*) as total FROM clientes WHERE email_contacto IS NOT NULL AND email_contacto != ''")
+        con_email = cur.fetchone()['total']
+        print(f"   - Con email: {con_email} ({con_email*100/total if total > 0 else 0:.1f}%)")
+        
+        cur.execute("SELECT COUNT(*) as total FROM clientes WHERE nombre_contacto IS NOT NULL AND nombre_contacto != ''")
+        con_contacto = cur.fetchone()['total']
+        print(f"   - Con contacto: {con_contacto} ({con_contacto*100/total if total > 0 else 0:.1f}%)")
+        
+        cur.close()
+        conn.close()
+        
+        print("\n" + "=" * 80)
+        
+    except Exception as e:
+        print(f"❌ Error en diagnóstico: {str(e)}")
+        import traceback
+        traceback.print_exc()
