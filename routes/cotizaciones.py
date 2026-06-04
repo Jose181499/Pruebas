@@ -417,7 +417,7 @@ def buscar_contactos_cliente(cliente_id):
 
 
 # ==========================================
-# ENDPOINT: CREAR CLIENTE
+# ENDPOINT: CREAR CLIENTEE
 # ==========================================
 
 @cotizaciones_bp.route("/api/clientes/crear", methods=["POST"])
