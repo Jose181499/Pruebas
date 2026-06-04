@@ -1011,7 +1011,6 @@ def api_get_cotizacion(cotizacion_id):
 # ==========================================
 # LISTAR COTIZACIONES
 # ==========================================
-
 @cotizaciones_bp.route("/api/cotizacion_comercial")
 def listar_cotizaciones():
     try:
@@ -1038,8 +1037,24 @@ def listar_cotizaciones():
                 c.tiempo_entrega,
                 c.direccion_entrega,
                 c.requerimiento,
+                c.nota_cotizacion,
+                c.contacto_cliente,
+                c.telefono_cliente,
+                c.email_cliente,
+                c.descuento_porcentaje,
+                c.descuento_monto,
+                c.descuento_tipo,
+                -- Datos del cliente
                 COALESCE(cl.razon_social, 'Sin cliente') AS cliente,
-                u.nombre_completo as vendedor
+                cl.ruc,
+                cl.numero_documento,
+                cl.codigo AS codigo_cliente,
+                cl.nombre_comercial AS razon_comercial,
+                cl.razon_social AS razon_social,
+                cl.direccion_fiscal,
+                -- Datos del vendedor
+                u.nombre_completo as vendedor,
+                u.codigo_vendedor
             FROM cotizaciones c
             LEFT JOIN clientes cl ON c.cliente_id = cl.id
             LEFT JOIN usuarios u ON c.usuario_id = u.id
@@ -1053,11 +1068,13 @@ def listar_cotizaciones():
                     c.numero_cotizacion ILIKE %s OR
                     c.codigo_cotizacion ILIKE %s OR
                     cl.razon_social ILIKE %s OR
+                    cl.ruc ILIKE %s OR
+                    cl.numero_documento ILIKE %s OR
                     u.nombre_completo ILIKE %s
                 )
             """
             like_param = f"%{buscar}%"
-            params = [like_param, like_param, like_param, like_param]
+            params = [like_param, like_param, like_param, like_param, like_param, like_param]
             print(f"🔍 Filtrando por: '{buscar}'")
         
         query += " ORDER BY c.id DESC"
@@ -1066,15 +1083,48 @@ def listar_cotizaciones():
         
         resultado = []
         for row in rows:
+            # Obtener la primera descripción de producto (si existe)
+            descripcion = ""
+            if row['id']:
+                prod_query = """
+                    SELECT p.descripcion 
+                    FROM cotizacion_detalle cd
+                    JOIN productos p ON cd.producto_id = p.id
+                    WHERE cd.cotizacion_id = %s
+                    LIMIT 1
+                """
+                productos = db_query(prod_query, (row['id'],))
+                if productos:
+                    descripcion = productos[0]['descripcion']
+            
+            # Determinar jale_1_items_producto (si tiene al menos un producto)
+            jale_producto = False
+            if row['id']:
+                prod_count = db_query("SELECT COUNT(*) as total FROM cotizacion_detalle WHERE cotizacion_id = %s", (row['id'],))
+                if prod_count and prod_count[0]['total'] > 0:
+                    jale_producto = True
+            
             resultado.append({
                 'id': row['id'],
                 'numero_cotizacion': row['numero_cotizacion'],
                 'codigo_cotizacion': row['codigo_cotizacion'],
+                'correlativo': row['correlativo'],
                 'fecha_creacion': row['fecha_creacion'].strftime('%Y-%m-%d %H:%M:%S') if row['fecha_creacion'] else '',
                 'estado': row['estado'],
                 'cliente': row['cliente'],
                 'vendedor': row['vendedor'],
-                'total': float(row['total']) if row['total'] else 0
+                'total': float(row['total']) if row['total'] else 0,
+                # Nuevos campos
+                'ruc': row.get('ruc') or row.get('numero_documento') or '',
+                'codigo_cliente': row.get('codigo_cliente') or '',
+                'razon_comercial': row.get('razon_comercial') or row.get('cliente') or '',
+                'razon_social': row.get('razon_social') or row.get('cliente') or '',
+                'descripcion': descripcion,
+                'nota_aclaratoria': row.get('nota_cotizacion') or '',
+                'condicion_pago': row.get('condicion_pago') or 'Contado',
+                'jale_1_items_producto': jale_producto,
+                'fecha': row['fecha_creacion'].strftime('%Y-%m-%d') if row['fecha_creacion'] else '',
+                'hora': row['fecha_creacion'].strftime('%H:%M:%S') if row['fecha_creacion'] else ''
             })
         
         print(f"✅ Encontradas {len(resultado)} cotizaciones")
@@ -1086,8 +1136,6 @@ def listar_cotizaciones():
         import traceback
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
-
-
 # ==========================================
 # ELIMINAR COTIZACION
 # ==========================================

@@ -335,7 +335,7 @@ function renderizarTabla(cotizaciones) {
     if (!cotizaciones || cotizaciones.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" class="text-center py-5 text-muted">
+                <td colspan="15" class="text-center py-5 text-muted">
                     <i class="bi bi-inbox fs-1"></i>
                     <div class="mt-2">No hay cotizaciones para mostrar</div>
                 </td>
@@ -351,42 +351,133 @@ function renderizarTabla(cotizaciones) {
         const esBorrador = c.codigo_cotizacion && c.codigo_cotizacion.startsWith('TMP-');
         const codigoMostrar = c.codigo_cotizacion || c.numero_cotizacion;
         let estadoHtml = renderEstado(c.estado, esBorrador);
+        const nombreEstado = getNombreEstado(c.estado, esBorrador);
+        
+        // Valores para las nuevas columnas (usa los campos de tu backend)
+        const jaleProducto = c.jale_producto || c.jale_1_items_producto || false;
+        const ruc = c.ruc || '---';
+        const codigoCliente = c.codigo_cliente || '---';
+        const razonComercial = c.razon_comercial || c.nombre_comercial || '---';
+        const razonSocial = c.razon_social || c.cliente || '---';
+        const descripcion = c.descripcion || '---';
+        const notaAclaratoria = c.nota_aclaratoria || '---';
+        const condicionPago = c.condicion_pago || '---';
         
         return `
             <tr data-id="${c.id}" data-codigo="${codigoMostrar}">
+                <!-- 1. Ítems -->
                 <td class="text-center fw-bold" style="width:50px">${index + 1}</td>
-                <td class="codigo-cell">
-                    <strong>${escapeHtml(codigoMostrar || '-')}</strong>
-                    ${c.correlativo ? `<br><small class="text-muted">Correl: ${c.correlativo}</small>` : ''}
-                 </td>
+                
+                <!-- 2. Fecha y Hora -->
                 <td class="fecha-cell">
                     <div class="fecha-hora">
                         <div class="fecha"><strong>${fecha}</strong></div>
                         <div class="hora small text-muted">${hora}</div>
                     </div>
-                 </td>
-                <td class="cliente-cell">
-                    <strong>${escapeHtml(c.cliente || 'Sin cliente')}</strong>
-                    ${c.vendedor ? `<br><small class="text-muted"><i class="bi bi-person"></i> ${escapeHtml(c.vendedor)}</small>` : ''}
-                 </td>
+                </td>
+                
+                <!-- 3. Jale 1 items producto -->
+                <td class="text-center">
+                    ${jaleProducto ? 
+                        '<span class="badge bg-success"><i class="bi bi-check-circle"></i> Jaleado</span>' : 
+                        '<span class="badge bg-secondary"><i class="bi bi-x-circle"></i> No jaleado</span>'
+                    }
+                </td>
+                
+                <!-- 4. Estado (con botón de color) -->
                 <td class="estado-cell">${estadoHtml}</td>
-                <td class="monto text-end">S/ ${Number(total).toLocaleString('es-PE', { minimumFractionDigits: 2 })}</td>
+                
+                <!-- 5. Nombre Estado (texto plano) -->
+                <td>${escapeHtml(nombreEstado)}</td>
+                
+                <!-- 6. N° Cotización -->
+                <td class="codigo-cell">
+                    <strong>${escapeHtml(codigoMostrar || '-')}</strong>
+                    ${c.correlativo ? `<br><small class="text-muted">Correl: ${c.correlativo}</small>` : ''}
+                </td>
+                
+                <!-- 7. RUC -->
+                <td>${escapeHtml(ruc)}</td>
+                
+                <!-- 8. Código Cliente -->
+                <td><span class="badge-codigo">${escapeHtml(codigoCliente)}</span></td>
+                
+                <!-- 9. R comercial -->
+                <td><small>${escapeHtml(razonComercial)}</small></td>
+                
+                <!-- 10. R social -->
+                <td><strong>${escapeHtml(razonSocial)}</strong></td>
+                
+                <!-- 11. Descripción -->
+                <td><small>${escapeHtml(descripcion.length > 50 ? descripcion.substring(0, 50) + '...' : descripcion)}</small></td>
+                
+                <!-- 12. Monto (Con IGV) -->
+                <td class="monto text-end fw-bold">S/ ${Number(total).toLocaleString('es-PE', { minimumFractionDigits: 2 })}</td>
+                
+                <!-- 13. Nota aclaratoria -->
+                <td><small class="text-muted">${escapeHtml(notaAclaratoria)}</small></td>
+                
+                <!-- 14. Condición pago -->
+                <td><small>${escapeHtml(condicionPago)}</small></td>
+                
+                <!-- 15. Acciones (Desplegable) -->
                 <td class="acciones text-center">
-                    <button class="btn-mini btn-ver" onclick="verDetalle(${c.id})" title="Ver Detalle">
-                        <i class="bi bi-eye"></i>
-                    </button>
-                    <button class="btn-mini btn-editar" onclick="editar(${c.id})" title="Editar">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                    <button class="btn-mini btn-eliminar" onclick="mostrarModalEliminar(${c.id}, '${escapeHtml(codigoMostrar)}')" title="Eliminar">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                  </td>
-               </tr>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="verDetalle(${c.id})">
+                                <i class="bi bi-eye"></i> Ver detalle
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="editar(${c.id})">
+                                <i class="bi bi-pencil"></i> Editar
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="duplicarCotizacion(${c.id})">
+                                <i class="bi bi-files"></i> Duplicar
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="enviarPorEmail(${c.id})">
+                                <i class="bi bi-envelope"></i> Enviar email
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="exportarPDF(${c.id})">
+                                <i class="bi bi-file-pdf"></i> Exportar PDF
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#" onclick="mostrarModalEliminar(${c.id}, '${escapeHtml(codigoMostrar)}')">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </a></li>
+                        </ul>
+                    </div>
+                </td>
+            </tr>
         `;
     }).join('');
 }
 
+// Función auxiliar para obtener el nombre del estado
+function getNombreEstado(estado, esBorrador) {
+    if (esBorrador) return 'Borrador';
+    
+    const estados = {
+        'borrador': 'Borrador',
+        'generada': 'Generada',
+        'en_proceso': 'En proceso',
+        'rechazada': 'Rechazada',
+        'aceptada': 'Aceptada'
+    };
+    return estados[estado?.toLowerCase()] || 'Desconocido';
+}
+
+// Función para escapar HTML (importante por seguridad)
+function escapeHtml(str) {
+    if (!str) return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
 // ===========================
 // ESCAPE HTML (seguridad)
 // ===========================
