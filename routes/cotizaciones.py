@@ -288,31 +288,35 @@ def buscar_cliente_por_ruc_api():
 
 
 # ==========================================
-# ENDPOINT: OBTENER CLIENTE POR ID
+# ENDPOINT: OBTENER CLIENTE POR IDD
 # ==========================================
 
 @cotizaciones_bp.route("/api/clientes/<int:id>", methods=["GET"])
 def obtener_cliente(id):
     """Obtener cliente por ID con sus puntos de entrega"""
     try:
-        query = """
-            SELECT id, razon_social, numero_documento, direccion_fiscal, 
-                   telefono_contacto, nombre_contacto, tipo_documento, email_contacto
-            FROM clientes 
-            WHERE id = %s
-        """
-        cliente = db_query(query, (id,))
+        cliente = db_query("""
+            SELECT c.id, c.razon_social, c.numero_documento, c.direccion_fiscal,
+                   c.tipo_documento,
+                   cc.telefono AS telefono_contacto,
+                   cc.nombre_contacto,
+                   cc.email AS email_contacto
+            FROM clientes c
+            LEFT JOIN clientes_contactos cc ON cc.cliente_id = c.id AND cc.activo = TRUE
+            WHERE c.id = %s
+            ORDER BY cc.principal DESC
+            LIMIT 1
+        """, (id,))
         
         if not cliente:
             return jsonify({'success': False, 'error': 'Cliente no encontrado'}), 404
         
-        query_puntos = """
+        puntos_entrega = db_query("""
             SELECT id, nombre_punto, direccion, telefono_contacto, nombre_contacto,
                    condicion_pago
             FROM clientes_puntos_entrega 
             WHERE cliente_id = %s
-        """
-        puntos_entrega = db_query(query_puntos, (id,))
+        """, (id,))
         
         cliente[0]['puntos_entrega'] = puntos_entrega
         
