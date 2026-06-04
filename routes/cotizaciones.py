@@ -445,8 +445,8 @@ def crear_cliente():
             SELECT c.id, c.numero_documento, c.razon_social, c.nombre_comercial,
                    c.direccion_fiscal,
                    cc.telefono AS telefono_contacto,
-                   cc.email AS email,
-                   cc.nombre AS nombre_contacto
+                   cc.email AS email_contacto,
+                   cc.nombre_contacto
             FROM clientes c
             LEFT JOIN clientes_contactos cc ON cc.cliente_id = c.id
             WHERE c.numero_documento = %s
@@ -465,13 +465,20 @@ def crear_cliente():
             cur.execute("""
                 INSERT INTO clientes 
                 (tipo_documento, numero_documento, razon_social, nombre_comercial, 
-                 direccion_fiscal, telefono_contacto, email_contacto, nombre_contacto, activo)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, TRUE)
+                 direccion_fiscal, activo)
+                VALUES (%s, %s, %s, %s, %s, TRUE)
                 RETURNING id
             """, (tipo_documento, numero_documento, razon_social, nombre_comercial,
-                  direccion_fiscal, telefono_contacto, email_contacto, nombre_contacto))
+                  direccion_fiscal))
             
             cliente_id = cur.fetchone()[0]
+            
+            if nombre_contacto or email_contacto or telefono_contacto:
+                cur.execute("""
+                    INSERT INTO clientes_contactos
+                    (cliente_id, nombre_contacto, email, telefono, principal, activo)
+                    VALUES (%s, %s, %s, %s, TRUE, TRUE)
+                """, (cliente_id, nombre_contacto, email_contacto, telefono_contacto))
         
         return jsonify({
             'success': True,
