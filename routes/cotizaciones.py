@@ -1280,20 +1280,19 @@ def eliminar_producto_api(id):
         }), 500
 
 
-# ==========================================
-# ENDPOINT: OBTENER CONTACTO DEL CLIENTE
-# ==========================================
-
 @cotizaciones_bp.route("/api/clientes/<int:cliente_id>/contacto", methods=["GET"])
 def obtener_contacto_cliente(cliente_id):
-    """Obtener nombre_contacto, email_contacto y telefono_contacto de un cliente"""
+    """Obtener nombre_contacto, email y telefono de un cliente"""
     try:
-        query = """
-            SELECT nombre_contacto, email_contacto, telefono_contacto 
-            FROM clientes 
-            WHERE id = %s
-        """
-        cliente = db_query(query, (cliente_id,))
+        cliente = db_query("""
+            SELECT cc.nombre_contacto,
+                   cc.email AS email_contacto,
+                   cc.telefono AS telefono_contacto
+            FROM clientes_contactos cc
+            WHERE cc.cliente_id = %s AND cc.activo = TRUE
+            ORDER BY cc.principal DESC
+            LIMIT 1
+        """, (cliente_id,))
         
         if not cliente:
             return jsonify({
