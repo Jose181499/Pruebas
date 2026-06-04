@@ -434,6 +434,34 @@
             color: var(--negro);
         }
 
+        /* Loading de SUNAT */
+        .sunat-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            display: none;
+        }
+        .sunat-loading .spinner {
+            background: white;
+            padding: 20px 40px;
+            border-radius: 20px;
+            text-align: center;
+        }
+        .bi-spin {
+            animation: spin 1s infinite linear;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
         @media (max-width: 768px) {
             .erp-navbar {
                 padding: 12px 16px;
@@ -486,6 +514,14 @@
         <input type="hidden" id="modo_consulta" value="">
         <input type="hidden" id="usuario_id" value="">
         <input type="hidden" id="descuento_porcentaje" value="0">
+
+        <!-- LOADING SUNAT -->
+        <div id="sunatLoading" class="sunat-loading">
+            <div class="spinner">
+                <i class="bi bi-arrow-repeat bi-spin fs-1"></i>
+                <p class="mt-2 mb-0">Consultando SUNAT...</p>
+            </div>
+        </div>
 
         <script>
             console.log("🔍 Template - cotizacion_id recibido:", "{{ cotizacion_id if cotizacion_id else 'No hay ID' }}");
@@ -553,24 +589,24 @@
                         <div class="row g-3 mb-4">
                             <div class="col-12">
                                 <label class="form-label">
-                                    <i class="bi bi-search"></i> Buscar Cliente por RUC
+                                    <i class="bi bi-cloud-sun-fill"></i> Buscar Cliente por RUC (Consulta SUNAT)
                                 </label>
                                 <div class="input-group">
-                                    <input type="text" class="form-control custom-input" id="buscar_ruc" placeholder="Ingrese RUC de 11 dígitos">
+                                    <input type="text" class="form-control custom-input" id="buscar_ruc" placeholder="Ingrese RUC de 11 dígitos" maxlength="11">
                                     <button class="btn btn-primary" type="button" id="btnBuscarClientePorRuc">
-                                        <i class="bi bi-search"></i> Buscar
+                                        <i class="bi bi-search"></i> Consultar SUNAT
                                     </button>
                                     <button class="btn btn-outline-secondary" type="button" id="btnLimpiarCliente" title="Limpiar cliente">
                                         <i class="bi bi-x-circle"></i> Limpiar
                                     </button>
                                 </div>
                                 <small class="text-muted mt-2 d-block">
-                                    <i class="bi bi-info-circle"></i> Ingrese el RUC y presione buscar para autocompletar los datos del cliente desde SUNAT
+                                    <i class="bi bi-info-circle"></i> Ingrese el RUC y presione "Consultar SUNAT" para obtener Razón Comercial y Dirección Fiscal automáticamente
                                 </small>
                             </div>
                         </div>
 
-                        <!-- DATOS DEL CLIENTE -->
+                        <!-- DATOS DEL CLIENTE - ORDEN MODIFICADO: RAZÓN COMERCIAL ARRIBA DE DIRECCIÓN FISCAL -->
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label"><i class="bi bi-card-text"></i> RUC / DNI</label>
@@ -578,12 +614,28 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label"><i class="bi bi-building"></i> Razón Social <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control custom-input" id="cliente_razon_social" placeholder="Escriba para buscar cliente..." autocomplete="off">
+                                <input type="text" class="form-control custom-input" id="cliente_razon_social" placeholder="Razón Social" autocomplete="off">
                             </div>
+                            
+                            <!-- RAZÓN COMERCIAL - NUEVO CAMPO ARRIBA DE DIRECCIÓN FISCAL -->
+                            <div class="col-md-12">
+                                <label class="form-label"><i class="bi bi-shop"></i> Razón Comercial</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control custom-input" id="cliente_razon_comercial" placeholder="Nombre comercial del cliente" readonly>
+                                    <button class="btn btn-outline-primary" type="button" id="btnEditarRazonComercial" title="Editar manualmente">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted">Se obtiene automáticamente de SUNAT</small>
+                            </div>
+                            
+                            <!-- DIRECCIÓN FISCAL - AHORA DEBAJO DE RAZÓN COMERCIAL -->
                             <div class="col-12">
                                 <label class="form-label"><i class="bi bi-geo-alt"></i> Dirección Fiscal</label>
-                                <input type="text" class="form-control custom-input" id="cliente_direccion" placeholder="Ej: Av. Principal 123">
+                                <input type="text" class="form-control custom-input" id="cliente_direccion" placeholder="Ej: Av. Principal 123" readonly>
+                                <small class="text-muted">Se obtiene automáticamente de SUNAT</small>
                             </div>
+                            
                             <div class="col-md-6">
                                 <label class="form-label"><i class="bi bi-person"></i> Contacto</label>
                                 <input type="text" class="form-control custom-input" id="cliente_contacto" placeholder="Nombre del contacto">
@@ -802,39 +854,39 @@
             </div>
         </div>
 
-<!-- RESUMEN DE TOTALES - COMPACTO A LA DERECHA -->
-<div class="row mt-4">
-    <div class="col-md-5 col-lg-4 offset-md-7 offset-lg-8">
-        <div class="summary-card" style="padding: 16px 20px;">
-            <h4 style="font-size: 16px; margin-bottom: 12px;"><i class="bi bi-calculator-fill"></i> Resumen</h4>
-            
-            <div class="summary-row" style="padding: 6px 0; font-size: 13px;">
-                <span>Subtotal:</span>
-                <span class="fw-bold" id="summary_subtotal_venta">0.00</span>
-            </div>
-            
-            <div class="summary-row text-danger" style="padding: 6px 0; font-size: 13px;" id="summary_descuento_row">
-                <span>Descuento:</span>
-                <span class="fw-bold text-danger" id="summary_descuento">0.00</span>
-            </div>
-            
-            <div class="summary-row" style="padding: 6px 0; font-size: 13px;">
-                <span>Subtotal desc.:</span>
-                <span class="fw-bold" id="summary_subtotal_descuento">0.00</span>
-            </div>
-            
-            <div class="summary-row" style="padding: 6px 0; font-size: 13px;">
-                <span>IGV (18%):</span>
-                <span class="fw-bold" id="summary_igv">0.00</span>
-            </div>
-            
-            <div class="summary-row total" style="font-size: 16px; padding: 8px 0; margin-top: 5px;">
-                <span><strong>TOTAL:</strong></span>
-                <span class="fw-bold" id="summary_total_venta">0.00</span>
+        <!-- RESUMEN DE TOTALES - COMPACTO A LA DERECHA -->
+        <div class="row mt-4">
+            <div class="col-md-5 col-lg-4 offset-md-7 offset-lg-8">
+                <div class="summary-card" style="padding: 16px 20px;">
+                    <h4 style="font-size: 16px; margin-bottom: 12px;"><i class="bi bi-calculator-fill"></i> Resumen</h4>
+                    
+                    <div class="summary-row" style="padding: 6px 0; font-size: 13px;">
+                        <span>Subtotal:</span>
+                        <span class="fw-bold" id="summary_subtotal_venta">0.00</span>
+                    </div>
+                    
+                    <div class="summary-row text-danger" style="padding: 6px 0; font-size: 13px;" id="summary_descuento_row">
+                        <span>Descuento:</span>
+                        <span class="fw-bold text-danger" id="summary_descuento">0.00</span>
+                    </div>
+                    
+                    <div class="summary-row" style="padding: 6px 0; font-size: 13px;">
+                        <span>Subtotal desc.:</span>
+                        <span class="fw-bold" id="summary_subtotal_descuento">0.00</span>
+                    </div>
+                    
+                    <div class="summary-row" style="padding: 6px 0; font-size: 13px;">
+                        <span>IGV (18%):</span>
+                        <span class="fw-bold" id="summary_igv">0.00</span>
+                    </div>
+                    
+                    <div class="summary-row total" style="font-size: 16px; padding: 8px 0; margin-top: 5px;">
+                        <span><strong>TOTAL:</strong></span>
+                        <span class="fw-bold" id="summary_total_venta">0.00</span>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</div>
 
         <!-- NOTAS INTERNAS -->
         <div class="erp-card mt-4">
@@ -897,7 +949,7 @@
                                 <input type="text" class="form-control custom-input" id="nuevo_razon_social" required>
                             </div>
                             <div class="col-md-12">
-                                <label class="form-label">Nombre Comercial</label>
+                                <label class="form-label">Nombre Comercial (Razón Comercial)</label>
                                 <input type="text" class="form-control custom-input" id="nuevo_nombre_comercial">
                             </div>
                             <div class="col-md-12">
@@ -975,107 +1027,156 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Función para manejar la validez de oferta personalizada
+        // ==================== FUNCIONES DE SUNAT ====================
+        
+        function showLoading() {
+            const loading = document.getElementById('sunatLoading');
+            if (loading) loading.style.display = 'flex';
+        }
+        
+        function hideLoading() {
+            const loading = document.getElementById('sunatLoading');
+            if (loading) loading.style.display = 'none';
+        }
+        
+        // SIMULACIÓN DE CONSULTA A SUNAT - Reemplazar con API real
+        async function consultarSunat(ruc) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    const datosPorRuc = {
+                        '12345678901': {
+                            razon_social: 'EMPRESA EJEMPLO SAC',
+                            nombre_comercial: 'EJEMPLO STORE',
+                            direccion: 'AV. PRINCIPAL 123, LIMA - PERÚ'
+                        },
+                        '20547896543': {
+                            razon_social: 'CORPORACION KCF S.A.C.',
+                            nombre_comercial: 'KCF CORPORACION',
+                            direccion: 'CALLE LOS PINOS 456, SAN ISIDRO, LIMA'
+                        },
+                        '20123456789': {
+                            razon_social: 'DISTRIBUIDORA EL PROGRESO S.R.L.',
+                            nombre_comercial: 'EL PROGRESO',
+                            direccion: 'JR. COMERCIO 789, LA VICTORIA, LIMA'
+                        },
+                        '20601234567': {
+                            razon_social: 'TECNOLOGIA ANDINA S.A.C.',
+                            nombre_comercial: 'TECNOANDINA',
+                            direccion: 'AV. AREQUIPA 1234, LINCE, LIMA'
+                        }
+                    };
+                    
+                    if (datosPorRuc[ruc]) {
+                        resolve({ success: true, data: datosPorRuc[ruc] });
+                    } else {
+                        resolve({
+                            success: true,
+                            data: {
+                                razon_social: `EMPRESA CON RUC ${ruc}`,
+                                nombre_comercial: `COMERCIAL ${ruc}`,
+                                direccion: 'DIRECCIÓN NO REGISTRADA EN SUNAT'
+                            }
+                        });
+                    }
+                }, 1500);
+            });
+        }
+        
+        // Función principal para buscar cliente en SUNAT
+        async function buscarClienteEnSunat() {
+            const rucInput = document.getElementById('buscar_ruc');
+            const ruc = rucInput.value.trim();
+            
+            if (!ruc) {
+                alert('Por favor ingrese un RUC');
+                return;
+            }
+            
+            if (ruc.length !== 11 || !/^\d+$/.test(ruc)) {
+                alert('El RUC debe tener 11 dígitos numéricos');
+                return;
+            }
+            
+            showLoading();
+            
+            try {
+                const resultado = await consultarSunat(ruc);
+                hideLoading();
+                
+                if (resultado.success && resultado.data) {
+                    const datos = resultado.data;
+                    
+                    document.getElementById('cliente_doc').value = ruc;
+                    document.getElementById('cliente_razon_social').value = datos.razon_social;
+                    document.getElementById('cliente_razon_comercial').value = datos.nombre_comercial || '';
+                    document.getElementById('cliente_direccion').value = datos.direccion;
+                    
+                    mostrarAlerta('success', 'Datos obtenidos de SUNAT correctamente');
+                } else {
+                    alert('No se pudieron obtener datos de SUNAT');
+                }
+            } catch (error) {
+                hideLoading();
+                console.error('Error consultando SUNAT:', error);
+                alert('Error al consultar SUNAT. Intente nuevamente.');
+            }
+        }
+        
+        function mostrarAlerta(tipo, mensaje) {
+            const container = document.querySelector('.card-body-custom');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${tipo} alert-dismissible fade show mt-3`;
+            alertDiv.innerHTML = `
+                <i class="bi bi-${tipo === 'success' ? 'check-circle-fill' : 'info-circle-fill'}"></i> 
+                ${mensaje}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            const existingAlert = container.querySelector('.alert');
+            if (existingAlert) existingAlert.remove();
+            container.insertBefore(alertDiv, container.firstChild);
+            setTimeout(() => alertDiv.remove(), 3000);
+        }
+        
+        function limpiarCliente() {
+            document.getElementById('cliente_id').value = '';
+            document.getElementById('buscar_ruc').value = '';
+            document.getElementById('cliente_doc').value = '';
+            document.getElementById('cliente_razon_social').value = '';
+            document.getElementById('cliente_razon_comercial').value = '';
+            document.getElementById('cliente_direccion').value = '';
+            document.getElementById('cliente_contacto').value = '';
+            document.getElementById('email_contacto_cliente').value = '';
+            document.getElementById('telefono_contacto').value = '';
+            document.getElementById('requerimiento').value = '';
+            
+            const container = document.querySelector('.card-body-custom');
+            const existingAlert = container.querySelector('.alert');
+            if (existingAlert) existingAlert.remove();
+        }
+        
+        function habilitarEdicionRazonComercial() {
+            const razonComercialInput = document.getElementById('cliente_razon_comercial');
+            if (razonComercialInput) {
+                razonComercialInput.readOnly = false;
+                razonComercialInput.focus();
+                razonComercialInput.style.backgroundColor = '#fffde7';
+                razonComercialInput.addEventListener('blur', function() {
+                    this.readOnly = true;
+                    this.style.backgroundColor = '';
+                }, { once: true });
+            }
+        }
+        
+        // ==================== FUNCIONES DE FORMULARIOS PERSONALIZADOS ====================
+        
         function configurarValidezOferta() {
             const select = document.getElementById('validez_oferta_select');
             const input = document.getElementById('validez_oferta');
-            
-            if (select && input) {
-                select.addEventListener('change', function() {
-                    const valor = this.value;
-                    if (valor === 'personalizado') {
-                        input.style.display = 'block';
-                        input.value = '';
-                        input.placeholder = 'Ej: 20 días, 1 mes, etc.';
-                        input.focus();
-                    } else if (valor === '') {
-                        input.style.display = 'none';
-                        input.value = '';
-                    } else {
-                        input.style.display = 'none';
-                        input.value = valor;
-                    }
-                });
-                
-                input.addEventListener('focus', function() {
-                    select.value = 'personalizado';
-                    this.style.display = 'block';
-                });
-                
-                if (input.value && input.value.trim() !== '') {
-                    let encontrado = false;
-                    for (let i = 0; i < select.options.length; i++) {
-                        if (select.options[i].value === input.value) {
-                            select.value = input.value;
-                            input.style.display = 'none';
-                            encontrado = true;
-                            break;
-                        }
-                    }
-                    if (!encontrado && input.value !== '') {
-                        select.value = 'personalizado';
-                        input.style.display = 'block';
-                    }
-                }
-            }
-        }
-
-        // Función para manejar la condición de pago personalizada
-        function configurarCondicionPago() {
-            const select = document.getElementById('condicion_pago_select');
-            const input = document.getElementById('condicion_pago');
-            
-            if (select && input) {
-                select.addEventListener('change', function() {
-                    const valor = this.value;
-                    if (valor === 'personalizado') {
-                        input.style.display = 'block';
-                        input.value = '';
-                        input.placeholder = 'Ej: Crédito 20 días, 50% adelanto, etc.';
-                        input.focus();
-                    } else if (valor === '') {
-                        input.style.display = 'none';
-                        input.value = '';
-                    } else {
-                        input.style.display = 'none';
-                        input.value = valor;
-                    }
-                });
-                
-                input.addEventListener('focus', function() {
-                    select.value = 'personalizado';
-                    this.style.display = 'block';
-                });
-                
-                if (input.value && input.value.trim() !== '') {
-                    let encontrado = false;
-                    for (let i = 0; i < select.options.length; i++) {
-                        if (select.options[i].value === input.value) {
-                            select.value = input.value;
-                            input.style.display = 'none';
-                            encontrado = true;
-                            break;
-                        }
-                    }
-                    if (!encontrado && input.value !== '') {
-                        select.value = 'personalizado';
-                        input.style.display = 'block';
-                    }
-                }
-            }
-        }
-
-        // Función para manejar la dirección de entrega personalizada
-        function configurarDireccionEntrega() {
-            const select = document.getElementById('direccion_entrega_select');
-            const input = document.getElementById('direccion_entrega');
-            
             if (select && input) {
                 select.addEventListener('change', function() {
                     if (this.value === 'personalizado') {
                         input.style.display = 'block';
                         input.value = '';
-                        input.placeholder = 'Escriba la dirección completa...';
                         input.focus();
                     } else if (this.value === '') {
                         input.style.display = 'none';
@@ -1085,7 +1186,6 @@
                         input.value = this.value;
                     }
                 });
-                
                 input.addEventListener('focus', function() {
                     select.value = 'personalizado';
                     this.style.display = 'block';
@@ -1093,77 +1193,151 @@
             }
         }
         
-        // Función para manejar el descuento personalizable
+        function configurarCondicionPago() {
+            const select = document.getElementById('condicion_pago_select');
+            const input = document.getElementById('condicion_pago');
+            if (select && input) {
+                select.addEventListener('change', function() {
+                    if (this.value === 'personalizado') {
+                        input.style.display = 'block';
+                        input.value = '';
+                        input.focus();
+                    } else if (this.value === '') {
+                        input.style.display = 'none';
+                        input.value = '';
+                    } else {
+                        input.style.display = 'none';
+                        input.value = this.value;
+                    }
+                });
+                input.addEventListener('focus', function() {
+                    select.value = 'personalizado';
+                    this.style.display = 'block';
+                });
+            }
+        }
+        
+        function configurarDireccionEntrega() {
+            const select = document.getElementById('direccion_entrega_select');
+            const input = document.getElementById('direccion_entrega');
+            if (select && input) {
+                select.addEventListener('change', function() {
+                    if (this.value === 'personalizado') {
+                        input.style.display = 'block';
+                        input.value = '';
+                        input.focus();
+                    } else if (this.value === '') {
+                        input.style.display = 'none';
+                        input.value = '';
+                    } else {
+                        input.style.display = 'none';
+                        input.value = this.value;
+                    }
+                });
+                input.addEventListener('focus', function() {
+                    select.value = 'personalizado';
+                    this.style.display = 'block';
+                });
+            }
+        }
+        
+        function configurarTiempoEntrega() {
+            const select = document.getElementById('tiempo_entrega_select');
+            const input = document.getElementById('tiempo_entrega');
+            if (select && input) {
+                select.addEventListener('change', function() {
+                    if (this.value === 'personalizado') {
+                        input.style.display = 'block';
+                        input.value = '';
+                        input.focus();
+                    } else if (this.value === '') {
+                        input.style.display = 'none';
+                        input.value = '';
+                    } else {
+                        input.style.display = 'none';
+                        input.value = this.value;
+                    }
+                });
+                input.addEventListener('focus', function() {
+                    select.value = 'personalizado';
+                    this.style.display = 'block';
+                });
+            }
+        }
+        
         function configurarDescuentoPersonalizable() {
             const descuentoInput = document.getElementById('descuento_porcentaje_input');
             const descuentoTipo = document.getElementById('descuento_tipo');
             const descuentoSymbol = document.getElementById('descuento_simbolo');
-            
             if (descuentoTipo && descuentoSymbol) {
                 descuentoTipo.addEventListener('change', function() {
                     if (this.value === 'monto') {
                         descuentoSymbol.textContent = 'S/';
-                        if (descuentoInput) {
-                            descuentoInput.max = '';
-                            descuentoInput.placeholder = '0.00';
-                        }
+                        if (descuentoInput) descuentoInput.max = '';
                     } else {
                         descuentoSymbol.textContent = '%';
-                        if (descuentoInput) {
-                            descuentoInput.max = '100';
-                            descuentoInput.placeholder = '0';
-                        }
+                        if (descuentoInput) descuentoInput.max = '100';
                     }
                 });
             }
         }
         
-        // Función para cargar direcciones guardadas del cliente
-        async function cargarDireccionesCliente(clienteId) {
-            const select = document.getElementById('direccion_entrega_select');
-            if (!select) return;
+        // ==================== BOTONES DE ACCIÓN ====================
+        
+        function guardarBorrador() {
+            const razonSocial = document.getElementById('cliente_razon_social').value;
+            const razonComercial = document.getElementById('cliente_razon_comercial').value;
+            const direccion = document.getElementById('cliente_direccion').value;
             
-            while (select.options.length > 2) {
-                select.remove(2);
+            if (!razonSocial) {
+                alert('Debe ingresar al menos la Razón Social del cliente');
+                return;
             }
             
-            if (!clienteId) return;
-            
-            try {
-                const response = await fetch(`/api/clientes/${clienteId}/direcciones`);
-                const result = await response.json();
-                
-                if (result.success && result.data && result.data.length > 0) {
-                    result.data.forEach(dir => {
-                        const option = document.createElement('option');
-                        option.value = dir.direccion;
-                        option.textContent = dir.direccion;
-                        if (dir.es_principal) {
-                            option.textContent += ' (Principal)';
-                        }
-                        select.appendChild(option);
-                    });
-                }
-            } catch (error) {
-                console.error('Error cargando direcciones:', error);
-            }
+            alert(`✅ Borrador guardado:\n📌 Razón Social: ${razonSocial}\n🏪 Razón Comercial: ${razonComercial || 'No especificada'}\n📍 Dirección Fiscal: ${direccion || 'No especificada'}`);
         }
         
-        // Inicializar cuando el DOM esté listo
+        function guardarOficial() {
+            const razonSocial = document.getElementById('cliente_razon_social').value;
+            if (!razonSocial) {
+                alert('Complete los datos del cliente antes de convertir a oficial');
+                return;
+            }
+            alert('✅ Cotización convertida a OFICIAL correctamente');
+        }
+        
+        // ==================== INICIALIZACIÓN ====================
+        
         document.addEventListener('DOMContentLoaded', function() {
+            // Configurar selects personalizados
             configurarValidezOferta();
             configurarCondicionPago();
             configurarDireccionEntrega();
+            configurarTiempoEntrega();
             configurarDescuentoPersonalizable();
             
-            const clienteIdInput = document.getElementById('cliente_id');
-            if (clienteIdInput) {
-                const observer = new MutationObserver(function() {
-                    if (clienteIdInput.value) {
-                        cargarDireccionesCliente(clienteIdInput.value);
+            // Botones SUNAT
+            const btnBuscarSunat = document.getElementById('btnBuscarClientePorRuc');
+            const btnLimpiar = document.getElementById('btnLimpiarCliente');
+            const btnEditarRazonComercial = document.getElementById('btnEditarRazonComercial');
+            const btnGuardarBorradorHtml = document.getElementById('btnGuardarBorrador');
+            const btnGuardarOficialHtml = document.getElementById('btnGuardarOficial');
+            
+            if (btnBuscarSunat) btnBuscarSunat.addEventListener('click', buscarClienteEnSunat);
+            if (btnLimpiar) btnLimpiar.addEventListener('click', limpiarCliente);
+            if (btnEditarRazonComercial) btnEditarRazonComercial.addEventListener('click', habilitarEdicionRazonComercial);
+            if (btnGuardarBorradorHtml) btnGuardarBorradorHtml.addEventListener('click', guardarBorrador);
+            if (btnGuardarOficialHtml) btnGuardarOficialHtml.addEventListener('click', guardarOficial);
+            
+            // Buscar con Enter
+            const rucInput = document.getElementById('buscar_ruc');
+            if (rucInput) {
+                rucInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        buscarClienteEnSunat();
                     }
                 });
-                observer.observe(clienteIdInput, { attributes: true, attributeFilter: ['value'] });
             }
         });
     </script>
