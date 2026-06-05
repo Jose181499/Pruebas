@@ -477,7 +477,7 @@ def obtener_clientes():
             # =========================================
             cur.execute("""
 
-                SELECT nombre_contacto
+                SELECT nombre_contacto,email, telefono
 
                 FROM clientes_contactos
 
