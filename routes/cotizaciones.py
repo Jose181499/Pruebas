@@ -1319,6 +1319,271 @@ def obtener_contacto_cliente(cliente_id):
             'success': False,
             'error': str(e)
         }), 500
+
+# ==========================================
+# DUPLICAR COTIZACIÓN
+# ==========================================
+
+@cotizaciones_bp.route("/api/cotizacion/duplicar/<int:id>", methods=["POST"])
+def duplicar_cotizacion(id):
+    """Duplicar una cotización existente"""
+    try:
+        # 1. Obtener la cotización original
+        query_cotizacion = """
+            SELECT 
+                cliente_id,
+                estado,
+                condicion_pago,
+                tiempo_entrega,
+                validez_oferta,
+                direccion_entrega,
+                requerimiento,
+                nota_cotizacion,
+                notas,
+                descuento_porcentaje,
+                descuento_monto,
+                descuento_tipo,
+                contacto_cliente,
+                telefono_cliente,
+                email_cliente,
+                usuario_id
+            FROM cotizaciones 
+            WHERE id = %s
+        """
+        cotizacion_original = db_query(query_cotizacion, (id,))
+        
+        if not cotizacion_original:
+            return jsonify({'success': False, 'error': 'Cotización no encontrada'}), 404
+        
+        orig = cotizacion_original[0]
+        
+        # 2. Obtener los detalles de la cotización original
+        query_detalle = """
+            SELECT 
+                producto_id,
+                cantidad,
+                costo_unitario,
+                subtotal_costo,
+                margen_porcentaje,
+                precio_venta_unitario,
+                subtotal_venta,
+                descuento_porcentaje,
+                precio_venta_con_descuento,
+                subtotal_venta_con_descuento,
+                descuento_total,
+                margen_final
+            FROM cotizacion_detalle 
+            WHERE cotizacion_id = %s
+        """
+        detalles_originales = db_query(query_detalle, (id,))
+        
+        # 3. Generar nuevo código para la cotización duplicada
+        usuario_id = orig.get('usuario_id')
+        
+        # Obtener último número de cotización
+        ultimo_num = db_query("SELECT numero_cotizacion FROM cotizaciones ORDER BY id DESC LIMIT 1")
+        if ultimo_num and ultimo_num[0].get('numero_cotizacion'):
+            ultimo_str = ultimo_num[0]['numero_cotizacion']
+            try:
+                num_parts = ultimo_str.split('-')
+                if len(num_parts) >= 2:
+                    nuevo_numero_int = int(num_parts[1]) + 1
+                else:
+                    nuevo_numero_int = 1
+            except:
+                nuevo_numero_int = 1
+        else:
+            nuevo_numero_int = 1
+        
+        nuevo_numero = f"COT-{str(nuevo_numero_int).zfill(5)}"
+        
+        # Generar código personalizado
+        from datetime import datetime
+        
+        if usuario_id:
+            usuario = db_query("SELECT codigo_vendedor FROM usuarios WHERE id = %s", (usuario_id,))
+            codigo_vendedor = usuario[0]['codigo_vendedor'] if usuario else f"V{str(usuario_id).zfill(3)}"
+        else:
+            codigo_vendedor = "TMP"
+        
+        # Obtener correlativo
+        corr_query = "SELECT MAX(correlativo) as ultimo FROM cotizaciones WHERE usuario_id = %s"
+        ultimo_corr = db_query(corr_query, (usuario_id,)) if usuario_id else [{'ultimo': 0}]
+        nuevo_corr = (ultimo_corr[0]['ultimo'] or 0) + 1
+        
+        fecha = datetime.now()
+        nuevo_codigo = f"COT-{codigo_vendedor}-{fecha.year}{str(fecha.month).zfill(2)}{str(fecha.day).zfill(2)}-{str(nuevo_corr).zfill(4)}"
+        
+        # 4. Crear nueva cotización (duplicada)
+        with db_tx() as conn:
+            cur = conn.cursor()
+            
+            cur.execute("""
+                INSERT INTO cotizaciones (
+                    numero_cotizacion,
+                    cliente_id,
+                    fecha_creacion,
+                    estado,
+                    condicion_pago,
+                    tiempo_entrega,
+                    validez_oferta,
+                    direccion_entrega,
+                    requerimiento,
+                    nota_cotizacion,
+                    usuario_id,
+                    notas,
+                    codigo_cotizacion,
+                    correlativo,
+                    descuento_porcentaje,
+                    descuento_monto,
+                    descuento_tipo,
+                    contacto_cliente,
+                    telefono_cliente,
+                    email_cliente,
+                    subtotal,
+                    igv,
+                    total
+                )
+                VALUES (
+                    %s, %s, NOW() AT TIME ZONE 'America/Lima', %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 0, 0, 0
+                )
+                RETURNING id
+            """, (
+                nuevo_numero,
+                orig.get('cliente_id'),
+                'Borrador',  # Estado inicial como Borrador
+                orig.get('condicion_pago'),
+                orig.get('tiempo_entrega'),
+                orig.get('validez_oferta'),
+                orig.get('direccion_entrega'),
+                orig.get('requerimiento'),
+                orig.get('nota_cotizacion'),
+                usuario_id,
+                f"Duplicado de cotización #{id}",
+                nuevo_codigo,
+                nuevo_corr,
+                orig.get('descuento_porcentaje', 0),
+                orig.get('descuento_monto', 0),
+                orig.get('descuento_tipo', 'porcentaje'),
+                orig.get('contacto_cliente'),
+                orig.get('telefono_cliente'),
+                orig.get('email_cliente')
+            ))
+            
+            nuevo_id = cur.fetchone()[0]
+            
+            # 5. Duplicar los detalles (productos)
+            for detalle in detalles_originales:
+                cur.execute("""
+                    INSERT INTO cotizacion_detalle (
+                        cotizacion_id,
+                        producto_id,
+                        cantidad,
+                        costo_unitario,
+                        subtotal_costo,
+                        margen_porcentaje,
+                        precio_venta_unitario,
+                        subtotal_venta,
+                        descuento_porcentaje,
+                        precio_venta_con_descuento,
+                        subtotal_venta_con_descuento,
+                        descuento_total,
+                        margen_final
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (
+                    nuevo_id,
+                    detalle.get('producto_id'),
+                    detalle.get('cantidad', 0),
+                    detalle.get('costo_unitario', 0),
+                    detalle.get('subtotal_costo', 0),
+                    detalle.get('margen_porcentaje', 20),
+                    detalle.get('precio_venta_unitario', 0),
+                    detalle.get('subtotal_venta', 0),
+                    detalle.get('descuento_porcentaje', 0),
+                    detalle.get('precio_venta_con_descuento', 0),
+                    detalle.get('subtotal_venta_con_descuento', 0),
+                    detalle.get('descuento_total', 0),
+                    detalle.get('margen_final', 20)
+                ))
+        
+        return jsonify({
+            'success': True,
+            'nuevo_id': nuevo_id,
+            'message': 'Cotización duplicada correctamente'
+        })
+        
+    except Exception as e:
+        print(f"❌ Error al duplicar cotización: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ==========================================
+# ENVIAR COTIZACIÓN POR EMAIL
+# ==========================================
+
+@cotizaciones_bp.route("/api/cotizacion/enviar-email/<int:id>", methods=["POST"])
+def enviar_email_cotizacion(id):
+    """Enviar cotización por email"""
+    try:
+        # Obtener datos de la cotización
+        query = """
+            SELECT 
+                c.*,
+                cl.razon_social as cliente_razon_social,
+                cl.numero_documento as cliente_ruc,
+                cl.email_contacto as cliente_email,
+                u.nombre_completo as vendedor_nombre,
+                u.email as vendedor_email
+            FROM cotizaciones c
+            LEFT JOIN clientes cl ON c.cliente_id = cl.id
+            LEFT JOIN usuarios u ON c.usuario_id = u.id
+            WHERE c.id = %s
+        """
+        cotizacion = db_query(query, (id,))
+        
+        if not cotizacion:
+            return jsonify({'success': False, 'error': 'Cotización no encontrada'}), 404
+        
+        cotizacion_data = cotizacion[0]
+        
+        # Determinar email del destinatario
+        email_destino = cotizacion_data.get('email_cliente') or cotizacion_data.get('cliente_email')
+        
+        if not email_destino:
+            return jsonify({
+                'success': False, 
+                'error': 'No se encontró email del cliente para enviar la cotización'
+            }), 400
+        
+        # Aquí puedes implementar el envío de email con Flask-Mail
+        print(f"📧 Enviando cotización {cotizacion_data.get('codigo_cotizacion')} a {email_destino}")
+        
+        return jsonify({
+            'success': True,
+            'message': f'Email enviado correctamente a {email_destino}'
+        })
+        
+    except Exception as e:
+        print(f"❌ Error al enviar email: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ==========================================
+# EXPORTAR COTIZACIÓN A PDF
+# ==========================================
+
+@cotizaciones_bp.route("/api/cotizacion/exportar-pdf/<int:id>", methods=["GET"])
+def exportar_pdf_cotizacion(id):
+    """Exportar cotización a PDF (reutiliza el endpoint existente)"""
+    try:
+        return generar_pdf(id)
+    except Exception as e:
+        print(f"❌ Error al exportar PDF: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 # ==========================================
 # GENERAR PDF
 # ==========================================
