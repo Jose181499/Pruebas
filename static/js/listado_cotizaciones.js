@@ -318,6 +318,19 @@ function formatearHora(fechaStr) {
 }
 
 // ===========================
+// ESCAPE HTML (seguridad)
+// ===========================
+function escapeHtml(str) {
+    if (!str) return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+// ===========================
 // RENDERIZAR TABLA - COLUMNAS ELIMINADAS: Jale y Nombre Estado
 // ===========================
 function renderizarTabla(cotizaciones) {
@@ -345,7 +358,6 @@ function renderizarTabla(cotizaciones) {
         const codigoMostrar = c.codigo_cotizacion || c.numero_cotizacion;
         let estadoHtml = renderEstado(c.estado, esBorrador);
         
-        // Tus datos existentes
         const ruc = c.ruc || '---';
         const codigoCliente = c.codigo_cliente || '---';
         const razonComercial = c.razon_comercial || c.nombre_comercial || '---';
@@ -356,51 +368,26 @@ function renderizarTabla(cotizaciones) {
         
         return `
             <tr data-id="${c.id}" data-codigo="${codigoMostrar}">
-                <!-- 1. Ítems -->
                 <td class="text-center fw-bold" style="width:50px">${index + 1}</td>
-                
-                <!-- 2. Fecha y Hora -->
                 <td class="fecha-cell">
                     <div class="fecha-hora">
                         <div class="fecha"><strong>${fecha}</strong></div>
                         <div class="hora small text-muted">${hora}</div>
                     </div>
                 </td>
-                
-                <!-- 3. N° Cotización -->
                 <td class="codigo-cell">
                     <strong>${escapeHtml(codigoMostrar || '-')}</strong>
                     ${c.correlativo ? `<br><small class="text-muted">Correl: ${c.correlativo}</small>` : ''}
                 </td>
-                
-                <!-- 4. RUC -->
                 <td>${escapeHtml(ruc)}</td>
-                
-                <!-- 5. Código Cliente -->
                 <td><span class="badge-codigo">${escapeHtml(codigoCliente)}</span></td>
-                
-                <!-- 6. R comercial -->
                 <td><small>${escapeHtml(razonComercial)}</small></td>
-                
-                <!-- 7. R social -->
                 <td><strong>${escapeHtml(razonSocial)}</strong></td>
-                
-                <!-- 8. Descripción -->
                 <td><small>${escapeHtml(descripcion.length > 50 ? descripcion.substring(0, 50) + '...' : descripcion)}</small></td>
-                
-                <!-- 9. Monto (Con IGV) -->
                 <td class="monto text-end fw-bold">S/ ${Number(total).toLocaleString('es-PE', { minimumFractionDigits: 2 })}</td>
-                
-                <!-- 10. Nota aclaratoria -->
                 <td><small class="text-muted">${escapeHtml(notaAclaratoria)}</small></td>
-                
-                <!-- 11. Condición pago -->
                 <td><small>${escapeHtml(condicionPago)}</small></td>
-                
-                <!-- 12. ESTADO (con color semáforo) -->
                 <td class="estado-cell">${estadoHtml}</td>
-                
-                <!-- 13. Acciones -->
                 <td class="acciones text-center">
                     <div class="dropdown">
                         <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -432,16 +419,6 @@ function renderizarTabla(cotizaciones) {
             </tr>
         `;
     }).join('');
-}
-
-function escapeHtml(str) {
-    if (!str) return '';
-    return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
 }
 
 // ===========================
@@ -557,15 +534,67 @@ function editar(id) {
     window.location.href = `/cotizacion/consultar/${id}`;
 }
 
-function duplicarCotizacion(id) {
-    window.location.href = `/cotizacion/duplicar/${id}`;
+// ===========================
+// DUPLICAR COTIZACIÓN - FUNCIÓN PRINCIPAL
+// ===========================
+async function duplicarCotizacion(id) {
+    try {
+        mostrarNotificacion('📋 Duplicando cotización...', 'info');
+        
+        const response = await fetch(`/api/cotizacion/duplicar/${id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            mostrarNotificacion('✅ Cotización duplicada correctamente', 'success');
+            // Recargar la lista para mostrar la nueva cotización
+            await cargarCotizaciones();
+        } else {
+            mostrarNotificacion('❌ Error al duplicar: ' + (result.error || 'Error desconocido'), 'danger');
+        }
+    } catch (error) {
+        console.error('Error al duplicar:', error);
+        mostrarNotificacion('❌ Error de conexión al duplicar', 'danger');
+    }
 }
 
-function enviarPorEmail(id) {
-    mostrarNotificacion(`📧 Enviando cotización por email...`, 'info');
+// ===========================
+// ENVIAR POR EMAIL
+// ===========================
+async function enviarPorEmail(id) {
+    try {
+        mostrarNotificacion('📧 Enviando cotización por email...', 'info');
+        
+        const response = await fetch(`/api/cotizacion/enviar-email/${id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            mostrarNotificacion('✅ Cotización enviada por email correctamente', 'success');
+        } else {
+            mostrarNotificacion('❌ Error al enviar: ' + (result.error || 'Error desconocido'), 'danger');
+        }
+    } catch (error) {
+        console.error('Error al enviar email:', error);
+        mostrarNotificacion('❌ Error de conexión al enviar email', 'danger');
+    }
 }
 
+// ===========================
+// EXPORTAR PDF
+// ===========================
 function exportarPDF(id) {
+    // Abrir el PDF en una nueva pestaña
     window.open(`/api/cotizacion/exportar-pdf/${id}`, '_blank');
 }
 
@@ -614,12 +643,12 @@ async function eliminarCotizacionConfirmado() {
 // ===========================
 function renderEstado(estado, esBorrador = false) {
     if (esBorrador) {
-        return `<span class="estado estado-borrador">📝 BORRADOR</span>`;
+        return `<span class="estado-borrador">📝 BORRADOR</span>`;
     }
     let clase = '';
     let texto = estado || 'En Proceso';
     if (texto === 'En Proceso') {
-        clase = 'estado-proceso';
+        clase = 'estado-en-proceso';
         texto = '⏳ En Proceso';
     } else if (texto === 'Generada') {
         clase = 'estado-generada';
@@ -631,27 +660,48 @@ function renderEstado(estado, esBorrador = false) {
         clase = 'estado-rechazada';
         texto = '❌ Rechazada';
     } else {
-        clase = 'estado-proceso';
+        clase = 'estado-en-proceso';
     }
-    return `<span class="estado ${clase}">${texto}</span>`;
+    return `<span class="${clase}">${texto}</span>`;
 }
 
 // ===========================
 // MOSTRAR NOTIFICACIÓN
 // ===========================
 function mostrarNotificacion(mensaje, tipo) {
+    const container = document.getElementById('notificacionesContainer');
+    if (!container) return;
+    
     const notificacion = document.createElement('div');
-    notificacion.className = `alert alert-${tipo} position-fixed top-0 end-0 m-3`;
-    notificacion.style.zIndex = '9999';
-    notificacion.style.minWidth = '300px';
-    notificacion.style.animation = 'slideIn 0.3s ease';
-    let icono = tipo === 'success' ? 'check-circle' : (tipo === 'danger' ? 'exclamation-triangle' : 'info-circle');
-    notificacion.innerHTML = `<i class="bi bi-${icono} me-2"></i>${escapeHtml(mensaje)}`;
-    document.body.appendChild(notificacion);
+    const tipoClass = {
+        'success': 'notificacion-exito',
+        'danger': 'notificacion-error',
+        'warning': 'notificacion-warning',
+        'info': 'notificacion-info'
+    };
+    
+    const iconos = {
+        'success': 'bi-check-circle-fill',
+        'danger': 'bi-x-circle-fill',
+        'warning': 'bi-exclamation-triangle-fill',
+        'info': 'bi-info-circle-fill'
+    };
+    
+    notificacion.className = `notificacion ${tipoClass[tipo] || 'notificacion-info'}`;
+    notificacion.innerHTML = `
+        <i class="bi ${iconos[tipo] || 'bi-info-circle-fill'} me-2"></i>
+        <span>${escapeHtml(mensaje)}</span>
+        <button class="btn-close btn-close-white" onclick="this.parentElement.remove()"></button>
+    `;
+    
+    container.appendChild(notificacion);
+    
     setTimeout(() => {
-        notificacion.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => notificacion.remove(), 300);
-    }, 3000);
+        if (notificacion && notificacion.parentElement) {
+            notificacion.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => notificacion.remove(), 300);
+        }
+    }, 4000);
 }
 
 // ===========================
@@ -713,7 +763,7 @@ async function guardarNuevoClienteListado() {
 }
 
 // ===========================
-// ESTILOS ADICIONALES
+// ESTILOS ADICIONALES PARA SEMÁFORO
 // ===========================
 const style = document.createElement('style');
 style.textContent = `
@@ -725,14 +775,95 @@ style.textContent = `
         from { transform: translateX(0); opacity: 1; }
         to { transform: translateX(100%); opacity: 0; }
     }
-    .estado-borrador { background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
-    .estado-proceso { background: #e0e7ff; color: #3730a3; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
-    .estado-generada { background: #dcfce7; color: #166534; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
-    .estado-aceptada { background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
-    .estado-rechazada { background: #fee2e2; color: #991b1b; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
-    .badge-codigo { font-family: monospace; font-size: 13px; font-weight: 700; background: #f3f4f6; padding: 4px 10px; border-radius: 8px; color: #374151; }
-    .monto { font-weight: 700; color: #111827; }
-    .fecha-hora .fecha { font-weight: 600; color: #111827; }
-    .fecha-hora .hora { font-size: 11px; color: #6b7280; }
+    
+    .estado-borrador {
+        background: #FEF3C7;
+        color: #92400E;
+        padding: 6px 14px;
+        border-radius: 40px;
+        font-size: 12px;
+        font-weight: 700;
+        text-align: center;
+        display: inline-block;
+    }
+    
+    .estado-generada {
+        background: #DCFCE7;
+        color: #166534;
+        padding: 6px 14px;
+        border-radius: 40px;
+        font-size: 12px;
+        font-weight: 700;
+        text-align: center;
+        display: inline-block;
+    }
+    
+    .estado-aceptada {
+        background: #D1FAE5;
+        color: #065F46;
+        padding: 6px 14px;
+        border-radius: 40px;
+        font-size: 12px;
+        font-weight: 700;
+        text-align: center;
+        display: inline-block;
+    }
+    
+    .estado-rechazada {
+        background: #FEE2E2;
+        color: #991B1B;
+        padding: 6px 14px;
+        border-radius: 40px;
+        font-size: 12px;
+        font-weight: 700;
+        text-align: center;
+        display: inline-block;
+    }
+    
+    .estado-en-proceso {
+        background: #E0E7FF;
+        color: #3730A3;
+        padding: 6px 14px;
+        border-radius: 40px;
+        font-size: 12px;
+        font-weight: 700;
+        text-align: center;
+        display: inline-block;
+    }
+    
+    .badge-codigo {
+        font-family: monospace;
+        font-size: 13px;
+        font-weight: 700;
+        background: #f3f4f6;
+        padding: 4px 10px;
+        border-radius: 8px;
+        color: #374151;
+        display: inline-block;
+    }
+    
+    .monto {
+        font-weight: 700;
+        color: #111827;
+    }
+    
+    .fecha-hora .fecha {
+        font-weight: 600;
+        color: #111827;
+    }
+    
+    .fecha-hora .hora {
+        font-size: 11px;
+        color: #6b7280;
+    }
+    
+    .acciones .dropdown-toggle {
+        background-color: #6c757d;
+        border: none;
+    }
+    
+    .dropdown-item i {
+        margin-right: 8px;
+    }
 `;
 document.head.appendChild(style);
