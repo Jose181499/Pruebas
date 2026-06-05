@@ -1289,14 +1289,14 @@ def eliminar_producto_api(id):
 def obtener_contacto_cliente(cliente_id):
     """Obtener nombre_contacto, email y telefono de un cliente"""
     try:
+        # 🔥 Usar campos directos de la tabla clientes en lugar de clientes_contactos
         cliente = db_query("""
-            SELECT cc.nombre_contacto,
-                   cc.email AS email_contacto,
-                   cc.telefono AS telefono_contacto
-            FROM clientes_contactos cc
-            WHERE cc.cliente_id = %s AND cc.activo = TRUE
-            ORDER BY cc.principal DESC
-            LIMIT 1
+            SELECT 
+                nombre_contacto,
+                email_contacto,
+                telefono_contacto
+            FROM clientes
+            WHERE id = %s AND activo = TRUE
         """, (cliente_id,))
         
         if not cliente:
@@ -1320,7 +1320,6 @@ def obtener_contacto_cliente(cliente_id):
             'success': False,
             'error': str(e)
         }), 500
-
 # ==========================================
 # DUPLICAR COTIZACIÓN
 # ==========================================
