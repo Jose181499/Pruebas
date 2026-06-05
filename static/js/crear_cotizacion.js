@@ -2315,13 +2315,13 @@ function attachClienteAutocompleteRapido(inputId) {
             }
             
             const filtrados = clientesCache.filter(cliente => {
-             const razon = (cliente.razon_social || '').toLowerCase();
-            const doc = (cliente.numero_documento || '').toLowerCase();
-            const nombreComercial = (cliente.nombre_comercial || '').toLowerCase();
-            const razonComercial = (cliente.razon_comercial || '').toLowerCase();
-            const contacto = (cliente.nombre_contacto || '').toLowerCase();
+            const razon = (cliente.razon_social || '').toLowerCase();
+             const doc = (cliente.numero_documento || '').toLowerCase();
+             const nombreComercial = (cliente.nombre_comercial || '').toLowerCase();
+             const razonComercial = (cliente.razon_comercial || '').toLowerCase();
+            const contacto = (cliente.contacto || cliente.nombre_contacto || '').toLowerCase(); // ← Usar contacto
     
-             return razon.includes(busqueda) || 
+            return razon.includes(busqueda) || 
            doc.includes(busqueda) || 
            nombreComercial.includes(busqueda) ||
            razonComercial.includes(busqueda) ||
