@@ -332,7 +332,6 @@ def obtener_cliente(id):
             'error': str(e)
         }), 500
 
-
 # ==========================================
 # ENDPOINT: OBTENER DIRECCIONES DEL CLIENTE
 # ==========================================
