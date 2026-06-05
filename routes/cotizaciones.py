@@ -211,41 +211,23 @@ def buscar_usuarios():
 # ==========================================
 @cotizaciones_bp.route("/api/clientes/buscar", methods=["GET"])
 def buscar_clientes():
-    """Buscar clientes por nombre o documento - VERSIÓN FINAL CON JOIN"""
-    print("=" * 60)
-    print("🎯 BUSCANDO CLIENTES - VERSIÓN FINAL CON CONTACTO")
-    print("=" * 60)
-    
     try:
         q = request.args.get('q', '').strip()
+        print(f"🔍 🔥🔥🔥 BUSCANDO: '{q}' - LLAMANDO A buscar_clientes_mejorado")
         
-        # Usamos la función mejorada con JOIN
         clientes = buscar_clientes_mejorado(busqueda=q, limit=20)
         
-        print(f"📊 Se encontraron {len(clientes)} clientes")
-        
+        print(f"📊 RESULTADOS de buscar_clientes_mejorado: {len(clientes)}")
         if clientes:
-            print(f"📋 PRIMER CLIENTE:")
-            print(f"   - razon_social: {clientes[0].get('razon_social')}")
-            print(f"   - telefono_contacto: '{clientes[0].get('telefono_contacto', '')}'")
-            print(f"   - email_contacto: '{clientes[0].get('email_contacto', '')}'")
-            print(f"   - nombre_contacto: '{clientes[0].get('nombre_contacto', '')}'")
-            print(f"   - principal: {clientes[0].get('principal')}")
+            print(f"   Primer resultado: {clientes[0]}")
         
         return jsonify({
             'success': True,
             'data': clientes
         })
-        
     except Exception as e:
-        print(f"❌ Error en /api/clientes/buscar: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
+        print(f"❌ Error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 # ==========================================
 # ENDPOINT: BUSCAR CLIENTE POR RUC EXACTO
 # ==========================================

@@ -647,86 +647,52 @@ def insertar_producto(
 
     return rows[0]["id"]
 
-
 def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=50):
+    print(f"🔥🔥🔥 DENTRO DE buscar_clientes_mejorado - busqueda: '{busqueda}'")
     try:
         with db_tx() as conn:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             
-            query = """
-                SELECT 
-                    c.id,
-                    c.tipo_documento,
-                    c.numero_documento,
-                    c.razon_social,
-                    c.nombre_comercial,
-                    c.razon_comercial,
-                    c.direccion_fiscal,
-                    c.codigo_cliente,
-                    c.activo,
-                    c.fecha_creacion,
-                    -- 🔥 IMPORTANTE: Traer contacto directamente
-                    cc.nombre_contacto,
-                    cc.email,
-                    cc.telefono,
-                    cc.cargo
-                FROM clientes c
-                INNER JOIN clientes_contactos cc ON cc.cliente_id = c.id
-                WHERE c.activo = TRUE AND cc.activo = TRUE
-            """
-            params = []
-            
             if busqueda and busqueda.strip():
                 busqueda_like = f"%{busqueda.strip()}%"
-                query += """ AND (
-                    c.numero_documento ILIKE %s OR 
-                    c.razon_social ILIKE %s OR 
-                    c.nombre_comercial ILIKE %s OR
-                    c.razon_comercial ILIKE %s OR
-                    cc.nombre_contacto ILIKE %s
-                )
-                ORDER BY cc.nombre_contacto, c.razon_social
-                LIMIT %s
-                """
-                params.extend([busqueda_like, busqueda_like, busqueda_like, busqueda_like, busqueda_like])
-                params.append(limit)
+                cur.execute("""
+                    SELECT 
+                        c.id,
+                        c.razon_social,
+                        c.numero_documento,
+                        cc.nombre_contacto,
+                        cc.email,
+                        cc.telefono
+                    FROM clientes c
+                    INNER JOIN clientes_contactos cc ON cc.cliente_id = c.id
+                    WHERE c.activo = TRUE AND cc.activo = TRUE
+                    AND cc.nombre_contacto ILIKE %s
+                    LIMIT %s
+                """, (busqueda_like, limit))
             else:
-                query += " ORDER BY cc.nombre_contacto, c.razon_social LIMIT %s"
-                params.append(limit)
+                cur.execute("""
+                    SELECT 
+                        c.id,
+                        c.razon_social,
+                        c.numero_documento,
+                        cc.nombre_contacto,
+                        cc.email,
+                        cc.telefono
+                    FROM clientes c
+                    INNER JOIN clientes_contactos cc ON cc.cliente_id = c.id
+                    WHERE c.activo = TRUE AND cc.activo = TRUE
+                    LIMIT %s
+                """, (limit,))
             
-            cur.execute(query, params)
             clientes = cur.fetchall()
-            
-            # 🔥 Renombrar columnas para el frontend
-            resultado = []
+            print(f"🔥🔥🔥 RESULTADOS SQL: {len(clientes)} clientes encontrados")
             for c in clientes:
-                resultado.append({
-                    'id': c.get('id'),
-                    'tipo_documento': c.get('tipo_documento'),
-                    'numero_documento': c.get('numero_documento'),
-                    'razon_social': c.get('razon_social'),
-                    'nombre_comercial': c.get('nombre_comercial'),
-                    'razon_comercial': c.get('razon_comercial'),
-                    'direccion_fiscal': c.get('direccion_fiscal'),
-                    'codigo_cliente': c.get('codigo_cliente'),
-                    'activo': c.get('activo'),
-                    'fecha_creacion': c.get('fecha_creacion'),
-                    'nombre_contacto': c.get('nombre_contacto'),  # ← Clave para el frontend
-                    'email_contacto': c.get('email'),
-                    'telefono_contacto': c.get('telefono'),
-                    'cargo_contacto': c.get('cargo')
-                })
-            
-            print(f"✅ Búsqueda '{busqueda}': {len(resultado)} clientes encontrados")
-            for c in resultado[:3]:
                 print(f"   - nombre_contacto: {c.get('nombre_contacto')} | razon_social: {c.get('razon_social')}")
             
-            return resultado
+            return clientes
             
     except Exception as e:
         print(f"❌ Error en buscar_clientes_mejorado: {e}")
-        import traceback
-        traceback.print_exc()
         return []
 # =========================
 # BUSCAR CLIENTES CON PAGINACIÓN
