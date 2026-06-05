@@ -648,13 +648,10 @@ def insertar_producto(
     return rows[0]["id"]
 
 
-# =========================
-# BUSCAR CLIENTES - VERSIÓN MEJORADA
-# Busca por RUC, razón social O nombre comercial
-# =========================
-def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=100):
+def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=50):  # ← Reducir limit a 50
     """
     Buscar clientes - AHORA usando los campos DIRECTOS de la tabla clientes
+    Incluye búsqueda por razón comercial
     """
     try:
         with db_tx() as conn:
@@ -667,11 +664,11 @@ def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=100):
                     c.numero_documento,
                     c.razon_social,
                     c.nombre_comercial,
+                    c.razon_comercial,
                     c.direccion_fiscal,
                     c.codigo_cliente,
                     c.activo,
                     c.fecha_creacion,
-                    -- 🔥 CAMBIO IMPORTANTE: Usar los campos DIRECTOS de la tabla clientes
                     c.nombre_contacto,
                     c.email_contacto,
                     c.telefono_contacto
@@ -680,21 +677,33 @@ def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=100):
             """
             params = []
             
-            if tipo_documento and tipo_documento.strip():
-                query += " AND c.tipo_documento = %s"
-                params.append(tipo_documento)
-            
             if busqueda and busqueda.strip():
                 busqueda_like = f"%{busqueda.strip()}%"
+                # 🔥 ORDENAR POR RELEVANCIA (los que coinciden primero)
                 query += """ AND (
                     c.numero_documento ILIKE %s OR 
                     c.razon_social ILIKE %s OR 
-                    c.nombre_comercial ILIKE %s
-                )"""
-                params.extend([busqueda_like, busqueda_like, busqueda_like])
-            
-            query += " ORDER BY c.id DESC LIMIT %s"
-            params.append(limit)
+                    c.nombre_comercial ILIKE %s OR
+                    c.razon_comercial ILIKE %s
+                )
+                ORDER BY 
+                    CASE 
+                        WHEN c.numero_documento ILIKE %s THEN 1
+                        WHEN c.razon_social ILIKE %s THEN 2
+                        WHEN c.nombre_comercial ILIKE %s THEN 3
+                        WHEN c.razon_comercial ILIKE %s THEN 4
+                        ELSE 5
+                    END,
+                    c.razon_social
+                LIMIT %s
+                """
+                # Parámetros: 4 para WHERE + 4 para ORDER BY + 1 para LIMIT = 9
+                params.extend([busqueda_like, busqueda_like, busqueda_like, busqueda_like])  # WHERE
+                params.extend([busqueda_like, busqueda_like, busqueda_like, busqueda_like])  # ORDER BY
+                params.append(limit)  # LIMIT
+            else:
+                query += " ORDER BY c.razon_social LIMIT %s"
+                params.append(limit)
             
             cur.execute(query, params)
             clientes = cur.fetchall()
@@ -705,13 +714,7 @@ def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=100):
                 cliente['telefono_contacto'] = cliente.get('telefono_contacto') or ''
                 cliente['nombre_contacto'] = cliente.get('nombre_contacto') or ''
             
-            # Debug
-            if clientes:
-                print(f"✅ Primer cliente encontrado:")
-                print(f"   - razon_social: {clientes[0].get('razon_social')}")
-                print(f"   - telefono_contacto: '{clientes[0].get('telefono_contacto')}'")
-                print(f"   - email_contacto: '{clientes[0].get('email_contacto')}'")
-                print(f"   - nombre_contacto: '{clientes[0].get('nombre_contacto')}'")
+            print(f"✅ Búsqueda '{busqueda}': {len(clientes)} clientes encontrados")
             
             return clientes
             
@@ -720,7 +723,6 @@ def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=100):
         import traceback
         traceback.print_exc()
         return []
-
 # =========================
 # BUSCAR CLIENTES CON PAGINACIÓN
 # =========================

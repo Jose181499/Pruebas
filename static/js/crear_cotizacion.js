@@ -2314,12 +2314,19 @@ function attachClienteAutocompleteRapido(inputId) {
                 return;
             }
             
-            // 🔥 FILTRADO LOCAL RÁPIDO
             const filtrados = clientesCache.filter(cliente => {
-                const razon = (cliente.razon_social || '').toLowerCase();
-                const doc = (cliente.numero_documento || '').toLowerCase();
-                return razon.includes(busqueda) || doc.includes(busqueda);
-            });
+             const razon = (cliente.razon_social || '').toLowerCase();
+            const doc = (cliente.numero_documento || '').toLowerCase();
+            const nombreComercial = (cliente.nombre_comercial || '').toLowerCase();
+            const razonComercial = (cliente.razon_comercial || '').toLowerCase();
+            const contacto = (cliente.nombre_contacto || '').toLowerCase();
+    
+             return razon.includes(busqueda) || 
+           doc.includes(busqueda) || 
+           nombreComercial.includes(busqueda) ||
+           razonComercial.includes(busqueda) ||
+           contacto.includes(busqueda);
+});
             
             if (filtrados.length === 0) {
                 dropdown.innerHTML = `<div class="empty" style="padding: 12px; text-align: center;">No se encontraron clientes</div>`;
