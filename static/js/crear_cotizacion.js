@@ -2218,14 +2218,201 @@ function attachProductoAutocomplete(row) {
     configurarCondicionPago();
     configurarValidezOferta();
     configurarDescuentoPersonalizable();
+    // ==========================================
+// AUTOCOMPLETADO RÁPIDO DE CLIENTES (CACHÉ LOCAL)
+// ==========================================
 
+let clientesCache = [];
+let clientesCargados = false;
+
+async function cargarClientesCache() {
+    if (clientesCargados) return;
+    
+    try {
+        mostrarNotificacion('🔄 Cargando lista de clientes...', 'info');
+        const response = await fetch('/api/clientes/buscar?q=');
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            clientesCache = result.data;
+            clientesCargados = true;
+            console.log(`✅ Clientes cargados: ${clientesCache.length}`);
+        }
+    } catch (error) {
+        console.error('Error cargando clientes:', error);
+    }
+}
+
+function attachClienteAutocompleteRapido(inputId) {
+    const input = document.getElementById(inputId);
+    if (!input) {
+        console.warn(`Input no encontrado: #${inputId}`);
+        return;
+    }
+
+    // Crear contenedor relativo
+    let container = input.parentElement;
+    if (getComputedStyle(container).position !== 'relative') {
+        const newContainer = document.createElement('div');
+        newContainer.style.position = 'relative';
+        newContainer.style.width = '100%';
+        input.parentNode.insertBefore(newContainer, input);
+        newContainer.appendChild(input);
+        container = newContainer;
+    }
+
+    // Crear dropdown
+    const dropdownId = `dropdown_rapido_${inputId}`;
+    let dropdown = document.getElementById(dropdownId);
+    
+    if (!dropdown) {
+        dropdown = document.createElement('div');
+        dropdown.id = dropdownId;
+        dropdown.className = 'autocomplete-rapido';
+        dropdown.style.cssText = `
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 10000;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            border: 1px solid #e5e7eb;
+            margin-top: 4px;
+        `;
+        container.appendChild(dropdown);
+    }
+
+    // Cargar caché al enfocar
+    input.addEventListener('focus', async () => {
+        if (!clientesCargados) {
+            await cargarClientesCache();
+        }
+    });
+
+    let busquedaTimeout = null;
+
+    input.addEventListener('input', () => {
+        const busqueda = input.value.trim().toLowerCase();
+        
+        if (busquedaTimeout) clearTimeout(busquedaTimeout);
+        
+        if (busqueda.length < 2) {
+            dropdown.style.display = 'none';
+            dropdown.innerHTML = '';
+            return;
+        }
+
+        busquedaTimeout = setTimeout(() => {
+            if (!clientesCargados) {
+                dropdown.innerHTML = `<div class="empty" style="padding: 12px; text-align: center;">Cargando clientes...</div>`;
+                dropdown.style.display = 'block';
+                return;
+            }
+            
+            // 🔥 FILTRADO LOCAL RÁPIDO
+            const filtrados = clientesCache.filter(cliente => {
+                const razon = (cliente.razon_social || '').toLowerCase();
+                const doc = (cliente.numero_documento || '').toLowerCase();
+                return razon.includes(busqueda) || doc.includes(busqueda);
+            });
+            
+            if (filtrados.length === 0) {
+                dropdown.innerHTML = `<div class="empty" style="padding: 12px; text-align: center;">No se encontraron clientes</div>`;
+                dropdown.style.display = 'block';
+                return;
+            }
+            
+            dropdown.innerHTML = filtrados.map(c => `
+                <div class="item" 
+                    style="padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #f1f5f9;"
+                    data-id="${c.id || ''}"
+                    data-razon="${escapeHtml(c.razon_social || '')}"
+                    data-doc="${c.numero_documento || ''}"
+                    data-direccion="${escapeHtml(c.direccion_fiscal || '')}"
+                    data-contacto="${escapeHtml(c.nombre_contacto || '')}"
+                    data-email="${c.email_contacto || ''}"
+                    data-telefono="${c.telefono_contacto || ''}">
+                    <strong>🏢 ${escapeHtml(c.razon_social || c.nombre_comercial || '')}</strong>
+                    <div class="meta">📄 ${c.numero_documento || ''}</div>
+                    <div class="meta">📞 ${c.telefono_contacto || ''} • ✉️ ${c.email_contacto || ''}</div>
+                </div>
+            `).join('');
+            
+            dropdown.style.display = 'block';
+            
+            // Eventos click
+            dropdown.querySelectorAll('.item').forEach(el => {
+                el.addEventListener('click', async () => {
+                    const clienteId = el.dataset.id;
+                    document.getElementById('cliente_id').value = clienteId;
+                    document.getElementById('cliente_razon_social').value = el.dataset.razon;
+                    document.getElementById('cliente_doc').value = el.dataset.doc;
+                    document.getElementById('cliente_direccion').value = el.dataset.direccion;
+                    
+                    dropdown.style.display = 'none';
+                    
+                    if (clienteId) {
+                        await autoCompletarContactoYCorreo(clienteId);
+                        await cargarDireccionesCliente(clienteId);
+                    }
+                    
+                    mostrarNotificacion('✅ Cliente seleccionado', 'success');
+                    datosModificados = true;
+                });
+            });
+        }, 150); // ⚡ Timeout más rápido
+    });
+    
+    // Cerrar dropdown al hacer clic fuera
+    document.addEventListener('click', (e) => {
+        if (!container.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+    
+    // Navegación con teclado
+    input.addEventListener('keydown', (e) => {
+        if (dropdown.style.display === 'block') {
+            const items = dropdown.querySelectorAll('.item');
+            let currentFocus = -1;
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                currentFocus = (currentFocus + 1) % items.length;
+                highlightItem(items, currentFocus);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                currentFocus = (currentFocus - 1 + items.length) % items.length;
+                highlightItem(items, currentFocus);
+            } else if (e.key === 'Enter' && currentFocus >= 0) {
+                e.preventDefault();
+                items[currentFocus].click();
+            } else if (e.key === 'Escape') {
+                dropdown.style.display = 'none';
+            }
+        }
+    });
+    
+    function highlightItem(items, index) {
+        items.forEach(item => item.style.background = '');
+        if (items[index]) {
+            items[index].style.background = '#fef2f2';
+            items[index].scrollIntoView({ block: 'nearest' });
+        }
+    }
+}
     // =========================
     // INIT
     // =========================
     actualizarEstadoVisual();
     aplicarBloqueoUI();
-    attachClienteAutocomplete('cliente_doc');
-    attachClienteAutocomplete('cliente_razon_social');
+    attachClienteAutocompleteRapido('cliente_doc');
+    attachClienteAutocompleteRapido('cliente_razon_social');
     attachAsesorAutocomplete();
     
     configurarTiempoEntrega();
