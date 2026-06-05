@@ -664,11 +664,17 @@ def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=50):
                         cc.email,
                         cc.telefono
                     FROM clientes c
-                    INNER JOIN clientes_contactos cc ON cc.cliente_id = c.id
-                    WHERE c.activo = TRUE AND cc.activo = TRUE
-                    AND cc.nombre_contacto ILIKE %s
+                    LEFT JOIN clientes_contactos cc ON cc.cliente_id = c.id 
+                        AND cc.activo = TRUE AND cc.principal = TRUE
+                    WHERE c.activo = TRUE
+                    AND (
+                        c.razon_social ILIKE %s OR
+                        c.numero_documento ILIKE %s OR
+                        cc.nombre_contacto ILIKE %s
+                    )
+                    ORDER BY c.razon_social
                     LIMIT %s
-                """, (busqueda_like, limit))
+                """, (busqueda_like, busqueda_like, busqueda_like, limit))
             else:
                 cur.execute("""
                     SELECT 
@@ -679,8 +685,10 @@ def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=50):
                         cc.email,
                         cc.telefono
                     FROM clientes c
-                    INNER JOIN clientes_contactos cc ON cc.cliente_id = c.id
-                    WHERE c.activo = TRUE AND cc.activo = TRUE
+                    LEFT JOIN clientes_contactos cc ON cc.cliente_id = c.id 
+                        AND cc.activo = TRUE AND cc.principal = TRUE
+                    WHERE c.activo = TRUE
+                    ORDER BY c.razon_social
                     LIMIT %s
                 """, (limit,))
             
