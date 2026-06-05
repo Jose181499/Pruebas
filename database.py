@@ -648,10 +648,9 @@ def insertar_producto(
     return rows[0]["id"]
 
 
-def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=50):  # ← Reducir limit a 50
+def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=50):
     """
-    Buscar clientes - AHORA usando los campos DIRECTOS de la tabla clientes
-    Incluye búsqueda por razón comercial
+    Buscar clientes - INCLUYENDO datos de clientes_contactos
     """
     try:
         with db_tx() as conn:
@@ -669,22 +668,24 @@ def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=50):  # ← R
                     c.codigo_cliente,
                     c.activo,
                     c.fecha_creacion,
-                    c.nombre_contacto,
-                    c.email_contacto,
-                    c.telefono_contacto
+                    -- 🔥 OBTENER CONTACTO PRINCIPAL desde clientes_contactos
+                    COALESCE(cc.nombre_contacto, c.nombre_contacto) as nombre_contacto,
+                    COALESCE(cc.email, c.email_contacto) as email_contacto,
+                    COALESCE(cc.telefono, c.telefono_contacto) as telefono_contacto
                 FROM clientes c
+                LEFT JOIN clientes_contactos cc ON cc.cliente_id = c.id AND cc.principal = TRUE
                 WHERE c.activo = TRUE
             """
             params = []
             
             if busqueda and busqueda.strip():
                 busqueda_like = f"%{busqueda.strip()}%"
-                # 🔥 ORDENAR POR RELEVANCIA (los que coinciden primero)
                 query += """ AND (
                     c.numero_documento ILIKE %s OR 
                     c.razon_social ILIKE %s OR 
                     c.nombre_comercial ILIKE %s OR
-                    c.razon_comercial ILIKE %s
+                    c.razon_comercial ILIKE %s OR
+                    cc.nombre_contacto ILIKE %s
                 )
                 ORDER BY 
                     CASE 
@@ -692,14 +693,15 @@ def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=50):  # ← R
                         WHEN c.razon_social ILIKE %s THEN 2
                         WHEN c.nombre_comercial ILIKE %s THEN 3
                         WHEN c.razon_comercial ILIKE %s THEN 4
-                        ELSE 5
+                        WHEN cc.nombre_contacto ILIKE %s THEN 5
+                        ELSE 6
                     END,
                     c.razon_social
                 LIMIT %s
                 """
-                # Parámetros: 4 para WHERE + 4 para ORDER BY + 1 para LIMIT = 9
-                params.extend([busqueda_like, busqueda_like, busqueda_like, busqueda_like])  # WHERE
-                params.extend([busqueda_like, busqueda_like, busqueda_like, busqueda_like])  # ORDER BY
+                # Parámetros: 5 para WHERE + 5 para ORDER BY + 1 para LIMIT = 11
+                params.extend([busqueda_like, busqueda_like, busqueda_like, busqueda_like, busqueda_like])  # WHERE
+                params.extend([busqueda_like, busqueda_like, busqueda_like, busqueda_like, busqueda_like])  # ORDER BY
                 params.append(limit)  # LIMIT
             else:
                 query += " ORDER BY c.razon_social LIMIT %s"
@@ -715,6 +717,8 @@ def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=50):  # ← R
                 cliente['nombre_contacto'] = cliente.get('nombre_contacto') or ''
             
             print(f"✅ Búsqueda '{busqueda}': {len(clientes)} clientes encontrados")
+            if clientes:
+                print(f"   - Primer cliente: {clientes[0].get('nombre_contacto')} / {clientes[0].get('telefono_contacto')}")
             
             return clientes
             
@@ -857,9 +861,7 @@ def buscar_clientes_paginado(tipo_documento='', busqueda='', pagina=1, por_pagin
 # Buscar clientes con todos los campos (VERSIÓN CORREGIDA)
 # =========================
 def buscar_clientes_completo(q: str, limit: int = 20):
-    """
-    Buscar clientes por texto con TODOS los campos incluyendo contactos
-    """
+    """Buscar clientes por texto incluyendo contactos"""
     q = (q or "").strip()
     
     if len(q) < 2:
@@ -870,36 +872,34 @@ def buscar_clientes_completo(q: str, limit: int = 20):
     
     query = """
         SELECT 
-            id,
-            tipo_documento,
-            numero_documento,
-            razon_social,
-            nombre_comercial,
-            direccion_fiscal,
-            codigo_cliente,
-            telefono_contacto,
-            email_contacto,
-            nombre_contacto
-        FROM clientes
-        WHERE activo = TRUE
+            c.id,
+            c.tipo_documento,
+            c.numero_documento,
+            c.razon_social,
+            c.nombre_comercial,
+            c.razon_comercial,
+            c.direccion_fiscal,
+            c.codigo_cliente,
+            COALESCE(cc.nombre_contacto, c.nombre_contacto) as nombre_contacto,
+            COALESCE(cc.email, c.email_contacto) as email_contacto,
+            COALESCE(cc.telefono, c.telefono_contacto) as telefono_contacto
+        FROM clientes c
+        LEFT JOIN clientes_contactos cc ON cc.cliente_id = c.id AND cc.principal = TRUE
+        WHERE c.activo = TRUE
         AND (
-            numero_documento ILIKE %s OR 
-            razon_social ILIKE %s OR 
-            nombre_comercial ILIKE %s
+            c.numero_documento ILIKE %s OR 
+            c.razon_social ILIKE %s OR 
+            c.nombre_comercial ILIKE %s OR
+            c.razon_comercial ILIKE %s OR
+            cc.nombre_contacto ILIKE %s
         )
-        ORDER BY razon_social
+        ORDER BY c.razon_social
         LIMIT %s
     """
     
-    print(f"🔍 DEBUG - Buscando: {q}")
-    cur.execute(query, (f"%{q}%", f"%{q}%", f"%{q}%", limit))
+    like_param = f"%{q}%"
+    cur.execute(query, (like_param, like_param, like_param, like_param, like_param, limit))
     result = cur.fetchall()
-    
-    if result:
-        print(f"✅ DEBUG - Campos devueltos: {list(result[0].keys())}")
-        print(f"✅ DEBUG - teléfono: {result[0].get('telefono_contacto')}")
-        print(f"✅ DEBUG - email: {result[0].get('email_contacto')}")
-        print(f"✅ DEBUG - contacto: {result[0].get('nombre_contacto')}")
     
     cur.close()
     conn.close()
