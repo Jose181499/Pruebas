@@ -902,21 +902,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // ❌ ELIMINADO el setTimeout de auto-cierre - ahora solo se cierra con el botón
  }
 
-    async function cargarClienteEnCotizacion(clienteId) {
+        async function cargarClienteEnCotizacion(clienteId) {
         try {
             const response = await fetch(`/api/clientes/${clienteId}`);
             const result = await response.json();
             
             if (result.success && result.data) {
                 const cliente = result.data;
+                const contacto = cliente.contactos && cliente.contactos.length > 0 ? cliente.contactos[0] : {};
                 
                 document.getElementById('cliente_id').value = cliente.id;
                 document.getElementById('cliente_razon_social').value = cliente.razon_social;
                 document.getElementById('cliente_doc').value = cliente.numero_documento || '';
                 document.getElementById('cliente_direccion').value = cliente.direccion_fiscal || '';
-                document.getElementById('telefono_contacto').value = cliente.telefono_contacto || '';
-                document.getElementById('cliente_contacto').value = cliente.nombre_contacto || '';
-                document.getElementById('email_contacto_cliente').value = cliente.email_contacto || '';
+                document.getElementById('telefono_contacto').value = contacto.telefono || '';
+                document.getElementById('cliente_contacto').value = contacto.nombre_contacto || '';
+                document.getElementById('email_contacto_cliente').value = contacto.email || '';
                 
                 await cargarDireccionesCliente(cliente.id);
                 
