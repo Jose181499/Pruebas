@@ -216,14 +216,37 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================
     // CONSULTA A SUNAT
     // =========================
-    async function consultarSunat(ruc) {
+   async function consultarSunat(ruc) {
+    try {
+        mostrarNotificacion(`🔍 Consultando RUC ${ruc} en SUNAT...`, 'info');
+        
+        // 🔥 PRIMERO: Intentar con el proxy del backend (evita CORS)
         try {
-            mostrarNotificacion(`🔍 Consultando RUC ${ruc} en SUNAT...`, 'info');
+            const proxyResponse = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
+            const proxyData = await proxyResponse.json();
             
+            if (proxyData.success) {
+                return {
+                    success: true,
+                    razon_social: proxyData.razon_social || '',
+                    nombre_comercial: proxyData.nombre_comercial || '',
+                    razon_comercial: proxyData.nombre_comercial || '',
+                    direccion: proxyData.direccion || '',
+                    estado: proxyData.estado || ''
+                };
+            } else {
+                console.warn('Proxy falló:', proxyData.error);
+            }
+        } catch (proxyError) {
+            console.error('Error con proxy:', proxyError);
+        }
+        
+        // 🔥 SOLO si el proxy falla, intentar API directa (por si acaso)
+        try {
             const response = await fetch(`https://api.apis.net.pe/v2/sunat/ruc?numero=${ruc}`);
             
             if (!response.ok) {
-                throw new Error('Error al consultar SUNAT');
+                throw new Error(`HTTP ${response.status}`);
             }
             
             const data = await response.json();
@@ -233,29 +256,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     success: true,
                     razon_social: data.razonSocial || '',
                     nombre_comercial: data.nombreComercial || '',
-                     razon_comercial: data.nombreComercial || '',
+                    razon_comercial: data.nombreComercial || '',
                     direccion: data.direccion || '',
                     estado: data.estado || ''
                 };
-            } else {
-                return { success: false, error: 'No se encontraron datos' };
             }
-        } catch (error) {
-            console.error('Error consultando SUNAT:', error);
-            
-            try {
-                const proxyResponse = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
-                const proxyData = await proxyResponse.json();
-                if (proxyData.success) {
-                    return proxyData;
-                }
-            } catch (e) {
-                console.error('Error con proxy:', e);
-            }
-            
-            return { success: false, error: error.message };
+        } catch (directError) {
+            console.error('Error con API directa:', directError);
         }
+        
+        return { success: false, error: 'No se pudieron obtener datos del RUC' };
+        
+    } catch (error) {
+        console.error('Error consultando SUNAT:', error);
+        return { success: false, error: error.message };
     }
+}
 
     async function autocompletarConSunat() {
         const tipoDocumento = document.getElementById('nuevo_tipo_documento')?.value;
