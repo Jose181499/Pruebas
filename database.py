@@ -650,7 +650,7 @@ def insertar_producto(
 
 def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=50):
     """
-    Buscar clientes - INCLUYENDO datos de clientes_contactos
+    Buscar clientes - trayendo datos DIRECTAMENTE de clientes_contactos
     """
     try:
         with db_tx() as conn:
@@ -668,13 +668,14 @@ def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=50):
                     c.codigo_cliente,
                     c.activo,
                     c.fecha_creacion,
-                    -- 🔥 CORREGIDO: usar 'nombre' (sin _contacto)
-                    COALESCE(cc.nombre, c.nombre_contacto) as nombre_contacto,
-                    COALESCE(cc.email, c.email_contacto) as email_contacto,
-                    COALESCE(cc.telefono, c.telefono_contacto) as telefono_contacto
+                    -- 🔥 IMPORTANTE: Datos DIRECTOS de clientes_contactos
+                    cc.nombre_contacto as nombre_contacto,
+                    cc.email as email_contacto,
+                    cc.telefono as telefono_contacto,
+                    cc.cargo as cargo_contacto
                 FROM clientes c
-                LEFT JOIN clientes_contactos cc ON cc.cliente_id = c.id
-                WHERE c.activo = TRUE
+                INNER JOIN clientes_contactos cc ON cc.cliente_id = c.id
+                WHERE c.activo = TRUE AND cc.activo = TRUE
             """
             params = []
             
@@ -685,40 +686,35 @@ def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=50):
                     c.razon_social ILIKE %s OR 
                     c.nombre_comercial ILIKE %s OR
                     c.razon_comercial ILIKE %s OR
-                    cc.nombre ILIKE %s
+                    cc.nombre_contacto ILIKE %s
                 )
                 ORDER BY 
                     CASE 
-                        WHEN c.numero_documento ILIKE %s THEN 1
+                        WHEN cc.nombre_contacto ILIKE %s THEN 1
                         WHEN c.razon_social ILIKE %s THEN 2
                         WHEN c.nombre_comercial ILIKE %s THEN 3
                         WHEN c.razon_comercial ILIKE %s THEN 4
-                        WHEN cc.nombre ILIKE %s THEN 5
+                        WHEN c.numero_documento ILIKE %s THEN 5
                         ELSE 6
                     END,
+                    cc.nombre_contacto,
                     c.razon_social
                 LIMIT %s
                 """
-                # 5 para WHERE + 5 para ORDER BY + 1 LIMIT = 11
+                # Parámetros: 5 para WHERE + 5 para ORDER BY + 1 LIMIT = 11
                 params.extend([busqueda_like, busqueda_like, busqueda_like, busqueda_like, busqueda_like])
                 params.extend([busqueda_like, busqueda_like, busqueda_like, busqueda_like, busqueda_like])
                 params.append(limit)
             else:
-                query += " ORDER BY c.razon_social LIMIT %s"
+                query += " ORDER BY cc.nombre_contacto, c.razon_social LIMIT %s"
                 params.append(limit)
             
             cur.execute(query, params)
             clientes = cur.fetchall()
             
-            # Limpiar valores None
-            for cliente in clientes:
-                cliente['email_contacto'] = cliente.get('email_contacto') or ''
-                cliente['telefono_contacto'] = cliente.get('telefono_contacto') or ''
-                cliente['nombre_contacto'] = cliente.get('nombre_contacto') or ''
-            
             print(f"✅ Búsqueda '{busqueda}': {len(clientes)} clientes encontrados")
-            if clientes:
-                print(f"   - Primer cliente: {clientes[0].get('nombre_contacto')} / {clientes[0].get('telefono_contacto')}")
+            for c in clientes[:5]:
+                print(f"   - Contacto: {c.get('nombre_contacto')} | Cliente: {c.get('razon_social')}")
             
             return clientes
             
