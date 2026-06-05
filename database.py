@@ -668,7 +668,7 @@ def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=50):
                     c.codigo_cliente,
                     c.activo,
                     c.fecha_creacion,
-                    -- 🔥 CORREGIDO: usar 'nombre' y sin condición principal
+                    -- 🔥 CORREGIDO: usar 'nombre' (sin _contacto)
                     COALESCE(cc.nombre, c.nombre_contacto) as nombre_contacto,
                     COALESCE(cc.email, c.email_contacto) as email_contacto,
                     COALESCE(cc.telefono, c.telefono_contacto) as telefono_contacto
@@ -884,7 +884,7 @@ def buscar_clientes_completo(q: str, limit: int = 20):
             COALESCE(cc.email, c.email_contacto) as email_contacto,
             COALESCE(cc.telefono, c.telefono_contacto) as telefono_contacto
         FROM clientes c
-        LEFT JOIN clientes_contactos cc ON cc.cliente_id = c.id AND cc.principal = TRUE
+        LEFT JOIN clientes_contactos cc ON cc.cliente_id = c.id
         WHERE c.activo = TRUE
         AND (
             c.numero_documento ILIKE %s OR 
@@ -905,7 +905,6 @@ def buscar_clientes_completo(q: str, limit: int = 20):
     conn.close()
     
     return result
-
 # =========================
 # Buscar clientes (versión antigua - mantener compatibilidad)
 # =========================
