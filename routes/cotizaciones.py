@@ -209,7 +209,6 @@ def buscar_usuarios():
 # ==========================================
 # ENDPOINT: BUSCAR CLIENTES (CORREGIDO)
 # ==========================================
-
 @cotizaciones_bp.route("/api/clientes/buscar", methods=["GET"])
 def buscar_clientes():
     """Buscar clientes por nombre o documento - VERSIÓN FINAL CON JOIN"""
@@ -246,7 +245,6 @@ def buscar_clientes():
             'success': False,
             'error': str(e)
         }), 500
-
 
 # ==========================================
 # ENDPOINT: BUSCAR CLIENTE POR RUC EXACTO
