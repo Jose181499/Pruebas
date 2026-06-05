@@ -5,13 +5,13 @@ let timeout;
 let cotizacionesData = [];
 let cotizacionAEliminar = null;
 
-document.addEventListener('DOMContentIZADA', () => {
+document.addEventListener('DOMContentLoaded', () => {
 
     filtro = document.getElementById("filtroTipo");
     buscador = document.getElementById("buscador");
     const btnRefrescar = document.getElementById("btnRefrescar");
 
-    // Limpiar valor inválido del buscador al inicio
+    // 🔥 Limpiar valor inválido del buscador al inicio
     if (buscador && (buscador.value === ':1' || buscador.value === ':')) {
         console.warn("⚠️ Limpiando valor inválido del buscador:", buscador.value);
         buscador.value = '';
@@ -19,14 +19,14 @@ document.addEventListener('DOMContentIZADA', () => {
 
     cargarCotizaciones();
 
-    // Filtro
+    // 🔽 filtro
     if (filtro) {
         filtro.addEventListener("change", () => {
             aplicarFiltros();
         });
     }
 
-    // Buscador con debounce
+    // 🔍 buscador con debounce
     if (buscador) {
         buscador.addEventListener("keyup", () => {
             clearTimeout(timeout);
@@ -36,20 +36,20 @@ document.addEventListener('DOMContentIZADA', () => {
         });
     }
 
-    // Botón refrescar
+    // 🔄 botón refrescar
     if (btnRefrescar) {
         btnRefrescar.addEventListener("click", () => {
             cargarCotizaciones();
         });
     }
 
-    // Botón confirmar eliminar en modal
+    // 🗑️ botón confirmar eliminar en modal
     const btnConfirmarEliminar = document.getElementById("btnConfirmarEliminar");
     if (btnConfirmarEliminar) {
         btnConfirmarEliminar.addEventListener("click", eliminarCotizacionConfirmado);
     }
 
-    // Botón crear cliente en listado
+    // 🆕 botón crear cliente en listado
     const btnCrearClienteListado = document.getElementById("btnCrearClienteListado");
     if (btnCrearClienteListado) {
         btnCrearClienteListado.addEventListener("click", () => {
@@ -62,13 +62,13 @@ document.addEventListener('DOMContentIZADA', () => {
         });
     }
 
-    // Botón guardar nuevo cliente
+    // 💾 botón guardar nuevo cliente
     const btnGuardarNuevoClienteListado = document.getElementById("btnGuardarNuevoClienteListado");
     if (btnGuardarNuevoClienteListado) {
         btnGuardarNuevoClienteListado.addEventListener("click", guardarNuevoClienteListado);
     }
 
-    // Botón buscar en SUNAT
+    // 🔍 Botón buscar en SUNAT
     const btnBuscarSunatListado = document.getElementById("btnBuscarSunatListado");
     if (btnBuscarSunatListado) {
         btnBuscarSunatListado.addEventListener("click", autocompletarConSunatListado);
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentIZADA', () => {
 });
 
 // ===========================
-// FUNCIÓN PARA FORMATEAR CANTIDAD
+// FUNCIÓN PARA FORMATEAR CANTIDAD (elimina .000)
 // ===========================
 function formatCantidad(cant) {
     if (cant === null || cant === undefined) return '0';
@@ -177,7 +177,6 @@ async function cargarCotizaciones() {
     try {
         let buscar = buscador ? buscador.value : "";
         
-        // Validación: Limpiar valor :1 si aparece
         if (buscar === ':1' || buscar === ':' || buscar === null) {
             console.warn("⚠️ Limpiando valor inválido del buscador:", buscar);
             buscar = "";
@@ -319,20 +318,7 @@ function formatearHora(fechaStr) {
 }
 
 // ===========================
-// ESCAPE HTML (seguridad)
-// ===========================
-function escapeHtml(str) {
-    if (!str) return '';
-    return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-}
-
-// ===========================
-// RENDERIZAR TABLA (VERSIÓN ACTUALIZADA - SIN JALE Y SIN NOMBRE ESTADO)
+// RENDERIZAR TABLA - COLUMNAS ELIMINADAS: Jale y Nombre Estado
 // ===========================
 function renderizarTabla(cotizaciones) {
     const tbody = document.getElementById('tbodyCotizaciones');
@@ -357,12 +343,10 @@ function renderizarTabla(cotizaciones) {
         const total = Number(c.total || 0).toFixed(2);
         const esBorrador = c.codigo_cotizacion && c.codigo_cotizacion.startsWith('TMP-');
         const codigoMostrar = c.codigo_cotizacion || c.numero_cotizacion;
+        let estadoHtml = renderEstado(c.estado, esBorrador);
         
-        // ESTADO con colores de semáforo (solo el badge, sin texto adicional)
-        const estadoBadge = renderEstado(c.estado, esBorrador);
-        
-        // Valores para las columnas
-        const ruc = c.ruc || c.cliente_ruc || '---';
+        // Tus datos existentes
+        const ruc = c.ruc || '---';
         const codigoCliente = c.codigo_cliente || '---';
         const razonComercial = c.razon_comercial || c.nombre_comercial || '---';
         const razonSocial = c.razon_social || c.cliente || '---';
@@ -371,13 +355,9 @@ function renderizarTabla(cotizaciones) {
         const condicionPago = c.condicion_pago || '---';
         
         return `
-            <tr data-id="${c.id}" data-codigo="${escapeHtml(codigoMostrar)}" data-estado="${c.estado || ''}">
+            <tr data-id="${c.id}" data-codigo="${codigoMostrar}">
                 <!-- 1. Ítems -->
-                <td class="text-center">
-                    <span class="items-badge">
-                        <i class="bi bi-box-seam me-1"></i>${index + 1}
-                    </span>
-                </td>
+                <td class="text-center fw-bold" style="width:50px">${index + 1}</td>
                 
                 <!-- 2. Fecha y Hora -->
                 <td class="fecha-cell">
@@ -387,40 +367,40 @@ function renderizarTabla(cotizaciones) {
                     </div>
                 </td>
                 
-                <!-- 3. Estado (colores semáforo) -->
-                <td class="estado-cell">${estadoBadge}</td>
-                
-                <!-- 4. N° Cotización -->
+                <!-- 3. N° Cotización -->
                 <td class="codigo-cell">
                     <strong>${escapeHtml(codigoMostrar || '-')}</strong>
                     ${c.correlativo ? `<br><small class="text-muted">Correl: ${c.correlativo}</small>` : ''}
                 </td>
                 
-                <!-- 5. RUC -->
+                <!-- 4. RUC -->
                 <td>${escapeHtml(ruc)}</td>
                 
-                <!-- 6. Código Cliente -->
+                <!-- 5. Código Cliente -->
                 <td><span class="badge-codigo">${escapeHtml(codigoCliente)}</span></td>
                 
-                <!-- 7. R comercial -->
+                <!-- 6. R comercial -->
                 <td><small>${escapeHtml(razonComercial)}</small></td>
                 
-                <!-- 8. R social -->
+                <!-- 7. R social -->
                 <td><strong>${escapeHtml(razonSocial)}</strong></td>
                 
-                <!-- 9. Descripción -->
-                <td><small title="${escapeHtml(descripcion)}">${escapeHtml(descripcion.length > 50 ? descripcion.substring(0, 50) + '...' : descripcion)}</small></td>
+                <!-- 8. Descripción -->
+                <td><small>${escapeHtml(descripcion.length > 50 ? descripcion.substring(0, 50) + '...' : descripcion)}</small></td>
                 
-                <!-- 10. Monto (Con IGV) -->
-                <td class="monto text-end fw-bold text-success">S/ ${Number(total).toLocaleString('es-PE', { minimumFractionDigits: 2 })}</td>
+                <!-- 9. Monto (Con IGV) -->
+                <td class="monto text-end fw-bold">S/ ${Number(total).toLocaleString('es-PE', { minimumFractionDigits: 2 })}</td>
                 
-                <!-- 11. Nota aclaratoria -->
-                <td><small class="text-muted" title="${escapeHtml(notaAclaratoria)}">${escapeHtml(notaAclaratoria.length > 40 ? notaAclaratoria.substring(0, 40) + '...' : notaAclaratoria)}</small></td>
+                <!-- 10. Nota aclaratoria -->
+                <td><small class="text-muted">${escapeHtml(notaAclaratoria)}</small></td>
                 
-                <!-- 12. Condición pago -->
+                <!-- 11. Condición pago -->
                 <td><small>${escapeHtml(condicionPago)}</small></td>
                 
-                <!-- 13. Acciones (Desplegable) -->
+                <!-- 12. ESTADO (con color semáforo) -->
+                <td class="estado-cell">${estadoHtml}</td>
+                
+                <!-- 13. Acciones -->
                 <td class="acciones text-center">
                     <div class="dropdown">
                         <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -454,29 +434,14 @@ function renderizarTabla(cotizaciones) {
     }).join('');
 }
 
-// ===========================
-// ESTADO CON COLORES SEMÁFORO
-// ===========================
-function renderEstado(estado, esBorrador = false) {
-    if (esBorrador) {
-        return `<span class="estado-borrador">📝 Borrador</span>`;
-    }
-    
-    const estadoLower = (estado || '').toLowerCase();
-    
-    // Mapeo de estados a clases y emojis
-    const estadosMap = {
-        'generada': { clase: 'estado-generada', emoji: '📄', texto: 'Generada' },
-        'aceptada': { clase: 'estado-aceptada', emoji: '✅', texto: 'Aceptada' },
-        'aceptada por cliente': { clase: 'estado-aceptada', emoji: '✅', texto: 'Aceptada' },
-        'rechazada': { clase: 'estado-rechazada', emoji: '❌', texto: 'Rechazada' },
-        'en_proceso': { clase: 'estado-en-proceso', emoji: '⏳', texto: 'En Proceso' },
-        'en proceso': { clase: 'estado-en-proceso', emoji: '⏳', texto: 'En Proceso' }
-    };
-    
-    const config = estadosMap[estadoLower] || estadosMap['en_proceso'];
-    
-    return `<span class="${config.clase}">${config.emoji} ${config.texto}</span>`;
+function escapeHtml(str) {
+    if (!str) return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
 // ===========================
@@ -496,7 +461,6 @@ async function verDetalle(id) {
             const total = Number(data.total || 0).toFixed(2);
             let estadoBadge = renderEstado(data.estado, esBorrador);
             
-            // Productos HTML
             const productosHtml = (data.detalle || []).map((p, index) => {
                 const subtotalSinIGV = Number(p.subtotal_venta_con_descuento || 0);
                 const igv = subtotalSinIGV * 0.18;
@@ -593,24 +557,14 @@ function editar(id) {
     window.location.href = `/cotizacion/consultar/${id}`;
 }
 
-// ===========================
-// DUPLICAR COTIZACIÓN
-// ===========================
 function duplicarCotizacion(id) {
     window.location.href = `/cotizacion/duplicar/${id}`;
 }
 
-// ===========================
-// ENVIAR POR EMAIL
-// ===========================
 function enviarPorEmail(id) {
     mostrarNotificacion(`📧 Enviando cotización por email...`, 'info');
-    // Aquí va la lógica de envío
 }
 
-// ===========================
-// EXPORTAR PDF
-// ===========================
 function exportarPDF(id) {
     window.open(`/api/cotizacion/exportar-pdf/${id}`, '_blank');
 }
@@ -656,7 +610,52 @@ async function eliminarCotizacionConfirmado() {
 }
 
 // ===========================
-// GUARDAR NUEVO CLIENTE
+// ESTADO CON COLOR SEMÁFORO
+// ===========================
+function renderEstado(estado, esBorrador = false) {
+    if (esBorrador) {
+        return `<span class="estado estado-borrador">📝 BORRADOR</span>`;
+    }
+    let clase = '';
+    let texto = estado || 'En Proceso';
+    if (texto === 'En Proceso') {
+        clase = 'estado-proceso';
+        texto = '⏳ En Proceso';
+    } else if (texto === 'Generada') {
+        clase = 'estado-generada';
+        texto = '📄 Generada';
+    } else if (texto === 'Aceptada por Cliente') {
+        clase = 'estado-aceptada';
+        texto = '✅ Aceptada';
+    } else if (texto === 'Rechazada') {
+        clase = 'estado-rechazada';
+        texto = '❌ Rechazada';
+    } else {
+        clase = 'estado-proceso';
+    }
+    return `<span class="estado ${clase}">${texto}</span>`;
+}
+
+// ===========================
+// MOSTRAR NOTIFICACIÓN
+// ===========================
+function mostrarNotificacion(mensaje, tipo) {
+    const notificacion = document.createElement('div');
+    notificacion.className = `alert alert-${tipo} position-fixed top-0 end-0 m-3`;
+    notificacion.style.zIndex = '9999';
+    notificacion.style.minWidth = '300px';
+    notificacion.style.animation = 'slideIn 0.3s ease';
+    let icono = tipo === 'success' ? 'check-circle' : (tipo === 'danger' ? 'exclamation-triangle' : 'info-circle');
+    notificacion.innerHTML = `<i class="bi bi-${icono} me-2"></i>${escapeHtml(mensaje)}`;
+    document.body.appendChild(notificacion);
+    setTimeout(() => {
+        notificacion.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notificacion.remove(), 300);
+    }, 3000);
+}
+
+// ===========================
+// CREAR NUEVO CLIENTE DESDE LISTADO
 // ===========================
 async function guardarNuevoClienteListado() {
     const tipoDocumento = document.getElementById('nuevo_tipo_documento_listado')?.value;
@@ -714,46 +713,7 @@ async function guardarNuevoClienteListado() {
 }
 
 // ===========================
-// MOSTRAR NOTIFICACIÓN
-// ===========================
-function mostrarNotificacion(mensaje, tipo) {
-    const container = document.getElementById('notificacionesContainer');
-    if (!container) return;
-    
-    const notificacion = document.createElement('div');
-    const tipoClass = {
-        'success': 'notificacion-exito',
-        'danger': 'notificacion-error',
-        'warning': 'notificacion-warning',
-        'info': 'notificacion-info'
-    };
-    
-    const iconos = {
-        'success': 'bi-check-circle-fill',
-        'danger': 'bi-x-circle-fill',
-        'warning': 'bi-exclamation-triangle-fill',
-        'info': 'bi-info-circle-fill'
-    };
-    
-    notificacion.className = `notificacion ${tipoClass[tipo] || 'notificacion-info'}`;
-    notificacion.innerHTML = `
-        <i class="bi ${iconos[tipo] || 'bi-info-circle-fill'} me-2"></i>
-        <span>${escapeHtml(mensaje)}</span>
-        <button class="btn-close btn-close-white" onclick="this.parentElement.remove()"></button>
-    `;
-    
-    container.appendChild(notificacion);
-    
-    setTimeout(() => {
-        if (notificacion && notificacion.parentElement) {
-            notificacion.style.animation = 'slideOut 0.3s ease';
-            setTimeout(() => notificacion.remove(), 300);
-        }
-    }, 4000);
-}
-
-// ===========================
-// ESTILOS ADICIONALES PARA SEMÁFORO
+// ESTILOS ADICIONALES
 // ===========================
 const style = document.createElement('style');
 style.textContent = `
@@ -765,96 +725,14 @@ style.textContent = `
         from { transform: translateX(0); opacity: 1; }
         to { transform: translateX(100%); opacity: 0; }
     }
-    
-    /* Estados tipo semáforo - SOLO COLOR DE FONDO Y TEXTO, SIN BORDES LATERALES */
-    .estado-borrador {
-        background: #FEF3C7;
-        color: #92400E;
-        padding: 6px 14px;
-        border-radius: 40px;
-        font-size: 12px;
-        font-weight: 700;
-        text-align: center;
-        display: inline-block;
-    }
-    
-    .estado-generada {
-        background: #DCFCE7;
-        color: #166534;
-        padding: 6px 14px;
-        border-radius: 40px;
-        font-size: 12px;
-        font-weight: 700;
-        text-align: center;
-        display: inline-block;
-    }
-    
-    .estado-aceptada {
-        background: #D1FAE5;
-        color: #065F46;
-        padding: 6px 14px;
-        border-radius: 40px;
-        font-size: 12px;
-        font-weight: 700;
-        text-align: center;
-        display: inline-block;
-    }
-    
-    .estado-rechazada {
-        background: #FEE2E2;
-        color: #991B1B;
-        padding: 6px 14px;
-        border-radius: 40px;
-        font-size: 12px;
-        font-weight: 700;
-        text-align: center;
-        display: inline-block;
-    }
-    
-    .estado-en-proceso {
-        background: #E0E7FF;
-        color: #3730A3;
-        padding: 6px 14px;
-        border-radius: 40px;
-        font-size: 12px;
-        font-weight: 700;
-        text-align: center;
-        display: inline-block;
-    }
-    
-    .items-badge {
-        background: #E5E7EB;
-        color: #374151;
-        font-weight: 700;
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 13px;
-        display: inline-block;
-        text-align: center;
-    }
-    
-    .badge-codigo {
-        font-family: monospace;
-        font-size: 13px;
-        font-weight: 700;
-        background: #f3f4f6;
-        padding: 4px 10px;
-        border-radius: 8px;
-        color: #374151;
-    }
-    
-    .fecha-hora .fecha {
-        font-weight: 600;
-        color: #111827;
-    }
-    
-    .fecha-hora .hora {
-        font-size: 11px;
-        color: #6b7280;
-    }
-    
-    .monto {
-        font-weight: 700;
-    }
+    .estado-borrador { background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+    .estado-proceso { background: #e0e7ff; color: #3730a3; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+    .estado-generada { background: #dcfce7; color: #166534; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+    .estado-aceptada { background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+    .estado-rechazada { background: #fee2e2; color: #991b1b; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+    .badge-codigo { font-family: monospace; font-size: 13px; font-weight: 700; background: #f3f4f6; padding: 4px 10px; border-radius: 8px; color: #374151; }
+    .monto { font-weight: 700; color: #111827; }
+    .fecha-hora .fecha { font-weight: 600; color: #111827; }
+    .fecha-hora .hora { font-size: 11px; color: #6b7280; }
 `;
 document.head.appendChild(style);
