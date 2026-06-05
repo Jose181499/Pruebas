@@ -442,11 +442,7 @@ def obtener_clientes():
 
         cur = conn.cursor()
 
-        # =========================================
-        # CLIENTES
-        # =========================================
         cur.execute("""
-
             SELECT
                 id,
                 tipo_documento,
@@ -455,77 +451,50 @@ def obtener_clientes():
                 direccion_fiscal,
                 codigo_cliente,
                 nombre_comercial
-
             FROM clientes
-
             WHERE activo = TRUE
-
             ORDER BY id DESC
-
         """)
 
         clientes = cur.fetchall()
-
         resultado = []
 
         for c in clientes:
 
             cliente_id = c[0]
 
-            # =========================================
-            # CONTACTOS
-            # =========================================
             cur.execute("""
-
-                SELECT nombre_contacto,email, telefono
-
+                SELECT nombre_contacto, email, telefono
                 FROM clientes_contactos
-
                 WHERE cliente_id = %s
-
+                ORDER BY principal DESC
+                LIMIT 1
             """, (cliente_id,))
 
             contactos = [
-
                 {
-                    "nombre_contacto": row[0]
+                    "nombre_contacto": row[0],
+                    "email": row[1],
+                    "telefono": row[2]
                 }
-
                 for row in cur.fetchall()
-
             ]
 
-            # =========================================
-            # PUNTOS ENTREGA
-            # =========================================
             cur.execute("""
-
-                SELECT
-                    nombre_punto,
-                    condicion_pago
-
+                SELECT nombre_punto, condicion_pago
                 FROM clientes_puntos_entrega
-
                 WHERE cliente_id = %s
-
             """, (cliente_id,))
 
             puntos = [
-
                 {
                     "nombre_punto": row[0],
                     "condicion_pago": row[1]
                 }
-
                 for row in cur.fetchall()
-
             ]
 
-            # =========================================
-            # OBJETO
-            # =========================================
             cliente = {
-
                 "id": c[0],
                 "tipo_documento": c[1],
                 "numero_documento": c[2],
@@ -535,7 +504,6 @@ def obtener_clientes():
                 "nombre_comercial": c[6],
                 "contactos": contactos,
                 "puntos_entrega": puntos
-
             }
 
             resultado.append(cliente)
