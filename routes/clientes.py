@@ -7,29 +7,34 @@ clientes_bp = Blueprint("clientes", __name__)
 @clientes_bp.route("/api/clientes/buscar")
 def api_buscar_clientes():
     try:
-        # Obtener parámetros de búsqueda
         busqueda = request.args.get('busqueda', '').strip()
+        q = request.args.get('q', '').strip()
+        busqueda = busqueda or q
         tipo_documento = request.args.get('tipo_documento', '')
 
-        # Obtener todos los clientes primero
         data = obtener_clientes()
-
-        # ✅ Agregar esta línea:
         data.sort(key=lambda c: c.get('id', 0), reverse=True)
 
-        # Aplicar filtros si hay búsqueda
+        # Aplanar contacto principal a la raíz
+        for c in data:
+            contactos = c.get('contactos', [])
+            contacto = next((x for x in contactos if x.get('principal')), contactos[0] if contactos else {})
+            c['nombre_contacto'] = contacto.get('nombre_contacto', '')
+            c['email_contacto'] = contacto.get('email', '')
+            c['telefono_contacto'] = contacto.get('telefono', '')
+
         if busqueda:
-            busqueda = busqueda.lower()
+            busqueda_lower = busqueda.lower()
             data = [
                 c for c in data if (
-                    (c.get('numero_documento') and busqueda in str(c.get('numero_documento', '')).lower()) or
-                    (c.get('razon_social') and busqueda in str(c.get('razon_social', '')).lower()) or
-                    (c.get('nombre_comercial') and busqueda in str(c.get('nombre_comercial', '')).lower()) or
-                    (c.get('codigo_cliente') and busqueda in str(c.get('codigo_cliente', '')).lower())
+                    (c.get('numero_documento') and busqueda_lower in str(c.get('numero_documento', '')).lower()) or
+                    (c.get('razon_social') and busqueda_lower in str(c.get('razon_social', '')).lower()) or
+                    (c.get('nombre_comercial') and busqueda_lower in str(c.get('nombre_comercial', '')).lower()) or
+                    (c.get('codigo_cliente') and busqueda_lower in str(c.get('codigo_cliente', '')).lower()) or
+                    (c.get('nombre_contacto') and busqueda_lower in str(c.get('nombre_contacto', '')).lower())
                 )
             ]
 
-        # Filtrar por tipo de documento si se envía
         if tipo_documento:
             data = [c for c in data if c.get('tipo_documento') == tipo_documento]
 
