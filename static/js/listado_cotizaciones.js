@@ -5,13 +5,13 @@ let timeout;
 let cotizacionesData = [];
 let cotizacionAEliminar = null;
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentIZADA', () => {
 
     filtro = document.getElementById("filtroTipo");
     buscador = document.getElementById("buscador");
     const btnRefrescar = document.getElementById("btnRefrescar");
 
-    // 🔥 Limpiar valor inválido del buscador al inicio
+    // Limpiar valor inválido del buscador al inicio
     if (buscador && (buscador.value === ':1' || buscador.value === ':')) {
         console.warn("⚠️ Limpiando valor inválido del buscador:", buscador.value);
         buscador.value = '';
@@ -19,14 +19,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     cargarCotizaciones();
 
-    // 🔽 filtro
+    // Filtro
     if (filtro) {
         filtro.addEventListener("change", () => {
             aplicarFiltros();
         });
     }
 
-    // 🔍 buscador con debounce
+    // Buscador con debounce
     if (buscador) {
         buscador.addEventListener("keyup", () => {
             clearTimeout(timeout);
@@ -36,20 +36,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 🔄 botón refrescar
+    // Botón refrescar
     if (btnRefrescar) {
         btnRefrescar.addEventListener("click", () => {
             cargarCotizaciones();
         });
     }
 
-    // 🗑️ botón confirmar eliminar en modal
+    // Botón confirmar eliminar en modal
     const btnConfirmarEliminar = document.getElementById("btnConfirmarEliminar");
     if (btnConfirmarEliminar) {
         btnConfirmarEliminar.addEventListener("click", eliminarCotizacionConfirmado);
     }
 
-    // 🆕 botón crear cliente en listado
+    // Botón crear cliente en listado
     const btnCrearClienteListado = document.getElementById("btnCrearClienteListado");
     if (btnCrearClienteListado) {
         btnCrearClienteListado.addEventListener("click", () => {
@@ -62,13 +62,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 💾 botón guardar nuevo cliente
+    // Botón guardar nuevo cliente
     const btnGuardarNuevoClienteListado = document.getElementById("btnGuardarNuevoClienteListado");
     if (btnGuardarNuevoClienteListado) {
         btnGuardarNuevoClienteListado.addEventListener("click", guardarNuevoClienteListado);
     }
 
-    // 🔍 Botón buscar en SUNAT
+    // Botón buscar en SUNAT
     const btnBuscarSunatListado = document.getElementById("btnBuscarSunatListado");
     if (btnBuscarSunatListado) {
         btnBuscarSunatListado.addEventListener("click", autocompletarConSunatListado);
@@ -76,18 +76,15 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ===========================
-// FUNCIÓN PARA FORMATEAR CANTIDAD (elimina .000)
+// FUNCIÓN PARA FORMATEAR CANTIDAD
 // ===========================
 function formatCantidad(cant) {
     if (cant === null || cant === undefined) return '0';
-    // Convertir a número
     let numero = parseFloat(cant);
     if (isNaN(numero)) return '0';
-    // Si es entero (incluyendo .000), mostrar sin decimales
     if (numero % 1 === 0) {
         return numero.toString();
     }
-    // Si tiene decimales, mostrarlos sin ceros innecesarios al final
     return numero.toFixed(3).replace(/\.?0+$/, '');
 }
 
@@ -169,7 +166,7 @@ async function cargarCotizaciones() {
     if (tbody) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" class="text-center py-5">
+                <td colspan="13" class="text-center py-5">
                     <div class="spinner-border text-primary mb-3"></div>
                     <div class="text-muted">Cargando cotizaciones...</div>
                 </td>
@@ -180,14 +177,13 @@ async function cargarCotizaciones() {
     try {
         let buscar = buscador ? buscador.value : "";
         
-        // 🔥 VALIDACIÓN CRÍTICA: Limpiar valor :1 si aparece
+        // Validación: Limpiar valor :1 si aparece
         if (buscar === ':1' || buscar === ':' || buscar === null) {
             console.warn("⚠️ Limpiando valor inválido del buscador:", buscar);
             buscar = "";
             if (buscador) buscador.value = "";
         }
         
-        // 🔥 Construir URL correctamente
         const url = buscar ? `/api/cotizacion_comercial?buscar=${encodeURIComponent(buscar)}` : '/api/cotizacion_comercial';
         console.log("🌐 Fetching URL:", url);
         
@@ -218,7 +214,7 @@ async function cargarCotizaciones() {
         if (tbody) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="7" class="text-center py-5 text-danger">
+                    <td colspan="13" class="text-center py-5 text-danger">
                         <i class="bi bi-wifi-off fs-1"></i>
                         <div class="mt-2">Error de conexión: ${e.message}</div>
                         <div class="mt-2 small">Recargue la página o contacte al administrador</div>
@@ -294,7 +290,6 @@ function aplicarFiltros() {
 // ===========================
 function formatearFecha(fechaStr) {
     if (!fechaStr) return '-';
-    // El string viene como "2025-05-26 15:30:00"
     const partes = fechaStr.split(' ');
     if (partes.length >= 1) {
         const fechaParte = partes[0];
@@ -311,7 +306,6 @@ function formatearFecha(fechaStr) {
 // ===========================
 function formatearHora(fechaStr) {
     if (!fechaStr) return '-';
-    // El string viene como "2025-05-26 15:30:00"
     const partes = fechaStr.split(' ');
     if (partes.length >= 2) {
         const horaParte = partes[1];
@@ -325,7 +319,20 @@ function formatearHora(fechaStr) {
 }
 
 // ===========================
-// RENDERIZAR TABLA CON FECHA Y HORA
+// ESCAPE HTML (seguridad)
+// ===========================
+function escapeHtml(str) {
+    if (!str) return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+// ===========================
+// RENDERIZAR TABLA (VERSIÓN ACTUALIZADA - SIN JALE Y SIN NOMBRE ESTADO)
 // ===========================
 function renderizarTabla(cotizaciones) {
     const tbody = document.getElementById('tbodyCotizaciones');
@@ -335,7 +342,7 @@ function renderizarTabla(cotizaciones) {
     if (!cotizaciones || cotizaciones.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="15" class="text-center py-5 text-muted">
+                <td colspan="13" class="text-center py-5 text-muted">
                     <i class="bi bi-inbox fs-1"></i>
                     <div class="mt-2">No hay cotizaciones para mostrar</div>
                 </td>
@@ -350,12 +357,12 @@ function renderizarTabla(cotizaciones) {
         const total = Number(c.total || 0).toFixed(2);
         const esBorrador = c.codigo_cotizacion && c.codigo_cotizacion.startsWith('TMP-');
         const codigoMostrar = c.codigo_cotizacion || c.numero_cotizacion;
-        let estadoHtml = renderEstado(c.estado, esBorrador);
-        const nombreEstado = getNombreEstado(c.estado, esBorrador);
         
-        // Valores para las nuevas columnas (usa los campos de tu backend)
-        const jaleProducto = c.jale_producto || c.jale_1_items_producto || false;
-        const ruc = c.ruc || '---';
+        // ESTADO con colores de semáforo (solo el badge, sin texto adicional)
+        const estadoBadge = renderEstado(c.estado, esBorrador);
+        
+        // Valores para las columnas
+        const ruc = c.ruc || c.cliente_ruc || '---';
         const codigoCliente = c.codigo_cliente || '---';
         const razonComercial = c.razon_comercial || c.nombre_comercial || '---';
         const razonSocial = c.razon_social || c.cliente || '---';
@@ -364,9 +371,13 @@ function renderizarTabla(cotizaciones) {
         const condicionPago = c.condicion_pago || '---';
         
         return `
-            <tr data-id="${c.id}" data-codigo="${codigoMostrar}">
+            <tr data-id="${c.id}" data-codigo="${escapeHtml(codigoMostrar)}" data-estado="${c.estado || ''}">
                 <!-- 1. Ítems -->
-                <td class="text-center fw-bold" style="width:50px">${index + 1}</td>
+                <td class="text-center">
+                    <span class="items-badge">
+                        <i class="bi bi-box-seam me-1"></i>${index + 1}
+                    </span>
+                </td>
                 
                 <!-- 2. Fecha y Hora -->
                 <td class="fecha-cell">
@@ -376,51 +387,40 @@ function renderizarTabla(cotizaciones) {
                     </div>
                 </td>
                 
-                <!-- 3. Jale 1 items producto -->
-                <td class="text-center">
-                    ${jaleProducto ? 
-                        '<span class="badge bg-success"><i class="bi bi-check-circle"></i> Jaleado</span>' : 
-                        '<span class="badge bg-secondary"><i class="bi bi-x-circle"></i> No jaleado</span>'
-                    }
-                </td>
+                <!-- 3. Estado (colores semáforo) -->
+                <td class="estado-cell">${estadoBadge}</td>
                 
-                <!-- 4. Estado (con botón de color) -->
-                <td class="estado-cell">${estadoHtml}</td>
-                
-                <!-- 5. Nombre Estado (texto plano) -->
-                <td>${escapeHtml(nombreEstado)}</td>
-                
-                <!-- 6. N° Cotización -->
+                <!-- 4. N° Cotización -->
                 <td class="codigo-cell">
                     <strong>${escapeHtml(codigoMostrar || '-')}</strong>
                     ${c.correlativo ? `<br><small class="text-muted">Correl: ${c.correlativo}</small>` : ''}
                 </td>
                 
-                <!-- 7. RUC -->
+                <!-- 5. RUC -->
                 <td>${escapeHtml(ruc)}</td>
                 
-                <!-- 8. Código Cliente -->
+                <!-- 6. Código Cliente -->
                 <td><span class="badge-codigo">${escapeHtml(codigoCliente)}</span></td>
                 
-                <!-- 9. R comercial -->
+                <!-- 7. R comercial -->
                 <td><small>${escapeHtml(razonComercial)}</small></td>
                 
-                <!-- 10. R social -->
+                <!-- 8. R social -->
                 <td><strong>${escapeHtml(razonSocial)}</strong></td>
                 
-                <!-- 11. Descripción -->
-                <td><small>${escapeHtml(descripcion.length > 50 ? descripcion.substring(0, 50) + '...' : descripcion)}</small></td>
+                <!-- 9. Descripción -->
+                <td><small title="${escapeHtml(descripcion)}">${escapeHtml(descripcion.length > 50 ? descripcion.substring(0, 50) + '...' : descripcion)}</small></td>
                 
-                <!-- 12. Monto (Con IGV) -->
-                <td class="monto text-end fw-bold">S/ ${Number(total).toLocaleString('es-PE', { minimumFractionDigits: 2 })}</td>
+                <!-- 10. Monto (Con IGV) -->
+                <td class="monto text-end fw-bold text-success">S/ ${Number(total).toLocaleString('es-PE', { minimumFractionDigits: 2 })}</td>
                 
-                <!-- 13. Nota aclaratoria -->
-                <td><small class="text-muted">${escapeHtml(notaAclaratoria)}</small></td>
+                <!-- 11. Nota aclaratoria -->
+                <td><small class="text-muted" title="${escapeHtml(notaAclaratoria)}">${escapeHtml(notaAclaratoria.length > 40 ? notaAclaratoria.substring(0, 40) + '...' : notaAclaratoria)}</small></td>
                 
-                <!-- 14. Condición pago -->
+                <!-- 12. Condición pago -->
                 <td><small>${escapeHtml(condicionPago)}</small></td>
                 
-                <!-- 15. Acciones (Desplegable) -->
+                <!-- 13. Acciones (Desplegable) -->
                 <td class="acciones text-center">
                     <div class="dropdown">
                         <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -454,45 +454,33 @@ function renderizarTabla(cotizaciones) {
     }).join('');
 }
 
-// Función auxiliar para obtener el nombre del estado
-function getNombreEstado(estado, esBorrador) {
-    if (esBorrador) return 'Borrador';
+// ===========================
+// ESTADO CON COLORES SEMÁFORO
+// ===========================
+function renderEstado(estado, esBorrador = false) {
+    if (esBorrador) {
+        return `<span class="estado-borrador">📝 Borrador</span>`;
+    }
     
-    const estados = {
-        'borrador': 'Borrador',
-        'generada': 'Generada',
-        'en_proceso': 'En proceso',
-        'rechazada': 'Rechazada',
-        'aceptada': 'Aceptada'
+    const estadoLower = (estado || '').toLowerCase();
+    
+    // Mapeo de estados a clases y emojis
+    const estadosMap = {
+        'generada': { clase: 'estado-generada', emoji: '📄', texto: 'Generada' },
+        'aceptada': { clase: 'estado-aceptada', emoji: '✅', texto: 'Aceptada' },
+        'aceptada por cliente': { clase: 'estado-aceptada', emoji: '✅', texto: 'Aceptada' },
+        'rechazada': { clase: 'estado-rechazada', emoji: '❌', texto: 'Rechazada' },
+        'en_proceso': { clase: 'estado-en-proceso', emoji: '⏳', texto: 'En Proceso' },
+        'en proceso': { clase: 'estado-en-proceso', emoji: '⏳', texto: 'En Proceso' }
     };
-    return estados[estado?.toLowerCase()] || 'Desconocido';
-}
-
-// Función para escapar HTML (importante por seguridad)
-function escapeHtml(str) {
-    if (!str) return '';
-    return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-}
-// ===========================
-// ESCAPE HTML (seguridad)
-// ===========================
-function escapeHtml(str) {
-    if (!str) return '';
-    return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+    
+    const config = estadosMap[estadoLower] || estadosMap['en_proceso'];
+    
+    return `<span class="${config.clase}">${config.emoji} ${config.texto}</span>`;
 }
 
 // ===========================
-// VER DETALLE - MODIFICADO CON ITEM, VALOR TOTAL SIN IG Y PRECIO TOTAL CON IG
+// VER DETALLE
 // ===========================
 async function verDetalle(id) {
     try {
@@ -508,13 +496,10 @@ async function verDetalle(id) {
             const total = Number(data.total || 0).toFixed(2);
             let estadoBadge = renderEstado(data.estado, esBorrador);
             
-            // 🔥 PRODUCTOS HTML - Con número de item correlativo, Valor total sin IG y Precio total con IG
+            // Productos HTML
             const productosHtml = (data.detalle || []).map((p, index) => {
-                // Calcular subtotal sin IGV (asumiendo que subtotal_venta_con_descuento es el neto sin IGV)
                 const subtotalSinIGV = Number(p.subtotal_venta_con_descuento || 0);
-                // Calcular IGV (18% sobre el subtotal sin IGV)
                 const igv = subtotalSinIGV * 0.18;
-                // Calcular precio total con IGV
                 const precioTotalConIGV = subtotalSinIGV + igv;
                 
                 return `
@@ -569,7 +554,7 @@ async function verDetalle(id) {
                                 <thead class="table-light">
                                     <tr>
                                         <th class="text-center">Item</th>
-                                        <th>Código<br>Producto</th>
+                                        <th>Código Producto</th>
                                         <th>Descripción</th>
                                         <th>Marca</th>
                                         <th class="text-center">Cant</th>
@@ -606,6 +591,28 @@ async function verDetalle(id) {
 // ===========================
 function editar(id) {
     window.location.href = `/cotizacion/consultar/${id}`;
+}
+
+// ===========================
+// DUPLICAR COTIZACIÓN
+// ===========================
+function duplicarCotizacion(id) {
+    window.location.href = `/cotizacion/duplicar/${id}`;
+}
+
+// ===========================
+// ENVIAR POR EMAIL
+// ===========================
+function enviarPorEmail(id) {
+    mostrarNotificacion(`📧 Enviando cotización por email...`, 'info');
+    // Aquí va la lógica de envío
+}
+
+// ===========================
+// EXPORTAR PDF
+// ===========================
+function exportarPDF(id) {
+    window.open(`/api/cotizacion/exportar-pdf/${id}`, '_blank');
 }
 
 // ===========================
@@ -649,52 +656,7 @@ async function eliminarCotizacionConfirmado() {
 }
 
 // ===========================
-// ESTADO CON COLOR
-// ===========================
-function renderEstado(estado, esBorrador = false) {
-    if (esBorrador) {
-        return `<span class="estado estado-borrador">📝 BORRADOR</span>`;
-    }
-    let clase = '';
-    let texto = estado || 'En Proceso';
-    if (texto === 'En Proceso') {
-        clase = 'estado-proceso';
-        texto = '⏳ En Proceso';
-    } else if (texto === 'Generada') {
-        clase = 'estado-generada';
-        texto = '📄 Generada';
-    } else if (texto === 'Aceptada por Cliente') {
-        clase = 'estado-aceptada';
-        texto = '✅ Aceptada';
-    } else if (texto === 'Rechazada') {
-        clase = 'estado-rechazada';
-        texto = '❌ Rechazada';
-    } else {
-        clase = 'estado-proceso';
-    }
-    return `<span class="estado ${clase}">${texto}</span>`;
-}
-
-// ===========================
-// MOSTRAR NOTIFICACIÓN
-// ===========================
-function mostrarNotificacion(mensaje, tipo) {
-    const notificacion = document.createElement('div');
-    notificacion.className = `alert alert-${tipo} position-fixed top-0 end-0 m-3`;
-    notificacion.style.zIndex = '9999';
-    notificacion.style.minWidth = '300px';
-    notificacion.style.animation = 'slideIn 0.3s ease';
-    let icono = tipo === 'success' ? 'check-circle' : (tipo === 'danger' ? 'exclamation-triangle' : 'info-circle');
-    notificacion.innerHTML = `<i class="bi bi-${icono} me-2"></i>${escapeHtml(mensaje)}`;
-    document.body.appendChild(notificacion);
-    setTimeout(() => {
-        notificacion.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => notificacion.remove(), 300);
-    }, 3000);
-}
-
-// ===========================
-// CREAR NUEVO CLIENTE DESDE LISTADO
+// GUARDAR NUEVO CLIENTE
 // ===========================
 async function guardarNuevoClienteListado() {
     const tipoDocumento = document.getElementById('nuevo_tipo_documento_listado')?.value;
@@ -752,7 +714,46 @@ async function guardarNuevoClienteListado() {
 }
 
 // ===========================
-// ESTILOS ADICIONALES
+// MOSTRAR NOTIFICACIÓN
+// ===========================
+function mostrarNotificacion(mensaje, tipo) {
+    const container = document.getElementById('notificacionesContainer');
+    if (!container) return;
+    
+    const notificacion = document.createElement('div');
+    const tipoClass = {
+        'success': 'notificacion-exito',
+        'danger': 'notificacion-error',
+        'warning': 'notificacion-warning',
+        'info': 'notificacion-info'
+    };
+    
+    const iconos = {
+        'success': 'bi-check-circle-fill',
+        'danger': 'bi-x-circle-fill',
+        'warning': 'bi-exclamation-triangle-fill',
+        'info': 'bi-info-circle-fill'
+    };
+    
+    notificacion.className = `notificacion ${tipoClass[tipo] || 'notificacion-info'}`;
+    notificacion.innerHTML = `
+        <i class="bi ${iconos[tipo] || 'bi-info-circle-fill'} me-2"></i>
+        <span>${escapeHtml(mensaje)}</span>
+        <button class="btn-close btn-close-white" onclick="this.parentElement.remove()"></button>
+    `;
+    
+    container.appendChild(notificacion);
+    
+    setTimeout(() => {
+        if (notificacion && notificacion.parentElement) {
+            notificacion.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => notificacion.remove(), 300);
+        }
+    }, 4000);
+}
+
+// ===========================
+// ESTILOS ADICIONALES PARA SEMÁFORO
 // ===========================
 const style = document.createElement('style');
 style.textContent = `
@@ -764,23 +765,96 @@ style.textContent = `
         from { transform: translateX(0); opacity: 1; }
         to { transform: translateX(100%); opacity: 0; }
     }
-    .estado-borrador { background: #fef3c7; color: #92400e; border-left: 3px solid #f59e0b; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
-    .estado-proceso { background: #e0e7ff; color: #3730a3; border-left: 3px solid #6366f1; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
-    .estado-generada { background: #dbeafe; color: #1e40af; border-left: 3px solid #3b82f6; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
-    .estado-aceptada { background: #d1fae5; color: #065f46; border-left: 3px solid #10b981; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
-    .estado-rechazada { background: #fee2e2; color: #991b1b; border-left: 3px solid #ef4444; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
-    .btn-mini { background: none; border: none; font-size: 1.1rem; padding: 6px 10px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; margin: 0 2px; }
-    .btn-mini:hover { transform: scale(1.05); }
-    .btn-ver { color: #3b82f6; }
-    .btn-ver:hover { background: rgba(59, 130, 246, 0.1); }
-    .btn-editar { color: #f59e0b; }
-    .btn-editar:hover { background: rgba(245, 158, 11, 0.1); }
-    .btn-eliminar { color: #ef4444; }
-    .btn-eliminar:hover { background: rgba(239, 68, 68, 0.1); }
-    .monto { font-weight: 700; color: #111827; }
-    .acciones { white-space: nowrap; }
-    .codigo-cell, .fecha-cell, .cliente-cell, .estado-cell, .monto, .acciones { vertical-align: middle; }
-    .fecha-hora .fecha { font-weight: 600; color: #111827; }
-    .fecha-hora .hora { font-size: 11px; color: #6b7280; }
+    
+    /* Estados tipo semáforo - SOLO COLOR DE FONDO Y TEXTO, SIN BORDES LATERALES */
+    .estado-borrador {
+        background: #FEF3C7;
+        color: #92400E;
+        padding: 6px 14px;
+        border-radius: 40px;
+        font-size: 12px;
+        font-weight: 700;
+        text-align: center;
+        display: inline-block;
+    }
+    
+    .estado-generada {
+        background: #DCFCE7;
+        color: #166534;
+        padding: 6px 14px;
+        border-radius: 40px;
+        font-size: 12px;
+        font-weight: 700;
+        text-align: center;
+        display: inline-block;
+    }
+    
+    .estado-aceptada {
+        background: #D1FAE5;
+        color: #065F46;
+        padding: 6px 14px;
+        border-radius: 40px;
+        font-size: 12px;
+        font-weight: 700;
+        text-align: center;
+        display: inline-block;
+    }
+    
+    .estado-rechazada {
+        background: #FEE2E2;
+        color: #991B1B;
+        padding: 6px 14px;
+        border-radius: 40px;
+        font-size: 12px;
+        font-weight: 700;
+        text-align: center;
+        display: inline-block;
+    }
+    
+    .estado-en-proceso {
+        background: #E0E7FF;
+        color: #3730A3;
+        padding: 6px 14px;
+        border-radius: 40px;
+        font-size: 12px;
+        font-weight: 700;
+        text-align: center;
+        display: inline-block;
+    }
+    
+    .items-badge {
+        background: #E5E7EB;
+        color: #374151;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 13px;
+        display: inline-block;
+        text-align: center;
+    }
+    
+    .badge-codigo {
+        font-family: monospace;
+        font-size: 13px;
+        font-weight: 700;
+        background: #f3f4f6;
+        padding: 4px 10px;
+        border-radius: 8px;
+        color: #374151;
+    }
+    
+    .fecha-hora .fecha {
+        font-weight: 600;
+        color: #111827;
+    }
+    
+    .fecha-hora .hora {
+        font-size: 11px;
+        color: #6b7280;
+    }
+    
+    .monto {
+        font-weight: 700;
+    }
 `;
 document.head.appendChild(style);
