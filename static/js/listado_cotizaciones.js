@@ -331,7 +331,7 @@ function escapeHtml(str) {
 }
 
 // ===========================
-// RENDERIZAR TABLA - COLUMNAS ELIMINADAS: Jale y Nombre Estado
+// RENDERIZAR TABLA - ORDEN CORRECTO DE COLUMNAS
 // ===========================
 function renderizarTabla(cotizaciones) {
     const tbody = document.getElementById('tbodyCotizaciones');
@@ -358,36 +358,62 @@ function renderizarTabla(cotizaciones) {
         const codigoMostrar = c.codigo_cotizacion || c.numero_cotizacion;
         let estadoHtml = renderEstado(c.estado, esBorrador);
         
+        // Tus datos existentes
         const ruc = c.ruc || '---';
         const codigoCliente = c.codigo_cliente || '---';
         const razonComercial = c.razon_comercial || c.nombre_comercial || '---';
         const razonSocial = c.razon_social || c.cliente || '---';
         const descripcion = c.descripcion || '---';
         const notaAclaratoria = c.nota_aclaratoria || '---';
-        const condicionPago = c.condicion_pago || '---';
+        const condicionPago = c.condicion_pago || 'Contado';
         
         return `
-            <tr data-id="${c.id}" data-codigo="${codigoMostrar}">
-                <td class="text-center fw-bold" style="width:50px">${index + 1}</td>
+            <tr data-id="${c.id}" data-codigo="${escapeHtml(codigoMostrar)}">
+                <!-- 1. Ítems -->
+                <td class="text-center fw-bold">${index + 1}</td>
+                
+                <!-- 2. Fecha y Hora -->
                 <td class="fecha-cell">
                     <div class="fecha-hora">
                         <div class="fecha"><strong>${fecha}</strong></div>
                         <div class="hora small text-muted">${hora}</div>
                     </div>
                 </td>
+                
+                <!-- 3. ESTADO (con colores semáforo) -->
+                <td class="estado-cell">${estadoHtml}</td>
+                
+                <!-- 4. N° Cotización -->
                 <td class="codigo-cell">
                     <strong>${escapeHtml(codigoMostrar || '-')}</strong>
                     ${c.correlativo ? `<br><small class="text-muted">Correl: ${c.correlativo}</small>` : ''}
                 </td>
+                
+                <!-- 5. RUC -->
                 <td>${escapeHtml(ruc)}</td>
+                
+                <!-- 6. Código Cliente -->
                 <td><span class="badge-codigo">${escapeHtml(codigoCliente)}</span></td>
+                
+                <!-- 7. R comercial -->
                 <td><small>${escapeHtml(razonComercial)}</small></td>
+                
+                <!-- 8. R social -->
                 <td><strong>${escapeHtml(razonSocial)}</strong></td>
-                <td><small>${escapeHtml(descripcion.length > 50 ? descripcion.substring(0, 50) + '...' : descripcion)}</small></td>
-                <td class="monto text-end fw-bold">S/ ${Number(total).toLocaleString('es-PE', { minimumFractionDigits: 2 })}</td>
-                <td><small class="text-muted">${escapeHtml(notaAclaratoria)}</small></td>
+                
+                <!-- 9. Descripción -->
+                <td><small title="${escapeHtml(descripcion)}">${escapeHtml(descripcion.length > 50 ? descripcion.substring(0, 50) + '...' : descripcion)}</small></td>
+                
+                <!-- 10. Monto (Con IGV) -->
+                <td class="monto text-end fw-bold text-success">S/ ${Number(total).toLocaleString('es-PE', { minimumFractionDigits: 2 })}</td>
+                
+                <!-- 11. Nota aclaratoria -->
+                <td><small class="text-muted" title="${escapeHtml(notaAclaratoria)}">${escapeHtml(notaAclaratoria.length > 40 ? notaAclaratoria.substring(0, 40) + '...' : notaAclaratoria)}</small></td>
+                
+                <!-- 12. Condición pago -->
                 <td><small>${escapeHtml(condicionPago)}</small></td>
-                <td class="estado-cell">${estadoHtml}</td>
+                
+                <!-- 13. Acciones -->
                 <td class="acciones text-center">
                     <div class="dropdown">
                         <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -420,7 +446,6 @@ function renderizarTabla(cotizaciones) {
         `;
     }).join('');
 }
-
 // ===========================
 // VER DETALLE
 // ===========================
