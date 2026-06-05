@@ -217,12 +217,11 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
         mostrarNotificacion(`🔍 Consultando RUC ${ruc} en SUNAT...`, 'info');
         
-        // 🔥 SOLO usar el proxy del backend (NUNCA llamar directamente a la API externa)
+        // ✅ SOLO el proxy del backend
         const proxyResponse = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
         const proxyData = await proxyResponse.json();
         
         if (proxyData.success) {
-            console.log('✅ Datos obtenidos del proxy:', proxyData);
             return {
                 success: true,
                 razon_social: proxyData.razon_social || '',
@@ -232,16 +231,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 estado: proxyData.estado || ''
             };
         } else {
-            console.error('Proxy falló:', proxyData.error);
-            return { 
-                success: false, 
-                error: proxyData.error || 'No se encontraron datos para este RUC' 
-            };
+            return { success: false, error: proxyData.error || 'No se encontraron datos' };
         }
         
     } catch (error) {
         console.error('Error consultando SUNAT:', error);
-        mostrarNotificacion('❌ Error de conexión con el servidor', 'danger');
         return { success: false, error: error.message };
     }
 }
