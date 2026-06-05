@@ -212,79 +212,401 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(notificacion);
         setTimeout(() => notificacion.remove(), 3000);
     }
-
-   async function consultarSunat(ruc) {
+// FUNCIÓN MODIFICADA: Consultar SUNAT pero PRIORIZANDO datos locales
+async function consultarSunat(ruc) {
     try {
-        mostrarNotificacion(`🔍 Consultando RUC ${ruc} en SUNAT...`, 'info');
+        mostrarNotificacion(`🔍 Verificando RUC ${ruc} en sistema local...`, 'info');
         
-        // ✅ SOLO el proxy del backend
+        // PASO 1: Primero verificar si el RUC ya existe como cliente en tu sistema
+        const checkResponse = await fetch(`/api/clientes/buscar?q=${ruc}`);
+        const checkData = await checkResponse.json();
+        
+        let existeLocal = false;
+        let clienteLocal = null;
+        
+        if (checkData.success && checkData.data && checkData.data.length > 0) {
+            // Buscar coincidencia exacta por número de documento
+            clienteLocal = checkData.data.find(c => c.numero_documento === ruc);
+            if (clienteLocal) {
+                existeLocal = true;
+                console.log('✅ Cliente encontrado en base local:', clienteLocal);
+            }
+        }
+        
+        // PASO 2: Si existe en local, devolver los datos locales (son más completos)
+        if (existeLocal && clienteLocal) {
+            // Obtener el contacto principal del cliente
+            let contactoData = {};
+            try {
+                const contactoResponse = await fetch(`/api/clientes/${clienteLocal.id}/contacto`);
+                const contactoResult = await contactoResponse.json();
+                if (contactoResult.success && contactoResult.data) {
+                    contactoData = contactoResult.data;
+                }
+            } catch (e) {
+                console.warn('No se pudo obtener contacto:', e);
+            }
+            
+            mostrarNotificacion(`🏢 Cliente ENCONTRADO en sistema: ${clienteLocal.razon_social}`, 'success');
+            
+            return {
+                success: true,
+                existe_en_sistema: true,
+                cliente_id: clienteLocal.id,
+                razon_social: clienteLocal.razon_social || '',
+                nombre_comercial: clienteLocal.nombre_comercial || '',
+                razon_comercial: clienteLocal.razon_comercial || '',
+                direccion: clienteLocal.direccion_fiscal || '',
+                estado: clienteLocal.estado || 'ACTIVO',
+                // Datos adicionales del cliente (más completos que SUNAT)
+                telefono_contacto: contactoData.telefono_contacto || clienteLocal.telefono_contacto || '',
+                email_contacto: contactoData.email_contacto || clienteLocal.email_contacto || '',
+                nombre_contacto: contactoData.nombre_contacto || clienteLocal.nombre_contacto || ''
+            };
+        }
+        
+        // PASO 3: Si NO existe en local, consultar a SUNAT normalmente
+        mostrarNotificacion(`🌐 Consultando RUC ${ruc} en SUNAT...`, 'info');
         const proxyResponse = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
         const proxyData = await proxyResponse.json();
         
         if (proxyData.success) {
+            mostrarNotificacion(`🆕 Cliente NUEVO (no existe en sistema), cargando datos de SUNAT...`, 'info');
             return {
                 success: true,
+                existe_en_sistema: false,
                 razon_social: proxyData.razon_social || '',
                 nombre_comercial: proxyData.nombre_comercial || '',
                 razon_comercial: proxyData.nombre_comercial || '',
                 direccion: proxyData.direccion || '',
-                estado: proxyData.estado || ''
+                estado: proxyData.estado || '',
+                telefono_contacto: '',
+                email_contacto: '',
+                nombre_contacto: ''
             };
         } else {
-            return { success: false, error: proxyData.error || 'No se encontraron datos' };
+            return { success: false, error: proxyData.error || 'No se encontraron datos en SUNAT' };
         }
         
     } catch (error) {
-        console.error('Error consultando SUNAT:', error);
+        console.error('Error consultando:', error);
         return { success: false, error: error.message };
     }
- }
+}
 
-    async function autocompletarConSunat() {
-        const tipoDocumento = document.getElementById('nuevo_tipo_documento')?.value;
-        const numeroDocumento = document.getElementById('nuevo_numero_documento')?.value.trim();
+// FUNCIÓN MODIFICADA: Autocompletar con SUNAT pero preservando datos locales
+async function autocompletarConSunat() {
+    const tipoDocumento = document.getElementById('nuevo_tipo_documento')?.value;
+    const numeroDocumento = document.getElementById('nuevo_numero_documento')?.value.trim();
+    
+    if (tipoDocumento !== 'RUC') {
+        mostrarNotificacion('⚠️ La búsqueda en SUNAT solo está disponible para RUC', 'warning');
+        return;
+    }
+    
+    if (!numeroDocumento || numeroDocumento.length !== 11) {
+        mostrarNotificacion('⚠️ Ingrese un RUC válido de 11 dígitos', 'warning');
+        return;
+    }
+    
+    const btnBuscar = document.getElementById('btnBuscarSunat');
+    const textoOriginal = btnBuscar?.innerHTML;
+    if (btnBuscar) {
+        btnBuscar.innerHTML = '<i class="bi bi-hourglass-split"></i> Verificando...';
+        btnBuscar.disabled = true;
+    }
+    
+    try {
+        const resultado = await consultarSunat(numeroDocumento);
         
-        if (tipoDocumento !== 'RUC') {
-            mostrarNotificacion('⚠️ La búsqueda en SUNAT solo está disponible para RUC', 'warning');
-            return;
+        if (resultado.success) {
+            // Cargar datos básicos del cliente
+            document.getElementById('nuevo_razon_social').value = resultado.razon_social || '';
+            document.getElementById('nuevo_nombre_comercial').value = resultado.nombre_comercial || '';
+            document.getElementById('nuevo_razon_comercial').value = resultado.razon_comercial || '';
+            document.getElementById('nuevo_direccion_fiscal').value = resultado.direccion || '';
+            
+            // 🔥 NUEVO: Si el cliente YA EXISTE en sistema, cargar sus datos de contacto
+            if (resultado.existe_en_sistema) {
+                // Mostrar notificación destacada de que ya existe
+                mostrarNotificacionExistente(resultado);
+                
+                // Autocompletar campos de contacto con los datos locales
+                document.getElementById('nuevo_telefono').value = resultado.telefono_contacto || '';
+                document.getElementById('nuevo_email').value = resultado.email_contacto || '';
+                document.getElementById('nuevo_nombre_contacto').value = resultado.nombre_contacto || '';
+                
+                // Cambiar color de los campos para indicar que son datos existentes
+                resaltarCamposExistentes();
+                
+                // Mostrar botón o indicador de que ya existe
+                mostrarIndicadorClienteExistente(resultado);
+            } else {
+                // Limpiar campos de contacto para cliente nuevo
+                document.getElementById('nuevo_telefono').value = '';
+                document.getElementById('nuevo_email').value = '';
+                document.getElementById('nuevo_nombre_contacto').value = '';
+                quitarResaltadoCampos();
+                ocultarIndicadorClienteExistente();
+            }
+            
+            mostrarNotificacion('✅ Datos cargados correctamente', 'success');
+        } else {
+            mostrarNotificacion('❌ ' + (resultado.error || 'No se encontraron datos para este RUC'), 'danger');
         }
-        
-        if (!numeroDocumento || numeroDocumento.length !== 11) {
-            mostrarNotificacion('⚠️ Ingrese un RUC válido de 11 dígitos', 'warning');
-            return;
-        }
-        
-        const btnBuscar = document.getElementById('btnBuscarSunat');
-        const textoOriginal = btnBuscar?.innerHTML;
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarNotificacion('❌ Error al consultar', 'danger');
+    } finally {
         if (btnBuscar) {
-            btnBuscar.innerHTML = '<i class="bi bi-hourglass-split"></i> Buscando...';
-            btnBuscar.disabled = true;
+            btnBuscar.innerHTML = textoOriginal;
+            btnBuscar.disabled = false;
         }
+    }
+}
+
+// NUEVA FUNCIÓN: Notificación especial cuando el cliente ya existe
+function mostrarNotificacionExistente(cliente) {
+    // Crear notificación persistente (no auto-cierre)
+    const notificacionDiv = document.createElement('div');
+    notificacionDiv.id = 'cliente-existente-notificacion';
+    notificacionDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+        padding: 16px 24px;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        max-width: 400px;
+        animation: slideInRight 0.3s ease-out;
+        border-left: 4px solid #ffd700;
+    `;
+    
+    notificacionDiv.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="font-size: 28px;">🏢</div>
+            <div style="flex: 1;">
+                <strong style="font-size: 16px;">¡CLIENTE YA REGISTRADO!</strong>
+                <div style="font-size: 13px; margin-top: 4px;">
+                    Este RUC ya existe en el sistema con los siguientes datos:
+                </div>
+                <div style="background: rgba(255,255,255,0.2); border-radius: 8px; padding: 8px; margin-top: 8px; font-size: 12px;">
+                    <div>📞 Teléfono: ${cliente.telefono_contacto || 'No registrado'}</div>
+                    <div>✉️ Email: ${cliente.email_contacto || 'No registrado'}</div>
+                    <div>👤 Contacto: ${cliente.nombre_contacto || 'No registrado'}</div>
+                </div>
+                <div style="font-size: 11px; margin-top: 6px; opacity: 0.9;">
+                    ✅ Los datos de contacto han sido autocompletados automáticamente
+                </div>
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;">✕</button>
+        </div>
+    `;
+    
+    // Eliminar notificación anterior si existe
+    const oldNotif = document.getElementById('cliente-existente-notificacion');
+    if (oldNotif) oldNotif.remove();
+    
+    document.body.appendChild(notificacionDiv);
+    
+    // Auto-cerrar después de 8 segundos
+    setTimeout(() => {
+        if (notificacionDiv && notificacionDiv.parentNode) {
+            notificacionDiv.style.animation = 'fadeOut 0.3s ease-out';
+            setTimeout(() => notificacionDiv.remove(), 300);
+        }
+    }, 8000);
+}
+
+// NUEVA FUNCIÓN: Resaltar campos que fueron autocompletados con datos existentes
+function resaltarCamposExistentes() {
+    const campos = ['nuevo_telefono', 'nuevo_email', 'nuevo_nombre_contacto'];
+    campos.forEach(campoId => {
+        const campo = document.getElementById(campoId);
+        if (campo && campo.value) {
+            campo.style.transition = 'all 0.3s ease';
+            campo.style.backgroundColor = '#fef3c7';
+            campo.style.border = '2px solid #f59e0b';
+            
+            // Quitar resaltado después de 2 segundos
+            setTimeout(() => {
+                if (campo) {
+                    campo.style.backgroundColor = '';
+                    campo.style.border = '';
+                }
+            }, 2000);
+        }
+    });
+}
+
+function quitarResaltadoCampos() {
+    const campos = ['nuevo_telefono', 'nuevo_email', 'nuevo_nombre_contacto'];
+    campos.forEach(campoId => {
+        const campo = document.getElementById(campoId);
+        if (campo) {
+            campo.style.backgroundColor = '';
+            campo.style.border = '';
+        }
+    });
+}
+
+// NUEVA FUNCIÓN: Mostrar indicador visual de que el cliente ya existe
+function mostrarIndicadorClienteExistente(cliente) {
+    // Crear o actualizar badge en el formulario
+    let badge = document.getElementById('cliente-existente-badge');
+    if (!badge) {
+        badge = document.createElement('div');
+        badge.id = 'cliente-existente-badge';
+        const formContainer = document.getElementById('formNuevoCliente')?.querySelector('.modal-body');
+        if (formContainer) {
+            badge.style.cssText = `
+                background: #fef3c7;
+                border-left: 4px solid #f59e0b;
+                padding: 10px 15px;
+                border-radius: 8px;
+                margin-bottom: 15px;
+                font-size: 13px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            `;
+            formContainer.insertBefore(badge, formContainer.firstChild);
+        }
+    }
+    
+    if (badge) {
+        badge.innerHTML = `
+            <span style="font-size: 20px;">⚠️</span>
+            <div style="flex: 1;">
+                <strong style="color: #92400e;">¡ATENCIÓN!</strong>
+                <div style="color: #78350f;">Este RUC ya está registrado como cliente con ID: ${cliente.cliente_id}</div>
+                <div style="color: #78350f; font-size: 11px; margin-top: 4px;">
+                    Los datos de contacto han sido autocompletados automáticamente.
+                </div>
+            </div>
+        `;
+        badge.style.display = 'flex';
+    }
+}
+
+function ocultarIndicadorClienteExistente() {
+    const badge = document.getElementById('cliente-existente-badge');
+    if (badge) {
+        badge.style.display = 'none';
+    }
+}
+
+// MODIFICACIÓN: También mejorar la función de búsqueda por RUC del cliente principal
+// Actualizar el evento del botón btnBuscarClientePorRuc
+const btnBuscarClientePorRucOriginal = document.getElementById('btnBuscarClientePorRuc');
+if (btnBuscarClientePorRucOriginal) {
+    // Reemplazar el evento existente con uno nuevo mejorado
+    const nuevoBtn = btnBuscarClientePorRucOriginal.cloneNode(true);
+    btnBuscarClientePorRucOriginal.parentNode.replaceChild(nuevoBtn, btnBuscarClientePorRucOriginal);
+    
+    nuevoBtn.addEventListener('click', async function(e) {
+        e.preventDefault();
+        
+        const ruc = document.getElementById('buscar_ruc')?.value.trim();
+        
+        if (!ruc) {
+            mostrarNotificacion('⚠️ Ingrese un RUC para buscar', 'warning');
+            return;
+        }
+        
+        if (ruc.length !== 11) {
+            mostrarNotificacion('⚠️ El RUC debe tener 11 dígitos', 'warning');
+            return;
+        }
+        
+        const textoOriginal = nuevoBtn.innerHTML;
+        nuevoBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Verificando...';
+        nuevoBtn.disabled = true;
         
         try {
-            const resultado = await consultarSunat(numeroDocumento);
+            // Usar la misma función mejorada que verifica existencia local
+            const resultado = await consultarSunat(ruc);
             
             if (resultado.success) {
+                // Autocompletar todos los campos
+                document.getElementById('cliente_razon_social').value = resultado.razon_social || '';
+                document.getElementById('cliente_razon_comercial').value = resultado.razon_comercial || '';
+                document.getElementById('cliente_doc').value = ruc;
+                document.getElementById('cliente_direccion').value = resultado.direccion || '';
+                
                 document.getElementById('nuevo_razon_social').value = resultado.razon_social || '';
                 document.getElementById('nuevo_nombre_comercial').value = resultado.nombre_comercial || '';
-                document.getElementById('nuevo_razon_comercial').value = resultado.razon_comercial || '';  // <--- AGREGAR
+                document.getElementById('nuevo_razon_comercial').value = resultado.razon_comercial || '';
                 document.getElementById('nuevo_direccion_fiscal').value = resultado.direccion || '';
+                document.getElementById('nuevo_numero_documento').value = ruc;
                 
-                
-                mostrarNotificacion('✅ Datos cargados desde SUNAT correctamente', 'success');
+                // 🔥 Si existe en sistema, cargar también los datos de contacto
+                if (resultado.existe_en_sistema) {
+                    document.getElementById('telefono_contacto').value = resultado.telefono_contacto || '';
+                    document.getElementById('cliente_contacto').value = resultado.nombre_contacto || '';
+                    document.getElementById('email_contacto_cliente').value = resultado.email_contacto || '';
+                    document.getElementById('cliente_id').value = resultado.cliente_id || '';
+                    
+                    // Notificación especial
+                    mostrarNotificacionExistente(resultado);
+                    
+                    // Cargar direcciones del cliente existente
+                    if (resultado.cliente_id) {
+                        await cargarDireccionesCliente(resultado.cliente_id);
+                    }
+                    
+                    mostrarNotificacion('✅ Cliente existente cargado con todos sus datos', 'success');
+                } else {
+                    // Cliente nuevo - limpiar campos de contacto
+                    document.getElementById('telefono_contacto').value = '';
+                    document.getElementById('cliente_contacto').value = '';
+                    document.getElementById('email_contacto_cliente').value = '';
+                    document.getElementById('cliente_id').value = '';
+                    
+                    mostrarNotificacion('✅ Datos de SUNAT cargados (cliente nuevo)', 'success');
+                }
             } else {
-                mostrarNotificacion('❌ ' + (resultado.error || 'No se encontraron datos para este RUC'), 'danger');
+                mostrarNotificacion('❌ ' + (resultado.error || 'No se encontraron datos para este RUC en SUNAT'), 'danger');
             }
         } catch (error) {
             console.error('Error:', error);
-            mostrarNotificacion('❌ Error al consultar SUNAT', 'danger');
+            mostrarNotificacion('❌ Error al consultar: ' + error.message, 'danger');
         } finally {
-            if (btnBuscar) {
-                btnBuscar.innerHTML = textoOriginal;
-                btnBuscar.disabled = false;
+            nuevoBtn.innerHTML = textoOriginal;
+            nuevoBtn.disabled = false;
+        }
+    });
+}
+
+// Agregar estilos CSS para las animaciones si no existen
+if (!document.querySelector('#sunat-animation-styles')) {
+    const style = document.createElement('style');
+    style.id = 'sunat-animation-styles';
+    style.textContent = `
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
             }
         }
-    }
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+}
 
     // =========================
     // CONFIGURAR DIRECCIÓN DE ENTREGA

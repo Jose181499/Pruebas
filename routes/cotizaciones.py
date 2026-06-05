@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, jsonify, request, session, send_file, make_response, Response
-from psycopg2.extras import RealDictCursor, DictCursor
+from psycop2.extras import RealDictCursor, DictCursor
 from database import (obtener_cotizaciones_recientes, crear_cotizacion_transaccional, obtener_cotizacion_completa,
                     db_query, db_execute, db_tx, get_connection, buscar_cliente_por_ruc,buscar_clientes_mejorado)
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer
@@ -228,6 +228,67 @@ def buscar_clientes():
     except Exception as e:
         print(f"❌ Error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ==========================================
+# NUEVO ENDPOINT: VERIFICAR CLIENTE POR RUC (AGREGADO)
+# ==========================================
+@cotizaciones_bp.route("/api/clientes/verificar-ruc", methods=["GET"])
+def verificar_cliente_por_ruc():
+    """Verificar si un RUC ya existe en la base de datos"""
+    try:
+        ruc = request.args.get('ruc', '').strip()
+        
+        if not ruc:
+            return jsonify({
+                'success': False,
+                'error': 'RUC requerido'
+            }), 400
+        
+        if len(ruc) != 11:
+            return jsonify({
+                'success': False,
+                'error': 'El RUC debe tener 11 dígitos'
+            }), 400
+        
+        query = """
+            SELECT 
+                id,
+                razon_social,
+                numero_documento,
+                direccion_fiscal,
+                nombre_comercial,
+                razon_comercial,
+                telefono_contacto,
+                email_contacto,
+                nombre_contacto
+            FROM clientes
+            WHERE numero_documento = %s AND activo = TRUE
+            LIMIT 1
+        """
+        cliente = db_query(query, (ruc,))
+        
+        if cliente:
+            return jsonify({
+                'success': True,
+                'exists': True,
+                'data': cliente[0]
+            })
+        else:
+            return jsonify({
+                'success': True,
+                'exists': False,
+                'data': None
+            })
+            
+    except Exception as e:
+        print(f"❌ Error en verificar_cliente_por_ruc: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
 # ==========================================
 # ENDPOINT: BUSCAR CLIENTE POR RUC EXACTO
 # ==========================================
@@ -268,7 +329,7 @@ def buscar_cliente_por_ruc_api():
 
 
 # ==========================================
-# ENDPOINT: OBTENER CLIENTE POR IDD
+# ENDPOINT: OBTENER CLIENTE POR ID
 # ==========================================
 
 @cotizaciones_bp.route("/api/clientes/<int:id>", methods=["GET"])
@@ -400,7 +461,7 @@ def buscar_contactos_cliente(cliente_id):
 
 
 # ==========================================
-# ENDPOINT: CREAR CLIENTEE
+# ENDPOINT: CREAR CLIENTE
 # ==========================================
 
 @cotizaciones_bp.route("/api/clientes/crear", methods=["POST"])
@@ -571,6 +632,47 @@ def obtener_cliente_por_documento(numero_documento):
     except Exception as e:
         print(f"Error en obtener_cliente_por_documento: {e}")
         return None
+
+
+# ==========================================
+# NUEVO ENDPOINT: OBTENER CLIENTE CON CONTACTO (AGREGADO)
+# ==========================================
+@cotizaciones_bp.route("/api/clientes/<int:cliente_id>/completo", methods=["GET"])
+def obtener_cliente_completo(cliente_id):
+    """Obtener cliente con todos sus datos y contacto principal"""
+    try:
+        query = """
+            SELECT 
+                c.id,
+                c.razon_social,
+                c.numero_documento,
+                c.direccion_fiscal,
+                c.nombre_comercial,
+                c.razon_comercial,
+                c.tipo_documento,
+                COALESCE(cc.nombre_contacto, c.nombre_contacto) AS nombre_contacto,
+                COALESCE(cc.email, c.email_contacto) AS email_contacto,
+                COALESCE(cc.telefono, c.telefono_contacto) AS telefono_contacto
+            FROM clientes c
+            LEFT JOIN clientes_contactos cc ON cc.cliente_id = c.id AND cc.principal = TRUE AND cc.activo = TRUE
+            WHERE c.id = %s AND c.activo = TRUE
+            LIMIT 1
+        """
+        cliente = db_query(query, (cliente_id,))
+        
+        if not cliente:
+            return jsonify({'success': False, 'error': 'Cliente no encontrado'}), 404
+        
+        return jsonify({
+            'success': True,
+            'data': cliente[0]
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en /api/clientes/{cliente_id}/completo: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @cotizaciones_bp.route("/api/cotizacion/guardar", methods=["POST"])
 def guardar_cotizacion():
     data = request.json
@@ -1135,6 +1237,8 @@ def listar_cotizaciones():
         import traceback
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
+
+
 # ==========================================
 # ELIMINAR COTIZACION
 # ==========================================
@@ -1299,6 +1403,8 @@ def obtener_contacto_cliente(cliente_id):
             'success': False,
             'error': str(e)
         }), 500
+
+
 # ==========================================
 # DUPLICAR COTIZACIÓN
 # ==========================================
@@ -1562,6 +1668,7 @@ def exportar_pdf_cotizacion(id):
     except Exception as e:
         print(f"❌ Error al exportar PDF: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 # ==========================================
 # GENERAR PDF
