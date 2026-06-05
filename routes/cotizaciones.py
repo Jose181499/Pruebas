@@ -434,6 +434,7 @@ def crear_cliente():
         numero_documento = data.get('numero_documento')
         razon_social = data.get('razon_social')
         nombre_comercial = data.get('nombre_comercial', '')
+        razon_comercial = data.get('razon_comercial', '')
         direccion_fiscal = data.get('direccion_fiscal', '')
         telefono_contacto = data.get('telefono_contacto', '')
         email_contacto = data.get('email_contacto', '')
@@ -469,11 +470,11 @@ def crear_cliente():
             cur.execute("""
                 INSERT INTO clientes 
                 (tipo_documento, numero_documento, razon_social, nombre_comercial, 
-                 direccion_fiscal, activo)
-                VALUES (%s, %s, %s, %s, %s, TRUE)
+                 razon_comercial, direccion_fiscal, activo)
+                VALUES (%s, %s, %s, %s, %s, %s, TRUE)
                 RETURNING id
             """, (tipo_documento, numero_documento, razon_social, nombre_comercial,
-                  direccion_fiscal))
+                  razon_comercial, direccion_fiscal))
             
             cliente_id = cur.fetchone()[0]
             
@@ -496,7 +497,6 @@ def crear_cliente():
     except Exception as e:
         print(f"Error en /api/clientes/crear: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 # ==========================================
 # ENDPOINT: BUSCAR PRODUCTOS
@@ -1015,7 +1015,8 @@ def api_get_cotizacion(cotizacion_id):
                 "descuento_tipo": cabecera.get("descuento_tipo", "porcentaje"),
                 "cliente_contacto": cabecera.get("contacto_cliente") or "",
                 "telefono_contacto": cabecera.get("telefono_cliente") or "",
-                "email_contacto_cliente": cabecera.get("email_cliente") or ""
+                "email_contacto_cliente": cabecera.get("email_cliente") or "",
+                "razon_comercial": cabecera.get("razon_comercial") or "" 
             }
         })
 

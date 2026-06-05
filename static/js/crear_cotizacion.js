@@ -233,6 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     success: true,
                     razon_social: data.razonSocial || '',
                     nombre_comercial: data.nombreComercial || '',
+                     razon_comercial: data.nombreComercial || '',
                     direccion: data.direccion || '',
                     estado: data.estado || ''
                 };
@@ -283,7 +284,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (resultado.success) {
                 document.getElementById('nuevo_razon_social').value = resultado.razon_social || '';
                 document.getElementById('nuevo_nombre_comercial').value = resultado.nombre_comercial || '';
+                document.getElementById('nuevo_razon_comercial').value = resultado.razon_comercial || '';  // <--- AGREGAR
                 document.getElementById('nuevo_direccion_fiscal').value = resultado.direccion || '';
+                
                 
                 mostrarNotificacion('✅ Datos cargados desde SUNAT correctamente', 'success');
             } else {
@@ -549,14 +552,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const resultado = await consultarSunat(ruc);
                 
                 if (resultado.success) {
-                    document.getElementById('cliente_razon_social').value = resultado.razon_social || '';
-                    document.getElementById('cliente_doc').value = ruc;
-                    document.getElementById('cliente_direccion').value = resultado.direccion || '';
-                    
-                    document.getElementById('nuevo_razon_social').value = resultado.razon_social || '';
-                    document.getElementById('nuevo_nombre_comercial').value = resultado.nombre_comercial || '';
-                    document.getElementById('nuevo_direccion_fiscal').value = resultado.direccion || '';
-                    document.getElementById('nuevo_numero_documento').value = ruc;
+                  document.getElementById('cliente_razon_social').value = resultado.razon_social || '';
+                document.getElementById('cliente_razon_comercial').value = resultado.razon_comercial || '';  // <--- AGREGAR
+                document.getElementById('cliente_doc').value = ruc;
+                document.getElementById('cliente_direccion').value = resultado.direccion || '';
+
+                document.getElementById('nuevo_razon_social').value = resultado.razon_social || '';
+                document.getElementById('nuevo_nombre_comercial').value = resultado.nombre_comercial || '';
+                document.getElementById('nuevo_razon_comercial').value = resultado.razon_comercial || '';  // <--- AGREGAR
+                document.getElementById('nuevo_direccion_fiscal').value = resultado.direccion || '';
+                document.getElementById('nuevo_numero_documento').value = ruc;
                     
                     mostrarNotificacion('✅ Datos cargados desde SUNAT correctamente', 'success');
                 } else {
@@ -662,15 +667,17 @@ document.addEventListener('DOMContentLoaded', () => {
     
     try {
         const payload = {
-            tipo_documento: tipoDocumento,
-            numero_documento: numeroDocumento,
-            razon_social: razonSocial,
-            nombre_comercial: document.getElementById('nuevo_nombre_comercial')?.value.trim() || '',
-            direccion_fiscal: document.getElementById('nuevo_direccion_fiscal')?.value.trim() || '',
-            telefono_contacto: document.getElementById('nuevo_telefono')?.value.trim() || '',
-            email_contacto: document.getElementById('nuevo_email')?.value.trim() || '',
-            nombre_contacto: document.getElementById('nuevo_nombre_contacto')?.value.trim() || ''
-        };
+    tipo_documento: tipoDocumento,
+    numero_documento: numeroDocumento,
+    razon_social: razonSocial,
+    nombre_comercial: document.getElementById('nuevo_nombre_comercial')?.value.trim() || '',
+    razon_comercial: document.getElementById('nuevo_razon_comercial')?.value.trim() || '',  // <--- AGREGAR
+    direccion_fiscal: document.getElementById('nuevo_direccion_fiscal')?.value.trim() || '',
+    telefono_contacto: document.getElementById('nuevo_telefono')?.value.trim() || '',
+    email_contacto: document.getElementById('nuevo_email')?.value.trim() || '',
+    nombre_contacto: document.getElementById('nuevo_nombre_contacto')?.value.trim() || ''
+};
+
         
         const response = await fetch('/api/clientes/crear', {
             method: 'POST',
@@ -2104,11 +2111,12 @@ function attachProductoAutocomplete(row) {
                 document.getElementById('cliente_id').value = data.cliente_id;
             }
             document.getElementById('cliente_razon_social').value = data.cliente || data.razon_social || '';
+            document.getElementById('cliente_razon_comercial').value = data.razon_comercial || ''; 
             document.getElementById('cliente_doc').value = data.numero_documento || data.cliente_ruc || '';
             document.getElementById('cliente_direccion').value = data.direccion_fiscal || '';
-        document.getElementById('cliente_contacto').value = data.cliente_contacto || '';
-        document.getElementById('email_contacto_cliente').value = data.email_contacto_cliente || '';
-        document.getElementById('telefono_contacto').value = data.telefono_contacto || '';
+             document.getElementById('cliente_contacto').value = data.cliente_contacto || '';
+            document.getElementById('email_contacto_cliente').value = data.email_contacto_cliente || '';
+            document.getElementById('telefono_contacto').value = data.telefono_contacto || '';
             
             document.getElementById('estado').value = data.estado || 'En Proceso';
             document.getElementById('notas').value = data.notas || '';
