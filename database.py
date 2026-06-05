@@ -668,8 +668,8 @@ def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=50):
                     c.codigo_cliente,
                     c.activo,
                     c.fecha_creacion,
-                    -- 🔥 OBTENER CONTACTO PRINCIPAL desde clientes_contactos
-                    COALESCE(cc.nombre_contacto, c.nombre_contacto) as nombre_contacto,
+                    -- 🔥 CORREGIDO: usar 'nombre' en lugar de 'nombre_contacto'
+                    COALESCE(cc.nombre, c.nombre_contacto) as nombre_contacto,
                     COALESCE(cc.email, c.email_contacto) as email_contacto,
                     COALESCE(cc.telefono, c.telefono_contacto) as telefono_contacto
                 FROM clientes c
@@ -685,7 +685,7 @@ def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=50):
                     c.razon_social ILIKE %s OR 
                     c.nombre_comercial ILIKE %s OR
                     c.razon_comercial ILIKE %s OR
-                    cc.nombre_contacto ILIKE %s
+                    cc.nombre ILIKE %s
                 )
                 ORDER BY 
                     CASE 
@@ -693,16 +693,16 @@ def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=50):
                         WHEN c.razon_social ILIKE %s THEN 2
                         WHEN c.nombre_comercial ILIKE %s THEN 3
                         WHEN c.razon_comercial ILIKE %s THEN 4
-                        WHEN cc.nombre_contacto ILIKE %s THEN 5
+                        WHEN cc.nombre ILIKE %s THEN 5
                         ELSE 6
                     END,
                     c.razon_social
                 LIMIT %s
                 """
-                # Parámetros: 5 para WHERE + 5 para ORDER BY + 1 para LIMIT = 11
-                params.extend([busqueda_like, busqueda_like, busqueda_like, busqueda_like, busqueda_like])  # WHERE
-                params.extend([busqueda_like, busqueda_like, busqueda_like, busqueda_like, busqueda_like])  # ORDER BY
-                params.append(limit)  # LIMIT
+                # 5 para WHERE + 5 para ORDER BY + 1 LIMIT = 11
+                params.extend([busqueda_like, busqueda_like, busqueda_like, busqueda_like, busqueda_like])
+                params.extend([busqueda_like, busqueda_like, busqueda_like, busqueda_like, busqueda_like])
+                params.append(limit)
             else:
                 query += " ORDER BY c.razon_social LIMIT %s"
                 params.append(limit)
@@ -880,7 +880,7 @@ def buscar_clientes_completo(q: str, limit: int = 20):
             c.razon_comercial,
             c.direccion_fiscal,
             c.codigo_cliente,
-            COALESCE(cc.nombre_contacto, c.nombre_contacto) as nombre_contacto,
+            COALESCE(cc.nombre, c.nombre_contacto) as nombre_contacto,
             COALESCE(cc.email, c.email_contacto) as email_contacto,
             COALESCE(cc.telefono, c.telefono_contacto) as telefono_contacto
         FROM clientes c
@@ -891,7 +891,7 @@ def buscar_clientes_completo(q: str, limit: int = 20):
             c.razon_social ILIKE %s OR 
             c.nombre_comercial ILIKE %s OR
             c.razon_comercial ILIKE %s OR
-            cc.nombre_contacto ILIKE %s
+            cc.nombre ILIKE %s
         )
         ORDER BY c.razon_social
         LIMIT %s
