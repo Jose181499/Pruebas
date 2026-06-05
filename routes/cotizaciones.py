@@ -1451,7 +1451,7 @@ def duplicar_cotizacion(id):
             """, (
                 nuevo_numero,
                 orig.get('cliente_id'),
-                'Borrador',  # Estado inicial como Borrador
+                'En Proceso',  
                 orig.get('condicion_pago'),
                 orig.get('tiempo_entrega'),
                 orig.get('validez_oferta'),
