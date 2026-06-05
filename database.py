@@ -570,7 +570,7 @@ def insertar_contacto_cliente(cliente_id, nombre_contacto, email, telefono, carg
 
     db_execute("""
         INSERT INTO clientes_contactos
-        (cliente_id, nombre, email, telefono, cargo, principal)
+        (cliente_id, nombre_contacto, email, telefono, cargo, principal)
         VALUES (%s, %s, %s, %s, %s, %s)
     """, (
         cliente_id,
@@ -824,7 +824,7 @@ def buscar_clientes_paginado(tipo_documento='', busqueda='', pagina=1, por_pagin
         }
 
 
-        # =========================
+# =========================
 # Buscar clientes con todos los campos (VERSIÓN CORREGIDA)
 # =========================
 def buscar_clientes_completo(q: str, limit: int = 20):
@@ -847,18 +847,18 @@ def buscar_clientes_completo(q: str, limit: int = 20):
             c.razon_comercial,
             c.direccion_fiscal,
             c.codigo_cliente,
-            COALESCE(cc.nombre, c.nombre_contacto) as nombre_contacto,
-            COALESCE(cc.email, c.email_contacto) as email_contacto,
-            COALESCE(cc.telefono, c.telefono_contacto) as telefono_contacto
+            cc.nombre_contacto,
+            cc.email AS email_contacto,
+            cc.telefono AS telefono_contacto
         FROM clientes c
-        LEFT JOIN clientes_contactos cc ON cc.cliente_id = c.id
+        LEFT JOIN clientes_contactos cc ON cc.cliente_id = c.id AND cc.principal = TRUE
         WHERE c.activo = TRUE
         AND (
             c.numero_documento ILIKE %s OR 
             c.razon_social ILIKE %s OR 
             c.nombre_comercial ILIKE %s OR
             c.razon_comercial ILIKE %s OR
-            cc.nombre ILIKE %s
+            cc.nombre_contacto ILIKE %s
         )
         ORDER BY c.razon_social
         LIMIT %s
@@ -1322,7 +1322,7 @@ def obtener_todos_clientes_con_detalles():
             
             # Obtener contactos
             cur.execute("""
-                SELECT id, nombre, email, telefono, cargo, principal
+                SELECT id, nombre_contacto, email, telefono, cargo, principal
                 FROM clientes_contactos
                 WHERE cliente_id = %s
             """, (cliente_id,))
@@ -1374,7 +1374,7 @@ def actualizar_cliente_completo(cliente_id, data):
             if contacto.get('nombre_contacto'):
                 cur.execute("""
                     INSERT INTO clientes_contactos 
-                    (cliente_id, nombre, email, telefono, cargo, principal)
+                    (cliente_id, nombre_contacto, email, telefono, cargo, principal)
                     VALUES (%s, %s, %s, %s, %s, %s)
                 """, (
                     cliente_id,

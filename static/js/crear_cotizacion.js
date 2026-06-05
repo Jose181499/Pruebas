@@ -628,74 +628,74 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================
     // CREAR NUEVO CLIENTE
     // =========================
-  async function guardarNuevoCliente() {
-    const tipoDocumento = document.getElementById('nuevo_tipo_documento')?.value;
-    const numeroDocumento = document.getElementById('nuevo_numero_documento')?.value.trim();
-    const razonSocial = document.getElementById('nuevo_razon_social')?.value.trim();
-    
-    if (!numeroDocumento) {
-        mostrarNotificacion('⚠️ Ingrese el número de documento', 'warning');
-        return;
-    }
-    
-    if (!razonSocial) {
-        mostrarNotificacion('⚠️ Ingrese la razón social', 'warning');
-        return;
-    }
-    
-    const btnGuardar = document.getElementById('btnGuardarNuevoCliente');
-    const textoOriginal = btnGuardar.innerHTML;
-    btnGuardar.innerHTML = '<i class="bi bi-hourglass-split"></i> Guardando...';
-    btnGuardar.disabled = true;
-    
-    try {
-        const payload = {
-    tipo_documento: tipoDocumento,
-    numero_documento: numeroDocumento,
-    razon_social: razonSocial,
-    nombre_comercial: document.getElementById('nuevo_nombre_comercial')?.value.trim() || '',
-    razon_comercial: document.getElementById('nuevo_razon_comercial')?.value.trim() || '',  // <--- AGREGAR
-    direccion_fiscal: document.getElementById('nuevo_direccion_fiscal')?.value.trim() || '',
-    telefono_contacto: document.getElementById('nuevo_telefono')?.value.trim() || '',
-    email_contacto: document.getElementById('nuevo_email')?.value.trim() || '',
-    nombre_contacto: document.getElementById('nuevo_nombre_contacto')?.value.trim() || ''
-};
-
-        
-        const response = await fetch('/api/clientes/crear', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            document.getElementById('formNuevoCliente')?.reset();
-            const modal = bootstrap.Modal.getInstance(document.getElementById('modalNuevoCliente'));
-            modal.hide();
+    async function guardarNuevoCliente() {
+            const tipoDocumento = document.getElementById('nuevo_tipo_documento')?.value;
+            const numeroDocumento = document.getElementById('nuevo_numero_documento')?.value.trim();
+            const razonSocial = document.getElementById('nuevo_razon_social')?.value.trim();
             
-            // 🔥 CAMBIO AQUÍ - Notificación GRANDE en lugar de la pequeña
-            mostrarNotificacionClienteGuardadoGrande({
-                razon_social: razonSocial,
-                tipo_documento: tipoDocumento,
-                numero_documento: numeroDocumento,
-                nombre_contacto: payload.nombre_contacto,
-                telefono: payload.telefono_contacto,
-                email: payload.email_contacto
+            if (!numeroDocumento) {
+                mostrarNotificacion('⚠️ Ingrese el número de documento', 'warning');
+                return;
+            }
+            
+            if (!razonSocial) {
+                mostrarNotificacion('⚠️ Ingrese la razón social', 'warning');
+                return;
+            }
+            
+            const btnGuardar = document.getElementById('btnGuardarNuevoCliente');
+            const textoOriginal = btnGuardar.innerHTML;
+            btnGuardar.innerHTML = '<i class="bi bi-hourglass-split"></i> Guardando...';
+            btnGuardar.disabled = true;
+            
+            try {
+                const payload = {
+            tipo_documento: tipoDocumento,
+            numero_documento: numeroDocumento,
+            razon_social: razonSocial,
+            nombre_comercial: document.getElementById('nuevo_nombre_comercial')?.value.trim() || '',
+            razon_comercial: document.getElementById('nuevo_razon_comercial')?.value.trim() || '',  // <--- AGREGAR
+            direccion_fiscal: document.getElementById('nuevo_direccion_fiscal')?.value.trim() || '',
+            telefono_contacto: document.getElementById('nuevo_telefono')?.value.trim() || '',
+            email_contacto: document.getElementById('nuevo_email')?.value.trim() || '',
+            nombre_contacto: document.getElementById('nuevo_nombre_contacto')?.value.trim() || ''
+            };
+
+            
+            const response = await fetch('/api/clientes/crear', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
             });
             
-            await cargarClienteEnCotizacion(result.data.id);
-        } else {
-            mostrarNotificacion('❌ Error: ' + (result.error || 'No se pudo crear el cliente'), 'danger');
+            const result = await response.json();
+            
+            if (result.success) {
+                document.getElementById('formNuevoCliente')?.reset();
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalNuevoCliente'));
+                modal.hide();
+                
+                // 🔥 CAMBIO AQUÍ - Notificación GRANDE en lugar de la pequeña
+                mostrarNotificacionClienteGuardadoGrande({
+                    razon_social: razonSocial,
+                    tipo_documento: tipoDocumento,
+                    numero_documento: numeroDocumento,
+                    nombre_contacto: payload.nombre_contacto,
+                    telefono: payload.telefono_contacto,
+                    email: payload.email_contacto
+                });
+                
+                await cargarClienteEnCotizacion(result.data.id);
+            } else {
+                mostrarNotificacion('❌ Error: ' + (result.error || 'No se pudo crear el cliente'), 'danger');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            mostrarNotificacion('❌ Error de conexión', 'danger');
+        } finally {
+            btnGuardar.innerHTML = textoOriginal;
+            btnGuardar.disabled = false;
         }
-    } catch (error) {
-        console.error('Error:', error);
-        mostrarNotificacion('❌ Error de conexión', 'danger');
-    } finally {
-        btnGuardar.innerHTML = textoOriginal;
-        btnGuardar.disabled = false;
-    }
     }
     // NOTIFICACIÓN GRANDE Y DESTACADA (con fecha/hora y sin auto-cierre)
     function mostrarNotificacionClienteGuardadoGrande(datosCliente) {
