@@ -648,9 +648,13 @@ def insertar_producto(
     return rows[0]["id"]
 
 
-def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=50):
+# =========================
+# BUSCAR CLIENTES - VERSIÓN MEJORADA
+# Busca por RUC, razón social O nombre comercial
+# =========================
+def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=100):
     """
-    Buscar clientes - INCLUYENDO datos de clientes_contactos
+    Buscar clientes - AHORA usando los campos DIRECTOS de la tabla clientes
     """
     try:
         with db_tx() as conn:
@@ -663,49 +667,34 @@ def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=50):
                     c.numero_documento,
                     c.razon_social,
                     c.nombre_comercial,
-                    c.razon_comercial,
                     c.direccion_fiscal,
                     c.codigo_cliente,
                     c.activo,
                     c.fecha_creacion,
-                    -- 🔥 CORREGIDO: usar 'nombre' en lugar de 'nombre_contacto'
-                    COALESCE(cc.nombre, c.nombre_contacto) as nombre_contacto,
-                    COALESCE(cc.email, c.email_contacto) as email_contacto,
-                    COALESCE(cc.telefono, c.telefono_contacto) as telefono_contacto
+                    -- 🔥 CAMBIO IMPORTANTE: Usar los campos DIRECTOS de la tabla clientes
+                    c.nombre_contacto,
+                    c.email_contacto,
+                    c.telefono_contacto
                 FROM clientes c
-                LEFT JOIN clientes_contactos cc ON cc.cliente_id = c.id AND cc.principal = TRUE
                 WHERE c.activo = TRUE
             """
             params = []
+            
+            if tipo_documento and tipo_documento.strip():
+                query += " AND c.tipo_documento = %s"
+                params.append(tipo_documento)
             
             if busqueda and busqueda.strip():
                 busqueda_like = f"%{busqueda.strip()}%"
                 query += """ AND (
                     c.numero_documento ILIKE %s OR 
                     c.razon_social ILIKE %s OR 
-                    c.nombre_comercial ILIKE %s OR
-                    c.razon_comercial ILIKE %s OR
-                    cc.nombre ILIKE %s
-                )
-                ORDER BY 
-                    CASE 
-                        WHEN c.numero_documento ILIKE %s THEN 1
-                        WHEN c.razon_social ILIKE %s THEN 2
-                        WHEN c.nombre_comercial ILIKE %s THEN 3
-                        WHEN c.razon_comercial ILIKE %s THEN 4
-                        WHEN cc.nombre ILIKE %s THEN 5
-                        ELSE 6
-                    END,
-                    c.razon_social
-                LIMIT %s
-                """
-                # 5 para WHERE + 5 para ORDER BY + 1 LIMIT = 11
-                params.extend([busqueda_like, busqueda_like, busqueda_like, busqueda_like, busqueda_like])
-                params.extend([busqueda_like, busqueda_like, busqueda_like, busqueda_like, busqueda_like])
-                params.append(limit)
-            else:
-                query += " ORDER BY c.razon_social LIMIT %s"
-                params.append(limit)
+                    c.nombre_comercial ILIKE %s
+                )"""
+                params.extend([busqueda_like, busqueda_like, busqueda_like])
+            
+            query += " ORDER BY c.id DESC LIMIT %s"
+            params.append(limit)
             
             cur.execute(query, params)
             clientes = cur.fetchall()
@@ -716,9 +705,13 @@ def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=50):
                 cliente['telefono_contacto'] = cliente.get('telefono_contacto') or ''
                 cliente['nombre_contacto'] = cliente.get('nombre_contacto') or ''
             
-            print(f"✅ Búsqueda '{busqueda}': {len(clientes)} clientes encontrados")
+            # Debug
             if clientes:
-                print(f"   - Primer cliente: {clientes[0].get('nombre_contacto')} / {clientes[0].get('telefono_contacto')}")
+                print(f"✅ Primer cliente encontrado:")
+                print(f"   - razon_social: {clientes[0].get('razon_social')}")
+                print(f"   - telefono_contacto: '{clientes[0].get('telefono_contacto')}'")
+                print(f"   - email_contacto: '{clientes[0].get('email_contacto')}'")
+                print(f"   - nombre_contacto: '{clientes[0].get('nombre_contacto')}'")
             
             return clientes
             
@@ -727,6 +720,7 @@ def buscar_clientes_mejorado(tipo_documento='', busqueda='', limit=50):
         import traceback
         traceback.print_exc()
         return []
+
 # =========================
 # BUSCAR CLIENTES CON PAGINACIÓN
 # =========================
@@ -861,7 +855,9 @@ def buscar_clientes_paginado(tipo_documento='', busqueda='', pagina=1, por_pagin
 # Buscar clientes con todos los campos (VERSIÓN CORREGIDA)
 # =========================
 def buscar_clientes_completo(q: str, limit: int = 20):
-    """Buscar clientes por texto incluyendo contactos"""
+    """
+    Buscar clientes por texto con TODOS los campos incluyendo contactos
+    """
     q = (q or "").strip()
     
     if len(q) < 2:
@@ -872,34 +868,36 @@ def buscar_clientes_completo(q: str, limit: int = 20):
     
     query = """
         SELECT 
-            c.id,
-            c.tipo_documento,
-            c.numero_documento,
-            c.razon_social,
-            c.nombre_comercial,
-            c.razon_comercial,
-            c.direccion_fiscal,
-            c.codigo_cliente,
-            COALESCE(cc.nombre, c.nombre_contacto) as nombre_contacto,
-            COALESCE(cc.email, c.email_contacto) as email_contacto,
-            COALESCE(cc.telefono, c.telefono_contacto) as telefono_contacto
-        FROM clientes c
-        LEFT JOIN clientes_contactos cc ON cc.cliente_id = c.id AND cc.principal = TRUE
-        WHERE c.activo = TRUE
+            id,
+            tipo_documento,
+            numero_documento,
+            razon_social,
+            nombre_comercial,
+            direccion_fiscal,
+            codigo_cliente,
+            telefono_contacto,
+            email_contacto,
+            nombre_contacto
+        FROM clientes
+        WHERE activo = TRUE
         AND (
-            c.numero_documento ILIKE %s OR 
-            c.razon_social ILIKE %s OR 
-            c.nombre_comercial ILIKE %s OR
-            c.razon_comercial ILIKE %s OR
-            cc.nombre ILIKE %s
+            numero_documento ILIKE %s OR 
+            razon_social ILIKE %s OR 
+            nombre_comercial ILIKE %s
         )
-        ORDER BY c.razon_social
+        ORDER BY razon_social
         LIMIT %s
     """
     
-    like_param = f"%{q}%"
-    cur.execute(query, (like_param, like_param, like_param, like_param, like_param, limit))
+    print(f"🔍 DEBUG - Buscando: {q}")
+    cur.execute(query, (f"%{q}%", f"%{q}%", f"%{q}%", limit))
     result = cur.fetchall()
+    
+    if result:
+        print(f"✅ DEBUG - Campos devueltos: {list(result[0].keys())}")
+        print(f"✅ DEBUG - teléfono: {result[0].get('telefono_contacto')}")
+        print(f"✅ DEBUG - email: {result[0].get('email_contacto')}")
+        print(f"✅ DEBUG - contacto: {result[0].get('nombre_contacto')}")
     
     cur.close()
     conn.close()
