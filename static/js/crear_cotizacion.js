@@ -238,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Error consultando SUNAT:', error);
         return { success: false, error: error.message };
     }
-}
+ }
 
     async function autocompletarConSunat() {
         const tipoDocumento = document.getElementById('nuevo_tipo_documento')?.value;
@@ -900,9 +900,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // ❌ ELIMINADO el setTimeout de auto-cierre - ahora solo se cierra con el botón
- }
+    }
 
-        async function cargarClienteEnCotizacion(clienteId) {
+    async function cargarClienteEnCotizacion(clienteId) {
         try {
             const response = await fetch(`/api/clientes/${clienteId}`);
             const result = await response.json();
@@ -910,6 +910,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (result.success && result.data) {
                 const cliente = result.data;
                 const contacto = cliente.contactos && cliente.contactos.length > 0 ? cliente.contactos[0] : {};
+                console.log('🔥 contacto:', contacto); // AGREGAR ESTA LÍNEA
                 
                 document.getElementById('cliente_id').value = cliente.id;
                 document.getElementById('cliente_razon_social').value = cliente.razon_social;
@@ -929,30 +930,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Función para autocompletar contacto y correo automáticamente cuando se selecciona un cliente
-async function autoCompletarContactoYCorreo(clienteId) {
-    if (!clienteId) return;
-    
-    try {
-        const response = await fetch(`/api/clientes/${clienteId}/contacto`);
-        const result = await response.json();
-        
-        if (result.success && result.data) {
-            const contacto = result.data.nombre_contacto || '';
-            const email = result.data.email_contacto || '';
-            const telefono = result.data.telefono_contacto || '';
+        async function autoCompletarContactoYCorreo(clienteId) {
+            if (!clienteId) return;
             
-            if (contacto) document.getElementById('cliente_contacto').value = contacto;
-            if (email) document.getElementById('email_contacto_cliente').value = email;
-            if (telefono) document.getElementById('telefono_contacto').value = telefono;
-            
-            if (contacto || email || telefono) {
-                console.log('✅ Contacto autocompletado:', { contacto, email, telefono });
+            try {
+                const response = await fetch(`/api/clientes/${clienteId}/contacto`);
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    const contacto = result.data.nombre_contacto || '';
+                    const email = result.data.email_contacto || '';
+                    const telefono = result.data.telefono_contacto || '';
+                    
+                    if (contacto) document.getElementById('cliente_contacto').value = contacto;
+                    if (email) document.getElementById('email_contacto_cliente').value = email;
+                    if (telefono) document.getElementById('telefono_contacto').value = telefono;
+                    
+                    if (contacto || email || telefono) {
+                        console.log('✅ Contacto autocompletado:', { contacto, email, telefono });
+                    }
+                }
+            } catch (error) {
+                console.error('Error autocompletando contacto:', error);
             }
         }
-    } catch (error) {
-        console.error('Error autocompletando contacto:', error);
-    }
-}
 
     // =========================
     // MODAL DE CONFIRMACIÓN
