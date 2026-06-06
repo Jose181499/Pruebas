@@ -227,6 +227,28 @@ function inicializarEventosPunto(div, data = {}) {
 }
 
 // =========================================
+// REINICIALIZAR BOTONES DE ELIMINAR
+// =========================================
+function reinicializarBotonesEliminar() {
+    document.querySelectorAll('.btn-eliminar').forEach(btn => {
+        // Remover event listeners antiguos clonando y reemplazando
+        const nuevoBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(nuevoBtn, btn);
+        
+        nuevoBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const itemAEliminar = this.closest('.item-agregable');
+            if (itemAEliminar) {
+                if (confirm('¿Estás seguro de eliminar este elemento?')) {
+                    itemAEliminar.remove();
+                    mostrarNotificacion('Elemento eliminado', 'info');
+                }
+            }
+        });
+    });
+}
+
+// =========================================
 // AGREGAR CONTACTO - NUEVO CLIENTE
 // =========================================
 function agregarContactoNuevo(data = {}) {
@@ -249,6 +271,7 @@ function agregarContactoNuevo(data = {}) {
         <div class="checkbox-group"><input type="checkbox" data-field="principal" ${data.principal ? 'checked' : ''}> <label>Principal</label></div>
     `;
     container.appendChild(div);
+    reinicializarBotonesEliminar();
 }
 
 // =========================================
@@ -295,6 +318,7 @@ function agregarPuntoNuevo(data = {}) {
     container.appendChild(div);
     
     inicializarEventosPunto(div, data);
+    reinicializarBotonesEliminar();
     
     const selectCondicion = div.querySelector('.select-condicion-pago');
     const campoPersonalizado = div.querySelector('.campo-credito-personalizado');
@@ -328,6 +352,7 @@ function agregarContactoEdicion(data = {}) {
         <div class="checkbox-group"><input type="checkbox" data-field="principal" ${data.principal ? 'checked' : ''}> <label>Principal</label></div>
     `;
     container.appendChild(div);
+    reinicializarBotonesEliminar();
 }
 
 // =========================================
@@ -374,6 +399,7 @@ function agregarPuntoEdicion(data = {}) {
     container.appendChild(div);
     
     inicializarEventosPunto(div, data);
+    reinicializarBotonesEliminar();
     
     const selectCondicion = div.querySelector('.select-condicion-pago');
     const campoPersonalizado = div.querySelector('.campo-credito-personalizado');
@@ -654,7 +680,7 @@ window.abrirModalVer = async function(id) {
             </div>
         `;
         
-        // Contactos (CORREGIDO: No repetir información del cliente)
+        // Contactos
         html += `<div class="erp-section-title mt-4 mb-3"><i class="bi bi-person-badge"></i> Contactos Asociados</div>`;
         if (c.contactos && c.contactos.length > 0) {
             c.contactos.forEach(contacto => {
@@ -744,23 +770,8 @@ function inicializarContactosPuntos() {
         btnAgregarPuntoEdit.addEventListener('click', () => agregarPuntoEdicion());
     }
     
-    document.addEventListener('click', (e) => {
-        if (e.target.classList.contains('btn-eliminar')) {
-            e.target.closest('.item-agregable').remove();
-        }
-    });
-    
-    document.addEventListener('change', (e) => {
-        if (e.target.dataset.field === 'principal' || e.target.dataset.field === 'principal_punto') {
-            const container = e.target.closest('#listaContactos, #edit_listaContactos, #listaPuntos, #edit_listaPuntos');
-            if (container) {
-                const checkboxes = container.querySelectorAll('[data-field="principal"], [data-field="principal_punto"]');
-                checkboxes.forEach(cb => {
-                    if (cb !== e.target) cb.checked = false;
-                });
-            }
-        }
-    });
+    // Inicializar botones de eliminar existentes
+    reinicializarBotonesEliminar();
 }
 
 // =========================================
@@ -923,6 +934,9 @@ window.abrirModalEditar = async function(id) {
         } else {
             agregarPuntoEdicion();
         }
+        
+        // Reinicializar botones después de cargar datos
+        reinicializarBotonesEliminar();
         
         const modal = new bootstrap.Modal(document.getElementById('modalEditarCliente'));
         modal.show();
@@ -1178,4 +1192,5 @@ setTimeout(() => {
     if (document.getElementById('listaPuntos') && document.getElementById('listaPuntos').children.length === 0) {
         agregarPuntoNuevo();
     }
+    reinicializarBotonesEliminar();
 }, 100);
