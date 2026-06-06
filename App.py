@@ -537,6 +537,7 @@ from routes.mantenedor_productos import productos_bp
 from routes.mantenedor_clientes import mantenedor_clientes_bp
 from routes.compras import compras_bp  # ← AGREGADO: Importar blueprint de compras
 from routes.proveedores import proveedores_bp  # ← AGREGADO: Importar blueprint de proveedores
+from routes.guias_remision import guias_bp 
 
 # Registrar blueprints
 app.register_blueprint(usuarios_bp)
@@ -545,6 +546,7 @@ app.register_blueprint(productos_bp)
 app.register_blueprint(mantenedor_clientes_bp)
 app.register_blueprint(compras_bp)  # ← AGREGADO: Registrar blueprint de compras
 app.register_blueprint(proveedores_bp)  # ← AGREGADO: Registrar blueprint de proveedores
+app.register_blueprint(guias_bp)  
 
 print("🔵 Blueprints registrados:", list(app.blueprints.keys()))
 print("🚀 Servidor Flask iniciado")

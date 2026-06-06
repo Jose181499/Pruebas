@@ -1,5 +1,5 @@
 Flask
-pandas 
+pandas
 psycopg2
 weasyprint
 reportlab
@@ -8,3 +8,7 @@ requests
 beautifulsoup4
 gunicorn
 Flask-SQLAlchemy
+qrcode
+pillow
+greenter
+greenter-sunat

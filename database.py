@@ -2020,7 +2020,6 @@ def eliminar_orden_compra_db(orden_id: int):
         print(f"Error en eliminar_orden_compra_db: {str(e)}")
         raise
 
-
 def obtener_direcciones_proveedor(proveedor_id: int):
     """Obtener direcciones guardadas de un proveedor"""
     try:
@@ -2044,10 +2043,84 @@ def obtener_direcciones_proveedor(proveedor_id: int):
         return []
 
 
-        # ==========================================
+# ==========================================
+# DB UPDATE - Para ejecutar UPDATE en la base de datos
+# ==========================================
+def db_update(sql, params=()):
+    """
+    Ejecuta una consulta UPDATE y retorna el número de filas afectadas
+    
+    Args:
+        sql: Consulta SQL (UPDATE, DELETE, etc.)
+        params: Parámetros para la consulta
+    
+    Returns:
+        int: Número de filas afectadas
+    """
+    conn = None
+    cur = None
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute(sql, params)
+        conn.commit()
+        filas_afectadas = cur.rowcount
+        return filas_afectadas
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print(f"❌ Error en db_update: {e}")
+        raise
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+# ==========================================
+# DB INSERT - Para ejecutar INSERT y obtener el ID
+# ==========================================
+def db_insert(sql, params=()):
+    """
+    Ejecuta una consulta INSERT y retorna el ID generado
+    
+    Args:
+        sql: Consulta SQL (INSERT ... RETURNING id)
+        params: Parámetros para la consulta
+    
+    Returns:
+        int: ID del registro insertado, o None si falló
+    """
+    conn = None
+    cur = None
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute(sql, params)
+        conn.commit()
+        
+        # Intentar obtener el ID retornado
+        if cur.description:
+            resultado = cur.fetchone()
+            if resultado:
+                return resultado[0]
+        return None
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print(f"❌ Error en db_insert: {e}")
+        raise
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+# ==========================================
 # FUNCIÓN DE DIAGNÓSTICO PARA CLIENTES
 # ==========================================
-
 def diagnosticar_clientes():
     """Función para diagnosticar problemas con los campos de clientes"""
     print("\n" + "=" * 80)
