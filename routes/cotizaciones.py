@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, jsonify, request, session, send_file, make_response, Response
-from psycop2.extras import RealDictCursor, DictCursor
+from psycopg2.extras import RealDictCursor, DictCursor
 from database import (obtener_cotizaciones_recientes, crear_cotizacion_transaccional, obtener_cotizacion_completa,
                     db_query, db_execute, db_tx, get_connection, buscar_cliente_por_ruc,buscar_clientes_mejorado)
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer
