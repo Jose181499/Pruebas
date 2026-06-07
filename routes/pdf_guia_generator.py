@@ -1,11 +1,17 @@
-# pdf_guia_generator.py
+# routes/pdf_guia_generator.py
 from weasyprint import HTML, CSS
 from jinja2 import Template
 import qrcode
 import base64
 from io import BytesIO
 import json
-from datetime import datetime
+from datetime import datetime, date
+
+def convertir_a_serializable(obj):
+    """Convierte objetos no serializables a tipos serializables"""
+    if isinstance(obj, (date, datetime)):
+        return obj.strftime('%Y-%m-%d')
+    return obj
 
 def generar_pdf_guia(guia_data):
     """
@@ -17,6 +23,13 @@ def generar_pdf_guia(guia_data):
     Returns:
         BytesIO: Archivo PDF listo para descargar
     """
+    
+    # Convertir fechas a string si son objetos date
+    if isinstance(guia_data.get('fecha_emision'), (date, datetime)):
+        guia_data['fecha_emision'] = guia_data['fecha_emision'].strftime('%Y-%m-%d')
+    
+    if isinstance(guia_data.get('fecha_traslado'), (date, datetime)):
+        guia_data['fecha_traslado'] = guia_data['fecha_traslado'].strftime('%Y-%m-%d')
     
     # Generar código QR con los datos de la guía
     qr_data = generar_qr_data(guia_data)
@@ -32,6 +45,12 @@ def generar_pdf_guia(guia_data):
         guia_data['items'] = json.loads(guia_data['items_json'])
     else:
         guia_data['items'] = guia_data.get('items_json', [])
+    
+    # Asegurar que peso_total sea float
+    if guia_data.get('peso_total'):
+        guia_data['peso_total'] = float(guia_data['peso_total'])
+    else:
+        guia_data['peso_total'] = 0.0
     
     # Renderizar HTML
     html_content = renderizar_html_guia(guia_data)
@@ -203,7 +222,7 @@ def generar_qr_data(guia_data):
         "numero": guia_data.get('numero', ''),
         "ruc_remitente": guia_data.get('ruc_remitente', ''),
         "ruc_destinatario": guia_data.get('ruc_destinatario', ''),
-        "fecha_emision": guia_data.get('fecha_emision', ''),
+        "fecha_emision": convertir_a_serializable(guia_data.get('fecha_emision', '')),
         "total_peso": str(guia_data.get('peso_total', '0')),
         "placa_vehiculo": guia_data.get('placa_vehiculo', '')
     }
