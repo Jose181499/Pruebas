@@ -4,7 +4,7 @@ from functools import wraps
 import sys
 import os
 import json
-from datetime import datetime
+from datetime import datetime, date
 from io import BytesIO
 
 sys.dont_write_bytecode = True
@@ -443,8 +443,11 @@ def descargar_pdf(comp_id):
         html_content = generar_html_pdf(comp_data, items)
         
         # Generar PDF con weasyprint
-        from weasyprint import HTML, CSS
-        from io import BytesIO
+        try:
+            from weasyprint import HTML
+        except ImportError:
+            # Fallback si no está instalado weasyprint
+            return jsonify({'success': False, 'error': 'Módulo weasyprint no instalado'}), 500
         
         pdf_file = BytesIO()
         HTML(string=html_content).write_pdf(pdf_file)
@@ -471,23 +474,49 @@ def descargar_pdf(comp_id):
 def generar_html_pdf(comp_data, items):
     """Genera el HTML para el PDF del comprobante"""
     
-    subtotal = float(comp_data.get('subtotal', 0))
-    igv = float(comp_data.get('igv', 0))
-    total = float(comp_data.get('total', 0))
+    # Convertir a diccionario si es necesario (para manejar objetos tipo Row)
+    if hasattr(comp_data, 'items'):
+        # Ya es un diccionario o similar
+        pass
+    else:
+        comp_data = dict(comp_data)
     
+    # Obtener valores de forma segura
+    tipo_comprobante = comp_data.get('tipo_comprobante', 'FACTURA')
+    serie = comp_data.get('serie', 'F001')
+    numero = comp_data.get('numero', 1)
+    cliente_tipo_doc = comp_data.get('cliente_tipo_doc', 'RUC')
+    cliente_numero_doc = comp_data.get('cliente_numero_doc', '-')
+    cliente_nombre = comp_data.get('cliente_nombre', '-')
+    cliente_direccion = comp_data.get('cliente_direccion', '-')
+    moneda = comp_data.get('moneda', 'PEN')
+    estado_sunat = comp_data.get('estado_sunat', 'BORRADOR')
+    observaciones = comp_data.get('observaciones', '')
+    
+    # Convertir fechas
     fecha_emision = comp_data.get('fecha_emision', '')
     if fecha_emision:
         try:
-            fecha_emision = datetime.strptime(str(fecha_emision), '%Y-%m-%d').strftime('%d/%m/%Y')
+            if isinstance(fecha_emision, (datetime, date)):
+                fecha_emision = fecha_emision.strftime('%d/%m/%Y')
+            else:
+                fecha_emision = datetime.strptime(str(fecha_emision), '%Y-%m-%d').strftime('%d/%m/%Y')
         except:
-            pass
+            fecha_emision = str(fecha_emision)
+    else:
+        fecha_emision = ''
+    
+    # Obtener totales como floats
+    subtotal = float(comp_data.get('subtotal', 0))
+    igv = float(comp_data.get('igv', 0))
+    total = float(comp_data.get('total', 0))
     
     html = f"""
     <!DOCTYPE html>
     <html>
     <head>
         <meta charset="UTF-8">
-        <title>{comp_data['tipo_comprobante']} {comp_data['serie']}-{comp_data['numero']}</title>
+        <title>{tipo_comprobante} {serie}-{numero}</title>
         <style>
             @page {{
                 size: A4;
@@ -577,12 +606,19 @@ def generar_html_pdf(comp_data, items):
                 border-top: 1px solid #ddd;
                 padding-top: 10px;
             }}
+            .observaciones {{
+                margin-top: 15px;
+                padding: 10px;
+                background: #fef3c7;
+                border-left: 3px solid #f59e0b;
+                font-size: 10px;
+            }}
         </style>
     </head>
     <body>
         <div class="header">
-            <h1>{comp_data['tipo_comprobante']} ELECTRÓNICA</h1>
-            <p>N° {comp_data['serie']}-{comp_data['numero']}</p>
+            <h1>{tipo_comprobante} ELECTRÓNICA</h1>
+            <p>N° {serie}-{numero}</p>
         </div>
         
         <div class="info-grid">
@@ -593,9 +629,9 @@ def generar_html_pdf(comp_data, items):
             </div>
             <div class="info-box">
                 <h3>🎯 CLIENTE</h3>
-                <div class="info-row"><span class="info-label">{comp_data.get('cliente_tipo_doc', 'RUC')}:</span> {comp_data.get('cliente_numero_doc', '-')}</div>
-                <div class="info-row"><span class="info-label">Razón Social:</span> {comp_data.get('cliente_nombre', '-')}</div>
-                <div class="info-row"><span class="info-label">Dirección:</span> {comp_data.get('cliente_direccion', '-')}</div>
+                <div class="info-row"><span class="info-label">{cliente_tipo_doc}:</span> {cliente_numero_doc}</div>
+                <div class="info-row"><span class="info-label">Razón Social:</span> {cliente_nombre}</div>
+                <div class="info-row"><span class="info-label">Dirección:</span> {cliente_direccion}</div>
             </div>
         </div>
         
@@ -603,11 +639,11 @@ def generar_html_pdf(comp_data, items):
             <div class="info-box">
                 <h3>📄 DATOS DEL COMPROBANTE</h3>
                 <div class="info-row"><span class="info-label">Fecha Emisión:</span> {fecha_emision}</div>
-                <div class="info-row"><span class="info-label">Moneda:</span> {comp_data.get('moneda', 'PEN')}</div>
+                <div class="info-row"><span class="info-label">Moneda:</span> {moneda}</div>
             </div>
             <div class="info-box">
                 <h3>🚚 DATOS ADICIONALES</h3>
-                <div class="info-row"><span class="info-label">Estado SUNAT:</span> {comp_data.get('estado_sunat', 'BORRADOR')}</div>
+                <div class="info-row"><span class="info-label">Estado SUNAT:</span> {estado_sunat}</div>
             </div>
         </div>
         
@@ -628,16 +664,19 @@ def generar_html_pdf(comp_data, items):
     """
     
     for idx, item in enumerate(items, 1):
-        cantidad = float(item.get('cantidad', 0))
-        precio = float(item.get('precio_unitario', 0))
+        cantidad = float(item.get('cantidad', 0)) if isinstance(item, dict) else 0
+        precio = float(item.get('precio_unitario', 0)) if isinstance(item, dict) else 0
         subtotal_item = cantidad * precio
+        codigo = item.get('codigo', '-') if isinstance(item, dict) else '-'
+        descripcion = item.get('descripcion', '-') if isinstance(item, dict) else '-'
+        unidad = item.get('unidad', 'NIU') if isinstance(item, dict) else 'NIU'
         
         html += f"""
                 <tr>
                     <td>{idx}</td>
-                    <td>{item.get('codigo', '-')}</td>
-                    <td style="text-align: left;">{item.get('descripcion', '-')}</td>
-                    <td>{item.get('unidad', 'NIU')}</td>
+                    <td>{codigo}</td>
+                    <td style="text-align: left;">{descripcion}</td>
+                    <td>{unidad}</td>
                     <td>{cantidad:.2f}</td>
                     <td>S/ {precio:.2f}</td>
                     <td>S/ {subtotal_item:.2f}</td>
@@ -653,9 +692,17 @@ def generar_html_pdf(comp_data, items):
             <div class="summary-row"><strong>IGV (18%):</strong> S/ {igv:.2f}</div>
             <div class="summary-row total"><strong>TOTAL:</strong> S/ {total:.2f}</div>
         </div>
-        
-        {f'<div class="observaciones"><strong>📝 Observaciones:</strong><br>{comp_data.get("observaciones", "")}</div>' if comp_data.get('observaciones') else ''}
-        
+    """
+    
+    if observaciones:
+        html += f"""
+        <div class="observaciones">
+            <strong>📝 Observaciones:</strong><br>
+            {observaciones}
+        </div>
+        """
+    
+    html += """
         <div class="footer">
             <p>Documento emitido electrónicamente por KCF CORPORACION - Sistema ERP</p>
             <p>Este documento es una representación impresa de un comprobante electrónico</p>
