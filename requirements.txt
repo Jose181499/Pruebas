@@ -10,5 +10,3 @@ gunicorn
 Flask-SQLAlchemy
 qrcode
 pillow
-greenter
-greenter-sunat
