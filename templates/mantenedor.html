@@ -316,7 +316,7 @@
 
         <nav class="menu">
             <!-- Dashboard principal -->
-            <a href="/" class="menu-item active">
+            <a href="/index" class="menu-item active">
                 <i class="bi bi-speedometer2"></i>
                 Dashboard
             </a>
@@ -385,14 +385,8 @@
                     <a href="#" class="submenu-item">
                         <i class="bi bi-receipt"></i> Comprobantes (Factura Ventas - Boleta Venta)
                     </a>
-                    <a href="#" class="submenu-item">
-                        <i class="bi bi-pencil-square"></i> Notas de Crédito
-                    </a>
-                    <a href="#" class="submenu-item">
+                    <a href="/guias/" class="submenu-item">
                         <i class="bi bi-truck"></i> Guías de remisión
-                    </a>
-                    <a href="#" class="submenu-item">
-                        <i class="bi bi-coin"></i> Cuentas por cobrar
                     </a>
                 </div>
             </div>
@@ -417,9 +411,6 @@
                     </a>
                     <a href="#" class="submenu-item">
                         <i class="bi bi-truck"></i> Guías de remisión (Compra)
-                    </a>
-                    <a href="#" class="submenu-item">
-                        <i class="bi bi-currency-dollar"></i> Cuentas por pagar
                     </a>
                 </div>
             </div>
@@ -466,23 +457,6 @@
                 </div>
             </div>
 
-            <!-- ========= REPORTE SUNAT ========= -->
-            <div class="dropdown">
-                <button class="menu-item dropdown-toggle-btn w-100 text-start border-0 bg-transparent" 
-                        type="button" 
-                        data-bs-toggle="collapse" 
-                        data-bs-target="#submenuSunat" 
-                        aria-expanded="false">
-                    <i class="bi bi-file-earmark-spreadsheet"></i>
-                    Reporte SUNAT
-                    <span class="badge-custom badge-sunat">PLE</span>
-                </button>
-                <div class="collapse submenu" id="submenuSunat">
-                    <a href="#" class="submenu-item"><i class="bi bi-book"></i> Libro electrónico de Ventas</a>
-                    <a href="#" class="submenu-item"><i class="bi bi-receipt"></i> Libro electrónico de Compras</a>
-                </div>
-            </div>
-
             <!-- CARGA MASIVA y PAPELERA -->
             <div class="menu-divider"></div>
             
@@ -521,10 +495,10 @@
                 <p class="page-subtitle">Gestión de datos maestros</p>
             </div>
             <div class="user-box">
-                <div class="user-avatar">A</div>
+                <div class="user-avatar">{{ session.nombre_completo[0] if session.nombre_completo else 'A' }}</div>
                 <div>
-                    <strong>Administrador</strong>
-                    <p class="role">administrador</p>
+                    <strong>{{ session.nombre_completo if session.nombre_completo else 'Administrador' }}</strong>
+                    <p class="role">{{ session.rol if session.rol else 'administrador' }}</p>
                 </div>
             </div>
         </div>
