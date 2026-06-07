@@ -10,7 +10,7 @@ from flask import (
 from functools import wraps
 from routes.clientes import clientes_bp
 from routes.cotizaciones import cotizaciones_bp
-from routes.compras import compras_bp  # ✅ NUEVO: Importar compras
+from routes.compras import compras_bp
 from routes.proveedores import proveedores_bp
 from routes.mantenedor_productos import mantenedor_productos_bp
 from routes.usuarios import usuarios_bp
@@ -18,6 +18,7 @@ from routes.mantenedor_principal import mantenedor_principal_bp
 from routes.mantenedor_clientes import mantenedor_clientes_bp
 from routes.mantenedor_proveedores import mantenedor_proveedores_bp
 from routes.mantenedor_usuarios import mantenedor_usuarios_bp
+from routes.guias_remision import guias_bp  # ← AGREGAR ESTA LÍNEA
 from database import (
     verificar_usuario,
     insertar_cliente_completo,
@@ -53,6 +54,7 @@ app.register_blueprint(mantenedor_principal_bp)
 app.register_blueprint(mantenedor_clientes_bp)
 app.register_blueprint(mantenedor_usuarios_bp)
 app.register_blueprint(mantenedor_proveedores_bp)
+app.register_blueprint(guias_bp)
 
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-only-change-me")
 
