@@ -367,3 +367,127 @@ def descargar_pdf(guia_id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+    
+
+@guias_bp.route('/editar/<int:guia_id>')
+def editar(guia_id):
+    """Formulario para editar una guía de remisión"""
+    try:
+        query = "SELECT * FROM guias_remision WHERE id = %s"
+        guia = db_query(query, (guia_id,))
+        
+        if not guia:
+            return "Guía no encontrada", 404
+        
+        return render_template('editar_guia.html', guia=guia[0])
+    except Exception as e:
+        return f"Error: {e}", 500
+
+@guias_bp.route('/api/actualizar/<int:guia_id>', methods=['PUT'])
+@login_required
+def actualizar_guia(guia_id):
+    """Actualizar una guía de remisión existente"""
+    try:
+        data = request.get_json()
+        
+        # Validaciones mínimas
+        if not data.get('destinatario', {}).get('ruc'):
+            return jsonify({'success': False, 'error': 'El RUC del destinatario es obligatorio'})
+        
+        if not data.get('vehiculo', {}).get('placa'):
+            return jsonify({'success': False, 'error': 'La placa del vehículo es obligatoria'})
+        
+        if not data.get('items') or len(data.get('items')) == 0:
+            return jsonify({'success': False, 'error': 'Debe agregar al menos un producto'})
+        
+        # Verificar que la guía esté en estado editable
+        check_query = "SELECT estado_sunat FROM guias_remision WHERE id = %s"
+        check_result = db_query(check_query, (guia_id,))
+        
+        if check_result and check_result[0]['estado_sunat'] not in ['BORRADOR', 'RECHAZADA']:
+            return jsonify({'success': False, 'error': f'No se puede editar una guía en estado {check_result[0]["estado_sunat"]}. Solo BORRADOR o RECHAZADA.'})
+        
+        # Calcular peso total
+        peso_total = sum(
+            float(item.get('peso_unitario', 0)) * float(item.get('cantidad', 1)) 
+            for item in data['items']
+        )
+        
+        import json
+        items_json = json.dumps(data['items'], default=str)
+        
+        # Actualizar en base de datos
+        update_query = """
+            UPDATE guias_remision SET
+                fecha_emision = %s,
+                fecha_traslado = %s,
+                remitente_direccion = %s,
+                remitente_ubigeo = %s,
+                ruc_destinatario = %s,
+                destinatario_nombre = %s,
+                destinatario_direccion = %s,
+                destinatario_ubigeo = %s,
+                modalidad_transporte = %s,
+                placa_vehiculo = %s,
+                conductor_dni = %s,
+                conductor_nombre = %s,
+                licencia_conductor = %s,
+                transportista_ruc = %s,
+                transportista_nombre = %s,
+                motivo_traslado = %s,
+                documento_asociado = %s,
+                peso_total = %s,
+                items_json = %s,
+                observaciones = %s,
+                updated_at = NOW()
+            WHERE id = %s
+            RETURNING id
+        """
+        
+        # Obtener transportista
+        transportista_ruc = ''
+        transportista_nombre = ''
+        if data.get('transportista') and data['modalidad_transporte'] == 'PUBLICO':
+            transportista_ruc = data['transportista'].get('ruc', '')
+            transportista_nombre = data['transportista'].get('nombre', '')
+        
+        params = (
+            data.get('fecha_emision'),
+            data.get('fecha_traslado'),
+            data.get('remitente', {}).get('direccion', ''),
+            data.get('remitente', {}).get('ubigeo', ''),
+            data['destinatario'].get('ruc', ''),
+            data['destinatario'].get('nombre', ''),
+            data['destinatario'].get('direccion', ''),
+            data['destinatario'].get('ubigeo', ''),
+            data.get('modalidad_transporte', 'PRIVADO'),
+            data['vehiculo'].get('placa', ''),
+            data['vehiculo'].get('conductor_dni', ''),
+            data['vehiculo'].get('conductor_nombre', ''),
+            data['vehiculo'].get('licencia_conducir', ''),
+            transportista_ruc,
+            transportista_nombre,
+            data.get('motivo_traslado', 'VENTA'),
+            data.get('documento_asociado', ''),
+            peso_total,
+            items_json,
+            data.get('observaciones', ''),
+            guia_id
+        )
+        
+        result = db_update(update_query, params)
+        
+        if result:
+            return jsonify({
+                'success': True,
+                'guia_id': guia_id,
+                'message': 'Guía actualizada exitosamente'
+            })
+        else:
+            return jsonify({'success': False, 'error': 'Error al actualizar la guía'})
+            
+    except Exception as e:
+        print(f"Error actualizando guía: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)})    
