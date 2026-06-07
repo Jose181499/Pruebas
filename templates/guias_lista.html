@@ -272,7 +272,7 @@
         <!-- FILTROS -->
         <div class="filtros">
             <div class="row g-3">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label fw-semibold">
                         <i class="bi bi-search"></i> Buscar
                     </label>
@@ -281,7 +281,7 @@
                         <input type="text" id="filtroBusqueda" class="form-control search-input" placeholder="Buscar por N° Guía, RUC o Cliente...">
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label fw-semibold">
                         <i class="bi bi-funnel"></i> Estado
                     </label>
@@ -293,7 +293,7 @@
                         <option value="RECHAZADA">❌ Rechazada</option>
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label fw-semibold">
                         <i class="bi bi-calendar"></i> Fecha desde
                     </label>
@@ -326,18 +326,19 @@
                             <th>Placa</th>
                             <th>Peso Total</th>
                             <th>Estado</th>
+                            <th>Creado</th>
                             <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tablaGuias">
                         <tr>
-                            <td colspan="9" class="text-center py-5">
+                            <td colspan="10" class="text-center py-5">
                                 <div class="spinner-border text-primary" role="status"></div>
                                 <br>Cargando guías...
-                            </td>
-                        </tr>
+                            <\/td>
+                        <\/tr>
                     </tbody>
-                </table>
+                <\/table>
             </div>
             <div class="pagination" id="pagination"></div>
         </div>
@@ -424,11 +425,34 @@
         }
         
         // ==========================================
+        // FORMATO FECHA Y HORA
+        // ==========================================
+        function formatFechaHora(fechaStr) {
+            if (!fechaStr) return '-';
+            try {
+                const fecha = new Date(fechaStr);
+                return fecha.toLocaleDateString('es-PE') + ' ' + fecha.toLocaleTimeString('es-PE');
+            } catch {
+                return fechaStr;
+            }
+        }
+        
+        function formatFecha(fechaStr) {
+            if (!fechaStr) return '-';
+            try {
+                const fecha = new Date(fechaStr);
+                return fecha.toLocaleDateString('es-PE');
+            } catch {
+                return fechaStr;
+            }
+        }
+        
+        // ==========================================
         // CARGAR GUÍAS
         // ==========================================
         async function cargarGuias() {
             const tbody = document.getElementById('tablaGuias');
-            tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5"><div class="spinner-border text-primary"></div><br>Cargando...<\/div><\/td><\/tr>`;
+            tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5"><div class="spinner-border text-primary"></div><br>Cargando...<\/td><\/tr>`;
             
             try {
                 const response = await fetch('/guias/api/listar');
@@ -438,11 +462,11 @@
                     todasGuias = result.data;
                     aplicarFiltros();
                 } else {
-                    tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5 text-danger">Error al cargar guías<\/td><\/tr>`;
+                    tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5 text-danger">Error al cargar guías<\/td><\/tr>`;
                 }
             } catch (error) {
                 console.error('Error:', error);
-                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5 text-danger">Error de conexión<\/td><\/tr>`;
+                tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5 text-danger">Error de conexión<\/td><\/tr>`;
             }
         }
         
@@ -481,7 +505,7 @@
             const tbody = document.getElementById('tablaGuias');
             
             if (guias.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><i class="bi bi-inbox"></i><p class="mb-0">No hay guías de remisión registradas</p><small class="text-muted">Crea una nueva guía usando el botón "Nueva Guía"</small><\/td><\/tr>`;
+                tbody.innerHTML = `<tr><td colspan="10" class="empty-state"><i class="bi bi-inbox"></i><p class="mb-0">No hay guías de remisión registradas</p><small class="text-muted">Crea una nueva guía usando el botón "Nueva Guía"</small><\/td><\/tr>`;
                 return;
             }
             
@@ -492,6 +516,7 @@
                 const pesoTotal = guia.peso_total ? parseFloat(guia.peso_total).toFixed(2) : '0.00';
                 const estadoClase = `estado-${guia.estado_sunat || 'BORRADOR'}`;
                 const estadoTexto = guia.estado_sunat || 'BORRADOR';
+                const fechaCreacion = formatFechaHora(guia.created_at);
                 
                 let estadoIcono = '';
                 if (estadoTexto === 'ACEPTADA') estadoIcono = '✅';
@@ -515,6 +540,7 @@
                         <td><span class="badge bg-secondary">${guia.placa_vehiculo || '-'}<\/span><\/td>
                         <td>${pesoTotal} kg<\/td>
                         <td><span class="badge-estado ${estadoClase}">${estadoIcono} ${estadoTexto}<\/span><\/td>
+                        <td><small>${fechaCreacion}<\/small><\/td>
                         <td class="text-center">
                             <button class="btn-accion btn-ver" onclick="verGuia(${guia.id})" title="Ver Detalle">
                                 <i class="bi bi-eye-fill"></i>
@@ -537,16 +563,6 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
-        }
-        
-        function formatFecha(fechaStr) {
-            if (!fechaStr) return '-';
-            try {
-                const fecha = new Date(fechaStr);
-                return fecha.toLocaleDateString('es-PE');
-            } catch {
-                return fechaStr;
-            }
         }
         
         // ==========================================
@@ -595,6 +611,7 @@
                     }
                     
                     const pesoTotalNum = parseFloat(g.peso_total) || 0;
+                    const fechaCreacionDetalle = formatFechaHora(g.created_at);
                     
                     modalBody.innerHTML = `
                         <div class="row g-3">
@@ -629,6 +646,12 @@
                                     <small><strong>Fecha Emisión:</strong> ${formatFecha(g.fecha_emision)}</small>
                                     <small><strong>Fecha Traslado:</strong> ${formatFecha(g.fecha_traslado)}</small>
                                     <small><strong>Peso Total:</strong> ${pesoTotalNum.toFixed(2)} kg</small>
+                                <\/div>
+                            <\/div>
+                            <div class="col-12">
+                                <div class="card bg-light p-3">
+                                    <h6><i class="bi bi-clock-history text-info"></i> Registro</h6>
+                                    <small><strong>Fecha de Creación:</strong> ${fechaCreacionDetalle}</small>
                                 <\/div>
                             <\/div>
                             ${g.transportista_ruc ? `
@@ -708,11 +731,9 @@
                 
                 if (result.success) {
                     mostrarNotificacion(`✅ Guía ${guiaAEliminarNumero} eliminada exitosamente`, 'exito');
-                    // Cerrar modal
                     const modalElement = document.getElementById('modalConfirmarEliminar');
                     const modal = bootstrap.Modal.getInstance(modalElement);
                     modal.hide();
-                    // Recargar lista
                     cargarGuias();
                 } else {
                     mostrarNotificacion(`❌ ${result.error || 'Error al eliminar'}`, 'error');
