@@ -2412,3 +2412,398 @@ def listar_comprobantes_api(filtros=None):
     except Exception as e:
         print(f"Error en listar_comprobantes_api: {e}")
         return []
+    
+# ==========================================
+# COMPROBANTES DE COMPRA - FUNCIONES
+# ==========================================
+
+def obtener_comprobantes_compra():
+    """Obtener todos los comprobantes de compra"""
+    try:
+        return db_query("""
+            SELECT id, tipo_comprobante, serie, numero, 
+                   proveedor_nombre, proveedor_numero_doc, fecha_emision, 
+                   subtotal, igv, total, estado, created_at
+            FROM comprobantes_compra
+            ORDER BY created_at DESC
+        """)
+    except Exception as e:
+        print(f"Error en obtener_comprobantes_compra: {e}")
+        return []
+
+
+def obtener_comprobante_compra_por_id(comp_id):
+    """Obtener un comprobante de compra por ID"""
+    try:
+        rows = db_query("SELECT * FROM comprobantes_compra WHERE id = %s", (comp_id,))
+        return rows[0] if rows else None
+    except Exception as e:
+        print(f"Error en obtener_comprobante_compra_por_id: {e}")
+        return None
+
+
+def insertar_comprobante_compra(data):
+    """Insertar un nuevo comprobante de compra"""
+    try:
+        with db_tx() as conn:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            
+            cur.execute("""
+                INSERT INTO comprobantes_compra (
+                    tipo_comprobante, serie, numero, fecha_emision, moneda,
+                    proveedor_tipo_doc, proveedor_numero_doc, proveedor_nombre, 
+                    proveedor_direccion, proveedor_email, proveedor_telefono,
+                    subtotal, igv, total, items_json, observaciones, 
+                    estado, creado_por
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
+            """, (
+                data.get('tipo_comprobante'),
+                data.get('serie'),
+                data.get('numero'),
+                data.get('fecha_emision'),
+                data.get('moneda', 'PEN'),
+                data.get('proveedor_tipo_doc', 'RUC'),
+                data.get('proveedor_numero_doc'),
+                data.get('proveedor_nombre'),
+                data.get('proveedor_direccion'),
+                data.get('proveedor_email'),
+                data.get('proveedor_telefono'),
+                data.get('subtotal', 0),
+                data.get('igv', 0),
+                data.get('total', 0),
+                data.get('items_json', '[]'),
+                data.get('observaciones', ''),
+                data.get('estado', 'BORRADOR'),
+                data.get('creado_por')
+            ))
+            
+            result = cur.fetchone()
+            return result['id'] if result else None
+            
+    except Exception as e:
+        print(f"Error en insertar_comprobante_compra: {e}")
+        raise
+
+
+def actualizar_comprobante_compra(comp_id, data):
+    """Actualizar un comprobante de compra existente"""
+    try:
+        with db_tx() as conn:
+            cur = conn.cursor()
+            
+            cur.execute("""
+                UPDATE comprobantes_compra SET
+                    fecha_emision = %s,
+                    proveedor_tipo_doc = %s,
+                    proveedor_numero_doc = %s,
+                    proveedor_nombre = %s,
+                    proveedor_direccion = %s,
+                    proveedor_email = %s,
+                    proveedor_telefono = %s,
+                    subtotal = %s,
+                    igv = %s,
+                    total = %s,
+                    items_json = %s,
+                    observaciones = %s,
+                    updated_at = NOW()
+                WHERE id = %s
+            """, (
+                data.get('fecha_emision'),
+                data.get('proveedor_tipo_doc', 'RUC'),
+                data.get('proveedor_numero_doc'),
+                data.get('proveedor_nombre'),
+                data.get('proveedor_direccion'),
+                data.get('proveedor_email'),
+                data.get('proveedor_telefono'),
+                data.get('subtotal', 0),
+                data.get('igv', 0),
+                data.get('total', 0),
+                data.get('items_json', '[]'),
+                data.get('observaciones', ''),
+                comp_id
+            ))
+            
+            return True
+            
+    except Exception as e:
+        print(f"Error en actualizar_comprobante_compra: {e}")
+        raise
+
+
+def eliminar_comprobante_compra_db(comp_id):
+    """Eliminar un comprobante de compra"""
+    try:
+        db_execute("DELETE FROM comprobantes_compra WHERE id = %s", (comp_id,))
+        return True
+    except Exception as e:
+        print(f"Error en eliminar_comprobante_compra_db: {e}")
+        raise
+
+
+def listar_comprobantes_compra_api(filtros=None):
+    """Listar comprobantes de compra con filtros"""
+    try:
+        query = """
+            SELECT id, tipo_comprobante, serie, numero, proveedor_nombre, 
+                   proveedor_numero_doc, fecha_emision, subtotal, igv, total, 
+                   estado, created_at
+            FROM comprobantes_compra
+            WHERE 1=1
+        """
+        params = []
+        
+        if filtros:
+            if filtros.get('tipo'):
+                query += " AND tipo_comprobante = %s"
+                params.append(filtros['tipo'])
+            
+            if filtros.get('estado'):
+                query += " AND estado = %s"
+                params.append(filtros['estado'])
+            
+            if filtros.get('fecha_desde'):
+                query += " AND fecha_emision >= %s"
+                params.append(filtros['fecha_desde'])
+            
+            if filtros.get('fecha_hasta'):
+                query += " AND fecha_emision <= %s"
+                params.append(filtros['fecha_hasta'])
+            
+            if filtros.get('busqueda'):
+                busqueda = f"%{filtros['busqueda']}%"
+                query += " AND (proveedor_nombre ILIKE %s OR CAST(numero AS TEXT) ILIKE %s)"
+                params.extend([busqueda, busqueda])
+        
+        query += " ORDER BY created_at DESC"
+        
+        return db_query(query, params if params else None)
+        
+    except Exception as e:
+        print(f"Error en listar_comprobantes_compra_api: {e}")
+        return []
+
+
+def obtener_ultimo_numero_comprobante_compra(serie):
+    """Obtener el último número de comprobante de compra para una serie"""
+    try:
+        rows = db_query("""
+            SELECT COALESCE(MAX(numero), 0) as ultimo_numero
+            FROM comprobantes_compra 
+            WHERE serie = %s
+        """, (serie,))
+        return rows[0]['ultimo_numero'] if rows else 0
+    except Exception as e:
+        print(f"Error en obtener_ultimo_numero_comprobante_compra: {e}")
+        return 0
+
+
+# ==========================================
+# GUÍAS DE REMISIÓN DE COMPRA - FUNCIONES
+# ==========================================
+
+def obtener_guias_compra():
+    """Obtener todas las guías de remisión de compra"""
+    try:
+        return db_query("""
+            SELECT id, serie, numero, proveedor_nombre, proveedor_ruc,
+                   fecha_emision, fecha_traslado, placa_vehiculo,
+                   peso_total, estado, created_at
+            FROM guias_remision_compra
+            ORDER BY created_at DESC
+        """)
+    except Exception as e:
+        print(f"Error en obtener_guias_compra: {e}")
+        return []
+
+
+def obtener_guia_compra_por_id(guia_id):
+    """Obtener una guía de remisión de compra por ID"""
+    try:
+        rows = db_query("SELECT * FROM guias_remision_compra WHERE id = %s", (guia_id,))
+        return rows[0] if rows else None
+    except Exception as e:
+        print(f"Error en obtener_guia_compra_por_id: {e}")
+        return None
+
+
+def insertar_guia_compra(data):
+    """Insertar una nueva guía de remisión de compra"""
+    try:
+        with db_tx() as conn:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            
+            cur.execute("""
+                INSERT INTO guias_remision_compra (
+                    serie, numero, fecha_emision, fecha_traslado,
+                    proveedor_ruc, proveedor_nombre, proveedor_direccion, proveedor_ubigeo,
+                    ruc_remitente, remitente_nombre, remitente_direccion, remitente_ubigeo,
+                    modalidad_transporte, placa_vehiculo, conductor_dni, conductor_nombre, licencia_conductor,
+                    transportista_ruc, transportista_nombre,
+                    motivo_traslado, factura_asociada, peso_total,
+                    items_json, observaciones, estado, creado_por
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
+            """, (
+                data.get('serie'),
+                data.get('numero'),
+                data.get('fecha_emision'),
+                data.get('fecha_traslado'),
+                data.get('proveedor_ruc'),
+                data.get('proveedor_nombre'),
+                data.get('proveedor_direccion'),
+                data.get('proveedor_ubigeo'),
+                data.get('ruc_remitente'),
+                data.get('remitente_nombre'),
+                data.get('remitente_direccion'),
+                data.get('remitente_ubigeo'),
+                data.get('modalidad_transporte', 'PRIVADO'),
+                data.get('placa_vehiculo'),
+                data.get('conductor_dni'),
+                data.get('conductor_nombre'),
+                data.get('licencia_conductor'),
+                data.get('transportista_ruc'),
+                data.get('transportista_nombre'),
+                data.get('motivo_traslado', 'COMPRA'),
+                data.get('factura_asociada'),
+                data.get('peso_total', 0),
+                data.get('items_json', '[]'),
+                data.get('observaciones', ''),
+                data.get('estado', 'BORRADOR'),
+                data.get('creado_por')
+            ))
+            
+            result = cur.fetchone()
+            return result['id'] if result else None
+            
+    except Exception as e:
+        print(f"Error en insertar_guia_compra: {e}")
+        raise
+
+
+def actualizar_guia_compra(guia_id, data):
+    """Actualizar una guía de remisión de compra existente"""
+    try:
+        with db_tx() as conn:
+            cur = conn.cursor()
+            
+            cur.execute("""
+                UPDATE guias_remision_compra SET
+                    fecha_emision = %s,
+                    fecha_traslado = %s,
+                    proveedor_ruc = %s,
+                    proveedor_nombre = %s,
+                    proveedor_direccion = %s,
+                    proveedor_ubigeo = %s,
+                    ruc_remitente = %s,
+                    remitente_nombre = %s,
+                    remitente_direccion = %s,
+                    remitente_ubigeo = %s,
+                    modalidad_transporte = %s,
+                    placa_vehiculo = %s,
+                    conductor_dni = %s,
+                    conductor_nombre = %s,
+                    licencia_conductor = %s,
+                    transportista_ruc = %s,
+                    transportista_nombre = %s,
+                    motivo_traslado = %s,
+                    factura_asociada = %s,
+                    peso_total = %s,
+                    items_json = %s,
+                    observaciones = %s,
+                    updated_at = NOW()
+                WHERE id = %s
+            """, (
+                data.get('fecha_emision'),
+                data.get('fecha_traslado'),
+                data.get('proveedor_ruc'),
+                data.get('proveedor_nombre'),
+                data.get('proveedor_direccion'),
+                data.get('proveedor_ubigeo'),
+                data.get('ruc_remitente'),
+                data.get('remitente_nombre'),
+                data.get('remitente_direccion'),
+                data.get('remitente_ubigeo'),
+                data.get('modalidad_transporte', 'PRIVADO'),
+                data.get('placa_vehiculo'),
+                data.get('conductor_dni'),
+                data.get('conductor_nombre'),
+                data.get('licencia_conductor'),
+                data.get('transportista_ruc'),
+                data.get('transportista_nombre'),
+                data.get('motivo_traslado', 'COMPRA'),
+                data.get('factura_asociada'),
+                data.get('peso_total', 0),
+                data.get('items_json', '[]'),
+                data.get('observaciones', ''),
+                guia_id
+            ))
+            
+            return True
+            
+    except Exception as e:
+        print(f"Error en actualizar_guia_compra: {e}")
+        raise
+
+
+def eliminar_guia_compra_db(guia_id):
+    """Eliminar una guía de remisión de compra"""
+    try:
+        db_execute("DELETE FROM guias_remision_compra WHERE id = %s", (guia_id,))
+        return True
+    except Exception as e:
+        print(f"Error en eliminar_guia_compra_db: {e}")
+        raise
+
+
+def listar_guias_compra_api(filtros=None):
+    """Listar guías de remisión de compra con filtros"""
+    try:
+        query = """
+            SELECT id, serie, numero, proveedor_nombre, proveedor_ruc,
+                   fecha_emision, fecha_traslado, placa_vehiculo,
+                   peso_total, estado, created_at
+            FROM guias_remision_compra
+            WHERE 1=1
+        """
+        params = []
+        
+        if filtros:
+            if filtros.get('estado'):
+                query += " AND estado = %s"
+                params.append(filtros['estado'])
+            
+            if filtros.get('fecha_desde'):
+                query += " AND fecha_emision >= %s"
+                params.append(filtros['fecha_desde'])
+            
+            if filtros.get('fecha_hasta'):
+                query += " AND fecha_emision <= %s"
+                params.append(filtros['fecha_hasta'])
+            
+            if filtros.get('busqueda'):
+                busqueda = f"%{filtros['busqueda']}%"
+                query += " AND (proveedor_nombre ILIKE %s OR CAST(numero AS TEXT) ILIKE %s)"
+                params.extend([busqueda, busqueda])
+        
+        query += " ORDER BY created_at DESC"
+        
+        return db_query(query, params if params else None)
+        
+    except Exception as e:
+        print(f"Error en listar_guias_compra_api: {e}")
+        return []
+
+
+def obtener_ultimo_numero_guia_compra(serie):
+    """Obtener el último número de guía de compra para una serie"""
+    try:
+        rows = db_query("""
+            SELECT COALESCE(MAX(numero), 0) as ultimo_numero
+            FROM guias_remision_compra 
+            WHERE serie = %s
+        """, (serie,))
+        return rows[0]['ultimo_numero'] if rows else 0
+    except Exception as e:
+        print(f"Error en obtener_ultimo_numero_guia_compra: {e}")
+        return 0

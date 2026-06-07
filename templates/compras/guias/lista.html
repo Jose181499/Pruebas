@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guías de Remisión de Compra - ERP KCF</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); }
+        .erp-navbar {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .hero-card {
+            background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
+            padding: 32px;
+            border-radius: 24px;
+            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+        .hero-title { font-weight: 800; font-size: 28px; margin: 0; background: linear-gradient(135deg, #111827, #374151); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hero-subtitle { color: #6b7280; margin-top: 8px; font-size: 14px; }
+        .btn-erp { border-radius: 12px; padding: 10px 24px; font-weight: 600; transition: all 0.2s ease; border: none; }
+        .erp-card { background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.05); }
+        .card-header-custom { background: linear-gradient(135deg, #1f2937, #111827); color: white; padding: 16px 24px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        .table-modern { margin: 0; }
+        .table-modern thead th { background: #f8fafc; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding: 14px 12px; border-bottom: 2px solid #e2e8f0; color: #1e293b; }
+        .table-modern tbody td { padding: 12px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+        .table-modern tbody tr:hover { background: #f8fafc; transition: all 0.3s; }
+        .badge-estado { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-block; }
+        .estado-BORRADOR { background: #fef3c7; color: #92400e; }
+        .estado-REGISTRADO { background: #d1fae5; color: #065f46; }
+        .btn-accion { background: none; border: none; padding: 6px 10px; border-radius: 8px; cursor: pointer; transition: all 0.2s; margin: 0 2px; }
+        .btn-ver { color: #3b82f6; }
+        .btn-pdf { color: #ef4444; }
+        .btn-editar { color: #f59e0b; }
+        .btn-eliminar { color: #dc2626; }
+        .filtros { background: white; border-radius: 20px; padding: 20px; margin-bottom: 24px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05); }
+        .search-box { position: relative; }
+        .search-box i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; z-index: 10; }
+        .search-input { padding-left: 40px; border-radius: 12px; border: 1.5px solid #e2e8f0; padding: 10px 15px 10px 40px; }
+        .toast-notification { position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+        .empty-state { text-align: center; padding: 60px 20px; color: #94a3b8; }
+        .empty-state i { font-size: 64px; margin-bottom: 20px; opacity: 0.5; }
+    </style>
+</head>
+<body>
+
+    <div class="erp-navbar">
+        <div class="d-flex align-items-center gap-3">
+            <div class="bg-white rounded-3 p-2"><i class="bi bi-truck fs-4 text-dark"></i></div>
+            <div><div class="text-white fw-bold fs-5">KCF CORPORACION</div><div class="text-white-50 small">ERP Comercial · Guías de Remisión de Compra</div></div>
+        </div>
+        <div class="d-flex gap-3">
+            <div class="text-white-50 small"><i class="bi bi-person-circle"></i> {{ session.nombre_completo }}</div>
+            <a href="/mantenedor" class="btn btn-dark btn-sm"><i class="bi bi-arrow-left"></i> Volver</a>
+        </div>
+    </div>
+
+    <div class="container-fluid py-4">
+        <div class="hero-card">
+            <div><h1 class="hero-title"><i class="bi bi-truck text-danger"></i> Guías de Remisión de Compra</h1>
+            <div class="hero-subtitle"><i class="bi bi-info-circle"></i> Gestión de documentos de traslado de compras</div></div>
+            <div class="hero-actions"><a href="/compras/guias/crear" class="btn btn-danger btn-erp"><i class="bi bi-plus-circle-fill"></i> Nueva Guía</a></div>
+        </div>
+        
+        <div class="filtros">
+            <div class="row g-3">
+                <div class="col-md-4"><label class="form-label fw-semibold"><i class="bi bi-search"></i> Buscar</label><div class="search-box"><i class="bi bi-search"></i><input type="text" id="filtroBusqueda" class="form-control search-input" placeholder="Buscar por N° Guía, RUC o Proveedor..."></div></div>
+                <div class="col-md-3"><label class="form-label fw-semibold"><i class="bi bi-funnel"></i> Estado</label><select id="filtroEstado" class="form-select" style="border-radius: 12px;"><option value="">Todos</option><option value="BORRADOR">📝 Borrador</option><option value="REGISTRADO">✅ Registrado</option></select></div>
+                <div class="col-md-3"><label class="form-label fw-semibold"><i class="bi bi-calendar"></i> Fecha desde</label><input type="date" id="filtroFechaDesde" class="form-control"></div>
+                <div class="col-md-2"><label class="form-label fw-semibold"><i class="bi bi-calendar"></i> Fecha hasta</label><input type="date" id="filtroFechaHasta" class="form-control"></div>
+            </div>
+        </div>
+        
+        <div class="erp-card">
+            <div class="card-header-custom"><i class="bi bi-list-ul"></i> Listado de Guías de Remisión de Compra<span class="ms-auto badge bg-light text-dark" id="totalRegistros">0 registros</span></div>
+            <div class="table-responsive"><table class="table table-modern"><thead><tr><th>N° Guía</th><th>Proveedor</th><th>RUC</th><th>Fecha Emisión</th><th>Fecha Traslado</th><th>Placa</th><th>Peso Total</th><th>Estado</th><th>Creado</th><th class="text-center">Acciones</th></tr></thead>
+            <tbody id="tablaGuias"><tr><td colspan="10" class="text-center py-5"><div class="spinner-border text-primary"></div><br>Cargando guías...</td></tr></tbody></table></div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="modalVerGuia" tabindex="-1"><div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content"><div class="modal-header" style="background: linear-gradient(135deg, #1f2937, #111827); color: white;"><h5 class="modal-title"><i class="bi bi-eye-fill"></i> Detalle de Guía</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body" id="modalVerBody"><div class="text-center py-5"><div class="spinner-border text-primary"></div><p>Cargando...</p></div></div>
+    <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button><button class="btn btn-success" id="btnDescargarPDFModal"><i class="bi bi-file-earmark-pdf-fill"></i> Descargar PDF</button></div></div></div></div>
+
+    <div class="modal fade" id="modalConfirmarEliminar" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header" style="background: #dc2626; color: white;"><h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill"></i> Confirmar Eliminación</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body"><p>¿Estás seguro de que deseas eliminar esta guía?</p><p class="text-danger small"><i class="bi bi-info-circle"></i> Esta acción no se puede deshacer.</p><p><strong>N° Guía:</strong> <span id="eliminarNumeroGuia"></span></p><p><strong>Proveedor:</strong> <span id="eliminarProveedor"></span></p></div>
+    <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button class="btn btn-danger" id="btnConfirmarEliminar"><i class="bi bi-trash-fill"></i> Sí, Eliminar</button></div></div></div></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let todasGuias = [], guiaActualId = null, guiaAEliminarId = null, guiaAEliminarNumero = '', guiaAEliminarProveedor = '';
+        function mostrarNotificacion(m, t){const c={exito:'#10b981',error:'#ef4444',info:'#3b82f6',warning:'#f59e0b'},i={exito:'✅',error:'❌',info:'ℹ️',warning:'⚠️'};const d=document.createElement('div');d.className='toast-notification';d.style.background=c[t]||c.info;d.style.color='white';d.style.padding='12px 20px';d.style.borderRadius='12px';d.style.boxShadow='0 10px 25px rgba(0,0,0,0.2)';d.innerHTML=`<div style="display:flex;align-items:center;gap:10px;"><span style="font-size:20px;">${i[t]}</span><span>${m}</span></div>`;document.body.appendChild(d);setTimeout(()=>{d.style.animation='slideOut 0.3s ease';setTimeout(()=>d.remove(),300);},4000);}
+        function formatFechaHora(f){if(!f)return '-';try{const d=new Date(f);return d.toLocaleDateString('es-PE')+' '+d.toLocaleTimeString('es-PE');}catch{return f;}}
+        function formatFecha(f){if(!f)return '-';try{const d=new Date(f);return d.toLocaleDateString('es-PE');}catch{return f;}}
+        async function cargarGuias(){const b=document.getElementById('tablaGuias');b.innerHTML=`<tr><td colspan="10" class="text-center py-5"><div class="spinner-border text-primary"></div><br>Cargando...<\/td><\/tr>`;try{const r=await fetch('/compras/guias/api/listar'),j=await r.json();if(j.success&&j.data){todasGuias=j.data;aplicarFiltros();}else{b.innerHTML=`<tr><td colspan="10" class="text-center py-5 text-danger">Error al cargar guías<\/td><\/tr>`;}}catch(e){b.innerHTML=`<tr><td colspan="10" class="text-center py-5 text-danger">Error de conexión<\/td><\/tr>`;}}
+        function aplicarFiltros(){const b=document.getElementById('filtroBusqueda')?.value.toLowerCase()||'',e=document.getElementById('filtroEstado')?.value||'',fd=document.getElementById('filtroFechaDesde')?.value||'',fh=document.getElementById('filtroFechaHasta')?.value||'';let f=todasGuias.filter(g=>{if(b){const n=`${g.serie}-${g.numero}`.toLowerCase(),p=(g.proveedor_nombre||'').toLowerCase(),r=(g.proveedor_ruc||'').toLowerCase();if(!n.includes(b)&&!p.includes(b)&&!r.includes(b))return false;}if(e&&g.estado!==e)return false;if(fd&&g.fecha_emision&&g.fecha_emision<fd)return false;if(fh&&g.fecha_emision&&g.fecha_emision>fh)return false;return true;});renderizarTabla(f);document.getElementById('totalRegistros').innerHTML=`${f.length} registros`;}
+        function escapeHtml(t){if(!t)return '';const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
+        function renderizarTabla(guias){const t=document.getElementById('tablaGuias');if(guias.length===0){t.innerHTML=`<tr><td colspan="10" class="empty-state"><i class="bi bi-inbox"></i><p class="mb-0">No hay guías registradas</p><small class="text-muted">Crea una nueva guía usando el botón "Nueva Guía"</small><\/td><\/tr>`;return;}
+        t.innerHTML=guias.map(g=>{const n=`${g.serie||'G001'}-${g.numero||'?'}`,fe=formatFecha(g.fecha_emision),ft=formatFecha(g.fecha_traslado),p=parseFloat(g.peso_total||0).toFixed(2),ec=`estado-${g.estado||'BORRADOR'}`,et=g.estado||'BORRADOR',fc=formatFechaHora(g.created_at);let ei='';if(et==='REGISTRADO')ei='✅';else if(et==='BORRADOR')ei='📝';const eb=g.estado==='BORRADOR'?`<button class="btn-accion btn-eliminar" onclick="confirmarEliminar(${g.id},'${n}','${escapeHtml(g.proveedor_nombre||'-')}')"><i class="bi bi-trash-fill"></i></button>`:'';return `<tr><td class="fw-bold">${n}<\/td><td>${escapeHtml(g.proveedor_nombre||'-')}<\/td><td>${g.proveedor_ruc||'-'}<\/td><td>${fe}<\/td><td>${ft}<\/td><td><span class="badge bg-secondary">${g.placa_vehiculo||'-'}<\/span><\/td><td>${p} kg<\/td><td><span class="badge-estado ${ec}">${ei} ${et}<\/span><\/td><td><small>${fc}<\/small><\/td>
+        <td class="text-center"><button class="btn-accion btn-ver" onclick="verGuia(${g.id})"><i class="bi bi-eye-fill"></i></button><button class="btn-accion btn-pdf" onclick="descargarPDF(${g.id})"><i class="bi bi-file-earmark-pdf-fill"></i></button><button class="btn-accion btn-editar" onclick="editarGuia(${g.id})"><i class="bi bi-pencil-fill"></i></button>${eb}<\/td><\/tr>`;}).join('');}
+        
+        window.verGuia=async function(id){guiaActualId=id;const mb=document.getElementById('modalVerBody');mb.innerHTML=`<div class="text-center py-5"><div class="spinner-border text-primary"></div><p>Cargando guía ID: ${id}...</p><\/div>`;const me=document.getElementById('modalVerGuia'),m=new bootstrap.Modal(me);m.show();try{const r=await fetch(`/compras/guias/api/obtener/${id}`),j=await r.json();if(j.success&&j.data){const g=j.data,it=typeof g.items_json==='string'?JSON.parse(g.items_json):(g.items_json||[]);let ih='';if(it.length>0){ih=`<div class="table-responsive mt-3"><table class="table table-sm"><thead class="table-light"><tr><th>Item</th><th>Código</th><th>Descripción</th><th>Cantidad</th><th>Peso Unit.</th><th>Peso Total</th><\/tr><\/thead><tbody>`+it.map(itm=>`<tr><td>${itm.item||'-'}<\/td><td>${escapeHtml(itm.codigo||'-')}<\/td><td style="text-align:left;">${escapeHtml(itm.descripcion||'-')}<\/td><td>${itm.cantidad||0}<\/td><td>${(parseFloat(itm.peso_unitario)||0).toFixed(2)} kg<\/td><td>${((parseFloat(itm.cantidad)||0)*(parseFloat(itm.peso_unitario)||0)).toFixed(2)} kg<\/td><\/tr>`).join('')+`<\/tbody><\/table><\/div>`;}mb.innerHTML=`<div class="row g-3"><div class="col-md-6"><div class="card bg-light p-3"><h6><i class="bi bi-building text-primary"></i> Proveedor</h6><small><strong>RUC:</strong> ${g.proveedor_ruc||'-'}</small><small><strong>Razón Social:</strong> ${escapeHtml(g.proveedor_nombre||'-')}</small><small><strong>Dirección:</strong> ${escapeHtml(g.proveedor_direccion||'-')}</small><\/div><\/div>
+        <div class="col-md-6"><div class="card bg-light p-3"><h6><i class="bi bi-truck text-warning"></i> Vehículo</h6><small><strong>Placa:</strong> ${g.placa_vehiculo||'-'}</small><small><strong>Conductor:</strong> ${escapeHtml(g.conductor_nombre||'-')} (DNI: ${g.conductor_dni||'-'})</small><small><strong>Modalidad:</strong> ${g.modalidad_transporte||'PRIVADO'}</small><\/div><\/div>
+        <div class="col-md-6"><div class="card bg-light p-3"><h6><i class="bi bi-calendar"></i> Traslado</h6><small><strong>Motivo:</strong> ${g.motivo_traslado||'COMPRA'}</small><small><strong>Fecha Emisión:</strong> ${formatFecha(g.fecha_emision)}</small><small><strong>Fecha Traslado:</strong> ${formatFecha(g.fecha_traslado)}</small><small><strong>Peso Total:</strong> ${(parseFloat(g.peso_total)||0).toFixed(2)} kg</small><\/div><\/div>
+        <div class="col-md-6"><div class="card bg-light p-3"><h6><i class="bi bi-clock-history text-info"></i> Registro</h6><small><strong>Fecha de Creación:</strong> ${formatFechaHora(g.created_at)}</small><small><strong>Estado:</strong> ${g.estado||'BORRADOR'}</small><\/div><\/div>
+        ${g.factura_asociada?`<div class="col-12"><div class="card bg-light p-3"><h6><i class="bi bi-file-text"></i> Factura Asociada</h6><small>${g.factura_asociada}<\/small><\/div><\/div>`:''}
+        ${g.observaciones?`<div class="col-12"><div class="card bg-light p-3"><h6><i class="bi bi-chat-text"></i> Observaciones</h6><small>${escapeHtml(g.observaciones)}<\/small><\/div><\/div>`:''}
+        <div class="col-12"><h6 class="mt-2"><i class="bi bi-box-seam"></i> Productos</h6>${ih}<\/div><\/div>`;}else{mb.innerHTML=`<div class="text-center py-5 text-danger">Error: ${j.error||'No se encontraron datos'}<\/div>`;}}catch(e){mb.innerHTML=`<div class="text-center py-5 text-danger">Error al cargar detalles: ${e.message}<\/div>`;}};
+        
+        window.descargarPDF=function(id){window.open(`/compras/guias/api/pdf/${id}`,'_blank');};
+        window.editarGuia=function(id){window.location.href=`/compras/guias/editar/${id}`;};
+        window.confirmarEliminar=function(id,n,p){guiaAEliminarId=n;guiaAEliminarNumero=n;guiaAEliminarProveedor=p;document.getElementById('eliminarNumeroGuia').textContent=n;document.getElementById('eliminarProveedor').textContent=p;const m=new bootstrap.Modal(document.getElementById('modalConfirmarEliminar'));m.show();};
+        async function eliminarGuia(){if(!guiaAEliminarId)return;try{const r=await fetch(`/compras/guias/api/eliminar/${guiaAEliminarId}`,{method:'DELETE'}),j=await r.json();if(j.success){mostrarNotificacion(`✅ Guía ${guiaAEliminarNumero} eliminada exitosamente`,'exito');const m=bootstrap.Modal.getInstance(document.getElementById('modalConfirmarEliminar'));m.hide();cargarGuias();}else{mostrarNotificacion(`❌ ${j.error||'Error al eliminar'}`,'error');}}catch(e){mostrarNotificacion('❌ Error de conexión al eliminar','error');}}
+        
+        document.getElementById('filtroBusqueda')?.addEventListener('input',aplicarFiltros);
+        document.getElementById('filtroEstado')?.addEventListener('change',aplicarFiltros);
+        document.getElementById('filtroFechaDesde')?.addEventListener('change',aplicarFiltros);
+        document.getElementById('filtroFechaHasta')?.addEventListener('change',aplicarFiltros);
+        document.getElementById('btnDescargarPDFModal')?.addEventListener('click',()=>{if(guiaActualId)descargarPDF(guiaActualId);});
+        document.getElementById('btnConfirmarEliminar')?.addEventListener('click',eliminarGuia);
+        document.addEventListener('DOMContentLoaded',()=>{cargarGuias();});
+    </script>
+</body>
+</html>

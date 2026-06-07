@@ -316,7 +316,7 @@
 
         <nav class="menu">
             <!-- Dashboard principal -->
-            <a href="/index" class="menu-item active">
+            <a href="/index" class="menu-item">
                 <i class="bi bi-speedometer2"></i>
                 Dashboard
             </a>
@@ -382,8 +382,8 @@
                     <a href="/cotizacion" class="submenu-item">
                         <i class="bi bi-file-text"></i> Cotizaciones
                     </a>
-                   <a href="/comprobantes/" class="submenu-item">
-                    <i class="bi bi-receipt"></i> Comprobantes (Factura Ventas - Boleta Venta)
+                    <a href="/comprobantes/" class="submenu-item">
+                        <i class="bi bi-receipt"></i> Comprobantes (Factura Ventas - Boleta Venta)
                     </a>
                     <a href="/guias/" class="submenu-item">
                         <i class="bi bi-truck"></i> Guías de remisión
@@ -406,10 +406,10 @@
                     <a href="/compras" class="submenu-item">
                         <i class="bi bi-cart-plus"></i> Orden Compra
                     </a>
-                    <a href="#" class="submenu-item">
+                    <a href="/compras/comprobantes/" class="submenu-item">
                         <i class="bi bi-file-earmark-text"></i> Comprobantes (Factura Compras - Boleta Compra)
                     </a>
-                    <a href="#" class="submenu-item">
+                    <a href="/compras/guias/" class="submenu-item">
                         <i class="bi bi-truck"></i> Guías de remisión (Compra)
                     </a>
                 </div>
@@ -637,9 +637,9 @@
                             <tr><th>ID</th><th>Usuario</th><th>Nombre Completo</th><th>Rol</th><th>Email</th><th>Teléfono</th><th>Estado</th><th>Acciones</th></tr>
                         </thead>
                         <tbody>
-                            <tr><td>1</td><td>admin_kcf</td><td>Carlos Fuentes</td><td>administrador</td><td>carlos@kcf.com</td><td>999888777</td><td>Activo</td><td><button class="btn btn-sm btn-outline-danger">Editar</button></td></tr>
-                            <tr><td>2</td><td>ventas_lucia</td><td>Lucia Mercado</td><td>usuario</td><td>lucia@kcf.com</td><td>999111222</td><td>Activo</td><td><button class="btn btn-sm btn-outline-danger">Editar</button></td></tr>
-                            <tr><td>3</td><td>compras_jorge</td><td>Jorge Rivas</td><td>usuario</td><td>jorge@kcf.com</td><td>999333444</td><td>Activo</td><td><button class="btn btn-sm btn-outline-danger">Editar</button></td></tr>
+                            <tr><td class="text-center">1</td><td>admin_kcf</td><td>Carlos Fuentes</td><td>administrador</td><td>carlos@kcf.com</td><td>999888777</td><td>Activo</td><td class="text-center"><button class="btn btn-sm btn-outline-danger">Editar</button></td></tr>
+                            <tr><td class="text-center">2</td><td>ventas_lucia</td><td>Lucia Mercado</td><td>usuario</td><td>lucia@kcf.com</td><td>999111222</td><td>Activo</td><td class="text-center"><button class="btn btn-sm btn-outline-danger">Editar</button></td></tr>
+                            <tr><td class="text-center">3</td><td>compras_jorge</td><td>Jorge Rivas</td><td>usuario</td><td>jorge@kcf.com</td><td>999333444</td><td>Activo</td><td class="text-center"><button class="btn btn-sm btn-outline-danger">Editar</button></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -668,10 +668,10 @@
                                 <tr><th>ID</th><th>Código</th><th>Familia</th><th>Descripción</th><th>Modelo</th><th>Marca</th><th>Presentación</th><th>Peso</th><th>Transporte</th></tr>
                             </thead>
                             <tbody>
-                                <tr><td>1</td><td><strong>PRO-1001</strong></td><td>Electrónica</td><td>Laptop Ultrabook</td><td>X1 Carbon</td><td>Lenovo</td><td>Unidad</td><td>1.2kg</td><td>Normal</td></tr>
-                                <tr><td>2</td><td><strong>PRO-1002</strong></td><td>Oficina</td><td>Impresora Láser</td><td>MFP 230</td><td>HP</td><td>Unidad</td><td>7kg</td><td>Normal</td></tr>
-                                <tr><td>3</td><td><strong>PRO-1003</strong></td><td>Seguridad</td><td>Cámara IP 4MP</td><td>DS-2CD</td><td>Hikvision</td><td>Unidad</td><td>0.5kg</td><td>Normal</td></tr>
-                                <tr><td>4</td><td><strong>PRO-1004</strong></td><td>Mobiliario</td><td>Silla Ejecutiva</td><td>Ergo Plus</td><td>Rollic</td><td>Unidad</td><td>12kg</td><td>Normal</td></tr>
+                                <tr><td class="text-center">1</td><td><strong>PRO-1001</strong></td><td>Electrónica</td><td>Laptop Ultrabook</td><td>X1 Carbon</td><td>Lenovo</td><td>Unidad</td><td>1.2kg</td><td>Normal</td></tr>
+                                <tr><td class="text-center">2</td><td><strong>PRO-1002</strong></td><td>Oficina</td><td>Impresora Láser</td><td>MFP 230</td><td>HP</td><td>Unidad</td><td>7kg</td><td>Normal</td></tr>
+                                <tr><td class="text-center">3</td><td><strong>PRO-1003</strong></td><td>Seguridad</td><td>Cámara IP 4MP</td><td>DS-2CD</td><td>Hikvision</td><td>Unidad</td><td>0.5kg</td><td>Normal</td></tr>
+                                <tr><td class="text-center">4</td><td><strong>PRO-1004</strong></td><td>Mobiliario</td><td>Silla Ejecutiva</td><td>Ergo Plus</td><td>Rollic</td><td>Unidad</td><td>12kg</td><td>Normal</td></tr>
                             </tbody>
                         </table>
                     </div>
