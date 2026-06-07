@@ -165,6 +165,12 @@
                 <button class="btn btn-success btn-toolbar" id="btnPdf" disabled>
                     <i class="bi bi-file-earmark-pdf-fill"></i> PDF con QR
                 </button>
+                <button class="btn btn-secondary btn-toolbar" id="btnLimpiar">
+                    <i class="bi bi-eraser-fill"></i> Limpiar
+                </button>
+                <button class="btn btn-danger btn-toolbar" id="btnCancelar">
+                    <i class="bi bi-x-circle-fill"></i> Cancelar
+                </button>
             </div>
         </div>
 
@@ -638,6 +644,78 @@
                 estadoBadge.classList.add('bg-success', 'bg-opacity-25', 'text-success');
             }
         }
+        
+        // ==========================================
+        // LIMPIAR FORMULARIO
+        // ==========================================
+        document.getElementById('btnLimpiar')?.addEventListener('click', function() {
+            if (confirm('¿Estás seguro de que deseas limpiar todos los campos? Los datos no guardados se perderán.')) {
+                
+                // Limpiar destinatario
+                document.getElementById('buscar_cliente_ruc').value = '';
+                document.getElementById('destinatario_doc').value = '';
+                document.getElementById('destinatario_nombre').value = '';
+                document.getElementById('direccion_llegada').value = '';
+                
+                // Limpiar vehículo
+                document.getElementById('placa_vehiculo').value = '';
+                document.getElementById('licencia_conductor').value = '';
+                document.getElementById('conductor_dni').value = '';
+                document.getElementById('conductor_nombre').value = '';
+                
+                // Limpiar transportista
+                document.getElementById('transportista_ruc').value = '';
+                document.getElementById('transportista_nombre').value = '';
+                
+                // Resetear selects
+                document.getElementById('modalidad_transporte').value = 'PRIVADO';
+                document.getElementById('motivo_traslado').value = 'VENTA';
+                document.getElementById('ubigeo_partida').value = '150101';
+                document.getElementById('ubigeo_llegada').value = '150101';
+                
+                // Limpiar otros campos
+                document.getElementById('direccion_partida').value = '';
+                document.getElementById('documento_asociado').value = '';
+                document.getElementById('observaciones').value = '';
+                
+                // Resetear fecha
+                const hoy = new Date().toISOString().split('T')[0];
+                document.getElementById('fecha_traslado').value = hoy;
+                
+                // Limpiar productos (dejar solo una fila)
+                const tbody = document.getElementById('table-body');
+                tbody.innerHTML = '';
+                itemCount = 0;
+                agregarFilaProducto();
+                
+                // Resetear estado
+                const estadoBadge = document.getElementById('estadoBadge');
+                estadoBadge.innerHTML = '<i class="bi bi-circle-fill fs-10 me-1"></i> NUEVA GUÍA';
+                estadoBadge.classList.remove('bg-success', 'bg-opacity-25', 'text-success');
+                estadoBadge.classList.add('bg-warning', 'bg-opacity-25', 'text-warning');
+                
+                // Resetear variable
+                ultimaGuiaId = null;
+                localStorage.removeItem('ultima_guia_id');
+                
+                // Deshabilitar botón PDF
+                document.getElementById('btnPdf').disabled = true;
+                
+                // Volver a aplicar toggle
+                toggleTransportista();
+                
+                mostrarNotificacion('Formulario limpiado correctamente', 'info');
+            }
+        });
+        
+        // ==========================================
+        // CANCELAR Y VOLVER
+        // ==========================================
+        document.getElementById('btnCancelar')?.addEventListener('click', function() {
+            if (confirm('¿Estás seguro de que deseas cancelar? Los datos no guardados se perderán.')) {
+                window.location.href = '/guias/';
+            }
+        });
         
         // ==========================================
         // GUARDAR BORRADOR

@@ -339,8 +339,8 @@ def obtener_guia(guia_id):
 def descargar_pdf(guia_id):
     """Generar y descargar PDF de la guía de remisión"""
     try:
-        from pdf_guia_generator import generar_pdf_guia
-        
+        from routes.pdf_guia_generator import generar_pdf_guia
+
         # Obtener datos de la guía
         query = "SELECT * FROM guias_remision WHERE id = %s"
         guia = db_query(query, (guia_id,))
