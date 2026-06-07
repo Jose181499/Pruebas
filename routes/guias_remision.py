@@ -491,3 +491,32 @@ def actualizar_guia(guia_id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)})    
+@guias_bp.route('/api/eliminar/<int:guia_id>', methods=['DELETE'])
+@login_required
+def eliminar_guia(guia_id):
+    """Eliminar una guía de remisión (solo si está en estado BORRADOR)"""
+    try:
+        # Verificar que la guía exista y esté en estado BORRADOR
+        check_query = "SELECT estado_sunat FROM guias_remision WHERE id = %s"
+        check_result = db_query(check_query, (guia_id,))
+        
+        if not check_result:
+            return jsonify({'success': False, 'error': 'Guía no encontrada'}), 404
+        
+        if check_result[0]['estado_sunat'] != 'BORRADOR':
+            return jsonify({'success': False, 'error': 'Solo se pueden eliminar guías en estado BORRADOR'}), 400
+        
+        # Eliminar la guía
+        delete_query = "DELETE FROM guias_remision WHERE id = %s"
+        db_update(delete_query, (guia_id,))
+        
+        return jsonify({
+            'success': True,
+            'message': 'Guía eliminada exitosamente'
+        })
+        
+    except Exception as e:
+        print(f"Error eliminando guía: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
