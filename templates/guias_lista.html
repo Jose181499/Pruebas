@@ -331,7 +331,7 @@
                             <td colspan="9" class="text-center py-5">
                                 <div class="spinner-border text-primary" role="status"></div>
                                 <br>Cargando guías...
-                            </td>
+                            </tr>
                         </tr>
                     </tbody>
                 </table>
@@ -513,11 +513,9 @@
         }
         
         // ==========================================
-        // VER GUÍA (MODAL) CON DEPURACIÓN
+        // VER GUÍA (MODAL) - CORREGIDO
         // ==========================================
         window.verGuia = async function(id) {
-            // ALERTA PARA CONFIRMAR QUE EL BOTÓN FUNCIONA
-            alert(`🔍 Botón Ver presionado para la guía ID: ${id}`);
             console.log("🔍 Ver guía llamada con ID:", id);
             
             guiaActualId = id;
@@ -562,7 +560,7 @@
                                                 <td>${escapeHtml(item.descripcion || '-')}</td>
                                                 <td>${item.cantidad || 0}</td>
                                                 <td>${item.unidad || 'NIU'}</td>
-                                                <td>${(item.peso_unitario || 0).toFixed(2)} kg</td>
+                                                <td>${(parseFloat(item.peso_unitario) || 0).toFixed(2)} kg</td>
                                             </tr>
                                         `).join('')}
                                     </tbody>
@@ -570,6 +568,9 @@
                             </div>
                         `;
                     }
+                    
+                    // CORRECCIÓN: Usar parseFloat para convertir el peso_total a número
+                    const pesoTotalNum = parseFloat(g.peso_total) || 0;
                     
                     modalBody.innerHTML = `
                         <div class="row g-3">
@@ -603,7 +604,7 @@
                                     <small><strong>Motivo:</strong> ${g.motivo_traslado || '-'}</small>
                                     <small><strong>Fecha Emisión:</strong> ${formatFecha(g.fecha_emision)}</small>
                                     <small><strong>Fecha Traslado:</strong> ${formatFecha(g.fecha_traslado)}</small>
-                                    <small><strong>Peso Total:</strong> ${(g.peso_total || 0).toFixed(2)} kg</small>
+                                    <small><strong>Peso Total:</strong> ${pesoTotalNum.toFixed(2)} kg</small>
                                 </div>
                             </div>
                             ${g.transportista_ruc ? `
