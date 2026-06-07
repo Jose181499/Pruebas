@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ver Comprobante - ERP KCF</title>
+    
+    <!-- BOOTSTRAP -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); }
+        
+        .erp-navbar {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .erp-card {
+            background: white;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            margin-bottom: 24px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .card-header-custom {
+            background: linear-gradient(135deg, #1f2937, #111827);
+            color: white;
+            padding: 16px 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .badge-estado {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .estado-BORRADOR { background: #fef3c7; color: #92400e; }
+        .estado-PROCESANDO { background: #dbeafe; color: #1e40af; }
+        .estado-ACEPTADA { background: #d1fae5; color: #065f46; }
+        .estado-RECHAZADA { background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body>
+
+    <div class="erp-navbar">
+        <div class="d-flex align-items-center gap-3">
+            <div class="bg-white rounded-3 p-2"><i class="bi bi-receipt fs-4 text-dark"></i></div>
+            <div>
+                <div class="text-white fw-bold fs-5">KCF CORPORACION</div>
+                <div class="text-white-50 small">ERP Comercial · Ver Comprobante</div>
+            </div>
+        </div>
+        <div class="d-flex gap-3">
+            <a href="/comprobantes/" class="btn btn-dark btn-sm">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="fw-bold">{{ comprobante.tipo_comprobante }} {{ comprobante.serie }}-{{ comprobante.numero }}</h1>
+            <div>
+                <a href="/comprobantes/api/pdf/{{ comprobante.id }}" class="btn btn-success" target="_blank">
+                    <i class="bi bi-file-earmark-pdf-fill"></i> Descargar PDF
+                </a>
+                {% if comprobante.estado_sunat == 'BORRADOR' %}
+                <a href="/comprobantes/editar/{{ comprobante.id }}" class="btn btn-warning">
+                    <i class="bi bi-pencil-fill"></i> Editar
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="erp-card">
+                    <div class="card-header-custom blue">
+                        <i class="bi bi-building"></i> Datos del Cliente
+                    </div>
+                    <div class="p-4">
+                        <p><strong>{{ comprobante.cliente_tipo_doc }}:</strong> {{ comprobante.cliente_numero_doc }}</p>
+                        <p><strong>Razón Social:</strong> {{ comprobante.cliente_nombre }}</p>
+                        <p><strong>Dirección:</strong> {{ comprobante.cliente_direccion or '-' }}</p>
+                        <p><strong>Email:</strong> {{ comprobante.cliente_email or '-' }}</p>
+                        <p><strong>Teléfono:</strong> {{ comprobante.cliente_telefono or '-' }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="erp-card">
+                    <div class="card-header-custom green">
+                        <i class="bi bi-receipt"></i> Datos del Comprobante
+                    </div>
+                    <div class="p-4">
+                        <p><strong>Fecha Emisión:</strong> {{ comprobante.fecha_emision }}</p>
+                        <p><strong>Moneda:</strong> {{ comprobante.moneda or 'PEN' }}</p>
+                        <p><strong>Estado SUNAT:</strong> <span class="badge-estado estado-{{ comprobante.estado_sunat }}">{{ comprobante.estado_sunat }}</span></p>
+                        <p><strong>Fecha Creación:</strong> {{ comprobante.created_at[:19] if comprobante.created_at else '-' }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="erp-card">
+            <div class="card-header-custom purple">
+                <i class="bi bi-box-seam"></i> Productos
+            </div>
+            <div class="table-responsive">
+                <table class="table table-bordered mb-0">
+                    <thead class="table-light">
+                        <tr><th>Item</th><th>Código</th><th>Descripción</th><th>Cantidad</th><th>Precio Unit.</th><th>Subtotal</th></tr>
+                    </thead>
+                    <tbody>
+                        {% set items = comprobante.items_json %}
+                        {% if items is string %}
+                            {% set items = items|tojson|safe %}
+                        {% endif %}
+                        {% for item in (items if items is iterable else []) %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ item.codigo or '-' }}</td>
+                            <td>{{ item.descripcion }}</td>
+                            <td>{{ item.cantidad }}</td>
+                            <td>S/ {{ "%.2f"|format(item.precio_unitario) }}</td>
+                            <td>S/ {{ "%.2f"|format(item.cantidad * item.precio_unitario) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr><th colspan="5" class="text-end">SUBTOTAL</th><th>S/ {{ "%.2f"|format(comprobante.subtotal) }}</th></tr>
+                        <tr><th colspan="5" class="text-end">IGV (18%)</th><th>S/ {{ "%.2f"|format(comprobante.igv) }}</th></tr>
+                        <tr class="fw-bold"><th colspan="5" class="text-end">TOTAL</th><th>S/ {{ "%.2f"|format(comprobante.total) }}</th></tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        {% if comprobante.observaciones %}
+        <div class="erp-card">
+            <div class="card-header-custom">
+                <i class="bi bi-chat-text"></i> Observaciones
+            </div>
+            <div class="p-4">
+                <p>{{ comprobante.observaciones }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
