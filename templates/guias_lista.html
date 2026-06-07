@@ -426,7 +426,6 @@
             const fechaHasta = document.getElementById('filtroFechaHasta')?.value || '';
             
             let guiasFiltradas = todasGuias.filter(guia => {
-                // Filtro por búsqueda
                 if (busqueda) {
                     const numeroGuia = `${guia.serie}-${guia.numero}`.toLowerCase();
                     const destinatario = (guia.destinatario_nombre || '').toLowerCase();
@@ -435,20 +434,9 @@
                         return false;
                     }
                 }
-                
-                // Filtro por estado
-                if (estado && guia.estado_sunat !== estado) {
-                    return false;
-                }
-                
-                // Filtro por fecha
-                if (fechaDesde && guia.fecha_emision && guia.fecha_emision < fechaDesde) {
-                    return false;
-                }
-                if (fechaHasta && guia.fecha_emision && guia.fecha_emision > fechaHasta) {
-                    return false;
-                }
-                
+                if (estado && guia.estado_sunat !== estado) return false;
+                if (fechaDesde && guia.fecha_emision && guia.fecha_emision < fechaDesde) return false;
+                if (fechaHasta && guia.fecha_emision && guia.fecha_emision > fechaHasta) return false;
                 return true;
             });
             
@@ -463,15 +451,7 @@
             const tbody = document.getElementById('tablaGuias');
             
             if (guias.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="9" class="empty-state">
-                            <i class="bi bi-inbox"></i>
-                            <p class="mb-0">No hay guías de remisión registradas</p>
-                            <small class="text-muted">Crea una nueva guía usando el botón "Nueva Guía"</small>
-                        </td>
-                    </tr>
-                `;
+                tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><i class="bi bi-inbox"></i><p class="mb-0">No hay guías de remisión registradas</p><small class="text-muted">Crea una nueva guía usando el botón "Nueva Guía"</small></td></tr>`;
                 return;
             }
             
@@ -515,9 +495,6 @@
             }).join('');
         }
         
-        // ==========================================
-        // ESCAPE HTML
-        // ==========================================
         function escapeHtml(text) {
             if (!text) return '';
             const div = document.createElement('div');
@@ -525,9 +502,6 @@
             return div.innerHTML;
         }
         
-        // ==========================================
-        // FORMATO FECHA
-        // ==========================================
         function formatFecha(fechaStr) {
             if (!fechaStr) return '-';
             try {
@@ -539,16 +513,34 @@
         }
         
         // ==========================================
-        // VER GUÍA (MODAL)
+        // VER GUÍA (MODAL) CON DEPURACIÓN
         // ==========================================
         window.verGuia = async function(id) {
+            // ALERTA PARA CONFIRMAR QUE EL BOTÓN FUNCIONA
+            alert(`🔍 Botón Ver presionado para la guía ID: ${id}`);
+            console.log("🔍 Ver guía llamada con ID:", id);
+            
             guiaActualId = id;
             const modalBody = document.getElementById('modalVerBody');
-            modalBody.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div><p>Cargando...</p></div>`;
+            modalBody.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div><p>Cargando guía ID: ${id}...</p></div>`;
+            
+            // Mostrar el modal manualmente
+            const modalElement = document.getElementById('modalVerGuia');
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
             
             try {
-                const response = await fetch(`/guias/api/obtener/${id}`);
+                const url = `/guias/api/obtener/${id}`;
+                console.log("📡 Fetching URL:", url);
+                const response = await fetch(url);
+                console.log("📡 Response status:", response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const result = await response.json();
+                console.log("📦 Datos recibidos:", result);
                 
                 if (result.success && result.data) {
                     const g = result.data;
@@ -637,11 +629,12 @@
                             </div>
                         </div>
                     `;
-                    
-                    new bootstrap.Modal(document.getElementById('modalVerGuia')).show();
+                } else {
+                    modalBody.innerHTML = `<div class="text-center py-5 text-danger">Error: ${result.error || 'No se encontraron datos'}</div>`;
                 }
             } catch (error) {
-                modalBody.innerHTML = `<div class="text-center py-5 text-danger">Error al cargar detalles</div>`;
+                console.error("❌ Error en verGuia:", error);
+                modalBody.innerHTML = `<div class="text-center py-5 text-danger">Error al cargar detalles: ${error.message}</div>`;
             }
         };
         
@@ -649,6 +642,7 @@
         // DESCARGAR PDF
         // ==========================================
         window.descargarPDF = function(id) {
+            console.log("📄 Descargando PDF para ID:", id);
             window.open(`/guias/api/pdf/${id}`, '_blank');
         };
         
@@ -656,6 +650,7 @@
         // EDITAR GUÍA
         // ==========================================
         window.editarGuia = function(id) {
+            console.log("✏️ Editando guía ID:", id);
             window.location.href = `/guias/editar/${id}`;
         };
         
@@ -680,6 +675,7 @@
         // INICIALIZAR
         // ==========================================
         document.addEventListener('DOMContentLoaded', () => {
+            console.log("🚀 Página cargada, inicializando...");
             cargarGuias();
         });
     </script>
