@@ -19,6 +19,7 @@ from routes.mantenedor_clientes import mantenedor_clientes_bp
 from routes.mantenedor_proveedores import mantenedor_proveedores_bp
 from routes.mantenedor_usuarios import mantenedor_usuarios_bp
 from routes.guias_remision import guias_bp  # ← AGREGAR ESTA LÍNEA
+from routes.comprobantes import comprobantes_bp
 from database import (
     verificar_usuario,
     insertar_cliente_completo,
@@ -55,6 +56,7 @@ app.register_blueprint(mantenedor_clientes_bp)
 app.register_blueprint(mantenedor_usuarios_bp)
 app.register_blueprint(mantenedor_proveedores_bp)
 app.register_blueprint(guias_bp)
+app.register_blueprint(comprobantes_bp)
 
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-only-change-me")
 

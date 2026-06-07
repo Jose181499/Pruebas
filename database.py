@@ -2203,3 +2203,212 @@ def diagnosticar_clientes():
         print(f"❌ Error en diagnóstico: {str(e)}")
         import traceback
         traceback.print_exc()
+
+
+# ==========================================
+# COMPROBANTES DE VENTA - FUNCIONES
+# ==========================================
+
+def obtener_comprobantes():
+    """Obtener todos los comprobantes"""
+    try:
+        return db_query("""
+            SELECT id, tipo_comprobante, serie, numero, 
+                   cliente_nombre, cliente_numero_doc, fecha_emision, 
+                   subtotal, igv, total, estado_sunat, created_at
+            FROM comprobantes
+            ORDER BY created_at DESC
+        """)
+    except Exception as e:
+        print(f"Error en obtener_comprobantes: {e}")
+        return []
+
+
+def obtener_comprobante_por_id(comp_id):
+    """Obtener un comprobante por ID"""
+    try:
+        rows = db_query("""
+            SELECT * FROM comprobantes WHERE id = %s
+        """, (comp_id,))
+        return rows[0] if rows else None
+    except Exception as e:
+        print(f"Error en obtener_comprobante_por_id: {e}")
+        return None
+
+
+def insertar_comprobante(data):
+    """Insertar un nuevo comprobante"""
+    try:
+        with db_tx() as conn:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            
+            cur.execute("""
+                INSERT INTO comprobantes (
+                    tipo_comprobante, serie, numero, fecha_emision, moneda,
+                    cliente_tipo_doc, cliente_numero_doc, cliente_nombre, 
+                    cliente_direccion, cliente_email, cliente_telefono,
+                    subtotal, igv, total, items_json, observaciones, 
+                    estado_sunat, creado_por
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
+            """, (
+                data.get('tipo_comprobante'),
+                data.get('serie'),
+                data.get('numero'),
+                data.get('fecha_emision'),
+                data.get('moneda', 'PEN'),
+                data.get('cliente_tipo_doc', 'RUC'),
+                data.get('cliente_numero_doc'),
+                data.get('cliente_nombre'),
+                data.get('cliente_direccion'),
+                data.get('cliente_email'),
+                data.get('cliente_telefono'),
+                data.get('subtotal', 0),
+                data.get('igv', 0),
+                data.get('total', 0),
+                data.get('items_json', '[]'),
+                data.get('observaciones', ''),
+                data.get('estado_sunat', 'BORRADOR'),
+                data.get('creado_por')
+            ))
+            
+            result = cur.fetchone()
+            return result['id'] if result else None
+            
+    except Exception as e:
+        print(f"Error en insertar_comprobante: {e}")
+        raise
+
+
+def actualizar_comprobante(comp_id, data):
+    """Actualizar un comprobante existente"""
+    try:
+        with db_tx() as conn:
+            cur = conn.cursor()
+            
+            cur.execute("""
+                UPDATE comprobantes SET
+                    fecha_emision = %s,
+                    cliente_tipo_doc = %s,
+                    cliente_numero_doc = %s,
+                    cliente_nombre = %s,
+                    cliente_direccion = %s,
+                    cliente_email = %s,
+                    cliente_telefono = %s,
+                    subtotal = %s,
+                    igv = %s,
+                    total = %s,
+                    items_json = %s,
+                    observaciones = %s,
+                    updated_at = NOW()
+                WHERE id = %s
+            """, (
+                data.get('fecha_emision'),
+                data.get('cliente_tipo_doc', 'RUC'),
+                data.get('cliente_numero_doc'),
+                data.get('cliente_nombre'),
+                data.get('cliente_direccion'),
+                data.get('cliente_email'),
+                data.get('cliente_telefono'),
+                data.get('subtotal', 0),
+                data.get('igv', 0),
+                data.get('total', 0),
+                data.get('items_json', '[]'),
+                data.get('observaciones', ''),
+                comp_id
+            ))
+            
+            return True
+            
+    except Exception as e:
+        print(f"Error en actualizar_comprobante: {e}")
+        raise
+
+
+def eliminar_comprobante_db(comp_id):
+    """Eliminar un comprobante (borrado físico)"""
+    try:
+        db_execute("DELETE FROM comprobantes WHERE id = %s", (comp_id,))
+        return True
+    except Exception as e:
+        print(f"Error en eliminar_comprobante_db: {e}")
+        raise
+
+
+def actualizar_estado_sunat_comprobante(comp_id, estado, sunat_response=None, cdr_response=None):
+    """Actualizar el estado SUNAT de un comprobante"""
+    try:
+        with db_tx() as conn:
+            cur = conn.cursor()
+            
+            cur.execute("""
+                UPDATE comprobantes 
+                SET estado_sunat = %s,
+                    sunat_response = %s,
+                    cdr_response = %s,
+                    updated_at = NOW()
+                WHERE id = %s
+            """, (estado, sunat_response, cdr_response, comp_id))
+            
+            return True
+            
+    except Exception as e:
+        print(f"Error en actualizar_estado_sunat_comprobante: {e}")
+        raise
+
+
+def obtener_ultimo_numero_comprobante(serie):
+    """Obtener el último número de comprobante para una serie"""
+    try:
+        rows = db_query("""
+            SELECT COALESCE(MAX(numero), 0) as ultimo_numero
+            FROM comprobantes 
+            WHERE serie = %s
+        """, (serie,))
+        return rows[0]['ultimo_numero'] if rows else 0
+    except Exception as e:
+        print(f"Error en obtener_ultimo_numero_comprobante: {e}")
+        return 0
+
+
+def listar_comprobantes_api(filtros=None):
+    """Listar comprobantes con filtros para la API"""
+    try:
+        query = """
+            SELECT id, tipo_comprobante, serie, numero, cliente_nombre, 
+                   cliente_numero_doc, fecha_emision, subtotal, igv, total, 
+                   estado_sunat, created_at
+            FROM comprobantes
+            WHERE 1=1
+        """
+        params = []
+        
+        if filtros:
+            if filtros.get('tipo'):
+                query += " AND tipo_comprobante = %s"
+                params.append(filtros['tipo'])
+            
+            if filtros.get('estado'):
+                query += " AND estado_sunat = %s"
+                params.append(filtros['estado'])
+            
+            if filtros.get('fecha_desde'):
+                query += " AND fecha_emision >= %s"
+                params.append(filtros['fecha_desde'])
+            
+            if filtros.get('fecha_hasta'):
+                query += " AND fecha_emision <= %s"
+                params.append(filtros['fecha_hasta'])
+            
+            if filtros.get('busqueda'):
+                busqueda = f"%{filtros['busqueda']}%"
+                query += " AND (cliente_nombre ILIKE %s OR CAST(numero AS TEXT) ILIKE %s)"
+                params.extend([busqueda, busqueda])
+        
+        query += " ORDER BY created_at DESC"
+        
+        return db_query(query, params if params else None)
+        
+    except Exception as e:
+        print(f"Error en listar_comprobantes_api: {e}")
+        return []
