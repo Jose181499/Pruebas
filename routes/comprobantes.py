@@ -63,8 +63,31 @@ def editar(comp_id):
         if not comprobante:
             return "Comprobante no encontrado", 404
         
-        return render_template('comprobantes/editar.html', comprobante=comprobante[0])
+        # Convertir el objeto Row a diccionario
+        comprobante_dict = dict(comprobante[0])
+        
+        # Convertir datetime a string para evitar errores en el template
+        if comprobante_dict.get('created_at'):
+            if isinstance(comprobante_dict['created_at'], (datetime, date)):
+                comprobante_dict['created_at'] = comprobante_dict['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+        
+        if comprobante_dict.get('updated_at'):
+            if isinstance(comprobante_dict['updated_at'], (datetime, date)):
+                comprobante_dict['updated_at'] = comprobante_dict['updated_at'].strftime('%Y-%m-%d %H:%M:%S')
+        
+        if comprobante_dict.get('fecha_emision'):
+            if isinstance(comprobante_dict['fecha_emision'], (datetime, date)):
+                comprobante_dict['fecha_emision'] = comprobante_dict['fecha_emision'].strftime('%Y-%m-%d')
+        
+        # Asegurar que items_json sea un string JSON válido
+        if comprobante_dict.get('items_json') and isinstance(comprobante_dict['items_json'], (dict, list)):
+            comprobante_dict['items_json'] = json.dumps(comprobante_dict['items_json'])
+        
+        return render_template('comprobantes/editar.html', comprobante=comprobante_dict)
     except Exception as e:
+        print(f"Error en editar: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return f"Error: {e}", 500
 
 
@@ -78,8 +101,21 @@ def ver(comp_id):
         if not comprobante:
             return "Comprobante no encontrado", 404
         
-        return render_template('comprobantes/ver.html', comprobante=comprobante[0])
+        # Convertir a diccionario
+        comprobante_dict = dict(comprobante[0])
+        
+        # Convertir fechas a string
+        if comprobante_dict.get('created_at'):
+            if isinstance(comprobante_dict['created_at'], (datetime, date)):
+                comprobante_dict['created_at'] = comprobante_dict['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+        
+        if comprobante_dict.get('fecha_emision'):
+            if isinstance(comprobante_dict['fecha_emision'], (datetime, date)):
+                comprobante_dict['fecha_emision'] = comprobante_dict['fecha_emision'].strftime('%Y-%m-%d')
+        
+        return render_template('comprobantes/ver.html', comprobante=comprobante_dict)
     except Exception as e:
+        print(f"Error en ver: {str(e)}")
         return f"Error: {e}", 500
 
 
@@ -475,11 +511,11 @@ def generar_html_pdf(comp_data, items):
     """Genera el HTML para el PDF del comprobante"""
     
     # Convertir a diccionario si es necesario (para manejar objetos tipo Row)
-    if hasattr(comp_data, 'items'):
-        # Ya es un diccionario o similar
-        pass
-    else:
-        comp_data = dict(comp_data)
+    if not isinstance(comp_data, dict):
+        if hasattr(comp_data, 'items'):
+            comp_data = dict(comp_data)
+        else:
+            comp_data = {}
     
     # Obtener valores de forma segura
     tipo_comprobante = comp_data.get('tipo_comprobante', 'FACTURA')
@@ -664,12 +700,17 @@ def generar_html_pdf(comp_data, items):
     """
     
     for idx, item in enumerate(items, 1):
-        cantidad = float(item.get('cantidad', 0)) if isinstance(item, dict) else 0
-        precio = float(item.get('precio_unitario', 0)) if isinstance(item, dict) else 0
-        subtotal_item = cantidad * precio
-        codigo = item.get('codigo', '-') if isinstance(item, dict) else '-'
-        descripcion = item.get('descripcion', '-') if isinstance(item, dict) else '-'
-        unidad = item.get('unidad', 'NIU') if isinstance(item, dict) else 'NIU'
+        if isinstance(item, dict):
+            cantidad = float(item.get('cantidad', 0))
+            precio = float(item.get('precio_unitario', 0))
+            subtotal_item = cantidad * precio
+            codigo = item.get('codigo', '-')
+            descripcion = item.get('descripcion', '-')
+            unidad = item.get('unidad', 'NIU')
+        else:
+            cantidad = precio = subtotal_item = 0
+            codigo = descripcion = '-'
+            unidad = 'NIU'
         
         html += f"""
                 <tr>
