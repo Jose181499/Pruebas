@@ -886,6 +886,7 @@ if (!document.querySelector('#sunat-animation-styles')) {
         btnLimpiarCliente.addEventListener('click', function() {
             document.getElementById('cliente_id').value = '';
             document.getElementById('cliente_razon_social').value = '';
+            document.getElementById('cliente_razon_comercial').value = '';
             document.getElementById('cliente_doc').value = '';
             document.getElementById('cliente_direccion').value = '';
             document.getElementById('telefono_contacto').value = '';
