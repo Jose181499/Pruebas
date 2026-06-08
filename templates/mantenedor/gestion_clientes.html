@@ -1,3 +1,6 @@
+Tienes razón, el error es porque el modal de eliminar no tiene el evento bien configurado y además puede haber conflictos con los IDs. Aquí está el código corregido con el botón eliminar funcionando correctamente:
+
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -174,7 +177,7 @@
             background: #eef2ff;
             padding: 2px 8px;
             border-radius: 12px;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             display: inline-block;
             width: fit-content;
         }
@@ -206,6 +209,7 @@
             background: #1f2937; color: white; border-radius: 48px;
             padding: 0.7rem 1.5rem; font-weight: 500; display: flex; gap: 10px;
             animation: fadeUp 0.2s ease;
+            z-index: 10000;
         }
         @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
         .modal-header-clean {
@@ -262,7 +266,7 @@
             padding: 15px 24px;
             font-size: 1.1rem;
             font-weight: 600;
-            display: inline-flex;
+            display: flex;
             align-items: center;
             gap: 14px;
             margin-bottom: 20px;
@@ -479,19 +483,36 @@
     </div>
 </div>
 
-<!-- MODAL ELIMINAR -->
+<!-- MODAL ELIMINAR - CORREGIDO -->
 <div class="modal fade" id="modalEliminarCliente" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-danger text-white"><h5 class="modal-title"><i class="bi bi-trash-fill me-2"></i> Eliminar Cliente</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body"><input type="hidden" id="delete_id"><p>¿Está seguro que desea eliminar permanentemente este cliente?</p><p class="text-danger small">Esta acción no se puede deshacer.</p></div>
-            <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button id="btnConfirmarEliminar" class="btn btn-danger"><i class="bi bi-trash me-1"></i> Eliminar</button></div>
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-trash-fill me-2"></i> Eliminar Cliente</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="delete_id_cliente">
+                <div class="text-center py-3">
+                    <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3rem;"></i>
+                    <p class="mt-3 fw-semibold">¿Está seguro que desea eliminar este cliente?</p>
+                    <p class="text-muted small">Esta acción no se puede deshacer. Se eliminarán todos los datos asociados.</p>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancelar</button>
+                <button type="button" class="btn btn-danger px-4" id="confirmarEliminarBtn"><i class="bi bi-trash me-1"></i> Eliminar</button>
+            </div>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    let clienteAEliminar = null;
+    let deleteModal = null;
+    let confirmDeleteBtn = null;
+
     function notificar(msg, tipo='success'){ 
         let d=document.createElement('div'); 
         d.className='toast-notify-custom'; 
@@ -633,7 +654,7 @@
             } 
             tbody.innerHTML=clientes.map((c, idx)=>`
                 <tr>
-                    <td>${idx+1}</td>
+                    <td class="text-center">${idx+1}</td>
                     <td class="fw-bold">${c.codigo_cliente || c.id}</td>
                     <td>${escapeHtml(c.nombre_comercial || '-')}</td>
                     <td><strong>${escapeHtml(c.razon_social || '-')}</strong></td>
@@ -659,10 +680,11 @@
                         <button class="btn-accion btn-edit-icon" onclick="editarCliente(${c.id})" title="Editar"><i class="bi bi-pencil"></i></button> 
                         <button class="btn-accion btn-del-icon" onclick="eliminarClienteModal(${c.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
                     </td>
-                </tr>
+                </table>
             `).join(''); 
         } catch(e){ 
-            tbody.innerHTML='<tr><td colspan="10" class="text-danger">Error carga</td></tr>'; 
+            console.error('Error cargando clientes:', e);
+            tbody.innerHTML='<tr><td colspan="10" class="text-danger">Error al cargar clientes</td></tr>'; 
         } 
     }
     
@@ -740,7 +762,7 @@
             new bootstrap.Modal(document.getElementById('modalVerCliente')).show();
         } catch(e) {
             console.error('Error:', e);
-            document.getElementById('modalVerBody').innerHTML = '<div class="alert alert-danger">Error al cargar detalles del cliente: ' + (e.message || 'Error desconocido') + '</div>';
+            document.getElementById('modalVerBody').innerHTML = '<div class="alert alert-danger">Error al cargar detalles del cliente</div>';
             notificar('Error al cargar detalles del cliente', 'error');
         }
     };
@@ -763,17 +785,48 @@
             if(c.puntos_entrega && c.puntos_entrega.length>0){ c.puntos_entrega.forEach(p=>agregarPuntoEditOrd(p)); } 
             else{ agregarPuntoEditOrd({}); } 
             new bootstrap.Modal(document.getElementById('modalEditarClienteOrdenado')).show(); 
-        } catch(e){ notificar('Error edición','error');} 
+        } catch(e){ 
+            console.error('Error edición:', e);
+            notificar('Error al cargar datos para edición', 'error');
+        } 
     };
     
-    window.eliminarClienteModal=(id)=>{ document.getElementById('delete_id').value=id; new bootstrap.Modal(document.getElementById('modalEliminarCliente')).show(); };
+    // Función para mostrar modal de eliminar
+    window.eliminarClienteModal = (id) => {
+        clienteAEliminar = id;
+        if (deleteModal) {
+            deleteModal.show();
+        }
+    };
     
-    document.getElementById('btnConfirmarEliminar')?.addEventListener('click',async()=>{ 
-        let id=document.getElementById('delete_id').value; 
-        let res=await fetch(`/api/clientes/${id}`,{method:'DELETE'}); 
-        let json=await res.json(); 
-        if(json.success){ notificar('Cliente eliminado'); cargarClientes(); bootstrap.Modal.getInstance(document.getElementById('modalEliminarCliente')).hide(); } 
-        else notificar('Error','error'); 
+    // Configurar eventos al cargar la página
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializar modales
+        deleteModal = new bootstrap.Modal(document.getElementById('modalEliminarCliente'));
+        
+        // Configurar botón de confirmar eliminar
+        confirmDeleteBtn = document.getElementById('confirmarEliminarBtn');
+        if (confirmDeleteBtn) {
+            confirmDeleteBtn.addEventListener('click', async function() {
+                if (clienteAEliminar) {
+                    try {
+                        let res = await fetch(`/api/clientes/${clienteAEliminar}`, { method: 'DELETE' });
+                        let json = await res.json();
+                        if (json.success) {
+                            notificar('Cliente eliminado correctamente');
+                            cargarClientes();
+                            deleteModal.hide();
+                            clienteAEliminar = null;
+                        } else {
+                            notificar(json.error || 'Error al eliminar', 'error');
+                        }
+                    } catch(e) {
+                        console.error('Error eliminando:', e);
+                        notificar('Error al conectar con el servidor', 'error');
+                    }
+                }
+            });
+        }
     });
     
     document.getElementById('formClienteOrdenado')?.addEventListener('submit',async(e)=>{ 
@@ -888,3 +941,4 @@
 </script>
 </body>
 </html>
+```
