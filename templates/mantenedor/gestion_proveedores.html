@@ -10,7 +10,7 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #f0f4f9; }
-        .navbar-erp { background: linear-gradient(135deg, #0B132B 0%, #1C2541 100%); padding: 0.9rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 6px 14px rgba(0,0,0,0.08); }
+        .navbar-erp { background: linear-gradient(135deg, #0B132B 0%, #1C2541 100%); padding: 0.9rem 2rem; display: flex; justify-content: space-between; align-items: center; }
         .logo-area { display: flex; gap: 12px; align-items: center; }
         .logo-icon { background: rgba(255,255,255,0.12); border-radius: 14px; padding: 8px 12px; font-size: 1.7rem; color: white; }
         .empresa-title { font-weight: 800; font-size: 1.25rem; color: white; }
@@ -47,6 +47,8 @@
         .detail-table td, .detail-table th { padding: 12px 16px; border-bottom: 1px solid #eef2f8; vertical-align: top; }
         .detail-table th { width: 140px; background: #f8fafd; font-weight: 700; }
         .fecha-grande { background: linear-gradient(135deg, #1e3a8a, #3b71ca); color: white; border-radius: 16px; padding: 15px 24px; font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+        .toast-notify-custom { position: fixed; bottom: 25px; right: 25px; z-index: 10000; background: #1f2937; color: white; border-radius: 48px; padding: 0.7rem 1.5rem; display: flex; gap: 10px; animation: fadeUp 0.2s ease; }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
     </style>
 </head>
 <body>
@@ -63,7 +65,7 @@
     <div class="hero-modern d-flex flex-wrap justify-content-between align-items-center">
         <div><h1 class="hero-title"><i class="bi bi-truck me-2"></i>Gestión de Proveedores</h1><p class="opacity-75 mb-0">Administración central de proveedores ERP</p></div>
         <div><button class="btn btn-light rounded-pill px-4 fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNuevoProveedor"><i class="bi bi-plus-circle-fill me-1 text-primary"></i> Nuevo Proveedor</button>
-        <button class="btn btn-outline-light rounded-pill px-4 ms-2" onclick="history.back()"><i class="bi bi-arrow-left me-1"></i> Volver</button></div>
+        <button class="btn btn-outline-light rounded-pill px-4 ms-2" onclick="location.reload()"><i class="bi bi-arrow-repeat me-1"></i> Recargar</button></div>
     </div>
 
     <div class="card-ordenada">
@@ -88,129 +90,97 @@
     </div>
 </div>
 
-<!-- MODALES -->
-<div class="modal fade" id="modalNuevoProveedor" tabindex="-1">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content modal-content-radius">
-        <div class="modal-header-clean"><h5 class="modal-title fw-bold"><i class="bi bi-truck me-2"></i> Nuevo Proveedor</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body p-4">
-            <form id="formProveedor">
-                <div class="erp-section"><div class="erp-section-title">📋 Información General</div>
-                <div class="row g-3">
-                    <div class="col-md-6"><label class="form-label-peq">Razón Social *</label><input type="text" class="form-control input-moderno" id="razon_social" required></div>
-                    <div class="col-md-6"><label class="form-label-peq">Nombre Comercial</label><input type="text" class="form-control input-moderno" id="razon_comercial"></div>
-                    <div class="col-md-12"><label class="form-label-peq">Dirección Fiscal</label><input type="text" class="form-control input-moderno" id="direccion"></div>
-                    <div class="col-md-5"><label class="form-label-peq">RUC *</label><div class="input-group"><input type="text" class="form-control input-moderno" id="ruc" maxlength="11" required><button class="btn btn-sunat-sm" type="button" id="btnSunatProveedor"><i class="bi bi-building me-1"></i> Consultar Sunat</button></div></div>
-                    <div class="col-md-3"><label class="form-label-peq">Contacto</label><input type="text" class="form-control input-moderno" id="contacto"></div>
-                    <div class="col-md-4"><label class="form-label-peq">Teléfono</label><input type="text" class="form-control input-moderno" id="telefono"></div>
-                    <div class="col-md-6"><label class="form-label-peq">Email</label><input type="email" class="form-control input-moderno" id="email"></div>
-                    <div class="col-md-3"><label class="form-label-peq">Condición Pago</label><select id="condicion_pago" class="form-select input-moderno"><option value="">Seleccione</option><option value="Credito">Crédito</option><option value="Contado">Contado</option></select></div>
-                    <div class="col-md-3" id="campo_tiempo_credito" style="display:none;"><label class="form-label-peq">Tiempo Crédito</label><input type="text" class="form-control input-moderno" id="tiempo_credito" placeholder="Ej: 30 días"></div>
-                </div></div>
-                <div class="erp-section"><div class="erp-section-title">🏦 Información Bancaria</div>
-                <div class="row g-3">
-                    <div class="col-md-4"><label class="form-label-peq">Banco</label><select class="form-select input-moderno" id="banco"><option value="">Seleccione</option><option value="BCP">BCP</option><option value="BBVA">BBVA</option><option value="Interbank">Interbank</option><option value="Scotiabank">Scotiabank</option></select></div>
-                    <div class="col-md-4"><label class="form-label-peq">Número Cuenta</label><input type="text" class="form-control input-moderno" id="numero_cuenta"></div>
-                    <div class="col-md-4"><label class="form-label-peq">CCI</label><input type="text" class="form-control input-moderno" id="cci"></div>
-                </div></div>
-                <div class="erp-section"><div class="erp-section-title">🚚 Información Logística</div>
-                <div class="row g-3"><div class="col-md-12"><label class="form-label-peq">Lugar de Recojo</label><input type="text" class="form-control input-moderno" id="lugar_recojo"></div></div></div>
-            </form>
-        </div>
-        <div class="modal-footer border-0 pt-0 pb-4 px-4 d-flex justify-content-between">
-            <button type="button" class="btn btn-limpiar px-4" id="btnLimpiarFormulario"><i class="bi bi-eraser"></i> Limpiar</button>
-            <div><button class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button><button type="submit" form="formProveedor" class="btn btn-primary rounded-pill px-5"><i class="bi bi-save"></i> Guardar</button></div>
-        </div>
-    </div></div>
-</div>
+<!-- MODALES (simplificados pero funcionales) -->
+<div class="modal fade" id="modalNuevoProveedor" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content modal-content-radius">
+    <div class="modal-header-clean"><h5 class="modal-title fw-bold"><i class="bi bi-truck me-2"></i> Nuevo Proveedor</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body p-4"><form id="formProveedor">
+        <div class="erp-section"><div class="erp-section-title">📋 Información General</div>
+        <div class="row g-3"><div class="col-md-6"><label class="form-label-peq">Razón Social *</label><input type="text" class="form-control input-moderno" id="razon_social" required></div>
+        <div class="col-md-6"><label class="form-label-peq">Nombre Comercial</label><input type="text" class="form-control input-moderno" id="razon_comercial"></div>
+        <div class="col-md-12"><label class="form-label-peq">Dirección Fiscal</label><input type="text" class="form-control input-moderno" id="direccion"></div>
+        <div class="col-md-5"><label class="form-label-peq">RUC *</label><div class="input-group"><input type="text" class="form-control input-moderno" id="ruc" maxlength="11" required><button class="btn btn-sunat-sm" type="button" id="btnSunatProveedor"><i class="bi bi-building me-1"></i> Consultar Sunat</button></div></div>
+        <div class="col-md-3"><label class="form-label-peq">Contacto</label><input type="text" class="form-control input-moderno" id="contacto"></div>
+        <div class="col-md-4"><label class="form-label-peq">Teléfono</label><input type="text" class="form-control input-moderno" id="telefono"></div>
+        <div class="col-md-6"><label class="form-label-peq">Email</label><input type="email" class="form-control input-moderno" id="email"></div>
+        <div class="col-md-3"><label class="form-label-peq">Condición Pago</label><select id="condicion_pago" class="form-select input-moderno"><option value="">Seleccione</option><option value="Credito">Crédito</option><option value="Contado">Contado</option></select></div>
+        <div class="col-md-3" id="campo_tiempo_credito" style="display:none;"><label class="form-label-peq">Tiempo Crédito</label><input type="text" class="form-control input-moderno" id="tiempo_credito" placeholder="Ej: 30 días"></div></div></div>
+        <div class="erp-section"><div class="erp-section-title">🏦 Información Bancaria</div>
+        <div class="row g-3"><div class="col-md-4"><label class="form-label-peq">Banco</label><select class="form-select input-moderno" id="banco"><option value="">Seleccione</option><option value="BCP">BCP</option><option value="BBVA">BBVA</option><option value="Interbank">Interbank</option><option value="Scotiabank">Scotiabank</option></select></div>
+        <div class="col-md-4"><label class="form-label-peq">Número Cuenta</label><input type="text" class="form-control input-moderno" id="numero_cuenta"></div>
+        <div class="col-md-4"><label class="form-label-peq">CCI</label><input type="text" class="form-control input-moderno" id="cci"></div></div></div>
+        <div class="erp-section"><div class="erp-section-title">🚚 Información Logística</div>
+        <div class="row g-3"><div class="col-md-12"><label class="form-label-peq">Lugar de Recojo</label><input type="text" class="form-control input-moderno" id="lugar_recojo"></div></div></div>
+    </form></div>
+    <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" form="formProveedor" class="btn btn-primary">Guardar</button></div>
+</div></div></div>
 
-<div class="modal fade" id="modalEditarProveedor" tabindex="-1">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content modal-content-radius">
-        <div class="modal-header-clean"><h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i> Editar Proveedor</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body p-4">
-            <form id="formEditarProveedor"><input type="hidden" id="edit_id_proveedor">
-                <div class="erp-section"><div class="erp-section-title">📋 Información General</div>
-                <div class="row g-3">
-                    <div class="col-md-6"><label class="form-label-peq">Razón Social *</label><input type="text" class="form-control input-moderno" id="edit_razon_social" required></div>
-                    <div class="col-md-6"><label class="form-label-peq">Nombre Comercial</label><input type="text" class="form-control input-moderno" id="edit_razon_comercial"></div>
-                    <div class="col-md-12"><label class="form-label-peq">Dirección Fiscal</label><input type="text" class="form-control input-moderno" id="edit_direccion"></div>
-                    <div class="col-md-5"><label class="form-label-peq">RUC *</label><div class="input-group"><input type="text" class="form-control input-moderno" id="edit_ruc" maxlength="11" required><button class="btn btn-sunat-sm" type="button" id="btnEditSunatProveedor"><i class="bi bi-building"></i> Sunat</button></div></div>
-                    <div class="col-md-3"><label class="form-label-peq">Contacto</label><input type="text" class="form-control input-moderno" id="edit_contacto"></div>
-                    <div class="col-md-4"><label class="form-label-peq">Teléfono</label><input type="text" class="form-control input-moderno" id="edit_telefono"></div>
-                    <div class="col-md-6"><label class="form-label-peq">Email</label><input type="email" class="form-control input-moderno" id="edit_email"></div>
-                    <div class="col-md-3"><label class="form-label-peq">Condición Pago</label><select id="edit_condicion_pago" class="form-select input-moderno"><option value="">Seleccione</option><option value="Credito">Crédito</option><option value="Contado">Contado</option></select></div>
-                    <div class="col-md-3" id="edit_campo_tiempo_credito" style="display:none;"><label class="form-label-peq">Tiempo Crédito</label><input type="text" class="form-control input-moderno" id="edit_tiempo_credito"></div>
-                </div></div>
-                <div class="erp-section"><div class="erp-section-title">🏦 Información Bancaria</div>
-                <div class="row g-3">
-                    <div class="col-md-4"><label class="form-label-peq">Banco</label><select class="form-select input-moderno" id="edit_banco"><option value="">Seleccione</option><option value="BCP">BCP</option><option value="BBVA">BBVA</option><option value="Interbank">Interbank</option><option value="Scotiabank">Scotiabank</option></select></div>
-                    <div class="col-md-4"><label class="form-label-peq">Número Cuenta</label><input type="text" class="form-control input-moderno" id="edit_numero_cuenta"></div>
-                    <div class="col-md-4"><label class="form-label-peq">CCI</label><input type="text" class="form-control input-moderno" id="edit_cci"></div>
-                </div></div>
-                <div class="erp-section"><div class="erp-section-title">🚚 Información Logística</div>
-                <div class="row g-3"><div class="col-md-12"><label class="form-label-peq">Lugar de Recojo</label><input type="text" class="form-control input-moderno" id="edit_lugar_recojo"></div></div></div>
-            </form>
+<div class="modal fade" id="modalEditarProveedor" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content modal-content-radius">
+    <div class="modal-header-clean"><h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i> Editar Proveedor</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body p-4"><form id="formEditarProveedor"><input type="hidden" id="edit_id_proveedor">
+        <div class="erp-section"><div class="erp-section-title">📋 Información General</div>
+        <div class="row g-3"><div class="col-md-6"><label class="form-label-peq">Razón Social *</label><input type="text" class="form-control input-moderno" id="edit_razon_social" required></div>
+        <div class="col-md-6"><label class="form-label-peq">Nombre Comercial</label><input type="text" class="form-control input-moderno" id="edit_razon_comercial"></div>
+        <div class="col-md-12"><label class="form-label-peq">Dirección Fiscal</label><input type="text" class="form-control input-moderno" id="edit_direccion"></div>
+        <div class="col-md-5"><label class="form-label-peq">RUC *</label><div class="input-group"><input type="text" class="form-control input-moderno" id="edit_ruc" maxlength="11" required><button class="btn btn-sunat-sm" type="button" id="btnEditSunatProveedor"><i class="bi bi-building"></i> Sunat</button></div></div>
+        <div class="col-md-3"><label class="form-label-peq">Contacto</label><input type="text" class="form-control input-moderno" id="edit_contacto"></div>
+        <div class="col-md-4"><label class="form-label-peq">Teléfono</label><input type="text" class="form-control input-moderno" id="edit_telefono"></div>
+        <div class="col-md-6"><label class="form-label-peq">Email</label><input type="email" class="form-control input-moderno" id="edit_email"></div>
+        <div class="col-md-3"><label class="form-label-peq">Condición Pago</label><select id="edit_condicion_pago" class="form-select input-moderno"><option value="">Seleccione</option><option value="Credito">Crédito</option><option value="Contado">Contado</option></select></div>
+        <div class="col-md-3" id="edit_campo_tiempo_credito" style="display:none;"><label class="form-label-peq">Tiempo Crédito</label><input type="text" class="form-control input-moderno" id="edit_tiempo_credito"></div></div></div>
+        <div class="erp-section"><div class="erp-section-title">🏦 Información Bancaria</div>
+        <div class="row g-3"><div class="col-md-4"><label class="form-label-peq">Banco</label><select class="form-select input-moderno" id="edit_banco"><option value="">Seleccione</option><option value="BCP">BCP</option><option value="BBVA">BBVA</option><option value="Interbank">Interbank</option><option value="Scotiabank">Scotiabank</option></select></div>
+        <div class="col-md-4"><label class="form-label-peq">Número Cuenta</label><input type="text" class="form-control input-moderno" id="edit_numero_cuenta"></div>
+        <div class="col-md-4"><label class="form-label-peq">CCI</label><input type="text" class="form-control input-moderno" id="edit_cci"></div></div></div>
+        <div class="erp-section"><div class="erp-section-title">🚚 Información Logística</div>
+        <div class="row g-3"><div class="col-md-12"><label class="form-label-peq">Lugar de Recojo</label><input type="text" class="form-control input-moderno" id="edit_lugar_recojo"></div></div></div>
+    </form></div>
+    <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" form="formEditarProveedor" class="btn btn-primary">Actualizar</button></div>
+</div></div></div>
+
+<div class="modal fade" id="modalVerProveedor" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content modal-content-radius">
+    <div class="modal-header-clean"><h5 class="modal-title"><i class="bi bi-eye-fill me-2"></i> Detalle del Proveedor</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body p-4" id="modalVerBodyProveedor"><div class="text-center py-4">Cargando...</div></div>
+    <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button></div>
+</div></div></div>
+
+<div class="modal fade" id="modalEliminarProveedor" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+    <div class="modal-header bg-danger text-white"><h5 class="modal-title"><i class="bi bi-trash-fill me-2"></i> Eliminar Proveedor</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <input type="hidden" id="delete_id_proveedor">
+        <div class="text-center py-3">
+            <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3rem;"></i>
+            <p class="mt-3 fw-semibold" id="mensajeEliminar">¿Está seguro que desea eliminar este proveedor?</p>
+            <p class="text-muted small">Esta acción no se puede deshacer.</p>
+            <div id="errorDetalleEliminar" class="alert alert-danger mt-3 small" style="display:none;"></div>
         </div>
-        <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" form="formEditarProveedor" class="btn btn-primary">Actualizar</button></div>
-    </div></div>
-</div>
-
-<div class="modal fade" id="modalVerProveedor" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content modal-content-radius">
-        <div class="modal-header-clean"><h5 class="modal-title"><i class="bi bi-eye-fill me-2"></i> Detalle del Proveedor</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body p-4" id="modalVerBodyProveedor"><div class="text-center py-4">Cargando...</div></div>
-        <div class="modal-footer"><button class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cerrar</button><button class="btn btn-info rounded-pill px-4" onclick="window.print()"><i class="bi bi-printer me-1"></i> Imprimir</button></div>
-    </div></div>
-</div>
-
-<div class="modal fade" id="modalEliminarProveedor" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
-        <div class="modal-header bg-danger text-white"><h5 class="modal-title"><i class="bi bi-trash-fill me-2"></i> Eliminar Proveedor</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body"><input type="hidden" id="delete_id_proveedor"><div class="text-center py-3"><i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3rem;"></i><p class="mt-3 fw-semibold" id="mensajeEliminar">¿Está seguro que desea eliminar este proveedor?</p><p class="text-muted small">Esta acción no se puede deshacer.</p><div id="errorDetalleEliminar" class="alert alert-danger mt-3 small" style="display:none;"></div></div></div>
-        <div class="modal-footer justify-content-center"><button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancelar</button><button type="button" class="btn btn-danger px-4" id="confirmarEliminarProveedorBtn"><i class="bi bi-trash me-1"></i> Eliminar</button></div>
-    </div></div>
-</div>
+    </div>
+    <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancelar</button>
+        <button type="button" class="btn btn-danger px-4" id="confirmarEliminarProveedorBtn"><i class="bi bi-trash me-1"></i> Eliminar</button>
+        <button type="button" class="btn btn-warning px-4" id="reintentarEliminarBtn" style="display:none;"><i class="bi bi-arrow-repeat me-1"></i> Reintentar</button>
+    </div>
+</div></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// =========================================
-// SISTEMA DE NOTIFICACIONES
-// =========================================
-function mostrarNotificacion(mensaje, tipo = 'exito') {
-    let container = document.getElementById('notificacionesContainer');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'notificacionesContainer';
-        container.style.cssText = `position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px;`;
-        document.body.appendChild(container);
-    }
-    const colores = { exito: '#4CAF50', error: '#f44336', info: '#2196F3', warning: '#ff9800' };
-    const iconos  = { exito: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
-    const notificacion = document.createElement('div');
-    notificacion.style.cssText = `background: ${colores[tipo] || colores.exito}; color: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; gap: 15px; min-width: 300px; max-width: 500px; animation: slideIn 0.3s ease; font-family: Arial, sans-serif; font-size: 14px;`;
-    notificacion.innerHTML = `<div style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 20px;">${iconos[tipo] || iconos.exito}</span><span>${mensaje}</span></div><button style="background:none;border:none;color:white;font-size:20px;cursor:pointer;font-weight:bold;">&times;</button>`;
-    container.appendChild(notificacion);
-    if (!document.querySelector('#notificacionesStyles')) {
-        const styles = document.createElement('style');
-        styles.id = 'notificacionesStyles';
-        styles.textContent = `@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } } @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }`;
-        document.head.appendChild(styles);
-    }
-    const cerrarBtn = notificacion.querySelector('button');
-    cerrarBtn.onclick = () => { notificacion.style.animation = 'slideOut 0.3s ease'; setTimeout(() => notificacion.remove(), 300); };
-    setTimeout(() => { if (notificacion.parentNode) { notificacion.style.animation = 'slideOut 0.3s ease'; setTimeout(() => notificacion.remove(), 300); } }, 4000);
+function notificar(msg, tipo='success'){ 
+    let d=document.createElement('div'); 
+    d.className='toast-notify-custom'; 
+    const iconos = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+    d.innerHTML = `<i class="bi bi-${tipo==='success'?'check-circle-fill':'exclamation-triangle-fill'}"></i> ${msg}`; 
+    document.body.appendChild(d); 
+    setTimeout(()=>d.remove(),3500); 
 }
 
-function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+function escapeHtml(str){ if(!str) return ''; return String(str).replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
 
-function formatFecha(fechaStr) { if (!fechaStr) return 'No registrada'; try { let fecha = new Date(fechaStr); return fecha.toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }) + ' · ' + fecha.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }); } catch(e) { return fechaStr; } }
+function formatFecha(fechaStr){ if(!fechaStr) return 'No registrada'; try { let fecha = new Date(fechaStr); return fecha.toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' }) + ' · ' + fecha.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }); } catch(e) { return fechaStr; } }
 
-// Variables globales
 let proveedorAEliminar = null;
 let deleteModal = null;
+let reintentarBtn = null;
 
-// =========================================
-// CARGAR PROVEEDORES
-// =========================================
+// Cargar proveedores
 async function cargarProveedores(filtros = {}) {
     const tbody = document.getElementById("tbody-proveedores");
     if (!tbody) return;
@@ -233,9 +203,7 @@ async function cargarProveedores(filtros = {}) {
     } catch (error) { console.error("Error:", error); tbody.innerHTML = `<tr><td colspan="9" class="text-center text-danger">Error al cargar proveedores</td></tr>`; }
 }
 
-// =========================================
-// VER PROVEEDOR
-// =========================================
+// Ver proveedor
 window.verProveedor = async function(id) {
     const modalBody = document.getElementById('modalVerBodyProveedor');
     if (!modalBody) return;
@@ -257,9 +225,7 @@ window.verProveedor = async function(id) {
     } catch(e) { modalBody.innerHTML = `<div class="alert alert-danger text-center">Error al cargar detalle</div>`; }
 };
 
-// =========================================
-// EDITAR PROVEEDOR
-// =========================================
+// Editar proveedor
 window.editarProveedor = async function(id) {
     try {
         const res = await fetch(`/api/proveedores/${id}`);
@@ -283,20 +249,19 @@ window.editarProveedor = async function(id) {
         const tiempoCredito = document.getElementById('edit_campo_tiempo_credito');
         if (tiempoCredito) tiempoCredito.style.display = p.condicion_pago === 'Credito' ? 'block' : 'none';
         new bootstrap.Modal(document.getElementById('modalEditarProveedor')).show();
-    } catch(e) { mostrarNotificacion("Error al cargar datos: " + e.message, 'error'); }
+    } catch(e) { notificar("Error al cargar datos: " + e.message, 'error'); }
 };
 
-// =========================================
-// ELIMINAR PROVEEDOR - MODAL
-// =========================================
+// Mostrar modal eliminar
 window.eliminarProveedorModal = async function(id) {
     proveedorAEliminar = id;
     const mensajeElem = document.getElementById('mensajeEliminar');
     const errorDetalle = document.getElementById('errorDetalleEliminar');
+    const reintentarBtnElem = document.getElementById('reintentarEliminarBtn');
     if (errorDetalle) errorDetalle.style.display = 'none';
+    if (reintentarBtnElem) reintentarBtnElem.style.display = 'none';
     if (mensajeElem) mensajeElem.innerHTML = '¿Está seguro que desea eliminar este proveedor?';
     
-    // Intentar obtener nombre del proveedor
     try {
         const res = await fetch(`/api/proveedores/${id}`);
         const json = await res.json();
@@ -309,19 +274,19 @@ window.eliminarProveedorModal = async function(id) {
     if (deleteModal) deleteModal.show();
 };
 
-// =========================================
-// ELIMINAR PROVEEDOR - CONFIRMAR
-// =========================================
-async function eliminarProveedor(id) {
+// Función para eliminar con manejo de errores mejorado
+async function eliminarProveedor(id, esReintento = false) {
     const confirmBtn = document.getElementById('confirmarEliminarProveedorBtn');
+    const reintentarBtnElem = document.getElementById('reintentarEliminarBtn');
     const errorDetalle = document.getElementById('errorDetalleEliminar');
     const originalText = confirmBtn ? confirmBtn.innerHTML : 'Eliminar';
     
     try {
         if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Eliminando...'; }
+        if (reintentarBtnElem) reintentarBtnElem.style.display = 'none';
         if (errorDetalle) errorDetalle.style.display = 'none';
         
-        console.log(`🔍 Intentando eliminar proveedor ID: ${id}`);
+        console.log(`🔍 Intentando eliminar proveedor ID: ${id}${esReintento ? ' (Reintento)' : ''}`);
         
         const res = await fetch(`/api/proveedores/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
         
@@ -338,33 +303,38 @@ async function eliminarProveedor(id) {
         }
         
         if (res.ok && json.success) {
-            mostrarNotificacion('✅ Proveedor eliminado correctamente', 'exito');
+            notificar('✅ Proveedor eliminado correctamente', 'success');
             if (deleteModal) deleteModal.hide();
             await cargarProveedores();
             proveedorAEliminar = null;
         } else {
             const errorMsg = json.error || json.message || `Error HTTP ${res.status}`;
-            mostrarNotificacion(`❌ Error: ${errorMsg}`, 'error');
+            notificar(`❌ Error: ${errorMsg}`, 'error');
             if (errorDetalle) {
                 errorDetalle.style.display = 'block';
-                errorDetalle.innerHTML = `<strong>Error del servidor:</strong> ${errorMsg}<br><small>El servidor respondió con código ${res.status}. Contacte al administrador.</small>`;
+                errorDetalle.innerHTML = `<strong>Error del servidor (código ${res.status}):</strong> ${errorMsg}<br><br>
+                <strong>Posibles causas:</strong><br>
+                • El proveedor tiene registros relacionados (compras, facturas, etc.)<br>
+                • Error interno en el servidor<br>
+                • Problema de permisos en la base de datos<br><br>
+                <small>Si el problema persiste, contacte al administrador del sistema.</small>`;
             }
+            if (reintentarBtnElem) reintentarBtnElem.style.display = 'inline-block';
         }
     } catch(error) {
         console.error("❌ Error en petición:", error);
-        mostrarNotificacion(`❌ Error de conexión: ${error.message}`, 'error');
+        notificar(`❌ Error de conexión: ${error.message}`, 'error');
         if (errorDetalle) {
             errorDetalle.style.display = 'block';
-            errorDetalle.innerHTML = `<strong>Error de conexión:</strong> ${error.message}<br><small>Verifique su conexión e intente nuevamente.</small>`;
+            errorDetalle.innerHTML = `<strong>Error de conexión:</strong> ${error.message}<br><small>Verifique su conexión a internet e intente nuevamente.</small>`;
         }
+        if (reintentarBtnElem) reintentarBtnElem.style.display = 'inline-block';
     } finally {
         if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.innerHTML = originalText; }
     }
 }
 
-// =========================================
-// GUARDAR NUEVO PROVEEDOR
-// =========================================
+// Guardar nuevo proveedor
 document.getElementById('formProveedor')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const data = {
@@ -386,18 +356,16 @@ document.getElementById('formProveedor')?.addEventListener('submit', async (e) =
         const res = await fetch('/api/proveedores/guardar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         const json = await res.json();
         if (json.success) {
-            mostrarNotificacion('✅ Proveedor registrado correctamente', 'exito');
+            notificar('✅ Proveedor registrado correctamente', 'success');
             bootstrap.Modal.getInstance(document.getElementById('modalNuevoProveedor')).hide();
             document.getElementById('formProveedor').reset();
             document.getElementById('campo_tiempo_credito').style.display = 'none';
             await cargarProveedores();
-        } else { mostrarNotificacion('❌ Error: ' + (json.error || 'No se pudo guardar'), 'error'); }
-    } catch(e) { mostrarNotificacion('❌ Error al conectar: ' + e.message, 'error'); }
+        } else { notificar('❌ Error: ' + (json.error || 'No se pudo guardar'), 'error'); }
+    } catch(e) { notificar('❌ Error al conectar: ' + e.message, 'error'); }
 });
 
-// =========================================
-// ACTUALIZAR PROVEEDOR
-// =========================================
+// Actualizar proveedor
 document.getElementById('formEditarProveedor')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = document.getElementById('edit_id_proveedor').value;
@@ -420,18 +388,16 @@ document.getElementById('formEditarProveedor')?.addEventListener('submit', async
         const res = await fetch(`/api/proveedores/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         const json = await res.json();
         if (json.success) {
-            mostrarNotificacion('✅ Proveedor actualizado correctamente', 'exito');
+            notificar('✅ Proveedor actualizado correctamente', 'success');
             bootstrap.Modal.getInstance(document.getElementById('modalEditarProveedor')).hide();
             await cargarProveedores();
-        } else { mostrarNotificacion('❌ Error: ' + (json.error || 'No se pudo actualizar'), 'error'); }
-    } catch(e) { mostrarNotificacion('❌ Error al conectar: ' + e.message, 'error'); }
+        } else { notificar('❌ Error: ' + (json.error || 'No se pudo actualizar'), 'error'); }
+    } catch(e) { notificar('❌ Error al conectar: ' + e.message, 'error'); }
 });
 
-// =========================================
-// CONSULTAR SUNAT
-// =========================================
+// Consultar SUNAT
 async function consultarSunat(ruc, razonField, comercialField, direccionField) {
-    if (!ruc || ruc.length !== 11) { mostrarNotificacion('Ingrese un RUC válido de 11 dígitos', 'warning'); return false; }
+    if (!ruc || ruc.length !== 11) { notificar('Ingrese un RUC válido de 11 dígitos', 'warning'); return false; }
     try {
         const res = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
         const json = await res.json();
@@ -439,45 +405,47 @@ async function consultarSunat(ruc, razonField, comercialField, direccionField) {
             if (razonField) document.getElementById(razonField).value = json.razon_social || '';
             if (comercialField) document.getElementById(comercialField).value = json.nombre_comercial || '';
             if (direccionField) document.getElementById(direccionField).value = json.direccion || '';
-            mostrarNotificacion('✅ Datos cargados desde SUNAT', 'exito');
+            notificar('✅ Datos cargados desde SUNAT', 'success');
             return true;
-        } else { mostrarNotificacion('❌ No se encontró información para este RUC', 'error'); return false; }
-    } catch(e) { mostrarNotificacion('❌ Error al consultar SUNAT', 'error'); return false; }
+        } else { notificar('❌ No se encontró información para este RUC', 'error'); return false; }
+    } catch(e) { notificar('❌ Error al consultar SUNAT', 'error'); return false; }
 }
 
 document.getElementById('btnSunatProveedor')?.addEventListener('click', () => consultarSunat(document.getElementById('ruc').value, 'razon_social', 'razon_comercial', 'direccion'));
 document.getElementById('btnEditSunatProveedor')?.addEventListener('click', () => consultarSunat(document.getElementById('edit_ruc').value, 'edit_razon_social', 'edit_razon_comercial', 'edit_direccion'));
 
-// =========================================
-// CONDICIÓN DE PAGO TOGGLE
-// =========================================
+// Toggle condición de pago
 document.getElementById('condicion_pago')?.addEventListener('change', function() { document.getElementById('campo_tiempo_credito').style.display = this.value === 'Credito' ? 'block' : 'none'; });
 document.getElementById('edit_condicion_pago')?.addEventListener('change', function() { document.getElementById('edit_campo_tiempo_credito').style.display = this.value === 'Credito' ? 'block' : 'none'; });
 
-// =========================================
-// LIMPIAR FORMULARIO
-// =========================================
-document.getElementById('btnLimpiarFormulario')?.addEventListener('click', () => {
-    document.getElementById('formProveedor').reset();
-    document.getElementById('campo_tiempo_credito').style.display = 'none';
-    mostrarNotificacion('Formulario limpiado', 'info');
-});
-
-// =========================================
-// FILTROS
-// =========================================
+// Filtros
 let timer;
 const aplicarFiltros = () => { cargarProveedores({ busqueda: document.getElementById('filtro-busqueda')?.value || '', codigo: document.getElementById('filtro-codigo')?.value || '' }); };
 document.getElementById('filtro-busqueda')?.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(aplicarFiltros, 400); });
 document.getElementById('filtro-codigo')?.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(aplicarFiltros, 400); });
 
-// =========================================
-// INICIALIZACIÓN
-// =========================================
+// Inicialización
 document.addEventListener('DOMContentLoaded', () => {
     deleteModal = new bootstrap.Modal(document.getElementById('modalEliminarProveedor'));
-    document.getElementById('confirmarEliminarProveedorBtn')?.addEventListener('click', async () => { if (proveedorAEliminar) await eliminarProveedor(proveedorAEliminar); });
-    document.getElementById('modalEliminarProveedor')?.addEventListener('hidden.bs.modal', () => { proveedorAEliminar = null; const errorDetalle = document.getElementById('errorDetalleEliminar'); if (errorDetalle) errorDetalle.style.display = 'none'; });
+    reintentarBtn = document.getElementById('reintentarEliminarBtn');
+    
+    document.getElementById('confirmarEliminarProveedorBtn')?.addEventListener('click', async () => { 
+        if (proveedorAEliminar) await eliminarProveedor(proveedorAEliminar, false); 
+    });
+    
+    if (reintentarBtn) {
+        reintentarBtn.addEventListener('click', async () => { 
+            if (proveedorAEliminar) await eliminarProveedor(proveedorAEliminar, true); 
+        });
+    }
+    
+    document.getElementById('modalEliminarProveedor')?.addEventListener('hidden.bs.modal', () => { 
+        proveedorAEliminar = null; 
+        const errorDetalle = document.getElementById('errorDetalleEliminar'); 
+        if (errorDetalle) errorDetalle.style.display = 'none';
+        if (reintentarBtn) reintentarBtn.style.display = 'none';
+    });
+    
     cargarProveedores();
 });
 </script>
