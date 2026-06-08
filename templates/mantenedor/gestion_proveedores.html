@@ -68,13 +68,14 @@
         <button class="btn btn-outline-light rounded-pill px-4 ms-2" onclick="location.reload()"><i class="bi bi-arrow-repeat me-1"></i> Recargar</button></div>
     </div>
 
+    <!-- FILTROS - RUC EN PRIMER LUGAR -->
     <div class="card-ordenada">
         <div class="card-header-orden"><i class="bi bi-funnel-fill"></i> Filtros de búsqueda</div>
         <div class="card-body-orden">
             <div class="row g-3">
-                <div class="col-md-5"><label class="form-label-peq">Buscar por RUC o Razón Social</label><input type="text" id="filtro-busqueda" class="form-control input-moderno" placeholder="RUC o razón social..."></div>
-                <div class="col-md-4"><label class="form-label-peq">Buscar por Código de Proveedor</label><input type="text" id="filtro-codigo" class="form-control input-moderno" placeholder="Ej: PROV-00001"></div>
-                <div class="col-md-3"><div class="text-muted small mt-2"><i class="bi bi-info-circle"></i> Búsqueda automática</div></div>
+                <div class="col-md-4"><label class="form-label-peq"><i class="bi bi-file-text me-1"></i> Buscar por RUC</label><input type="text" id="filtro-ruc" class="form-control input-moderno" placeholder="Ingrese RUC (11 dígitos)..." maxlength="11"></div>
+                <div class="col-md-4"><label class="form-label-peq"><i class="bi bi-building me-1"></i> Buscar por Razón Social</label><input type="text" id="filtro-razon" class="form-control input-moderno" placeholder="Nombre del proveedor..."></div>
+                <div class="col-md-4"><label class="form-label-peq"><i class="bi bi-upc-scan me-1"></i> Buscar por Código</label><input type="text" id="filtro-codigo" class="form-control input-moderno" placeholder="Ej: PROV-00001"></div>
             </div>
         </div>
     </div>
@@ -90,7 +91,7 @@
     </div>
 </div>
 
-<!-- MODALES (simplificados pero funcionales) -->
+<!-- MODALES (igual que antes) -->
 <div class="modal fade" id="modalNuevoProveedor" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content modal-content-radius">
     <div class="modal-header-clean"><h5 class="modal-title fw-bold"><i class="bi bi-truck me-2"></i> Nuevo Proveedor</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
     <div class="modal-body p-4"><form id="formProveedor">
@@ -166,8 +167,7 @@
 function notificar(msg, tipo='success'){ 
     let d=document.createElement('div'); 
     d.className='toast-notify-custom'; 
-    const iconos = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
-    d.innerHTML = `<i class="bi bi-${tipo==='success'?'check-circle-fill':'exclamation-triangle-fill'}"></i> ${msg}`; 
+    d.innerHTML = `<i class="bi bi-${tipo==='success'?'check-circle-fill':tipo==='error'?'exclamation-triangle-fill':'info-circle-fill'}"></i> ${msg}`; 
     document.body.appendChild(d); 
     setTimeout(()=>d.remove(),3500); 
 }
@@ -178,9 +178,8 @@ function formatFecha(fechaStr){ if(!fechaStr) return 'No registrada'; try { let 
 
 let proveedorAEliminar = null;
 let deleteModal = null;
-let reintentarBtn = null;
 
-// Cargar proveedores
+// Cargar proveedores con filtros combinados
 async function cargarProveedores(filtros = {}) {
     const tbody = document.getElementById("tbody-proveedores");
     if (!tbody) return;
@@ -188,7 +187,8 @@ async function cargarProveedores(filtros = {}) {
     try {
         let url = "/api/proveedores/listar";
         const params = new URLSearchParams();
-        if (filtros.busqueda) params.append("busqueda", filtros.busqueda);
+        if (filtros.ruc) params.append("ruc", filtros.ruc);
+        if (filtros.razon) params.append("razon", filtros.razon);
         if (filtros.codigo) params.append("codigo", filtros.codigo);
         if (params.toString()) url += "?" + params.toString();
         const res = await fetch(url);
@@ -215,7 +215,7 @@ window.verProveedor = async function(id) {
         const json = await res.json();
         if (!json.success || !json.data) throw new Error("Proveedor no encontrado");
         const p = json.data;
-        const fechaRegistro = p.created_at || p.fecha_registro || new Date().toISOString();
+        const fechaRegistro = p.created_at || p.fecha_creacion || new Date().toISOString();
         const fila = (label, valor) => `<div class="col-md-4 mb-3"><small class="text-muted d-block fw-bold">${label}</small><span>${escapeHtml(valor) || '<span class="text-muted">—</span>'}</span></div>`;
         modalBody.innerHTML = `<div class="fecha-grande"><i class="bi bi-calendar-clock"></i><span><strong>📅 Fecha Registro:</strong> ${formatFecha(fechaRegistro)}</span></div>
             <div class="d-flex align-items-center gap-3 mb-4 p-3" style="background:linear-gradient(135deg,#111827,#1f2937);border-radius:12px;color:white;"><div style="width:55px;height:55px;border-radius:12px;background:linear-gradient(135deg,#d90429,#ef233c);display:flex;align-items:center;justify-content:center;font-size:22px;">🏢</div><div><h5 class="mb-0">${escapeHtml(p.razon_social)}</h5><small>${escapeHtml(p.codigo_proveedor || ('PROV-'+String(p.id).padStart(5,'0')))} · RUC: ${p.ruc || '—'}</small></div></div>
@@ -274,7 +274,7 @@ window.eliminarProveedorModal = async function(id) {
     if (deleteModal) deleteModal.show();
 };
 
-// Función para eliminar con manejo de errores mejorado
+// Función para eliminar
 async function eliminarProveedor(id, esReintento = false) {
     const confirmBtn = document.getElementById('confirmarEliminarProveedorBtn');
     const reintentarBtnElem = document.getElementById('reintentarEliminarBtn');
@@ -286,52 +286,47 @@ async function eliminarProveedor(id, esReintento = false) {
         if (reintentarBtnElem) reintentarBtnElem.style.display = 'none';
         if (errorDetalle) errorDetalle.style.display = 'none';
         
-        console.log(`🔍 Intentando eliminar proveedor ID: ${id}${esReintento ? ' (Reintento)' : ''}`);
-        
         const res = await fetch(`/api/proveedores/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
-        
-        console.log(`📡 Status code: ${res.status}`);
-        
         let json;
         try {
             const textResponse = await res.text();
-            console.log(`📄 Respuesta: ${textResponse}`);
             json = JSON.parse(textResponse);
         } catch(e) {
-            console.error('Error parseando JSON:', e);
             json = { success: false, error: 'Error en la respuesta del servidor' };
         }
         
         if (res.ok && json.success) {
             notificar('✅ Proveedor eliminado correctamente', 'success');
             if (deleteModal) deleteModal.hide();
-            await cargarProveedores();
+            await cargarProveedores(getFiltrosActuales());
             proveedorAEliminar = null;
         } else {
             const errorMsg = json.error || json.message || `Error HTTP ${res.status}`;
             notificar(`❌ Error: ${errorMsg}`, 'error');
             if (errorDetalle) {
                 errorDetalle.style.display = 'block';
-                errorDetalle.innerHTML = `<strong>Error del servidor (código ${res.status}):</strong> ${errorMsg}<br><br>
-                <strong>Posibles causas:</strong><br>
-                • El proveedor tiene registros relacionados (compras, facturas, etc.)<br>
-                • Error interno en el servidor<br>
-                • Problema de permisos en la base de datos<br><br>
-                <small>Si el problema persiste, contacte al administrador del sistema.</small>`;
+                errorDetalle.innerHTML = `<strong>Error del servidor (código ${res.status}):</strong> ${errorMsg}<br><small>El proveedor puede tener registros relacionados.</small>`;
             }
             if (reintentarBtnElem) reintentarBtnElem.style.display = 'inline-block';
         }
     } catch(error) {
-        console.error("❌ Error en petición:", error);
         notificar(`❌ Error de conexión: ${error.message}`, 'error');
         if (errorDetalle) {
             errorDetalle.style.display = 'block';
-            errorDetalle.innerHTML = `<strong>Error de conexión:</strong> ${error.message}<br><small>Verifique su conexión a internet e intente nuevamente.</small>`;
+            errorDetalle.innerHTML = `<strong>Error de conexión:</strong> ${error.message}`;
         }
         if (reintentarBtnElem) reintentarBtnElem.style.display = 'inline-block';
     } finally {
         if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.innerHTML = originalText; }
     }
+}
+
+function getFiltrosActuales() {
+    return {
+        ruc: document.getElementById('filtro-ruc')?.value || '',
+        razon: document.getElementById('filtro-razon')?.value || '',
+        codigo: document.getElementById('filtro-codigo')?.value || ''
+    };
 }
 
 // Guardar nuevo proveedor
@@ -360,7 +355,7 @@ document.getElementById('formProveedor')?.addEventListener('submit', async (e) =
             bootstrap.Modal.getInstance(document.getElementById('modalNuevoProveedor')).hide();
             document.getElementById('formProveedor').reset();
             document.getElementById('campo_tiempo_credito').style.display = 'none';
-            await cargarProveedores();
+            await cargarProveedores(getFiltrosActuales());
         } else { notificar('❌ Error: ' + (json.error || 'No se pudo guardar'), 'error'); }
     } catch(e) { notificar('❌ Error al conectar: ' + e.message, 'error'); }
 });
@@ -390,7 +385,7 @@ document.getElementById('formEditarProveedor')?.addEventListener('submit', async
         if (json.success) {
             notificar('✅ Proveedor actualizado correctamente', 'success');
             bootstrap.Modal.getInstance(document.getElementById('modalEditarProveedor')).hide();
-            await cargarProveedores();
+            await cargarProveedores(getFiltrosActuales());
         } else { notificar('❌ Error: ' + (json.error || 'No se pudo actualizar'), 'error'); }
     } catch(e) { notificar('❌ Error al conectar: ' + e.message, 'error'); }
 });
@@ -418,32 +413,29 @@ document.getElementById('btnEditSunatProveedor')?.addEventListener('click', () =
 document.getElementById('condicion_pago')?.addEventListener('change', function() { document.getElementById('campo_tiempo_credito').style.display = this.value === 'Credito' ? 'block' : 'none'; });
 document.getElementById('edit_condicion_pago')?.addEventListener('change', function() { document.getElementById('edit_campo_tiempo_credito').style.display = this.value === 'Credito' ? 'block' : 'none'; });
 
-// Filtros
+// Filtros con debounce
 let timer;
-const aplicarFiltros = () => { cargarProveedores({ busqueda: document.getElementById('filtro-busqueda')?.value || '', codigo: document.getElementById('filtro-codigo')?.value || '' }); };
-document.getElementById('filtro-busqueda')?.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(aplicarFiltros, 400); });
+const aplicarFiltros = () => { cargarProveedores(getFiltrosActuales()); };
+document.getElementById('filtro-ruc')?.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(aplicarFiltros, 400); });
+document.getElementById('filtro-razon')?.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(aplicarFiltros, 400); });
 document.getElementById('filtro-codigo')?.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(aplicarFiltros, 400); });
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', () => {
     deleteModal = new bootstrap.Modal(document.getElementById('modalEliminarProveedor'));
-    reintentarBtn = document.getElementById('reintentarEliminarBtn');
     
     document.getElementById('confirmarEliminarProveedorBtn')?.addEventListener('click', async () => { 
         if (proveedorAEliminar) await eliminarProveedor(proveedorAEliminar, false); 
     });
     
-    if (reintentarBtn) {
-        reintentarBtn.addEventListener('click', async () => { 
-            if (proveedorAEliminar) await eliminarProveedor(proveedorAEliminar, true); 
-        });
-    }
+    document.getElementById('reintentarEliminarBtn')?.addEventListener('click', async () => { 
+        if (proveedorAEliminar) await eliminarProveedor(proveedorAEliminar, true); 
+    });
     
     document.getElementById('modalEliminarProveedor')?.addEventListener('hidden.bs.modal', () => { 
         proveedorAEliminar = null; 
         const errorDetalle = document.getElementById('errorDetalleEliminar'); 
         if (errorDetalle) errorDetalle.style.display = 'none';
-        if (reintentarBtn) reintentarBtn.style.display = 'none';
     });
     
     cargarProveedores();
