@@ -1,4 +1,4 @@
-Tienes razón, el error ocurre porque el código está intentando acceder a propiedades que pueden no existir o la estructura de datos es diferente. Aquí está la versión corregida con manejos de errores y compatibilidad total:
+Aquí tienes el código completo con la tabla rediseñada con las columnas que solicitaste y el modal VER con fecha/hora de registro:
 
 ```html
 <!DOCTYPE html>
@@ -46,7 +46,7 @@ Tienes razón, el error ocurre porque el código está intentando acceder a prop
             background: white;
             border-radius: 24px;
             box-shadow: 0 6px 18px rgba(0,0,0,0.03);
-            overflow: hidden;
+            overflow-x: auto;
             margin-bottom: 1.8rem;
             border: 1px solid #eef2f8;
         }
@@ -151,6 +151,7 @@ Tienes razón, el error ocurre porque el código está intentando acceder a prop
             text-transform: uppercase;
             border-bottom: 1px solid #e2e8f0;
             padding: 1rem 0.75rem;
+            white-space: nowrap;
         }
         .table-styled td {
             padding: 1rem 0.75rem;
@@ -227,6 +228,14 @@ Tienes razón, el error ocurre porque el código está intentando acceder a prop
             background: #f1f5f9;
             font-weight: 600;
         }
+        .fecha-badge {
+            background: #eef2ff;
+            color: #1e3a8a;
+            border-radius: 20px;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
@@ -284,10 +293,21 @@ Tienes razón, el error ocurre porque el código está intentando acceder a prop
         <div class="table-responsive">
             <table class="table table-styled align-middle mb-0">
                 <thead>
-                    <tr><th>Código</th><th>RUC/DNI</th><th>Razón Social / Comercial</th><th>Dirección Fiscal</th><th>Cond. Pago</th><th>Contactos</th><th class="text-center">Acciones</th></tr>
+                    <tr>
+                        <th>Item</th>
+                        <th>Código Cliente</th>
+                        <th>Nombre Comercial</th>
+                        <th>Razón Social</th>
+                        <th>RUC/DNI</th>
+                        <th>Dirección Fiscal</th>
+                        <th>Condición Pago</th>
+                        <th>Contactos</th>
+                        <th>Puntos Entrega</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
                 </thead>
                 <tbody id="tbody-clientes">
-                    <tr><td colspan="7" class="text-center py-5"><div class="spinner-border spinner-border-sm text-secondary"></div> Cargando...</td></tr>
+                    <tr><td colspan="10" class="text-center py-5"><div class="spinner-border spinner-border-sm text-secondary"></div> Cargando...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -388,7 +408,7 @@ Tienes razón, el error ocurre porque el código está intentando acceder a prop
     </div>
 </div>
 
-<!-- MODAL VER CLIENTE - Totalmente funcional y con manejo de errores -->
+<!-- MODAL VER CLIENTE -->
 <div class="modal fade" id="modalVerCliente" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content modal-content-radius">
@@ -419,6 +439,8 @@ Tienes razón, el error ocurre porque el código está intentando acceder a prop
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    let clientesData = [];
+
     function notificar(msg, tipo='success'){ 
         let d=document.createElement('div'); 
         d.className='toast-notify-custom'; 
@@ -435,6 +457,17 @@ Tienes razón, el error ocurre porque el código está intentando acceder a prop
             if(m==='>') return '&gt;'; 
             return m;
         }); 
+    }
+    
+    function formatFecha(fechaStr){
+        if(!fechaStr) return 'No registrada';
+        try {
+            let fecha = new Date(fechaStr);
+            return fecha.toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' }) + ' - ' + 
+                   fecha.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+        } catch(e) {
+            return fechaStr;
+        }
     }
     
     function configPlaceholderNuevo(){ 
@@ -532,7 +565,7 @@ Tienes razón, el error ocurre porque el código está intentando acceder a prop
     
     async function cargarClientes(filtro={}){ 
         let tbody=document.getElementById('tbody-clientes'); 
-        tbody.innerHTML='<tr><td colspan="7" class="text-center p-4"><i class="bi bi-arrow-repeat"></i> Cargando...</td></tr>'; 
+        tbody.innerHTML='<tr><td colspan="10" class="text-center p-4"><i class="bi bi-arrow-repeat"></i> Cargando...</td></tr>'; 
         try{ 
             let url='/api/clientes/buscar?'; 
             let params=new URLSearchParams(); 
@@ -541,29 +574,32 @@ Tienes razón, el error ocurre porque el código está intentando acceder a prop
             let res=await fetch(url+params); 
             let json=await res.json(); 
             let clientes=json.data||[]; 
+            clientesData = clientes;
             if(!clientes.length){ 
-                tbody.innerHTML='<tr><td colspan="7" class="text-center">Sin clientes registrados</td></tr>'; 
+                tbody.innerHTML='<tr><td colspan="10" class="text-center">Sin clientes registrados</td></tr>'; 
                 return; 
             } 
-            tbody.innerHTML=clientes.map(c=>`<tr>
-                <td class="fw-bold">${c.codigo_cliente||c.id}</td>
-                <td><span class="badge-doc">${c.numero_documento||'-'}</span></td>
-                <td><strong>${escapeHtml(c.razon_social||'-')}</strong><br><small class="text-muted">${escapeHtml(c.nombre_comercial||'')}</small></td>
-                <td>${escapeHtml(c.direccion_fiscal||'-')}</td>
+            tbody.innerHTML=clientes.map((c, idx)=>`<tr>
+                <td>${idx+1}</td>
+                <td class="fw-bold">${c.codigo_cliente || c.id}</td>
+                <td>${escapeHtml(c.nombre_comercial || '-')}</td>
+                <td><strong>${escapeHtml(c.razon_social || '-')}</strong></td>
+                <td><span class="badge-doc">${c.numero_documento || '-'}</span></td>
+                <td>${escapeHtml(c.direccion_fiscal || '-')}</td>
                 <td>${c.puntos_entrega && c.puntos_entrega[0] ? c.puntos_entrega[0].condicion_pago : '-'}</td>
                 <td>${c.contactos ? c.contactos.length : 0}</td>
+                <td>${c.puntos_entrega ? c.puntos_entrega.length : 0}</td>
                 <td class="text-center">
                     <button class="btn-accion btn-ver-icon" onclick="verCliente(${c.id})"><i class="bi bi-eye"></i></button> 
                     <button class="btn-accion btn-edit-icon" onclick="editarCliente(${c.id})"><i class="bi bi-pencil"></i></button> 
                     <button class="btn-accion btn-del-icon" onclick="eliminarClienteModal(${c.id})"><i class="bi bi-trash"></i></button>
                 </td>
-            </tr>`).join(''); 
+            </table>`).join(''); 
         } catch(e){ 
-            tbody.innerHTML='<tr><td colspan="7" class="text-danger">Error carga</td></tr>'; 
+            tbody.innerHTML='</table><td colspan="10" class="text-danger">Error carga</td></tr>'; 
         } 
     }
     
-    // Función VER CLIENTE completamente funcional con manejo de datos
     window.verCliente = async (id) => {
         try {
             const modalBody = document.getElementById('modalVerBody');
@@ -615,7 +651,12 @@ Tienes razón, el error ocurre porque el código está intentando acceder a prop
                 puntosHtml = '<p class="text-muted mb-0">No hay puntos de entrega registrados</p>';
             }
             
+            let fechaRegistro = c.created_at || c.fecha_registro || c.fecha_creacion || new Date().toISOString();
+            
             let html = `
+                <div class="mb-3 text-end">
+                    <span class="fecha-badge"><i class="bi bi-calendar3 me-1"></i> Registro: ${formatFecha(fechaRegistro)}</span>
+                </div>
                 <table class="detail-table">
                     <tr><th>Código Cliente</th><td>${escapeHtml(c.codigo_cliente || c.id)}</td></tr>
                     <tr><th>Tipo Documento</th><td>${escapeHtml(c.tipo_documento || '-')}</td></tr>
