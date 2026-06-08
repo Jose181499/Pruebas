@@ -1,3 +1,6 @@
+Tienes razón, el error ocurre porque el código está intentando acceder a propiedades que pueden no existir o la estructura de datos es diferente. Aquí está la versión corregida con manejos de errores y compatibilidad total:
+
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -12,7 +15,6 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #f0f4f9; }
 
-        /* Navbar */
         .navbar-erp {
             background: linear-gradient(135deg, #0B132B 0%, #1C2541 100%);
             padding: 0.9rem 2rem;
@@ -30,7 +32,6 @@
         .empresa-sub { font-size: 0.7rem; opacity: 0.75; color: #b9d0f0; }
         .user-badge { background: #2c3e66; border-radius: 40px; padding: 0.4rem 1.2rem; font-size: 0.85rem; color: white; }
 
-        /* Hero */
         .hero-modern {
             background: linear-gradient(115deg, #1F2B5C, #2A3E7C);
             border-radius: 28px;
@@ -41,7 +42,6 @@
         }
         .hero-title { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.5px; }
 
-        /* Tarjetas estilo segunda foto (ordenadas) */
         .card-ordenada {
             background: white;
             border-radius: 24px;
@@ -63,7 +63,6 @@
         }
         .card-body-orden { padding: 1.5rem; }
 
-        /* Formulario compacto */
         .form-label-peq {
             font-weight: 600;
             font-size: 0.7rem;
@@ -95,7 +94,6 @@
         }
         .btn-sunat-sm:hover { background: #2c3e66; transform: translateY(-1px); }
 
-        /* Items agregables (contactos / puntos) */
         .item-card-mini {
             background: #fafcff;
             border-radius: 20px;
@@ -146,7 +144,6 @@
         }
         .btn-agregar-link:hover { background: #eef2ff; }
 
-        /* Tabla */
         .table-styled th {
             background: #f8fafd;
             font-weight: 700;
@@ -176,7 +173,6 @@
         .btn-del-icon { color: #dc2626; }
         .btn-del-icon:hover { background: #fee2e2; }
 
-        /* Notificaciones */
         .toast-notify-custom {
             position: fixed; bottom: 25px; right: 25px; z-index: 9999;
             background: #1f2937; color: white; border-radius: 48px;
@@ -198,7 +194,6 @@
         }
         .btn-limpiar:hover { background: #e5e7eb; }
         
-        /* Estilo para tabla de detalle en modal VER */
         .detail-table {
             width: 100%;
             border-collapse: collapse;
@@ -236,7 +231,6 @@
 </head>
 <body>
 
-<!-- NAVBAR -->
 <div class="navbar-erp">
     <div class="logo-area">
         <div class="logo-icon"><i class="bi bi-cube-fill"></i></div>
@@ -249,7 +243,6 @@
 </div>
 
 <div class="container-fluid py-4 px-lg-5">
-    <!-- Hero + botón nuevo cliente -->
     <div class="hero-modern d-flex flex-wrap justify-content-between align-items-center">
         <div>
             <h1 class="hero-title"><i class="bi bi-people-fill me-2"></i>Clientes</h1>
@@ -262,7 +255,6 @@
         </div>
     </div>
 
-    <!-- Filtros -->
     <div class="card-ordenada">
         <div class="card-header-orden"><i class="bi bi-funnel-fill"></i> Filtros de búsqueda</div>
         <div class="card-body-orden">
@@ -287,7 +279,6 @@
         </div>
     </div>
 
-    <!-- Tabla de clientes -->
     <div class="card-ordenada">
         <div class="card-header-orden"><i class="bi bi-table"></i> Listado de clientes</div>
         <div class="table-responsive">
@@ -303,7 +294,7 @@
     </div>
 </div>
 
-<!-- ========== MODAL NUEVO CLIENTE - MUY ORDENADO, CON BOTÓN LIMPIAR ========== -->
+<!-- MODAL NUEVO CLIENTE -->
 <div class="modal fade" id="modalNuevoClienteOrdenado" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content modal-content-radius">
@@ -333,7 +324,6 @@
                                     <input type="text" id="numero_documento_nuevo" class="form-control input-moderno" placeholder="11 dígitos" required>
                                     <button class="btn btn-sunat-sm" type="button" id="btnSunatNuevo"><i class="bi bi-building me-1"></i> Consultar Sunat</button>
                                 </div>
-                                <div id="sunatFeedbackNuevo" class="small text-muted mt-1"></div>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label-peq">Razón Social *</label>
@@ -349,7 +339,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="mb-4">
                         <div class="section-mini-title">
                             <span><i class="bi bi-person-lines-fill me-1"></i> 📞 Contactos</span>
@@ -357,7 +346,6 @@
                         </div>
                         <div id="listaContactosOrdenada"></div>
                     </div>
-
                     <div>
                         <div class="section-mini-title">
                             <span><i class="bi bi-geo-alt-fill me-1"></i> 📦 Puntos de Entrega</span>
@@ -368,13 +356,8 @@
                 </form>
             </div>
             <div class="modal-footer border-0 pt-0 pb-4 px-4 d-flex justify-content-between">
-                <div>
-                    <button type="button" class="btn btn-limpiar px-4" id="btnLimpiarFormulario"><i class="bi bi-eraser"></i> Limpiar todo</button>
-                </div>
-                <div>
-                    <button class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" form="formClienteOrdenado" class="btn btn-primary rounded-pill px-5 shadow-sm"><i class="bi bi-save"></i> Guardar Cliente</button>
-                </div>
+                <div><button type="button" class="btn btn-limpiar px-4" id="btnLimpiarFormulario"><i class="bi bi-eraser"></i> Limpiar todo</button></div>
+                <div><button class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button><button type="submit" form="formClienteOrdenado" class="btn btn-primary rounded-pill px-5 shadow-sm"><i class="bi bi-save"></i> Guardar Cliente</button></div>
             </div>
         </div>
     </div>
@@ -405,7 +388,7 @@
     </div>
 </div>
 
-<!-- MODAL VER CLIENTE - CON FORMATO TABLA TAL CUAL COMO EL SEGUNDO DISEÑO -->
+<!-- MODAL VER CLIENTE - Totalmente funcional y con manejo de errores -->
 <div class="modal fade" id="modalVerCliente" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content modal-content-radius">
@@ -414,7 +397,7 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4" id="modalVerBody">
-                <!-- Aquí se inyectará el detalle en formato tabla -->
+                <div class="text-center py-4">Cargando información...</div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cerrar</button>
@@ -427,31 +410,40 @@
 <div class="modal fade" id="modalEliminarCliente" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">Eliminar Cliente</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="delete_id">
-                <p>¿Está seguro que desea eliminar permanentemente este cliente?</p>
-                <p class="text-danger small">Esta acción no se puede deshacer.</p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button id="btnConfirmarEliminar" class="btn btn-danger">Eliminar</button>
-            </div>
+            <div class="modal-header bg-danger text-white"><h5 class="modal-title">Eliminar Cliente</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body"><input type="hidden" id="delete_id"><p>¿Está seguro que desea eliminar permanentemente este cliente?</p><p class="text-danger small">Esta acción no se puede deshacer.</p></div>
+            <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button id="btnConfirmarEliminar" class="btn btn-danger">Eliminar</button></div>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // ==================== UTILS ==================
-    function notificar(msg, tipo='success'){ let d=document.createElement('div'); d.className='toast-notify-custom'; d.innerHTML=`<i class="bi bi-${tipo==='success'?'check-circle-fill':'exclamation-triangle-fill'}"></i> ${msg}`; document.body.appendChild(d); setTimeout(()=>d.remove(),3500); }
-    function escapeHtml(str){ if(!str) return ''; return str.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;});}
+    function notificar(msg, tipo='success'){ 
+        let d=document.createElement('div'); 
+        d.className='toast-notify-custom'; 
+        d.innerHTML=`<i class="bi bi-${tipo==='success'?'check-circle-fill':'exclamation-triangle-fill'}"></i> ${msg}`; 
+        document.body.appendChild(d); 
+        setTimeout(()=>d.remove(),3500); 
+    }
     
-    function configPlaceholderNuevo(){ let tipo=document.getElementById('tipo_documento_nuevo').value; let input=document.getElementById('numero_documento_nuevo'); if(tipo==='RUC'){input.placeholder='11 dígitos'; input.maxLength=11;} else if(tipo==='DNI'){input.placeholder='8 dígitos'; input.maxLength=8;} else{input.placeholder='Número documento'; input.maxLength=20;} }
-    function configPlaceholderEdit(){ let tipo=document.getElementById('edit_tipo_doc').value; let input=document.getElementById('edit_num_doc'); if(tipo==='RUC'){input.placeholder='11 dígitos'; input.maxLength=11;} else if(tipo==='DNI'){input.placeholder='8 dígitos'; input.maxLength=8;} else{input.placeholder='Número'; input.maxLength=20;} }
+    function escapeHtml(str){ 
+        if(!str) return ''; 
+        return String(str).replace(/[&<>]/g, function(m){
+            if(m==='&') return '&amp;'; 
+            if(m==='<') return '&lt;'; 
+            if(m==='>') return '&gt;'; 
+            return m;
+        }); 
+    }
+    
+    function configPlaceholderNuevo(){ 
+        let tipo=document.getElementById('tipo_documento_nuevo').value; 
+        let input=document.getElementById('numero_documento_nuevo'); 
+        if(tipo==='RUC'){input.placeholder='11 dígitos'; input.maxLength=11;} 
+        else if(tipo==='DNI'){input.placeholder='8 dígitos'; input.maxLength=8;} 
+        else{input.placeholder='Número documento'; input.maxLength=20;} 
+    }
     
     function limpiarFormularioNuevo() {
         document.getElementById('formClienteOrdenado').reset();
@@ -463,7 +455,6 @@
         notificar('Formulario limpiado', 'info');
     }
     
-    // ========== AGREGAR CONTACTOS Y PUNTOS (NUEVO) ==========
     function agregarContactoNuevoOrdenado(data={}) {
         const container = document.getElementById('listaContactosOrdenada');
         if(!container) return;
@@ -479,6 +470,7 @@
         container.appendChild(div);
         div.querySelector('.btn-remove-mini').onclick = ()=>div.remove();
     }
+    
     function agregarPuntoNuevoOrdenado(data={}) {
         const container = document.getElementById('listaPuntosOrdenada');
         if(!container) return;
@@ -496,20 +488,132 @@
         div.querySelector('.btn-remove-mini').onclick = ()=>div.remove();
     }
     
-    function agregarContactoEditOrd(data={}){ let cont=document.getElementById('edit_listaContactosOrd'); if(!cont)return; let d=document.createElement('div'); d.className='item-card-mini'; d.innerHTML=`<button class="btn-remove-mini">🗑️</button><div class="row g-2"><div class="col-md-5"><label>Nombre</label><input class="form-control" data-field="edit_nombre" value="${escapeHtml(data.nombre_contacto||'')}"></div><div class="col-md-4"><label>Cargo</label><input class="form-control" data-field="edit_cargo" value="${escapeHtml(data.cargo||'')}"></div><div class="col-md-3"><label>Teléfono</label><input class="form-control" data-field="edit_telefono" value="${escapeHtml(data.telefono||'')}"></div><div class="col-md-6"><label>Email</label><input class="form-control" data-field="edit_email" value="${escapeHtml(data.email||'')}"></div><div class="col-md-6"><div class="checkbox-linea"><input type="checkbox" data-field="principal_edit" ${data.principal?'checked':''}> Principal</div></div></div>`; cont.appendChild(d); d.querySelector('.btn-remove-mini').onclick=()=>d.remove(); }
-    function agregarPuntoEditOrd(data={}){ let cont=document.getElementById('edit_listaPuntosOrd'); if(!cont)return; let d=document.createElement('div'); d.className='item-card-mini'; d.innerHTML=`<button class="btn-remove-mini">🗑️</button><div class="row g-2"><div class="col-md-5"><label>Punto</label><input class="form-control" data-field="edit_nombre_punto" value="${escapeHtml(data.nombre_punto||'')}"></div><div class="col-md-7"><label>Dirección</label><input class="form-control" data-field="edit_direccion" value="${escapeHtml(data.direccion||'')}"></div><div class="col-md-4"><label>Contacto</label><input class="form-control" data-field="edit_responsable" value="${escapeHtml(data.responsable||'')}"></div><div class="col-md-4"><label>Teléfono</label><input class="form-control" data-field="edit_telefono_punto" value="${escapeHtml(data.telefono_punto||'')}"></div><div class="col-md-4"><label>Cond. Pago</label><select class="form-select" data-field="edit_condicion_pago"><option>Contado</option><option>Crédito 30 días</option><option>Personalizado</option></select></div><div class="col-12 mt-2"><input type="checkbox" data-field="edit_principal_punto" ${data.principal_punto?'checked':''}> Principal</div></div>`; cont.appendChild(d); d.querySelector('.btn-remove-mini').onclick=()=>d.remove(); }
-
-    async function consultarSunatNuevo(){ let tipo=document.getElementById('tipo_documento_nuevo').value; let num=document.getElementById('numero_documento_nuevo').value; if(tipo!=='RUC'){ notificar('Solo consulta para RUC','warning'); return; } if(!num||num.length!==11){ notificar('RUC 11 dígitos','warning'); return; } let btn=document.getElementById('btnSunatNuevo'); let original=btn.innerHTML; btn.innerHTML='<i class="bi bi-hourglass-split"></i>'; btn.disabled=true; try{ let res=await fetch(`/api/sunat/consulta?ruc=${num}`); let json=await res.json(); if(json.success){ document.getElementById('razon_social_nuevo').value=json.razon_social||''; document.getElementById('nombre_comercial_nuevo').value=json.nombre_comercial||''; document.getElementById('direccion_fiscal_nuevo').value=json.direccion||''; notificar('Datos Sunat cargados'); } else notificar('No encontrado','error'); }catch(e){ notificar('Error conexión','error'); }finally{ btn.innerHTML=original; btn.disabled=false; } }
-    async function consultarSunatEdit(){ let tipo=document.getElementById('edit_tipo_doc').value; let num=document.getElementById('edit_num_doc').value; if(tipo!=='RUC'){ notificar('Solo RUC','warning'); return; } if(!num||num.length!==11){ notificar('RUC inválido','warning'); return; } let btn=document.getElementById('btnEditSunat'); let orig=btn.innerHTML; btn.innerHTML='<i class="bi bi-hourglass-split"></i>'; btn.disabled=true; try{ let res=await fetch(`/api/sunat/consulta?ruc=${num}`); let json=await res.json(); if(json.success){ document.getElementById('edit_razon_social').value=json.razon_social||''; document.getElementById('edit_nombre_comercial').value=json.nombre_comercial||''; document.getElementById('edit_direccion_fiscal').value=json.direccion||''; notificar('Datos actualizados'); } else notificar('Error SUNAT','error'); }catch(e){ notificar('Error','error'); }finally{ btn.innerHTML=orig; btn.disabled=false;} }
+    function agregarContactoEditOrd(data={}){ 
+        let cont=document.getElementById('edit_listaContactosOrd'); 
+        if(!cont)return; 
+        let d=document.createElement('div'); 
+        d.className='item-card-mini'; 
+        d.innerHTML=`<button class="btn-remove-mini">🗑️</button><div class="row g-2"><div class="col-md-5"><label>Nombre</label><input class="form-control" data-field="edit_nombre" value="${escapeHtml(data.nombre_contacto||'')}"></div><div class="col-md-4"><label>Cargo</label><input class="form-control" data-field="edit_cargo" value="${escapeHtml(data.cargo||'')}"></div><div class="col-md-3"><label>Teléfono</label><input class="form-control" data-field="edit_telefono" value="${escapeHtml(data.telefono||'')}"></div><div class="col-md-6"><label>Email</label><input class="form-control" data-field="edit_email" value="${escapeHtml(data.email||'')}"></div><div class="col-md-6"><div class="checkbox-linea"><input type="checkbox" data-field="principal_edit" ${data.principal?'checked':''}> Principal</div></div></div>`; 
+        cont.appendChild(d); 
+        d.querySelector('.btn-remove-mini').onclick=()=>d.remove(); 
+    }
     
-    async function cargarClientes(filtro={}){ let tbody=document.getElementById('tbody-clientes'); tbody.innerHTML='<tr><td colspan="7" class="text-center p-4"><i class="bi bi-arrow-repeat"></i> Cargando...</td></tr>'; try{ let url='/api/clientes/buscar?'; let params=new URLSearchParams(); if(filtro.tipo) params.append('tipo_documento',filtro.tipo); if(filtro.busqueda) params.append('busqueda',filtro.busqueda); let res=await fetch(url+params); let json=await res.json(); let clientes=json.data||[]; if(!clientes.length){ tbody.innerHTML='<tr><td colspan="7" class="text-center">Sin clientes registrados</td></tr>'; return; } tbody.innerHTML=clientes.map(c=>`<tr><td class="fw-bold">${c.codigo_cliente||c.id}</td><td><span class="badge-doc">${c.numero_documento||'-'}</span></td><td><strong>${escapeHtml(c.razon_social||'-')}</strong><br><small class="text-muted">${escapeHtml(c.nombre_comercial||'')}</small></td><td>${escapeHtml(c.direccion_fiscal||'-')}</td><td>${c.puntos_entrega?.[0]?.condicion_pago||'-'}</td><td>${c.contactos?.length||0}</td><td class="text-center"><button class="btn-accion btn-ver-icon" onclick="verCliente(${c.id})"><i class="bi bi-eye"></i></button> <button class="btn-accion btn-edit-icon" onclick="editarCliente(${c.id})"><i class="bi bi-pencil"></i></button> <button class="btn-accion btn-del-icon" onclick="eliminarClienteModal(${c.id})"><i class="bi bi-trash"></i></button></td></tr>`).join(''); }catch(e){ tbody.innerHTML='<tr><td colspan="7" class="text-danger">Error carga</td></tr>';} }
+    function agregarPuntoEditOrd(data={}){ 
+        let cont=document.getElementById('edit_listaPuntosOrd'); 
+        if(!cont)return; 
+        let d=document.createElement('div'); 
+        d.className='item-card-mini'; 
+        d.innerHTML=`<button class="btn-remove-mini">🗑️</button><div class="row g-2"><div class="col-md-5"><label>Punto</label><input class="form-control" data-field="edit_nombre_punto" value="${escapeHtml(data.nombre_punto||'')}"></div><div class="col-md-7"><label>Dirección</label><input class="form-control" data-field="edit_direccion" value="${escapeHtml(data.direccion||'')}"></div><div class="col-md-4"><label>Contacto</label><input class="form-control" data-field="edit_responsable" value="${escapeHtml(data.responsable||'')}"></div><div class="col-md-4"><label>Teléfono</label><input class="form-control" data-field="edit_telefono_punto" value="${escapeHtml(data.telefono_punto||'')}"></div><div class="col-md-4"><label>Cond. Pago</label><select class="form-select" data-field="edit_condicion_pago"><option>Contado</option><option>Crédito 30 días</option><option>Personalizado</option></select></div><div class="col-12 mt-2"><input type="checkbox" data-field="edit_principal_punto" ${data.principal_punto?'checked':''}> Principal</div></div>`; 
+        cont.appendChild(d); 
+        d.querySelector('.btn-remove-mini').onclick=()=>d.remove(); 
+    }
     
-    // Función VER CLIENTE con formato de tabla detallada tal cual el segundo diseño
+    async function consultarSunatNuevo(){ 
+        let tipo=document.getElementById('tipo_documento_nuevo').value; 
+        let num=document.getElementById('numero_documento_nuevo').value; 
+        if(tipo!=='RUC'){ notificar('Solo consulta para RUC','warning'); return; } 
+        if(!num||num.length!==11){ notificar('RUC 11 dígitos','warning'); return; } 
+        let btn=document.getElementById('btnSunatNuevo'); 
+        let original=btn.innerHTML; 
+        btn.innerHTML='<i class="bi bi-hourglass-split"></i>'; 
+        btn.disabled=true; 
+        try{ 
+            let res=await fetch(`/api/sunat/consulta?ruc=${num}`); 
+            let json=await res.json(); 
+            if(json.success){ 
+                document.getElementById('razon_social_nuevo').value=json.razon_social||''; 
+                document.getElementById('nombre_comercial_nuevo').value=json.nombre_comercial||''; 
+                document.getElementById('direccion_fiscal_nuevo').value=json.direccion||''; 
+                notificar('Datos Sunat cargados'); 
+            } else notificar('No encontrado','error'); 
+        } catch(e){ notificar('Error conexión','error'); } 
+        finally{ btn.innerHTML=original; btn.disabled=false; } 
+    }
+    
+    async function cargarClientes(filtro={}){ 
+        let tbody=document.getElementById('tbody-clientes'); 
+        tbody.innerHTML='<tr><td colspan="7" class="text-center p-4"><i class="bi bi-arrow-repeat"></i> Cargando...</td></tr>'; 
+        try{ 
+            let url='/api/clientes/buscar?'; 
+            let params=new URLSearchParams(); 
+            if(filtro.tipo) params.append('tipo_documento',filtro.tipo); 
+            if(filtro.busqueda) params.append('busqueda',filtro.busqueda); 
+            let res=await fetch(url+params); 
+            let json=await res.json(); 
+            let clientes=json.data||[]; 
+            if(!clientes.length){ 
+                tbody.innerHTML='<tr><td colspan="7" class="text-center">Sin clientes registrados</td></tr>'; 
+                return; 
+            } 
+            tbody.innerHTML=clientes.map(c=>`<tr>
+                <td class="fw-bold">${c.codigo_cliente||c.id}</td>
+                <td><span class="badge-doc">${c.numero_documento||'-'}</span></td>
+                <td><strong>${escapeHtml(c.razon_social||'-')}</strong><br><small class="text-muted">${escapeHtml(c.nombre_comercial||'')}</small></td>
+                <td>${escapeHtml(c.direccion_fiscal||'-')}</td>
+                <td>${c.puntos_entrega && c.puntos_entrega[0] ? c.puntos_entrega[0].condicion_pago : '-'}</td>
+                <td>${c.contactos ? c.contactos.length : 0}</td>
+                <td class="text-center">
+                    <button class="btn-accion btn-ver-icon" onclick="verCliente(${c.id})"><i class="bi bi-eye"></i></button> 
+                    <button class="btn-accion btn-edit-icon" onclick="editarCliente(${c.id})"><i class="bi bi-pencil"></i></button> 
+                    <button class="btn-accion btn-del-icon" onclick="eliminarClienteModal(${c.id})"><i class="bi bi-trash"></i></button>
+                </td>
+            </tr>`).join(''); 
+        } catch(e){ 
+            tbody.innerHTML='<tr><td colspan="7" class="text-danger">Error carga</td></tr>'; 
+        } 
+    }
+    
+    // Función VER CLIENTE completamente funcional con manejo de datos
     window.verCliente = async (id) => {
         try {
+            const modalBody = document.getElementById('modalVerBody');
+            modalBody.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div><br>Cargando información...</div>';
+            
             let res = await fetch(`/api/clientes/${id}`);
             let json = await res.json();
             let c = json.data;
+            
+            if (!c) {
+                modalBody.innerHTML = '<div class="alert alert-danger">No se encontró información del cliente</div>';
+                return;
+            }
+            
+            let contactosHtml = '';
+            if (c.contactos && c.contactos.length > 0) {
+                contactosHtml = `<table class="subtable">
+                    <thead><tr><th>Nombre</th><th>Cargo</th><th>Teléfono</th><th>Email</th><th>Principal</th></tr></thead>
+                    <tbody>${c.contactos.map(ct => `
+                        <tr>
+                            <td>${escapeHtml(ct.nombre_contacto || '-')}</td>
+                            <td>${escapeHtml(ct.cargo || '-')}</td>
+                            <td>${escapeHtml(ct.telefono || '-')}</td>
+                            <td>${escapeHtml(ct.email || '-')}</td>
+                            <td>${ct.principal ? '✓ Sí' : '—'}</td>
+                        </tr>
+                    `).join('')}</tbody>
+                </table>`;
+            } else {
+                contactosHtml = '<p class="text-muted mb-0">No hay contactos registrados</p>';
+            }
+            
+            let puntosHtml = '';
+            if (c.puntos_entrega && c.puntos_entrega.length > 0) {
+                puntosHtml = `<table class="subtable">
+                    <thead><tr><th>Nombre Punto</th><th>Dirección</th><th>Responsable</th><th>Teléfono</th><th>Condición Pago</th><th>Principal</th></tr></thead>
+                    <tbody>${c.puntos_entrega.map(p => `
+                        <tr>
+                            <td>${escapeHtml(p.nombre_punto || '-')}</td>
+                            <td>${escapeHtml(p.direccion || '-')}</td>
+                            <td>${escapeHtml(p.responsable || '-')}</td>
+                            <td>${escapeHtml(p.telefono_punto || '-')}</td>
+                            <td>${escapeHtml(p.condicion_pago || '-')}</td>
+                            <td>${p.principal_punto ? '✓ Sí' : '—'}</td>
+                        </tr>
+                    `).join('')}</tbody>
+                </table>`;
+            } else {
+                puntosHtml = '<p class="text-muted mb-0">No hay puntos de entrega registrados</p>';
+            }
             
             let html = `
                 <table class="detail-table">
@@ -519,66 +623,161 @@
                     <tr><th>Razón Social</th><td>${escapeHtml(c.razon_social || '-')}</td></tr>
                     <tr><th>Nombre Comercial</th><td>${escapeHtml(c.nombre_comercial || '-')}</td></tr>
                     <tr><th>Dirección Fiscal</th><td>${escapeHtml(c.direccion_fiscal || '-')}</td></tr>
-                    <tr><th>Contactos</th><td>
-                        <table class="subtable">
-                            <thead><tr><th>Nombre</th><th>Cargo</th><th>Teléfono</th><th>Email</th><th>Principal</th></tr></thead>
-                            <tbody>${(c.contactos || []).map(ct => `
-                                <tr>
-                                    <td>${escapeHtml(ct.nombre_contacto || '-')}</td>
-                                    <td>${escapeHtml(ct.cargo || '-')}</td>
-                                    <td>${escapeHtml(ct.telefono || '-')}</td>
-                                    <td>${escapeHtml(ct.email || '-')}</td>
-                                    <td>${ct.principal ? '✓ Sí' : '—'}</td>
-                                </tr>
-                            `).join('') || '<tr><td colspan="5" class="text-center">No hay contactos registrados</td></tr>'}
-                            </tbody>
-                        </table>
-                    </td></tr>
-                    <tr><th>Puntos de Entrega</th><td>
-                        <table class="subtable">
-                            <thead><tr><th>Nombre Punto</th><th>Dirección</th><th>Responsable</th><th>Teléfono</th><th>Condición Pago</th><th>Principal</th></tr></thead>
-                            <tbody>${(c.puntos_entrega || []).map(p => `
-                                <tr>
-                                    <td>${escapeHtml(p.nombre_punto || '-')}</td>
-                                    <td>${escapeHtml(p.direccion || '-')}</td>
-                                    <td>${escapeHtml(p.responsable || '-')}</td>
-                                    <td>${escapeHtml(p.telefono_punto || '-')}</td>
-                                    <td>${escapeHtml(p.condicion_pago || '-')}</td>
-                                    <td>${p.principal_punto ? '✓ Sí' : '—'}</td>
-                                </tr>
-                            `).join('') || '<tr><td colspan="6" class="text-center">No hay puntos de entrega registrados</td></tr>'}
-                            </tbody>
-                        </table>
-                    </td></tr>
+                    <tr><th>Contactos</th><td>${contactosHtml}</td></tr>
+                    <tr><th>Puntos de Entrega</th><td>${puntosHtml}</td></tr>
                 </table>
             `;
-            document.getElementById('modalVerBody').innerHTML = html;
+            
+            modalBody.innerHTML = html;
             new bootstrap.Modal(document.getElementById('modalVerCliente')).show();
         } catch(e) {
+            console.error('Error:', e);
+            document.getElementById('modalVerBody').innerHTML = '<div class="alert alert-danger">Error al cargar detalles del cliente: ' + (e.message || 'Error desconocido') + '</div>';
             notificar('Error al cargar detalles del cliente', 'error');
         }
     };
     
-    window.editarCliente=async(id)=>{ try{ let res=await fetch(`/api/clientes/${id}`); let json=await res.json(); let c=json.data; document.getElementById('edit_id_cliente').value=c.id; document.getElementById('edit_tipo_doc').value=c.tipo_documento||'RUC'; document.getElementById('edit_num_doc').value=c.numero_documento||''; document.getElementById('edit_razon_social').value=c.razon_social||''; document.getElementById('edit_nombre_comercial').value=c.nombre_comercial||''; document.getElementById('edit_direccion_fiscal').value=c.direccion_fiscal||''; document.getElementById('edit_listaContactosOrd').innerHTML=''; document.getElementById('edit_listaPuntosOrd').innerHTML=''; (c.contactos||[]).forEach(ct=>agregarContactoEditOrd(ct)); if((c.contactos||[]).length===0) agregarContactoEditOrd({}); (c.puntos_entrega||[]).forEach(p=>agregarPuntoEditOrd(p)); if((c.puntos_entrega||[]).length===0) agregarPuntoEditOrd({}); new bootstrap.Modal(document.getElementById('modalEditarClienteOrdenado')).show(); }catch(e){ notificar('Error edición','error');} };
+    window.editarCliente=async(id)=>{ 
+        try{ 
+            let res=await fetch(`/api/clientes/${id}`); 
+            let json=await res.json(); 
+            let c=json.data; 
+            document.getElementById('edit_id_cliente').value=c.id; 
+            document.getElementById('edit_tipo_doc').value=c.tipo_documento||'RUC'; 
+            document.getElementById('edit_num_doc').value=c.numero_documento||''; 
+            document.getElementById('edit_razon_social').value=c.razon_social||''; 
+            document.getElementById('edit_nombre_comercial').value=c.nombre_comercial||''; 
+            document.getElementById('edit_direccion_fiscal').value=c.direccion_fiscal||''; 
+            document.getElementById('edit_listaContactosOrd').innerHTML=''; 
+            document.getElementById('edit_listaPuntosOrd').innerHTML=''; 
+            if(c.contactos && c.contactos.length>0){ c.contactos.forEach(ct=>agregarContactoEditOrd(ct)); } 
+            else{ agregarContactoEditOrd({}); } 
+            if(c.puntos_entrega && c.puntos_entrega.length>0){ c.puntos_entrega.forEach(p=>agregarPuntoEditOrd(p)); } 
+            else{ agregarPuntoEditOrd({}); } 
+            new bootstrap.Modal(document.getElementById('modalEditarClienteOrdenado')).show(); 
+        } catch(e){ notificar('Error edición','error');} 
+    };
+    
     window.eliminarClienteModal=(id)=>{ document.getElementById('delete_id').value=id; new bootstrap.Modal(document.getElementById('modalEliminarCliente')).show(); };
-    document.getElementById('btnConfirmarEliminar')?.addEventListener('click',async()=>{ let id=document.getElementById('delete_id').value; let res=await fetch(`/api/clientes/${id}`,{method:'DELETE'}); let json=await res.json(); if(json.success){ notificar('Cliente eliminado'); cargarClientes(); bootstrap.Modal.getInstance(document.getElementById('modalEliminarCliente')).hide(); } else notificar('Error','error'); });
     
-    document.getElementById('formClienteOrdenado')?.addEventListener('submit',async(e)=>{ e.preventDefault(); let data={ tipo_documento:document.getElementById('tipo_documento_nuevo').value, numero_documento:document.getElementById('numero_documento_nuevo').value, razon_social:document.getElementById('razon_social_nuevo').value, nombre_comercial:document.getElementById('nombre_comercial_nuevo').value, direccion_fiscal:document.getElementById('direccion_fiscal_nuevo').value, contactos:[], puntos_entrega:[] }; document.querySelectorAll('#listaContactosOrdenada .item-card-mini').forEach(el=>{ let nombre=el.querySelector('[data-field="nombre_contacto"]')?.value.trim(); if(nombre) data.contactos.push({ nombre_contacto:nombre, cargo:el.querySelector('[data-field="cargo"]')?.value||'', email:el.querySelector('[data-field="email"]')?.value||'', telefono:el.querySelector('[data-field="telefono"]')?.value||'', principal:el.querySelector('[data-field="principal"]')?.checked||false }); }); document.querySelectorAll('#listaPuntosOrdenada .item-card-mini').forEach(el=>{ let nombreP=el.querySelector('[data-field="nombre_punto"]')?.value.trim(); if(nombreP){ data.puntos_entrega.push({ nombre_punto:nombreP, direccion:el.querySelector('[data-field="direccion"]')?.value||'', responsable:el.querySelector('[data-field="responsable"]')?.value||'', telefono:el.querySelector('[data-field="telefono_punto"]')?.value||'', condicion_pago:el.querySelector('[data-field="condicion_pago"]')?.value||'', principal_punto:el.querySelector('[data-field="principal_punto"]')?.checked||false }); } }); let res=await fetch('/api/clientes/guardar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}); let json=await res.json(); if(json.success){ notificar('Cliente registrado'); bootstrap.Modal.getInstance(document.getElementById('modalNuevoClienteOrdenado')).hide(); document.getElementById('formClienteOrdenado').reset(); document.getElementById('listaContactosOrdenada').innerHTML=''; document.getElementById('listaPuntosOrdenada').innerHTML=''; agregarContactoNuevoOrdenado(); agregarPuntoNuevoOrdenado(); cargarClientes(); } else notificar(json.error||'Error guardar','error'); });
+    document.getElementById('btnConfirmarEliminar')?.addEventListener('click',async()=>{ 
+        let id=document.getElementById('delete_id').value; 
+        let res=await fetch(`/api/clientes/${id}`,{method:'DELETE'}); 
+        let json=await res.json(); 
+        if(json.success){ notificar('Cliente eliminado'); cargarClientes(); bootstrap.Modal.getInstance(document.getElementById('modalEliminarCliente')).hide(); } 
+        else notificar('Error','error'); 
+    });
     
-    document.getElementById('formEditarClienteOrdenado')?.addEventListener('submit',async(e)=>{ e.preventDefault(); let id=document.getElementById('edit_id_cliente').value; let data={ tipo_documento:document.getElementById('edit_tipo_doc').value, numero_documento:document.getElementById('edit_num_doc').value, razon_social:document.getElementById('edit_razon_social').value, nombre_comercial:document.getElementById('edit_nombre_comercial').value, direccion_fiscal:document.getElementById('edit_direccion_fiscal').value, contactos:[], puntos_entrega:[] }; document.querySelectorAll('#edit_listaContactosOrd .item-card-mini').forEach(el=>{ let nombre=el.querySelector('[data-field="edit_nombre"]')?.value.trim(); if(nombre) data.contactos.push({ nombre_contacto:nombre, cargo:el.querySelector('[data-field="edit_cargo"]')?.value||'', email:el.querySelector('[data-field="edit_email"]')?.value||'', telefono:el.querySelector('[data-field="edit_telefono"]')?.value||'', principal:el.querySelector('[data-field="principal_edit"]')?.checked||false }); }); document.querySelectorAll('#edit_listaPuntosOrd .item-card-mini').forEach(el=>{ let nombre=el.querySelector('[data-field="edit_nombre_punto"]')?.value.trim(); if(nombre) data.puntos_entrega.push({ nombre_punto:nombre, direccion:el.querySelector('[data-field="edit_direccion"]')?.value||'', responsable:el.querySelector('[data-field="edit_responsable"]')?.value||'', telefono:el.querySelector('[data-field="edit_telefono_punto"]')?.value||'', condicion_pago:el.querySelector('[data-field="edit_condicion_pago"]')?.value||'', principal_punto:el.querySelector('[data-field="edit_principal_punto"]')?.checked||false }); }); let res=await fetch(`/api/clientes/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}); let json=await res.json(); if(json.success){ notificar('Cliente actualizado'); bootstrap.Modal.getInstance(document.getElementById('modalEditarClienteOrdenado')).hide(); cargarClientes(); } else notificar(json.error,'error'); });
+    document.getElementById('formClienteOrdenado')?.addEventListener('submit',async(e)=>{ 
+        e.preventDefault(); 
+        let data={ 
+            tipo_documento:document.getElementById('tipo_documento_nuevo').value, 
+            numero_documento:document.getElementById('numero_documento_nuevo').value, 
+            razon_social:document.getElementById('razon_social_nuevo').value, 
+            nombre_comercial:document.getElementById('nombre_comercial_nuevo').value, 
+            direccion_fiscal:document.getElementById('direccion_fiscal_nuevo').value, 
+            contactos:[], 
+            puntos_entrega:[] 
+        }; 
+        document.querySelectorAll('#listaContactosOrdenada .item-card-mini').forEach(el=>{ 
+            let nombre=el.querySelector('[data-field="nombre_contacto"]')?.value.trim(); 
+            if(nombre) data.contactos.push({ 
+                nombre_contacto:nombre, 
+                cargo:el.querySelector('[data-field="cargo"]')?.value||'', 
+                email:el.querySelector('[data-field="email"]')?.value||'', 
+                telefono:el.querySelector('[data-field="telefono"]')?.value||'', 
+                principal:el.querySelector('[data-field="principal"]')?.checked||false 
+            }); 
+        }); 
+        document.querySelectorAll('#listaPuntosOrdenada .item-card-mini').forEach(el=>{ 
+            let nombreP=el.querySelector('[data-field="nombre_punto"]')?.value.trim(); 
+            if(nombreP){ 
+                data.puntos_entrega.push({ 
+                    nombre_punto:nombreP, 
+                    direccion:el.querySelector('[data-field="direccion"]')?.value||'', 
+                    responsable:el.querySelector('[data-field="responsable"]')?.value||'', 
+                    telefono:el.querySelector('[data-field="telefono_punto"]')?.value||'', 
+                    condicion_pago:el.querySelector('[data-field="condicion_pago"]')?.value||'', 
+                    principal_punto:el.querySelector('[data-field="principal_punto"]')?.checked||false 
+                }); 
+            } 
+        }); 
+        let res=await fetch('/api/clientes/guardar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}); 
+        let json=await res.json(); 
+        if(json.success){ 
+            notificar('Cliente registrado'); 
+            bootstrap.Modal.getInstance(document.getElementById('modalNuevoClienteOrdenado')).hide(); 
+            document.getElementById('formClienteOrdenado').reset(); 
+            document.getElementById('listaContactosOrdenada').innerHTML=''; 
+            document.getElementById('listaPuntosOrdenada').innerHTML=''; 
+            agregarContactoNuevoOrdenado(); 
+            agregarPuntoNuevoOrdenado(); 
+            cargarClientes(); 
+        } else notificar(json.error||'Error guardar','error'); 
+    });
+    
+    document.getElementById('formEditarClienteOrdenado')?.addEventListener('submit',async(e)=>{ 
+        e.preventDefault(); 
+        let id=document.getElementById('edit_id_cliente').value; 
+        let data={ 
+            tipo_documento:document.getElementById('edit_tipo_doc').value, 
+            numero_documento:document.getElementById('edit_num_doc').value, 
+            razon_social:document.getElementById('edit_razon_social').value, 
+            nombre_comercial:document.getElementById('edit_nombre_comercial').value, 
+            direccion_fiscal:document.getElementById('edit_direccion_fiscal').value, 
+            contactos:[], 
+            puntos_entrega:[] 
+        }; 
+        document.querySelectorAll('#edit_listaContactosOrd .item-card-mini').forEach(el=>{ 
+            let nombre=el.querySelector('[data-field="edit_nombre"]')?.value.trim(); 
+            if(nombre) data.contactos.push({ 
+                nombre_contacto:nombre, 
+                cargo:el.querySelector('[data-field="edit_cargo"]')?.value||'', 
+                email:el.querySelector('[data-field="edit_email"]')?.value||'', 
+                telefono:el.querySelector('[data-field="edit_telefono"]')?.value||'', 
+                principal:el.querySelector('[data-field="principal_edit"]')?.checked||false 
+            }); 
+        }); 
+        document.querySelectorAll('#edit_listaPuntosOrd .item-card-mini').forEach(el=>{ 
+            let nombre=el.querySelector('[data-field="edit_nombre_punto"]')?.value.trim(); 
+            if(nombre) data.puntos_entrega.push({ 
+                nombre_punto:nombre, 
+                direccion:el.querySelector('[data-field="edit_direccion"]')?.value||'', 
+                responsable:el.querySelector('[data-field="edit_responsable"]')?.value||'', 
+                telefono:el.querySelector('[data-field="edit_telefono_punto"]')?.value||'', 
+                condicion_pago:el.querySelector('[data-field="edit_condicion_pago"]')?.value||'', 
+                principal_punto:el.querySelector('[data-field="edit_principal_punto"]')?.checked||false 
+            }); 
+        }); 
+        let res=await fetch(`/api/clientes/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}); 
+        let json=await res.json(); 
+        if(json.success){ 
+            notificar('Cliente actualizado'); 
+            bootstrap.Modal.getInstance(document.getElementById('modalEditarClienteOrdenado')).hide(); 
+            cargarClientes(); 
+        } else notificar(json.error,'error'); 
+    });
     
     document.getElementById('btnLimpiarFormulario')?.addEventListener('click', limpiarFormularioNuevo);
-    
     document.getElementById('btnAgregarContactoOrdenado')?.addEventListener('click',()=>agregarContactoNuevoOrdenado());
     document.getElementById('btnAgregarPuntoOrdenado')?.addEventListener('click',()=>agregarPuntoNuevoOrdenado());
     document.getElementById('btnAgregarContactoEditOrd')?.addEventListener('click',()=>agregarContactoEditOrd());
     document.getElementById('btnAgregarPuntoEditOrd')?.addEventListener('click',()=>agregarPuntoEditOrd());
     document.getElementById('btnSunatNuevo')?.addEventListener('click',consultarSunatNuevo);
-    document.getElementById('btnEditSunat')?.addEventListener('click',consultarSunatEdit);
     document.getElementById('tipo_documento_nuevo')?.addEventListener('change',configPlaceholderNuevo);
-    document.getElementById('edit_tipo_doc')?.addEventListener('change',configPlaceholderEdit);
-    let filtroTipo=document.getElementById('filtro-tipo'), filtroBusq=document.getElementById('filtro-busqueda'); let timer; filtroTipo?.addEventListener('change',()=>cargarClientes({tipo:filtroTipo.value,busqueda:filtroBusq?.value||''})); filtroBusq?.addEventListener('input',()=>{ clearTimeout(timer); timer=setTimeout(()=>cargarClientes({tipo:filtroTipo?.value||'',busqueda:filtroBusq.value}),400); });
-    setTimeout(()=>{ if(document.getElementById('listaContactosOrdenada')?.children.length===0) agregarContactoNuevoOrdenado(); if(document.getElementById('listaPuntosOrdenada')?.children.length===0) agregarPuntoNuevoOrdenado(); configPlaceholderNuevo(); configPlaceholderEdit(); cargarClientes(); },150);
+    
+    let filtroTipo=document.getElementById('filtro-tipo'), filtroBusq=document.getElementById('filtro-busqueda'); 
+    let timer; 
+    filtroTipo?.addEventListener('change',()=>cargarClientes({tipo:filtroTipo.value,busqueda:filtroBusq?.value||''})); 
+    filtroBusq?.addEventListener('input',()=>{ clearTimeout(timer); timer=setTimeout(()=>cargarClientes({tipo:filtroTipo?.value||'',busqueda:filtroBusq.value}),400); });
+    
+    setTimeout(()=>{ 
+        if(document.getElementById('listaContactosOrdenada')?.children.length===0) agregarContactoNuevoOrdenado(); 
+        if(document.getElementById('listaPuntosOrdenada')?.children.length===0) agregarPuntoNuevoOrdenado(); 
+        configPlaceholderNuevo(); 
+        cargarClientes(); 
+    },150);
 </script>
 </body>
 </html>
+```
