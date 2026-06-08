@@ -303,9 +303,6 @@ def obtener_productos():
     """)
 
 
-# =========================
-# Insertar nuevo proveedor (Versión Actualizada)
-# =========================
 def insertar_proveedor(
     razon_social,
     ruc,
@@ -321,40 +318,28 @@ def insertar_proveedor(
     cci="",
     lugar_recojo=""
 ):
+    conn = None
+    cur = None
     try:
-        with db_tx() as conn:
-            cur = conn.cursor(cursor_factory=RealDictCursor)
+        print(f"📝 Insertando proveedor: {razon_social}, RUC: {ruc}")
+        
+        conn = get_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
 
-            # Generar código automáticamente (PROV-00001, PROV-00002...)
-            cur.execute("""
-                SELECT COALESCE(MAX(CAST(SUBSTRING(codigo_proveedor FROM 6) AS INTEGER)), 0) + 1 as siguiente
-                FROM proveedores 
-                WHERE codigo_proveedor LIKE 'PROV-%'
-            """)
-            siguiente = cur.fetchone()['siguiente']
-            codigo_proveedor = f"PROV-{siguiente:05d}"
+        # 🔥 GENERAR CÓDIGO MANUALMENTE
+        cur.execute("""
+            SELECT COALESCE(MAX(CAST(SUBSTRING(codigo_proveedor FROM 6) AS INTEGER)), 0) + 1 as siguiente
+            FROM proveedores 
+            WHERE codigo_proveedor LIKE 'PROV-%'
+        """)
+        resultado = cur.fetchone()
+        siguiente = resultado['siguiente'] if resultado else 1
+        codigo_proveedor = f"PROV-{siguiente:05d}"
+        
+        print(f"   📌 Código generado: {codigo_proveedor}")
 
-            cur.execute("""
-                INSERT INTO proveedores (
-                    codigo_proveedor,
-                    razon_social,
-                    razon_comercial,
-                    ruc,
-                    direccion,
-                    telefono,
-                    contacto,
-                    email,
-                    condicion_pago,
-                    tiempo_credito,
-                    banco,
-                    numero_cuenta,
-                    cci,
-                    lugar_recojo,
-                    activo,
-                    fecha_creacion
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE, NOW())
-                RETURNING id
-            """, (
+        cur.execute("""
+            INSERT INTO proveedores (
                 codigo_proveedor,
                 razon_social,
                 razon_comercial,
@@ -368,18 +353,47 @@ def insertar_proveedor(
                 banco,
                 numero_cuenta,
                 cci,
-                lugar_recojo
-            ))
+                lugar_recojo,
+                activo,
+                fecha_creacion
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE, NOW())
+            RETURNING id
+        """, (
+            codigo_proveedor,
+            razon_social,
+            razon_comercial,
+            ruc,
+            direccion,
+            telefono,
+            contacto,
+            email,
+            condicion_pago,
+            tiempo_credito,
+            banco,
+            numero_cuenta,
+            cci,
+            lugar_recojo
+        ))
 
-            nuevo_id = cur.fetchone()['id']
-            conn.commit()  # Por si db_tx no hace commit automático
-
-            return nuevo_id   # ← Muy importante
+        result = cur.fetchone()
+        nuevo_id = result['id']
+        conn.commit()
+        
+        print(f"   ✅ Insertado con ID: {nuevo_id}")
+        return nuevo_id
 
     except Exception as e:
-        print(f"Error insertando proveedor: {e}")
-        raise  # Para que la API lo capture
-
+        if conn:
+            conn.rollback()
+        print(f"❌ Error insertando proveedor: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
 
 # =========================
 # Obtener proveedores
@@ -1542,9 +1556,8 @@ def obtener_proveedor_por_id(proveedor_id):
         print(f"❌ Error en obtener_proveedor_por_id({proveedor_id}): {e}")
         return None
 
-
 def actualizar_proveedor(proveedor_id, data):
-    """Actualizar proveedor - VERSIÓN CORREGIDA que recibe un diccionario"""
+    """Actualizar proveedor - SIN fecha_actualizacion"""
     try:
         db_execute("""
             UPDATE proveedores 
@@ -1560,8 +1573,7 @@ def actualizar_proveedor(proveedor_id, data):
                 banco = %s,
                 numero_cuenta = %s,   
                 cci = %s, 
-                lugar_recojo = %s,
-                fecha_actualizacion = NOW()
+                lugar_recojo = %s
             WHERE id = %s AND activo = TRUE
         """, (
             data.get('razon_social'),
