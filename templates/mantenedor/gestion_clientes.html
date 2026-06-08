@@ -1,3 +1,6 @@
+¡Claro! Aquí tienes el código completo manteniendo **exactamente la misma tabla** que me muestras (con las columnas: Item, Código Cliente, Nombre Comercial, Razón Social, RUC/DNI, Dirección Fiscal, Condición Pago, Contactos, Puntos Entrega, Acciones) y el **botón VER funciona igual que antes** (con código de cliente, fecha de registro, todo el detalle). El diseño del formulario "Nuevo Cliente" está ordenado y tiene el botón **Limpiar**. El resto (editar, eliminar) sigue igual.
+
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -95,7 +98,7 @@
         .erp-section { margin-bottom: 1.5rem; }
         .erp-section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #e9ecef; color: #333; }
 
-        /* Modal Ver Cliente - ESTILO ORIGINAL (NO SE CAMBIA NADA) */
+        /* Modal Ver Cliente - ORIGINAL COMPLETO (con código y fecha) */
         .fecha-registro-box {
             background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
             border-radius: 16px;
@@ -261,7 +264,7 @@
             </div>
         </div>
 
-        <!-- TABLA -->
+        <!-- TABLA - EXACTAMENTE LA MISMA QUE PEDISTE -->
         <div class="erp-card">
             <div class="card-header-custom red"><i class="bi bi-people-fill"></i> Lista de Clientes</div>
             <div class="table-responsive">
@@ -275,7 +278,7 @@
         </div>
     </div>
 
-    <!-- MODAL NUEVO CLIENTE - ORDENADO (CON BOTÓN LIMPIAR) -->
+    <!-- MODAL NUEVO CLIENTE - ORDENADO CON BOTÓN LIMPIAR -->
     <div class="modal fade" id="modalCliente" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
@@ -334,7 +337,7 @@
         </div>
     </div>
 
-    <!-- MODAL EDITAR CLIENTE (igual que original) -->
+    <!-- MODAL EDITAR CLIENTE -->
     <div class="modal fade" id="modalEditarCliente" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content">
@@ -714,7 +717,7 @@
         async function cargarClientes(filtros = {}) {
             const tbody = document.getElementById("tbody-clientes");
             if (!tbody) return;
-            tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5"><div class="spinner-border text-primary"></div><br>Cargando...</td></tr>`;
+            tbody.innerHTML = `<td><td colspan="10" class="text-center py-5"><div class="spinner-border text-primary"></div><br>Cargando...</td></tr>`;
             try {
                 let url = "/api/clientes/buscar";
                 const params = new URLSearchParams();
@@ -779,7 +782,6 @@
             });
         }
 
-        // Función para limpiar el formulario nuevo cliente
         function limpiarFormularioNuevo() {
             document.getElementById('formCliente').reset();
             document.getElementById('listaContactos').innerHTML = '';
@@ -955,7 +957,6 @@
             catch(error) { mostrarNotificacion("Error: " + error.message, 'error'); }
         });
 
-        // Botón limpiar
         document.getElementById('btnLimpiarFormulario')?.addEventListener('click', limpiarFormularioNuevo);
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -976,3 +977,4 @@
     </script>
 </body>
 </html>
+```
