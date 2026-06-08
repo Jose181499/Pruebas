@@ -76,23 +76,29 @@ def db_query(sql, params=()):
     return data
 
 
-# =========================
-# EXECUTE
-# =========================
 def db_execute(sql, params=()):
-
-    conn = get_connection()
-
-    cur = conn.cursor()
-
-    cur.execute(sql, params)
-
-    conn.commit()
-
-    cur.close()
-
-    conn.close()
-
+    """
+    Ejecuta una consulta SQL y retorna el número de filas afectadas
+    """
+    conn = None
+    cur = None
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute(sql, params)
+        conn.commit()
+        filas_afectadas = cur.rowcount
+        return filas_afectadas
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print(f"❌ Error en db_execute: {e}")
+        raise
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
 
 # =====================================
 # GUARDAR
