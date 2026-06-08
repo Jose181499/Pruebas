@@ -12,7 +12,6 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #f0f4f9; }
 
-        /* Navbar */
         .navbar-erp {
             background: linear-gradient(135deg, #0B132B 0%, #1C2541 100%);
             padding: 0.9rem 2rem;
@@ -30,7 +29,6 @@
         .empresa-sub { font-size: 0.7rem; opacity: 0.75; color: #b9d0f0; }
         .user-badge { background: #2c3e66; border-radius: 40px; padding: 0.4rem 1.2rem; font-size: 0.85rem; color: white; }
 
-        /* Hero */
         .hero-modern {
             background: linear-gradient(115deg, #1F2B5C, #2A3E7C);
             border-radius: 28px;
@@ -41,7 +39,6 @@
         }
         .hero-title { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.5px; }
 
-        /* Tarjetas */
         .card-ordenada {
             background: white;
             border-radius: 24px;
@@ -63,7 +60,6 @@
         }
         .card-body-orden { padding: 1.5rem; }
 
-        /* Formulario */
         .form-label-peq {
             font-weight: 600;
             font-size: 0.7rem;
@@ -83,8 +79,18 @@
             border-color: #3b71ca;
             box-shadow: 0 0 0 3px rgba(59,113,202,0.15);
         }
+        .btn-sunat-sm {
+            background: #1e2a47;
+            border: none;
+            border-radius: 12px;
+            padding: 0 1rem;
+            font-weight: 500;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            color: white;
+        }
+        .btn-sunat-sm:hover { background: #2c3e66; transform: translateY(-1px); }
 
-        /* Tabla */
         .table-styled th {
             background: #f8fafd;
             font-weight: 700;
@@ -109,6 +115,16 @@
             display: inline-block;
             white-space: nowrap;
         }
+        .codigo-proveedor {
+            background: linear-gradient(135deg, #1e2a47, #2c3e66);
+            color: white;
+            border-radius: 20px;
+            padding: 0.2rem 0.8rem;
+            font-weight: 600;
+            font-size: 0.75rem;
+            display: inline-block;
+            font-family: monospace;
+        }
         .acciones-cell {
             white-space: nowrap;
             text-align: center;
@@ -132,7 +148,6 @@
         .btn-del-icon { color: #dc2626; }
         .btn-del-icon:hover { background: #fee2e2; }
 
-        /* Notificaciones */
         .toast-notify-custom {
             position: fixed; bottom: 25px; right: 25px; z-index: 9999;
             background: #1f2937; color: white; border-radius: 48px;
@@ -147,6 +162,14 @@
             padding: 1rem 1.5rem;
         }
         .modal-content-radius { border-radius: 24px; border: none; }
+        .btn-limpiar {
+            border-radius: 30px;
+            background: #f3f4f6;
+            border: 1px solid #ddd;
+            color: #374151;
+            font-weight: 500;
+        }
+        .btn-limpiar:hover { background: #e5e7eb; }
         
         .detail-table {
             width: 100%;
@@ -256,7 +279,7 @@
             <table class="table table-styled align-middle mb-0">
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th>Item</th>
                         <th>Código Proveedor</th>
                         <th>Razón Social</th>
                         <th>RUC</th>
@@ -300,11 +323,15 @@
                                 <label class="form-label-peq">Dirección Fiscal</label>
                                 <input type="text" class="form-control input-moderno" id="direccion" placeholder="Dirección fiscal completa">
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-5">
                                 <label class="form-label-peq">RUC *</label>
-                                <input type="text" class="form-control input-moderno" id="ruc" placeholder="11 dígitos" maxlength="11" required>
+                                <div class="input-group">
+                                    <input type="text" class="form-control input-moderno" id="ruc" placeholder="11 dígitos" maxlength="11" required>
+                                    <button class="btn btn-sunat-sm" type="button" id="btnSunatProveedor"><i class="bi bi-building me-1"></i> Consultar Sunat</button>
+                                </div>
+                                <div id="sunatFeedback" class="small text-muted mt-1"></div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label-peq">Persona de Contacto</label>
                                 <input type="text" class="form-control input-moderno" id="contacto" placeholder="Nombre del contacto">
                             </div>
@@ -388,8 +415,14 @@
                             <div class="col-md-6"><label class="form-label-peq">Razón Social *</label><input type="text" class="form-control input-moderno" id="edit_razon_social" required></div>
                             <div class="col-md-6"><label class="form-label-peq">Nombre Comercial</label><input type="text" class="form-control input-moderno" id="edit_razon_comercial"></div>
                             <div class="col-md-12"><label class="form-label-peq">Dirección Fiscal</label><input type="text" class="form-control input-moderno" id="edit_direccion"></div>
-                            <div class="col-md-4"><label class="form-label-peq">RUC *</label><input type="text" class="form-control input-moderno" id="edit_ruc" maxlength="11" required></div>
-                            <div class="col-md-4"><label class="form-label-peq">Persona de Contacto</label><input type="text" class="form-control input-moderno" id="edit_contacto"></div>
+                            <div class="col-md-5">
+                                <label class="form-label-peq">RUC *</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control input-moderno" id="edit_ruc" maxlength="11" required>
+                                    <button class="btn btn-sunat-sm" type="button" id="btnEditSunatProveedor"><i class="bi bi-building me-1"></i> Consultar Sunat</button>
+                                </div>
+                            </div>
+                            <div class="col-md-3"><label class="form-label-peq">Persona de Contacto</label><input type="text" class="form-control input-moderno" id="edit_contacto"></div>
                             <div class="col-md-4"><label class="form-label-peq">Teléfono</label><input type="text" class="form-control input-moderno" id="edit_telefono"></div>
                             <div class="col-md-6"><label class="form-label-peq">Email</label><input type="email" class="form-control input-moderno" id="edit_email"></div>
                             <div class="col-md-3"><label class="form-label-peq">Condición de Pago</label><select id="edit_condicion_pago" class="form-select input-moderno"><option value="">Seleccione</option><option value="Credito">Crédito</option><option value="Contado">Contado</option></select></div>
@@ -502,6 +535,43 @@
         notificar('Formulario limpiado', 'info');
     }
     
+    // Función para consultar SUNAT
+    async function consultarSunatProveedor(ruc, razonSocialField, nombreComercialField, direccionField) {
+        if(!ruc || ruc.length !== 11){
+            notificar('Ingrese un RUC válido de 11 dígitos', 'warning');
+            return false;
+        }
+        
+        try {
+            let res = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
+            let json = await res.json();
+            if(json.success){
+                if(razonSocialField) document.getElementById(razonSocialField).value = json.razon_social || '';
+                if(nombreComercialField) document.getElementById(nombreComercialField).value = json.nombre_comercial || '';
+                if(direccionField) document.getElementById(direccionField).value = json.direccion || '';
+                notificar('Datos cargados desde SUNAT');
+                return true;
+            } else {
+                notificar('No se encontró información para este RUC', 'error');
+                return false;
+            }
+        } catch(e) {
+            notificar('Error al consultar SUNAT', 'error');
+            return false;
+        }
+    }
+    
+    // Eventos SUNAT
+    document.getElementById('btnSunatProveedor')?.addEventListener('click', async () => {
+        let ruc = document.getElementById('ruc').value;
+        await consultarSunatProveedor(ruc, 'razon_social', 'razon_comercial', 'direccion');
+    });
+    
+    document.getElementById('btnEditSunatProveedor')?.addEventListener('click', async () => {
+        let ruc = document.getElementById('edit_ruc').value;
+        await consultarSunatProveedor(ruc, 'edit_razon_social', 'edit_razon_comercial', 'edit_direccion');
+    });
+    
     // Condición de pago toggle
     document.getElementById('condicion_pago')?.addEventListener('change', function() {
         const tiempoCredito = document.getElementById('campo_tiempo_credito');
@@ -531,7 +601,7 @@
             tbody.innerHTML=proveedores.map((p, idx)=>`
                 <tr>
                     <td class="text-center">${idx+1}</td>
-                    <td class="fw-bold">${p.codigo_proveedor || p.id}</td>
+                    <td><span class="codigo-proveedor">${escapeHtml(p.codigo_proveedor || ('PROV-' + String(p.id).padStart(5,'0')))}</span></td>
                     <td><strong>${escapeHtml(p.razon_social || '-')}</strong><br><small class="text-muted">${escapeHtml(p.razon_comercial || '')}</small></td>
                     <td><span class="badge-doc">${p.ruc || '-'}</span></td>
                     <td>${escapeHtml(p.direccion || '-')}</td>
@@ -573,7 +643,7 @@
                     <span><strong>📅 Fecha y Hora de Registro:</strong> ${formatFechaGrande(fechaRegistro)}</span>
                 </div>
                 <table class="detail-table">
-                    <tr><th>Código Proveedor</th><td><strong>${escapeHtml(p.codigo_proveedor || p.id)}</strong></td></tr>
+                    <tr><th>Código Proveedor</th><td><span class="codigo-proveedor">${escapeHtml(p.codigo_proveedor || ('PROV-' + String(p.id).padStart(5,'0')))}</span></td></tr>
                     <tr><th>Razón Social</th><td><strong>${escapeHtml(p.razon_social || '-')}</strong></td></tr>
                     <tr><th>Nombre Comercial</th><td>${escapeHtml(p.razon_comercial || '-')}</td></tr>
                     <tr><th>RUC</th><td>${escapeHtml(p.ruc || '-')}</td></tr>
