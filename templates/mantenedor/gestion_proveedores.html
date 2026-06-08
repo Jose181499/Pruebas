@@ -246,9 +246,9 @@
             <button class="btn btn-light rounded-pill px-4 fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNuevoProveedor">
                 <i class="bi bi-plus-circle-fill me-1 text-primary"></i> Nuevo Proveedor
             </button>
-            <a href="/mantenedor" class="btn btn-outline-light rounded-pill px-4 ms-2">
+            <button class="btn btn-outline-light rounded-pill px-4 ms-2" onclick="history.back()">
                 <i class="bi bi-arrow-left me-1"></i> Volver
-            </a>
+            </button>
         </div>
     </div>
 
@@ -329,7 +329,6 @@
                                     <input type="text" class="form-control input-moderno" id="ruc" placeholder="11 dígitos" maxlength="11" required>
                                     <button class="btn btn-sunat-sm" type="button" id="btnSunatProveedor"><i class="bi bi-building me-1"></i> Consultar Sunat</button>
                                 </div>
-                                <div id="sunatFeedback" class="small text-muted mt-1"></div>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label-peq">Persona de Contacto</label>
@@ -469,7 +468,7 @@
     </div>
 </div>
 
-<!-- MODAL ELIMINAR PROVEEDOR -->
+<!-- MODAL ELIMINAR PROVEEDOR - CORREGIDO -->
 <div class="modal fade" id="modalEliminarProveedor" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -481,13 +480,13 @@
                 <input type="hidden" id="delete_id_proveedor">
                 <div class="text-center py-3">
                     <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3rem;"></i>
-                    <p class="mt-3 fw-semibold">¿Está seguro que desea eliminar este proveedor?</p>
+                    <p class="mt-3 fw-semibold" id="mensajeEliminar">¿Está seguro que desea eliminar este proveedor?</p>
                     <p class="text-muted small">Esta acción no se puede deshacer. Se eliminarán todos los datos asociados.</p>
                 </div>
             </div>
             <div class="modal-footer justify-content-center">
                 <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancelar</button>
-                <button type="button" class="btn btn-danger px-4" id="confirmarEliminarProveedor"><i class="bi bi-trash me-1"></i> Eliminar</button>
+                <button type="button" class="btn btn-danger px-4" id="confirmarEliminarProveedorBtn"><i class="bi bi-trash me-1"></i> Eliminar</button>
             </div>
         </div>
     </div>
@@ -611,7 +610,7 @@
                     <td class="acciones-cell">
                         <button class="btn-accion btn-ver-icon" onclick="verProveedor(${p.id})" title="Ver"><i class="bi bi-eye"></i></button> 
                         <button class="btn-accion btn-edit-icon" onclick="editarProveedor(${p.id})" title="Editar"><i class="bi bi-pencil"></i></button> 
-                        <button class="btn-accion btn-del-icon" onclick="eliminarProveedorModal(${p.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
+                        <button class="btn-accion btn-del-icon" onclick="eliminarProveedorModal(${p.id}, '${escapeHtml(p.razon_social)}')" title="Eliminar"><i class="bi bi-trash"></i></button>
                     </td>
                 </tr>
             `).join(''); 
@@ -698,15 +697,23 @@
         } 
     };
     
-    window.eliminarProveedorModal = (id) => {
+    // Función para mostrar modal de eliminar
+    window.eliminarProveedorModal = (id, nombre) => {
         proveedorAEliminar = id;
+        const mensajeElem = document.getElementById('mensajeEliminar');
+        if (mensajeElem && nombre) {
+            mensajeElem.innerHTML = `¿Está seguro que desea eliminar el proveedor <strong>${escapeHtml(nombre)}</strong>?`;
+        } else if (mensajeElem) {
+            mensajeElem.innerHTML = '¿Está seguro que desea eliminar este proveedor?';
+        }
         if (deleteModal) {
             deleteModal.show();
         }
     };
     
+    // Función para eliminar
     async function eliminarProveedor(id) {
-        const confirmBtn = document.getElementById('confirmarEliminarProveedor');
+        const confirmBtn = document.getElementById('confirmarEliminarProveedorBtn');
         const originalText = confirmBtn.innerHTML;
         
         try {
@@ -826,14 +833,27 @@
         }
     });
     
+    // Inicializar modales
     document.addEventListener('DOMContentLoaded', function() {
         deleteModal = new bootstrap.Modal(document.getElementById('modalEliminarProveedor'));
         
-        const confirmBtn = document.getElementById('confirmarEliminarProveedor');
+        const confirmBtn = document.getElementById('confirmarEliminarProveedorBtn');
         if (confirmBtn) {
             confirmBtn.addEventListener('click', async function() {
                 if (proveedorAEliminar) {
                     await eliminarProveedor(proveedorAEliminar);
+                }
+            });
+        }
+        
+        // Limpiar variable al cerrar modal
+        const modalEliminar = document.getElementById('modalEliminarProveedor');
+        if (modalEliminar) {
+            modalEliminar.addEventListener('hidden.bs.modal', function () {
+                proveedorAEliminar = null;
+                const mensajeElem = document.getElementById('mensajeEliminar');
+                if (mensajeElem) {
+                    mensajeElem.innerHTML = '¿Está seguro que desea eliminar este proveedor?';
                 }
             });
         }
