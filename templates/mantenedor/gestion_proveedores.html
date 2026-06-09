@@ -322,7 +322,7 @@
     </div>
 </div>
 
-<!-- MODALES -->
+<!-- MODAL NUEVO PROVEEDOR - VERSIÓN REORDENADA -->
 <div class="modal fade" id="modalNuevoProveedor" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content modal-content-radius">
@@ -332,80 +332,244 @@
             </div>
             <div class="modal-body p-4">
                 <form id="formProveedor">
-                    <div class="erp-section">
-                        <div class="erp-section-title"><i class="bi bi-card-list me-2"></i> Información General</div>
+                    <!-- INFORMACIÓN GENERAL - RUC ARRIBA -->
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center gap-2 border-start border-4 border-primary ps-3 mb-3">
+                            <i class="bi bi-card-list fs-5 text-primary"></i>
+                            <h6 class="fw-bold m-0">Información General</h6>
+                        </div>
                         <div class="row g-3">
-                            <div class="col-md-6"><label class="form-label-peq">Razón Social *</label><input type="text" class="form-control input-moderno" id="razon_social" required></div>
-                            <div class="col-md-6"><label class="form-label-peq">Nombre Comercial</label><input type="text" class="form-control input-moderno" id="razon_comercial"></div>
-                            <div class="col-md-12"><label class="form-label-peq">Dirección Fiscal</label><input type="text" class="form-control input-moderno" id="direccion"></div>
+                            <!-- PRIMERA FILA: RUC + Botón Sunat + Razón Social -->
                             <div class="col-md-5">
                                 <label class="form-label-peq">RUC *</label>
                                 <div class="input-group">
-                                    <input type="text" class="form-control input-moderno" id="ruc" maxlength="11" required>
-                                    <button class="btn btn-sunat-sm" type="button" id="btnSunatProveedor"><i class="bi bi-building me-1"></i> Consultar Sunat</button>
+                                    <input type="text" class="form-control input-moderno" id="ruc" maxlength="11" placeholder="11 dígitos" required>
+                                    <button class="btn btn-sunat-sm" type="button" id="btnSunatProveedor">
+                                        <i class="bi bi-building me-1"></i> Consultar Sunat
+                                    </button>
                                 </div>
                             </div>
-                            <div class="col-md-3"><label class="form-label-peq">Persona de Contacto</label><input type="text" class="form-control input-moderno" id="contacto"></div>
-                            <div class="col-md-4"><label class="form-label-peq">Teléfono</label><input type="text" class="form-control input-moderno" id="telefono"></div>
-                            <div class="col-md-6"><label class="form-label-peq">Email</label><input type="email" class="form-control input-moderno" id="email"></div>
-                            <div class="col-md-3"><label class="form-label-peq">Condición de Pago</label><select id="condicion_pago" class="form-select input-moderno"><option value="">Seleccione</option><option value="Credito">Crédito</option><option value="Contado">Contado</option></select></div>
-                            <div class="col-md-3" id="campo_tiempo_credito" style="display:none;"><label class="form-label-peq">Tiempo Crédito</label><input type="text" class="form-control input-moderno" id="tiempo_credito" placeholder="Ej: 30 días"></div>
+                            <div class="col-md-7">
+                                <label class="form-label-peq">Razón Social *</label>
+                                <input type="text" class="form-control input-moderno" id="razon_social" placeholder="Razón social" required>
+                            </div>
+                            
+                            <!-- SEGUNDA FILA: Nombre Comercial + Dirección -->
+                            <div class="col-md-4">
+                                <label class="form-label-peq">Nombre Comercial</label>
+                                <input type="text" class="form-control input-moderno" id="razon_comercial" placeholder="Ej: KCF SAC">
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label-peq">Dirección Fiscal</label>
+                                <input type="text" class="form-control input-moderno" id="direccion" placeholder="Dirección completa">
+                            </div>
+                            
+                            <!-- TERCERA FILA: Contacto + Teléfono + Email -->
+                            <div class="col-md-4">
+                                <label class="form-label-peq">Persona de Contacto</label>
+                                <input type="text" class="form-control input-moderno" id="contacto" placeholder="Nombre del contacto">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label-peq">Teléfono</label>
+                                <input type="text" class="form-control input-moderno" id="telefono" placeholder="Teléfono de contacto">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label-peq">Email</label>
+                                <input type="email" class="form-control input-moderno" id="email" placeholder="correo@empresa.com">
+                            </div>
+                            
+                            <!-- CUARTA FILA: Condición de Pago + Tiempo Crédito -->
+                            <div class="col-md-4">
+                                <label class="form-label-peq">Condición de Pago</label>
+                                <select id="condicion_pago" class="form-select input-moderno">
+                                    <option value="">Seleccione</option>
+                                    <option value="Credito">Crédito</option>
+                                    <option value="Contado">Contado</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4" id="campo_tiempo_credito" style="display:none;">
+                                <label class="form-label-peq">Tiempo Crédito</label>
+                                <input type="text" class="form-control input-moderno" id="tiempo_credito" placeholder="Ej: 30 días">
+                            </div>
                         </div>
                     </div>
-                    <div class="erp-section">
-                        <div class="erp-section-title"><i class="bi bi-bank2 me-2"></i> Información Bancaria</div>
+
+                    <!-- INFORMACIÓN BANCARIA -->
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center gap-2 border-start border-4 border-success ps-3 mb-3">
+                            <i class="bi bi-bank2 fs-5 text-success"></i>
+                            <h6 class="fw-bold m-0">Información Bancaria</h6>
+                        </div>
                         <div class="row g-3">
-                            <div class="col-md-4"><label class="form-label-peq">Banco</label><select class="form-select input-moderno" id="banco"><option value="">Seleccione</option><option value="BCP">BCP</option><option value="BBVA">BBVA</option><option value="Interbank">Interbank</option><option value="Scotiabank">Scotiabank</option></select></div>
-                            <div class="col-md-4"><label class="form-label-peq">Número de Cuenta</label><input type="text" class="form-control input-moderno" id="numero_cuenta"></div>
-                            <div class="col-md-4"><label class="form-label-peq">CCI</label><input type="text" class="form-control input-moderno" id="cci"></div>
+                            <div class="col-md-4">
+                                <label class="form-label-peq">Banco</label>
+                                <select class="form-select input-moderno" id="banco">
+                                    <option value="">Seleccione</option>
+                                    <option value="BCP">BCP</option>
+                                    <option value="BBVA">BBVA</option>
+                                    <option value="Interbank">Interbank</option>
+                                    <option value="Scotiabank">Scotiabank</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label-peq">Número de Cuenta</label>
+                                <input type="text" class="form-control input-moderno" id="numero_cuenta" placeholder="Número de cuenta">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label-peq">CCI</label>
+                                <input type="text" class="form-control input-moderno" id="cci" placeholder="Código de cuenta interbancario">
+                            </div>
                         </div>
                     </div>
-                    <div class="erp-section">
-                        <div class="erp-section-title"><i class="bi bi-geo-alt-fill me-2"></i> Información Logística</div>
+
+                    <!-- INFORMACIÓN LOGÍSTICA -->
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center gap-2 border-start border-4 border-info ps-3 mb-3">
+                            <i class="bi bi-geo-alt-fill fs-5 text-info"></i>
+                            <h6 class="fw-bold m-0">Información Logística</h6>
+                        </div>
                         <div class="row g-3">
-                            <div class="col-md-12"><label class="form-label-peq">Lugar de Recojo</label><input type="text" class="form-control input-moderno" id="lugar_recojo"></div>
+                            <div class="col-md-12">
+                                <label class="form-label-peq">Lugar de Recojo</label>
+                                <input type="text" class="form-control input-moderno" id="lugar_recojo" placeholder="Dirección donde se recogen los productos">
+                            </div>
                         </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer border-0 pt-0 pb-4 px-4 d-flex justify-content-between">
-                <div><button type="button" class="btn btn-limpiar px-4" id="btnLimpiarFormulario"><i class="bi bi-eraser"></i> Limpiar todo</button></div>
-                <div><button class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button><button type="submit" form="formProveedor" class="btn btn-primary rounded-pill px-5 shadow-sm"><i class="bi bi-save"></i> Guardar</button></div>
+                <div>
+                    <button type="button" class="btn btn-limpiar px-4" id="btnLimpiarFormulario">
+                        <i class="bi bi-eraser"></i> Limpiar todo
+                    </button>
+                </div>
+                <div>
+                    <button class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="formProveedor" class="btn btn-primary rounded-pill px-5 shadow-sm">
+                        <i class="bi bi-save"></i> Guardar Proveedor
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- MODAL EDITAR PROVEEDOR - VERSIÓN REORDENADA -->
 <div class="modal fade" id="modalEditarProveedor" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content modal-content-radius">
-            <div class="modal-header-clean"><h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i> Editar Proveedor</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-header-clean">
+                <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i> Editar Proveedor</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
             <div class="modal-body p-4">
                 <form id="formEditarProveedor">
                     <input type="hidden" id="edit_id_proveedor">
-                    <div class="erp-section"><div class="erp-section-title">📋 Información General</div>
-                    <div class="row g-3">
-                        <div class="col-md-6"><label class="form-label-peq">Razón Social *</label><input type="text" class="form-control input-moderno" id="edit_razon_social" required></div>
-                        <div class="col-md-6"><label class="form-label-peq">Nombre Comercial</label><input type="text" class="form-control input-moderno" id="edit_razon_comercial"></div>
-                        <div class="col-md-12"><label class="form-label-peq">Dirección Fiscal</label><input type="text" class="form-control input-moderno" id="edit_direccion"></div>
-                        <div class="col-md-5"><label class="form-label-peq">RUC *</label><div class="input-group"><input type="text" class="form-control input-moderno" id="edit_ruc" maxlength="11" required><button class="btn btn-sunat-sm" type="button" id="btnEditSunatProveedor"><i class="bi bi-building"></i> Sunat</button></div></div>
-                        <div class="col-md-3"><label class="form-label-peq">Contacto</label><input type="text" class="form-control input-moderno" id="edit_contacto"></div>
-                        <div class="col-md-4"><label class="form-label-peq">Teléfono</label><input type="text" class="form-control input-moderno" id="edit_telefono"></div>
-                        <div class="col-md-6"><label class="form-label-peq">Email</label><input type="email" class="form-control input-moderno" id="edit_email"></div>
-                        <div class="col-md-3"><label class="form-label-peq">Condición Pago</label><select id="edit_condicion_pago" class="form-select input-moderno"><option value="">Seleccione</option><option value="Credito">Crédito</option><option value="Contado">Contado</option></select></div>
-                        <div class="col-md-3" id="edit_campo_tiempo_credito" style="display:none;"><label class="form-label-peq">Tiempo Crédito</label><input type="text" class="form-control input-moderno" id="edit_tiempo_credito"></div>
-                    </div></div>
-                    <div class="erp-section"><div class="erp-section-title">🏦 Información Bancaria</div>
-                    <div class="row g-3">
-                        <div class="col-md-4"><label class="form-label-peq">Banco</label><select class="form-select input-moderno" id="edit_banco"><option value="">Seleccione</option><option value="BCP">BCP</option><option value="BBVA">BBVA</option><option value="Interbank">Interbank</option><option value="Scotiabank">Scotiabank</option></select></div>
-                        <div class="col-md-4"><label class="form-label-peq">Número Cuenta</label><input type="text" class="form-control input-moderno" id="edit_numero_cuenta"></div>
-                        <div class="col-md-4"><label class="form-label-peq">CCI</label><input type="text" class="form-control input-moderno" id="edit_cci"></div>
-                    </div></div>
-                    <div class="erp-section"><div class="erp-section-title">🚚 Información Logística</div>
-                    <div class="row g-3"><div class="col-md-12"><label class="form-label-peq">Lugar de Recojo</label><input type="text" class="form-control input-moderno" id="edit_lugar_recojo"></div></div></div>
+                    
+                    <!-- INFORMACIÓN GENERAL -->
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center gap-2 border-start border-4 border-warning ps-3 mb-3">
+                            <i class="bi bi-card-list fs-5 text-warning"></i>
+                            <h6 class="fw-bold m-0">Información General</h6>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <label class="form-label-peq">RUC *</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control input-moderno" id="edit_ruc" maxlength="11" required>
+                                    <button class="btn btn-sunat-sm" type="button" id="btnEditSunatProveedor">
+                                        <i class="bi bi-building me-1"></i> Sunat
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-7">
+                                <label class="form-label-peq">Razón Social *</label>
+                                <input type="text" class="form-control input-moderno" id="edit_razon_social" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label-peq">Nombre Comercial</label>
+                                <input type="text" class="form-control input-moderno" id="edit_razon_comercial">
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label-peq">Dirección Fiscal</label>
+                                <input type="text" class="form-control input-moderno" id="edit_direccion">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label-peq">Persona de Contacto</label>
+                                <input type="text" class="form-control input-moderno" id="edit_contacto">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label-peq">Teléfono</label>
+                                <input type="text" class="form-control input-moderno" id="edit_telefono">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label-peq">Email</label>
+                                <input type="email" class="form-control input-moderno" id="edit_email">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label-peq">Condición Pago</label>
+                                <select id="edit_condicion_pago" class="form-select input-moderno">
+                                    <option value="">Seleccione</option>
+                                    <option value="Credito">Crédito</option>
+                                    <option value="Contado">Contado</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4" id="edit_campo_tiempo_credito" style="display:none;">
+                                <label class="form-label-peq">Tiempo Crédito</label>
+                                <input type="text" class="form-control input-moderno" id="edit_tiempo_credito" placeholder="Ej: 30 días">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- INFORMACIÓN BANCARIA -->
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center gap-2 border-start border-4 border-success ps-3 mb-3">
+                            <i class="bi bi-bank2 fs-5 text-success"></i>
+                            <h6 class="fw-bold m-0">Información Bancaria</h6>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label-peq">Banco</label>
+                                <select class="form-select input-moderno" id="edit_banco">
+                                    <option value="">Seleccione</option>
+                                    <option value="BCP">BCP</option>
+                                    <option value="BBVA">BBVA</option>
+                                    <option value="Interbank">Interbank</option>
+                                    <option value="Scotiabank">Scotiabank</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label-peq">Número Cuenta</label>
+                                <input type="text" class="form-control input-moderno" id="edit_numero_cuenta">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label-peq">CCI</label>
+                                <input type="text" class="form-control input-moderno" id="edit_cci">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- INFORMACIÓN LOGÍSTICA -->
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center gap-2 border-start border-4 border-info ps-3 mb-3">
+                            <i class="bi bi-geo-alt-fill fs-5 text-info"></i>
+                            <h6 class="fw-bold m-0">Información Logística</h6>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label-peq">Lugar de Recojo</label>
+                                <input type="text" class="form-control input-moderno" id="edit_lugar_recojo" placeholder="Dirección donde se recogen los productos">
+                            </div>
+                        </div>
+                    </div>
                 </form>
             </div>
-            <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" form="formEditarProveedor" class="btn btn-primary">Actualizar</button></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" form="formEditarProveedor" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                    <i class="bi bi-save"></i> Actualizar Proveedor
+                </button>
+            </div>
         </div>
     </div>
 </div>
