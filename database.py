@@ -1563,8 +1563,7 @@ def actualizar_proveedor(proveedor_id, razon_social=None, razon_comercial=None,
                 banco = %s,
                 numero_cuenta = %s,   
                 cci = %s, 
-                lugar_recojo = %s,
-                fecha_actualizacion = NOW()
+                lugar_recojo = %s
             WHERE id = %s AND activo = TRUE
         """, (
             razon_social,
