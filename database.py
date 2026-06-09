@@ -1543,8 +1543,11 @@ def obtener_proveedor_por_id(proveedor_id):
         return None
 
 
-def actualizar_proveedor(proveedor_id, data):
-    """Actualizar proveedor - VERSIÓN CORREGIDA que recibe un diccionario"""
+def actualizar_proveedor(proveedor_id, razon_social=None, razon_comercial=None, 
+                         ruc=None, direccion=None, telefono=None, contacto=None,
+                         email=None, condicion_pago=None, tiempo_credito=None,
+                         banco=None, numero_cuenta=None, cci=None, lugar_recojo=None):
+    """Actualizar proveedor con parámetros individuales"""
     try:
         db_execute("""
             UPDATE proveedores 
@@ -1564,27 +1567,25 @@ def actualizar_proveedor(proveedor_id, data):
                 fecha_actualizacion = NOW()
             WHERE id = %s AND activo = TRUE
         """, (
-            data.get('razon_social'),
-            data.get('razon_comercial'),
-            data.get('ruc'),
-            data.get('direccion'),
-            data.get('telefono'),
-            data.get('contacto'),
-            data.get('email'),
-            data.get('condicion_pago'),
-            data.get('tiempo_credito'),
-            data.get('banco'),
-            data.get('numero_cuenta'),
-            data.get('cci'),
-            data.get('lugar_recojo'),
+            razon_social,
+            razon_comercial,
+            ruc,
+            direccion,
+            telefono,
+            contacto,
+            email,
+            condicion_pago,
+            tiempo_credito,
+            banco,
+            numero_cuenta,
+            cci,
+            lugar_recojo,
             proveedor_id
         ))
         return {'success': True}
-
     except Exception as e:
         print(f"Error actualizando proveedor {proveedor_id}: {e}")
         raise
-
 
 def eliminar_proveedor_db(proveedor_id):
     """Eliminar proveedor (borrado lógico)"""
