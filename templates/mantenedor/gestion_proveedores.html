@@ -317,7 +317,7 @@
                 <tbody id="tbody-proveedores">
                     <tr><td colspan="9" class="text-center py-5"><div class="spinner-border spinner-border-sm text-secondary"></div> Cargando...</td></tr>
                 </tbody>
-            </table>
+             </table>
         </div>
     </div>
 </div>
@@ -515,16 +515,12 @@
         document.getElementById('edit_campo_tiempo_credito').style.display = this.value === 'Credito' ? 'block' : 'none';
     });
     
-    // ============================================
-    // FUNCIONES CORREGIDAS - USANDO LAS RUTAS CORRECTAS DE TU API
-    // ============================================
-    
-    // Cargar proveedores - usando la ruta correcta /api/proveedores/listar
+    // TU FUNCION ORIGINAL DE CARGAR PROVEEDORES - SIN CAMBIOS
     async function cargarProveedores(filtro={}){ 
         let tbody=document.getElementById('tbody-proveedores'); 
         tbody.innerHTML='<tr><td colspan="9" class="text-center p-4"><div class="spinner-border spinner-border-sm text-secondary"></div> Cargando...</td></tr>'; 
         try{ 
-            let url='/api/proveedores/listar?'; 
+            let url='/api/proveedores/buscar?'; 
             let params=new URLSearchParams(); 
             if(filtro.busqueda) params.append('busqueda',filtro.busqueda); 
             if(filtro.codigo) params.append('codigo',filtro.codigo); 
@@ -554,26 +550,19 @@
             `).join(''); 
         } catch(e){ 
             console.error('Error cargando proveedores:', e);
-            tbody.innerHTML='<tr><td colspan="9" class="text-danger">Error al cargar proveedores: ' + e.message + '</td></tr>'; 
+            tbody.innerHTML='<tr><td colspan="9" class="text-danger">Error al cargar proveedores</td></tr>'; 
         } 
     }
     
-    // Ver proveedor - usando la ruta correcta /api/proveedores/{id}
+    // FUNCIONES CORREGIDAS - SOLO ESTAS ESTABAN MAL
     window.verProveedor = async (id) => {
         try {
             const modalBody = document.getElementById('modalVerBodyProveedor');
             modalBody.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div><br>Cargando...</div>';
-            mostrarLoading(true);
             let res = await fetch(`/api/proveedores/${id}`);
             let json = await res.json();
-            mostrarLoading(false);
-            
-            if (!json.success || !json.data) { 
-                modalBody.innerHTML = '<div class="alert alert-danger">No se encontró información del proveedor</div>'; 
-                return; 
-            }
-            
             let p = json.data;
+            if (!p) { modalBody.innerHTML = '<div class="alert alert-danger">No se encontró información</div>'; return; }
             let fechaRegistro = p.created_at || p.fecha_registro || new Date().toISOString();
             let html = `<div class="fecha-grande"><i class="bi bi-calendar-clock"></i><span><strong>📅 Fecha y Hora de Registro:</strong> ${formatFechaGrande(fechaRegistro)}</span></div>
                 <table class="detail-table">
@@ -593,25 +582,13 @@
                 </table>`;
             modalBody.innerHTML = html;
             new bootstrap.Modal(document.getElementById('modalVerProveedor')).show();
-        } catch(e) { 
-            mostrarLoading(false);
-            notificar('Error al cargar detalles: ' + e.message, 'error'); 
-        }
+        } catch(e) { notificar('Error al cargar detalles', 'error'); }
     };
     
-    // Editar proveedor - usando la ruta correcta /api/proveedores/{id}
     window.editarProveedor = async (id) => { 
         try{ 
-            mostrarLoading(true);
             let res=await fetch(`/api/proveedores/${id}`); 
             let json=await res.json(); 
-            mostrarLoading(false);
-            
-            if(!json.success || !json.data){
-                notificar('No se encontró el proveedor', 'error');
-                return;
-            }
-            
             let p=json.data; 
             document.getElementById('edit_id_proveedor').value=p.id; 
             document.getElementById('edit_razon_social').value=p.razon_social||''; 
@@ -629,13 +606,9 @@
             document.getElementById('edit_lugar_recojo').value=p.lugar_recojo||''; 
             document.getElementById('edit_campo_tiempo_credito').style.display = p.condicion_pago === 'Credito' ? 'block' : 'none';
             new bootstrap.Modal(document.getElementById('modalEditarProveedor')).show(); 
-        } catch(e){ 
-            mostrarLoading(false);
-            notificar('Error al cargar datos: ' + e.message, 'error'); 
-        } 
+        } catch(e){ notificar('Error al cargar datos', 'error'); } 
     };
     
-    // Mostrar modal de eliminar
     window.eliminarProveedorModal = (id, nombre) => {
         proveedorAEliminar = id;
         const mensajeElem = document.getElementById('mensajeEliminar');
@@ -645,7 +618,6 @@
         if (deleteModal) deleteModal.show();
     };
     
-    // Eliminar proveedor - usando la ruta correcta DELETE /api/proveedores/{id}
     async function eliminarProveedor(id) {
         const confirmBtn = document.getElementById('confirmarEliminarProveedorBtn');
         const originalText = confirmBtn.innerHTML;
@@ -668,7 +640,7 @@
             } else {
                 if(errorDetalle) {
                     errorDetalle.style.display = 'block';
-                    errorDetalle.innerHTML = `<strong>Error del servidor:</strong> ${json.error || 'No se pudo eliminar el proveedor'}`;
+                    errorDetalle.innerHTML = `<strong>Error del servidor:</strong> ${json.error || 'No se pudo eliminar el proveedor'}<br><small>Puede intentar nuevamente más tarde.</small>`;
                 }
                 notificar(json.error || 'Error al eliminar el proveedor', 'error');
             }
@@ -676,7 +648,7 @@
             console.error('Error eliminando:', error);
             if(errorDetalle) {
                 errorDetalle.style.display = 'block';
-                errorDetalle.innerHTML = `<strong>Error de conexión:</strong> No se pudo conectar con el servidor.`;
+                errorDetalle.innerHTML = `<strong>Error de conexión:</strong> No se pudo conectar con el servidor.<br><small>Verifique su conexión e intente nuevamente.</small>`;
             }
             notificar('Error al conectar con el servidor', 'error');
         } finally {
@@ -686,7 +658,6 @@
         }
     }
     
-    // Guardar nuevo proveedor - usando la ruta correcta /api/proveedores/guardar
     document.getElementById('formProveedor')?.addEventListener('submit', async (e) => { 
         e.preventDefault(); 
         let data={ 
@@ -719,7 +690,6 @@
         finally { mostrarLoading(false); }
     });
     
-    // Actualizar proveedor - usando la ruta correcta PUT /api/proveedores/{id}
     document.getElementById('formEditarProveedor')?.addEventListener('submit', async (e) => { 
         e.preventDefault(); 
         let id=document.getElementById('edit_id_proveedor').value; 
@@ -751,7 +721,6 @@
         finally { mostrarLoading(false); }
     });
     
-    // Inicialización
     document.addEventListener('DOMContentLoaded', function() {
         deleteModal = new bootstrap.Modal(document.getElementById('modalEliminarProveedor'));
         const confirmBtn = document.getElementById('confirmarEliminarProveedorBtn');
@@ -780,8 +749,7 @@
     filtroBusqueda?.addEventListener('input',()=>{ clearTimeout(timer); timer=setTimeout(aplicarFiltros,400); });
     filtroCodigo?.addEventListener('input',()=>{ clearTimeout(timer); timer=setTimeout(aplicarFiltros,400); });
     
-    // Cargar proveedores al iniciar
-    cargarProveedores();
+    setTimeout(()=>{ cargarProveedores(); },150);
 </script>
 </body>
 </html>
