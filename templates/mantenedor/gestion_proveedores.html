@@ -515,12 +515,16 @@
         document.getElementById('edit_campo_tiempo_credito').style.display = this.value === 'Credito' ? 'block' : 'none';
     });
     
-    // Función para cargar proveedores desde tu API
+    // ============================================
+    // FUNCIONES CORREGIDAS - USANDO LAS RUTAS CORRECTAS DE TU API
+    // ============================================
+    
+    // Cargar proveedores - usando la ruta correcta /api/proveedores/listar
     async function cargarProveedores(filtro={}){ 
         let tbody=document.getElementById('tbody-proveedores'); 
         tbody.innerHTML='<tr><td colspan="9" class="text-center p-4"><div class="spinner-border spinner-border-sm text-secondary"></div> Cargando...</td></tr>'; 
         try{ 
-            let url='/api/proveedores/buscar?'; 
+            let url='/api/proveedores/listar?'; 
             let params=new URLSearchParams(); 
             if(filtro.busqueda) params.append('busqueda',filtro.busqueda); 
             if(filtro.codigo) params.append('codigo',filtro.codigo); 
@@ -550,19 +554,26 @@
             `).join(''); 
         } catch(e){ 
             console.error('Error cargando proveedores:', e);
-            tbody.innerHTML='<tr><td colspan="9" class="text-danger">Error al cargar proveedores</td></tr>'; 
+            tbody.innerHTML='<tr><td colspan="9" class="text-danger">Error al cargar proveedores: ' + e.message + '</td></tr>'; 
         } 
     }
     
-    // Ver proveedor
+    // Ver proveedor - usando la ruta correcta /api/proveedores/{id}
     window.verProveedor = async (id) => {
         try {
             const modalBody = document.getElementById('modalVerBodyProveedor');
             modalBody.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div><br>Cargando...</div>';
+            mostrarLoading(true);
             let res = await fetch(`/api/proveedores/${id}`);
             let json = await res.json();
+            mostrarLoading(false);
+            
+            if (!json.success || !json.data) { 
+                modalBody.innerHTML = '<div class="alert alert-danger">No se encontró información del proveedor</div>'; 
+                return; 
+            }
+            
             let p = json.data;
-            if (!p) { modalBody.innerHTML = '<div class="alert alert-danger">No se encontró información</div>'; return; }
             let fechaRegistro = p.created_at || p.fecha_registro || new Date().toISOString();
             let html = `<div class="fecha-grande"><i class="bi bi-calendar-clock"></i><span><strong>📅 Fecha y Hora de Registro:</strong> ${formatFechaGrande(fechaRegistro)}</span></div>
                 <table class="detail-table">
@@ -582,14 +593,25 @@
                 </table>`;
             modalBody.innerHTML = html;
             new bootstrap.Modal(document.getElementById('modalVerProveedor')).show();
-        } catch(e) { notificar('Error al cargar detalles', 'error'); }
+        } catch(e) { 
+            mostrarLoading(false);
+            notificar('Error al cargar detalles: ' + e.message, 'error'); 
+        }
     };
     
-    // Editar proveedor
+    // Editar proveedor - usando la ruta correcta /api/proveedores/{id}
     window.editarProveedor = async (id) => { 
         try{ 
+            mostrarLoading(true);
             let res=await fetch(`/api/proveedores/${id}`); 
             let json=await res.json(); 
+            mostrarLoading(false);
+            
+            if(!json.success || !json.data){
+                notificar('No se encontró el proveedor', 'error');
+                return;
+            }
+            
             let p=json.data; 
             document.getElementById('edit_id_proveedor').value=p.id; 
             document.getElementById('edit_razon_social').value=p.razon_social||''; 
@@ -607,7 +629,10 @@
             document.getElementById('edit_lugar_recojo').value=p.lugar_recojo||''; 
             document.getElementById('edit_campo_tiempo_credito').style.display = p.condicion_pago === 'Credito' ? 'block' : 'none';
             new bootstrap.Modal(document.getElementById('modalEditarProveedor')).show(); 
-        } catch(e){ notificar('Error al cargar datos', 'error'); } 
+        } catch(e){ 
+            mostrarLoading(false);
+            notificar('Error al cargar datos: ' + e.message, 'error'); 
+        } 
     };
     
     // Mostrar modal de eliminar
@@ -620,7 +645,7 @@
         if (deleteModal) deleteModal.show();
     };
     
-    // Eliminar proveedor
+    // Eliminar proveedor - usando la ruta correcta DELETE /api/proveedores/{id}
     async function eliminarProveedor(id) {
         const confirmBtn = document.getElementById('confirmarEliminarProveedorBtn');
         const originalText = confirmBtn.innerHTML;
@@ -661,7 +686,7 @@
         }
     }
     
-    // Guardar nuevo proveedor
+    // Guardar nuevo proveedor - usando la ruta correcta /api/proveedores/guardar
     document.getElementById('formProveedor')?.addEventListener('submit', async (e) => { 
         e.preventDefault(); 
         let data={ 
@@ -694,7 +719,7 @@
         finally { mostrarLoading(false); }
     });
     
-    // Actualizar proveedor
+    // Actualizar proveedor - usando la ruta correcta PUT /api/proveedores/{id}
     document.getElementById('formEditarProveedor')?.addEventListener('submit', async (e) => { 
         e.preventDefault(); 
         let id=document.getElementById('edit_id_proveedor').value; 
@@ -755,7 +780,8 @@
     filtroBusqueda?.addEventListener('input',()=>{ clearTimeout(timer); timer=setTimeout(aplicarFiltros,400); });
     filtroCodigo?.addEventListener('input',()=>{ clearTimeout(timer); timer=setTimeout(aplicarFiltros,400); });
     
-    setTimeout(()=>{ cargarProveedores(); },150);
+    // Cargar proveedores al iniciar
+    cargarProveedores();
 </script>
 </body>
 </html>
