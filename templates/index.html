@@ -4,10 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KCF ERP · Sistema Empresarial</title>
 
-    <title>KCF ERP </title>
-
-    <!-- Bootstrap -->
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Bootstrap Icons -->
@@ -17,186 +16,475 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fc 0%, #eef2f8 100%);
+            min-height: 100vh;
+        }
+
+        /* ========================================
+           TOPBAR CORPORATIVO
+        ======================================== */
+        .topbar {
+            background: linear-gradient(135deg, #0B132B 0%, #1C2541 100%);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-section h3 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff 0%, #c9d9ff 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+            margin: 0;
+        }
+
+        .user-box {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 0.5rem 1.2rem;
+            border-radius: 60px;
+            backdrop-filter: blur(10px);
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #3b71ca, #1e3a8a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+        }
+
+        .user-info strong {
+            color: white;
+            font-size: 0.85rem;
+            display: block;
+            line-height: 1.2;
+        }
+
+        .user-info p {
+            color: #a0b8d9;
+            font-size: 0.7rem;
+            margin: 0;
+        }
+
+        .btn-logout {
+            background: rgba(220, 38, 38, 0.9);
+            border: none;
+            color: white;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .btn-logout:hover {
+            background: #dc2626;
+            transform: scale(1.05);
+        }
+
+        /* ========================================
+           MAIN WRAPPER
+        ======================================== */
+        .main-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* ========================================
+           HERO SECTION
+        ======================================== */
+        .hero {
+            background: linear-gradient(115deg, #1F2B5C 0%, #2A3E7C 100%);
+            border-radius: 32px;
+            padding: 2rem 2.5rem;
+            margin-bottom: 2.5rem;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -30%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .hero h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero p {
+            font-size: 1rem;
+            opacity: 0.85;
+            margin: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ========================================
+           MODULES GRID
+        ======================================== */
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .module-card {
+            background: white;
+            border-radius: 24px;
+            padding: 1.5rem;
+            text-decoration: none;
+            color: #1a2c4e;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .module-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.15);
+            border-color: rgba(59, 113, 202, 0.2);
+        }
+
+        .module-card .tag {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: #eef2ff;
+            color: #1e3a8a;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 0.25rem 0.8rem;
+            border-radius: 30px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .module-card i,
+        .module-card .ti {
+            font-size: 2.8rem;
+            color: #1e3a8a;
+            transition: all 0.3s ease;
+        }
+
+        .module-card .icon-svg svg {
+            transition: all 0.3s ease;
+        }
+
+        .module-card:hover i,
+        .module-card:hover .ti,
+        .module-card:hover .icon-svg svg path,
+        .module-card:hover .icon-svg svg line,
+        .module-card:hover .icon-svg svg circle {
+            stroke: #3b71ca;
+        }
+
+        .module-card h4 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 0;
+            color: #0B132B;
+        }
+
+        .module-card span:last-child {
+            font-size: 0.8rem;
+            color: #5a6e8a;
+            line-height: 1.4;
+        }
+
+        /* Colores específicos por módulo al hover */
+        .module-card:hover i.bi-database-gear { color: #3b71ca; }
+        .module-card:hover .ti-receipt-2 { color: #10b981; }
+        .module-card:hover .ti-shopping-cart-plus { color: #f59e0b; }
+        .module-card:hover .ti-truck-delivery { color: #8b5cf6; }
+        .module-card:hover i.bi-box-seam { color: #06b6d4; }
+        .module-card:hover i.bi-clock-history { color: #ec489a; }
+        .module-card:hover i.bi-graph-up-arrow { color: #14b8a6; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .topbar {
+                padding: 0.8rem 1rem;
+            }
+            
+            .logo-section h3 {
+                font-size: 1.2rem;
+            }
+            
+            .user-box {
+                padding: 0.3rem 1rem;
+                gap: 0.5rem;
+            }
+            
+            .user-info {
+                display: none;
+            }
+            
+            .main-wrapper {
+                padding: 1rem;
+            }
+            
+            .hero {
+                padding: 1.5rem;
+            }
+            
+            .hero h1 {
+                font-size: 1.6rem;
+            }
+            
+            .modules-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .module-card {
+                padding: 1.2rem;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .modules-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Animación de entrada */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .module-card {
+            animation: fadeInUp 0.5s ease forwards;
+            animation-delay: calc(var(--order, 0) * 0.05s);
+            opacity: 0;
+        }
+
+        .module-card:nth-child(1) { --order: 1; }
+        .module-card:nth-child(2) { --order: 2; }
+        .module-card:nth-child(3) { --order: 3; }
+        .module-card:nth-child(4) { --order: 4; }
+        .module-card:nth-child(5) { --order: 5; }
+        .module-card:nth-child(6) { --order: 6; }
+        .module-card:nth-child(7) { --order: 7; }
+        .module-card:nth-child(8) { --order: 8; }
+        .module-card:nth-child(9) { --order: 9; }
+    </style>
 </head>
 
 <body>
 
-    <!-- TOPBAR R-->
+    <!-- TOPBAR CORPORATIVO -->
     <nav class="topbar">
-
         <div class="logo-section">
             <h3>KCF ERP</h3>
         </div>
-
         <div class="user-box">
-
             <div class="avatar">
-                {{ session.nombre_completo[0] }}
+                {{ session.nombre_completo[0] if session.nombre_completo else 'U' }}
             </div>
-
             <div class="user-info">
-                <strong>{{ session.nombre_completo }}</strong>
-                <p>{{ session.rol }}</p>
+                <strong>{{ session.nombre_completo if session.nombre_completo else 'Usuario' }}</strong>
+                <p>{{ session.rol if session.rol else 'Administrador' }}</p>
             </div>
-
-            <a href="/logout" class="btn btn-danger btn-sm">
+            <a href="/logout" class="btn-logout">
                 <i class="bi bi-box-arrow-right"></i>
             </a>
-
         </div>
-
     </nav>
 
-    <!-- MAIN -->
+    <!-- MAIN CONTENT -->
     <div class="container-fluid main-wrapper">
-
-        <!-- HERO -->
+        
+        <!-- HERO SECTION -->
         <div class="hero">
-
             <h1>KCF CORPORACION</h1>
-
-            <p>
-                Sistema de Gestión Empresarial
-            </p>
-
+            <p>Sistema de Gestión Empresarial · ERP Integral</p>
         </div>
 
-        <!-- GRID -->
+        <!-- MÓDULOS GRID -->
         <div class="modules-grid">
 
-            <!-- MANTENEDOR -->
+            <!-- 1. LISTA MAESTRA (Mantenimiento) -->
             <a href="/mantenedor" class="module-card">
-
+                <span class="tag">Configuración</span>
                 <i class="bi bi-database-gear"></i>
-
                 <h4>Lista Maestra</h4>
-
-                <span>Gestión de base de datos</span>
-
+                <span>Gestión central de tablas maestras y parámetros</span>
             </a>
 
-            <!-- PRODUCTOS -->
-    <a href="/mantenedor/productos/gestion" class="module-card">
-      <span class="tag">Inventario</span>
-      <div class="icon-svg">
-        <svg width="45" height="45" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- respaldo -->
-          <path d="M15 6 Q15 3 24 3 Q33 3 33 6 L33 22 Q33 25 24 25 Q15 25 15 22 Z" stroke="#dc2626" stroke-width="2.2" stroke-linejoin="round" fill="none"/>
-          <!-- apoyabrazos izquierdo -->
-          <path d="M15 14 L10 14 Q8 14 8 16 L8 20 Q8 22 10 22 L15 22" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-          <!-- apoyabrazos derecho -->
-          <path d="M33 14 L38 14 Q40 14 40 16 L40 20 Q40 22 38 22 L33 22" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-          <!-- asiento -->
-          <path d="M13 25 Q13 29 24 29 Q35 29 35 25" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-          <!-- pistón -->
-          <line x1="24" y1="29" x2="24" y2="37" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round"/>
-          <!-- base estrella -->
-          <line x1="24" y1="37" x2="14" y2="44" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/>
-          <line x1="24" y1="37" x2="34" y2="44" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/>
-          <line x1="24" y1="37" x2="24" y2="45" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/>
-          <line x1="24" y1="37" x2="10" y2="39" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/>
-          <line x1="24" y1="37" x2="38" y2="39" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/>
-          <!-- rueditas -->
-          <circle cx="14" cy="44" r="1.5" stroke="#dc2626" stroke-width="1.8" fill="none"/>
-          <circle cx="34" cy="44" r="1.5" stroke="#dc2626" stroke-width="1.8" fill="none"/>
-          <circle cx="24" cy="45" r="1.5" stroke="#dc2626" stroke-width="1.8" fill="none"/>
-          <circle cx="10" cy="39" r="1.5" stroke="#dc2626" stroke-width="1.8" fill="none"/>
-          <circle cx="38" cy="39" r="1.5" stroke="#dc2626" stroke-width="1.8" fill="none"/>
-        </svg>
-      </div>
-      <h4>Productos</h4>
-      <span>Costo, Precio y Kardex</span>
-    </a>
+            <!-- 2. PRODUCTOS -->
+            <a href="/mantenedor/productos/gestion" class="module-card">
+                <span class="tag">Inventario</span>
+                <div class="icon-svg">
+                    <svg width="45" height="45" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M15 6 Q15 3 24 3 Q33 3 33 6 L33 22 Q33 25 24 25 Q15 25 15 22 Z" stroke="#1e3a8a" stroke-width="2.2" stroke-linejoin="round" fill="none"/>
+                        <path d="M15 14 L10 14 Q8 14 8 16 L8 20 Q8 22 10 22 L15 22" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                        <path d="M33 14 L38 14 Q40 14 40 16 L40 20 Q40 22 38 22 L33 22" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                        <path d="M13 25 Q13 29 24 29 Q35 29 35 25" stroke="#1e3a8a" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+                        <line x1="24" y1="29" x2="24" y2="37" stroke="#1e3a8a" stroke-width="2.2" stroke-linecap="round"/>
+                        <line x1="24" y1="37" x2="14" y2="44" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="24" y1="37" x2="34" y2="44" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="24" y1="37" x2="24" y2="45" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="24" y1="37" x2="10" y2="39" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="24" y1="37" x2="38" y2="39" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="14" cy="44" r="1.5" stroke="#1e3a8a" stroke-width="1.8" fill="none"/>
+                        <circle cx="34" cy="44" r="1.5" stroke="#1e3a8a" stroke-width="1.8" fill="none"/>
+                        <circle cx="24" cy="45" r="1.5" stroke="#1e3a8a" stroke-width="1.8" fill="none"/>
+                        <circle cx="10" cy="39" r="1.5" stroke="#1e3a8a" stroke-width="1.8" fill="none"/>
+                        <circle cx="38" cy="39" r="1.5" stroke="#1e3a8a" stroke-width="1.8" fill="none"/>
+                    </svg>
+                </div>
+                <h4>Productos</h4>
+                <span>Costo, Precio y Kardex · Gestión completa de productos</span>
+            </a>
 
-            <!-- VENTAS -->
+            <!-- 3. VENTAS -->
             <a href="/cotizacion" class="module-card">
-
-               <span class="tag">Comercial</span>
-
-            <i class="ti ti-receipt-2"></i>
-
-            <h4>Ventas</h4>
-
-            <span>Cotizaciones y Facturas</span>
-
+                <span class="tag">Comercial</span>
+                <i class="ti ti-receipt-2"></i>
+                <h4>Ventas</h4>
+                <span>Cotizaciones, Facturas y gestión comercial</span>
             </a>
 
-           <!-- COMPRAS -->
-           <a href="/compras" class="module-card">
+            <!-- 4. COMPRAS -->
+            <a href="/compras" class="module-card">
+                <span class="tag">Abastecimiento</span>
+                <i class="ti ti-shopping-cart-plus"></i>
+                <h4>Compras</h4>
+                <span>Órdenes de Compra y Facturas de Compra</span>
+            </a>
 
-              <span class="tag">Abastecimiento</span>
+            <!-- 5. GUÍAS DE REMISIÓN -->
+            <a href="/guias/" class="module-card">
+                <span class="tag">Logística</span>
+                <i class="ti ti-truck-delivery"></i>
+                <h4>Guías de Remisión</h4>
+                <span>Emitir Guía de Remisión · Sustento de Entrega</span>
+            </a>
 
-           <i class="ti ti-shopping-cart-plus"></i>
-
-           <h4>Compras</h4>
-
-           <span>Órdenes de Compra y Registro de Facturas de Compra</span>
-
-           </a>
-
-            <!-- GUÍAS DE REMISIÓN -->
-        <a href="/guias/" class="module-card">
-
-        <span class="tag">Logística</span>
-
-        <i class="ti ti-truck-delivery"></i>
-
-        <h4>Guías de Remisión</h4>
-
-     <span>Emitir Guía de Remisión (Sustento de Entrega)</span>
-
-    </a>
-
-            
-
-            <!-- ALMACEN -->
+            <!-- 6. ALMACÉN -->
             <a href="/almacen" class="module-card">
-
+                <span class="tag">Inventario</span>
                 <i class="bi bi-box-seam"></i>
-
                 <h4>Almacén</h4>
-
-                <span>Inventario y Stock</span>
-
+                <span>Control de inventario y movimientos de stock</span>
             </a>
 
-
-            <!-- HISTORIAL -->
+            <!-- 7. HISTORIAL -->
             <a href="/historial" class="module-card">
-
+                <span class="tag">Trazabilidad</span>
                 <i class="bi bi-clock-history"></i>
-
                 <h4>Historial</h4>
-
-                <span>Movimientos y registros</span>
-
+                <span>Registro completo de operaciones y movimientos</span>
             </a>
-            
 
-            <!-- KPI -->
+            <!-- 8. KPI's -->
             <a href="/kpis" class="module-card">
-
+                <span class="tag">Analítica</span>
                 <i class="bi bi-graph-up-arrow"></i>
-
                 <h4>KPIs</h4>
+                <span>Indicadores empresariales y métricas clave</span>
+            </a>
 
-                <span>Indicadores empresariales</span>
+            <!-- 9. CLIENTES (Agregado como módulo adicional) -->
+            <a href="/clientes" class="module-card">
+                <span class="tag">CRM</span>
+                <i class="bi bi-people-fill"></i>
+                <h4>Clientes</h4>
+                <span>Gestión de clientes, contactos y puntos de entrega</span>
+            </a>
 
+            <!-- 10. PROVEEDORES (Agregado como módulo adicional) -->
+            <a href="/proveedores" class="module-card">
+                <span class="tag">Compras</span>
+                <i class="bi bi-truck"></i>
+                <h4>Proveedores</h4>
+                <span>Administración de proveedores y condiciones</span>
             </a>
 
         </div>
-
     </div>
 
-    <!-- Bootstrap JS -->
+    <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- JS -->
-    <script src="{{ url_for('static', filename='js/index.js') }}"></script>
+    <!-- Script adicional para efectos -->
+    <script>
+        // Smooth hover effects and animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Añadir clase de animación a las tarjetas
+            const cards = document.querySelectorAll('.module-card');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.05}s`;
+            });
+
+            // Efecto de seguimiento del mouse en tarjetas (opcional)
+            cards.forEach(card => {
+                card.addEventListener('mousemove', function(e) {
+                    const rect = this.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    this.style.setProperty('--mouse-x', `${x}px`);
+                    this.style.setProperty('--mouse-y', `${y}px`);
+                });
+            });
+        });
+    </script>
 
 </body>
 
