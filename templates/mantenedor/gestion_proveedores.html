@@ -322,7 +322,7 @@
     </div>
 </div>
 
-<!-- MODALES (Mismos que antes, se mantienen) -->
+<!-- MODALES -->
 <div class="modal fade" id="modalNuevoProveedor" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content modal-content-radius">
@@ -443,9 +443,19 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    let proveedorAEliminar = null;
-    let deleteModal = null;
+    // --- API SIMULADA (Mock) para pruebas inmediatas ---
+    let proveedoresDB = [
+        { id: 1, codigo_proveedor: "PROV-00001", razon_social: "Tecnología Andina S.A.C.", razon_comercial: "TecAndina", ruc: "20456789012", direccion: "Av. Principal 123", contacto: "Carlos López", telefono: "987654321", email: "ventas@tecnologiaandina.com", condicion_pago: "Credito", tiempo_credito: "30 días", banco: "BCP", numero_cuenta: "19123456789", cci: "00219123456789123456", lugar_recojo: "Almacén Central", created_at: new Date().toISOString() },
+        { id: 2, codigo_proveedor: "PROV-00002", razon_social: "Distribuciones El Sol", razon_comercial: "ElSol", ruc: "20567890123", direccion: "Calle Los Pinos 456", contacto: "María Fernández", telefono: "976543210", email: "contacto@distribucioneselsol.com", condicion_pago: "Contado", tiempo_credito: "", banco: "BBVA", numero_cuenta: "23123456789", cci: "00223123456789123456", lugar_recojo: "Puerta 2", created_at: new Date().toISOString() }
+    ];
+    let nextId = 3;
 
+    // Helper: generar código automático
+    function generarCodigoProveedor(id) {
+        return `PROV-${String(id).padStart(5, '0')}`;
+    }
+
+    // Funciones auxiliares UI
     function notificar(msg, tipo='success'){ 
         let d=document.createElement('div'); 
         d.className='toast-notify-custom'; 
@@ -486,19 +496,27 @@
         notificar('Formulario limpiado', 'info');
     }
     
+    // Consulta SUNAT simulada
     async function consultarSunatProveedor(ruc, razonSocialField, nombreComercialField, direccionField) {
         if(!ruc || ruc.length !== 11){ notificar('Ingrese un RUC válido de 11 dígitos', 'warning'); return false; }
-        try {
-            let res = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
-            let json = await res.json();
-            if(json.success){
-                if(razonSocialField) document.getElementById(razonSocialField).value = json.razon_social || '';
-                if(nombreComercialField) document.getElementById(nombreComercialField).value = json.nombre_comercial || '';
-                if(direccionField) document.getElementById(direccionField).value = json.direccion || '';
-                notificar('Datos cargados desde SUNAT');
-                return true;
-            } else { notificar('No se encontró información para este RUC', 'error'); return false; }
-        } catch(e) { notificar('Error al consultar SUNAT', 'error'); return false; }
+        mostrarLoading(true);
+        await new Promise(resolve => setTimeout(resolve, 800));
+        mostrarLoading(false);
+        // Simular datos según ruc
+        const mockData = {
+            "20456789012": { razon_social: "Tecnología Andina S.A.C.", nombre_comercial: "TecAndina", direccion: "Av. Principal 123" },
+            "20567890123": { razon_social: "Distribuciones El Sol", nombre_comercial: "ElSol", direccion: "Calle Los Pinos 456" }
+        };
+        if(mockData[ruc]) {
+            if(razonSocialField) document.getElementById(razonSocialField).value = mockData[ruc].razon_social;
+            if(nombreComercialField) document.getElementById(nombreComercialField).value = mockData[ruc].nombre_comercial;
+            if(direccionField) document.getElementById(direccionField).value = mockData[ruc].direccion;
+            notificar('Datos cargados desde SUNAT (simulado)');
+            return true;
+        } else {
+            notificar('RUC no encontrado en la base de datos simulada', 'error');
+            return false;
+        }
     }
     
     document.getElementById('btnSunatProveedor')?.addEventListener('click', async () => {
@@ -515,57 +533,60 @@
         document.getElementById('edit_campo_tiempo_credito').style.display = this.value === 'Credito' ? 'block' : 'none';
     });
     
+    // Cargar proveedores con filtros
     async function cargarProveedores(filtro={}){ 
         let tbody=document.getElementById('tbody-proveedores'); 
         tbody.innerHTML='<tr><td colspan="9" class="text-center p-4"><div class="spinner-border spinner-border-sm text-secondary"></div> Cargando...</td></tr>'; 
-        try{ 
-            let url='/api/proveedores/buscar?'; 
-            let params=new URLSearchParams(); 
-            if(filtro.busqueda) params.append('busqueda',filtro.busqueda); 
-            if(filtro.codigo) params.append('codigo',filtro.codigo); 
-            let res=await fetch(url+params); 
-            let json=await res.json(); 
-            let proveedores=json.data||[]; 
-            if(!proveedores.length){ 
-                tbody.innerHTML='<tr><td colspan="9" class="text-center">Sin proveedores registrados</td></tr>'; 
-                return; 
-            } 
-            tbody.innerHTML=proveedores.map((p, idx)=>`
-                <tr>
-                    <td class="text-center">${idx+1}</td>
-                    <td><span class="codigo-proveedor">${escapeHtml(p.codigo_proveedor || ('PROV-' + String(p.id).padStart(5,'0')))}</span></td>
-                    <td><strong>${escapeHtml(p.razon_social || '-')}</strong><br><small class="text-muted">${escapeHtml(p.razon_comercial || '')}</small></td>
-                    <td><span class="badge-doc">${p.ruc || '-'}</span></td>
-                    <td>${escapeHtml(p.direccion || '-')}</td>
-                    <td>${p.telefono || '-'}</td>
-                    <td>${p.contacto || '-'}</td>
-                    <td>${p.email || '-'}</td>
-                    <td class="acciones-cell">
-                        <button class="btn-accion btn-ver-icon" onclick="verProveedor(${p.id})" title="Ver"><i class="bi bi-eye"></i></button> 
-                        <button class="btn-accion btn-edit-icon" onclick="editarProveedor(${p.id})" title="Editar"><i class="bi bi-pencil"></i></button> 
-                        <button class="btn-accion btn-del-icon" onclick="eliminarProveedorModal(${p.id}, '${escapeHtml(p.razon_social)}')" title="Eliminar"><i class="bi bi-trash"></i></button>
-                    </td>
-                </tr>
-            `).join(''); 
-        } catch(e){ 
-            console.error('Error cargando proveedores:', e);
-            tbody.innerHTML='<tr><td colspan="9" class="text-danger">Error al cargar proveedores</td></tr>'; 
+        mostrarLoading(true);
+        await new Promise(resolve => setTimeout(resolve, 300));
+        let filtered = [...proveedoresDB];
+        if(filtro.busqueda) {
+            const term = filtro.busqueda.toLowerCase();
+            filtered = filtered.filter(p => p.razon_social.toLowerCase().includes(term) || (p.ruc && p.ruc.includes(term)));
+        }
+        if(filtro.codigo) {
+            const term = filtro.codigo.toLowerCase();
+            filtered = filtered.filter(p => (p.codigo_proveedor || generarCodigoProveedor(p.id)).toLowerCase().includes(term));
+        }
+        if(!filtered.length){ 
+            tbody.innerHTML='<tr><td colspan="9" class="text-center">Sin proveedores registrados</td></tr>'; 
+            mostrarLoading(false);
+            return; 
         } 
+        tbody.innerHTML=filtered.map((p, idx)=>`
+            <tr>
+                <td class="text-center">${idx+1}</td>
+                <td><span class="codigo-proveedor">${escapeHtml(p.codigo_proveedor || generarCodigoProveedor(p.id))}</span></td>
+                <td><strong>${escapeHtml(p.razon_social)}</strong><br><small class="text-muted">${escapeHtml(p.razon_comercial || '')}</small></td>
+                <td><span class="badge-doc">${p.ruc || '-'}</span></td>
+                <td>${escapeHtml(p.direccion || '-')}</td>
+                <td>${p.telefono || '-'}</td>
+                <td>${p.contacto || '-'}</td>
+                <td>${p.email || '-'}</td>
+                <td class="acciones-cell">
+                    <button class="btn-accion btn-ver-icon" onclick="verProveedor(${p.id})" title="Ver"><i class="bi bi-eye"></i></button> 
+                    <button class="btn-accion btn-edit-icon" onclick="editarProveedor(${p.id})" title="Editar"><i class="bi bi-pencil"></i></button> 
+                    <button class="btn-accion btn-del-icon" onclick="eliminarProveedorModal(${p.id}, '${escapeHtml(p.razon_social)}')" title="Eliminar"><i class="bi bi-trash"></i></button>
+                </td>
+            </tr>
+        `).join(''); 
+        mostrarLoading(false);
     }
     
     window.verProveedor = async (id) => {
         try {
             const modalBody = document.getElementById('modalVerBodyProveedor');
             modalBody.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div><br>Cargando...</div>';
-            let res = await fetch(`/api/proveedores/${id}`);
-            let json = await res.json();
-            let p = json.data;
+            mostrarLoading(true);
+            await new Promise(resolve => setTimeout(resolve, 300));
+            const p = proveedoresDB.find(prov => prov.id === id);
+            mostrarLoading(false);
             if (!p) { modalBody.innerHTML = '<div class="alert alert-danger">No se encontró información</div>'; return; }
-            let fechaRegistro = p.created_at || p.fecha_registro || new Date().toISOString();
+            let fechaRegistro = p.created_at || new Date().toISOString();
             let html = `<div class="fecha-grande"><i class="bi bi-calendar-clock"></i><span><strong>📅 Fecha y Hora de Registro:</strong> ${formatFechaGrande(fechaRegistro)}</span></div>
                 <table class="detail-table">
-                    <tr><th>Código Proveedor</th><td><span class="codigo-proveedor">${escapeHtml(p.codigo_proveedor || ('PROV-' + String(p.id).padStart(5,'0')))}</span></td></tr>
-                    <tr><th>Razón Social</th><td><strong>${escapeHtml(p.razon_social || '-')}</strong></td></tr>
+                    <tr><th>Código Proveedor</th><td><span class="codigo-proveedor">${escapeHtml(p.codigo_proveedor || generarCodigoProveedor(p.id))}</span></td></tr>
+                    <tr><th>Razón Social</th><td><strong>${escapeHtml(p.razon_social)}</strong></td></tr>
                     <tr><th>Nombre Comercial</th><td>${escapeHtml(p.razon_comercial || '-')}</td></tr>
                     <tr><th>RUC</th><td>${escapeHtml(p.ruc || '-')}</td></tr>
                     <tr><th>Dirección Fiscal</th><td>${escapeHtml(p.direccion || '-')}</td></tr>
@@ -580,33 +601,35 @@
                 </table>`;
             modalBody.innerHTML = html;
             new bootstrap.Modal(document.getElementById('modalVerProveedor')).show();
-        } catch(e) { notificar('Error al cargar detalles', 'error'); }
+        } catch(e) { notificar('Error al cargar detalles', 'error'); mostrarLoading(false); }
     };
     
     window.editarProveedor = async (id) => { 
-        try{ 
-            let res=await fetch(`/api/proveedores/${id}`); 
-            let json=await res.json(); 
-            let p=json.data; 
-            document.getElementById('edit_id_proveedor').value=p.id; 
-            document.getElementById('edit_razon_social').value=p.razon_social||''; 
-            document.getElementById('edit_razon_comercial').value=p.razon_comercial||''; 
-            document.getElementById('edit_direccion').value=p.direccion||''; 
-            document.getElementById('edit_ruc').value=p.ruc||''; 
-            document.getElementById('edit_contacto').value=p.contacto||''; 
-            document.getElementById('edit_telefono').value=p.telefono||''; 
-            document.getElementById('edit_email').value=p.email||''; 
-            document.getElementById('edit_condicion_pago').value=p.condicion_pago||''; 
-            document.getElementById('edit_tiempo_credito').value=p.tiempo_credito||''; 
-            document.getElementById('edit_banco').value=p.banco||''; 
-            document.getElementById('edit_numero_cuenta').value=p.numero_cuenta||''; 
-            document.getElementById('edit_cci').value=p.cci||''; 
-            document.getElementById('edit_lugar_recojo').value=p.lugar_recojo||''; 
-            document.getElementById('edit_campo_tiempo_credito').style.display = p.condicion_pago === 'Credito' ? 'block' : 'none';
-            new bootstrap.Modal(document.getElementById('modalEditarProveedor')).show(); 
-        } catch(e){ notificar('Error al cargar datos', 'error'); } 
+        mostrarLoading(true);
+        await new Promise(resolve => setTimeout(resolve, 200));
+        const p = proveedoresDB.find(prov => prov.id === id);
+        mostrarLoading(false);
+        if(!p) { notificar('Proveedor no encontrado', 'error'); return; }
+        document.getElementById('edit_id_proveedor').value = p.id; 
+        document.getElementById('edit_razon_social').value = p.razon_social || ''; 
+        document.getElementById('edit_razon_comercial').value = p.razon_comercial || ''; 
+        document.getElementById('edit_direccion').value = p.direccion || ''; 
+        document.getElementById('edit_ruc').value = p.ruc || ''; 
+        document.getElementById('edit_contacto').value = p.contacto || ''; 
+        document.getElementById('edit_telefono').value = p.telefono || ''; 
+        document.getElementById('edit_email').value = p.email || ''; 
+        document.getElementById('edit_condicion_pago').value = p.condicion_pago || ''; 
+        document.getElementById('edit_tiempo_credito').value = p.tiempo_credito || ''; 
+        document.getElementById('edit_banco').value = p.banco || ''; 
+        document.getElementById('edit_numero_cuenta').value = p.numero_cuenta || ''; 
+        document.getElementById('edit_cci').value = p.cci || ''; 
+        document.getElementById('edit_lugar_recojo').value = p.lugar_recojo || ''; 
+        document.getElementById('edit_campo_tiempo_credito').style.display = p.condicion_pago === 'Credito' ? 'block' : 'none';
+        new bootstrap.Modal(document.getElementById('modalEditarProveedor')).show(); 
     };
     
+    let proveedorAEliminar = null;
+    let deleteModal = null;
     window.eliminarProveedorModal = (id, nombre) => {
         proveedorAEliminar = id;
         const mensajeElem = document.getElementById('mensajeEliminar');
@@ -616,42 +639,32 @@
         if (deleteModal) deleteModal.show();
     };
     
-    // Función mejorada para eliminar con reintentos y simulación local
     async function eliminarProveedor(id) {
         const confirmBtn = document.getElementById('confirmarEliminarProveedorBtn');
         const originalText = confirmBtn.innerHTML;
         const errorDetalle = document.getElementById('errorDetalle');
-        
         try {
             mostrarLoading(true);
             confirmBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Eliminando...';
             confirmBtn.disabled = true;
             if(errorDetalle) errorDetalle.style.display = 'none';
-            
-            // Intentar eliminar en el servidor
-            let res = await fetch(`/api/proveedores/${id}`, { method: 'DELETE' });
-            let json = await res.json();
-            
-            if (json.success) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            const index = proveedoresDB.findIndex(p => p.id === id);
+            if(index !== -1) {
+                proveedoresDB.splice(index, 1);
                 notificar('Proveedor eliminado correctamente');
                 await cargarProveedores();
                 deleteModal.hide();
                 proveedorAEliminar = null;
             } else {
-                // Si el servidor devuelve error, mostrar mensaje
-                if(errorDetalle) {
-                    errorDetalle.style.display = 'block';
-                    errorDetalle.innerHTML = `<strong>Error del servidor:</strong> ${json.error || 'No se pudo eliminar el proveedor'}<br><small>Puede intentar nuevamente más tarde.</small>`;
-                }
-                notificar(json.error || 'Error al eliminar el proveedor', 'error');
+                throw new Error('Proveedor no existe');
             }
         } catch (error) {
-            console.error('Error eliminando:', error);
             if(errorDetalle) {
                 errorDetalle.style.display = 'block';
-                errorDetalle.innerHTML = `<strong>Error de conexión:</strong> No se pudo conectar con el servidor.<br><small>Verifique su conexión e intente nuevamente.</small>`;
+                errorDetalle.innerHTML = `<strong>Error:</strong> No se pudo eliminar el proveedor.`;
             }
-            notificar('Error al conectar con el servidor', 'error');
+            notificar('Error al eliminar el proveedor', 'error');
         } finally {
             mostrarLoading(false);
             confirmBtn.innerHTML = originalText;
@@ -659,9 +672,13 @@
         }
     }
     
+    // Guardar nuevo
     document.getElementById('formProveedor')?.addEventListener('submit', async (e) => { 
         e.preventDefault(); 
+        let newId = nextId++;
         let data={ 
+            id: newId,
+            codigo_proveedor: generarCodigoProveedor(newId),
             razon_social:document.getElementById('razon_social').value, 
             razon_comercial:document.getElementById('razon_comercial').value, 
             direccion:document.getElementById('direccion').value, 
@@ -674,27 +691,28 @@
             banco:document.getElementById('banco').value, 
             numero_cuenta:document.getElementById('numero_cuenta').value, 
             cci:document.getElementById('cci').value, 
-            lugar_recojo:document.getElementById('lugar_recojo').value 
+            lugar_recojo:document.getElementById('lugar_recojo').value,
+            created_at: new Date().toISOString()
         }; 
         mostrarLoading(true);
-        try {
-            let res=await fetch('/api/proveedores/guardar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}); 
-            let json=await res.json(); 
-            if(json.success){ 
-                notificar('Proveedor registrado'); 
-                bootstrap.Modal.getInstance(document.getElementById('modalNuevoProveedor')).hide(); 
-                document.getElementById('formProveedor').reset(); 
-                document.getElementById('campo_tiempo_credito').style.display = 'none';
-                await cargarProveedores(); 
-            } else { notificar(json.error||'Error guardar','error'); }
-        } catch(e) { notificar('Error al conectar con el servidor', 'error'); }
-        finally { mostrarLoading(false); }
+        await new Promise(resolve => setTimeout(resolve, 500));
+        proveedoresDB.push(data);
+        notificar('Proveedor registrado'); 
+        bootstrap.Modal.getInstance(document.getElementById('modalNuevoProveedor')).hide(); 
+        document.getElementById('formProveedor').reset(); 
+        document.getElementById('campo_tiempo_credito').style.display = 'none';
+        await cargarProveedores(); 
+        mostrarLoading(false);
     });
     
+    // Actualizar
     document.getElementById('formEditarProveedor')?.addEventListener('submit', async (e) => { 
         e.preventDefault(); 
-        let id=document.getElementById('edit_id_proveedor').value; 
-        let data={ 
+        let id = parseInt(document.getElementById('edit_id_proveedor').value); 
+        let index = proveedoresDB.findIndex(p => p.id === id);
+        if(index === -1) { notificar('Proveedor no encontrado', 'error'); return; }
+        let updated = { 
+            ...proveedoresDB[index],
             razon_social:document.getElementById('edit_razon_social').value, 
             razon_comercial:document.getElementById('edit_razon_comercial').value, 
             direccion:document.getElementById('edit_direccion').value, 
@@ -708,18 +726,14 @@
             numero_cuenta:document.getElementById('edit_numero_cuenta').value, 
             cci:document.getElementById('edit_cci').value, 
             lugar_recojo:document.getElementById('edit_lugar_recojo').value 
-        }; 
+        };
         mostrarLoading(true);
-        try {
-            let res=await fetch(`/api/proveedores/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}); 
-            let json=await res.json(); 
-            if(json.success){ 
-                notificar('Proveedor actualizado'); 
-                bootstrap.Modal.getInstance(document.getElementById('modalEditarProveedor')).hide(); 
-                await cargarProveedores(); 
-            } else { notificar(json.error,'error'); }
-        } catch(e) { notificar('Error al conectar con el servidor', 'error'); }
-        finally { mostrarLoading(false); }
+        await new Promise(resolve => setTimeout(resolve, 500));
+        proveedoresDB[index] = updated;
+        notificar('Proveedor actualizado'); 
+        bootstrap.Modal.getInstance(document.getElementById('modalEditarProveedor')).hide(); 
+        await cargarProveedores(); 
+        mostrarLoading(false);
     });
     
     document.addEventListener('DOMContentLoaded', function() {
@@ -750,7 +764,7 @@
     filtroBusqueda?.addEventListener('input',()=>{ clearTimeout(timer); timer=setTimeout(aplicarFiltros,400); });
     filtroCodigo?.addEventListener('input',()=>{ clearTimeout(timer); timer=setTimeout(aplicarFiltros,400); });
     
-    setTimeout(()=>{ cargarProveedores(); },150);
+    cargarProveedores();
 </script>
 </body>
 </html>
