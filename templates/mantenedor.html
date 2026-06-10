@@ -553,7 +553,7 @@
             </div>
 
             <!-- Tarjeta Gestión de Usuarios (solo admin) -->
-           
+            {% if session.rol == 'administrador' %}
             <div class="erp-card">
                 <div class="card-header-custom">
                     <div>
@@ -567,7 +567,7 @@
                     <button class="btn btn-light btn-sm-custom" data-bs-toggle="modal" data-bs-target="#modalListaUsuarios">Usuarios</button>
                 </div>
             </div>
-            
+            {% endif %}
         </div>
     </main>
 </div>
@@ -699,7 +699,7 @@
                                     <td>{{ p.peso }}</td>
                                     <td>{{ p.transporte }}</td>
                                 </tr>
-                                
+                                {% endfor %}
                             </tbody>
                         </table>
                     </div>
