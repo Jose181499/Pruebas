@@ -1,4 +1,4 @@
-// crear_orden_compra.js - COMPLETO Y FUNCIONAL PARA COMPRAS
+// crear_compra.js - COMPLETO Y FUNCIONAL PARA COMPRAS
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -9,6 +9,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const x = Number(String(v ?? '').replace(',', '.'));
         return Number.isFinite(x) ? x : 0;
     };
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
 
     function formatCantidad(cant) {
         if (cant === null || cant === undefined) return '0';
@@ -193,33 +200,65 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // CONSULTA A SUNAT (PROVEEDORES)
+    // CONSULTA A SUNAT PARA PROVEEDORES (PRIORIZANDO DATOS LOCALES)
     // =========================
     async function consultarSunat(ruc) {
         try {
-            mostrarNotificacion(`🔍 Consultando RUC ${ruc} en SUNAT...`, 'info');
+            mostrarNotificacion(`🔍 Verificando RUC ${ruc} en sistema local...`, 'info');
             
-            const response = await fetch(`/api/sunat/consulta_proveedor?ruc=${ruc}`);
+            const checkResponse = await fetch(`/api/proveedores/buscar?q=${ruc}`);
+            const checkData = await checkResponse.json();
             
-            if (!response.ok) {
-                throw new Error('Error al consultar SUNAT');
+            let existeLocal = false;
+            let proveedorLocal = null;
+            
+            if (checkData.success && checkData.data && checkData.data.length > 0) {
+                proveedorLocal = checkData.data.find(p => p.numero_documento === ruc);
+                if (proveedorLocal) {
+                    existeLocal = true;
+                    console.log('✅ Proveedor encontrado en base local:', proveedorLocal);
+                }
             }
             
+            if (existeLocal && proveedorLocal) {
+                mostrarNotificacion(`🏢 Proveedor ENCONTRADO en sistema: ${proveedorLocal.razon_social}`, 'success');
+                
+                return {
+                    success: true,
+                    existe_en_sistema: true,
+                    proveedor_id: proveedorLocal.id,
+                    razon_social: proveedorLocal.razon_social || '',
+                    nombre_comercial: proveedorLocal.nombre_comercial || '',
+                    direccion: proveedorLocal.direccion_fiscal || '',
+                    estado: proveedorLocal.estado || 'ACTIVO',
+                    telefono_contacto: proveedorLocal.telefono_contacto || '',
+                    email_contacto: proveedorLocal.email_contacto || '',
+                    nombre_contacto: proveedorLocal.nombre_contacto || ''
+                };
+            }
+            
+            mostrarNotificacion(`🌐 Consultando RUC ${ruc} en SUNAT...`, 'info');
+            const response = await fetch(`/api/sunat/consulta_proveedor?ruc=${ruc}`);
             const data = await response.json();
             
             if (data.success) {
+                mostrarNotificacion(`🆕 Proveedor NUEVO (no existe en sistema), cargando datos de SUNAT...`, 'info');
                 return {
                     success: true,
+                    existe_en_sistema: false,
                     razon_social: data.razon_social || '',
                     nombre_comercial: data.nombre_comercial || '',
                     direccion: data.direccion || '',
-                    estado: data.estado || ''
+                    estado: data.estado || '',
+                    telefono_contacto: '',
+                    email_contacto: '',
+                    nombre_contacto: ''
                 };
             } else {
-                return { success: false, error: data.error || 'No se encontraron datos' };
+                return { success: false, error: data.error || 'No se encontraron datos en SUNAT' };
             }
         } catch (error) {
-            console.error('Error consultando SUNAT:', error);
+            console.error('Error consultando:', error);
             return { success: false, error: error.message };
         }
     }
@@ -241,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const btnBuscar = document.getElementById('btnBuscarSunat');
         const textoOriginal = btnBuscar?.innerHTML;
         if (btnBuscar) {
-            btnBuscar.innerHTML = '<i class="bi bi-hourglass-split"></i> Buscando...';
+            btnBuscar.innerHTML = '<i class="bi bi-hourglass-split"></i> Verificando...';
             btnBuscar.disabled = true;
         }
         
@@ -253,19 +292,249 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('nuevo_nombre_comercial').value = resultado.nombre_comercial || '';
                 document.getElementById('nuevo_direccion_fiscal').value = resultado.direccion || '';
                 
-                mostrarNotificacion('✅ Datos cargados desde SUNAT correctamente', 'success');
+                if (resultado.existe_en_sistema) {
+                    mostrarNotificacionExistente(resultado);
+                    document.getElementById('nuevo_telefono').value = resultado.telefono_contacto || '';
+                    document.getElementById('nuevo_email').value = resultado.email_contacto || '';
+                    document.getElementById('nuevo_nombre_contacto').value = resultado.nombre_contacto || '';
+                    resaltarCamposExistentes();
+                    mostrarIndicadorProveedorExistente(resultado);
+                } else {
+                    document.getElementById('nuevo_telefono').value = '';
+                    document.getElementById('nuevo_email').value = '';
+                    document.getElementById('nuevo_nombre_contacto').value = '';
+                    quitarResaltadoCampos();
+                    ocultarIndicadorProveedorExistente();
+                }
+                
+                mostrarNotificacion('✅ Datos cargados correctamente', 'success');
             } else {
                 mostrarNotificacion('❌ ' + (resultado.error || 'No se encontraron datos para este RUC'), 'danger');
             }
         } catch (error) {
             console.error('Error:', error);
-            mostrarNotificacion('❌ Error al consultar SUNAT', 'danger');
+            mostrarNotificacion('❌ Error al consultar', 'danger');
         } finally {
             if (btnBuscar) {
                 btnBuscar.innerHTML = textoOriginal;
                 btnBuscar.disabled = false;
             }
         }
+    }
+
+    function mostrarNotificacionExistente(proveedor) {
+        const notificacionDiv = document.createElement('div');
+        notificacionDiv.id = 'proveedor-existente-notificacion';
+        notificacionDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 400px;
+            animation: slideInRight 0.3s ease-out;
+            border-left: 4px solid #ffd700;
+        `;
+        
+        notificacionDiv.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="font-size: 28px;">🏢</div>
+                <div style="flex: 1;">
+                    <strong style="font-size: 16px;">¡PROVEEDOR YA REGISTRADO!</strong>
+                    <div style="font-size: 13px; margin-top: 4px;">
+                        Este RUC ya existe en el sistema con los siguientes datos:
+                    </div>
+                    <div style="background: rgba(255,255,255,0.2); border-radius: 8px; padding: 8px; margin-top: 8px; font-size: 12px;">
+                        <div>📞 Teléfono: ${proveedor.telefono_contacto || 'No registrado'}</div>
+                        <div>✉️ Email: ${proveedor.email_contacto || 'No registrado'}</div>
+                        <div>👤 Contacto: ${proveedor.nombre_contacto || 'No registrado'}</div>
+                    </div>
+                    <div style="font-size: 11px; margin-top: 6px; opacity: 0.9;">
+                        ✅ Los datos de contacto han sido autocompletados automáticamente
+                    </div>
+                </div>
+                <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;">✕</button>
+            </div>
+        `;
+        
+        const oldNotif = document.getElementById('proveedor-existente-notificacion');
+        if (oldNotif) oldNotif.remove();
+        
+        document.body.appendChild(notificacionDiv);
+        
+        setTimeout(() => {
+            if (notificacionDiv && notificacionDiv.parentNode) {
+                notificacionDiv.style.animation = 'fadeOut 0.3s ease-out';
+                setTimeout(() => notificacionDiv.remove(), 300);
+            }
+        }, 8000);
+    }
+
+    function resaltarCamposExistentes() {
+        const campos = ['nuevo_telefono', 'nuevo_email', 'nuevo_nombre_contacto'];
+        campos.forEach(campoId => {
+            const campo = document.getElementById(campoId);
+            if (campo && campo.value) {
+                campo.style.transition = 'all 0.3s ease';
+                campo.style.backgroundColor = '#fef3c7';
+                campo.style.border = '2px solid #f59e0b';
+                
+                setTimeout(() => {
+                    if (campo) {
+                        campo.style.backgroundColor = '';
+                        campo.style.border = '';
+                    }
+                }, 2000);
+            }
+        });
+    }
+
+    function quitarResaltadoCampos() {
+        const campos = ['nuevo_telefono', 'nuevo_email', 'nuevo_nombre_contacto'];
+        campos.forEach(campoId => {
+            const campo = document.getElementById(campoId);
+            if (campo) {
+                campo.style.backgroundColor = '';
+                campo.style.border = '';
+            }
+        });
+    }
+
+    function mostrarIndicadorProveedorExistente(proveedor) {
+        let badge = document.getElementById('proveedor-existente-badge');
+        if (!badge) {
+            badge = document.createElement('div');
+            badge.id = 'proveedor-existente-badge';
+            const formContainer = document.getElementById('formNuevoProveedor')?.querySelector('.modal-body');
+            if (formContainer) {
+                badge.style.cssText = `
+                    background: #fef3c7;
+                    border-left: 4px solid #f59e0b;
+                    padding: 10px 15px;
+                    border-radius: 8px;
+                    margin-bottom: 15px;
+                    font-size: 13px;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                `;
+                formContainer.insertBefore(badge, formContainer.firstChild);
+            }
+        }
+        
+        if (badge) {
+            badge.innerHTML = `
+                <span style="font-size: 20px;">⚠️</span>
+                <div style="flex: 1;">
+                    <strong style="color: #92400e;">¡ATENCIÓN!</strong>
+                    <div style="color: #78350f;">Este RUC ya está registrado como proveedor con ID: ${proveedor.proveedor_id}</div>
+                    <div style="color: #78350f; font-size: 11px; margin-top: 4px;">
+                        Los datos de contacto han sido autocompletados automáticamente.
+                    </div>
+                </div>
+            `;
+            badge.style.display = 'flex';
+        }
+    }
+
+    function ocultarIndicadorProveedorExistente() {
+        const badge = document.getElementById('proveedor-existente-badge');
+        if (badge) {
+            badge.style.display = 'none';
+        }
+    }
+
+    // =========================
+    // BOTÓN BUSCAR PROVEEDOR POR RUC (MEJORADO)
+    // =========================
+    const btnBuscarProveedorPorRuc = document.getElementById('btnBuscarProveedorPorRuc');
+    const buscarRucInput = document.getElementById('buscar_ruc');
+    const btnLimpiarProveedor = document.getElementById('btnLimpiarProveedor');
+
+    if (btnBuscarProveedorPorRuc) {
+        btnBuscarProveedorPorRuc.addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            const ruc = buscarRucInput?.value.trim();
+            
+            if (!ruc) {
+                mostrarNotificacion('⚠️ Ingrese un RUC para buscar', 'warning');
+                return;
+            }
+            
+            if (ruc.length !== 11) {
+                mostrarNotificacion('⚠️ El RUC debe tener 11 dígitos', 'warning');
+                return;
+            }
+            
+            const textoOriginal = btnBuscarProveedorPorRuc.innerHTML;
+            btnBuscarProveedorPorRuc.innerHTML = '<i class="bi bi-hourglass-split"></i> Verificando...';
+            btnBuscarProveedorPorRuc.disabled = true;
+            
+            try {
+                const resultado = await consultarSunat(ruc);
+                
+                if (resultado.success) {
+                    document.getElementById('proveedor_razon_social').value = resultado.razon_social || '';
+                    document.getElementById('proveedor_doc').value = ruc;
+                    document.getElementById('proveedor_direccion').value = resultado.direccion || '';
+                    
+                    document.getElementById('nuevo_razon_social').value = resultado.razon_social || '';
+                    document.getElementById('nuevo_nombre_comercial').value = resultado.nombre_comercial || '';
+                    document.getElementById('nuevo_direccion_fiscal').value = resultado.direccion || '';
+                    document.getElementById('nuevo_numero_documento').value = ruc;
+                    
+                    if (resultado.existe_en_sistema) {
+                        document.getElementById('telefono_contacto').value = resultado.telefono_contacto || '';
+                        document.getElementById('proveedor_contacto').value = resultado.nombre_contacto || '';
+                        document.getElementById('email_contacto_proveedor').value = resultado.email_contacto || '';
+                        document.getElementById('proveedor_id').value = resultado.proveedor_id || '';
+                        
+                        mostrarNotificacionExistente(resultado);
+                        
+                        if (resultado.proveedor_id) {
+                            await cargarDireccionesProveedor(resultado.proveedor_id);
+                        }
+                        
+                        mostrarNotificacion('✅ Proveedor existente cargado con todos sus datos', 'success');
+                    } else {
+                        document.getElementById('telefono_contacto').value = '';
+                        document.getElementById('proveedor_contacto').value = '';
+                        document.getElementById('email_contacto_proveedor').value = '';
+                        document.getElementById('proveedor_id').value = '';
+                        
+                        mostrarNotificacion('✅ Datos de SUNAT cargados (proveedor nuevo)', 'success');
+                    }
+                } else {
+                    mostrarNotificacion('❌ ' + (resultado.error || 'No se encontraron datos para este RUC en SUNAT'), 'danger');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('❌ Error al consultar: ' + error.message, 'danger');
+            } finally {
+                btnBuscarProveedorPorRuc.innerHTML = textoOriginal;
+                btnBuscarProveedorPorRuc.disabled = false;
+            }
+        });
+    }
+
+    if (btnLimpiarProveedor) {
+        btnLimpiarProveedor.addEventListener('click', function() {
+            document.getElementById('proveedor_id').value = '';
+            document.getElementById('proveedor_razon_social').value = '';
+            document.getElementById('proveedor_doc').value = '';
+            document.getElementById('proveedor_direccion').value = '';
+            document.getElementById('telefono_contacto').value = '';
+            document.getElementById('proveedor_contacto').value = '';
+            document.getElementById('email_contacto_proveedor').value = '';
+            document.getElementById('num_cotizacion').value = '';
+            if (buscarRucInput) buscarRucInput.value = '';
+            mostrarNotificacion('🧹 Proveedor limpiado', 'info');
+        });
     }
 
     // =========================
@@ -302,74 +571,236 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // BOTÓN BUSCAR PROVEEDOR POR RUC
+    // CONFIGURAR LUGAR DE ENTREGA
     // =========================
-    const btnBuscarProveedorPorRuc = document.getElementById('btnBuscarProveedorPorRuc');
-    const buscarRucInput = document.getElementById('buscar_ruc');
-    const btnLimpiarProveedor = document.getElementById('btnLimpiarProveedor');
-
-    if (btnBuscarProveedorPorRuc) {
-        btnBuscarProveedorPorRuc.addEventListener('click', async function(e) {
-            e.preventDefault();
-            
-            const ruc = buscarRucInput?.value.trim();
-            
-            if (!ruc) {
-                mostrarNotificacion('⚠️ Ingrese un RUC para buscar', 'warning');
-                return;
-            }
-            
-            if (ruc.length !== 11) {
-                mostrarNotificacion('⚠️ El RUC debe tener 11 dígitos', 'warning');
-                return;
-            }
-            
-            mostrarNotificacion('🔍 Consultando SUNAT para RUC: ' + ruc, 'info');
-            
-            const textoOriginal = btnBuscarProveedorPorRuc.innerHTML;
-            btnBuscarProveedorPorRuc.innerHTML = '<i class="bi bi-hourglass-split"></i> Consultando SUNAT...';
-            btnBuscarProveedorPorRuc.disabled = true;
-            
-            try {
-                const resultado = await consultarSunat(ruc);
-                
-                if (resultado.success) {
-                    document.getElementById('proveedor_razon_social').value = resultado.razon_social || '';
-                    document.getElementById('proveedor_doc').value = ruc;
-                    document.getElementById('proveedor_direccion').value = resultado.direccion || '';
-                    
-                    document.getElementById('nuevo_razon_social').value = resultado.razon_social || '';
-                    document.getElementById('nuevo_nombre_comercial').value = resultado.nombre_comercial || '';
-                    document.getElementById('nuevo_direccion_fiscal').value = resultado.direccion || '';
-                    document.getElementById('nuevo_numero_documento').value = ruc;
-                    
-                    mostrarNotificacion('✅ Datos cargados desde SUNAT correctamente', 'success');
-                } else {
-                    mostrarNotificacion('❌ ' + (resultado.error || 'No se encontraron datos para este RUC en SUNAT'), 'danger');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                mostrarNotificacion('❌ Error al consultar SUNAT: ' + error.message, 'danger');
-            } finally {
-                btnBuscarProveedorPorRuc.innerHTML = textoOriginal;
-                btnBuscarProveedorPorRuc.disabled = false;
+    function configurarLugarEntrega() {
+        const select = document.getElementById('lugar_entrega_select');
+        const input = document.getElementById('lugar_entrega');
+        
+        if (!select || !input) {
+            console.warn('⚠️ Elementos de lugar de entrega no encontrados');
+            return;
+        }
+        
+        select.addEventListener('change', function() {
+            const valor = this.value;
+            if (valor === 'personalizado') {
+                input.style.display = 'block';
+                input.value = '';
+                input.placeholder = 'Escriba la dirección completa...';
+                input.focus();
+            } else if (valor === '') {
+                input.style.display = 'none';
+                input.value = '';
+            } else {
+                input.style.display = 'none';
+                input.value = valor;
             }
         });
+        
+        input.addEventListener('focus', function() {
+            select.value = 'personalizado';
+            this.style.display = 'block';
+        });
+        
+        if (input.value && input.value.trim() !== '') {
+            let encontrado = false;
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].value === input.value) {
+                    select.value = input.value;
+                    input.style.display = 'none';
+                    encontrado = true;
+                    break;
+                }
+            }
+            if (!encontrado && input.value !== '') {
+                select.value = 'personalizado';
+                input.style.display = 'block';
+            }
+        }
     }
 
-    if (btnLimpiarProveedor) {
-        btnLimpiarProveedor.addEventListener('click', function() {
-            document.getElementById('proveedor_id').value = '';
-            document.getElementById('proveedor_razon_social').value = '';
-            document.getElementById('proveedor_doc').value = '';
-            document.getElementById('proveedor_direccion').value = '';
-            document.getElementById('telefono_contacto').value = '';
-            document.getElementById('proveedor_contacto').value = '';
-            document.getElementById('email_contacto_proveedor').value = '';
-            document.getElementById('num_cotizacion').value = '';
-            if (buscarRucInput) buscarRucInput.value = '';
-            mostrarNotificacion('🧹 Proveedor limpiado', 'info');
+    // =========================
+    // CONFIGURAR CONDICIÓN DE PAGO PERSONALIZADA
+    // =========================
+    function configurarCondicionPago() {
+        const select = document.getElementById('condicion_pago_select');
+        const input = document.getElementById('condicion_pago');
+        
+        if (!select || !input) {
+            console.warn('⚠️ Elementos de condición de pago no encontrados');
+            return;
+        }
+        
+        select.addEventListener('change', function() {
+            const valor = this.value;
+            if (valor === 'personalizado') {
+                input.style.display = 'block';
+                input.value = '';
+                input.placeholder = 'Ej: Crédito 20 días, 50% adelanto, etc.';
+                input.focus();
+            } else if (valor === '') {
+                input.style.display = 'none';
+                input.value = '';
+            } else {
+                input.style.display = 'none';
+                input.value = valor;
+            }
         });
+        
+        input.addEventListener('focus', function() {
+            select.value = 'personalizado';
+            this.style.display = 'block';
+        });
+        
+        if (input.value && input.value.trim() !== '') {
+            let encontrado = false;
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].value === input.value) {
+                    select.value = input.value;
+                    input.style.display = 'none';
+                    encontrado = true;
+                    break;
+                }
+            }
+            if (!encontrado && input.value !== '') {
+                select.value = 'personalizado';
+                input.style.display = 'block';
+            }
+        }
+    }
+
+    // =========================
+    // CONFIGURAR FECHA REQUERIDA PERSONALIZADA
+    // =========================
+    function configurarFechaRequerida() {
+        const select = document.getElementById('fecha_requerida_select');
+        const input = document.getElementById('fecha_requerida');
+        
+        if (!select || !input) {
+            console.warn('⚠️ Elementos de fecha requerida no encontrados');
+            return;
+        }
+        
+        select.addEventListener('change', function() {
+            const valor = this.value;
+            if (valor === 'personalizado') {
+                input.style.display = 'block';
+                input.value = '';
+                input.placeholder = 'Ej: 20/12/2024, 2 semanas, etc.';
+                input.focus();
+            } else if (valor === '') {
+                input.style.display = 'none';
+                input.value = '';
+            } else {
+                input.style.display = 'none';
+                input.value = valor;
+            }
+        });
+        
+        input.addEventListener('focus', function() {
+            select.value = 'personalizado';
+            this.style.display = 'block';
+        });
+        
+        if (input.value && input.value.trim() !== '') {
+            let encontrado = false;
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].value === input.value) {
+                    select.value = input.value;
+                    input.style.display = 'none';
+                    encontrado = true;
+                    break;
+                }
+            }
+            if (!encontrado && input.value !== '') {
+                select.value = 'personalizado';
+                input.style.display = 'block';
+            }
+        }
+    }
+
+    // =========================
+    // CONFIGURAR TIEMPO DE ENTREGA
+    // =========================
+    function configurarTiempoEntrega() {
+        const select = document.getElementById('tiempo_entrega_select');
+        const input = document.getElementById('tiempo_entrega');
+        
+        if (!select || !input) {
+            console.warn('⚠️ Elementos de tiempo de entrega no encontrados');
+            return;
+        }
+        
+        select.addEventListener('change', function() {
+            const valor = this.value;
+            if (valor === 'personalizado') {
+                input.style.display = 'block';
+                input.value = '';
+                input.placeholder = 'Ej: 10 días hábiles, 2 semanas, etc.';
+                input.focus();
+            } else if (valor === '') {
+                input.style.display = 'none';
+                input.value = '';
+            } else {
+                input.style.display = 'none';
+                input.value = valor;
+            }
+        });
+        
+        input.addEventListener('focus', function() {
+            select.value = 'personalizado';
+            this.style.display = 'block';
+        });
+        
+        if (input.value && input.value.trim() !== '') {
+            let encontrado = false;
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].value === input.value) {
+                    select.value = input.value;
+                    input.style.display = 'none';
+                    encontrado = true;
+                    break;
+                }
+            }
+            if (!encontrado && input.value !== '') {
+                select.value = 'personalizado';
+                input.style.display = 'block';
+            }
+        }
+    }
+
+    // =========================
+    // CONFIGURAR DESCUENTO PERSONALIZABLE
+    // =========================
+    function configurarDescuentoPersonalizable() {
+        const descuentoInput = document.getElementById('descuento_porcentaje_input');
+        const descuentoTipo = document.getElementById('descuento_tipo');
+        
+        if (descuentoInput) {
+            descuentoInput.addEventListener('input', function() {
+                recalculateAll();
+                datosModificados = true;
+            });
+        }
+        
+        if (descuentoTipo) {
+            descuentoTipo.addEventListener('change', function() {
+                if (descuentoInput) {
+                    if (this.value === 'monto') {
+                        descuentoInput.placeholder = '0.00';
+                        descuentoInput.step = '0.01';
+                        descuentoInput.max = '';
+                    } else {
+                        descuentoInput.placeholder = '0';
+                        descuentoInput.step = '0.01';
+                        descuentoInput.max = '100';
+                    }
+                }
+                recalculateAll();
+                datosModificados = true;
+            });
+        }
     }
 
     // =========================
@@ -419,7 +850,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('formNuevoProveedor')?.reset();
                 const modal = bootstrap.Modal.getInstance(document.getElementById('modalNuevoProveedor'));
                 modal.hide();
-                mostrarNotificacion('✅ Proveedor creado exitosamente', 'success');
+                
+                mostrarNotificacionProveedorGuardadoGrande({
+                    razon_social: razonSocial,
+                    tipo_documento: tipoDocumento,
+                    numero_documento: numeroDocumento,
+                    nombre_contacto: payload.nombre_contacto,
+                    telefono: payload.telefono_contacto,
+                    email: payload.email_contacto
+                });
+                
                 await cargarProveedorEnOrden(result.data.id);
             } else {
                 mostrarNotificacion('❌ Error: ' + (result.error || 'No se pudo crear el proveedor'), 'danger');
@@ -433,6 +873,206 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function mostrarNotificacionProveedorGuardadoGrande(datosProveedor) {
+        const ahora = new Date();
+        const fecha = ahora.toLocaleDateString('es-PE', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        const hora = ahora.toLocaleTimeString('es-PE', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+        });
+        
+        const overlay = document.createElement('div');
+        overlay.id = 'notification-overlay-grande';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease-out;
+        `;
+        
+        const notificacion = document.createElement('div');
+        notificacion.style.cssText = `
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+            border-radius: 24px;
+            padding: 40px 48px;
+            max-width: 550px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: scaleIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        `;
+        
+        const iconoCheck = `
+            <div style="margin-bottom: 20px;">
+                <div style="background: rgba(255, 255, 255, 0.2); border-radius: 50%; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                    <svg style="width: 50px; height: 50px; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+            </div>
+        `;
+        
+        const titulo = `
+            <h2 style="color: white; font-size: 28px; font-weight: 700; margin: 0 0 8px 0; font-family: inherit;">
+                ✅ ¡PROVEEDOR GUARDADO!
+            </h2>
+            <p style="color: rgba(255,255,255,0.9); font-size: 14px; margin: 0 0 20px 0;">
+                El proveedor se ha registrado exitosamente en el sistema
+            </p>
+        `;
+        
+        const fechaHora = `
+            <div style="background: rgba(255,255,255,0.15); border-radius: 12px; padding: 10px; margin-bottom: 20px;">
+                <div style="color: white; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 20px;">
+                    <span>📅 ${fecha}</span>
+                    <span>⏰ ${hora}</span>
+                </div>
+            </div>
+        `;
+        
+        const tipoDocTexto = datosProveedor.tipo_documento === 'RUC' ? 'RUC' : 'DNI';
+        const tipoIcono = datosProveedor.tipo_documento === 'RUC' ? '🏢' : '👤';
+        
+        const infoProveedor = `
+            <div style="background: white; border-radius: 16px; padding: 24px; margin: 0 0 20px 0; text-align: left;">
+                <div style="border-bottom: 2px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 16px;">
+                    <span style="font-size: 20px; font-weight: 700; color: #1f2937;">📋 DATOS DEL PROVEEDOR</span>
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <div style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">RAZÓN SOCIAL</div>
+                    <div style="font-size: 20px; font-weight: 700; color: #111827;">${escapeHtml(datosProveedor.razon_social)}</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                    <div>
+                        <div style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">${tipoDocTexto}</div>
+                        <div style="font-size: 18px; font-weight: 600; color: #111827;">${tipoIcono} ${datosProveedor.numero_documento}</div>
+                    </div>
+                    ${datosProveedor.nombre_contacto ? `
+                    <div>
+                        <div style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">CONTACTO</div>
+                        <div style="font-size: 16px; font-weight: 600; color: #111827;">👤 ${escapeHtml(datosProveedor.nombre_contacto)}</div>
+                    </div>
+                    ` : ''}
+                </div>
+                ${datosProveedor.telefono || datosProveedor.email ? `
+                <div style="background: #f3f4f6; border-radius: 12px; padding: 12px; margin-top: 12px;">
+                    <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                        ${datosProveedor.telefono ? `<div><span style="font-size: 13px; color: #6b7280;">📞 TELÉFONO</span><br><span style="font-weight: 600;">${escapeHtml(datosProveedor.telefono)}</span></div>` : ''}
+                        ${datosProveedor.email ? `<div><span style="font-size: 13px; color: #6b7280;">✉️ EMAIL</span><br><span style="font-weight: 600; font-size: 13px;">${escapeHtml(datosProveedor.email)}</span></div>` : ''}
+                    </div>
+                </div>
+                ` : ''}
+            </div>
+        `;
+        
+        const botonCerrar = `
+            <button id="btnCerrarNotificacionGrande" style="
+                background: white;
+                color: #047857;
+                border: none;
+                padding: 14px 32px;
+                font-size: 16px;
+                font-weight: 600;
+                border-radius: 40px;
+                cursor: pointer;
+                margin-top: 8px;
+                transition: all 0.2s ease;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                width: auto;
+                min-width: 180px;
+            " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.2)';" 
+            onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)';">
+                ✕ CERRAR
+            </button>
+        `;
+        
+        notificacion.innerHTML = iconoCheck + titulo + fechaHora + infoProveedor + botonCerrar;
+        overlay.appendChild(notificacion);
+        document.body.appendChild(overlay);
+        
+        if (!document.querySelector('#notification-grande-styles')) {
+            const style = document.createElement('style');
+            style.id = 'notification-grande-styles';
+            style.textContent = `
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes scaleIn {
+                    from {
+                        transform: scale(0.7);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: scale(1);
+                        opacity: 1;
+                    }
+                }
+                @keyframes fadeOut {
+                    from { opacity: 1; }
+                    to { opacity: 0; }
+                }
+                @keyframes scaleOut {
+                    from {
+                        transform: scale(1);
+                        opacity: 1;
+                    }
+                    to {
+                        transform: scale(0.7);
+                        opacity: 0;
+                    }
+                }
+                @keyframes slideInRight {
+                    from {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        const cerrarNotificacion = () => {
+            overlay.style.animation = 'fadeOut 0.2s ease-out';
+            notificacion.style.animation = 'scaleOut 0.2s ease-out';
+            setTimeout(() => {
+                if (overlay && overlay.parentNode) {
+                    overlay.remove();
+                }
+            }, 200);
+        };
+        
+        const btnCerrar = document.getElementById('btnCerrarNotificacionGrande');
+        if (btnCerrar) {
+            btnCerrar.addEventListener('click', cerrarNotificacion);
+        }
+        
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                cerrarNotificacion();
+            }
+        });
+    }
+
     async function cargarProveedorEnOrden(proveedorId) {
         try {
             const response = await fetch(`/api/proveedores/${proveedorId}`);
@@ -440,14 +1080,15 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (result.success && result.data) {
                 const proveedor = result.data;
+                const contacto = proveedor.contactos && proveedor.contactos.length > 0 ? proveedor.contactos[0] : {};
                 
                 document.getElementById('proveedor_id').value = proveedor.id;
                 document.getElementById('proveedor_razon_social').value = proveedor.razon_social;
                 document.getElementById('proveedor_doc').value = proveedor.numero_documento || '';
                 document.getElementById('proveedor_direccion').value = proveedor.direccion_fiscal || '';
-                document.getElementById('telefono_contacto').value = proveedor.telefono_contacto || '';
-                document.getElementById('proveedor_contacto').value = proveedor.nombre_contacto || '';
-                document.getElementById('email_contacto_proveedor').value = proveedor.email_contacto || '';
+                document.getElementById('telefono_contacto').value = contacto.telefono || '';
+                document.getElementById('proveedor_contacto').value = contacto.nombre_contacto || '';
+                document.getElementById('email_contacto_proveedor').value = contacto.email || '';
                 
                 await cargarDireccionesProveedor(proveedor.id);
                 
@@ -455,6 +1096,31 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Error cargando proveedor:', error);
+        }
+    }
+
+    async function autoCompletarContactoYCorreo(proveedorId) {
+        if (!proveedorId) return;
+        
+        try {
+            const response = await fetch(`/api/proveedores/${proveedorId}/contacto`);
+            const result = await response.json();
+            
+            if (result.success && result.data) {
+                const contacto = result.data.nombre_contacto || '';
+                const email = result.data.email_contacto || '';
+                const telefono = result.data.telefono_contacto || '';
+                
+                if (contacto) document.getElementById('proveedor_contacto').value = contacto;
+                if (email) document.getElementById('email_contacto_proveedor').value = email;
+                if (telefono) document.getElementById('telefono_contacto').value = telefono;
+                
+                if (contacto || email || telefono) {
+                    console.log('✅ Contacto autocompletado:', { contacto, email, telefono });
+                }
+            }
+        } catch (error) {
+            console.error('Error autocompletando contacto:', error);
         }
     }
 
@@ -470,15 +1136,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const horaActual = ahora.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
         
         modalBody.innerHTML = `
-            <div class="text-center mb-3">
-                <i class="bi bi-check-circle-fill" style="font-size: 48px; color: #10b981;"></i>
-            </div>
-            <div class="alert alert-success">
-                <strong>✅ ¡Orden de Compra guardada exitosamente!</strong>
-            </div>
+            <div class="text-center mb-3"><i class="bi bi-check-circle-fill" style="font-size: 48px; color: #10b981;"></i></div>
+            <div class="alert alert-success"><strong>✅ ¡Orden de Compra guardada exitosamente!</strong></div>
             <div class="row">
                 <div class="col-6"><strong>Número:</strong></div>
-                <div class="col-6">${datos.numero || datos.codigo_orden || 'N/A'}</div>
+                <div class="col-6">${datos.numero || datos.codigo_orden}</div>
             </div>
             <div class="row mt-2">
                 <div class="col-6"><strong>Tipo:</strong></div>
@@ -497,32 +1159,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="col-6">${horaActual}</div>
             </div>
             <hr>
-            <div class="text-muted small">
-                <i class="bi bi-info-circle"></i> El código es único y quedará registrado.
-            </div>
+            <div class="text-muted small"><i class="bi bi-info-circle"></i> El código es único y quedará registrado.</div>
         `;
         
         const modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
         modal.show();
         
-        const btnPDF = document.getElementById('btnDescargarPDFModal');
-        if (btnPDF) {
-            btnPDF.onclick = () => {
-                const ordenId = document.getElementById('orden_compra_id')?.value;
-                if (ordenId && !esBorrador) {
-                    window.open(`/api/orden_compra/pdf/${ordenId}`, '_blank');
-                } else {
-                    mostrarNotificacion('⚠️ Debe convertir a oficial antes de generar PDF', 'warning');
-                }
-            };
-        }
+        document.getElementById('btnDescargarPDFModal').onclick = () => {
+            const ordenId = document.getElementById('orden_compra_id')?.value;
+            if (ordenId && !esBorrador) {
+                const pdfUrl = `/api/orden_compra/pdf/${ordenId}`;
+                window.open(pdfUrl, '_blank');
+            } else {
+                mostrarNotificacion('⚠️ Debe convertir a oficial antes de generar PDF', 'warning');
+            }
+        };
         
-        const btnNueva = document.getElementById('btnNuevaOrdenModal');
-        if (btnNueva) {
-            btnNueva.onclick = () => {
-                window.location.href = '/crear_compra';
-            };
-        }
+        document.getElementById('btnNuevaOrdenModal').onclick = () => {
+            window.location.href = '/crear_compra';
+        };
     }
 
     // =========================
@@ -549,13 +1204,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const rect = inputEl.getBoundingClientRect();
         portal.style.left = rect.left + 'px';
         portal.style.top = (rect.bottom + 4) + 'px';
-        portal.style.minWidth = Math.max(rect.width, 280) + 'px';
+        portal.style.minWidth = rect.width + 'px';
         portal.innerHTML = html;
         portal.style.display = 'block';
     }
 
     // =========================
-    // OBTENER LISTA DE PRODUCTOS - CORREGIDO
+    // OBTENER LISTA DE PRODUCTOS
     // =========================
     function obtenerListaProductos() {
         const filas = document.querySelectorAll("#table-body tr");
@@ -569,7 +1224,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const cantidad = Number(getInput('.cantidad')) || 0;
             const precio_venta_unitario = Number(getInput('.precio_venta_unitario')) || 0;
-            const subtotal_venta = cantidad * precio_venta_unitario;
+            const valor_venta_total = cantidad * precio_venta_unitario;
 
             const producto = {
                 producto_id: Number(getInput('.producto_id')) || null,
@@ -580,13 +1235,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 unidad_medida: getInput('.unidad_medida') || 'UNIDAD',
                 cantidad: cantidad,
                 precio_venta_unitario: precio_venta_unitario,
-                subtotal_venta: subtotal_venta,
+                subtotal_venta: valor_venta_total,
                 costo_unitario: 0,
                 subtotal_costo: 0,
                 margen_porcentaje: 20,
                 descuento_porcentaje: 0,
                 precio_venta_con_descuento: precio_venta_unitario,
-                subtotal_venta_con_descuento: subtotal_venta,
+                subtotal_venta_con_descuento: valor_venta_total,
                 descuento_total: 0,
                 margen_final: 20
             };
@@ -617,20 +1272,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch(`/api/productos/buscar?q=${encodeURIComponent(q)}`);
             const json = await res.json();
             console.log('📦 Productos encontrados:', json);
-            
-            const productos = json.data || [];
-            
-            return productos.map(p => ({
-                id: p.id,
-                codigo: p.codigo || '',
-                descripcion: p.descripcion || '',
-                modelo: p.modelo || '',
-                marca: p.marca || '',
-                unidad_medida: p.unidad_medida || 'UNIDAD',
-                costo_unitario: parseFloat(p.costo_unitario) || 0,
-                precio_unitario: parseFloat(p.precio_unitario) || 0,
-                stock: parseInt(p.stock) || 0
-            }));
+            return json.data || [];
         } catch (error) {
             console.error('Error buscando productos:', error);
             return [];
@@ -638,14 +1280,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // GUARDAR ORDEN DE COMPRA - CORREGIDO
+    // GUARDAR ORDEN DE COMPRA
     // =========================
     async function guardarOrdenCompra() {
-        const proveedor_id = Number(document.getElementById('proveedor_id')?.value || 0);
-        if (!proveedor_id) { mostrarNotificacion("⚠️ Seleccione proveedor", "warning"); return; }
-
+        const proveedorData = {
+            razon_social: document.getElementById('proveedor_razon_social')?.value.trim() || '',
+            numero_documento: document.getElementById('proveedor_doc')?.value.trim() || '',
+            direccion_fiscal: document.getElementById('proveedor_direccion')?.value.trim() || '',
+            telefono_contacto: document.getElementById('telefono_contacto')?.value.trim() || '',
+            email_contacto: document.getElementById('email_contacto_proveedor')?.value.trim() || '',
+            nombre_contacto: document.getElementById('proveedor_contacto')?.value.trim() || ''
+        };
+        
+        if (!proveedorData.razon_social || !proveedorData.numero_documento) {
+            mostrarNotificacion("⚠️ Complete los datos del proveedor (Razón Social y RUC/DNI)", "warning");
+            return;
+        }
+        
         const listaProductos = obtenerListaProductos();
-        if (listaProductos.length === 0) { mostrarNotificacion("⚠️ Agregue items", "warning"); return; }
+        if (listaProductos.length === 0) { 
+            mostrarNotificacion("⚠️ Agregue items", "warning"); 
+            return; 
+        }
         
         for (let i = 0; i < listaProductos.length; i++) {
             if (!listaProductos[i].producto_id) { 
@@ -654,7 +1310,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // Calcular total basado en los productos
         let totalSinDescuento = 0;
         for (const p of listaProductos) {
             totalSinDescuento += p.subtotal_venta;
@@ -685,7 +1340,16 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const payload = {
             id: orden_id && orden_id !== '' && orden_id !== 'None' ? parseInt(orden_id) : null,
-            proveedor_id: proveedor_id,
+            proveedor_id: Number(document.getElementById('proveedor_id')?.value || 0),
+            proveedor_data: {
+                razon_social: proveedorData.razon_social,
+                numero_documento: proveedorData.numero_documento,
+                direccion_fiscal: proveedorData.direccion_fiscal,
+                telefono_contacto: proveedorData.telefono_contacto,
+                email_contacto: proveedorData.email_contacto,
+                nombre_contacto: proveedorData.nombre_contacto,
+                tipo_documento: proveedorData.numero_documento.length === 11 ? 'RUC' : 'DNI'
+            },
             usuario_id: Number(document.getElementById("usuario_id")?.value || 0),
             estado: document.getElementById("estado")?.value || "pendiente",
             subtotal: subtotal,
@@ -709,9 +1373,7 @@ document.addEventListener('DOMContentLoaded', () => {
             telefono_contacto: document.getElementById('telefono_contacto')?.value || '',
             email_contacto_proveedor: document.getElementById('email_contacto_proveedor')?.value || ''
         };
-
-        console.log("📦 Payload enviado:", payload);
-
+        
         const btnGuardar = esBorrador ? document.getElementById('btnGuardarBorrador') : document.getElementById('btnGuardarOficial');
         const textoOriginal = btnGuardar?.innerHTML;
         if (btnGuardar) {
@@ -733,6 +1395,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             document.getElementById('orden_compra_id').value = json.data.id;
+            
+            if (json.data.proveedor_id) {
+                document.getElementById('proveedor_id').value = json.data.proveedor_id;
+            }
             
             if (!esBorrador) {
                 correlativoActual++;
@@ -768,16 +1434,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return; 
         }
         
-        const proveedor_razon_social = document.getElementById('proveedor_razon_social')?.value.trim();
-        const proveedor_doc = document.getElementById('proveedor_doc')?.value.trim();
+        const razonSocial = document.getElementById('proveedor_razon_social')?.value.trim();
+        const numeroDocumento = document.getElementById('proveedor_doc')?.value.trim();
         
-        if (!proveedor_razon_social) {
-            mostrarNotificacion("⚠️ Debe ingresar los datos del proveedor (Razón Social)", "warning");
-            return;
-        }
-        
-        if (!proveedor_doc) {
-            mostrarNotificacion("⚠️ Debe ingresar el RUC del proveedor", "warning");
+        if (!razonSocial || !numeroDocumento) {
+            mostrarNotificacion("⚠️ Complete los datos del proveedor (Razón Social y RUC)", "warning");
             return;
         }
         
@@ -789,52 +1450,12 @@ document.addEventListener('DOMContentLoaded', () => {
         
         for (let i = 0; i < listaProductos.length; i++) {
             if (!listaProductos[i].precio_venta_unitario || listaProductos[i].precio_venta_unitario <= 0) {
-                mostrarNotificacion(`⚠️ El producto ${listaProductos[i].codigo || 'sin código'} no tiene precio válido`, "warning");
+                mostrarNotificacion(`⚠️ El producto ${listaProductos[i].codigo || 'sin código'} no tiene precio de venta válido`, "warning");
                 return;
             }
         }
         
         if (!confirm("¿Convertir este borrador a orden de compra oficial?\n\nEsta acción generará un código único y definitivo.")) return;
-        
-        let proveedor_id = document.getElementById('proveedor_id')?.value;
-        
-        if (!proveedor_id || proveedor_id === '') {
-            mostrarNotificacion("📝 Registrando proveedor automáticamente...", "info");
-            
-            try {
-                const payload = {
-                    tipo_documento: 'RUC',
-                    numero_documento: proveedor_doc,
-                    razon_social: proveedor_razon_social,
-                    nombre_comercial: proveedor_razon_social,
-                    direccion_fiscal: document.getElementById('proveedor_direccion')?.value || '',
-                    telefono_contacto: document.getElementById('telefono_contacto')?.value || '',
-                    email_contacto: document.getElementById('email_contacto_proveedor')?.value || '',
-                    nombre_contacto: document.getElementById('proveedor_contacto')?.value || ''
-                };
-                
-                const response = await fetch('/api/proveedores/crear', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    proveedor_id = result.data.id;
-                    document.getElementById('proveedor_id').value = proveedor_id;
-                    mostrarNotificacion('✅ Proveedor registrado automáticamente', 'success');
-                } else {
-                    mostrarNotificacion('❌ Error al registrar proveedor: ' + (result.error || 'Error desconocido'), 'danger');
-                    return;
-                }
-            } catch (error) {
-                console.error('Error registrando proveedor:', error);
-                mostrarNotificacion('❌ Error al registrar proveedor automáticamente', 'danger');
-                return;
-            }
-        }
         
         const nuevoCodigo = await generarCodigoOficial();
         if (nuevoCodigo) {
@@ -855,7 +1476,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const ordenId = document.getElementById('orden_compra_id')?.value;
         
         if (!ordenId || ordenId === '' || ordenId === 'None') {
-            mostrarNotificacion("⚠️ Debe guardar la orden primero", "warning");
+            mostrarNotificacion("⚠️ Debe guardar la orden de compra primero", "warning");
             return;
         }
         
@@ -864,7 +1485,21 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        const pdfUrl = `/api/orden_compra/pdf/${ordenId}`;
+        const telefono = document.getElementById('telefono_contacto')?.value || '';
+        const atencion = document.getElementById('proveedor_contacto')?.value || '';
+        const correo = document.getElementById('email_contacto_proveedor')?.value || '';
+        const numCotizacion = document.getElementById('num_cotizacion')?.value || '';
+        const lugarEntrega = document.getElementById('lugar_entrega')?.value || '';
+        
+        const params = new URLSearchParams({
+            telefono_contacto: telefono,
+            proveedor_contacto: atencion,
+            email_contacto_proveedor: correo,
+            num_cotizacion: numCotizacion,
+            lugar_entrega: lugarEntrega
+        });
+        
+        const pdfUrl = `/api/orden_compra/pdf/${ordenId}?${params.toString()}`;
         
         try {
             mostrarNotificacion("📄 Generando PDF, espere...", "info");
@@ -895,10 +1530,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (marcaInput) marcaInput.value = p.marca || "";
         if (unidadMedidaInput) unidadMedidaInput.value = p.unidad_medida || "UNIDAD";
         
-        if (precioVentaInput) {
-            let precio = parseFloat(p.precio_unitario);
-            precioVentaInput.value = isNaN(precio) ? 0 : precio;
-        }
+        if (precioVentaInput && p.precio_unitario) precioVentaInput.value = p.precio_unitario;
         
         if (cantidadInput && (cantidadInput.value === '0' || !cantidadInput.value)) {
             cantidadInput.value = 1;
@@ -908,43 +1540,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // AUTOCOMPLETES
+    // AUTOCOMPLETAR PRODUCTO EN FILA
     // =========================
-    function attachProveedorAutocomplete(idInput) {
-        const input = document.getElementById(idInput);
-        if (!input) return;
-        let timeoutId = null;
-
-        input.addEventListener('input', async () => {
-            const q = input.value.trim();
-            if (timeoutId) clearTimeout(timeoutId);
-            if (q.length < 2) { portalHide(); return; }
-            
-            timeoutId = setTimeout(async () => {
-                const proveedores = await buscarProveedores(q);
-                if (!proveedores.length) { portalShow(input, `<div class="empty">No encontrado</div>`); return; }
-
-                const html = proveedores.map(p => `<div class="item" data-id="${p.id}" data-razon="${p.razon_social}" data-doc="${p.numero_documento || ''}" data-direccion="${p.direccion_fiscal || ''}" data-telefono="${p.telefono_contacto || ''}" data-contacto="${p.nombre_contacto || ''}" data-email="${p.email_contacto || ''}">
-                    <strong>🏢 ${p.razon_social}</strong><div class="meta">${p.tipo_documento || 'RUC'} • ${p.numero_documento || 'Sin documento'}</div></div>`).join('');
-                portalShow(input, html);
-
-                portal.querySelectorAll('.item').forEach(el => {
-                    el.addEventListener('click', async () => {
-                        document.getElementById('proveedor_id').value = el.dataset.id;
-                        document.getElementById('proveedor_razon_social').value = el.dataset.razon;
-                        document.getElementById('proveedor_doc').value = el.dataset.doc || '';
-                        document.getElementById('proveedor_direccion').value = el.dataset.direccion || '';
-                        document.getElementById('telefono_contacto').value = el.dataset.telefono || '';
-                        document.getElementById('proveedor_contacto').value = el.dataset.contacto || '';
-                        document.getElementById('email_contacto_proveedor').value = el.dataset.email || '';
-                        await cargarDireccionesProveedor(el.dataset.id);
-                        portalHide();
-                    });
-                });
-            }, 300);
-        });
-    }
-
     function attachProductoAutocomplete(row) {
         const input = row.querySelector('.codigo_producto');
         
@@ -965,43 +1562,115 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             timeoutId = setTimeout(async () => {
-                const productos = await buscarProductos(q);
-                
-                if (!productos.length) { 
-                    portalShow(input, `<div class="empty">❌ No se encontraron productos</div>`); 
-                    return; 
-                }
+                try {
+                    const productos = await buscarProductos(q);
+                    
+                    if (!productos || productos.length === 0) {
+                        portalShow(input, `<div class="empty">❌ No se encontraron productos</div>`);
+                        return;
+                    }
 
-                const html = productos.map(p => {
-                    const precio = parseFloat(p.precio_unitario) || 0;
-                    return `<div class="item" 
-                        data-id="${p.id}" 
-                        data-codigo="${p.codigo}" 
-                        data-descripcion="${p.descripcion}" 
-                        data-modelo="${p.modelo || ''}" 
-                        data-marca="${p.marca || ''}" 
-                        data-unidad="${p.unidad_medida || 'UNIDAD'}" 
-                        data-precio="${precio}">
+                    const html = productos.map(p => `
+                        <div class="item" 
+                            data-id="${p.id}" 
+                            data-codigo="${p.codigo || ''}" 
+                            data-descripcion="${p.descripcion || ''}" 
+                            data-modelo="${p.modelo || ''}" 
+                            data-marca="${p.marca || ''}" 
+                            data-unidad="${p.unidad_medida || 'UNIDAD'}" 
+                            data-costo="${p.costo_unitario || 0}" 
+                            data-precio="${p.precio_unitario || 0}">
                             <strong>📦 ${p.codigo}</strong> - ${p.descripcion}
-                            <div class="meta">${p.marca || ''} • Precio: S/ ${precio.toFixed(2)}</div>
-                        </div>`;
-                }).join('');
-                portalShow(input, html);
+                            <div class="meta">${p.marca || ''} • Precio: S/ ${(p.precio_unitario || 0).toFixed(2)}</div>
+                        </div>
+                    `).join('');
+                    
+                    portalShow(input, html);
 
+                    portal.querySelectorAll('.item').forEach(el => {
+                        el.addEventListener('click', () => {
+                            const productoData = {
+                                id: el.dataset.id,
+                                codigo: el.dataset.codigo,
+                                descripcion: el.dataset.descripcion,
+                                modelo: el.dataset.modelo,
+                                marca: el.dataset.marca,
+                                unidad_medida: el.dataset.unidad,
+                                costo_unitario: parseFloat(el.dataset.costo) || 0,
+                                precio_unitario: parseFloat(el.dataset.precio) || 0
+                            };
+                            setProductoEnFila(row, productoData);
+                            portalHide();
+                            recalculateAll();
+                        });
+                    });
+                } catch (error) {
+                    console.error('Error en autocomplete de producto:', error);
+                    portalShow(input, `<div class="empty">Error al buscar productos</div>`);
+                }
+            }, 300);
+        });
+    }
+
+    // =========================
+    // AUTOCOMPLETAR PROVEEDOR
+    // =========================
+    function attachProveedorAutocomplete(inputId) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        
+        let timeoutId = null;
+
+        input.addEventListener('input', async () => {
+            const q = input.value.trim();
+            if (timeoutId) clearTimeout(timeoutId);
+            if (q.length < 2) { portalHide(); return; }
+            
+            timeoutId = setTimeout(async () => {
+                const proveedores = await buscarProveedores(q);
+                
+                if (!proveedores.length) {
+                    portalShow(input, `<div class="empty">No se encontraron proveedores</div>`);
+                    return;
+                }
+                
+                const html = proveedores.map(p => `
+                    <div class="item" 
+                        data-id="${p.id}" 
+                        data-razon="${escapeHtml(p.razon_social || '')}" 
+                        data-doc="${p.numero_documento || ''}" 
+                        data-direccion="${escapeHtml(p.direccion_fiscal || '')}" 
+                        data-contacto="${escapeHtml(p.nombre_contacto || '')}" 
+                        data-email="${p.email_contacto || ''}" 
+                        data-telefono="${p.telefono_contacto || ''}">
+                        <strong>🏢 ${escapeHtml(p.razon_social)}</strong>
+                        <div class="meta">📄 ${p.numero_documento || ''}</div>
+                        <div class="meta">📞 ${p.telefono_contacto || ''} • ✉️ ${p.email_contacto || ''}</div>
+                    </div>
+                `).join('');
+                
+                portalShow(input, html);
+                
                 portal.querySelectorAll('.item').forEach(el => {
-                    el.addEventListener('click', () => {
-                        const productoData = {
-                            id: el.dataset.id,
-                            codigo: el.dataset.codigo,
-                            descripcion: el.dataset.descripcion,
-                            modelo: el.dataset.modelo,
-                            marca: el.dataset.marca,
-                            unidad_medida: el.dataset.unidad,
-                            precio_unitario: parseFloat(el.dataset.precio) || 0
-                        };
-                        setProductoEnFila(row, productoData);
+                    el.addEventListener('click', async () => {
+                        const proveedorId = el.dataset.id;
+                        document.getElementById('proveedor_id').value = proveedorId;
+                        document.getElementById('proveedor_razon_social').value = el.dataset.razon;
+                        document.getElementById('proveedor_doc').value = el.dataset.doc;
+                        document.getElementById('proveedor_direccion').value = el.dataset.direccion;
+                        document.getElementById('telefono_contacto').value = el.dataset.telefono || '';
+                        document.getElementById('proveedor_contacto').value = el.dataset.contacto || '';
+                        document.getElementById('email_contacto_proveedor').value = el.dataset.email || '';
+                        
                         portalHide();
-                        recalculateAll();
+                        
+                        if (proveedorId) {
+                            await autoCompletarContactoYCorreo(proveedorId);
+                            await cargarDireccionesProveedor(proveedorId);
+                        }
+                        
+                        mostrarNotificacion('✅ Proveedor seleccionado', 'success');
+                        datosModificados = true;
                     });
                 });
             }, 300);
@@ -1072,80 +1741,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-// AUTOCOMPLETAR PRODUCTO EN FILA
-// =========================
-function attachProductoAutocomplete(row) {
-    const input = row.querySelector('.codigo_producto');
-    
-    if (!input) {
-        console.error('❌ No se encontró input .codigo_producto en la fila');
-        return;
-    }
-    
-    let timeoutId = null;
-
-    input.addEventListener('input', async () => {
-        const q = input.value.trim();
-        
-        if (timeoutId) clearTimeout(timeoutId);
-        if (q.length < 2) { 
-            portalHide(); 
-            return; 
-        }
-        
-        timeoutId = setTimeout(async () => {
-            try {
-                const productos = await buscarProductos(q);
-                
-                if (!productos || productos.length === 0) {
-                    portalShow(input, `<div class="empty">❌ No se encontraron productos</div>`);
-                    return;
-                }
-
-                const html = productos.map(p => `
-                    <div class="item" 
-                        data-id="${p.id}" 
-                        data-codigo="${p.codigo || ''}" 
-                        data-descripcion="${p.descripcion || ''}" 
-                        data-modelo="${p.modelo || ''}" 
-                        data-marca="${p.marca || ''}" 
-                        data-unidad="${p.unidad_medida || 'UNIDAD'}" 
-                        data-costo="${p.costo_unitario || 0}" 
-                        data-precio="${p.precio_unitario || 0}"
-                        data-stock="${p.stock || 0}">
-                        <strong>📦 ${p.codigo}</strong> - ${p.descripcion}
-                        <div class="meta">${p.marca || ''} • Stock: ${p.stock || 0}</div>
-                    </div>
-                `).join('');
-                
-                portalShow(input, html);
-
-                portal.querySelectorAll('.item').forEach(el => {
-                    el.addEventListener('click', () => {
-                        const productoData = {
-                            id: el.dataset.id,
-                            codigo: el.dataset.codigo,
-                            descripcion: el.dataset.descripcion,
-                            modelo: el.dataset.modelo,
-                            marca: el.dataset.marca,
-                            unidad_medida: el.dataset.unidad,
-                            costo_unitario: parseFloat(el.dataset.costo) || 0,
-                            precio_unitario: parseFloat(el.dataset.precio) || 0,
-                            stock: parseInt(el.dataset.stock) || 0
-                        };
-                        setProductoEnFila(row, productoData);
-                        portalHide();
-                        recalculateAll();
-                    });
-                });
-            } catch (error) {
-                console.error('Error en autocomplete de producto:', error);
-                portalShow(input, `<div class="empty">Error al buscar productos</div>`);
-            }
-        }, 300);
-    });
-}
-    // =========================
     // AGREGAR ITEMS
     // =========================
     function addItem() {
@@ -1195,26 +1790,19 @@ function attachProductoAutocomplete(row) {
     // =========================
     // ESTADO VISUAL
     // =========================
-    function actualizarEstadoVisual(estado) {
-        const estadoDiv = document.getElementById('estado_fixed');
+    function actualizarEstadoVisual() {
+        const estadoElement = document.getElementById('estado_fixed');
         const estadoTexto = document.getElementById('estado_texto');
-        
-        const estadoMapa = {
-            'pendiente': { class: 'estado-pendiente', text: 'PENDIENTE' },
-            'cotizando': { class: 'estado-cotizando', text: 'EN COTIZACIÓN' },
-            'aprobado': { class: 'estado-aprobado', text: 'APROBADO' },
-            'rechazado': { class: 'estado-rechazado', text: 'RECHAZADO' },
-            'ordenado': { class: 'estado-ordenado', text: 'ORDENADO' },
-            'recibido': { class: 'estado-recibido', text: 'RECIBIDO' }
-        };
-        
-        const estadoData = estadoMapa[estado] || estadoMapa.pendiente;
-        
-        if (estadoDiv && estadoTexto) {
-            estadoDiv.className = `erp-status ${estadoData.class}`;
-            estadoTexto.textContent = estadoData.text;
-        }
-        
+        if (!estadoElement || !estadoTexto) return;
+        estadoTexto.textContent = estadoOrden.toUpperCase();
+        estadoElement.className = 'erp-status ';
+        if (estadoOrden === 'pendiente') estadoElement.classList.add('estado-pendiente');
+        else if (estadoOrden === 'cotizando') estadoElement.classList.add('estado-cotizando');
+        else if (estadoOrden === 'aprobado') estadoElement.classList.add('estado-aprobado');
+        else if (estadoOrden === 'rechazado') estadoElement.classList.add('estado-rechazado');
+        else if (estadoOrden === 'ordenado') estadoElement.classList.add('estado-ordenado');
+        else if (estadoOrden === 'recibido') estadoElement.classList.add('estado-recibido');
+        else estadoElement.classList.add('estado-pendiente');
         actualizarBotones();
     }
 
@@ -1234,9 +1822,7 @@ function attachProductoAutocomplete(row) {
             return;
         }
         
-        const estado = document.getElementById('estado')?.value || 'pendiente';
-        
-        if (estado === 'pendiente' || estado === 'cotizando') {
+        if (estadoOrden === 'pendiente' || estadoOrden === 'cotizando') {
             ordenBloqueada = false;
             if (guardarBorrador) guardarBorrador.disabled = false;
             if (guardarOficial) guardarOficial.disabled = false;
@@ -1247,6 +1833,7 @@ function attachProductoAutocomplete(row) {
             if (guardarBorrador) guardarBorrador.disabled = true;
             if (guardarOficial) guardarOficial.disabled = true;
             if (agregarBtn) agregarBtn.disabled = true;
+            if (btnAprobado) btnAprobado.disabled = true;
         }
     }
 
@@ -1267,8 +1854,11 @@ function attachProductoAutocomplete(row) {
     }
 
     function showModificarModal() {
-        const modal = new bootstrap.Modal(document.getElementById('modalModificar'));
-        modal.show();
+        const modalElement = document.getElementById('modalModificar');
+        if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        }
     }
 
     async function cargarOrdenCompra(id) {
@@ -1358,12 +1948,13 @@ function attachProductoAutocomplete(row) {
             }
             
             recalculateAll();
+            configurarTiempoEntrega();
+            configurarLugarEntrega();
             
             if (data.proveedor_id) {
                 await cargarDireccionesProveedor(data.proveedor_id);
             }
             
-            actualizarEstadoVisual(data.estado || 'pendiente');
             actualizarEstadoBotonPDF();
             
         } catch (err) { 
@@ -1373,136 +1964,166 @@ function attachProductoAutocomplete(row) {
     }
 
     // =========================
-    // DIAGNÓSTICO
+    // CACHE DE PROVEEDORES PARA AUTOCOMPLETADO RÁPIDO
     // =========================
-    function diagnosticar() {
-        console.log('=== DIAGNÓSTICO COMPRAS ===');
-        console.log('Estado orden:', estadoOrden);
-        console.log('Bloqueada:', ordenBloqueada);
-        console.log('Modo consulta:', modoConsulta);
-        console.log('Es borrador:', esBorrador);
-        console.log('Item counter:', itemCounter);
-        
-        const filas = document.querySelectorAll("#table-body tr");
-        console.log('Filas en tabla:', filas.length);
-        
-        mostrarNotificacion('Diagnóstico completo. Revisa la consola (F12)', 'info');
-    }
+    let proveedoresCache = [];
+    let proveedoresCargados = false;
 
-    // =========================
-    // CONFIGURACIONES
-    // =========================
-    function configurarTiempoEntrega() {
-        const select = document.getElementById('tiempo_entrega_select');
-        const input = document.getElementById('tiempo_entrega');
+    async function cargarProveedoresCache() {
+        if (proveedoresCargados) return;
         
-        if (select && input) {
-            select.addEventListener('change', function() {
-                const valor = this.value;
-                if (valor === 'personalizado') {
-                    input.style.display = 'block';
-                    input.value = '';
-                    input.focus();
-                } else if (valor === '') {
-                    input.style.display = 'none';
-                    input.value = '';
-                } else {
-                    input.style.display = 'none';
-                    input.value = valor;
-                }
-            });
+        try {
+            mostrarNotificacion('🔄 Cargando lista de proveedores...', 'info');
+            const response = await fetch('/api/proveedores/buscar?q=');
+            const result = await response.json();
+            
+            if (result.success && result.data) {
+                proveedoresCache = result.data;
+                proveedoresCargados = true;
+                console.log(`✅ Proveedores cargados: ${proveedoresCache.length}`);
+            }
+        } catch (error) {
+            console.error('Error cargando proveedores:', error);
         }
     }
 
-    function configurarFechaRequerida() {
-        const select = document.getElementById('fecha_requerida_select');
-        const input = document.getElementById('fecha_requerida');
-        
-        if (select && input) {
-            select.addEventListener('change', function() {
-                const valor = this.value;
-                if (valor === 'personalizado') {
-                    input.style.display = 'block';
-                    input.value = '';
-                    input.focus();
-                } else if (valor === '') {
-                    input.style.display = 'none';
-                    input.value = '';
-                } else {
-                    input.style.display = 'none';
-                    input.value = valor;
-                }
-            });
-        }
-    }
+    function attachProveedorAutocompleteRapido(inputId) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
 
-    function configurarCondicionPago() {
-        const select = document.getElementById('condicion_pago_select');
-        const input = document.getElementById('condicion_pago');
-        
-        if (select && input) {
-            select.addEventListener('change', function() {
-                const valor = this.value;
-                if (valor === 'personalizado') {
-                    input.style.display = 'block';
-                    input.value = '';
-                    input.focus();
-                } else if (valor === '') {
-                    input.style.display = 'none';
-                    input.value = '';
-                } else {
-                    input.style.display = 'none';
-                    input.value = valor;
-                }
-            });
+        let container = input.parentElement;
+        if (getComputedStyle(container).position !== 'relative') {
+            const newContainer = document.createElement('div');
+            newContainer.style.position = 'relative';
+            newContainer.style.width = '100%';
+            input.parentNode.insertBefore(newContainer, input);
+            newContainer.appendChild(input);
+            container = newContainer;
         }
-    }
 
-    function configurarLugarEntrega() {
-        const select = document.getElementById('lugar_entrega_select');
-        const input = document.getElementById('lugar_entrega');
+        const dropdownId = `dropdown_rapido_${inputId}`;
+        let dropdown = document.getElementById(dropdownId);
         
-        if (select && input) {
-            select.addEventListener('change', function() {
-                if (this.value === 'personalizado') {
-                    input.style.display = 'block';
-                    input.value = '';
-                    input.focus();
-                } else if (this.value === '') {
-                    input.style.display = 'none';
-                    input.value = '';
-                } else {
-                    input.style.display = 'none';
-                    input.value = this.value;
-                }
-            });
+        if (!dropdown) {
+            dropdown = document.createElement('div');
+            dropdown.id = dropdownId;
+            dropdown.style.cssText = `
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                z-index: 10000;
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+                max-height: 300px;
+                overflow-y: auto;
+                display: none;
+                border: 1px solid #e5e7eb;
+                margin-top: 4px;
+            `;
+            container.appendChild(dropdown);
         }
-    }
 
-    function configurarDescuentoPersonalizable() {
-        const descuentoInput = document.getElementById('descuento_porcentaje_input');
-        const descuentoTipo = document.getElementById('descuento_tipo');
-        const descuentoSymbol = document.getElementById('descuento_simbolo');
-        
-        if (descuentoTipo && descuentoSymbol) {
-            descuentoTipo.addEventListener('change', function() {
-                if (this.value === 'monto') {
-                    descuentoSymbol.textContent = 'S/';
-                    if (descuentoInput) {
-                        descuentoInput.max = '';
-                    }
-                } else {
-                    descuentoSymbol.textContent = '%';
-                    if (descuentoInput) {
-                        descuentoInput.max = '100';
-                    }
+        input.addEventListener('focus', async () => {
+            if (!proveedoresCargados) {
+                await cargarProveedoresCache();
+            }
+        });
+
+        let busquedaTimeout = null;
+
+        input.addEventListener('input', () => {
+            const busqueda = input.value.trim().toLowerCase();
+            
+            if (busquedaTimeout) clearTimeout(busquedaTimeout);
+            
+            if (busqueda.length < 2) {
+                dropdown.style.display = 'none';
+                dropdown.innerHTML = '';
+                return;
+            }
+
+            busquedaTimeout = setTimeout(() => {
+                if (!proveedoresCargados) {
+                    dropdown.innerHTML = `<div class="empty" style="padding: 12px; text-align: center;">Cargando proveedores...</div>`;
+                    dropdown.style.display = 'block';
+                    return;
                 }
-                recalculateAll();
-            });
-        }
+                
+                const filtrados = proveedoresCache.filter(proveedor => {
+                    const razon = (proveedor.razon_social || '').toLowerCase();
+                    const doc = (proveedor.numero_documento || '').toLowerCase();
+                    const nombreComercial = (proveedor.nombre_comercial || '').toLowerCase();
+                    const contacto = (proveedor.nombre_contacto || '').toLowerCase();
+                
+                    return razon.includes(busqueda) || 
+                        doc.includes(busqueda) || 
+                        nombreComercial.includes(busqueda) ||
+                        contacto.includes(busqueda);
+                });
+                
+                if (filtrados.length === 0) {
+                    dropdown.innerHTML = `<div class="empty" style="padding: 12px; text-align: center;">No se encontraron proveedores</div>`;
+                    dropdown.style.display = 'block';
+                    return;
+                }
+                
+                dropdown.innerHTML = filtrados.map(p => `
+                    <div class="item" 
+                        style="padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #f1f5f9;"
+                        data-id="${p.id || ''}"
+                        data-razon="${escapeHtml(p.razon_social || '')}"
+                        data-doc="${p.numero_documento || ''}"
+                        data-direccion="${escapeHtml(p.direccion_fiscal || '')}"
+                        data-contacto="${escapeHtml(p.nombre_contacto || '')}"
+                        data-email="${p.email || p.email_contacto || ''}"
+                        data-telefono="${p.telefono || p.telefono_contacto || ''}">
+                        <strong>🏢 ${escapeHtml(p.razon_social || p.nombre_comercial || '')}</strong>
+                        <div class="meta">📄 ${p.numero_documento || ''}</div>
+                        <div class="meta">📞 ${p.telefono || p.telefono_contacto || ''} • ✉️ ${p.email || p.email_contacto || ''}</div>
+                    </div>
+                `).join('');
+                
+                dropdown.style.display = 'block';
+                
+                dropdown.querySelectorAll('.item').forEach(el => {
+                    el.addEventListener('click', async () => {
+                        const proveedorId = el.dataset.id;
+                        document.getElementById('proveedor_id').value = proveedorId;
+                        document.getElementById('proveedor_razon_social').value = el.dataset.razon;
+                        document.getElementById('proveedor_doc').value = el.dataset.doc;
+                        document.getElementById('proveedor_direccion').value = el.dataset.direccion;
+                        document.getElementById('proveedor_contacto').value = el.dataset.contacto || '';
+                        document.getElementById('email_contacto_proveedor').value = el.dataset.email || '';
+                        document.getElementById('telefono_contacto').value = el.dataset.telefono || '';
+                        
+                        dropdown.style.display = 'none';
+                        
+                        if (proveedorId) {
+                            await autoCompletarContactoYCorreo(proveedorId);
+                            await cargarDireccionesProveedor(proveedorId);
+                        }
+                        
+                        mostrarNotificacion('✅ Proveedor seleccionado', 'success');
+                        datosModificados = true;
+                    });
+                });
+            }, 150);
+        });
         
-        if (descuentoInput) {
-            descuentoInput.addEventListener('input', () => recalculateAll());
+        document.addEventListener('click', (e) => {
+            if (!container.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+        
+        function highlightItem(items, index) {
+            items.forEach(item => item.style.background = '');
+            if (items[index]) {
+                items[index].style.background = '#fef2f2';
+                items[index].scrollIntoView({ block: 'nearest' });
+            }
         }
     }
 
@@ -1514,7 +2135,6 @@ function attachProductoAutocomplete(row) {
     document.getElementById('btnPdf')?.addEventListener('click', generatePdf);
     document.getElementById('btnModificar')?.addEventListener('click', showModificarModal);
     document.getElementById('btnAgregarItem')?.addEventListener('click', addItem);
-    document.getElementById('btnDiagnostico')?.addEventListener('click', diagnosticar);
     document.getElementById('btnCrearProveedor')?.addEventListener('click', () => {
         document.getElementById('formNuevoProveedor')?.reset();
         new bootstrap.Modal(document.getElementById('modalNuevoProveedor')).show();
@@ -1545,7 +2165,8 @@ function attachProductoAutocomplete(row) {
         const ordenProveedor = prompt('Ingrese el número de orden de compra del proveedor:');
         if (ordenProveedor) {
             document.getElementById('estado').value = 'aprobado';
-            actualizarEstadoVisual('aprobado');
+            estadoOrden = 'aprobado';
+            actualizarEstadoVisual();
             await guardarOrdenCompra();
             mostrarNotificacion('✅ Orden de compra aprobada', 'success');
         }
@@ -1554,7 +2175,9 @@ function attachProductoAutocomplete(row) {
     const estadoSelect = document.getElementById('estado');
     if (estadoSelect) {
         estadoSelect.addEventListener('change', function() {
-            actualizarEstadoVisual(this.value);
+            estadoOrden = this.value;
+            actualizarEstadoVisual();
+            aplicarBloqueoUI();
         });
     }
 
@@ -1567,11 +2190,11 @@ function attachProductoAutocomplete(row) {
     configurarLugarEntrega();
     configurarDescuentoPersonalizable();
     
-    actualizarEstadoVisual('pendiente');
+    actualizarEstadoVisual();
     aplicarBloqueoUI();
     
-    attachProveedorAutocomplete('proveedor_razon_social');
-    attachProveedorAutocomplete('proveedor_doc');
+    attachProveedorAutocompleteRapido('proveedor_doc');
+    attachProveedorAutocompleteRapido('proveedor_razon_social');
     
     addItem();
     inicializarCodigo();

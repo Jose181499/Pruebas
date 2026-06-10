@@ -1,9 +1,9 @@
-
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crear 0rden de C0mpr4 - ERP KCF</title>
+    <title>Crear Orden de Compra - ERP KCF</title>
 
     <!-- BOOTSTRAP -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -16,15 +16,15 @@
 
     <style>
         :root {
-            --azul-corporativo: #0a2540;
+            --azul: #0a2540;
             --azul-oscuro: #1a3a4f;
-            --verde: #10b981;
-            --verde-oscuro: #059669;
+            --negro: #111827;
             --gris: #6b7280;
             --gris-claro: #f3f4f6;
             --fondo: #f8fafc;
-            --amarillo: #f59e0b;
+            --verde: #10b981;
             --rojo: #dc3545;
+            --amarillo: #f59e0b;
         }
 
         * {
@@ -48,7 +48,7 @@
             border-radius: 10px;
         }
         ::-webkit-scrollbar-thumb {
-            background: var(--azul-corporativo);
+            background: var(--azul);
             border-radius: 10px;
         }
         ::-webkit-scrollbar-thumb:hover {
@@ -77,7 +77,7 @@
             width: 50px;
             height: 50px;
             border-radius: 14px;
-            background: linear-gradient(135deg, var(--azul-corporativo), #2c5f8a);
+            background: linear-gradient(135deg, var(--azul), #2c5f8a);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -168,7 +168,7 @@
             font-weight: 800;
             font-size: 28px;
             margin: 0;
-            background: linear-gradient(135deg, var(--azul-corporativo), #374151);
+            background: linear-gradient(135deg, var(--azul), #374151);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -198,7 +198,7 @@
         .number-value {
             font-size: 20px;
             font-weight: 800;
-            color: var(--azul-corporativo);
+            color: var(--azul);
         }
 
         .badge-warning {
@@ -262,13 +262,13 @@
         .card-header-custom i {
             font-size: 20px;
         }
-        .card-header-custom.blue {
-            background: linear-gradient(135deg, var(--azul-corporativo), #2c5f8a);
+        .card-header-custom.azul {
+            background: linear-gradient(135deg, var(--azul), #2c5f8a);
         }
-        .card-header-custom.green {
+        .card-header-custom.verde {
             background: linear-gradient(135deg, #059669, var(--verde));
         }
-        .card-header-custom.dark {
+        .card-header-custom.oscuro {
             background: linear-gradient(135deg, #1f2937, #0f172a);
         }
 
@@ -284,7 +284,7 @@
             transition: all 0.2s ease;
         }
         .custom-input:focus {
-            border-color: var(--azul-corporativo);
+            border-color: var(--azul);
             box-shadow: 0 0 0 3px rgba(10, 37, 64, 0.1);
             outline: none;
         }
@@ -328,7 +328,7 @@
             transition: all 0.2s ease;
         }
         .table-modern input:focus, .table-modern select:focus {
-            border-color: var(--azul-corporativo);
+            border-color: var(--azul);
             outline: none;
             box-shadow: 0 0 0 2px rgba(10, 37, 64, 0.1);
         }
@@ -347,7 +347,7 @@
             font-weight: 800;
             margin-bottom: 20px;
             font-size: 18px;
-            color: var(--azul-corporativo);
+            color: var(--azul);
         }
         .summary-row {
             display: flex;
@@ -360,8 +360,8 @@
             font-size: 18px;
             margin-top: 10px;
             padding-top: 18px;
-            border-top: 2px solid var(--azul-corporativo);
-            color: var(--azul-corporativo);
+            border-top: 2px solid var(--azul);
+            color: var(--azul);
         }
 
         .descuento-personalizado {
@@ -409,7 +409,7 @@
         #portalSuggestions .item strong {
             display: block;
             font-size: 14px;
-            color: var(--azul-corporativo);
+            color: var(--azul);
         }
         #portalSuggestions .item .meta {
             font-size: 12px;
@@ -441,7 +441,7 @@
             font-weight: 600;
             font-size: 13px;
             margin-bottom: 6px;
-            color: var(--azul-corporativo);
+            color: var(--azul);
         }
 
         @media (max-width: 768px) {
@@ -497,6 +497,10 @@
         <input type="hidden" id="usuario_id" value="">
         <input type="hidden" id="descuento_porcentaje" value="0">
 
+        <script>
+            console.log("🔍 Template - orden_compra_id recibido:", "{{ orden_compra_id if orden_compra_id else 'No hay ID' }}");
+        </script>
+
         <!-- HERO -->
         <div class="hero-card mb-4">
             <div class="hero-content">
@@ -539,7 +543,7 @@
                     <i class="bi bi-pencil-square"></i> Modificar
                 </button>
                 <button class="btn btn-success btn-toolbar" id="btnAprobado" disabled>
-                    <i class="bi bi-check-circle-fill"></i> Marcar como Aprobado
+                    <i class="bi bi-check-circle-fill"></i> Aprobado
                 </button>
             </div>
         </div>
@@ -549,7 +553,7 @@
             <!-- COLUMNA IZQUIERDA: INFORMACIÓN DEL PROVEEDOR -->
             <div class="col-xl-6">
                 <div class="erp-card">
-                    <div class="card-header-custom blue">
+                    <div class="card-header-custom azul">
                         <i class="bi bi-building-fill"></i> Información del Proveedor
                     </div>
                     <div class="card-body-custom">
@@ -587,6 +591,10 @@
                                 <input type="text" class="form-control custom-input" id="proveedor_razon_social" placeholder="Escriba para buscar proveedor..." autocomplete="off">
                             </div>
                             <div class="col-12">
+                                <label class="form-label"><i class="bi bi-shop"></i> Razón Comercial</label>
+                                <input type="text" class="form-control custom-input" id="proveedor_razon_comercial" placeholder="Nombre comercial del proveedor">
+                            </div>
+                            <div class="col-12">
                                 <label class="form-label"><i class="bi bi-geo-alt"></i> Dirección Fiscal</label>
                                 <input type="text" class="form-control custom-input" id="proveedor_direccion" placeholder="Ej: Av. Principal 123">
                             </div>
@@ -603,14 +611,14 @@
                                 <input type="text" class="form-control custom-input" id="telefono_contacto" placeholder="Ej: 987654321">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label"><i class="bi bi-file-text"></i> N° Cotización</label>
-                                <input type="text" class="form-control custom-input" id="num_cotizacion" placeholder="N° Cotización proveedor">
+                                <label class="form-label"><i class="bi bi-file-text"></i> Requerimiento</label>
+                                <input type="text" class="form-control custom-input" id="requerimiento" placeholder="N° Requerimiento o Proyecto">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label"><i class="bi bi-flag"></i> Estado</label>
                                 <select class="form-select custom-input" id="estado">
                                     <option value="pendiente">🟡 Pendiente</option>
-                                    <option value="cotizando">🔵 En Cotización</option>
+                                    <option value="cotizando">🔵 Cotizando</option>
                                     <option value="aprobado">🟢 Aprobado</option>
                                     <option value="rechazado">🔴 Rechazado</option>
                                     <option value="ordenado">🟣 Ordenado</option>
@@ -631,18 +639,18 @@
             <!-- COLUMNA DERECHA: CONDICIONES COMERCIALES -->
             <div class="col-xl-6">
                 <div class="erp-card">
-                    <div class="card-header-custom blue">
-                        <i class="bi bi-journal-check"></i> Condiciones de Compra
+                    <div class="card-header-custom azul">
+                        <i class="bi bi-journal-check"></i> Condiciones Comerciales
                     </div>
                     <div class="card-body-custom">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label"><i class="bi bi-person-circle"></i> Comprador Responsable</label>
-                                <input type="text" class="form-control custom-input" id="comprador_responsable" placeholder="Seleccione comprador">
+                                <label class="form-label"><i class="bi bi-person-circle"></i> Comprador</label>
+                                <input type="text" class="form-control custom-input" id="comprador" placeholder="Seleccione comprador">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label"><i class="bi bi-envelope"></i> E-mail Comprador</label>
-                                <input type="text" class="form-control custom-input" id="email_contacto_user" readonly>
+                                <input type="text" class="form-control custom-input" id="email_contacto" readonly>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label"><i class="bi bi-telephone"></i> Teléfono Comprador</label>
@@ -670,11 +678,11 @@
                                 </div>
                             </div>
                             
-                            <!-- FECHA REQUERIDA -->
+                            <!-- VALIDEZ OFERTA CON OPCIÓN PERSONALIZADA -->
                             <div class="col-md-6">
-                                <label class="form-label"><i class="bi bi-calendar-check"></i> Fecha Requerida</label>
-                                <div class="fecha-requerida-wrapper">
-                                    <select class="form-select custom-input" id="fecha_requerida_select">
+                                <label class="form-label"><i class="bi bi-calendar-check"></i> Validez Oferta</label>
+                                <div class="validez-oferta-wrapper">
+                                    <select class="form-select custom-input" id="validez_oferta_select">
                                         <option value="">-- Seleccionar opción --</option>
                                         <option value="7 días">📅 7 días</option>
                                         <option value="15 días" selected>📅 15 días</option>
@@ -685,13 +693,13 @@
                                     </select>
                                     <input type="text" 
                                            class="form-control custom-input mt-2" 
-                                           id="fecha_requerida" 
-                                           placeholder="Ej: 20/12/2024, 2 semanas, etc."
+                                           id="validez_oferta" 
+                                           placeholder="Ej: 20 días, 1 mes, etc."
                                            style="display: none;">
                                 </div>
                             </div>
                             
-                            <!-- CONDICIÓN DE PAGO -->
+                            <!-- CONDICIÓN DE PAGO CON OPCIÓN PERSONALIZADA -->
                             <div class="col-md-6">
                                 <label class="form-label"><i class="bi bi-credit-card"></i> Condición de Pago</label>
                                 <div class="condicion-pago-wrapper">
@@ -715,17 +723,17 @@
                             </div>
                             
                             <div class="col-md-6">
-                                <label class="form-label"><i class="bi bi-truck"></i> Lugar de Entrega</label>
+                                <label class="form-label"><i class="bi bi-truck"></i> Dirección de Entrega</label>
                                 <div class="d-flex gap-2">
-                                    <select class="form-select custom-input" id="lugar_entrega_select">
+                                    <select class="form-select custom-input" id="direccion_entrega_select">
                                         <option value="">-- Seleccionar dirección guardada --</option>
                                         <option value="personalizado">✏️ Personalizar dirección</option>
                                     </select>
                                 </div>
                                 <input type="text" 
                                        class="form-control custom-input mt-2" 
-                                       id="lugar_entrega" 
-                                       placeholder="Escriba el lugar de entrega"
+                                       id="direccion_entrega" 
+                                       placeholder="Escriba la dirección de entrega"
                                        style="display: none;">
                             </div>
                         </div>
@@ -761,7 +769,7 @@
                         </div>
                         
                         <div class="mt-3">
-                            <label class="form-label"><i class="bi bi-chat-text"></i> Nota de Compra</label>
+                            <label class="form-label"><i class="bi bi-chat-text"></i> Nota Comercial</label>
                             <textarea class="form-control custom-input" id="nota_compra" rows="2" placeholder="Escriba notas adicionales..."></textarea>
                         </div>
                     </div>
@@ -771,8 +779,8 @@
 
         <!-- TABLA PRODUCTOS -->
         <div class="erp-card mt-4">
-            <div class="card-header-custom green">
-                <i class="bi bi-box-seam-fill"></i> Detalle de Productos / Servicios
+            <div class="card-header-custom verde">
+                <i class="bi bi-box-seam-fill"></i> Detalle de Productos
             </div>
             <div class="card-body-custom p-0">
                 <div class="table-responsive">
@@ -789,12 +797,13 @@
                                 <th style="width:110px">Precio Unit<br>S/.</th>
                                 <th style="width:130px">Precio Total<br>S/.</th>
                                 <th style="width:60px">Eliminar</th>
+                                <th style="width:70px">Stock</th>
                             </tr>
                         </thead>
                         <tbody id="table-body"></tbody>
                         <tfoot>
                             <tr class="fw-bold bg-light">
-                                <td colspan="8" class="text-end">TOTAL: </td>
+                                <td colspan="9" class="text-end">SUBTOTAL: </td>
                                 <td id="total_valor_venta">0.00</td>
                                 <td></td>
                             </tr>
@@ -809,30 +818,35 @@
             </div>
         </div>
 
-        <!-- RESUMEN -->
+        <!-- RESUMEN DE TOTALES - COMPACTO A LA DERECHA -->
         <div class="row mt-4">
-            <div class="col-lg-4 ms-auto">
-                <div class="summary-card">
-                    <h4><i class="bi bi-calculator-fill"></i> Resumen Compra</h4>
-                    <div class="summary-row">
+            <div class="col-md-5 col-lg-4 offset-md-7 offset-lg-8">
+                <div class="summary-card" style="padding: 16px 20px;">
+                    <h4 style="font-size: 16px; margin-bottom: 12px;"><i class="bi bi-calculator-fill"></i> Resumen</h4>
+                    
+                    <div class="summary-row" style="padding: 6px 0; font-size: 13px;">
                         <span>Subtotal:</span>
-                        <strong>S/. <span id="summary_subtotal_venta">0.00</span></strong>
+                        <span class="fw-bold" id="summary_subtotal_venta">0.00</span>
                     </div>
-                    <div class="summary-row" id="descuento_row">
+                    
+                    <div class="summary-row text-danger" style="padding: 6px 0; font-size: 13px;" id="summary_descuento_row">
                         <span>Descuento:</span>
-                        <strong class="text-danger">- S/. <span id="summary_descuento">0.00</span></strong>
+                        <span class="fw-bold text-danger" id="summary_descuento">0.00</span>
                     </div>
-                    <div class="summary-row">
-                        <span>Subtotal con descuento:</span>
-                        <strong>S/. <span id="summary_subtotal_descuento">0.00</span></strong>
+                    
+                    <div class="summary-row" style="padding: 6px 0; font-size: 13px;">
+                        <span>Subtotal desc.:</span>
+                        <span class="fw-bold" id="summary_subtotal_descuento">0.00</span>
                     </div>
-                    <div class="summary-row">
-                        <span>IGV 18%:</span>
-                        <strong>S/. <span id="summary_igv">0.00</span></strong>
+                    
+                    <div class="summary-row" style="padding: 6px 0; font-size: 13px;">
+                        <span>IGV (18%):</span>
+                        <span class="fw-bold" id="summary_igv">0.00</span>
                     </div>
-                    <div class="summary-row total">
-                        <span>Total Compra:</span>
-                        <strong>S/. <span id="summary_total_venta">0.00</span></strong>
+                    
+                    <div class="summary-row total" style="font-size: 16px; padding: 8px 0; margin-top: 5px;">
+                        <span><strong>TOTAL:</strong></span>
+                        <span class="fw-bold" id="summary_total_venta">0.00</span>
                     </div>
                 </div>
             </div>
@@ -840,7 +854,7 @@
 
         <!-- NOTAS INTERNAS -->
         <div class="erp-card mt-4">
-            <div class="card-header-custom dark">
+            <div class="card-header-custom oscuro">
                 <i class="bi bi-journal-text"></i> Notas Internas ERP
             </div>
             <div class="card-body-custom">
@@ -860,7 +874,7 @@
                 <div class="modal-body" id="modalConfirmacionBody"></div>
                 <div class="modal-footer">
                     <button class="btn btn-primary" id="btnDescargarPDFModal">📄 Descargar PDF</button>
-                    <button class="btn btn-success" id="btnNuevaOrdenModal">➕ Nueva Orden de Compra</button>
+                    <button class="btn btn-success" id="btnNuevaOrdenModal">➕ Nueva Orden</button>
                     <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
@@ -903,6 +917,10 @@
                                 <input type="text" class="form-control custom-input" id="nuevo_nombre_comercial">
                             </div>
                             <div class="col-md-12">
+                                <label class="form-label"><i class="bi bi-shop"></i> Razón Comercial</label>
+                                <input type="text" class="form-control custom-input" id="nuevo_razon_comercial" placeholder="Nombre comercial">
+                            </div>
+                            <div class="col-md-12">
                                 <label class="form-label">Dirección Fiscal</label>
                                 <input type="text" class="form-control custom-input" id="nuevo_direccion_fiscal">
                             </div>
@@ -938,17 +956,17 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">N° Orden de Compra Proveedor</label>
-                        <input type="text" class="form-control custom-input" id="orden_proveedor">
+                        <label class="form-label">Orden / Pedido Proveedor</label>
+                        <input type="text" class="form-control custom-input" id="pedido_proveedor">
                     </div>
                     <div>
-                        <label class="form-label">Fecha de Aprobación</label>
+                        <label class="form-label">Fecha Aprobación</label>
                         <input type="date" class="form-control custom-input" id="fecha_aprobacion">
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button class="btn btn-success" id="btn-registrar-aprobado">Aprobar</button>
+                    <button class="btn btn-success" id="btn-registrar">Confirmar</button>
                 </div>
             </div>
         </div>
@@ -977,10 +995,10 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Función para manejar tiempo de entrega personalizado
-        function configurarTiempoEntrega() {
-            const select = document.getElementById('tiempo_entrega_select');
-            const input = document.getElementById('tiempo_entrega');
+        // Función para manejar la validez de oferta personalizada
+        function configurarValidezOferta() {
+            const select = document.getElementById('validez_oferta_select');
+            const input = document.getElementById('validez_oferta');
             
             if (select && input) {
                 select.addEventListener('change', function() {
@@ -988,7 +1006,7 @@
                     if (valor === 'personalizado') {
                         input.style.display = 'block';
                         input.value = '';
-                        input.placeholder = 'Ej: 10 días, 2 semanas, etc.';
+                        input.placeholder = 'Ej: 20 días, 1 mes, etc.';
                         input.focus();
                     } else if (valor === '') {
                         input.style.display = 'none';
@@ -1003,35 +1021,22 @@
                     select.value = 'personalizado';
                     this.style.display = 'block';
                 });
-            }
-        }
-
-        // Función para manejar fecha requerida personalizada
-        function configurarFechaRequerida() {
-            const select = document.getElementById('fecha_requerida_select');
-            const input = document.getElementById('fecha_requerida');
-            
-            if (select && input) {
-                select.addEventListener('change', function() {
-                    const valor = this.value;
-                    if (valor === 'personalizado') {
-                        input.style.display = 'block';
-                        input.value = '';
-                        input.placeholder = 'Ej: 20/12/2024, 2 semanas, etc.';
-                        input.focus();
-                    } else if (valor === '') {
-                        input.style.display = 'none';
-                        input.value = '';
-                    } else {
-                        input.style.display = 'none';
-                        input.value = valor;
-                    }
-                });
                 
-                input.addEventListener('focus', function() {
-                    select.value = 'personalizado';
-                    this.style.display = 'block';
-                });
+                if (input.value && input.value.trim() !== '') {
+                    let encontrado = false;
+                    for (let i = 0; i < select.options.length; i++) {
+                        if (select.options[i].value === input.value) {
+                            select.value = input.value;
+                            input.style.display = 'none';
+                            encontrado = true;
+                            break;
+                        }
+                    }
+                    if (!encontrado && input.value !== '') {
+                        select.value = 'personalizado';
+                        input.style.display = 'block';
+                    }
+                }
             }
         }
 
@@ -1061,13 +1066,29 @@
                     select.value = 'personalizado';
                     this.style.display = 'block';
                 });
+                
+                if (input.value && input.value.trim() !== '') {
+                    let encontrado = false;
+                    for (let i = 0; i < select.options.length; i++) {
+                        if (select.options[i].value === input.value) {
+                            select.value = input.value;
+                            input.style.display = 'none';
+                            encontrado = true;
+                            break;
+                        }
+                    }
+                    if (!encontrado && input.value !== '') {
+                        select.value = 'personalizado';
+                        input.style.display = 'block';
+                    }
+                }
             }
         }
 
-        // Función para manejar el lugar de entrega personalizado
-        function configurarLugarEntrega() {
-            const select = document.getElementById('lugar_entrega_select');
-            const input = document.getElementById('lugar_entrega');
+        // Función para manejar la dirección de entrega personalizada
+        function configurarDireccionEntrega() {
+            const select = document.getElementById('direccion_entrega_select');
+            const input = document.getElementById('direccion_entrega');
             
             if (select && input) {
                 select.addEventListener('change', function() {
@@ -1117,9 +1138,38 @@
             }
         }
         
+        // Función para manejar tiempo de entrega personalizado
+        function configurarTiempoEntrega() {
+            const select = document.getElementById('tiempo_entrega_select');
+            const input = document.getElementById('tiempo_entrega');
+            
+            if (select && input) {
+                select.addEventListener('change', function() {
+                    const valor = this.value;
+                    if (valor === 'personalizado') {
+                        input.style.display = 'block';
+                        input.value = '';
+                        input.placeholder = 'Ej: 10 días, 2 semanas, etc.';
+                        input.focus();
+                    } else if (valor === '') {
+                        input.style.display = 'none';
+                        input.value = '';
+                    } else {
+                        input.style.display = 'none';
+                        input.value = valor;
+                    }
+                });
+                
+                input.addEventListener('focus', function() {
+                    select.value = 'personalizado';
+                    this.style.display = 'block';
+                });
+            }
+        }
+        
         // Función para cargar direcciones guardadas del proveedor
         async function cargarDireccionesProveedor(proveedorId) {
-            const select = document.getElementById('lugar_entrega_select');
+            const select = document.getElementById('direccion_entrega_select');
             if (!select) return;
             
             while (select.options.length > 2) {
@@ -1148,43 +1198,13 @@
             }
         }
         
-        // Mapeo de estados para el status bar
-        const estadoMap = {
-            'pendiente': { class: 'estado-pendiente', text: 'PENDIENTE' },
-            'cotizando': { class: 'estado-cotizando', text: 'EN COTIZACIÓN' },
-            'aprobado': { class: 'estado-aprobado', text: 'APROBADO' },
-            'rechazado': { class: 'estado-rechazado', text: 'RECHAZADO' },
-            'ordenado': { class: 'estado-ordenado', text: 'ORDENADO' },
-            'recibido': { class: 'estado-recibido', text: 'RECIBIDO' }
-        };
-        
-        // Actualizar estado visual
-        function actualizarEstadoVisual(estado) {
-            const estadoDiv = document.getElementById('estado_fixed');
-            const estadoTexto = document.getElementById('estado_texto');
-            const estadoData = estadoMap[estado] || estadoMap.pendiente;
-            
-            if (estadoDiv && estadoTexto) {
-                estadoDiv.className = `erp-status ${estadoData.class}`;
-                estadoTexto.textContent = estadoData.text;
-            }
-        }
-        
-        // Escuchar cambios en el select de estado
+        // Inicializar cuando el DOM esté listo
         document.addEventListener('DOMContentLoaded', function() {
-            const estadoSelect = document.getElementById('estado');
-            if (estadoSelect) {
-                estadoSelect.addEventListener('change', function() {
-                    actualizarEstadoVisual(this.value);
-                });
-                actualizarEstadoVisual(estadoSelect.value);
-            }
-            
-            configurarTiempoEntrega();
-            configurarFechaRequerida();
+            configurarValidezOferta();
             configurarCondicionPago();
-            configurarLugarEntrega();
+            configurarDireccionEntrega();
             configurarDescuentoPersonalizable();
+            configurarTiempoEntrega();
             
             const proveedorIdInput = document.getElementById('proveedor_id');
             if (proveedorIdInput) {
