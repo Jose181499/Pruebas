@@ -1,3 +1,6 @@
+Aquí tienes la tabla de clientes completamente actualizada con la columna de fecha y hora después del Item, el código de cliente resaltado en azul, y el botón de "Atrás" en la parte superior izquierda. He ajustado el orden de las columnas y la lógica para mostrar correctamente la fecha y hora de registro.
+
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -32,11 +35,33 @@
         .hero-modern {
             background: linear-gradient(115deg, #1F2B5C, #2A3E7C);
             border-radius: 28px;
-            padding: 1.8rem 2rem;
-            color: white;
+            padding: 1.5rem 2rem;
             margin-bottom: 2rem;
             box-shadow: 0 12px 20px rgba(0,0,0,0.08);
+            position: relative;
         }
+        
+        /* Botón de atrás moderno */
+        .btn-back-modern {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 40px;
+            padding: 0.5rem 1.2rem;
+            color: white;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        .btn-back-modern:hover {
+            background: rgba(255,255,255,0.25);
+            color: white;
+            transform: translateX(-3px);
+        }
+        
         .hero-title { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.5px; }
 
         .card-ordenada {
@@ -305,26 +330,26 @@
             display: inline-block;
             width: fit-content;
         }
-        .btn-cargando {
-            opacity: 0.7;
-            pointer-events: none;
-        }
         
         /* Estilo para la celda de fecha/hora */
         .fecha-hora-cell {
             font-family: 'Inter', monospace;
             font-size: 0.75rem;
-            font-weight: 500;
-            color: #2c3e66;
+            font-weight: 600;
+            color: #1e3a8a;
             white-space: nowrap;
+            background: #f8fafd;
         }
         
-        /* Animación sutil para la tabla */
         .table-styled tbody tr {
             transition: background 0.2s ease;
         }
         .table-styled tbody tr:hover {
             background: #fafbff;
+        }
+        
+        .btn-atras-top {
+            margin-bottom: 0.5rem;
         }
     </style>
 </head>
@@ -342,10 +367,16 @@
 </div>
 
 <div class="container-fluid py-4 px-lg-5">
+    <!-- Hero con botón de atrás -->
     <div class="hero-modern d-flex flex-wrap justify-content-between align-items-center">
-        <div>
-            <h1 class="hero-title"><i class="bi bi-people-fill me-2"></i>Clientes</h1>
-            <p class="opacity-75 mb-0">Centralizado, ordenado y fácil de gestionar</p>
+        <div class="d-flex align-items-center gap-3">
+            <a href="#" class="btn-back-modern" id="btnBackMain">
+                <i class="bi bi-arrow-left-short fs-4"></i> Atrás
+            </a>
+            <div>
+                <h1 class="hero-title"><i class="bi bi-people-fill me-2"></i>Clientes</h1>
+                <p class="opacity-75 mb-0">Centralizado, ordenado y fácil de gestionar</p>
+            </div>
         </div>
         <div class="mt-2 mt-sm-0">
             <button class="btn btn-light rounded-pill px-4 fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNuevoClienteOrdenado">
@@ -385,6 +416,7 @@
                 <thead>
                     <tr>
                         <th>Item</th>
+                        <th>Fecha y Hora</th>
                         <th>Código Cliente</th>
                         <th>Nombre Comercial</th>
                         <th>Razón Social</th>
@@ -393,7 +425,6 @@
                         <th>Condición Pago</th>
                         <th>Contactos</th>
                         <th>Puntos Entrega</th>
-                        <th>Fecha y Hora</th>
                         <th class="text-center">Acciones</th>
                     </tr>
                 </thead>
@@ -405,7 +436,7 @@
     </div>
 </div>
 
-<!-- MODALES -->
+<!-- MODALES (Mismos modales funcionales) -->
 <div class="modal fade" id="modalNuevoClienteOrdenado" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content modal-content-radius">
@@ -561,7 +592,8 @@
         }); 
     }
     
-    function formatFechaGrande(fechaStr){
+    // Función para formatear fecha y hora como en el modal de ver
+    function formatearFechaHoraCompleta(fechaStr) {
         if(!fechaStr) return 'No registrada';
         try {
             let fecha = new Date(fechaStr);
@@ -574,7 +606,8 @@
         }
     }
     
-    function formatearFechaHora(fechaStr) {
+    // Función para formatear fecha y hora corta para la tabla
+    function formatearFechaHoraCorta(fechaStr) {
         if(!fechaStr) return '—';
         try {
             let fecha = new Date(fechaStr);
@@ -693,9 +726,15 @@
                 tbody.innerHTML='<tr><td colspan="11" class="text-center">Sin clientes registrados</td></tr>'; 
                 return; 
             } 
-            tbody.innerHTML=clientes.map((c, idx)=>`
+            tbody.innerHTML=clientes.map((c, idx)=> {
+                // Obtener la fecha de registro del cliente (priorizando diferentes campos posibles)
+                let fechaRegistro = c.created_at || c.fecha_registro || c.fecha_creacion || null;
+                let fechaFormateada = formatearFechaHoraCorta(fechaRegistro);
+                
+                return `
                 <tr>
                     <td class="text-center fw-semibold">${idx+1}</td>
+                    <td class="fecha-hora-cell"><i class="bi bi-calendar3 me-1"></i> ${fechaFormateada}</td>
                     <td><span class="codigo-cliente"><i class="bi bi-upc-scan me-1"></i>${escapeHtml(c.codigo_cliente || c.id)}</span></td>
                     <td>${escapeHtml(c.nombre_comercial || '-')}</td>
                     <td><strong>${escapeHtml(c.razon_social || '-')}</strong></td>
@@ -716,14 +755,13 @@
                                 : '<span class="text-muted">—</span>'}
                         </div>
                     </td>
-                    <td class="fecha-hora-cell"><i class="bi bi-calendar3 me-1"></i> ${formatearFechaHora(c.created_at || c.fecha_registro || c.fecha_creacion)}</td>
                     <td class="acciones-cell">
                         <button class="btn-accion btn-ver-icon" onclick="verCliente(${c.id})" title="Ver"><i class="bi bi-eye"></i></button> 
                         <button class="btn-accion btn-edit-icon" onclick="editarCliente(${c.id})" title="Editar"><i class="bi bi-pencil"></i></button> 
                         <button class="btn-accion btn-del-icon" onclick="eliminarClienteModal(${c.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
                     </td>
                 </tr>
-            `).join(''); 
+            `}).join(''); 
         } catch(e){ 
             console.error('Error cargando clientes:', e);
             tbody.innerHTML='<tr><td colspan="11" class="text-danger">Error al cargar clientes</td></tr>'; 
@@ -786,7 +824,7 @@
             let html = `
                 <div class="fecha-grande">
                     <i class="bi bi-calendar-clock"></i>
-                    <span><strong>📅 Fecha y Hora de Registro:</strong> ${formatFechaGrande(fechaRegistro)}</span>
+                    <span><strong>📅 Fecha y Hora de Registro:</strong> ${formatearFechaHoraCompleta(fechaRegistro)}</span>
                 </div>
                 <table class="detail-table">
                     <tr><th>Código Cliente</th><td><span class="codigo-cliente"><i class="bi bi-upc-scan me-1"></i>${escapeHtml(c.codigo_cliente || c.id)}</span></td></tr>
@@ -1019,6 +1057,15 @@
                 }
             });
         }
+        
+        // Botón de atrás funcional
+        const btnBack = document.getElementById('btnBackMain');
+        if (btnBack) {
+            btnBack.addEventListener('click', function(e) {
+                e.preventDefault();
+                window.history.back();
+            });
+        }
     });
     
     document.getElementById('btnLimpiarFormulario')?.addEventListener('click', limpiarFormularioNuevo);
@@ -1043,3 +1090,4 @@
 </script>
 </body>
 </html>
+```
