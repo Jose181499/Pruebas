@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ERP KCF · Gestión de Proveedores | Panel Ordenado</title>
+    <title>ERP KCF · Gestión de Clientes | Panel Ordenado</title>
     <!-- Bootstrap 5 + Icons + Google Font -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -36,6 +36,7 @@
             color: white;
             margin-bottom: 2rem;
             box-shadow: 0 12px 20px rgba(0,0,0,0.08);
+            position: relative;
         }
         .hero-title { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.5px; }
 
@@ -115,7 +116,7 @@
             display: inline-block;
             white-space: nowrap;
         }
-        .codigo-proveedor {
+        .codigo-cliente {
             background: linear-gradient(135deg, #1e2a47, #2c3e66);
             color: white;
             border-radius: 20px;
@@ -124,6 +125,19 @@
             font-size: 0.75rem;
             display: inline-block;
             font-family: monospace;
+        }
+        .contactos-lista, .puntos-lista {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .contacto-nombre, .punto-nombre {
+            background: #eef2ff;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            display: inline-block;
+            width: fit-content;
         }
         .acciones-cell {
             white-space: nowrap;
@@ -189,6 +203,21 @@
             font-weight: 700;
             color: #1a2c4e;
         }
+        .subtable {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+        .subtable th, .subtable td {
+            border: 1px solid #e2e8f0;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            background: white;
+        }
+        .subtable th {
+            background: #f1f5f9;
+            font-weight: 600;
+        }
         .fecha-grande {
             background: linear-gradient(135deg, #1e3a8a, #3b71ca);
             color: white;
@@ -205,22 +234,12 @@
         }
         .fecha-grande i { font-size: 1.5rem; }
         
-        .erp-section {
-            background: #fafcff;
-            border-radius: 20px;
-            padding: 1.2rem;
-            margin-bottom: 1.5rem;
-            border: 1px solid #eef2f8;
+        .fecha-hora-cell {
+            font-weight: 600;
+            color: #1e3a8a;
+            white-space: nowrap;
         }
-        .erp-section-title {
-            font-weight: 700;
-            font-size: 0.85rem;
-            color: #1e2f5e;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid #dc2626;
-            display: inline-block;
-        }
+        
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -240,6 +259,26 @@
             border-radius: 20px;
             text-align: center;
         }
+        
+        .btn-back-header {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 40px;
+            padding: 0.5rem 1.2rem;
+            color: white;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        .btn-back-header:hover {
+            background: rgba(255,255,255,0.25);
+            color: white;
+            transform: translateX(-3px);
+        }
     </style>
 </head>
 <body>
@@ -253,10 +292,10 @@
 
 <div class="navbar-erp">
     <div class="logo-area">
-        <div class="logo-icon"><i class="bi bi-truck"></i></div>
+        <div class="logo-icon"><i class="bi bi-people-fill"></i></div>
         <div>
             <div class="empresa-title">KCF CORPORACION</div>
-            <div class="empresa-sub">ERP · Gestión de Proveedores</div>
+            <div class="empresa-sub">ERP · Gestión de Clientes</div>
         </div>
     </div>
     <div class="user-badge"><i class="bi bi-person-circle me-1"></i> Administrador</div>
@@ -264,16 +303,18 @@
 
 <div class="container-fluid py-4 px-lg-5">
     <div class="hero-modern d-flex flex-wrap justify-content-between align-items-center">
-        <div>
-            <h1 class="hero-title"><i class="bi bi-truck me-2"></i>Gestión de Proveedores</h1>
-            <p class="opacity-75 mb-0">Administración central de proveedores ERP</p>
+        <div class="d-flex align-items-center gap-3">
+            <a href="#" class="btn-back-header" id="btnBackMain">
+                <i class="bi bi-arrow-left-short fs-4"></i> Atrás
+            </a>
+            <div>
+                <h1 class="hero-title"><i class="bi bi-people-fill me-2"></i>Gestión de Clientes</h1>
+                <p class="opacity-75 mb-0">Administración central de clientes ERP</p>
+            </div>
         </div>
         <div class="mt-2 mt-sm-0">
-            <button class="btn btn-light rounded-pill px-4 fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNuevoProveedor">
-                <i class="bi bi-plus-circle-fill me-1 text-primary"></i> Nuevo Proveedor
-            </button>
-            <button class="btn btn-outline-light rounded-pill px-4 ms-2" onclick="history.back()">
-                <i class="bi bi-arrow-left me-1"></i> Volver
+            <button class="btn btn-light rounded-pill px-4 fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNuevoClienteOrdenado">
+                <i class="bi bi-plus-circle-fill me-1 text-primary"></i> Nuevo Cliente
             </button>
         </div>
     </div>
@@ -283,12 +324,17 @@
         <div class="card-body-orden">
             <div class="row g-3 align-items-end">
                 <div class="col-md-5">
-                    <label class="form-label-peq">Buscar por RUC o Razón Social</label>
-                    <input type="text" id="filtro-busqueda" class="form-control input-moderno" placeholder="RUC o razón social...">
+                    <label class="form-label-peq">Buscar por RUC/DNI o Razón Social</label>
+                    <input type="text" id="filtro-busqueda" class="form-control input-moderno" placeholder="RUC, DNI o razón social...">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label-peq">Buscar por Código de Proveedor</label>
-                    <input type="text" id="search-codigo" class="form-control input-moderno" placeholder="Ej: PROV-00001">
+                    <label class="form-label-peq">Tipo de Documento</label>
+                    <select id="filtro-tipo" class="form-select input-moderno">
+                        <option value="">Todos</option>
+                        <option value="RUC">RUC</option>
+                        <option value="DNI">DNI</option>
+                        <option value="CE">Carnet Ext.</option>
+                    </select>
                 </div>
                 <div class="col-md-3">
                     <div class="text-muted small mt-2"><i class="bi bi-info-circle"></i> Búsqueda automática</div>
@@ -298,308 +344,151 @@
     </div>
 
     <div class="card-ordenada">
-        <div class="card-header-orden"><i class="bi bi-table"></i> Listado de Proveedores</div>
+        <div class="card-header-orden"><i class="bi bi-table"></i> Listado de Clientes</div>
         <div class="table-responsive">
             <table class="table table-styled align-middle mb-0">
                 <thead>
                     <tr>
                         <th>Item</th>
-                        <th>Código Proveedor</th>
+                        <th>Fecha y Hora</th>
+                        <th>Código Cliente</th>
+                        <th>Nombre Comercial</th>
                         <th>Razón Social</th>
-                        <th>RUC</th>
-                        <th>Dirección</th>
-                        <th>Teléfono</th>
-                        <th>Contacto</th>
-                        <th>Email</th>
+                        <th>RUC/DNI</th>
+                        <th>Dirección Fiscal</th>
+                        <th>Condición Pago</th>
+                        <th>Contactos</th>
+                        <th>Puntos Entrega</th>
                         <th class="text-center">Acciones</th>
                     </tr>
                 </thead>
-                <tbody id="tbody-proveedores">
-                    <tr><td colspan="9" class="text-center py-5"><div class="spinner-border spinner-border-sm text-secondary"></div> Cargando...</td></tr>
+                <tbody id="tbody-clientes">
+                    <tr><td colspan="11" class="text-center py-5"><div class="spinner-border spinner-border-sm text-secondary"></div> Cargando...<\/td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
 
-<!-- MODAL NUEVO PROVEEDOR - VERSIÓN REORDENADA -->
-<div class="modal fade" id="modalNuevoProveedor" tabindex="-1" aria-hidden="true">
+<!-- MODALES -->
+<div class="modal fade" id="modalNuevoClienteOrdenado" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content modal-content-radius">
             <div class="modal-header-clean d-flex justify-content-between">
-                <h5 class="modal-title fw-bold"><i class="bi bi-truck me-2"></i> Nuevo Proveedor</h5>
+                <h5 class="modal-title fw-bold"><i class="bi bi-person-plus-fill me-2"></i> Nuevo Cliente</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
-                <form id="formProveedor">
-                    <!-- INFORMACIÓN GENERAL - RUC ARRIBA -->
+                <form id="formClienteOrdenado">
                     <div class="mb-4">
                         <div class="d-flex align-items-center gap-2 border-start border-4 border-primary ps-3 mb-3">
                             <i class="bi bi-card-list fs-5 text-primary"></i>
                             <h6 class="fw-bold m-0">Información General</h6>
                         </div>
                         <div class="row g-3">
-                            <!-- PRIMERA FILA: RUC + Botón Sunat + Razón Social -->
+                            <div class="col-md-3">
+                                <label class="form-label-peq">Tipo Documento *</label>
+                                <select id="tipo_documento_nuevo" class="form-select input-moderno" required>
+                                    <option value="RUC">RUC</option>
+                                    <option value="DNI">DNI</option>
+                                    <option value="CE">Carnet de Extranjería</option>
+                                </select>
+                            </div>
                             <div class="col-md-5">
-                                <label class="form-label-peq">RUC *</label>
+                                <label class="form-label-peq">Número Documento *</label>
                                 <div class="input-group">
-                                    <input type="text" class="form-control input-moderno" id="ruc" maxlength="11" placeholder="11 dígitos" required>
-                                    <button class="btn btn-sunat-sm" type="button" id="btnSunatProveedor">
-                                        <i class="bi bi-building me-1"></i> Consultar Sunat
-                                    </button>
+                                    <input type="text" id="numero_documento_nuevo" class="form-control input-moderno" placeholder="11 dígitos" required>
+                                    <button class="btn btn-sunat-sm" type="button" id="btnSunatNuevo"><i class="bi bi-building me-1"></i> Consultar Sunat</button>
                                 </div>
                             </div>
-                            <div class="col-md-7">
+                            <div class="col-md-4">
                                 <label class="form-label-peq">Razón Social *</label>
-                                <input type="text" class="form-control input-moderno" id="razon_social" placeholder="Razón social" required>
+                                <input type="text" id="razon_social_nuevo" class="form-control input-moderno" placeholder="Razón social" required>
                             </div>
-                            
-                            <!-- SEGUNDA FILA: Nombre Comercial + Dirección -->
                             <div class="col-md-4">
                                 <label class="form-label-peq">Nombre Comercial</label>
-                                <input type="text" class="form-control input-moderno" id="razon_comercial" placeholder="Ej: KCF SAC">
+                                <input type="text" id="nombre_comercial_nuevo" class="form-control input-moderno" placeholder="Ej: CINDEL S.A.">
                             </div>
                             <div class="col-md-8">
                                 <label class="form-label-peq">Dirección Fiscal</label>
-                                <input type="text" class="form-control input-moderno" id="direccion" placeholder="Dirección completa">
-                            </div>
-                            
-                            <!-- TERCERA FILA: Contacto + Teléfono + Email -->
-                            <div class="col-md-4">
-                                <label class="form-label-peq">Persona de Contacto</label>
-                                <input type="text" class="form-control input-moderno" id="contacto" placeholder="Nombre del contacto">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label-peq">Teléfono</label>
-                                <input type="text" class="form-control input-moderno" id="telefono" placeholder="Teléfono de contacto">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label-peq">Email</label>
-                                <input type="email" class="form-control input-moderno" id="email" placeholder="correo@empresa.com">
-                            </div>
-                            
-                            <!-- CUARTA FILA: Condición de Pago + Tiempo Crédito -->
-                            <div class="col-md-4">
-                                <label class="form-label-peq">Condición de Pago</label>
-                                <select id="condicion_pago" class="form-select input-moderno">
-                                    <option value="">Seleccione</option>
-                                    <option value="Credito">Crédito</option>
-                                    <option value="Contado">Contado</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4" id="campo_tiempo_credito" style="display:none;">
-                                <label class="form-label-peq">Tiempo Crédito</label>
-                                <input type="text" class="form-control input-moderno" id="tiempo_credito" placeholder="Ej: 30 días">
+                                <input type="text" id="direccion_fiscal_nuevo" class="form-control input-moderno" placeholder="Av. Javier Prado Oeste 1650">
                             </div>
                         </div>
                     </div>
-
-                    <!-- INFORMACIÓN BANCARIA -->
                     <div class="mb-4">
-                        <div class="d-flex align-items-center gap-2 border-start border-4 border-success ps-3 mb-3">
-                            <i class="bi bi-bank2 fs-5 text-success"></i>
-                            <h6 class="fw-bold m-0">Información Bancaria</h6>
+                        <div class="section-mini-title">
+                            <span><i class="bi bi-person-lines-fill me-1"></i> 📞 Contactos</span>
+                            <button type="button" class="btn-agregar-link" id="btnAgregarContactoOrdenado"><i class="bi bi-plus-circle me-1"></i> Agregar contacto</button>
                         </div>
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="form-label-peq">Banco</label>
-                                <select class="form-select input-moderno" id="banco">
-                                    <option value="">Seleccione</option>
-                                    <option value="BCP">BCP</option>
-                                    <option value="BBVA">BBVA</option>
-                                    <option value="Interbank">Interbank</option>
-                                    <option value="Scotiabank">Scotiabank</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label-peq">Número de Cuenta</label>
-                                <input type="text" class="form-control input-moderno" id="numero_cuenta" placeholder="Número de cuenta">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label-peq">CCI</label>
-                                <input type="text" class="form-control input-moderno" id="cci" placeholder="Código de cuenta interbancario">
-                            </div>
-                        </div>
+                        <div id="listaContactosOrdenada"></div>
                     </div>
-
-                    <!-- INFORMACIÓN LOGÍSTICA -->
-                    <div class="mb-4">
-                        <div class="d-flex align-items-center gap-2 border-start border-4 border-info ps-3 mb-3">
-                            <i class="bi bi-geo-alt-fill fs-5 text-info"></i>
-                            <h6 class="fw-bold m-0">Información Logística</h6>
+                    <div>
+                        <div class="section-mini-title">
+                            <span><i class="bi bi-geo-alt-fill me-1"></i> 📦 Puntos de Entrega</span>
+                            <button type="button" class="btn-agregar-link" id="btnAgregarPuntoOrdenado"><i class="bi bi-plus-circle me-1"></i> Agregar punto</button>
                         </div>
-                        <div class="row g-3">
-                            <div class="col-md-12">
-                                <label class="form-label-peq">Lugar de Recojo</label>
-                                <input type="text" class="form-control input-moderno" id="lugar_recojo" placeholder="Dirección donde se recogen los productos">
-                            </div>
-                        </div>
+                        <div id="listaPuntosOrdenada"></div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer border-0 pt-0 pb-4 px-4 d-flex justify-content-between">
-                <div>
-                    <button type="button" class="btn btn-limpiar px-4" id="btnLimpiarFormulario">
-                        <i class="bi bi-eraser"></i> Limpiar todo
-                    </button>
-                </div>
-                <div>
-                    <button class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" form="formProveedor" class="btn btn-primary rounded-pill px-5 shadow-sm">
-                        <i class="bi bi-save"></i> Guardar Proveedor
-                    </button>
-                </div>
+                <div><button type="button" class="btn btn-limpiar px-4" id="btnLimpiarFormulario"><i class="bi bi-eraser"></i> Limpiar todo</button></div>
+                <div><button class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button><button type="submit" form="formClienteOrdenado" class="btn btn-primary rounded-pill px-5 shadow-sm"><i class="bi bi-save"></i> Guardar Cliente</button></div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- MODAL EDITAR PROVEEDOR - VERSIÓN REORDENADA -->
-<div class="modal fade" id="modalEditarProveedor" tabindex="-1">
+<div class="modal fade" id="modalEditarClienteOrdenado" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content modal-content-radius">
-            <div class="modal-header-clean">
-                <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i> Editar Proveedor</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
+            <div class="modal-header-clean"><h5 class="modal-title"><i class="bi bi-pencil-square"></i> Editar Cliente</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
             <div class="modal-body p-4">
-                <form id="formEditarProveedor">
-                    <input type="hidden" id="edit_id_proveedor">
-                    
-                    <!-- INFORMACIÓN GENERAL -->
-                    <div class="mb-4">
-                        <div class="d-flex align-items-center gap-2 border-start border-4 border-warning ps-3 mb-3">
-                            <i class="bi bi-card-list fs-5 text-warning"></i>
-                            <h6 class="fw-bold m-0">Información General</h6>
-                        </div>
-                        <div class="row g-3">
-                            <div class="col-md-5">
-                                <label class="form-label-peq">RUC *</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control input-moderno" id="edit_ruc" maxlength="11" required>
-                                    <button class="btn btn-sunat-sm" type="button" id="btnEditSunatProveedor">
-                                        <i class="bi bi-building me-1"></i> Sunat
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="col-md-7">
-                                <label class="form-label-peq">Razón Social *</label>
-                                <input type="text" class="form-control input-moderno" id="edit_razon_social" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label-peq">Nombre Comercial</label>
-                                <input type="text" class="form-control input-moderno" id="edit_razon_comercial">
-                            </div>
-                            <div class="col-md-8">
-                                <label class="form-label-peq">Dirección Fiscal</label>
-                                <input type="text" class="form-control input-moderno" id="edit_direccion">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label-peq">Persona de Contacto</label>
-                                <input type="text" class="form-control input-moderno" id="edit_contacto">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label-peq">Teléfono</label>
-                                <input type="text" class="form-control input-moderno" id="edit_telefono">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label-peq">Email</label>
-                                <input type="email" class="form-control input-moderno" id="edit_email">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label-peq">Condición Pago</label>
-                                <select id="edit_condicion_pago" class="form-select input-moderno">
-                                    <option value="">Seleccione</option>
-                                    <option value="Credito">Crédito</option>
-                                    <option value="Contado">Contado</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4" id="edit_campo_tiempo_credito" style="display:none;">
-                                <label class="form-label-peq">Tiempo Crédito</label>
-                                <input type="text" class="form-control input-moderno" id="edit_tiempo_credito" placeholder="Ej: 30 días">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- INFORMACIÓN BANCARIA -->
-                    <div class="mb-4">
-                        <div class="d-flex align-items-center gap-2 border-start border-4 border-success ps-3 mb-3">
-                            <i class="bi bi-bank2 fs-5 text-success"></i>
-                            <h6 class="fw-bold m-0">Información Bancaria</h6>
-                        </div>
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="form-label-peq">Banco</label>
-                                <select class="form-select input-moderno" id="edit_banco">
-                                    <option value="">Seleccione</option>
-                                    <option value="BCP">BCP</option>
-                                    <option value="BBVA">BBVA</option>
-                                    <option value="Interbank">Interbank</option>
-                                    <option value="Scotiabank">Scotiabank</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label-peq">Número Cuenta</label>
-                                <input type="text" class="form-control input-moderno" id="edit_numero_cuenta">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label-peq">CCI</label>
-                                <input type="text" class="form-control input-moderno" id="edit_cci">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- INFORMACIÓN LOGÍSTICA -->
-                    <div class="mb-4">
-                        <div class="d-flex align-items-center gap-2 border-start border-4 border-info ps-3 mb-3">
-                            <i class="bi bi-geo-alt-fill fs-5 text-info"></i>
-                            <h6 class="fw-bold m-0">Información Logística</h6>
-                        </div>
-                        <div class="row g-3">
-                            <div class="col-md-12">
-                                <label class="form-label-peq">Lugar de Recojo</label>
-                                <input type="text" class="form-control input-moderno" id="edit_lugar_recojo" placeholder="Dirección donde se recogen los productos">
-                            </div>
-                        </div>
-                    </div>
+                <form id="formEditarClienteOrdenado">
+                    <input type="hidden" id="edit_id_cliente">
+                    <div class="mb-4"><div class="border-start border-4 border-warning ps-3 mb-3"><h6 class="fw-bold">Información General</h6></div>
+                    <div class="row g-3">
+                        <div class="col-md-3"><label class="form-label-peq">Tipo Doc.</label><select id="edit_tipo_doc" class="form-select input-moderno"><option value="RUC">RUC</option><option value="DNI">DNI</option><option value="CE">CE</option></select></div>
+                        <div class="col-md-5"><label class="form-label-peq">Número Documento</label><div class="input-group"><input id="edit_num_doc" class="form-control input-moderno"><button class="btn btn-sunat-sm" type="button" id="btnEditSunat"><i class="bi bi-building"></i> Sunat</button></div></div>
+                        <div class="col-md-4"><label class="form-label-peq">Razón Social</label><input id="edit_razon_social" class="form-control input-moderno"></div>
+                        <div class="col-md-4"><label class="form-label-peq">Nombre Comercial</label><input id="edit_nombre_comercial" class="form-control input-moderno"></div>
+                        <div class="col-md-8"><label class="form-label-peq">Dirección Fiscal</label><input id="edit_direccion_fiscal" class="form-control input-moderno"></div>
+                    </div></div>
+                    <div class="mb-4"><div class="section-mini-title"><span><i class="bi bi-person-badge"></i> Contactos</span><button type="button" id="btnAgregarContactoEditOrd" class="btn-agregar-link"><i class="bi bi-plus-circle"></i> Agregar</button></div><div id="edit_listaContactosOrd"></div></div>
+                    <div><div class="section-mini-title"><span><i class="bi bi-geo-alt"></i> Puntos de Entrega</span><button type="button" id="btnAgregarPuntoEditOrd" class="btn-agregar-link"><i class="bi bi-plus-circle"></i> Agregar</button></div><div id="edit_listaPuntosOrd"></div></div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" form="formEditarProveedor" class="btn btn-primary rounded-pill px-4 shadow-sm">
-                    <i class="bi bi-save"></i> Actualizar Proveedor
-                </button>
-            </div>
+            <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" form="formEditarClienteOrdenado" class="btn btn-primary">Actualizar</button></div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="modalVerProveedor" tabindex="-1">
+<div class="modal fade" id="modalVerCliente" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content modal-content-radius">
-            <div class="modal-header-clean"><h5 class="modal-title"><i class="bi bi-eye-fill me-2"></i> Detalle del Proveedor</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body p-4" id="modalVerBodyProveedor"><div class="text-center py-4">Cargando...</div></div>
+            <div class="modal-header-clean"><h5 class="modal-title"><i class="bi bi-eye-fill me-2"></i> Detalle del Cliente</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body p-4" id="modalVerBody"><div class="text-center py-4">Cargando...</div></div>
             <div class="modal-footer"><button class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cerrar</button><button class="btn btn-info rounded-pill px-4" onclick="window.print()"><i class="bi bi-printer me-1"></i> Imprimir</button></div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="modalEliminarProveedor" tabindex="-1">
+<div class="modal fade" id="modalEliminarCliente" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-danger text-white"><h5 class="modal-title"><i class="bi bi-trash-fill me-2"></i> Eliminar Proveedor</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-header bg-danger text-white"><h5 class="modal-title"><i class="bi bi-trash-fill me-2"></i> Eliminar Cliente</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
-                <input type="hidden" id="delete_id_proveedor">
+                <input type="hidden" id="delete_id_cliente">
                 <div class="text-center py-3">
                     <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3rem;"></i>
-                    <p class="mt-3 fw-semibold" id="mensajeEliminar">¿Está seguro que desea eliminar este proveedor?</p>
-                    <p class="text-muted small">Esta acción no se puede deshacer.</p>
-                    <div id="errorDetalle" class="alert alert-danger mt-3 small" style="display:none;"></div>
+                    <p class="mt-3 fw-semibold">¿Está seguro que desea eliminar este cliente?</p>
+                    <p class="text-muted small">Esta acción no se puede deshacer. Se eliminarán todos los datos asociados.</p>
+                    <div id="errorDetalleCliente" class="alert alert-danger mt-3 small" style="display:none;"></div>
                 </div>
             </div>
             <div class="modal-footer justify-content-center">
                 <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancelar</button>
-                <button type="button" class="btn btn-danger px-4" id="btnConfirmarEliminarProveedor"><i class="bi bi-trash me-1"></i> Eliminar</button>
+                <button type="button" class="btn btn-danger px-4" id="confirmarEliminarBtn"><i class="bi bi-trash me-1"></i> Eliminar</button>
             </div>
         </div>
     </div>
@@ -607,9 +496,9 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // =========================================
-    // FUNCIONES DE NOTIFICACIÓN (las que ya tenías)
-    // =========================================
+    let clienteAEliminar = null;
+    let deleteModal = null;
+
     function notificar(msg, tipo='success'){ 
         let d=document.createElement('div'); 
         d.className='toast-notify-custom'; 
@@ -644,161 +533,239 @@
         } catch(e) { return fechaStr; }
     }
     
+    function convertirAHoraPeru(fechaUTC) {
+        return new Date(fechaUTC.getTime() - (5 * 60 * 60 * 1000));
+    }
+    
+    function formatearFechaHoraCorta(fechaStr) {
+        if(!fechaStr) return '—';
+        try {
+            let fechaUTC = new Date(fechaStr);
+            if (isNaN(fechaUTC.getTime())) return '—';
+            let fecha = convertirAHoraPeru(fechaUTC);
+            const dia = fecha.getDate().toString().padStart(2, '0');
+            const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+            const anio = fecha.getFullYear();
+            const horas = fecha.getHours().toString().padStart(2, '0');
+            const minutos = fecha.getMinutes().toString().padStart(2, '0');
+            return `${dia}/${mes}/${anio} ${horas}:${minutos}`;
+        } catch(e) { return '—'; }
+    }
+    
+    function configPlaceholderNuevo(){ 
+        let tipo=document.getElementById('tipo_documento_nuevo').value; 
+        let input=document.getElementById('numero_documento_nuevo'); 
+        if(tipo==='RUC'){input.placeholder='11 dígitos'; input.maxLength=11;} 
+        else if(tipo==='DNI'){input.placeholder='8 dígitos'; input.maxLength=8;} 
+        else{input.placeholder='Número documento'; input.maxLength=20;} 
+    }
+    
     function limpiarFormularioNuevo() {
-        document.getElementById('formProveedor').reset();
-        document.getElementById('campo_tiempo_credito').style.display = 'none';
+        document.getElementById('formClienteOrdenado').reset();
+        document.getElementById('listaContactosOrdenada').innerHTML = '';
+        document.getElementById('listaPuntosOrdenada').innerHTML = '';
+        agregarContactoNuevoOrdenado();
+        agregarPuntoNuevoOrdenado();
+        configPlaceholderNuevo();
         notificar('Formulario limpiado', 'info');
     }
     
-    async function consultarSunatProveedor(ruc, razonSocialField, nombreComercialField, direccionField) {
-        if(!ruc || ruc.length !== 11){ notificar('Ingrese un RUC válido de 11 dígitos', 'warning'); return false; }
-        try {
-            let res = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
-            let json = await res.json();
-            if(json.success){
-                if(razonSocialField) document.getElementById(razonSocialField).value = json.razon_social || '';
-                if(nombreComercialField) document.getElementById(nombreComercialField).value = json.nombre_comercial || '';
-                if(direccionField) document.getElementById(direccionField).value = json.direccion || '';
-                notificar('Datos cargados desde SUNAT');
-                return true;
-            } else { notificar('No se encontró información para este RUC', 'error'); return false; }
-        } catch(e) { notificar('Error al consultar SUNAT', 'error'); return false; }
+    function agregarContactoNuevoOrdenado(data={}) {
+        const container = document.getElementById('listaContactosOrdenada');
+        if(!container) return;
+        const div = document.createElement('div'); div.className = 'item-card-mini';
+        div.innerHTML = `<button type="button" class="btn-remove-mini">🗑️</button>
+            <div class="row g-2">
+                <div class="col-md-5"><label class="form-label-peq">Nombre *</label><input class="form-control input-moderno" data-field="nombre_contacto" value="${escapeHtml(data.nombre_contacto||'')}"></div>
+                <div class="col-md-4"><label class="form-label-peq">Cargo</label><input class="form-control input-moderno" data-field="cargo" value="${escapeHtml(data.cargo||'')}"></div>
+                <div class="col-md-3"><label class="form-label-peq">Teléfono</label><input class="form-control input-moderno" data-field="telefono" value="${escapeHtml(data.telefono||'')}"></div>
+                <div class="col-md-6"><label class="form-label-peq">Email</label><input class="form-control input-moderno" data-field="email" value="${escapeHtml(data.email||'')}"></div>
+                <div class="col-md-6"><div class="checkbox-linea"><input type="checkbox" data-field="principal" ${data.principal?'checked':''}> <span class="small fw-semibold">Contacto principal</span></div></div>
+            </div>`;
+        container.appendChild(div);
+        div.querySelector('.btn-remove-mini').onclick = ()=>div.remove();
     }
     
-    document.getElementById('btnSunatProveedor')?.addEventListener('click', async () => {
-        await consultarSunatProveedor(document.getElementById('ruc').value, 'razon_social', 'razon_comercial', 'direccion');
-    });
-    document.getElementById('btnEditSunatProveedor')?.addEventListener('click', async () => {
-        await consultarSunatProveedor(document.getElementById('edit_ruc').value, 'edit_razon_social', 'edit_razon_comercial', 'edit_direccion');
-    });
+    function agregarPuntoNuevoOrdenado(data={}) {
+        const container = document.getElementById('listaPuntosOrdenada');
+        if(!container) return;
+        const div = document.createElement('div'); div.className = 'item-card-mini';
+        div.innerHTML = `<button type="button" class="btn-remove-mini">🗑️</button>
+            <div class="row g-2">
+                <div class="col-md-5"><label class="form-label-peq">Punto de Entrega *</label><input class="form-control input-moderno" data-field="nombre_punto" value="${escapeHtml(data.nombre_punto||'')}"></div>
+                <div class="col-md-7"><label class="form-label-peq">Dirección</label><input class="form-control input-moderno" data-field="direccion" value="${escapeHtml(data.direccion||'')}"></div>
+                <div class="col-md-4"><label class="form-label-peq">Contacto Entrega</label><input class="form-control input-moderno" data-field="responsable" value="${escapeHtml(data.responsable||'')}"></div>
+                <div class="col-md-4"><label class="form-label-peq">Teléfono punto</label><input class="form-control input-moderno" data-field="telefono_punto" value="${escapeHtml(data.telefono_punto||'')}"></div>
+                <div class="col-md-4"><label class="form-label-peq">Condición Pago</label><select class="form-select input-moderno" data-field="condicion_pago"><option value="">Seleccione</option><option ${data.condicion_pago==='Contado'?'selected':''}>Contado</option><option ${data.condicion_pago==='Crédito 30 días'?'selected':''}>Crédito 30 días</option><option ${data.condicion_pago==='Crédito 45 días'?'selected':''}>Crédito 45 días</option><option ${data.condicion_pago==='Crédito 60 días'?'selected':''}>Crédito 60 días</option><option ${data.condicion_pago==='Personalizado'?'selected':''}>Personalizado</option></select></div>
+                <div class="col-md-12 mt-2"><div class="checkbox-linea"><input type="checkbox" data-field="principal_punto" ${data.principal_punto?'checked':''}> <span class="small fw-semibold">Punto principal</span></div></div>
+            </div>`;
+        container.appendChild(div);
+        div.querySelector('.btn-remove-mini').onclick = ()=>div.remove();
+    }
     
-    document.getElementById('condicion_pago')?.addEventListener('change', function() {
-        document.getElementById('campo_tiempo_credito').style.display = this.value === 'Credito' ? 'block' : 'none';
-    });
-    document.getElementById('edit_condicion_pago')?.addEventListener('change', function() {
-        document.getElementById('edit_campo_tiempo_credito').style.display = this.value === 'Credito' ? 'block' : 'none';
-    });
+    function agregarContactoEditOrd(data={}){ 
+        let cont=document.getElementById('edit_listaContactosOrd'); 
+        if(!cont)return; 
+        let d=document.createElement('div'); 
+        d.className='item-card-mini'; 
+        d.innerHTML=`<button class="btn-remove-mini">🗑️</button><div class="row g-2"><div class="col-md-5"><label>Nombre</label><input class="form-control" data-field="edit_nombre" value="${escapeHtml(data.nombre_contacto||'')}"></div><div class="col-md-4"><label>Cargo</label><input class="form-control" data-field="edit_cargo" value="${escapeHtml(data.cargo||'')}"></div><div class="col-md-3"><label>Teléfono</label><input class="form-control" data-field="edit_telefono" value="${escapeHtml(data.telefono||'')}"></div><div class="col-md-6"><label>Email</label><input class="form-control" data-field="edit_email" value="${escapeHtml(data.email||'')}"></div><div class="col-md-6"><div class="checkbox-linea"><input type="checkbox" data-field="principal_edit" ${data.principal?'checked':''}> Principal</div></div></div>`; 
+        cont.appendChild(d); 
+        d.querySelector('.btn-remove-mini').onclick=()=>d.remove(); 
+    }
     
-    // =========================================
-    // CARGAR PROVEEDORES - USANDO TU RUTA /api/proveedores/listar
-    // =========================================
-    async function cargarProveedores(filtro={}){ 
-        let tbody=document.getElementById('tbody-proveedores'); 
-        tbody.innerHTML='<tr><td colspan="9" class="text-center p-4"><div class="spinner-border spinner-border-sm text-secondary"></div> Cargando...</td></tr>'; 
+    function agregarPuntoEditOrd(data={}){ 
+        let cont=document.getElementById('edit_listaPuntosOrd'); 
+        if(!cont)return; 
+        let d=document.createElement('div'); 
+        d.className='item-card-mini'; 
+        d.innerHTML=`<button class="btn-remove-mini">🗑️</button><div class="row g-2"><div class="col-md-5"><label>Punto</label><input class="form-control" data-field="edit_nombre_punto" value="${escapeHtml(data.nombre_punto||'')}"></div><div class="col-md-7"><label>Dirección</label><input class="form-control" data-field="edit_direccion" value="${escapeHtml(data.direccion||'')}"></div><div class="col-md-4"><label>Contacto</label><input class="form-control" data-field="edit_responsable" value="${escapeHtml(data.responsable||'')}"></div><div class="col-md-4"><label>Teléfono</label><input class="form-control" data-field="edit_telefono_punto" value="${escapeHtml(data.telefono_punto||'')}"></div><div class="col-md-4"><label>Cond. Pago</label><select class="form-select" data-field="edit_condicion_pago"><option>Contado</option><option>Crédito 30 días</option><option>Personalizado</option></select></div><div class="col-12 mt-2"><input type="checkbox" data-field="edit_principal_punto" ${data.principal_punto?'checked':''}> Principal</div></div>`; 
+        cont.appendChild(d); 
+        d.querySelector('.btn-remove-mini').onclick=()=>d.remove(); 
+    }
+    
+    async function consultarSunatNuevo(){ 
+        let tipo=document.getElementById('tipo_documento_nuevo').value; 
+        let num=document.getElementById('numero_documento_nuevo').value; 
+        if(tipo!=='RUC'){ notificar('Solo consulta para RUC','warning'); return; } 
+        if(!num||num.length!==11){ notificar('RUC 11 dígitos','warning'); return; } 
+        let btn=document.getElementById('btnSunatNuevo'); 
+        let original=btn.innerHTML; 
+        btn.innerHTML='<i class="bi bi-hourglass-split"></i>'; 
+        btn.disabled=true; 
         try{ 
-            let url='/api/proveedores/listar?'; 
+            let res=await fetch(`/api/sunat/consulta?ruc=${num}`); 
+            let json=await res.json(); 
+            if(json.success){ 
+                document.getElementById('razon_social_nuevo').value=json.razon_social||''; 
+                document.getElementById('nombre_comercial_nuevo').value=json.nombre_comercial||''; 
+                document.getElementById('direccion_fiscal_nuevo').value=json.direccion||''; 
+                notificar('Datos Sunat cargados'); 
+            } else notificar('No encontrado','error'); 
+        } catch(e){ notificar('Error conexión','error'); } 
+        finally{ btn.innerHTML=original; btn.disabled=false; } 
+    }
+    
+    async function cargarClientes(filtro={}){ 
+        let tbody=document.getElementById('tbody-clientes'); 
+        tbody.innerHTML='<td><td colspan="11" class="text-center p-4"><div class="spinner-border spinner-border-sm text-secondary"></div> Cargando...<\/td></tr>'; 
+        try{ 
+            let url='/api/clientes/buscar?'; 
             let params=new URLSearchParams(); 
+            if(filtro.tipo) params.append('tipo_documento',filtro.tipo); 
             if(filtro.busqueda) params.append('busqueda',filtro.busqueda); 
-            if(filtro.codigo) params.append('codigo',filtro.codigo); 
             let res=await fetch(url+params); 
             let json=await res.json(); 
-            let proveedores=json.data||[]; 
-            if(!proveedores.length){ 
-                tbody.innerHTML='<tr><td colspan="9" class="text-center">Sin proveedores registrados</td></tr>'; 
+            let clientes=json.data||[]; 
+            if(!clientes.length){ 
+                tbody.innerHTML='<tr><td colspan="11" class="text-center">Sin clientes registrados<\/td></tr>'; 
                 return; 
             } 
-            tbody.innerHTML=proveedores.map((p, idx)=>`
+            tbody.innerHTML=clientes.map((c, idx)=> {
+                let fechaRegistro = c.created_at || c.fecha_registro || c.fecha_creacion || new Date().toISOString();
+                let fechaFormateada = formatearFechaHoraCorta(fechaRegistro);
+                return `
                 <tr>
                     <td class="text-center">${idx+1}</td>
-                    <td><span class="codigo-proveedor">${escapeHtml(p.codigo_proveedor || ('PROV-' + String(p.id).padStart(5,'0')))}</span></td>
-                    <td><strong>${escapeHtml(p.razon_social || '-')}</strong><br><small class="text-muted">${escapeHtml(p.razon_comercial || '')}</small></td>
-                    <td><span class="badge-doc">${p.ruc || '-'}</span></td>
-                    <td>${escapeHtml(p.direccion || '-')}</td>
-                    <td>${p.telefono || '-'}</td>
-                    <td>${p.contacto || '-'}</td>
-                    <td>${p.email || '-'}</td>
+                    <td class="fecha-hora-cell">${fechaFormateada}</td>
+                    <td><span class="codigo-cliente">${escapeHtml(c.codigo_cliente || c.id)}</span></td>
+                    <td>${escapeHtml(c.nombre_comercial || '-')}</td>
+                    <td><strong>${escapeHtml(c.razon_social || '-')}</strong></td>
+                    <td><span class="badge-doc">${c.numero_documento || '-'}</span></td>
+                    <td>${escapeHtml(c.direccion_fiscal || '-')}</td>
+                    <td>${c.puntos_entrega && c.puntos_entrega[0] ? c.puntos_entrega[0].condicion_pago : '-'}</td>
+                    <td>
+                        <div class="contactos-lista">
+                            ${c.contactos && c.contactos.length > 0 
+                                ? c.contactos.map(ct => `<span class="contacto-nombre">${escapeHtml(ct.nombre_contacto || '-')}</span>`).join('')
+                                : '<span class="text-muted">—</span>'}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="puntos-lista">
+                            ${c.puntos_entrega && c.puntos_entrega.length > 0 
+                                ? c.puntos_entrega.map(p => `<span class="punto-nombre">${escapeHtml(p.nombre_punto || '-')}</span>`).join('')
+                                : '<span class="text-muted">—</span>'}
+                        </div>
+                    </td>
                     <td class="acciones-cell">
-                        <button class="btn-accion btn-ver-icon" onclick="abrirModalVerProveedor(${p.id})" title="Ver"><i class="bi bi-eye"></i></button> 
-                        <button class="btn-accion btn-edit-icon" onclick="abrirModalEditarProveedor(${p.id})" title="Editar"><i class="bi bi-pencil"></i></button> 
-                        <button class="btn-accion btn-del-icon" onclick="abrirModalEliminarProveedor(${p.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
+                        <button class="btn-accion btn-ver-icon" onclick="abrirModalVerCliente(${c.id})" title="Ver"><i class="bi bi-eye"></i></button> 
+                        <button class="btn-accion btn-edit-icon" onclick="abrirModalEditarCliente(${c.id})" title="Editar"><i class="bi bi-pencil"></i></button> 
+                        <button class="btn-accion btn-del-icon" onclick="abrirModalEliminarCliente(${c.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
                     </td>
                 </tr>
-            `).join(''); 
+            `}).join(''); 
         } catch(e){ 
-            console.error('Error cargando proveedores:', e);
-            tbody.innerHTML='<tr><td colspan="9" class="text-danger">Error al cargar proveedores</td></tr>'; 
+            console.error('Error cargando clientes:', e);
+            tbody.innerHTML='<tr><td colspan="11" class="text-danger">Error al cargar clientes<\/td></tr>'; 
         } 
     }
     
-    // =========================================
-    // VER PROVEEDOR
-    // =========================================
-    window.abrirModalVerProveedor = async (id) => {
+    window.abrirModalVerCliente = async (id) => {
         try {
-            const modalBody = document.getElementById('modalVerBodyProveedor');
+            const modalBody = document.getElementById('modalVerBody');
             modalBody.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div><br>Cargando...</div>';
-            let res = await fetch(`/api/proveedores/${id}`);
+            let res = await fetch(`/api/clientes/${id}`);
             let json = await res.json();
-            let p = json.data;
-            if (!p) { modalBody.innerHTML = '<div class="alert alert-danger">No se encontró información</div>'; return; }
-            let fechaRegistro = p.created_at || p.fecha_registro || new Date().toISOString();
+            let c = json.data;
+            if (!c) { modalBody.innerHTML = '<div class="alert alert-danger">No se encontró información</div>'; return; }
+            
+            let contactosHtml = '';
+            if (c.contactos && c.contactos.length > 0) {
+                contactosHtml = `<table class="subtable"><thead><tr><th>Nombre</th><th>Cargo</th><th>Teléfono</th><th>Email</th><th>Principal</th></tr></thead><tbody>${c.contactos.map(ct => `<tr><td><strong>${escapeHtml(ct.nombre_contacto || '-')}</strong></td><td>${escapeHtml(ct.cargo || '-')}</td><td>${escapeHtml(ct.telefono || '-')}</td><td>${escapeHtml(ct.email || '-')}</td><td class="text-center">${ct.principal ? '✓ Sí' : '—'}</td></tr>`).join('')}</tbody></table>`;
+            } else { contactosHtml = '<p class="text-muted mb-0">No hay contactos registrados</p>'; }
+            
+            let puntosHtml = '';
+            if (c.puntos_entrega && c.puntos_entrega.length > 0) {
+                puntosHtml = `<table class="subtable"><thead><tr><th>Nombre Punto</th><th>Dirección</th><th>Responsable</th><th>Teléfono</th><th>Condición Pago</th><th>Principal</th></tr></thead><tbody>${c.puntos_entrega.map(p => `<tr><td><strong>${escapeHtml(p.nombre_punto || '-')}</strong></td><td>${escapeHtml(p.direccion || '-')}</td><td>${escapeHtml(p.responsable || '-')}</td><td>${escapeHtml(p.telefono_punto || '-')}</td><td>${escapeHtml(p.condicion_pago || '-')}</td><td class="text-center">${p.principal_punto ? '✓ Sí' : '—'}</td></tr>`).join('')}</tbody></table>`;
+            } else { puntosHtml = '<p class="text-muted mb-0">No hay puntos de entrega registrados</p>'; }
+            
+            let fechaRegistro = c.created_at || c.fecha_registro || c.fecha_creacion || new Date().toISOString();
             let html = `<div class="fecha-grande"><i class="bi bi-calendar-clock"></i><span><strong>📅 Fecha y Hora de Registro:</strong> ${formatFechaGrande(fechaRegistro)}</span></div>
                 <table class="detail-table">
-                    <tr><th>Código Proveedor</th><td><span class="codigo-proveedor">${escapeHtml(p.codigo_proveedor || ('PROV-' + String(p.id).padStart(5,'0')))}</span></td></tr>
-                    <tr><th>Razón Social</th><td><strong>${escapeHtml(p.razon_social || '-')}</strong></td></tr>
-                    <tr><th>Nombre Comercial</th><td>${escapeHtml(p.razon_comercial || '-')}</td></tr>
-                    <tr><th>RUC</th><td>${escapeHtml(p.ruc || '-')}</td></tr>
-                    <tr><th>Dirección Fiscal</th><td>${escapeHtml(p.direccion || '-')}</td></tr>
-                    <tr><th>Persona de Contacto</th><td>${escapeHtml(p.contacto || '-')}</td></tr>
-                    <tr><th>Teléfono</th><td>${escapeHtml(p.telefono || '-')}</td></tr>
-                    <tr><th>Email</th><td>${escapeHtml(p.email || '-')}</td></tr>
-                    <tr><th>Condición de Pago</th><td>${escapeHtml(p.condicion_pago || '-')} ${p.tiempo_credito ? '('+p.tiempo_credito+')' : ''}</td>
-                    <tr><th>Banco</th><td>${escapeHtml(p.banco || '-')}</td>
-                    <tr><th>Número de Cuenta</th><td>${escapeHtml(p.numero_cuenta || '-')}</td>
-                    <tr><th>CCI</th><td>${escapeHtml(p.cci || '-')}</td>
-                    <tr><th>Lugar de Recojo</th><td>${escapeHtml(p.lugar_recojo || '-')}</td>
+                    <tr><th>Código Cliente</th><td><span class="codigo-cliente">${escapeHtml(c.codigo_cliente || c.id)}</span></td></tr>
+                    <tr><th>Tipo Documento</th><td>${escapeHtml(c.tipo_documento || '-')}</td></tr>
+                    <tr><th>Número Documento</th><td>${escapeHtml(c.numero_documento || '-')}</td></tr>
+                    <tr><th>Razón Social</th><td><strong>${escapeHtml(c.razon_social || '-')}</strong></td></tr>
+                    <tr><th>Nombre Comercial</th><td>${escapeHtml(c.nombre_comercial || '-')}</td></tr>
+                    <tr><th>Dirección Fiscal</th><td>${escapeHtml(c.direccion_fiscal || '-')}</td></tr>
+                    <tr><th>Contactos</th><td>${contactosHtml}</td></tr>
+                    <tr><th>Puntos de Entrega</th><td>${puntosHtml}</td></tr>
                 </table>`;
             modalBody.innerHTML = html;
-            new bootstrap.Modal(document.getElementById('modalVerProveedor')).show();
+            new bootstrap.Modal(document.getElementById('modalVerCliente')).show();
         } catch(e) { notificar('Error al cargar detalles', 'error'); }
     };
     
-    // =========================================
-    // EDITAR PROVEEDOR
-    // =========================================
-    window.abrirModalEditarProveedor = async (id) => { 
+    window.abrirModalEditarCliente = async (id) => { 
         try{ 
-            let res=await fetch(`/api/proveedores/${id}`); 
+            let res=await fetch(`/api/clientes/${id}`); 
             let json=await res.json(); 
-            let p=json.data; 
-            document.getElementById('edit_id_proveedor').value=p.id; 
-            document.getElementById('edit_razon_social').value=p.razon_social||''; 
-            document.getElementById('edit_razon_comercial').value=p.razon_comercial||''; 
-            document.getElementById('edit_direccion').value=p.direccion||''; 
-            document.getElementById('edit_ruc').value=p.ruc||''; 
-            document.getElementById('edit_contacto').value=p.contacto||''; 
-            document.getElementById('edit_telefono').value=p.telefono||''; 
-            document.getElementById('edit_email').value=p.email||''; 
-            document.getElementById('edit_condicion_pago').value=p.condicion_pago||''; 
-            document.getElementById('edit_tiempo_credito').value=p.tiempo_credito||''; 
-            document.getElementById('edit_banco').value=p.banco||''; 
-            document.getElementById('edit_numero_cuenta').value=p.numero_cuenta||''; 
-            document.getElementById('edit_cci').value=p.cci||''; 
-            document.getElementById('edit_lugar_recojo').value=p.lugar_recojo||''; 
-            document.getElementById('edit_campo_tiempo_credito').style.display = p.condicion_pago === 'Credito' ? 'block' : 'none';
-            new bootstrap.Modal(document.getElementById('modalEditarProveedor')).show(); 
+            let c=json.data; 
+            document.getElementById('edit_id_cliente').value=c.id; 
+            document.getElementById('edit_tipo_doc').value=c.tipo_documento||'RUC'; 
+            document.getElementById('edit_num_doc').value=c.numero_documento||''; 
+            document.getElementById('edit_razon_social').value=c.razon_social||''; 
+            document.getElementById('edit_nombre_comercial').value=c.nombre_comercial||''; 
+            document.getElementById('edit_direccion_fiscal').value=c.direccion_fiscal||''; 
+            document.getElementById('edit_listaContactosOrd').innerHTML=''; 
+            document.getElementById('edit_listaPuntosOrd').innerHTML=''; 
+            if(c.contactos && c.contactos.length>0){ c.contactos.forEach(ct=>agregarContactoEditOrd(ct)); } 
+            else{ agregarContactoEditOrd({}); } 
+            if(c.puntos_entrega && c.puntos_entrega.length>0){ c.puntos_entrega.forEach(p=>agregarPuntoEditOrd(p)); } 
+            else{ agregarPuntoEditOrd({}); } 
+            new bootstrap.Modal(document.getElementById('modalEditarClienteOrdenado')).show(); 
         } catch(e){ notificar('Error al cargar datos', 'error'); } 
     };
     
-    // =========================================
-    // ELIMINAR PROVEEDOR - MODAL
-    // =========================================
-    let proveedorAEliminar = null;
-    let deleteModal = null;
-    
-    window.abrirModalEliminarProveedor = (id, nombre) => {
-        proveedorAEliminar = id;
-        const mensajeElem = document.getElementById('mensajeEliminar');
-        if (mensajeElem && nombre) {
-            mensajeElem.innerHTML = `¿Está seguro que desea eliminar el proveedor <strong>${escapeHtml(nombre)}</strong>?`;
-        }
+    window.abrirModalEliminarCliente = (id) => {
+        clienteAEliminar = id;
         if (deleteModal) deleteModal.show();
     };
     
-    async function eliminarProveedor(id) {
-        const confirmBtn = document.getElementById('btnConfirmarEliminarProveedor');
+    async function eliminarCliente(id) {
+        const confirmBtn = document.getElementById('confirmarEliminarBtn');
         const originalText = confirmBtn.innerHTML;
-        const errorDetalle = document.getElementById('errorDetalle');
+        const errorDetalle = document.getElementById('errorDetalleCliente');
         
         try {
             mostrarLoading(true);
@@ -806,20 +773,20 @@
             confirmBtn.disabled = true;
             if(errorDetalle) errorDetalle.style.display = 'none';
             
-            let res = await fetch(`/api/proveedores/${id}`, { method: 'DELETE' });
+            let res = await fetch(`/api/clientes/${id}`, { method: 'DELETE' });
             let json = await res.json();
             
             if (json.success) {
-                notificar('Proveedor eliminado correctamente');
-                await cargarProveedores();
+                notificar('Cliente eliminado correctamente');
+                await cargarClientes();
                 deleteModal.hide();
-                proveedorAEliminar = null;
+                clienteAEliminar = null;
             } else {
                 if(errorDetalle) {
                     errorDetalle.style.display = 'block';
-                    errorDetalle.innerHTML = `<strong>Error del servidor:</strong> ${json.error || 'No se pudo eliminar el proveedor'}`;
+                    errorDetalle.innerHTML = `<strong>Error del servidor:</strong> ${json.error || 'No se pudo eliminar el cliente'}`;
                 }
-                notificar(json.error || 'Error al eliminar el proveedor', 'error');
+                notificar(json.error || 'Error al eliminar el cliente', 'error');
             }
         } catch (error) {
             console.error('Error eliminando:', error);
@@ -835,107 +802,151 @@
         }
     }
     
-    // =========================================
-    // GUARDAR NUEVO PROVEEDOR
-    // =========================================
-    document.getElementById('formProveedor')?.addEventListener('submit', async (e) => { 
+    document.getElementById('formClienteOrdenado')?.addEventListener('submit', async (e) => { 
         e.preventDefault(); 
         let data={ 
-            razon_social:document.getElementById('razon_social').value, 
-            razon_comercial:document.getElementById('razon_comercial').value, 
-            direccion:document.getElementById('direccion').value, 
-            ruc:document.getElementById('ruc').value, 
-            contacto:document.getElementById('contacto').value, 
-            telefono:document.getElementById('telefono').value, 
-            email:document.getElementById('email').value, 
-            condicion_pago:document.getElementById('condicion_pago').value, 
-            tiempo_credito:document.getElementById('tiempo_credito').value, 
-            banco:document.getElementById('banco').value, 
-            numero_cuenta:document.getElementById('numero_cuenta').value, 
-            cci:document.getElementById('cci').value, 
-            lugar_recojo:document.getElementById('lugar_recojo').value 
+            tipo_documento:document.getElementById('tipo_documento_nuevo').value, 
+            numero_documento:document.getElementById('numero_documento_nuevo').value, 
+            razon_social:document.getElementById('razon_social_nuevo').value, 
+            nombre_comercial:document.getElementById('nombre_comercial_nuevo').value, 
+            direccion_fiscal:document.getElementById('direccion_fiscal_nuevo').value, 
+            contactos:[], 
+            puntos_entrega:[] 
         }; 
+        document.querySelectorAll('#listaContactosOrdenada .item-card-mini').forEach(el=>{ 
+            let nombre=el.querySelector('[data-field="nombre_contacto"]')?.value.trim(); 
+            if(nombre) data.contactos.push({ 
+                nombre_contacto:nombre, 
+                cargo:el.querySelector('[data-field="cargo"]')?.value||'', 
+                email:el.querySelector('[data-field="email"]')?.value||'', 
+                telefono:el.querySelector('[data-field="telefono"]')?.value||'', 
+                principal:el.querySelector('[data-field="principal"]')?.checked||false 
+            }); 
+        }); 
+        document.querySelectorAll('#listaPuntosOrdenada .item-card-mini').forEach(el=>{ 
+            let nombreP=el.querySelector('[data-field="nombre_punto"]')?.value.trim(); 
+            if(nombreP){ 
+                data.puntos_entrega.push({ 
+                    nombre_punto:nombreP, 
+                    direccion:el.querySelector('[data-field="direccion"]')?.value||'', 
+                    responsable:el.querySelector('[data-field="responsable"]')?.value||'', 
+                    telefono:el.querySelector('[data-field="telefono_punto"]')?.value||'', 
+                    condicion_pago:el.querySelector('[data-field="condicion_pago"]')?.value||'', 
+                    principal_punto:el.querySelector('[data-field="principal_punto"]')?.checked||false 
+                }); 
+            } 
+        }); 
         mostrarLoading(true);
         try {
-            let res=await fetch('/api/proveedores/guardar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}); 
+            let res=await fetch('/api/clientes/guardar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}); 
             let json=await res.json(); 
             if(json.success){ 
-                notificar('Proveedor registrado'); 
-                bootstrap.Modal.getInstance(document.getElementById('modalNuevoProveedor')).hide(); 
-                document.getElementById('formProveedor').reset(); 
-                document.getElementById('campo_tiempo_credito').style.display = 'none';
-                await cargarProveedores(); 
+                notificar('Cliente registrado'); 
+                bootstrap.Modal.getInstance(document.getElementById('modalNuevoClienteOrdenado')).hide(); 
+                document.getElementById('formClienteOrdenado').reset(); 
+                document.getElementById('listaContactosOrdenada').innerHTML=''; 
+                document.getElementById('listaPuntosOrdenada').innerHTML=''; 
+                agregarContactoNuevoOrdenado(); 
+                agregarPuntoNuevoOrdenado(); 
+                await cargarClientes(); 
             } else { notificar(json.error||'Error guardar','error'); }
         } catch(e) { notificar('Error al conectar con el servidor', 'error'); }
         finally { mostrarLoading(false); }
     });
     
-    // =========================================
-    // ACTUALIZAR PROVEEDOR
-    // =========================================
-    document.getElementById('formEditarProveedor')?.addEventListener('submit', async (e) => { 
+    document.getElementById('formEditarClienteOrdenado')?.addEventListener('submit', async (e) => { 
         e.preventDefault(); 
-        let id=document.getElementById('edit_id_proveedor').value; 
+        let id=document.getElementById('edit_id_cliente').value; 
         let data={ 
+            tipo_documento:document.getElementById('edit_tipo_doc').value, 
+            numero_documento:document.getElementById('edit_num_doc').value, 
             razon_social:document.getElementById('edit_razon_social').value, 
-            razon_comercial:document.getElementById('edit_razon_comercial').value, 
-            direccion:document.getElementById('edit_direccion').value, 
-            ruc:document.getElementById('edit_ruc').value, 
-            contacto:document.getElementById('edit_contacto').value, 
-            telefono:document.getElementById('edit_telefono').value, 
-            email:document.getElementById('edit_email').value, 
-            condicion_pago:document.getElementById('edit_condicion_pago').value, 
-            tiempo_credito:document.getElementById('edit_tiempo_credito').value, 
-            banco:document.getElementById('edit_banco').value, 
-            numero_cuenta:document.getElementById('edit_numero_cuenta').value, 
-            cci:document.getElementById('edit_cci').value, 
-            lugar_recojo:document.getElementById('edit_lugar_recojo').value 
+            nombre_comercial:document.getElementById('edit_nombre_comercial').value, 
+            direccion_fiscal:document.getElementById('edit_direccion_fiscal').value, 
+            contactos:[], 
+            puntos_entrega:[] 
         }; 
+        document.querySelectorAll('#edit_listaContactosOrd .item-card-mini').forEach(el=>{ 
+            let nombre=el.querySelector('[data-field="edit_nombre"]')?.value.trim(); 
+            if(nombre) data.contactos.push({ 
+                nombre_contacto:nombre, 
+                cargo:el.querySelector('[data-field="edit_cargo"]')?.value||'', 
+                email:el.querySelector('[data-field="edit_email"]')?.value||'', 
+                telefono:el.querySelector('[data-field="edit_telefono"]')?.value||'', 
+                principal:el.querySelector('[data-field="principal_edit"]')?.checked||false 
+            }); 
+        }); 
+        document.querySelectorAll('#edit_listaPuntosOrd .item-card-mini').forEach(el=>{ 
+            let nombre=el.querySelector('[data-field="edit_nombre_punto"]')?.value.trim(); 
+            if(nombre) data.puntos_entrega.push({ 
+                nombre_punto:nombre, 
+                direccion:el.querySelector('[data-field="edit_direccion"]')?.value||'', 
+                responsable:el.querySelector('[data-field="edit_responsable"]')?.value||'', 
+                telefono:el.querySelector('[data-field="edit_telefono_punto"]')?.value||'', 
+                condicion_pago:el.querySelector('[data-field="edit_condicion_pago"]')?.value||'', 
+                principal_punto:el.querySelector('[data-field="edit_principal_punto"]')?.checked||false 
+            }); 
+        }); 
         mostrarLoading(true);
         try {
-            let res=await fetch(`/api/proveedores/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}); 
+            let res=await fetch(`/api/clientes/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}); 
             let json=await res.json(); 
             if(json.success){ 
-                notificar('Proveedor actualizado'); 
-                bootstrap.Modal.getInstance(document.getElementById('modalEditarProveedor')).hide(); 
-                await cargarProveedores(); 
+                notificar('Cliente actualizado'); 
+                bootstrap.Modal.getInstance(document.getElementById('modalEditarClienteOrdenado')).hide(); 
+                await cargarClientes(); 
             } else { notificar(json.error,'error'); }
         } catch(e) { notificar('Error al conectar con el servidor', 'error'); }
         finally { mostrarLoading(false); }
     });
     
-    // =========================================
-    // INICIALIZACIÓN
-    // =========================================
     document.addEventListener('DOMContentLoaded', function() {
-        deleteModal = new bootstrap.Modal(document.getElementById('modalEliminarProveedor'));
-        const confirmBtn = document.getElementById('btnConfirmarEliminarProveedor');
+        deleteModal = new bootstrap.Modal(document.getElementById('modalEliminarCliente'));
+        const confirmBtn = document.getElementById('confirmarEliminarBtn');
         if (confirmBtn) {
             confirmBtn.addEventListener('click', async function() {
-                if (proveedorAEliminar) await eliminarProveedor(proveedorAEliminar);
+                if (clienteAEliminar) await eliminarCliente(clienteAEliminar);
             });
         }
-        const modalEliminar = document.getElementById('modalEliminarProveedor');
+        const modalEliminar = document.getElementById('modalEliminarCliente');
         if (modalEliminar) {
             modalEliminar.addEventListener('hidden.bs.modal', function () {
-                proveedorAEliminar = null;
-                const mensajeElem = document.getElementById('mensajeEliminar');
-                const errorDetalle = document.getElementById('errorDetalle');
-                if (mensajeElem) mensajeElem.innerHTML = '¿Está seguro que desea eliminar este proveedor?';
+                clienteAEliminar = null;
+                const errorDetalle = document.getElementById('errorDetalleCliente');
                 if (errorDetalle) errorDetalle.style.display = 'none';
+            });
+        }
+        
+        // Botón de atrás
+        const btnBack = document.getElementById('btnBackMain');
+        if (btnBack) {
+            btnBack.addEventListener('click', function(e) {
+                e.preventDefault();
+                window.history.back();
             });
         }
     });
     
     document.getElementById('btnLimpiarFormulario')?.addEventListener('click', limpiarFormularioNuevo);
+    document.getElementById('btnAgregarContactoOrdenado')?.addEventListener('click',()=>agregarContactoNuevoOrdenado());
+    document.getElementById('btnAgregarPuntoOrdenado')?.addEventListener('click',()=>agregarPuntoNuevoOrdenado());
+    document.getElementById('btnAgregarContactoEditOrd')?.addEventListener('click',()=>agregarContactoEditOrd());
+    document.getElementById('btnAgregarPuntoEditOrd')?.addEventListener('click',()=>agregarPuntoEditOrd());
+    document.getElementById('btnSunatNuevo')?.addEventListener('click',consultarSunatNuevo);
+    document.getElementById('tipo_documento_nuevo')?.addEventListener('change',configPlaceholderNuevo);
     
-    let filtroBusqueda=document.getElementById('filtro-busqueda'), filtroCodigo=document.getElementById('search-codigo'); 
+    let filtroTipo=document.getElementById('filtro-tipo'), filtroBusq=document.getElementById('filtro-busqueda'); 
     let timer; 
-    const aplicarFiltros = () => { cargarProveedores({ busqueda: filtroBusqueda?.value || '', codigo: filtroCodigo?.value || '' }); };
-    filtroBusqueda?.addEventListener('input',()=>{ clearTimeout(timer); timer=setTimeout(aplicarFiltros,400); });
-    filtroCodigo?.addEventListener('input',()=>{ clearTimeout(timer); timer=setTimeout(aplicarFiltros,400); });
+    const aplicarFiltros = () => { cargarClientes({ tipo: filtroTipo?.value || '', busqueda: filtroBusq?.value || '' }); };
+    filtroTipo?.addEventListener('change', aplicarFiltros);
+    filtroBusq?.addEventListener('input',()=>{ clearTimeout(timer); timer=setTimeout(aplicarFiltros,400); });
     
-    setTimeout(()=>{ cargarProveedores(); },150);
+    setTimeout(()=>{ 
+        if(document.getElementById('listaContactosOrdenada')?.children.length===0) agregarContactoNuevoOrdenado(); 
+        if(document.getElementById('listaPuntosOrdenada')?.children.length===0) agregarPuntoNuevoOrdenado(); 
+        configPlaceholderNuevo(); 
+        cargarClientes(); 
+    },150);
 </script>
 </body>
 </html>
