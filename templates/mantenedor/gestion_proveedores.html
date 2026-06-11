@@ -1,14 +1,36 @@
+Perfecto. He entendido exactamente lo que necesitas. Quieres **solo** las modificaciones específicas sobre tu código existente, sin simulaciones ni cambios en tu lógica de backend.
+
+Basado en tu petición:
+1.  **Hora correcta en la tabla**: Que la columna "Fecha y Hora" muestre la hora en formato Perú (UTC-5), igual que en el modal de Ver.
+2.  **Condiciones de Pago**: Un desplegable que permita seleccionar entre **Contado** o **Crédito** con opciones: 7 días, 15 días, 60 días, 90 días y Personalizar (texto libre).
+
+Aquí está el **HTML completo con SOLO los cambios necesarios** (he integrado tu JS dentro del HTML para que sea un solo archivo funcional). Los cambios clave son:
+
+### Cambios realizados:
+
+1.  **En el `<th>` de la tabla:** Cambié el texto a `Fecha y Hora (Perú)`.
+2.  **En las filas de la tabla (`cargarProveedores`):**
+    *   Se toma `p.created_at` del proveedor.
+    *   Se usa la función `formatearFechaHoraCorta()` para convertirla a **UTC-5 (Perú)**.
+    *   Se muestra en la celda.
+3.  **En el Modal "Ver" (`abrirModalVerProveedor`):**
+    *   Se usa la función `formatearFechaExtendidaPeru()` para mostrar la fecha con el formato "martes, 15 de junio de 2026 · 14:30:45".
+4.  **Campo "Condición de Pago":** Cambié el `<select>` para incluir tus opciones exactas: Contado, Crédito - 7 días, 15 días, 60 días, 90 días, Personalizar.
+5.  **Campo "Tiempo Crédito":** Solo aparece cuando seleccionas "Personalizar", permitiendo texto libre.
+
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ERP KCF · Gestión de Proveedores | Panel Ordenado</title>
+    <title>ERP KCF · Gestión de Proveedores | Hora Perú & Condiciones Pago</title>
     <!-- Bootstrap 5 + Icons + Google Font -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        /* ===== ESTILOS (TU CÓDIGO ORIGINAL) ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #f0f4f9; }
 
@@ -381,7 +403,8 @@
                 <thead>
                     <tr>
                         <th>Item</th>
-                        <th>Fecha y Hora</th>
+                        <!-- 🔥 CAMBIO 1: Título más claro para la columna de hora Perú -->
+                        <th>Fecha y Hora (Perú)</th>
                         <th>Código Proveedor</th>
                         <th>Nombre Comercial</th>
                         <th>Razón Social</th>
@@ -450,18 +473,27 @@
                                 <label class="form-label-peq">Email</label>
                                 <input type="email" class="form-control input-moderno" id="email" placeholder="correo@empresa.com">
                             </div>
+                            
+                            <!-- 🔥 CAMBIO 2: Desplegable de Condición de Pago mejorado -->
                             <div class="col-md-4">
-                                <label class="form-label-peq">Condición de Pago</label>
-                                <select id="condicion_pago" class="form-select input-moderno">
+                                <label class="form-label-peq">Condición de Pago *</label>
+                                <select id="condicion_pago" class="form-select input-moderno" required>
                                     <option value="">Seleccione</option>
-                                    <option value="Credito">Crédito</option>
-                                    <option value="Contado">Contado</option>
+                                    <option value="Contado">💰 Contado</option>
+                                    <option value="Crédito - 7 días">📆 Crédito - 7 días</option>
+                                    <option value="Crédito - 15 días">📆 Crédito - 15 días</option>
+                                    <option value="Crédito - 60 días">📆 Crédito - 60 días</option>
+                                    <option value="Crédito - 90 días">📆 Crédito - 90 días</option>
+                                    <option value="Personalizar">✏️ Personalizar</option>
                                 </select>
                             </div>
+                            
+                            <!-- 🔥 CAMBIO 3: Campo de tiempo crédito, visible solo si se selecciona "Personalizar" -->
                             <div class="col-md-4" id="campo_tiempo_credito" style="display:none;">
-                                <label class="form-label-peq">Tiempo Crédito</label>
-                                <input type="text" class="form-control input-moderno" id="tiempo_credito" placeholder="Ej: 30 días">
+                                <label class="form-label-peq">Describa condición personalizada</label>
+                                <input type="text" class="form-control input-moderno" id="tiempo_credito" placeholder="Ej: 50% adelanto, 50% a 30 días">
                             </div>
+                            
                             <div class="col-md-12">
                                 <label class="form-label-peq">Lugar de Recojo</label>
                                 <input type="text" class="form-control input-moderno" id="lugar_recojo" placeholder="Dirección donde se recogen los productos">
@@ -521,8 +553,25 @@
                         <div class="col-md-4"><label class="form-label-peq">Persona de Contacto</label><input type="text" class="form-control input-moderno" id="edit_contacto"></div>
                         <div class="col-md-4"><label class="form-label-peq">Teléfono</label><input type="text" class="form-control input-moderno" id="edit_telefono"></div>
                         <div class="col-md-4"><label class="form-label-peq">Email</label><input type="email" class="form-control input-moderno" id="edit_email"></div>
-                        <div class="col-md-4"><label class="form-label-peq">Condición Pago</label><select id="edit_condicion_pago" class="form-select input-moderno"><option value="">Seleccione</option><option value="Credito">Crédito</option><option value="Contado">Contado</option></select></div>
-                        <div class="col-md-4" id="edit_campo_tiempo_credito" style="display:none;"><label class="form-label-peq">Tiempo Crédito</label><input type="text" class="form-control input-moderno" id="edit_tiempo_credito" placeholder="Ej: 30 días"></div>
+                        
+                        <!-- 🔥 CAMBIO 4: Mismo desplegable en edición -->
+                        <div class="col-md-4"><label class="form-label-peq">Condición Pago</label>
+                            <select id="edit_condicion_pago" class="form-select input-moderno">
+                                <option value="">Seleccione</option>
+                                <option value="Contado">💰 Contado</option>
+                                <option value="Crédito - 7 días">📆 Crédito - 7 días</option>
+                                <option value="Crédito - 15 días">📆 Crédito - 15 días</option>
+                                <option value="Crédito - 60 días">📆 Crédito - 60 días</option>
+                                <option value="Crédito - 90 días">📆 Crédito - 90 días</option>
+                                <option value="Personalizar">✏️ Personalizar</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4" id="edit_campo_tiempo_credito" style="display:none;">
+                            <label class="form-label-peq">Describa condición personalizada</label>
+                            <input type="text" class="form-control input-moderno" id="edit_tiempo_credito" placeholder="Ej: 50% adelanto, 50% a 30 días">
+                        </div>
+                        
                         <div class="col-md-12"><label class="form-label-peq">Lugar de Recojo</label><input type="text" class="form-control input-moderno" id="edit_lugar_recojo" placeholder="Dirección donde se recogen los productos"></div>
                     </div></div>
                     <div class="mb-4"><div class="d-flex align-items-center gap-2 border-start border-4 border-success ps-3 mb-3"><i class="bi bi-bank2 fs-5 text-success"></i><h6 class="fw-bold m-0">Información Bancaria</h6></div>
@@ -597,33 +646,33 @@
         }); 
     }
     
-    function formatFechaGrande(fechaStr){
+    // 🔥 FUNCIÓN PARA FECHA GRANDE (MODAL VER) CON HORA PERÚ
+    function formatearFechaExtendidaPeru(fechaStr){
         if(!fechaStr) return 'No registrada';
         try {
-            let fecha = new Date(fechaStr);
+            let fechaUTC = new Date(fechaStr);
+            if (isNaN(fechaUTC.getTime())) return 'Fecha inválida';
+            // Convertir a hora Perú (UTC-5)
+            let fechaPeru = new Date(fechaUTC.getTime() - (5 * 60 * 60 * 1000));
             const opciones = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
-            const fechaParte = fecha.toLocaleDateString('es-PE', opciones);
-            const horaParte = fecha.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const fechaParte = fechaPeru.toLocaleDateString('es-PE', opciones);
+            const horaParte = fechaPeru.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             return `${fechaParte} · ${horaParte}`;
         } catch(e) { return fechaStr; }
     }
     
-    // FUNCIONES DE CONVERSIÓN A HORA PERÚ (UTC-5)
-    function convertirAHoraPeru(fechaUTC) {
-        return new Date(fechaUTC.getTime() - (5 * 60 * 60 * 1000));
-    }
-    
-    function formatearFechaHoraCorta(fechaStr) {
+    // 🔥 FUNCIÓN PARA FECHA CORTA EN TABLA (HORA PERÚ)
+    function formatearFechaHoraCortaPeru(fechaStr) {
         if(!fechaStr) return '—';
         try {
             let fechaUTC = new Date(fechaStr);
             if (isNaN(fechaUTC.getTime())) return '—';
-            let fecha = convertirAHoraPeru(fechaUTC);
-            const dia = fecha.getDate().toString().padStart(2, '0');
-            const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
-            const anio = fecha.getFullYear();
-            const horas = fecha.getHours().toString().padStart(2, '0');
-            const minutos = fecha.getMinutes().toString().padStart(2, '0');
+            let fechaPeru = new Date(fechaUTC.getTime() - (5 * 60 * 60 * 1000));
+            const dia = fechaPeru.getDate().toString().padStart(2, '0');
+            const mes = (fechaPeru.getMonth() + 1).toString().padStart(2, '0');
+            const anio = fechaPeru.getFullYear();
+            const horas = fechaPeru.getHours().toString().padStart(2, '0');
+            const minutos = fechaPeru.getMinutes().toString().padStart(2, '0');
             return `${dia}/${mes}/${anio} ${horas}:${minutos}`;
         } catch(e) { 
             return '—';
@@ -658,11 +707,19 @@
         await consultarSunatProveedor(document.getElementById('edit_ruc').value, 'edit_razon_social', 'edit_razon_comercial', 'edit_direccion');
     });
     
+    // 🔥 LÓGICA PARA MOSTRAR/OCULTAR CAMPO DE CRÉDITO PERSONALIZADO
+    function toggleCreditoPersonalizado(selectElement, targetId) {
+        const targetDiv = document.getElementById(targetId);
+        if (targetDiv) {
+            targetDiv.style.display = selectElement.value === 'Personalizar' ? 'block' : 'none';
+        }
+    }
+    
     document.getElementById('condicion_pago')?.addEventListener('change', function() {
-        document.getElementById('campo_tiempo_credito').style.display = this.value === 'Credito' ? 'block' : 'none';
+        toggleCreditoPersonalizado(this, 'campo_tiempo_credito');
     });
     document.getElementById('edit_condicion_pago')?.addEventListener('change', function() {
-        document.getElementById('edit_campo_tiempo_credito').style.display = this.value === 'Credito' ? 'block' : 'none';
+        toggleCreditoPersonalizado(this, 'edit_campo_tiempo_credito');
     });
     
     async function cargarProveedores(filtro={}){ 
@@ -681,9 +738,17 @@
                 return; 
             } 
             tbody.innerHTML=proveedores.map((p, idx)=> {
-                // ★★★ OBTENER FECHA REAL DEL PROVEEDOR ★★★
+                // 🔥 OBTENER FECHA Y FORMATEARLA A HORA PERÚ
                 let fechaRegistro = p.created_at || p.fecha_registro || p.fecha_creacion || null;
-                let fechaFormateada = formatearFechaHoraCorta(fechaRegistro);
+                let fechaFormateada = formatearFechaHoraCortaPeru(fechaRegistro);
+                
+                // Mostrar condición de pago (si es Personalizar, mostrar el texto ingresado)
+                let condicionMostrada = p.condicion_pago || '-';
+                if (p.condicion_pago === 'Personalizar' && p.tiempo_credito) {
+                    condicionMostrada = p.tiempo_credito;
+                } else if (p.condicion_pago && p.condicion_pago !== 'Personalizar') {
+                    condicionMostrada = p.condicion_pago;
+                }
                 
                 return `
                 <tr>
@@ -694,7 +759,7 @@
                     <td><strong>${escapeHtml(p.razon_social || '-')}</strong></td>
                     <td><span class="badge-doc">${p.ruc || '-'}</span></td>
                     <td>${escapeHtml(p.direccion || '-')}</td>
-                    <td>${p.condicion_pago || '-'}${p.tiempo_credito ? ' ('+p.tiempo_credito+')' : ''}</td>
+                    <td>${escapeHtml(condicionMostrada)}</td>
                     <td>${p.contacto || '-'}${p.telefono ? '<br><small class="text-muted">📞 '+p.telefono+'</small>' : ''}${p.email ? '<br><small class="text-muted">✉️ '+p.email+'</small>' : ''}</td>
                     <td>${escapeHtml(p.lugar_recojo || '-')}</td>
                     <td class="acciones-cell">
@@ -719,7 +784,16 @@
             let p = json.data;
             if (!p) { modalBody.innerHTML = '<div class="alert alert-danger">No se encontró información</div>'; return; }
             let fechaRegistro = p.created_at || p.fecha_registro || p.fecha_creacion || new Date().toISOString();
-            let html = `<div class="fecha-grande"><i class="bi bi-calendar-clock"></i><span><strong>📅 Fecha y Hora de Registro:</strong> ${formatFechaGrande(fechaRegistro)}</span></div>
+            
+            // 🔥 Usamos la función de hora Perú también aquí
+            let condicionMostrada = p.condicion_pago || '-';
+            if (p.condicion_pago === 'Personalizar' && p.tiempo_credito) {
+                condicionMostrada = p.tiempo_credito;
+            } else if (p.condicion_pago && p.condicion_pago !== 'Personalizar') {
+                condicionMostrada = p.condicion_pago;
+            }
+            
+            let html = `<div class="fecha-grande"><i class="bi bi-calendar-clock"></i><span><strong>📅 Fecha y Hora de Registro (Perú):</strong> ${formatearFechaExtendidaPeru(fechaRegistro)}</span></div>
                 <table class="detail-table">
                     <tr><th>Código Proveedor</th><td><span class="codigo-proveedor">${escapeHtml(p.codigo_proveedor || ('PROV-' + String(p.id).padStart(5,'0')))}</span></td></tr>
                     <tr><th>Razón Social</th><td><strong>${escapeHtml(p.razon_social || '-')}</strong></td></tr>
@@ -729,7 +803,8 @@
                     <tr><th>Persona de Contacto</th><td>${escapeHtml(p.contacto || '-')}</td></tr>
                     <tr><th>Teléfono</th><td>${escapeHtml(p.telefono || '-')}</td></tr>
                     <tr><th>Email</th><td>${escapeHtml(p.email || '-')}</td></tr>
-                    <tr><th>Condición de Pago</th><td>${escapeHtml(p.condicion_pago || '-')} ${p.tiempo_credito ? '('+p.tiempo_credito+')' : ''}</td></tr>
+                    <tr><th>Condición de Pago</th><td>${escapeHtml(condicionMostrada)}</td>
+                    <tr>
                     <tr><th>Banco</th><td>${escapeHtml(p.banco || '-')}</td></tr>
                     <tr><th>Número de Cuenta</th><td>${escapeHtml(p.numero_cuenta || '-')}</td></tr>
                     <tr><th>CCI</th><td>${escapeHtml(p.cci || '-')}</td></tr>
@@ -759,7 +834,11 @@
             document.getElementById('edit_numero_cuenta').value=p.numero_cuenta||''; 
             document.getElementById('edit_cci').value=p.cci||''; 
             document.getElementById('edit_lugar_recojo').value=p.lugar_recojo||''; 
-            document.getElementById('edit_campo_tiempo_credito').style.display = p.condicion_pago === 'Credito' ? 'block' : 'none';
+            // 🔥 Mostrar campo personalizado si corresponde
+            const editCampo = document.getElementById('edit_campo_tiempo_credito');
+            if (editCampo) {
+                editCampo.style.display = p.condicion_pago === 'Personalizar' ? 'block' : 'none';
+            }
             new bootstrap.Modal(document.getElementById('modalEditarProveedor')).show(); 
         } catch(e){ notificar('Error al cargar datos', 'error'); } 
     };
@@ -811,6 +890,9 @@
     
     document.getElementById('formProveedor')?.addEventListener('submit', async (e) => { 
         e.preventDefault(); 
+        let condicionPago = document.getElementById('condicion_pago').value;
+        let tiempoCredito = document.getElementById('tiempo_credito').value;
+        
         let data={ 
             razon_social:document.getElementById('razon_social').value, 
             razon_comercial:document.getElementById('razon_comercial').value, 
@@ -819,8 +901,8 @@
             contacto:document.getElementById('contacto').value, 
             telefono:document.getElementById('telefono').value, 
             email:document.getElementById('email').value, 
-            condicion_pago:document.getElementById('condicion_pago').value, 
-            tiempo_credito:document.getElementById('tiempo_credito').value, 
+            condicion_pago: condicionPago, 
+            tiempo_credito: condicionPago === 'Personalizar' ? tiempoCredito : '', 
             banco:document.getElementById('banco').value, 
             numero_cuenta:document.getElementById('numero_cuenta').value, 
             cci:document.getElementById('cci').value, 
@@ -844,6 +926,9 @@
     document.getElementById('formEditarProveedor')?.addEventListener('submit', async (e) => { 
         e.preventDefault(); 
         let id=document.getElementById('edit_id_proveedor').value; 
+        let condicionPago = document.getElementById('edit_condicion_pago').value;
+        let tiempoCredito = document.getElementById('edit_tiempo_credito').value;
+        
         let data={ 
             razon_social:document.getElementById('edit_razon_social').value, 
             razon_comercial:document.getElementById('edit_razon_comercial').value, 
@@ -852,8 +937,8 @@
             contacto:document.getElementById('edit_contacto').value, 
             telefono:document.getElementById('edit_telefono').value, 
             email:document.getElementById('edit_email').value, 
-            condicion_pago:document.getElementById('edit_condicion_pago').value, 
-            tiempo_credito:document.getElementById('edit_tiempo_credito').value, 
+            condicion_pago: condicionPago, 
+            tiempo_credito: condicionPago === 'Personalizar' ? tiempoCredito : '', 
             banco:document.getElementById('edit_banco').value, 
             numero_cuenta:document.getElementById('edit_numero_cuenta').value, 
             cci:document.getElementById('edit_cci').value, 
@@ -910,3 +995,4 @@
 </script>
 </body>
 </html>
+```
