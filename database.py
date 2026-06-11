@@ -456,7 +456,9 @@ def obtener_clientes():
                 razon_social,
                 direccion_fiscal,
                 codigo_cliente,
-                nombre_comercial
+                nombre_comercial,
+                fecha_creacion,
+                created_at
             FROM clientes
             WHERE activo = TRUE
             ORDER BY id DESC
@@ -470,24 +472,25 @@ def obtener_clientes():
             cliente_id = c[0]
 
             cur.execute("""
-                SELECT nombre_contacto, email, telefono
+                SELECT nombre_contacto, email, telefono, cargo, principal
                 FROM clientes_contactos
                 WHERE cliente_id = %s
                 ORDER BY principal DESC
-                LIMIT 1
             """, (cliente_id,))
 
             contactos = [
                 {
                     "nombre_contacto": row[0],
                     "email": row[1],
-                    "telefono": row[2]
+                    "telefono": row[2],
+                    "cargo": row[3],
+                    "principal": row[4]
                 }
                 for row in cur.fetchall()
             ]
 
             cur.execute("""
-                SELECT nombre_punto, condicion_pago
+                SELECT nombre_punto, condicion_pago, direccion, responsable, telefono_contacto, principal
                 FROM clientes_puntos_entrega
                 WHERE cliente_id = %s
             """, (cliente_id,))
@@ -495,7 +498,11 @@ def obtener_clientes():
             puntos = [
                 {
                     "nombre_punto": row[0],
-                    "condicion_pago": row[1]
+                    "condicion_pago": row[1],
+                    "direccion": row[2],
+                    "responsable": row[3],
+                    "telefono_contacto": row[4],
+                    "principal": row[5]
                 }
                 for row in cur.fetchall()
             ]
@@ -508,6 +515,8 @@ def obtener_clientes():
                 "direccion_fiscal": c[4],
                 "codigo_cliente": c[5],
                 "nombre_comercial": c[6],
+                "fecha_creacion": c[7].isoformat() if c[7] else None,  # ← FORMATO ISO
+                "created_at": c[8].isoformat() if len(c) > 8 and c[8] else None,  # ← FORMATO ISO
                 "contactos": contactos,
                 "puntos_entrega": puntos
             }
@@ -515,8 +524,6 @@ def obtener_clientes():
             resultado.append(cliente)
 
         return resultado
-
-
 # =========================
 # Insertar cliente
 # =========================
