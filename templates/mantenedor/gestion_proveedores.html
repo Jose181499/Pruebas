@@ -1,36 +1,14 @@
-Perfecto. He entendido exactamente lo que necesitas. Quieres **solo** las modificaciones específicas sobre tu código existente, sin simulaciones ni cambios en tu lógica de backend.
-
-Basado en tu petición:
-1.  **Hora correcta en la tabla**: Que la columna "Fecha y Hora" muestre la hora en formato Perú (UTC-5), igual que en el modal de Ver.
-2.  **Condiciones de Pago**: Un desplegable que permita seleccionar entre **Contado** o **Crédito** con opciones: 7 días, 15 días, 60 días, 90 días y Personalizar (texto libre).
-
-Aquí está el **HTML completo con SOLO los cambios necesarios** (he integrado tu JS dentro del HTML para que sea un solo archivo funcional). Los cambios clave son:
-
-### Cambios realizados:
-
-1.  **En el `<th>` de la tabla:** Cambié el texto a `Fecha y Hora (Perú)`.
-2.  **En las filas de la tabla (`cargarProveedores`):**
-    *   Se toma `p.created_at` del proveedor.
-    *   Se usa la función `formatearFechaHoraCorta()` para convertirla a **UTC-5 (Perú)**.
-    *   Se muestra en la celda.
-3.  **En el Modal "Ver" (`abrirModalVerProveedor`):**
-    *   Se usa la función `formatearFechaExtendidaPeru()` para mostrar la fecha con el formato "martes, 15 de junio de 2026 · 14:30:45".
-4.  **Campo "Condición de Pago":** Cambié el `<select>` para incluir tus opciones exactas: Contado, Crédito - 7 días, 15 días, 60 días, 90 días, Personalizar.
-5.  **Campo "Tiempo Crédito":** Solo aparece cuando seleccionas "Personalizar", permitiendo texto libre.
-
-```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ERP KCF · Gestión de Proveedores | Hora Perú & Condiciones Pago</title>
+    <title>ERP KCF · Gestión de Proveedores | Hora Correcta</title>
     <!-- Bootstrap 5 + Icons + Google Font -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* ===== ESTILOS (TU CÓDIGO ORIGINAL) ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #f0f4f9; }
 
@@ -403,8 +381,7 @@ Aquí está el **HTML completo con SOLO los cambios necesarios** (he integrado t
                 <thead>
                     <tr>
                         <th>Item</th>
-                        <!-- 🔥 CAMBIO 1: Título más claro para la columna de hora Perú -->
-                        <th>Fecha y Hora (Perú)</th>
+                        <th>Fecha y Hora</th>
                         <th>Código Proveedor</th>
                         <th>Nombre Comercial</th>
                         <th>Razón Social</th>
@@ -474,7 +451,7 @@ Aquí está el **HTML completo con SOLO los cambios necesarios** (he integrado t
                                 <input type="email" class="form-control input-moderno" id="email" placeholder="correo@empresa.com">
                             </div>
                             
-                            <!-- 🔥 CAMBIO 2: Desplegable de Condición de Pago mejorado -->
+                            <!-- CAMBIO 1: Desplegable de Condición de Pago -->
                             <div class="col-md-4">
                                 <label class="form-label-peq">Condición de Pago *</label>
                                 <select id="condicion_pago" class="form-select input-moderno" required>
@@ -488,7 +465,7 @@ Aquí está el **HTML completo con SOLO los cambios necesarios** (he integrado t
                                 </select>
                             </div>
                             
-                            <!-- 🔥 CAMBIO 3: Campo de tiempo crédito, visible solo si se selecciona "Personalizar" -->
+                            <!-- CAMBIO 2: Campo tiempo crédito (solo para Personalizar) -->
                             <div class="col-md-4" id="campo_tiempo_credito" style="display:none;">
                                 <label class="form-label-peq">Describa condición personalizada</label>
                                 <input type="text" class="form-control input-moderno" id="tiempo_credito" placeholder="Ej: 50% adelanto, 50% a 30 días">
@@ -554,7 +531,7 @@ Aquí está el **HTML completo con SOLO los cambios necesarios** (he integrado t
                         <div class="col-md-4"><label class="form-label-peq">Teléfono</label><input type="text" class="form-control input-moderno" id="edit_telefono"></div>
                         <div class="col-md-4"><label class="form-label-peq">Email</label><input type="email" class="form-control input-moderno" id="edit_email"></div>
                         
-                        <!-- 🔥 CAMBIO 4: Mismo desplegable en edición -->
+                        <!-- CAMBIO 3: Mismo desplegable en edición -->
                         <div class="col-md-4"><label class="form-label-peq">Condición Pago</label>
                             <select id="edit_condicion_pago" class="form-select input-moderno">
                                 <option value="">Seleccione</option>
@@ -646,13 +623,13 @@ Aquí está el **HTML completo con SOLO los cambios necesarios** (he integrado t
         }); 
     }
     
-    // 🔥 FUNCIÓN PARA FECHA GRANDE (MODAL VER) CON HORA PERÚ
-    function formatearFechaExtendidaPeru(fechaStr){
+    // CORRECCIÓN: Función para formato extendido (Modal Ver) - AHORA CON UTC-5
+    function formatFechaGrandePeru(fechaStr){
         if(!fechaStr) return 'No registrada';
         try {
             let fechaUTC = new Date(fechaStr);
             if (isNaN(fechaUTC.getTime())) return 'Fecha inválida';
-            // Convertir a hora Perú (UTC-5)
+            // Convertir a UTC-5 (Perú)
             let fechaPeru = new Date(fechaUTC.getTime() - (5 * 60 * 60 * 1000));
             const opciones = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
             const fechaParte = fechaPeru.toLocaleDateString('es-PE', opciones);
@@ -661,8 +638,8 @@ Aquí está el **HTML completo con SOLO los cambios necesarios** (he integrado t
         } catch(e) { return fechaStr; }
     }
     
-    // 🔥 FUNCIÓN PARA FECHA CORTA EN TABLA (HORA PERÚ)
-    function formatearFechaHoraCortaPeru(fechaStr) {
+    // Función para formato corto en tabla (YA ESTABA BIEN CON UTC-5)
+    function formatearFechaHoraCorta(fechaStr) {
         if(!fechaStr) return '—';
         try {
             let fechaUTC = new Date(fechaStr);
@@ -707,7 +684,7 @@ Aquí está el **HTML completo con SOLO los cambios necesarios** (he integrado t
         await consultarSunatProveedor(document.getElementById('edit_ruc').value, 'edit_razon_social', 'edit_razon_comercial', 'edit_direccion');
     });
     
-    // 🔥 LÓGICA PARA MOSTRAR/OCULTAR CAMPO DE CRÉDITO PERSONALIZADO
+    // Lógica para mostrar/ocultar campo personalizado
     function toggleCreditoPersonalizado(selectElement, targetId) {
         const targetDiv = document.getElementById(targetId);
         if (targetDiv) {
@@ -734,15 +711,15 @@ Aquí está el **HTML completo con SOLO los cambios necesarios** (he integrado t
             let json=await res.json(); 
             let proveedores=json.data||[]; 
             if(!proveedores.length){ 
-                tbody.innerHTML='<tr><td colspan="11" class="text-center">Sin proveedores registrados<\/td></tr>'; 
+                tbody.innerHTML='<tr><td colspan="11" class="text-center">Sin proveedores registrados<\/td><tr>'; 
                 return; 
             } 
             tbody.innerHTML=proveedores.map((p, idx)=> {
-                // 🔥 OBTENER FECHA Y FORMATEARLA A HORA PERÚ
+                // Usar la función correcta (con UTC-5)
                 let fechaRegistro = p.created_at || p.fecha_registro || p.fecha_creacion || null;
-                let fechaFormateada = formatearFechaHoraCortaPeru(fechaRegistro);
+                let fechaFormateada = formatearFechaHoraCorta(fechaRegistro);
                 
-                // Mostrar condición de pago (si es Personalizar, mostrar el texto ingresado)
+                // Mostrar condición de pago correctamente
                 let condicionMostrada = p.condicion_pago || '-';
                 if (p.condicion_pago === 'Personalizar' && p.tiempo_credito) {
                     condicionMostrada = p.tiempo_credito;
@@ -785,7 +762,7 @@ Aquí está el **HTML completo con SOLO los cambios necesarios** (he integrado t
             if (!p) { modalBody.innerHTML = '<div class="alert alert-danger">No se encontró información</div>'; return; }
             let fechaRegistro = p.created_at || p.fecha_registro || p.fecha_creacion || new Date().toISOString();
             
-            // 🔥 Usamos la función de hora Perú también aquí
+            // CORRECCIÓN: Usar formatFechaGrandePeru (con UTC-5) igual que la tabla
             let condicionMostrada = p.condicion_pago || '-';
             if (p.condicion_pago === 'Personalizar' && p.tiempo_credito) {
                 condicionMostrada = p.tiempo_credito;
@@ -793,22 +770,21 @@ Aquí está el **HTML completo con SOLO los cambios necesarios** (he integrado t
                 condicionMostrada = p.condicion_pago;
             }
             
-            let html = `<div class="fecha-grande"><i class="bi bi-calendar-clock"></i><span><strong>📅 Fecha y Hora de Registro (Perú):</strong> ${formatearFechaExtendidaPeru(fechaRegistro)}</span></div>
+            let html = `<div class="fecha-grande"><i class="bi bi-calendar-clock"></i><span><strong>📅 Fecha y Hora de Registro (Perú):</strong> ${formatFechaGrandePeru(fechaRegistro)}</span></div>
                 <table class="detail-table">
                     <tr><th>Código Proveedor</th><td><span class="codigo-proveedor">${escapeHtml(p.codigo_proveedor || ('PROV-' + String(p.id).padStart(5,'0')))}</span></td></tr>
                     <tr><th>Razón Social</th><td><strong>${escapeHtml(p.razon_social || '-')}</strong></td></tr>
-                    <tr><th>Nombre Comercial</th><td>${escapeHtml(p.razon_comercial || '-')}</td></tr>
-                    <tr><th>RUC</th><td>${escapeHtml(p.ruc || '-')}</td></tr>
-                    <tr><th>Dirección Fiscal</th><td>${escapeHtml(p.direccion || '-')}</td></tr>
-                    <tr><th>Persona de Contacto</th><td>${escapeHtml(p.contacto || '-')}</td></tr>
-                    <tr><th>Teléfono</th><td>${escapeHtml(p.telefono || '-')}</td></tr>
-                    <tr><th>Email</th><td>${escapeHtml(p.email || '-')}</td></tr>
-                    <tr><th>Condición de Pago</th><td>${escapeHtml(condicionMostrada)}</td>
-                    <tr>
-                    <tr><th>Banco</th><td>${escapeHtml(p.banco || '-')}</td></tr>
-                    <tr><th>Número de Cuenta</th><td>${escapeHtml(p.numero_cuenta || '-')}</td></tr>
-                    <tr><th>CCI</th><td>${escapeHtml(p.cci || '-')}</td></tr>
-                    <tr><th>Lugar de Recojo</th><td>${escapeHtml(p.lugar_recojo || '-')}</td></tr>
+                    <tr><th>Nombre Comercial</th><td>${escapeHtml(p.razon_comercial || '-')}<\/td></tr>
+                    <tr><th>RUC</th><td>${escapeHtml(p.ruc || '-')}<\/td></tr>
+                    <tr><th>Dirección Fiscal</th><td>${escapeHtml(p.direccion || '-')}<\/td></tr>
+                    <tr><th>Persona de Contacto</th><td>${escapeHtml(p.contacto || '-')}<\/td></tr>
+                    <tr><th>Teléfono</th><td>${escapeHtml(p.telefono || '-')}<\/td></tr>
+                    <tr><th>Email</th><td>${escapeHtml(p.email || '-')}<\/td></tr>
+                    <tr><th>Condición de Pago</th><td>${escapeHtml(condicionMostrada)}<\/td></tr>
+                    <tr><th>Banco</th><td>${escapeHtml(p.banco || '-')}<\/td></tr>
+                    <tr><th>Número de Cuenta</th><td>${escapeHtml(p.numero_cuenta || '-')}<\/td></tr>
+                    <tr><th>CCI</th><td>${escapeHtml(p.cci || '-')}<\/td></tr>
+                    <tr><th>Lugar de Recojo</th><td>${escapeHtml(p.lugar_recojo || '-')}<\/td></tr>
                 </table>`;
             modalBody.innerHTML = html;
             new bootstrap.Modal(document.getElementById('modalVerProveedor')).show();
@@ -834,7 +810,7 @@ Aquí está el **HTML completo con SOLO los cambios necesarios** (he integrado t
             document.getElementById('edit_numero_cuenta').value=p.numero_cuenta||''; 
             document.getElementById('edit_cci').value=p.cci||''; 
             document.getElementById('edit_lugar_recojo').value=p.lugar_recojo||''; 
-            // 🔥 Mostrar campo personalizado si corresponde
+            
             const editCampo = document.getElementById('edit_campo_tiempo_credito');
             if (editCampo) {
                 editCampo.style.display = p.condicion_pago === 'Personalizar' ? 'block' : 'none';
@@ -995,4 +971,3 @@ Aquí está el **HTML completo con SOLO los cambios necesarios** (he integrado t
 </script>
 </body>
 </html>
-```
