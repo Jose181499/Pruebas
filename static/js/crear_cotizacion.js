@@ -20,17 +20,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // FORMATEAR CANTIDAD (elimina .000)
     // =========================
     function formatCantidad(cant) {
-        if (cant === null || cant === undefined) return '0';
-        let numero = parseFloat(cant);
-        if (isNaN(numero)) return '0';
-        // Si es entero, mostrar sin decimales
-        if (numero % 1 === 0) {
-            return numero.toString();
-        }
-        // Si tiene decimales, mostrarlos sin ceros innecesarios
-        return numero.toFixed(3).replace(/\.?0+$/, '');
+    if (cant === null || cant === undefined || cant === '') return '0';
+    let numero = parseFloat(cant);
+    if (isNaN(numero)) return '0';
+    
+    // Si es entero, mostrar sin decimales
+    if (numero % 1 === 0) {
+        return numero.toString();
     }
-
+    
+    // Si tiene decimales, mostrarlos sin ceros innecesarios al final
+    // Pero mantener hasta 3 decimales si son significativos
+    return parseFloat(numero.toFixed(3)).toString();
+}
     
         // =========================
         // GENERACIÓN DE CÓDIGOS PERSONALIZADOS
@@ -1729,7 +1731,7 @@ if (!document.querySelector('#sunat-animation-styles')) {
     // SET PRODUCTO EN FILA
     // =========================
    // =========================
- function setProductoEnFila(row, p) {  
+function setProductoEnFila(row, p) {  
     const productoIdInput = row.querySelector('.producto_id');
     const codigoInput = row.querySelector('.codigo_producto');
     const descripcionInput = row.querySelector('.descripcion');
@@ -1748,10 +1750,9 @@ if (!document.querySelector('#sunat-animation-styles')) {
     if (modeloInput) modeloInput.value = p.modelo || "";
     if (marcaInput) marcaInput.value = p.marca || "";
     if (unidadMedidaInput) unidadMedidaInput.value = p.unidad_medida || "UNIDAD";
-    if (costoUnitarioInput && p.costo_unitario) costoUnitarioInput.value = p.costo_unitario;
-    if (precioVentaInput && p.precio_unitario) precioVentaInput.value = p.precio_unitario;
+    if (costoUnitarioInput && p.costo_unitario) costoUnitarioInput.value = formatCantidad(p.costo_unitario);
+    if (precioVentaInput && p.precio_unitario) precioVentaInput.value = formatCantidad(p.precio_unitario);
     
-    // 🔥 CAMBIO 3: Mostrar stock en el badge
     const stock = p.stock || 0;
     if (stockActualInput) stockActualInput.value = stock;
     if (stockBadge) {
@@ -1760,14 +1761,13 @@ if (!document.querySelector('#sunat-animation-styles')) {
         stockBadge.style.color = stock < 5 ? '#dc2626' : '#065f46';
     }
     
-    // 🔥 CAMBIO 4: Validar stock con cantidad actual
     let cantidadActual = cantidadInput ? parseFloat(cantidadInput.value) || 1 : 1;
     if (cantidadActual > stock && stock > 0) {
         mostrarNotificacion(`⚠️ Stock insuficiente. Solo hay ${stock} unidades disponibles`, "warning");
         if (cantidadInput) cantidadInput.value = stock;
         setTimeout(() => recalculateAll(), 50);
     }
- }
+}
    // Reemplaza la función attachClienteAutocomplete completa con esta versión mejorada
 function attachClienteAutocomplete(inputId) {
     const input = document.getElementById(inputId);
@@ -2071,130 +2071,91 @@ function attachClienteAutocomplete(inputId) {
         }
     }
 }
-    // function attachContactoAutocomplete() {
-    //     const input = document.getElementById('cliente_contacto');
-    //     if (!input) return;
-    //     let timeoutId = null;
-        
-    //     input.addEventListener('input', async () => {
-    //         const q = input.value.trim();
-    //         const clienteId = document.getElementById('cliente_id')?.value;
-    //         if (timeoutId) clearTimeout(timeoutId);
-            
-    //         if (!clienteId) {
-    //             portalShow(input, `<div class="item" data-value="A tratar"><strong>📝 A tratar</strong><div class="meta">Contacto por definir</div></div>`);
-    //             return;
-    //         }
-            
-    //         timeoutId = setTimeout(async () => {
-    //             const contactos = await buscarContactos(clienteId, q);
-    //             let html = '';
-    //             if (contactos.length > 0) {
-    //                 html = contactos.map(c => `<div class="item" data-value="${c.nombre_contacto}"><strong>👤 ${c.nombre_contacto}</strong><div class="meta">${c.cargo || 'Contacto'} • ${c.telefono || ''}</div></div>`).join('');
-    //             }
-    //             html += `<div class="item" data-value="A tratar"><strong>📝 A tratar</strong><div class="meta">Negociación</div></div>`;
-    //             portalShow(input, html);
-                
-    //             portal.querySelectorAll('.item').forEach(el => {
-    //                 el.addEventListener('click', () => { input.value = el.dataset.value; portalHide(); });
-    //             });
-    //         }, 300);
-    //     });
-    // }
-
     // =========================
     // RECALCULAR CON DESCUENTO PERSONALIZABLE Y VALIDACIÓN DE STOCK
     // =========================
-    function recalculateAll() {
-        const rows = document.querySelectorAll("#table-body tr");
-        let totalValorVenta = 0;
-        let hayErrorStock = false;
+   function recalculateAll() {
+    const rows = document.querySelectorAll("#table-body tr");
+    let totalValorVenta = 0;
+    let hayErrorStock = false;
 
-        rows.forEach(r => {
-            const cantidad = Number(r.querySelector('.cantidad')?.value || 0);
-            const precioVenta = Number(r.querySelector('.precio_venta_unitario')?.value || 0);
-            
-            // 🔥 CAMBIO 6: Obtener stock actual del badge
-            const stockBadge = r.querySelector('.stock-badge');
-            let stockActual = 0;
-            if (stockBadge) {
-                stockActual = parseInt(stockBadge.textContent) || 0;
-            } else {
-                const stockHidden = r.querySelector('.stock_actual');
-                if (stockHidden) stockActual = parseInt(stockHidden.value) || 0;
-            }
-            
-            const cantidadInput = r.querySelector('.cantidad');
-            const codigoProducto = r.querySelector('.codigo_producto')?.value || 'producto';
-            
-            // 🔥 CAMBIO 7: Validar cantidad vs stock
-            if (stockActual > 0 && cantidad > stockActual) {
-                if (!hayErrorStock) {
-                    mostrarNotificacion(`⚠️ Stock insuficiente para "${codigoProducto}". Máximo disponible: ${stockActual}`, "warning");
-                    hayErrorStock = true;
-                }
-                if (cantidadInput) cantidadInput.value = stockActual;
-                const cantidadCorregida = stockActual;
-                const valorVentaTotalCorregido = cantidadCorregida * precioVenta;
-                const valorVentaTotalElem = r.querySelector('.valor_venta_total');
-                if (valorVentaTotalElem) valorVentaTotalElem.textContent = formatCantidad(valorVentaTotalCorregido);
-                totalValorVenta += valorVentaTotalCorregido;
-                return;
-            }
-            
-            const valorVentaTotal = cantidad * precioVenta;
-            const valorVentaTotalElem = r.querySelector('.valor_venta_total');
-            if (valorVentaTotalElem) valorVentaTotalElem.textContent = formatCantidad(valorVentaTotal);
-            totalValorVenta += valorVentaTotal;
-        });
-
-        // ... el resto de tu código de descuento y totales sigue igual
-        const totalValorVentaElem = document.getElementById('total_valor_venta');
-        if (totalValorVentaElem) totalValorVentaElem.textContent = formatCantidad(totalValorVenta);
+    rows.forEach(r => {
+        const cantidad = Number(r.querySelector('.cantidad')?.value || 0);
+        const precioVenta = Number(r.querySelector('.precio_venta_unitario')?.value || 0);
         
-        const summarySubtotal = document.getElementById('summary_subtotal_venta');
-        if (summarySubtotal) summarySubtotal.textContent = formatCantidad(totalValorVenta);
-        
-        // ... resto del código de descuento (no cambia)
-        const descuentoInput = document.getElementById('descuento_porcentaje_input');
-        const descuentoTipo = document.getElementById('descuento_tipo');
-        let descuentoValor = 0;
-        let descuentoMonto = 0;
-        
-        if (descuentoInput && descuentoInput.value) {
-            descuentoValor = parseFloat(descuentoInput.value) || 0;
-            if (descuentoTipo && descuentoTipo.value === 'monto') {
-                descuentoMonto = Math.min(descuentoValor, totalValorVenta);
-            } else {
-                descuentoMonto = totalValorVenta * (descuentoValor / 100);
-            }
+        const stockBadge = r.querySelector('.stock-badge');
+        let stockActual = 0;
+        if (stockBadge) {
+            stockActual = parseInt(stockBadge.textContent) || 0;
+        } else {
+            const stockHidden = r.querySelector('.stock_actual');
+            if (stockHidden) stockActual = parseInt(stockHidden.value) || 0;
         }
         
-        const subtotalConDescuento = totalValorVenta - descuentoMonto;
-        const igv = subtotalConDescuento * 0.18;
-        const totalVenta = subtotalConDescuento + igv;
+        const cantidadInput = r.querySelector('.cantidad');
+        const codigoProducto = r.querySelector('.codigo_producto')?.value || 'producto';
         
-        const summaryDescuento = document.getElementById('summary_descuento');
-        if (summaryDescuento) summaryDescuento.textContent = formatCantidad(descuentoMonto);
-        
-        const summarySubtotalDescuento = document.getElementById('summary_subtotal_descuento');
-        if (summarySubtotalDescuento) summarySubtotalDescuento.textContent = formatCantidad(subtotalConDescuento);
-        
-        const summaryIgv = document.getElementById('summary_igv');
-        if (summaryIgv) summaryIgv.textContent = formatCantidad(igv);
-        
-        const summaryTotal = document.getElementById('summary_total_venta');
-        if (summaryTotal) summaryTotal.textContent = formatCantidad(totalVenta);
-        
-        const descuentoHidden = document.getElementById('descuento_porcentaje');
-        if (descuentoHidden) {
-            if (descuentoTipo && descuentoTipo.value === 'monto') {
-                descuentoHidden.value = descuentoValor;
-            } else {
-                descuentoHidden.value = descuentoValor;
+        if (stockActual > 0 && cantidad > stockActual) {
+            if (!hayErrorStock) {
+                mostrarNotificacion(`⚠️ Stock insuficiente para "${codigoProducto}". Máximo disponible: ${stockActual}`, "warning");
+                hayErrorStock = true;
             }
+            if (cantidadInput) cantidadInput.value = stockActual;
+            const cantidadCorregida = stockActual;
+            const valorVentaTotalCorregido = cantidadCorregida * precioVenta;
+            const valorVentaTotalElem = r.querySelector('.valor_venta_total');
+            if (valorVentaTotalElem) valorVentaTotalElem.textContent = formatCantidad(valorVentaTotalCorregido);
+            totalValorVenta += valorVentaTotalCorregido;
+            return;
+        }
+        
+        const valorVentaTotal = cantidad * precioVenta;
+        const valorVentaTotalElem = r.querySelector('.valor_venta_total');
+        if (valorVentaTotalElem) valorVentaTotalElem.textContent = formatCantidad(valorVentaTotal);
+        totalValorVenta += valorVentaTotal;
+    });
+
+    const totalValorVentaElem = document.getElementById('total_valor_venta');
+    if (totalValorVentaElem) totalValorVentaElem.textContent = formatCantidad(totalValorVenta);
+    
+    const summarySubtotal = document.getElementById('summary_subtotal_venta');
+    if (summarySubtotal) summarySubtotal.textContent = formatCantidad(totalValorVenta);
+    
+    const descuentoInput = document.getElementById('descuento_porcentaje_input');
+    const descuentoTipo = document.getElementById('descuento_tipo');
+    let descuentoValor = 0;
+    let descuentoMonto = 0;
+    
+    if (descuentoInput && descuentoInput.value) {
+        descuentoValor = parseFloat(descuentoInput.value) || 0;
+        if (descuentoTipo && descuentoTipo.value === 'monto') {
+            descuentoMonto = Math.min(descuentoValor, totalValorVenta);
+        } else {
+            descuentoMonto = totalValorVenta * (descuentoValor / 100);
         }
     }
+    
+    const subtotalConDescuento = totalValorVenta - descuentoMonto;
+    const igv = subtotalConDescuento * 0.18;
+    const totalVenta = subtotalConDescuento + igv;
+    
+    const summaryDescuento = document.getElementById('summary_descuento');
+    if (summaryDescuento) summaryDescuento.textContent = formatCantidad(descuentoMonto);
+    
+    const summarySubtotalDescuento = document.getElementById('summary_subtotal_descuento');
+    if (summarySubtotalDescuento) summarySubtotalDescuento.textContent = formatCantidad(subtotalConDescuento);
+    
+    const summaryIgv = document.getElementById('summary_igv');
+    if (summaryIgv) summaryIgv.textContent = formatCantidad(igv);
+    
+    const summaryTotal = document.getElementById('summary_total_venta');
+    if (summaryTotal) summaryTotal.textContent = formatCantidad(totalVenta);
+    
+    const descuentoHidden = document.getElementById('descuento_porcentaje');
+    if (descuentoHidden) {
+        descuentoHidden.value = descuentoValor;
+    }
+}
     // =========================
 // AUTOCOMPLETAR PRODUCTO EN FILA
 // =========================
@@ -2272,56 +2233,54 @@ function attachProductoAutocomplete(row) {
     // =========================
     // AGREGAR ITEMS (CON STOCK)
     // =========================
-    function addItem() {
-        if (cotizacionBloqueada) { 
-            mostrarNotificacion("⚠️ La cotización está bloqueada.", "warning"); 
-            return; 
-        }
-        itemCounter++;
-        const row = document.createElement("tr");
-        row.innerHTML = `
-            <td class="col-item">${itemCounter}</td>
-            <td class="col-codigo">
-                <input type="text" class="codigo_producto" placeholder="Buscar producto..." style="width:100%; min-width:120px;">
-                <input type="hidden" class="producto_id">
-                <input type="hidden" class="costo_unitario" value="0">
-                <input type="hidden" class="stock_actual" value="0">
-            </td>
-            <td class="col-desc"><input type="text" class="descripcion" readonly style="width:100%;"></td>
-            <td class="col-modelo"><input type="text" class="modelo" readonly style="width:100%;"></td>
-            <td class="col-marca"><input type="text" class="marca" readonly style="width:100%;"></td>
-            <td class="col-unidad"><input type="text" class="unidad_medida" value="UNIDAD" style="width:100%;"></td>
-            <td class="col-cantidad"><input type="number" class="cantidad" value="1" step="0.01" style="width:100%;"></td>
-            <td class="col-precio"><input type="number" class="precio_venta_unitario" value="0" step="0.01" style="width:100%;"></td>
-            <td class="valor_venta_total">0.00</td>
-            <td class="col-eliminar"><button class="btn-del">🗑</button></td>
-            <!-- 🔥 CAMBIO 5: Agregar badge de stock -->
-            <td class="col-stock" style="text-align:center;">
-                <span class="stock-badge" style="display:inline-block; padding:4px 8px; border-radius:12px; font-size:12px; font-weight:600;">0</span>
-            </td>
-        `;
-        
-        if (tableBody) tableBody.appendChild(row);
-        
-        attachProductoAutocomplete(row);
-        
-        const rec = () => { 
-            if (!modoConsulta) { 
-                recalculateAll(); 
-                datosModificados = true; 
-            } 
-        };
-        
-        row.querySelector('.cantidad')?.addEventListener('input', rec);
-        row.querySelector('.precio_venta_unitario')?.addEventListener('input', rec);
-        row.querySelector('.btn-del')?.addEventListener('click', () => { 
-            row.remove(); 
-            recalculateAll(); 
-        });
-        
-        setTimeout(recalculateAll, 50);
+   function addItem() {
+    if (cotizacionBloqueada) { 
+        mostrarNotificacion("⚠️ La cotización está bloqueada.", "warning"); 
+        return; 
     }
-
+    itemCounter++;
+    const row = document.createElement("tr");
+    row.innerHTML = `
+        <td class="col-item">${itemCounter}</td>
+        <td class="col-codigo">
+            <input type="text" class="codigo_producto" placeholder="Buscar producto..." style="width:100%; min-width:120px;">
+            <input type="hidden" class="producto_id">
+            <input type="hidden" class="costo_unitario" value="0">
+            <input type="hidden" class="stock_actual" value="0">
+        </td>
+        <td class="col-desc"><input type="text" class="descripcion" readonly style="width:100%;"></td>
+        <td class="col-modelo"><input type="text" class="modelo" readonly style="width:100%;"></td>
+        <td class="col-marca"><input type="text" class="marca" readonly style="width:100%;"></td>
+        <td class="col-unidad"><input type="text" class="unidad_medida" value="UNIDAD" style="width:100%;"></td>
+        <td class="col-cantidad"><input type="number" class="cantidad" value="1" step="0.01" style="width:100%;"></td>
+        <td class="col-precio"><input type="number" class="precio_venta_unitario" value="0" step="0.01" style="width:100%;"></td>
+        <td class="valor_venta_total">0</td>
+        <td class="col-eliminar"><button class="btn-del">🗑</button></td>
+        <td class="col-stock" style="text-align:center;">
+            <span class="stock-badge" style="display:inline-block; padding:4px 8px; border-radius:12px; font-size:12px; font-weight:600;">0</span>
+        </td>
+    `;
+    
+    if (tableBody) tableBody.appendChild(row);
+    
+    attachProductoAutocomplete(row);
+    
+    const rec = () => { 
+        if (!modoConsulta) { 
+            recalculateAll(); 
+            datosModificados = true; 
+        } 
+    };
+    
+    row.querySelector('.cantidad')?.addEventListener('input', rec);
+    row.querySelector('.precio_venta_unitario')?.addEventListener('input', rec);
+    row.querySelector('.btn-del')?.addEventListener('click', () => { 
+        row.remove(); 
+        recalculateAll(); 
+    });
+    
+    setTimeout(recalculateAll, 50);
+}
     // =========================
     // ESTADO VISUAL
     // =========================
@@ -2464,23 +2423,22 @@ function attachProductoAutocomplete(row) {
             document.getElementById('table-body').innerHTML = '';
             itemCounter = 0;
             
-            if (data.detalle && data.detalle.length > 0) {
-            data.detalle.forEach(item => {
-            addItem();
-            const row = document.querySelector("#table-body tr:last-child");
-            if (row) {
+           if (data.detalle && data.detalle.length > 0) {
+        data.detalle.forEach(item => {
+        addItem();
+        const row = document.querySelector("#table-body tr:last-child");
+        if (row) {
             row.querySelector('.producto_id').value = item.producto_id || '';
             row.querySelector('.cantidad').value = formatCantidad(item.cantidad || 0);
-            row.querySelector('.precio_venta_unitario').value = item.precio_venta_unitario || 0;
+            row.querySelector('.precio_venta_unitario').value = formatCantidad(item.precio_venta_unitario || 0);
             row.querySelector('.codigo_producto').value = item.codigo || '';
             row.querySelector('.descripcion').value = item.descripcion || '';
             row.querySelector('.modelo').value = item.modelo || '';
             row.querySelector('.marca').value = item.marca || '';
             row.querySelector('.unidad_medida').value = item.unidad_medida || 'UNIDAD';
             if (row.querySelector('.costo_unitario')) {
-                row.querySelector('.costo_unitario').value = item.costo_unitario || 0;
+                row.querySelector('.costo_unitario').value = formatCantidad(item.costo_unitario || 0);
             }
-            // 🔥 AGREGAR ESTAS 4 LÍNEAS PARA RESTAURAR STOCK
             const stockBadge = row.querySelector('.stock-badge');
             if (stockBadge && item.stock !== undefined) {
                 stockBadge.textContent = item.stock;
@@ -2488,8 +2446,8 @@ function attachProductoAutocomplete(row) {
                 stockBadge.style.color = item.stock < 5 ? '#dc2626' : '#065f46';
             }
         }
-             });
-                }
+    });
+}
             
             recalculateAll();
             configurarTiempoEntrega();
