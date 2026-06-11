@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ERP KCF · Gestión de Clientes | Panel Ordenado</title>
-    <!-- Bootstrap 5 + Icons + Google Font -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -334,7 +333,7 @@
         .fecha-hora-cell {
             font-family: 'Inter', monospace;
             font-size: 0.8rem;
-            font-weight: 500;
+            font-weight: 700;
             color: #1e3a8a;
             white-space: nowrap;
         }
@@ -586,47 +585,34 @@
     }
     
     // =========================================
-    // FUNCIONES DE FECHA CORREGIDAS - HORA PERÚ (UTC-5)
+    // FUNCIONES DE FECHA
     // =========================================
     
     function convertirAHoraPeru(fechaUTC) {
-        // Restar 5 horas para convertir de UTC a hora de Perú
         return new Date(fechaUTC.getTime() - (5 * 60 * 60 * 1000));
     }
     
-    function formatFechaGrande(fechaStr) {
+    // Función ORIGINAL del modal (sin modificar)
+    function formatFechaGrande(fechaStr){
         if(!fechaStr) return 'No registrada';
         try {
-            let fechaUTC = new Date(fechaStr);
-            if (isNaN(fechaUTC.getTime())) return 'No registrada';
-            
-            // Convertir a hora Perú
-            let fecha = convertirAHoraPeru(fechaUTC);
-            
-            const diasSemana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-            const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-            
-            const diaSemana = diasSemana[fecha.getDay()];
-            const dia = fecha.getDate();
-            const mes = meses[fecha.getMonth()];
-            const anio = fecha.getFullYear();
-            const horas = fecha.getHours().toString().padStart(2, '0');
-            const minutos = fecha.getMinutes().toString().padStart(2, '0');
-            const segundos = fecha.getSeconds().toString().padStart(2, '0');
-            
-            return `${diaSemana}, ${dia} de ${mes} de ${anio} · ${horas}:${minutos}:${segundos}`;
+            let fecha = new Date(fechaStr);
+            const opciones = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            const fechaParte = fecha.toLocaleDateString('es-PE', opciones);
+            const horaParte = fecha.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            return `${fechaParte} · ${horaParte}`;
         } catch(e) {
             return fechaStr;
         }
     }
     
+    // Función para la tabla (convertida a hora Perú y en negritas)
     function formatearFechaHoraCorta(fechaStr) {
         if(!fechaStr) return '—';
         try {
             let fechaUTC = new Date(fechaStr);
             if (isNaN(fechaUTC.getTime())) return '—';
             
-            // Convertir a hora Perú
             let fecha = convertirAHoraPeru(fechaUTC);
             
             const dia = fecha.getDate().toString().padStart(2, '0');
@@ -635,7 +621,7 @@
             const horas = fecha.getHours().toString().padStart(2, '0');
             const minutos = fecha.getMinutes().toString().padStart(2, '0');
             
-            return `${dia}/${mes}/${anio} ${horas}:${minutos}`;
+            return `<strong>${dia}/${mes}/${anio} ${horas}:${minutos}</strong>`;
         } catch(e) {
             return '—';
         }
@@ -736,7 +722,7 @@
     
     async function cargarClientes(filtro={}){ 
         let tbody=document.getElementById('tbody-clientes'); 
-        tbody.innerHTML='<tr><td colspan="11" class="text-center p-4"><i class="bi bi-arrow-repeat"></i> Cargando...<\/td><tr>'; 
+        tbody.innerHTML='<tr><td colspan="11" class="text-center p-4"><i class="bi bi-arrow-repeat"></i> Cargando...<\/td></tr>'; 
         try{ 
             let url='/api/clientes/buscar?'; 
             let params=new URLSearchParams(); 
@@ -757,7 +743,7 @@
                 return `
                 <tr>
                     <td class="text-center fw-semibold">${idx+1}</td>
-                    <td class="fecha-hora-cell"><i class="bi bi-calendar3 me-1"></i> ${fechaFormateada}</td>
+                    <td class="fecha-hora-cell">${fechaFormateada}</td>
                     <td><span class="codigo-cliente"><i class="bi bi-upc-scan me-1"></i>${escapeHtml(c.codigo_cliente || c.id)}</span></td>
                     <td>${escapeHtml(c.nombre_comercial || '-')}</td>
                     <td><strong>${escapeHtml(c.razon_social || '-')}</strong></td>
@@ -826,7 +812,7 @@
             let puntosHtml = '';
             if (c.puntos_entrega && c.puntos_entrega.length > 0) {
                 puntosHtml = `<table class="subtable">
-                    <thead><tr><th>Nombre Punto</th><th>Dirección</th><th>Responsable</th><th>Teléfono</th><th>Condición Pago</th><th>Principal</th></tr></thead>
+                    <thead><tr><th>Nombre Punto</th><th>Dirección</th><th>Responsable</th><th>Teléfono</th><th>Condición Pago</th><th>Principal</th></td></thead>
                     <tbody>${c.puntos_entrega.map(p => `
                         <tr>
                             <td><strong>${escapeHtml(p.nombre_punto || '-')}</strong></td>
@@ -857,7 +843,7 @@
                     <tr><th>Nombre Comercial</th><td>${escapeHtml(c.nombre_comercial || '-')}</td></tr>
                     <tr><th>Dirección Fiscal</th><td>${escapeHtml(c.direccion_fiscal || '-')}</td></tr>
                     <tr><th>Contactos</th><td>${contactosHtml}</td></tr>
-                    <tr><th>Puntos de Entrega</th><td>${puntosHtml}</td></tr>
+                    <tr><th>Puntos de Entrega</th><td>${puntosHtml}NonNull
                 </table>
             `;
             
