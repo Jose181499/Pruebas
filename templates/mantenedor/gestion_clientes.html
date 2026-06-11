@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ERP KCF ·.. Gestión de Clientes | Panel Ordenado</title>
+    <title>ERP KCF · Gestión de Clientes | Panel Ordenado</title>
     <!-- Bootstrap 5 + Icons + Google Font -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -39,7 +39,6 @@
             position: relative;
         }
         
-        /* Botón de atrás moderno */
         .btn-back-modern {
             background: rgba(255,255,255,0.15);
             backdrop-filter: blur(8px);
@@ -180,7 +179,6 @@
             border-bottom: 1px solid #ecf3fa;
         }
         
-        /* Estilo especial para el código de cliente - resaltado en azul */
         .codigo-cliente {
             background: linear-gradient(135deg, #E8F0FE 0%, #D4E4FC 100%);
             color: #0047AB;
@@ -333,7 +331,6 @@
             pointer-events: none;
         }
         
-        /* Estilo para la celda de fecha/hora */
         .fecha-hora-cell {
             font-family: 'Inter', monospace;
             font-size: 0.8rem;
@@ -342,7 +339,6 @@
             white-space: nowrap;
         }
         
-        /* Animación sutil para la tabla */
         .table-styled tbody tr {
             transition: background 0.2s ease;
         }
@@ -589,41 +585,61 @@
         }); 
     }
     
-    function formatFechaGrande(fechaStr){
+    // =========================================
+    // FUNCIONES DE FECHA CORREGIDAS - HORA PERÚ (UTC-5)
+    // =========================================
+    
+    function convertirAHoraPeru(fechaUTC) {
+        // Restar 5 horas para convertir de UTC a hora de Perú
+        return new Date(fechaUTC.getTime() - (5 * 60 * 60 * 1000));
+    }
+    
+    function formatFechaGrande(fechaStr) {
         if(!fechaStr) return 'No registrada';
         try {
-            let fecha = new Date(fechaStr);
-            const opciones = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
-            const fechaParte = fecha.toLocaleDateString('es-PE', opciones);
-            const horaParte = fecha.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            return `${fechaParte} · ${horaParte}`;
+            let fechaUTC = new Date(fechaStr);
+            if (isNaN(fechaUTC.getTime())) return 'No registrada';
+            
+            // Convertir a hora Perú
+            let fecha = convertirAHoraPeru(fechaUTC);
+            
+            const diasSemana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+            const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+            
+            const diaSemana = diasSemana[fecha.getDay()];
+            const dia = fecha.getDate();
+            const mes = meses[fecha.getMonth()];
+            const anio = fecha.getFullYear();
+            const horas = fecha.getHours().toString().padStart(2, '0');
+            const minutos = fecha.getMinutes().toString().padStart(2, '0');
+            const segundos = fecha.getSeconds().toString().padStart(2, '0');
+            
+            return `${diaSemana}, ${dia} de ${mes} de ${anio} · ${horas}:${minutos}:${segundos}`;
         } catch(e) {
             return fechaStr;
         }
     }
     
-    // MISMA FUNCIÓN que usa el modal para formatear fecha en la tabla
     function formatearFechaHoraCorta(fechaStr) {
-    if(!fechaStr) return '—';
-    try {
-        let fecha = new Date(fechaStr);
-        if (isNaN(fecha.getTime())) return '—';
-        
-        // Convertir a hora de Perú (UTC-5)
-        // Opción 1: Usar toLocaleString con zona horaria
-        return fecha.toLocaleString('es-PE', {
-            timeZone: 'America/Lima',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-        });
-    } catch(e) {
-        return '—';
+        if(!fechaStr) return '—';
+        try {
+            let fechaUTC = new Date(fechaStr);
+            if (isNaN(fechaUTC.getTime())) return '—';
+            
+            // Convertir a hora Perú
+            let fecha = convertirAHoraPeru(fechaUTC);
+            
+            const dia = fecha.getDate().toString().padStart(2, '0');
+            const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+            const anio = fecha.getFullYear();
+            const horas = fecha.getHours().toString().padStart(2, '0');
+            const minutos = fecha.getMinutes().toString().padStart(2, '0');
+            
+            return `${dia}/${mes}/${anio} ${horas}:${minutos}`;
+        } catch(e) {
+            return '—';
+        }
     }
-}
     
     function configPlaceholderNuevo(){ 
         let tipo=document.getElementById('tipo_documento_nuevo').value; 
@@ -720,7 +736,7 @@
     
     async function cargarClientes(filtro={}){ 
         let tbody=document.getElementById('tbody-clientes'); 
-        tbody.innerHTML='<tr><td colspan="11" class="text-center p-4"><i class="bi bi-arrow-repeat"></i> Cargando...<\/td></tr>'; 
+        tbody.innerHTML='<tr><td colspan="11" class="text-center p-4"><i class="bi bi-arrow-repeat"></i> Cargando...<\/td><tr>'; 
         try{ 
             let url='/api/clientes/buscar?'; 
             let params=new URLSearchParams(); 
@@ -735,8 +751,6 @@
             } 
             
             tbody.innerHTML=clientes.map((c, idx)=> {
-                // ★★★ MISMA LÓGICA QUE EL MODAL VER ★★★
-                // El modal usa: c.created_at || c.fecha_registro || c.fecha_creacion || new Date().toISOString()
                 let fechaRegistro = c.created_at || c.fecha_registro || c.fecha_creacion || new Date().toISOString();
                 let fechaFormateada = formatearFechaHoraCorta(fechaRegistro);
                 
@@ -828,7 +842,6 @@
                 puntosHtml = '<p class="text-muted mb-0">No hay puntos de entrega registrados</p>';
             }
             
-            // ★★★ MISMA LÓGICA QUE USA LA TABLA ★★★
             let fechaRegistro = c.created_at || c.fecha_registro || c.fecha_creacion || new Date().toISOString();
             
             let html = `
@@ -1068,7 +1081,6 @@
             });
         }
         
-        // Botón de atrás funcional
         const btnBack = document.getElementById('btnBackMain');
         if (btnBack) {
             btnBack.addEventListener('click', function(e) {
