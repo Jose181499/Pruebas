@@ -451,7 +451,6 @@
                                 <input type="email" class="form-control input-moderno" id="email" placeholder="correo@empresa.com">
                             </div>
                             
-                            <!-- CAMBIO 1: Desplegable de Condición de Pago -->
                             <div class="col-md-4">
                                 <label class="form-label-peq">Condición de Pago *</label>
                                 <select id="condicion_pago" class="form-select input-moderno" required>
@@ -465,7 +464,6 @@
                                 </select>
                             </div>
                             
-                            <!-- CAMBIO 2: Campo tiempo crédito (solo para Personalizar) -->
                             <div class="col-md-4" id="campo_tiempo_credito" style="display:none;">
                                 <label class="form-label-peq">Describa condición personalizada</label>
                                 <input type="text" class="form-control input-moderno" id="tiempo_credito" placeholder="Ej: 50% adelanto, 50% a 30 días">
@@ -531,7 +529,6 @@
                         <div class="col-md-4"><label class="form-label-peq">Teléfono</label><input type="text" class="form-control input-moderno" id="edit_telefono"></div>
                         <div class="col-md-4"><label class="form-label-peq">Email</label><input type="email" class="form-control input-moderno" id="edit_email"></div>
                         
-                        <!-- CAMBIO 3: Mismo desplegable en edición -->
                         <div class="col-md-4"><label class="form-label-peq">Condición Pago</label>
                             <select id="edit_condicion_pago" class="form-select input-moderno">
                                 <option value="">Seleccione</option>
@@ -623,37 +620,40 @@
         }); 
     }
     
-    // CORRECCIÓN: Función para formato extendido (Modal Ver) - AHORA CON UTC-5
-    function formatFechaGrandePeru(fechaStr){
-        if(!fechaStr) return 'No registrada';
-        try {
-            let fechaUTC = new Date(fechaStr);
-            if (isNaN(fechaUTC.getTime())) return 'Fecha inválida';
-            // Convertir a UTC-5 (Perú)
-            let fechaPeru = new Date(fechaUTC.getTime() - (5 * 60 * 60 * 1000));
-            const opciones = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
-            const fechaParte = fechaPeru.toLocaleDateString('es-PE', opciones);
-            const horaParte = fechaPeru.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            return `${fechaParte} · ${horaParte}`;
-        } catch(e) { return fechaStr; }
-    }
-    
-    // Función para formato corto en tabla (YA ESTABA BIEN CON UTC-5)
+    // 🔥 CORRECCIÓN 1: Función para formatear fecha CORRECTAMENTE
+    // Si el servidor devuelve la hora en UTC, mostramos la local (Perú UTC-5)
+    // Si el servidor devuelve la hora local, la mostramos tal cual sin restar
     function formatearFechaHoraCorta(fechaStr) {
         if(!fechaStr) return '—';
         try {
-            let fechaUTC = new Date(fechaStr);
-            if (isNaN(fechaUTC.getTime())) return '—';
-            let fechaPeru = new Date(fechaUTC.getTime() - (5 * 60 * 60 * 1000));
-            const dia = fechaPeru.getDate().toString().padStart(2, '0');
-            const mes = (fechaPeru.getMonth() + 1).toString().padStart(2, '0');
-            const anio = fechaPeru.getFullYear();
-            const horas = fechaPeru.getHours().toString().padStart(2, '0');
-            const minutos = fechaPeru.getMinutes().toString().padStart(2, '0');
+            let fecha = new Date(fechaStr);
+            if (isNaN(fecha.getTime())) return '—';
+            
+            // Intentamos detectar si la fecha viene en UTC o local
+            // Simplemente mostramos la fecha como está, sin conversión adicional
+            // porque el servidor debería guardar la hora correcta de Perú
+            const dia = fecha.getDate().toString().padStart(2, '0');
+            const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+            const anio = fecha.getFullYear();
+            const horas = fecha.getHours().toString().padStart(2, '0');
+            const minutos = fecha.getMinutes().toString().padStart(2, '0');
             return `${dia}/${mes}/${anio} ${horas}:${minutos}`;
         } catch(e) { 
             return '—';
         }
+    }
+    
+    // Para el modal Ver - formato extendido
+    function formatFechaGrande(fechaStr){
+        if(!fechaStr) return 'No registrada';
+        try {
+            let fecha = new Date(fechaStr);
+            if (isNaN(fecha.getTime())) return 'Fecha inválida';
+            const opciones = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            const fechaParte = fecha.toLocaleDateString('es-PE', opciones);
+            const horaParte = fecha.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            return `${fechaParte} · ${horaParte}`;
+        } catch(e) { return fechaStr; }
     }
     
     function limpiarFormularioNuevo() {
@@ -684,7 +684,6 @@
         await consultarSunatProveedor(document.getElementById('edit_ruc').value, 'edit_razon_social', 'edit_razon_comercial', 'edit_direccion');
     });
     
-    // Lógica para mostrar/ocultar campo personalizado
     function toggleCreditoPersonalizado(selectElement, targetId) {
         const targetDiv = document.getElementById(targetId);
         if (targetDiv) {
@@ -710,16 +709,18 @@
             let res=await fetch(url+params); 
             let json=await res.json(); 
             let proveedores=json.data||[]; 
+            
+            // 🔥 CORRECCIÓN 2: Ordenar por ID descendente (los más nuevos primero)
+            proveedores.sort((a, b) => (b.id || 0) - (a.id || 0));
+            
             if(!proveedores.length){ 
-                tbody.innerHTML='<tr><td colspan="11" class="text-center">Sin proveedores registrados<\/td><tr>'; 
+                tbody.innerHTML='<tr><td colspan="11" class="text-center">Sin proveedores registrados<\/td></td>'; 
                 return; 
             } 
             tbody.innerHTML=proveedores.map((p, idx)=> {
-                // Usar la función correcta (con UTC-5)
-                let fechaRegistro = p.created_at || p.fecha_registro || p.fecha_creacion || null;
+                let fechaRegistro = p.created_at || p.fecha_registro || p.fecha_creacion || new Date().toISOString();
                 let fechaFormateada = formatearFechaHoraCorta(fechaRegistro);
                 
-                // Mostrar condición de pago correctamente
                 let condicionMostrada = p.condicion_pago || '-';
                 if (p.condicion_pago === 'Personalizar' && p.tiempo_credito) {
                     condicionMostrada = p.tiempo_credito;
@@ -762,7 +763,6 @@
             if (!p) { modalBody.innerHTML = '<div class="alert alert-danger">No se encontró información</div>'; return; }
             let fechaRegistro = p.created_at || p.fecha_registro || p.fecha_creacion || new Date().toISOString();
             
-            // CORRECCIÓN: Usar formatFechaGrandePeru (con UTC-5) igual que la tabla
             let condicionMostrada = p.condicion_pago || '-';
             if (p.condicion_pago === 'Personalizar' && p.tiempo_credito) {
                 condicionMostrada = p.tiempo_credito;
@@ -770,7 +770,7 @@
                 condicionMostrada = p.condicion_pago;
             }
             
-            let html = `<div class="fecha-grande"><i class="bi bi-calendar-clock"></i><span><strong>📅 Fecha y Hora de Registro (Perú):</strong> ${formatFechaGrandePeru(fechaRegistro)}</span></div>
+            let html = `<div class="fecha-grande"><i class="bi bi-calendar-clock"></i><span><strong>📅 Fecha y Hora de Registro:</strong> ${formatFechaGrande(fechaRegistro)}</span></div>
                 <table class="detail-table">
                     <tr><th>Código Proveedor</th><td><span class="codigo-proveedor">${escapeHtml(p.codigo_proveedor || ('PROV-' + String(p.id).padStart(5,'0')))}</span></td></tr>
                     <tr><th>Razón Social</th><td><strong>${escapeHtml(p.razon_social || '-')}</strong></td></tr>
