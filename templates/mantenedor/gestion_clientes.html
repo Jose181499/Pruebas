@@ -604,17 +604,26 @@
     
     // MISMA FUNCIÓN que usa el modal para formatear fecha en la tabla
     function formatearFechaHoraCorta(fechaStr) {
-        if(!fechaStr) return 'No registrada';
-        try {
-            let fecha = new Date(fechaStr);
-            // Mismo formato que el modal pero más compacto para la tabla
-            const fechaParte = fecha.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            const horaParte = fecha.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
-            return `${fechaParte} ${horaParte}`;
-        } catch(e) {
-            return fechaStr;
-        }
+    if(!fechaStr) return '—';
+    try {
+        let fecha = new Date(fechaStr);
+        if (isNaN(fecha.getTime())) return '—';
+        
+        // Convertir a hora de Perú (UTC-5)
+        // Opción 1: Usar toLocaleString con zona horaria
+        return fecha.toLocaleString('es-PE', {
+            timeZone: 'America/Lima',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+    } catch(e) {
+        return '—';
     }
+}
     
     function configPlaceholderNuevo(){ 
         let tipo=document.getElementById('tipo_documento_nuevo').value; 
