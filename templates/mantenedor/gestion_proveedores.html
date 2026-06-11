@@ -401,7 +401,7 @@
     </div>
 </div>
 
-<!-- MODALES (simplificados pero funcionales) -->
+<!-- MODALES -->
 <div class="modal fade" id="modalNuevoProveedor" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content modal-content-radius">
@@ -608,6 +608,7 @@
         } catch(e) { return fechaStr; }
     }
     
+    // FUNCIONES DE CONVERSIÓN A HORA PERÚ (UTC-5)
     function convertirAHoraPeru(fechaUTC) {
         return new Date(fechaUTC.getTime() - (5 * 60 * 60 * 1000));
     }
@@ -624,7 +625,9 @@
             const horas = fecha.getHours().toString().padStart(2, '0');
             const minutos = fecha.getMinutes().toString().padStart(2, '0');
             return `${dia}/${mes}/${anio} ${horas}:${minutos}`;
-        } catch(e) { return '—'; }
+        } catch(e) { 
+            return '—';
+        }
     }
     
     function limpiarFormularioNuevo() {
@@ -664,7 +667,7 @@
     
     async function cargarProveedores(filtro={}){ 
         let tbody=document.getElementById('tbody-proveedores'); 
-        tbody.innerHTML='<table><td colspan="11" class="text-center p-4"><div class="spinner-border spinner-border-sm text-secondary"></div> Cargando...<\/td></tr>'; 
+        tbody.innerHTML='<tr><td colspan="11" class="text-center p-4"><div class="spinner-border spinner-border-sm text-secondary"></div> Cargando...<\/td></tr>'; 
         try{ 
             let url='/api/proveedores/listar?'; 
             let params=new URLSearchParams(); 
@@ -678,8 +681,10 @@
                 return; 
             } 
             tbody.innerHTML=proveedores.map((p, idx)=> {
-                let fechaRegistro = p.created_at || p.fecha_registro || new Date().toISOString();
+                // ★★★ OBTENER FECHA REAL DEL PROVEEDOR ★★★
+                let fechaRegistro = p.created_at || p.fecha_registro || p.fecha_creacion || null;
                 let fechaFormateada = formatearFechaHoraCorta(fechaRegistro);
+                
                 return `
                 <tr>
                     <td class="text-center fw-semibold">${idx+1}</td>
@@ -690,7 +695,7 @@
                     <td><span class="badge-doc">${p.ruc || '-'}</span></td>
                     <td>${escapeHtml(p.direccion || '-')}</td>
                     <td>${p.condicion_pago || '-'}${p.tiempo_credito ? ' ('+p.tiempo_credito+')' : ''}</td>
-                    <td>${p.contacto || '-'}${p.telefono ? ' - ' + p.telefono : ''}${p.email ? ' - ' + p.email : ''}</td>
+                    <td>${p.contacto || '-'}${p.telefono ? '<br><small class="text-muted">📞 '+p.telefono+'</small>' : ''}${p.email ? '<br><small class="text-muted">✉️ '+p.email+'</small>' : ''}</td>
                     <td>${escapeHtml(p.lugar_recojo || '-')}</td>
                     <td class="acciones-cell">
                         <button class="btn-accion btn-ver-icon" onclick="abrirModalVerProveedor(${p.id})" title="Ver"><i class="bi bi-eye"></i></button> 
@@ -701,7 +706,7 @@
             `}).join(''); 
         } catch(e){ 
             console.error('Error cargando proveedores:', e);
-            tbody.innerHTML='<tr><td colspan="11" class="text-danger">Error al cargar proveedores<\/td></tr>'; 
+            tbody.innerHTML='<tr><td colspan="11" class="text-danger">Error al cargar proveedores: ' + e.message + '<\/td></tr>'; 
         } 
     }
     
@@ -713,12 +718,12 @@
             let json = await res.json();
             let p = json.data;
             if (!p) { modalBody.innerHTML = '<div class="alert alert-danger">No se encontró información</div>'; return; }
-            let fechaRegistro = p.created_at || p.fecha_registro || new Date().toISOString();
+            let fechaRegistro = p.created_at || p.fecha_registro || p.fecha_creacion || new Date().toISOString();
             let html = `<div class="fecha-grande"><i class="bi bi-calendar-clock"></i><span><strong>📅 Fecha y Hora de Registro:</strong> ${formatFechaGrande(fechaRegistro)}</span></div>
                 <table class="detail-table">
                     <tr><th>Código Proveedor</th><td><span class="codigo-proveedor">${escapeHtml(p.codigo_proveedor || ('PROV-' + String(p.id).padStart(5,'0')))}</span></td></tr>
                     <tr><th>Razón Social</th><td><strong>${escapeHtml(p.razon_social || '-')}</strong></td></tr>
-                    <td><th>Nombre Comercial</th><td>${escapeHtml(p.razon_comercial || '-')}</td></tr>
+                    <tr><th>Nombre Comercial</th><td>${escapeHtml(p.razon_comercial || '-')}</td></tr>
                     <tr><th>RUC</th><td>${escapeHtml(p.ruc || '-')}</td></tr>
                     <tr><th>Dirección Fiscal</th><td>${escapeHtml(p.direccion || '-')}</td></tr>
                     <tr><th>Persona de Contacto</th><td>${escapeHtml(p.contacto || '-')}</td></tr>
