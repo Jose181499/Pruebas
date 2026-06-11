@@ -1605,8 +1605,54 @@ def duplicar_cotizacion(id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+
+
 # ==========================================
-# ENVIAR COTIZACIÓN POR EMAIL
+# ==========================================
+# ACEPTAR COTIZACIÓN (NUEVO)
+# ==========================================
+
+@cotizaciones_bp.route("/api/cotizacion/aceptar/<int:id>", methods=["PUT"])
+def aceptar_cotizacion(id):
+    """Marcar una cotización como aceptada (solo si está en estado Generada)"""
+    try:
+        # Verificar que la cotización existe y está en estado "Generada"
+        query_estado = "SELECT estado, codigo_cotizacion FROM cotizaciones WHERE id = %s"
+        resultado = db_query(query_estado, (id,))
+        
+        if not resultado:
+            return jsonify({'success': False, 'error': 'Cotización no encontrada'}), 404
+        
+        estado_actual = resultado[0]['estado']
+        codigo = resultado[0]['codigo_cotizacion']
+        
+        # Solo permitir aceptar si está en estado "Generada"
+        if estado_actual not in ['Generada', 'generada']:
+            return jsonify({
+                'success': False, 
+                'error': f'No se puede aceptar una cotización en estado "{estado_actual}". Solo se pueden aceptar cotizaciones en estado "Generada".'
+            }), 400
+        
+        # Actualizar el estado
+        db_execute("""
+            UPDATE cotizaciones 
+            SET estado = 'Aceptada por Cliente' 
+            WHERE id = %s
+        """, (id,))
+        
+        return jsonify({
+            'success': True, 
+            'message': f'Cotización {codigo} aceptada correctamente'
+        })
+        
+    except Exception as e:
+        print(f"Error al aceptar cotización {id}: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+
 # ==========================================
 
 @cotizaciones_bp.route("/api/cotizacion/enviar-email/<int:id>", methods=["POST"])

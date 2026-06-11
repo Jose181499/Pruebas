@@ -435,6 +435,13 @@ function renderizarTabla(cotizaciones) {
                             <li><a class="dropdown-item" href="#" onclick="exportarPDF(${c.id})">
                                 <i class="bi bi-file-pdf"></i> Exportar PDF
                             </a></li>
+                            // 👇 AGREGAR ESTA NUEVA OPCIÓN AQUÍ
+                            ${(c.estado === 'Generada' || c.estado === 'generada') ? `
+                             <li><a class="dropdown-item text-success" href="#" onclick="aceptarCotizacion(${c.id}, '${escapeHtml(codigoMostrar)}')">
+                             <i class="bi bi-check-circle-fill"></i> Aceptada
+                             </a></li>
+                             ` : ''}
+
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item text-danger" href="#" onclick="mostrarModalEliminar(${c.id}, '${escapeHtml(codigoMostrar)}')">
                                 <i class="bi bi-trash"></i> Eliminar
@@ -622,7 +629,39 @@ function exportarPDF(id) {
     // Abrir el PDF en una nueva pestaña
     window.open(`/api/cotizacion/exportar-pdf/${id}`, '_blank');
 }
-
+// ===========================
+// ACEPTAR COTIZACIÓN
+// ===========================
+async function aceptarCotizacion(id, codigo) {
+    // Mostrar confirmación personalizada
+    const confirmar = confirm(`¿Estás seguro que la cotización ${codigo} está aceptada?\n\nYa llegó el comprobante y esta acción no se puede corregir.\n\n¿Deseas marcarla como ACEPTADA?`);
+    
+    if (!confirmar) return;
+    
+    try {
+        mostrarNotificacion('📝 Procesando aceptación de cotización...', 'info');
+        
+        const response = await fetch(`/api/cotizacion/aceptar/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            mostrarNotificacion('✅ Cotización marcada como ACEPTADA correctamente', 'success');
+            // Recargar la tabla para mostrar el nuevo estado
+            await cargarCotizaciones();
+        } else {
+            mostrarNotificacion('❌ Error al aceptar: ' + (result.error || 'Error desconocido'), 'danger');
+        }
+    } catch (error) {
+        console.error('Error al aceptar cotización:', error);
+        mostrarNotificacion('❌ Error de conexión al aceptar la cotización', 'danger');
+    }
+}
 // ===========================
 // MOSTRAR MODAL ELIMINAR
 // ===========================
@@ -892,3 +931,4 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+window.aceptarCotizacion = aceptarCotizacion;
