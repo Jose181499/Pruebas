@@ -2233,7 +2233,7 @@ function attachProductoAutocomplete(row) {
     // =========================
     // AGREGAR ITEMS (CON STOCK)
     // =========================
-   function addItem() {
+  function addItem() {
     if (cotizacionBloqueada) { 
         mostrarNotificacion("⚠️ La cotización está bloqueada.", "warning"); 
         return; 
@@ -2252,8 +2252,8 @@ function attachProductoAutocomplete(row) {
         <td class="col-modelo"><input type="text" class="modelo" readonly style="width:100%;"></td>
         <td class="col-marca"><input type="text" class="marca" readonly style="width:100%;"></td>
         <td class="col-unidad"><input type="text" class="unidad_medida" value="UNIDAD" style="width:100%;"></td>
-        <td class="col-cantidad"><input type="number" class="cantidad" value="1" step="0.01" style="width:100%;"></td>
-        <td class="col-precio"><input type="number" class="precio_venta_unitario" value="0" step="0.01" style="width:100%;"></td>
+        <td class="col-cantidad"><input type="number" class="cantidad" value="1" step="1" style="width:100%;"></td>
+        <td class="col-precio"><input type="number" class="precio_venta_unitario" value="0" step="1" style="width:100%;"></td>
         <td class="valor_venta_total">0</td>
         <td class="col-eliminar"><button class="btn-del">🗑</button></td>
         <td class="col-stock" style="text-align:center;">
