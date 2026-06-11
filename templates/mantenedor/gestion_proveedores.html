@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ERP KCF · Gestión de Proveedores | Panel Ordenado</title>
+    <!-- Bootstrap 5 + Icons + Google Font -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -35,6 +36,7 @@
             color: white;
             margin-bottom: 2rem;
             box-shadow: 0 12px 20px rgba(0,0,0,0.08);
+            position: relative;
         }
 
         .btn-back-header {
@@ -148,20 +150,6 @@
             font-weight: 500;
             display: inline-block;
             white-space: nowrap;
-        }
-        
-        .contactos-lista {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .contacto-nombre {
-            background: #eef2ff;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            display: inline-block;
-            width: fit-content;
         }
         
         .acciones-cell {
@@ -278,6 +266,55 @@
             border-radius: 20px;
             text-align: center;
         }
+        
+        .item-card-mini {
+            background: #fafcff;
+            border-radius: 20px;
+            padding: 0.9rem 1rem 1rem 1rem;
+            margin-bottom: 0.9rem;
+            border: 1px solid #e9edf2;
+            position: relative;
+            transition: 0.2s;
+        }
+        .item-card-mini:hover { background: white; border-color: #dce5ef; }
+        .btn-remove-mini {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #fee2e2;
+            border: none;
+            border-radius: 30px;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #b91c1c;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .btn-remove-mini:hover { background: #f5c6c6; transform: scale(1.02); }
+        .checkbox-linea { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+        .checkbox-linea input { width: 18px; height: 18px; margin: 0; cursor: pointer; }
+        .section-mini-title {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #1e2f5e;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .btn-agregar-link {
+            background: none;
+            border: none;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #1e2f5e;
+            border-radius: 20px;
+            padding: 0.2rem 0.8rem;
+        }
+        .btn-agregar-link:hover { background: #eef2ff; }
     </style>
 </head>
 <body>
@@ -560,34 +597,18 @@
         }); 
     }
     
-    // ★★★ FUNCIÓN PARA EL MODAL - CONVIERTE A HORA PERÚ ★★★
     function formatFechaGrande(fechaStr){
         if(!fechaStr) return 'No registrada';
         try {
             let fecha = new Date(fechaStr);
-            if (isNaN(fecha.getTime())) return 'No registrada';
-            
-            // Convertir a hora Perú (UTC-5)
-            let fechaPeru = new Date(fecha.getTime() - (5 * 60 * 60 * 1000));
-            
-            const diasSemana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-            const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-            
-            const diaSemana = diasSemana[fechaPeru.getDay()];
-            const dia = fechaPeru.getDate();
-            const mes = meses[fechaPeru.getMonth()];
-            const anio = fechaPeru.getFullYear();
-            const horas = fechaPeru.getHours().toString().padStart(2, '0');
-            const minutos = fechaPeru.getMinutes().toString().padStart(2, '0');
-            const segundos = fechaPeru.getSeconds().toString().padStart(2, '0');
-            
-            return `${diaSemana}, ${dia} de ${mes} de ${anio} · ${horas}:${minutos}:${segundos}`;
-        } catch(e) { 
-            return fechaStr; 
-        }
+            const opciones = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            const fechaParte = fecha.toLocaleDateString('es-PE', opciones);
+            const horaParte = fecha.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            return `${fechaParte} · ${horaParte}`;
+        } catch(e) { return fechaStr; }
     }
     
-    // ★★★ FUNCIÓN PARA LA TABLA - CONVIERTE A HORA PERÚ ★★★
+    // FUNCIONES DE CONVERSIÓN A HORA PERÚ (UTC-5)
     function convertirAHoraPeru(fechaUTC) {
         return new Date(fechaUTC.getTime() - (5 * 60 * 60 * 1000));
     }
@@ -660,7 +681,7 @@
                 return; 
             } 
             tbody.innerHTML=proveedores.map((p, idx)=> {
-                // Obtener fecha real del proveedor (como en clientes)
+                // ★★★ OBTENER FECHA REAL DEL PROVEEDOR ★★★
                 let fechaRegistro = p.created_at || p.fecha_registro || p.fecha_creacion || null;
                 let fechaFormateada = formatearFechaHoraCorta(fechaRegistro);
                 
@@ -674,20 +695,13 @@
                     <td><span class="badge-doc">${p.ruc || '-'}</span></td>
                     <td>${escapeHtml(p.direccion || '-')}</td>
                     <td>${p.condicion_pago || '-'}${p.tiempo_credito ? ' ('+p.tiempo_credito+')' : ''}</td>
-                    <td>
-                        <div class="contactos-lista">
-                            ${p.contacto ? '<span class="contacto-nombre">👤 '+escapeHtml(p.contacto)+'</span>' : ''}
-                            ${p.telefono ? '<span class="contacto-nombre">📞 '+escapeHtml(p.telefono)+'</span>' : ''}
-                            ${p.email ? '<span class="contacto-nombre">✉️ '+escapeHtml(p.email)+'</span>' : ''}
-                            ${!p.contacto && !p.telefono && !p.email ? '<span class="text-muted">—</span>' : ''}
-                        </div>
-                    </div>
+                    <td>${p.contacto || '-'}${p.telefono ? '<br><small class="text-muted">📞 '+p.telefono+'</small>' : ''}${p.email ? '<br><small class="text-muted">✉️ '+p.email+'</small>' : ''}</td>
                     <td>${escapeHtml(p.lugar_recojo || '-')}</td>
                     <td class="acciones-cell">
                         <button class="btn-accion btn-ver-icon" onclick="abrirModalVerProveedor(${p.id})" title="Ver"><i class="bi bi-eye"></i></button> 
                         <button class="btn-accion btn-edit-icon" onclick="abrirModalEditarProveedor(${p.id})" title="Editar"><i class="bi bi-pencil"></i></button> 
                         <button class="btn-accion btn-del-icon" onclick="abrirModalEliminarProveedor(${p.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
-                    </div>
+                    </td>
                 </tr>
             `}).join(''); 
         } catch(e){ 
@@ -704,10 +718,7 @@
             let json = await res.json();
             let p = json.data;
             if (!p) { modalBody.innerHTML = '<div class="alert alert-danger">No se encontró información</div>'; return; }
-            
-            // Usar la misma fecha que la tabla
-            let fechaRegistro = p.created_at || p.fecha_registro || p.fecha_creacion || null;
-            
+            let fechaRegistro = p.created_at || p.fecha_registro || p.fecha_creacion || new Date().toISOString();
             let html = `<div class="fecha-grande"><i class="bi bi-calendar-clock"></i><span><strong>📅 Fecha y Hora de Registro:</strong> ${formatFechaGrande(fechaRegistro)}</span></div>
                 <table class="detail-table">
                     <tr><th>Código Proveedor</th><td><span class="codigo-proveedor">${escapeHtml(p.codigo_proveedor || ('PROV-' + String(p.id).padStart(5,'0')))}</span></td></tr>
@@ -726,10 +737,7 @@
                 </table>`;
             modalBody.innerHTML = html;
             new bootstrap.Modal(document.getElementById('modalVerProveedor')).show();
-        } catch(e) { 
-            console.error('Error:', e);
-            notificar('Error al cargar detalles', 'error'); 
-        }
+        } catch(e) { notificar('Error al cargar detalles', 'error'); }
     };
     
     window.abrirModalEditarProveedor = async (id) => { 
