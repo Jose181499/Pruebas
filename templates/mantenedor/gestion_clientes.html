@@ -1,12 +1,9 @@
-Aquí tienes la tabla de clientes completamente actualizada con la columna de fecha y hora después del Item, el código de cliente resaltado en azul, y el botón de "Atrás" en la parte superior izquierda. He ajustado el orden de las columnas y la lógica para mostrar correctamente la fecha y hora de registro.
-
-```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ERP KCF · Gestión de Clientes | Panel Profesional</title>
+    <title>ERP KCF · Gestión de Clientes | Panel Ordenado</title>
     <!-- Bootstrap 5 + Icons + Google Font -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -35,7 +32,8 @@ Aquí tienes la tabla de clientes completamente actualizada con la columna de fe
         .hero-modern {
             background: linear-gradient(115deg, #1F2B5C, #2A3E7C);
             border-radius: 28px;
-            padding: 1.5rem 2rem;
+            padding: 1.8rem 2rem;
+            color: white;
             margin-bottom: 2rem;
             box-shadow: 0 12px 20px rgba(0,0,0,0.08);
             position: relative;
@@ -330,26 +328,26 @@ Aquí tienes la tabla de clientes completamente actualizada con la columna de fe
             display: inline-block;
             width: fit-content;
         }
+        .btn-cargando {
+            opacity: 0.7;
+            pointer-events: none;
+        }
         
         /* Estilo para la celda de fecha/hora */
         .fecha-hora-cell {
             font-family: 'Inter', monospace;
             font-size: 0.75rem;
-            font-weight: 600;
-            color: #1e3a8a;
+            font-weight: 500;
+            color: #2c3e66;
             white-space: nowrap;
-            background: #f8fafd;
         }
         
+        /* Animación sutil para la tabla */
         .table-styled tbody tr {
             transition: background 0.2s ease;
         }
         .table-styled tbody tr:hover {
             background: #fafbff;
-        }
-        
-        .btn-atras-top {
-            margin-bottom: 0.5rem;
         }
     </style>
 </head>
@@ -367,7 +365,6 @@ Aquí tienes la tabla de clientes completamente actualizada con la columna de fe
 </div>
 
 <div class="container-fluid py-4 px-lg-5">
-    <!-- Hero con botón de atrás -->
     <div class="hero-modern d-flex flex-wrap justify-content-between align-items-center">
         <div class="d-flex align-items-center gap-3">
             <a href="#" class="btn-back-modern" id="btnBackMain">
@@ -431,12 +428,12 @@ Aquí tienes la tabla de clientes completamente actualizada con la columna de fe
                 <tbody id="tbody-clientes">
                     <tr><td colspan="11" class="text-center py-5"><div class="spinner-border spinner-border-sm text-secondary"></div> Cargando...</td></tr>
                 </tbody>
-            </table>
+             </table>
         </div>
     </div>
 </div>
 
-<!-- MODALES (Mismos modales funcionales) -->
+<!-- MODALES -->
 <div class="modal fade" id="modalNuevoClienteOrdenado" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content modal-content-radius">
@@ -592,8 +589,7 @@ Aquí tienes la tabla de clientes completamente actualizada con la columna de fe
         }); 
     }
     
-    // Función para formatear fecha y hora como en el modal de ver
-    function formatearFechaHoraCompleta(fechaStr) {
+    function formatFechaGrande(fechaStr){
         if(!fechaStr) return 'No registrada';
         try {
             let fecha = new Date(fechaStr);
@@ -606,7 +602,6 @@ Aquí tienes la tabla de clientes completamente actualizada con la columna de fe
         }
     }
     
-    // Función para formatear fecha y hora corta para la tabla
     function formatearFechaHoraCorta(fechaStr) {
         if(!fechaStr) return '—';
         try {
@@ -727,10 +722,8 @@ Aquí tienes la tabla de clientes completamente actualizada con la columna de fe
                 return; 
             } 
             tbody.innerHTML=clientes.map((c, idx)=> {
-                // Obtener la fecha de registro del cliente (priorizando diferentes campos posibles)
                 let fechaRegistro = c.created_at || c.fecha_registro || c.fecha_creacion || null;
                 let fechaFormateada = formatearFechaHoraCorta(fechaRegistro);
-                
                 return `
                 <tr>
                     <td class="text-center fw-semibold">${idx+1}</td>
@@ -795,7 +788,7 @@ Aquí tienes la tabla de clientes completamente actualizada con la columna de fe
                             <td class="text-center">${ct.principal ? '✓ Sí' : '—'}</td>
                         </tr>
                     `).join('')}</tbody>
-                </table>`;
+                患</table>`;
             } else {
                 contactosHtml = '<p class="text-muted mb-0">No hay contactos registrados</p>';
             }
@@ -814,7 +807,7 @@ Aquí tienes la tabla de clientes completamente actualizada con la columna de fe
                             <td class="text-center">${p.principal_punto ? '✓ Sí' : '—'}</td>
                         </tr>
                     `).join('')}</tbody>
-                </table>`;
+                患</table>`;
             } else {
                 puntosHtml = '<p class="text-muted mb-0">No hay puntos de entrega registrados</p>';
             }
@@ -824,7 +817,7 @@ Aquí tienes la tabla de clientes completamente actualizada con la columna de fe
             let html = `
                 <div class="fecha-grande">
                     <i class="bi bi-calendar-clock"></i>
-                    <span><strong>📅 Fecha y Hora de Registro:</strong> ${formatearFechaHoraCompleta(fechaRegistro)}</span>
+                    <span><strong>📅 Fecha y Hora de Registro:</strong> ${formatFechaGrande(fechaRegistro)}</span>
                 </div>
                 <table class="detail-table">
                     <tr><th>Código Cliente</th><td><span class="codigo-cliente"><i class="bi bi-upc-scan me-1"></i>${escapeHtml(c.codigo_cliente || c.id)}</span></td></tr>
@@ -1090,4 +1083,3 @@ Aquí tienes la tabla de clientes completamente actualizada con la columna de fe
 </script>
 </body>
 </html>
-```
