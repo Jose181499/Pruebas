@@ -65,7 +65,7 @@
             background: white;
             border-radius: 24px;
             box-shadow: 0 6px 18px rgba(0,0,0,0.03);
-            overflow: hidden;
+            overflow-x: auto;
             margin-bottom: 1.8rem;
             border: 1px solid #eef2f8;
         }
@@ -128,15 +128,7 @@
             font-size: 0.85rem;
             border-bottom: 1px solid #ecf3fa;
         }
-        .badge-doc {
-            background: #eef2ff;
-            color: #1e3a8a;
-            border-radius: 40px;
-            padding: 0.2rem 0.8rem;
-            font-weight: 500;
-            display: inline-block;
-            white-space: nowrap;
-        }
+        
         .codigo-proveedor {
             background: linear-gradient(135deg, #E8F0FE 0%, #D4E4FC 100%);
             color: #0047AB;
@@ -149,6 +141,17 @@
             border: 1px solid #b9d4ff;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
+        
+        .badge-doc {
+            background: #eef2ff;
+            color: #1e3a8a;
+            border-radius: 40px;
+            padding: 0.2rem 0.8rem;
+            font-weight: 500;
+            display: inline-block;
+            white-space: nowrap;
+        }
+        
         .acciones-cell {
             white-space: nowrap;
             text-align: center;
@@ -229,6 +232,21 @@
         }
         .fecha-grande i { font-size: 1.5rem; }
         
+        .fecha-hora-cell {
+            font-family: 'Inter', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #1e3a8a;
+            white-space: nowrap;
+        }
+        
+        .table-styled tbody tr {
+            transition: background 0.2s ease;
+        }
+        .table-styled tbody tr:hover {
+            background: #fafbff;
+        }
+        
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -249,7 +267,6 @@
             text-align: center;
         }
         
-        /* Estilos para items agregables (contactos/puntos) */
         .item-card-mini {
             background: #fafcff;
             border-radius: 20px;
@@ -364,25 +381,27 @@
                 <thead>
                     <tr>
                         <th>Item</th>
+                        <th>Fecha y Hora</th>
                         <th>Código Proveedor</th>
+                        <th>Nombre Comercial</th>
                         <th>Razón Social</th>
                         <th>RUC</th>
-                        <th>Dirección</th>
-                        <th>Teléfono</th>
+                        <th>Dirección Fiscal</th>
+                        <th>Condición Pago</th>
                         <th>Contacto</th>
-                        <th>Email</th>
+                        <th>Lugar de Recojo</th>
                         <th class="text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="tbody-proveedores">
-                    <tr><td colspan="9" class="text-center py-5"><div class="spinner-border spinner-border-sm text-secondary"></div> Cargando...</td></tr>
+                    <tr><td colspan="11" class="text-center py-5"><div class="spinner-border spinner-border-sm text-secondary"></div> Cargando...<\/td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
 
-<!-- MODAL NUEVO PROVEEDOR -->
+<!-- MODALES (simplificados pero funcionales) -->
 <div class="modal fade" id="modalNuevoProveedor" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content modal-content-radius">
@@ -392,7 +411,6 @@
             </div>
             <div class="modal-body p-4">
                 <form id="formProveedor">
-                    <!-- INFORMACIÓN GENERAL -->
                     <div class="mb-4">
                         <div class="d-flex align-items-center gap-2 border-start border-4 border-primary ps-3 mb-3">
                             <i class="bi bi-card-list fs-5 text-primary"></i>
@@ -444,10 +462,13 @@
                                 <label class="form-label-peq">Tiempo Crédito</label>
                                 <input type="text" class="form-control input-moderno" id="tiempo_credito" placeholder="Ej: 30 días">
                             </div>
+                            <div class="col-md-12">
+                                <label class="form-label-peq">Lugar de Recojo</label>
+                                <input type="text" class="form-control input-moderno" id="lugar_recojo" placeholder="Dirección donde se recogen los productos">
+                            </div>
                         </div>
                     </div>
 
-                    <!-- INFORMACIÓN BANCARIA -->
                     <div class="mb-4">
                         <div class="d-flex align-items-center gap-2 border-start border-4 border-success ps-3 mb-3">
                             <i class="bi bi-bank2 fs-5 text-success"></i>
@@ -474,152 +495,45 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- INFORMACIÓN LOGÍSTICA -->
-                    <div class="mb-4">
-                        <div class="d-flex align-items-center gap-2 border-start border-4 border-info ps-3 mb-3">
-                            <i class="bi bi-geo-alt-fill fs-5 text-info"></i>
-                            <h6 class="fw-bold m-0">Información Logística</h6>
-                        </div>
-                        <div class="row g-3">
-                            <div class="col-md-12">
-                                <label class="form-label-peq">Lugar de Recojo</label>
-                                <input type="text" class="form-control input-moderno" id="lugar_recojo" placeholder="Dirección donde se recogen los productos">
-                            </div>
-                        </div>
-                    </div>
                 </form>
             </div>
             <div class="modal-footer border-0 pt-0 pb-4 px-4 d-flex justify-content-between">
-                <div>
-                    <button type="button" class="btn btn-limpiar px-4" id="btnLimpiarFormulario">
-                        <i class="bi bi-eraser"></i> Limpiar todo
-                    </button>
-                </div>
-                <div>
-                    <button class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" form="formProveedor" class="btn btn-primary rounded-pill px-5 shadow-sm">
-                        <i class="bi bi-save"></i> Guardar Proveedor
-                    </button>
-                </div>
+                <div><button type="button" class="btn btn-limpiar px-4" id="btnLimpiarFormulario"><i class="bi bi-eraser"></i> Limpiar todo</button></div>
+                <div><button class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button><button type="submit" form="formProveedor" class="btn btn-primary rounded-pill px-5 shadow-sm"><i class="bi bi-save"></i> Guardar Proveedor</button></div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- MODAL EDITAR PROVEEDOR -->
 <div class="modal fade" id="modalEditarProveedor" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content modal-content-radius">
-            <div class="modal-header-clean">
-                <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i> Editar Proveedor</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
+            <div class="modal-header-clean"><h5 class="modal-title"><i class="bi bi-pencil-square"></i> Editar Proveedor</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
             <div class="modal-body p-4">
                 <form id="formEditarProveedor">
                     <input type="hidden" id="edit_id_proveedor">
-                    
-                    <div class="mb-4">
-                        <div class="d-flex align-items-center gap-2 border-start border-4 border-warning ps-3 mb-3">
-                            <i class="bi bi-card-list fs-5 text-warning"></i>
-                            <h6 class="fw-bold m-0">Información General</h6>
-                        </div>
-                        <div class="row g-3">
-                            <div class="col-md-5">
-                                <label class="form-label-peq">RUC *</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control input-moderno" id="edit_ruc" maxlength="11" required>
-                                    <button class="btn btn-sunat-sm" type="button" id="btnEditSunatProveedor">
-                                        <i class="bi bi-building me-1"></i> Sunat
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="col-md-7">
-                                <label class="form-label-peq">Razón Social *</label>
-                                <input type="text" class="form-control input-moderno" id="edit_razon_social" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label-peq">Nombre Comercial</label>
-                                <input type="text" class="form-control input-moderno" id="edit_razon_comercial">
-                            </div>
-                            <div class="col-md-8">
-                                <label class="form-label-peq">Dirección Fiscal</label>
-                                <input type="text" class="form-control input-moderno" id="edit_direccion">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label-peq">Persona de Contacto</label>
-                                <input type="text" class="form-control input-moderno" id="edit_contacto">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label-peq">Teléfono</label>
-                                <input type="text" class="form-control input-moderno" id="edit_telefono">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label-peq">Email</label>
-                                <input type="email" class="form-control input-moderno" id="edit_email">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label-peq">Condición Pago</label>
-                                <select id="edit_condicion_pago" class="form-select input-moderno">
-                                    <option value="">Seleccione</option>
-                                    <option value="Credito">Crédito</option>
-                                    <option value="Contado">Contado</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4" id="edit_campo_tiempo_credito" style="display:none;">
-                                <label class="form-label-peq">Tiempo Crédito</label>
-                                <input type="text" class="form-control input-moderno" id="edit_tiempo_credito" placeholder="Ej: 30 días">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <div class="d-flex align-items-center gap-2 border-start border-4 border-success ps-3 mb-3">
-                            <i class="bi bi-bank2 fs-5 text-success"></i>
-                            <h6 class="fw-bold m-0">Información Bancaria</h6>
-                        </div>
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="form-label-peq">Banco</label>
-                                <select class="form-select input-moderno" id="edit_banco">
-                                    <option value="">Seleccione</option>
-                                    <option value="BCP">BCP</option>
-                                    <option value="BBVA">BBVA</option>
-                                    <option value="Interbank">Interbank</option>
-                                    <option value="Scotiabank">Scotiabank</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label-peq">Número Cuenta</label>
-                                <input type="text" class="form-control input-moderno" id="edit_numero_cuenta">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label-peq">CCI</label>
-                                <input type="text" class="form-control input-moderno" id="edit_cci">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <div class="d-flex align-items-center gap-2 border-start border-4 border-info ps-3 mb-3">
-                            <i class="bi bi-geo-alt-fill fs-5 text-info"></i>
-                            <h6 class="fw-bold m-0">Información Logística</h6>
-                        </div>
-                        <div class="row g-3">
-                            <div class="col-md-12">
-                                <label class="form-label-peq">Lugar de Recojo</label>
-                                <input type="text" class="form-control input-moderno" id="edit_lugar_recojo" placeholder="Dirección donde se recogen los productos">
-                            </div>
-                        </div>
-                    </div>
+                    <div class="mb-4"><div class="border-start border-4 border-warning ps-3 mb-3"><h6 class="fw-bold">Información General</h6></div>
+                    <div class="row g-3">
+                        <div class="col-md-5"><label class="form-label-peq">RUC *</label><div class="input-group"><input type="text" class="form-control input-moderno" id="edit_ruc" maxlength="11" required><button class="btn btn-sunat-sm" type="button" id="btnEditSunatProveedor"><i class="bi bi-building"></i> Sunat</button></div></div>
+                        <div class="col-md-7"><label class="form-label-peq">Razón Social *</label><input type="text" class="form-control input-moderno" id="edit_razon_social" required></div>
+                        <div class="col-md-4"><label class="form-label-peq">Nombre Comercial</label><input type="text" class="form-control input-moderno" id="edit_razon_comercial"></div>
+                        <div class="col-md-8"><label class="form-label-peq">Dirección Fiscal</label><input type="text" class="form-control input-moderno" id="edit_direccion"></div>
+                        <div class="col-md-4"><label class="form-label-peq">Persona de Contacto</label><input type="text" class="form-control input-moderno" id="edit_contacto"></div>
+                        <div class="col-md-4"><label class="form-label-peq">Teléfono</label><input type="text" class="form-control input-moderno" id="edit_telefono"></div>
+                        <div class="col-md-4"><label class="form-label-peq">Email</label><input type="email" class="form-control input-moderno" id="edit_email"></div>
+                        <div class="col-md-4"><label class="form-label-peq">Condición Pago</label><select id="edit_condicion_pago" class="form-select input-moderno"><option value="">Seleccione</option><option value="Credito">Crédito</option><option value="Contado">Contado</option></select></div>
+                        <div class="col-md-4" id="edit_campo_tiempo_credito" style="display:none;"><label class="form-label-peq">Tiempo Crédito</label><input type="text" class="form-control input-moderno" id="edit_tiempo_credito" placeholder="Ej: 30 días"></div>
+                        <div class="col-md-12"><label class="form-label-peq">Lugar de Recojo</label><input type="text" class="form-control input-moderno" id="edit_lugar_recojo" placeholder="Dirección donde se recogen los productos"></div>
+                    </div></div>
+                    <div class="mb-4"><div class="d-flex align-items-center gap-2 border-start border-4 border-success ps-3 mb-3"><i class="bi bi-bank2 fs-5 text-success"></i><h6 class="fw-bold m-0">Información Bancaria</h6></div>
+                    <div class="row g-3">
+                        <div class="col-md-4"><label class="form-label-peq">Banco</label><select class="form-select input-moderno" id="edit_banco"><option value="">Seleccione</option><option value="BCP">BCP</option><option value="BBVA">BBVA</option><option value="Interbank">Interbank</option><option value="Scotiabank">Scotiabank</option></select></div>
+                        <div class="col-md-4"><label class="form-label-peq">Número Cuenta</label><input type="text" class="form-control input-moderno" id="edit_numero_cuenta"></div>
+                        <div class="col-md-4"><label class="form-label-peq">CCI</label><input type="text" class="form-control input-moderno" id="edit_cci"></div>
+                    </div></div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" form="formEditarProveedor" class="btn btn-primary rounded-pill px-4 shadow-sm">
-                    <i class="bi bi-save"></i> Actualizar Proveedor
-                </button>
-            </div>
+            <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" form="formEditarProveedor" class="btn btn-primary">Actualizar</button></div>
         </div>
     </div>
 </div>
@@ -629,7 +543,7 @@
         <div class="modal-content modal-content-radius">
             <div class="modal-header-clean"><h5 class="modal-title"><i class="bi bi-eye-fill me-2"></i> Detalle del Proveedor</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
             <div class="modal-body p-4" id="modalVerBodyProveedor"><div class="text-center py-4">Cargando...</div></div>
-            <div class="modal-footer"><button class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cerrar</button><button class="btn btn-info rounded-pill px-4" onclick="window.print()"><i class="bi bi-printer me-1"></i> Imprimir</button></div>
+            <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button></div>
         </div>
     </div>
 </div>
@@ -694,6 +608,25 @@
         } catch(e) { return fechaStr; }
     }
     
+    function convertirAHoraPeru(fechaUTC) {
+        return new Date(fechaUTC.getTime() - (5 * 60 * 60 * 1000));
+    }
+    
+    function formatearFechaHoraCorta(fechaStr) {
+        if(!fechaStr) return '—';
+        try {
+            let fechaUTC = new Date(fechaStr);
+            if (isNaN(fechaUTC.getTime())) return '—';
+            let fecha = convertirAHoraPeru(fechaUTC);
+            const dia = fecha.getDate().toString().padStart(2, '0');
+            const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+            const anio = fecha.getFullYear();
+            const horas = fecha.getHours().toString().padStart(2, '0');
+            const minutos = fecha.getMinutes().toString().padStart(2, '0');
+            return `${dia}/${mes}/${anio} ${horas}:${minutos}`;
+        } catch(e) { return '—'; }
+    }
+    
     function limpiarFormularioNuevo() {
         document.getElementById('formProveedor').reset();
         document.getElementById('campo_tiempo_credito').style.display = 'none';
@@ -731,7 +664,7 @@
     
     async function cargarProveedores(filtro={}){ 
         let tbody=document.getElementById('tbody-proveedores'); 
-        tbody.innerHTML='<tr><td colspan="9" class="text-center p-4"><div class="spinner-border spinner-border-sm text-secondary"></div> Cargando...<\/td></tr>'; 
+        tbody.innerHTML='<table><td colspan="11" class="text-center p-4"><div class="spinner-border spinner-border-sm text-secondary"></div> Cargando...<\/td></tr>'; 
         try{ 
             let url='/api/proveedores/listar?'; 
             let params=new URLSearchParams(); 
@@ -741,29 +674,34 @@
             let json=await res.json(); 
             let proveedores=json.data||[]; 
             if(!proveedores.length){ 
-                tbody.innerHTML='<tr><td colspan="9" class="text-center">Sin proveedores registrados<\/td></tr>'; 
+                tbody.innerHTML='<tr><td colspan="11" class="text-center">Sin proveedores registrados<\/td></tr>'; 
                 return; 
             } 
-            tbody.innerHTML=proveedores.map((p, idx)=>`
+            tbody.innerHTML=proveedores.map((p, idx)=> {
+                let fechaRegistro = p.created_at || p.fecha_registro || new Date().toISOString();
+                let fechaFormateada = formatearFechaHoraCorta(fechaRegistro);
+                return `
                 <tr>
-                    <td class="text-center">${idx+1}</td>
-                    <td><span class="codigo-proveedor">${escapeHtml(p.codigo_proveedor || ('PROV-' + String(p.id).padStart(5,'0')))}</span></td>
-                    <td><strong>${escapeHtml(p.razon_social || '-')}</strong><br><small class="text-muted">${escapeHtml(p.razon_comercial || '')}</small></td>
+                    <td class="text-center fw-semibold">${idx+1}</td>
+                    <td class="fecha-hora-cell"><i class="bi bi-calendar3 me-1"></i> ${fechaFormateada}</td>
+                    <td><span class="codigo-proveedor"><i class="bi bi-upc-scan me-1"></i>${escapeHtml(p.codigo_proveedor || ('PROV-' + String(p.id).padStart(5,'0')))}</span></td>
+                    <td>${escapeHtml(p.razon_comercial || '-')}</td>
+                    <td><strong>${escapeHtml(p.razon_social || '-')}</strong></td>
                     <td><span class="badge-doc">${p.ruc || '-'}</span></td>
                     <td>${escapeHtml(p.direccion || '-')}</td>
-                    <td>${p.telefono || '-'}</td>
-                    <td>${p.contacto || '-'}</td>
-                    <td>${p.email || '-'}</td>
+                    <td>${p.condicion_pago || '-'}${p.tiempo_credito ? ' ('+p.tiempo_credito+')' : ''}</td>
+                    <td>${p.contacto || '-'}${p.telefono ? ' - ' + p.telefono : ''}${p.email ? ' - ' + p.email : ''}</td>
+                    <td>${escapeHtml(p.lugar_recojo || '-')}</td>
                     <td class="acciones-cell">
                         <button class="btn-accion btn-ver-icon" onclick="abrirModalVerProveedor(${p.id})" title="Ver"><i class="bi bi-eye"></i></button> 
                         <button class="btn-accion btn-edit-icon" onclick="abrirModalEditarProveedor(${p.id})" title="Editar"><i class="bi bi-pencil"></i></button> 
                         <button class="btn-accion btn-del-icon" onclick="abrirModalEliminarProveedor(${p.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
                     </td>
                 </tr>
-            `).join(''); 
+            `}).join(''); 
         } catch(e){ 
             console.error('Error cargando proveedores:', e);
-            tbody.innerHTML='<tr><td colspan="9" class="text-danger">Error al cargar proveedores<\/td></tr>'; 
+            tbody.innerHTML='<tr><td colspan="11" class="text-danger">Error al cargar proveedores<\/td></tr>'; 
         } 
     }
     
@@ -780,17 +718,17 @@
                 <table class="detail-table">
                     <tr><th>Código Proveedor</th><td><span class="codigo-proveedor">${escapeHtml(p.codigo_proveedor || ('PROV-' + String(p.id).padStart(5,'0')))}</span></td></tr>
                     <tr><th>Razón Social</th><td><strong>${escapeHtml(p.razon_social || '-')}</strong></td></tr>
-                    <tr><th>Nombre Comercial</th><td>${escapeHtml(p.razon_comercial || '-')}</td></tr>
+                    <td><th>Nombre Comercial</th><td>${escapeHtml(p.razon_comercial || '-')}</td></tr>
                     <tr><th>RUC</th><td>${escapeHtml(p.ruc || '-')}</td></tr>
                     <tr><th>Dirección Fiscal</th><td>${escapeHtml(p.direccion || '-')}</td></tr>
                     <tr><th>Persona de Contacto</th><td>${escapeHtml(p.contacto || '-')}</td></tr>
                     <tr><th>Teléfono</th><td>${escapeHtml(p.telefono || '-')}</td></tr>
                     <tr><th>Email</th><td>${escapeHtml(p.email || '-')}</td></tr>
-                    <tr><th>Condición de Pago</th><td>${escapeHtml(p.condicion_pago || '-')} ${p.tiempo_credito ? '('+p.tiempo_credito+')' : ''}</td>
-                    <tr><th>Banco</th><td>${escapeHtml(p.banco || '-')}</td>
-                    <tr><th>Número de Cuenta</th><td>${escapeHtml(p.numero_cuenta || '-')}</td>
-                    <tr><th>CCI</th><td>${escapeHtml(p.cci || '-')}</td>
-                    <tr><th>Lugar de Recojo</th><td>${escapeHtml(p.lugar_recojo || '-')}</td>
+                    <tr><th>Condición de Pago</th><td>${escapeHtml(p.condicion_pago || '-')} ${p.tiempo_credito ? '('+p.tiempo_credito+')' : ''}</td></tr>
+                    <tr><th>Banco</th><td>${escapeHtml(p.banco || '-')}</td></tr>
+                    <tr><th>Número de Cuenta</th><td>${escapeHtml(p.numero_cuenta || '-')}</td></tr>
+                    <tr><th>CCI</th><td>${escapeHtml(p.cci || '-')}</td></tr>
+                    <tr><th>Lugar de Recojo</th><td>${escapeHtml(p.lugar_recojo || '-')}</td></tr>
                 </table>`;
             modalBody.innerHTML = html;
             new bootstrap.Modal(document.getElementById('modalVerProveedor')).show();
@@ -946,7 +884,6 @@
             });
         }
         
-        // Botón de atrás
         const btnBack = document.getElementById('btnBackMain');
         if (btnBack) {
             btnBack.addEventListener('click', function(e) {
