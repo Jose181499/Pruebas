@@ -68,6 +68,11 @@
             box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
         }
         
+        .custom-input:read-only {
+            background-color: #f8f9fa;
+            cursor: not-allowed;
+        }
+        
         .table-modern thead th {
             background: linear-gradient(135deg, #1e293b, #0f172a);
             color: white;
@@ -123,14 +128,22 @@
             background: #fecaca;
             transform: scale(1.05);
         }
+        
         .ubigeo-help-text {
             font-size: 12px;
             color: #6c757d;
             margin-top: 5px;
         }
+        
         select.form-select:disabled {
             background-color: #e9ecef;
             cursor: not-allowed;
+        }
+        
+        .cantidad-readonly {
+            background-color: #f8f9fa;
+            text-align: center;
+            font-weight: 500;
         }
     </style>
 </head>
@@ -202,7 +215,7 @@
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Dirección de Partida (Almacén)</label>
-                                <input type="text" class="form-control custom-input" id="direccion_partida" placeholder="Av. Principal 123, Lima" value="JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO (ALT. AV. CANTA CALLAO CRUCE AV. LOS OLIV)">
+                                <input type="text" class="form-control custom-input" id="direccion_partida" value="JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO (ALT. AV. CANTA CALLAO CRUCE AV. LOS OLIV)">
                                 
                                 <!-- Sistema de 3 desplegables para UBIGEO (PARTIDA) -->
                                 <div class="row mt-2">
@@ -308,10 +321,10 @@
                                     </select>
                                 </div>
                                 <div class="col-md-12">
-                                <label class="form-label">Seleccionar Conductor/Transportista</label>
-                                <select class="form-select custom-input" id="select_transportista">
-                                <option value="">-- Seleccione un conductor --</option>
-                            </select>
+                                    <label class="form-label">Seleccionar Conductor/Transportista</label>
+                                    <select class="form-select custom-input" id="select_transportista">
+                                        <option value="">-- Seleccione un conductor --</option>
+                                    </select>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Placa del Vehículo <span class="text-danger">*</span></label>
@@ -364,14 +377,14 @@
             </div>
         </div>
 
-        <!-- FILA 3: MOTIVO DEL TRASLADO -->
+        <!-- FILA 3: MOTIVO DEL TRASLADO (AHORA CON PESO) -->
         <div class="erp-card">
             <div class="card-header-custom">
                 <i class="bi bi-file-text"></i> Información del Traslado
             </div>
             <div class="card-body-custom p-4">
                 <div class="row g-3">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">Motivo de Traslado</label>
                         <select class="form-select custom-input" id="motivo_traslado">
                             <option value="VENTA">🛒 Venta</option>
@@ -381,11 +394,15 @@
                             <option value="CONSIGNACION">📋 Consignación</option>
                         </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">Fecha de Traslado</label>
                         <input type="date" class="form-control custom-input" id="fecha_traslado">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <label class="form-label">Peso Total (kg)</label>
+                        <input type="number" class="form-control custom-input" id="peso_total_traslado" placeholder="0.00" step="0.01" value="0.00">
+                    </div>
+                    <div class="col-md-3">
                         <label class="form-label">Factura/Boleta Asociada</label>
                         <input type="text" class="form-control custom-input" id="documento_asociado" placeholder="F001-123 (opcional)">
                     </div>
@@ -393,7 +410,7 @@
             </div>
         </div>
 
-        <!-- TABLA DE PRODUCTOS -->
+        <!-- TABLA DE PRODUCTOS (SIN PESO, CANTIDAD READONLY) -->
         <div class="erp-card">
             <div class="card-header-custom green">
                 <i class="bi bi-box-seam-fill"></i> Productos a Trasladar
@@ -406,9 +423,8 @@
                                 <th style="width:40px">Item</th>
                                 <th style="width:130px">Código</th>
                                 <th style="width:300px">Descripción</th>
-                                <th style="width:80px">Unidad</th>
+                                <th style="width:100px">Unidad</th>
                                 <th style="width:100px">Cantidad</th>
-                                <th style="width:80px">Peso (kg)</th>
                                 <th style="width:60px">Acción</th>
                             </tr>
                         </thead>
@@ -418,8 +434,7 @@
                                 <td><input type="text" class="form-control form-control-sm" placeholder="Código"></td>
                                 <td><input type="text" class="form-control form-control-sm" placeholder="Descripción del producto"></td>
                                 <td><select class="form-select form-select-sm"><option value="NIU">Unidad (NIU)</option><option value="KG">Kilogramo (KG)</option><option value="LTR">Litro (LTR)</option></select></td>
-                                <td><input type="number" class="form-control form-control-sm cantidad" value="1" min="0.01" step="0.01"></td>
-                                <td><input type="number" class="form-control form-control-sm peso" placeholder="0.00" step="0.01"></td>
+                                <td><input type="number" class="form-control form-control-sm cantidad-readonly" value="1" min="0.01" step="0.01" readonly></td>
                                 <td><button class="btn-del btn-sm">🗑️</button></td>
                             </tr>
                         </tbody>
@@ -441,10 +456,6 @@
                         <span>Total Productos:</span>
                         <span class="fw-bold" id="total_productos">0</span>
                     </div>
-                    <div class="d-flex justify-content-between">
-                        <span>Peso Total (kg):</span>
-                        <span class="fw-bold" id="peso_total">0.00</span>
-                    </div>
                 </div>
             </div>
         </div>
@@ -463,38 +474,40 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // ==========================================
-        // DATA DE UBIGEOS (EJEMPLO CON LIMA, CALLAO, AREQUIPA)
+        // DATA COMPLETA DE UBIGEOS (TODOS LOS DEPARTAMENTOS DEL PERÚ)
         // ==========================================
         const ubigeoData = {
-            "LIMA": {
-                "LIMA": ["ANCON", "ATE", "BARRANCO", "BREÑA", "CARABAYLLO", "CHACLACAYO", "CHORRILLOS", "CIENEGUILLA", "COMAS", "EL AGUSTINO", "INDEPENDENCIA", "JESUS MARIA", "LA MOLINA", "LA VICTORIA", "LINCE", "LOS OLIVOS", "LURIGANCHO", "LURIN", "MAGDALENA DEL MAR", "MIRAFLORES", "PACHACAMAC", "PUCUSANA", "PUENTE PIEDRA", "PUNTA HERMOSA", "PUNTA NEGRA", "RIMAC", "SAN BARTOLO", "SAN BORJA", "SAN ISIDRO", "SAN JUAN DE LURIGANCHO", "SAN JUAN DE MIRAFLORES", "SAN LUIS", "SAN MARTIN DE PORRES", "SAN MIGUEL", "SANTA ANITA", "SANTA MARIA DEL MAR", "SANTA ROSA", "SANTIAGO DE SURCO", "SURQUILLO", "VILLA EL SALVADOR", "VILLA MARIA DEL TRIUNFO"],
-                "CAJATAMBO": ["CAJATAMBO", "COSMA", "HUAMANTANGA", "HUAROS", "MANAS", "SANTA ROSA DE QUIVES"],
-                "CAÑETE": ["ASIA", "CALANGO", "CERRO AZUL", "CHILCA", "COAYLLO", "IMPERIAL", "LUNAHUANA", "MALA", "NUEVO IMPERIAL", "PACARAN", "QUILMANA", "SAN ANTONIO", "SAN LUIS", "SAN VICENTE DE CAÑETE", "SANTA CRUZ DE FLORES", "ZUÑIGA"],
-                "HUARAL": ["ATAVILLOS ALTO", "ATAVILLOS BAJO", "AUCALLAMA", "CHANCAY", "HUARAL", "IHUARI", "LAMPIAN", "PACARAOS", "SAN MIGUEL DE ACOS", "SANTA CRUZ DE ANDAMARCA", "SUMBILCA", "VEINTISIETE DE NOVIEMBRE"],
-                "HUAROCHIRI": ["ANTIOQUIA", "CALLAHUANCA", "CAMPOMANIA", "CARAMPOMA", "CHICLA", "CUENCA", "HUACHUPAMPA", "HUANZA", "HUAROCHIRI", "LAHUAYTAMBO", "LANGA", "LARAOS", "MARIATANA", "MATUCANA", "RICARDO PALMA", "SAN ANDRES DE TUPICOCHA", "SAN ANTONIO DE CHACLLA", "SAN BARTOLOME", "SAN DAMIAN", "SAN JUAN DE IRIS", "SAN JUAN DE TANTARANCHE", "SAN LORENZO DE QUINTI", "SAN MATEO", "SAN MATEO DE OTAO", "SAN PEDRO DE CASTA", "SAN PEDRO DE HUANCAYRE", "SANGALLANA", "SANTA CRUZ DE COCACHACRA", "SANTA EULALIA", "SANTIAGO DE ANCHUCAYA", "SANTIAGO DE TUNA", "SANTO DOMINGO DE LOS OLLEROS", "SURCO"],
-                "HUAURA": ["AMBAR", "CALETA DE CARQUIN", "CHECRAS", "HUACHO", "HUALMAY", "HUAURA", "LEONCIO PRADO", "PACCHO", "SANTA LEONOR", "SANTA MARIA", "SAYAN", "VEGUETA"],
-                "OYON": ["ANDAJES", "CAUJUL", "COCHAMARCA", "NAVAN", "OYON", "PACHANGARA"],
-                "YAUYOS": ["ALIS", "ALLAUCA", "AYAVIRI", "AZANGARO", "CACRA", "CARANIA", "CATAHUASI", "CHOCOS", "COCHAS", "COLONIA", "HONGOS", "HUAMPARA", "HUANCAYA", "HUANGASCAR", "HUANTAN", "JUSTICIA", "LARAOS", "LINCHA", "MADEAN", "MIRAFLORES", "OMAS", "PUTINZA", "QUINCHES", "QUINOCAY", "SAN JOAQUIN", "SAN PEDRO DE PILAS", "TANTA", "TAURIPAMPA", "TOMAS", "TUPE", "VIÑAC", "VITIS", "YAUYOS"]
-            },
-            "CALLAO": {
-                "CALLAO": ["BELLAVISTA", "CALLAO", "CARMEN DE LA LEGUA REYNOSO", "LA PERLA", "LA PUNTA", "VENTANILLA", "MI PERU"]
-            },
-            "AREQUIPA": {
-                "AREQUIPA": ["ALTO SELVA ALEGRE", "AREQUIPA", "CAYMA", "CERRO COLORADO", "CHARACATO", "CHIGUATA", "JACOBO HUNTER", "JOSE LUIS BUSTAMANTE Y RIVERO", "LA JOYA", "MARIANO MELGAR", "MIRAFLORES", "MOLLEBAYA", "PAUCARPATA", "POCSI", "POLOBAYA", "QUEQUEÑA", "SABANDIA", "SACHACA", "SAN JUAN DE SIGUAS", "SAN JUAN DE TARUCANI", "SANTA ISABEL DE SIGUAS", "SANTA RITA DE SIGUAS", "SOCABAYA", "TIABAYA", "UCHUMAYO", "VITOR", "YANAHUARA", "YARABAMBA", "YURA"],
-                "CAMANA": ["CAMANA", "JOSE MARIA QUIMPER", "MARIANO NICOLAS VALCARCEL", "MARISCAL CACERES", "NICOLAS DE PIEROLA", "OCOÑA", "QUILCA", "SAMUEL PASTOR"],
-                "CARAVELI": ["ACARI", "ATICO", "ATIQUIPA", "BELLA UNION", "CARAVELI", "CAYARANI", "CHALA", "CHAPARRA", "HUANUHUANU", "JAQUI", "LOMAS", "QUICACHA", "YAUCA"],
-                "CASTILLA": ["ANDAGUA", "APLAO", "ACHOMA", "CHACHAS", "HUANCARQUI", "MACHAGUAY", "ORCOPAMPA", "PAMPACOLCA", "TIPAN", "UÑON", "URACA", "VIRACO"],
-                "CAYLLOMA": ["ACHIVI", "CABANACONDE", "CALLALLI", "CAYLLOMA", "CHIVAY", "COPORAQUE", "HUAMBO", "HUANCA", "ICHUPAMPA", "LARI", "LLUTA", "MACA", "MADRIGAL", "SAN ANTONIO DE CHUCA", "SIBAYO", "TAPAY", "TISCO", "TUTI", "YANQUE"],
-                "CONDESUYOS": ["ANDARAY", "CAYARANI", "CHICHAS", "CHUQUIBAMBA", "IRAY", "RIO GRANDE", "SALAMANCA", "YANAQUIHUA"],
-                "ISLAY": ["COCACHACRA", "DEAN VALDIVIA", "ISLAY", "MEJIA", "MOLLENDO", "PUNTA DE BOMBON"],
-                "LA UNION": ["ALCA", "CHARCANA", "COTAHUASI", "HUAYNACOTAS", "PAMPAMARCA", "PUYCA", "QUECHUALLA", "SAYLA", "TAURIA", "TOMEPAMPA", "TORO"]
-            }
+            "AMAZONAS": {"CHACHAPOYAS": ["CHACHAPOYAS", "ASUNCION", "BALSAS", "CHETO", "CHILIQUIN", "CHUQUIBAMBA", "GRANADA", "HUANCAS", "LA JALCA", "LEIMEBAMBA", "LEVANTO", "MAGDALENA", "MARISCAL CASTILLA", "MOLINOPAMPA", "MONTEVIDEO", "OLLEROS", "QUINJALCA", "SAN FRANCISCO DE DAGUAS", "SAN ISIDRO DE MAINO", "SOLOCO", "SONCHE"]},
+            "ANCASH": {"HUARAZ": ["HUARAZ", "COCHABAMBA", "COLCABAMBA", "HUANCHAY", "INDEPENDENCIA", "JANGAS", "LA LIBERTAD", "OLLEROS", "PAMPAS", "PARIACOTO", "PIRA", "TARICA"]},
+            "APURIMAC": {"ABANCAY": ["ABANCAY", "CHACOCHE", "CIRCA", "CURAHUASI", "HUAIPI", "LAMBRAMA", "PICHIRHUA", "SAN PEDRO DE CACHORA", "TAMBURCO"]},
+            "AREQUIPA": {"AREQUIPA": ["AREQUIPA", "ALTO SELVA ALEGRE", "CAYMA", "CERRO COLORADO", "CHARACATO", "CHIGUATA", "JACOBO HUNTER", "JOSE LUIS BUSTAMANTE Y RIVERO", "LA JOYA", "MARIANO MELGAR", "MIRAFLORES", "MOLLEBAYA", "PAUCARPATA", "POCSI", "POLOBAYA", "QUEQUEÑA", "SABANDIA", "SACHACA", "SAN JUAN DE SIGUAS", "SAN JUAN DE TARUCANI", "SANTA ISABEL DE SIGUAS", "SANTA RITA DE SIGUAS", "SOCABAYA", "TIABAYA", "UCHUMAYO", "VITOR", "YANAHUARA", "YARABAMBA", "YURA"]},
+            "AYACUCHO": {"HUAMANGA": ["AYACUCHO", "ACOCRO", "ACOS VINCHOS", "CARMEN ALTO", "CHIARA", "OCROS", "PACAYCASA", "QUINUA", "SAN JOSE DE TICLLAS", "SAN JUAN BAUTISTA", "SANTIAGO DE PISCHA", "SOCOS", "TAMBILLO", "VINCHOS"]},
+            "CAJAMARCA": {"CAJAMARCA": ["CAJAMARCA", "ASUNCION", "CHETILLA", "COSPAN", "ENCAÑADA", "JESUS", "LLACANORA", "LOS BAÑOS DEL INCA", "MAGDALENA", "MATARA", "NAMORA", "SAN JUAN"]},
+            "CALLAO": {"CALLAO": ["CALLAO", "BELLAVISTA", "CARMEN DE LA LEGUA REYNOSO", "LA PERLA", "LA PUNTA", "VENTANILLA", "MI PERU"]},
+            "CUSCO": {"CUSCO": ["CUSCO", "CCORCA", "POROY", "SAN JERONIMO", "SAN SEBASTIAN", "SANTIAGO", "SAYLLA", "WANCHAQ"]},
+            "HUANCAVELICA": {"HUANCAVELICA": ["HUANCAVELICA", "ACOBAMBILLA", "ACORIA", "CONAYCA", "CUENCA", "HUACHOCOLPA", "HUAYLLAHUARA", "IZCUCHACA", "LARIA", "MANTA", "MARISCAL CACERES", "MOYA", "NUEVO OCCORO", "PALCA", "PILCHACA", "VILCA", "YAULI"]},
+            "HUANUCO": {"HUANUCO": ["HUANUCO", "AMARILIS", "CHINCHAO", "CHURUBAMBA", "MARGOS", "QUISQUI", "SAN FRANCISCO DE CAYRAN", "SAN PEDRO DE CHAULAN", "SANTA MARIA DEL VALLE", "YARUMAYO"]},
+            "ICA": {"ICA": ["ICA", "LA TINGUIÑA", "LOS AQUIJES", "OCUCAJE", "PACHACUTEC", "PARCONA", "PUEBLO NUEVO", "SALAS", "SAN JOSE DE LOS MOLINOS", "SAN JUAN BAUTISTA", "SANTIAGO", "SUBTANJALLA", "TATE", "YAUCA"]},
+            "JUNIN": {"HUANCAYO": ["HUANCAYO", "CARHUACALLANGA", "CHACAPAMPA", "CHICCHE", "CHILCA", "CHONGOS ALTO", "CHUPURO", "COLCA", "CULLHUAS", "EL TAMBO", "HUACRAPUQUIO", "HUALHUAS", "HUANCAN", "HUASICANCHA", "HUAYUCACHI", "INGENIO", "PARIAHUANCA", "PILCOMAYO", "PUCARA", "QUICHUAY", "QUILCAS", "SAN AGUSTIN", "SAN JERONIMO DE TUNAN", "SANTO DOMINGO DE ACOBAMBA", "SAÑO", "SAPALLANGA", "SICAYA", "VIDOS"]},
+            "LA LIBERTAD": {"TRUJILLO": ["TRUJILLO", "EL PORVENIR", "FLORENCIA DE MORA", "HUANCHACO", "LA ESPERANZA", "LAREDO", "MOCHE", "POROTO", "SALAVERRY", "SIMBAL", "VICTOR LARCO HERRERA"]},
+            "LAMBAYEQUE": {"CHICLAYO": ["CHICLAYO", "CHONGOYAPE", "ETEN", "ETEN PUERTO", "JOSE LEONARDO ORTIZ", "LA VICTORIA", "LAGUNAS", "MONSEFU", "MOTUPE", "OLMOS", "PIMENTEL", "REQUE", "SANTA ROSA", "SAÑA"]},
+            "LIMA": {"LIMA": ["LIMA", "ANCON", "ATE", "BARRANCO", "BREÑA", "CARABAYLLO", "CHACLACAYO", "CHORRILLOS", "CIENEGUILLA", "COMAS", "EL AGUSTINO", "INDEPENDENCIA", "JESUS MARIA", "LA MOLINA", "LA VICTORIA", "LINCE", "LOS OLIVOS", "LURIGANCHO", "LURIN", "MAGDALENA DEL MAR", "MIRAFLORES", "PACHACAMAC", "PUCUSANA", "PUENTE PIEDRA", "PUNTA HERMOSA", "PUNTA NEGRA", "RIMAC", "SAN BARTOLO", "SAN BORJA", "SAN ISIDRO", "SAN JUAN DE LURIGANCHO", "SAN JUAN DE MIRAFLORES", "SAN LUIS", "SAN MARTIN DE PORRES", "SAN MIGUEL", "SANTA ANITA", "SANTA MARIA DEL MAR", "SANTA ROSA", "SANTIAGO DE SURCO", "SURQUILLO", "VILLA EL SALVADOR", "VILLA MARIA DEL TRIUNFO"]},
+            "LORETO": {"MAYNAS": ["IQUITOS", "ALTO NANAY", "FERNANDO LORES", "INDIANA", "LAS AMAZONAS", "MAZAN", "NAPO", "PUNCHANA", "PUTUMAYO", "TORRES CAUSANA", "BELEN", "SAN JUAN BAUTISTA"]},
+            "MADRE DE DIOS": {"TAMBOPATA": ["PUERTO MALDONADO", "INAMBARI", "LAS PIEDRAS", "LABERINTO"]},
+            "MOQUEGUA": {"MARISCAL NIETO": ["MOQUEGUA", "CARUMAS", "CUCHUMBAYA", "SAMEGUA", "SAN CRISTOBAL", "TORATA"]},
+            "PASCO": {"PASCO": ["CERRO DE PASCO", "CHAUPIMARCA", "HUACHON", "HUARIACA", "HUAYLLAY", "NINACACA", "PALLANCHACRA", "PAUCARTAMBO", "SAN FRANCISCO DE ASIS DE YARUSYACAN", "SIMON BOLIVAR", "TICLACAYAN", "TINYAHUARCO", "VICCO", "YANACANCHA"]},
+            "PIURA": {"PIURA": ["PIURA", "CASTILLA", "CATACAOS", "CURA MORI", "EL TALLAN", "LA ARENA", "LA UNION", "LAS LOMAS", "TAMBO GRANDE"]},
+            "PUNO": {"PUNO": ["PUNO", "ACORA", "AMANTANI", "ATUNCALLA", "CAPACHICA", "CHUCUITO", "COATA", "HUATA", "MAÑAZO", "PAUCARCOLLA", "PICHACANI", "PLATERIA", "SAN ANTONIO", "TIQUILLACA", "VILQUE"]},
+            "SAN MARTIN": {"MOYOBAMBA": ["MOYOBAMBA", "CALZADA", "HABANA", "JEPELACIO", "SORITOR", "YANTALO"]},
+            "TACNA": {"TACNA": ["TACNA", "ALTO DE LA ALIANZA", "CALANA", "CIUDAD NUEVA", "CORONEL GREGORIO ALBARRACIN LANCHIPA", "INCLAN", "PACHIA", "PALCA", "POCOLLAY", "SAMA"]},
+            "TUMBES": {"TUMBES": ["TUMBES", "CORRALES", "LA CRUZ", "PAMPAS DE HOSPITAL", "SAN JACINTO", "SAN JUAN DE LA VIRGEN"]},
+            "UCAYALI": {"CORONEL PORTILLO": ["PUCALLPA", "CALLERIA", "CAMPOVERDE", "IPARIA", "MANANTAY", "MASISEA", "NUEVA REQUENA", "YARINACOCHA"]}
         };
 
-        // Mapeo de departamentos para selects
-        const departamentos = Object.keys(ubigeoData);
+        // Lista de departamentos
+        const departamentos = Object.keys(ubigeoData).sort();
 
-        // Función para llenar departamentos en un select
+        // Función para llenar departamentos
         function llenarDepartamentos(selectId) {
             const select = document.getElementById(selectId);
             select.innerHTML = '<option value="">Seleccione Departamento</option>';
@@ -506,7 +519,7 @@
             });
         }
 
-        // Función para llenar provincias según departamento
+        // Función para llenar provincias
         function llenarProvincias(departamento, provinciaSelectId, distritoSelectId) {
             const provinciaSelect = document.getElementById(provinciaSelectId);
             const distritoSelect = document.getElementById(distritoSelectId);
@@ -532,7 +545,7 @@
             distritoSelect.disabled = true;
         }
 
-        // Función para llenar distritos según departamento y provincia
+        // Función para llenar distritos
         function llenarDistritos(departamento, provincia, distritoSelectId, ubigeoHiddenId, ubigeoTextSpanId) {
             const distritoSelect = document.getElementById(distritoSelectId);
             
@@ -555,10 +568,9 @@
             distritoSelect.disabled = false;
         }
 
-        // Función para actualizar ubigeo final
+        // Función para actualizar ubigeo
         function actualizarUbigeo(departamento, provincia, distrito, ubigeoHiddenId, ubigeoTextSpanId) {
             if (departamento && provincia && distrito) {
-                // Generar código ubigeo simulado (en un caso real, tendrías un mapa a códigos reales)
                 const codigoGenerado = `${departamento.substring(0,2)}${provincia.substring(0,2)}${distrito.substring(0,2)}`.toUpperCase();
                 document.getElementById(ubigeoHiddenId).value = codigoGenerado;
                 document.getElementById(ubigeoTextSpanId).textContent = `${departamento} - ${provincia} - ${distrito} (${codigoGenerado})`;
@@ -568,7 +580,7 @@
             }
         }
 
-        // Configurar los eventos para un grupo de selects (partida o llegada)
+        // Configurar eventos para un grupo de ubigeo
         function configurarGrupoUbigeo(baseId) {
             const deptoSelect = document.getElementById(`departamento_${baseId}`);
             const provinciaSelect = document.getElementById(`provincia_${baseId}`);
@@ -597,20 +609,17 @@
             });
         }
 
-        // Función para preseleccionar un ubigeo específico (ejemplo: LIMA - LIMA - SAN MARTIN DE PORRES)
+        // Preseleccionar ubigeo
         function preseleccionarUbigeo(baseId, departamento, provincia, distrito) {
             const deptoSelect = document.getElementById(`departamento_${baseId}`);
             const provinciaSelect = document.getElementById(`provincia_${baseId}`);
             const distritoSelect = document.getElementById(`distrito_${baseId}`);
             
-            // Seleccionar departamento
             if (departamento && deptoSelect.querySelector(`option[value="${departamento}"]`)) {
                 deptoSelect.value = departamento;
-                // Disparar evento change para cargar provincias
                 const changeEvent = new Event('change');
                 deptoSelect.dispatchEvent(changeEvent);
                 
-                // Esperar un poco para que se carguen las provincias
                 setTimeout(() => {
                     if (provincia && provinciaSelect.querySelector(`option[value="${provincia}"]`)) {
                         provinciaSelect.value = provincia;
@@ -688,12 +697,6 @@
         function actualizarResumen() {
             const filas = tbody.querySelectorAll('tr');
             document.getElementById('total_productos').textContent = filas.length;
-            let pesoTotal = 0;
-            filas.forEach(fila => {
-                const peso = fila.querySelector('.peso')?.value;
-                if (peso) pesoTotal += parseFloat(peso) || 0;
-            });
-            document.getElementById('peso_total').textContent = pesoTotal.toFixed(2);
         }
         
         function agregarFilaProducto() {
@@ -704,25 +707,30 @@
                 <td><input type="text" class="form-control form-control-sm" placeholder="Código"></td>
                 <td><input type="text" class="form-control form-control-sm" placeholder="Descripción del producto"></td>
                 <td><select class="form-select form-select-sm"><option value="NIU">Unidad (NIU)</option><option value="KG">Kilogramo (KG)</option><option value="LTR">Litro (LTR)</option></select></td>
-                <td><input type="number" class="form-control form-control-sm cantidad" value="1" min="0.01" step="0.01"></td>
-                <td><input type="number" class="form-control form-control-sm peso" placeholder="0.00" step="0.01"></td>
+                <td><input type="number" class="form-control form-control-sm cantidad-readonly" value="1" min="0.01" step="0.01" readonly></td>
                 <td><button class="btn-del btn-sm">🗑️</button></td>
             `;
             tbody.appendChild(nuevaFila);
-            nuevaFila.querySelector('.btn-del').addEventListener('click', () => { nuevaFila.remove(); actualizarResumen(); });
-            nuevaFila.querySelector('.peso').addEventListener('input', actualizarResumen);
+            nuevaFila.querySelector('.btn-del').addEventListener('click', () => { nuevaFila.remove(); actualizarResumen(); renumerarItems(); });
             actualizarResumen();
+        }
+        
+        function renumerarItems() {
+            const filas = document.querySelectorAll('#table-body tr');
+            filas.forEach((fila, idx) => {
+                fila.cells[0].textContent = idx + 1;
+            });
+            itemCount = filas.length;
         }
         
         document.getElementById('btnAgregarProducto')?.addEventListener('click', agregarFilaProducto);
         document.querySelectorAll('.btn-del').forEach(btn => {
-            btn.addEventListener('click', function() { this.closest('tr').remove(); actualizarResumen(); });
+            btn.addEventListener('click', function() { this.closest('tr').remove(); actualizarResumen(); renumerarItems(); });
         });
-        document.querySelectorAll('.peso').forEach(peso => peso.addEventListener('input', actualizarResumen));
         actualizarResumen();
       
         // ==========================================
-        // BUSCAR CLIENTE POR RUC (MEJORADO - BUSCA EN BD LOCAL PRIMERO)
+        // BUSCAR CLIENTE POR RUC
         // ==========================================
         document.getElementById('btnBuscarCliente')?.addEventListener('click', async function() {
             const ruc = document.getElementById('buscar_cliente_ruc').value.trim();
@@ -734,12 +742,10 @@
             mostrarNotificacion('🔍 Buscando cliente...', 'info');
             
             try {
-                // PRIMERO: Buscar en tu base de datos local
                 const responseLocal = await fetch(`/api/clientes/buscar-por-ruc?ruc=${ruc}`);
                 const dataLocal = await responseLocal.json();
                 
                 if (dataLocal.success && dataLocal.data) {
-                    // Cliente encontrado en BD local
                     const cliente = dataLocal.data;
                     document.getElementById('destinatario_doc').value = cliente.numero_documento;
                     document.getElementById('destinatario_nombre').value = cliente.razon_social;
@@ -750,7 +756,6 @@
                     return;
                 }
                 
-                // SEGUNDO: Si no está en BD, consultar SUNAT
                 const responseSunat = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
                 const dataSunat = await responseSunat.json();
                 
@@ -801,15 +806,14 @@
             const items = [];
             filas.forEach((fila, idx) => {
                 const descripcion = fila.querySelector('td:nth-child(3) input')?.value;
-                const cantidad = fila.querySelector('.cantidad')?.value;
+                const cantidad = fila.querySelector('.cantidad-readonly')?.value;
                 if (descripcion && cantidad > 0) {
                     items.push({
                         item: idx + 1,
                         codigo: fila.querySelector('td:nth-child(2) input')?.value || `ITEM-${idx + 1}`,
                         descripcion: descripcion,
                         unidad: fila.querySelector('td:nth-child(4) select')?.value || 'NIU',
-                        cantidad: parseFloat(cantidad),
-                        peso_unitario: parseFloat(fila.querySelector('.peso')?.value) || 0
+                        cantidad: parseFloat(cantidad)
                     });
                 }
             });
@@ -820,6 +824,7 @@
                 fecha_traslado: document.getElementById('fecha_traslado').value,
                 motivo_traslado: document.getElementById('motivo_traslado').value,
                 modalidad_transporte: document.getElementById('modalidad_transporte').value,
+                peso_total: parseFloat(document.getElementById('peso_total_traslado').value) || 0,
                 remitente: {
                     ruc: document.getElementById('remitente_ruc').value,
                     nombre: document.getElementById('remitente_nombre').value,
@@ -888,57 +893,39 @@
         // LIMPIAR FORMULARIO
         // ==========================================
         document.getElementById('btnLimpiar')?.addEventListener('click', function() {
-            if (confirm('¿Estás seguro de que deseas limpiar todos los campos? Los datos no guardados se perderán.')) {
-                
-                // Limpiar destinatario
+            if (confirm('¿Estás seguro de que deseas limpiar todos los campos?')) {
                 document.getElementById('buscar_cliente_ruc').value = '';
                 document.getElementById('destinatario_doc').value = '';
                 document.getElementById('destinatario_nombre').value = '';
                 document.getElementById('direccion_llegada').value = '';
-                
-                // Limpiar vehículo
                 document.getElementById('placa_vehiculo').value = '';
                 document.getElementById('licencia_conductor').value = '';
                 document.getElementById('conductor_dni').value = '';
                 document.getElementById('conductor_nombre').value = '';
-                
-                // Limpiar transportista
                 document.getElementById('transportista_ruc').value = '';
                 document.getElementById('transportista_nombre').value = '';
-                
-                // Resetear selects
                 document.getElementById('modalidad_transporte').value = 'PRIVADO';
                 document.getElementById('motivo_traslado').value = 'VENTA';
-                
-                // Limpiar otros campos
-                document.getElementById('direccion_partida').value = '';
+                document.getElementById('peso_total_traslado').value = '0.00';
                 document.getElementById('documento_asociado').value = '';
                 document.getElementById('observaciones').value = '';
                 
-                // Resetear fecha
                 const hoy = new Date().toISOString().split('T')[0];
                 document.getElementById('fecha_traslado').value = hoy;
                 
-                // Limpiar productos (dejar solo una fila)
                 const tbody = document.getElementById('table-body');
                 tbody.innerHTML = '';
                 itemCount = 0;
                 agregarFilaProducto();
                 
-                // Resetear estado
                 const estadoBadge = document.getElementById('estadoBadge');
                 estadoBadge.innerHTML = '<i class="bi bi-circle-fill fs-10 me-1"></i> NUEVA GUÍA';
                 estadoBadge.classList.remove('bg-success', 'bg-opacity-25', 'text-success');
                 estadoBadge.classList.add('bg-warning', 'bg-opacity-25', 'text-warning');
                 
-                // Resetear variable
                 ultimaGuiaId = null;
                 localStorage.removeItem('ultima_guia_id');
-                
-                // Deshabilitar botón PDF
                 document.getElementById('btnPdf').disabled = true;
-                
-                // Volver a aplicar toggle
                 toggleTransportista();
                 
                 mostrarNotificacion('Formulario limpiado correctamente', 'info');
@@ -946,10 +933,10 @@
         });
         
         // ==========================================
-        // CANCELAR Y VOLVER
+        // CANCELAR
         // ==========================================
         document.getElementById('btnCancelar')?.addEventListener('click', function() {
-            if (confirm('¿Estás seguro de que deseas cancelar? Los datos no guardados se perderán.')) {
+            if (confirm('¿Estás seguro de que deseas cancelar?')) {
                 window.location.href = '/guias/';
             }
         });
@@ -1023,80 +1010,14 @@
         });
         
         // ==========================================
-        // CARGAR TRANSPORTISTAS
-        // ==========================================
-        async function cargarTransportistas() {
-            try {
-                const response = await fetch('/api/transportistas');
-                const result = await response.json();
-                
-                if (result.success && result.data) {
-                    const select = document.getElementById('select_transportista');
-                    if (select) {
-                        select.innerHTML = '<option value="">-- Seleccione un conductor --</option>';
-                        
-                        result.data.forEach(transportista => {
-                            const option = document.createElement('option');
-                            option.value = transportista.id;
-                            let texto = transportista.nombre_completo;
-                            if (transportista.placa) texto += ` - ${transportista.placa}`;
-                            if (transportista.dni) texto += ` (DNI: ${transportista.dni})`;
-                            option.textContent = texto;
-                            select.appendChild(option);
-                        });
-                    }
-                }
-            } catch (error) {
-                console.error('Error cargando transportistas:', error);
-            }
-        }
-        
-        // ==========================================
-        // AUTOCOMPLETAR DATOS DEL TRANSPORTISTA
-        // ==========================================
-        document.getElementById('select_transportista')?.addEventListener('change', async function() {
-            const transportistaId = this.value;
-            if (!transportistaId) return;
-            
-            try {
-                const response = await fetch(`/api/transportistas/${transportistaId}`);
-                const result = await response.json();
-                
-                if (result.success && result.data) {
-                    const t = result.data;
-                    
-                    // Autocompletar campos del vehículo
-                    if (t.placa) document.getElementById('placa_vehiculo').value = t.placa;
-                    if (t.dni) document.getElementById('conductor_dni').value = t.dni;
-                    if (t.nombre_completo) document.getElementById('conductor_nombre').value = t.nombre_completo;
-                    if (t.licencia) document.getElementById('licencia_conductor').value = t.licencia;
-                    if (t.telefono) document.getElementById('conductor_telefono')?.setAttribute('value', t.telefono);
-                    
-                    // Si es empresa, mostrar en transportista
-                    if (t.tipo === 'empresa') {
-                        document.getElementById('transportista_ruc').value = t.dni;
-                        document.getElementById('transportista_nombre').value = t.nombre_completo;
-                    }
-                    
-                    mostrarNotificacion(`✅ Datos de ${t.nombre_completo} cargados`, 'exito');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                mostrarNotificacion('Error al cargar datos del transportista', 'error');
-            }
-        });
-        
-        // ==========================================
         // PDF
         // ==========================================
         document.getElementById('btnPdf')?.addEventListener('click', async function() {
             const guiaId = ultimaGuiaId || localStorage.getItem('ultima_guia_id');
-            
             if (!guiaId) {
-                mostrarNotificacion('⚠️ No hay una guía para descargar. Guarde o envíe primero.', 'warning');
+                mostrarNotificacion('⚠️ No hay una guía para descargar', 'warning');
                 return;
             }
-            
             try {
                 window.open(`/guias/api/pdf/${guiaId}`, '_blank');
             } catch (error) {
@@ -1105,18 +1026,15 @@
         });
         
         // ==========================================
-        // INICIALIZAR FECHA ACTUAL
+        // INICIALIZAR
         // ==========================================
         const hoy = new Date().toISOString().split('T')[0];
         document.getElementById('fecha_traslado').value = hoy;
         
-        // ==========================================
-        // AUTOCOMPLETAR DESDE COTIZACIÓN ACEPTADA
-        // ==========================================
+        // Autocompletar desde cotización
         function autocompletarDesdeCotizacion() {
             const urlParams = new URLSearchParams(window.location.search);
             const fromCotizacion = urlParams.get('from_cotizacion');
-            
             if (!fromCotizacion) return;
             
             const datosGuardados = localStorage.getItem('datos_cotizacion_para_guia');
@@ -1124,98 +1042,94 @@
             
             try {
                 const datos = JSON.parse(datosGuardados);
-                console.log('📦 Autocompletando desde cotización:', datos);
-                
                 if (datos.cliente) {
-                    const cliente = datos.cliente;
-                    if (cliente.ruc) {
-                        document.getElementById('destinatario_doc').value = cliente.ruc;
-                        document.getElementById('buscar_cliente_ruc').value = cliente.ruc;
-                    }
-                    if (cliente.razon_social) document.getElementById('destinatario_nombre').value = cliente.razon_social;
-                    if (cliente.direccion) document.getElementById('direccion_llegada').value = cliente.direccion;
+                    if (datos.cliente.ruc) document.getElementById('destinatario_doc').value = datos.cliente.ruc;
+                    if (datos.cliente.razon_social) document.getElementById('destinatario_nombre').value = datos.cliente.razon_social;
+                    if (datos.cliente.direccion) document.getElementById('direccion_llegada').value = datos.cliente.direccion;
                 }
-                
                 if (datos.productos && datos.productos.length > 0) {
                     const tbody = document.getElementById('table-body');
                     tbody.innerHTML = '';
                     itemCount = 0;
-                    
-                    datos.productos.forEach((producto, idx) => {
+                    datos.productos.forEach((producto) => {
                         if (producto.cantidad > 0) {
                             itemCount++;
                             const nuevaFila = document.createElement('tr');
                             nuevaFila.innerHTML = `
                                 <td>${itemCount}</td>
                                 <td><input type="text" class="form-control form-control-sm" value="${escapeHtml(producto.codigo || '')}" placeholder="Código"></td>
-                                <td><input type="text" class="form-control form-control-sm" value="${escapeHtml(producto.descripcion || '')}" placeholder="Descripción del producto"></td>
-                                <td>
-                                    <select class="form-select form-select-sm">
-                                        <option value="NIU" ${producto.unidad === 'NIU' ? 'selected' : ''}>Unidad (NIU)</option>
-                                        <option value="KG" ${producto.unidad === 'KG' ? 'selected' : ''}>Kilogramo (KG)</option>
-                                        <option value="LTR" ${producto.unidad === 'LTR' ? 'selected' : ''}>Litro (LTR)</option>
-                                    </select>
-                                </td>
-                                <td><input type="number" class="form-control form-control-sm cantidad" value="${producto.cantidad}" min="0.01" step="0.01"></td>
-                                <td><input type="number" class="form-control form-control-sm peso" value="${producto.peso_unitario || 0}" placeholder="0.00" step="0.01"></td>
+                                <td><input type="text" class="form-control form-control-sm" value="${escapeHtml(producto.descripcion || '')}" placeholder="Descripción"></td>
+                                <td><select class="form-select form-select-sm"><option value="NIU">NIU</option><option value="KG">KG</option><option value="LTR">LTR</option></select></td>
+                                <td><input type="number" class="form-control form-control-sm cantidad-readonly" value="${producto.cantidad}" readonly></td>
                                 <td><button class="btn-del btn-sm">🗑️</button></td>
                             `;
                             tbody.appendChild(nuevaFila);
                             nuevaFila.querySelector('.btn-del').addEventListener('click', () => { nuevaFila.remove(); actualizarResumen(); renumerarItems(); });
-                            nuevaFila.querySelector('.peso').addEventListener('input', actualizarResumen);
-                            nuevaFila.querySelector('.cantidad').addEventListener('input', actualizarResumen);
                         }
                     });
                     actualizarResumen();
-                    mostrarNotificacion(`✅ Se cargaron ${datos.productos.length} productos de la cotización`, 'exito');
                 }
-                
                 if (datos.documento_asociado) document.getElementById('documento_asociado').value = datos.documento_asociado;
-                
-                if (datos.observaciones) {
-                    const obsField = document.getElementById('observaciones');
-                    obsField.value = obsField.value ? obsField.value + '\n\n📄 De cotización: ' + datos.observaciones : '📄 De cotización: ' + datos.observaciones;
-                }
-                
-                if (datos.fecha_cotizacion) {
-                    const fechaCotizacion = new Date(datos.fecha_cotizacion);
-                    if (!isNaN(fechaCotizacion)) document.getElementById('fecha_traslado').value = fechaCotizacion.toISOString().split('T')[0];
-                }
-                
-                mostrarNotificacion('✅ Datos de cotización cargados automáticamente', 'exito');
+                mostrarNotificacion('✅ Datos de cotización cargados', 'exito');
             } catch (error) {
-                console.error('Error al autocompletar:', error);
-                mostrarNotificacion('⚠️ Error al cargar datos automáticos', 'warning');
+                console.error('Error:', error);
             }
-        }
-        
-        function renumerarItems() {
-            const filas = document.querySelectorAll('#table-body tr');
-            filas.forEach((fila, idx) => { fila.cells[0].textContent = idx + 1; });
-            itemCount = filas.length;
         }
         
         function escapeHtml(str) {
             if (!str) return '';
-            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
         
-        // ==========================================
-        // INICIALIZACIÓN COMPLETA
-        // ==========================================
+        // Inicializar todo
         document.addEventListener('DOMContentLoaded', function() {
-            // Inicializar selects de ubigeo para PARTIDA y LLEGADA
             llenarDepartamentos('departamento_partida');
             llenarDepartamentos('departamento_llegada');
-            
             configurarGrupoUbigeo('partida');
             configurarGrupoUbigeo('llegada');
-            
-            // Preseleccionar dirección de partida: LIMA - LIMA - SAN MARTIN DE PORRES
             preseleccionarUbigeo('partida', 'LIMA', 'LIMA', 'SAN MARTIN DE PORRES');
-            
             cargarTransportistas();
             autocompletarDesdeCotizacion();
+        });
+        
+        async function cargarTransportistas() {
+            try {
+                const response = await fetch('/api/transportistas');
+                const result = await response.json();
+                if (result.success && result.data) {
+                    const select = document.getElementById('select_transportista');
+                    select.innerHTML = '<option value="">-- Seleccione un conductor --</option>';
+                    result.data.forEach(transportista => {
+                        const option = document.createElement('option');
+                        option.value = transportista.id;
+                        let texto = transportista.nombre_completo;
+                        if (transportista.placa) texto += ` - ${transportista.placa}`;
+                        option.textContent = texto;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+        document.getElementById('select_transportista')?.addEventListener('change', async function() {
+            const transportistaId = this.value;
+            if (!transportistaId) return;
+            try {
+                const response = await fetch(`/api/transportistas/${transportistaId}`);
+                const result = await response.json();
+                if (result.success && result.data) {
+                    const t = result.data;
+                    if (t.placa) document.getElementById('placa_vehiculo').value = t.placa;
+                    if (t.dni) document.getElementById('conductor_dni').value = t.dni;
+                    if (t.nombre_completo) document.getElementById('conductor_nombre').value = t.nombre_completo;
+                    if (t.licencia) document.getElementById('licencia_conductor').value = t.licencia;
+                    mostrarNotificacion(`✅ Datos de ${t.nombre_completo} cargados`, 'exito');
+                }
+            } catch (error) {
+                mostrarNotificacion('Error al cargar datos', 'error');
+            }
         });
     </script>
 </body>
