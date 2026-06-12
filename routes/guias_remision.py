@@ -100,6 +100,18 @@ def guardar_borrador():
             for item in data['items']
         )
         
+        # 🔥 MANEJO SEGURO DEL TRANSPORTISTA 🔥
+        modalidad = data.get('modalidad_transporte', 'PRIVADO')
+        transportista_data = data.get('transportista', {})
+        
+        # Si es público, usar los datos del transportista; si es privado, enviar vacío
+        if modalidad == 'PUBLICO':
+            transportista_ruc = transportista_data.get('ruc', '') if transportista_data else ''
+            transportista_nombre = transportista_data.get('nombre', '') if transportista_data else ''
+        else:
+            transportista_ruc = ''
+            transportista_nombre = ''
+        
         # Insertar en base de datos
         insert_query = """
             INSERT INTO guias_remision (
@@ -135,19 +147,19 @@ def guardar_borrador():
             data['destinatario'].get('nombre', ''),
             data['destinatario'].get('direccion', ''),
             data['destinatario'].get('ubigeo', ''),
-            data.get('modalidad_transporte', 'PRIVADO'),
+            modalidad,
             data['vehiculo'].get('placa', ''),
             data['vehiculo'].get('conductor_dni', ''),
             data['vehiculo'].get('conductor_nombre', ''),
             data['vehiculo'].get('licencia_conducir', ''),
-            data.get('transportista', {}).get('ruc', ''),
-            data.get('transportista', {}).get('nombre', ''),
+            transportista_ruc,
+            transportista_nombre,
             data.get('motivo_traslado', 'VENTA'),
             data.get('documento_asociado', ''),
             peso_total,
             items_json,
             data.get('observaciones', ''),
-            'BORRADOR',  # Estado inicial
+            'BORRADOR',
             session.get('usuario_id')
         )
         
@@ -206,6 +218,17 @@ def enviar_sunat():
             for item in data['items']
         )
         
+        # 🔥 MANEJO SEGURO DEL TRANSPORTISTA 🔥
+        modalidad = data.get('modalidad_transporte', 'PRIVADO')
+        transportista_data = data.get('transportista', {})
+        
+        if modalidad == 'PUBLICO':
+            transportista_ruc = transportista_data.get('ruc', '') if transportista_data else ''
+            transportista_nombre = transportista_data.get('nombre', '') if transportista_data else ''
+        else:
+            transportista_ruc = ''
+            transportista_nombre = ''
+        
         import json
         items_json = json.dumps(data['items'], default=str)
         
@@ -241,19 +264,19 @@ def enviar_sunat():
             data['destinatario'].get('nombre', ''),
             data['destinatario'].get('direccion', ''),
             data['destinatario'].get('ubigeo', ''),
-            data.get('modalidad_transporte', 'PRIVADO'),
+            modalidad,
             data['vehiculo'].get('placa', ''),
             data['vehiculo'].get('conductor_dni', ''),
             data['vehiculo'].get('conductor_nombre', ''),
             data['vehiculo'].get('licencia_conducir', ''),
-            data.get('transportista', {}).get('ruc', ''),
-            data.get('transportista', {}).get('nombre', ''),
+            transportista_ruc,
+            transportista_nombre,
             data.get('motivo_traslado', 'VENTA'),
             data.get('documento_asociado', ''),
             peso_total,
             items_json,
             data.get('observaciones', ''),
-            'PROCESANDO',  # Estado: PROCESANDO, ACEPTADA, RECHAZADA
+            'PROCESANDO',
             session.get('usuario_id')
         )
         
@@ -264,7 +287,6 @@ def enviar_sunat():
         
         # TODO: Aquí se conectará con SUNAT (próximo paso)
         # Por ahora, simulamos que se envió correctamente
-        # Actualizar estado a ACEPTADA (simulado)
         update_query = """
             UPDATE guias_remision 
             SET estado_sunat = 'ACEPTADA',
@@ -416,6 +438,14 @@ def actualizar_guia(guia_id):
         import json
         items_json = json.dumps(data['items'], default=str)
         
+        # 🔥 MANEJO SEGURO DEL TRANSPORTISTA 🔥
+        modalidad = data.get('modalidad_transporte', 'PRIVADO')
+        transportista_ruc = ''
+        transportista_nombre = ''
+        if modalidad == 'PUBLICO' and data.get('transportista'):
+            transportista_ruc = data['transportista'].get('ruc', '')
+            transportista_nombre = data['transportista'].get('nombre', '')
+        
         # Actualizar en base de datos
         update_query = """
             UPDATE guias_remision SET
@@ -444,13 +474,6 @@ def actualizar_guia(guia_id):
             RETURNING id
         """
         
-        # Obtener transportista
-        transportista_ruc = ''
-        transportista_nombre = ''
-        if data.get('transportista') and data['modalidad_transporte'] == 'PUBLICO':
-            transportista_ruc = data['transportista'].get('ruc', '')
-            transportista_nombre = data['transportista'].get('nombre', '')
-        
         params = (
             data.get('fecha_emision'),
             data.get('fecha_traslado'),
@@ -460,7 +483,7 @@ def actualizar_guia(guia_id):
             data['destinatario'].get('nombre', ''),
             data['destinatario'].get('direccion', ''),
             data['destinatario'].get('ubigeo', ''),
-            data.get('modalidad_transporte', 'PRIVADO'),
+            modalidad,
             data['vehiculo'].get('placa', ''),
             data['vehiculo'].get('conductor_dni', ''),
             data['vehiculo'].get('conductor_nombre', ''),
@@ -491,6 +514,7 @@ def actualizar_guia(guia_id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)})    
+
 @guias_bp.route('/api/eliminar/<int:guia_id>', methods=['DELETE'])
 @login_required
 def eliminar_guia(guia_id):
