@@ -1,6 +1,3 @@
-Aquí tienes el **código completo y corregido** de `crear_comprobante.html`. He eliminado las duplicaciones y dejado solo una inicialización:
-
-```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -75,6 +72,11 @@ Aquí tienes el **código completo y corregido** de `crear_comprobante.html`. He
         .custom-input:focus {
             border-color: #ea580c;
             box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
+        }
+        
+        .custom-input:read-only {
+            background-color: #f8f9fa;
+            cursor: not-allowed;
         }
         
         .table-modern thead th {
@@ -161,6 +163,12 @@ Aquí tienes el **código completo y corregido** de `crear_comprobante.html`. He
         
         .tipo-FACTURA { background: #dbeafe; color: #1e40af; }
         .tipo-BOLETA { background: #dcfce7; color: #166534; }
+        
+        .cantidad-readonly, .precio-readonly {
+            background-color: #f8f9fa;
+            text-align: center;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -298,10 +306,11 @@ Aquí tienes el **código completo y corregido** de `crear_comprobante.html`. He
             </div>
         </div>
 
-        <!-- TABLA DE PRODUCTOS -->
+        <!-- TABLA DE PRODUCTOS - CAMPOS READONLY -->
         <div class="erp-card">
             <div class="card-header-custom purple">
                 <i class="bi bi-box-seam-fill"></i> Productos
+                <span class="ms-auto badge bg-light text-dark">Los valores se cargan automáticamente</span>
             </div>
             <div class="card-body-custom p-0">
                 <div class="table-responsive">
@@ -321,24 +330,27 @@ Aquí tienes el **código completo y corregido** de `crear_comprobante.html`. He
                         <tbody id="table-body">
                             <tr>
                                 <td>1</td>
-                                <td><input type="text" class="form-control form-control-sm" placeholder="Código"></td>
-                                <td><input type="text" class="form-control form-control-sm" placeholder="Descripción del producto"></td>
-                                <td><select class="form-select form-select-sm"><option value="NIU">Unidad (NIU)</option><option value="KG">Kilogramo (KG)</option><option value="LTR">Litro (LTR)</option></select></td>
-                                <td><input type="number" class="form-control form-control-sm cantidad" value="1" min="0.01" step="0.01"></td>
-                                <td><input type="number" class="form-control form-control-sm precio" value="0.00" min="0" step="0.01"></td>
-                                <td><input type="text" class="form-control form-control-sm subtotal" value="0.00" readonly style="background:#f3f4f6;"></td>
-                                <td><button class="btn-del btn-sm">🗑️</button></td>
+                                <td><input type="text" class="form-control form-control-sm" placeholder="Código" readonly disabled style="background:#f3f4f6;"></td>
+                                <td><input type="text" class="form-control form-control-sm" placeholder="Descripción del producto" readonly disabled style="background:#f3f4f6;"></td>
+                                <td><select class="form-select form-select-sm" disabled><option value="NIU">Unidad (NIU)</option><option value="KG">Kilogramo (KG)</option><option value="LTR">Litro (LTR)</option></select></td>
+                                <td><input type="number" class="form-control form-control-sm cantidad-readonly" value="1" min="0.01" step="0.01" readonly disabled style="background:#f3f4f6;"></td>
+                                <td><input type="number" class="form-control form-control-sm precio-readonly" value="0.00" min="0" step="0.01" readonly disabled style="background:#f3f4f6;"></td>
+                                <td><input type="text" class="form-control form-control-sm subtotal" value="0.00" readonly style="background:#e5e7eb;"></td>
+                                <td><button class="btn-del btn-sm" disabled style="opacity:0.5; cursor:not-allowed;">🗑️</button></td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
                 <div class="p-4">
-                    <button class="btn btn-success btn-sm" id="btnAgregarProducto">
+                    <button class="btn btn-success btn-sm" id="btnAgregarProducto" disabled style="opacity:0.5">
                         <i class="bi bi-plus-circle-fill"></i> Agregar Producto
                     </button>
                     <button class="btn btn-outline-primary btn-sm ms-2" id="btnBuscarProducto">
                         <i class="bi bi-search"></i> Buscar Producto
                     </button>
+                    <span class="ms-3 text-muted small">
+                        <i class="bi bi-info-circle"></i> Los productos se cargan desde la cotización aceptada. No se pueden editar manualmente.
+                    </span>
                 </div>
             </div>
         </div>
@@ -429,7 +441,7 @@ Aquí tienes el **código completo y corregido** de `crear_comprobante.html`. He
         }
         
         // ==========================================
-        // GESTIÓN DE PRODUCTOS
+        // GESTIÓN DE PRODUCTOS (SOLO CARGA AUTOMÁTICA)
         // ==========================================
         const tbody = document.getElementById('table-body');
         
@@ -438,8 +450,8 @@ Aquí tienes el **código completo y corregido** de `crear_comprobante.html`. He
             let subtotal = 0;
             
             filas.forEach(fila => {
-                const cantidad = parseFloat(fila.querySelector('.cantidad')?.value) || 0;
-                const precio = parseFloat(fila.querySelector('.precio')?.value) || 0;
+                const cantidad = parseFloat(fila.querySelector('.cantidad-readonly')?.value) || 0;
+                const precio = parseFloat(fila.querySelector('.precio-readonly')?.value) || 0;
                 const subtotalFila = cantidad * precio;
                 const subtotalInput = fila.querySelector('.subtotal');
                 if (subtotalInput) subtotalInput.value = subtotalFila.toFixed(2);
@@ -449,39 +461,65 @@ Aquí tienes el **código completo y corregido** de `crear_comprobante.html`. He
             const igv = subtotal * 0.18;
             const total = subtotal + igv;
             
-            document.getElementById('subtotal').innerHTML = `S/ ${subtotal.toFixed(2)}`;
-            document.getElementById('igv').innerHTML = `S/ ${igv.toFixed(2)}`;
-            document.getElementById('total').innerHTML = `S/ ${total.toFixed(2)}`;
+            const moneda = document.getElementById('moneda').value === 'PEN' ? 'S/ ' : '$ ';
+            document.getElementById('subtotal').innerHTML = `${moneda}${subtotal.toFixed(2)}`;
+            document.getElementById('igv').innerHTML = `${moneda}${igv.toFixed(2)}`;
+            document.getElementById('total').innerHTML = `${moneda}${total.toFixed(2)}`;
         }
         
-        function agregarFilaProducto() {
-            itemCount++;
-            const nuevaFila = document.createElement('tr');
-            nuevaFila.innerHTML = `
-                <td>${itemCount}</td>
-                <td><input type="text" class="form-control form-control-sm" placeholder="Código"></td>
-                <td><input type="text" class="form-control form-control-sm" placeholder="Descripción del producto"></td>
-                <td><select class="form-select form-select-sm"><option value="NIU">Unidad (NIU)</option><option value="KG">Kilogramo (KG)</option><option value="LTR">Litro (LTR)</option></select></td>
-                <td><input type="number" class="form-control form-control-sm cantidad" value="1" min="0.01" step="0.01"></td>
-                <td><input type="number" class="form-control form-control-sm precio" value="0.00" min="0" step="0.01"></td>
-                <td><input type="text" class="form-control form-control-sm subtotal" value="0.00" readonly style="background:#f3f4f6;"></td>
-                <td><button class="btn-del btn-sm">🗑️</button></td>
-            `;
-            tbody.appendChild(nuevaFila);
-            nuevaFila.querySelector('.btn-del').addEventListener('click', () => { nuevaFila.remove(); calcularTotales(); });
-            nuevaFila.querySelector('.cantidad').addEventListener('input', calcularTotales);
-            nuevaFila.querySelector('.precio').addEventListener('input', calcularTotales);
+        function cargarProductosDesdeCotizacion(productos) {
+            tbody.innerHTML = '';
+            itemCount = 0;
+            
+            if (!productos || productos.length === 0) {
+                // Mostrar fila vacía pero deshabilitada
+                itemCount = 1;
+                const filaVacia = document.createElement('tr');
+                filaVacia.innerHTML = `
+                    <td>1</td>
+                    <td><input type="text" class="form-control form-control-sm" placeholder="Código" readonly disabled style="background:#f3f4f6;"></td>
+                    <td><input type="text" class="form-control form-control-sm" placeholder="Descripción del producto" readonly disabled style="background:#f3f4f6;"></td>
+                    <td><select class="form-select form-select-sm" disabled><option value="NIU">Unidad (NIU)</option></select></td>
+                    <td><input type="number" class="form-control form-control-sm cantidad-readonly" value="0" readonly disabled style="background:#f3f4f6;"></td>
+                    <td><input type="number" class="form-control form-control-sm precio-readonly" value="0" readonly disabled style="background:#f3f4f6;"></td>
+                    <td><input type="text" class="form-control form-control-sm subtotal" value="0.00" readonly style="background:#e5e7eb;"></td>
+                    <td><button class="btn-del btn-sm" disabled style="opacity:0.5">🗑️</button></td>
+                `;
+                tbody.appendChild(filaVacia);
+                calcularTotales();
+                return;
+            }
+            
+            productos.forEach((producto, idx) => {
+                if (producto.cantidad > 0) {
+                    itemCount++;
+                    const precioUnitario = producto.precio_unitario || producto.precio || 0;
+                    const cantidad = producto.cantidad || 1;
+                    const subtotal = cantidad * precioUnitario;
+                    
+                    const nuevaFila = document.createElement('tr');
+                    nuevaFila.innerHTML = `
+                        <td>${itemCount}</td>
+                        <td><input type="text" class="form-control form-control-sm" value="${escapeHtml(producto.codigo || '')}" placeholder="Código" readonly disabled style="background:#f3f4f6;"></td>
+                        <td><input type="text" class="form-control form-control-sm" value="${escapeHtml(producto.descripcion || '')}" placeholder="Descripción del producto" readonly disabled style="background:#f3f4f6;"></td>
+                        <td>
+                            <select class="form-select form-select-sm" disabled>
+                                <option value="NIU" ${producto.unidad === 'NIU' ? 'selected' : ''}>Unidad (NIU)</option>
+                                <option value="KG" ${producto.unidad === 'KG' ? 'selected' : ''}>Kilogramo (KG)</option>
+                                <option value="LTR" ${producto.unidad === 'LTR' ? 'selected' : ''}>Litro (LTR)</option>
+                            </select>
+                        </td>
+                        <td><input type="number" class="form-control form-control-sm cantidad-readonly" value="${cantidad}" readonly disabled style="background:#f3f4f6;"></td>
+                        <td><input type="number" class="form-control form-control-sm precio-readonly" value="${precioUnitario.toFixed(2)}" readonly disabled style="background:#f3f4f6;"></td>
+                        <td><input type="text" class="form-control form-control-sm subtotal" value="${subtotal.toFixed(2)}" readonly style="background:#e5e7eb;"></td>
+                        <td><button class="btn-del btn-sm" disabled style="opacity:0.5; cursor:not-allowed;">🗑️</button></td>
+                    `;
+                    tbody.appendChild(nuevaFila);
+                }
+            });
+            
             calcularTotales();
         }
-        
-        document.getElementById('btnAgregarProducto')?.addEventListener('click', agregarFilaProducto);
-        document.querySelectorAll('.btn-del').forEach(btn => {
-            btn.addEventListener('click', function() { this.closest('tr').remove(); calcularTotales(); });
-        });
-        document.querySelectorAll('.cantidad, .precio').forEach(input => {
-            input.addEventListener('input', calcularTotales);
-        });
-        calcularTotales();
         
         // ==========================================
         // BUSCAR CLIENTE POR DOCUMENTO
@@ -513,10 +551,11 @@ Aquí tienes el **código completo y corregido** de `crear_comprobante.html`. He
         });
         
         // ==========================================
-        // BUSCAR PRODUCTO
+        // BUSCAR PRODUCTO (CARGAR DESDE COTIZACIÓN)
         // ==========================================
         document.getElementById('btnBuscarProducto')?.addEventListener('click', function() {
-            mostrarNotificacion('Módulo de búsqueda de productos en desarrollo', 'info');
+            // Redirigir a la página de cotizaciones para seleccionar una
+            window.location.href = '/cotizaciones?select_for_comprobante=true';
         });
         
         // ==========================================
@@ -527,20 +566,20 @@ Aquí tienes el **código completo y corregido** de `crear_comprobante.html`. He
             const items = [];
             filas.forEach((fila, idx) => {
                 const descripcion = fila.querySelector('td:nth-child(3) input')?.value;
-                const cantidad = fila.querySelector('.cantidad')?.value;
-                if (descripcion && cantidad > 0) {
+                const cantidad = fila.querySelector('.cantidad-readonly')?.value;
+                if (descripcion && cantidad && parseFloat(cantidad) > 0) {
                     items.push({
                         item: idx + 1,
                         codigo: fila.querySelector('td:nth-child(2) input')?.value || `ITEM-${idx + 1}`,
                         descripcion: descripcion,
                         unidad: fila.querySelector('td:nth-child(4) select')?.value || 'NIU',
                         cantidad: parseFloat(cantidad),
-                        precio_unitario: parseFloat(fila.querySelector('.precio')?.value) || 0
+                        precio_unitario: parseFloat(fila.querySelector('.precio-readonly')?.value) || 0
                     });
                 }
             });
             
-            const subtotal = parseFloat(document.getElementById('subtotal').innerHTML.replace('S/ ', '')) || 0;
+            const subtotal = parseFloat(document.getElementById('subtotal').innerHTML.replace(/[^0-9.-]+/g, '')) || 0;
             const igv = subtotal * 0.18;
             const total = subtotal + igv;
             
@@ -578,7 +617,7 @@ Aquí tienes el **código completo y corregido** de `crear_comprobante.html`. He
                 return false;
             }
             if (data.items.length === 0) {
-                mostrarNotificacion('Debe agregar al menos un producto', 'warning');
+                mostrarNotificacion('Debe cargar productos desde una cotización aceptada', 'warning');
                 return false;
             }
             return true;
@@ -727,37 +766,10 @@ Aquí tienes el **código completo y corregido** de `crear_comprobante.html`. He
                     if (cliente.telefono) document.getElementById('cliente_telefono').value = cliente.telefono;
                 }
                 
-                // Autocompletar productos
+                // Autocompletar productos (CANTIDAD Y PRECIO NO EDITABLES)
                 if (datos.productos && datos.productos.length > 0) {
-                    const tbody = document.getElementById('table-body');
-                    tbody.innerHTML = '';
-                    itemCount = 0;
-                    
-                    datos.productos.forEach((producto) => {
-                        if (producto.cantidad > 0) {
-                            itemCount++;
-                            const precioUnitario = producto.precio_unitario || 0;
-                            const subtotal = producto.cantidad * precioUnitario;
-                            
-                            const nuevaFila = document.createElement('tr');
-                            nuevaFila.innerHTML = `
-                                <td>${itemCount}</td>
-                                <td><input type="text" class="form-control form-control-sm" value="${escapeHtml(producto.codigo || '')}" placeholder="Código"></td>
-                                <td><input type="text" class="form-control form-control-sm" value="${escapeHtml(producto.descripcion || '')}" placeholder="Descripción del producto"></td>
-                                <td><select class="form-select form-select-sm"><option value="NIU" ${producto.unidad === 'NIU' ? 'selected' : ''}>Unidad (NIU)</option><option value="KG" ${producto.unidad === 'KG' ? 'selected' : ''}>Kilogramo (KG)</option><option value="LTR" ${producto.unidad === 'LTR' ? 'selected' : ''}>Litro (LTR)</option></select></td>
-                                <td><input type="number" class="form-control form-control-sm cantidad" value="${producto.cantidad}" min="0.01" step="0.01"></td>
-                                <td><input type="number" class="form-control form-control-sm precio" value="${precioUnitario.toFixed(2)}" min="0" step="0.01"></td>
-                                <td><input type="text" class="form-control form-control-sm subtotal" value="${subtotal.toFixed(2)}" readonly style="background:#f3f4f6;"></td>
-                                <td><button class="btn-del btn-sm">🗑️</button></td>
-                            `;
-                            tbody.appendChild(nuevaFila);
-                            nuevaFila.querySelector('.btn-del').addEventListener('click', () => { nuevaFila.remove(); calcularTotales(); renumerarItems(); });
-                            nuevaFila.querySelector('.cantidad').addEventListener('input', calcularTotales);
-                            nuevaFila.querySelector('.precio').addEventListener('input', calcularTotales);
-                        }
-                    });
-                    calcularTotales();
-                    mostrarNotificacion(`✅ Se cargaron ${datos.productos.length} productos de la cotización`, 'exito');
+                    cargarProductosDesdeCotizacion(datos.productos);
+                    mostrarNotificacion(`✅ Se cargaron ${datos.productos.length} productos de la cotización. Los valores no se pueden editar.`, 'exito');
                 }
                 
                 // Autocompletar observaciones
@@ -770,17 +782,14 @@ Aquí tienes el **código completo y corregido** de `crear_comprobante.html`. He
                     }
                 }
                 
+                // Limpiar localStorage después de usar
+                localStorage.removeItem('datos_cotizacion_para_comprobante');
+                
                 mostrarNotificacion('✅ Datos de cotización cargados automáticamente', 'exito');
             } catch (error) {
                 console.error('Error al autocompletar:', error);
                 mostrarNotificacion('⚠️ Error al cargar datos automáticos', 'warning');
             }
-        }
-        
-        function renumerarItems() {
-            const filas = document.querySelectorAll('#table-body tr');
-            filas.forEach((fila, idx) => { fila.cells[0].textContent = idx + 1; });
-            itemCount = filas.length;
         }
         
         function escapeHtml(str) {
@@ -789,7 +798,7 @@ Aquí tienes el **código completo y corregido** de `crear_comprobante.html`. He
         }
         
         // ==========================================
-        // INICIALIZACIÓN PRINCIPAL (SOLO UNA VEZ)
+        // INICIALIZACIÓN PRINCIPAL
         // ==========================================
         document.addEventListener('DOMContentLoaded', function() {
             inicializar();
@@ -798,4 +807,3 @@ Aquí tienes el **código completo y corregido** de `crear_comprobante.html`. He
     </script>
 </body>
 </html>
-```
