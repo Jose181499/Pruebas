@@ -68,6 +68,11 @@
             box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
         }
         
+        .custom-input:read-only {
+            background-color: #f8f9fa;
+            cursor: not-allowed;
+        }
+        
         .table-modern thead th {
             background: linear-gradient(135deg, #1e293b, #0f172a);
             color: white;
@@ -136,6 +141,23 @@
         .estado-PROCESANDO { background: #dbeafe; color: #1e40af; }
         .estado-ACEPTADA { background: #d1fae5; color: #065f46; }
         .estado-RECHAZADA { background: #fee2e2; color: #991b1b; }
+        
+        .ubigeo-help-text {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        select.form-select:disabled {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+        }
+        
+        .cantidad-readonly {
+            background-color: #f8f9fa;
+            text-align: center;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -200,12 +222,30 @@
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Dirección de Partida (Almacén)</label>
-                                <input type="text" class="form-control custom-input" id="direccion_partida" value="{{ guia.remitente_direccion or '' }}" placeholder="Av. Principal 123, Lima">
-                                <select class="form-select form-select-sm mt-2" id="ubigeo_partida" style="width: auto;">
-                                    <option value="150101" {% if guia.remitente_ubigeo == '150101' %}selected{% endif %}>Lima - Lima - Lima</option>
-                                    <option value="070101" {% if guia.remitente_ubigeo == '070101' %}selected{% endif %}>Callao - Callao - Callao</option>
-                                    <option value="040101" {% if guia.remitente_ubigeo == '040101' %}selected{% endif %}>Arequipa - Arequipa - Arequipa</option>
-                                </select>
+                                <input type="text" class="form-control custom-input" id="direccion_partida" value="{{ guia.remitente_direccion or '' }}">
+                                
+                                <!-- Sistema de 3 desplegables para UBIGEO (PARTIDA) -->
+                                <div class="row mt-2">
+                                    <div class="col-md-4">
+                                        <select class="form-select form-select-sm" id="departamento_partida">
+                                            <option value="">Seleccione Departamento</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <select class="form-select form-select-sm" id="provincia_partida" disabled>
+                                            <option value="">Primero seleccione Departamento</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <select class="form-select form-select-sm" id="distrito_partida" disabled>
+                                            <option value="">Primero seleccione Provincia</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="ubigeo-help-text" id="ubigeo_partida_texto">
+                                    <i class="bi bi-geo-alt-fill"></i> Ubigeo seleccionado: <span id="ubigeo_partida_valor">Ninguno</span>
+                                </div>
+                                <input type="hidden" id="ubigeo_partida_hidden" value="{{ guia.remitente_ubigeo or '' }}">
                             </div>
                         </div>
                     </div>
@@ -230,12 +270,30 @@
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Dirección de Llegada</label>
-                                <input type="text" class="form-control custom-input" id="direccion_llegada" value="{{ guia.destinatario_direccion or '' }}" placeholder="Dirección del cliente">
-                                <select class="form-select form-select-sm mt-2" id="ubigeo_llegada" style="width: auto;">
-                                    <option value="150101" {% if guia.destinatario_ubigeo == '150101' %}selected{% endif %}>Lima - Lima - Lima</option>
-                                    <option value="070101" {% if guia.destinatario_ubigeo == '070101' %}selected{% endif %}>Callao - Callao - Callao</option>
-                                    <option value="040101" {% if guia.destinatario_ubigeo == '040101' %}selected{% endif %}>Arequipa - Arequipa - Arequipa</option>
-                                </select>
+                                <input type="text" class="form-control custom-input" id="direccion_llegada" value="{{ guia.destinatario_direccion or '' }}">
+                                
+                                <!-- Sistema de 3 desplegables para UBIGEO (LLEGADA) -->
+                                <div class="row mt-2">
+                                    <div class="col-md-4">
+                                        <select class="form-select form-select-sm" id="departamento_llegada">
+                                            <option value="">Seleccione Departamento</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <select class="form-select form-select-sm" id="provincia_llegada" disabled>
+                                            <option value="">Primero seleccione Departamento</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <select class="form-select form-select-sm" id="distrito_llegada" disabled>
+                                            <option value="">Primero seleccione Provincia</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="ubigeo-help-text" id="ubigeo_llegada_texto">
+                                    <i class="bi bi-geo-alt-fill"></i> Ubigeo seleccionado: <span id="ubigeo_llegada_valor">Ninguno</span>
+                                </div>
+                                <input type="hidden" id="ubigeo_llegada_hidden" value="{{ guia.destinatario_ubigeo or '' }}">
                             </div>
                         </div>
                     </div>
@@ -311,14 +369,14 @@
             </div>
         </div>
 
-        <!-- FILA 3: MOTIVO DEL TRASLADO -->
+        <!-- FILA 3: MOTIVO DEL TRASLADO (AHORA CON PESO) -->
         <div class="erp-card">
             <div class="card-header-custom">
                 <i class="bi bi-file-text"></i> Información del Traslado
             </div>
             <div class="card-body-custom p-4">
                 <div class="row g-3">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">Motivo de Traslado</label>
                         <select class="form-select custom-input" id="motivo_traslado">
                             <option value="VENTA" {% if guia.motivo_traslado == 'VENTA' %}selected{% endif %}>🛒 Venta</option>
@@ -328,11 +386,15 @@
                             <option value="CONSIGNACION" {% if guia.motivo_traslado == 'CONSIGNACION' %}selected{% endif %}>📋 Consignación</option>
                         </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">Fecha de Traslado</label>
                         <input type="date" class="form-control custom-input" id="fecha_traslado" value="{{ guia.fecha_traslado or '' }}">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <label class="form-label">Peso Total (kg)</label>
+                        <input type="number" class="form-control custom-input" id="peso_total_traslado" placeholder="0.00" step="0.01" value="{{ guia.peso_total or '0.00' }}">
+                    </div>
+                    <div class="col-md-3">
                         <label class="form-label">Factura/Boleta Asociada</label>
                         <input type="text" class="form-control custom-input" id="documento_asociado" value="{{ guia.documento_asociado or '' }}" placeholder="F001-123 (opcional)">
                     </div>
@@ -340,7 +402,7 @@
             </div>
         </div>
 
-        <!-- TABLA DE PRODUCTOS -->
+        <!-- TABLA DE PRODUCTOS (SIN PESO, CANTIDAD READONLY) -->
         <div class="erp-card">
             <div class="card-header-custom green">
                 <i class="bi bi-box-seam-fill"></i> Productos a Trasladar
@@ -353,9 +415,8 @@
                                 <th style="width:40px">Item</th>
                                 <th style="width:130px">Código</th>
                                 <th style="width:300px">Descripción</th>
-                                <th style="width:80px">Unidad</th>
+                                <th style="width:100px">Unidad</th>
                                 <th style="width:100px">Cantidad</th>
-                                <th style="width:80px">Peso (kg)</th>
                                 <th style="width:60px">Acción</th>
                             </tr>
                         </thead>
@@ -380,10 +441,6 @@
                         <span>Total Productos:</span>
                         <span class="fw-bold" id="total_productos">0</span>
                     </div>
-                    <div class="d-flex justify-content-between">
-                        <span>Peso Total (kg):</span>
-                        <span class="fw-bold" id="peso_total">0.00</span>
-                    </div>
                 </div>
             </div>
         </div>
@@ -401,10 +458,176 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Variables globales
+        // ==========================================
+        // DATA COMPLETA DE UBIGEOS (TODOS LOS DEPARTAMENTOS DEL PERÚ)
+        // ==========================================
+        const ubigeoData = {
+            "AMAZONAS": {"CHACHAPOYAS": ["CHACHAPOYAS", "ASUNCION", "BALSAS", "CHETO", "CHILIQUIN", "CHUQUIBAMBA", "GRANADA", "HUANCAS", "LA JALCA", "LEIMEBAMBA", "LEVANTO", "MAGDALENA", "MARISCAL CASTILLA", "MOLINOPAMPA", "MONTEVIDEO", "OLLEROS", "QUINJALCA", "SAN FRANCISCO DE DAGUAS", "SAN ISIDRO DE MAINO", "SOLOCO", "SONCHE"]},
+            "ANCASH": {"HUARAZ": ["HUARAZ", "COCHABAMBA", "COLCABAMBA", "HUANCHAY", "INDEPENDENCIA", "JANGAS", "LA LIBERTAD", "OLLEROS", "PAMPAS", "PARIACOTO", "PIRA", "TARICA"]},
+            "APURIMAC": {"ABANCAY": ["ABANCAY", "CHACOCHE", "CIRCA", "CURAHUASI", "HUAIPI", "LAMBRAMA", "PICHIRHUA", "SAN PEDRO DE CACHORA", "TAMBURCO"]},
+            "AREQUIPA": {"AREQUIPA": ["AREQUIPA", "ALTO SELVA ALEGRE", "CAYMA", "CERRO COLORADO", "CHARACATO", "CHIGUATA", "JACOBO HUNTER", "JOSE LUIS BUSTAMANTE Y RIVERO", "LA JOYA", "MARIANO MELGAR", "MIRAFLORES", "MOLLEBAYA", "PAUCARPATA", "POCSI", "POLOBAYA", "QUEQUEÑA", "SABANDIA", "SACHACA", "SAN JUAN DE SIGUAS", "SAN JUAN DE TARUCANI", "SANTA ISABEL DE SIGUAS", "SANTA RITA DE SIGUAS", "SOCABAYA", "TIABAYA", "UCHUMAYO", "VITOR", "YANAHUARA", "YARABAMBA", "YURA"]},
+            "AYACUCHO": {"HUAMANGA": ["AYACUCHO", "ACOCRO", "ACOS VINCHOS", "CARMEN ALTO", "CHIARA", "OCROS", "PACAYCASA", "QUINUA", "SAN JOSE DE TICLLAS", "SAN JUAN BAUTISTA", "SANTIAGO DE PISCHA", "SOCOS", "TAMBILLO", "VINCHOS"]},
+            "CAJAMARCA": {"CAJAMARCA": ["CAJAMARCA", "ASUNCION", "CHETILLA", "COSPAN", "ENCAÑADA", "JESUS", "LLACANORA", "LOS BAÑOS DEL INCA", "MAGDALENA", "MATARA", "NAMORA", "SAN JUAN"]},
+            "CALLAO": {"CALLAO": ["CALLAO", "BELLAVISTA", "CARMEN DE LA LEGUA REYNOSO", "LA PERLA", "LA PUNTA", "VENTANILLA", "MI PERU"]},
+            "CUSCO": {"CUSCO": ["CUSCO", "CCORCA", "POROY", "SAN JERONIMO", "SAN SEBASTIAN", "SANTIAGO", "SAYLLA", "WANCHAQ"]},
+            "HUANCAVELICA": {"HUANCAVELICA": ["HUANCAVELICA", "ACOBAMBILLA", "ACORIA", "CONAYCA", "CUENCA", "HUACHOCOLPA", "HUAYLLAHUARA", "IZCUCHACA", "LARIA", "MANTA", "MARISCAL CACERES", "MOYA", "NUEVO OCCORO", "PALCA", "PILCHACA", "VILCA", "YAULI"]},
+            "HUANUCO": {"HUANUCO": ["HUANUCO", "AMARILIS", "CHINCHAO", "CHURUBAMBA", "MARGOS", "QUISQUI", "SAN FRANCISCO DE CAYRAN", "SAN PEDRO DE CHAULAN", "SANTA MARIA DEL VALLE", "YARUMAYO"]},
+            "ICA": {"ICA": ["ICA", "LA TINGUIÑA", "LOS AQUIJES", "OCUCAJE", "PACHACUTEC", "PARCONA", "PUEBLO NUEVO", "SALAS", "SAN JOSE DE LOS MOLINOS", "SAN JUAN BAUTISTA", "SANTIAGO", "SUBTANJALLA", "TATE", "YAUCA"]},
+            "JUNIN": {"HUANCAYO": ["HUANCAYO", "CARHUACALLANGA", "CHACAPAMPA", "CHICCHE", "CHILCA", "CHONGOS ALTO", "CHUPURO", "COLCA", "CULLHUAS", "EL TAMBO", "HUACRAPUQUIO", "HUALHUAS", "HUANCAN", "HUASICANCHA", "HUAYUCACHI", "INGENIO", "PARIAHUANCA", "PILCOMAYO", "PUCARA", "QUICHUAY", "QUILCAS", "SAN AGUSTIN", "SAN JERONIMO DE TUNAN", "SANTO DOMINGO DE ACOBAMBA", "SAÑO", "SAPALLANGA", "SICAYA", "VIDOS"]},
+            "LA LIBERTAD": {"TRUJILLO": ["TRUJILLO", "EL PORVENIR", "FLORENCIA DE MORA", "HUANCHACO", "LA ESPERANZA", "LAREDO", "MOCHE", "POROTO", "SALAVERRY", "SIMBAL", "VICTOR LARCO HERRERA"]},
+            "LAMBAYEQUE": {"CHICLAYO": ["CHICLAYO", "CHONGOYAPE", "ETEN", "ETEN PUERTO", "JOSE LEONARDO ORTIZ", "LA VICTORIA", "LAGUNAS", "MONSEFU", "MOTUPE", "OLMOS", "PIMENTEL", "REQUE", "SANTA ROSA", "SAÑA"]},
+            "LIMA": {"LIMA": ["LIMA", "ANCON", "ATE", "BARRANCO", "BREÑA", "CARABAYLLO", "CHACLACAYO", "CHORRILLOS", "CIENEGUILLA", "COMAS", "EL AGUSTINO", "INDEPENDENCIA", "JESUS MARIA", "LA MOLINA", "LA VICTORIA", "LINCE", "LOS OLIVOS", "LURIGANCHO", "LURIN", "MAGDALENA DEL MAR", "MIRAFLORES", "PACHACAMAC", "PUCUSANA", "PUENTE PIEDRA", "PUNTA HERMOSA", "PUNTA NEGRA", "RIMAC", "SAN BARTOLO", "SAN BORJA", "SAN ISIDRO", "SAN JUAN DE LURIGANCHO", "SAN JUAN DE MIRAFLORES", "SAN LUIS", "SAN MARTIN DE PORRES", "SAN MIGUEL", "SANTA ANITA", "SANTA MARIA DEL MAR", "SANTA ROSA", "SANTIAGO DE SURCO", "SURQUILLO", "VILLA EL SALVADOR", "VILLA MARIA DEL TRIUNFO"]},
+            "LORETO": {"MAYNAS": ["IQUITOS", "ALTO NANAY", "FERNANDO LORES", "INDIANA", "LAS AMAZONAS", "MAZAN", "NAPO", "PUNCHANA", "PUTUMAYO", "TORRES CAUSANA", "BELEN", "SAN JUAN BAUTISTA"]},
+            "MADRE DE DIOS": {"TAMBOPATA": ["PUERTO MALDONADO", "INAMBARI", "LAS PIEDRAS", "LABERINTO"]},
+            "MOQUEGUA": {"MARISCAL NIETO": ["MOQUEGUA", "CARUMAS", "CUCHUMBAYA", "SAMEGUA", "SAN CRISTOBAL", "TORATA"]},
+            "PASCO": {"PASCO": ["CERRO DE PASCO", "CHAUPIMARCA", "HUACHON", "HUARIACA", "HUAYLLAY", "NINACACA", "PALLANCHACRA", "PAUCARTAMBO", "SAN FRANCISCO DE ASIS DE YARUSYACAN", "SIMON BOLIVAR", "TICLACAYAN", "TINYAHUARCO", "VICCO", "YANACANCHA"]},
+            "PIURA": {"PIURA": ["PIURA", "CASTILLA", "CATACAOS", "CURA MORI", "EL TALLAN", "LA ARENA", "LA UNION", "LAS LOMAS", "TAMBO GRANDE"]},
+            "PUNO": {"PUNO": ["PUNO", "ACORA", "AMANTANI", "ATUNCALLA", "CAPACHICA", "CHUCUITO", "COATA", "HUATA", "MAÑAZO", "PAUCARCOLLA", "PICHACANI", "PLATERIA", "SAN ANTONIO", "TIQUILLACA", "VILQUE"]},
+            "SAN MARTIN": {"MOYOBAMBA": ["MOYOBAMBA", "CALZADA", "HABANA", "JEPELACIO", "SORITOR", "YANTALO"]},
+            "TACNA": {"TACNA": ["TACNA", "ALTO DE LA ALIANZA", "CALANA", "CIUDAD NUEVA", "CORONEL GREGORIO ALBARRACIN LANCHIPA", "INCLAN", "PACHIA", "PALCA", "POCOLLAY", "SAMA"]},
+            "TUMBES": {"TUMBES": ["TUMBES", "CORRALES", "LA CRUZ", "PAMPAS DE HOSPITAL", "SAN JACINTO", "SAN JUAN DE LA VIRGEN"]},
+            "UCAYALI": {"CORONEL PORTILLO": ["PUCALLPA", "CALLERIA", "CAMPOVERDE", "IPARIA", "MANANTAY", "MASISEA", "NUEVA REQUENA", "YARINACOCHA"]}
+        };
+
+        const departamentos = Object.keys(ubigeoData).sort();
+
+        // ==========================================
+        // FUNCIONES DE UBIGEO
+        // ==========================================
+        function llenarDepartamentos(selectId) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '<option value="">Seleccione Departamento</option>';
+            departamentos.forEach(depto => {
+                const option = document.createElement('option');
+                option.value = depto;
+                option.textContent = depto;
+                select.appendChild(option);
+            });
+        }
+
+        function llenarProvincias(departamento, provinciaSelectId, distritoSelectId) {
+            const provinciaSelect = document.getElementById(provinciaSelectId);
+            const distritoSelect = document.getElementById(distritoSelectId);
+            
+            if (!departamento || !ubigeoData[departamento]) {
+                provinciaSelect.innerHTML = '<option value="">Primero seleccione Departamento</option>';
+                provinciaSelect.disabled = true;
+                distritoSelect.innerHTML = '<option value="">Primero seleccione Provincia</option>';
+                distritoSelect.disabled = true;
+                return;
+            }
+            
+            const provincias = Object.keys(ubigeoData[departamento]);
+            provinciaSelect.innerHTML = '<option value="">Seleccione Provincia</option>';
+            provincias.forEach(prov => {
+                const option = document.createElement('option');
+                option.value = prov;
+                option.textContent = prov;
+                provinciaSelect.appendChild(option);
+            });
+            provinciaSelect.disabled = false;
+            distritoSelect.innerHTML = '<option value="">Primero seleccione Provincia</option>';
+            distritoSelect.disabled = true;
+        }
+
+        function llenarDistritos(departamento, provincia, distritoSelectId, ubigeoHiddenId, ubigeoTextSpanId) {
+            const distritoSelect = document.getElementById(distritoSelectId);
+            
+            if (!departamento || !provincia || !ubigeoData[departamento] || !ubigeoData[departamento][provincia]) {
+                distritoSelect.innerHTML = '<option value="">Primero seleccione Provincia</option>';
+                distritoSelect.disabled = true;
+                return;
+            }
+            
+            const distritos = ubigeoData[departamento][provincia];
+            distritoSelect.innerHTML = '<option value="">Seleccione Distrito</option>';
+            distritos.forEach(dist => {
+                const option = document.createElement('option');
+                option.value = dist;
+                option.textContent = dist;
+                distritoSelect.appendChild(option);
+            });
+            distritoSelect.disabled = false;
+        }
+
+        function actualizarUbigeo(departamento, provincia, distrito, ubigeoHiddenId, ubigeoTextSpanId) {
+            if (departamento && provincia && distrito) {
+                const codigoGenerado = `${departamento.substring(0,2)}${provincia.substring(0,2)}${distrito.substring(0,2)}`.toUpperCase();
+                document.getElementById(ubigeoHiddenId).value = codigoGenerado;
+                document.getElementById(ubigeoTextSpanId).textContent = `${departamento} - ${provincia} - ${distrito} (${codigoGenerado})`;
+            } else {
+                document.getElementById(ubigeoHiddenId).value = '';
+                document.getElementById(ubigeoTextSpanId).textContent = 'Ninguno';
+            }
+        }
+
+        function configurarGrupoUbigeo(baseId) {
+            const deptoSelect = document.getElementById(`departamento_${baseId}`);
+            const provinciaSelect = document.getElementById(`provincia_${baseId}`);
+            const distritoSelect = document.getElementById(`distrito_${baseId}`);
+            const ubigeoHidden = document.getElementById(`ubigeo_${baseId}_hidden`);
+            const ubigeoTextSpan = document.getElementById(`ubigeo_${baseId}_valor`);
+            
+            deptoSelect.addEventListener('change', function() {
+                const depto = this.value;
+                llenarProvincias(depto, `provincia_${baseId}`, `distrito_${baseId}`);
+                actualizarUbigeo(depto, provinciaSelect.value, distritoSelect.value, ubigeoHidden.id, ubigeoTextSpan.id);
+            });
+            
+            provinciaSelect.addEventListener('change', function() {
+                const depto = deptoSelect.value;
+                const provincia = this.value;
+                llenarDistritos(depto, provincia, `distrito_${baseId}`, ubigeoHidden.id, ubigeoTextSpan.id);
+                actualizarUbigeo(depto, provincia, distritoSelect.value, ubigeoHidden.id, ubigeoTextSpan.id);
+            });
+            
+            distritoSelect.addEventListener('change', function() {
+                const depto = deptoSelect.value;
+                const provincia = provinciaSelect.value;
+                const distrito = this.value;
+                actualizarUbigeo(depto, provincia, distrito, ubigeoHidden.id, ubigeoTextSpan.id);
+            });
+        }
+
+        // Función para preseleccionar ubigeo desde un código guardado
+        function preseleccionarUbigeoDesdeValor(baseId, ubigeoGuardado) {
+            if (!ubigeoGuardado) return;
+            
+            // Buscar el departamento, provincia y distrito que coincidan con el código
+            for (const [depto, provincias] of Object.entries(ubigeoData)) {
+                for (const [prov, distritos] of Object.entries(provincias)) {
+                    for (const dist of distritos) {
+                        const codigo = `${depto.substring(0,2)}${prov.substring(0,2)}${dist.substring(0,2)}`.toUpperCase();
+                        if (codigo === ubigeoGuardado) {
+                            // Encontramos la coincidencia
+                            const deptoSelect = document.getElementById(`departamento_${baseId}`);
+                            const provinciaSelect = document.getElementById(`provincia_${baseId}`);
+                            const distritoSelect = document.getElementById(`distrito_${baseId}`);
+                            
+                            deptoSelect.value = depto;
+                            const changeEvent = new Event('change');
+                            deptoSelect.dispatchEvent(changeEvent);
+                            
+                            setTimeout(() => {
+                                provinciaSelect.value = prov;
+                                provinciaSelect.dispatchEvent(changeEvent);
+                                
+                                setTimeout(() => {
+                                    distritoSelect.value = dist;
+                                    distritoSelect.dispatchEvent(changeEvent);
+                                }, 50);
+                            }, 50);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        // ==========================================
+        // VARIABLES GLOBALES
+        // ==========================================
         let itemCount = 0;
-        
-        // Datos de la guía desde el backend
         const guiaData = JSON.parse('{{ guia | tojson | safe if guia else "{}" }}');
         
         // ==========================================
@@ -452,7 +675,6 @@
         }
         
         modalidadSelect?.addEventListener('change', toggleTransportista);
-        toggleTransportista();
         
         // ==========================================
         // CARGAR PRODUCTOS EXISTENTES
@@ -484,14 +706,11 @@
                         <td><input type="text" class="form-control form-control-sm" value="${escapeHtml(item.codigo || '')}" placeholder="Código"></td>
                         <td><input type="text" class="form-control form-control-sm" value="${escapeHtml(item.descripcion || '')}" placeholder="Descripción del producto"></td>
                         <td><select class="form-select form-select-sm"><option value="NIU" ${item.unidad === 'NIU' ? 'selected' : ''}>Unidad (NIU)</option><option value="KG" ${item.unidad === 'KG' ? 'selected' : ''}>Kilogramo (KG)</option><option value="LTR" ${item.unidad === 'LTR' ? 'selected' : ''}>Litro (LTR)</option></select></td>
-                        <td><input type="number" class="form-control form-control-sm cantidad" value="${item.cantidad || 1}" min="0.01" step="0.01"></td>
-                        <td><input type="number" class="form-control form-control-sm peso" value="${item.peso_unitario || 0}" placeholder="0.00" step="0.01"></td>
+                        <td><input type="number" class="form-control form-control-sm cantidad-readonly" value="${item.cantidad || 1}" min="0.01" step="0.01" readonly></td>
                         <td><button class="btn-del btn-sm">🗑️</button></td>
                     `;
                     tbody.appendChild(nuevaFila);
-                    nuevaFila.querySelector('.btn-del').addEventListener('click', () => { nuevaFila.remove(); actualizarResumen(); });
-                    nuevaFila.querySelector('.peso').addEventListener('input', actualizarResumen);
-                    nuevaFila.querySelector('.cantidad').addEventListener('input', actualizarResumen);
+                    nuevaFila.querySelector('.btn-del').addEventListener('click', () => { nuevaFila.remove(); actualizarResumen(); renumerarItems(); });
                 });
             }
             actualizarResumen();
@@ -504,19 +723,20 @@
             return div.innerHTML;
         }
         
+        function renumerarItems() {
+            const filas = document.querySelectorAll('#table-body tr');
+            filas.forEach((fila, idx) => {
+                fila.cells[0].textContent = idx + 1;
+            });
+            itemCount = filas.length;
+        }
+        
         // ==========================================
         // GESTIÓN DE PRODUCTOS
         // ==========================================
         function actualizarResumen() {
             const filas = document.querySelectorAll('#table-body tr');
             document.getElementById('total_productos').textContent = filas.length;
-            let pesoTotal = 0;
-            filas.forEach(fila => {
-                const cantidad = parseFloat(fila.querySelector('.cantidad')?.value) || 0;
-                const peso = parseFloat(fila.querySelector('.peso')?.value) || 0;
-                pesoTotal += cantidad * peso;
-            });
-            document.getElementById('peso_total').textContent = pesoTotal.toFixed(2);
         }
         
         function agregarFilaProducto() {
@@ -528,14 +748,11 @@
                 <td><input type="text" class="form-control form-control-sm" placeholder="Código"></td>
                 <td><input type="text" class="form-control form-control-sm" placeholder="Descripción del producto"></td>
                 <td><select class="form-select form-select-sm"><option value="NIU">Unidad (NIU)</option><option value="KG">Kilogramo (KG)</option><option value="LTR">Litro (LTR)</option></select></td>
-                <td><input type="number" class="form-control form-control-sm cantidad" value="1" min="0.01" step="0.01"></td>
-                <td><input type="number" class="form-control form-control-sm peso" placeholder="0.00" step="0.01"></td>
+                <td><input type="number" class="form-control form-control-sm cantidad-readonly" value="1" min="0.01" step="0.01" readonly></td>
                 <td><button class="btn-del btn-sm">🗑️</button></td>
             `;
             tbody.appendChild(nuevaFila);
-            nuevaFila.querySelector('.btn-del').addEventListener('click', () => { nuevaFila.remove(); actualizarResumen(); });
-            nuevaFila.querySelector('.peso').addEventListener('input', actualizarResumen);
-            nuevaFila.querySelector('.cantidad').addEventListener('input', actualizarResumen);
+            nuevaFila.querySelector('.btn-del').addEventListener('click', () => { nuevaFila.remove(); actualizarResumen(); renumerarItems(); });
             actualizarResumen();
         }
         
@@ -572,15 +789,14 @@
             const items = [];
             filas.forEach((fila, idx) => {
                 const descripcion = fila.querySelector('td:nth-child(3) input')?.value;
-                const cantidad = fila.querySelector('.cantidad')?.value;
+                const cantidad = fila.querySelector('.cantidad-readonly')?.value;
                 if (descripcion && cantidad > 0) {
                     items.push({
                         item: idx + 1,
                         codigo: fila.querySelector('td:nth-child(2) input')?.value || `ITEM-${idx + 1}`,
                         descripcion: descripcion,
                         unidad: fila.querySelector('td:nth-child(4) select')?.value || 'NIU',
-                        cantidad: parseFloat(cantidad),
-                        peso_unitario: parseFloat(fila.querySelector('.peso')?.value) || 0
+                        cantidad: parseFloat(cantidad)
                     });
                 }
             });
@@ -591,17 +807,18 @@
                 fecha_traslado: document.getElementById('fecha_traslado').value,
                 motivo_traslado: document.getElementById('motivo_traslado').value,
                 modalidad_transporte: document.getElementById('modalidad_transporte').value,
+                peso_total: parseFloat(document.getElementById('peso_total_traslado').value) || 0,
                 remitente: {
                     ruc: document.getElementById('remitente_ruc').value,
                     nombre: document.getElementById('remitente_nombre').value,
                     direccion: document.getElementById('direccion_partida').value,
-                    ubigeo: document.getElementById('ubigeo_partida').value
+                    ubigeo: document.getElementById('ubigeo_partida_hidden').value
                 },
                 destinatario: {
                     ruc: document.getElementById('destinatario_doc').value,
                     nombre: document.getElementById('destinatario_nombre').value,
                     direccion: document.getElementById('direccion_llegada').value,
-                    ubigeo: document.getElementById('ubigeo_llegada').value
+                    ubigeo: document.getElementById('ubigeo_llegada_hidden').value
                 },
                 vehiculo: {
                     placa: document.getElementById('placa_vehiculo').value,
@@ -698,13 +915,33 @@
         // INICIALIZAR
         // ==========================================
         function inicializar() {
-            const hoy = new Date().toISOString().split('T')[0];
+            // Inicializar selects de ubigeo
+            llenarDepartamentos('departamento_partida');
+            llenarDepartamentos('departamento_llegada');
+            configurarGrupoUbigeo('partida');
+            configurarGrupoUbigeo('llegada');
+            
+            // Preseleccionar ubigeos guardados
+            const remitenteUbigeo = document.getElementById('ubigeo_partida_hidden').value;
+            const destinatarioUbigeo = document.getElementById('ubigeo_llegada_hidden').value;
+            
+            if (remitenteUbigeo) {
+                preseleccionarUbigeoDesdeValor('partida', remitenteUbigeo);
+            }
+            if (destinatarioUbigeo) {
+                preseleccionarUbigeoDesdeValor('llegada', destinatarioUbigeo);
+            }
+            
+            // Fecha por defecto
             if (!document.getElementById('fecha_traslado').value) {
+                const hoy = new Date().toISOString().split('T')[0];
                 document.getElementById('fecha_traslado').value = hoy;
             }
-            cargarProductos();
             
-            // Mostrar estado actual
+            cargarProductos();
+            toggleTransportista();
+            
+            // Mostrar estado actual y bloquear si no es editable
             const estadoActual = document.getElementById('estado_actual').value;
             const estadoBadge = document.getElementById('estadoBadge');
             if (estadoActual !== 'BORRADOR' && estadoActual !== 'RECHAZADA') {
@@ -716,6 +953,12 @@
                     btnGuardar.disabled = true;
                     btnGuardar.style.opacity = '0.5';
                 }
+                // Deshabilitar campos editables
+                document.querySelectorAll('input, select, textarea, button').forEach(el => {
+                    if (el.id !== 'btnPdf' && el.id !== 'btnVolver') {
+                        el.disabled = true;
+                    }
+                });
             }
         }
         
