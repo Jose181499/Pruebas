@@ -435,7 +435,6 @@ function renderizarTabla(cotizaciones) {
                             <li><a class="dropdown-item" href="#" onclick="exportarPDF(${c.id})">
                                 <i class="bi bi-file-pdf"></i> Exportar PDF
                             </a></li>
-                            // 👇 AGREGAR ESTA NUEVA OPCIÓN AQUÍ
                             ${(c.estado === 'Generada' || c.estado === 'generada') ? `
                              <li><a class="dropdown-item text-success" href="#" onclick="aceptarCotizacion(${c.id}, '${escapeHtml(codigoMostrar)}')">
                              <i class="bi bi-check-circle-fill"></i> Aceptada
