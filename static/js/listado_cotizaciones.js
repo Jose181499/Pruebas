@@ -445,7 +445,15 @@ function renderizarTabla(cotizaciones) {
                               <i class="bi bi-truck"></i> Crear guía de remisión
                             </a></li>
                             ` : ''}
-                            
+                           
+                            ${(c.estado === 'Aceptada por Cliente' || c.estado === 'aceptada') ? `
+                            <li><a class="dropdown-item text-success" href="#" onclick="crearComprobante(${c.id}, 'FACTURA')">
+                            <i class="bi bi-receipt"></i> Crear Factura
+                            </a></li>
+                            <li><a class="dropdown-item text-info" href="#" onclick="crearComprobante(${c.id}, 'BOLETA')">
+                            <i class="bi bi-ticket-perforated"></i> Crear Boleta
+                            </a></li>
+                            ` : ''}
 
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item text-danger" href="#" onclick="mostrarModalEliminar(${c.id}, '${escapeHtml(codigoMostrar)}')">
@@ -601,7 +609,79 @@ async function duplicarCotizacion(id) {
 }
 
 // ===========================
-// ENVIAR POR EMAIL
+// ===========================
+// CREAR COMPROBANTE (FACTURA/BOLETA) DESDE COTIZACIÓN ACEPTADA
+// ===========================
+async function crearComprobante(cotizacionId, tipoComprobante) {
+    try {
+        mostrarNotificacion(`📝 Preparando ${tipoComprobante === 'FACTURA' ? 'factura' : 'boleta'}...`, 'info');
+        
+        // Obtener datos completos de la cotización
+        const response = await fetch(`/api/cotizacion/${cotizacionId}`);
+        const result = await response.json();
+        
+        if (!result.success || !result.data) {
+            mostrarNotificacion('❌ Error al cargar datos de la cotización', 'danger');
+            return;
+        }
+        
+        const cotizacion = result.data;
+        
+        // Verificar que esté aceptada
+        if (cotizacion.estado !== 'Aceptada por Cliente' && cotizacion.estado !== 'aceptada') {
+            mostrarNotificacion('⚠️ Solo se pueden crear comprobantes de cotizaciones aceptadas', 'warning');
+            return;
+        }
+        
+        // Procesar productos de la cotización
+        const productosComprobante = (cotizacion.detalle || []).map(producto => ({
+            codigo: producto.codigo || '',
+            descripcion: producto.descripcion || '',
+            unidad: producto.unidad || 'NIU',
+            cantidad: parseFloat(producto.cantidad || 0),
+            precio_unitario: parseFloat(producto.precio_unitario || producto.costo_unitario || 0)
+        }));
+        
+        // Calcular totales
+        const subtotal = productosComprobante.reduce((sum, p) => sum + (p.cantidad * p.precio_unitario), 0);
+        const igv = subtotal * 0.18;
+        const total = subtotal + igv;
+        
+        // Preparar datos para el comprobante
+        const datosComprobante = {
+            tipo: tipoComprobante,
+            cliente: {
+                tipo_documento: cotizacion.numero_documento?.length === 11 ? 'RUC' : 'DNI',
+                numero_documento: cotizacion.numero_documento || cotizacion.cliente_ruc,
+                razon_social: cotizacion.razon_social || cotizacion.cliente,
+                direccion: cotizacion.direccion_fiscal || cotizacion.direccion_entrega,
+                telefono: cotizacion.telefono_cliente || cotizacion.telefono_contacto,
+                email: cotizacion.email_cliente || cotizacion.email_contacto
+            },
+            productos: productosComprobante,
+            subtotal: subtotal,
+            igv: igv,
+            total: total,
+            numero_cotizacion: cotizacion.numero_cotizacion || cotizacion.codigo_cotizacion,
+            observaciones: cotizacion.nota_cotizacion || cotizacion.notas || '',
+            fecha_cotizacion: cotizacion.fecha_creacion
+        };
+        
+        // Guardar en localStorage
+        localStorage.setItem('datos_cotizacion_para_comprobante', JSON.stringify(datosComprobante));
+        
+        // Redirigir según el tipo
+        if (tipoComprobante === 'FACTURA') {
+            window.location.href = '/comprobantes/crear?tipo=FACTURA&from_cotizacion=' + cotizacionId;
+        } else {
+            window.location.href = '/comprobantes/crear?tipo=BOLETA&from_cotizacion=' + cotizacionId;
+        }
+        
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarNotificacion('❌ Error al preparar: ' + error.message, 'danger');
+    }
+}
 // ===========================
 async function enviarPorEmail(id) {
     try {
@@ -993,3 +1073,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 window.aceptarCotizacion = aceptarCotizacion;
+window.crearComprobante = crearComprobante;

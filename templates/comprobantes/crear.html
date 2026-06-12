@@ -1,3 +1,6 @@
+Aquí tienes el **código completo y corregido** de `crear_comprobante.html`. He eliminado las duplicaciones y dejado solo una inicialización:
+
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -208,7 +211,6 @@
         <div class="row g-4">
             <!-- COLUMNA IZQUIERDA: DATOS DEL CLIENTE -->
             <div class="col-md-6">
-                <!-- DATOS DEL CLIENTE -->
                 <div class="erp-card">
                     <div class="card-header-custom blue">
                         <i class="bi bi-people-fill"></i> Datos del Cliente
@@ -258,7 +260,6 @@
 
             <!-- COLUMNA DERECHA: DATOS DEL COMPROBANTE -->
             <div class="col-md-6">
-                <!-- DATOS DEL COMPROBANTE -->
                 <div class="erp-card">
                     <div class="card-header-custom green">
                         <i class="bi bi-receipt"></i> Datos del Comprobante
@@ -483,7 +484,7 @@
         calcularTotales();
         
         // ==========================================
-        // BUSCAR CLIENTE POR DOCUMENTO (SUNAT)
+        // BUSCAR CLIENTE POR DOCUMENTO
         // ==========================================
         document.getElementById('btnBuscarCliente')?.addEventListener('click', async function() {
             const doc = document.getElementById('buscar_cliente_doc').value;
@@ -696,8 +697,105 @@
             }
         });
         
-        // Inicializar
-        inicializar();
+        // ==========================================
+        // AUTOCOMPLETAR DESDE COTIZACIÓN ACEPTADA
+        // ==========================================
+        function autocompletarDesdeCotizacion() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const fromCotizacion = urlParams.get('from_cotizacion');
+            
+            if (!fromCotizacion) return;
+            
+            const datosGuardados = localStorage.getItem('datos_cotizacion_para_comprobante');
+            if (!datosGuardados) return;
+            
+            try {
+                const datos = JSON.parse(datosGuardados);
+                console.log('📦 Autocompletando desde cotización:', datos);
+                
+                // Autocompletar datos del cliente
+                if (datos.cliente) {
+                    const cliente = datos.cliente;
+                    if (cliente.numero_documento) {
+                        document.getElementById('buscar_cliente_doc').value = cliente.numero_documento;
+                        document.getElementById('cliente_numero_doc').value = cliente.numero_documento;
+                    }
+                    if (cliente.tipo_documento) document.getElementById('cliente_tipo_doc').value = cliente.tipo_documento;
+                    if (cliente.razon_social) document.getElementById('cliente_nombre').value = cliente.razon_social;
+                    if (cliente.direccion) document.getElementById('cliente_direccion').value = cliente.direccion;
+                    if (cliente.email) document.getElementById('cliente_email').value = cliente.email;
+                    if (cliente.telefono) document.getElementById('cliente_telefono').value = cliente.telefono;
+                }
+                
+                // Autocompletar productos
+                if (datos.productos && datos.productos.length > 0) {
+                    const tbody = document.getElementById('table-body');
+                    tbody.innerHTML = '';
+                    itemCount = 0;
+                    
+                    datos.productos.forEach((producto) => {
+                        if (producto.cantidad > 0) {
+                            itemCount++;
+                            const precioUnitario = producto.precio_unitario || 0;
+                            const subtotal = producto.cantidad * precioUnitario;
+                            
+                            const nuevaFila = document.createElement('tr');
+                            nuevaFila.innerHTML = `
+                                <td>${itemCount}</td>
+                                <td><input type="text" class="form-control form-control-sm" value="${escapeHtml(producto.codigo || '')}" placeholder="Código"></td>
+                                <td><input type="text" class="form-control form-control-sm" value="${escapeHtml(producto.descripcion || '')}" placeholder="Descripción del producto"></td>
+                                <td><select class="form-select form-select-sm"><option value="NIU" ${producto.unidad === 'NIU' ? 'selected' : ''}>Unidad (NIU)</option><option value="KG" ${producto.unidad === 'KG' ? 'selected' : ''}>Kilogramo (KG)</option><option value="LTR" ${producto.unidad === 'LTR' ? 'selected' : ''}>Litro (LTR)</option></select></td>
+                                <td><input type="number" class="form-control form-control-sm cantidad" value="${producto.cantidad}" min="0.01" step="0.01"></td>
+                                <td><input type="number" class="form-control form-control-sm precio" value="${precioUnitario.toFixed(2)}" min="0" step="0.01"></td>
+                                <td><input type="text" class="form-control form-control-sm subtotal" value="${subtotal.toFixed(2)}" readonly style="background:#f3f4f6;"></td>
+                                <td><button class="btn-del btn-sm">🗑️</button></td>
+                            `;
+                            tbody.appendChild(nuevaFila);
+                            nuevaFila.querySelector('.btn-del').addEventListener('click', () => { nuevaFila.remove(); calcularTotales(); renumerarItems(); });
+                            nuevaFila.querySelector('.cantidad').addEventListener('input', calcularTotales);
+                            nuevaFila.querySelector('.precio').addEventListener('input', calcularTotales);
+                        }
+                    });
+                    calcularTotales();
+                    mostrarNotificacion(`✅ Se cargaron ${datos.productos.length} productos de la cotización`, 'exito');
+                }
+                
+                // Autocompletar observaciones
+                if (datos.observaciones) {
+                    const obsField = document.getElementById('observaciones');
+                    if (obsField.value) {
+                        obsField.value = obsField.value + '\n\n📄 De cotización: ' + datos.observaciones;
+                    } else {
+                        obsField.value = '📄 De cotización: ' + datos.observaciones;
+                    }
+                }
+                
+                mostrarNotificacion('✅ Datos de cotización cargados automáticamente', 'exito');
+            } catch (error) {
+                console.error('Error al autocompletar:', error);
+                mostrarNotificacion('⚠️ Error al cargar datos automáticos', 'warning');
+            }
+        }
+        
+        function renumerarItems() {
+            const filas = document.querySelectorAll('#table-body tr');
+            filas.forEach((fila, idx) => { fila.cells[0].textContent = idx + 1; });
+            itemCount = filas.length;
+        }
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+        
+        // ==========================================
+        // INICIALIZACIÓN PRINCIPAL (SOLO UNA VEZ)
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', function() {
+            inicializar();
+            autocompletarDesdeCotizacion();
+        });
     </script>
 </body>
 </html>
+```
