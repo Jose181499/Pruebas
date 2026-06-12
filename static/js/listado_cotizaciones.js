@@ -439,7 +439,13 @@ function renderizarTabla(cotizaciones) {
                              <li><a class="dropdown-item text-success" href="#" onclick="aceptarCotizacion(${c.id}, '${escapeHtml(codigoMostrar)}')">
                              <i class="bi bi-check-circle-fill"></i> Aceptada
                              </a></li>
-                             ` : ''}
+                            ` : ''}
+                             ${(c.estado === 'Aceptada por Cliente' || c.estado === 'aceptada') ? `
+                            <li><a class="dropdown-item text-primary" href="#" onclick="crearGuiaRemision(${c.id})">
+                              <i class="bi bi-truck"></i> Crear guía de remisión
+                            </a></li>
+                            ` : ''}
+                            
 
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item text-danger" href="#" onclick="mostrarModalEliminar(${c.id}, '${escapeHtml(codigoMostrar)}')">
@@ -662,7 +668,63 @@ async function aceptarCotizacion(id, codigo) {
     }
 }
 // ===========================
-// MOSTRAR MODAL ELIMINAR
+// ===========================
+// CREAR GUÍA DE REMISIÓN DESDE COTIZACIÓN ACEPTADA
+// ===========================
+async function crearGuiaRemision(cotizacionId) {
+    try {
+        mostrarNotificacion('🚚 Preparando guía de remisión...', 'info');
+        
+        // Obtener datos completos de la cotización
+        const response = await fetch(`/api/cotizacion/${cotizacionId}`);
+        const result = await response.json();
+        
+        if (!result.success || !result.data) {
+            mostrarNotificacion('❌ Error al cargar datos de la cotización', 'danger');
+            return;
+        }
+        
+        const cotizacion = result.data;
+        
+        // Verificar que esté aceptada
+        if (cotizacion.estado !== 'Aceptada por Cliente' && cotizacion.estado !== 'aceptada') {
+            mostrarNotificacion('⚠️ Solo se pueden crear guías de cotizaciones aceptadas', 'warning');
+            return;
+        }
+        
+        // Preparar datos para la guía
+        const datosGuia = {
+            cliente: {
+                ruc: cotizacion.numero_documento || cotizacion.cliente_ruc,
+                razon_social: cotizacion.razon_social || cotizacion.cliente,
+                direccion: cotizacion.direccion_entrega || cotizacion.direccion_fiscal,
+                telefono: cotizacion.telefono_cliente || cotizacion.telefono_contacto,
+                email: cotizacion.email_cliente || cotizacion.email_contacto,
+                contacto: cotizacion.contacto_cliente || cotizacion.nombre_contacto
+            },
+            productos: (cotizacion.detalle || []).map(p => ({
+                codigo: p.codigo || '',
+                descripcion: p.descripcion || '',
+                unidad: p.unidad || 'NIU',
+                cantidad: parseFloat(p.cantidad || 0),
+                peso_unitario: p.peso || 0
+            })),
+            documento_asociado: cotizacion.numero_cotizacion || cotizacion.codigo_cotizacion,
+            observaciones: cotizacion.nota_cotizacion || cotizacion.notas || '',
+            fecha_cotizacion: cotizacion.fecha_creacion
+        };
+        
+        // Guardar en localStorage para usar en la página de guía
+        localStorage.setItem('datos_cotizacion_para_guia', JSON.stringify(datosGuia));
+        
+        // Redirigir a la página de crear guía
+        window.location.href = '/guias/crear?from_cotizacion=' + cotizacionId;
+        
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarNotificacion('❌ Error al preparar guía de remisión: ' + error.message, 'danger');
+    }
+}
 // ===========================
 function mostrarModalEliminar(id, codigo) {
     cotizacionAEliminar = id;

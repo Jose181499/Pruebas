@@ -353,5 +353,94 @@ def eliminar_cliente(cliente_id):
         }), 500
     
 
-
+# =========================================
+# BUSCAR CLIENTE POR RUC EXACTO
+# =========================================
+@clientes_bp.route("/api/clientes/buscar-por-ruc", methods=["GET"])
+def buscar_cliente_por_ruc():
+    """Buscar cliente exactamente por número de RUC/DNI"""
+    try:
+        ruc = request.args.get('ruc', '').strip()
+        
+        if not ruc or len(ruc) < 3:
+            return jsonify({
+                "success": False, 
+                "error": "Debe ingresar un RUC/DNI válido"
+            }), 400
+        
+        from database import db_query
+        
+        # Buscar cliente por número de documento exacto
+        query = """
+            SELECT 
+                id,
+                tipo_documento,
+                numero_documento,
+                razon_social,
+                nombre_comercial,
+                direccion_fiscal,
+                codigo_cliente,
+                telefono_contacto,
+                email_contacto,
+                nombre_contacto
+            FROM clientes
+            WHERE activo = TRUE 
+            AND numero_documento = %s
+            LIMIT 1
+        """
+        
+        clientes = db_query(query, (ruc,))
+        
+        if clientes and len(clientes) > 0:
+            cliente = clientes[0]
+            
+            # Obtener contactos adicionales si existen
+            contactos_query = """
+                SELECT nombre_contacto, email, telefono, cargo, principal
+                FROM clientes_contactos
+                WHERE cliente_id = %s AND activo = TRUE
+                ORDER BY principal DESC
+            """
+            contactos = db_query(contactos_query, (cliente['id'],))
+            
+            # Obtener puntos de entrega
+            puntos_query = """
+                SELECT nombre_punto, direccion, telefono_contacto, responsable, condicion_pago, principal
+                FROM clientes_puntos_entrega
+                WHERE cliente_id = %s AND activo = TRUE
+                ORDER BY principal DESC
+            """
+            puntos = db_query(puntos_query, (cliente['id'],))
+            
+            return jsonify({
+                "success": True,
+                "data": {
+                    "id": cliente['id'],
+                    "tipo_documento": cliente.get('tipo_documento', ''),
+                    "numero_documento": cliente.get('numero_documento', ''),
+                    "razon_social": cliente.get('razon_social', ''),
+                    "nombre_comercial": cliente.get('nombre_comercial', ''),
+                    "direccion_fiscal": cliente.get('direccion_fiscal', ''),
+                    "codigo_cliente": cliente.get('codigo_cliente', ''),
+                    "telefono_contacto": cliente.get('telefono_contacto', ''),
+                    "email_contacto": cliente.get('email_contacto', ''),
+                    "nombre_contacto": cliente.get('nombre_contacto', ''),
+                    "contactos": contactos if contactos else [],
+                    "puntos_entrega": puntos if puntos else []
+                }
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "error": "Cliente no encontrado"
+            })
+            
+    except Exception as e:
+        import traceback
+        print("❌ Error en buscar_cliente_por_ruc:")
+        traceback.print_exc()
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
    

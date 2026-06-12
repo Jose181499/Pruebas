@@ -505,31 +505,54 @@
         });
         document.querySelectorAll('.peso').forEach(peso => peso.addEventListener('input', actualizarResumen));
         actualizarResumen();
+      // ==========================================
+// BUSCAR CLIENTE POR RUC (MEJORADO - BUSCA EN BD LOCAL PRIMERO)
+// ==========================================
+document.getElementById('btnBuscarCliente')?.addEventListener('click', async function() {
+    const ruc = document.getElementById('buscar_cliente_ruc').value.trim();
+    if (!ruc || ruc.length !== 11) {
+        mostrarNotificacion('Ingrese un RUC válido de 11 dígitos', 'warning');
+        return;
+    }
+    
+    mostrarNotificacion('🔍 Buscando cliente...', 'info');
+    
+    try {
+        // PRIMERO: Buscar en tu base de datos local
+        const responseLocal = await fetch(`/api/clientes/buscar-por-ruc?ruc=${ruc}`);
+        const dataLocal = await responseLocal.json();
         
-        // ==========================================
-        // BUSCAR CLIENTE POR RUC
-        // ==========================================
-        document.getElementById('btnBuscarCliente')?.addEventListener('click', async function() {
-            const ruc = document.getElementById('buscar_cliente_ruc').value;
-            if (!ruc || ruc.length !== 11) {
-                mostrarNotificacion('Ingrese un RUC válido de 11 dígitos', 'warning');
-                return;
+        if (dataLocal.success && dataLocal.data) {
+            // Cliente encontrado en BD local
+            const cliente = dataLocal.data;
+            document.getElementById('destinatario_doc').value = cliente.numero_documento;
+            document.getElementById('destinatario_nombre').value = cliente.razon_social;
+            if (cliente.direccion_fiscal) {
+                document.getElementById('direccion_llegada').value = cliente.direccion_fiscal;
             }
-            try {
-                const response = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
-                const data = await response.json();
-                if (data.success) {
-                    document.getElementById('destinatario_doc').value = ruc;
-                    document.getElementById('destinatario_nombre').value = data.razon_social;
-                    if (data.direccion) document.getElementById('direccion_llegada').value = data.direccion;
-                    mostrarNotificacion('✅ Cliente cargado desde SUNAT', 'exito');
-                } else {
-                    mostrarNotificacion('No se encontró el RUC', 'error');
-                }
-            } catch (error) {
-                mostrarNotificacion('Error al consultar SUNAT', 'error');
+            mostrarNotificacion('✅ Cliente encontrado en la base de datos', 'exito');
+            return;
+        }
+        
+        // SEGUNDO: Si no está en BD, consultar SUNAT
+        const responseSunat = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
+        const dataSunat = await responseSunat.json();
+        
+        if (dataSunat.success) {
+            document.getElementById('destinatario_doc').value = ruc;
+            document.getElementById('destinatario_nombre').value = dataSunat.razon_social || '';
+            if (dataSunat.direccion) {
+                document.getElementById('direccion_llegada').value = dataSunat.direccion;
             }
-        });
+            mostrarNotificacion('✅ Cliente cargado desde SUNAT', 'exito');
+        } else {
+            mostrarNotificacion('❌ No se encontró el RUC en SUNAT', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarNotificacion('❌ Error al consultar', 'error');
+    }
+});
         
         // ==========================================
         // BUSCAR TRANSPORTISTA
@@ -808,6 +831,158 @@
         // ==========================================
         const hoy = new Date().toISOString().split('T')[0];
         document.getElementById('fecha_traslado').value = hoy;
+        
+                // ==========================================
+// AUTOCOMPLETAR DESDE COTIZACIÓN ACEPTADA
+// ==========================================
+function autocompletarDesdeCotizacion() {
+    // Verificar si venimos de una cotización
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromCotizacion = urlParams.get('from_cotizacion');
+    
+    if (!fromCotizacion) return;
+    
+    // Obtener datos guardados
+    const datosGuardados = localStorage.getItem('datos_cotizacion_para_guia');
+    if (!datosGuardados) return;
+    
+    try {
+        const datos = JSON.parse(datosGuardados);
+        console.log('📦 Autocompletando desde cotización:', datos);
+        
+        // 1. Autocompletar destinatario (cliente)
+        if (datos.cliente) {
+            const cliente = datos.cliente;
+            
+            if (cliente.ruc) {
+                document.getElementById('destinatario_doc').value = cliente.ruc;
+                document.getElementById('buscar_cliente_ruc').value = cliente.ruc;
+            }
+            
+            if (cliente.razon_social) {
+                document.getElementById('destinatario_nombre').value = cliente.razon_social;
+            }
+            
+            if (cliente.direccion) {
+                document.getElementById('direccion_llegada').value = cliente.direccion;
+            }
+            
+            // Opcional: autocompletar contactos si existen
+            if (cliente.contacto) {
+                document.getElementById('conductor_nombre').value = cliente.contacto;
+            }
+            
+            if (cliente.telefono) {
+                document.getElementById('conductor_dni').value = cliente.telefono;
+            }
+        }
+        
+        // 2. Autocompletar productos
+        if (datos.productos && datos.productos.length > 0) {
+            // Limpiar productos existentes
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+            itemCount = 0;
+            
+            // Agregar cada producto de la cotización
+            datos.productos.forEach((producto, idx) => {
+                if (producto.cantidad > 0) {
+                    itemCount++;
+                    const nuevaFila = document.createElement('tr');
+                    nuevaFila.innerHTML = `
+                        <td>${itemCount}</td>
+                        <td><input type="text" class="form-control form-control-sm" value="${escapeHtml(producto.codigo || '')}" placeholder="Código"></td>
+                        <td><input type="text" class="form-control form-control-sm" value="${escapeHtml(producto.descripcion || '')}" placeholder="Descripción del producto"></td>
+                        <td>
+                            <select class="form-select form-select-sm">
+                                <option value="NIU" ${producto.unidad === 'NIU' ? 'selected' : ''}>Unidad (NIU)</option>
+                                <option value="KG" ${producto.unidad === 'KG' ? 'selected' : ''}>Kilogramo (KG)</option>
+                                <option value="LTR" ${producto.unidad === 'LTR' ? 'selected' : ''}>Litro (LTR)</option>
+                            </select>
+                        </td>
+                        <td><input type="number" class="form-control form-control-sm cantidad" value="${producto.cantidad}" min="0.01" step="0.01"></td>
+                        <td><input type="number" class="form-control form-control-sm peso" value="${producto.peso_unitario || 0}" placeholder="0.00" step="0.01"></td>
+                        <td><button class="btn-del btn-sm">🗑️</button></td>
+                    `;
+                    tbody.appendChild(nuevaFila);
+                    
+                    // Agregar event listeners
+                    nuevaFila.querySelector('.btn-del').addEventListener('click', () => { 
+                        nuevaFila.remove(); 
+                        actualizarResumen(); 
+                        renumerarItems();
+                    });
+                    nuevaFila.querySelector('.peso').addEventListener('input', actualizarResumen);
+                    nuevaFila.querySelector('.cantidad').addEventListener('input', actualizarResumen);
+                }
+            });
+            
+            actualizarResumen();
+            mostrarNotificacion(`✅ Se cargaron ${datos.productos.length} productos de la cotización`, 'exito');
+        }
+        
+        // 3. Autocompletar documento asociado (número de cotización)
+        if (datos.documento_asociado) {
+            document.getElementById('documento_asociado').value = datos.documento_asociado;
+        }
+        
+        // 4. Autocompletar observaciones
+        if (datos.observaciones) {
+            const obsField = document.getElementById('observaciones');
+            const obsActual = obsField.value;
+            if (obsActual) {
+                obsField.value = obsActual + '\n\n📄 De cotización: ' + datos.observaciones;
+            } else {
+                obsField.value = '📄 De cotización: ' + datos.observaciones;
+            }
+        }
+        
+        // 5. Autocompletar fecha de traslado (usar fecha de cotización o actual)
+        if (datos.fecha_cotizacion) {
+            const fechaCotizacion = new Date(datos.fecha_cotizacion);
+            if (!isNaN(fechaCotizacion)) {
+                const fechaFormateada = fechaCotizacion.toISOString().split('T')[0];
+                document.getElementById('fecha_traslado').value = fechaFormateada;
+            }
+        }
+        
+        // Mostrar notificación de éxito
+        mostrarNotificacion('✅ Datos de cotización cargados automáticamente', 'exito');
+        
+        // Limpiar localStorage después de usar (opcional, para no recargar datos viejos)
+        // localStorage.removeItem('datos_cotizacion_para_guia');
+        
+    } catch (error) {
+        console.error('Error al autocompletar:', error);
+        mostrarNotificacion('⚠️ Error al cargar datos automáticos', 'warning');
+    }
+}
+
+// Función para renumerar items
+function renumerarItems() {
+    const filas = document.querySelectorAll('#table-body tr');
+    filas.forEach((fila, idx) => {
+        fila.cells[0].textContent = idx + 1;
+    });
+    itemCount = filas.length;
+}
+
+// Función helper para escapar HTML
+function escapeHtml(str) {
+    if (!str) return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+// Ejecutar autocompletado cuando carga la página
+document.addEventListener('DOMContentLoaded', function() {
+    autocompletarDesdeCotizacion();
+});
+
     </script>
 </body>
 </html>
