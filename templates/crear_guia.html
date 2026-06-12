@@ -263,6 +263,12 @@
                                         <option value="PUBLICO">🚚 Transporte Público (tercero)</option>
                                     </select>
                                 </div>
+                                <div class="col-md-12">
+                                <label class="form-label">Seleccionar Conductor/Transportista</label>
+                                <select class="form-select custom-input" id="select_transportista">
+                                <option value="">-- Seleccione un conductor --</option>
+                            </select>
+                                </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Placa del Vehículo <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control custom-input" id="placa_vehiculo" placeholder="ABC-123" required>
@@ -809,7 +815,71 @@ document.getElementById('btnBuscarCliente')?.addEventListener('click', async fun
         });
         
         // ==========================================
-        // DESCARGAR PDF
+        // ==========================================
+// CARGAR TRANSPORTISTAS
+// ==========================================
+async function cargarTransportistas() {
+    try {
+        const response = await fetch('/api/transportistas');
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            const select = document.getElementById('select_transportista');
+            if (select) {
+                select.innerHTML = '<option value="">-- Seleccione un conductor --</option>';
+                
+                result.data.forEach(transportista => {
+                    const option = document.createElement('option');
+                    option.value = transportista.id;
+                    let texto = transportista.nombre_completo;
+                    if (transportista.placa) texto += ` - ${transportista.placa}`;
+                    if (transportista.dni) texto += ` (DNI: ${transportista.dni})`;
+                    option.textContent = texto;
+                    select.appendChild(option);
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Error cargando transportistas:', error);
+    }
+}
+
+// ==========================================
+// AUTOCOMPLETAR DATOS DEL TRANSPORTISTA
+// ==========================================
+document.getElementById('select_transportista')?.addEventListener('change', async function() {
+    const transportistaId = this.value;
+    if (!transportistaId) return;
+    
+    try {
+        const response = await fetch(`/api/transportistas/${transportistaId}`);
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            const t = result.data;
+            
+            // Autocompletar campos del vehículo
+            if (t.placa) document.getElementById('placa_vehiculo').value = t.placa;
+            if (t.dni) document.getElementById('conductor_dni').value = t.dni;
+            if (t.nombre_completo) document.getElementById('conductor_nombre').value = t.nombre_completo;
+            if (t.licencia) document.getElementById('licencia_conductor').value = t.licencia;
+            if (t.telefono) document.getElementById('conductor_telefono')?.setAttribute('value', t.telefono);
+            
+            // Si es empresa, mostrar en transportista
+            if (t.tipo === 'empresa') {
+                document.getElementById('transportista_ruc').value = t.dni;
+                document.getElementById('transportista_nombre').value = t.nombre_completo;
+            }
+            
+            mostrarNotificacion(`✅ Datos de ${t.nombre_completo} cargados`, 'exito');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarNotificacion('Error al cargar datos del transportista', 'error');
+    }
+});
+
+
         // ==========================================
         document.getElementById('btnPdf')?.addEventListener('click', async function() {
             const guiaId = ultimaGuiaId || localStorage.getItem('ultima_guia_id');
@@ -867,14 +937,7 @@ function autocompletarDesdeCotizacion() {
                 document.getElementById('direccion_llegada').value = cliente.direccion;
             }
             
-            // // Opcional: autocompletar contactos si existen
-            // if (cliente.contacto) {
-            //     document.getElementById('conductor_nombre').value = cliente.contacto;
-            // }
             
-            // if (cliente.telefono) {
-            //     document.getElementById('conductor_dni').value = cliente.telefono;
-            // }
         }
         
         // 2. Autocompletar productos
@@ -978,9 +1041,9 @@ function escapeHtml(str) {
         .replace(/'/g, '&#39;');
 }
 
-// Ejecutar autocompletado cuando carga la página
 document.addEventListener('DOMContentLoaded', function() {
-    autocompletarDesdeCotizacion();
+    cargarTransportistas();           // Cargar transportistas del selector
+    autocompletarDesdeCotizacion();   // Autocompletar desde cotización si viene
 });
 
     </script>

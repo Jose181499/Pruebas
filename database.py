@@ -2820,3 +2820,105 @@ def obtener_ultimo_numero_guia_compra(serie):
     except Exception as e:
         print(f"Error en obtener_ultimo_numero_guia_compra: {e}")
         return 0
+
+# ==========================================
+# TRANSPORTISTAS - FUNCIONES
+# ==========================================
+
+def obtener_transportistas(activo=True):
+    """Obtener lista de transportistas/conductores"""
+    try:
+        query = """
+            SELECT id, nombre_completo, dni, placa, medidas, licencia, telefono, peso_carga, tipo
+            FROM transportistas
+            WHERE activo = TRUE
+            ORDER BY nombre_completo
+        """
+        if not activo:
+            query = """
+                SELECT id, nombre_completo, dni, placa, medidas, licencia, telefono, peso_carga, tipo
+                FROM transportistas
+                ORDER BY nombre_completo
+            """
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_transportistas: {e}")
+        return []
+
+def obtener_transportista_por_id(transportista_id):
+    """Obtener transportista por ID"""
+    try:
+        rows = db_query("""
+            SELECT id, nombre_completo, dni, placa, medidas, licencia, telefono, peso_carga, tipo
+            FROM transportistas
+            WHERE id = %s AND activo = TRUE
+        """, (transportista_id,))
+        return rows[0] if rows else None
+    except Exception as e:
+        print(f"❌ Error en obtener_transportista_por_id: {e}")
+        return None
+
+def insertar_transportista(data):
+    """Insertar nuevo transportista"""
+    try:
+        with db_tx() as conn:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            cur.execute("""
+                INSERT INTO transportistas (nombre_completo, dni, placa, medidas, licencia, telefono, peso_carga, tipo)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
+            """, (
+                data.get('nombre_completo'),
+                data.get('dni'),
+                data.get('placa'),
+                data.get('medidas'),
+                data.get('licencia'),
+                data.get('telefono'),
+                data.get('peso_carga'),
+                data.get('tipo', 'conductor')
+            ))
+            result = cur.fetchone()
+            return result['id'] if result else None
+    except Exception as e:
+        print(f"❌ Error en insertar_transportista: {e}")
+        return None
+
+def actualizar_transportista(transportista_id, data):
+    """Actualizar transportista existente"""
+    try:
+        db_execute("""
+            UPDATE transportistas 
+            SET nombre_completo = %s,
+                dni = %s,
+                placa = %s,
+                medidas = %s,
+                licencia = %s,
+                telefono = %s,
+                peso_carga = %s,
+                tipo = %s,
+                updated_at = NOW()
+            WHERE id = %s
+        """, (
+            data.get('nombre_completo'),
+            data.get('dni'),
+            data.get('placa'),
+            data.get('medidas'),
+            data.get('licencia'),
+            data.get('telefono'),
+            data.get('peso_carga'),
+            data.get('tipo', 'conductor'),
+            transportista_id
+        ))
+        return True
+    except Exception as e:
+        print(f"❌ Error en actualizar_transportista: {e}")
+        return False
+
+def eliminar_transportista_db(transportista_id):
+    """Eliminar transportista (borrado lógico)"""
+    try:
+        db_execute("UPDATE transportistas SET activo = FALSE WHERE id = %s", (transportista_id,))
+        return True
+    except Exception as e:
+        print(f"❌ Error en eliminar_transportista_db: {e}")
+        return False
