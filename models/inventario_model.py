@@ -7,14 +7,16 @@ class InventarioModel:
     
     @staticmethod
     def get_stock_actual(producto_id):
-        """Obtener stock actual de un producto"""
+        """Obtener stock actual de un producto - Retorna float"""
         try:
             query = "SELECT stock_actual FROM inventario WHERE producto_id = %s"
             result = db_query(query, (producto_id,))
-            return result[0]['stock_actual'] if result else 0
+            if result and result[0].get('stock_actual') is not None:
+                return float(result[0]['stock_actual'])
+            return 0.0
         except Exception as e:
             print(f"Error en get_stock_actual: {e}")
-            return 0
+            return 0.0
     
     @staticmethod
     def get_todos_stocks():
@@ -29,7 +31,12 @@ class InventarioModel:
                 LEFT JOIN inventario i ON p.id = i.producto_id
                 ORDER BY p.descripcion
             """
-            return db_query(query)
+            resultados = db_query(query)
+            # Convertir Decimal a float en los resultados
+            for r in resultados:
+                if 'stock_actual' in r and r['stock_actual'] is not None:
+                    r['stock_actual'] = float(r['stock_actual'])
+            return resultados
         except Exception as e:
             print(f"Error en get_todos_stocks: {e}")
             return []
@@ -48,10 +55,17 @@ class InventarioModel:
                 LEFT JOIN inventario i ON p.id = i.producto_id
             """
             result = db_query(query)
-            return result[0] if result else {'total_productos': 0, 'stock_total': 0, 'stock_bajo': 0, 'stock_cero': 0}
+            if result:
+                return {
+                    'total_productos': int(result[0].get('total_productos', 0)),
+                    'stock_total': float(result[0].get('stock_total', 0)),
+                    'stock_bajo': int(result[0].get('stock_bajo', 0)),
+                    'stock_cero': int(result[0].get('stock_cero', 0))
+                }
+            return {'total_productos': 0, 'stock_total': 0.0, 'stock_bajo': 0, 'stock_cero': 0}
         except Exception as e:
             print(f"Error en get_resumen_stock: {e}")
-            return {'total_productos': 0, 'stock_total': 0, 'stock_bajo': 0, 'stock_cero': 0}
+            return {'total_productos': 0, 'stock_total': 0.0, 'stock_bajo': 0, 'stock_cero': 0}
     
     @staticmethod
     def get_productos_stock_critico():
@@ -67,7 +81,11 @@ class InventarioModel:
                 WHERE COALESCE(i.stock_actual, 0) <= 0
                 ORDER BY stock_actual ASC
             """
-            return db_query(query)
+            resultados = db_query(query)
+            for r in resultados:
+                if 'stock_actual' in r:
+                    r['stock_actual'] = float(r['stock_actual'])
+            return resultados
         except Exception as e:
             print(f"Error en get_productos_stock_critico: {e}")
             return []
@@ -86,7 +104,11 @@ class InventarioModel:
                   AND COALESCE(i.stock_actual, 0) <= COALESCE(i.stock_minimo, 5)
                 ORDER BY (COALESCE(i.stock_actual, 0) / NULLIF(COALESCE(i.stock_minimo, 5), 0)) ASC
             """
-            return db_query(query)
+            resultados = db_query(query)
+            for r in resultados:
+                if 'stock_actual' in r:
+                    r['stock_actual'] = float(r['stock_actual'])
+            return resultados
         except Exception as e:
             print(f"Error en get_productos_stock_bajo: {e}")
             return []
@@ -95,8 +117,12 @@ class InventarioModel:
     def registrar_entrada(producto_id, cantidad, costo_unitario, documento, proveedor, observaciones):
         """Registrar entrada de mercadería"""
         try:
+            # Convertir a float para evitar problemas con Decimal
+            cantidad = float(cantidad)
+            costo_unitario = float(costo_unitario) if costo_unitario else 0.0
+            
             stock_actual = InventarioModel.get_stock_actual(producto_id)
-            nuevo_stock = stock_actual + float(cantidad)
+            nuevo_stock = stock_actual + cantidad
             
             # Insertar movimiento
             db_execute("""
@@ -106,19 +132,11 @@ class InventarioModel:
             """, (producto_id, cantidad, costo_unitario, stock_actual, nuevo_stock, documento, observaciones))
             
             # Actualizar stock (con UPSERT en PostgreSQL)
-            try:
-                db_execute("""
-                    INSERT INTO inventario (producto_id, stock_actual) 
-                    VALUES (%s, %s)
-                    ON CONFLICT (producto_id) DO UPDATE SET stock_actual = inventario.stock_actual + %s
-                """, (producto_id, cantidad, cantidad))
-            except:
-                # Si no hay UNIQUE constraint, usar UPDATE primero
-                db_execute("UPDATE inventario SET stock_actual = stock_actual + %s WHERE producto_id = %s", (cantidad, producto_id))
-                db_execute("""
-                    INSERT INTO inventario (producto_id, stock_actual) 
-                    SELECT %s, %s WHERE NOT EXISTS (SELECT 1 FROM inventario WHERE producto_id = %s)
-                """, (producto_id, cantidad, producto_id))
+            db_execute("""
+                INSERT INTO inventario (producto_id, stock_actual) 
+                VALUES (%s, %s)
+                ON CONFLICT (producto_id) DO UPDATE SET stock_actual = inventario.stock_actual + %s
+            """, (producto_id, cantidad, cantidad))
             
             return {'success': True, 'message': 'Entrada registrada'}
         except Exception as e:
@@ -129,12 +147,14 @@ class InventarioModel:
     def registrar_salida(producto_id, cantidad, motivo, documento, destino, observaciones):
         """Registrar salida de mercadería"""
         try:
+            # Convertir a float
+            cantidad = float(cantidad)
             stock_actual = InventarioModel.get_stock_actual(producto_id)
             
-            if stock_actual < float(cantidad):
+            if stock_actual < cantidad:
                 return {'success': False, 'error': 'Stock insuficiente'}
             
-            nuevo_stock = stock_actual - float(cantidad)
+            nuevo_stock = stock_actual - cantidad
             
             # Insertar movimiento
             db_execute("""
@@ -169,7 +189,15 @@ class InventarioModel:
                 ORDER BY fecha_creacion DESC
                 LIMIT 100
             """
-            return db_query(query, (producto_id,))
+            resultados = db_query(query, (producto_id,))
+            for r in resultados:
+                if 'entrada' in r and r['entrada']:
+                    r['entrada'] = float(r['entrada']) if r['entrada'] != '-' else 0
+                if 'salida' in r and r['salida']:
+                    r['salida'] = float(r['salida']) if r['salida'] != '-' else 0
+                if 'saldo' in r and r['saldo']:
+                    r['saldo'] = float(r['saldo'])
+            return resultados
         except Exception as e:
             print(f"Error en get_kardex: {e}")
             return []
@@ -184,10 +212,15 @@ class InventarioModel:
                 WHERE id = %s
             """
             result = db_query(query, (producto_id,))
-            return result[0] if result else {'costo_unitario': 0, 'precio_venta': 0}
+            if result:
+                return {
+                    'costo_unitario': float(result[0].get('costo_unitario', 0)) if result[0].get('costo_unitario') else 0,
+                    'precio_venta': float(result[0].get('precio_venta', 0)) if result[0].get('precio_venta') else 0
+                }
+            return {'costo_unitario': 0.0, 'precio_venta': 0.0}
         except Exception as e:
             print(f"Error en get_precios_producto: {e}")
-            return {'costo_unitario': 0, 'precio_venta': 0}
+            return {'costo_unitario': 0.0, 'precio_venta': 0.0}
     
     @staticmethod
     def revalorizar_individual(producto_id, nuevo_costo, nuevo_precio, motivo):
@@ -196,23 +229,85 @@ class InventarioModel:
             # Obtener valores actuales
             actual = InventarioModel.get_precios_producto(producto_id)
             
+            nuevo_costo_float = float(nuevo_costo) if nuevo_costo else None
+            nuevo_precio_float = float(nuevo_precio) if nuevo_precio else None
+            
             # Registrar revalorización
             db_execute("""
                 INSERT INTO revalorizaciones_inventario
                 (producto_id, costo_anterior, costo_nuevo, precio_anterior, precio_nuevo, motivo)
                 VALUES (%s, %s, %s, %s, %s, %s)
-            """, (producto_id, actual.get('costo_unitario'), nuevo_costo, 
-                   actual.get('precio_venta'), nuevo_precio, motivo))
+            """, (producto_id, actual.get('costo_unitario'), nuevo_costo_float, 
+                   actual.get('precio_venta'), nuevo_precio_float, motivo))
             
             # Actualizar producto
-            if nuevo_costo and float(nuevo_costo) > 0:
-                db_execute("UPDATE productos SET costo_unitario = %s WHERE id = %s", (nuevo_costo, producto_id))
-            if nuevo_precio and float(nuevo_precio) > 0:
-                db_execute("UPDATE productos SET precio_venta = %s WHERE id = %s", (nuevo_precio, producto_id))
+            if nuevo_costo_float and nuevo_costo_float > 0:
+                db_execute("UPDATE productos SET costo_unitario = %s WHERE id = %s", (nuevo_costo_float, producto_id))
+            if nuevo_precio_float and nuevo_precio_float > 0:
+                db_execute("UPDATE productos SET precio_venta = %s WHERE id = %s", (nuevo_precio_float, producto_id))
             
             return {'success': True, 'message': 'Revalorización aplicada'}
         except Exception as e:
             print(f"Error en revalorizar_individual: {e}")
+            return {'success': False, 'error': str(e)}
+    
+    @staticmethod
+    def revalorizar_masivo(familia, tipo_ajuste, valor_ajuste, aplicar_costo, aplicar_precio, motivo):
+        """Revalorización masiva de productos por familia"""
+        try:
+            query_base = "SELECT id, costo_unitario, precio_venta FROM productos WHERE activo = TRUE"
+            params = []
+            
+            if familia and familia.strip():
+                query_base += " AND familia = %s"
+                params.append(familia)
+            
+            productos = db_query(query_base, params if params else None)
+            
+            if not productos:
+                return {'success': False, 'error': 'No se encontraron productos para revalorizar'}
+            
+            productos_afectados = 0
+            valor = float(valor_ajuste)
+            
+            for producto in productos:
+                producto_id = producto['id']
+                nuevo_costo = None
+                nuevo_precio = None
+                
+                if aplicar_costo and producto.get('costo_unitario'):
+                    costo_actual = float(producto['costo_unitario'])
+                    if tipo_ajuste == 'PORCENTAJE':
+                        nuevo_costo = costo_actual * (1 + valor / 100)
+                    else:
+                        nuevo_costo = costo_actual + valor
+                    nuevo_costo = round(max(0.0, nuevo_costo), 2)
+                
+                if aplicar_precio and producto.get('precio_venta'):
+                    precio_actual = float(producto['precio_venta'])
+                    if tipo_ajuste == 'PORCENTAJE':
+                        nuevo_precio = precio_actual * (1 + valor / 100)
+                    else:
+                        nuevo_precio = precio_actual + valor
+                    nuevo_precio = round(max(0.0, nuevo_precio), 2)
+                
+                if nuevo_costo or nuevo_precio:
+                    resultado = InventarioModel.revalorizar_individual(
+                        producto_id=producto_id,
+                        nuevo_costo=nuevo_costo,
+                        nuevo_precio=nuevo_precio,
+                        motivo=f"[MASIVO] {motivo}"
+                    )
+                    if resultado.get('success'):
+                        productos_afectados += 1
+            
+            return {
+                'success': True, 
+                'message': f'Revalorización masiva aplicada a {productos_afectados} productos',
+                'productos_afectados': productos_afectados
+            }
+        except Exception as e:
+            print(f"Error en revalorizar_masivo: {e}")
             return {'success': False, 'error': str(e)}
     
     @staticmethod
@@ -237,26 +332,27 @@ class InventarioModel:
         """Registrar recuento físico"""
         try:
             stock_sistema = InventarioModel.get_stock_actual(producto_id)
-            diferencia = float(cantidad_fisica) - stock_sistema
+            cantidad_fisica_float = float(cantidad_fisica)
+            diferencia = cantidad_fisica_float - stock_sistema
             
             # Insertar recuento
             db_execute("""
                 INSERT INTO recuentos_inventario
                 (producto_id, cantidad_sistema, cantidad_fisica, diferencia, ubicacion, observaciones, ajuste_aplicado, fecha_recuento)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, CURRENT_DATE)
-            """, (producto_id, stock_sistema, cantidad_fisica, diferencia, 
+            """, (producto_id, stock_sistema, cantidad_fisica_float, diferencia, 
                    ubicacion, observaciones, aplicar_ajuste))
             
             # Aplicar ajuste si se solicitó
             if aplicar_ajuste and diferencia != 0:
-                db_execute("UPDATE inventario SET stock_actual = %s WHERE producto_id = %s", (cantidad_fisica, producto_id))
+                db_execute("UPDATE inventario SET stock_actual = %s WHERE producto_id = %s", (cantidad_fisica_float, producto_id))
                 
                 # Registrar movimiento de ajuste
                 db_execute("""
                     INSERT INTO movimientos_inventario
                     (producto_id, tipo_movimiento, cantidad, stock_anterior, stock_nuevo, observaciones)
                     VALUES (%s, 'AJUSTE', %s, %s, %s, %s)
-                """, (producto_id, abs(diferencia), stock_sistema, cantidad_fisica, 
+                """, (producto_id, abs(diferencia), stock_sistema, cantidad_fisica_float, 
                        f"Ajuste por recuento físico - {observaciones}"))
             
             return {'success': True, 'message': 'Recuento registrado'}
@@ -285,23 +381,24 @@ class InventarioModel:
     def realizar_transferencia(producto_id, cantidad, almacen_origen, almacen_destino, motivo):
         """Realizar transferencia entre almacenes"""
         try:
+            cantidad_float = float(cantidad)
             stock_actual = InventarioModel.get_stock_actual(producto_id)
             
-            if stock_actual < float(cantidad):
+            if stock_actual < cantidad_float:
                 return {'success': False, 'error': 'Stock insuficiente en almacén origen'}
             
-            nuevo_stock = stock_actual - float(cantidad)
+            nuevo_stock = stock_actual - cantidad_float
             
             # Registrar movimiento de salida (transferencia)
             db_execute("""
                 INSERT INTO movimientos_inventario 
                 (producto_id, tipo_movimiento, cantidad, stock_anterior, stock_nuevo, motivo, observaciones)
                 VALUES (%s, 'TRANSFERENCIA', %s, %s, %s, %s, %s)
-            """, (producto_id, cantidad, stock_actual, nuevo_stock, motivo, 
+            """, (producto_id, cantidad_float, stock_actual, nuevo_stock, motivo, 
                    f"Transferencia de {almacen_origen} a {almacen_destino}"))
             
             # Actualizar stock
-            db_execute("UPDATE inventario SET stock_actual = stock_actual - %s WHERE producto_id = %s", (cantidad, producto_id))
+            db_execute("UPDATE inventario SET stock_actual = stock_actual - %s WHERE producto_id = %s", (cantidad_float, producto_id))
             
             return {'success': True, 'message': 'Transferencia realizada'}
         except Exception as e:
