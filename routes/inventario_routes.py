@@ -1,19 +1,117 @@
 from flask import Blueprint, render_template, jsonify, request
 from models.producto_model import ProductoModel
 from models.inventario_model import InventarioModel
+import traceback
 
 inventario_bp = Blueprint('inventario', __name__, url_prefix='/inventario')
 
-# PRUEBA SIMPLE - Comenta todo lo demás
+# ==========================================
+# PÁGINAS PRINCIPALES
+# ==========================================
+
 @inventario_bp.route('/')
 def index():
-    return "<h1>Inventario funcionando</h1><p>Si ves esto, el blueprint está bien</p>"
+    return render_template('inventario/index.html')
 
-@inventario_bp.route('/test')
-def test():
-    return {"status": "ok", "message": "API funcionando"}
+@inventario_bp.route('/kardex')
+def kardex():
+    try:
+        productos = ProductoModel.obtener_todos()
+        return render_template('inventario/kardex.html', productos=productos)
+    except Exception as e:
+        return f"Error en kardex: {str(e)}", 500
 
+@inventario_bp.route('/estado-stock')
+def estado_stock():
+    try:
+        productos = ProductoModel.obtener_todos()
+        return render_template('inventario/estado_stock.html', productos=productos)
+    except Exception as e:
+        return f"Error en estado-stock: {str(e)}", 500
 
+@inventario_bp.route('/entrada')
+def entrada_mercaderia():
+    try:
+        productos = ProductoModel.obtener_todos()
+        return render_template('inventario/entrada_mercaderia.html', productos=productos)
+    except Exception as e:
+        return f"Error en entrada: {str(e)}", 500
+
+@inventario_bp.route('/salida')
+def salida_mercaderia():
+    try:
+        productos = ProductoModel.obtener_todos()
+        return render_template('inventario/salida_mercaderia.html', productos=productos)
+    except Exception as e:
+        return f"Error en salida: {str(e)}", 500
+
+@inventario_bp.route('/transferencia')
+def transferencia():
+    try:
+        productos = ProductoModel.obtener_todos()
+        return render_template('inventario/transferencia.html', productos=productos)
+    except Exception as e:
+        return f"Error en transferencia: {str(e)}", 500
+
+@inventario_bp.route('/revalorizacion')
+def revalorizacion():
+    try:
+        productos = ProductoModel.obtener_todos()
+        return render_template('inventario/revalorizacion.html', productos=productos)
+    except Exception as e:
+        return f"Error en revalorizacion: {str(e)}", 500
+
+@inventario_bp.route('/recuentos')
+def recuentos():
+    try:
+        productos = ProductoModel.obtener_todos()
+        return render_template('inventario/recuentos.html', productos=productos)
+    except Exception as e:
+        return f"Error en recuentos: {str(e)}", 500
+
+@inventario_bp.route('/reposicion')
+def reposicion_stock():
+    try:
+        productos = ProductoModel.obtener_todos()
+        return render_template('inventario/reposicion_stock.html', productos=productos)
+    except Exception as e:
+        return f"Error en reposicion: {str(e)}", 500
+
+# ==========================================
+# APIS
+# ==========================================
+
+@inventario_bp.route('/api/stock/<int:producto_id>')
+def api_get_stock(producto_id):
+    try:
+        stock = InventarioModel.get_stock_actual(producto_id)
+        return jsonify({'success': True, 'stock_actual': stock})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@inventario_bp.route('/api/todos-stocks')
+def api_todos_stocks():
+    try:
+        stocks = InventarioModel.get_todos_stocks()
+        return jsonify({'success': True, 'data': stocks})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@inventario_bp.route('/api/resumen-stock')
+def api_resumen_stock():
+    try:
+        resumen = InventarioModel.get_resumen_stock()
+        return jsonify({'success': True, **resumen})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@inventario_bp.route('/api/kardex/<int:producto_id>')
+def api_kardex(producto_id):
+    try:
+        kardex = InventarioModel.get_kardex(producto_id)
+        return jsonify({'success': True, 'data': kardex})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
 
 # from flask import Blueprint, render_template, jsonify, request
 # from models.producto_model import ProductoModel  # Ajusta según tu modelo de productos
