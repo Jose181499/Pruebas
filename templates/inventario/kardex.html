@@ -1,48 +1,44 @@
 {% extends "base.html" %}
+
 {% block title %}Kardex de Productos{% endblock %}
+
+{% block page_title %}📒 Kardex de Productos{% endblock %}
+{% block page_subtitle %}Historial de movimientos por producto{% endblock %}
+
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="fw-bold">📒 Kardex de Productos</h1>
-        <a href="/inventario" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Volver
-        </a>
+<div class="erp-card">
+    <div class="card-header-custom">
+        <i class="bi bi-search"></i> Seleccionar Producto
     </div>
-
-    <div class="card shadow-sm border-0 rounded-4">
-        <div class="card-header bg-primary text-white rounded-top-4">
-            <i class="bi bi-search"></i> Seleccionar Producto
-        </div>
-        <div class="card-body">
-            <select class="form-select form-select-lg" id="productoSelect">
-                <option value="">-- Seleccione un producto --</option>
-                {% for p in productos %}
-                <option value="{{ p.id }}">{{ p.codigo }} - {{ p.descripcion }} ({{ p.marca }})</option>
-                {% endfor %}
-            </select>
-        </div>
+    <div class="card-body">
+        <select class="form-select form-select-lg" id="productoSelect">
+            <option value="">-- Seleccione un producto --</option>
+            {% for p in productos %}
+            <option value="{{ p.id }}">{{ p.codigo }} - {{ p.descripcion }} ({{ p.marca }})</option>
+            {% endfor %}
+        </select>
     </div>
+</div>
 
-    <div class="card shadow-sm border-0 rounded-4 mt-4" id="kardexContainer" style="display: none;">
-        <div class="card-header bg-success text-white rounded-top-4">
-            <i class="bi bi-table"></i> Historial de Movimientos
-        </div>
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead class="table-success">
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Tipo</th>
-                        <th>Documento</th>
-                        <th>Entrada</th>
-                        <th>Salida</th>
-                        <th>Saldo</th>
-                        <th>Observaciones</th>
-                    </tr>
-                </thead>
-                <tbody id="kardexBody"></tbody>
-            </table>
-        </div>
+<div class="erp-card mt-4" id="kardexContainer" style="display: none;">
+    <div class="card-header-custom" style="background: linear-gradient(135deg, #059669, #047857);">
+        <i class="bi bi-table"></i> Historial de Movimientos
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-success">
+                <tr>
+                    <th>Fecha</th>
+                    <th>Tipo</th>
+                    <th>Documento</th>
+                    <th>Entrada</th>
+                    <th>Salida</th>
+                    <th>Saldo</th>
+                    <th>Observaciones</th>
+                </tr>
+            </thead>
+            <tbody id="kardexBody"></tbody>
+        </table>
     </div>
 </div>
 
@@ -80,4 +76,3 @@ document.getElementById('productoSelect').addEventListener('change', async funct
 });
 </script>
 {% endblock %}
-

@@ -1,46 +1,42 @@
 {% extends "base.html" %}
-{% block title %}Estado de Stock{% endblock %}
-{% block content %}
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="fw-bold">📊 Estado de Stock</h1>
-        <a href="/inventario" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Volver
-        </a>
-    </div>
 
-    <div class="card shadow-sm border-0 rounded-4">
-        <div class="card-header bg-success text-white rounded-top-4">
-            <i class="bi bi-clipboard-data"></i> Stock Actual de Productos
-        </div>
-        <div class="table-responsive">
-            <table class="table table-hover" id="tablaStock">
-                <thead class="table-success">
-                    <tr>
-                        <th>Código</th>
-                        <th>Descripción</th>
-                        <th>Marca</th>
-                        <th>Unidad</th>
-                        <th>Stock Actual</th>
-                        <th>Stock Mínimo</th>
-                        <th>Estado</th>
-                    </tr>
-                </thead>
-                <tbody id="stockBody">
-                    {% for p in productos %}
-                    <tr>
-                        <td>{{ p.codigo }}</td>
-                        <td>{{ p.descripcion }}</td>
-                        <td>{{ p.marca }}</td>
-                        <td>{{ p.unidad }}</td>
-                        <td class="fw-bold" id="stock_{{ p.id }}">Cargando...</td>
-                        <td>5</td>
-                        <td id="estado_{{ p.id }}">-</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+{% block title %}Estado de Stock - Inventario{% endblock %}
+
+{% block page_title %}📊 Estado de Stock{% endblock %}
+{% block page_subtitle %}Inventario actual de productos{% endblock %}
+
+{% block content %}
+<div class="erp-card">
+    <div class="card-header-custom">
+        <i class="bi bi-clipboard-data"></i> Stock Actual de Productos
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-primary">
+                <tr>
+                    <th>Código</th>
+                    <th>Descripción</th>
+                    <th>Marca</th>
+                    <th>Unidad</th>
+                    <th>Stock Actual</th>
+                    <th>Stock Mínimo</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody id="stockBody">
+                {% for p in productos %}
+                <tr>
+                    <td>{{ p.codigo }}</td>
+                    <td>{{ p.descripcion }}</td>
+                    <td>{{ p.marca }}</td>
+                    <td>{{ p.unidad }}</td>
+                    <td class="fw-bold" id="stock_{{ p.id }}">Cargando...</td>
+                    <td>5</td>
+                    <td id="estado_{{ p.id }}">-</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 
@@ -59,10 +55,10 @@ async function cargarStocks() {
                 
                 if (item.stock_actual <= 0) {
                     estadoCell.innerHTML = '<span class="badge bg-danger">SIN STOCK</span>';
-                    stockCell.classList.add('text-danger', 'fw-bold');
+                    stockCell.classList.add('text-danger');
                 } else if (item.stock_actual <= 5) {
                     estadoCell.innerHTML = '<span class="badge bg-warning">STOCK BAJO</span>';
-                    stockCell.classList.add('text-warning', 'fw-bold');
+                    stockCell.classList.add('text-warning');
                 } else {
                     estadoCell.innerHTML = '<span class="badge bg-success">NORMAL</span>';
                     stockCell.classList.add('text-success');
@@ -74,4 +70,3 @@ async function cargarStocks() {
 cargarStocks();
 </script>
 {% endblock %}
-

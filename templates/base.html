@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ERP KCF CORPORACION{% endblock %}</title>
+    
+    <!-- Bootstrap 5 + Icons + Google Fonts -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f1f5f9; overflow-x: hidden; }
+        
+        .layout { display: flex; min-height: 100vh; }
+        
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #0f172a 0%, #0a0f1e 100%);
+            color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.08);
+            z-index: 100;
+        }
+        
+        .logo {
+            padding: 1.5rem 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 1.5rem;
+        }
+        
+        .logo h3 {
+            font-weight: 700;
+            font-size: 1.6rem;
+            background: linear-gradient(135deg, #fff, #93c5fd);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .menu {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            padding: 0 0.75rem;
+            flex: 1;
+        }
+        
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            padding: 0.7rem 1rem;
+            color: #cbd5e6;
+            text-decoration: none;
+            border-radius: 0.75rem;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+        
+        .menu-item i { font-size: 1.25rem; width: 1.6rem; }
+        .menu-item:hover { background: rgba(255, 255, 255, 0.07); color: white; }
+        .menu-item.active { background: #2563eb; color: white; }
+        
+        .dropdown-toggle-btn {
+            justify-content: space-between;
+            width: 100%;
+            background: transparent;
+            border: none;
+            text-align: left;
+        }
+        
+        .dropdown-toggle-btn::after {
+            content: "\F282";
+            font-family: 'bootstrap-icons';
+            border: none;
+            font-size: 0.9rem;
+            transition: transform 0.25s;
+            margin-left: auto;
+        }
+        
+        .dropdown-toggle-btn[aria-expanded="true"]::after { transform: rotate(180deg); }
+        
+        .submenu {
+            padding-left: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+            margin-top: 0.2rem;
+            margin-bottom: 0.2rem;
+        }
+        
+        .submenu-item {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.85rem;
+            color: #b9c3da;
+            text-decoration: none;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        
+        .submenu-item:hover { background: rgba(255, 255, 255, 0.06); color: white; padding-left: 1rem; }
+        
+        .main-content {
+            flex: 1;
+            padding: 1.5rem 2rem 2rem 2rem;
+            background: #f8fafc;
+            overflow-y: auto;
+        }
+        
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 1rem 1.8rem;
+            border-radius: 1.25rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+        
+        .page-title { font-size: 1.6rem; font-weight: 700; color: #0f172a; margin-bottom: 0.2rem; }
+        .page-subtitle { color: #475569; font-size: 0.85rem; }
+        
+        .user-box {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            background: #f1f5f9;
+            padding: 0.4rem 1rem 0.4rem 0.6rem;
+            border-radius: 60px;
+        }
+        
+        .user-avatar {
+            width: 42px;
+            height: 42px;
+            background: #2563eb;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: white;
+        }
+        
+        .role { font-size: 0.7rem; color: #3b82f6; font-weight: 500; }
+        
+        .erp-card {
+            background: white;
+            border-radius: 1.2rem;
+            padding: 1.2rem 1.4rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            border: 1px solid #eef2ff;
+            margin-bottom: 1.5rem;
+        }
+        
+        .btn-back-wrapper {
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.07);
+            padding-top: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .btn-back-wrapper .menu-item { color: #f97373; }
+        .btn-back-wrapper .menu-item:hover { background: rgba(249, 115, 115, 0.12); color: #ffc5c5; }
+        
+        .card-header-custom {
+            background: linear-gradient(135deg, #1f2937, #111827);
+            color: white;
+            padding: 16px 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-radius: 1.2rem 1.2rem 0 0;
+        }
+        
+        .badge-custom {
+            font-size: 0.62rem;
+            font-weight: 600;
+            padding: 0.2rem 0.55rem;
+            border-radius: 30px;
+            margin-left: auto;
+            background: #1e293b;
+            color: #a5f3c3;
+        }
+    </style>
+</head>
+<body>
+
+<div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="logo">
+            <h3>KCF ERP</h3>
+        </div>
+        <nav class="menu">
+            <a href="/index" class="menu-item">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+            
+            <!-- ========= INVENTARIO ========= -->
+            <div class="dropdown">
+                <button class="menu-item dropdown-toggle-btn w-100 text-start border-0 bg-transparent" 
+                        type="button" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#submenuInventario" 
+                        aria-expanded="false">
+                    <i class="bi bi-archive"></i> Inventario
+                </button>
+                <div class="collapse submenu" id="submenuInventario">
+                    <a href="/inventario/kardex" class="submenu-item"><i class="bi bi-card-list"></i> Kardex</a>
+                    <a href="/inventario/estado-stock" class="submenu-item"><i class="bi bi-clipboard-data"></i> Estado stock</a>
+                    <a href="/inventario/entrada" class="submenu-item"><i class="bi bi-arrow-down-short"></i> Entrada</a>
+                    <a href="/inventario/salida" class="submenu-item"><i class="bi bi-arrow-up-short"></i> Salida</a>
+                    <a href="/inventario/transferencia" class="submenu-item"><i class="bi bi-arrow-left-right"></i> Transferencia</a>
+                    <a href="/inventario/revalorizacion" class="submenu-item"><i class="bi bi-calculator"></i> Revalorización</a>
+                    <a href="/inventario/recuentos" class="submenu-item"><i class="bi bi-check2-square"></i> Recuentos</a>
+                    <a href="/inventario/reposicion" class="submenu-item"><i class="bi bi-arrow-repeat"></i> Reposición</a>
+                </div>
+            </div>
+
+            <div class="btn-back-wrapper">
+                <a href="javascript:void(0);" class="menu-item" onclick="window.history.back();">
+                    <i class="bi bi-arrow-left-circle"></i> Atrás
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <div class="topbar">
+            <div>
+                <h2 class="page-title">{% block page_title %}Panel de Control{% endblock %}</h2>
+                <p class="page-subtitle">{% block page_subtitle %}Sistema ERP KCF CORPORACION{% endblock %}</p>
+            </div>
+            <div class="user-box">
+                <div class="user-avatar">{{ session.nombre_completo[0] if session.nombre_completo else 'A' }}</div>
+                <div>
+                    <strong>{{ session.nombre_completo if session.nombre_completo else 'Administrador' }}</strong>
+                    <p class="role">{{ session.rol if session.rol else 'admin' }}</p>
+                </div>
+            </div>
+        </div>
+        
+        {% block content %}{% endblock %}
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
