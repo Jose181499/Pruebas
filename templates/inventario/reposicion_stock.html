@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+{% block title %}Reposición de Stock{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="fw-bold">🛒 Reposición de Stock</h1>
+        <a href="/inventario" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <!-- Alertas de Stock Bajo -->
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-header bg-danger text-white rounded-top-4">
+            <i class="bi bi-exclamation-triangle-fill"></i> Productos con Stock Crítico
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-danger">
+                    <tr>
+                        <th>Código</th>
+                        <th>Descripción</th>
+                        <th>Marca</th>
+                        <th>Stock Actual</th>
+                        <th>Stock Mínimo</th>
+                        <th>Stock Máximo</th>
+                        <th>Cantidad a Reponer</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="stockCriticoBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Productos por debajo del Stock Mínimo -->
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-header bg-warning text-dark rounded-top-4">
+            <i class="bi bi-graph-down"></i> Productos por debajo del Stock Mínimo
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover" id="tablaStockBajo">
+                <thead class="table-warning">
+                    <tr>
+                        <th>Código</th>
+                        <th>Descripción</th>
+                        <th>Marca</th>
+                        <th>Stock Actual</th>
+                        <th>Stock Mínimo</th>
+                        <th>Faltante</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="stockBajoBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Generar Orden de Compra -->
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-success text-white rounded-top-4">
+            <i class="bi bi-cart-plus"></i> Generar Orden de Compra
+        </div>
+        <div class="card-body">
+            <form id="formOrdenCompra">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Proveedor</label>
+                        <select class="form-select" id="proveedor_id" required>
+                            <option value="">Seleccione proveedor</option>
+                            <!-- Aquí cargas tus proveedores -->
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Productos a Reponer</label>
+                        <select class="form-select" id="producto_reponer">
+                            <option value="">Seleccione producto</option>
+                            {% for p in productos %}
+                            <option value="{{ p.id }}">{{ p.codigo }} - {{ p.descripcion }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Cantidad</label>
+                        <input type="number" class="form-control" id="cantidad_reponer" step="0.01">
+                    </div>
+                    <div class="col-12">
+                        <button type="button" class="btn btn-primary" id="btnAgregarItem">➕ Agregar a Orden</button>
+                    </div>
+                </div>
+            </form>
+
+            <hr>
+
+            <h5>Items de la Orden</h5>
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr><th>Producto</th><th>Cantidad</th><th>Acción</th></tr>
+                    </thead>
+                    <tbody id="ordenItems"></tbody>
+                </table>
+            </div>
+
+            <div class="mt-3">
+                <label class="form-label">Observaciones</label>
+                <textarea class="form-control" id="orden_observaciones" rows="2"></textarea>
+            </div>
+
+            <div class="mt-3">
+                <button class="btn btn-success" id="btnGenerarOrden">📄 Generar Orden de Compra</button>
+                <button class="btn btn-secondary" id="btnLimpiarOrden">Limpiar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Cargar productos con stock crítico y bajo
+async function cargarAlertasStock() {
+    const response = await fetch('/inventario/api/alertas-stock');
+    const data = await response.json();
+    
+    if (data.success) {
+        // Stock Crítico (stock = 0)
+        const criticoBody = document.getElementById('stockCriticoBody');
+        criticoBody.innerHTML = '';
+        data.criticos.forEach(p => {
+            criticoBody.innerHTML += `
+                <tr>
+                    <td>${p.codigo}</td>
+                    <td>${p.descripcion}</td>
+                    <td>${p.marca}</td>
+                    <td class="text-danger fw-bold">${p.stock_actual}</td>
+                    <td>${p.stock_minimo || 5}</td>
+                    <td>${p.stock_maximo || 100}</td>                    <td><input type="number" class="form-control form-control-sm" id="cant_${p.id}" placeholder="Cantidad" style="width:100px"></td>
+                    <td><button class="btn btn-sm btn-primary" onclick="agregarAOrden(${p.id}, '${p.descripcion}')">➕ Reponer</button></td>
+                </tr>
+            `;
+        });
+        
+        // Stock Bajo (0 < stock < stock_minimo)
+        const bajoBody = document.getElementById('stockBajoBody');
+        bajoBody.innerHTML = '';
+        data.bajos.forEach(p => {
+            const faltante = (p.stock_minimo || 5) - p.stock_actual;
+            bajoBody.innerHTML += `
+                <tr>
+                    <td>${p.codigo}</td>
+                    <td>${p.descripcion}</td>
+                    <td>${p.marca}</td>
+                    <td class="text-warning fw-bold">${p.stock_actual}</td>
+                    <td>${p.stock_minimo || 5}</td>
+                    <td class="text-danger">${faltante}</td>
+                    <td><button class="btn btn-sm btn-warning" onclick="agregarAOrden(${p.id}, '${p.descripcion}', ${faltante})">➕ Reponer</button></td>
+                </tr>
+            `;
+        });
+    }
+}
+
+// Items de la orden
+let ordenItems = [];
+
+function agregarAOrden(productoId, productoNombre, cantidadSugerida = null) {
+    let cantidad;
+    if (cantidadSugerida) {
+        cantidad = cantidadSugerida;
+    } else {
+        const input = document.getElementById(`cant_${productoId}`);
+        cantidad = input ? parseFloat(input.value) : 1;
+        if (!cantidad || cantidad <= 0) cantidad = 1;
+    }
+    
+    const existing = ordenItems.find(i => i.id === productoId);
+    if (existing) {
+        existing.cantidad += cantidad;
+    } else {
+        ordenItems.push({ id: productoId, nombre: productoNombre, cantidad: cantidad });
+    }
+    renderOrdenItems();
+}
+
+function renderOrdenItems() {
+    const tbody = document.getElementById('ordenItems');
+    tbody.innerHTML = '';
+    ordenItems.forEach((item, idx) => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${item.nombre}</td>
+                <td>${item.cantidad}</td>
+                <td><button class="btn btn-sm btn-danger" onclick="eliminarItemOrden(${idx})">🗑️</button></td>
+            </tr>
+        `;
+    });
+}
+
+function eliminarItemOrden(idx) {
+    ordenItems.splice(idx, 1);
+    renderOrdenItems();
+}
+
+document.getElementById('btnAgregarItem').addEventListener('click', () => {
+    const productoId = document.getElementById('producto_reponer').value;
+    const cantidad = document.getElementById('cantidad_reponer').value;
+    if (!productoId || !cantidad) {
+        alert('Seleccione un producto y cantidad');
+        return;
+    }
+    
+    fetch(`/inventario/api/producto/${productoId}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                agregarAOrden(productoId, data.descripcion, parseFloat(cantidad));
+                document.getElementById('producto_reponer').value = '';
+                document.getElementById('cantidad_reponer').value = '';
+            }
+        });
+});
+
+document.getElementById('btnLimpiarOrden').addEventListener('click', () => {
+    ordenItems = [];
+    renderOrdenItems();
+});
+
+document.getElementById('btnGenerarOrden').addEventListener('click', async () => {
+    if (ordenItems.length === 0) {
+        alert('Agregue al menos un producto a la orden');
+        return;
+    }
+    
+    const data = {
+        proveedor_id: document.getElementById('proveedor_id').value,
+        items: ordenItems,
+        observaciones: document.getElementById('orden_observaciones').value
+    };
+    
+    const response = await fetch('/inventario/api/generar-orden-compra', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+        alert(`✅ Orden de Compra N° ${result.numero_orden} generada correctamente`);
+        ordenItems = [];
+        renderOrdenItems();
+        cargarAlertasStock();
+    } else {
+        alert('❌ Error: ' + result.error);
+    }
+});
+
+// Cargar proveedores
+async function cargarProveedores() {
+    const response = await fetch('/api/proveedores');
+    const data = await response.json();
+    const select = document.getElementById('proveedor_id');
+    if (data.success) {
+        data.data.forEach(p => {
+            const option = document.createElement('option');
+            option.value = p.id;
+            option.textContent = `${p.ruc} - ${p.nombre}`;
+            select.appendChild(option);
+        });
+    }
+}
+
+cargarAlertasStock();
+cargarProveedores();
+</script>
+{% endblock %}
+

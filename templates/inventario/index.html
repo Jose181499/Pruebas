@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Inventario - KCF ERP{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="fw-bold">📦 Gestión de Inventario</h1>
+        <a href="/index" class="btn btn-secondary">
+            <i class="bi bi-house"></i> Dashboard
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4 col-lg-3">
+            <div class="card shadow-sm border-0 rounded-4 h-100" style="cursor: pointer;" onclick="window.location.href='/inventario/kardex'">
+                <div class="card-body text-center py-4">
+                    <div class="display-4 text-primary mb-3">📒</div>
+                    <h5 class="fw-bold">Kardex de productos</h5>
+                    <p class="text-muted small">Historial de movimientos por producto</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-3">
+            <div class="card shadow-sm border-0 rounded-4 h-100" style="cursor: pointer;" onclick="window.location.href='/inventario/estado-stock'">
+                <div class="card-body text-center py-4">
+                    <div class="display-4 text-success mb-3">📊</div>
+                    <h5 class="fw-bold">Estado de stock</h5>
+                    <p class="text-muted small">Stock actual y alertas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-3">
+            <div class="card shadow-sm border-0 rounded-4 h-100" style="cursor: pointer;" onclick="window.location.href='/inventario/entrada'">
+                <div class="card-body text-center py-4">
+                    <div class="display-4 text-info mb-3">📥</div>
+                    <h5 class="fw-bold">Entrada mercadería</h5>
+                    <p class="text-muted small">Registrar ingreso de productos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-3">
+            <div class="card shadow-sm border-0 rounded-4 h-100" style="cursor: pointer;" onclick="window.location.href='/inventario/salida'">
+                <div class="card-body text-center py-4">
+                    <div class="display-4 text-danger mb-3">📤</div>
+                    <h5 class="fw-bold">Salida mercadería</h5>
+                    <p class="text-muted small">Registrar salida de productos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-3">
+            <div class="card shadow-sm border-0 rounded-4 h-100" style="cursor: pointer;" onclick="window.location.href='/inventario/transferencia'">
+                <div class="card-body text-center py-4">
+                    <div class="display-4 text-warning mb-3">🔄</div>
+                    <h5 class="fw-bold">Transferencia</h5>
+                    <p class="text-muted small">Entre almacenes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-3">
+            <div class="card shadow-sm border-0 rounded-4 h-100" style="cursor: pointer;" onclick="window.location.href='/inventario/revalorizacion'">
+                <div class="card-body text-center py-4">
+                    <div class="display-4 text-secondary mb-3">💰</div>
+                    <h5 class="fw-bold">Revalorización</h5>
+                    <p class="text-muted small">Ajuste de precios y costos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-3">
+            <div class="card shadow-sm border-0 rounded-4 h-100" style="cursor: pointer;" onclick="window.location.href='/inventario/recuentos'">
+                <div class="card-body text-center py-4">
+                    <div class="display-4 text-dark mb-3">🔢</div>
+                    <h5 class="fw-bold">Recuentos</h5>
+                    <p class="text-muted small">Conteo físico de inventario</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-3">
+            <div class="card shadow-sm border-0 rounded-4 h-100" style="cursor: pointer;" onclick="window.location.href='/inventario/reposicion'">
+                <div class="card-body text-center py-4">
+                    <div class="display-4 text-success mb-3">🛒</div>
+                    <h5 class="fw-bold">Reposición Stock</h5>
+                    <p class="text-muted small">Alertas y órdenes de compra</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Cargar resumen de stock desde tu API
+    async function cargarResumen() {
+        try {
+            const response = await fetch('/inventario/api/resumen-stock');
+            const data = await response.json();
+            if (data.success) {
+                document.getElementById('totalProductos').textContent = data.total_productos;
+                document.getElementById('stockTotal').textContent = data.stock_total;
+                document.getElementById('stockBajo').textContent = data.stock_bajo;
+                document.getElementById('stockCero').textContent = data.stock_cero;
+            }
+        } catch(e) { console.error(e); }
+    }
+    cargarResumen();
+</script>
+{% endblock %}
+

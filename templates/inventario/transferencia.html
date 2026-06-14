@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block title %}Transferencia entre Almacenes{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="fw-bold">🔄 Transferencia entre Almacenes</h1>
+        <a href="/inventario" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-warning text-dark rounded-top-4">
+            <i class="bi bi-arrow-left-right"></i> Transferir Productos
+        </div>
+        <div class="card-body">
+            <form id="formTransferencia">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Almacén Origen</label>
+                        <select class="form-select" id="almacen_origen" required>
+                            <option value="">Seleccione almacén</option>
+                            <option value="PRINCIPAL">Almacén Principal</option>
+                            <option value="SECUNDARIO">Almacén Secundario</option>
+                            <option value="TIENDA">Tienda</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Almacén Destino</label>
+                        <select class="form-select" id="almacen_destino" required>
+                            <option value="">Seleccione almacén</option>
+                            <option value="PRINCIPAL">Almacén Principal</option>
+                            <option value="SECUNDARIO">Almacén Secundario</option>
+                            <option value="TIENDA">Tienda</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Producto</label>
+                        <select class="form-select" id="producto_id" required>
+                            <option value="">Seleccione producto</option>
+                            {% for p in productos %}
+                            <option value="{{ p.id }}">{{ p.codigo }} - {{ p.descripcion }} ({{ p.marca }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Stock Origen</label>
+                        <input type="text" class="form-control" id="stock_origen" readonly style="background:#f3f4f6;">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Cantidad a Transferir</label>
+                        <input type="number" class="form-control" id="cantidad" step="0.01" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Motivo de Transferencia</label>
+                        <textarea class="form-control" id="motivo" rows="2" placeholder="Ej: Reabastecimiento, Devolución, etc."></textarea>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-warning">🔄 Realizar Transferencia</button>
+                        <button type="reset" class="btn btn-secondary">Limpiar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4 mt-4">
+        <div class="card-header bg-dark text-white rounded-top-4">
+            <i class="bi bi-clock-history"></i> Historial de Transferencias
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover" id="tablaTransferencias">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Producto</th>
+                        <th>Origen</th>
+                        <th>Destino</th>
+                        <th>Cantidad</th>
+                        <th>Motivo</th>
+                        <th>Usuario</th>
+                    </tr>
+                </thead>
+                <tbody id="transferenciasBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+// Cargar stock al seleccionar producto
+document.getElementById('producto_id').addEventListener('change', async function() {
+    const productoId = this.value;
+    const almacen = document.getElementById('almacen_origen').value;
+    if (!productoId || !almacen) return;
+    
+    const response = await fetch(`/inventario/api/stock/${productoId}?almacen=${almacen}`);
+    const data = await response.json();
+    
+    if (data.success) {
+        document.getElementById('stock_origen').value = data.stock_actual;
+    }
+});
+
+// Verificar que origen y destino sean diferentes
+document.getElementById('formTransferencia').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const origen = document.getElementById('almacen_origen').value;
+    const destino = document.getElementById('almacen_destino').value;
+    
+    if (origen === destino) {
+        alert('❌ El almacén origen y destino no pueden ser iguales');
+        return;
+    }
+    
+    const data = {
+        producto_id: document.getElementById('producto_id').value,
+        cantidad: document.getElementById('cantidad').value,
+        almacen_origen: origen,
+        almacen_destino: destino,
+        motivo: document.getElementById('motivo').value
+    };
+    
+    const response = await fetch('/inventario/api/transferencia', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+        alert('✅ Transferencia realizada correctamente');
+        cargarHistorial();
+        location.reload();
+    } else {
+        alert('❌ Error: ' + result.error);
+    }
+});
+
+async function cargarHistorial() {
+    const response = await fetch('/inventario/api/transferencias/historial');
+    const data = await response.json();
+    
+    if (data.success) {
+        const tbody = document.getElementById('transferenciasBody');
+        tbody.innerHTML = '';
+        data.data.forEach(t => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${t.fecha}</td>
+                    <td>${t.producto_nombre}</td>
+                    <td>${t.origen}</td>
+                    <td>${t.destino}</td>
+                    <td class="fw-bold">${t.cantidad}</td>
+                    <td>${t.motivo || '-'}</td>
+                    <td>${t.usuario}</td>
+                </tr>
+            `;
+        });
+    }
+}
+cargarHistorial();
+</script>
+{% endblock %}
+

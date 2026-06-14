@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+{% block title %}Revalorización de Inventario{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="fw-bold">💰 Revalorización de Inventario</h1>
+        <a href="/inventario" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-secondary text-white rounded-top-4">
+            <i class="bi bi-calculator-fill"></i> Ajuste de Costos / Precios
+        </div>
+        <div class="card-body">
+            <ul class="nav nav-tabs mb-4" id="revalorizacionTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="individual-tab" data-bs-toggle="tab" data-bs-target="#individual" type="button" role="tab">Producto Individual</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="masivo-tab" data-bs-toggle="tab" data-bs-target="#masivo" type="button" role="tab">Actualización Masiva</button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <!-- Pestaña Individual -->
+                <div class="tab-pane fade show active" id="individual" role="tabpanel">
+                    <form id="formIndividual">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Producto</label>
+                                <select class="form-select" id="producto_id" required>
+                                    <option value="">Seleccione producto</option>
+                                    {% for p in productos %}
+                                    <option value="{{ p.id }}">{{ p.codigo }} - {{ p.descripcion }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Costo Actual</label>
+                                <input type="text" class="form-control" id="costo_actual" readonly style="background:#f3f4f6;">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Precio Actual</label>
+                                <input type="text" class="form-control" id="precio_actual" readonly style="background:#f3f4f6;">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Nuevo Costo Unitario</label>
+                                <input type="number" class="form-control" id="nuevo_costo" step="0.01">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Nuevo Precio Venta</label>
+                                <input type="number" class="form-control" id="nuevo_precio" step="0.01">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Motivo de Revalorización</label>
+                                <textarea class="form-control" id="motivo" rows="2" required></textarea>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-secondary">💾 Aplicar Cambios</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Pestaña Masiva -->
+                <div class="tab-pane fade" id="masivo" role="tabpanel">
+                    <form id="formMasivo">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Familia de Productos</label>
+                                <select class="form-select" id="familia">
+                                    <option value="">Todas las familias</option>
+                                    <option value="ELECTRONICOS">Electrónicos</option>
+                                    <option value="ROPA">Ropa</option>
+                                    <option value="ALIMENTOS">Alimentos</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Tipo de Ajuste</label>
+                                <select class="form-select" id="tipo_ajuste">
+                                    <option value="PORCENTAJE">Porcentaje (%)</option>
+                                    <option value="MONTO">Monto Fijo (S/)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Valor de Ajuste</label>
+                                <input type="number" class="form-control" id="valor_ajuste" step="0.01" placeholder="Ej: 10 o 10.5">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Aplicar a:</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="aplicar_costo" checked>
+                                    <label class="form-check-label">Costo Unitario</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="aplicar_precio" checked>
+                                    <label class="form-check-label">Precio Venta</label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Motivo de Revalorización Masiva</label>
+                                <textarea class="form-control" id="motivo_masivo" rows="2" required></textarea>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-warning">⚡ Aplicar Ajuste Masivo</button>
+                                <span class="text-danger small ms-3" id="previewMsg"></span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4 mt-4">
+        <div class="card-header bg-dark text-white rounded-top-4">
+            <i class="bi bi-clock-history"></i> Historial de Revalorizaciones
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Producto</th>
+                        <th>Costo Anterior</th>
+                        <th>Costo Nuevo</th>
+                        <th>Precio Anterior</th>
+                        <th>Precio Nuevo</th>
+                        <th>Motivo</th>
+                        <th>Usuario</th>
+                    </tr>
+                </thead>
+                <tbody id="historialBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+// Cargar datos actuales del producto
+document.getElementById('producto_id').addEventListener('change', async function() {
+    const productoId = this.value;
+    if (!productoId) return;
+    
+    const response = await fetch(`/inventario/api/producto/precios/${productoId}`);
+    const data = await response.json();
+    
+    if (data.success) {
+        document.getElementById('costo_actual').value = data.costo || '0.00';
+        document.getElementById('precio_actual').value = data.precio || '0.00';
+    }
+});
+
+// Formulario Individual
+document.getElementById('formIndividual').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const data = {
+        producto_id: document.getElementById('producto_id').value,
+        nuevo_costo: document.getElementById('nuevo_costo').value,
+        nuevo_precio: document.getElementById('nuevo_precio').value,
+        motivo: document.getElementById('motivo').value
+    };
+    
+    const response = await fetch('/inventario/api/revalorizacion/individual', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+        alert('✅ Revalorización aplicada correctamente');
+        cargarHistorial();
+        location.reload();
+    } else {
+        alert('❌ Error: ' + result.error);
+    }
+});
+
+// Formulario Masivo
+document.getElementById('formMasivo').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const data = {
+        familia: document.getElementById('familia').value,
+        tipo_ajuste: document.getElementById('tipo_ajuste').value,
+        valor_ajuste: document.getElementById('valor_ajuste').value,
+        aplicar_costo: document.getElementById('aplicar_costo').checked,
+        aplicar_precio: document.getElementById('aplicar_precio').checked,
+        motivo: document.getElementById('motivo_masivo').value
+    };
+    
+    const response = await fetch('/inventario/api/revalorizacion/masivo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+        alert(`✅ Ajuste masivo aplicado a ${result.productos_afectados} productos`);
+        cargarHistorial();
+    } else {
+        alert('❌ Error: ' + result.error);
+    }
+});
+
+async function cargarHistorial() {
+    const response = await fetch('/inventario/api/revalorizaciones/historial');
+    const data = await response.json();
+    
+    if (data.success) {
+        const tbody = document.getElementById('historialBody');
+        tbody.innerHTML = '';
+        data.data.forEach(r => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${r.fecha}</td>
+                    <td>${r.producto_nombre}</td>
+                    <td class="text-danger">${r.costo_anterior || '-'}</td>
+                    <td class="text-success">${r.costo_nuevo || '-'}</td>
+                    <td class="text-danger">${r.precio_anterior || '-'}</td>
+                    <td class="text-success">${r.precio_nuevo || '-'}</td>
+                    <td>${r.motivo}</td>
+                    <td>${r.usuario}</td>
+                </tr>
+            `;
+        });
+    }
+}
+cargarHistorial();
+</script>
+{% endblock %}
+
