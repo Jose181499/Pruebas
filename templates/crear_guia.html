@@ -55,6 +55,8 @@
         .card-header-custom.blue { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
         .card-header-custom.green { background: linear-gradient(135deg, #059669, #047857); }
         .card-header-custom.orange { background: linear-gradient(135deg, #ea580c, #c2410c); }
+        .card-header-custom.purple { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
+        .card-header-custom.teal { background: linear-gradient(135deg, #0d9488, #0f766e); }
         
         .custom-input {
             border-radius: 12px !important;
@@ -86,6 +88,11 @@
             font-size: 13px;
             margin-bottom: 6px;
             color: #111827;
+        }
+        
+        .form-label .required {
+            color: #dc2626;
+            margin-left: 2px;
         }
         
         .vehiculo-card {
@@ -145,6 +152,25 @@
             text-align: center;
             font-weight: 500;
         }
+        
+        .badge-sunat {
+            font-size: 10px;
+            background: #1e293b;
+            color: #94a3b8;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-left: 6px;
+        }
+        
+        .help-text-small {
+            font-size: 11px;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+        
+        .campo-obligatorio {
+            border-left: 3px solid #dc2626 !important;
+        }
     </style>
 </head>
 <body>
@@ -176,7 +202,7 @@
                 <h1 class="fw-bold mb-1" style="font-size: 28px;">Nueva Guía de Remisión</h1>
                 <p class="text-muted small mb-0"><i class="bi bi-info-circle"></i> Documento obligatorio para traslado de mercancías</p>
             </div>
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 flex-wrap">
                 <button class="btn btn-warning btn-toolbar" id="btnGuardarBorrador">
                     <i class="bi bi-save-fill"></i> Guardar Borrador
                 </button>
@@ -297,6 +323,16 @@
                                 </div>
                                 <input type="hidden" id="ubigeo_llegada_hidden" value="">
                             </div>
+                            
+                            <!-- NUEVO: NÚMERO DE ORDEN DE COMPRA (CLIENTES) -->
+                            <div class="col-12">
+                                <label class="form-label">
+                                    <i class="bi bi-receipt"></i> Número de Orden de Compra (Cliente)
+                                    <span class="badge-sunat">Opcional</span>
+                                </label>
+                                <input type="text" class="form-control custom-input" id="orden_compra_cliente" placeholder="Ej: OC-2026-00123">
+                                <div class="help-text-small">Número de orden de compra proporcionado por el cliente</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -377,42 +413,123 @@
             </div>
         </div>
 
-        <!-- FILA 3: MOTIVO DEL TRASLADO (AHORA CON PESO) -->
+        <!-- FILA 3: INFORMACIÓN DEL TRASLADO (ACTUALIZADO CON TODOS LOS CAMPOS) -->
         <div class="erp-card">
-            <div class="card-header-custom">
+            <div class="card-header-custom purple">
                 <i class="bi bi-file-text"></i> Información del Traslado
             </div>
             <div class="card-body-custom p-4">
                 <div class="row g-3">
+                    <!-- MOTIVO DE TRASLADO - DETALLADO SEGÚN SUNAT -->
                     <div class="col-md-3">
-                        <label class="form-label">Motivo de Traslado</label>
-                        <select class="form-select custom-input" id="motivo_traslado">
-                            <option value="VENTA">🛒 Venta</option>
-                            <option value="TRASLADO_INTERNO">📦 Traslado entre almacenes</option>
-                            <option value="EXPORTACION">🌎 Exportación</option>
-                            <option value="DEVOLUCION">🔄 Devolución</option>
-                            <option value="CONSIGNACION">📋 Consignación</option>
+                        <label class="form-label">
+                            Motivo de Traslado <span class="text-danger">*</span>
+                            <span class="badge-sunat">SUNAT</span>
+                        </label>
+                        <select class="form-select custom-input campo-obligatorio" id="motivo_traslado">
+                            <option value="">-- Seleccione un motivo --</option>
+                            <option value="01">01 - Venta</option>
+                            <option value="02">02 - Compra</option>
+                            <option value="03">03 - Traslado entre establecimientos</option>
+                            <option value="04">04 - Consignación</option>
+                            <option value="05">05 - Devolución</option>
+                            <option value="06">06 - Exportación</option>
+                            <option value="07">07 - Importación</option>
+                            <option value="08">08 - Donación</option>
+                            <option value="09">09 - Traslado por cuenta de terceros</option>
+                            <option value="10">10 - Traslado para transformación</option>
+                            <option value="11">11 - Traslado por reparación</option>
+                            <option value="12">12 - Traslado por garantía</option>
+                            <option value="13">13 - Traslado por consignación para venta</option>
+                            <option value="14">14 - Traslado por consignación para transformación</option>
+                            <option value="15">15 - Traslado por consignación para reparación</option>
+                            <option value="16">16 - Traslado por devolución de consignación</option>
+                            <option value="17">17 - Traslado por permuta</option>
+                            <option value="18">18 - Traslado por comodato</option>
+                            <option value="19">19 - Traslado por arrendamiento</option>
+                            <option value="20">20 - Traslado por anticipo de venta</option>
+                            <option value="21">21 - Traslado por anticipo de compra</option>
+                            <option value="22">22 - Traslado por maquila</option>
+                            <option value="23">23 - Traslado por consignación para maquila</option>
+                            <option value="24">24 - Traslado por devolución de maquila</option>
+                            <option value="25">25 - Traslado por consignación para venta a plazo</option>
+                            <option value="26">26 - Traslado por consignación para venta al contado</option>
+                            <option value="27">27 - Traslado por consignación para venta con anticipo</option>
+                            <option value="28">28 - Traslado por consignación para venta con reserva de dominio</option>
                         </select>
                     </div>
+                    
+                    <!-- FECHA DE INICIO DE TRASLADO -->
+                    <div class="col-md-3">
+                        <label class="form-label">
+                            Fecha de Inicio de Traslado <span class="text-danger">*</span>
+                        </label>
+                        <input type="date" class="form-control custom-input campo-obligatorio" id="fecha_inicio_traslado">
+                        <div class="help-text-small">Fecha en que inicia el traslado</div>
+                    </div>
+                    
+                    <!-- FECHA DE TRASLADO (mantenemos compatibilidad) -->
                     <div class="col-md-3">
                         <label class="form-label">Fecha de Traslado</label>
                         <input type="date" class="form-control custom-input" id="fecha_traslado">
+                        <div class="help-text-small">Fecha de emisión del documento</div>
                     </div>
+                    
+                    <!-- NUEVO: UNIDAD DE MEDIDA DE PESO BRUTO -->
                     <div class="col-md-3">
-                        <label class="form-label">Peso Total (kg)</label>
-                        <input type="number" class="form-control custom-input" id="peso_total_traslado" placeholder="0.00" step="0.01" value="0.00">
+                        <label class="form-label">
+                            Unidad de Medida de Peso Bruto <span class="text-danger">*</span>
+                            <span class="badge-sunat">SUNAT</span>
+                        </label>
+                        <select class="form-select custom-input campo-obligatorio" id="unidad_peso_bruto">
+                            <option value="">-- Seleccionar --</option>
+                            <option value="ESCUBA">ESCUBA - Escala de Unidades Básicas</option>
+                            <option value="KGM">KGM - Kilogramo</option>
+                            <option value="TNE">TNE - Tonelada Métrica</option>
+                            <option value="LBR">LBR - Libra</option>
+                            <option value="GRM">GRM - Gramo</option>
+                            <option value="ONZ">ONZ - Onza</option>
+                            <option value="CEN">CEN - Cento de Unidades</option>
+                            <option value="UM">UM - Millón de Unidades</option>
+                            <option value="ZZ">ZZ - Unidad (ZZ)</option>
+                            <option value="NU">NU - Unidad (NU)</option>
+                        </select>
+                        <div class="help-text-small">Unidad de medida para el peso bruto total</div>
                     </div>
+                </div>
+                
+                <div class="row g-3 mt-1">
+                    <!-- PESO BRUTO TOTAL DE LA CARGA -->
                     <div class="col-md-3">
-                        <label class="form-label">Factura/Boleta Asociada</label>
+                        <label class="form-label">
+                            Peso Bruto Total de la Carga <span class="text-danger">*</span>
+                        </label>
+                        <input type="number" class="form-control custom-input campo-obligatorio" id="peso_bruto_total" placeholder="0.00" step="0.01" value="0.00">
+                        <div class="help-text-small">Peso total de toda la carga en la unidad seleccionada</div>
+                    </div>
+                    
+                    <!-- NÚMERO DE BULTOS -->
+                    <div class="col-md-3">
+                        <label class="form-label">
+                            Número de Bultos <span class="text-danger">*</span>
+                        </label>
+                        <input type="number" class="form-control custom-input campo-obligatorio" id="numero_bultos" placeholder="0" min="0" value="1">
+                        <div class="help-text-small">Cantidad de paquetes o bultos</div>
+                    </div>
+                    
+                    <!-- DOCUMENTO ASOCIADO -->
+                    <div class="col-md-6">
+                        <label class="form-label">Documento Asociado</label>
                         <input type="text" class="form-control custom-input" id="documento_asociado" placeholder="F001-123 (opcional)">
+                        <div class="help-text-small">Factura, boleta o ticket asociado al traslado</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- TABLA DE PRODUCTOS (SIN PESO, CANTIDAD READONLY) -->
+        <!-- TABLA DE PRODUCTOS -->
         <div class="erp-card">
-            <div class="card-header-custom green">
+            <div class="card-header-custom teal">
                 <i class="bi bi-box-seam-fill"></i> Productos a Trasladar
             </div>
             <div class="card-body-custom p-0">
@@ -422,7 +539,7 @@
                             <tr>
                                 <th style="width:40px">Item</th>
                                 <th style="width:130px">Código</th>
-                                <th style="width:300px">Descripción</th>
+                                <th style="width:280px">Descripción</th>
                                 <th style="width:100px">Unidad</th>
                                 <th style="width:100px">Cantidad</th>
                                 <th style="width:60px">Acción</th>
@@ -433,7 +550,16 @@
                                 <td>1</td>
                                 <td><input type="text" class="form-control form-control-sm" placeholder="Código"></td>
                                 <td><input type="text" class="form-control form-control-sm" placeholder="Descripción del producto"></td>
-                                <td><select class="form-select form-select-sm"><option value="NIU">Unidad (NIU)</option><option value="KG">Kilogramo (KG)</option><option value="LTR">Litro (LTR)</option></select></td>
+                                <td>
+                                    <select class="form-select form-select-sm">
+                                        <option value="NIU">Unidad (NIU)</option>
+                                        <option value="KGM">Kilogramo (KGM)</option>
+                                        <option value="LTR">Litro (LTR)</option>
+                                        <option value="MTR">Metro (MTR)</option>
+                                        <option value="ZZ">Unidad (ZZ)</option>
+                                        <option value="NU">Unidad (NU)</option>
+                                    </select>
+                                </td>
                                 <td><input type="number" class="form-control form-control-sm cantidad-readonly" value="1" min="0.01" step="0.01" readonly></td>
                                 <td><button class="btn-del btn-sm">🗑️</button></td>
                             </tr>
@@ -455,6 +581,14 @@
                     <div class="d-flex justify-content-between mb-2">
                         <span>Total Productos:</span>
                         <span class="fw-bold" id="total_productos">0</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Peso Bruto Total:</span>
+                        <span class="fw-bold" id="resumen_peso_bruto">0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>N° Bultos:</span>
+                        <span class="fw-bold" id="resumen_bultos">0</span>
                     </div>
                 </div>
             </div>
@@ -697,6 +831,14 @@
         function actualizarResumen() {
             const filas = tbody.querySelectorAll('tr');
             document.getElementById('total_productos').textContent = filas.length;
+            
+            // Actualizar resumen de peso bruto
+            const pesoBruto = parseFloat(document.getElementById('peso_bruto_total').value) || 0;
+            document.getElementById('resumen_peso_bruto').textContent = pesoBruto.toFixed(2);
+            
+            // Actualizar resumen de bultos
+            const bultos = parseInt(document.getElementById('numero_bultos').value) || 0;
+            document.getElementById('resumen_bultos').textContent = bultos;
         }
         
         function agregarFilaProducto() {
@@ -706,7 +848,16 @@
                 <td>${itemCount}</td>
                 <td><input type="text" class="form-control form-control-sm" placeholder="Código"></td>
                 <td><input type="text" class="form-control form-control-sm" placeholder="Descripción del producto"></td>
-                <td><select class="form-select form-select-sm"><option value="NIU">Unidad (NIU)</option><option value="KG">Kilogramo (KG)</option><option value="LTR">Litro (LTR)</option></select></td>
+                <td>
+                    <select class="form-select form-select-sm">
+                        <option value="NIU">Unidad (NIU)</option>
+                        <option value="KGM">Kilogramo (KGM)</option>
+                        <option value="LTR">Litro (LTR)</option>
+                        <option value="MTR">Metro (MTR)</option>
+                        <option value="ZZ">Unidad (ZZ)</option>
+                        <option value="NU">Unidad (NU)</option>
+                    </select>
+                </td>
                 <td><input type="number" class="form-control form-control-sm cantidad-readonly" value="1" min="0.01" step="0.01" readonly></td>
                 <td><button class="btn-del btn-sm">🗑️</button></td>
             `;
@@ -728,6 +879,10 @@
             btn.addEventListener('click', function() { this.closest('tr').remove(); actualizarResumen(); renumerarItems(); });
         });
         actualizarResumen();
+        
+        // Event listeners para actualizar resumen
+        document.getElementById('peso_bruto_total')?.addEventListener('input', actualizarResumen);
+        document.getElementById('numero_bultos')?.addEventListener('input', actualizarResumen);
       
         // ==========================================
         // BUSCAR CLIENTE POR RUC
@@ -751,6 +906,9 @@
                     document.getElementById('destinatario_nombre').value = cliente.razon_social;
                     if (cliente.direccion_fiscal) {
                         document.getElementById('direccion_llegada').value = cliente.direccion_fiscal;
+                    }
+                    if (cliente.orden_compra) {
+                        document.getElementById('orden_compra_cliente').value = cliente.orden_compra;
                     }
                     mostrarNotificacion('✅ Cliente encontrado en la base de datos', 'exito');
                     return;
@@ -822,9 +980,13 @@
                 serie: "T001",
                 fecha_emision: new Date().toISOString().split('T')[0],
                 fecha_traslado: document.getElementById('fecha_traslado').value,
+                fecha_inicio_traslado: document.getElementById('fecha_inicio_traslado').value,
                 motivo_traslado: document.getElementById('motivo_traslado').value,
                 modalidad_transporte: document.getElementById('modalidad_transporte').value,
-                peso_total: parseFloat(document.getElementById('peso_total_traslado').value) || 0,
+                peso_bruto_total: parseFloat(document.getElementById('peso_bruto_total').value) || 0,
+                unidad_peso_bruto: document.getElementById('unidad_peso_bruto').value,
+                numero_bultos: parseInt(document.getElementById('numero_bultos').value) || 0,
+                orden_compra_cliente: document.getElementById('orden_compra_cliente').value,
                 remitente: {
                     ruc: document.getElementById('remitente_ruc').value,
                     nombre: document.getElementById('remitente_nombre').value,
@@ -865,6 +1027,26 @@
                 mostrarNotificacion('La placa del vehículo es obligatoria', 'warning');
                 return false;
             }
+            if (!data.motivo_traslado) {
+                mostrarNotificacion('Debe seleccionar un motivo de traslado', 'warning');
+                return false;
+            }
+            if (!data.fecha_inicio_traslado) {
+                mostrarNotificacion('La fecha de inicio de traslado es obligatoria', 'warning');
+                return false;
+            }
+            if (!data.unidad_peso_bruto) {
+                mostrarNotificacion('Debe seleccionar la unidad de medida de peso bruto', 'warning');
+                return false;
+            }
+            if (data.peso_bruto_total <= 0) {
+                mostrarNotificacion('El peso bruto total debe ser mayor a 0', 'warning');
+                return false;
+            }
+            if (data.numero_bultos <= 0) {
+                mostrarNotificacion('El número de bultos debe ser mayor a 0', 'warning');
+                return false;
+            }
             if (data.items.length === 0) {
                 mostrarNotificacion('Debe agregar al menos un producto', 'warning');
                 return false;
@@ -898,6 +1080,7 @@
                 document.getElementById('destinatario_doc').value = '';
                 document.getElementById('destinatario_nombre').value = '';
                 document.getElementById('direccion_llegada').value = '';
+                document.getElementById('orden_compra_cliente').value = '';
                 document.getElementById('placa_vehiculo').value = '';
                 document.getElementById('licencia_conductor').value = '';
                 document.getElementById('conductor_dni').value = '';
@@ -905,13 +1088,16 @@
                 document.getElementById('transportista_ruc').value = '';
                 document.getElementById('transportista_nombre').value = '';
                 document.getElementById('modalidad_transporte').value = 'PRIVADO';
-                document.getElementById('motivo_traslado').value = 'VENTA';
-                document.getElementById('peso_total_traslado').value = '0.00';
+                document.getElementById('motivo_traslado').value = '';
+                document.getElementById('unidad_peso_bruto').value = '';
+                document.getElementById('peso_bruto_total').value = '0.00';
+                document.getElementById('numero_bultos').value = '1';
                 document.getElementById('documento_asociado').value = '';
                 document.getElementById('observaciones').value = '';
                 
                 const hoy = new Date().toISOString().split('T')[0];
                 document.getElementById('fecha_traslado').value = hoy;
+                document.getElementById('fecha_inicio_traslado').value = hoy;
                 
                 const tbody = document.getElementById('table-body');
                 tbody.innerHTML = '';
@@ -927,6 +1113,7 @@
                 localStorage.removeItem('ultima_guia_id');
                 document.getElementById('btnPdf').disabled = true;
                 toggleTransportista();
+                actualizarResumen();
                 
                 mostrarNotificacion('Formulario limpiado correctamente', 'info');
             }
@@ -1030,6 +1217,7 @@
         // ==========================================
         const hoy = new Date().toISOString().split('T')[0];
         document.getElementById('fecha_traslado').value = hoy;
+        document.getElementById('fecha_inicio_traslado').value = hoy;
         
         // Autocompletar desde cotización
         function autocompletarDesdeCotizacion() {
@@ -1059,7 +1247,16 @@
                                 <td>${itemCount}</td>
                                 <td><input type="text" class="form-control form-control-sm" value="${escapeHtml(producto.codigo || '')}" placeholder="Código"></td>
                                 <td><input type="text" class="form-control form-control-sm" value="${escapeHtml(producto.descripcion || '')}" placeholder="Descripción"></td>
-                                <td><select class="form-select form-select-sm"><option value="NIU">NIU</option><option value="KG">KG</option><option value="LTR">LTR</option></select></td>
+                                <td>
+                                    <select class="form-select form-select-sm">
+                                        <option value="NIU">NIU</option>
+                                        <option value="KGM">KGM</option>
+                                        <option value="LTR">LTR</option>
+                                        <option value="MTR">MTR</option>
+                                        <option value="ZZ">ZZ</option>
+                                        <option value="NU">NU</option>
+                                    </select>
+                                </td>
                                 <td><input type="number" class="form-control form-control-sm cantidad-readonly" value="${producto.cantidad}" readonly></td>
                                 <td><button class="btn-del btn-sm">🗑️</button></td>
                             `;
@@ -1070,6 +1267,9 @@
                     actualizarResumen();
                 }
                 if (datos.documento_asociado) document.getElementById('documento_asociado').value = datos.documento_asociado;
+                if (datos.orden_compra) document.getElementById('orden_compra_cliente').value = datos.orden_compra;
+                if (datos.peso_bruto_total) document.getElementById('peso_bruto_total').value = datos.peso_bruto_total;
+                if (datos.numero_bultos) document.getElementById('numero_bultos').value = datos.numero_bultos;
                 mostrarNotificacion('✅ Datos de cotización cargados', 'exito');
             } catch (error) {
                 console.error('Error:', error);
@@ -1090,6 +1290,7 @@
             preseleccionarUbigeo('partida', 'LIMA', 'LIMA', 'SAN MARTIN DE PORRES');
             cargarTransportistas();
             autocompletarDesdeCotizacion();
+            actualizarResumen();
         });
         
         async function cargarTransportistas() {
