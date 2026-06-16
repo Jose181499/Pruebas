@@ -57,6 +57,7 @@
         .card-header-custom.orange { background: linear-gradient(135deg, #ea580c, #c2410c); }
         .card-header-custom.purple { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
         .card-header-custom.teal { background: linear-gradient(135deg, #0d9488, #0f766e); }
+        .card-header-custom.slate { background: linear-gradient(135deg, #475569, #334155); }
         
         .custom-input {
             border-radius: 12px !important;
@@ -170,6 +171,23 @@
         
         .campo-obligatorio {
             border-left: 3px solid #dc2626 !important;
+        }
+
+        /* Grupo de peso bruto en línea */
+        .grupo-peso-bruto {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 16px 20px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .grupo-peso-bruto .row {
+            align-items: end;
+        }
+        
+        .grupo-peso-bruto .form-label {
+            font-size: 12px;
+            margin-bottom: 4px;
         }
 
         /* ==========================================
@@ -374,6 +392,31 @@
         .modal-confirmacion.show .modal-dialog {
             transform: scale(1) translateY(0);
         }
+
+        /* Tabla de productos - solo vista */
+        .tabla-solo-vista .form-control,
+        .tabla-solo-vista .form-select {
+            background-color: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+            cursor: default !important;
+            pointer-events: none !important;
+            opacity: 0.85;
+        }
+        
+        .tabla-solo-vista .btn-del {
+            opacity: 0.4;
+            cursor: not-allowed !important;
+            pointer-events: none !important;
+        }
+        
+        .tabla-solo-vista .btn-del:hover {
+            transform: none !important;
+            background: #fee2e2 !important;
+        }
+        
+        .tabla-solo-vista .btn-agregar-producto {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -436,7 +479,7 @@
                         <div class="row g-3">
                             <div class="col-12">
                                 <label class="form-label">RUC</label>
-                                <input type="text" class="form-control custom-input" id="remitente_ruc" value="20123456789" readonly disabled>
+                                <input type="text" class="form-control custom-input" id="remitente_ruc" value="20602095704" readonly disabled>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Razón Social</label>
@@ -527,14 +570,26 @@
                                 <input type="hidden" id="ubigeo_llegada_hidden" value="">
                             </div>
                             
-                            <!-- NUEVO: NÚMERO DE ORDEN DE COMPRA (CLIENTES) -->
+                            <!-- FILA: Pedido Compra (izquierda) y Documento Asociado (derecha) -->
                             <div class="col-12">
-                                <label class="form-label">
-                                    <i class="bi bi-receipt"></i> Pedido Compra 
-                                    <span class="badge-sunat">Opcional</span>
-                                </label>
-                                <input type="text" class="form-control custom-input" id="orden_compra_cliente" placeholder="Ej: OC-2026-00123">
-                                <div class="help-text-small">Número de orden de compra proporcionado por el cliente</div>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">
+                                            <i class="bi bi-receipt"></i> Pedido Compra (Cliente)
+                                            <span class="badge-sunat">Opcional</span>
+                                        </label>
+                                        <input type="text" class="form-control custom-input" id="orden_compra_cliente" placeholder="Ej: OC-2026-00123">
+                                        <div class="help-text-small">Número de orden de compra proporcionado por el cliente</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">
+                                            <i class="bi bi-file-earmark-text"></i> Documento Asociado
+                                            <span class="badge-sunat">Opcional</span>
+                                        </label>
+                                        <input type="text" class="form-control custom-input" id="documento_asociado" placeholder="F001-123">
+                                        <div class="help-text-small">Factura, boleta o ticket asociado al traslado</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -547,7 +602,7 @@
             <div class="col-md-6">
                 <div class="erp-card">
                     <div class="card-header-custom orange">
-                        <i class="bi bi-truck"></i> Datos del Vehículo
+                        <i class="bi bi-truck"></i> Datos de Transporte 
                     </div>
                     <div class="card-body-custom p-4">
                         <div class="vehiculo-card">
@@ -619,7 +674,7 @@
         <!-- FILA 3: INFORMACIÓN DEL TRASLADO -->
         <div class="erp-card">
             <div class="card-header-custom purple">
-                <i class="bi bi-file-text"></i> Información del Traslado
+                <i class="bi bi-file-text"></i> Datos del Traslado
             </div>
             <div class="card-body-custom p-4">
                 <div class="row g-3">
@@ -662,53 +717,20 @@
                         </select>
                     </div>
                     
-                    <!-- FECHA DE INICIO DE TRASLADO -->
-                    <div class="col-md-3">
-                        <label class="form-label">
-                            Fecha de Inicio de Traslado <span class="text-danger">*</span>
-                        </label>
-                        <input type="date" class="form-control custom-input campo-obligatorio" id="fecha_inicio_traslado">
-                        <div class="help-text-small">Fecha en que inicia el traslado</div>
-                    </div>
-                    
-                    <!-- FECHA DE TRASLADO -->
+                    <!-- FECHA DE TRASLADO (primero) -->
                     <div class="col-md-3">
                         <label class="form-label">Fecha de Traslado</label>
                         <input type="date" class="form-control custom-input" id="fecha_traslado">
                         <div class="help-text-small">Fecha de emisión del documento</div>
                     </div>
                     
-                    <!-- UNIDAD DE MEDIDA DE PESO BRUTO -->
+                    <!-- FECHA DE INICIO DE TRASLADO (segundo) -->
                     <div class="col-md-3">
                         <label class="form-label">
-                            Unidad de Medida de Peso Bruto <span class="text-danger">*</span>
-                            <span class="badge-sunat">SUNAT</span>
+                            Fecha de Inicio de Traslado <span class="text-danger">*</span>
                         </label>
-                        <select class="form-select custom-input campo-obligatorio" id="unidad_peso_bruto">
-                            <option value="">-- Seleccionar --</option>
-                            <option value="ESCUBA">ESCUBA - Escala de Unidades Básicas</option>
-                            <option value="KGM">KGM - Kilogramo</option>
-                            <option value="TNE">TNE - Tonelada Métrica</option>
-                            <option value="LBR">LBR - Libra</option>
-                            <option value="GRM">GRM - Gramo</option>
-                            <option value="ONZ">ONZ - Onza</option>
-                            <option value="CEN">CEN - Cento de Unidades</option>
-                            <option value="UM">UM - Millón de Unidades</option>
-                            <option value="ZZ">ZZ - Unidad (ZZ)</option>
-                            <option value="NU">NU - Unidad (NU)</option>
-                        </select>
-                        <div class="help-text-small">Unidad de medida para el peso bruto total</div>
-                    </div>
-                </div>
-                
-                <div class="row g-3 mt-1">
-                    <!-- PESO BRUTO TOTAL DE LA CARGA -->
-                    <div class="col-md-3">
-                        <label class="form-label">
-                            Peso Bruto Total de la Carga <span class="text-danger">*</span>
-                        </label>
-                        <input type="number" class="form-control custom-input campo-obligatorio" id="peso_bruto_total" placeholder="0.00" step="0.01" value="0.00">
-                        <div class="help-text-small">Peso total de toda la carga en la unidad seleccionada</div>
+                        <input type="date" class="form-control custom-input campo-obligatorio" id="fecha_inicio_traslado">
+                        <div class="help-text-small">Fecha en que inicia el traslado</div>
                     </div>
                     
                     <!-- NÚMERO DE BULTOS -->
@@ -719,24 +741,66 @@
                         <input type="number" class="form-control custom-input campo-obligatorio" id="numero_bultos" placeholder="0" min="0" value="1">
                         <div class="help-text-small">Cantidad de paquetes o bultos</div>
                     </div>
-                    
-                    <!-- DOCUMENTO ASOCIADO -->
-                    <div class="col-md-6">
-                        <label class="form-label">Documento Asociado</label>
-                        <input type="text" class="form-control custom-input" id="documento_asociado" placeholder="F001-123 (opcional)">
-                        <div class="help-text-small">Factura, boleta o ticket asociado al traslado</div>
+                </div>
+                
+                <!-- GRUPO: UNIDAD DE PESO BRUTO Y PESO BRUTO TOTAL (juntos en un solo grupo) -->
+                <div class="row g-3 mt-2">
+                    <div class="col-12">
+                        <div class="grupo-peso-bruto">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">
+                                        Unidad de Medida de Peso Bruto <span class="text-danger">*</span>
+                                        <span class="badge-sunat">SUNAT</span>
+                                    </label>
+                                    <select class="form-select custom-input campo-obligatorio" id="unidad_peso_bruto">
+                                        <option value="">-- Seleccionar --</option>
+                                        <option value="ESCUBA">ESCUBA - Escala de Unidades Básicas</option>
+                                        <option value="KGM">KGM - Kilogramo</option>
+                                        <option value="TNE">TNE - Tonelada Métrica</option>
+                                        <option value="LBR">LBR - Libra</option>
+                                        <option value="GRM">GRM - Gramo</option>
+                                        <option value="ONZ">ONZ - Onza</option>
+                                        <option value="CEN">CEN - Cento de Unidades</option>
+                                        <option value="UM">UM - Millón de Unidades</option>
+                                        <option value="ZZ">ZZ - Unidad (ZZ)</option>
+                                        <option value="NU">NU - Unidad (NU)</option>
+                                    </select>
+                                    <div class="help-text-small">Unidad de medida para el peso bruto total</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">
+                                        Peso Bruto Total de la Carga <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="number" class="form-control custom-input campo-obligatorio" id="peso_bruto_total" placeholder="0.00" step="0.01" value="0.00">
+                                    <div class="help-text-small">Peso total de toda la carga en la unidad seleccionada</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- OBSERVACIONES -->
+                <div class="row g-3 mt-2">
+                    <div class="col-12">
+                        <label class="form-label">
+                            <i class="bi bi-chat-text"></i> Observaciones
+                        </label>
+                        <textarea class="form-control custom-input" id="observaciones" rows="2" placeholder="Notas adicionales para el transportista..."></textarea>
+                        <div class="help-text-small">Información adicional para el traslado</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- TABLA DE PRODUCTOS -->
+        <!-- TABLA DE PRODUCTOS - SOLO VISTA (no se puede agregar ni eliminar) -->
         <div class="erp-card">
             <div class="card-header-custom teal">
                 <i class="bi bi-box-seam-fill"></i> Productos a Trasladar
+                <span class="badge bg-light text-dark ms-2" style="font-size: 11px; font-weight: 500;">SOLO LECTURA</span>
             </div>
             <div class="card-body-custom p-0">
-                <div class="table-responsive">
+                <div class="table-responsive tabla-solo-vista">
                     <table class="table table-modern" id="products-table">
                         <thead>
                             <tr>
@@ -751,11 +815,11 @@
                         <tbody id="table-body">
                             <tr>
                                 <td>1</td>
-                                <td><input type="text" class="form-control form-control-sm" placeholder="Código"></td>
-                                <td><input type="text" class="form-control form-control-sm" placeholder="Descripción del producto"></td>
+                                <td><input type="text" class="form-control form-control-sm" placeholder="Código" value="PROD-001" readonly></td>
+                                <td><input type="text" class="form-control form-control-sm" placeholder="Descripción del producto" value="Producto de ejemplo" readonly></td>
                                 <td>
-                                    <select class="form-select form-select-sm">
-                                        <option value="NIU">Unidad (NIU)</option>
+                                    <select class="form-select form-select-sm" disabled>
+                                        <option value="NIU" selected>Unidad (NIU)</option>
                                         <option value="KGM">Kilogramo (KGM)</option>
                                         <option value="LTR">Litro (LTR)</option>
                                         <option value="MTR">Metro (MTR)</option>
@@ -764,48 +828,23 @@
                                     </select>
                                 </td>
                                 <td><input type="number" class="form-control form-control-sm cantidad-readonly" value="1" min="0.01" step="0.01" readonly></td>
-                                <td><button class="btn-del btn-sm">🗑️</button></td>
+                                <td><button class="btn-del btn-sm" disabled>🗑️</button></td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-                <div class="p-4">
-                    <button class="btn btn-success btn-sm" id="btnAgregarProducto">
+                <!-- Botón de agregar oculto -->
+                <div class="p-4" style="display: none;">
+                    <button class="btn btn-success btn-sm btn-agregar-producto" id="btnAgregarProducto">
                         <i class="bi bi-plus-circle-fill"></i> Agregar Producto
                     </button>
                 </div>
-            </div>
-        </div>
-
-        <!-- RESUMEN -->
-        <div class="row mt-4">
-            <div class="col-md-4 offset-md-8">
-                <div class="p-3" style="background: #f8fafc; border-radius: 16px;">
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Total Productos:</span>
-                        <span class="fw-bold" id="total_productos">0</span>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Peso Bruto Total:</span>
-                        <span class="fw-bold" id="resumen_peso_bruto">0.00</span>
-                    </div>
-                    <div class="d-flex justify-content-between">
-                        <span>N° Bultos:</span>
-                        <span class="fw-bold" id="resumen_bultos">0</span>
-                    </div>
+                <div class="p-3 text-center text-muted small" style="border-top: 1px solid #e2e8f0; background: #fafbfc;">
+                    <i class="bi bi-info-circle"></i> Los productos se cargan automáticamente desde el pedido o cotización asociada
                 </div>
             </div>
         </div>
 
-        <!-- OBSERVACIONES -->
-        <div class="erp-card mt-4">
-            <div class="card-header-custom">
-                <i class="bi bi-chat-text"></i> Observaciones
-            </div>
-            <div class="card-body-custom p-4">
-                <textarea class="form-control custom-input" id="observaciones" rows="3" placeholder="Notas adicionales para el transportista..."></textarea>
-            </div>
-        </div>
     </div>
 
     <!-- ========================================== -->
@@ -1058,7 +1097,6 @@
         // ==========================================
         // VARIABLES GLOBALES
         // ==========================================
-        let itemCount = 1;
         let ultimaGuiaId = localStorage.getItem('ultima_guia_id') || null;
         
         // ==========================================
@@ -1108,64 +1146,6 @@
         modalidadSelect?.addEventListener('change', toggleTransportista);
         toggleTransportista();
         
-        // ==========================================
-        // GESTIÓN DE PRODUCTOS
-        // ==========================================
-        const tbody = document.getElementById('table-body');
-        
-        function actualizarResumen() {
-            const filas = tbody.querySelectorAll('tr');
-            document.getElementById('total_productos').textContent = filas.length;
-            
-            const pesoBruto = parseFloat(document.getElementById('peso_bruto_total').value) || 0;
-            document.getElementById('resumen_peso_bruto').textContent = pesoBruto.toFixed(2);
-            
-            const bultos = parseInt(document.getElementById('numero_bultos').value) || 0;
-            document.getElementById('resumen_bultos').textContent = bultos;
-        }
-        
-        function agregarFilaProducto() {
-            itemCount++;
-            const nuevaFila = document.createElement('tr');
-            nuevaFila.innerHTML = `
-                <td>${itemCount}</td>
-                <td><input type="text" class="form-control form-control-sm" placeholder="Código"></td>
-                <td><input type="text" class="form-control form-control-sm" placeholder="Descripción del producto"></td>
-                <td>
-                    <select class="form-select form-select-sm">
-                        <option value="NIU">Unidad (NIU)</option>
-                        <option value="KGM">Kilogramo (KGM)</option>
-                        <option value="LTR">Litro (LTR)</option>
-                        <option value="MTR">Metro (MTR)</option>
-                        <option value="ZZ">Unidad (ZZ)</option>
-                        <option value="NU">Unidad (NU)</option>
-                    </select>
-                </td>
-                <td><input type="number" class="form-control form-control-sm cantidad-readonly" value="1" min="0.01" step="0.01" readonly></td>
-                <td><button class="btn-del btn-sm">🗑️</button></td>
-            `;
-            tbody.appendChild(nuevaFila);
-            nuevaFila.querySelector('.btn-del').addEventListener('click', () => { nuevaFila.remove(); actualizarResumen(); renumerarItems(); });
-            actualizarResumen();
-        }
-        
-        function renumerarItems() {
-            const filas = document.querySelectorAll('#table-body tr');
-            filas.forEach((fila, idx) => {
-                fila.cells[0].textContent = idx + 1;
-            });
-            itemCount = filas.length;
-        }
-        
-        document.getElementById('btnAgregarProducto')?.addEventListener('click', agregarFilaProducto);
-        document.querySelectorAll('.btn-del').forEach(btn => {
-            btn.addEventListener('click', function() { this.closest('tr').remove(); actualizarResumen(); renumerarItems(); });
-        });
-        actualizarResumen();
-        
-        document.getElementById('peso_bruto_total')?.addEventListener('input', actualizarResumen);
-        document.getElementById('numero_bultos')?.addEventListener('input', actualizarResumen);
-      
         // ==========================================
         // BUSCAR CLIENTE POR RUC
         // ==========================================
@@ -1242,7 +1222,7 @@
         // RECOLECTAR DATOS DEL FORMULARIO
         // ==========================================
         function recolectarDatosFormulario() {
-            const filas = tbody.querySelectorAll('tr');
+            const filas = document.querySelectorAll('#table-body tr');
             const items = [];
             filas.forEach((fila, idx) => {
                 const descripcion = fila.querySelector('td:nth-child(3) input')?.value;
@@ -1269,6 +1249,8 @@
                 unidad_peso_bruto: document.getElementById('unidad_peso_bruto').value,
                 numero_bultos: parseInt(document.getElementById('numero_bultos').value) || 0,
                 orden_compra_cliente: document.getElementById('orden_compra_cliente').value,
+                documento_asociado: document.getElementById('documento_asociado').value,
+                observaciones: document.getElementById('observaciones').value,
                 remitente: {
                     ruc: document.getElementById('remitente_ruc').value,
                     nombre: document.getElementById('remitente_nombre').value,
@@ -1291,8 +1273,6 @@
                     ruc: document.getElementById('transportista_ruc').value,
                     nombre: document.getElementById('transportista_nombre').value
                 } : null,
-                documento_asociado: document.getElementById('documento_asociado').value,
-                observaciones: document.getElementById('observaciones').value,
                 items: items
             };
         }
@@ -1359,41 +1339,6 @@
         let datosParaEnviar = null;
         let modalSunatInstance = null;
         
-        // Función para obtener el texto del motivo
-        function getMotivoTexto(valor) {
-            const mapa = {
-                '01': 'Venta',
-                '02': 'Compra',
-                '03': 'Traslado entre establecimientos',
-                '04': 'Consignación',
-                '05': 'Devolución',
-                '06': 'Exportación',
-                '07': 'Importación',
-                '08': 'Donación',
-                '09': 'Traslado por cuenta de terceros',
-                '10': 'Traslado para transformación',
-                '11': 'Traslado por reparación',
-                '12': 'Traslado por garantía',
-                '13': 'Traslado por consignación para venta',
-                '14': 'Traslado por consignación para transformación',
-                '15': 'Traslado por consignación para reparación',
-                '16': 'Traslado por devolución de consignación',
-                '17': 'Traslado por permuta',
-                '18': 'Traslado por comodato',
-                '19': 'Traslado por arrendamiento',
-                '20': 'Traslado por anticipo de venta',
-                '21': 'Traslado por anticipo de compra',
-                '22': 'Traslado por maquila',
-                '23': 'Traslado por consignación para maquila',
-                '24': 'Traslado por devolución de maquila',
-                '25': 'Traslado por consignación para venta a plazo',
-                '26': 'Traslado por consignación para venta al contado',
-                '27': 'Traslado por consignación para venta con anticipo',
-                '28': 'Traslado por consignación para venta con reserva de dominio'
-            };
-            return mapa[valor] || valor || '---';
-        }
-
         // Función para preparar y mostrar el modal
         function prepararModalConfirmacion(data) {
             datosParaEnviar = data;
@@ -1497,6 +1442,7 @@
                 document.getElementById('destinatario_nombre').value = '';
                 document.getElementById('direccion_llegada').value = '';
                 document.getElementById('orden_compra_cliente').value = '';
+                document.getElementById('documento_asociado').value = '';
                 document.getElementById('placa_vehiculo').value = '';
                 document.getElementById('licencia_conductor').value = '';
                 document.getElementById('conductor_dni').value = '';
@@ -1508,17 +1454,11 @@
                 document.getElementById('unidad_peso_bruto').value = '';
                 document.getElementById('peso_bruto_total').value = '0.00';
                 document.getElementById('numero_bultos').value = '1';
-                document.getElementById('documento_asociado').value = '';
                 document.getElementById('observaciones').value = '';
                 
                 const hoy = new Date().toISOString().split('T')[0];
                 document.getElementById('fecha_traslado').value = hoy;
                 document.getElementById('fecha_inicio_traslado').value = hoy;
-                
-                const tbody = document.getElementById('table-body');
-                tbody.innerHTML = '';
-                itemCount = 0;
-                agregarFilaProducto();
                 
                 const estadoBadge = document.getElementById('estadoBadge');
                 estadoBadge.innerHTML = '<i class="bi bi-circle-fill fs-10 me-1"></i> NUEVA GUÍA';
@@ -1529,7 +1469,6 @@
                 localStorage.removeItem('ultima_guia_id');
                 document.getElementById('btnPdf').disabled = true;
                 toggleTransportista();
-                actualizarResumen();
                 
                 mostrarNotificacion('Formulario limpiado correctamente', 'info');
             }
@@ -1620,38 +1559,36 @@
                 if (datos.productos && datos.productos.length > 0) {
                     const tbody = document.getElementById('table-body');
                     tbody.innerHTML = '';
-                    itemCount = 0;
-                    datos.productos.forEach((producto) => {
+                    datos.productos.forEach((producto, idx) => {
                         if (producto.cantidad > 0) {
-                            itemCount++;
                             const nuevaFila = document.createElement('tr');
                             nuevaFila.innerHTML = `
-                                <td>${itemCount}</td>
-                                <td><input type="text" class="form-control form-control-sm" value="${escapeHtml(producto.codigo || '')}" placeholder="Código"></td>
-                                <td><input type="text" class="form-control form-control-sm" value="${escapeHtml(producto.descripcion || '')}" placeholder="Descripción"></td>
+                                <td>${idx + 1}</td>
+                                <td><input type="text" class="form-control form-control-sm" value="${escapeHtml(producto.codigo || '')}" placeholder="Código" readonly></td>
+                                <td><input type="text" class="form-control form-control-sm" value="${escapeHtml(producto.descripcion || '')}" placeholder="Descripción" readonly></td>
                                 <td>
-                                    <select class="form-select form-select-sm">
-                                        <option value="NIU">NIU</option>
-                                        <option value="KGM">KGM</option>
-                                        <option value="LTR">LTR</option>
-                                        <option value="MTR">MTR</option>
-                                        <option value="ZZ">ZZ</option>
-                                        <option value="NU">NU</option>
+                                    <select class="form-select form-select-sm" disabled>
+                                        <option value="NIU" ${producto.unidad === 'NIU' ? 'selected' : ''}>NIU</option>
+                                        <option value="KGM" ${producto.unidad === 'KGM' ? 'selected' : ''}>KGM</option>
+                                        <option value="LTR" ${producto.unidad === 'LTR' ? 'selected' : ''}>LTR</option>
+                                        <option value="MTR" ${producto.unidad === 'MTR' ? 'selected' : ''}>MTR</option>
+                                        <option value="ZZ" ${producto.unidad === 'ZZ' ? 'selected' : ''}>ZZ</option>
+                                        <option value="NU" ${producto.unidad === 'NU' ? 'selected' : ''}>NU</option>
                                     </select>
                                 </td>
                                 <td><input type="number" class="form-control form-control-sm cantidad-readonly" value="${producto.cantidad}" readonly></td>
-                                <td><button class="btn-del btn-sm">🗑️</button></td>
+                                <td><button class="btn-del btn-sm" disabled>🗑️</button></td>
                             `;
                             tbody.appendChild(nuevaFila);
-                            nuevaFila.querySelector('.btn-del').addEventListener('click', () => { nuevaFila.remove(); actualizarResumen(); renumerarItems(); });
                         }
                     });
-                    actualizarResumen();
                 }
                 if (datos.documento_asociado) document.getElementById('documento_asociado').value = datos.documento_asociado;
                 if (datos.orden_compra) document.getElementById('orden_compra_cliente').value = datos.orden_compra;
                 if (datos.peso_bruto_total) document.getElementById('peso_bruto_total').value = datos.peso_bruto_total;
                 if (datos.numero_bultos) document.getElementById('numero_bultos').value = datos.numero_bultos;
+                if (datos.observaciones) document.getElementById('observaciones').value = datos.observaciones;
+                if (datos.unidad_peso_bruto) document.getElementById('unidad_peso_bruto').value = datos.unidad_peso_bruto;
                 mostrarNotificacion('✅ Datos de cotización cargados', 'exito');
             } catch (error) {
                 console.error('Error:', error);
@@ -1672,7 +1609,6 @@
             preseleccionarUbigeo('partida', 'LIMA', 'LIMA', 'SAN MARTIN DE PORRES');
             cargarTransportistas();
             autocompletarDesdeCotizacion();
-            actualizarResumen();
         });
         
         async function cargarTransportistas() {

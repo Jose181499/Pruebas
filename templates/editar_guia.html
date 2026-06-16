@@ -55,6 +55,8 @@
         .card-header-custom.blue { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
         .card-header-custom.green { background: linear-gradient(135deg, #059669, #047857); }
         .card-header-custom.orange { background: linear-gradient(135deg, #ea580c, #c2410c); }
+        .card-header-custom.purple { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
+        .card-header-custom.teal { background: linear-gradient(135deg, #0d9488, #0f766e); }
         
         .custom-input {
             border-radius: 12px !important;
@@ -86,6 +88,11 @@
             font-size: 13px;
             margin-bottom: 6px;
             color: #111827;
+        }
+        
+        .form-label .required {
+            color: #dc2626;
+            margin-left: 2px;
         }
         
         .vehiculo-card {
@@ -158,6 +165,270 @@
             text-align: center;
             font-weight: 500;
         }
+        
+        .badge-sunat {
+            font-size: 10px;
+            background: #1e293b;
+            color: #94a3b8;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-left: 6px;
+        }
+        
+        .help-text-small {
+            font-size: 11px;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+        
+        .campo-obligatorio {
+            border-left: 3px solid #dc2626 !important;
+        }
+
+        .grupo-peso-bruto {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 16px 20px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .grupo-peso-bruto .row {
+            align-items: end;
+        }
+        
+        .grupo-peso-bruto .form-label {
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        /* ==========================================
+           MODAL DE CONFIRMACIÓN MEJORADO
+           ========================================== */
+        .modal-confirmacion {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(8px);
+        }
+        
+        .modal-confirmacion .modal-content {
+            border-radius: 24px;
+            border: none;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            max-width: 560px;
+            margin: 0 auto;
+        }
+        
+        .modal-confirmacion .modal-header {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            padding: 20px 28px;
+            border: none;
+        }
+        
+        .modal-confirmacion .modal-header .modal-title {
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .modal-confirmacion .modal-header .modal-title i {
+            font-size: 28px;
+        }
+        
+        .modal-confirmacion .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+            opacity: 0.8;
+        }
+        
+        .modal-confirmacion .modal-header .btn-close:hover {
+            opacity: 1;
+        }
+        
+        .modal-confirmacion .modal-body {
+            padding: 28px 28px 20px;
+            background: #f8fafc;
+        }
+        
+        .modal-confirmacion .modal-body .icono-advertencia {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+        
+        .modal-confirmacion .modal-body .icono-advertencia .circulo {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: #fef2f2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #fca5a5;
+        }
+        
+        .modal-confirmacion .modal-body .icono-advertencia .circulo i {
+            font-size: 36px;
+            color: #dc2626;
+        }
+        
+        .modal-confirmacion .modal-body .mensaje-principal {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 6px;
+        }
+        
+        .modal-confirmacion .modal-body .mensaje-secundario {
+            text-align: center;
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 20px;
+        }
+        
+        .modal-confirmacion .modal-body .info-adicional {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 20px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 16px;
+        }
+        
+        .modal-confirmacion .modal-body .info-adicional .fila-info {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 13px;
+        }
+        
+        .modal-confirmacion .modal-body .info-adicional .fila-info .label {
+            color: #64748b;
+            font-weight: 500;
+        }
+        
+        .modal-confirmacion .modal-body .info-adicional .fila-info .valor {
+            color: #1e293b;
+            font-weight: 600;
+        }
+        
+        .modal-confirmacion .modal-body .info-adicional .divisor {
+            border-top: 1px solid #e2e8f0;
+            margin: 8px 0;
+        }
+        
+        .modal-confirmacion .modal-body .info-adicional .hora-actual {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: #f1f5f9;
+            padding: 8px 14px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 13px;
+            color: #334155;
+        }
+        
+        .modal-confirmacion .modal-body .info-adicional .hora-actual i {
+            color: #64748b;
+            font-size: 16px;
+        }
+        
+        .modal-confirmacion .modal-body .info-adicional .hora-actual .hora-texto {
+            font-weight: 600;
+            color: #0f172a;
+            font-family: 'Courier New', monospace;
+            font-size: 15px;
+        }
+        
+        .modal-confirmacion .modal-footer {
+            padding: 16px 28px 28px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            gap: 12px;
+        }
+        
+        .modal-confirmacion .modal-footer .btn {
+            border-radius: 12px;
+            padding: 10px 28px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .modal-confirmacion .modal-footer .btn-cancelar {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .modal-confirmacion .modal-footer .btn-cancelar:hover {
+            background: #e2e8f0;
+        }
+        
+        .modal-confirmacion .modal-footer .btn-aceptar {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: white;
+            border: none;
+            min-width: 140px;
+        }
+        
+        .modal-confirmacion .modal-footer .btn-aceptar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(220, 38, 38, 0.35);
+        }
+        
+        .modal-confirmacion .modal-footer .btn-aceptar:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .modal-confirmacion .modal-footer .btn-aceptar i {
+            margin-right: 8px;
+        }
+        
+        .modal-confirmacion.fade .modal-dialog {
+            transform: scale(0.95) translateY(-20px);
+            transition: transform 0.25s ease, opacity 0.25s ease;
+        }
+        
+        .modal-confirmacion.show .modal-dialog {
+            transform: scale(1) translateY(0);
+        }
+
+        /* Tabla de productos - solo vista en edición (si está en estado no editable) */
+        .tabla-solo-vista .form-control,
+        .tabla-solo-vista .form-select {
+            background-color: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+            cursor: default !important;
+            pointer-events: none !important;
+            opacity: 0.85;
+        }
+        
+        .tabla-solo-vista .btn-del {
+            opacity: 0.4;
+            cursor: not-allowed !important;
+            pointer-events: none !important;
+        }
+        
+        .tabla-solo-vista .btn-del:hover {
+            transform: none !important;
+            background: #fee2e2 !important;
+        }
+        
+        .tabla-solo-vista .btn-agregar-producto {
+            display: none !important;
+        }
+        
+        .campo-bloqueado {
+            opacity: 0.7;
+            pointer-events: none;
+            background-color: #f1f5f9 !important;
+        }
     </style>
 </head>
 <body>
@@ -192,6 +463,9 @@
             <div class="d-flex gap-2">
                 <button class="btn btn-warning btn-toolbar" id="btnGuardarCambios">
                     <i class="bi bi-save-fill"></i> Guardar Cambios
+                </button>
+                <button class="btn btn-danger btn-toolbar" id="btnReenviarSunat">
+                    <i class="bi bi-cloud-upload-fill"></i> Reenviar a SUNAT
                 </button>
                 <button class="btn btn-success btn-toolbar" id="btnPdf">
                     <i class="bi bi-file-earmark-pdf-fill"></i> PDF con QR
@@ -295,6 +569,28 @@
                                 </div>
                                 <input type="hidden" id="ubigeo_llegada_hidden" value="{{ guia.destinatario_ubigeo or '' }}">
                             </div>
+                            
+                            <!-- FILA: Pedido Compra (izquierda) y Documento Asociado (derecha) -->
+                            <div class="col-12">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">
+                                            <i class="bi bi-receipt"></i> Pedido Compra (Cliente)
+                                            <span class="badge-sunat">Opcional</span>
+                                        </label>
+                                        <input type="text" class="form-control custom-input" id="orden_compra_cliente" value="{{ guia.orden_compra_cliente or '' }}" placeholder="Ej: OC-2026-00123">
+                                        <div class="help-text-small">Número de orden de compra proporcionado por el cliente</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">
+                                            <i class="bi bi-file-earmark-text"></i> Documento Asociado
+                                            <span class="badge-sunat">Opcional</span>
+                                        </label>
+                                        <input type="text" class="form-control custom-input" id="documento_asociado" value="{{ guia.documento_asociado or '' }}" placeholder="F001-123">
+                                        <div class="help-text-small">Factura, boleta o ticket asociado al traslado</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -306,7 +602,7 @@
             <div class="col-md-6">
                 <div class="erp-card">
                     <div class="card-header-custom orange">
-                        <i class="bi bi-truck"></i> Datos del Vehículo
+                        <i class="bi bi-truck"></i> Datos de Transporte
                     </div>
                     <div class="card-body-custom p-4">
                         <div class="vehiculo-card">
@@ -316,6 +612,12 @@
                                     <select class="form-select custom-input" id="modalidad_transporte">
                                         <option value="PRIVADO" {% if guia.modalidad_transporte == 'PRIVADO' %}selected{% endif %}>🚛 Transporte Privado (vehículo propio)</option>
                                         <option value="PUBLICO" {% if guia.modalidad_transporte == 'PUBLICO' %}selected{% endif %}>🚚 Transporte Público (tercero)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label">Seleccionar Conductor/Transportista</label>
+                                    <select class="form-select custom-input" id="select_transportista">
+                                        <option value="">-- Seleccione un conductor --</option>
                                     </select>
                                 </div>
                                 <div class="col-md-6">
@@ -369,52 +671,142 @@
             </div>
         </div>
 
-        <!-- FILA 3: MOTIVO DEL TRASLADO (AHORA CON PESO) -->
+        <!-- FILA 3: INFORMACIÓN DEL TRASLADO -->
         <div class="erp-card">
-            <div class="card-header-custom">
-                <i class="bi bi-file-text"></i> Información del Traslado
+            <div class="card-header-custom purple">
+                <i class="bi bi-file-text"></i> Datos del Traslado
             </div>
             <div class="card-body-custom p-4">
                 <div class="row g-3">
+                    <!-- MOTIVO DE TRASLADO - DETALLADO SEGÚN SUNAT -->
                     <div class="col-md-3">
-                        <label class="form-label">Motivo de Traslado</label>
-                        <select class="form-select custom-input" id="motivo_traslado">
-                            <option value="VENTA" {% if guia.motivo_traslado == 'VENTA' %}selected{% endif %}>🛒 Venta</option>
-                            <option value="TRASLADO_INTERNO" {% if guia.motivo_traslado == 'TRASLADO_INTERNO' %}selected{% endif %}>📦 Traslado entre almacenes</option>
-                            <option value="EXPORTACION" {% if guia.motivo_traslado == 'EXPORTACION' %}selected{% endif %}>🌎 Exportación</option>
-                            <option value="DEVOLUCION" {% if guia.motivo_traslado == 'DEVOLUCION' %}selected{% endif %}>🔄 Devolución</option>
-                            <option value="CONSIGNACION" {% if guia.motivo_traslado == 'CONSIGNACION' %}selected{% endif %}>📋 Consignación</option>
+                        <label class="form-label">
+                            Motivo de Traslado <span class="text-danger">*</span>
+                            <span class="badge-sunat">SUNAT</span>
+                        </label>
+                        <select class="form-select custom-input campo-obligatorio" id="motivo_traslado">
+                            <option value="">-- Seleccione un motivo --</option>
+                            <option value="01" {% if guia.motivo_traslado == '01' %}selected{% endif %}>01 - Venta</option>
+                            <option value="02" {% if guia.motivo_traslado == '02' %}selected{% endif %}>02 - Compra</option>
+                            <option value="03" {% if guia.motivo_traslado == '03' %}selected{% endif %}>03 - Traslado entre establecimientos</option>
+                            <option value="04" {% if guia.motivo_traslado == '04' %}selected{% endif %}>04 - Consignación</option>
+                            <option value="05" {% if guia.motivo_traslado == '05' %}selected{% endif %}>05 - Devolución</option>
+                            <option value="06" {% if guia.motivo_traslado == '06' %}selected{% endif %}>06 - Exportación</option>
+                            <option value="07" {% if guia.motivo_traslado == '07' %}selected{% endif %}>07 - Importación</option>
+                            <option value="08" {% if guia.motivo_traslado == '08' %}selected{% endif %}>08 - Donación</option>
+                            <option value="09" {% if guia.motivo_traslado == '09' %}selected{% endif %}>09 - Traslado por cuenta de terceros</option>
+                            <option value="10" {% if guia.motivo_traslado == '10' %}selected{% endif %}>10 - Traslado para transformación</option>
+                            <option value="11" {% if guia.motivo_traslado == '11' %}selected{% endif %}>11 - Traslado por reparación</option>
+                            <option value="12" {% if guia.motivo_traslado == '12' %}selected{% endif %}>12 - Traslado por garantía</option>
+                            <option value="13" {% if guia.motivo_traslado == '13' %}selected{% endif %}>13 - Traslado por consignación para venta</option>
+                            <option value="14" {% if guia.motivo_traslado == '14' %}selected{% endif %}>14 - Traslado por consignación para transformación</option>
+                            <option value="15" {% if guia.motivo_traslado == '15' %}selected{% endif %}>15 - Traslado por consignación para reparación</option>
+                            <option value="16" {% if guia.motivo_traslado == '16' %}selected{% endif %}>16 - Traslado por devolución de consignación</option>
+                            <option value="17" {% if guia.motivo_traslado == '17' %}selected{% endif %}>17 - Traslado por permuta</option>
+                            <option value="18" {% if guia.motivo_traslado == '18' %}selected{% endif %}>18 - Traslado por comodato</option>
+                            <option value="19" {% if guia.motivo_traslado == '19' %}selected{% endif %}>19 - Traslado por arrendamiento</option>
+                            <option value="20" {% if guia.motivo_traslado == '20' %}selected{% endif %}>20 - Traslado por anticipo de venta</option>
+                            <option value="21" {% if guia.motivo_traslado == '21' %}selected{% endif %}>21 - Traslado por anticipo de compra</option>
+                            <option value="22" {% if guia.motivo_traslado == '22' %}selected{% endif %}>22 - Traslado por maquila</option>
+                            <option value="23" {% if guia.motivo_traslado == '23' %}selected{% endif %}>23 - Traslado por consignación para maquila</option>
+                            <option value="24" {% if guia.motivo_traslado == '24' %}selected{% endif %}>24 - Traslado por devolución de maquila</option>
+                            <option value="25" {% if guia.motivo_traslado == '25' %}selected{% endif %}>25 - Traslado por consignación para venta a plazo</option>
+                            <option value="26" {% if guia.motivo_traslado == '26' %}selected{% endif %}>26 - Traslado por consignación para venta al contado</option>
+                            <option value="27" {% if guia.motivo_traslado == '27' %}selected{% endif %}>27 - Traslado por consignación para venta con anticipo</option>
+                            <option value="28" {% if guia.motivo_traslado == '28' %}selected{% endif %}>28 - Traslado por consignación para venta con reserva de dominio</option>
                         </select>
                     </div>
+                    
+                    <!-- FECHA DE TRASLADO (primero) -->
                     <div class="col-md-3">
                         <label class="form-label">Fecha de Traslado</label>
                         <input type="date" class="form-control custom-input" id="fecha_traslado" value="{{ guia.fecha_traslado or '' }}">
+                        <div class="help-text-small">Fecha de emisión del documento</div>
                     </div>
+                    
+                    <!-- FECHA DE INICIO DE TRASLADO (segundo) -->
                     <div class="col-md-3">
-                        <label class="form-label">Peso Total (kg)</label>
-                        <input type="number" class="form-control custom-input" id="peso_total_traslado" placeholder="0.00" step="0.01" value="{{ guia.peso_total or '0.00' }}">
+                        <label class="form-label">
+                            Fecha de Inicio de Traslado <span class="text-danger">*</span>
+                        </label>
+                        <input type="date" class="form-control custom-input campo-obligatorio" id="fecha_inicio_traslado" value="{{ guia.fecha_inicio_traslado or '' }}">
+                        <div class="help-text-small">Fecha en que inicia el traslado</div>
                     </div>
+                    
+                    <!-- NÚMERO DE BULTOS -->
                     <div class="col-md-3">
-                        <label class="form-label">Factura/Boleta Asociada</label>
-                        <input type="text" class="form-control custom-input" id="documento_asociado" value="{{ guia.documento_asociado or '' }}" placeholder="F001-123 (opcional)">
+                        <label class="form-label">
+                            Número de Bultos <span class="text-danger">*</span>
+                        </label>
+                        <input type="number" class="form-control custom-input campo-obligatorio" id="numero_bultos" placeholder="0" min="0" value="{{ guia.numero_bultos or 1 }}">
+                        <div class="help-text-small">Cantidad de paquetes o bultos</div>
+                    </div>
+                </div>
+                
+                <!-- GRUPO: UNIDAD DE PESO BRUTO Y PESO BRUTO TOTAL (juntos en un solo grupo) -->
+                <div class="row g-3 mt-2">
+                    <div class="col-12">
+                        <div class="grupo-peso-bruto">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">
+                                        Unidad de Medida de Peso Bruto <span class="text-danger">*</span>
+                                        <span class="badge-sunat">SUNAT</span>
+                                    </label>
+                                    <select class="form-select custom-input campo-obligatorio" id="unidad_peso_bruto">
+                                        <option value="">-- Seleccionar --</option>
+                                        <option value="ESCUBA" {% if guia.unidad_peso_bruto == 'ESCUBA' %}selected{% endif %}>ESCUBA - Escala de Unidades Básicas</option>
+                                        <option value="KGM" {% if guia.unidad_peso_bruto == 'KGM' %}selected{% endif %}>KGM - Kilogramo</option>
+                                        <option value="TNE" {% if guia.unidad_peso_bruto == 'TNE' %}selected{% endif %}>TNE - Tonelada Métrica</option>
+                                        <option value="LBR" {% if guia.unidad_peso_bruto == 'LBR' %}selected{% endif %}>LBR - Libra</option>
+                                        <option value="GRM" {% if guia.unidad_peso_bruto == 'GRM' %}selected{% endif %}>GRM - Gramo</option>
+                                        <option value="ONZ" {% if guia.unidad_peso_bruto == 'ONZ' %}selected{% endif %}>ONZ - Onza</option>
+                                        <option value="CEN" {% if guia.unidad_peso_bruto == 'CEN' %}selected{% endif %}>CEN - Cento de Unidades</option>
+                                        <option value="UM" {% if guia.unidad_peso_bruto == 'UM' %}selected{% endif %}>UM - Millón de Unidades</option>
+                                        <option value="ZZ" {% if guia.unidad_peso_bruto == 'ZZ' %}selected{% endif %}>ZZ - Unidad (ZZ)</option>
+                                        <option value="NU" {% if guia.unidad_peso_bruto == 'NU' %}selected{% endif %}>NU - Unidad (NU)</option>
+                                    </select>
+                                    <div class="help-text-small">Unidad de medida para el peso bruto total</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">
+                                        Peso Bruto Total de la Carga <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="number" class="form-control custom-input campo-obligatorio" id="peso_bruto_total" placeholder="0.00" step="0.01" value="{{ guia.peso_bruto_total or '0.00' }}">
+                                    <div class="help-text-small">Peso total de toda la carga en la unidad seleccionada</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- OBSERVACIONES -->
+                <div class="row g-3 mt-2">
+                    <div class="col-12">
+                        <label class="form-label">
+                            <i class="bi bi-chat-text"></i> Observaciones
+                        </label>
+                        <textarea class="form-control custom-input" id="observaciones" rows="2" placeholder="Notas adicionales para el transportista...">{{ guia.observaciones or '' }}</textarea>
+                        <div class="help-text-small">Información adicional para el traslado</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- TABLA DE PRODUCTOS (SIN PESO, CANTIDAD READONLY) -->
+        <!-- TABLA DE PRODUCTOS - SOLO VISTA (no se puede agregar ni eliminar) -->
         <div class="erp-card">
-            <div class="card-header-custom green">
+            <div class="card-header-custom teal">
                 <i class="bi bi-box-seam-fill"></i> Productos a Trasladar
+                <span class="badge bg-light text-dark ms-2" style="font-size: 11px; font-weight: 500;" id="badgeModoEdicion">EDITABLE</span>
             </div>
             <div class="card-body-custom p-0">
-                <div class="table-responsive">
+                <div class="table-responsive" id="tablaProductosContainer">
                     <table class="table table-modern" id="products-table">
                         <thead>
                             <tr>
                                 <th style="width:40px">Item</th>
                                 <th style="width:130px">Código</th>
-                                <th style="width:300px">Descripción</th>
+                                <th style="width:280px">Descripción</th>
                                 <th style="width:100px">Unidad</th>
                                 <th style="width:100px">Cantidad</th>
                                 <th style="width:60px">Acción</th>
@@ -425,33 +817,100 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="p-4">
+                <div class="p-4" id="contenedorAgregarProducto">
                     <button class="btn btn-success btn-sm" id="btnAgregarProducto">
                         <i class="bi bi-plus-circle-fill"></i> Agregar Producto
                     </button>
                 </div>
-            </div>
-        </div>
-
-        <!-- RESUMEN -->
-        <div class="row mt-4">
-            <div class="col-md-4 offset-md-8">
-                <div class="p-3" style="background: #f8fafc; border-radius: 16px;">
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Total Productos:</span>
-                        <span class="fw-bold" id="total_productos">0</span>
-                    </div>
+                <div class="p-3 text-center text-muted small" style="border-top: 1px solid #e2e8f0; background: #fafbfc;">
+                    <i class="bi bi-info-circle"></i> Los productos se cargan desde el pedido o cotización asociada
                 </div>
             </div>
         </div>
 
-        <!-- OBSERVACIONES -->
-        <div class="erp-card mt-4">
-            <div class="card-header-custom">
-                <i class="bi bi-chat-text"></i> Observaciones
-            </div>
-            <div class="card-body-custom p-4">
-                <textarea class="form-control custom-input" id="observaciones" rows="3" placeholder="Notas adicionales para el transportista...">{{ guia.observaciones or '' }}</textarea>
+        <!-- RESUMEN ELIMINADO -->
+        <!-- El resumen se eliminó según tu solicitud -->
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL DE CONFIRMACIÓN PARA REENVIAR A SUNAT -->
+    <!-- ========================================== -->
+    <div class="modal fade modal-confirmacion" id="modalConfirmarSunat" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <!-- HEADER -->
+                <div class="modal-header">
+                    <div class="modal-title">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        Confirmar Reenvío a SUNAT
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <!-- BODY -->
+                <div class="modal-body">
+                    <!-- Icono de advertencia -->
+                    <div class="icono-advertencia">
+                        <div class="circulo">
+                            <i class="bi bi-shield-exclamation"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Mensajes -->
+                    <div class="mensaje-principal">
+                        ¿Está seguro de reenviar la Guía de Remisión Electrónica a SUNAT?
+                    </div>
+                    <div class="mensaje-secundario">
+                        Esta acción reemplazará la guía anterior en SUNAT
+                    </div>
+                    
+                    <!-- Información adicional de la guía -->
+                    <div class="info-adicional" id="infoGuiaConfirmacion">
+                        <div class="fila-info">
+                            <span class="label"><i class="bi bi-file-text"></i> Motivo</span>
+                            <span class="valor" id="confirm_motivo">---</span>
+                        </div>
+                        <div class="fila-info">
+                            <span class="label"><i class="bi bi-box"></i> Total Productos</span>
+                            <span class="valor" id="confirm_productos">0</span>
+                        </div>
+                        <div class="fila-info">
+                            <span class="label"><i class="bi bi-weight-scale"></i> Peso Bruto</span>
+                            <span class="valor" id="confirm_peso">0.00</span>
+                        </div>
+                        <div class="fila-info">
+                            <span class="label"><i class="bi bi-boxes"></i> N° Bultos</span>
+                            <span class="valor" id="confirm_bultos">0</span>
+                        </div>
+                        <div class="fila-info">
+                            <span class="label"><i class="bi bi-truck"></i> Placa</span>
+                            <span class="valor" id="confirm_placa">---</span>
+                        </div>
+                        <div class="divisor"></div>
+                        <div class="fila-info">
+                            <span class="label"><i class="bi bi-person"></i> Cliente</span>
+                            <span class="valor" id="confirm_cliente">---</span>
+                        </div>
+                        <div class="divisor"></div>
+                        <!-- HORA ACTUAL -->
+                        <div class="hora-actual">
+                            <i class="bi bi-clock-history"></i>
+                            <span>Hora de reenvío:</span>
+                            <span class="hora-texto" id="horaActualConfirmacion">--:--:--</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- FOOTER -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-cancelar" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg"></i> Cancelar
+                    </button>
+                    <button type="button" class="btn btn-aceptar" id="btnConfirmarEnvio">
+                        <i class="bi bi-check-lg"></i> Aceptar
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -589,17 +1048,14 @@
             });
         }
 
-        // Función para preseleccionar ubigeo desde un código guardado
         function preseleccionarUbigeoDesdeValor(baseId, ubigeoGuardado) {
             if (!ubigeoGuardado) return;
             
-            // Buscar el departamento, provincia y distrito que coincidan con el código
             for (const [depto, provincias] of Object.entries(ubigeoData)) {
                 for (const [prov, distritos] of Object.entries(provincias)) {
                     for (const dist of distritos) {
                         const codigo = `${depto.substring(0,2)}${prov.substring(0,2)}${dist.substring(0,2)}`.toUpperCase();
                         if (codigo === ubigeoGuardado) {
-                            // Encontramos la coincidencia
                             const deptoSelect = document.getElementById(`departamento_${baseId}`);
                             const provinciaSelect = document.getElementById(`provincia_${baseId}`);
                             const distritoSelect = document.getElementById(`distrito_${baseId}`);
@@ -629,6 +1085,8 @@
         // ==========================================
         let itemCount = 0;
         const guiaData = JSON.parse('{{ guia | tojson | safe if guia else "{}" }}');
+        let datosParaEnviar = null;
+        let modalSunatInstance = null;
         
         // ==========================================
         // NOTIFICACIONES
@@ -695,7 +1153,8 @@
             tbody.innerHTML = '';
             itemCount = 0;
             
-            if (items.length === 0) {
+            if (!items || items.length === 0) {
+                // Agregar una fila de ejemplo si no hay productos
                 agregarFilaProducto();
             } else {
                 items.forEach((item, idx) => {
@@ -705,15 +1164,28 @@
                         <td>${idx + 1}</td>
                         <td><input type="text" class="form-control form-control-sm" value="${escapeHtml(item.codigo || '')}" placeholder="Código"></td>
                         <td><input type="text" class="form-control form-control-sm" value="${escapeHtml(item.descripcion || '')}" placeholder="Descripción del producto"></td>
-                        <td><select class="form-select form-select-sm"><option value="NIU" ${item.unidad === 'NIU' ? 'selected' : ''}>Unidad (NIU)</option><option value="KG" ${item.unidad === 'KG' ? 'selected' : ''}>Kilogramo (KG)</option><option value="LTR" ${item.unidad === 'LTR' ? 'selected' : ''}>Litro (LTR)</option></select></td>
+                        <td>
+                            <select class="form-select form-select-sm">
+                                <option value="NIU" ${item.unidad === 'NIU' ? 'selected' : ''}>Unidad (NIU)</option>
+                                <option value="KGM" ${item.unidad === 'KGM' ? 'selected' : ''}>Kilogramo (KGM)</option>
+                                <option value="LTR" ${item.unidad === 'LTR' ? 'selected' : ''}>Litro (LTR)</option>
+                                <option value="MTR" ${item.unidad === 'MTR' ? 'selected' : ''}>Metro (MTR)</option>
+                                <option value="ZZ" ${item.unidad === 'ZZ' ? 'selected' : ''}>Unidad (ZZ)</option>
+                                <option value="NU" ${item.unidad === 'NU' ? 'selected' : ''}>Unidad (NU)</option>
+                            </select>
+                        </td>
                         <td><input type="number" class="form-control form-control-sm cantidad-readonly" value="${item.cantidad || 1}" min="0.01" step="0.01" readonly></td>
                         <td><button class="btn-del btn-sm">🗑️</button></td>
                     `;
                     tbody.appendChild(nuevaFila);
-                    nuevaFila.querySelector('.btn-del').addEventListener('click', () => { nuevaFila.remove(); actualizarResumen(); renumerarItems(); });
+                    nuevaFila.querySelector('.btn-del').addEventListener('click', () => { 
+                        if (!esSoloLectura) {
+                            nuevaFila.remove(); 
+                            renumerarItems(); 
+                        }
+                    });
                 });
             }
-            actualizarResumen();
         }
         
         function escapeHtml(text) {
@@ -734,12 +1206,9 @@
         // ==========================================
         // GESTIÓN DE PRODUCTOS
         // ==========================================
-        function actualizarResumen() {
-            const filas = document.querySelectorAll('#table-body tr');
-            document.getElementById('total_productos').textContent = filas.length;
-        }
-        
         function agregarFilaProducto() {
+            if (esSoloLectura) return;
+            
             itemCount++;
             const tbody = document.getElementById('table-body');
             const nuevaFila = document.createElement('tr');
@@ -747,13 +1216,26 @@
                 <td>${itemCount}</td>
                 <td><input type="text" class="form-control form-control-sm" placeholder="Código"></td>
                 <td><input type="text" class="form-control form-control-sm" placeholder="Descripción del producto"></td>
-                <td><select class="form-select form-select-sm"><option value="NIU">Unidad (NIU)</option><option value="KG">Kilogramo (KG)</option><option value="LTR">Litro (LTR)</option></select></td>
+                <td>
+                    <select class="form-select form-select-sm">
+                        <option value="NIU">Unidad (NIU)</option>
+                        <option value="KGM">Kilogramo (KGM)</option>
+                        <option value="LTR">Litro (LTR)</option>
+                        <option value="MTR">Metro (MTR)</option>
+                        <option value="ZZ">Unidad (ZZ)</option>
+                        <option value="NU">Unidad (NU)</option>
+                    </select>
+                </td>
                 <td><input type="number" class="form-control form-control-sm cantidad-readonly" value="1" min="0.01" step="0.01" readonly></td>
                 <td><button class="btn-del btn-sm">🗑️</button></td>
             `;
             tbody.appendChild(nuevaFila);
-            nuevaFila.querySelector('.btn-del').addEventListener('click', () => { nuevaFila.remove(); actualizarResumen(); renumerarItems(); });
-            actualizarResumen();
+            nuevaFila.querySelector('.btn-del').addEventListener('click', () => { 
+                if (!esSoloLectura) {
+                    nuevaFila.remove(); 
+                    renumerarItems(); 
+                }
+            });
         }
         
         document.getElementById('btnAgregarProducto')?.addEventListener('click', agregarFilaProducto);
@@ -802,12 +1284,18 @@
             });
             
             return {
-                serie: "T001",
+                guia_id: document.getElementById('guia_id').value,
                 fecha_emision: new Date().toISOString().split('T')[0],
                 fecha_traslado: document.getElementById('fecha_traslado').value,
+                fecha_inicio_traslado: document.getElementById('fecha_inicio_traslado').value,
                 motivo_traslado: document.getElementById('motivo_traslado').value,
                 modalidad_transporte: document.getElementById('modalidad_transporte').value,
-                peso_total: parseFloat(document.getElementById('peso_total_traslado').value) || 0,
+                peso_bruto_total: parseFloat(document.getElementById('peso_bruto_total').value) || 0,
+                unidad_peso_bruto: document.getElementById('unidad_peso_bruto').value,
+                numero_bultos: parseInt(document.getElementById('numero_bultos').value) || 0,
+                orden_compra_cliente: document.getElementById('orden_compra_cliente').value,
+                documento_asociado: document.getElementById('documento_asociado').value,
+                observaciones: document.getElementById('observaciones').value,
                 remitente: {
                     ruc: document.getElementById('remitente_ruc').value,
                     nombre: document.getElementById('remitente_nombre').value,
@@ -830,8 +1318,6 @@
                     ruc: document.getElementById('transportista_ruc').value,
                     nombre: document.getElementById('transportista_nombre').value
                 } : null,
-                documento_asociado: document.getElementById('documento_asociado').value,
-                observaciones: document.getElementById('observaciones').value,
                 items: items
             };
         }
@@ -852,6 +1338,26 @@
                 mostrarNotificacion('La placa del vehículo es obligatoria', 'warning');
                 return false;
             }
+            if (!data.motivo_traslado) {
+                mostrarNotificacion('Debe seleccionar un motivo de traslado', 'warning');
+                return false;
+            }
+            if (!data.fecha_inicio_traslado) {
+                mostrarNotificacion('La fecha de inicio de traslado es obligatoria', 'warning');
+                return false;
+            }
+            if (!data.unidad_peso_bruto) {
+                mostrarNotificacion('Debe seleccionar la unidad de medida de peso bruto', 'warning');
+                return false;
+            }
+            if (data.peso_bruto_total <= 0) {
+                mostrarNotificacion('El peso bruto total debe ser mayor a 0', 'warning');
+                return false;
+            }
+            if (data.numero_bultos <= 0) {
+                mostrarNotificacion('El número de bultos debe ser mayor a 0', 'warning');
+                return false;
+            }
             if (data.items.length === 0) {
                 mostrarNotificacion('Debe agregar al menos un producto', 'warning');
                 return false;
@@ -866,7 +1372,7 @@
             const guiaId = document.getElementById('guia_id').value;
             const estadoActual = document.getElementById('estado_actual').value;
             
-            if (estadoActual !== 'BORRADOR' && estadoActual !== 'RECHAZADA') {
+            if (esSoloLectura) {
                 mostrarNotificacion(`No se puede editar una guía en estado ${estadoActual}. Solo BORRADOR o RECHAZADA.`, 'error');
                 return;
             }
@@ -904,12 +1410,114 @@
         });
         
         // ==========================================
+        // MODAL DE CONFIRMACIÓN PARA REENVIAR A SUNAT
+        // ==========================================
+        function prepararModalConfirmacion(data) {
+            datosParaEnviar = data;
+            
+            const motivoSelect = document.getElementById('motivo_traslado');
+            const motivoTexto = motivoSelect.options[motivoSelect.selectedIndex]?.text || '---';
+            document.getElementById('confirm_motivo').textContent = motivoTexto;
+            
+            const totalProductos = data.items.length;
+            document.getElementById('confirm_productos').textContent = totalProductos;
+            
+            const peso = data.peso_bruto_total || 0;
+            const unidadPeso = document.getElementById('unidad_peso_bruto').value || '';
+            document.getElementById('confirm_peso').textContent = `${peso.toFixed(2)} ${unidadPeso}`;
+            
+            document.getElementById('confirm_bultos').textContent = data.numero_bultos || 0;
+            document.getElementById('confirm_placa').textContent = data.vehiculo.placa || '---';
+            
+            const clienteNombre = data.destinatario.nombre || '---';
+            document.getElementById('confirm_cliente').textContent = clienteNombre;
+            
+            const ahora = new Date();
+            const horaStr = ahora.toLocaleTimeString('es-PE', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit',
+                hour12: false
+            });
+            document.getElementById('horaActualConfirmacion').textContent = horaStr;
+            
+            if (!modalSunatInstance) {
+                modalSunatInstance = new bootstrap.Modal(document.getElementById('modalConfirmarSunat'), {
+                    backdrop: 'static',
+                    keyboard: false
+                });
+            }
+            modalSunatInstance.show();
+        }
+        
+        // ==========================================
+        // REENVIAR A SUNAT
+        // ==========================================
+        document.getElementById('btnReenviarSunat')?.addEventListener('click', function() {
+            const estadoActual = document.getElementById('estado_actual').value;
+            if (esSoloLectura) {
+                mostrarNotificacion(`No se puede reenviar una guía en estado ${estadoActual}. Solo BORRADOR o RECHAZADA.`, 'error');
+                return;
+            }
+            
+            const data = recolectarDatosFormulario();
+            if (!validarFormulario(data)) return;
+            
+            prepararModalConfirmacion(data);
+        });
+        
+        // ==========================================
+        // CONFIRMAR REENVÍO
+        // ==========================================
+        document.getElementById('btnConfirmarEnvio')?.addEventListener('click', async function() {
+            if (!datosParaEnviar) return;
+            
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Enviando...';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch('/guias/api/reenviar-sunat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datosParaEnviar)
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    mostrarNotificacion(`✅ Guía reenviada a SUNAT exitosamente`, 'exito');
+                    if (modalSunatInstance) {
+                        modalSunatInstance.hide();
+                    }
+                    setTimeout(() => {
+                        window.location.href = '/guias/';
+                    }, 1500);
+                } else {
+                    mostrarNotificacion('❌ ' + (result.error || 'Error al reenviar a SUNAT'), 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('❌ Error de conexión con el servidor', 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                datosParaEnviar = null;
+            }
+        });
+        
+        // ==========================================
         // DESCARGAR PDF
         // ==========================================
         document.getElementById('btnPdf')?.addEventListener('click', function() {
             const guiaId = document.getElementById('guia_id').value;
             window.open(`/guias/api/pdf/${guiaId}`, '_blank');
         });
+        
+        // ==========================================
+        // VARIABLE DE CONTROL PARA SOLO LECTURA
+        // ==========================================
+        let esSoloLectura = false;
         
         // ==========================================
         // INICIALIZAR
@@ -937,30 +1545,101 @@
                 const hoy = new Date().toISOString().split('T')[0];
                 document.getElementById('fecha_traslado').value = hoy;
             }
+            if (!document.getElementById('fecha_inicio_traslado').value) {
+                const hoy = new Date().toISOString().split('T')[0];
+                document.getElementById('fecha_inicio_traslado').value = hoy;
+            }
             
             cargarProductos();
             toggleTransportista();
+            cargarTransportistas();
             
             // Mostrar estado actual y bloquear si no es editable
             const estadoActual = document.getElementById('estado_actual').value;
             const estadoBadge = document.getElementById('estadoBadge');
-            if (estadoActual !== 'BORRADOR' && estadoActual !== 'RECHAZADA') {
+            const badgeModo = document.getElementById('badgeModoEdicion');
+            
+            if (estadoActual === 'BORRADOR' || estadoActual === 'RECHAZADA') {
+                esSoloLectura = false;
+                estadoBadge.innerHTML = `<i class="bi bi-pencil-fill me-1"></i> EDITANDO - ${estadoActual}`;
+                estadoBadge.classList.remove('bg-secondary', 'bg-opacity-25', 'text-secondary');
+                estadoBadge.classList.add('bg-warning', 'bg-opacity-25', 'text-warning');
+                badgeModo.textContent = 'EDITABLE';
+                badgeModo.className = 'badge bg-success text-white ms-2';
+            } else {
+                esSoloLectura = true;
                 estadoBadge.innerHTML = `<i class="bi bi-lock-fill me-1"></i> SOLO LECTURA - ${estadoActual}`;
                 estadoBadge.classList.remove('bg-warning', 'bg-opacity-25', 'text-warning');
                 estadoBadge.classList.add('bg-secondary', 'bg-opacity-25', 'text-secondary');
-                const btnGuardar = document.getElementById('btnGuardarCambios');
-                if (btnGuardar) {
-                    btnGuardar.disabled = true;
-                    btnGuardar.style.opacity = '0.5';
-                }
+                badgeModo.textContent = 'SOLO LECTURA';
+                badgeModo.className = 'badge bg-secondary text-white ms-2';
+                
                 // Deshabilitar campos editables
-                document.querySelectorAll('input, select, textarea, button').forEach(el => {
-                    if (el.id !== 'btnPdf' && el.id !== 'btnVolver') {
+                document.querySelectorAll('.custom-input, .form-select, textarea').forEach(el => {
+                    if (el.id !== 'btnPdf' && el.id !== 'btnVolver' && el.id !== 'btnReenviarSunat') {
                         el.disabled = true;
+                        el.classList.add('campo-bloqueado');
                     }
                 });
+                
+                // Deshabilitar botones de agregar y eliminar productos
+                document.getElementById('btnAgregarProducto').disabled = true;
+                document.getElementById('btnAgregarProducto').style.opacity = '0.5';
+                document.getElementById('contenedorAgregarProducto').style.pointerEvents = 'none';
+                
+                // Deshabilitar botones de acción
+                document.getElementById('btnGuardarCambios').disabled = true;
+                document.getElementById('btnGuardarCambios').style.opacity = '0.5';
+                document.getElementById('btnReenviarSunat').disabled = true;
+                document.getElementById('btnReenviarSunat').style.opacity = '0.5';
             }
         }
+        
+        async function cargarTransportistas() {
+            try {
+                const response = await fetch('/api/transportistas');
+                const result = await response.json();
+                if (result.success && result.data) {
+                    const select = document.getElementById('select_transportista');
+                    select.innerHTML = '<option value="">-- Seleccione un conductor --</option>';
+                    result.data.forEach(transportista => {
+                        const option = document.createElement('option');
+                        option.value = transportista.id;
+                        let texto = transportista.nombre_completo;
+                        if (transportista.placa) texto += ` - ${transportista.placa}`;
+                        option.textContent = texto;
+                        select.appendChild(option);
+                    });
+                    
+                    // Si hay un transportista seleccionado previamente, cargar sus datos
+                    if (guiaData.conductor_id) {
+                        select.value = guiaData.conductor_id;
+                        select.dispatchEvent(new Event('change'));
+                    }
+                }
+            } catch (error) {
+                console.error('Error cargando transportistas:', error);
+            }
+        }
+        
+        document.getElementById('select_transportista')?.addEventListener('change', async function() {
+            const transportistaId = this.value;
+            if (!transportistaId) return;
+            try {
+                const response = await fetch(`/api/transportistas/${transportistaId}`);
+                const result = await response.json();
+                if (result.success && result.data) {
+                    const t = result.data;
+                    if (t.placa) document.getElementById('placa_vehiculo').value = t.placa;
+                    if (t.dni) document.getElementById('conductor_dni').value = t.dni;
+                    if (t.nombre_completo) document.getElementById('conductor_nombre').value = t.nombre_completo;
+                    if (t.licencia) document.getElementById('licencia_conductor').value = t.licencia;
+                    mostrarNotificacion(`✅ Datos de ${t.nombre_completo} cargados`, 'exito');
+                }
+            } catch (error) {
+                mostrarNotificacion('Error al cargar datos', 'error');
+            }
+        });
         
         inicializar();
     </script>

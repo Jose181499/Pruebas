@@ -1,4 +1,4 @@
-# routes/pdf_guia_generator.py
+
 from weasyprint import HTML, CSS
 from jinja2 import Template
 import qrcode
@@ -6,6 +6,7 @@ import base64
 from io import BytesIO
 import json
 from datetime import datetime, date
+import re
 
 def convertir_a_serializable(obj):
     """Convierte objetos no serializables a tipos serializables"""
@@ -31,6 +32,9 @@ def generar_pdf_guia(guia_data):
     if isinstance(guia_data.get('fecha_traslado'), (date, datetime)):
         guia_data['fecha_traslado'] = guia_data['fecha_traslado'].strftime('%Y-%m-%d')
     
+    if isinstance(guia_data.get('fecha_inicio_traslado'), (date, datetime)):
+        guia_data['fecha_inicio_traslado'] = guia_data['fecha_inicio_traslado'].strftime('%Y-%m-%d')
+    
     # Generar código QR con los datos de la guía
     qr_data = generar_qr_data(guia_data)
     qr_base64 = generar_qr_base64(qr_data)
@@ -39,167 +43,248 @@ def generar_pdf_guia(guia_data):
     guia_data['qr_base64'] = qr_base64
     guia_data['fecha_emision_formato'] = formatear_fecha(guia_data.get('fecha_emision'))
     guia_data['fecha_traslado_formato'] = formatear_fecha(guia_data.get('fecha_traslado'))
+    guia_data['fecha_inicio_formato'] = formatear_fecha(guia_data.get('fecha_inicio_traslado'))
     
     # Procesar items (si viene como string JSON)
     if isinstance(guia_data.get('items_json'), str):
-        guia_data['items'] = json.loads(guia_data['items_json'])
+        items = json.loads(guia_data['items_json'])
+        guia_data['items'] = items
     else:
         guia_data['items'] = guia_data.get('items_json', [])
     
-    # Asegurar que peso_total sea float
-    if guia_data.get('peso_total'):
-        guia_data['peso_total'] = float(guia_data['peso_total'])
+    # Procesar motivos de traslado
+    guia_data['motivo_texto'] = get_motivo_texto(guia_data.get('motivo_traslado', ''))
+    
+    # Asegurar que peso_bruto_total sea float
+    if guia_data.get('peso_bruto_total'):
+        guia_data['peso_bruto_total'] = float(guia_data['peso_bruto_total'])
     else:
-        guia_data['peso_total'] = 0.0
+        guia_data['peso_bruto_total'] = 0.0
+    
+    # Obtener unidad de peso
+    guia_data['unidad_peso_texto'] = get_unidad_peso_texto(guia_data.get('unidad_peso_bruto', 'KGM'))
+    
+    # Obtener modalidad de transporte texto
+    guia_data['modalidad_texto'] = 'Transporte privado' if guia_data.get('modalidad_transporte') == 'PRIVADO' else 'Transporte público'
     
     # Renderizar HTML
     html_content = renderizar_html_guia(guia_data)
     
-    # CSS para el PDF
+    # CSS para el PDF - Estilo tipo SUNAT
     css_content = """
     @page {
         size: A4;
-        margin: 1.5cm;
+        margin: 1.2cm 1.5cm;
     }
     
     body {
         font-family: 'Helvetica', Arial, sans-serif;
-        font-size: 11px;
-        line-height: 1.4;
-        color: #333;
-    }
-    
-    .header {
-        text-align: center;
-        margin-bottom: 20px;
-        border-bottom: 2px solid #333;
-        padding-bottom: 10px;
-    }
-    
-    .header h1 {
-        font-size: 18px;
-        margin: 0;
-        color: #1a1a2e;
-    }
-    
-    .header p {
-        margin: 5px 0 0;
         font-size: 10px;
-        color: #666;
+        line-height: 1.5;
+        color: #1a1a1a;
     }
     
-    .info-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-        margin-bottom: 20px;
+    .header-empresa {
+        text-align: center;
+        border-bottom: 2px solid #1a1a1a;
+        padding-bottom: 8px;
+        margin-bottom: 12px;
     }
     
-    .info-box {
-        border: 1px solid #ddd;
-        padding: 10px;
-        border-radius: 5px;
+    .header-empresa .nombre-empresa {
+        font-size: 11px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    
+    .header-empresa .direccion-empresa {
+        font-size: 9px;
+        color: #444;
+    }
+    
+    .header-empresa .contacto-empresa {
+        font-size: 9px;
+        color: #444;
+    }
+    
+    .titulo-guia {
+        text-align: center;
+        font-size: 14px;
+        font-weight: bold;
+        margin: 10px 0;
+        letter-spacing: 1px;
+    }
+    
+    .numero-guia {
+        text-align: center;
+        font-size: 13px;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+    
+    .seccion {
+        margin-bottom: 10px;
+    }
+    
+    .seccion-titulo {
+        font-weight: bold;
+        font-size: 10px;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        color: #1a1a1a;
+    }
+    
+    .info-line {
+        padding: 2px 0;
+        font-size: 9.5px;
+    }
+    
+    .info-line .label {
+        font-weight: bold;
+        display: inline-block;
+        min-width: 120px;
+    }
+    
+    .info-line .value {
+        display: inline-block;
+    }
+    
+    .info-destinatario {
+        border: 1px solid #ccc;
+        padding: 8px 10px;
+        margin-bottom: 8px;
         background: #f9f9f9;
     }
     
-    .info-box h3 {
-        font-size: 12px;
-        margin: 0 0 8px 0;
-        padding-bottom: 5px;
-        border-bottom: 1px solid #ddd;
-        color: #2563eb;
-    }
-    
-    .info-row {
-        margin-bottom: 6px;
-    }
-    
-    .info-label {
+    .info-destinatario .label {
         font-weight: bold;
-        font-size: 10px;
-        color: #666;
     }
     
-    .info-value {
-        font-size: 11px;
-        margin-top: 2px;
+    .datos-traslado {
+        border: 1px solid #ccc;
+        padding: 8px 10px;
+        margin-bottom: 8px;
+        background: #f9f9f9;
     }
     
-    .qr-container {
-        text-align: center;
-        margin: 20px 0;
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 5px;
+    .datos-traslado .row {
+        display: flex;
+        flex-wrap: wrap;
     }
     
-    .qr-container img {
-        width: 120px;
-        height: 120px;
+    .datos-traslado .col {
+        flex: 1;
+        min-width: 120px;
+        padding: 2px 5px 2px 0;
+    }
+    
+    .datos-ruta {
+        border: 1px solid #ccc;
+        padding: 8px 10px;
+        margin-bottom: 8px;
+        background: #f9f9f9;
+    }
+    
+    .datos-transporte {
+        border: 1px solid #ccc;
+        padding: 8px 10px;
+        margin-bottom: 8px;
+        background: #f9f9f9;
     }
     
     .products-table {
         width: 100%;
         border-collapse: collapse;
-        margin: 15px 0;
+        margin: 8px 0;
+        font-size: 9px;
     }
     
     .products-table th {
-        background: #1e293b;
+        background: #1a1a2e;
         color: white;
-        padding: 8px;
-        font-size: 10px;
+        padding: 5px 6px;
         text-align: center;
         border: 1px solid #333;
+        font-size: 8.5px;
+        text-transform: uppercase;
     }
     
     .products-table td {
-        padding: 6px;
-        border: 1px solid #ddd;
-        text-align: center;
-        font-size: 10px;
-    }
-    
-    .summary {
-        margin-top: 15px;
-        text-align: right;
-    }
-    
-    .summary-row {
-        padding: 5px;
-        margin-bottom: 3px;
-    }
-    
-    .summary-row.total {
-        font-size: 14px;
-        font-weight: bold;
-        border-top: 2px solid #333;
-        padding-top: 8px;
-    }
-    
-    .footer {
-        margin-top: 30px;
+        padding: 4px 6px;
+        border: 1px solid #ccc;
         text-align: center;
         font-size: 9px;
-        color: #999;
-        border-top: 1px solid #ddd;
-        padding-top: 10px;
+    }
+    
+    .products-table td.descripcion {
+        text-align: left;
+    }
+    
+    .products-table td.series {
+        text-align: left;
+        font-size: 8px;
+        color: #555;
     }
     
     .observaciones {
+        margin-top: 10px;
+        padding: 6px 10px;
+        border: 1px solid #ccc;
+        background: #f9f9f9;
+        font-size: 9px;
+    }
+    
+    .observaciones .label {
+        font-weight: bold;
+    }
+    
+    .qr-container {
+        text-align: center;
+        margin: 10px 0;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: #fafafa;
+    }
+    
+    .qr-container img {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .qr-container .qr-text {
+        font-size: 8px;
+        color: #666;
+        margin-top: 4px;
+    }
+    
+    .footer {
         margin-top: 20px;
-        padding: 10px;
-        background: #f0fdf4;
-        border-left: 3px solid #10b981;
-        font-size: 10px;
+        text-align: center;
+        font-size: 8px;
+        color: #666;
+        border-top: 1px solid #ddd;
+        padding-top: 8px;
+    }
+    
+    .footer .autorizacion {
+        font-size: 8px;
+        color: #444;
+    }
+    
+    .footer .powered {
+        font-size: 7px;
+        color: #999;
+        margin-top: 3px;
     }
     
     .badge-estado {
         display: inline-block;
-        padding: 3px 8px;
-        border-radius: 12px;
-        font-size: 10px;
+        padding: 2px 10px;
+        border-radius: 10px;
+        font-size: 9px;
         font-weight: bold;
+        margin-top: 5px;
     }
     
     .estado-ACEPTADA { background: #d1fae5; color: #065f46; }
@@ -223,7 +308,7 @@ def generar_qr_data(guia_data):
         "ruc_remitente": guia_data.get('ruc_remitente', ''),
         "ruc_destinatario": guia_data.get('ruc_destinatario', ''),
         "fecha_emision": convertir_a_serializable(guia_data.get('fecha_emision', '')),
-        "total_peso": str(guia_data.get('peso_total', '0')),
+        "total_peso": str(guia_data.get('peso_bruto_total', '0')),
         "placa_vehiculo": guia_data.get('placa_vehiculo', '')
     }
     return json.dumps(qr_info)
@@ -249,17 +334,71 @@ def generar_qr_base64(data):
     return f"data:image/png;base64,{img_base64}"
 
 def formatear_fecha(fecha_str):
-    """Formatea fecha para mostrar"""
+    """Formatea fecha para mostrar en formato DD/MM/YYYY"""
     if not fecha_str:
-        return "No especificada"
+        return ""
     try:
-        fecha = datetime.strptime(str(fecha_str), '%Y-%m-%d')
+        # Si es string, intentar parsear
+        if isinstance(fecha_str, str):
+            fecha = datetime.strptime(fecha_str, '%Y-%m-%d')
+        else:
+            fecha = fecha_str
         return fecha.strftime('%d/%m/%Y')
     except:
         return str(fecha_str)
 
+def get_motivo_texto(codigo):
+    """Obtiene el texto descriptivo del motivo de traslado"""
+    motivos = {
+        '01': 'Venta',
+        '02': 'Compra',
+        '03': 'Traslado entre establecimientos',
+        '04': 'Consignación',
+        '05': 'Devolución',
+        '06': 'Exportación',
+        '07': 'Importación',
+        '08': 'Donación',
+        '09': 'Traslado por cuenta de terceros',
+        '10': 'Traslado para transformación',
+        '11': 'Traslado por reparación',
+        '12': 'Traslado por garantía',
+        '13': 'Traslado por consignación para venta',
+        '14': 'Traslado por consignación para transformación',
+        '15': 'Traslado por consignación para reparación',
+        '16': 'Traslado por devolución de consignación',
+        '17': 'Traslado por permuta',
+        '18': 'Traslado por comodato',
+        '19': 'Traslado por arrendamiento',
+        '20': 'Traslado por anticipo de venta',
+        '21': 'Traslado por anticipo de compra',
+        '22': 'Traslado por maquila',
+        '23': 'Traslado por consignación para maquila',
+        '24': 'Traslado por devolución de maquila',
+        '25': 'Traslado por consignación para venta a plazo',
+        '26': 'Traslado por consignación para venta al contado',
+        '27': 'Traslado por consignación para venta con anticipo',
+        '28': 'Traslado por consignación para venta con reserva de dominio'
+    }
+    return motivos.get(codigo, codigo or '')
+
+def get_unidad_peso_texto(codigo):
+    """Obtiene el texto de la unidad de peso"""
+    unidades = {
+        'ESCUBA': 'ESCUBA',
+        'KGM': 'KGM',
+        'TNE': 'TNE',
+        'LBR': 'LBR',
+        'GRM': 'GRM',
+        'ONZ': 'ONZ',
+        'CEN': 'CEN',
+        'UM': 'UM',
+        'ZZ': 'ZZ',
+        'NU': 'NU'
+    }
+    return unidades.get(codigo, 'KGM')
+
 def renderizar_html_guia(guia_data):
-    """Renderiza el HTML para el PDF"""
+    """Renderiza el HTML para el PDF con formato tipo SUNAT"""
     
     template = Template('''
     <!DOCTYPE html>
@@ -269,145 +408,167 @@ def renderizar_html_guia(guia_data):
         <title>Guía de Remisión {{ serie }}-{{ numero }}</title>
     </head>
     <body>
-        <div class="header">
-            <h1>GUÍA DE REMISIÓN - REMITENTE</h1>
-            <p>Documento Electrónico - SUNAT</p>
-            <p>N° {{ serie }}-{{ numero }}</p>
+        <!-- HEADER EMPRESA -->
+        <div class="header-empresa">
+            <div class="nombre-empresa">{{ remitente_nombre or 'KCF CORPORACION' }}</div>
+            <div class="direccion-empresa">{{ remitente_direccion or '' }}</div>
+            <div class="contacto-empresa">Tel: {{ telefono or '' }} Email: {{ email or '' }}</div>
         </div>
         
-        <div class="qr-container">
-            <img src="{{ qr_base64 }}" alt="Código QR">
-            <p style="font-size: 9px; margin-top: 5px;">Código de verificación electrónica</p>
-        </div>
+        <!-- TÍTULO Y NÚMERO -->
+        <div class="titulo-guia">GUIA DE REMISION REMITENTE ELECTRONICA</div>
+        <div class="numero-guia">{{ serie }}-{{ numero }}</div>
         
-        <div class="info-grid">
-            <div class="info-box">
-                <h3>📦 REMITENTE (Origen)</h3>
-                <div class="info-row">
-                    <div class="info-label">RUC:</div>
-                    <div class="info-value">{{ ruc_remitente }}</div>
+        <!-- DESTINATARIO -->
+        <div class="seccion">
+            <div class="seccion-titulo">DESTINATARIO</div>
+            <div class="info-destinatario">
+                <div class="info-line">
+                    <span class="label">R.U.C.:</span>
+                    <span class="value">{{ ruc_destinatario }}</span>
                 </div>
-                <div class="info-row">
-                    <div class="info-label">Razón Social:</div>
-                    <div class="info-value">{{ remitente_nombre }}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Dirección de Partida:</div>
-                    <div class="info-value">{{ remitente_direccion or 'No especificada' }}</div>
-                </div>
-            </div>
-            
-            <div class="info-box">
-                <h3>🎯 DESTINATARIO (Llegada)</h3>
-                <div class="info-row">
-                    <div class="info-label">RUC:</div>
-                    <div class="info-value">{{ ruc_destinatario }}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Razón Social:</div>
-                    <div class="info-value">{{ destinatario_nombre }}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Dirección de Llegada:</div>
-                    <div class="info-value">{{ destinatario_direccion or 'No especificada' }}</div>
+                <div class="info-line">
+                    <span class="label">DENOMINACIÓN:</span>
+                    <span class="value">{{ destinatario_nombre }}</span>
                 </div>
             </div>
         </div>
         
-        <div class="info-grid">
-            <div class="info-box">
-                <h3>🚛 DATOS DEL TRASLADO</h3>
-                <div class="info-row">
-                    <div class="info-label">Motivo:</div>
-                    <div class="info-value">{{ motivo_traslado }}</div>
+        <!-- DATOS DEL TRASLADO -->
+        <div class="seccion">
+            <div class="seccion-titulo">DATOS DEL TRASLADO</div>
+            <div class="datos-traslado">
+                <div class="row">
+                    <div class="col">
+                        <span class="label">FECHA EMISIÓN :</span>
+                        {{ fecha_emision_formato }}
+                    </div>
+                    <div class="col">
+                        <span class="label">FECHA INICIO DE TRASLADO :</span>
+                        {{ fecha_inicio_formato }}
+                    </div>
                 </div>
-                <div class="info-row">
-                    <div class="info-label">Fecha Emisión:</div>
-                    <div class="info-value">{{ fecha_emision_formato }}</div>
+                <div class="row">
+                    <div class="col">
+                        <span class="label">MOTIVO DE TRASLADO :</span>
+                        {{ motivo_texto }}
+                    </div>
+                    <div class="col">
+                        <span class="label">MODALIDAD DE TRANSPORTE :</span>
+                        {{ modalidad_texto }}
+                    </div>
                 </div>
-                <div class="info-row">
-                    <div class="info-label">Fecha Traslado:</div>
-                    <div class="info-value">{{ fecha_traslado_formato }}</div>
+                <div class="row">
+                    <div class="col">
+                        <span class="label">PESO BRUTO TOTAL ({{ unidad_peso_texto }}) :</span>
+                        {{ '%.1f'|format(peso_bruto_total|float) if peso_bruto_total else '0.0' }}
+                    </div>
+                    <div class="col">
+                        <span class="label">NÚMERO DE BULTOS :</span>
+                        {{ numero_bultos or '1' }}
+                    </div>
                 </div>
-                <div class="info-row">
-                    <div class="info-label">Documento Asociado:</div>
-                    <div class="info-value">{{ documento_asociado or 'No especificado' }}</div>
-                </div>
-            </div>
-            
-            <div class="info-box">
-                <h3>🚚 VEHÍCULO</h3>
-                <div class="info-row">
-                    <div class="info-label">Modalidad:</div>
-                    <div class="info-value">{{ modalidad_transporte }}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Placa:</div>
-                    <div class="info-value"><strong>{{ placa_vehiculo }}</strong></div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Conductor:</div>
-                    <div class="info-value">{{ conductor_nombre or 'No especificado' }} (DNI: {{ conductor_dni or '-' }})</div>
-                </div>
-                {% if transportista_ruc %}
-                <div class="info-row">
-                    <div class="info-label">Transportista:</div>
-                    <div class="info-value">{{ transportista_nombre }} (RUC: {{ transportista_ruc }})</div>
+                {% if documento_asociado %}
+                <div class="row">
+                    <div class="col">
+                        <span class="label">DOCUMENTO ASOCIADO :</span>
+                        {{ documento_asociado }}
+                    </div>
+                    <div class="col"></div>
                 </div>
                 {% endif %}
             </div>
         </div>
         
-        <h3 style="margin: 15px 0 10px 0;">📋 PRODUCTOS A TRASLADAR</h3>
-        <table class="products-table">
-            <thead>
-                <tr>
-                    <th>Item</th>
-                    <th>Código</th>
-                    <th>Descripción</th>
-                    <th>Unidad</th>
-                    <th>Cantidad</th>
-                    <th>Peso Unit. (kg)</th>
-                    <th>Peso Total (kg)</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in items %}
-                <tr>
-                    <td>{{ loop.index }}</td>
-                    <td>{{ item.codigo or '-' }}</td>
-                    <td style="text-align: left;">{{ item.descripcion }}</td>
-                    <td>{{ item.unidad or 'NIU' }}</td>
-                    <td>{{ item.cantidad }}</td>
-                    <td>{{ '%.2f'|format(item.peso_unitario|float) if item.peso_unitario else '0.00' }}</td>
-                    <td>{{ '%.2f'|format((item.cantidad|float * (item.peso_unitario|float))) if item.peso_unitario else '0.00' }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        
-        <div class="summary">
-            <div class="summary-row">
-                <strong>Total Productos:</strong> {{ items|length }}
-            </div>
-            <div class="summary-row total">
-                <strong>Peso Total:</strong> {{ '%.2f'|format(peso_total|float) }} kg
+        <!-- DATOS DE RUTA -->
+        <div class="seccion">
+            <div class="seccion-titulo">DATOS DE RUTA</div>
+            <div class="datos-ruta">
+                <div class="info-line">
+                    <span class="label">PUNTO DE PARTIDA:</span>
+                    <span class="value">({{ remitente_ubigeo or '' }}) {{ remitente_direccion or '' }}, Perú</span>
+                </div>
+                <div class="info-line">
+                    <span class="label">PUNTO DE LLEGADA:</span>
+                    <span class="value">({{ destinatario_ubigeo or '' }}) {{ destinatario_direccion or '' }}, Perú</span>
+                </div>
             </div>
         </div>
         
-        {% if observaciones %}
+        <!-- DATOS DEL TRANSPORTE -->
+        <div class="seccion">
+            <div class="seccion-titulo">DATOS DEL TRANSPORTE</div>
+            <div class="datos-transporte">
+                <div class="info-line">
+                    <span class="label">TRANSPORTISTA:</span>
+                    <span class="value">{% if transportista_nombre %}{{ transportista_nombre }} (RUC: {{ transportista_ruc }}){% else %}---{% endif %}</span>
+                </div>
+                <div class="info-line">
+                    <span class="label">VEHICULO:</span>
+                    <span class="value">{{ placa_vehiculo or '' }}</span>
+                </div>
+                <div class="info-line">
+                    <span class="label">CONDUCTOR:</span>
+                    <span class="value">D.N.I. {{ conductor_dni or '' }} - {{ conductor_nombre or '' }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- PRODUCTOS -->
+        <div class="seccion">
+            <div class="seccion-titulo">PRODUCTOS</div>
+            <table class="products-table">
+                <thead>
+                    <tr>
+                        <th style="width:8%">Nro</th>
+                        <th style="width:15%">CÓD.</th>
+                        <th style="width:32%">DESCRIPCIÓN</th>
+                        <th style="width:10%">U/M</th>
+                        <th style="width:10%">CANTIDAD</th>
+                        <th style="width:25%">SERIES</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ item.codigo or '-' }}</td>
+                        <td class="descripcion">{{ item.descripcion }}</td>
+                        <td>{{ item.unidad or 'NIU' }}</td>
+                        <td>{{ '%.1f'|format(item.cantidad|float) if item.cantidad else '0.0' }}</td>
+                        <td class="series">{{ item.series or '' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- OBSERVACIONES -->
+        {% if observaciones or orden_compra_cliente %}
         <div class="observaciones">
-            <strong>📝 Observaciones:</strong><br>
+            <span class="label">OBSERVACIONES :</span>
+            {% if orden_compra_cliente %}
+            Orden de Compra {{ destinatario_nombre or 'Cliente' }} : {{ orden_compra_cliente }}
+            {% endif %}
+            {% if observaciones %}
+            {% if orden_compra_cliente %} - {% endif %}
             {{ observaciones }}
+            {% endif %}
         </div>
         {% endif %}
         
+        <!-- QR Y FOOTER -->
+        <div class="qr-container">
+            <img src="{{ qr_base64 }}" alt="Código QR">
+            <div class="qr-text">Representación impresa de la GUIA DE REMISIÓN REMITENTE ELECTRÓNICA, consulte el documento en https://see.conflux.pe</div>
+            <div class="qr-text" style="font-size:7px; margin-top:2px;">Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
+        </div>
+        
         <div class="footer">
-            <p>Documento emitido electrónicamente por KCF CORPORACION - Sistema ERP</p>
-            <p>Fecha de emisión: {{ fecha_emision_formato }} - Validez según SUNAT</p>
-            <div class="badge-estado estado-{{ estado_sunat }}">
-                Estado: {{ estado_sunat }}
-            </div>
+            <div class="autorizacion">Representación impresa de la GUIA DE REMISIÓN REMITENTE ELECTRÓNICA</div>
+            <div class="autorizacion">Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
+            <div class="powered">Pag. 1 de 1</div>
+            <div class="powered">Powered by Conflux</div>
         </div>
     </body>
     </html>
