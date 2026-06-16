@@ -1927,14 +1927,24 @@ def obtener_documentos_vinculados(cotizacion_id):
                OR ruc_destinatario = %s
             ORDER BY created_at DESC
         """
-        guias = db_query(query_guias, (
+        
+        # Preparar parámetros para guías
+        ultimo_numero = ''
+        if codigo_completo and '-' in codigo_completo:
+            partes = codigo_completo.split('-')
+            if len(partes) >= 4:
+                ultimo_numero = partes[-1]
+        
+        guias_params = (
             codigo_completo,
             numero_cotizacion,
-            f'%{codigo_completo}%',
-            f'%{numero_cotizacion}%',
-            f'%{codigo_completo.split("-")[-1]}%',
-            cliente_ruc
-        ))
+            f'%{codigo_completo}%' if codigo_completo else '%',
+            f'%{numero_cotizacion}%' if numero_cotizacion else '%',
+            f'%{ultimo_numero}%' if ultimo_numero else '%',
+            cliente_ruc if cliente_ruc else ''
+        )
+        
+        guias = db_query(query_guias, guias_params)
         
         print(f"📊 Guías encontradas: {len(guias)}")
         for guia in guias:
@@ -1954,83 +1964,157 @@ def obtener_documentos_vinculados(cotizacion_id):
         # ==========================================
         # BUSCAR COMPROBANTES (Facturas/Boletas)
         # ==========================================
-        query_comprobantes = """
-            SELECT 
-                id,
-                tipo_comprobante,
-                serie,
-                numero,
-                fecha_emision,
-                cliente_numero_doc as cliente_ruc,
-                cliente_nombre,
-                estado_sunat,
-                observaciones,
-                items_json,
-                created_at,
-                CASE 
-                    WHEN tipo_comprobante = 'FACTURA' THEN 'Factura'
-                    ELSE 'Boleta'
-                END as tipo_documento,
-                CONCAT(serie, '-', numero) as numero_completo
-            FROM comprobantes
-            WHERE 1=1
-            AND (
-                -- Buscar en observaciones
-                observaciones ILIKE %s
-                OR observaciones ILIKE %s
-                OR observaciones ILIKE %s
-                OR observaciones ILIKE %s
-                OR observaciones ILIKE %s
-                OR observaciones ILIKE %s
-                OR observaciones ILIKE %s
-                -- Buscar en items_json
-                OR items_json::text ILIKE %s
-                OR items_json::text ILIKE %s
-                OR items_json::text ILIKE %s
-                -- Buscar por RUC del cliente
-                OR cliente_numero_doc = %s
-                -- Buscar por nombre del cliente
-                OR cliente_nombre ILIKE %s
-            )
-            ORDER BY created_at DESC
-        """
+        # Construir la consulta de comprobantes dinámicamente
+        comprobantes = []
         
-        # Preparar todos los términos de búsqueda
-        terminos = []
-        
-        # Términos basados en el código de cotización
-        if codigo_completo:
-            terminos.append(f'%{codigo_completo}%')
-            terminos.append(f'% {codigo_completo}%')
-            terminos.append(f'%{codigo_completo} %')
-            # Extraer número de cotización del código (ej: 0024)
-            partes = codigo_completo.split('-')
-            if len(partes) >= 4:
-                ultimo_numero = partes[-1]  # 0024
-                terminos.append(f'%{ultimo_numero}%')
-                # Combinación año-mes-día + número (ej: 20260606-0024)
-                if len(partes) >= 3:
-                    terminos.append(f'%{partes[2]}-{partes[3]}%')
-        
-        if numero_cotizacion:
-            terminos.append(f'%{numero_cotizacion}%')
-            terminos.append(f'% {numero_cotizacion}%')
-            terminos.append(f'%{numero_cotizacion} %')
-        
-        # Si el cliente tiene RUC, buscarlo también
-        if cliente_ruc:
-            terminos.append(cliente_ruc)
-        
-        # Si el cliente tiene nombre, buscarlo también
-        if cliente_nombre:
-            terminos.append(f'%{cliente_nombre}%')
-        
-        # Asegurar que tenemos al menos un término
-        if not terminos:
-            terminos = ['%']
-        
-        # Ejecutar la consulta con todos los términos
-        comprobantes = db_query(query_comprobantes, tuple(terminos))
+        try:
+            # Método 1: Buscar por código de cotización en observaciones
+            if codigo_completo:
+                query_comp = """
+                    SELECT 
+                        id,
+                        tipo_comprobante,
+                        serie,
+                        numero,
+                        fecha_emision,
+                        cliente_numero_doc as cliente_ruc,
+                        cliente_nombre,
+                        estado_sunat,
+                        observaciones,
+                        items_json,
+                        created_at,
+                        CASE 
+                            WHEN tipo_comprobante = 'FACTURA' THEN 'Factura'
+                            ELSE 'Boleta'
+                        END as tipo_documento,
+                        CONCAT(serie, '-', numero) as numero_completo
+                    FROM comprobantes
+                    WHERE observaciones ILIKE %s
+                    ORDER BY created_at DESC
+                """
+                comprobantes_temp = db_query(query_comp, (f'%{codigo_completo}%',))
+                for c in comprobantes_temp:
+                    if c not in comprobantes:
+                        comprobantes.append(c)
+            
+            # Método 2: Buscar por número de cotización en observaciones
+            if numero_cotizacion:
+                query_comp = """
+                    SELECT 
+                        id,
+                        tipo_comprobante,
+                        serie,
+                        numero,
+                        fecha_emision,
+                        cliente_numero_doc as cliente_ruc,
+                        cliente_nombre,
+                        estado_sunat,
+                        observaciones,
+                        items_json,
+                        created_at,
+                        CASE 
+                            WHEN tipo_comprobante = 'FACTURA' THEN 'Factura'
+                            ELSE 'Boleta'
+                        END as tipo_documento,
+                        CONCAT(serie, '-', numero) as numero_completo
+                    FROM comprobantes
+                    WHERE observaciones ILIKE %s
+                    ORDER BY created_at DESC
+                """
+                comprobantes_temp = db_query(query_comp, (f'%{numero_cotizacion}%',))
+                for c in comprobantes_temp:
+                    if c not in comprobantes:
+                        comprobantes.append(c)
+            
+            # Método 3: Buscar en items_json
+            if codigo_completo:
+                query_comp = """
+                    SELECT 
+                        id,
+                        tipo_comprobante,
+                        serie,
+                        numero,
+                        fecha_emision,
+                        cliente_numero_doc as cliente_ruc,
+                        cliente_nombre,
+                        estado_sunat,
+                        observaciones,
+                        items_json,
+                        created_at,
+                        CASE 
+                            WHEN tipo_comprobante = 'FACTURA' THEN 'Factura'
+                            ELSE 'Boleta'
+                        END as tipo_documento,
+                        CONCAT(serie, '-', numero) as numero_completo
+                    FROM comprobantes
+                    WHERE items_json::text ILIKE %s
+                    ORDER BY created_at DESC
+                """
+                comprobantes_temp = db_query(query_comp, (f'%{codigo_completo}%',))
+                for c in comprobantes_temp:
+                    if c not in comprobantes:
+                        comprobantes.append(c)
+            
+            # Método 4: Buscar por RUC del cliente
+            if cliente_ruc:
+                query_comp = """
+                    SELECT 
+                        id,
+                        tipo_comprobante,
+                        serie,
+                        numero,
+                        fecha_emision,
+                        cliente_numero_doc as cliente_ruc,
+                        cliente_nombre,
+                        estado_sunat,
+                        observaciones,
+                        items_json,
+                        created_at,
+                        CASE 
+                            WHEN tipo_comprobante = 'FACTURA' THEN 'Factura'
+                            ELSE 'Boleta'
+                        END as tipo_documento,
+                        CONCAT(serie, '-', numero) as numero_completo
+                    FROM comprobantes
+                    WHERE cliente_numero_doc = %s
+                    ORDER BY created_at DESC
+                """
+                comprobantes_temp = db_query(query_comp, (cliente_ruc,))
+                for c in comprobantes_temp:
+                    if c not in comprobantes:
+                        comprobantes.append(c)
+            
+            # Método 5: Buscar por nombre del cliente
+            if cliente_nombre:
+                query_comp = """
+                    SELECT 
+                        id,
+                        tipo_comprobante,
+                        serie,
+                        numero,
+                        fecha_emision,
+                        cliente_numero_doc as cliente_ruc,
+                        cliente_nombre,
+                        estado_sunat,
+                        observaciones,
+                        items_json,
+                        created_at,
+                        CASE 
+                            WHEN tipo_comprobante = 'FACTURA' THEN 'Factura'
+                            ELSE 'Boleta'
+                        END as tipo_documento,
+                        CONCAT(serie, '-', numero) as numero_completo
+                    FROM comprobantes
+                    WHERE cliente_nombre ILIKE %s
+                    ORDER BY created_at DESC
+                """
+                comprobantes_temp = db_query(query_comp, (f'%{cliente_nombre}%',))
+                for c in comprobantes_temp:
+                    if c not in comprobantes:
+                        comprobantes.append(c)
+                        
+        except Exception as e:
+            print(f"⚠️ Error al buscar comprobantes: {str(e)}")
         
         print(f"📊 Comprobantes encontrados: {len(comprobantes)}")
         
@@ -2039,25 +2123,17 @@ def obtener_documentos_vinculados(cotizacion_id):
             tipo_corto = 'Factura' if comp.get('tipo_comprobante') == 'FACTURA' else 'Boleta'
             print(f"   📄 {tipo_corto}: {comp.get('serie')}-{comp.get('numero')} - {comp.get('cliente_nombre', '')[:30]}...")
             
-            # Verificar si este comprobante ya fue agregado (evitar duplicados)
-            existe = False
-            for doc in documentos:
-                if doc.get('tipo') == tipo_corto and doc.get('numero') == f"{comp.get('serie')}-{comp.get('numero')}":
-                    existe = True
-                    break
-            
-            if not existe:
-                documentos.append({
-                    'tipo': comp.get('tipo_documento', tipo_corto),
-                    'tipo_corto': tipo_corto,
-                    'numero': comp.get('numero_completo') or f"{comp.get('serie')}-{comp.get('numero')}",
-                    'fecha': comp.get('fecha_emision').strftime('%Y-%m-%d %H:%M:%S') if comp.get('fecha_emision') else '',
-                    'cliente_ruc': comp.get('cliente_ruc', ''),
-                    'cliente_nombre': comp.get('cliente_nombre', ''),
-                    'estado': comp.get('estado_sunat', ''),
-                    'id': comp.get('id'),
-                    'url': f"/comprobantes/ver/{comp.get('id')}"
-                })
+            documentos.append({
+                'tipo': comp.get('tipo_documento', tipo_corto),
+                'tipo_corto': tipo_corto,
+                'numero': comp.get('numero_completo') or f"{comp.get('serie')}-{comp.get('numero')}",
+                'fecha': comp.get('fecha_emision').strftime('%Y-%m-%d %H:%M:%S') if comp.get('fecha_emision') else '',
+                'cliente_ruc': comp.get('cliente_ruc', ''),
+                'cliente_nombre': comp.get('cliente_nombre', ''),
+                'estado': comp.get('estado_sunat', ''),
+                'id': comp.get('id'),
+                'url': f"/comprobantes/ver/{comp.get('id')}"
+            })
         
         # ==========================================
         # INCLUIR LA COTIZACIÓN MISMA
@@ -2128,61 +2204,58 @@ def contar_documentos_vinculados(cotizacion_id):
         cliente_ruc = datos.get('cliente_ruc', '')
         cliente_nombre = datos.get('cliente_nombre', '')
         
+        total = 0
+        has_documentos = False
+        
         # Contar guías
-        count_guias = db_query("""
-            SELECT COUNT(*) as total 
-            FROM guias_remision 
-            WHERE documento_asociado = %s 
-               OR documento_asociado = %s
-               OR documento_asociado LIKE %s
-               OR documento_asociado LIKE %s
-               OR ruc_destinatario = %s
-        """, (
-            codigo_completo, 
-            numero_cotizacion, 
-            f'%{codigo_completo}%', 
-            f'%{numero_cotizacion}%',
-            cliente_ruc
-        ))
+        try:
+            count_guias = db_query("""
+                SELECT COUNT(*) as total 
+                FROM guias_remision 
+                WHERE documento_asociado = %s 
+                   OR documento_asociado = %s
+                   OR ruc_destinatario = %s
+            """, (codigo_completo, numero_cotizacion, cliente_ruc))
+            
+            total += count_guias[0]['total'] if count_guias else 0
+        except Exception as e:
+            print(f"⚠️ Error contando guías: {str(e)}")
         
         # Contar comprobantes
-        count_comprobantes = db_query("""
-            SELECT COUNT(*) as total 
-            FROM comprobantes 
-            WHERE observaciones ILIKE %s 
-               OR observaciones ILIKE %s
-               OR observaciones ILIKE %s
-               OR observaciones ILIKE %s
-               OR observaciones ILIKE %s
-               OR observaciones ILIKE %s
-               OR observaciones ILIKE %s
-               OR items_json::text ILIKE %s
-               OR items_json::text ILIKE %s
-               OR items_json::text ILIKE %s
-               OR cliente_numero_doc = %s
-               OR cliente_nombre ILIKE %s
-        """, (
-            f'%{codigo_completo}%',
-            f'% {codigo_completo}%',
-            f'%{codigo_completo} %',
-            f'%{numero_cotizacion}%',
-            f'% {numero_cotizacion}%',
-            f'%{numero_cotizacion} %',
-            f'%{codigo_completo.split("-")[-1]}%' if codigo_completo and '-' in codigo_completo else '%',
-            f'%{codigo_completo}%',
-            f'%{numero_cotizacion}%',
-            f'%{codigo_completo.split("-")[-1]}%' if codigo_completo and '-' in codigo_completo else '%',
-            cliente_ruc,
-            f'%{cliente_nombre}%' if cliente_nombre else '%'
-        ))
+        try:
+            if codigo_completo:
+                count_comp = db_query("""
+                    SELECT COUNT(*) as total 
+                    FROM comprobantes 
+                    WHERE observaciones ILIKE %s
+                """, (f'%{codigo_completo}%',))
+                total += count_comp[0]['total'] if count_comp else 0
+            
+            if numero_cotizacion:
+                count_comp = db_query("""
+                    SELECT COUNT(*) as total 
+                    FROM comprobantes 
+                    WHERE observaciones ILIKE %s
+                """, (f'%{numero_cotizacion}%',))
+                total += count_comp[0]['total'] if count_comp else 0
+            
+            if cliente_ruc:
+                count_comp = db_query("""
+                    SELECT COUNT(*) as total 
+                    FROM comprobantes 
+                    WHERE cliente_numero_doc = %s
+                """, (cliente_ruc,))
+                total += count_comp[0]['total'] if count_comp else 0
+                
+        except Exception as e:
+            print(f"⚠️ Error contando comprobantes: {str(e)}")
         
-        total = (count_guias[0]['total'] if count_guias else 0) + \
-                (count_comprobantes[0]['total'] if count_comprobantes else 0)
+        has_documentos = total > 0
         
         return jsonify({
             'success': True,
             'count': total,
-            'has_documentos': total > 0
+            'has_documentos': has_documentos
         })
         
     except Exception as e:
