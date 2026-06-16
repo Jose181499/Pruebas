@@ -159,7 +159,7 @@ async function autocompletarConSunatListado() {
 }
 
 // ===========================
-// CARGAR COTIZACIONES
+// CARGAR COTIZACIONES - VERSIÓN CON CONTEO DE DOCUMENTOS
 // ===========================
 async function cargarCotizaciones() {
     const tbody = document.getElementById('tbodyCotizaciones');
@@ -204,6 +204,10 @@ async function cargarCotizaciones() {
         }
 
         cotizacionesData = result.data || [];
+        
+        // 🆕 Cargar conteos de documentos vinculados
+        await cargarConteoDocumentos(cotizacionesData);
+        
         actualizarEstadisticas();
         renderizarTabla(cotizacionesData);
 
@@ -221,6 +225,52 @@ async function cargarCotizaciones() {
                 </tr>
             `;
         }
+    }
+}
+
+// ===========================
+// CARGAR CONTEO DE DOCUMENTOS PARA CADA COTIZACIÓN
+// ===========================
+async function cargarConteoDocumentos(cotizaciones) {
+    if (!cotizaciones || cotizaciones.length === 0) {
+        return cotizaciones;
+    }
+
+    try {
+        // Hacer peticiones en paralelo para obtener los conteos
+        const promesas = cotizaciones.map(cot => 
+            fetch(`/api/cotizacion/${cot.id}/documentos/count`)
+                .then(res => res.json())
+                .then(data => ({
+                    id: cot.id,
+                    count: data.success ? data.count : 0,
+                    hasDocumentos: data.success ? data.has_documentos : false
+                }))
+                .catch(() => ({
+                    id: cot.id,
+                    count: 0,
+                    hasDocumentos: false
+                }))
+        );
+
+        const resultados = await Promise.all(promesas);
+        
+        // Agregar los conteos a las cotizaciones
+        const mapa = {};
+        resultados.forEach(r => {
+            mapa[r.id] = { count: r.count, hasDocumentos: r.hasDocumentos };
+        });
+
+        cotizaciones.forEach(cot => {
+            const info = mapa[cot.id] || { count: 0, hasDocumentos: false };
+            cot.documents_count = info.count;
+            cot.tiene_documentos = info.hasDocumentos;
+        });
+
+        return cotizaciones;
+    } catch (error) {
+        console.error('Error cargando conteos de documentos:', error);
+        return cotizaciones;
     }
 }
 
@@ -331,7 +381,7 @@ function escapeHtml(str) {
 }
 
 // ===========================
-// RENDERIZAR TABLA - ORDEN CORRECTO DE COLUMNAS
+// RENDERIZAR TABLA - CON BOTÓN DE DOCUMENTOS VINCULADOS
 // ===========================
 function renderizarTabla(cotizaciones) {
     const tbody = document.getElementById('tbodyCotizaciones');
@@ -367,6 +417,10 @@ function renderizarTabla(cotizaciones) {
         const notaAclaratoria = c.nota_aclaratoria || '---';
         const condicionPago = c.condicion_pago || 'Contado';
         
+        // 🆕 Obtener conteo de documentos vinculados
+        const tieneDocumentos = c.tiene_documentos || false;
+        const documentosCount = c.documents_count || 0;
+        
         return `
             <tr data-id="${c.id}" data-codigo="${escapeHtml(codigoMostrar)}">
                 <!-- 1. Ítems -->
@@ -380,7 +434,7 @@ function renderizarTabla(cotizaciones) {
                     </div>
                 </td>
                 
-                <!-- 3. ESTADO (con colores semáforo) -->
+                <!-- 3. ESTADO -->
                 <td class="estado-cell">${estadoHtml}</td>
                 
                 <!-- 4. N° Cotización -->
@@ -435,6 +489,11 @@ function renderizarTabla(cotizaciones) {
                             <li><a class="dropdown-item" href="#" onclick="exportarPDF(${c.id})">
                                 <i class="bi bi-file-pdf"></i> Exportar PDF
                             </a></li>
+                            <!-- 🆕 BOTÓN DOCUMENTOS VINCULADOS -->
+                            <li><a class="dropdown-item text-info" href="#" onclick="verDocumentos(${c.id})">
+                                <i class="bi bi-link-45deg"></i> Documentos vinculados
+                                ${tieneDocumentos ? `<span class="badge bg-primary ms-1">${documentosCount}</span>` : ''}
+                            </a></li>
                             ${(c.estado === 'Generada' || c.estado === 'generada') ? `
                              <li><a class="dropdown-item text-success" href="#" onclick="aceptarCotizacion(${c.id}, '${escapeHtml(codigoMostrar)}')">
                              <i class="bi bi-check-circle-fill"></i> Aceptada
@@ -445,7 +504,6 @@ function renderizarTabla(cotizaciones) {
                               <i class="bi bi-truck"></i> Crear guía de remisión
                             </a></li>
                             ` : ''}
-                           
                             ${(c.estado === 'Aceptada por Cliente' || c.estado === 'aceptada') ? `
                             <li><a class="dropdown-item text-success" href="#" onclick="crearComprobante(${c.id}, 'FACTURA')">
                             <i class="bi bi-receipt"></i> Crear Factura
@@ -454,7 +512,6 @@ function renderizarTabla(cotizaciones) {
                             <i class="bi bi-ticket-perforated"></i> Crear Boleta
                             </a></li>
                             ` : ''}
-
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item text-danger" href="#" onclick="mostrarModalEliminar(${c.id}, '${escapeHtml(codigoMostrar)}')">
                                 <i class="bi bi-trash"></i> Eliminar
@@ -466,6 +523,7 @@ function renderizarTabla(cotizaciones) {
         `;
     }).join('');
 }
+
 // ===========================
 // VER DETALLE
 // ===========================
@@ -597,7 +655,6 @@ async function duplicarCotizacion(id) {
         
         if (result.success) {
             mostrarNotificacion('✅ Cotización duplicada correctamente', 'success');
-            // Recargar la lista para mostrar la nueva cotización
             await cargarCotizaciones();
         } else {
             mostrarNotificacion('❌ Error al duplicar: ' + (result.error || 'Error desconocido'), 'danger');
@@ -609,14 +666,12 @@ async function duplicarCotizacion(id) {
 }
 
 // ===========================
-// ===========================
 // CREAR COMPROBANTE (FACTURA/BOLETA) DESDE COTIZACIÓN ACEPTADA
 // ===========================
 async function crearComprobante(cotizacionId, tipoComprobante) {
     try {
         mostrarNotificacion(`📝 Preparando ${tipoComprobante === 'FACTURA' ? 'factura' : 'boleta'}...`, 'info');
         
-        // Obtener datos completos de la cotización
         const response = await fetch(`/api/cotizacion/${cotizacionId}`);
         const result = await response.json();
         
@@ -627,13 +682,11 @@ async function crearComprobante(cotizacionId, tipoComprobante) {
         
         const cotizacion = result.data;
         
-        // Verificar que esté aceptada
         if (cotizacion.estado !== 'Aceptada por Cliente' && cotizacion.estado !== 'aceptada') {
             mostrarNotificacion('⚠️ Solo se pueden crear comprobantes de cotizaciones aceptadas', 'warning');
             return;
         }
         
-        // Procesar productos de la cotización
         const productosComprobante = (cotizacion.detalle || []).map(producto => ({
             codigo: producto.codigo || '',
             descripcion: producto.descripcion || '',
@@ -642,12 +695,10 @@ async function crearComprobante(cotizacionId, tipoComprobante) {
             precio_unitario: parseFloat(producto.precio_unitario || producto.costo_unitario || 0)
         }));
         
-        // Calcular totales
         const subtotal = productosComprobante.reduce((sum, p) => sum + (p.cantidad * p.precio_unitario), 0);
         const igv = subtotal * 0.18;
         const total = subtotal + igv;
         
-        // Preparar datos para el comprobante
         const datosComprobante = {
             tipo: tipoComprobante,
             cliente: {
@@ -667,10 +718,8 @@ async function crearComprobante(cotizacionId, tipoComprobante) {
             fecha_cotizacion: cotizacion.fecha_creacion
         };
         
-        // Guardar en localStorage
         localStorage.setItem('datos_cotizacion_para_comprobante', JSON.stringify(datosComprobante));
         
-        // Redirigir según el tipo
         if (tipoComprobante === 'FACTURA') {
             window.location.href = '/comprobantes/crear?tipo=FACTURA&from_cotizacion=' + cotizacionId;
         } else {
@@ -682,6 +731,9 @@ async function crearComprobante(cotizacionId, tipoComprobante) {
         mostrarNotificacion('❌ Error al preparar: ' + error.message, 'danger');
     }
 }
+
+// ===========================
+// ENVIAR POR EMAIL
 // ===========================
 async function enviarPorEmail(id) {
     try {
@@ -711,14 +763,13 @@ async function enviarPorEmail(id) {
 // EXPORTAR PDF
 // ===========================
 function exportarPDF(id) {
-    // Abrir el PDF en una nueva pestaña
     window.open(`/api/cotizacion/exportar-pdf/${id}`, '_blank');
 }
+
 // ===========================
 // ACEPTAR COTIZACIÓN
 // ===========================
 async function aceptarCotizacion(id, codigo) {
-    // Mostrar confirmación personalizada
     const confirmar = confirm(`¿Estás seguro que la cotización ${codigo} está aceptada?\n\nYa llegó el comprobante y esta acción no se puede corregir.\n\n¿Deseas marcarla como ACEPTADA?`);
     
     if (!confirmar) return;
@@ -737,7 +788,6 @@ async function aceptarCotizacion(id, codigo) {
         
         if (result.success) {
             mostrarNotificacion('✅ Cotización marcada como ACEPTADA correctamente', 'success');
-            // Recargar la tabla para mostrar el nuevo estado
             await cargarCotizaciones();
         } else {
             mostrarNotificacion('❌ Error al aceptar: ' + (result.error || 'Error desconocido'), 'danger');
@@ -747,7 +797,7 @@ async function aceptarCotizacion(id, codigo) {
         mostrarNotificacion('❌ Error de conexión al aceptar la cotización', 'danger');
     }
 }
-// ===========================
+
 // ===========================
 // CREAR GUÍA DE REMISIÓN DESDE COTIZACIÓN ACEPTADA
 // ===========================
@@ -755,7 +805,6 @@ async function crearGuiaRemision(cotizacionId) {
     try {
         mostrarNotificacion('🚚 Preparando guía de remisión...', 'info');
         
-        // Obtener datos completos de la cotización
         const response = await fetch(`/api/cotizacion/${cotizacionId}`);
         const result = await response.json();
         
@@ -766,13 +815,11 @@ async function crearGuiaRemision(cotizacionId) {
         
         const cotizacion = result.data;
         
-        // Verificar que esté aceptada
         if (cotizacion.estado !== 'Aceptada por Cliente' && cotizacion.estado !== 'aceptada') {
             mostrarNotificacion('⚠️ Solo se pueden crear guías de cotizaciones aceptadas', 'warning');
             return;
         }
         
-        // Preparar datos para la guía
         const datosGuia = {
             cliente: {
                 ruc: cotizacion.numero_documento || cotizacion.cliente_ruc,
@@ -794,10 +841,7 @@ async function crearGuiaRemision(cotizacionId) {
             fecha_cotizacion: cotizacion.fecha_creacion
         };
         
-        // Guardar en localStorage para usar en la página de guía
         localStorage.setItem('datos_cotizacion_para_guia', JSON.stringify(datosGuia));
-        
-        // Redirigir a la página de crear guía
         window.location.href = '/guias/crear?from_cotizacion=' + cotizacionId;
         
     } catch (error) {
@@ -805,6 +849,9 @@ async function crearGuiaRemision(cotizacionId) {
         mostrarNotificacion('❌ Error al preparar guía de remisión: ' + error.message, 'danger');
     }
 }
+
+// ===========================
+// MOSTRAR MODAL ELIMINAR
 // ===========================
 function mostrarModalEliminar(id, codigo) {
     cotizacionAEliminar = id;
@@ -968,6 +1015,144 @@ async function guardarNuevoClienteListado() {
 }
 
 // ===========================
+// 🆕 VER DOCUMENTOS VINCULADOS (DATOS REALES)
+// ===========================
+window.verDocumentos = async function(id) {
+    const lista = document.getElementById('documentosLista');
+    if (lista) {
+        lista.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary"></div>
+                <p class="mt-2 text-muted">Cargando documentos vinculados...</p>
+            </div>
+        `;
+    }
+
+    const modalElement = document.getElementById('modalDocumentosVinculados');
+    if (modalElement) {
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+    }
+
+    try {
+        const response = await fetch(`/api/cotizacion/${id}/documentos`);
+        const data = await response.json();
+
+        if (!data.success) {
+            mostrarNotificacion('❌ Error al cargar documentos: ' + (data.error || 'Error desconocido'), 'danger');
+            if (lista) {
+                lista.innerHTML = `
+                    <div class="text-center py-4 text-danger">
+                        <i class="bi bi-exclamation-triangle fs-1 d-block"></i>
+                        <p>Error al cargar los documentos</p>
+                    </div>
+                `;
+            }
+            return;
+        }
+
+        const info = data.data;
+        const cotizacion = info.cotizacion || {};
+        const documentos = info.documentos || [];
+
+        const docNumero = document.getElementById('docCotizacionNumero');
+        const docCliente = document.getElementById('docClienteNombre');
+        const docVendedor = document.getElementById('docVendedorNombre');
+
+        if (docNumero) docNumero.textContent = cotizacion.codigo_cotizacion || cotizacion.numero_cotizacion || '--';
+        if (docCliente) docCliente.textContent = cotizacion.cliente_nombre || '--';
+        if (docVendedor) docVendedor.textContent = cotizacion.vendedor_nombre || '--';
+
+        let html = '';
+        if (documentos.length === 0) {
+            html = `
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-file-earmark-x fs-1 d-block mb-3"></i>
+                    <h6>No hay documentos vinculados</h6>
+                    <p class="small">Esta cotización no tiene documentos adicionales asociados.</p>
+                </div>
+            `;
+        } else {
+            documentos.forEach(doc => {
+                const icon = getDocumentoIcon(doc.tipo_corto || doc.tipo);
+                const color = getDocumentoColor(doc.tipo_corto || doc.tipo);
+                const esCotizacion = doc.es_cotizacion || false;
+                
+                let fechaMostrar = doc.fecha || '--';
+                if (fechaMostrar && fechaMostrar !== '--') {
+                    const partes = fechaMostrar.split(' ');
+                    if (partes.length >= 2) {
+                        const fechaParte = partes[0].split('-');
+                        if (fechaParte.length === 3) {
+                            fechaMostrar = `${fechaParte[2]}/${fechaParte[1]}/${fechaParte[0]} ${partes[1].substring(0, 5)}`;
+                        }
+                    }
+                }
+
+                const estiloFila = esCotizacion ? 'background-color: #f0f4ff; border-left: 3px solid #4f46e5;' : '';
+
+                html += `
+                    <div class="documento-item" style="${estiloFila}">
+                        <div class="documento-tipo">
+                            <i class="bi ${icon}" style="color: ${color}; font-size: 20px;"></i>
+                            <span class="ms-2">${escapeHtml(doc.tipo || 'Documento')}</span>
+                            ${esCotizacion ? '<span class="badge bg-primary ms-2">Principal</span>' : ''}
+                        </div>
+                        <div class="documento-detalle">
+                            <span class="documento-numero">${escapeHtml(doc.numero || '--')}</span>
+                            <span class="documento-fecha"><i class="bi bi-clock me-1"></i>${fechaMostrar}</span>
+                            <span class="documento-cliente"><i class="bi bi-person me-1"></i>${escapeHtml(doc.cliente_nombre || doc.cliente_ruc || '--')}</span>
+                            ${doc.url ? `<a href="${doc.url}" class="btn btn-sm btn-outline-primary" target="_blank" title="Ver documento"><i class="bi bi-eye"></i></a>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        if (lista) lista.innerHTML = html;
+
+    } catch (error) {
+        console.error('Error al cargar documentos:', error);
+        mostrarNotificacion('❌ Error de conexión al cargar documentos', 'danger');
+        if (lista) {
+            lista.innerHTML = `
+                <div class="text-center py-4 text-danger">
+                    <i class="bi bi-wifi-off fs-1 d-block"></i>
+                    <p>Error de conexión: ${escapeHtml(error.message)}</p>
+                </div>
+            `;
+        }
+    }
+};
+
+// ===========================
+// FUNCIONES AUXILIARES PARA DOCUMENTOS
+// ===========================
+function getDocumentoIcon(tipo) {
+    const icons = {
+        'Cotización': 'bi-file-earmark-text',
+        'Guía': 'bi-truck',
+        'Guía de Remisión': 'bi-truck',
+        'Factura': 'bi-file-earmark-pdf',
+        'Boleta': 'bi-receipt',
+        'Comprobante': 'bi-receipt-cut'
+    };
+    return icons[tipo] || 'bi-file-earmark';
+}
+
+function getDocumentoColor(tipo) {
+    const colors = {
+        'Cotización': '#4f46e5',
+        'Guía': '#2563eb',
+        'Guía de Remisión': '#2563eb',
+        'Factura': '#d97706',
+        'Boleta': '#059669',
+        'Comprobante': '#059669'
+    };
+    return colors[tipo] || '#6b7280';
+}
+
+// ===========================
 // ESTILOS ADICIONALES PARA SEMÁFORO
 // ===========================
 const style = document.createElement('style');
@@ -1070,7 +1255,87 @@ style.textContent = `
     .dropdown-item i {
         margin-right: 8px;
     }
+
+    /* Estilos para el modal de documentos vinculados */
+    .documento-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-bottom: 1px solid #f0f0f0;
+        transition: background 0.2s;
+        border-radius: 8px;
+        margin-bottom: 4px;
+    }
+
+    .documento-item:hover {
+        background: #f8fafc;
+    }
+
+    .documento-item:last-child {
+        border-bottom: none;
+    }
+
+    .documento-tipo {
+        font-weight: 700;
+        font-size: 14px;
+        color: #111827;
+        display: flex;
+        align-items: center;
+    }
+
+    .documento-tipo i {
+        margin-right: 10px;
+        font-size: 20px;
+    }
+
+    .documento-detalle {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .documento-numero {
+        font-family: monospace;
+        font-weight: 600;
+        color: #374151;
+        background: #f3f4f6;
+        padding: 2px 12px;
+        border-radius: 6px;
+        font-size: 13px;
+    }
+
+    .documento-fecha {
+        font-size: 12px;
+        color: #6b7280;
+    }
+
+    .documento-cliente {
+        font-size: 13px;
+        color: #4b5563;
+    }
+
+    .documentos-header-info {
+        background: #f8fafc;
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        font-size: 14px;
+    }
 `;
 document.head.appendChild(style);
+
+// ===========================
+// EXPONER FUNCIONES GLOBALES
+// ===========================
 window.aceptarCotizacion = aceptarCotizacion;
 window.crearComprobante = crearComprobante;
+window.verDocumentos = verDocumentos;
+window.editar = editar;
+window.duplicarCotizacion = duplicarCotizacion;
+window.exportarPDF = exportarPDF;
+window.enviarPorEmail = enviarPorEmail;
+window.crearGuiaRemision = crearGuiaRemision;
+window.mostrarModalEliminar = mostrarModalEliminar;
+window.verDetalle = verDetalle;

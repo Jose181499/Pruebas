@@ -1856,3 +1856,211 @@ def generar_pdf(cotizacion_id):
         content_type='application/pdf',
         headers={"Content-Disposition": f"inline; filename=cotizacion_{cotizacion_id}.pdf"}
     )
+
+# ==========================================
+# ENDPOINT: OBTENER DOCUMENTOS VINCULADOS DE UNA COTIZACIÓN
+# ==========================================
+
+@cotizaciones_bp.route("/api/cotizacion/<int:cotizacion_id>/documentos", methods=["GET"])
+def obtener_documentos_vinculados(cotizacion_id):
+    """
+    Obtener todos los documentos vinculados a una cotización:
+    - Guías de remisión
+    - Facturas
+    - Boletas
+    """
+    try:
+        # 1. Verificar que la cotización existe
+        query_cotizacion = """
+            SELECT 
+                c.id,
+                c.numero_cotizacion,
+                c.codigo_cotizacion,
+                cl.razon_social as cliente_nombre,
+                cl.numero_documento as cliente_ruc,
+                u.nombre_completo as vendedor_nombre
+            FROM cotizaciones c
+            LEFT JOIN clientes cl ON c.cliente_id = cl.id
+            LEFT JOIN usuarios u ON c.usuario_id = u.id
+            WHERE c.id = %s
+        """
+        cotizacion = db_query(query_cotizacion, (cotizacion_id,))
+        
+        if not cotizacion:
+            return jsonify({
+                'success': False, 
+                'error': 'Cotización no encontrada'
+            }), 404
+        
+        # 2. Buscar documentos vinculados
+        documentos = []
+        
+        # 2.1 Buscar Guías de Remisión vinculadas por documento_asociado
+        # (asumiendo que el campo documento_asociado guarda el código de cotización)
+        codigo_cotizacion = cotizacion[0].get('codigo_cotizacion') or cotizacion[0].get('numero_cotizacion')
+        
+        if codigo_cotizacion:
+            query_guias = """
+                SELECT 
+                    id,
+                    serie,
+                    numero,
+                    fecha_emision,
+                    ruc_destinatario as cliente_ruc,
+                    destinatario_nombre as cliente_nombre,
+                    estado_sunat,
+                    created_at,
+                    'Guía de Remisión' as tipo_documento,
+                    CONCAT(serie, '-', LPAD(numero::text, 8, '0')) as numero_completo
+                FROM guias_remision
+                WHERE documento_asociado = %s 
+                   OR documento_asociado LIKE %s
+                ORDER BY created_at DESC
+            """
+            guias = db_query(query_guias, (codigo_cotizacion, f'%{codigo_cotizacion}%'))
+            
+            for guia in guias:
+                documentos.append({
+                    'tipo': 'Guía de Remisión',
+                    'tipo_corto': 'Guía',
+                    'numero': guia.get('numero_completo') or f"{guia.get('serie', 'T')}-{str(guia.get('numero', 0)).zfill(8)}",
+                    'fecha': guia.get('fecha_emision').strftime('%Y-%m-%d %H:%M:%S') if guia.get('fecha_emision') else '',
+                    'cliente_ruc': guia.get('cliente_ruc', ''),
+                    'cliente_nombre': guia.get('cliente_nombre', ''),
+                    'estado': guia.get('estado_sunat', ''),
+                    'id': guia.get('id'),
+                    'url': f"/guias/ver/{guia.get('id')}"
+                })
+        
+        # 2.2 Buscar Comprobantes (Facturas/Boletas) vinculados
+        # Buscar por el código de cotización en observaciones o en items_json
+        query_comprobantes = """
+            SELECT 
+                id,
+                tipo_comprobante,
+                serie,
+                numero,
+                fecha_emision,
+                cliente_numero_doc as cliente_ruc,
+                cliente_nombre,
+                estado_sunat,
+                observaciones,
+                items_json,
+                created_at,
+                CASE 
+                    WHEN tipo_comprobante = 'FACTURA' THEN 'Factura'
+                    ELSE 'Boleta'
+                END as tipo_documento,
+                CONCAT(serie, '-', LPAD(numero::text, 8, '0')) as numero_completo
+            FROM comprobantes
+            WHERE observaciones ILIKE %s 
+               OR items_json::text ILIKE %s
+            ORDER BY created_at DESC
+        """
+        comprobantes = db_query(query_comprobantes, (f'%{codigo_cotizacion}%', f'%{codigo_cotizacion}%'))
+        
+        for comp in comprobantes:
+            # Determinar si es Factura o Boleta
+            tipo_corto = 'Factura' if comp.get('tipo_comprobante') == 'FACTURA' else 'Boleta'
+            
+            documentos.append({
+                'tipo': comp.get('tipo_documento', tipo_corto),
+                'tipo_corto': tipo_corto,
+                'numero': comp.get('numero_completo') or f"{comp.get('serie', 'F')}-{str(comp.get('numero', 0)).zfill(8)}",
+                'fecha': comp.get('fecha_emision').strftime('%Y-%m-%d %H:%M:%S') if comp.get('fecha_emision') else '',
+                'cliente_ruc': comp.get('cliente_ruc', ''),
+                'cliente_nombre': comp.get('cliente_nombre', ''),
+                'estado': comp.get('estado_sunat', ''),
+                'id': comp.get('id'),
+                'url': f"/comprobantes/ver/{comp.get('id')}"
+            })
+        
+        # 2.3 También incluir la cotización misma como documento
+        documentos.append({
+            'tipo': 'Cotización',
+            'tipo_corto': 'Cotización',
+            'numero': cotizacion[0].get('codigo_cotizacion') or cotizacion[0].get('numero_cotizacion'),
+            'fecha': '',  # La fecha se obtiene del detalle
+            'cliente_ruc': cotizacion[0].get('cliente_ruc', ''),
+            'cliente_nombre': cotizacion[0].get('cliente_nombre', ''),
+            'estado': 'Activa',
+            'id': cotizacion_id,
+            'url': f"/cotizacion/consultar/{cotizacion_id}",
+            'es_cotizacion': True
+        })
+        
+        # Ordenar: primero la cotización, luego los demás documentos
+        documentos.sort(key=lambda x: 0 if x.get('es_cotizacion') else 1)
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'cotizacion': cotizacion[0],
+                'documentos': documentos,
+                'total': len(documentos) - 1  # Restamos la cotización misma
+            }
+        })
+        
+    except Exception as e:
+        print(f"❌ Error al obtener documentos vinculados: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False, 
+            'error': str(e)
+        }), 500
+
+
+# ==========================================
+# ENDPOINT: CONTAR DOCUMENTOS VINCULADOS POR COTIZACIÓN
+# ==========================================
+
+@cotizaciones_bp.route("/api/cotizacion/<int:cotizacion_id>/documentos/count", methods=["GET"])
+def contar_documentos_vinculados(cotizacion_id):
+    """
+    Obtener el conteo de documentos vinculados a una cotización
+    (útil para mostrar el badge en el listado)
+    """
+    try:
+        # Obtener el código de cotización
+        query_codigo = """
+            SELECT codigo_cotizacion, numero_cotizacion 
+            FROM cotizaciones 
+            WHERE id = %s
+        """
+        resultado = db_query(query_codigo, (cotizacion_id,))
+        
+        if not resultado:
+            return jsonify({'success': False, 'error': 'Cotización no encontrada'}), 404
+        
+        codigo = resultado[0].get('codigo_cotizacion') or resultado[0].get('numero_cotizacion')
+        
+        if not codigo:
+            return jsonify({'success': True, 'count': 0})
+        
+        # Contar guías
+        count_guias = db_query("""
+            SELECT COUNT(*) as total 
+            FROM guias_remision 
+            WHERE documento_asociado = %s OR documento_asociado LIKE %s
+        """, (codigo, f'%{codigo}%'))
+        
+        # Contar comprobantes
+        count_comprobantes = db_query("""
+            SELECT COUNT(*) as total 
+            FROM comprobantes 
+            WHERE observaciones ILIKE %s OR items_json::text ILIKE %s
+        """, (f'%{codigo}%', f'%{codigo}%'))
+        
+        total = (count_guias[0]['total'] if count_guias else 0) + \
+                (count_comprobantes[0]['total'] if count_comprobantes else 0)
+        
+        return jsonify({
+            'success': True,
+            'count': total,
+            'has_documentos': total > 0
+        })
+        
+    except Exception as e:
+        print(f"❌ Error al contar documentos: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500

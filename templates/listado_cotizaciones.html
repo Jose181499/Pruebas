@@ -199,6 +199,104 @@
             border-radius: 20px 20px 0 0;
         }
         
+        /* Modal Documentos Vinculados */
+        .modal-documentos .modal-header {
+            background: linear-gradient(135deg, #4f46e5, #6366f1);
+        }
+        
+        .documento-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+            border-radius: 8px;
+            margin-bottom: 4px;
+        }
+        
+        .documento-item:hover {
+            background: #f8fafc;
+        }
+        
+        .documento-item:last-child {
+            border-bottom: none;
+        }
+        
+        .documento-tipo {
+            font-weight: 700;
+            font-size: 14px;
+            color: #111827;
+            display: flex;
+            align-items: center;
+        }
+        
+        .documento-tipo i {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+        
+        .documento-detalle {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .documento-numero {
+            font-family: monospace;
+            font-weight: 600;
+            color: #374151;
+            background: #f3f4f6;
+            padding: 2px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        
+        .documento-fecha {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .documento-cliente {
+            font-size: 13px;
+            color: #4b5563;
+        }
+        
+        .documentos-header-info {
+            background: #f8fafc;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        
+        /* Badges para tipos de documentos */
+        .badge-cotizacion {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+        
+        .badge-guia {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .badge-boleta {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .badge-factura {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .badge-sin-documentos {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+        
         /* Toolbar stats - VERSIÓN MÁS PEQUEÑA */
         .stats-bar {
             background: linear-gradient(135deg, #f8fafc, #f1f5f9);
@@ -315,6 +413,17 @@
             
             .stat-label {
                 font-size: 10px;
+            }
+            
+            .documento-detalle {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
+            .documento-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
             }
         }
     </style>
@@ -442,6 +551,39 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================= -->
+<!-- 🆕 MODAL DOCUMENTOS VINCULADOS                -->
+<!-- ============================================= -->
+<div class="modal fade" id="modalDocumentosVinculados" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content modal-confirmacion modal-documentos">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-link-45deg me-2"></i>
+                    Documentos Vinculados
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="documentosBody">
+                <div class="documentos-header-info">
+                    <i class="bi bi-file-earmark-text me-2"></i>
+                    Cotización: <strong id="docCotizacionNumero">--</strong>
+                    <span class="ms-3"><i class="bi bi-person me-1"></i> Cliente: <strong id="docClienteNombre">--</strong></span>
+                    <span class="ms-3"><i class="bi bi-person-badge me-1"></i> Vendedor: <strong id="docVendedorNombre">--</strong></span>
+                </div>
+                <div id="documentosLista">
+                    <!-- Los documentos se cargan dinámicamente -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Cerrar
+                </button>
             </div>
         </div>
     </div>
