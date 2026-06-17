@@ -1,4 +1,3 @@
-# routes/pdf_guia_generator.py
 from weasyprint import HTML, CSS
 from jinja2 import Template
 import qrcode
@@ -74,7 +73,7 @@ def generar_pdf_guia(guia_data):
     # Renderizar HTML
     html_content = renderizar_html_guia(guia_data)
     
-    # CSS para el PDF - EXACTAMENTE IGUAL AL EJEMPLO
+    # CSS para el PDF - CON RECUADRO A LA DERECHA
     css_content = """
     @page {
         size: A4;
@@ -202,11 +201,29 @@ def generar_pdf_guia(guia_data):
         background: #f9f9f9;
     }
     
+    /* ============================================================
+       RECUADRO DEL TRANSPORTE - CON BORDE Y FONDO GRIS
+    ============================================================ */
     .datos-transporte {
-        border: 1px solid #ccc;
-        padding: 6px 10px;
+        border: 2px solid #333;
+        padding: 8px 12px;
         margin-bottom: 6px;
-        background: #f9f9f9;
+        background: #f5f5f5;
+    }
+    
+    .datos-transporte .info-line {
+        padding: 2px 0;
+        font-size: 9px;
+    }
+    
+    .datos-transporte .label {
+        font-weight: bold;
+        display: inline-block;
+        min-width: 110px;
+    }
+    
+    .datos-transporte .value {
+        display: inline-block;
     }
     
     .products-table {
@@ -488,7 +505,7 @@ def renderizar_html_guia(guia_data):
             </div>
         </div>
         
-        <!-- DATOS DEL TRANSPORTE -->
+        <!-- DATOS DEL TRANSPORTE - CON RECUADRO GRIS A LA DERECHA -->
         <div class="seccion">
             <div class="seccion-titulo">DATOS DEL TRANSPORTE</div>
             <div class="datos-transporte">
