@@ -225,24 +225,47 @@
             margin-bottom: 20px;
             opacity: 0.5;
         }
-        
-        .total-card {
-            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
-            border-radius: 16px;
+
+        /* ===== DASHBOARD CARDS ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: white;
             padding: 16px 20px;
-            text-align: right;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border-left: 5px solid #e2e8f0;
+            transition: 0.2s;
         }
-        
-        .total-label {
-            font-size: 12px;
-            color: #166534;
-            font-weight: 500;
-        }
-        
-        .total-value {
-            font-size: 24px;
-            font-weight: 800;
-            color: #065f46;
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+        .stat-card .stat-icon { font-size: 28px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 14px; background: #f1f5f9; }
+        .stat-card .stat-info { display: flex; flex-direction: column; }
+        .stat-card .stat-number { font-size: 24px; font-weight: 800; line-height: 1.2; }
+        .stat-card .stat-label { font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-total { border-left-color: #3b82f6; }
+        .stat-total .stat-icon { background: #dbeafe; color: #1e40af; }
+        .stat-factura { border-left-color: #3b82f6; }
+        .stat-factura .stat-icon { background: #dbeafe; color: #1e40af; }
+        .stat-boleta { border-left-color: #10b981; }
+        .stat-boleta .stat-icon { background: #d1fae5; color: #065f46; }
+        .stat-aceptada { border-left-color: #10b981; }
+        .stat-aceptada .stat-icon { background: #d1fae5; color: #065f46; }
+        .stat-borrador { border-left-color: #f59e0b; }
+        .stat-borrador .stat-icon { background: #fef3c7; color: #92400e; }
+
+        /* ===== COLUMNA ITEM ===== */
+        .col-item {
+            width: 50px;
+            text-align: center;
+            font-weight: 600;
+            color: #64748b;
         }
     </style>
 </head>
@@ -289,6 +312,46 @@
                 </a>
             </div>
         </div>
+
+        <!-- ===== DASHBOARD SUPERIOR ===== -->
+        <div class="stats-grid" id="dashboardStats">
+            <div class="stat-card stat-total">
+                <div class="stat-icon"><i class="bi bi-files"></i></div>
+                <div class="stat-info">
+                    <span class="stat-number" id="totalComprobantes">0</span>
+                    <span class="stat-label">Total</span>
+                </div>
+            </div>
+            <div class="stat-card stat-factura">
+                <div class="stat-icon"><i class="bi bi-file-text-fill"></i></div>
+                <div class="stat-info">
+                    <span class="stat-number" id="totalFacturas">0</span>
+                    <span class="stat-label">Facturas</span>
+                </div>
+            </div>
+            <div class="stat-card stat-boleta">
+                <div class="stat-icon"><i class="bi bi-receipt"></i></div>
+                <div class="stat-info">
+                    <span class="stat-number" id="totalBoletas">0</span>
+                    <span class="stat-label">Boletas</span>
+                </div>
+            </div>
+            <div class="stat-card stat-aceptada">
+                <div class="stat-icon"><i class="bi bi-check-circle-fill"></i></div>
+                <div class="stat-info">
+                    <span class="stat-number" id="totalAceptadas">0</span>
+                    <span class="stat-label">Aceptadas</span>
+                </div>
+            </div>
+            <div class="stat-card stat-borrador">
+                <div class="stat-icon"><i class="bi bi-pencil-square"></i></div>
+                <div class="stat-info">
+                    <span class="stat-number" id="totalBorrador">0</span>
+                    <span class="stat-label">Borrador</span>
+                </div>
+            </div>
+        </div>
+        <!-- ===== FIN DASHBOARD ===== -->
         
         <!-- FILTROS -->
         <div class="filtros">
@@ -350,6 +413,7 @@
                 <table class="table table-modern">
                     <thead>
                         <tr>
+                            <th class="col-item">Item</th>
                             <th>N° Comprobante</th>
                             <th>Tipo</th>
                             <th>Cliente</th>
@@ -363,7 +427,7 @@
                     </thead>
                     <tbody id="tablaComprobantes">
                         <tr>
-                            <td colspan="9" class="text-center py-5">
+                            <td colspan="10" class="text-center py-5">
                                 <div class="spinner-border text-primary" role="status"></div>
                                 <br>Cargando comprobantes...
                             </td>
@@ -486,11 +550,28 @@
         }
         
         // ==========================================
+        // ACTUALIZAR DASHBOARD
+        // ==========================================
+        function actualizarDashboard(comprobantes) {
+            const total = comprobantes.length;
+            const facturas = comprobantes.filter(c => c.tipo_comprobante === 'FACTURA').length;
+            const boletas = comprobantes.filter(c => c.tipo_comprobante === 'BOLETA').length;
+            const aceptadas = comprobantes.filter(c => c.estado_sunat === 'ACEPTADA').length;
+            const borrador = comprobantes.filter(c => c.estado_sunat === 'BORRADOR').length;
+
+            document.getElementById('totalComprobantes').textContent = total;
+            document.getElementById('totalFacturas').textContent = facturas;
+            document.getElementById('totalBoletas').textContent = boletas;
+            document.getElementById('totalAceptadas').textContent = aceptadas;
+            document.getElementById('totalBorrador').textContent = borrador;
+        }
+        
+        // ==========================================
         // CARGAR COMPROBANTES
         // ==========================================
         async function cargarComprobantes() {
             const tbody = document.getElementById('tablaComprobantes');
-            tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5"><div class="spinner-border text-primary"></div><br>Cargando...</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5"><div class="spinner-border text-primary"></div><br>Cargando...</td></tr>`;
             
             try {
                 const response = await fetch('/comprobantes/api/listar');
@@ -498,13 +579,16 @@
                 
                 if (result.success && result.data) {
                     todosComprobantes = result.data;
+                    // Ordenar por ID descendente (más reciente primero)
+                    todosComprobantes.sort((a, b) => (b.id || 0) - (a.id || 0));
+                    actualizarDashboard(todosComprobantes);
                     aplicarFiltros();
                 } else {
-                    tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5 text-danger">Error al cargar comprobantes</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5 text-danger">Error al cargar comprobantes</td></tr>`;
                 }
             } catch (error) {
                 console.error('Error:', error);
-                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5 text-danger">Error de conexión</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5 text-danger">Error de conexión</td></tr>`;
             }
         }
         
@@ -542,11 +626,11 @@
             const tbody = document.getElementById('tablaComprobantes');
             
             if (comprobantes.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><i class="bi bi-inbox"></i><p class="mb-0">No hay comprobantes registrados</p><small class="text-muted">Crea un nuevo comprobante usando los botones "Nueva Factura" o "Nueva Boleta"</small></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="10" class="empty-state"><i class="bi bi-inbox"></i><p class="mb-0">No hay comprobantes registrados</p><small class="text-muted">Crea un nuevo comprobante usando los botones "Nueva Factura" o "Nueva Boleta"</small></td></tr>`;
                 return;
             }
             
-            tbody.innerHTML = comprobantes.map(comp => {
+            tbody.innerHTML = comprobantes.map((comp, index) => {
                 const numero = `${comp.serie || 'F001'}-${comp.numero || '?'}`;
                 const tipoClase = `tipo-${comp.tipo_comprobante}`;
                 const tipoTexto = comp.tipo_comprobante === 'FACTURA' ? '📄 Factura' : '🧾 Boleta';
@@ -568,6 +652,7 @@
                 
                 return `
                     <tr>
+                        <td class="col-item">${index + 1}</td>
                         <td class="fw-bold">${numero}</td>
                         <td><span class="badge-tipo ${tipoClase}">${tipoTexto}</span></td>
                         <td>${escapeHtml(comp.cliente_nombre || '-')}</td>
