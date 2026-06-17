@@ -1,5 +1,7 @@
 """
 Generador de rótulos de embalaje (formato AGD GROUP)
+DATOS FIJOS: Solo KCF CORPORACION (remitente)
+RESTO: Se toma de la cotización/guía
 """
 import json
 from datetime import datetime
@@ -37,6 +39,12 @@ def generar_rotulo_pdf(guia):
     """
     Genera PDF del rótulo de embalaje (formato AGD GROUP)
     
+    DATOS FIJOS DE KCF CORPORACION:
+    - remitente_nombre: KCF CORPORACION S.A.C
+    - remitente_direccion: AV. PRINCIPAL 123 - LIMA - PERÚ
+    
+    RESTO DE DATOS: Se toman de la guía (destinatario, conductor, productos, etc.)
+    
     Args:
         guia (dict): Datos de la guía de remisión
     
@@ -62,7 +70,15 @@ def generar_rotulo_pdf(guia):
     except:
         pass
     
-    # Obtener datos de la guía
+    # ==========================================
+    # DATOS FIJOS DE KCF CORPORACION (EMPRESA)
+    # ==========================================
+    REMITENTE_FIJO = 'KCF CORPORACION S.A.C'
+    DIRECCION_REMITENTE_FIJA = 'AV. PRINCIPAL 123 - LIMA - PERÚ'
+    
+    # ==========================================
+    # DATOS QUE VIENEN DE LA COTIZACIÓN/GUÍA
+    # ==========================================
     items = []
     if guia.get('items_json'):
         try:
@@ -70,14 +86,18 @@ def generar_rotulo_pdf(guia):
         except:
             items = []
     
-    # Valores por defecto (para que siempre se vea bien)
-    remitente = guia.get('remitente_nombre', 'CBM SOLUCIONES INTEGRALES S.A.C')
-    direccion_remitente = guia.get('remitente_direccion', 'AGENCIA ITTSA - AV. GRAÑA F INT. 07')
-    ubicacion = guia.get('destinatario_direccion', 'TALARA - PIURA - TALARA - PARIÑAS')
-    codigo_ruta = guia.get('codigo_ruta', 'EG07-421E001-496')
-    conductor = guia.get('conductor_nombre', 'Luis Alexander Bustamante Herrera')
-    dni_conductor = guia.get('conductor_dni', '76965568')
-    destinatario = guia.get('destinatario_nombre', 'AGD GROUP SAC')
+    # Destinatario (viene de la guía)
+    destinatario = guia.get('destinatario_nombre', '')
+    ubicacion_destino = guia.get('destinatario_direccion', '')
+    
+    # Conductor (viene de la guía)
+    conductor = guia.get('conductor_nombre', '')
+    dni_conductor = guia.get('conductor_dni', '')
+    
+    # Código de ruta (viene de la guía)
+    codigo_ruta = guia.get('codigo_ruta', '')
+    
+    # Número de guía
     numero_guia = f"{guia.get('serie', 'T001')}-{guia.get('numero', '000001')}"
     
     # Fecha
@@ -102,17 +122,18 @@ def generar_rotulo_pdf(guia):
     
     y = 140  # posición inicial en mm
     
-    # --- 1. REMITENTE ---
+    # --- 1. REMITENTE (FIJO - KCF CORPORACION) ---
     c.setFont(font_name, 12)
-    c.drawCentredString(mm_to_pt(45), mm_to_pt(y), remitente[:35])
+    c.drawCentredString(mm_to_pt(45), mm_to_pt(y), REMITENTE_FIJO[:35])
     y -= 6
     
     c.setFont(font_name, 9)
-    c.drawCentredString(mm_to_pt(45), mm_to_pt(y), direccion_remitente[:35])
+    c.drawCentredString(mm_to_pt(45), mm_to_pt(y), DIRECCION_REMITENTE_FIJA[:35])
     y -= 5
     
+    # Ubicación de destino (de la guía)
     c.setFont(font_name, 8)
-    c.drawCentredString(mm_to_pt(45), mm_to_pt(y), ubicacion[:35])
+    c.drawCentredString(mm_to_pt(45), mm_to_pt(y), ubicacion_destino[:35] if ubicacion_destino else '')
     y -= 7
     
     # Línea separadora
@@ -120,32 +141,32 @@ def generar_rotulo_pdf(guia):
     c.line(mm_to_pt(5), mm_to_pt(y), mm_to_pt(85), mm_to_pt(y))
     y -= 5
     
-    # --- 2. CÓDIGO DE RUTA ---
+    # --- 2. CÓDIGO DE RUTA (de la guía) ---
     c.setFont(font_name, 16)
     c.setFillColorRGB(0, 0, 0)
-    c.drawCentredString(mm_to_pt(45), mm_to_pt(y), codigo_ruta)
+    c.drawCentredString(mm_to_pt(45), mm_to_pt(y), codigo_ruta[:20] if codigo_ruta else '')
     y -= 8
     
-    # --- 3. CONDUCTOR ---
+    # --- 3. CONDUCTOR (de la guía) ---
     c.setFont(font_name, 10)
-    c.drawCentredString(mm_to_pt(45), mm_to_pt(y), conductor[:35])
+    c.drawCentredString(mm_to_pt(45), mm_to_pt(y), conductor[:35] if conductor else '')
     y -= 5
     
     c.setFont(font_name, 9)
-    c.drawCentredString(mm_to_pt(45), mm_to_pt(y), f"DNI: {dni_conductor}")
+    c.drawCentredString(mm_to_pt(45), mm_to_pt(y), f"DNI: {dni_conductor}" if dni_conductor else '')
     y -= 7
     
     # Línea separadora
     c.line(mm_to_pt(5), mm_to_pt(y), mm_to_pt(85), mm_to_pt(y))
     y -= 5
     
-    # --- 4. DESTINATARIO ---
+    # --- 4. DESTINATARIO (de la guía) ---
     c.setFont(font_name, 12)
     c.setFillColorRGB(0, 0, 0)
-    c.drawCentredString(mm_to_pt(45), mm_to_pt(y), destinatario[:35])
+    c.drawCentredString(mm_to_pt(45), mm_to_pt(y), destinatario[:35] if destinatario else '')
     y -= 8
     
-    # --- 5. TABLA DE PRODUCTOS ---
+    # --- 5. TABLA DE PRODUCTOS (de la guía) ---
     c.setFont(font_name, 7)
     c.drawString(mm_to_pt(5), mm_to_pt(y), "Cant")
     c.drawString(mm_to_pt(20), mm_to_pt(y), "Descripción")
@@ -224,6 +245,12 @@ def generar_rotulo_html(guia):
     """
     Genera HTML del rótulo para vista previa
     
+    DATOS FIJOS DE KCF CORPORACION:
+    - remitente_nombre: KCF CORPORACION S.A.C
+    - remitente_direccion: AV. PRINCIPAL 123 - LIMA - PERÚ
+    
+    RESTO DE DATOS: Se toman de la guía (destinatario, conductor, productos, etc.)
+    
     Args:
         guia (dict): Datos de la guía
     
@@ -236,6 +263,22 @@ def generar_rotulo_html(guia):
             items = json.loads(guia['items_json'])
         except:
             items = []
+    
+    # ==========================================
+    # DATOS FIJOS DE KCF CORPORACION
+    # ==========================================
+    REMITENTE_FIJO = 'KCF CORPORACION S.A.C'
+    DIRECCION_REMITENTE_FIJA = 'AV. PRINCIPAL 123 - LIMA - PERÚ'
+    
+    # ==========================================
+    # DATOS DE LA GUÍA
+    # ==========================================
+    destinatario = guia.get('destinatario_nombre', '')
+    ubicacion_destino = guia.get('destinatario_direccion', '')
+    codigo_ruta = guia.get('codigo_ruta', '')
+    conductor = guia.get('conductor_nombre', '')
+    dni_conductor = guia.get('conductor_dni', '')
+    numero_guia = f"{guia.get('serie', 'T001')}-{guia.get('numero', '000001')}"
     
     # Calcular bultos
     total_items = sum(item.get('cantidad', 0) for item in items)
@@ -251,6 +294,9 @@ def generar_rotulo_html(guia):
     except:
         pass
     
+    # Código de barras
+    codigo_barras = generar_codigo_barras(numero_guia)
+    
     # Construir HTML
     html = f'''
     <div style="
@@ -264,38 +310,38 @@ def generar_rotulo_html(guia):
         font-family: 'Courier New', monospace;
         margin: 0 auto;
     ">
-        <!-- Remitente -->
+        <!-- Remitente (FIJO: KCF CORPORACION) -->
         <div style="text-align:center;border-bottom:3px double #1a1a1a;padding-bottom:6px;margin-bottom:8px;">
             <div style="font-size:14px;font-weight:900;letter-spacing:-0.5px;color:#1a1a1a;line-height:1.2;">
-                {guia.get('remitente_nombre', 'CBM SOLUCIONES INTEGRALES S.A.C')}
+                {REMITENTE_FIJO}
             </div>
             <div style="font-size:10px;font-weight:600;color:#333;">
-                {guia.get('remitente_direccion', 'AGENCIA ITTSA - AV. GRAÑA F INT. 07')}
+                {DIRECCION_REMITENTE_FIJA}
             </div>
             <div style="font-size:9px;font-weight:500;color:#555;">
-                {guia.get('destinatario_direccion', 'TALARA - PIURA - TALARA - PARIÑAS')}
+                {ubicacion_destino if ubicacion_destino else ''}
             </div>
         </div>
 
-        <!-- Código de Ruta -->
+        <!-- Código de Ruta (de la guía) -->
         <div style="text-align:center;font-size:16px;font-weight:800;letter-spacing:2px;color:#1a1a1a;padding:4px 0;margin-bottom:4px;background:#f8f9fa;border-radius:4px;">
-            {guia.get('codigo_ruta', 'EG07-421E001-496')}
+            {codigo_ruta if codigo_ruta else ''}
         </div>
 
-        <!-- Conductor -->
+        <!-- Conductor (de la guía) -->
         <div style="text-align:center;font-size:12px;font-weight:700;padding:4px 0;border-top:1px dashed #ddd;border-bottom:1px dashed #ddd;margin:4px 0 6px 0;">
-            {guia.get('conductor_nombre', 'Luis Alexander Bustamante Herrera')}
+            {conductor if conductor else ''}
             <span style="font-weight:400;font-size:11px;color:#555;">
-                DNI: {guia.get('conductor_dni', '76965568')}
+                DNI: {dni_conductor if dni_conductor else ''}
             </span>
         </div>
 
-        <!-- Destinatario -->
+        <!-- Destinatario (de la guía) -->
         <div style="text-align:center;font-size:13px;font-weight:800;color:#1a1a1a;padding:4px 0;margin-bottom:6px;background:#f0f0f0;border-radius:4px;">
-            {guia.get('destinatario_nombre', 'AGD GROUP SAC')}
+            {destinatario if destinatario else ''}
         </div>
 
-        <!-- Tabla de Productos -->
+        <!-- Tabla de Productos (de la guía) -->
         <table style="width:100%;font-size:9px;border-collapse:collapse;margin:6px 0;">
             <thead>
                 <tr>
@@ -333,12 +379,12 @@ def generar_rotulo_html(guia):
 
         <!-- Código de Barras -->
         <div style="text-align:center;font-family:'Courier New',monospace;font-size:20px;letter-spacing:2px;padding:4px 0;margin:4px 0;background:#f8f9fa;border-radius:4px;">
-            {generar_codigo_barras(f"{guia.get('serie', 'T001')}-{guia.get('numero', '000001')}")}
+            {codigo_barras}
         </div>
 
         <!-- Resumen Final -->
         <div style="border-top:3px double #1a1a1a;padding-top:6px;margin-top:6px;display:flex;justify-content:space-between;font-size:10px;font-weight:600;">
-            <span>📦 Guía: <strong>{guia.get('serie', 'T001')}-{guia.get('numero', '000001')}</strong></span>
+            <span>📦 Guía: <strong>{numero_guia}</strong></span>
             <span>📅 {fecha}</span>
             <span style="background:#1a1a1a;color:#fff;padding:2px 12px;border-radius:4px;font-size:14px;">{bultos}</span>
         </div>
