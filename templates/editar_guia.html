@@ -40,29 +40,34 @@
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
             margin-bottom: 24px;
             border: 1px solid rgba(0, 0, 0, 0.05);
+            height: 100%;
         }
         
         .card-header-custom {
-            background: linear-gradient(135deg, #1f2937, #111827);
             color: white;
-            padding: 16px 24px;
+            padding: 14px 20px;
             font-weight: 700;
             display: flex;
             align-items: center;
             gap: 10px;
+            font-size: 14px;
         }
-        
         .card-header-custom.blue { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
         .card-header-custom.green { background: linear-gradient(135deg, #059669, #047857); }
         .card-header-custom.orange { background: linear-gradient(135deg, #ea580c, #c2410c); }
         .card-header-custom.purple { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
         .card-header-custom.teal { background: linear-gradient(135deg, #0d9488, #0f766e); }
         
+        .card-body-custom {
+            padding: 20px;
+        }
+        
         .custom-input {
-            border-radius: 12px !important;
+            border-radius: 10px !important;
             border: 1.5px solid #e5e7eb;
-            padding: 10px 14px;
-            font-size: 14px;
+            padding: 9px 14px;
+            font-size: 13px;
+            width: 100%;
         }
         
         .custom-input:focus {
@@ -70,36 +75,114 @@
             box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
         }
         
-        .custom-input:read-only {
+        .custom-input:read-only,
+        .custom-input[readonly] {
             background-color: #f8f9fa;
             cursor: not-allowed;
         }
         
-        .table-modern thead th {
-            background: linear-gradient(135deg, #1e293b, #0f172a);
-            color: white;
-            padding: 12px;
-            font-size: 12px;
-            text-align: center;
+        .custom-select {
+            border-radius: 10px !important;
+            border: 1.5px solid #e5e7eb;
+            padding: 9px 14px;
+            font-size: 13px;
+            width: 100%;
+            background-color: white;
+        }
+        
+        .custom-select:focus {
+            border-color: #ea580c;
+            box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
+        }
+        
+        .custom-select:disabled {
+            background-color: #f8f9fa;
+            cursor: not-allowed;
         }
         
         .form-label {
             font-weight: 600;
-            font-size: 13px;
-            margin-bottom: 6px;
-            color: #111827;
+            font-size: 12px;
+            margin-bottom: 4px;
+            color: #1e293b;
+            display: block;
         }
         
-        .form-label .required {
+        .form-label .text-danger {
             color: #dc2626;
-            margin-left: 2px;
+        }
+        
+        .form-label .badge-sunat {
+            font-size: 9px;
+            background: #1e293b;
+            color: #94a3b8;
+            padding: 1px 8px;
+            border-radius: 4px;
+            margin-left: 4px;
+            font-weight: 400;
+        }
+        
+        .help-text-small {
+            font-size: 10px;
+            color: #94a3b8;
+            margin-top: 3px;
+        }
+        
+        .ubigeo-help-text {
+            font-size: 11px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .ubigeo-help-text i {
+            color: #2563eb;
         }
         
         .vehiculo-card {
             background: #f8fafc;
-            border-radius: 16px;
+            border-radius: 14px;
             padding: 16px;
             border: 1px solid #e2e8f0;
+        }
+        
+        .grupo-peso-bruto {
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 16px 20px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .select-conductor-wrapper {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .select-conductor-wrapper .custom-select {
+            flex: 1;
+        }
+        
+        .btn-agregar-conductor {
+            white-space: nowrap;
+            padding: 8px 14px;
+            border-radius: 10px;
+            border: 1.5px solid #e5e7eb;
+            background: white;
+            color: #2563eb;
+            transition: all 0.2s;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .btn-agregar-conductor:hover {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+        
+        .btn-agregar-conductor i {
+            font-size: 14px;
         }
         
         .toast-notification {
@@ -121,94 +204,13 @@
             to { transform: translateX(100%); opacity: 0; }
         }
         
-        .btn-del {
-            background: #fee2e2;
-            border: none;
-            border-radius: 6px;
-            padding: 5px 8px;
-            color: #dc2626;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .btn-del:hover {
-            background: #fecaca;
-            transform: scale(1.05);
-        }
-        
-        .badge-estado {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-        
-        .estado-BORRADOR { background: #fef3c7; color: #92400e; }
-        .estado-PROCESANDO { background: #dbeafe; color: #1e40af; }
-        .estado-ACEPTADA { background: #d1fae5; color: #065f46; }
-        .estado-RECHAZADA { background: #fee2e2; color: #991b1b; }
-        
-        .ubigeo-help-text {
-            font-size: 12px;
-            color: #6c757d;
-            margin-top: 5px;
-        }
-        
-        select.form-select:disabled {
-            background-color: #e9ecef;
-            cursor: not-allowed;
-        }
-        
-        .cantidad-readonly {
-            background-color: #f8f9fa;
-            text-align: center;
-            font-weight: 500;
-        }
-        
-        .badge-sunat {
-            font-size: 10px;
-            background: #1e293b;
-            color: #94a3b8;
-            padding: 2px 8px;
-            border-radius: 4px;
-            margin-left: 6px;
-        }
-        
-        .help-text-small {
-            font-size: 11px;
-            color: #6c757d;
-            margin-top: 4px;
-        }
-        
-        .campo-obligatorio {
-            border-left: 3px solid #dc2626 !important;
-        }
-
-        .grupo-peso-bruto {
-            background: #f8fafc;
-            border-radius: 16px;
-            padding: 16px 20px;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .grupo-peso-bruto .row {
-            align-items: end;
-        }
-        
-        .grupo-peso-bruto .form-label {
-            font-size: 12px;
-            margin-bottom: 4px;
-        }
-
         /* ==========================================
-           MODAL DE CONFIRMACIÓN MEJORADO
-           ========================================== */
+           MODAL DE CONFIRMACIÓN
+        ========================================== */
         .modal-confirmacion {
             background: rgba(15, 23, 42, 0.6);
             backdrop-filter: blur(8px);
         }
-        
         .modal-confirmacion .modal-content {
             border-radius: 24px;
             border: none;
@@ -217,13 +219,11 @@
             max-width: 560px;
             margin: 0 auto;
         }
-        
         .modal-confirmacion .modal-header {
             background: linear-gradient(135deg, #dc2626, #b91c1c);
             padding: 20px 28px;
             border: none;
         }
-        
         .modal-confirmacion .modal-header .modal-title {
             color: white;
             font-weight: 700;
@@ -232,31 +232,25 @@
             align-items: center;
             gap: 12px;
         }
-        
         .modal-confirmacion .modal-header .modal-title i {
             font-size: 28px;
         }
-        
         .modal-confirmacion .modal-header .btn-close {
             filter: brightness(0) invert(1);
             opacity: 0.8;
         }
-        
         .modal-confirmacion .modal-header .btn-close:hover {
             opacity: 1;
         }
-        
         .modal-confirmacion .modal-body {
             padding: 28px 28px 20px;
             background: #f8fafc;
         }
-        
         .modal-confirmacion .modal-body .icono-advertencia {
             display: flex;
             justify-content: center;
             margin-bottom: 16px;
         }
-        
         .modal-confirmacion .modal-body .icono-advertencia .circulo {
             width: 72px;
             height: 72px;
@@ -267,12 +261,10 @@
             justify-content: center;
             border: 2px solid #fca5a5;
         }
-        
         .modal-confirmacion .modal-body .icono-advertencia .circulo i {
             font-size: 36px;
             color: #dc2626;
         }
-        
         .modal-confirmacion .modal-body .mensaje-principal {
             text-align: center;
             font-size: 16px;
@@ -280,14 +272,12 @@
             color: #1e293b;
             margin-bottom: 6px;
         }
-        
         .modal-confirmacion .modal-body .mensaje-secundario {
             text-align: center;
             font-size: 14px;
             color: #64748b;
             margin-bottom: 20px;
         }
-        
         .modal-confirmacion .modal-body .info-adicional {
             background: white;
             border-radius: 12px;
@@ -295,61 +285,48 @@
             border: 1px solid #e2e8f0;
             margin-bottom: 16px;
         }
-        
         .modal-confirmacion .modal-body .info-adicional .fila-info {
             display: flex;
             justify-content: space-between;
-            padding: 6px 0;
+            padding: 4px 0;
             font-size: 13px;
         }
-        
         .modal-confirmacion .modal-body .info-adicional .fila-info .label {
             color: #64748b;
             font-weight: 500;
         }
-        
         .modal-confirmacion .modal-body .info-adicional .fila-info .valor {
             color: #1e293b;
             font-weight: 600;
         }
-        
         .modal-confirmacion .modal-body .info-adicional .divisor {
             border-top: 1px solid #e2e8f0;
-            margin: 8px 0;
+            margin: 6px 0;
         }
-        
         .modal-confirmacion .modal-body .info-adicional .hora-actual {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
             background: #f1f5f9;
-            padding: 8px 14px;
+            padding: 6px 14px;
             border-radius: 8px;
-            margin-top: 10px;
+            margin-top: 8px;
             font-size: 13px;
             color: #334155;
         }
-        
-        .modal-confirmacion .modal-body .info-adicional .hora-actual i {
-            color: #64748b;
-            font-size: 16px;
-        }
-        
         .modal-confirmacion .modal-body .info-adicional .hora-actual .hora-texto {
             font-weight: 600;
             color: #0f172a;
             font-family: 'Courier New', monospace;
             font-size: 15px;
         }
-        
         .modal-confirmacion .modal-footer {
             padding: 16px 28px 28px;
             background: #f8fafc;
             border-top: 1px solid #e2e8f0;
             gap: 12px;
         }
-        
         .modal-confirmacion .modal-footer .btn {
             border-radius: 12px;
             padding: 10px 28px;
@@ -357,51 +334,123 @@
             font-size: 14px;
             transition: all 0.2s ease;
         }
-        
         .modal-confirmacion .modal-footer .btn-cancelar {
             background: #f1f5f9;
             color: #475569;
             border: 1px solid #e2e8f0;
         }
-        
         .modal-confirmacion .modal-footer .btn-cancelar:hover {
             background: #e2e8f0;
         }
-        
         .modal-confirmacion .modal-footer .btn-aceptar {
             background: linear-gradient(135deg, #dc2626, #b91c1c);
             color: white;
             border: none;
             min-width: 140px;
         }
-        
         .modal-confirmacion .modal-footer .btn-aceptar:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(220, 38, 38, 0.35);
         }
-        
         .modal-confirmacion .modal-footer .btn-aceptar:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
         }
         
-        .modal-confirmacion .modal-footer .btn-aceptar i {
-            margin-right: 8px;
+        /* ==========================================
+           MODAL CONDUCTOR
+        ========================================== */
+        .modal-conductor .modal-header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            border: none;
+        }
+        .modal-conductor .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+        .modal-conductor .modal-footer .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            border: none;
+            padding: 10px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        .modal-conductor .modal-footer .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
         }
         
-        .modal-confirmacion.fade .modal-dialog {
-            transform: scale(0.95) translateY(-20px);
-            transition: transform 0.25s ease, opacity 0.25s ease;
+        /* ==========================================
+           TABLA PRODUCTOS
+        ========================================== */
+        .table-modern {
+            margin: 0;
+        }
+        .table-modern thead th {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: white;
+            padding: 10px 12px;
+            font-size: 11px;
+            text-align: center;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .table-modern tbody td {
+            padding: 8px 6px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9;
         }
         
-        .modal-confirmacion.show .modal-dialog {
-            transform: scale(1) translateY(0);
+        .btn-del {
+            background: #fee2e2;
+            border: none;
+            border-radius: 6px;
+            padding: 4px 8px;
+            color: #dc2626;
+            cursor: pointer;
+            transition: all 0.2s;
         }
-
-        /* Tabla de productos - solo vista en edición (si está en estado no editable) */
+        .btn-del:hover {
+            background: #fecaca;
+            transform: scale(1.05);
+        }
+        
+        .cantidad-readonly {
+            background-color: #f8f9fa;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .badge-estado {
+            font-size: 11px;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        
+        .badge-estado.borrador {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .badge-estado.procesando {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .badge-estado.aceptada {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .campo-bloqueado {
+            opacity: 0.7;
+            pointer-events: none;
+            background-color: #f1f5f9 !important;
+        }
+        
         .tabla-solo-vista .form-control,
-        .tabla-solo-vista .form-select {
+        .tabla-solo-vista .custom-select {
             background-color: #f8fafc !important;
             border-color: #e2e8f0 !important;
             cursor: default !important;
@@ -415,25 +464,71 @@
             pointer-events: none !important;
         }
         
-        .tabla-solo-vista .btn-del:hover {
-            transform: none !important;
-            background: #fee2e2 !important;
+        /* ==========================================
+           RESPONSIVE
+        ========================================== */
+        @media (max-width: 768px) {
+            .erp-navbar {
+                flex-direction: column;
+                gap: 10px;
+                padding: 12px 16px;
+            }
+            .btn-toolbar {
+                padding: 8px 16px;
+                font-size: 13px;
+            }
+            .card-body-custom {
+                padding: 16px;
+            }
+            .select-conductor-wrapper {
+                flex-wrap: wrap;
+            }
+            .select-conductor-wrapper .custom-select {
+                flex: 1 1 100%;
+            }
+            .btn-agregar-conductor {
+                width: 100%;
+                justify-content: center;
+            }
         }
         
-        .tabla-solo-vista .btn-agregar-producto {
-            display: none !important;
+        /* ==========================================
+           ALINEACIÓN SIMÉTRICA
+        ========================================== */
+        .card-body-custom .row.g-3 {
+            --bs-gutter-y: 0.75rem;
+        }
+        .card-body-custom .row.g-3 > * {
+            padding-top: calc(var(--bs-gutter-y) * 0.5);
         }
         
-        .campo-bloqueado {
-            opacity: 0.7;
-            pointer-events: none;
-            background-color: #f1f5f9 !important;
+        .custom-input, .custom-select {
+            min-height: 40px;
+        }
+        
+        .input-group .btn {
+            border-radius: 10px !important;
+            padding: 9px 18px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .input-group .custom-input {
+            border-top-right-radius: 0 !important;
+            border-bottom-right-radius: 0 !important;
+        }
+        
+        .input-group .btn {
+            border-top-left-radius: 0 !important;
+            border-bottom-left-radius: 0 !important;
         }
     </style>
 </head>
 <body>
 
-    <!-- NAVBAR ERP -->
+    <!-- ==========================================
+    NAVBAR
+    ========================================== -->
     <div class="erp-navbar">
         <div class="d-flex align-items-center gap-3">
             <div class="bg-white rounded-3 p-2"><i class="bi bi-truck fs-4 text-dark"></i></div>
@@ -442,11 +537,11 @@
                 <div class="text-white-50 small">ERP Comercial · Editar Guía</div>
             </div>
         </div>
-        <div class="d-flex gap-3">
-            <div class="bg-warning bg-opacity-25 rounded-pill px-3 py-2 text-warning small fw-bold" id="estadoBadge">
-                <i class="bi bi-pencil-fill me-1"></i> EDITANDO
-            </div>
-            <a href="/guias/" class="btn btn-dark btn-sm">
+        <div class="d-flex gap-3 align-items-center">
+            <span class="badge-estado borrador" id="estadoBadge">
+                <i class="bi bi-pencil-fill me-1" style="font-size:8px;"></i> EDITANDO
+            </span>
+            <a href="/guias" class="btn btn-dark btn-sm">
                 <i class="bi bi-arrow-left"></i> Volver
             </a>
         </div>
@@ -454,17 +549,19 @@
 
     <div class="container-fluid py-4">
         
-        <!-- TÍTULO Y ACCIONES -->
+        <!-- ==========================================
+        TÍTULO Y ACCIONES
+        ========================================== -->
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
             <div>
-                <h1 class="fw-bold mb-1" style="font-size: 28px;">Editar Guía de Remisión</h1>
+                <h1 class="fw-bold mb-1" style="font-size: 26px;">Editar Guía de Remisión</h1>
                 <p class="text-muted small mb-0"><i class="bi bi-info-circle"></i> Solo se pueden editar guías en estado BORRADOR o RECHAZADA</p>
             </div>
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 flex-wrap">
                 <button class="btn btn-warning btn-toolbar" id="btnGuardarCambios">
                     <i class="bi bi-save-fill"></i> Guardar Cambios
                 </button>
-                <button class="btn btn-danger btn-toolbar" id="btnReenviarSunat">
+                <button class="btn btn-primary btn-toolbar" id="btnReenviarSunat">
                     <i class="bi bi-cloud-upload-fill"></i> Reenviar a SUNAT
                 </button>
                 <button class="btn btn-success btn-toolbar" id="btnPdf">
@@ -476,43 +573,46 @@
         <input type="hidden" id="guia_id" value="{{ guia.id }}">
         <input type="hidden" id="estado_actual" value="{{ guia.estado_sunat }}">
 
-        <!-- FILA 1: REMITENTE Y DESTINATARIO -->
+        <!-- ==========================================
+        FILA 1: REMITENTE Y DESTINATARIO (SIMÉTRICO)
+        ========================================== -->
         <div class="row g-4">
+            
             <!-- REMITENTE -->
             <div class="col-md-6">
                 <div class="erp-card">
                     <div class="card-header-custom blue">
                         <i class="bi bi-building"></i> Remitente (Origen)
                     </div>
-                    <div class="card-body-custom p-4">
+                    <div class="card-body-custom">
                         <div class="row g-3">
                             <div class="col-12">
                                 <label class="form-label">RUC</label>
-                                <input type="text" class="form-control custom-input" id="remitente_ruc" value="{{ guia.ruc_remitente or '' }}" readonly disabled>
+                                <input type="text" class="custom-input" id="remitente_ruc" value="{{ guia.ruc_remitente or '20602095704' }}" readonly>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Razón Social</label>
-                                <input type="text" class="form-control custom-input" id="remitente_nombre" value="{{ guia.remitente_nombre or '' }}" readonly disabled>
+                                <input type="text" class="custom-input" id="remitente_nombre" value="{{ guia.remitente_nombre or 'KCF CORPORACION SAC' }}" readonly>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Dirección de Partida (Almacén)</label>
-                                <input type="text" class="form-control custom-input" id="direccion_partida" value="{{ guia.remitente_direccion or '' }}">
-                                
-                                <!-- Sistema de 3 desplegables para UBIGEO (PARTIDA) -->
-                                <div class="row mt-2">
+                                <input type="text" class="custom-input" id="direccion_partida" value="{{ guia.remitente_direccion or 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES' }}">
+                            </div>
+                            <div class="col-12">
+                                <div class="row g-2">
                                     <div class="col-md-4">
-                                        <select class="form-select form-select-sm" id="departamento_partida">
-                                            <option value="">Seleccione Departamento</option>
+                                        <select class="custom-select" id="departamento_partida">
+                                            <option value="">Seleccione</option>
                                         </select>
                                     </div>
                                     <div class="col-md-4">
-                                        <select class="form-select form-select-sm" id="provincia_partida" disabled>
-                                            <option value="">Primero seleccione Departamento</option>
+                                        <select class="custom-select" id="provincia_partida" disabled>
+                                            <option value="">Primero seleccione</option>
                                         </select>
                                     </div>
                                     <div class="col-md-4">
-                                        <select class="form-select form-select-sm" id="distrito_partida" disabled>
-                                            <option value="">Primero seleccione Provincia</option>
+                                        <select class="custom-select" id="distrito_partida" disabled>
+                                            <option value="">Primero seleccione</option>
                                         </select>
                                     </div>
                                 </div>
@@ -532,64 +632,57 @@
                     <div class="card-header-custom green">
                         <i class="bi bi-people-fill"></i> Destinatario (Cliente)
                     </div>
-                    <div class="card-body-custom p-4">
+                    <div class="card-body-custom">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">RUC / DNI</label>
-                                <input type="text" class="form-control custom-input" id="destinatario_doc" value="{{ guia.ruc_destinatario or '' }}">
+                                <input type="text" class="custom-input" id="destinatario_doc" value="{{ guia.ruc_destinatario or '' }}">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Razón Social</label>
-                                <input type="text" class="form-control custom-input" id="destinatario_nombre" value="{{ guia.destinatario_nombre or '' }}">
+                                <input type="text" class="custom-input" id="destinatario_nombre" value="{{ guia.destinatario_nombre or '' }}">
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Dirección de Llegada</label>
-                                <input type="text" class="form-control custom-input" id="direccion_llegada" value="{{ guia.destinatario_direccion or '' }}">
-                                
-                                <!-- Sistema de 3 desplegables para UBIGEO (LLEGADA) -->
-                                <div class="row mt-2">
+                                <input type="text" class="custom-input" id="direccion_llegada" value="{{ guia.destinatario_direccion or '' }}" placeholder="Dirección del cliente">
+                            </div>
+                            <div class="col-12">
+                                <div class="row g-2">
                                     <div class="col-md-4">
-                                        <select class="form-select form-select-sm" id="departamento_llegada">
-                                            <option value="">Seleccione Departamento</option>
+                                        <select class="custom-select" id="departamento_llegada">
+                                            <option value="">Seleccione</option>
                                         </select>
                                     </div>
                                     <div class="col-md-4">
-                                        <select class="form-select form-select-sm" id="provincia_llegada" disabled>
-                                            <option value="">Primero seleccione Departamento</option>
+                                        <select class="custom-select" id="provincia_llegada" disabled>
+                                            <option value="">Primero seleccione</option>
                                         </select>
                                     </div>
                                     <div class="col-md-4">
-                                        <select class="form-select form-select-sm" id="distrito_llegada" disabled>
-                                            <option value="">Primero seleccione Provincia</option>
+                                        <select class="custom-select" id="distrito_llegada" disabled>
+                                            <option value="">Primero seleccione</option>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="ubigeo-help-text" id="ubigeo_llegada_texto">
-                                    <i class="bi bi-geo-alt-fill"></i> Ubigeo seleccionado: <span id="ubigeo_llegada_valor">Ninguno</span>
+                                    <i class="bi bi-geo-alt-fill"></i> Ubigeo - seleccionado: <span id="ubigeo_llegada_valor">Ninguno</span>
                                 </div>
                                 <input type="hidden" id="ubigeo_llegada_hidden" value="{{ guia.destinatario_ubigeo or '' }}">
                             </div>
-                            
-                            <!-- FILA: Pedido Compra (izquierda) y Documento Asociado (derecha) -->
-                            <div class="col-12">
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">
-                                            <i class="bi bi-receipt"></i> Pedido Compra (Cliente)
-                                            <span class="badge-sunat">Opcional</span>
-                                        </label>
-                                        <input type="text" class="form-control custom-input" id="orden_compra_cliente" value="{{ guia.orden_compra_cliente or '' }}" placeholder="Ej: OC-2026-00123">
-                                        <div class="help-text-small">Número de orden de compra proporcionado por el cliente</div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">
-                                            <i class="bi bi-file-earmark-text"></i> Documento Asociado
-                                            <span class="badge-sunat">Opcional</span>
-                                        </label>
-                                        <input type="text" class="form-control custom-input" id="documento_asociado" value="{{ guia.documento_asociado or '' }}" placeholder="F001-123">
-                                        <div class="help-text-small">Factura, boleta o ticket asociado al traslado</div>
-                                    </div>
-                                </div>
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-receipt"></i> Pedido Compra (Cliente)
+                                    <span class="badge-sunat">Opcional</span>
+                                </label>
+                                <input type="text" class="custom-input" id="orden_compra_cliente" value="{{ guia.orden_compra_cliente or '' }}" placeholder="Ej: OC-047051B8">
+                                <div class="help-text-small">Número de orden de compra del cliente</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-file-earmark-text"></i> Documento Asociado
+                                </label>
+                                <input type="text" class="custom-input" id="documento_asociado" value="{{ guia.documento_asociado or '' }}" placeholder="F001-123">
+                                <div class="help-text-small">Factura, boleta o ticket asociado</div>
                             </div>
                         </div>
                     </div>
@@ -597,44 +690,54 @@
             </div>
         </div>
 
-        <!-- FILA 2: VEHÍCULO Y TRANSPORTISTA -->
+        <!-- ==========================================
+        FILA 2: VEHÍCULO Y TRANSPORTISTA
+        ========================================== -->
         <div class="row g-4">
+            
+            <!-- VEHÍCULO -->
             <div class="col-md-6">
                 <div class="erp-card">
                     <div class="card-header-custom orange">
                         <i class="bi bi-truck"></i> Datos de Transporte
                     </div>
-                    <div class="card-body-custom p-4">
+                    <div class="card-body-custom">
                         <div class="vehiculo-card">
                             <div class="row g-3">
-                                <div class="col-md-12">
+                                <div class="col-12">
                                     <label class="form-label">Modalidad de Transporte</label>
-                                    <select class="form-select custom-input" id="modalidad_transporte">
+                                    <select class="custom-select" id="modalidad_transporte">
                                         <option value="PRIVADO" {% if guia.modalidad_transporte == 'PRIVADO' %}selected{% endif %}>🚛 Transporte Privado (vehículo propio)</option>
                                         <option value="PUBLICO" {% if guia.modalidad_transporte == 'PUBLICO' %}selected{% endif %}>🚚 Transporte Público (tercero)</option>
                                     </select>
                                 </div>
-                                <div class="col-md-12">
+                                <div class="col-12">
                                     <label class="form-label">Seleccionar Conductor/Transportista</label>
-                                    <select class="form-select custom-input" id="select_transportista">
-                                        <option value="">-- Seleccione un conductor --</option>
-                                    </select>
+                                    <div class="select-conductor-wrapper">
+                                        <select class="custom-select" id="select_transportista">
+                                            <option value="">-- Seleccione un conductor --</option>
+                                        </select>
+                                        <button type="button" class="btn-agregar-conductor" id="btnAgregarConductor">
+                                            <i class="bi bi-plus-circle"></i> Nuevo
+                                        </button>
+                                    </div>
+                                    <div class="help-text-small">Seleccione un conductor existente o agregue uno nuevo</div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Placa del Vehículo <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control custom-input" id="placa_vehiculo" value="{{ guia.placa_vehiculo or '' }}" placeholder="ABC-123" required>
+                                    <input type="text" class="custom-input" id="placa_vehiculo" value="{{ guia.placa_vehiculo or '' }}" placeholder="ABC-123" style="text-transform:uppercase;">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">N° Licencia Conductor</label>
-                                    <input type="text" class="form-control custom-input" id="licencia_conductor" value="{{ guia.licencia_conductor or '' }}" placeholder="Ej: 1234567890">
+                                    <input type="text" class="custom-input" id="licencia_conductor" value="{{ guia.licencia_conductor or '' }}" placeholder="Ej: 1234567890">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">DNI Conductor</label>
-                                    <input type="text" class="form-control custom-input" id="conductor_dni" value="{{ guia.conductor_dni or '' }}" placeholder="8 dígitos">
+                                    <input type="text" class="custom-input" id="conductor_dni" value="{{ guia.conductor_dni or '' }}" placeholder="8 dígitos" maxlength="8">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Nombres Conductor</label>
-                                    <input type="text" class="form-control custom-input" id="conductor_nombre" value="{{ guia.conductor_nombre or '' }}" placeholder="Nombre completo">
+                                    <input type="text" class="custom-input" id="conductor_nombre" value="{{ guia.conductor_nombre or '' }}" placeholder="Nombre completo">
                                 </div>
                             </div>
                         </div>
@@ -642,28 +745,29 @@
                 </div>
             </div>
 
+            <!-- TRANSPORTISTA (PÚBLICO) -->
             <div class="col-md-6">
                 <div class="erp-card" id="transportista_card">
                     <div class="card-header-custom orange">
                         <i class="bi bi-building"></i> Datos del Transportista (Público)
                     </div>
-                    <div class="card-body-custom p-4">
+                    <div class="card-body-custom">
                         <div class="row g-3">
-                            <div class="col-md-12">
+                            <div class="col-12">
                                 <label class="form-label">RUC Transportista</label>
                                 <div class="input-group">
-                                    <input type="text" class="form-control custom-input" id="transportista_ruc" value="{{ guia.transportista_ruc or '' }}" placeholder="RUC de la empresa de transporte">
-                                    <button class="btn btn-outline-primary" id="btnBuscarTransportista">
+                                    <input type="text" class="custom-input" id="transportista_ruc" value="{{ guia.transportista_ruc or '' }}" placeholder="RUC de la empresa de transporte" style="border-radius: 10px 0 0 10px;">
+                                    <button class="btn btn-outline-primary" id="btnBuscarTransportista" style="border-radius: 0 10px 10px 0; padding: 9px 18px; font-weight: 600;">
                                         <i class="bi bi-search"></i> Buscar
                                     </button>
                                 </div>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Razón Social</label>
-                                <input type="text" class="form-control custom-input" id="transportista_nombre" value="{{ guia.transportista_nombre or '' }}" readonly>
+                                <input type="text" class="custom-input" id="transportista_nombre" value="{{ guia.transportista_nombre or '' }}" readonly>
                             </div>
                         </div>
-                        <div class="alert alert-info mt-3 small" id="msg_transporte_privado" style="display: none;">
+                        <div class="alert alert-info mt-3 small" id="msg_transporte_privado" style="display: none; border-radius:10px;">
                             <i class="bi bi-info-circle"></i> En transporte privado, NO se requiere transportista.
                         </div>
                     </div>
@@ -671,21 +775,22 @@
             </div>
         </div>
 
-        <!-- FILA 3: INFORMACIÓN DEL TRASLADO -->
+        <!-- ==========================================
+        FILA 3: INFORMACIÓN DEL TRASLADO
+        ========================================== -->
         <div class="erp-card">
             <div class="card-header-custom purple">
                 <i class="bi bi-file-text"></i> Datos del Traslado
             </div>
-            <div class="card-body-custom p-4">
+            <div class="card-body-custom">
                 <div class="row g-3">
-                    <!-- MOTIVO DE TRASLADO - DETALLADO SEGÚN SUNAT -->
                     <div class="col-md-3">
                         <label class="form-label">
                             Motivo de Traslado <span class="text-danger">*</span>
                             <span class="badge-sunat">SUNAT</span>
                         </label>
-                        <select class="form-select custom-input campo-obligatorio" id="motivo_traslado">
-                            <option value="">-- Seleccione un motivo --</option>
+                        <select class="custom-select" id="motivo_traslado">
+                            <option value="">-- Seleccione --</option>
                             <option value="01" {% if guia.motivo_traslado == '01' %}selected{% endif %}>01 - Venta</option>
                             <option value="02" {% if guia.motivo_traslado == '02' %}selected{% endif %}>02 - Compra</option>
                             <option value="03" {% if guia.motivo_traslado == '03' %}selected{% endif %}>03 - Traslado entre establecimientos</option>
@@ -716,34 +821,27 @@
                             <option value="28" {% if guia.motivo_traslado == '28' %}selected{% endif %}>28 - Traslado por consignación para venta con reserva de dominio</option>
                         </select>
                     </div>
-                    
-                    <!-- FECHA DE TRASLADO (primero) -->
                     <div class="col-md-3">
-                        <label class="form-label">Fecha de Traslado</label>
-                        <input type="date" class="form-control custom-input" id="fecha_traslado" value="{{ guia.fecha_traslado or '' }}">
+                        <label class="form-label">Fecha de Emisión</label>
+                        <input type="date" class="custom-input" id="fecha_traslado" value="{{ guia.fecha_traslado or '' }}">
                         <div class="help-text-small">Fecha de emisión del documento</div>
                     </div>
-                    
-                    <!-- FECHA DE INICIO DE TRASLADO (segundo) -->
                     <div class="col-md-3">
                         <label class="form-label">
                             Fecha de Inicio de Traslado <span class="text-danger">*</span>
                         </label>
-                        <input type="date" class="form-control custom-input campo-obligatorio" id="fecha_inicio_traslado" value="{{ guia.fecha_inicio_traslado or '' }}">
+                        <input type="date" class="custom-input" id="fecha_inicio_traslado" value="{{ guia.fecha_inicio_traslado or '' }}">
                         <div class="help-text-small">Fecha en que inicia el traslado</div>
                     </div>
-                    
-                    <!-- NÚMERO DE BULTOS -->
                     <div class="col-md-3">
                         <label class="form-label">
                             Número de Bultos <span class="text-danger">*</span>
                         </label>
-                        <input type="number" class="form-control custom-input campo-obligatorio" id="numero_bultos" placeholder="0" min="0" value="{{ guia.numero_bultos or 1 }}">
+                        <input type="number" class="custom-input" id="numero_bultos" placeholder="0" min="0" value="{{ guia.numero_bultos or 1 }}">
                         <div class="help-text-small">Cantidad de paquetes o bultos</div>
                     </div>
                 </div>
                 
-                <!-- GRUPO: UNIDAD DE PESO BRUTO Y PESO BRUTO TOTAL (juntos en un solo grupo) -->
                 <div class="row g-3 mt-2">
                     <div class="col-12">
                         <div class="grupo-peso-bruto">
@@ -753,18 +851,13 @@
                                         Unidad de Medida de Peso Bruto <span class="text-danger">*</span>
                                         <span class="badge-sunat">SUNAT</span>
                                     </label>
-                                    <select class="form-select custom-input campo-obligatorio" id="unidad_peso_bruto">
+                                    <select class="custom-select" id="unidad_peso_bruto">
                                         <option value="">-- Seleccionar --</option>
-                                        <option value="ESCUBA" {% if guia.unidad_peso_bruto == 'ESCUBA' %}selected{% endif %}>ESCUBA - Escala de Unidades Básicas</option>
                                         <option value="KGM" {% if guia.unidad_peso_bruto == 'KGM' %}selected{% endif %}>KGM - Kilogramo</option>
                                         <option value="TNE" {% if guia.unidad_peso_bruto == 'TNE' %}selected{% endif %}>TNE - Tonelada Métrica</option>
                                         <option value="LBR" {% if guia.unidad_peso_bruto == 'LBR' %}selected{% endif %}>LBR - Libra</option>
                                         <option value="GRM" {% if guia.unidad_peso_bruto == 'GRM' %}selected{% endif %}>GRM - Gramo</option>
                                         <option value="ONZ" {% if guia.unidad_peso_bruto == 'ONZ' %}selected{% endif %}>ONZ - Onza</option>
-                                        <option value="CEN" {% if guia.unidad_peso_bruto == 'CEN' %}selected{% endif %}>CEN - Cento de Unidades</option>
-                                        <option value="UM" {% if guia.unidad_peso_bruto == 'UM' %}selected{% endif %}>UM - Millón de Unidades</option>
-                                        <option value="ZZ" {% if guia.unidad_peso_bruto == 'ZZ' %}selected{% endif %}>ZZ - Unidad (ZZ)</option>
-                                        <option value="NU" {% if guia.unidad_peso_bruto == 'NU' %}selected{% endif %}>NU - Unidad (NU)</option>
                                     </select>
                                     <div class="help-text-small">Unidad de medida para el peso bruto total</div>
                                 </div>
@@ -772,7 +865,7 @@
                                     <label class="form-label">
                                         Peso Bruto Total de la Carga <span class="text-danger">*</span>
                                     </label>
-                                    <input type="number" class="form-control custom-input campo-obligatorio" id="peso_bruto_total" placeholder="0.00" step="0.01" value="{{ guia.peso_bruto_total or '0.00' }}">
+                                    <input type="number" class="custom-input" id="peso_bruto_total" placeholder="0.00" step="0.01" value="{{ guia.peso_bruto_total or '0.00' }}">
                                     <div class="help-text-small">Peso total de toda la carga en la unidad seleccionada</div>
                                 </div>
                             </div>
@@ -780,36 +873,37 @@
                     </div>
                 </div>
                 
-                <!-- OBSERVACIONES -->
                 <div class="row g-3 mt-2">
                     <div class="col-12">
                         <label class="form-label">
                             <i class="bi bi-chat-text"></i> Observaciones
                         </label>
-                        <textarea class="form-control custom-input" id="observaciones" rows="2" placeholder="Notas adicionales para el transportista...">{{ guia.observaciones or '' }}</textarea>
+                        <textarea class="custom-input" id="observaciones" rows="2" placeholder="Notas adicionales para el transportista..." style="resize:vertical;">{{ guia.observaciones or '' }}</textarea>
                         <div class="help-text-small">Información adicional para el traslado</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- TABLA DE PRODUCTOS - SOLO VISTA (no se puede agregar ni eliminar) -->
+        <!-- ==========================================
+        TABLA DE PRODUCTOS
+        ========================================== -->
         <div class="erp-card">
             <div class="card-header-custom teal">
                 <i class="bi bi-box-seam-fill"></i> Productos a Trasladar
-                <span class="badge bg-light text-dark ms-2" style="font-size: 11px; font-weight: 500;" id="badgeModoEdicion">EDITABLE</span>
+                <span class="badge bg-light text-dark ms-2" style="font-size: 10px; font-weight: 500;" id="badgeModoEdicion">EDITABLE</span>
             </div>
             <div class="card-body-custom p-0">
                 <div class="table-responsive" id="tablaProductosContainer">
                     <table class="table table-modern" id="products-table">
                         <thead>
                             <tr>
-                                <th style="width:40px">Item</th>
-                                <th style="width:130px">Código</th>
-                                <th style="width:280px">Descripción</th>
-                                <th style="width:100px">Unidad</th>
-                                <th style="width:100px">Cantidad</th>
-                                <th style="width:60px">Acción</th>
+                                <th style="width:40px;">Item</th>
+                                <th style="width:120px;">Código</th>
+                                <th>Descripción</th>
+                                <th style="width:100px;">Unidad</th>
+                                <th style="width:90px;">Cantidad</th>
+                                <th style="width:50px;">Acción</th>
                             </tr>
                         </thead>
                         <tbody id="table-body">
@@ -828,44 +922,33 @@
             </div>
         </div>
 
-        <!-- RESUMEN ELIMINADO -->
-        <!-- El resumen se eliminó según tu solicitud -->
-
     </div>
 
-    <!-- ========================================== -->
-    <!-- MODAL DE CONFIRMACIÓN PARA REENVIAR A SUNAT -->
-    <!-- ========================================== -->
+    <!-- ==========================================
+    MODAL CONFIRMACIÓN SUNAT
+    ========================================== -->
     <div class="modal fade modal-confirmacion" id="modalConfirmarSunat" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <!-- HEADER -->
                 <div class="modal-header">
                     <div class="modal-title">
                         <i class="bi bi-exclamation-triangle-fill"></i>
                         Confirmar Reenvío a SUNAT
                     </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                
-                <!-- BODY -->
                 <div class="modal-body">
-                    <!-- Icono de advertencia -->
                     <div class="icono-advertencia">
                         <div class="circulo">
                             <i class="bi bi-shield-exclamation"></i>
                         </div>
                     </div>
-                    
-                    <!-- Mensajes -->
                     <div class="mensaje-principal">
                         ¿Está seguro de reenviar la Guía de Remisión Electrónica a SUNAT?
                     </div>
                     <div class="mensaje-secundario">
                         Esta acción reemplazará la guía anterior en SUNAT
                     </div>
-                    
-                    <!-- Información adicional de la guía -->
                     <div class="info-adicional" id="infoGuiaConfirmacion">
                         <div class="fila-info">
                             <span class="label"><i class="bi bi-file-text"></i> Motivo</span>
@@ -893,7 +976,6 @@
                             <span class="valor" id="confirm_cliente">---</span>
                         </div>
                         <div class="divisor"></div>
-                        <!-- HORA ACTUAL -->
                         <div class="hora-actual">
                             <i class="bi bi-clock-history"></i>
                             <span>Hora de reenvío:</span>
@@ -901,8 +983,6 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- FOOTER -->
                 <div class="modal-footer">
                     <button type="button" class="btn btn-cancelar" data-bs-dismiss="modal">
                         <i class="bi bi-x-lg"></i> Cancelar
@@ -915,47 +995,74 @@
         </div>
     </div>
 
+    <!-- ==========================================
+    MODAL NUEVO CONDUCTOR
+    ========================================== -->
+    <div class="modal fade modal-conductor" id="modalNuevoConductor" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-person-plus-fill"></i> Agregar Nuevo Conductor
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">DNI <span class="text-danger">*</span></label>
+                            <input type="text" class="custom-input" id="nuevo_conductor_dni" placeholder="8 dígitos" maxlength="8">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Nombres Completos <span class="text-danger">*</span></label>
+                            <input type="text" class="custom-input" id="nuevo_conductor_nombre" placeholder="Ej: Juan Perez">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Placa del Vehículo <span class="text-danger">*</span></label>
+                            <input type="text" class="custom-input" id="nuevo_conductor_placa" placeholder="ABC-123" style="text-transform:uppercase;">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">N° Licencia</label>
+                            <input type="text" class="custom-input" id="nuevo_conductor_licencia" placeholder="Ej: 1234567890">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Teléfono</label>
+                            <input type="text" class="custom-input" id="nuevo_conductor_telefono" placeholder="Ej: 987654321">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnGuardarNuevoConductor">
+                        <i class="bi bi-save-fill"></i> Guardar Conductor
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // ==========================================
-        // DATA COMPLETA DE UBIGEOS (TODOS LOS DEPARTAMENTOS DEL PERÚ)
+        // UBIGEOS DATA
         // ==========================================
         const ubigeoData = {
-            "AMAZONAS": {"CHACHAPOYAS": ["CHACHAPOYAS", "ASUNCION", "BALSAS", "CHETO", "CHILIQUIN", "CHUQUIBAMBA", "GRANADA", "HUANCAS", "LA JALCA", "LEIMEBAMBA", "LEVANTO", "MAGDALENA", "MARISCAL CASTILLA", "MOLINOPAMPA", "MONTEVIDEO", "OLLEROS", "QUINJALCA", "SAN FRANCISCO DE DAGUAS", "SAN ISIDRO DE MAINO", "SOLOCO", "SONCHE"]},
-            "ANCASH": {"HUARAZ": ["HUARAZ", "COCHABAMBA", "COLCABAMBA", "HUANCHAY", "INDEPENDENCIA", "JANGAS", "LA LIBERTAD", "OLLEROS", "PAMPAS", "PARIACOTO", "PIRA", "TARICA"]},
-            "APURIMAC": {"ABANCAY": ["ABANCAY", "CHACOCHE", "CIRCA", "CURAHUASI", "HUAIPI", "LAMBRAMA", "PICHIRHUA", "SAN PEDRO DE CACHORA", "TAMBURCO"]},
-            "AREQUIPA": {"AREQUIPA": ["AREQUIPA", "ALTO SELVA ALEGRE", "CAYMA", "CERRO COLORADO", "CHARACATO", "CHIGUATA", "JACOBO HUNTER", "JOSE LUIS BUSTAMANTE Y RIVERO", "LA JOYA", "MARIANO MELGAR", "MIRAFLORES", "MOLLEBAYA", "PAUCARPATA", "POCSI", "POLOBAYA", "QUEQUEÑA", "SABANDIA", "SACHACA", "SAN JUAN DE SIGUAS", "SAN JUAN DE TARUCANI", "SANTA ISABEL DE SIGUAS", "SANTA RITA DE SIGUAS", "SOCABAYA", "TIABAYA", "UCHUMAYO", "VITOR", "YANAHUARA", "YARABAMBA", "YURA"]},
-            "AYACUCHO": {"HUAMANGA": ["AYACUCHO", "ACOCRO", "ACOS VINCHOS", "CARMEN ALTO", "CHIARA", "OCROS", "PACAYCASA", "QUINUA", "SAN JOSE DE TICLLAS", "SAN JUAN BAUTISTA", "SANTIAGO DE PISCHA", "SOCOS", "TAMBILLO", "VINCHOS"]},
-            "CAJAMARCA": {"CAJAMARCA": ["CAJAMARCA", "ASUNCION", "CHETILLA", "COSPAN", "ENCAÑADA", "JESUS", "LLACANORA", "LOS BAÑOS DEL INCA", "MAGDALENA", "MATARA", "NAMORA", "SAN JUAN"]},
-            "CALLAO": {"CALLAO": ["CALLAO", "BELLAVISTA", "CARMEN DE LA LEGUA REYNOSO", "LA PERLA", "LA PUNTA", "VENTANILLA", "MI PERU"]},
-            "CUSCO": {"CUSCO": ["CUSCO", "CCORCA", "POROY", "SAN JERONIMO", "SAN SEBASTIAN", "SANTIAGO", "SAYLLA", "WANCHAQ"]},
-            "HUANCAVELICA": {"HUANCAVELICA": ["HUANCAVELICA", "ACOBAMBILLA", "ACORIA", "CONAYCA", "CUENCA", "HUACHOCOLPA", "HUAYLLAHUARA", "IZCUCHACA", "LARIA", "MANTA", "MARISCAL CACERES", "MOYA", "NUEVO OCCORO", "PALCA", "PILCHACA", "VILCA", "YAULI"]},
-            "HUANUCO": {"HUANUCO": ["HUANUCO", "AMARILIS", "CHINCHAO", "CHURUBAMBA", "MARGOS", "QUISQUI", "SAN FRANCISCO DE CAYRAN", "SAN PEDRO DE CHAULAN", "SANTA MARIA DEL VALLE", "YARUMAYO"]},
-            "ICA": {"ICA": ["ICA", "LA TINGUIÑA", "LOS AQUIJES", "OCUCAJE", "PACHACUTEC", "PARCONA", "PUEBLO NUEVO", "SALAS", "SAN JOSE DE LOS MOLINOS", "SAN JUAN BAUTISTA", "SANTIAGO", "SUBTANJALLA", "TATE", "YAUCA"]},
-            "JUNIN": {"HUANCAYO": ["HUANCAYO", "CARHUACALLANGA", "CHACAPAMPA", "CHICCHE", "CHILCA", "CHONGOS ALTO", "CHUPURO", "COLCA", "CULLHUAS", "EL TAMBO", "HUACRAPUQUIO", "HUALHUAS", "HUANCAN", "HUASICANCHA", "HUAYUCACHI", "INGENIO", "PARIAHUANCA", "PILCOMAYO", "PUCARA", "QUICHUAY", "QUILCAS", "SAN AGUSTIN", "SAN JERONIMO DE TUNAN", "SANTO DOMINGO DE ACOBAMBA", "SAÑO", "SAPALLANGA", "SICAYA", "VIDOS"]},
-            "LA LIBERTAD": {"TRUJILLO": ["TRUJILLO", "EL PORVENIR", "FLORENCIA DE MORA", "HUANCHACO", "LA ESPERANZA", "LAREDO", "MOCHE", "POROTO", "SALAVERRY", "SIMBAL", "VICTOR LARCO HERRERA"]},
-            "LAMBAYEQUE": {"CHICLAYO": ["CHICLAYO", "CHONGOYAPE", "ETEN", "ETEN PUERTO", "JOSE LEONARDO ORTIZ", "LA VICTORIA", "LAGUNAS", "MONSEFU", "MOTUPE", "OLMOS", "PIMENTEL", "REQUE", "SANTA ROSA", "SAÑA"]},
             "LIMA": {"LIMA": ["LIMA", "ANCON", "ATE", "BARRANCO", "BREÑA", "CARABAYLLO", "CHACLACAYO", "CHORRILLOS", "CIENEGUILLA", "COMAS", "EL AGUSTINO", "INDEPENDENCIA", "JESUS MARIA", "LA MOLINA", "LA VICTORIA", "LINCE", "LOS OLIVOS", "LURIGANCHO", "LURIN", "MAGDALENA DEL MAR", "MIRAFLORES", "PACHACAMAC", "PUCUSANA", "PUENTE PIEDRA", "PUNTA HERMOSA", "PUNTA NEGRA", "RIMAC", "SAN BARTOLO", "SAN BORJA", "SAN ISIDRO", "SAN JUAN DE LURIGANCHO", "SAN JUAN DE MIRAFLORES", "SAN LUIS", "SAN MARTIN DE PORRES", "SAN MIGUEL", "SANTA ANITA", "SANTA MARIA DEL MAR", "SANTA ROSA", "SANTIAGO DE SURCO", "SURQUILLO", "VILLA EL SALVADOR", "VILLA MARIA DEL TRIUNFO"]},
-            "LORETO": {"MAYNAS": ["IQUITOS", "ALTO NANAY", "FERNANDO LORES", "INDIANA", "LAS AMAZONAS", "MAZAN", "NAPO", "PUNCHANA", "PUTUMAYO", "TORRES CAUSANA", "BELEN", "SAN JUAN BAUTISTA"]},
-            "MADRE DE DIOS": {"TAMBOPATA": ["PUERTO MALDONADO", "INAMBARI", "LAS PIEDRAS", "LABERINTO"]},
-            "MOQUEGUA": {"MARISCAL NIETO": ["MOQUEGUA", "CARUMAS", "CUCHUMBAYA", "SAMEGUA", "SAN CRISTOBAL", "TORATA"]},
-            "PASCO": {"PASCO": ["CERRO DE PASCO", "CHAUPIMARCA", "HUACHON", "HUARIACA", "HUAYLLAY", "NINACACA", "PALLANCHACRA", "PAUCARTAMBO", "SAN FRANCISCO DE ASIS DE YARUSYACAN", "SIMON BOLIVAR", "TICLACAYAN", "TINYAHUARCO", "VICCO", "YANACANCHA"]},
+            "CALLAO": {"CALLAO": ["CALLAO", "BELLAVISTA", "CARMEN DE LA LEGUA REYNOSO", "LA PERLA", "LA PUNTA", "VENTANILLA"]},
             "PIURA": {"PIURA": ["PIURA", "CASTILLA", "CATACAOS", "CURA MORI", "EL TALLAN", "LA ARENA", "LA UNION", "LAS LOMAS", "TAMBO GRANDE"]},
-            "PUNO": {"PUNO": ["PUNO", "ACORA", "AMANTANI", "ATUNCALLA", "CAPACHICA", "CHUCUITO", "COATA", "HUATA", "MAÑAZO", "PAUCARCOLLA", "PICHACANI", "PLATERIA", "SAN ANTONIO", "TIQUILLACA", "VILQUE"]},
-            "SAN MARTIN": {"MOYOBAMBA": ["MOYOBAMBA", "CALZADA", "HABANA", "JEPELACIO", "SORITOR", "YANTALO"]},
-            "TACNA": {"TACNA": ["TACNA", "ALTO DE LA ALIANZA", "CALANA", "CIUDAD NUEVA", "CORONEL GREGORIO ALBARRACIN LANCHIPA", "INCLAN", "PACHIA", "PALCA", "POCOLLAY", "SAMA"]},
-            "TUMBES": {"TUMBES": ["TUMBES", "CORRALES", "LA CRUZ", "PAMPAS DE HOSPITAL", "SAN JACINTO", "SAN JUAN DE LA VIRGEN"]},
-            "UCAYALI": {"CORONEL PORTILLO": ["PUCALLPA", "CALLERIA", "CAMPOVERDE", "IPARIA", "MANANTAY", "MASISEA", "NUEVA REQUENA", "YARINACOCHA"]}
+            "TUMBES": {"TUMBES": ["TUMBES", "CORRALES", "LA CRUZ", "PAMPAS DE HOSPITAL", "SAN JACINTO"]},
+            "AREQUIPA": {"AREQUIPA": ["AREQUIPA", "ALTO SELVA ALEGRE", "CAYMA", "CERRO COLORADO", "CHARACATO", "JACOBO HUNTER", "JOSE LUIS BUSTAMANTE Y RIVERO", "LA JOYA", "MARIANO MELGAR", "MIRAFLORES", "MOLLEBAYA", "PAUCARPATA", "POCSI", "POLOBAYA", "SABANDIA", "SACHACA", "SOCABAYA", "TIABAYA", "UCHUMAYO", "VITOR", "YANAHUARA", "YARABAMBA", "YURA"]},
+            "CUSCO": {"CUSCO": ["CUSCO", "CCORCA", "POROY", "SAN JERONIMO", "SAN SEBASTIAN", "SANTIAGO", "SAYLLA", "WANCHAQ"]}
         };
 
         const departamentos = Object.keys(ubigeoData).sort();
 
         // ==========================================
-        // FUNCIONES DE UBIGEO
+        // FUNCIONES UBIGEO
         // ==========================================
         function llenarDepartamentos(selectId) {
             const select = document.getElementById(selectId);
-            select.innerHTML = '<option value="">Seleccione Departamento</option>';
+            select.innerHTML = '<option value="">Seleccione</option>';
             departamentos.forEach(depto => {
                 const option = document.createElement('option');
                 option.value = depto;
@@ -969,15 +1076,15 @@
             const distritoSelect = document.getElementById(distritoSelectId);
             
             if (!departamento || !ubigeoData[departamento]) {
-                provinciaSelect.innerHTML = '<option value="">Primero seleccione Departamento</option>';
+                provinciaSelect.innerHTML = '<option value="">Primero seleccione</option>';
                 provinciaSelect.disabled = true;
-                distritoSelect.innerHTML = '<option value="">Primero seleccione Provincia</option>';
+                distritoSelect.innerHTML = '<option value="">Primero seleccione</option>';
                 distritoSelect.disabled = true;
                 return;
             }
             
             const provincias = Object.keys(ubigeoData[departamento]);
-            provinciaSelect.innerHTML = '<option value="">Seleccione Provincia</option>';
+            provinciaSelect.innerHTML = '<option value="">Seleccione</option>';
             provincias.forEach(prov => {
                 const option = document.createElement('option');
                 option.value = prov;
@@ -985,7 +1092,7 @@
                 provinciaSelect.appendChild(option);
             });
             provinciaSelect.disabled = false;
-            distritoSelect.innerHTML = '<option value="">Primero seleccione Provincia</option>';
+            distritoSelect.innerHTML = '<option value="">Primero seleccione</option>';
             distritoSelect.disabled = true;
         }
 
@@ -993,13 +1100,15 @@
             const distritoSelect = document.getElementById(distritoSelectId);
             
             if (!departamento || !provincia || !ubigeoData[departamento] || !ubigeoData[departamento][provincia]) {
-                distritoSelect.innerHTML = '<option value="">Primero seleccione Provincia</option>';
+                distritoSelect.innerHTML = '<option value="">Primero seleccione</option>';
                 distritoSelect.disabled = true;
+                document.getElementById(ubigeoHiddenId).value = '';
+                document.getElementById(ubigeoTextSpanId).textContent = 'Ninguno';
                 return;
             }
             
             const distritos = ubigeoData[departamento][provincia];
-            distritoSelect.innerHTML = '<option value="">Seleccione Distrito</option>';
+            distritoSelect.innerHTML = '<option value="">Seleccione</option>';
             distritos.forEach(dist => {
                 const option = document.createElement('option');
                 option.value = dist;
@@ -1011,9 +1120,9 @@
 
         function actualizarUbigeo(departamento, provincia, distrito, ubigeoHiddenId, ubigeoTextSpanId) {
             if (departamento && provincia && distrito) {
-                const codigoGenerado = `${departamento.substring(0,2)}${provincia.substring(0,2)}${distrito.substring(0,2)}`.toUpperCase();
-                document.getElementById(ubigeoHiddenId).value = codigoGenerado;
-                document.getElementById(ubigeoTextSpanId).textContent = `${departamento} - ${provincia} - ${distrito} (${codigoGenerado})`;
+                const codigo = `${departamento.substring(0,2)}${provincia.substring(0,2)}${distrito.substring(0,2)}`.toUpperCase();
+                document.getElementById(ubigeoHiddenId).value = codigo;
+                document.getElementById(ubigeoTextSpanId).textContent = `${departamento} - ${provincia} - ${distrito} (${codigo})`;
             } else {
                 document.getElementById(ubigeoHiddenId).value = '';
                 document.getElementById(ubigeoTextSpanId).textContent = 'Ninguno';
@@ -1028,23 +1137,18 @@
             const ubigeoTextSpan = document.getElementById(`ubigeo_${baseId}_valor`);
             
             deptoSelect.addEventListener('change', function() {
-                const depto = this.value;
-                llenarProvincias(depto, `provincia_${baseId}`, `distrito_${baseId}`);
-                actualizarUbigeo(depto, provinciaSelect.value, distritoSelect.value, ubigeoHidden.id, ubigeoTextSpan.id);
+                llenarProvincias(this.value, `provincia_${baseId}`, `distrito_${baseId}`);
+                actualizarUbigeo(this.value, provinciaSelect.value, distritoSelect.value, ubigeoHidden.id, ubigeoTextSpan.id);
             });
             
             provinciaSelect.addEventListener('change', function() {
                 const depto = deptoSelect.value;
-                const provincia = this.value;
-                llenarDistritos(depto, provincia, `distrito_${baseId}`, ubigeoHidden.id, ubigeoTextSpan.id);
-                actualizarUbigeo(depto, provincia, distritoSelect.value, ubigeoHidden.id, ubigeoTextSpan.id);
+                llenarDistritos(depto, this.value, `distrito_${baseId}`, ubigeoHidden.id, ubigeoTextSpan.id);
+                actualizarUbigeo(depto, this.value, distritoSelect.value, ubigeoHidden.id, ubigeoTextSpan.id);
             });
             
             distritoSelect.addEventListener('change', function() {
-                const depto = deptoSelect.value;
-                const provincia = provinciaSelect.value;
-                const distrito = this.value;
-                actualizarUbigeo(depto, provincia, distrito, ubigeoHidden.id, ubigeoTextSpan.id);
+                actualizarUbigeo(deptoSelect.value, provinciaSelect.value, this.value, ubigeoHidden.id, ubigeoTextSpan.id);
             });
         }
 
@@ -1061,16 +1165,15 @@
                             const distritoSelect = document.getElementById(`distrito_${baseId}`);
                             
                             deptoSelect.value = depto;
-                            const changeEvent = new Event('change');
-                            deptoSelect.dispatchEvent(changeEvent);
+                            deptoSelect.dispatchEvent(new Event('change'));
                             
                             setTimeout(() => {
                                 provinciaSelect.value = prov;
-                                provinciaSelect.dispatchEvent(changeEvent);
+                                provinciaSelect.dispatchEvent(new Event('change'));
                                 
                                 setTimeout(() => {
                                     distritoSelect.value = dist;
-                                    distritoSelect.dispatchEvent(changeEvent);
+                                    distritoSelect.dispatchEvent(new Event('change'));
                                 }, 50);
                             }, 50);
                             return;
@@ -1083,11 +1186,12 @@
         // ==========================================
         // VARIABLES GLOBALES
         // ==========================================
-        let itemCount = 0;
         const guiaData = JSON.parse('{{ guia | tojson | safe if guia else "{}" }}');
+        let itemCount = 0;
         let datosParaEnviar = null;
         let modalSunatInstance = null;
-        
+        let esSoloLectura = false;
+
         // ==========================================
         // NOTIFICACIONES
         // ==========================================
@@ -1110,7 +1214,7 @@
                 setTimeout(() => toast.remove(), 300);
             }, 4000);
         }
-        
+
         // ==========================================
         // TOGGLE TRANSPORTISTA
         // ==========================================
@@ -1120,7 +1224,7 @@
         
         function toggleTransportista() {
             if (modalidadSelect.value === 'PRIVADO') {
-                transportistaCard.style.opacity = '0.5';
+                transportistaCard.style.opacity = '0.6';
                 msgPrivado.style.display = 'block';
                 document.getElementById('transportista_ruc').disabled = true;
                 document.getElementById('transportista_nombre').disabled = true;
@@ -1133,9 +1237,10 @@
         }
         
         modalidadSelect?.addEventListener('change', toggleTransportista);
-        
+        toggleTransportista();
+
         // ==========================================
-        // CARGAR PRODUCTOS EXISTENTES
+        // CARGAR PRODUCTOS
         // ==========================================
         function cargarProductos() {
             let items = [];
@@ -1154,7 +1259,6 @@
             itemCount = 0;
             
             if (!items || items.length === 0) {
-                // Agregar una fila de ejemplo si no hay productos
                 agregarFilaProducto();
             } else {
                 items.forEach((item, idx) => {
@@ -1162,20 +1266,18 @@
                     const nuevaFila = document.createElement('tr');
                     nuevaFila.innerHTML = `
                         <td>${idx + 1}</td>
-                        <td><input type="text" class="form-control form-control-sm" value="${escapeHtml(item.codigo || '')}" placeholder="Código"></td>
-                        <td><input type="text" class="form-control form-control-sm" value="${escapeHtml(item.descripcion || '')}" placeholder="Descripción del producto"></td>
+                        <td><input type="text" class="custom-input" value="${escapeHtml(item.codigo || '')}" placeholder="Código" style="font-size:12px;"></td>
+                        <td><input type="text" class="custom-input" value="${escapeHtml(item.descripcion || '')}" placeholder="Descripción" style="font-size:12px;"></td>
                         <td>
-                            <select class="form-select form-select-sm">
-                                <option value="NIU" ${item.unidad === 'NIU' ? 'selected' : ''}>Unidad (NIU)</option>
-                                <option value="KGM" ${item.unidad === 'KGM' ? 'selected' : ''}>Kilogramo (KGM)</option>
-                                <option value="LTR" ${item.unidad === 'LTR' ? 'selected' : ''}>Litro (LTR)</option>
-                                <option value="MTR" ${item.unidad === 'MTR' ? 'selected' : ''}>Metro (MTR)</option>
-                                <option value="ZZ" ${item.unidad === 'ZZ' ? 'selected' : ''}>Unidad (ZZ)</option>
-                                <option value="NU" ${item.unidad === 'NU' ? 'selected' : ''}>Unidad (NU)</option>
+                            <select class="custom-select" style="font-size:12px;">
+                                <option value="NIU" ${item.unidad === 'NIU' ? 'selected' : ''}>NIU</option>
+                                <option value="KGM" ${item.unidad === 'KGM' ? 'selected' : ''}>KGM</option>
+                                <option value="LTR" ${item.unidad === 'LTR' ? 'selected' : ''}>LTR</option>
+                                <option value="MTR" ${item.unidad === 'MTR' ? 'selected' : ''}>MTR</option>
                             </select>
                         </td>
-                        <td><input type="number" class="form-control form-control-sm cantidad-readonly" value="${item.cantidad || 1}" min="0.01" step="0.01" readonly></td>
-                        <td><button class="btn-del btn-sm">🗑️</button></td>
+                        <td><input type="number" class="custom-input cantidad-readonly" value="${item.cantidad || 1}" readonly style="font-size:12px;text-align:center;"></td>
+                        <td><button class="btn-del">🗑️</button></td>
                     `;
                     tbody.appendChild(nuevaFila);
                     nuevaFila.querySelector('.btn-del').addEventListener('click', () => { 
@@ -1203,9 +1305,6 @@
             itemCount = filas.length;
         }
         
-        // ==========================================
-        // GESTIÓN DE PRODUCTOS
-        // ==========================================
         function agregarFilaProducto() {
             if (esSoloLectura) return;
             
@@ -1214,20 +1313,18 @@
             const nuevaFila = document.createElement('tr');
             nuevaFila.innerHTML = `
                 <td>${itemCount}</td>
-                <td><input type="text" class="form-control form-control-sm" placeholder="Código"></td>
-                <td><input type="text" class="form-control form-control-sm" placeholder="Descripción del producto"></td>
+                <td><input type="text" class="custom-input" placeholder="Código" style="font-size:12px;"></td>
+                <td><input type="text" class="custom-input" placeholder="Descripción" style="font-size:12px;"></td>
                 <td>
-                    <select class="form-select form-select-sm">
-                        <option value="NIU">Unidad (NIU)</option>
-                        <option value="KGM">Kilogramo (KGM)</option>
-                        <option value="LTR">Litro (LTR)</option>
-                        <option value="MTR">Metro (MTR)</option>
-                        <option value="ZZ">Unidad (ZZ)</option>
-                        <option value="NU">Unidad (NU)</option>
+                    <select class="custom-select" style="font-size:12px;">
+                        <option value="NIU">NIU</option>
+                        <option value="KGM">KGM</option>
+                        <option value="LTR">LTR</option>
+                        <option value="MTR">MTR</option>
                     </select>
                 </td>
-                <td><input type="number" class="form-control form-control-sm cantidad-readonly" value="1" min="0.01" step="0.01" readonly></td>
-                <td><button class="btn-del btn-sm">🗑️</button></td>
+                <td><input type="number" class="custom-input cantidad-readonly" value="1" readonly style="font-size:12px;text-align:center;"></td>
+                <td><button class="btn-del">🗑️</button></td>
             `;
             tbody.appendChild(nuevaFila);
             nuevaFila.querySelector('.btn-del').addEventListener('click', () => { 
@@ -1239,47 +1336,166 @@
         }
         
         document.getElementById('btnAgregarProducto')?.addEventListener('click', agregarFilaProducto);
-        
+
+        // ==========================================
+        // CARGAR TRANSPORTISTAS
+        // ==========================================
+        async function cargarTransportistas() {
+            try {
+                const response = await fetch('/api/transportistas');
+                const result = await response.json();
+                if (result.success && result.data) {
+                    const select = document.getElementById('select_transportista');
+                    select.innerHTML = '<option value="">-- Seleccione un conductor --</option>';
+                    result.data.forEach(t => {
+                        const option = document.createElement('option');
+                        option.value = t.id;
+                        option.textContent = t.nombre_completo + (t.placa ? ` - ${t.placa}` : '');
+                        select.appendChild(option);
+                    });
+                    
+                    if (guiaData.conductor_id) {
+                        select.value = guiaData.conductor_id;
+                        select.dispatchEvent(new Event('change'));
+                    }
+                }
+            } catch (error) {
+                console.error('Error cargando transportistas:', error);
+            }
+        }
+
         // ==========================================
         // BUSCAR TRANSPORTISTA
         // ==========================================
         document.getElementById('btnBuscarTransportista')?.addEventListener('click', async function() {
-            const ruc = document.getElementById('transportista_ruc').value;
+            const ruc = document.getElementById('transportista_ruc').value.trim();
             if (!ruc || ruc.length !== 11) {
-                mostrarNotificacion('Ingrese un RUC válido de 11 dígitos', 'warning');
+                mostrarNotificacion('Ingrese un RUC válido', 'warning');
                 return;
             }
             try {
                 const response = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
                 const data = await response.json();
                 if (data.success) {
-                    document.getElementById('transportista_nombre').value = data.razon_social;
+                    document.getElementById('transportista_nombre').value = data.razon_social || '';
                     mostrarNotificacion('✅ Transportista cargado', 'exito');
                 } else {
-                    mostrarNotificacion('No se encontró el RUC', 'error');
+                    mostrarNotificacion('❌ No se encontró el RUC', 'error');
                 }
             } catch (error) {
-                mostrarNotificacion('Error al consultar SUNAT', 'error');
+                mostrarNotificacion('❌ Error al consultar', 'error');
             }
         });
-        
+
         // ==========================================
-        // RECOLECTAR DATOS DEL FORMULARIO
+        // SELECCIONAR CONDUCTOR
+        // ==========================================
+        document.getElementById('select_transportista')?.addEventListener('change', async function() {
+            const id = this.value;
+            if (!id) {
+                document.getElementById('placa_vehiculo').value = '';
+                document.getElementById('conductor_dni').value = '';
+                document.getElementById('conductor_nombre').value = '';
+                document.getElementById('licencia_conductor').value = '';
+                return;
+            }
+            try {
+                const response = await fetch(`/api/transportistas/${id}`);
+                const result = await response.json();
+                if (result.success && result.data) {
+                    const t = result.data;
+                    if (t.placa) document.getElementById('placa_vehiculo').value = t.placa;
+                    if (t.dni) document.getElementById('conductor_dni').value = t.dni;
+                    if (t.nombre_completo) document.getElementById('conductor_nombre').value = t.nombre_completo;
+                    if (t.licencia) document.getElementById('licencia_conductor').value = t.licencia;
+                    mostrarNotificacion(`✅ Datos de ${t.nombre_completo} cargados`, 'exito');
+                }
+            } catch (error) {
+                mostrarNotificacion('❌ Error al cargar', 'error');
+            }
+        });
+
+        // ==========================================
+        // AGREGAR CONDUCTOR
+        // ==========================================
+        document.getElementById('btnAgregarConductor')?.addEventListener('click', function() {
+            new bootstrap.Modal(document.getElementById('modalNuevoConductor')).show();
+        });
+
+        document.getElementById('btnGuardarNuevoConductor')?.addEventListener('click', async function() {
+            const dni = document.getElementById('nuevo_conductor_dni').value.trim();
+            const nombre = document.getElementById('nuevo_conductor_nombre').value.trim();
+            const placa = document.getElementById('nuevo_conductor_placa').value.trim().toUpperCase();
+            const licencia = document.getElementById('nuevo_conductor_licencia').value.trim();
+            const telefono = document.getElementById('nuevo_conductor_telefono').value.trim();
+            
+            if (!dni || dni.length < 8) {
+                mostrarNotificacion('Ingrese un DNI válido', 'warning');
+                return;
+            }
+            if (!nombre) {
+                mostrarNotificacion('Ingrese el nombre completo', 'warning');
+                return;
+            }
+            if (!placa) {
+                mostrarNotificacion('Ingrese la placa del vehículo', 'warning');
+                return;
+            }
+            
+            const btn = this;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Guardando...';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch('/api/transportistas', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ dni, nombre_completo: nombre, placa, licencia, telefono })
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    mostrarNotificacion('✅ Conductor guardado', 'exito');
+                    bootstrap.Modal.getInstance(document.getElementById('modalNuevoConductor'))?.hide();
+                    document.getElementById('nuevo_conductor_dni').value = '';
+                    document.getElementById('nuevo_conductor_nombre').value = '';
+                    document.getElementById('nuevo_conductor_placa').value = '';
+                    document.getElementById('nuevo_conductor_licencia').value = '';
+                    document.getElementById('nuevo_conductor_telefono').value = '';
+                    
+                    await cargarTransportistas();
+                    const select = document.getElementById('select_transportista');
+                    select.value = result.data.id;
+                    select.dispatchEvent(new Event('change'));
+                    
+                    document.getElementById('placa_vehiculo').value = placa;
+                    document.getElementById('conductor_dni').value = dni;
+                    document.getElementById('conductor_nombre').value = nombre;
+                    if (licencia) document.getElementById('licencia_conductor').value = licencia;
+                } else {
+                    mostrarNotificacion('❌ ' + (result.error || 'Error al guardar'), 'error');
+                }
+            } catch (error) {
+                mostrarNotificacion('❌ Error de conexión', 'error');
+            } finally {
+                btn.innerHTML = '<i class="bi bi-save-fill"></i> Guardar Conductor';
+                btn.disabled = false;
+            }
+        });
+
+        // ==========================================
+        // RECOLECTAR DATOS
         // ==========================================
         function recolectarDatosFormulario() {
             const filas = document.querySelectorAll('#table-body tr');
             const items = [];
             filas.forEach((fila, idx) => {
+                const codigo = fila.querySelector('td:nth-child(2) input')?.value;
                 const descripcion = fila.querySelector('td:nth-child(3) input')?.value;
-                const cantidad = fila.querySelector('.cantidad-readonly')?.value;
+                const unidad = fila.querySelector('td:nth-child(4) select')?.value || 'NIU';
+                const cantidad = parseFloat(fila.querySelector('.cantidad-readonly')?.value) || 0;
                 if (descripcion && cantidad > 0) {
-                    items.push({
-                        item: idx + 1,
-                        codigo: fila.querySelector('td:nth-child(2) input')?.value || `ITEM-${idx + 1}`,
-                        descripcion: descripcion,
-                        unidad: fila.querySelector('td:nth-child(4) select')?.value || 'NIU',
-                        cantidad: parseFloat(cantidad)
-                    });
+                    items.push({ item: idx + 1, codigo: codigo || `ITEM-${idx+1}`, descripcion, unidad, cantidad });
                 }
             });
             
@@ -1321,9 +1537,9 @@
                 items: items
             };
         }
-        
+
         // ==========================================
-        // VALIDAR FORMULARIO
+        // VALIDAR
         // ==========================================
         function validarFormulario(data) {
             if (!data.destinatario.ruc) {
@@ -1343,11 +1559,11 @@
                 return false;
             }
             if (!data.fecha_inicio_traslado) {
-                mostrarNotificacion('La fecha de inicio de traslado es obligatoria', 'warning');
+                mostrarNotificacion('La fecha de inicio es obligatoria', 'warning');
                 return false;
             }
             if (!data.unidad_peso_bruto) {
-                mostrarNotificacion('Debe seleccionar la unidad de medida de peso bruto', 'warning');
+                mostrarNotificacion('Seleccione la unidad de medida de peso', 'warning');
                 return false;
             }
             if (data.peso_bruto_total <= 0) {
@@ -1364,7 +1580,7 @@
             }
             return true;
         }
-        
+
         // ==========================================
         // GUARDAR CAMBIOS
         // ==========================================
@@ -1381,7 +1597,6 @@
             if (!validarFormulario(data)) return;
             
             const btn = this;
-            const originalText = btn.innerHTML;
             btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Guardando...';
             btn.disabled = true;
             
@@ -1395,64 +1610,41 @@
                 
                 if (result.success) {
                     mostrarNotificacion(`✅ Guía actualizada exitosamente`, 'exito');
-                    setTimeout(() => {
-                        window.location.href = '/guias/';
-                    }, 1500);
+                    setTimeout(() => window.location.href = '/guias/', 1500);
                 } else {
                     mostrarNotificacion('❌ ' + (result.error || 'Error al guardar'), 'error');
                 }
             } catch (error) {
                 mostrarNotificacion('❌ Error de conexión', 'error');
             } finally {
-                btn.innerHTML = originalText;
+                btn.innerHTML = '<i class="bi bi-save-fill"></i> Guardar Cambios';
                 btn.disabled = false;
             }
         });
-        
+
         // ==========================================
-        // MODAL DE CONFIRMACIÓN PARA REENVIAR A SUNAT
+        // MODAL CONFIRMACIÓN
         // ==========================================
         function prepararModalConfirmacion(data) {
             datosParaEnviar = data;
             
             const motivoSelect = document.getElementById('motivo_traslado');
-            const motivoTexto = motivoSelect.options[motivoSelect.selectedIndex]?.text || '---';
-            document.getElementById('confirm_motivo').textContent = motivoTexto;
-            
-            const totalProductos = data.items.length;
-            document.getElementById('confirm_productos').textContent = totalProductos;
-            
-            const peso = data.peso_bruto_total || 0;
-            const unidadPeso = document.getElementById('unidad_peso_bruto').value || '';
-            document.getElementById('confirm_peso').textContent = `${peso.toFixed(2)} ${unidadPeso}`;
-            
+            document.getElementById('confirm_motivo').textContent = motivoSelect.options[motivoSelect.selectedIndex]?.text || '---';
+            document.getElementById('confirm_productos').textContent = data.items.length;
+            document.getElementById('confirm_peso').textContent = `${data.peso_bruto_total.toFixed(2)} ${data.unidad_peso_bruto}`;
             document.getElementById('confirm_bultos').textContent = data.numero_bultos || 0;
             document.getElementById('confirm_placa').textContent = data.vehiculo.placa || '---';
-            
-            const clienteNombre = data.destinatario.nombre || '---';
-            document.getElementById('confirm_cliente').textContent = clienteNombre;
+            document.getElementById('confirm_cliente').textContent = data.destinatario.nombre || '---';
             
             const ahora = new Date();
-            const horaStr = ahora.toLocaleTimeString('es-PE', { 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit',
-                hour12: false
-            });
-            document.getElementById('horaActualConfirmacion').textContent = horaStr;
+            document.getElementById('horaActualConfirmacion').textContent = ahora.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
             
             if (!modalSunatInstance) {
-                modalSunatInstance = new bootstrap.Modal(document.getElementById('modalConfirmarSunat'), {
-                    backdrop: 'static',
-                    keyboard: false
-                });
+                modalSunatInstance = new bootstrap.Modal(document.getElementById('modalConfirmarSunat'), { backdrop: 'static', keyboard: false });
             }
             modalSunatInstance.show();
         }
-        
-        // ==========================================
-        // REENVIAR A SUNAT
-        // ==========================================
+
         document.getElementById('btnReenviarSunat')?.addEventListener('click', function() {
             const estadoActual = document.getElementById('estado_actual').value;
             if (esSoloLectura) {
@@ -1462,18 +1654,13 @@
             
             const data = recolectarDatosFormulario();
             if (!validarFormulario(data)) return;
-            
             prepararModalConfirmacion(data);
         });
-        
-        // ==========================================
-        // CONFIRMAR REENVÍO
-        // ==========================================
+
         document.getElementById('btnConfirmarEnvio')?.addEventListener('click', async function() {
             if (!datosParaEnviar) return;
             
             const btn = this;
-            const originalText = btn.innerHTML;
             btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Enviando...';
             btn.disabled = true;
             
@@ -1487,161 +1674,88 @@
                 
                 if (result.success) {
                     mostrarNotificacion(`✅ Guía reenviada a SUNAT exitosamente`, 'exito');
-                    if (modalSunatInstance) {
-                        modalSunatInstance.hide();
-                    }
-                    setTimeout(() => {
-                        window.location.href = '/guias/';
-                    }, 1500);
+                    if (modalSunatInstance) modalSunatInstance.hide();
+                    setTimeout(() => window.location.href = '/guias/', 1500);
                 } else {
-                    mostrarNotificacion('❌ ' + (result.error || 'Error al reenviar a SUNAT'), 'error');
+                    mostrarNotificacion('❌ ' + (result.error || 'Error al reenviar'), 'error');
                 }
             } catch (error) {
-                console.error('Error:', error);
-                mostrarNotificacion('❌ Error de conexión con el servidor', 'error');
+                mostrarNotificacion('❌ Error de conexión', 'error');
             } finally {
-                btn.innerHTML = originalText;
+                btn.innerHTML = '<i class="bi bi-check-lg"></i> Aceptar';
                 btn.disabled = false;
                 datosParaEnviar = null;
             }
         });
-        
+
         // ==========================================
-        // DESCARGAR PDF
+        // PDF
         // ==========================================
         document.getElementById('btnPdf')?.addEventListener('click', function() {
             const guiaId = document.getElementById('guia_id').value;
             window.open(`/guias/api/pdf/${guiaId}`, '_blank');
         });
-        
-        // ==========================================
-        // VARIABLE DE CONTROL PARA SOLO LECTURA
-        // ==========================================
-        let esSoloLectura = false;
-        
+
         // ==========================================
         // INICIALIZAR
         // ==========================================
-        function inicializar() {
-            // Inicializar selects de ubigeo
+        document.addEventListener('DOMContentLoaded', function() {
             llenarDepartamentos('departamento_partida');
             llenarDepartamentos('departamento_llegada');
             configurarGrupoUbigeo('partida');
             configurarGrupoUbigeo('llegada');
             
-            // Preseleccionar ubigeos guardados
             const remitenteUbigeo = document.getElementById('ubigeo_partida_hidden').value;
             const destinatarioUbigeo = document.getElementById('ubigeo_llegada_hidden').value;
             
-            if (remitenteUbigeo) {
-                preseleccionarUbigeoDesdeValor('partida', remitenteUbigeo);
-            }
-            if (destinatarioUbigeo) {
-                preseleccionarUbigeoDesdeValor('llegada', destinatarioUbigeo);
-            }
+            if (remitenteUbigeo) preseleccionarUbigeoDesdeValor('partida', remitenteUbigeo);
+            if (destinatarioUbigeo) preseleccionarUbigeoDesdeValor('llegada', destinatarioUbigeo);
             
-            // Fecha por defecto
             if (!document.getElementById('fecha_traslado').value) {
-                const hoy = new Date().toISOString().split('T')[0];
-                document.getElementById('fecha_traslado').value = hoy;
+                document.getElementById('fecha_traslado').value = new Date().toISOString().split('T')[0];
             }
             if (!document.getElementById('fecha_inicio_traslado').value) {
-                const hoy = new Date().toISOString().split('T')[0];
-                document.getElementById('fecha_inicio_traslado').value = hoy;
+                document.getElementById('fecha_inicio_traslado').value = new Date().toISOString().split('T')[0];
             }
             
             cargarProductos();
             toggleTransportista();
             cargarTransportistas();
             
-            // Mostrar estado actual y bloquear si no es editable
             const estadoActual = document.getElementById('estado_actual').value;
             const estadoBadge = document.getElementById('estadoBadge');
             const badgeModo = document.getElementById('badgeModoEdicion');
             
             if (estadoActual === 'BORRADOR' || estadoActual === 'RECHAZADA') {
                 esSoloLectura = false;
-                estadoBadge.innerHTML = `<i class="bi bi-pencil-fill me-1"></i> EDITANDO - ${estadoActual}`;
-                estadoBadge.classList.remove('bg-secondary', 'bg-opacity-25', 'text-secondary');
-                estadoBadge.classList.add('bg-warning', 'bg-opacity-25', 'text-warning');
+                estadoBadge.innerHTML = `<i class="bi bi-pencil-fill me-1" style="font-size:8px;"></i> EDITANDO - ${estadoActual}`;
+                estadoBadge.className = 'badge-estado borrador';
                 badgeModo.textContent = 'EDITABLE';
                 badgeModo.className = 'badge bg-success text-white ms-2';
             } else {
                 esSoloLectura = true;
-                estadoBadge.innerHTML = `<i class="bi bi-lock-fill me-1"></i> SOLO LECTURA - ${estadoActual}`;
-                estadoBadge.classList.remove('bg-warning', 'bg-opacity-25', 'text-warning');
-                estadoBadge.classList.add('bg-secondary', 'bg-opacity-25', 'text-secondary');
+                estadoBadge.innerHTML = `<i class="bi bi-lock-fill me-1" style="font-size:8px;"></i> SOLO LECTURA - ${estadoActual}`;
+                estadoBadge.className = 'badge-estado procesando';
                 badgeModo.textContent = 'SOLO LECTURA';
                 badgeModo.className = 'badge bg-secondary text-white ms-2';
                 
-                // Deshabilitar campos editables
-                document.querySelectorAll('.custom-input, .form-select, textarea').forEach(el => {
-                    if (el.id !== 'btnPdf' && el.id !== 'btnVolver' && el.id !== 'btnReenviarSunat') {
+                document.querySelectorAll('.custom-input, .custom-select, textarea').forEach(el => {
+                    if (!['btnPdf'].includes(el.id)) {
                         el.disabled = true;
                         el.classList.add('campo-bloqueado');
                     }
                 });
                 
-                // Deshabilitar botones de agregar y eliminar productos
                 document.getElementById('btnAgregarProducto').disabled = true;
                 document.getElementById('btnAgregarProducto').style.opacity = '0.5';
                 document.getElementById('contenedorAgregarProducto').style.pointerEvents = 'none';
                 
-                // Deshabilitar botones de acción
                 document.getElementById('btnGuardarCambios').disabled = true;
                 document.getElementById('btnGuardarCambios').style.opacity = '0.5';
                 document.getElementById('btnReenviarSunat').disabled = true;
                 document.getElementById('btnReenviarSunat').style.opacity = '0.5';
             }
-        }
-        
-        async function cargarTransportistas() {
-            try {
-                const response = await fetch('/api/transportistas');
-                const result = await response.json();
-                if (result.success && result.data) {
-                    const select = document.getElementById('select_transportista');
-                    select.innerHTML = '<option value="">-- Seleccione un conductor --</option>';
-                    result.data.forEach(transportista => {
-                        const option = document.createElement('option');
-                        option.value = transportista.id;
-                        let texto = transportista.nombre_completo;
-                        if (transportista.placa) texto += ` - ${transportista.placa}`;
-                        option.textContent = texto;
-                        select.appendChild(option);
-                    });
-                    
-                    // Si hay un transportista seleccionado previamente, cargar sus datos
-                    if (guiaData.conductor_id) {
-                        select.value = guiaData.conductor_id;
-                        select.dispatchEvent(new Event('change'));
-                    }
-                }
-            } catch (error) {
-                console.error('Error cargando transportistas:', error);
-            }
-        }
-        
-        document.getElementById('select_transportista')?.addEventListener('change', async function() {
-            const transportistaId = this.value;
-            if (!transportistaId) return;
-            try {
-                const response = await fetch(`/api/transportistas/${transportistaId}`);
-                const result = await response.json();
-                if (result.success && result.data) {
-                    const t = result.data;
-                    if (t.placa) document.getElementById('placa_vehiculo').value = t.placa;
-                    if (t.dni) document.getElementById('conductor_dni').value = t.dni;
-                    if (t.nombre_completo) document.getElementById('conductor_nombre').value = t.nombre_completo;
-                    if (t.licencia) document.getElementById('licencia_conductor').value = t.licencia;
-                    mostrarNotificacion(`✅ Datos de ${t.nombre_completo} cargados`, 'exito');
-                }
-            } catch (error) {
-                mostrarNotificacion('Error al cargar datos', 'error');
-            }
         });
-        
-        inicializar();
     </script>
 </body>
 </html>
