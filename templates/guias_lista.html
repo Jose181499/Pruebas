@@ -226,6 +226,40 @@
             color: white;
             border-color: #ea580c;
         }
+
+        /* DASHBOARD CARDS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: white;
+            padding: 16px 20px;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border-left: 5px solid #e2e8f0;
+            transition: 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+        .stat-card .stat-icon { font-size: 28px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 14px; background: #f1f5f9; }
+        .stat-card .stat-info { display: flex; flex-direction: column; }
+        .stat-card .stat-number { font-size: 24px; font-weight: 800; line-height: 1.2; }
+        .stat-card .stat-label { font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-total { border-left-color: #3b82f6; }
+        .stat-total .stat-icon { background: #dbeafe; color: #1e40af; }
+        .stat-borrador { border-left-color: #f59e0b; }
+        .stat-borrador .stat-icon { background: #fef3c7; color: #92400e; }
+        .stat-aceptada { border-left-color: #10b981; }
+        .stat-aceptada .stat-icon { background: #d1fae5; color: #065f46; }
+        .stat-procesando { border-left-color: #8b5cf6; }
+        .stat-procesando .stat-icon { background: #ede9fe; color: #5b21b6; }
+        .stat-rechazada { border-left-color: #ef4444; }
+        .stat-rechazada .stat-icon { background: #fee2e2; color: #991b1b; }
     </style>
 </head>
 <body>
@@ -268,6 +302,51 @@
                 </a>
             </div>
         </div>
+
+        <!-- ===== DASHBOARD SUPERIOR ===== -->
+        <div class="stats-grid" id="dashboardStats">
+            <!-- Total -->
+            <div class="stat-card stat-total">
+                <div class="stat-icon"><i class="bi bi-files"></i></div>
+                <div class="stat-info">
+                    <span class="stat-number" id="totalGuias">0</span>
+                    <span class="stat-label">Total</span>
+                </div>
+            </div>
+            <!-- Aceptadas -->
+            <div class="stat-card stat-aceptada">
+                <div class="stat-icon"><i class="bi bi-check-circle-fill"></i></div>
+                <div class="stat-info">
+                    <span class="stat-number" id="totalAceptadas">0</span>
+                    <span class="stat-label">Aceptadas</span>
+                </div>
+            </div>
+            <!-- Borrador -->
+            <div class="stat-card stat-borrador">
+                <div class="stat-icon"><i class="bi bi-pencil-square"></i></div>
+                <div class="stat-info">
+                    <span class="stat-number" id="totalBorrador">0</span>
+                    <span class="stat-label">Borrador</span>
+                </div>
+            </div>
+            <!-- Procesando -->
+            <div class="stat-card stat-procesando">
+                <div class="stat-icon"><i class="bi bi-hourglass-split"></i></div>
+                <div class="stat-info">
+                    <span class="stat-number" id="totalProcesando">0</span>
+                    <span class="stat-label">Procesando</span>
+                </div>
+            </div>
+            <!-- Rechazadas -->
+            <div class="stat-card stat-rechazada">
+                <div class="stat-icon"><i class="bi bi-x-circle-fill"></i></div>
+                <div class="stat-info">
+                    <span class="stat-number" id="totalRechazadas">0</span>
+                    <span class="stat-label">Rechazadas</span>
+                </div>
+            </div>
+        </div>
+        <!-- ===== FIN DASHBOARD ===== -->
         
         <!-- FILTROS -->
         <div class="filtros">
@@ -335,10 +414,10 @@
                             <td colspan="10" class="text-center py-5">
                                 <div class="spinner-border text-primary" role="status"></div>
                                 <br>Cargando guías...
-                            <\/td>
-                        <\/tr>
+                            </td>
+                        </tr>
                     </tbody>
-                <\/table>
+                </table>
             </div>
             <div class="pagination" id="pagination"></div>
         </div>
@@ -448,11 +527,28 @@
         }
         
         // ==========================================
+        // ACTUALIZAR DASHBOARD
+        // ==========================================
+        function actualizarDashboard(guias) {
+            const total = guias.length;
+            const aceptadas = guias.filter(g => g.estado_sunat === 'ACEPTADA').length;
+            const borrador = guias.filter(g => g.estado_sunat === 'BORRADOR').length;
+            const procesando = guias.filter(g => g.estado_sunat === 'PROCESANDO').length;
+            const rechazadas = guias.filter(g => g.estado_sunat === 'RECHAZADA').length;
+
+            document.getElementById('totalGuias').textContent = total;
+            document.getElementById('totalAceptadas').textContent = aceptadas;
+            document.getElementById('totalBorrador').textContent = borrador;
+            document.getElementById('totalProcesando').textContent = procesando;
+            document.getElementById('totalRechazadas').textContent = rechazadas;
+        }
+        
+        // ==========================================
         // CARGAR GUÍAS
         // ==========================================
         async function cargarGuias() {
             const tbody = document.getElementById('tablaGuias');
-            tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5"><div class="spinner-border text-primary"></div><br>Cargando...<\/td><\/tr>`;
+            tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5"><div class="spinner-border text-primary"></div><br>Cargando...</td></tr>`;
             
             try {
                 const response = await fetch('/guias/api/listar');
@@ -460,13 +556,16 @@
                 
                 if (result.success && result.data) {
                     todasGuias = result.data;
+                    // Ordenar por ID descendente (más reciente primero)
+                    todasGuias.sort((a, b) => (b.id || 0) - (a.id || 0));
+                    actualizarDashboard(todasGuias);
                     aplicarFiltros();
                 } else {
-                    tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5 text-danger">Error al cargar guías<\/td><\/tr>`;
+                    tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5 text-danger">Error al cargar guías</td></tr>`;
                 }
             } catch (error) {
                 console.error('Error:', error);
-                tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5 text-danger">Error de conexión<\/td><\/tr>`;
+                tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5 text-danger">Error de conexión</td></tr>`;
             }
         }
         
@@ -505,7 +604,7 @@
             const tbody = document.getElementById('tablaGuias');
             
             if (guias.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="10" class="empty-state"><i class="bi bi-inbox"></i><p class="mb-0">No hay guías de remisión registradas</p><small class="text-muted">Crea una nueva guía usando el botón "Nueva Guía"</small><\/td><\/tr>`;
+                tbody.innerHTML = `<tr><td colspan="10" class="empty-state"><i class="bi bi-inbox"></i><p class="mb-0">No hay guías de remisión registradas</p><small class="text-muted">Crea una nueva guía usando el botón "Nueva Guía"</small></td></tr>`;
                 return;
             }
             
@@ -532,15 +631,15 @@
                 
                 return `
                     <tr>
-                        <td class="fw-bold">${numeroGuia}<\/td>
-                        <td>${escapeHtml(guia.destinatario_nombre || '-')}<\/td>
-                        <td>${guia.ruc_destinatario || '-'}<\/td>
-                        <td>${fechaEmision}<\/td>
-                        <td>${fechaTraslado}<\/td>
-                        <td><span class="badge bg-secondary">${guia.placa_vehiculo || '-'}<\/span><\/td>
-                        <td>${pesoTotal} kg<\/td>
-                        <td><span class="badge-estado ${estadoClase}">${estadoIcono} ${estadoTexto}<\/span><\/td>
-                        <td><small>${fechaCreacion}<\/small><\/td>
+                        <td class="fw-bold">${numeroGuia}</td>
+                        <td>${escapeHtml(guia.destinatario_nombre || '-')}</td>
+                        <td>${guia.ruc_destinatario || '-'}</td>
+                        <td>${fechaEmision}</td>
+                        <td>${fechaTraslado}</td>
+                        <td><span class="badge bg-secondary">${guia.placa_vehiculo || '-'}</span></td>
+                        <td>${pesoTotal} kg</td>
+                        <td><span class="badge-estado ${estadoClase}">${estadoIcono} ${estadoTexto}</span></td>
+                        <td><small>${fechaCreacion}</small></td>
                         <td class="text-center">
                             <button class="btn-accion btn-ver" onclick="verGuia(${guia.id})" title="Ver Detalle">
                                 <i class="bi bi-eye-fill"></i>
@@ -552,8 +651,8 @@
                                 <i class="bi bi-pencil-fill"></i>
                             </button>
                             ${eliminarBtn}
-                        <\/td>
-                    <\/tr>
+                        </td>
+                    </tr>
                 `;
             }).join('');
         }
@@ -571,7 +670,7 @@
         window.verGuia = async function(id) {
             guiaActualId = id;
             const modalBody = document.getElementById('modalVerBody');
-            modalBody.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div><p>Cargando guía ID: ${id}...</p><\/div>`;
+            modalBody.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div><p>Cargando guía ID: ${id}...</p></div>`;
             
             const modalElement = document.getElementById('modalVerGuia');
             const modal = new bootstrap.Modal(modalElement);
@@ -591,22 +690,22 @@
                             <div class="table-responsive mt-3">
                                 <table class="table table-sm">
                                     <thead class="table-light">
-                                        <tr><th>Item</th><th>Código</th><th>Descripción</th><th>Cantidad</th><th>Unidad</th><th>Peso Unit.</th><\/tr>
+                                        <tr><th>Item</th><th>Código</th><th>Descripción</th><th>Cantidad</th><th>Unidad</th><th>Peso Unit.</th></tr>
                                     </thead>
                                     <tbody>
                                         ${items.map(item => `
                                             <tr>
-                                                <td>${item.item || '-'}<\/td>
-                                                <td>${escapeHtml(item.codigo || '-')}<\/td>
-                                                <td>${escapeHtml(item.descripcion || '-')}<\/td>
-                                                <td>${item.cantidad || 0}<\/td>
-                                                <td>${item.unidad || 'NIU'}<\/td>
-                                                <td>${(parseFloat(item.peso_unitario) || 0).toFixed(2)} kg<\/td>
-                                            <\/tr>
+                                                <td>${item.item || '-'}</td>
+                                                <td>${escapeHtml(item.codigo || '-')}</td>
+                                                <td>${escapeHtml(item.descripcion || '-')}</td>
+                                                <td>${item.cantidad || 0}</td>
+                                                <td>${item.unidad || 'NIU'}</td>
+                                                <td>${(parseFloat(item.peso_unitario) || 0).toFixed(2)} kg</td>
+                                            </tr>
                                         `).join('')}
                                     </tbody>
-                                <\/table>
-                            <\/div>
+                                </table>
+                            </div>
                         `;
                     }
                     
@@ -621,24 +720,24 @@
                                     <small><strong>RUC:</strong> ${g.ruc_remitente || '-'}</small>
                                     <small><strong>Razón Social:</strong> ${escapeHtml(g.remitente_nombre || '-')}</small>
                                     <small><strong>Dirección:</strong> ${escapeHtml(g.remitente_direccion || '-')}</small>
-                                <\/div>
-                            <\/div>
+                                </div>
+                            </div>
                             <div class="col-md-6">
                                 <div class="card bg-light p-3">
                                     <h6><i class="bi bi-people text-success"></i> Destinatario</h6>
                                     <small><strong>RUC:</strong> ${g.ruc_destinatario || '-'}</small>
                                     <small><strong>Razón Social:</strong> ${escapeHtml(g.destinatario_nombre || '-')}</small>
                                     <small><strong>Dirección:</strong> ${escapeHtml(g.destinatario_direccion || '-')}</small>
-                                <\/div>
-                            <\/div>
+                                </div>
+                            </div>
                             <div class="col-md-6">
                                 <div class="card bg-light p-3">
                                     <h6><i class="bi bi-truck text-warning"></i> Vehículo</h6>
                                     <small><strong>Placa:</strong> ${g.placa_vehiculo || '-'}</small>
                                     <small><strong>Conductor:</strong> ${escapeHtml(g.conductor_nombre || '-')} (DNI: ${g.conductor_dni || '-'})</small>
                                     <small><strong>Modalidad:</strong> ${g.modalidad_transporte || 'PRIVADO'}</small>
-                                <\/div>
-                            <\/div>
+                                </div>
+                            </div>
                             <div class="col-md-6">
                                 <div class="card bg-light p-3">
                                     <h6><i class="bi bi-calendar"></i> Traslado</h6>
@@ -646,43 +745,43 @@
                                     <small><strong>Fecha Emisión:</strong> ${formatFecha(g.fecha_emision)}</small>
                                     <small><strong>Fecha Traslado:</strong> ${formatFecha(g.fecha_traslado)}</small>
                                     <small><strong>Peso Total:</strong> ${pesoTotalNum.toFixed(2)} kg</small>
-                                <\/div>
-                            <\/div>
+                                </div>
+                            </div>
                             <div class="col-12">
                                 <div class="card bg-light p-3">
                                     <h6><i class="bi bi-clock-history text-info"></i> Registro</h6>
                                     <small><strong>Fecha de Creación:</strong> ${fechaCreacionDetalle}</small>
-                                <\/div>
-                            <\/div>
+                                </div>
+                            </div>
                             ${g.transportista_ruc ? `
                             <div class="col-12">
                                 <div class="card bg-light p-3">
                                     <h6><i class="bi bi-building"></i> Transportista</h6>
                                     <small><strong>RUC:</strong> ${g.transportista_ruc}</small>
                                     <small><strong>Razón Social:</strong> ${escapeHtml(g.transportista_nombre || '-')}</small>
-                                <\/div>
-                            <\/div>
+                                </div>
+                            </div>
                             ` : ''}
                             ${g.observaciones ? `
                             <div class="col-12">
                                 <div class="card bg-light p-3">
                                     <h6><i class="bi bi-chat-text"></i> Observaciones</h6>
                                     <small>${escapeHtml(g.observaciones)}</small>
-                                <\/div>
-                            <\/div>
+                                </div>
+                            </div>
                             ` : ''}
                             <div class="col-12">
                                 <h6 class="mt-2"><i class="bi bi-box-seam"></i> Productos</h6>
                                 ${itemsHtml}
-                            <\/div>
-                        <\/div>
+                            </div>
+                        </div>
                     `;
                 } else {
-                    modalBody.innerHTML = `<div class="text-center py-5 text-danger">Error: ${result.error || 'No se encontraron datos'}<\/div>`;
+                    modalBody.innerHTML = `<div class="text-center py-5 text-danger">Error: ${result.error || 'No se encontraron datos'}</div>`;
                 }
             } catch (error) {
                 console.error("❌ Error en verGuia:", error);
-                modalBody.innerHTML = `<div class="text-center py-5 text-danger">Error al cargar detalles: ${error.message}<\/div>`;
+                modalBody.innerHTML = `<div class="text-center py-5 text-danger">Error al cargar detalles: ${error.message}</div>`;
             }
         };
         
