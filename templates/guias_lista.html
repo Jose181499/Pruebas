@@ -806,14 +806,17 @@
             modal.show();
             
             try {
-                // Buscar la guía en los datos locales
-                const guia = todasGuias.find(g => g.id === id);
+                // 🔥 USAR LA API DE DETALLE PARA OBTENER TODOS LOS DATOS 🔥
+                const response = await fetch(`/guias/api/obtener/${id}`);
+                const result = await response.json();
                 
-                if (!guia) {
-                    modalBody.innerHTML = `<div class="text-center py-5 text-danger">No se encontraron datos de la guía</div>`;
+                if (!result.success || !result.data) {
+                    modalBody.innerHTML = `<div class="text-center py-5 text-danger">Error al obtener datos de la guía</div>`;
                     return;
                 }
-
+                
+                const guia = result.data;
+                
                 // Datos de la guía
                 const items = typeof guia.items_json === 'string' ? JSON.parse(guia.items_json) : (guia.items_json || []);
                 const codigoBarras = generarCodigoBarras(`${guia.serie}-${guia.numero}`);
@@ -823,8 +826,11 @@
                 // ==========================================
                 // 🔥 DATOS FIJOS DE KCF CORPORACION 🔥
                 // ==========================================
-                const REMITENTE_FIJO = 'KCF CORPORACION S.A.C';
-                const DIRECCION_REMITENTE_FIJA = 'AV. PRINCIPAL 123 - LIMA - PERÚ';
+                const REMITENTE_FIJO = guia.remitente_nombre || 'KCF CORPORACION S.A.C';
+                const DIRECCION_REMITENTE_FIJA = guia.remitente_direccion || 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES';
+                const RUC_REMITENTE = guia.ruc_remitente || '20612345678';
+                const TELEFONO = guia.telefono || '987-654-321';
+                const EMAIL = guia.email || 'ventas@kcf.pe';
                 
                 let itemsHtml = '';
                 if (items.length > 0) {
@@ -836,6 +842,16 @@
                         </tr>
                     `).join('');
                 }
+
+                // ==========================================
+                // DATOS DE LA GUÍA (DESDE LA API DE DETALLE)
+                // ==========================================
+                const destinatario = guia.destinatario_nombre || '';
+                const rucDestinatario = guia.ruc_destinatario || '';
+                const ubicacionDestino = guia.destinatario_direccion || '';
+                const codigoRuta = guia.codigo_ruta || '';
+                const conductor = guia.conductor_nombre || '';
+                const dniConductor = guia.conductor_dni || '';
 
                 modalBody.innerHTML = `
                     <!-- RÓTULO DE EMBALAJE - KCF CORPORACION -->
@@ -857,13 +873,19 @@
                             margin-bottom: 8px;
                         ">
                             <div style="font-size: 14px; font-weight: 900; letter-spacing: -0.5px; color: #1a1a1a; line-height: 1.2;">
-                                ${REMITENTE_FIJO}
+                                ${escapeHtml(REMITENTE_FIJO)}
                             </div>
-                            <div style="font-size: 10px; font-weight: 600; color: #333;">
-                                ${DIRECCION_REMITENTE_FIJA}
+                            <div style="font-size: 9px; font-weight: 600; color: #333;">
+                                RUC: ${escapeHtml(RUC_REMITENTE)}
                             </div>
-                            <div style="font-size: 9px; font-weight: 500; color: #555;">
-                                ${escapeHtml(guia.destinatario_direccion || '')}
+                            <div style="font-size: 9px; font-weight: 500; color: #333;">
+                                ${escapeHtml(DIRECCION_REMITENTE_FIJA)}
+                            </div>
+                            <div style="font-size: 8px; font-weight: 400; color: #555;">
+                                Tel: ${escapeHtml(TELEFONO)} | Email: ${escapeHtml(EMAIL)}
+                            </div>
+                            <div style="font-size: 9px; font-weight: 500; color: #555; margin-top: 2px;">
+                                ${ubicacionDestino ? escapeHtml(ubicacionDestino) : ''}
                             </div>
                         </div>
 
@@ -875,11 +897,11 @@
                             letter-spacing: 2px;
                             color: #1a1a1a;
                             padding: 4px 0;
-                            margin-bottom: 4px;
+                            margin: 4px 0;
                             background: #f8f9fa;
                             border-radius: 4px;
                         ">
-                            ${escapeHtml(guia.codigo_ruta || '')}
+                            ${codigoRuta ? escapeHtml(codigoRuta) : ''}
                         </div>
 
                         <!-- Conductor (de la guía) -->
@@ -892,9 +914,9 @@
                             border-bottom: 1px dashed #ddd;
                             margin: 4px 0 6px 0;
                         ">
-                            ${escapeHtml(guia.conductor_nombre || '')}
+                            ${conductor ? escapeHtml(conductor) : ''}
                             <span style="font-weight: 400; font-size: 11px; color: #555;">
-                                DNI: ${escapeHtml(guia.conductor_dni || '')}
+                                DNI: ${dniConductor ? escapeHtml(dniConductor) : ''}
                             </span>
                         </div>
 
@@ -905,11 +927,20 @@
                             font-weight: 800;
                             color: #1a1a1a;
                             padding: 4px 0;
-                            margin-bottom: 6px;
+                            margin-bottom: 2px;
                             background: #f0f0f0;
                             border-radius: 4px;
                         ">
-                            ${escapeHtml(guia.destinatario_nombre || '')}
+                            ${destinatario ? escapeHtml(destinatario) : ''}
+                        </div>
+                        <div style="
+                            text-align: center;
+                            font-size: 9px;
+                            font-weight: 500;
+                            color: #555;
+                            margin-bottom: 6px;
+                        ">
+                            RUC: ${rucDestinatario ? escapeHtml(rucDestinatario) : ''}
                         </div>
 
                         <!-- Detalle de Productos (de la guía) -->
@@ -952,8 +983,8 @@
                             font-size: 10px;
                             font-weight: 600;
                         ">
-                            <span>📦 Guía: <strong>${numeroGuia}</strong></span>
-                            <span>📅 ${fechaEmision}</span>
+                            <span>📦 Guía: <strong>${escapeHtml(numeroGuia)}</strong></span>
+                            <span>📅 ${escapeHtml(fechaEmision)}</span>
                             <span style="background:#1a1a1a;color:#fff;padding:2px 12px;border-radius:4px;font-size:14px;">
                                 ${calcularBultos(items)}
                             </span>
