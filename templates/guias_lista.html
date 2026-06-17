@@ -123,7 +123,6 @@
         .btn-editar:hover { background: rgba(245, 158, 11, 0.1); }
         .btn-eliminar { color: #dc2626; }
         .btn-eliminar:hover { background: rgba(220, 38, 38, 0.1); }
-        /* BOTÓN RÓTULO DE EMBALAJE */
         .btn-rotulo { color: #8b5cf6; }
         .btn-rotulo:hover { background: rgba(139, 92, 246, 0.1); }
 
@@ -196,7 +195,6 @@
             color: white;
             border-color: #ea580c;
         }
-        /* DASHBOARD CARDS */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -225,14 +223,12 @@
         .stat-borrador .stat-icon { background: #fef3c7; color: #92400e; }
         .stat-aceptada { border-left-color: #10b981; }
         .stat-aceptada .stat-icon { background: #d1fae5; color: #065f46; }
-        /* Estilo para la columna de item */
         .col-item {
             width: 50px;
             text-align: center;
             font-weight: 600;
             color: #64748b;
         }
-        /* Tooltip para el botón de rótulo */
         .btn-rotulo-tooltip {
             position: relative;
         }
@@ -293,7 +289,7 @@
             </div>
         </div>
 
-        <!-- ===== DASHBOARD SUPERIOR ===== -->
+        <!-- DASHBOARD -->
         <div class="stats-grid" id="dashboardStats">
             <div class="stat-card stat-total">
                 <div class="stat-icon"><i class="bi bi-files"></i></div>
@@ -317,7 +313,6 @@
                 </div>
             </div>
         </div>
-        <!-- ===== FIN DASHBOARD ===== -->
         
         <!-- FILTROS -->
         <div class="filtros">
@@ -641,7 +636,6 @@
                             <button class="btn-accion btn-editar" onclick="editarGuia(${guia.id})" title="Editar">
                                 <i class="bi bi-pencil-fill"></i>
                             </button>
-                            <!-- BOTÓN RÓTULO DE EMBALAJE -->
                             <button class="btn-accion btn-rotulo btn-rotulo-tooltip" onclick="generarRotulo(${guia.id})" title="Generar Rótulo de Embalaje">
                                 <i class="bi bi-tags-fill"></i>
                             </button>
@@ -795,7 +789,7 @@
         };
 
         // ==========================================
-        // GENERAR RÓTULO DE EMBALAJE - VERSIÓN CORREGIDA
+        // GENERAR RÓTULO DE EMBALAJE - NUEVO FORMATO
         // ==========================================
         window.generarRotulo = async function(id) {
             const modalBody = document.getElementById('modalRotuloBody');
@@ -806,7 +800,6 @@
             modal.show();
             
             try {
-                // 🔥 USAR LA API DE DETALLE PARA OBTENER TODOS LOS DATOS 🔥
                 const response = await fetch(`/guias/api/obtener/${id}`);
                 const result = await response.json();
                 
@@ -816,154 +809,125 @@
                 }
                 
                 const guia = result.data;
-                
-                // Datos de la guía
                 const items = typeof guia.items_json === 'string' ? JSON.parse(guia.items_json) : (guia.items_json || []);
-                const codigoBarras = generarCodigoBarras(`${guia.serie}-${guia.numero}`);
-                const fechaEmision = guia.fecha_emision ? formatFecha(guia.fecha_emision) : '-';
-                const numeroGuia = `${guia.serie || 'T001'}-${guia.numero || '?'}`;
                 
-                // ==========================================
-                // 🔥 DATOS FIJOS DE KCF CORPORACION 🔥
-                // ==========================================
-                const REMITENTE_FIJO = guia.remitente_nombre || 'KCF CORPORACION S.A.C';
-                const DIRECCION_REMITENTE_FIJA = guia.remitente_direccion || 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES';
+                // DATOS FIJOS DE KCF
+                const REMITENTE = guia.remitente_nombre || 'KCF CORPORACION S.A.C';
                 const RUC_REMITENTE = guia.ruc_remitente || '20612345678';
-                const TELEFONO = guia.telefono || '987-654-321';
-                const EMAIL = guia.email || 'ventas@kcf.pe';
                 
-                let itemsHtml = '';
-                if (items.length > 0) {
-                    itemsHtml = items.map(item => `
-                        <tr>
-                            <td style="text-align:center;padding:2px 4px;font-size:9px;">${item.cantidad || 0}</td>
-                            <td style="text-align:left;padding:2px 4px;font-size:9px;font-weight:500;">${escapeHtml(item.descripcion || '-')}</td>
-                            <td style="text-align:center;padding:2px 4px;font-size:9px;">${(parseFloat(item.peso_unitario) || 0).toFixed(1)} kg</td>
-                        </tr>
-                    `).join('');
-                }
-
-                // ==========================================
-                // DATOS DE LA GUÍA (DESDE LA API DE DETALLE)
-                // ==========================================
+                // DATOS DE LA GUÍA
                 const destinatario = guia.destinatario_nombre || '';
                 const rucDestinatario = guia.ruc_destinatario || '';
-                const ubicacionDestino = guia.destinatario_direccion || '';
-                const codigoRuta = guia.codigo_ruta || '';
+                const direccionEntrega = guia.destinatario_direccion || '';
                 const conductor = guia.conductor_nombre || '';
                 const dniConductor = guia.conductor_dni || '';
-
+                const numeroGuia = guia.codigo_ruta || `${guia.serie || 'T001'}-${guia.numero || '000001'}`;
+                const numeroFactura = guia.documento_asociado || 'E001-496';
+                const bultos = calcularBultos(items);
+                const codigoBarras = generarCodigoBarras(numeroGuia);
+                
                 modalBody.innerHTML = `
-                    <!-- RÓTULO DE EMBALAJE - KCF CORPORACION -->
                     <div style="
-                        width: 100%;
+                        width: 90mm;
                         max-width: 90mm;
                         margin: 0 auto;
                         background: #ffffff;
-                        border: 3px solid #1a1a1a;
-                        border-radius: 8px;
-                        padding: 12px 14px;
+                        border: 2px solid #1a2a6c;
+                        border-radius: 4px;
+                        padding: 10px 12px;
                         font-family: 'Courier New', monospace;
+                        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
                     ">
-                        <!-- Cabecera: Remitente (FIJO: KCF CORPORACION) -->
+                        <!-- HEADER: REMITENTE -->
                         <div style="
                             text-align: center;
-                            border-bottom: 3px double #1a1a1a;
-                            padding-bottom: 6px;
-                            margin-bottom: 8px;
-                        ">
-                            <div style="font-size: 14px; font-weight: 900; letter-spacing: -0.5px; color: #1a1a1a; line-height: 1.2;">
-                                ${escapeHtml(REMITENTE_FIJO)}
-                            </div>
-                            <div style="font-size: 9px; font-weight: 600; color: #333;">
-                                RUC: ${escapeHtml(RUC_REMITENTE)}
-                            </div>
-                            <div style="font-size: 9px; font-weight: 500; color: #333;">
-                                ${escapeHtml(DIRECCION_REMITENTE_FIJA)}
-                            </div>
-                            <div style="font-size: 8px; font-weight: 400; color: #555;">
-                                Tel: ${escapeHtml(TELEFONO)} | Email: ${escapeHtml(EMAIL)}
-                            </div>
-                            <div style="font-size: 9px; font-weight: 500; color: #555; margin-top: 2px;">
-                                ${ubicacionDestino ? escapeHtml(ubicacionDestino) : ''}
-                            </div>
-                        </div>
-
-                        <!-- Código de Ruta (de la guía) -->
-                        <div style="
-                            text-align: center;
-                            font-size: 16px;
-                            font-weight: 800;
-                            letter-spacing: 2px;
-                            color: #1a1a1a;
-                            padding: 4px 0;
-                            margin: 4px 0;
-                            background: #f8f9fa;
-                            border-radius: 4px;
-                        ">
-                            ${codigoRuta ? escapeHtml(codigoRuta) : ''}
-                        </div>
-
-                        <!-- Conductor (de la guía) -->
-                        <div style="
-                            text-align: center;
-                            font-size: 12px;
-                            font-weight: 700;
-                            padding: 4px 0;
-                            border-top: 1px dashed #ddd;
-                            border-bottom: 1px dashed #ddd;
-                            margin: 4px 0 6px 0;
-                        ">
-                            ${conductor ? escapeHtml(conductor) : ''}
-                            <span style="font-weight: 400; font-size: 11px; color: #555;">
-                                DNI: ${dniConductor ? escapeHtml(dniConductor) : ''}
-                            </span>
-                        </div>
-
-                        <!-- Destinatario (de la guía) -->
-                        <div style="
-                            text-align: center;
-                            font-size: 13px;
-                            font-weight: 800;
-                            color: #1a1a1a;
-                            padding: 4px 0;
-                            margin-bottom: 2px;
-                            background: #f0f0f0;
-                            border-radius: 4px;
-                        ">
-                            ${destinatario ? escapeHtml(destinatario) : ''}
-                        </div>
-                        <div style="
-                            text-align: center;
-                            font-size: 9px;
-                            font-weight: 500;
-                            color: #555;
+                            border-bottom: 2px solid #e94560;
+                            padding-bottom: 4px;
                             margin-bottom: 6px;
                         ">
-                            RUC: ${rucDestinatario ? escapeHtml(rucDestinatario) : ''}
+                            <div style="font-size: 12px; font-weight: 900; color: #1a2a6c; letter-spacing: 0.5px;">
+                                ${escapeHtml(REMITENTE)}
+                            </div>
+                            <div style="font-size: 8px; font-weight: 600; color: #555;">
+                                RUC: ${escapeHtml(RUC_REMITENTE)}
+                            </div>
                         </div>
 
-                        <!-- Detalle de Productos (de la guía) -->
-                        <div style="margin: 6px 0;">
-                            <table style="width:100%;font-size:9px;border-collapse:collapse;">
-                                <thead>
-                                    <tr>
-                                        <th style="background:#1a1a1a;color:#fff;padding:3px 4px;text-align:center;font-size:7px;text-transform:uppercase;">Cant</th>
-                                        <th style="background:#1a1a1a;color:#fff;padding:3px 4px;text-align:left;font-size:7px;text-transform:uppercase;">Descripción</th>
-                                        <th style="background:#1a1a1a;color:#fff;padding:3px 4px;text-align:center;font-size:7px;text-transform:uppercase;">Peso</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${itemsHtml || '<tr><td colspan="3" style="text-align:center;padding:8px;color:#999;">Sin productos</td></tr>'}
-                                </tbody>
-                            </table>
+                        <!-- CLIENTE -->
+                        <div style="margin: 2px 0;">
+                            <div style="font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px;">
+                                CLIENTE:
+                            </div>
+                            <div style="font-size: 11px; font-weight: 700; color: #1a1a1a;">
+                                ${escapeHtml(destinatario)}
+                            </div>
+                            <div style="font-size: 9px; font-weight: 500; color: #555;">
+                                RUC: ${escapeHtml(rucDestinatario)}
+                            </div>
                         </div>
 
-                        <!-- Código de Barras -->
+                        <div style="border-top: 1px dashed #ddd; margin: 3px 0;"></div>
+
+                        <!-- DIRECCIÓN DE ENTREGA -->
+                        <div style="margin: 2px 0;">
+                            <div style="font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px;">
+                                DIRECCIÓN DE ENTREGA:
+                            </div>
+                            <div style="font-size: 10px; font-weight: 600; color: #1a1a1a;">
+                                ${escapeHtml(direccionEntrega)}
+                            </div>
+                        </div>
+
+                        <div style="border-top: 1px dashed #ddd; margin: 3px 0;"></div>
+
+                        <!-- CONSIGNADOS (CONDUCTOR) -->
+                        <div style="margin: 2px 0;">
+                            <div style="font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px;">
+                                CONSIGNADOS:
+                            </div>
+                            <div style="font-size: 10px; font-weight: 600; color: #1a1a1a;">
+                                ${escapeHtml(conductor)}
+                            </div>
+                            <div style="font-size: 9px; font-weight: 500; color: #555;">
+                                DNI: ${escapeHtml(dniConductor)}
+                            </div>
+                        </div>
+
+                        <div style="border-top: 1px dashed #ddd; margin: 3px 0;"></div>
+
+                        <!-- N° BULTOS, N° GUÍA, FACTURA -->
+                        <div style="display: flex; justify-content: space-between; margin: 2px 0;">
+                            <div style="flex:1;">
+                                <div style="font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    N° BULTOS:
+                                </div>
+                                <div style="font-size: 14px; font-weight: 800; color: #e94560;">
+                                    ${bultos}
+                                </div>
+                            </div>
+                            <div style="flex:1;">
+                                <div style="font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    N° GUÍA:
+                                </div>
+                                <div style="font-size: 10px; font-weight: 600; color: #1a1a1a;">
+                                    ${escapeHtml(numeroGuia)}
+                                </div>
+                            </div>
+                            <div style="flex:1;">
+                                <div style="font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    FACTURA:
+                                </div>
+                                <div style="font-size: 10px; font-weight: 600; color: #1a1a1a;">
+                                    ${escapeHtml(numeroFactura)}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CÓDIGO DE BARRAS -->
                         <div style="
                             text-align: center;
                             font-family: 'Courier New', monospace;
-                            font-size: 20px;
+                            font-size: 18px;
                             letter-spacing: 2px;
                             padding: 4px 0;
                             margin: 4px 0;
@@ -973,38 +937,20 @@
                             ${codigoBarras}
                         </div>
 
-                        <!-- Resumen Final -->
-                        <div style="
-                            border-top: 3px double #1a1a1a;
-                            padding-top: 6px;
-                            margin-top: 6px;
-                            display: flex;
-                            justify-content: space-between;
-                            font-size: 10px;
-                            font-weight: 600;
-                        ">
-                            <span>📦 Guía: <strong>${escapeHtml(numeroGuia)}</strong></span>
-                            <span>📅 ${escapeHtml(fechaEmision)}</span>
-                            <span style="background:#1a1a1a;color:#fff;padding:2px 12px;border-radius:4px;font-size:14px;">
-                                ${calcularBultos(items)}
-                            </span>
-                        </div>
-
-                        <!-- Pie -->
+                        <!-- PIE -->
                         <div style="
                             text-align: center;
-                            font-size: 7px;
+                            font-size: 6px;
                             color: #888;
                             border-top: 1px solid #ddd;
                             padding-top: 4px;
                             margin-top: 4px;
                         ">
-                            RÓTULO DE EMBALAJE · Generado automáticamente · Verificar integridad del producto
+                            RÓTULO DE EMBALAJE · Verificar integridad del producto
                         </div>
                     </div>
                 `;
 
-                // Guardar el ID de la guía para la impresión
                 guiaActualId = id;
 
             } catch (error) {
