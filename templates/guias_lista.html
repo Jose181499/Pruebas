@@ -221,8 +221,6 @@
         .stat-borrador .stat-icon { background: #fef3c7; color: #92400e; }
         .stat-aceptada { border-left-color: #10b981; }
         .stat-aceptada .stat-icon { background: #d1fae5; color: #065f46; }
-        .stat-rechazada { border-left-color: #ef4444; }
-        .stat-rechazada .stat-icon { background: #fee2e2; color: #991b1b; }
         /* Estilo para la columna de item */
         .col-item {
             width: 50px;
@@ -273,7 +271,7 @@
             </div>
         </div>
 
-        <!-- ===== DASHBOARD SUPERIOR (sin Procesando) ===== -->
+        <!-- ===== DASHBOARD SUPERIOR (sin Procesando y sin Rechazada) ===== -->
         <div class="stats-grid" id="dashboardStats">
             <div class="stat-card stat-total">
                 <div class="stat-icon"><i class="bi bi-files"></i></div>
@@ -294,13 +292,6 @@
                 <div class="stat-info">
                     <span class="stat-number" id="totalBorrador">0</span>
                     <span class="stat-label">Borrador</span>
-                </div>
-            </div>
-            <div class="stat-card stat-rechazada">
-                <div class="stat-icon"><i class="bi bi-x-circle-fill"></i></div>
-                <div class="stat-info">
-                    <span class="stat-number" id="totalRechazadas">0</span>
-                    <span class="stat-label">Rechazadas</span>
                 </div>
             </div>
         </div>
@@ -355,7 +346,7 @@
                 <table class="table table-modern">
                     <thead>
                         <tr>
-                            <th class="col-item">Item</th>  <!-- Cambiado de "#" a "Item" -->
+                            <th class="col-item">Item</th>
                             <th>N° Guía</th>
                             <th>Destinatario</th>
                             <th>RUC</th>
@@ -486,18 +477,16 @@
         }
         
         // ==========================================
-        // ACTUALIZAR DASHBOARD (sin Procesando)
+        // ACTUALIZAR DASHBOARD (sin Procesando y sin Rechazada)
         // ==========================================
         function actualizarDashboard(guias) {
             const total = guias.length;
             const aceptadas = guias.filter(g => g.estado_sunat === 'ACEPTADA').length;
             const borrador = guias.filter(g => g.estado_sunat === 'BORRADOR').length;
-            const rechazadas = guias.filter(g => g.estado_sunat === 'RECHAZADA').length;
 
             document.getElementById('totalGuias').textContent = total;
             document.getElementById('totalAceptadas').textContent = aceptadas;
             document.getElementById('totalBorrador').textContent = borrador;
-            document.getElementById('totalRechazadas').textContent = rechazadas;
         }
         
         // ==========================================
