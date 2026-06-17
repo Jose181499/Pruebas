@@ -68,12 +68,13 @@ def generar_pdf_guia(guia_data):
     guia_data['modalidad_texto'] = 'Transporte privado' if guia_data.get('modalidad_transporte') == 'PRIVADO' else 'Transporte público'
     
     # Obtener el nombre de la empresa remitente
-    guia_data['remitente_nombre'] = guia_data.get('remitente_nombre', 'CONSORCIO MINERIA SUBTERRANEA SOCIEDAD ANONIMA CERRADA COMISUB S.A.C.')
+    guia_data['remitente_nombre'] = guia_data.get('remitente_nombre', 'KCF CORPORACION SAC')
+    guia_data['remitente_direccion'] = guia_data.get('remitente_direccion', 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES')
     
     # Renderizar HTML
     html_content = renderizar_html_guia(guia_data)
     
-    # CSS para el PDF - CON RECUADRO A LA DERECHA
+    # CSS para el PDF - EXACTAMENTE IGUAL AL PRIMER EJEMPLO
     css_content = """
     @page {
         size: A4;
@@ -145,6 +146,9 @@ def generar_pdf_guia(guia_data):
         color: #1a1a1a;
     }
     
+    /* ============================================================
+       RECUADRO DESTINATARIO - CON BORDE Y FONDO GRIS
+    ============================================================ */
     .info-destinatario {
         border: 1px solid #ccc;
         padding: 6px 10px;
@@ -152,25 +156,24 @@ def generar_pdf_guia(guia_data):
         background: #f9f9f9;
     }
     
-    .info-destinatario .label {
-        font-weight: bold;
-    }
-    
-    .info-line {
+    .info-destinatario .info-line {
         padding: 1px 0;
         font-size: 9px;
     }
     
-    .info-line .label {
+    .info-destinatario .label {
         font-weight: bold;
         display: inline-block;
         min-width: 110px;
     }
     
-    .info-line .value {
+    .info-destinatario .value {
         display: inline-block;
     }
     
+    /* ============================================================
+       RECUADRO DATOS DEL TRASLADO - CON BORDE Y FONDO GRIS
+    ============================================================ */
     .datos-traslado {
         border: 1px solid #ccc;
         padding: 6px 10px;
@@ -178,12 +181,13 @@ def generar_pdf_guia(guia_data):
         background: #f9f9f9;
     }
     
-    .datos-traslado .row {
+    .datos-traslado .fila {
         display: flex;
         flex-wrap: wrap;
+        padding: 1px 0;
     }
     
-    .datos-traslado .col {
+    .datos-traslado .campo {
         flex: 1;
         min-width: 140px;
         padding: 1px 5px 1px 0;
@@ -194,6 +198,9 @@ def generar_pdf_guia(guia_data):
         font-weight: bold;
     }
     
+    /* ============================================================
+       RECUADRO DATOS DE RUTA - CON BORDE Y FONDO GRIS
+    ============================================================ */
     .datos-ruta {
         border: 1px solid #ccc;
         padding: 6px 10px;
@@ -201,8 +208,23 @@ def generar_pdf_guia(guia_data):
         background: #f9f9f9;
     }
     
+    .datos-ruta .info-line {
+        padding: 1px 0;
+        font-size: 9px;
+    }
+    
+    .datos-ruta .label {
+        font-weight: bold;
+        display: inline-block;
+        min-width: 110px;
+    }
+    
+    .datos-ruta .value {
+        display: inline-block;
+    }
+    
     /* ============================================================
-       RECUADRO DEL TRANSPORTE - CON BORDE Y FONDO GRIS
+       RECUADRO DEL TRANSPORTE - CON BORDE GRUESO Y FONDO GRIS
     ============================================================ */
     .datos-transporte {
         border: 2px solid #333;
@@ -226,6 +248,9 @@ def generar_pdf_guia(guia_data):
         display: inline-block;
     }
     
+    /* ============================================================
+       TABLA DE PRODUCTOS - CON ENCABEZADO OSCURO
+    ============================================================ */
     .products-table {
         width: 100%;
         border-collapse: collapse;
@@ -260,6 +285,9 @@ def generar_pdf_guia(guia_data):
         color: #444;
     }
     
+    /* ============================================================
+       OBSERVACIONES
+    ============================================================ */
     .observaciones {
         margin-top: 8px;
         padding: 5px 10px;
@@ -272,6 +300,9 @@ def generar_pdf_guia(guia_data):
         font-weight: bold;
     }
     
+    /* ============================================================
+       CÓDIGO QR - CENTRADO CON BORDE
+    ============================================================ */
     .qr-container {
         text-align: center;
         margin: 8px 0 5px 0;
@@ -292,6 +323,9 @@ def generar_pdf_guia(guia_data):
         margin-top: 3px;
     }
     
+    /* ============================================================
+       FOOTER
+    ============================================================ */
     .footer {
         margin-top: 12px;
         text-align: center;
@@ -416,7 +450,7 @@ def get_unidad_peso_texto(codigo):
     return unidades.get(codigo, 'KGM')
 
 def renderizar_html_guia(guia_data):
-    """Renderiza el HTML para el PDF - EXACTAMENTE IGUAL AL EJEMPLO"""
+    """Renderiza el HTML para el PDF - EXACTAMENTE IGUAL AL PRIMER EJEMPLO"""
     
     template = Template('''
     <!DOCTYPE html>
@@ -426,9 +460,9 @@ def renderizar_html_guia(guia_data):
         <title>Guía de Remisión {{ serie }}-{{ numero }}</title>
     </head>
     <body>
-        <!-- HEADER EMPRESA - IGUAL AL EJEMPLO -->
+        <!-- HEADER EMPRESA - IGUAL AL PRIMER EJEMPLO -->
         <div class="header-empresa">
-            <div class="nombre-empresa">{{ remitente_nombre or 'CONSORCIO MINERIA SUBTERRANEA SOCIEDAD ANONIMA CERRADA COMISUB S.A.C.' }}</div>
+            <div class="nombre-empresa">{{ remitente_nombre or 'KCF CORPORACION SAC' }}</div>
             <div class="direccion-empresa">{{ remitente_direccion or '' }}</div>
             <div class="contacto-empresa">Tel: {{ telefono or '' }} Email: {{ email or '' }} Web: {{ web or '' }}</div>
         </div>
@@ -457,33 +491,33 @@ def renderizar_html_guia(guia_data):
         <div class="seccion">
             <div class="seccion-titulo">DATOS DEL TRASLADO</div>
             <div class="datos-traslado">
-                <div class="row">
-                    <div class="col">
-                        <span class="label">FECHA EMISIÓN :</span>
+                <div class="fila">
+                    <div class="campo">
+                        <span class="label">FECHA EMISIÓN:</span>
                         {{ fecha_emision_formato }}
                     </div>
-                    <div class="col">
-                        <span class="label">FECHA INICIO DE TRASLADO :</span>
+                    <div class="campo">
+                        <span class="label">FECHA INICIO DE TRASLADO:</span>
                         {{ fecha_inicio_formato }}
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col">
-                        <span class="label">MOTIVO DE TRASLADO :</span>
+                <div class="fila">
+                    <div class="campo">
+                        <span class="label">MOTIVO DE TRASLADO:</span>
                         {{ motivo_texto }}
                     </div>
-                    <div class="col">
-                        <span class="label">MODALIDAD DE TRANSPORTE :</span>
+                    <div class="campo">
+                        <span class="label">MODALIDAD DE TRANSPORTE:</span>
                         {{ modalidad_texto }}
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col">
-                        <span class="label">PESO BRUTO TOTAL ({{ unidad_peso_texto }}) :</span>
+                <div class="fila">
+                    <div class="campo">
+                        <span class="label">PESO BRUTO TOTAL ({{ unidad_peso_texto }}):</span>
                         {{ '%.1f'|format(peso_bruto_total|float) if peso_bruto_total else '0.0' }}
                     </div>
-                    <div class="col">
-                        <span class="label">NÚMERO DE BULTOS :</span>
+                    <div class="campo">
+                        <span class="label">NÚMERO DE BULTOS:</span>
                         {{ numero_bultos or '1' }}
                     </div>
                 </div>
@@ -505,7 +539,7 @@ def renderizar_html_guia(guia_data):
             </div>
         </div>
         
-        <!-- DATOS DEL TRANSPORTE -- CON RECUADRO GRIS A LA DERECHA -->
+        <!-- DATOS DEL TRANSPORTE - CON RECUADRO GRIS A LA DERECHA -->
         <div class="seccion">
             <div class="seccion-titulo">DATOS DEL TRANSPORTE</div>
             <div class="datos-transporte">
@@ -565,7 +599,7 @@ def renderizar_html_guia(guia_data):
             {% endif %}
         </div>
         
-        <!-- QR Y FOOTER - EXACTAMENTE IGUAL AL EJEMPLO -->
+        <!-- QR Y FOOTER - EXACTAMENTE IGUAL AL PRIMER EJEMPLO -->
         <div class="qr-container">
             <img src="{{ qr_base64 }}" alt="Código QR">
             <div class="qr-text">Representación impresa de la GUIA DE REMISIÓN REMITENTE ELECTRÓNICA, consulte el documento en https://see.conflux.pe</div>
