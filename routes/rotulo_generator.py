@@ -1,6 +1,6 @@
 """
 Generador de rótulos de embalaje (formato AGD GROUP)
-DATOS FIJOS: Solo KCF CORPORACION (remitente)
+DATOS FIJOS: KCF CORPORACION (remitente, RUC, contacto)
 RESTO: Se toma de la cotización/guía
 """
 import json
@@ -42,6 +42,10 @@ def generar_rotulo_pdf(guia):
     DATOS FIJOS DE KCF CORPORACION:
     - remitente_nombre: KCF CORPORACION S.A.C
     - remitente_direccion: AV. PRINCIPAL 123 - LIMA - PERÚ
+    - remitente_ruc: 20612345678
+    - telefono: 987-654-321
+    - email: ventas@kcf.pe
+    - web: www.kcf.pe
     
     RESTO DE DATOS: Se toman de la guía (destinatario, conductor, productos, etc.)
     
@@ -73,8 +77,12 @@ def generar_rotulo_pdf(guia):
     # ==========================================
     # DATOS FIJOS DE KCF CORPORACION (EMPRESA)
     # ==========================================
-    REMITENTE_FIJO = 'KCF CORPORACION S.A.C'
-    DIRECCION_REMITENTE_FIJA = 'AV. PRINCIPAL 123 - LIMA - PERÚ'
+    REMITENTE_FIJO = guia.get('remitente_nombre', 'KCF CORPORACION S.A.C')
+    DIRECCION_REMITENTE_FIJA = guia.get('remitente_direccion', 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES')
+    RUC_REMITENTE = guia.get('ruc_remitente', '20612345678')
+    TELEFONO = guia.get('telefono', '987-654-321')
+    EMAIL = guia.get('email', 'ventas@kcf.pe')
+    WEB = guia.get('web', 'www.kcf.pe')
     
     # ==========================================
     # DATOS QUE VIENEN DE LA COTIZACIÓN/GUÍA
@@ -86,9 +94,14 @@ def generar_rotulo_pdf(guia):
         except:
             items = []
     
+    # Si items está vacío pero hay items en otro formato
+    if not items and guia.get('items'):
+        items = guia.get('items', [])
+    
     # Destinatario (viene de la guía)
     destinatario = guia.get('destinatario_nombre', '')
     ubicacion_destino = guia.get('destinatario_direccion', '')
+    ruc_destinatario = guia.get('ruc_destinatario', '')
     
     # Conductor (viene de la guía)
     conductor = guia.get('conductor_nombre', '')
@@ -123,18 +136,26 @@ def generar_rotulo_pdf(guia):
     y = 140  # posición inicial en mm
     
     # --- 1. REMITENTE (FIJO - KCF CORPORACION) ---
-    c.setFont(font_name, 12)
+    c.setFont(font_name, 11)
     c.drawCentredString(mm_to_pt(45), mm_to_pt(y), REMITENTE_FIJO[:35])
-    y -= 6
-    
-    c.setFont(font_name, 9)
-    c.drawCentredString(mm_to_pt(45), mm_to_pt(y), DIRECCION_REMITENTE_FIJA[:35])
     y -= 5
+    
+    c.setFont(font_name, 8)
+    c.drawCentredString(mm_to_pt(45), mm_to_pt(y), f"RUC: {RUC_REMITENTE}")
+    y -= 4
+    
+    c.setFont(font_name, 8)
+    c.drawCentredString(mm_to_pt(45), mm_to_pt(y), DIRECCION_REMITENTE_FIJA[:35])
+    y -= 4
+    
+    c.setFont(font_name, 7)
+    c.drawCentredString(mm_to_pt(45), mm_to_pt(y), f"Tel: {TELEFONO} | Email: {EMAIL}")
+    y -= 4
     
     # Ubicación de destino (de la guía)
     c.setFont(font_name, 8)
     c.drawCentredString(mm_to_pt(45), mm_to_pt(y), ubicacion_destino[:35] if ubicacion_destino else '')
-    y -= 7
+    y -= 6
     
     # Línea separadora
     c.setLineWidth(1)
@@ -142,60 +163,80 @@ def generar_rotulo_pdf(guia):
     y -= 5
     
     # --- 2. CÓDIGO DE RUTA (de la guía) ---
-    c.setFont(font_name, 16)
-    c.setFillColorRGB(0, 0, 0)
-    c.drawCentredString(mm_to_pt(45), mm_to_pt(y), codigo_ruta[:20] if codigo_ruta else '')
-    y -= 8
+    if codigo_ruta:
+        c.setFont(font_name, 16)
+        c.setFillColorRGB(0, 0, 0)
+        c.drawCentredString(mm_to_pt(45), mm_to_pt(y), codigo_ruta[:20])
+        y -= 8
+    else:
+        y -= 4
     
     # --- 3. CONDUCTOR (de la guía) ---
-    c.setFont(font_name, 10)
-    c.drawCentredString(mm_to_pt(45), mm_to_pt(y), conductor[:35] if conductor else '')
-    y -= 5
-    
-    c.setFont(font_name, 9)
-    c.drawCentredString(mm_to_pt(45), mm_to_pt(y), f"DNI: {dni_conductor}" if dni_conductor else '')
-    y -= 7
+    if conductor:
+        c.setFont(font_name, 10)
+        c.drawCentredString(mm_to_pt(45), mm_to_pt(y), conductor[:35])
+        y -= 5
+        
+        if dni_conductor:
+            c.setFont(font_name, 9)
+            c.drawCentredString(mm_to_pt(45), mm_to_pt(y), f"DNI: {dni_conductor}")
+            y -= 7
+        else:
+            y -= 4
+    else:
+        y -= 4
     
     # Línea separadora
     c.line(mm_to_pt(5), mm_to_pt(y), mm_to_pt(85), mm_to_pt(y))
     y -= 5
     
     # --- 4. DESTINATARIO (de la guía) ---
-    c.setFont(font_name, 12)
-    c.setFillColorRGB(0, 0, 0)
-    c.drawCentredString(mm_to_pt(45), mm_to_pt(y), destinatario[:35] if destinatario else '')
-    y -= 8
-    
-    # --- 5. TABLA DE PRODUCTOS (de la guía) ---
-    c.setFont(font_name, 7)
-    c.drawString(mm_to_pt(5), mm_to_pt(y), "Cant")
-    c.drawString(mm_to_pt(20), mm_to_pt(y), "Descripción")
-    c.drawString(mm_to_pt(70), mm_to_pt(y), "Peso")
-    y -= 4
-    
-    # Línea de encabezados
-    c.line(mm_to_pt(5), mm_to_pt(y), mm_to_pt(85), mm_to_pt(y))
-    y -= 3
-    
-    # Items (máximo 8 para que quepan)
-    c.setFont(font_name, 7)
-    c.setFillColorRGB(0, 0, 0)
-    
-    for item in items[:8]:
-        cantidad = item.get('cantidad', 0)
-        descripcion = item.get('descripcion', '-')[:25]
-        peso_unitario = float(item.get('peso_unitario', 0))
-        peso_total = cantidad * peso_unitario
-        
-        c.drawString(mm_to_pt(5), mm_to_pt(y), str(cantidad))
-        c.drawString(mm_to_pt(20), mm_to_pt(y), descripcion)
-        c.drawString(mm_to_pt(70), mm_to_pt(y), f"{peso_total:.1f} kg")
+    if destinatario:
+        c.setFont(font_name, 12)
+        c.setFillColorRGB(0, 0, 0)
+        c.drawCentredString(mm_to_pt(45), mm_to_pt(y), destinatario[:35])
         y -= 5
         
-        if y < 20:
-            break
+        if ruc_destinatario:
+            c.setFont(font_name, 9)
+            c.drawCentredString(mm_to_pt(45), mm_to_pt(y), f"RUC: {ruc_destinatario}")
+            y -= 7
+        else:
+            y -= 4
+    else:
+        y -= 4
     
-    if not items:
+    # --- 5. TABLA DE PRODUCTOS (de la guía) ---
+    if items:
+        c.setFont(font_name, 7)
+        c.drawString(mm_to_pt(5), mm_to_pt(y), "Cant")
+        c.drawString(mm_to_pt(20), mm_to_pt(y), "Descripción")
+        c.drawString(mm_to_pt(70), mm_to_pt(y), "Peso")
+        y -= 4
+        
+        # Línea de encabezados
+        c.line(mm_to_pt(5), mm_to_pt(y), mm_to_pt(85), mm_to_pt(y))
+        y -= 3
+        
+        # Items (máximo 8 para que quepan)
+        c.setFont(font_name, 7)
+        c.setFillColorRGB(0, 0, 0)
+        
+        for item in items[:8]:
+            cantidad = item.get('cantidad', 0)
+            descripcion = item.get('descripcion', '-')[:25]
+            peso_unitario = float(item.get('peso_unitario', 0))
+            peso_total = cantidad * peso_unitario
+            
+            c.drawString(mm_to_pt(5), mm_to_pt(y), str(cantidad))
+            c.drawString(mm_to_pt(20), mm_to_pt(y), descripcion)
+            c.drawString(mm_to_pt(70), mm_to_pt(y), f"{peso_total:.1f} kg")
+            y -= 5
+            
+            if y < 20:
+                break
+    else:
+        c.setFont(font_name, 8)
         c.drawString(mm_to_pt(5), mm_to_pt(y), "Sin productos")
         y -= 5
     
@@ -248,6 +289,7 @@ def generar_rotulo_html(guia):
     DATOS FIJOS DE KCF CORPORACION:
     - remitente_nombre: KCF CORPORACION S.A.C
     - remitente_direccion: AV. PRINCIPAL 123 - LIMA - PERÚ
+    - remitente_ruc: 20612345678
     
     RESTO DE DATOS: Se toman de la guía (destinatario, conductor, productos, etc.)
     
@@ -264,17 +306,25 @@ def generar_rotulo_html(guia):
         except:
             items = []
     
+    if not items and guia.get('items'):
+        items = guia.get('items', [])
+    
     # ==========================================
     # DATOS FIJOS DE KCF CORPORACION
     # ==========================================
-    REMITENTE_FIJO = 'KCF CORPORACION S.A.C'
-    DIRECCION_REMITENTE_FIJA = 'AV. PRINCIPAL 123 - LIMA - PERÚ'
+    REMITENTE_FIJO = guia.get('remitente_nombre', 'KCF CORPORACION S.A.C')
+    DIRECCION_REMITENTE_FIJA = guia.get('remitente_direccion', 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES')
+    RUC_REMITENTE = guia.get('ruc_remitente', '20612345678')
+    TELEFONO = guia.get('telefono', '987-654-321')
+    EMAIL = guia.get('email', 'ventas@kcf.pe')
+    WEB = guia.get('web', 'www.kcf.pe')
     
     # ==========================================
     # DATOS DE LA GUÍA
     # ==========================================
     destinatario = guia.get('destinatario_nombre', '')
     ubicacion_destino = guia.get('destinatario_direccion', '')
+    ruc_destinatario = guia.get('ruc_destinatario', '')
     codigo_ruta = guia.get('codigo_ruta', '')
     conductor = guia.get('conductor_nombre', '')
     dni_conductor = guia.get('conductor_dni', '')
@@ -315,10 +365,16 @@ def generar_rotulo_html(guia):
             <div style="font-size:14px;font-weight:900;letter-spacing:-0.5px;color:#1a1a1a;line-height:1.2;">
                 {REMITENTE_FIJO}
             </div>
-            <div style="font-size:10px;font-weight:600;color:#333;">
+            <div style="font-size:9px;font-weight:600;color:#333;">
+                RUC: {RUC_REMITENTE}
+            </div>
+            <div style="font-size:9px;font-weight:500;color:#333;">
                 {DIRECCION_REMITENTE_FIJA}
             </div>
-            <div style="font-size:9px;font-weight:500;color:#555;">
+            <div style="font-size:8px;font-weight:400;color:#555;">
+                Tel: {TELEFONO} | Email: {EMAIL}
+            </div>
+            <div style="font-size:9px;font-weight:500;color:#555;margin-top:2px;">
                 {ubicacion_destino if ubicacion_destino else ''}
             </div>
         </div>
@@ -337,8 +393,11 @@ def generar_rotulo_html(guia):
         </div>
 
         <!-- Destinatario (de la guía) -->
-        <div style="text-align:center;font-size:13px;font-weight:800;color:#1a1a1a;padding:4px 0;margin-bottom:6px;background:#f0f0f0;border-radius:4px;">
+        <div style="text-align:center;font-size:13px;font-weight:800;color:#1a1a1a;padding:4px 0;margin-bottom:2px;background:#f0f0f0;border-radius:4px;">
             {destinatario if destinatario else ''}
+        </div>
+        <div style="text-align:center;font-size:9px;font-weight:500;color:#555;margin-bottom:6px;">
+            RUC: {ruc_destinatario if ruc_destinatario else ''}
         </div>
 
         <!-- Tabla de Productos (de la guía) -->
