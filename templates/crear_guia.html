@@ -173,7 +173,6 @@
             border-left: 3px solid #dc2626 !important;
         }
 
-        /* Grupo de peso bruto en línea */
         .grupo-peso-bruto {
             background: #f8fafc;
             border-radius: 16px;
@@ -190,9 +189,6 @@
             margin-bottom: 4px;
         }
 
-        /* ==========================================
-           MODAL DE CONFIRMACIÓN MEJORADO
-           ========================================== */
         .modal-confirmacion {
             background: rgba(15, 23, 42, 0.6);
             backdrop-filter: blur(8px);
@@ -383,7 +379,6 @@
             margin-right: 8px;
         }
         
-        /* Animación de entrada del modal */
         .modal-confirmacion.fade .modal-dialog {
             transform: scale(0.95) translateY(-20px);
             transition: transform 0.25s ease, opacity 0.25s ease;
@@ -393,7 +388,6 @@
             transform: scale(1) translateY(0);
         }
 
-        /* Tabla de productos - solo vista */
         .tabla-solo-vista .form-control,
         .tabla-solo-vista .form-select {
             background-color: #f8fafc !important;
@@ -416,6 +410,63 @@
         
         .tabla-solo-vista .btn-agregar-producto {
             display: none !important;
+        }
+
+        /* Estilos para el select con opción agregar nuevo */
+        .select-conductor-wrapper {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .select-conductor-wrapper .form-select {
+            flex: 1;
+        }
+        
+        .btn-agregar-conductor {
+            white-space: nowrap;
+            padding: 8px 14px;
+            border-radius: 12px;
+            border: 1.5px solid #e5e7eb;
+            background: white;
+            color: #2563eb;
+            transition: all 0.2s;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        
+        .btn-agregar-conductor:hover {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+        
+        .btn-agregar-conductor i {
+            font-size: 14px;
+        }
+
+        /* Modal Nuevo Conductor */
+        .modal-conductor .modal-header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            border: none;
+        }
+        
+        .modal-conductor .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+        
+        .modal-conductor .modal-footer .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            border: none;
+            padding: 10px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        
+        .modal-conductor .modal-footer .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
         }
     </style>
 </head>
@@ -473,7 +524,7 @@
             <div class="col-md-6">
                 <div class="erp-card">
                     <div class="card-header-custom blue">
-                        <i class="bi bi-building"></i> Remitente- (Origen)
+                        <i class="bi bi-building"></i> Remitente (Origen)
                     </div>
                     <div class="card-body-custom p-4">
                         <div class="row g-3">
@@ -489,7 +540,6 @@
                                 <label class="form-label">Dirección de Partida (Almacén)</label>
                                 <input type="text" class="form-control custom-input" id="direccion_partida" value="JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO (ALT. AV. CANTA CALLAO CRUCE AV. LOS OLIV)">
                                 
-                                <!-- Sistema de 3 desplegables para UBIGEO (PARTIDA) -->
                                 <div class="row mt-2">
                                     <div class="col-md-4">
                                         <select class="form-select form-select-sm" id="departamento_partida">
@@ -546,7 +596,6 @@
                                 <label class="form-label">Dirección de Llegada</label>
                                 <input type="text" class="form-control custom-input" id="direccion_llegada" placeholder="Dirección del cliente">
                                 
-                                <!-- Sistema de 3 desplegables para UBIGEO (LLEGADA) -->
                                 <div class="row mt-2">
                                     <div class="col-md-4">
                                         <select class="form-select form-select-sm" id="departamento_llegada">
@@ -570,7 +619,6 @@
                                 <input type="hidden" id="ubigeo_llegada_hidden" value="">
                             </div>
                             
-                            <!-- FILA: Pedido Compra (izquierda) y Documento Asociado (derecha) -->
                             <div class="col-12">
                                 <div class="row g-3">
                                     <div class="col-md-6">
@@ -616,9 +664,15 @@
                                 </div>
                                 <div class="col-md-12">
                                     <label class="form-label">Seleccionar Conductor/Transportista</label>
-                                    <select class="form-select custom-input" id="select_transportista">
-                                        <option value="">-- Seleccione un conductor --</option>
-                                    </select>
+                                    <div class="select-conductor-wrapper">
+                                        <select class="form-select custom-input" id="select_transportista">
+                                            <option value="">-- Seleccione un conductor --</option>
+                                        </select>
+                                        <button type="button" class="btn-agregar-conductor" id="btnAgregarConductor" title="Agregar nuevo conductor">
+                                            <i class="bi bi-plus-circle"></i> Nuevo
+                                        </button>
+                                    </div>
+                                    <div class="help-text-small">Seleccione un conductor existente o agregue uno nuevo</div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Placa del Vehículo <span class="text-danger">*</span></label>
@@ -678,7 +732,6 @@
             </div>
             <div class="card-body-custom p-4">
                 <div class="row g-3">
-                    <!-- MOTIVO DE TRASLADO - DETALLADO SEGÚN SUNAT -->
                     <div class="col-md-3">
                         <label class="form-label">
                             Motivo de Traslado <span class="text-danger">*</span>
@@ -717,14 +770,12 @@
                         </select>
                     </div>
                     
-                    <!-- FECHA DE TRASLADO (primero) -->
                     <div class="col-md-3">
                         <label class="form-label">Fecha de Traslado</label>
                         <input type="date" class="form-control custom-input" id="fecha_traslado">
                         <div class="help-text-small">Fecha de emisión del documento</div>
                     </div>
                     
-                    <!-- FECHA DE INICIO DE TRASLADO (segundo) -->
                     <div class="col-md-3">
                         <label class="form-label">
                             Fecha de Inicio de Traslado <span class="text-danger">*</span>
@@ -733,7 +784,6 @@
                         <div class="help-text-small">Fecha en que inicia el traslado</div>
                     </div>
                     
-                    <!-- NÚMERO DE BULTOS -->
                     <div class="col-md-3">
                         <label class="form-label">
                             Número de Bultos <span class="text-danger">*</span>
@@ -743,7 +793,6 @@
                     </div>
                 </div>
                 
-                <!-- GRUPO: UNIDAD DE PESO BRUTO Y PESO BRUTO TOTAL (juntos en un solo grupo) -->
                 <div class="row g-3 mt-2">
                     <div class="col-12">
                         <div class="grupo-peso-bruto">
@@ -780,7 +829,6 @@
                     </div>
                 </div>
                 
-                <!-- OBSERVACIONES -->
                 <div class="row g-3 mt-2">
                     <div class="col-12">
                         <label class="form-label">
@@ -793,7 +841,7 @@
             </div>
         </div>
 
-        <!-- TABLA DE PRODUCTOS - SOLO VISTA (no se puede agregar ni eliminar) -->
+        <!-- TABLA DE PRODUCTOS - SOLO VISTA -->
         <div class="erp-card">
             <div class="card-header-custom teal">
                 <i class="bi bi-box-seam-fill"></i> Productos a Trasladar
@@ -833,7 +881,6 @@
                         </tbody>
                     </table>
                 </div>
-                <!-- Botón de agregar oculto -->
                 <div class="p-4" style="display: none;">
                     <button class="btn btn-success btn-sm btn-agregar-producto" id="btnAgregarProducto">
                         <i class="bi bi-plus-circle-fill"></i> Agregar Producto
@@ -853,7 +900,6 @@
     <div class="modal fade modal-confirmacion" id="modalConfirmarSunat" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <!-- HEADER -->
                 <div class="modal-header">
                     <div class="modal-title">
                         <i class="bi bi-exclamation-triangle-fill"></i>
@@ -861,25 +907,18 @@
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                
-                <!-- BODY -->
                 <div class="modal-body">
-                    <!-- Icono de advertencia -->
                     <div class="icono-advertencia">
                         <div class="circulo">
                             <i class="bi bi-shield-exclamation"></i>
                         </div>
                     </div>
-                    
-                    <!-- Mensajes -->
                     <div class="mensaje-principal">
                         ¿Está seguro de emitir la Guía de Remisión Electrónica - Remitente?
                     </div>
                     <div class="mensaje-secundario">
                         Esta acción no se puede revertir
                     </div>
-                    
-                    <!-- Información adicional de la guía -->
                     <div class="info-adicional" id="infoGuiaConfirmacion">
                         <div class="fila-info">
                             <span class="label"><i class="bi bi-file-text"></i> Motivo</span>
@@ -907,7 +946,6 @@
                             <span class="valor" id="confirm_cliente">---</span>
                         </div>
                         <div class="divisor"></div>
-                        <!-- HORA ACTUAL -->
                         <div class="hora-actual">
                             <i class="bi bi-clock-history"></i>
                             <span>Hora de emisión:</span>
@@ -915,8 +953,6 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- FOOTER -->
                 <div class="modal-footer">
                     <button type="button" class="btn btn-cancelar" data-bs-dismiss="modal">
                         <i class="bi bi-x-lg"></i> Cancelar
@@ -929,10 +965,56 @@
         </div>
     </div>
 
+    <!-- ========================================== -->
+    <!-- MODAL PARA AGREGAR NUEVO CONDUCTOR          -->
+    <!-- ========================================== -->
+    <div class="modal fade modal-conductor" id="modalNuevoConductor" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-person-plus-fill"></i> Agregar Nuevo Conductor
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">DNI <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control custom-input" id="nuevo_conductor_dni" placeholder="8 dígitos" maxlength="8">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Nombres Completos <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control custom-input" id="nuevo_conductor_nombre" placeholder="Ej: Juan Perez">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Placa del Vehículo <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control custom-input" id="nuevo_conductor_placa" placeholder="ABC-123" style="text-transform: uppercase;">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">N° Licencia</label>
+                            <input type="text" class="form-control custom-input" id="nuevo_conductor_licencia" placeholder="Ej: 1234567890">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Teléfono</label>
+                            <input type="text" class="form-control custom-input" id="nuevo_conductor_telefono" placeholder="Ej: 987654321">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnGuardarNuevoConductor">
+                        <i class="bi bi-save-fill"></i> Guardar Conductor
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // ==========================================
-        // DATA COMPLETA DE UBIGEOS (TODOS LOS DEPARTAMENTOS DEL PERÚ)
+        // DATA COMPLETA DE UBIGEOS
         // ==========================================
         const ubigeoData = {
             "AMAZONAS": {"CHACHAPOYAS": ["CHACHAPOYAS", "ASUNCION", "BALSAS", "CHETO", "CHILIQUIN", "CHUQUIBAMBA", "GRANADA", "HUANCAS", "LA JALCA", "LEIMEBAMBA", "LEVANTO", "MAGDALENA", "MARISCAL CASTILLA", "MOLINOPAMPA", "MONTEVIDEO", "OLLEROS", "QUINJALCA", "SAN FRANCISCO DE DAGUAS", "SAN ISIDRO DE MAINO", "SOLOCO", "SONCHE"]},
@@ -962,10 +1044,8 @@
             "UCAYALI": {"CORONEL PORTILLO": ["PUCALLPA", "CALLERIA", "CAMPOVERDE", "IPARIA", "MANANTAY", "MASISEA", "NUEVA REQUENA", "YARINACOCHA"]}
         };
 
-        // Lista de departamentos
         const departamentos = Object.keys(ubigeoData).sort();
 
-        // Función para llenar departamentos
         function llenarDepartamentos(selectId) {
             const select = document.getElementById(selectId);
             select.innerHTML = '<option value="">Seleccione Departamento</option>';
@@ -977,7 +1057,6 @@
             });
         }
 
-        // Función para llenar provincias
         function llenarProvincias(departamento, provinciaSelectId, distritoSelectId) {
             const provinciaSelect = document.getElementById(provinciaSelectId);
             const distritoSelect = document.getElementById(distritoSelectId);
@@ -1003,7 +1082,6 @@
             distritoSelect.disabled = true;
         }
 
-        // Función para llenar distritos
         function llenarDistritos(departamento, provincia, distritoSelectId, ubigeoHiddenId, ubigeoTextSpanId) {
             const distritoSelect = document.getElementById(distritoSelectId);
             
@@ -1026,7 +1104,6 @@
             distritoSelect.disabled = false;
         }
 
-        // Función para actualizar ubigeo
         function actualizarUbigeo(departamento, provincia, distrito, ubigeoHiddenId, ubigeoTextSpanId) {
             if (departamento && provincia && distrito) {
                 const codigoGenerado = `${departamento.substring(0,2)}${provincia.substring(0,2)}${distrito.substring(0,2)}`.toUpperCase();
@@ -1038,7 +1115,6 @@
             }
         }
 
-        // Configurar eventos para un grupo de ubigeo
         function configurarGrupoUbigeo(baseId) {
             const deptoSelect = document.getElementById(`departamento_${baseId}`);
             const provinciaSelect = document.getElementById(`provincia_${baseId}`);
@@ -1067,7 +1143,6 @@
             });
         }
 
-        // Preseleccionar ubigeo
         function preseleccionarUbigeo(baseId, departamento, provincia, distrito) {
             const deptoSelect = document.getElementById(`departamento_${baseId}`);
             const provinciaSelect = document.getElementById(`provincia_${baseId}`);
@@ -1098,7 +1173,8 @@
         // VARIABLES GLOBALES
         // ==========================================
         let ultimaGuiaId = localStorage.getItem('ultima_guia_id') || null;
-        
+        let transportistas = [];
+
         // ==========================================
         // NOTIFICACIONES
         // ==========================================
@@ -1146,6 +1222,31 @@
         modalidadSelect?.addEventListener('change', toggleTransportista);
         toggleTransportista();
         
+        // ==========================================
+        // CARGAR TRANSPORTISTAS
+        // ==========================================
+        async function cargarTransportistas() {
+            try {
+                const response = await fetch('/api/transportistas');
+                const result = await response.json();
+                if (result.success && result.data) {
+                    transportistas = result.data;
+                    const select = document.getElementById('select_transportista');
+                    select.innerHTML = '<option value="">-- Seleccione un conductor --</option>';
+                    transportistas.forEach(transportista => {
+                        const option = document.createElement('option');
+                        option.value = transportista.id;
+                        let texto = transportista.nombre_completo;
+                        if (transportista.placa) texto += ` - ${transportista.placa}`;
+                        option.textContent = texto;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error cargando transportistas:', error);
+            }
+        }
+
         // ==========================================
         // BUSCAR CLIENTE POR RUC
         // ==========================================
@@ -1216,6 +1317,130 @@
             } catch (error) {
                 mostrarNotificacion('Error al consultar SUNAT', 'error');
             }
+        });
+        
+        // ==========================================
+        // EVENTO: SELECCIONAR CONDUCTOR
+        // ==========================================
+        document.getElementById('select_transportista')?.addEventListener('change', async function() {
+            const transportistaId = this.value;
+            if (!transportistaId) {
+                document.getElementById('placa_vehiculo').value = '';
+                document.getElementById('conductor_dni').value = '';
+                document.getElementById('conductor_nombre').value = '';
+                document.getElementById('licencia_conductor').value = '';
+                return;
+            }
+            try {
+                const response = await fetch(`/api/transportistas/${transportistaId}`);
+                const result = await response.json();
+                if (result.success && result.data) {
+                    const t = result.data;
+                    if (t.placa) document.getElementById('placa_vehiculo').value = t.placa;
+                    if (t.dni) document.getElementById('conductor_dni').value = t.dni;
+                    if (t.nombre_completo) document.getElementById('conductor_nombre').value = t.nombre_completo;
+                    if (t.licencia) document.getElementById('licencia_conductor').value = t.licencia;
+                    mostrarNotificacion(`✅ Datos de ${t.nombre_completo} cargados`, 'exito');
+                }
+            } catch (error) {
+                mostrarNotificacion('Error al cargar datos', 'error');
+            }
+        });
+
+        // ==========================================
+        // EVENTO: AGREGAR NUEVO CONDUCTOR
+        // ==========================================
+        document.getElementById('btnAgregarConductor')?.addEventListener('click', function() {
+            const modal = new bootstrap.Modal(document.getElementById('modalNuevoConductor'));
+            modal.show();
+        });
+
+        // ==========================================
+        // GUARDAR NUEVO CONDUCTOR
+        // ==========================================
+        document.getElementById('btnGuardarNuevoConductor')?.addEventListener('click', async function() {
+            const dni = document.getElementById('nuevo_conductor_dni').value.trim();
+            const nombre = document.getElementById('nuevo_conductor_nombre').value.trim();
+            const placa = document.getElementById('nuevo_conductor_placa').value.trim().toUpperCase();
+            const licencia = document.getElementById('nuevo_conductor_licencia').value.trim();
+            const telefono = document.getElementById('nuevo_conductor_telefono').value.trim();
+            
+            if (!dni || dni.length < 8) {
+                mostrarNotificacion('Ingrese un DNI válido (mínimo 8 dígitos)', 'warning');
+                return;
+            }
+            if (!nombre) {
+                mostrarNotificacion('Ingrese el nombre completo del conductor', 'warning');
+                return;
+            }
+            if (!placa) {
+                mostrarNotificacion('Ingrese la placa del vehículo', 'warning');
+                return;
+            }
+            
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Guardando...';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch('/api/transportistas', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        dni: dni,
+                        nombre_completo: nombre,
+                        placa: placa,
+                        licencia: licencia,
+                        telefono: telefono
+                    })
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    mostrarNotificacion('✅ Conductor guardado exitosamente', 'exito');
+                    
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('modalNuevoConductor'));
+                    if (modal) modal.hide();
+                    
+                    document.getElementById('nuevo_conductor_dni').value = '';
+                    document.getElementById('nuevo_conductor_nombre').value = '';
+                    document.getElementById('nuevo_conductor_placa').value = '';
+                    document.getElementById('nuevo_conductor_licencia').value = '';
+                    document.getElementById('nuevo_conductor_telefono').value = '';
+                    
+                    await cargarTransportistas();
+                    
+                    const select = document.getElementById('select_transportista');
+                    select.value = result.data.id;
+                    select.dispatchEvent(new Event('change'));
+                    
+                    document.getElementById('placa_vehiculo').value = placa;
+                    document.getElementById('conductor_dni').value = dni;
+                    document.getElementById('conductor_nombre').value = nombre;
+                    if (licencia) document.getElementById('licencia_conductor').value = licencia;
+                    
+                } else {
+                    mostrarNotificacion('❌ ' + (result.error || 'Error al guardar el conductor'), 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('❌ Error de conexión', 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        // ==========================================
+        // LIMPIAR MODAL AL CERRAR
+        // ==========================================
+        document.getElementById('modalNuevoConductor')?.addEventListener('hidden.bs.modal', function() {
+            document.getElementById('nuevo_conductor_dni').value = '';
+            document.getElementById('nuevo_conductor_nombre').value = '';
+            document.getElementById('nuevo_conductor_placa').value = '';
+            document.getElementById('nuevo_conductor_licencia').value = '';
+            document.getElementById('nuevo_conductor_telefono').value = '';
         });
         
         // ==========================================
@@ -1339,11 +1564,9 @@
         let datosParaEnviar = null;
         let modalSunatInstance = null;
         
-        // Función para preparar y mostrar el modal
         function prepararModalConfirmacion(data) {
             datosParaEnviar = data;
             
-            // Actualizar información en el modal
             const motivoSelect = document.getElementById('motivo_traslado');
             const motivoTexto = motivoSelect.options[motivoSelect.selectedIndex]?.text || '---';
             document.getElementById('confirm_motivo').textContent = motivoTexto;
@@ -1361,7 +1584,6 @@
             const clienteNombre = data.destinatario.nombre || '---';
             document.getElementById('confirm_cliente').textContent = clienteNombre;
             
-            // Actualizar hora actual
             const ahora = new Date();
             const horaStr = ahora.toLocaleTimeString('es-PE', { 
                 hour: '2-digit', 
@@ -1371,7 +1593,6 @@
             });
             document.getElementById('horaActualConfirmacion').textContent = horaStr;
             
-            // Mostrar el modal
             if (!modalSunatInstance) {
                 modalSunatInstance = new bootstrap.Modal(document.getElementById('modalConfirmarSunat'), {
                     backdrop: 'static',
@@ -1381,20 +1602,12 @@
             modalSunatInstance.show();
         }
         
-        // ==========================================
-        // EVENTO: Enviar a SUNAT (abre modal)
-        // ==========================================
         document.getElementById('btnEnviarSunat')?.addEventListener('click', function() {
             const data = recolectarDatosFormulario();
             if (!validarFormulario(data)) return;
-            
-            // Preparar y mostrar el modal de confirmación
             prepararModalConfirmacion(data);
         });
         
-        // ==========================================
-        // EVENTO: Confirmar envío desde el modal
-        // ==========================================
         document.getElementById('btnConfirmarEnvio')?.addEventListener('click', async function() {
             if (!datosParaEnviar) return;
             
@@ -1414,8 +1627,6 @@
                 if (result.success) {
                     mostrarNotificacion(`✅ Guía enviada a SUNAT: ${result.numero_guia}`, 'exito');
                     actualizarEstadoPDF(result.guia_id, result.numero_guia);
-                    
-                    // Cerrar modal
                     if (modalSunatInstance) {
                         modalSunatInstance.hide();
                     }
@@ -1540,7 +1751,6 @@
         document.getElementById('fecha_traslado').value = hoy;
         document.getElementById('fecha_inicio_traslado').value = hoy;
         
-        // Autocompletar desde cotización
         function autocompletarDesdeCotizacion() {
             const urlParams = new URLSearchParams(window.location.search);
             const fromCotizacion = urlParams.get('from_cotizacion');
@@ -1600,7 +1810,6 @@
             return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
         
-        // Inicializar todo
         document.addEventListener('DOMContentLoaded', function() {
             llenarDepartamentos('departamento_partida');
             llenarDepartamentos('departamento_llegada');
@@ -1609,46 +1818,6 @@
             preseleccionarUbigeo('partida', 'LIMA', 'LIMA', 'SAN MARTIN DE PORRES');
             cargarTransportistas();
             autocompletarDesdeCotizacion();
-        });
-        
-        async function cargarTransportistas() {
-            try {
-                const response = await fetch('/api/transportistas');
-                const result = await response.json();
-                if (result.success && result.data) {
-                    const select = document.getElementById('select_transportista');
-                    select.innerHTML = '<option value="">-- Seleccione un conductor --</option>';
-                    result.data.forEach(transportista => {
-                        const option = document.createElement('option');
-                        option.value = transportista.id;
-                        let texto = transportista.nombre_completo;
-                        if (transportista.placa) texto += ` - ${transportista.placa}`;
-                        option.textContent = texto;
-                        select.appendChild(option);
-                    });
-                }
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
-        
-        document.getElementById('select_transportista')?.addEventListener('change', async function() {
-            const transportistaId = this.value;
-            if (!transportistaId) return;
-            try {
-                const response = await fetch(`/api/transportistas/${transportistaId}`);
-                const result = await response.json();
-                if (result.success && result.data) {
-                    const t = result.data;
-                    if (t.placa) document.getElementById('placa_vehiculo').value = t.placa;
-                    if (t.dni) document.getElementById('conductor_dni').value = t.dni;
-                    if (t.nombre_completo) document.getElementById('conductor_nombre').value = t.nombre_completo;
-                    if (t.licencia) document.getElementById('licencia_conductor').value = t.licencia;
-                    mostrarNotificacion(`✅ Datos de ${t.nombre_completo} cargados`, 'exito');
-                }
-            } catch (error) {
-                mostrarNotificacion('Error al cargar datos', 'error');
-            }
         });
     </script>
 </body>
