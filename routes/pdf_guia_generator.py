@@ -505,7 +505,7 @@ def renderizar_html_guia(guia_data):
             </div>
         </div>
         
-        <!-- DATOS DEL TRANSPORTE - CON RECUADRO GRIS A LA DERECHA -->
+        <!-- DATOS DEL TRANSPORTE -- CON RECUADRO GRIS A LA DERECHA -->
         <div class="seccion">
             <div class="seccion-titulo">DATOS DEL TRANSPORTE</div>
             <div class="datos-transporte">
