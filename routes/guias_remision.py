@@ -544,3 +544,123 @@ def eliminar_guia(guia_id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
+# ==========================================
+# NUEVAS RUTAS: RÓTULO DE EMBALAJE (AGD GROUP)
+# ==========================================
+
+@guias_bp.route('/api/generar-rotulo/<int:guia_id>', methods=['POST'])
+@login_required
+def generar_rotulo(guia_id):
+    """
+    Genera y retorna el PDF del rótulo de embalaje
+    Formato: AGD GROUP
+    """
+    try:
+        # Obtener datos de la guía
+        query = "SELECT * FROM guias_remision WHERE id = %s"
+        guia_result = db_query(query, (guia_id,))
+        
+        if not guia_result:
+            return jsonify({'success': False, 'error': 'Guía no encontrada'}), 404
+        
+        guia = guia_result[0]
+        
+        # Importar función de generación de rótulo
+        from routes.rotulo_generator import generar_rotulo_pdf
+        
+        # Generar el PDF del rótulo
+        pdf_data = generar_rotulo_pdf(guia)
+        
+        # Retornar el PDF
+        from flask import send_file
+        import io
+        
+        return send_file(
+            io.BytesIO(pdf_data),
+            mimetype='application/pdf',
+            as_attachment=False,
+            download_name=f'rotulo_{guia["serie"]}-{guia["numero"]}.pdf'
+        )
+        
+    except ImportError:
+        return jsonify({'success': False, 'error': 'Módulo de generación de rótulo no disponible. Instala reportlab: pip install reportlab'}), 500
+    except Exception as e:
+        print(f"Error generando rótulo: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@guias_bp.route('/api/rotulo-html/<int:guia_id>', methods=['GET'])
+@login_required
+def obtener_rotulo_html(guia_id):
+    """
+    Retorna el HTML del rótulo para mostrar en el modal
+    """
+    try:
+        # Obtener datos de la guía
+        query = "SELECT * FROM guias_remision WHERE id = %s"
+        guia_result = db_query(query, (guia_id,))
+        
+        if not guia_result:
+            return jsonify({'success': False, 'error': 'Guía no encontrada'}), 404
+        
+        guia = guia_result[0]
+        
+        # Importar función de generación de HTML
+        from routes.rotulo_generator import generar_rotulo_html
+        
+        html = generar_rotulo_html(guia)
+        
+        return jsonify({
+            'success': True,
+            'html': html,
+            'guia': guia
+        })
+        
+    except ImportError:
+        return jsonify({'success': False, 'error': 'Módulo de generación de rótulo no disponible'}), 500
+    except Exception as e:
+        print(f"Error generando HTML del rótulo: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@guias_bp.route('/rotulo/pdf/<int:guia_id>', methods=['GET'])
+@login_required
+def descargar_rotulo_pdf(guia_id):
+    """
+    Descarga el rótulo en formato PDF (para impresión directa)
+    """
+    try:
+        # Obtener datos de la guía
+        query = "SELECT * FROM guias_remision WHERE id = %s"
+        guia_result = db_query(query, (guia_id,))
+        
+        if not guia_result:
+            return jsonify({'success': False, 'error': 'Guía no encontrada'}), 404
+        
+        guia = guia_result[0]
+        
+        # Importar función de generación de rótulo
+        from routes.rotulo_generator import generar_rotulo_pdf
+        
+        pdf_data = generar_rotulo_pdf(guia)
+        
+        from flask import send_file, make_response
+        import io
+        
+        response = make_response(pdf_data)
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename=rotulo_{guia["serie"]}-{guia["numero"]}.pdf'
+        return response
+        
+    except ImportError:
+        return jsonify({'success': False, 'error': 'Módulo de generación de rótulo no disponible. Instala reportlab: pip install reportlab'}), 500
+    except Exception as e:
+        print(f"Error descargando rótulo: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
