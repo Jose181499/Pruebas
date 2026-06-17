@@ -221,11 +221,9 @@
         .stat-borrador .stat-icon { background: #fef3c7; color: #92400e; }
         .stat-aceptada { border-left-color: #10b981; }
         .stat-aceptada .stat-icon { background: #d1fae5; color: #065f46; }
-        .stat-procesando { border-left-color: #8b5cf6; }
-        .stat-procesando .stat-icon { background: #ede9fe; color: #5b21b6; }
         .stat-rechazada { border-left-color: #ef4444; }
         .stat-rechazada .stat-icon { background: #fee2e2; color: #991b1b; }
-        /* Estilo para la columna de índice */
+        /* Estilo para la columna de item */
         .col-item {
             width: 50px;
             text-align: center;
@@ -275,7 +273,7 @@
             </div>
         </div>
 
-        <!-- ===== DASHBOARD SUPERIOR ===== -->
+        <!-- ===== DASHBOARD SUPERIOR (sin Procesando) ===== -->
         <div class="stats-grid" id="dashboardStats">
             <div class="stat-card stat-total">
                 <div class="stat-icon"><i class="bi bi-files"></i></div>
@@ -296,13 +294,6 @@
                 <div class="stat-info">
                     <span class="stat-number" id="totalBorrador">0</span>
                     <span class="stat-label">Borrador</span>
-                </div>
-            </div>
-            <div class="stat-card stat-procesando">
-                <div class="stat-icon"><i class="bi bi-hourglass-split"></i></div>
-                <div class="stat-info">
-                    <span class="stat-number" id="totalProcesando">0</span>
-                    <span class="stat-label">Procesando</span>
                 </div>
             </div>
             <div class="stat-card stat-rechazada">
@@ -364,7 +355,7 @@
                 <table class="table table-modern">
                     <thead>
                         <tr>
-                            <th class="col-item">#</th>  <!-- NUEVA COLUMNA ITEM -->
+                            <th class="col-item">Item</th>  <!-- Cambiado de "#" a "Item" -->
                             <th>N° Guía</th>
                             <th>Destinatario</th>
                             <th>RUC</th>
@@ -495,19 +486,17 @@
         }
         
         // ==========================================
-        // ACTUALIZAR DASHBOARD
+        // ACTUALIZAR DASHBOARD (sin Procesando)
         // ==========================================
         function actualizarDashboard(guias) {
             const total = guias.length;
             const aceptadas = guias.filter(g => g.estado_sunat === 'ACEPTADA').length;
             const borrador = guias.filter(g => g.estado_sunat === 'BORRADOR').length;
-            const procesando = guias.filter(g => g.estado_sunat === 'PROCESANDO').length;
             const rechazadas = guias.filter(g => g.estado_sunat === 'RECHAZADA').length;
 
             document.getElementById('totalGuias').textContent = total;
             document.getElementById('totalAceptadas').textContent = aceptadas;
             document.getElementById('totalBorrador').textContent = borrador;
-            document.getElementById('totalProcesando').textContent = procesando;
             document.getElementById('totalRechazadas').textContent = rechazadas;
         }
         
