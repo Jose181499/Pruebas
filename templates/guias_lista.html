@@ -795,7 +795,7 @@
         };
 
         // ==========================================
-        // GENERAR RÓTULO DE EMBALAJE
+        // GENERAR RÓTULO DE EMBALAJE - VERSIÓN CORREGIDA
         // ==========================================
         window.generarRotulo = async function(id) {
             const modalBody = document.getElementById('modalRotuloBody');
@@ -814,11 +814,17 @@
                     return;
                 }
 
-                // Construir el HTML del rótulo con los datos de la guía
+                // Datos de la guía
                 const items = typeof guia.items_json === 'string' ? JSON.parse(guia.items_json) : (guia.items_json || []);
-                
-                // Generar código de barras simulado
                 const codigoBarras = generarCodigoBarras(`${guia.serie}-${guia.numero}`);
+                const fechaEmision = guia.fecha_emision ? formatFecha(guia.fecha_emision) : '-';
+                const numeroGuia = `${guia.serie || 'T001'}-${guia.numero || '?'}`;
+                
+                // ==========================================
+                // 🔥 DATOS FIJOS DE KCF CORPORACION 🔥
+                // ==========================================
+                const REMITENTE_FIJO = 'KCF CORPORACION S.A.C';
+                const DIRECCION_REMITENTE_FIJA = 'AV. PRINCIPAL 123 - LIMA - PERÚ';
                 
                 let itemsHtml = '';
                 if (items.length > 0) {
@@ -831,12 +837,8 @@
                     `).join('');
                 }
 
-                const fechaEmision = guia.fecha_emision ? formatFecha(guia.fecha_emision) : '-';
-                const numeroGuia = `${guia.serie || 'T001'}-${guia.numero || '?'}`;
-                const pesoTotal = guia.peso_total ? parseFloat(guia.peso_total).toFixed(2) : '0.00';
-
                 modalBody.innerHTML = `
-                    <!-- RÓTULO DE EMBALAJE - FORMATO AGD GROUP -->
+                    <!-- RÓTULO DE EMBALAJE - KCF CORPORACION -->
                     <div style="
                         width: 100%;
                         max-width: 90mm;
@@ -847,7 +849,7 @@
                         padding: 12px 14px;
                         font-family: 'Courier New', monospace;
                     ">
-                        <!-- Cabecera: Remitente -->
+                        <!-- Cabecera: Remitente (FIJO: KCF CORPORACION) -->
                         <div style="
                             text-align: center;
                             border-bottom: 3px double #1a1a1a;
@@ -855,17 +857,17 @@
                             margin-bottom: 8px;
                         ">
                             <div style="font-size: 14px; font-weight: 900; letter-spacing: -0.5px; color: #1a1a1a; line-height: 1.2;">
-                                ${escapeHtml(guia.remitente_nombre || 'CBM SOLUCIONES INTEGRALES S.A.C')}
+                                ${REMITENTE_FIJO}
                             </div>
                             <div style="font-size: 10px; font-weight: 600; color: #333;">
-                                ${escapeHtml(guia.remitente_direccion || 'AGENCIA ITTSA - AV. GRAÑA F INT. 07')}
+                                ${DIRECCION_REMITENTE_FIJA}
                             </div>
                             <div style="font-size: 9px; font-weight: 500; color: #555;">
-                                ${escapeHtml(guia.destinatario_direccion || 'TALARA - PIURA - TALARA - PARIÑAS')}
+                                ${escapeHtml(guia.destinatario_direccion || '')}
                             </div>
                         </div>
 
-                        <!-- Código de Ruta -->
+                        <!-- Código de Ruta (de la guía) -->
                         <div style="
                             text-align: center;
                             font-size: 16px;
@@ -877,10 +879,10 @@
                             background: #f8f9fa;
                             border-radius: 4px;
                         ">
-                            ${escapeHtml(guia.codigo_ruta || 'EG07-421E001-496')}
+                            ${escapeHtml(guia.codigo_ruta || '')}
                         </div>
 
-                        <!-- Conductor -->
+                        <!-- Conductor (de la guía) -->
                         <div style="
                             text-align: center;
                             font-size: 12px;
@@ -890,13 +892,13 @@
                             border-bottom: 1px dashed #ddd;
                             margin: 4px 0 6px 0;
                         ">
-                            ${escapeHtml(guia.conductor_nombre || 'Luis Alexander Bustamante Herrera')}
+                            ${escapeHtml(guia.conductor_nombre || '')}
                             <span style="font-weight: 400; font-size: 11px; color: #555;">
-                                DNI: ${escapeHtml(guia.conductor_dni || '76965568')}
+                                DNI: ${escapeHtml(guia.conductor_dni || '')}
                             </span>
                         </div>
 
-                        <!-- Destinatario -->
+                        <!-- Destinatario (de la guía) -->
                         <div style="
                             text-align: center;
                             font-size: 13px;
@@ -907,10 +909,10 @@
                             background: #f0f0f0;
                             border-radius: 4px;
                         ">
-                            ${escapeHtml(guia.destinatario_nombre || 'AGD GROUP SAC')}
+                            ${escapeHtml(guia.destinatario_nombre || '')}
                         </div>
 
-                        <!-- Detalle de Productos -->
+                        <!-- Detalle de Productos (de la guía) -->
                         <div style="margin: 6px 0;">
                             <table style="width:100%;font-size:9px;border-collapse:collapse;">
                                 <thead>
@@ -985,7 +987,6 @@
         // ==========================================
         function calcularBultos(items) {
             if (!items || items.length === 0) return '1';
-            // Si hay más de 5 items, se asume múltiples bultos
             const totalItems = items.reduce((sum, item) => sum + (parseInt(item.cantidad) || 0), 0);
             return Math.ceil(totalItems / 10) || 1;
         }
@@ -1054,7 +1055,6 @@
         document.getElementById('btnImprimirRotulo')?.addEventListener('click', function() {
             const rotuloContent = document.querySelector('#modalRotuloBody > div');
             if (rotuloContent) {
-                // Crear una ventana nueva para imprimir
                 const ventana = window.open('', '_blank', 'width=400,height=600');
                 if (ventana) {
                     ventana.document.write(`
