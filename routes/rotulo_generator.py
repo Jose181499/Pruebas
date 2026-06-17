@@ -3,7 +3,7 @@
 GENERADOR DE RÓTULOS DE EMBALAJE - KCF CORPORACION
 ================================================================================
 Formato: AGD GROUP adaptado para KCF CORPORACION
-DATOS FIJOS: KCF CORPORACION (remitente, RUC, contacto)
+DATOS FIJOS: KCF CORPORACION (remitente, RUC, contacto, LOGO)
 RESTO: Se toma de la cotización/guía
 ================================================================================
 """
@@ -12,6 +12,7 @@ import json
 from datetime import datetime
 import io
 import os
+import base64
 
 # =================================================================================
 # IMPORTACIÓN DE REPORTLAB
@@ -23,6 +24,7 @@ try:
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
     from reportlab.lib.colors import white, HexColor
+    from reportlab.lib.utils import ImageReader
     REPORTLAB_AVAILABLE = True
 except ImportError:
     REPORTLAB_AVAILABLE = False
@@ -34,7 +36,7 @@ except ImportError:
 class KCF:
     """Datos fijos de KCF CORPORACION"""
     NOMBRE = 'KCF CORPORACION S.A.C'
-    RUC = '20612345678'
+    RUC = '20602095704'
     DIRECCION = 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES'
     TELEFONO = '987-654-321'
     EMAIL = 'ventas@kcf.pe'
@@ -47,6 +49,44 @@ class KCF:
     GRIS = HexColor('#555555')
     GRIS_CLARO = HexColor('#888888')
     BLANCO = white
+
+
+# =================================================================================
+# FUNCIÓN PARA OBTENER LOGO EN BASE64
+# =================================================================================
+def obtener_logo_base64():
+    """
+    Obtiene el logo de la empresa en formato base64 para incrustar en HTML
+    """
+    try:
+        # Ruta del logo - ajusta según tu estructura
+        logo_path = os.path.join(os.path.dirname(__file__), '..', 'static', 'img', 'logo_kcf.png')
+        
+        if os.path.exists(logo_path):
+            with open(logo_path, 'rb') as f:
+                logo_data = f.read()
+                return base64.b64encode(logo_data).decode('utf-8')
+        else:
+            return None
+    except Exception as e:
+        print(f"Error cargando logo: {e}")
+        return None
+
+
+def obtener_logo_image_reader():
+    """
+    Obtiene el logo como ImageReader para ReportLab
+    """
+    try:
+        logo_path = os.path.join(os.path.dirname(__file__), '..', 'static', 'img', 'logo_kcf.png')
+        
+        if os.path.exists(logo_path):
+            return ImageReader(logo_path)
+        else:
+            return None
+    except Exception as e:
+        print(f"Error cargando logo para PDF: {e}")
+        return None
 
 
 # =================================================================================
@@ -103,11 +143,11 @@ def obtener_items(guia):
 
 
 # =================================================================================
-# GENERAR PDF DEL RÓTULO
+# GENERAR PDF DEL RÓTULO CON LOGO
 # =================================================================================
 def generar_rotulo_pdf(guia):
     """
-    Genera PDF del rótulo de embalaje con formato AGD GROUP
+    Genera PDF del rótulo de embalaje con formato AGD GROUP y LOGO
     """
     if not REPORTLAB_AVAILABLE:
         raise Exception("ReportLab no está instalado. Ejecuta: pip install reportlab")
@@ -126,9 +166,15 @@ def generar_rotulo_pdf(guia):
     except:
         pass
     
+    # ─── LOGO ───
+    logo_img = obtener_logo_image_reader()
+    
     # ─── DATOS FIJOS (KCF) ───
     remitente = guia.get('remitente_nombre', KCF.NOMBRE)
     ruc_remitente = guia.get('ruc_remitente', KCF.RUC)
+    direccion = guia.get('remitente_direccion', KCF.DIRECCION)
+    telefono = guia.get('telefono', KCF.TELEFONO)
+    email = guia.get('email', KCF.EMAIL)
     
     # ─── DATOS DE LA GUÍA ───
     items = obtener_items(guia)
@@ -140,22 +186,33 @@ def generar_rotulo_pdf(guia):
     numero_guia = guia.get('codigo_ruta', f"{guia.get('serie', 'T001')}-{guia.get('numero', '000001')}")
     numero_factura = guia.get('documento_asociado', 'E001-496')
     bultos = calcular_bultos(items)
-    total_bultos = bultos
     
     # ─── DIBUJAR ───
     y = 138
     x_left = 8
-    x_right = 82
     
     # ═══════════════════════════════════════════════════
-    # 1. REMITENTE (KCF) - BORDE SUPERIOR
+    # 1. BORDE DEL RECUADRO
     # ═══════════════════════════════════════════════════
-    # Borde del recuadro
     c.setStrokeColor(KCF.AZUL)
     c.setLineWidth(2)
     c.rect(mm_to_pt(5), mm_to_pt(5), mm_to_pt(80), mm_to_pt(140), fill=0, stroke=1)
     
-    # Nombre de la empresa (arriba)
+    # ═══════════════════════════════════════════════════
+    # 2. LOGO Y REMITENTE
+    # ═══════════════════════════════════════════════════
+    if logo_img:
+        try:
+            # Dibujar logo en la esquina superior izquierda
+            c.drawImage(logo_img, mm_to_pt(10), mm_to_pt(y) - 5, width=mm_to_pt(20), height=mm_to_pt(20), preserveAspectRatio=True)
+            # Ajustar posición del texto
+            x_texto = 35
+        except:
+            x_texto = 8
+    else:
+        x_texto = 8
+    
+    # Nombre de la empresa
     c.setFont(font_name, 11)
     c.setFillColor(KCF.AZUL)
     c.drawCentredString(mm_to_pt(45), mm_to_pt(y), remitente[:35])
@@ -164,7 +221,12 @@ def generar_rotulo_pdf(guia):
     c.setFont(font_name, 8)
     c.setFillColor(KCF.GRIS)
     c.drawCentredString(mm_to_pt(45), mm_to_pt(y), f"RUC: {ruc_remitente}")
-    y -= 8
+    y -= 4
+    
+    c.setFont(font_name, 7)
+    c.setFillColor(KCF.GRIS)
+    c.drawCentredString(mm_to_pt(45), mm_to_pt(y), f"Tel: {telefono} | Email: {email}")
+    y -= 6
     
     # Línea separadora
     c.setLineWidth(1)
@@ -173,7 +235,7 @@ def generar_rotulo_pdf(guia):
     y -= 6
     
     # ═══════════════════════════════════════════════════
-    # 2. CLIENTE (DESTINATARIO)
+    # 3. CLIENTE (DESTINATARIO)
     # ═══════════════════════════════════════════════════
     c.setFont(font_name, 8)
     c.setFillColor(KCF.GRIS)
@@ -191,7 +253,7 @@ def generar_rotulo_pdf(guia):
     y -= 6
     
     # ═══════════════════════════════════════════════════
-    # 3. DIRECCIÓN DE ENTREGA
+    # 4. DIRECCIÓN DE ENTREGA
     # ═══════════════════════════════════════════════════
     c.setFont(font_name, 8)
     c.setFillColor(KCF.GRIS)
@@ -208,7 +270,7 @@ def generar_rotulo_pdf(guia):
     y -= 2
     
     # ═══════════════════════════════════════════════════
-    # 4. CONSIGNADOS (CONDUCTOR)
+    # 5. CONSIGNADOS (CONDUCTOR)
     # ═══════════════════════════════════════════════════
     c.setFont(font_name, 8)
     c.setFillColor(KCF.GRIS)
@@ -226,7 +288,7 @@ def generar_rotulo_pdf(guia):
     y -= 6
     
     # ═══════════════════════════════════════════════════
-    # 5. N° BULTOS, N° GUÍA, FACTURA
+    # 6. N° BULTOS, N° GUÍA, FACTURA
     # ═══════════════════════════════════════════════════
     c.setFont(font_name, 8)
     c.setFillColor(KCF.GRIS)
@@ -240,7 +302,7 @@ def generar_rotulo_pdf(guia):
     y -= 8
     
     # ═══════════════════════════════════════════════════
-    # 6. CÓDIGO DE BARRAS
+    # 7. CÓDIGO DE BARRAS
     # ═══════════════════════════════════════════════════
     c.setFont(font_name, 16)
     c.setFillColor(KCF.NEGRO)
@@ -249,7 +311,7 @@ def generar_rotulo_pdf(guia):
     y -= 8
     
     # ═══════════════════════════════════════════════════
-    # 7. PIE
+    # 8. PIE
     # ═══════════════════════════════════════════════════
     c.setFont(font_name, 6)
     c.setFillColor(KCF.GRIS_CLARO)
@@ -262,17 +324,23 @@ def generar_rotulo_pdf(guia):
 
 
 # =================================================================================
-# GENERAR HTML DEL RÓTULO
+# GENERAR HTML DEL RÓTULO CON LOGO
 # =================================================================================
 def generar_rotulo_html(guia):
     """
-    Genera HTML del rótulo con formato AGD GROUP
+    Genera HTML del rótulo con formato AGD GROUP y LOGO
     """
     items = obtener_items(guia)
+    
+    # Obtener logo en base64
+    logo_base64 = obtener_logo_base64()
     
     # Datos fijos (KCF)
     remitente = guia.get('remitente_nombre', KCF.NOMBRE)
     ruc_remitente = guia.get('ruc_remitente', KCF.RUC)
+    direccion = guia.get('remitente_direccion', KCF.DIRECCION)
+    telefono = guia.get('telefono', KCF.TELEFONO)
+    email = guia.get('email', KCF.EMAIL)
     
     # Datos de la guía
     destinatario = guia.get('destinatario_nombre', '')
@@ -289,7 +357,7 @@ def generar_rotulo_html(guia):
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Rótulo de Embalaje</title>
+    <title>Rótulo de Embalaje - KCF CORPORACION</title>
     <style>
         * {{ margin:0; padding:0; box-sizing:border-box; }}
         body {{
@@ -313,20 +381,40 @@ def generar_rotulo_html(guia):
             position: relative;
         }}
         .header {{
-            text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 10px;
             border-bottom: 2px solid #e94560;
             padding-bottom: 4px;
             margin-bottom: 6px;
         }}
-        .header .empresa {{
+        .header .logo {{
+            max-height: 35px;
+            max-width: 60px;
+        }}
+        .header .logo img {{
+            height: auto;
+            max-height: 35px;
+            max-width: 60px;
+        }}
+        .header .info {{
+            flex: 1;
+            text-align: center;
+        }}
+        .header .info .empresa {{
             font-size: 12px;
             font-weight: 900;
             color: #1a2a6c;
             letter-spacing: 0.5px;
         }}
-        .header .ruc {{
+        .header .info .ruc {{
             font-size: 8px;
             font-weight: 600;
+            color: #555;
+        }}
+        .header .info .contacto {{
+            font-size: 7px;
+            font-weight: 400;
             color: #555;
         }}
         .campo {{
@@ -380,10 +468,6 @@ def generar_rotulo_html(guia):
             border-top: 1px solid #ddd;
             padding-top: 4px;
             margin-top: 4px;
-            position: absolute;
-            bottom: 8px;
-            left: 12px;
-            right: 12px;
         }}
         .btn-imprimir {{
             position: fixed;
@@ -417,10 +501,16 @@ def generar_rotulo_html(guia):
 </head>
 <body>
     <div class="rotulo">
-        <!-- HEADER: REMITENTE -->
+        <!-- HEADER: REMITENTE CON LOGO -->
         <div class="header">
-            <div class="empresa">{remitente}</div>
-            <div class="ruc">RUC: {ruc_remitente}</div>
+            <div class="logo">
+                {f'<img src="data:image/png;base64,{logo_base64}" alt="KCF">' if logo_base64 else '<div style="font-size:14px;font-weight:900;color:#1a2a6c;">KCF</div>'}
+            </div>
+            <div class="info">
+                <div class="empresa">{remitente}</div>
+                <div class="ruc">RUC: {ruc_remitente}</div>
+                <div class="contacto">Tel: {telefono} | Email: {email}</div>
+            </div>
         </div>
 
         <!-- CLIENTE -->
