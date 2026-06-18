@@ -1203,10 +1203,9 @@ def guardar_orden_compra():
 # ==========================================
 # API ENDPOINTS CORREGIDOS - LISTADO
 # ==========================================
-
 @compras_bp.route("/api/orden_compra/<int:orden_id>", methods=["GET"])
 def api_get_orden_compra(orden_id):
-    """Obtener orden de compra por ID"""
+    """Obtener orden de compra por ID - CORREGIDO"""
     try:
         print(f"🔍 Buscando orden con ID: {orden_id}")
         
@@ -1221,6 +1220,7 @@ def api_get_orden_compra(orden_id):
         
         print(f"✅ Orden {orden_id} encontrada")
         
+        # 🔥 CORREGIDO: Incluir todos los campos necesarios incluyendo numero_documento
         return jsonify({
             "success": True, 
             "data": {
@@ -1242,6 +1242,8 @@ def api_get_orden_compra(orden_id):
                 "email_contacto_proveedor": cabecera.get("email_contacto_proveedor"),
                 "codigo_proveedor": cabecera.get("codigo_proveedor"),
                 "nombre_comercial": cabecera.get("nombre_comercial"),
+                "razon_comercial": cabecera.get("razon_comercial"),
+                "razon_social": cabecera.get("razon_social"),
                 "comprador": cabecera.get("comprador"),
                 "comprador_email": cabecera.get("comprador_email"),
                 "comprador_telefono": cabecera.get("comprador_telefono"),
@@ -1256,6 +1258,12 @@ def api_get_orden_compra(orden_id):
                 "contacto_proveedor": cabecera.get("contacto_proveedor"),
                 "telefono_proveedor": cabecera.get("telefono_proveedor"),
                 "email_proveedor": cabecera.get("email_proveedor"),
+                # 🔥 IMPORTANTE: Añadir estos campos para el frontend
+                "numero_documento": cabecera.get("proveedor_ruc") or cabecera.get("ruc") or '',
+                "direccion_fiscal": cabecera.get("proveedor_direccion") or cabecera.get("direccion") or '',
+                "telefono_contacto_proveedor": cabecera.get("telefono_contacto") or cabecera.get("telefono") or '',
+                "email_contacto_proveedor": cabecera.get("email_contacto_proveedor") or cabecera.get("email") or '',
+                "nombre_contacto": cabecera.get("proveedor_contacto") or cabecera.get("contacto") or '',
                 "detalle": detalle
             }
         })
