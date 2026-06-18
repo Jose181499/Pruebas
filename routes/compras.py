@@ -93,7 +93,7 @@ def editar_compra(orden_id):
                           modo='editar')
 
 # ==========================================
-# FUNCIONES AUXILIARES (CORREGIDAS)
+# FUNCIONES AUXILIARES
 # ==========================================
 
 def obtener_ordenes_recientes(limit=100):
@@ -124,10 +124,10 @@ def obtener_ordenes_recientes(limit=100):
                 o.contacto_proveedor,
                 o.telefono_proveedor,
                 o.email_proveedor,
-                -- Datos del proveedor
+                -- Datos del proveedor - CORREGIDO
                 p.ruc as proveedor_ruc,
                 p.razon_social as proveedor,
-                p.razon_comercial as nombre_comercial,
+                COALESCE(p.razon_comercial, p.razon_social) as nombre_comercial,
                 p.contacto as proveedor_contacto,
                 p.telefono as telefono_contacto,
                 p.email as email_contacto_proveedor,
@@ -140,7 +140,13 @@ def obtener_ordenes_recientes(limit=100):
                 -- Contadores
                 COUNT(d.id) as total_items,
                 COALESCE(SUM(d.cantidad), 0) as cantidad_total_items,
-                COALESCE(SUM(d.subtotal_venta_con_descuento), 0) as total_detalle
+                COALESCE(SUM(d.subtotal_venta_con_descuento), 0) as total_detalle,
+                -- Descripción de la orden desde productos
+                (SELECT STRING_AGG(pr.descripcion, ' / ') 
+                 FROM orden_compra_detalle d2 
+                 LEFT JOIN productos pr ON d2.producto_id = pr.id 
+                 WHERE d2.orden_id = o.id 
+                 LIMIT 3) as descripcion
             FROM ordenes_compra o
             LEFT JOIN proveedores p ON o.proveedor_id = p.id
             LEFT JOIN usuarios u ON o.usuario_id = u.id
@@ -178,7 +184,7 @@ def obtener_ordenes_recientes(limit=100):
                 'condicion_pago': orden.get('condicion_pago') or '--',
                 'nota_compra': orden.get('nota_compra') or '--',
                 'notas': orden.get('notas') or '--',
-                'descripcion': obtener_descripcion_orden(orden.get('id')),
+                'descripcion': orden.get('descripcion') or '--',
                 'lugar_entrega': orden.get('lugar_entrega') or '--',
                 'fecha_requerida': orden.get('fecha_requerida') or '--',
                 'tiempo_entrega': orden.get('tiempo_entrega') or '--',
@@ -244,7 +250,7 @@ def obtener_descripcion_orden(orden_id):
 
 
 def obtener_orden_completa(orden_id):
-    """Obtener orden de compra completa con cabecera y detalles - CORREGIDO"""
+    """Obtener orden de compra completa con cabecera y detalles"""
     try:
         conn = get_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
@@ -508,7 +514,7 @@ def test_conexion():
         }), 500
 
 # ==========================================
-# API ENDPOINTS PRINCIPALES (CORREGIDOS)
+# API ENDPOINTS PRINCIPALES
 # ==========================================
 
 @compras_bp.route("/api/usuarios/actual", methods=["GET"])
@@ -887,9 +893,13 @@ def obtener_direcciones_proveedor(proveedor_id):
         }), 500
 
 
+# ==========================================
+# 🔥 ENDPOINT GUARDAR - VERSIÓN CORREGIDA Y COMPLETA
+# ==========================================
+
 @compras_bp.route("/api/orden_compra/guardar", methods=["POST"])
 def guardar_orden_compra():
-    """Guardar orden de compra - VERSIÓN CORREGIDA CON CREACIÓN AUTOMÁTICA DE PROVEEDOR"""
+    """Guardar orden de compra - VERSIÓN CORREGIDA Y COMPLETA"""
     data = request.json
     print("📦 Datos recibidos en guardar_orden_compra:", data)
     
@@ -956,6 +966,14 @@ def guardar_orden_compra():
         if not productos:
             return jsonify({"success": False, "error": "Debe agregar al menos un producto"}), 400
         
+        # 🔥 VALIDAR QUE TODOS LOS PRODUCTOS TENGAN PRODUCTO_ID
+        for i, p in enumerate(productos):
+            if not p.get("producto_id"):
+                return jsonify({
+                    "success": False, 
+                    "error": f"El producto en la fila {i+1} no tiene ID válido"
+                }), 400
+        
         # Calcular totales
         subtotal = float(data.get("subtotal", 0))
         igv = float(data.get("igv", 0))
@@ -980,7 +998,7 @@ def guardar_orden_compra():
             cur = conn.cursor()
             
             if orden_id:
-                # ACTUALIZAR orden existente
+                # 🔥 ACTUALIZAR orden existente
                 cur.execute("""
                     UPDATE ordenes_compra 
                     SET proveedor_id = %s,
@@ -1029,8 +1047,11 @@ def guardar_orden_compra():
                 ))
                 
                 result = cur.fetchone()
+                
+                # 🔥 ELIMINAR DETALLES ANTIGUOS
                 cur.execute("DELETE FROM orden_compra_detalle WHERE orden_id = %s", (orden_id,))
                 
+                # 🔥 INSERTAR NUEVOS DETALLES
                 for idx, p in enumerate(productos):
                     cantidad = float(p.get("cantidad", 1))
                     precio_unitario = float(p.get("precio_venta_unitario", p.get("precio_unitario", 0)))
@@ -1072,7 +1093,7 @@ def guardar_orden_compra():
                 })
             
             else:
-                # CREAR nueva orden
+                # 🔥 CREAR NUEVA ORDEN
                 cur.execute("SELECT MAX(id) as ultimo FROM ordenes_compra")
                 row = cur.fetchone()
                 nuevo_numero = (row[0] or 0) + 1
@@ -1089,6 +1110,7 @@ def guardar_orden_compra():
                         codigo_orden = f"OC-{fecha.year}{str(fecha.month).zfill(2)}{str(fecha.day).zfill(2)}-{str(nuevo_numero).zfill(4)}"
                         correlativo = nuevo_numero
                 
+                # 🔥 INSERTAR EN ORDENES_COMPRA
                 cur.execute("""
                     INSERT INTO ordenes_compra (
                         numero_orden, codigo_orden, correlativo, proveedor_id, usuario_id,
@@ -1131,6 +1153,7 @@ def guardar_orden_compra():
                 nueva_orden_id = result[0]
                 codigo_generado = result[1]
                 
+                # 🔥 INSERTAR EN ORDEN_COMPRA_DETALLE
                 for idx, p in enumerate(productos):
                     cantidad = float(p.get("cantidad", 1))
                     precio_unitario = float(p.get("precio_venta_unitario", p.get("precio_unitario", 0)))
@@ -1178,12 +1201,12 @@ def guardar_orden_compra():
 
 
 # ==========================================
-# 🔥 API ENDPOINTS CORREGIDOS - LISTADO
+# API ENDPOINTS CORREGIDOS - LISTADO
 # ==========================================
 
 @compras_bp.route("/api/orden_compra/<int:orden_id>", methods=["GET"])
 def api_get_orden_compra(orden_id):
-    """Obtener orden de compra por ID - CORREGIDO"""
+    """Obtener orden de compra por ID"""
     try:
         print(f"🔍 Buscando orden con ID: {orden_id}")
         
