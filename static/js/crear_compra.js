@@ -1903,7 +1903,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function cargarOrdenCompra(id) {
+   async function cargarOrdenCompra(id) {
     try {
         console.log("🔍 Cargando orden de compra ID:", id);
         const res = await fetch(`/api/orden_compra/${id}`);
@@ -1925,39 +1925,41 @@ document.addEventListener('DOMContentLoaded', () => {
             actualizarNumeroOrdenUI(data.codigo_orden, esBorrador);
         }
         
-        if (data.proveedor_id) {
-            document.getElementById('proveedor_id').value = data.proveedor_id;
+        // 🔥 ASIGNAR VALORES CON VERIFICACIÓN DE EXISTENCIA
+        const elementos = {
+            'proveedor_id': data.proveedor_id,
+            'proveedor_razon_social': data.proveedor || data.razon_social || '',
+            'proveedor_razon_comercial': data.razon_comercial || data.proveedor || data.razon_social || '',
+            'proveedor_doc': data.numero_documento || '',
+            'proveedor_direccion': data.direccion_fiscal || '',
+            'proveedor_contacto': data.proveedor_contacto || '',
+            'email_contacto_proveedor': data.email_contacto_proveedor || '',
+            'telefono_contacto': data.telefono_contacto || '',
+            'num_cotizacion': data.num_cotizacion || '',
+            'estado': data.estado || 'pendiente',
+            'notas': data.notas || '',
+            'condicion_pago': data.condicion_pago || 'Contado',
+            'tiempo_entrega': data.tiempo_entrega || '',
+            'fecha_requerida': data.fecha_requerida || '',
+            'lugar_entrega': data.lugar_entrega || '',
+            'nota_compra': data.nota_compra || '',
+            'usuario_id': data.usuario_id || '',
+            'comprador': data.nombre_completo || data.comprador || '',
+            'email_contacto': data.email || data.comprador_email || '',
+            'telefono_contacto_user': data.telefono || data.comprador_telefono || ''
+        };
+        
+        // Asignar cada valor verificando que el elemento exista
+        for (const [id, valor] of Object.entries(elementos)) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.value = valor;
+            } else {
+                console.warn(`⚠️ Elemento no encontrado: #${id}`);
+            }
         }
         
-        // 🔥 CORREGIDO: Usar los IDs correctos del HTML
-        document.getElementById('proveedor_razon_social').value = data.proveedor || data.razon_social || '';
-        document.getElementById('proveedor_razon_comercial').value = data.razon_comercial || data.proveedor || data.razon_social || '';
-        document.getElementById('proveedor_doc').value = data.numero_documento || '';
-        document.getElementById('proveedor_direccion').value = data.direccion_fiscal || '';
-        document.getElementById('proveedor_contacto').value = data.proveedor_contacto || '';
-        document.getElementById('email_contacto_proveedor').value = data.email_contacto_proveedor || '';
-        document.getElementById('telefono_contacto').value = data.telefono_contacto || '';
-        document.getElementById('num_cotizacion').value = data.num_cotizacion || '';
-        
-        document.getElementById('estado').value = data.estado || 'pendiente';
-        document.getElementById('notas').value = data.notas || '';
-        document.getElementById('condicion_pago').value = data.condicion_pago || 'Contado';
-        document.getElementById('tiempo_entrega').value = data.tiempo_entrega || '';
-        document.getElementById('fecha_requerida').value = data.fecha_requerida || '';
-        document.getElementById('lugar_entrega').value = data.lugar_entrega || '';
-        document.getElementById('nota_compra').value = data.nota_compra || '';
-        
-        document.getElementById('usuario_id').value = data.usuario_id || '';
-        
-        // 🔥 CORREGIDO: El campo en el HTML es "comprador", no "comprador_responsable"
-        const compradorInput = document.getElementById('comprador');
-        if (compradorInput) {
-            compradorInput.value = data.nombre_completo || data.comprador || '';
-        }
-        
-        document.getElementById('email_contacto').value = data.email || data.comprador_email || '';
-        document.getElementById('telefono_contacto_user').value = data.telefono || data.comprador_telefono || '';
-        
+        // Descuento
         if (data.descuento_porcentaje !== undefined && data.descuento_porcentaje !== null) {
             const descuentoInput = document.getElementById('descuento_porcentaje_input');
             const descuentoTipo = document.getElementById('descuento_tipo');
@@ -1965,6 +1967,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (descuentoTipo && data.descuento_tipo) descuentoTipo.value = data.descuento_tipo;
         }
         
+        // Totales
         const total = Number(data.total || 0);
         const totalValorVentaElem = document.getElementById('total_valor_venta');
         if (totalValorVentaElem) totalValorVentaElem.textContent = formatCantidad(total);
@@ -1978,22 +1981,33 @@ document.addEventListener('DOMContentLoaded', () => {
         const summaryTotal = document.getElementById('summary_total_venta');
         if (summaryTotal) summaryTotal.textContent = formatCantidad(total);
         
-        document.getElementById('table-body').innerHTML = '';
-        itemCounter = 0;
+        // Limpiar tabla
+        const tableBody = document.getElementById('table-body');
+        if (tableBody) {
+            tableBody.innerHTML = '';
+            itemCounter = 0;
+        }
         
+        // Cargar detalles
         if (data.detalle && data.detalle.length > 0) {
             data.detalle.forEach(item => {
                 addItem();
                 const row = document.querySelector("#table-body tr:last-child");
                 if (row) {
-                    row.querySelector('.producto_id').value = item.producto_id || '';
-                    row.querySelector('.cantidad').value = formatCantidad(item.cantidad || 0);
-                    row.querySelector('.precio_venta_unitario').value = item.precio_unitario || 0;
-                    row.querySelector('.codigo_producto').value = item.codigo || '';
-                    row.querySelector('.descripcion').value = item.descripcion || '';
-                    row.querySelector('.modelo').value = item.modelo || '';
-                    row.querySelector('.marca').value = item.marca || '';
-                    row.querySelector('.unidad_medida').value = item.unidad_medida || 'UNIDAD';
+                    const campos = {
+                        '.producto_id': item.producto_id || '',
+                        '.cantidad': formatCantidad(item.cantidad || 0),
+                        '.precio_venta_unitario': item.precio_unitario || 0,
+                        '.codigo_producto': item.codigo || '',
+                        '.descripcion': item.descripcion || '',
+                        '.modelo': item.modelo || '',
+                        '.marca': item.marca || '',
+                        '.unidad_medida': item.unidad_medida || 'UNIDAD'
+                    };
+                    for (const [selector, valor] of Object.entries(campos)) {
+                        const el = row.querySelector(selector);
+                        if (el) el.value = valor;
+                    }
                 }
             });
         }
