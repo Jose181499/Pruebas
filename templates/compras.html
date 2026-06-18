@@ -503,86 +503,509 @@
     </div>
 </div>
 
-<!-- MODAL CREAR NUEVO PROVEEDOR -->
-<div class="modal fade" id="modalNuevoProveedor" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content modal-confirmacion">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-building-add text-success"></i>
-                    Nuevo Proveedor
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="formNuevoProveedor">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Tipo Documento <span class="text-danger">*</span></label>
-                            <select class="form-select" id="nuevo_tipo_documento" required>
-                                <option value="RUC">RUC</option>
-                                <option value="DNI">DNI</option>
-                                <option value="CE">Carnet de Extranjería</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Número Documento <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="nuevo_numero_documento" required placeholder="11 dígitos para RUC">
-                                <button class="btn btn-primary" type="button" id="btnBuscarSunat">
-                                    <i class="bi bi-search"></i> Buscar en SUNAT
-                                </button>
-                            </div>
-                            <small class="text-muted">Para RUC, puede buscar datos automáticamente en SUNAT</small>
-                        </div>
-                        <div class="col-md-12">
-                            <label class="form-label">Razón Social / Nombre <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="nuevo_razon_social" required>
-                        </div>
-                        <div class="col-md-12">
-                            <label class="form-label">Nombre Comercial</label>
-                            <input type="text" class="form-control" id="nuevo_nombre_comercial">
-                        </div>
-                        <div class="col-md-12">
-                            <label class="form-label">Razón Comercial</label>
-                            <input type="text" class="form-control" id="nuevo_razon_comercial">
-                        </div>
-                        <div class="col-md-12">
-                            <label class="form-label">Dirección Fiscal</label>
-                            <input type="text" class="form-control" id="nuevo_direccion_fiscal">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Teléfono Contacto</label>
-                            <input type="text" class="form-control" id="nuevo_telefono">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Email Contacto</label>
-                            <input type="email" class="form-control" id="nuevo_email">
-                        </div>
-                        <div class="col-md-12">
-                            <label class="form-label">Nombre Contacto</label>
-                            <input type="text" class="form-control" id="nuevo_nombre_contacto">
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="bi bi-x-circle"></i> Cancelar
-                </button>
-                <button type="button" class="btn btn-success" id="btnGuardarNuevoProveedor">
-                    <i class="bi bi-save-fill"></i> Guardar Proveedor
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- Notificaciones Container -->
 <div id="notificacionesContainer"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/static/js/listado_compras.js"></script>
+<script>
+    /**
+     * ============================================
+     *  LISTADO_COMPRAS.JS - Conectado a la API de Flask
+     *  Usa las rutas: /api/ordenes_compra, /api/orden_compra/{id}, etc.
+     * ============================================
+     */
+
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // =============================================
+        // 1. VARIABLES GLOBALES
+        // =============================================
+        
+        let ordenesData = [];
+
+        // =============================================
+        // 2. CARGAR DATOS DESDE EL BACKEND
+        // =============================================
+        
+        function cargarOrdenesDesdeBackend() {
+            const tbody = document.getElementById('tbodyOrdenes');
+            
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="13" class="text-center py-5">
+                        <div class="spinner-border text-primary mb-3"></div>
+                        <div class="text-muted">Cargando órdenes de compra...</div>
+                    </td>
+                </tr>
+            `;
+
+            const estado = document.getElementById('filtroEstado').value;
+            const busqueda = document.getElementById('buscador').value;
+            
+            let url = '/api/ordenes_compra';
+            const params = new URLSearchParams();
+            if (estado && estado !== 'todas') params.append('estado', estado);
+            if (busqueda) params.append('buscar', busqueda);
+            if (params.toString()) url += '?' + params.toString();
+
+            console.log('📡 Fetching:', url);
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Error HTTP: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('📦 Datos recibidos:', data);
+                    
+                    if (data.success && data.data) {
+                        ordenesData = data.data;
+                        renderizarTabla(ordenesData);
+                        actualizarEstadisticas(ordenesData);
+                    } else {
+                        throw new Error(data.error || 'Error al cargar datos');
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Error al cargar órdenes:', error);
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="13" class="text-center py-5 text-danger">
+                                <i class="bi bi-exclamation-triangle-fill fs-1 d-block mb-2"></i>
+                                Error al cargar las órdenes de compra
+                                <br>
+                                <small class="text-muted">${error.message}</small>
+                                <br>
+                                <button class="btn btn-sm btn-primary mt-2" onclick="cargarOrdenesDesdeBackend()">
+                                    <i class="bi bi-arrow-repeat"></i> Reintentar
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    mostrarNotificacion('error', 'Error al cargar los datos: ' + error.message);
+                });
+        }
+
+        // =============================================
+        // 3. FUNCIÓN PARA RENDERIZAR LA TABLA
+        // =============================================
+
+        function renderizarTabla(ordenes) {
+            const tbody = document.getElementById('tbodyOrdenes');
+
+            if (!ordenes || ordenes.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="13" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            No se encontraron órdenes de compra
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            ordenes.forEach(orden => {
+                // Total de ítems
+                const totalItems = orden.total_items || orden.cantidad_total_items || 0;
+
+                // Badge de estado
+                const estadoClass = {
+                    'pendiente': 'estado-pendiente',
+                    'aprobado': 'estado-aprobado',
+                    'cotizando': 'estado-cotizando',
+                    'rechazado': 'estado-rechazado',
+                    'ordenado': 'estado-ordenado',
+                    'recibido': 'estado-recibido'
+                }[orden.estado] || 'estado-pendiente';
+
+                const estadoLabel = {
+                    'pendiente': 'Pendiente',
+                    'aprobado': 'Aprobado',
+                    'cotizando': 'Cotizando',
+                    'rechazado': 'Rechazado',
+                    'ordenado': 'Ordenado',
+                    'recibido': 'Recibido'
+                }[orden.estado] || orden.estado;
+
+                // Formatear fecha
+                let fecha = '--', hora = '--';
+                if (orden.fecha_creacion) {
+                    try {
+                        const date = new Date(orden.fecha_creacion);
+                        fecha = date.toLocaleDateString('es-PE');
+                        hora = date.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+                    } catch(e) {
+                        fecha = orden.fecha_creacion;
+                    }
+                }
+
+                // Obtener el nombre comercial correctamente
+                const nombreComercial = orden.nombre_comercial || orden.razon_comercial || '--';
+                const razonSocial = orden.proveedor || orden.razon_social || '--';
+                const ruc = orden.proveedor_ruc || orden.ruc || '--';
+                const codigoProveedor = orden.codigo_proveedor || '--';
+                const descripcion = orden.descripcion || '--';
+                const nota = orden.nota_compra || orden.notas || '--';
+                const condicionPago = orden.condicion_pago || '--';
+                const total = parseFloat(orden.total || 0).toFixed(2);
+
+                html += `
+                    <tr>
+                        <td class="text-center">
+                            <span class="items-badge">${totalItems}</span>
+                        </td>
+                        <td>
+                            <div class="fecha">${fecha}</div>
+                            <div class="hora"><i class="bi bi-clock"></i> ${hora}</div>
+                        </td>
+                        <td>
+                            <span class="${estadoClass}">${estadoLabel}</span>
+                        </td>
+                        <td><span class="badge-codigo">${orden.numero_orden || orden.codigo_orden || '--'}</span></td>
+                        <td><span class="proveedor-ruc">${ruc}</span></td>
+                        <td><span style="font-size:0.7rem; font-weight:600;">${codigoProveedor}</span></td>
+                        <td><span style="font-size:0.7rem;">${nombreComercial}</span></td>
+                        <td><span style="font-size:0.7rem; font-weight:500;">${razonSocial}</span></td>
+                        <td><span style="font-size:0.7rem;">${descripcion}</span></td>
+                        <td class="text-end">
+                            <span class="amount">S/ ${total}</span>
+                        </td>
+                        <td><span style="font-size:0.65rem; color:#6c7e8e;">${nota}</span></td>
+                        <td><span style="font-size:0.65rem;">${condicionPago}</span></td>
+                        <td class="text-center">
+                            <div class="acciones">
+                                <button class="btn btn-sm btn-info" title="Ver Detalle" onclick="verDetalle(${orden.id})">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-warning" title="Editar" onclick="editarOrden(${orden.id})">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" title="Descargar PDF" onclick="descargarPDF(${orden.id})">
+                                    <i class="bi bi-file-pdf"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" title="Eliminar" onclick="eliminarOrden(${orden.id})">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        // =============================================
+        // 4. FUNCIONES DE ACCIÓN
+        // =============================================
+
+        window.verDetalle = function(id) {
+            console.log('🔍 Ver detalle de orden:', id);
+            
+            fetch(`/api/orden_compra/${id}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('📦 Detalle recibido:', data);
+                    if (data.success && data.data) {
+                        mostrarDetalleEnModal(data.data);
+                    } else {
+                        throw new Error(data.error || 'Error al cargar detalle');
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Error al cargar detalle:', error);
+                    mostrarNotificacion('error', 'Error al cargar el detalle: ' + error.message);
+                });
+        };
+
+        function mostrarDetalleEnModal(orden) {
+            const detalleBody = document.getElementById('detalleBody');
+            
+            let itemsHtml = '';
+            const detalle = orden.detalle || [];
+            
+            if (detalle.length > 0) {
+                itemsHtml = detalle.map(item =>
+                    `<tr>
+                        <td>${item.codigo || '--'}</td>
+                        <td>${item.descripcion || '--'}</td>
+                        <td class="text-center">${item.cantidad || 0}</td>
+                        <td>${item.unidad_medida || 'Unid'}</td>
+                        <td class="text-end">S/ ${parseFloat(item.precio_venta_unitario || 0).toFixed(2)}</td>
+                        <td class="text-end">S/ ${parseFloat((item.cantidad || 0) * (item.precio_venta_unitario || 0)).toFixed(2)}</td>
+                    </tr>`
+                ).join('');
+            } else {
+                itemsHtml = `<tr><td colspan="6" class="text-center">No hay ítems registrados</td></tr>`;
+            }
+
+            detalleBody.innerHTML = `
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-primary">INFORMACIÓN GENERAL</h6>
+                        <p><strong>N° Orden:</strong> ${orden.numero_orden || orden.codigo_orden || orden.id}</p>
+                        <p><strong>Fecha:</strong> ${orden.fecha_creacion ? new Date(orden.fecha_creacion).toLocaleString('es-PE') : '--'}</p>
+                        <p><strong>Estado:</strong> ${orden.estado || '--'}</p>
+                        <p><strong>Descripción:</strong> ${orden.descripcion || '--'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-primary">PROVEEDOR</h6>
+                        <p><strong>RUC:</strong> ${orden.proveedor_ruc || '--'}</p>
+                        <p><strong>Razón Social:</strong> ${orden.proveedor || '--'}</p>
+                        <p><strong>Dirección:</strong> ${orden.proveedor_direccion || '--'}</p>
+                        <p><strong>Contacto:</strong> ${orden.proveedor_contacto || '--'}</p>
+                        <p><strong>Teléfono:</strong> ${orden.telefono_contacto || '--'}</p>
+                        <p><strong>Email:</strong> ${orden.email_contacto_proveedor || '--'}</p>
+                    </div>
+                </div>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-primary">CONDICIONES DE PAGO</h6>
+                        <p><strong>Condición:</strong> ${orden.condicion_pago || 'Contado'}</p>
+                        <p><strong>Tiempo Entrega:</strong> ${orden.tiempo_entrega || 'No especificado'}</p>
+                        <p><strong>Fecha Requerida:</strong> ${orden.fecha_requerida || 'No especificada'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-primary">ENTREGA</h6>
+                        <p><strong>Lugar:</strong> ${orden.lugar_entrega || 'No especificado'}</p>
+                        <p><strong>N° Cotización:</strong> ${orden.num_cotizacion || '--'}</p>
+                        <p><strong>Nota:</strong> ${orden.nota_compra || '--'}</p>
+                    </div>
+                </div>
+                <h6 class="fw-bold text-primary">DETALLE DE ÍTEMS</h6>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Código</th>
+                                <th>Descripción</th>
+                                <th class="text-center">Cant.</th>
+                                <th>Unidad</th>
+                                <th class="text-end">Precio Unit.</th>
+                                <th class="text-end">Importe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsHtml}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="5" class="text-end fw-bold">Subtotal:</td>
+                                <td class="text-end">S/ ${parseFloat(orden.subtotal || 0).toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="5" class="text-end fw-bold">IGV (18%):</td>
+                                <td class="text-end">S/ ${parseFloat(orden.igv || 0).toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="5" class="text-end fw-bold">TOTAL:</td>
+                                <td class="text-end fw-bold">S/ ${parseFloat(orden.total || 0).toFixed(2)}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            `;
+
+            const modal = new bootstrap.Modal(document.getElementById('modalDetalle'));
+            modal.show();
+        }
+
+        window.editarOrden = function(id) {
+            console.log('✏️ Editar orden:', id);
+            window.location.href = `/editar_compra/${id}`;
+        };
+
+        window.descargarPDF = function(id) {
+            console.log('📄 Descargar PDF:', id);
+            mostrarNotificacion('info', `Generando PDF de la orden N° ${id}...`);
+            window.open(`/api/orden_compra/pdf/${id}`, '_blank');
+        };
+
+        window.eliminarOrden = function(id) {
+            console.log('🗑️ Eliminar orden:', id);
+            const orden = ordenesData.find(o => o.id === id);
+            
+            document.getElementById('eliminarInfo').innerHTML =
+                `Orden <strong>${orden ? orden.numero_orden || orden.codigo_orden : ''}</strong> será eliminada permanentemente.`;
+            document.getElementById('btnConfirmarEliminar').dataset.id = id;
+            
+            const modal = new bootstrap.Modal(document.getElementById('modalEliminar'));
+            modal.show();
+        };
+
+        document.getElementById('btnConfirmarEliminar').addEventListener('click', function() {
+            const id = parseInt(this.dataset.id);
+            
+            fetch(`/api/ordenes_compra/${id}`, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    const index = ordenesData.findIndex(o => o.id === id);
+                    if (index !== -1) {
+                        ordenesData.splice(index, 1);
+                        renderizarTabla(ordenesData);
+                        actualizarEstadisticas(ordenesData);
+                    }
+                    mostrarNotificacion('success', 'Orden eliminada correctamente.');
+                } else {
+                    mostrarNotificacion('error', data.error || 'Error al eliminar');
+                }
+            })
+            .catch(error => {
+                console.error('❌ Error al eliminar:', error);
+                mostrarNotificacion('error', 'Error al eliminar la orden: ' + error.message);
+            });
+
+            bootstrap.Modal.getInstance(document.getElementById('modalEliminar')).hide();
+        });
+
+        // =============================================
+        // 5. FUNCIONES DE FILTRADO
+        // =============================================
+
+        function filtrarOrdenes() {
+            cargarOrdenesDesdeBackend();
+        }
+
+        // =============================================
+        // 6. ACTUALIZAR ESTADÍSTICAS
+        // =============================================
+
+        function actualizarEstadisticas(ordenes) {
+            if (!ordenes || ordenes.length === 0) {
+                document.getElementById('totalOrdenes').textContent = '0';
+                document.getElementById('totalPendientes').textContent = '0';
+                document.getElementById('totalAprobadas').textContent = '0';
+                document.getElementById('totalRecibidas').textContent = '0';
+                return;
+            }
+
+            const totalOrdenes = ordenes.length;
+            const totalPendientes = ordenes.filter(o => o.estado === 'pendiente').length;
+            const totalAprobadas = ordenes.filter(o => o.estado === 'aprobado').length;
+            const totalRecibidas = ordenes.filter(o => o.estado === 'recibido').length;
+
+            document.getElementById('totalOrdenes').textContent = totalOrdenes;
+            document.getElementById('totalPendientes').textContent = totalPendientes;
+            document.getElementById('totalAprobadas').textContent = totalAprobadas;
+            document.getElementById('totalRecibidas').textContent = totalRecibidas;
+        }
+
+        // =============================================
+        // 7. NOTIFICACIONES
+        // =============================================
+
+        function mostrarNotificacion(tipo, mensaje) {
+            const container = document.getElementById('notificacionesContainer');
+            const tipos = {
+                success: 'notificacion-exito',
+                error: 'notificacion-error',
+                info: 'notificacion-info',
+                warning: 'notificacion-warning'
+            };
+
+            const notif = document.createElement('div');
+            notif.className = `notificacion ${tipos[tipo] || 'notificacion-info'}`;
+            notif.innerHTML = `
+                <span>${mensaje}</span>
+                <button class="btn-close btn-close-white" onclick="this.parentElement.remove()"></button>
+            `;
+            container.appendChild(notif);
+
+            setTimeout(() => {
+                notif.style.animation = 'slideOut 0.3s ease forwards';
+                setTimeout(() => notif.remove(), 300);
+            }, 4000);
+        }
+
+        // =============================================
+        // 8. EXPORTACIÓN A CSV
+        // =============================================
+
+        document.getElementById('btnExportar')?.addEventListener('click', function() {
+            if (ordenesData.length === 0) {
+                mostrarNotificacion('error', 'No hay datos para exportar.');
+                return;
+            }
+
+            const headers = [
+                'Ítems', 'Fecha', 'Hora', 'Estado', 'N° Orden', 'RUC',
+                'Código Proveedor', 'R. Comercial', 'R. Social', 'Descripción',
+                'Monto Total', 'Nota Aclaratoria', 'Condición Pago'
+            ];
+
+            let csvContent = headers.join(',') + '\n';
+
+            ordenesData.forEach(orden => {
+                const totalItems = orden.total_items || orden.cantidad_total_items || 0;
+                const fecha = orden.fecha_creacion ? new Date(orden.fecha_creacion).toLocaleDateString('es-PE') : '';
+                const hora = orden.fecha_creacion ? new Date(orden.fecha_creacion).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }) : '';
+                
+                const row = [
+                    totalItems,
+                    `"${fecha}"`,
+                    `"${hora}"`,
+                    `"${orden.estado || ''}"`,
+                    `"${orden.numero_orden || orden.codigo_orden || ''}"`,
+                    `"${orden.proveedor_ruc || ''}"`,
+                    `"${orden.codigo_proveedor || ''}"`,
+                    `"${orden.nombre_comercial || orden.razon_comercial || ''}"`,
+                    `"${orden.proveedor || orden.razon_social || ''}"`,
+                    `"${orden.descripcion || ''}"`,
+                    parseFloat(orden.total || 0).toFixed(2),
+                    `"${orden.nota_compra || orden.notas || ''}"`,
+                    `"${orden.condicion_pago || ''}"`
+                ];
+                csvContent += row.join(',') + '\n';
+            });
+
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'ordenes_compra.csv';
+            link.click();
+            URL.revokeObjectURL(link.href);
+
+            mostrarNotificacion('success', 'Exportación completada exitosamente.');
+        });
+
+        // =============================================
+        // 9. EVENTOS
+        // =============================================
+
+        document.getElementById('filtroEstado')?.addEventListener('change', filtrarOrdenes);
+        document.getElementById('filtroProveedor')?.addEventListener('input', filtrarOrdenes);
+        document.getElementById('fechaDesde')?.addEventListener('change', filtrarOrdenes);
+        document.getElementById('fechaHasta')?.addEventListener('change', filtrarOrdenes);
+        document.getElementById('buscador')?.addEventListener('input', filtrarOrdenes);
+        document.getElementById('btnRefrescar')?.addEventListener('click', cargarOrdenesDesdeBackend);
+
+        // =============================================
+        // 10. INICIALIZAR
+        // =============================================
+
+        cargarOrdenesDesdeBackend();
+
+        console.log('✅ Sistema de Gestión de Compras inicializado correctamente.');
+        console.log('📊 Conectado a la API de compras');
+    });
+</script>
 
 </body>
 </html>

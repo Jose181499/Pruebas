@@ -1866,10 +1866,11 @@ def obtener_ordenes_recientes(limit=100):
                 o.contacto_proveedor,
                 o.telefono_proveedor,
                 o.email_proveedor,
-                -- Datos del proveedor
+                -- Datos del proveedor - CORREGIDO
                 p.ruc as proveedor_ruc,
                 p.razon_social as proveedor,
-                p.razon_comercial as nombre_comercial,
+                -- 🔥 IMPORTANTE: Usar razon_comercial de la tabla proveedores
+                COALESCE(p.razon_comercial, p.razon_social) as nombre_comercial,
                 p.contacto as proveedor_contacto,
                 p.telefono as telefono_contacto,
                 p.email as email_contacto_proveedor,
@@ -1882,7 +1883,13 @@ def obtener_ordenes_recientes(limit=100):
                 -- Contadores
                 COUNT(d.id) as total_items,
                 COALESCE(SUM(d.cantidad), 0) as cantidad_total_items,
-                COALESCE(SUM(d.subtotal_venta_con_descuento), 0) as total_detalle
+                COALESCE(SUM(d.subtotal_venta_con_descuento), 0) as total_detalle,
+                -- 🔥 AGREGAR LA DESCRIPCIÓN DE LA ORDEN
+                (SELECT STRING_AGG(pr.descripcion, ' / ') 
+                 FROM orden_compra_detalle d2 
+                 LEFT JOIN productos pr ON d2.producto_id = pr.id 
+                 WHERE d2.orden_id = o.id 
+                 LIMIT 3) as descripcion
             FROM ordenes_compra o
             LEFT JOIN proveedores p ON o.proveedor_id = p.id
             LEFT JOIN usuarios u ON o.usuario_id = u.id
@@ -1920,8 +1927,7 @@ def obtener_ordenes_recientes(limit=100):
                 'condicion_pago': orden.get('condicion_pago') or '--',
                 'nota_compra': orden.get('nota_compra') or '--',
                 'notas': orden.get('notas') or '--',
-                # La descripción viene de los productos en el detalle, no de la cabecera
-                'descripcion': obtener_descripcion_orden(orden.get('id')),
+                'descripcion': orden.get('descripcion') or '--',
                 'lugar_entrega': orden.get('lugar_entrega') or '--',
                 'fecha_requerida': orden.get('fecha_requerida') or '--',
                 'tiempo_entrega': orden.get('tiempo_entrega') or '--',
@@ -1941,7 +1947,6 @@ def obtener_ordenes_recientes(limit=100):
                 'total_items': int(orden.get('total_items') or 0),
                 'cantidad_total_items': int(orden.get('cantidad_total_items') or 0),
                 'total_detalle': float(orden.get('total_detalle') or 0),
-                # Campos específicos de la orden de compra
                 'contacto_proveedor': orden.get('contacto_proveedor') or '--',
                 'telefono_proveedor': orden.get('telefono_proveedor') or '--',
                 'email_proveedor': orden.get('email_proveedor') or '--'

@@ -889,15 +889,63 @@ def obtener_direcciones_proveedor(proveedor_id):
 
 @compras_bp.route("/api/orden_compra/guardar", methods=["POST"])
 def guardar_orden_compra():
-    """Guardar orden de compra"""
+    """Guardar orden de compra - VERSIÓN CORREGIDA CON CREACIÓN AUTOMÁTICA DE PROVEEDOR"""
     data = request.json
     print("📦 Datos recibidos en guardar_orden_compra:", data)
     
     try:
+        # 🔥 OBTENER PROVEEDOR_ID DE MÚLTIPLES FUENTES
         proveedor_id = data.get("proveedor_id")
-        if not proveedor_id:
-            return jsonify({"success": False, "error": "proveedor_id es requerido"}), 400
         
+        # Si no hay proveedor_id o es 0, intentar obtenerlo de proveedor_data
+        if not proveedor_id or proveedor_id == 0:
+            proveedor_data = data.get("proveedor_data", {})
+            numero_documento = proveedor_data.get("numero_documento")
+            razon_social = proveedor_data.get("razon_social")
+            
+            if numero_documento and razon_social:
+                # Buscar proveedor por RUC en la base de datos
+                proveedor = buscar_proveedor_por_ruc(numero_documento)
+                if proveedor:
+                    proveedor_id = proveedor.get("id")
+                    print(f"✅ Proveedor encontrado por RUC: {proveedor_id}")
+                else:
+                    # Crear nuevo proveedor automáticamente
+                    try:
+                        with db_tx() as conn:
+                            cur = conn.cursor()
+                            cur.execute("""
+                                INSERT INTO proveedores 
+                                (ruc, razon_social, razon_comercial, direccion, 
+                                 telefono, contacto, email, activo)
+                                VALUES (%s, %s, %s, %s, %s, %s, %s, TRUE)
+                                RETURNING id
+                            """, (
+                                numero_documento,
+                                razon_social,
+                                razon_social,  # razon_comercial
+                                proveedor_data.get("direccion_fiscal", ""),
+                                proveedor_data.get("telefono_contacto", ""),
+                                proveedor_data.get("nombre_contacto", ""),
+                                proveedor_data.get("email_contacto", "")
+                            ))
+                            proveedor_id = cur.fetchone()[0]
+                            print(f"✅ Nuevo proveedor creado automáticamente: {proveedor_id}")
+                    except Exception as e:
+                        print(f"❌ Error creando proveedor: {e}")
+                        return jsonify({
+                            "success": False, 
+                            "error": f"Error al crear proveedor: {str(e)}"
+                        }), 400
+        
+        # 🔥 VALIDAR QUE TENGAMOS PROVEEDOR_ID
+        if not proveedor_id or proveedor_id == 0:
+            return jsonify({
+                "success": False, 
+                "error": "No se pudo identificar o crear el proveedor. Verifique que el RUC sea válido."
+            }), 400
+        
+        # Obtener usuario_id
         usuario_id = data.get("usuario_id")
         if not usuario_id:
             usuario_id = session.get('usuario_id')
@@ -908,6 +956,7 @@ def guardar_orden_compra():
         if not productos:
             return jsonify({"success": False, "error": "Debe agregar al menos un producto"}), 400
         
+        # Calcular totales
         subtotal = float(data.get("subtotal", 0))
         igv = float(data.get("igv", 0))
         total = float(data.get("total", 0))
@@ -931,6 +980,7 @@ def guardar_orden_compra():
             cur = conn.cursor()
             
             if orden_id:
+                # ACTUALIZAR orden existente
                 cur.execute("""
                     UPDATE ordenes_compra 
                     SET proveedor_id = %s,
@@ -1016,11 +1066,13 @@ def guardar_orden_compra():
                         "id": orden_id,
                         "codigo_orden": result[1] if result else None,
                         "numero_orden": result[2] if result else None,
+                        "proveedor_id": proveedor_id,
                         "actualizado": True
                     }
                 })
             
             else:
+                # CREAR nueva orden
                 cur.execute("SELECT MAX(id) as ultimo FROM ordenes_compra")
                 row = cur.fetchone()
                 nuevo_numero = (row[0] or 0) + 1
@@ -1114,6 +1166,7 @@ def guardar_orden_compra():
                         "id": nueva_orden_id,
                         "codigo_orden": codigo_generado,
                         "numero_orden": numero_orden,
+                        "proveedor_id": proveedor_id,
                         "nuevo": True
                     }
                 })

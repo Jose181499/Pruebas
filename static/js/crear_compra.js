@@ -1217,7 +1217,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const modalFooter = document.querySelector('#modalConfirmacion .modal-footer');
         if (modalFooter) {
-            // Remover botón duplicado si existe
             const existente = modalFooter.querySelector('.btn-ver-listado');
             if (existente) existente.remove();
             
@@ -1279,7 +1278,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const producto = {
                 producto_id: Number(getInput('.producto_id')) || null,
-                codigo: getInput('.codigo_producto') || '', // 🔥 Esto envía el código
+                codigo: getInput('.codigo_producto') || '',
                 descripcion: getInput('.descripcion') || '',
                 modelo: getInput('.modelo') || '',
                 marca: getInput('.marca') || '',
@@ -1331,9 +1330,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // GUARDAR ORDEN DE COMPRA
+    // GUARDAR ORDEN DE COMPRA - CORREGIDO CON PROVEEDOR_ID
     // =========================
     async function guardarOrdenCompra() {
+        // 🔥 OBTENER PROVEEDOR_ID CORRECTAMENTE
+        let proveedorId = document.getElementById('proveedor_id')?.value;
+        
+        // Si no hay proveedor_id, intentar buscar por RUC
+        if (!proveedorId || proveedorId === '' || proveedorId === '0') {
+            const ruc = document.getElementById('proveedor_doc')?.value.trim();
+            if (ruc) {
+                try {
+                    const result = await consultarSunat(ruc);
+                    if (result.success && result.existe_en_sistema) {
+                        proveedorId = result.proveedor_id;
+                        document.getElementById('proveedor_id').value = proveedorId;
+                        console.log('✅ Proveedor encontrado por RUC:', proveedorId);
+                    }
+                } catch (e) {
+                    console.error('Error buscando proveedor por RUC:', e);
+                }
+            }
+        }
+        
+        // 🔥 VALIDAR QUE TENGA PROVEEDOR_ID
+        if (!proveedorId || proveedorId === '' || proveedorId === '0') {
+            mostrarNotificacion("⚠️ Debe seleccionar un proveedor válido (RUC existente en el sistema)", "warning");
+            return;
+        }
+        
         const proveedorData = {
             razon_social: document.getElementById('proveedor_razon_social')?.value.trim() || '',
             numero_documento: document.getElementById('proveedor_doc')?.value.trim() || '',
@@ -1391,7 +1416,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const payload = {
             id: orden_id && orden_id !== '' && orden_id !== 'None' ? parseInt(orden_id) : null,
-            proveedor_id: Number(document.getElementById('proveedor_id')?.value || 0),
+            proveedor_id: parseInt(proveedorId), // 🔥 Asegurar que sea número
             proveedor_data: {
                 razon_social: proveedorData.razon_social,
                 numero_documento: proveedorData.numero_documento,
@@ -1425,6 +1450,8 @@ document.addEventListener('DOMContentLoaded', () => {
             email_contacto_proveedor: document.getElementById('email_contacto_proveedor')?.value || ''
         };
         
+        console.log('📦 Payload a enviar:', payload);
+        
         const btnGuardar = esBorrador ? document.getElementById('btnGuardarBorrador') : document.getElementById('btnGuardarOficial');
         const textoOriginal = btnGuardar?.innerHTML;
         if (btnGuardar) {
@@ -1439,6 +1466,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify(payload)
             });
             const json = await res.json();
+            console.log('📥 Respuesta del servidor:', json);
             
             if (!json.success) { 
                 mostrarNotificacion("❌ Error: " + (json.error || "Error desconocido"), "danger");

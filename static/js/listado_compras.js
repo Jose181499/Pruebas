@@ -1,4 +1,4 @@
-// listado_compras.js - Gestor de Compras (VERSIÓN COMPLETA)
+// listado_compras.js - Gestor de Compras (VERSIÓN COMPLETA CORREGIDA)
 
 // Variables globales
 let ordenesData = [];
@@ -6,12 +6,12 @@ let ordenesFiltradas = [];
 
 // Mapeo de estados
 const estadoMap = {
-    'pendiente': { class: 'status-pendiente', icon: 'bi-clock-history', text: 'PENDIENTE' },
-    'cotizando': { class: 'status-cotizando', icon: 'bi-arrow-repeat', text: 'EN COTIZACIÓN' },
-    'aprobado': { class: 'status-aprobado', icon: 'bi-check-circle', text: 'APROBADO' },
-    'rechazado': { class: 'status-rechazado', icon: 'bi-x-circle', text: 'RECHAZADO' },
-    'ordenado': { class: 'status-ordenado', icon: 'bi-cart-check', text: 'ORDENADO' },
-    'recibido': { class: 'status-recibido', icon: 'bi-box-seam', text: 'RECIBIDO' }
+    'pendiente': { class: 'estado-pendiente', icon: 'bi-clock-history', text: 'PENDIENTE' },
+    'cotizando': { class: 'estado-cotizando', icon: 'bi-arrow-repeat', text: 'EN COTIZACIÓN' },
+    'aprobado': { class: 'estado-aprobado', icon: 'bi-check-circle', text: 'APROBADO' },
+    'rechazado': { class: 'estado-rechazado', icon: 'bi-x-circle', text: 'RECHAZADO' },
+    'ordenado': { class: 'estado-ordenado', icon: 'bi-cart-check', text: 'ORDENADO' },
+    'recibido': { class: 'estado-recibido', icon: 'bi-box-seam', text: 'RECIBIDO' }
 };
 
 // =========================
@@ -101,12 +101,12 @@ function renderTable() {
     }
     
     tbody.innerHTML = ordenesFiltradas.map(orden => {
-        // Obtener datos del proveedor
-        const proveedor = orden.proveedor || 'Sin proveedor';
+        // 🔥 OBTENER DATOS CORRECTAMENTE - Usar los campos que devuelve la API
+        const razonSocial = orden.proveedor || orden.razon_social || 'Sin proveedor';
         const proveedorRuc = orden.proveedor_ruc || orden.ruc || '--';
         const codigoProveedor = orden.codigo_proveedor || '--';
-        const razonSocial = orden.razon_social || proveedor || '--';
-        const nombreComercial = orden.nombre_comercial || '--';
+        // 🔥 IMPORTANTE: nombre_comercial o razon_comercial
+        const nombreComercial = orden.nombre_comercial || orden.razon_comercial || '--';
         
         // Obtener estado
         const estado = estadoMap[orden.estado] || estadoMap.pendiente;
@@ -124,13 +124,13 @@ function renderTable() {
         const descripcion = orden.descripcion || '--';
         
         // Nota aclaratoria
-        const notaAclaratoria = orden.nota_aclaratoria || orden.nota_compra || orden.notas || '--';
+        const notaAclaratoria = orden.nota_compra || orden.notas || '--';
         
         // Condición de pago
         const condicionPago = orden.condicion_pago || '--';
         
         // Total de ítems
-        const totalItems = orden.total_items || (orden.detalle ? orden.detalle.length : 0);
+        const totalItems = orden.total_items || orden.cantidad_total_items || 0;
         
         return `
             <tr>
@@ -147,14 +147,14 @@ function renderTable() {
                 
                 <!-- Estado -->
                 <td>
-                    <span class="badge-status ${estado.class}">
+                    <span class="${estado.class}">
                         <i class="bi ${estado.icon}"></i>
                         ${estado.text}
                     </span>
                 </td>
                 
                 <!-- N° Orden -->
-                <td><span class="order-code">${escapeHtml(codigoMostrar)}</span></td>
+                <td><span class="badge-codigo">${escapeHtml(codigoMostrar)}</span></td>
                 
                 <!-- RUC -->
                 <td><span class="proveedor-ruc">${escapeHtml(proveedorRuc)}</span></td>
@@ -184,18 +184,18 @@ function renderTable() {
                 
                 <!-- Acciones -->
                 <td>
-                    <div class="action-icons">
-                        <button class="action-icon action-view" onclick="verDetalle(${orden.id})" title="Ver detalle">
-                            <i class="bi bi-eye-fill"></i>
+                    <div class="acciones">
+                        <button class="btn btn-sm btn-info" onclick="verDetalle(${orden.id})" title="Ver detalle">
+                            <i class="bi bi-eye"></i>
                         </button>
-                        <button class="action-icon action-edit" onclick="editarOrden(${orden.id})" title="Editar">
-                            <i class="bi bi-pencil-fill"></i>
+                        <button class="btn btn-sm btn-warning" onclick="editarOrden(${orden.id})" title="Editar">
+                            <i class="bi bi-pencil"></i>
                         </button>
-                        <button class="action-icon action-pdf" onclick="generarPDF(${orden.id})" title="Generar PDF">
-                            <i class="bi bi-file-pdf-fill"></i>
+                        <button class="btn btn-sm btn-danger" onclick="generarPDF(${orden.id})" title="Generar PDF">
+                            <i class="bi bi-file-pdf"></i>
                         </button>
-                        <button class="action-icon action-delete" onclick="eliminarOrden(${orden.id})" title="Eliminar">
-                            <i class="bi bi-trash-fill"></i>
+                        <button class="btn btn-sm btn-danger" onclick="eliminarOrden(${orden.id})" title="Eliminar">
+                            <i class="bi bi-trash"></i>
                         </button>
                     </div>
                 </td>
@@ -211,14 +211,17 @@ function actualizarStats() {
     const total = ordenesData.length;
     const pendientes = ordenesData.filter(o => o && o.estado === 'pendiente').length;
     const aprobadas = ordenesData.filter(o => o && o.estado === 'aprobado').length;
+    const recibidas = ordenesData.filter(o => o && o.estado === 'recibido').length;
     
-    const totalSpan = document.getElementById('totalActivas');
+    const totalSpan = document.getElementById('totalOrdenes');
     const pendientesSpan = document.getElementById('totalPendientes');
     const aprobadasSpan = document.getElementById('totalAprobadas');
+    const recibidasSpan = document.getElementById('totalRecibidas');
     
     if (totalSpan) totalSpan.innerText = total;
     if (pendientesSpan) pendientesSpan.innerText = pendientes;
     if (aprobadasSpan) aprobadasSpan.innerText = aprobadas;
+    if (recibidasSpan) recibidasSpan.innerText = recibidas;
 }
 
 // =========================
@@ -360,7 +363,7 @@ window.verDetalle = async function(id) {
                 <div class="row mb-3">
                     <div class="col-6">
                         <small class="text-muted text-uppercase">Estado</small>
-                        <div><span class="badge-status ${estado.class}"><i class="bi ${estado.icon}"></i> ${estado.text}</span></div>
+                        <div><span class="${estado.class}"><i class="bi ${estado.icon}"></i> ${estado.text}</span></div>
                     </div>
                     <div class="col-6 text-end">
                         <small class="text-muted text-uppercase">Monto Total</small>
@@ -568,7 +571,6 @@ function refrescarDatos() {
 function exportarExcel() {
     mostrarNotificacion('Exportando datos...', 'info');
     
-    // Crear CSV con todas las columnas
     const headers = [
         'Ítems', 'Fecha', 'Hora', 'Estado', 'N° Orden', 'RUC',
         'Código Proveedor', 'R. Comercial', 'R. Social', 'Descripción',
@@ -578,7 +580,7 @@ function exportarExcel() {
     let csvContent = headers.join(',') + '\n';
     
     ordenesFiltradas.forEach(orden => {
-        const totalItems = orden.total_items || (orden.detalle ? orden.detalle.length : 0);
+        const totalItems = orden.total_items || orden.cantidad_total_items || 0;
         const fecha = orden.fecha_creacion || orden.fecha || '';
         const estado = orden.estado || '';
         const codigo = orden.numero_orden || orden.codigo_orden || '';
@@ -591,11 +593,11 @@ function exportarExcel() {
             `"${codigo}"`,
             `"${orden.proveedor_ruc || orden.ruc || ''}"`,
             `"${orden.codigo_proveedor || ''}"`,
-            `"${orden.nombre_comercial || ''}"`,
+            `"${orden.nombre_comercial || orden.razon_comercial || ''}"`,
             `"${orden.proveedor || orden.razon_social || ''}"`,
             `"${orden.descripcion || ''}"`,
             parseFloat(orden.total || 0).toFixed(2),
-            `"${orden.nota_aclaratoria || orden.nota_compra || orden.notas || ''}"`,
+            `"${orden.nota_compra || orden.notas || ''}"`,
             `"${orden.condicion_pago || ''}"`
         ];
         csvContent += row.join(',') + '\n';
@@ -617,7 +619,6 @@ function exportarExcel() {
 document.addEventListener('DOMContentLoaded', () => {
     cargarOrdenes();
     
-    // Event listeners para filtros
     const filtroEstado = document.getElementById('filtroEstado');
     const filtroProveedor = document.getElementById('filtroProveedor');
     const fechaDesde = document.getElementById('fechaDesde');
@@ -635,3 +636,5 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnRefrescar) btnRefrescar.addEventListener('click', refrescarDatos);
     if (btnExportar) btnExportar.addEventListener('click', exportarExcel);
 });
+
+console.log('✅ listado_compras.js cargado correctamente');
