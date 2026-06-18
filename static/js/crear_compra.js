@@ -49,38 +49,39 @@ document.addEventListener('DOMContentLoaded', () => {
     let usuarioActual = null;
     let esBorrador = true;
 
-    async function obtenerUsuarioActual() {
-        try {
-            const response = await fetch('/api/usuarios/actual');
-            const data = await response.json();
-            if (data.success && data.data) {
-                usuarioActual = data.data;
-                
-                const codigoCompradorSpan = document.getElementById('codigo_comprador');
-                if (codigoCompradorSpan && usuarioActual.codigo_vendedor) {
-                    codigoCompradorSpan.textContent = usuarioActual.codigo_vendedor;
-                }
-                
-                const compradorInput = document.getElementById('comprador_responsable');
-                if (compradorInput && usuarioActual.nombre_completo) {
-                    compradorInput.value = usuarioActual.nombre_completo;
-                    const usuarioIdInput = document.getElementById('usuario_id');
-                    const emailContacto = document.getElementById('email_contacto_user');
-                    const telefonoUser = document.getElementById('telefono_contacto_user');
-                    
-                    if (usuarioIdInput) usuarioIdInput.value = usuarioActual.id;
-                    if (emailContacto) emailContacto.value = usuarioActual.email || '';
-                    if (telefonoUser) telefonoUser.value = usuarioActual.telefono || '';
-                }
-                
-                return usuarioActual;
+   async function obtenerUsuarioActual() {
+    try {
+        const response = await fetch('/api/usuarios/actual');
+        const data = await response.json();
+        if (data.success && data.data) {
+            usuarioActual = data.data;
+            
+            const codigoCompradorSpan = document.getElementById('codigo_comprador');
+            if (codigoCompradorSpan && usuarioActual.codigo_vendedor) {
+                codigoCompradorSpan.textContent = usuarioActual.codigo_vendedor;
             }
-            return null;
-        } catch (error) {
-            console.error('Error obteniendo usuario:', error);
-            return null;
+            
+            // 🔥 CORREGIDO: El campo es "comprador", no "comprador_responsable"
+            const compradorInput = document.getElementById('comprador');
+            if (compradorInput && usuarioActual.nombre_completo) {
+                compradorInput.value = usuarioActual.nombre_completo;
+                const usuarioIdInput = document.getElementById('usuario_id');
+                const emailContacto = document.getElementById('email_contacto');
+                const telefonoUser = document.getElementById('telefono_contacto_user');
+                
+                if (usuarioIdInput) usuarioIdInput.value = usuarioActual.id;
+                if (emailContacto) emailContacto.value = usuarioActual.email || '';
+                if (telefonoUser) telefonoUser.value = usuarioActual.telefono || '';
+            }
+            
+            return usuarioActual;
         }
+        return null;
+    } catch (error) {
+        console.error('Error obteniendo usuario:', error);
+        return null;
     }
+}
 
     async function obtenerUltimoCorrelativoCompra(usuarioId) {
         try {
@@ -1872,22 +1873,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function aplicarBloqueoUI() {
-        const disabled = ordenBloqueada;
-        document.querySelectorAll('#table-body input').forEach(i => i.disabled = disabled);
-        ['proveedor_razon_social', 'proveedor_doc', 'telefono_contacto', 'proveedor_contacto', 'email_contacto_proveedor', 'num_cotizacion', 'estado'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.disabled = disabled;
-        });
-        ['comprador_responsable', 'email_contacto_user', 'telefono_contacto_user', 'condicion_pago', 'tiempo_entrega', 'fecha_requerida', 'lugar_entrega', 'nota_compra', 'notas', 'descuento_porcentaje_input', 'descuento_tipo'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.disabled = disabled;
-        });
-        const btnAgregar = document.getElementById('btnAgregarItem');
-        if (btnAgregar) btnAgregar.disabled = disabled;
-        document.querySelectorAll('#table-body .btn-del').forEach(b => b.disabled = disabled);
-    }
-
+   function aplicarBloqueoUI() {
+    const disabled = ordenBloqueada;
+    document.querySelectorAll('#table-body input').forEach(i => i.disabled = disabled);
+    
+    ['proveedor_razon_social', 'proveedor_doc', 'telefono_contacto', 'proveedor_contacto', 
+     'email_contacto_proveedor', 'num_cotizacion', 'estado'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = disabled;
+    });
+    
+    // 🔥 CORREGIDO: Usar los IDs correctos del HTML
+    ['comprador', 'email_contacto', 'telefono_contacto_user', 'condicion_pago', 
+     'tiempo_entrega', 'fecha_requerida', 'lugar_entrega', 'nota_compra', 
+     'notas', 'descuento_porcentaje_input', 'descuento_tipo'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = disabled;
+    });
+    
+    const btnAgregar = document.getElementById('btnAgregarItem');
+    if (btnAgregar) btnAgregar.disabled = disabled;
+    document.querySelectorAll('#table-body .btn-del').forEach(b => b.disabled = disabled);
+}
     function showModificarModal() {
         const modalElement = document.getElementById('modalModificar');
         if (modalElement) {
@@ -1897,113 +1904,115 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function cargarOrdenCompra(id) {
-        try {
-            console.log("🔍 Cargando orden de compra ID:", id);
-            const res = await fetch(`/api/orden_compra/${id}`);
-            const json = await res.json();
-            console.log("📦 Datos recibidos:", json);
-            
-            if (!json.success) { 
-                mostrarNotificacion("Error al cargar orden de compra", "danger"); 
-                return; 
-            }
-            
-            const data = json.data;
-            console.log("✅ Datos de orden:", data);
-            
-            if (data.codigo_orden) {
-                codigoOrdenActual = data.codigo_orden;
-                correlativoActual = data.correlativo || 0;
-                esBorrador = data.codigo_orden.startsWith('TMP-');
-                actualizarNumeroOrdenUI(data.codigo_orden, esBorrador);
-            }
-            
-            if (data.proveedor_id) {
-                document.getElementById('proveedor_id').value = data.proveedor_id;
-            }
-            document.getElementById('proveedor_razon_social').value = data.proveedor || data.razon_social || '';
-            document.getElementById('proveedor_razon_comercial').value = data.razon_comercial || data.proveedor || data.razon_social || '';
-            document.getElementById('proveedor_doc').value = data.numero_documento || '';
-            document.getElementById('proveedor_direccion').value = data.direccion_fiscal || '';
-            document.getElementById('proveedor_contacto').value = data.proveedor_contacto || '';
-            document.getElementById('email_contacto_proveedor').value = data.email_contacto_proveedor || '';
-            document.getElementById('telefono_contacto').value = data.telefono_contacto || '';
-            document.getElementById('num_cotizacion').value = data.num_cotizacion || '';
-            
-            document.getElementById('estado').value = data.estado || 'pendiente';
-            document.getElementById('notas').value = data.notas || '';
-            document.getElementById('condicion_pago').value = data.condicion_pago || 'Contado';
-            document.getElementById('tiempo_entrega').value = data.tiempo_entrega || '';
-            document.getElementById('fecha_requerida').value = data.fecha_requerida || '';
-            document.getElementById('lugar_entrega').value = data.lugar_entrega || '';
-            document.getElementById('nota_compra').value = data.nota_compra || '';
-            
-            document.getElementById('usuario_id').value = data.usuario_id || '';
-            document.getElementById('comprador_responsable').value = data.nombre_completo || '';
-            document.getElementById('email_contacto_user').value = data.email || '';
-            document.getElementById('telefono_contacto_user').value = data.telefono || '';
-            
-            if (data.descuento_porcentaje !== undefined && data.descuento_porcentaje !== null) {
-                const descuentoInput = document.getElementById('descuento_porcentaje_input');
-                const descuentoTipo = document.getElementById('descuento_tipo');
-                if (descuentoInput) descuentoInput.value = data.descuento_porcentaje;
-                if (descuentoTipo && data.descuento_tipo) descuentoTipo.value = data.descuento_tipo;
-            }
-            
-            const total = Number(data.total || 0);
-            const totalValorVentaElem = document.getElementById('total_valor_venta');
-            if (totalValorVentaElem) totalValorVentaElem.textContent = formatCantidad(total);
-            
-            const summarySubtotal = document.getElementById('summary_subtotal_venta');
-            if (summarySubtotal) summarySubtotal.textContent = formatCantidad(total);
-            
-            const summaryIgv = document.getElementById('summary_igv');
-            if (summaryIgv) summaryIgv.textContent = formatCantidad(Number(data.igv || 0));
-            
-            const summaryTotal = document.getElementById('summary_total_venta');
-            if (summaryTotal) summaryTotal.textContent = formatCantidad(total);
-            
-            document.getElementById('table-body').innerHTML = '';
-            itemCounter = 0;
-            
-            if (data.detalle && data.detalle.length > 0) {
-                data.detalle.forEach(item => {
-                    addItem();
-                    const row = document.querySelector("#table-body tr:last-child");
-                    if (row) {
-                        row.querySelector('.producto_id').value = item.producto_id || '';
-                        row.querySelector('.cantidad').value = formatCantidad(item.cantidad || 0);
-                        row.querySelector('.precio_venta_unitario').value = item.precio_unitario || 0;
-                        row.querySelector('.codigo_producto').value = item.codigo || '';
-                        row.querySelector('.descripcion').value = item.descripcion || '';
-                        row.querySelector('.modelo').value = item.modelo || '';
-                        row.querySelector('.marca').value = item.marca || '';
-                        row.querySelector('.unidad_medida').value = item.unidad_medida || 'UNIDAD';
-                    }
-                });
-            }
-            
-            recalculateAll();
-            configurarTiempoEntrega();
-            configurarLugarEntrega();
-            
-            if (data.proveedor_id) {
-                await cargarDireccionesProveedor(data.proveedor_id);
-            }
-            
-            actualizarEstadoBotonPDF();
-            
-        } catch (err) { 
-            console.error("🔥 ERROR en cargarOrdenCompra:", err); 
-            mostrarNotificacion("Error cargando orden de compra", "danger"); 
+    try {
+        console.log("🔍 Cargando orden de compra ID:", id);
+        const res = await fetch(`/api/orden_compra/${id}`);
+        const json = await res.json();
+        console.log("📦 Datos recibidos:", json);
+        
+        if (!json.success) { 
+            mostrarNotificacion("Error al cargar orden de compra", "danger"); 
+            return; 
         }
+        
+        const data = json.data;
+        console.log("✅ Datos de orden:", data);
+        
+        if (data.codigo_orden) {
+            codigoOrdenActual = data.codigo_orden;
+            correlativoActual = data.correlativo || 0;
+            esBorrador = data.codigo_orden.startsWith('TMP-');
+            actualizarNumeroOrdenUI(data.codigo_orden, esBorrador);
+        }
+        
+        if (data.proveedor_id) {
+            document.getElementById('proveedor_id').value = data.proveedor_id;
+        }
+        
+        // 🔥 CORREGIDO: Usar los IDs correctos del HTML
+        document.getElementById('proveedor_razon_social').value = data.proveedor || data.razon_social || '';
+        document.getElementById('proveedor_razon_comercial').value = data.razon_comercial || data.proveedor || data.razon_social || '';
+        document.getElementById('proveedor_doc').value = data.numero_documento || '';
+        document.getElementById('proveedor_direccion').value = data.direccion_fiscal || '';
+        document.getElementById('proveedor_contacto').value = data.proveedor_contacto || '';
+        document.getElementById('email_contacto_proveedor').value = data.email_contacto_proveedor || '';
+        document.getElementById('telefono_contacto').value = data.telefono_contacto || '';
+        document.getElementById('num_cotizacion').value = data.num_cotizacion || '';
+        
+        document.getElementById('estado').value = data.estado || 'pendiente';
+        document.getElementById('notas').value = data.notas || '';
+        document.getElementById('condicion_pago').value = data.condicion_pago || 'Contado';
+        document.getElementById('tiempo_entrega').value = data.tiempo_entrega || '';
+        document.getElementById('fecha_requerida').value = data.fecha_requerida || '';
+        document.getElementById('lugar_entrega').value = data.lugar_entrega || '';
+        document.getElementById('nota_compra').value = data.nota_compra || '';
+        
+        document.getElementById('usuario_id').value = data.usuario_id || '';
+        
+        // 🔥 CORREGIDO: El campo en el HTML es "comprador", no "comprador_responsable"
+        const compradorInput = document.getElementById('comprador');
+        if (compradorInput) {
+            compradorInput.value = data.nombre_completo || data.comprador || '';
+        }
+        
+        document.getElementById('email_contacto').value = data.email || data.comprador_email || '';
+        document.getElementById('telefono_contacto_user').value = data.telefono || data.comprador_telefono || '';
+        
+        if (data.descuento_porcentaje !== undefined && data.descuento_porcentaje !== null) {
+            const descuentoInput = document.getElementById('descuento_porcentaje_input');
+            const descuentoTipo = document.getElementById('descuento_tipo');
+            if (descuentoInput) descuentoInput.value = data.descuento_porcentaje;
+            if (descuentoTipo && data.descuento_tipo) descuentoTipo.value = data.descuento_tipo;
+        }
+        
+        const total = Number(data.total || 0);
+        const totalValorVentaElem = document.getElementById('total_valor_venta');
+        if (totalValorVentaElem) totalValorVentaElem.textContent = formatCantidad(total);
+        
+        const summarySubtotal = document.getElementById('summary_subtotal_venta');
+        if (summarySubtotal) summarySubtotal.textContent = formatCantidad(total);
+        
+        const summaryIgv = document.getElementById('summary_igv');
+        if (summaryIgv) summaryIgv.textContent = formatCantidad(Number(data.igv || 0));
+        
+        const summaryTotal = document.getElementById('summary_total_venta');
+        if (summaryTotal) summaryTotal.textContent = formatCantidad(total);
+        
+        document.getElementById('table-body').innerHTML = '';
+        itemCounter = 0;
+        
+        if (data.detalle && data.detalle.length > 0) {
+            data.detalle.forEach(item => {
+                addItem();
+                const row = document.querySelector("#table-body tr:last-child");
+                if (row) {
+                    row.querySelector('.producto_id').value = item.producto_id || '';
+                    row.querySelector('.cantidad').value = formatCantidad(item.cantidad || 0);
+                    row.querySelector('.precio_venta_unitario').value = item.precio_unitario || 0;
+                    row.querySelector('.codigo_producto').value = item.codigo || '';
+                    row.querySelector('.descripcion').value = item.descripcion || '';
+                    row.querySelector('.modelo').value = item.modelo || '';
+                    row.querySelector('.marca').value = item.marca || '';
+                    row.querySelector('.unidad_medida').value = item.unidad_medida || 'UNIDAD';
+                }
+            });
+        }
+        
+        recalculateAll();
+        configurarTiempoEntrega();
+        configurarLugarEntrega();
+        
+        if (data.proveedor_id) {
+            await cargarDireccionesProveedor(data.proveedor_id);
+        }
+        
+        actualizarEstadoBotonPDF();
+        
+    } catch (err) { 
+        console.error("🔥 ERROR en cargarOrdenCompra:", err); 
+        mostrarNotificacion("Error cargando orden de compra", "danger"); 
     }
-
-    // =========================
-    // CACHE DE PROVEEDORES PARA AUTOCOMPLETADO RÁPIDO
-    // =========================
-    let proveedoresCache = [];
-    let proveedoresCargados = false;
+}
 
     async function cargarProveedoresCache() {
         if (proveedoresCargados) return;
