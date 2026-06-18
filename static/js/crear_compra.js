@@ -237,7 +237,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             if (existeLocal && proveedorLocal) {
-                // 🔥 USAR LA FUNCIÓN PARA ASEGURAR NOMBRE_COMERCIAL
                 const nombreComercial = asegurarNombreComercial(proveedorLocal);
                 
                 mostrarNotificacion(`🏢 Proveedor ENCONTRADO en sistema: ${proveedorLocal.razon_social}`, 'success');
@@ -267,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     success: true,
                     existe_en_sistema: false,
                     razon_social: data.razon_social || '',
-                    nombre_comercial: data.razon_social || '', // SUNAT no devuelve nombre_comercial
+                    nombre_comercial: data.razon_social || '',
                     razon_comercial: data.razon_social || '',
                     direccion: data.direccion || '',
                     estado: data.estado || '',
@@ -309,10 +308,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const resultado = await consultarSunat(numeroDocumento);
             
             if (resultado.success) {
-                // 🔥 FORZAR QUE NOMBRE_COMERCIAL SIEMPRE TENGA VALOR
                 const nombreComercial = resultado.nombre_comercial || resultado.razon_social || 'SIN RAZON SOCIAL';
                 
-                // 🔥 CORREGIDO: Llenar AMBOS campos (nombre_comercial Y razon_comercial)
+                // LLENAR TODOS LOS CAMPOS DEL MODAL
                 document.getElementById('nuevo_razon_social').value = resultado.razon_social || '';
                 document.getElementById('nuevo_nombre_comercial').value = nombreComercial;
                 document.getElementById('nuevo_razon_comercial').value = nombreComercial;
@@ -331,8 +329,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('nuevo_nombre_contacto').value = '';
                     quitarResaltadoCampos();
                     ocultarIndicadorProveedorExistente();
-                    
-                    // Si es nuevo, mostrar el RUC en el campo de documento
                     document.getElementById('nuevo_numero_documento').value = numeroDocumento;
                 }
                 
@@ -508,14 +504,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const resultado = await consultarSunat(ruc);
                 
                 if (resultado.success) {
-                    // 🔥 FORZAR QUE NOMBRE_COMERCIAL SIEMPRE TENGA VALOR
                     const nombreComercial = resultado.nombre_comercial || resultado.razon_social || 'SIN RAZON SOCIAL';
                     
+                    // 🔥 LLENAR TODOS LOS CAMPOS DEL FORMULARIO PRINCIPAL
                     document.getElementById('proveedor_razon_social').value = resultado.razon_social || '';
+                    document.getElementById('proveedor_razon_comercial').value = nombreComercial; // 🔥 ESTE ES EL IMPORTANTE
                     document.getElementById('proveedor_doc').value = ruc;
                     document.getElementById('proveedor_direccion').value = resultado.direccion || '';
                     
-                    // 🔥 Llenar campos del modal de nuevo proveedor (AMBOS)
+                    // LLENAR TODOS LOS CAMPOS DEL MODAL DE NUEVO PROVEEDOR
                     document.getElementById('nuevo_razon_social').value = resultado.razon_social || '';
                     document.getElementById('nuevo_nombre_comercial').value = nombreComercial;
                     document.getElementById('nuevo_razon_comercial').value = nombreComercial;
@@ -560,6 +557,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnLimpiarProveedor.addEventListener('click', function() {
             document.getElementById('proveedor_id').value = '';
             document.getElementById('proveedor_razon_social').value = '';
+            document.getElementById('proveedor_razon_comercial').value = '';
             document.getElementById('proveedor_doc').value = '';
             document.getElementById('proveedor_direccion').value = '';
             document.getElementById('telefono_contacto').value = '';
@@ -1119,6 +1117,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 document.getElementById('proveedor_id').value = proveedor.id;
                 document.getElementById('proveedor_razon_social').value = proveedor.razon_social;
+                document.getElementById('proveedor_razon_comercial').value = proveedor.razon_comercial || proveedor.razon_social || '';
                 document.getElementById('proveedor_doc').value = proveedor.numero_documento || '';
                 document.getElementById('proveedor_direccion').value = proveedor.direccion_fiscal || '';
                 document.getElementById('telefono_contacto').value = contacto.telefono || '';
@@ -1691,6 +1690,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const proveedorId = el.dataset.id;
                         document.getElementById('proveedor_id').value = proveedorId;
                         document.getElementById('proveedor_razon_social').value = el.dataset.razon;
+                        document.getElementById('proveedor_razon_comercial').value = el.dataset.razon || '';
                         document.getElementById('proveedor_doc').value = el.dataset.doc;
                         document.getElementById('proveedor_direccion').value = el.dataset.direccion;
                         document.getElementById('telefono_contacto').value = el.dataset.telefono || '';
@@ -1922,6 +1922,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('proveedor_id').value = data.proveedor_id;
             }
             document.getElementById('proveedor_razon_social').value = data.proveedor || data.razon_social || '';
+            document.getElementById('proveedor_razon_comercial').value = data.razon_comercial || data.proveedor || data.razon_social || '';
             document.getElementById('proveedor_doc').value = data.numero_documento || '';
             document.getElementById('proveedor_direccion').value = data.direccion_fiscal || '';
             document.getElementById('proveedor_contacto').value = data.proveedor_contacto || '';
@@ -2127,6 +2128,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const proveedorId = el.dataset.id;
                         document.getElementById('proveedor_id').value = proveedorId;
                         document.getElementById('proveedor_razon_social').value = el.dataset.razon;
+                        document.getElementById('proveedor_razon_comercial').value = el.dataset.razon || '';
                         document.getElementById('proveedor_doc').value = el.dataset.doc;
                         document.getElementById('proveedor_direccion').value = el.dataset.direccion;
                         document.getElementById('proveedor_contacto').value = el.dataset.contacto || '';
