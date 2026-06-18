@@ -4,18 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Gestor de Compras | KCF CORPORACION</title>
-    
+
+    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    
+
     <style>
+        /* ===== ESTILOS GENERALES ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { width: 100%; height: 100%; margin: 0; padding: 0; overflow-x: auto; }
         body { font-family: 'Inter', 'Roboto', sans-serif; background: #f0f2f5; min-height: 100vh; width: 100%; }
-        
+
+        /* ===== CONTENEDOR PRINCIPAL ===== */
         .main-container { width: 100%; padding: 1.5rem 2rem; margin: 0; }
-        
+
+        /* ===== HEADER CORPORATIVO ===== */
         .corporate-header {
             background: #0a2540;
             color: white;
@@ -30,7 +38,8 @@
         .header-stat { text-align: right; }
         .header-stat .label { font-size: 0.7rem; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.5px; }
         .header-stat .value { font-size: 1.5rem; font-weight: 700; line-height: 1; }
-        
+
+        /* ===== PANEL DE CONTROL ===== */
         .control-panel {
             background: white;
             border-radius: 8px;
@@ -47,7 +56,8 @@
         .panel-title h3 { font-size: 1rem; font-weight: 600; color: #1a3a4f; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; }
         .panel-title h3 i { color: #2c5f8a; margin-right: 0.5rem; }
         .panel-content { padding: 1.25rem 1.5rem; }
-        
+
+        /* ===== FILTROS ===== */
         .filter-group {
             display: flex;
             gap: 1rem;
@@ -89,7 +99,8 @@
             font-size: 0.9rem;
         }
         .search-wrapper input { padding-left: 2rem; }
-        
+
+        /* ===== BOTONES ===== */
         .btn-corporate {
             padding: 0.5rem 1rem;
             border-radius: 4px;
@@ -107,7 +118,8 @@
         .btn-corporate-secondary:hover { background: #e4e8ec; }
         .btn-corporate-success { background: #1e7f5e; color: white; }
         .btn-corporate-danger { background: #dc3545; color: white; }
-        
+
+        /* ===== TABLA MEJORADA ===== */
         .table-corporate {
             width: 100%;
             background: white;
@@ -115,68 +127,50 @@
             overflow-x: auto;
             border: 1px solid #e4e7eb;
         }
-        .table-corporate table { width: 100%; min-width: 1500px; }
+        .table-corporate table { width: 100%; min-width: 1200px; } /* Ancho mínimo para mostrar todas las columnas */
         .table-corporate thead th {
             background: #f8f9fa;
-            padding: 0.7rem 0.5rem;
-            font-size: 0.6rem;
+            padding: 0.875rem 0.75rem;
+            font-size: 0.7rem;
             font-weight: 700;
             color: #4a6276;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.5px;
             border-bottom: 2px solid #e4e7eb;
             white-space: nowrap;
-            text-align: center;
-            vertical-align: middle;
         }
         .table-corporate tbody td {
-            padding: 0.6rem 0.5rem;
-            font-size: 0.75rem;
+            padding: 0.75rem;
+            font-size: 0.8rem;
             vertical-align: middle;
             border-bottom: 1px solid #f0f2f5;
             color: #2c3e4e;
         }
         .table-corporate tbody tr:hover { background: #fafcfd; }
-        
-        .item-number {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 26px;
-            height: 26px;
-            background: #0a2540;
-            color: white;
-            border-radius: 50%;
-            font-weight: 700;
-            font-size: 0.75rem;
-        }
-        
+
+        /* Estilos para datos específicos */
         .order-code {
             font-family: 'Monaco', 'Courier New', monospace;
             font-weight: 600;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             color: #1a3a4f;
             background: #f0f2f5;
-            padding: 0.15rem 0.5rem;
+            padding: 0.2rem 0.5rem;
             border-radius: 4px;
             display: inline-block;
             white-space: nowrap;
         }
-        
-        .fecha { font-weight: 600; font-size: 0.75rem; color: #1a3a4f; white-space: nowrap; }
-        .hora { font-size: 0.6rem; color: #8a9aa8; margin-top: 2px; }
-        
-        .proveedor-nombre { font-weight: 500; font-size: 0.75rem; }
+        .fecha { font-weight: 600; font-size: 0.8rem; color: #1a3a4f; white-space: nowrap; }
+        .hora { font-size: 0.65rem; color: #8a9aa8; margin-top: 2px; }
+        .proveedor-nombre { font-weight: 500; }
         .proveedor-ruc { font-size: 0.7rem; color: #6c7e8e; }
-        .proveedor-telefono { font-size: 0.7rem; color: #6c7e8e; }
-        
         .badge-status {
             display: inline-flex;
             align-items: center;
-            gap: 0.3rem;
-            padding: 0.2rem 0.6rem;
+            gap: 0.4rem;
+            padding: 0.25rem 0.7rem;
             border-radius: 4px;
-            font-size: 0.6rem;
+            font-size: 0.65rem;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.3px;
@@ -188,13 +182,14 @@
         .status-rechazado { background: #ffebee; color: #c62828; border-left: 3px solid #f44336; }
         .status-ordenado { background: #e8eaf6; color: #283593; border-left: 3px solid #3f51b5; }
         .status-recibido { background: #e0f2f1; color: #00695c; border-left: 3px solid #009688; }
-        
-        .amount { font-weight: 700; font-size: 0.8rem; color: #1a3a4f; white-space: nowrap; }
-        
+
+        .amount { font-weight: 700; font-size: 0.9rem; color: #1a3a4f; white-space: nowrap; }
+        .amount-sub { font-size: 0.7rem; color: #6c7e8e; }
+
         .action-icons { display: flex; gap: 0.3rem; justify-content: center; flex-wrap: wrap; }
         .action-icon {
-            width: 26px;
-            height: 26px;
+            width: 28px;
+            height: 28px;
             border-radius: 4px;
             display: inline-flex;
             align-items: center;
@@ -203,17 +198,19 @@
             cursor: pointer;
             border: none;
             background: transparent;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
         }
         .action-icon:hover { transform: translateY(-2px); }
         .action-view { color: #1565c0; background: #e3f2fd; }
         .action-edit { color: #e65100; background: #fff3e0; }
         .action-pdf { color: #c62828; background: #ffebee; }
         .action-delete { color: #c62828; background: #ffebee; }
-        
+
+        /* ===== MODALES ===== */
         .modal-corporate .modal-content { border-radius: 12px; border: none; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
         .modal-corporate .modal-header { background: #0a2540; color: white; border: none; padding: 1rem 1.5rem; }
-        
+
+        /* ===== NOTIFICACIONES ===== */
         #notificacionesContainer {
             position: fixed;
             top: 20px;
@@ -243,12 +240,14 @@
         .notification-info i { color: #0a2540; }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
-        
+
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 992px) {
             .main-container { padding: 1rem; }
             .header-stats { display: none; }
             .filter-group { flex-direction: column; }
             .filter-item { width: 100%; }
+            .action-icons { flex-wrap: wrap; }
         }
         @media (max-width: 768px) {
             .corporate-header .container-fluid { padding: 0 1rem; }
@@ -256,9 +255,10 @@
         }
         @media (max-width: 640px) {
             .table-corporate { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-            .table-corporate table { min-width: 1200px; }
+            .table-corporate table { min-width: 900px; }
         }
-        
+
+        /* ===== SCROLLBAR ===== */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #bdc1c6; border-radius: 4px; }
@@ -366,27 +366,31 @@
         <table>
             <thead>
                 <tr>
-                    <th style="width:45px;">#</th>
+                    <!-- Información General -->
                     <th>N° ORDEN</th>
                     <th>FECHA / HORA</th>
-                    <th>RUC</th>
-                    <th>RAZÓN SOCIAL</th>
-                    <th>TELÉFONO</th>
+                    <!-- Información del Proveedor -->
+                    <th>PROVEEDOR (RUC)</th>
+                    <!-- Información de Pago -->
                     <th>MÉTODO PAGO</th>
+                    <th>CONDICIONES PAGO</th>
+                    <!-- Información de Entrega -->
                     <th>LUGAR ENTREGA</th>
                     <th>FECHA ENTREGA</th>
-                    <th>HORARIO ENTREGA</th>
-                    <th>CANT.</th>
-                    <th>UND</th>
-                    <th>PRECIO UNIT.</th>
+                    <!-- Detalle de Ítems (Resumen) -->
+                    <th>ÍTEMS</th>
+                    <!-- Montos -->
                     <th>SUB TOTAL</th>
+                    <th>IGV (18%)</th>
+                    <th class="text-end">MONTO TOTAL</th>
+                    <!-- Estado y Acciones -->
                     <th>ESTADO</th>
-                    <th style="width:140px;">ACCIONES</th>
+                    <th class="text-center">ACCIONES</th>
                 </tr>
             </thead>
             <tbody id="tbodyOrdenes">
                 <tr>
-                    <td colspan="16" class="text-center py-5">
+                    <td colspan="13" class="text-center py-5">
                         <div class="spinner-border text-primary mb-3" style="color: #0a2540;"></div>
                         <div class="text-muted">Cargando órdenes de compra...</div>
                     </td>
@@ -397,6 +401,7 @@
 </div>
 
 <!-- ===== MODALES ===== -->
+<!-- Modal Crear Proveedor -->
 <div class="modal fade modal-corporate" id="modalNuevoProveedor" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -451,6 +456,7 @@
     </div>
 </div>
 
+<!-- Modal Eliminar -->
 <div class="modal fade modal-corporate" id="modalEliminar" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -470,6 +476,7 @@
     </div>
 </div>
 
+<!-- Modal Detalle -->
 <div class="modal fade modal-corporate" id="modalDetalle" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -490,38 +497,89 @@
 <!-- ===== SCRIPTS ===== -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    /**
+     * ============================================
+     *  LISTADO_COMPRAS.JS - Versión Mejorada
+     *  Ahora incluye todos los campos extraídos
+     *  de los PDFs de órdenes de compra.
+     * ============================================
+     */
+
     document.addEventListener('DOMContentLoaded', function() {
 
         // =============================================
-        // DATOS DE EJEMPLO (ESTRUCTURA VACÍA - SOLO CAMPOS)
+        // 1. DATOS DE EJEMPLO (Estructura completa)
         // =============================================
-        // Esta es la estructura que debe devolver tu backend
-        // Todos los campos están en el orden de la tabla
+        // Estos datos simulan lo que vendría de tu backend.
+        // La estructura incluye TODOS los campos que aparecen en la tabla.
         // =============================================
 
         const ordenesData = [
-            // {
-            //     id: 1,
-            //     numero_orden: "",
-            //     fecha: "",
-            //     hora: "",
-            //     ruc: "",
-            //     razon_social: "",
-            //     telefono: "",
-            //     metodo_pago: "",
-            //     lugar_entrega: "",
-            //     fecha_entrega: "",
-            //     horario_entrega: "",
-            //     cantidad: "",
-            //     unidad_medida: "",
-            //     precio_unitario: "",
-            //     subtotal: "",
-            //     estado: ""
-            // }
+            {
+                id: 1,
+                numero_orden: "OC-047051B8",
+                fecha: "2026-06-15",
+                hora: "10:30 AM",
+                // --- PROVEEDOR ---
+                proveedor: {
+                    ruc: "20602095704",
+                    razon_social: "KCF CORPORACION EMPRESA INDIVIDUAL DE RESPONSABILIDAD LIMITADA",
+                    direccion: "JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO (ALT. AV. CANTA CALLAO CRUCE AV. LOS OLIV) LIMA - LIMA - SAN MARTIN DE PORRES",
+                    telefono: "921698196 / 999932051"
+                },
+                // --- PAGO ---
+                metodo_pago: "Credito 30 días",
+                condiciones_pago: "Día de Pago: viernes. Plazo desde factura.",
+                // --- ENTREGA ---
+                lugar_entrega: "Edificio Plaza del Sol, calle las Begonias 475, piso 10, distrito de San Isidro",
+                fecha_entrega: "2026-06-15",
+                horario_entrega: "Lunes a Viernes de 9:00am a 5:00pm (previa cita)",
+                // --- ÍTEMS ---
+                items: [
+                    { codigo: "SILLON-THINK", descripcion: "SILLON EJEC. THINK NYLON BR REG THINK SINCRO", cantidad: 2, unidad: "UN", precio_unitario: 489.00 }
+                ],
+                // --- MONTOS ---
+                subtotal: 978.00,
+                igv: 176.04,
+                total: 1154.04,
+                // --- ESTADO ---
+                estado: "pendiente"
+            },
+            {
+                id: 2,
+                numero_orden: "2040344399",
+                fecha: "2026-06-11",
+                hora: "09:15 AM",
+                // --- PROVEEDOR ---
+                proveedor: {
+                    ruc: "20602095704",
+                    razon_social: "KCF CORPORACION EIRL",
+                    direccion: "CALEL AMAUTA 147 URB. CARLOS CUETO FERNANDINI ET. CUATRO, LOS OLIVOS / LIMA / LIMA",
+                    telefono: "921698196 / 999932051"
+                },
+                // --- PAGO ---
+                metodo_pago: "Factura 90 días",
+                condiciones_pago: "Día de Pago: jueves. Plazo desde recepción de comprobante.",
+                // --- ENTREGA ---
+                lugar_entrega: "Av. Argentina 4453 - Callao",
+                fecha_entrega: "2026-07-08",
+                horario_entrega: "Previa cita en sistema Calendly",
+                // --- ÍTEMS ---
+                items: [
+                    { codigo: "121001060", descripcion: "SILICONA SIKASIL TRANSPARENTE 300ML", cantidad: 20, unidad: "UN", precio_unitario: 13.17 },
+                    { codigo: "121001409", descripcion: "PINTURA GLOSS ANYPSA X-3 GRIS GAL", cantidad: 4, unidad: "UN", precio_unitario: 73.95 }
+                ],
+                // --- MONTOS ---
+                subtotal: 559.20,
+                igv: 100.66,
+                total: 659.86,
+                // --- ESTADO ---
+                estado: "ordenado"
+            }
         ];
 
         // =============================================
-        // RENDERIZAR TABLA
+        // 2. FUNCIÓN PARA RENDERIZAR LA TABLA
         // =============================================
 
         function renderizarTabla(ordenes) {
@@ -530,7 +588,7 @@
             if (!ordenes || ordenes.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="16" class="text-center py-5 text-muted">
+                        <td colspan="13" class="text-center py-5 text-muted">
                             <i class="bi bi-inbox fs-1 d-block mb-2"></i>
                             No se encontraron órdenes de compra
                         </td>
@@ -540,7 +598,13 @@
             }
 
             let html = '';
-            ordenes.forEach((orden, index) => {
+            ordenes.forEach(orden => {
+                // Resumen de ítems
+                const itemsResumen = orden.items.map(item =>
+                    `${item.cantidad}x ${item.descripcion.substring(0, 20)}${item.descripcion.length > 20 ? '...' : ''}`
+                ).join('<br>');
+
+                // Badge de estado
                 const estadoClass = {
                     'pendiente': 'status-pendiente',
                     'aprobado': 'status-aprobado',
@@ -561,30 +625,57 @@
 
                 html += `
                     <tr>
-                        <td class="text-center"><span class="item-number">${index + 1}</span></td>
+                        <!-- N° ORDEN -->
                         <td><span class="order-code">${orden.numero_orden}</span></td>
+
+                        <!-- FECHA / HORA -->
                         <td>
                             <div class="fecha">${orden.fecha}</div>
                             <div class="hora"><i class="bi bi-clock"></i> ${orden.hora}</div>
                         </td>
-                        <td><span class="proveedor-ruc">${orden.ruc}</span></td>
-                        <td><span class="proveedor-nombre">${orden.razon_social}</span></td>
-                        <td><span class="proveedor-telefono">${orden.telefono}</span></td>
-                        <td><span style="font-size:0.7rem;">${orden.metodo_pago}</span></td>
-                        <td><span style="font-size:0.7rem;">${orden.lugar_entrega}</span></td>
-                        <td><span style="font-size:0.75rem; font-weight:500;">${orden.fecha_entrega}</span></td>
-                        <td><span style="font-size:0.65rem;">${orden.horario_entrega}</span></td>
-                        <td class="text-center"><strong>${orden.cantidad}</strong></td>
-                        <td class="text-center">${orden.unidad_medida}</td>
-                        <td class="text-end"><span class="amount">S/ ${orden.precio_unitario}</span></td>
-                        <td class="text-end"><span class="amount">S/ ${orden.subtotal}</span></td>
+
+                        <!-- PROVEEDOR (RUC) -->
+                        <td>
+                            <div class="proveedor-nombre">${orden.proveedor.razon_social}</div>
+                            <div class="proveedor-ruc">RUC: ${orden.proveedor.ruc}</div>
+                        </td>
+
+                        <!-- MÉTODO PAGO -->
+                        <td><span style="font-size:0.75rem;">${orden.metodo_pago}</span></td>
+
+                        <!-- CONDICIONES PAGO -->
+                        <td><span style="font-size:0.7rem; color:#6c7e8e;">${orden.condiciones_pago}</span></td>
+
+                        <!-- LUGAR ENTREGA -->
+                        <td><span style="font-size:0.75rem;">${orden.lugar_entrega}</span></td>
+
+                        <!-- FECHA ENTREGA -->
+                        <td><span style="font-size:0.8rem; font-weight:500;">${orden.fecha_entrega}</span></td>
+
+                        <!-- ÍTEMS (Resumen) -->
+                        <td><span style="font-size:0.75rem;">${itemsResumen}</span></td>
+
+                        <!-- SUB TOTAL -->
+                        <td><span class="amount">S/ ${orden.subtotal.toFixed(2)}</span></td>
+
+                        <!-- IGV -->
+                        <td><span class="amount-sub">S/ ${orden.igv.toFixed(2)}</span></td>
+
+                        <!-- MONTO TOTAL -->
+                        <td class="text-end">
+                            <span class="amount">S/ ${orden.total.toFixed(2)}</span>
+                        </td>
+
+                        <!-- ESTADO -->
                         <td>
                             <span class="badge-status ${estadoClass}">
-                                <i class="bi bi-circle-fill" style="font-size:0.4rem;"></i>
+                                <i class="bi bi-circle-fill" style="font-size:0.5rem;"></i>
                                 ${estadoLabel}
                             </span>
                         </td>
-                        <td>
+
+                        <!-- ACCIONES -->
+                        <td class="text-center">
                             <div class="action-icons">
                                 <button class="action-icon action-view" title="Ver Detalle" onclick="verDetalle(${orden.id})">
                                     <i class="bi bi-eye"></i>
@@ -605,22 +696,35 @@
             });
 
             tbody.innerHTML = html;
+
+            // Actualizar estadísticas del header
             actualizarEstadisticas(ordenes);
         }
 
         // =============================================
-        // FUNCIONES DE ACCIÓN
+        // 3. FUNCIONES DE ACCIÓN (Simuladas)
         // =============================================
 
+        // Función para ver detalle (abre modal)
         window.verDetalle = function(id) {
             const orden = ordenesData.find(o => o.id === id);
-            if (!orden) {
-                mostrarNotificacion('error', 'Orden no encontrada');
-                return;
-            }
+            if (!orden) return;
 
-            document.getElementById('detalleBody').innerHTML = `
-                <div class="row g-3">
+            const detalleBody = document.getElementById('detalleBody');
+            // Generar HTML con todos los detalles
+            let itemsHtml = orden.items.map(item =>
+                `<tr>
+                    <td>${item.codigo}</td>
+                    <td>${item.descripcion}</td>
+                    <td class="text-center">${item.cantidad}</td>
+                    <td>${item.unidad}</td>
+                    <td class="text-end">S/ ${item.precio_unitario.toFixed(2)}</td>
+                    <td class="text-end">S/ ${(item.cantidad * item.precio_unitario).toFixed(2)}</td>
+                </tr>`
+            ).join('');
+
+            detalleBody.innerHTML = `
+                <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <h6 class="fw-bold text-primary">INFORMACIÓN GENERAL</h6>
                         <p><strong>N° Orden:</strong> ${orden.numero_orden}</p>
@@ -629,39 +733,72 @@
                     </div>
                     <div class="col-md-6">
                         <h6 class="fw-bold text-primary">PROVEEDOR</h6>
-                        <p><strong>RUC:</strong> ${orden.ruc}</p>
-                        <p><strong>Razón Social:</strong> ${orden.razon_social}</p>
-                        <p><strong>Teléfono:</strong> ${orden.telefono}</p>
+                        <p><strong>RUC:</strong> ${orden.proveedor.ruc}</p>
+                        <p><strong>Razón Social:</strong> ${orden.proveedor.razon_social}</p>
+                        <p><strong>Dirección:</strong> ${orden.proveedor.direccion}</p>
+                        <p><strong>Teléfono:</strong> ${orden.proveedor.telefono}</p>
                     </div>
+                </div>
+                <div class="row g-3 mb-4">
                     <div class="col-md-6">
-                        <h6 class="fw-bold text-primary">PAGO</h6>
+                        <h6 class="fw-bold text-primary">INFORMACIÓN DE PAGO</h6>
                         <p><strong>Método:</strong> ${orden.metodo_pago}</p>
+                        <p><strong>Condiciones:</strong> ${orden.condiciones_pago}</p>
                     </div>
                     <div class="col-md-6">
-                        <h6 class="fw-bold text-primary">ENTREGA</h6>
+                        <h6 class="fw-bold text-primary">INFORMACIÓN DE ENTREGA</h6>
                         <p><strong>Lugar:</strong> ${orden.lugar_entrega}</p>
                         <p><strong>Fecha:</strong> ${orden.fecha_entrega}</p>
                         <p><strong>Horario:</strong> ${orden.horario_entrega}</p>
                     </div>
-                    <div class="col-12">
-                        <h6 class="fw-bold text-primary">DETALLE</h6>
-                        <p><strong>Cantidad:</strong> ${orden.cantidad}</p>
-                        <p><strong>Unidad:</strong> ${orden.unidad_medida}</p>
-                        <p><strong>Precio Unitario:</strong> S/ ${orden.precio_unitario}</p>
-                        <p><strong>Sub Total:</strong> S/ ${orden.subtotal}</p>
-                    </div>
+                </div>
+                <h6 class="fw-bold text-primary">DETALLE DE ÍTEMS</h6>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Código</th>
+                                <th>Descripción</th>
+                                <th class="text-center">Cant.</th>
+                                <th>Unidad</th>
+                                <th class="text-end">Precio Unit.</th>
+                                <th class="text-end">Importe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsHtml}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="5" class="text-end fw-bold">Subtotal:</td>
+                                <td class="text-end">S/ ${orden.subtotal.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="5" class="text-end fw-bold">IGV (18%):</td>
+                                <td class="text-end">S/ ${orden.igv.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="5" class="text-end fw-bold">TOTAL:</td>
+                                <td class="text-end fw-bold">S/ ${orden.total.toFixed(2)}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
                 </div>
             `;
 
-            new bootstrap.Modal(document.getElementById('modalDetalle')).show();
+            const modal = new bootstrap.Modal(document.getElementById('modalDetalle'));
+            modal.show();
         };
 
         window.editarOrden = function(id) {
             mostrarNotificacion('info', `Editando orden N° ${id}...`);
+            // Redirigir a página de edición
+            // window.location.href = `/editar_compra/${id}`;
         };
 
         window.descargarPDF = function(id) {
             mostrarNotificacion('success', `Descargando PDF de la orden N° ${id}...`);
+            // Lógica para descargar PDF
         };
 
         window.eliminarOrden = function(id) {
@@ -669,22 +806,24 @@
             document.getElementById('eliminarInfo').innerHTML =
                 `Orden <strong>${orden ? orden.numero_orden : ''}</strong> será eliminada permanentemente.`;
             document.getElementById('btnConfirmarEliminar').dataset.id = id;
-            new bootstrap.Modal(document.getElementById('modalEliminar')).show();
+            const modal = new bootstrap.Modal(document.getElementById('modalEliminar'));
+            modal.show();
         };
 
+        // Confirmar eliminación
         document.getElementById('btnConfirmarEliminar').addEventListener('click', function() {
             const id = parseInt(this.dataset.id);
             const index = ordenesData.findIndex(o => o.id === id);
             if (index !== -1) {
                 ordenesData.splice(index, 1);
                 renderizarTabla(ordenesData);
-                mostrarNotificacion('success', 'Orden eliminada correctamente.');
+                mostrarNotificacion('success', `Orden eliminada correctamente.`);
             }
             bootstrap.Modal.getInstance(document.getElementById('modalEliminar')).hide();
         });
 
         // =============================================
-        // FILTRADO
+        // 4. FUNCIONES DE FILTRADO
         // =============================================
 
         function filtrarOrdenes() {
@@ -695,14 +834,24 @@
             const busqueda = document.getElementById('buscador').value.toLowerCase();
 
             let filtradas = ordenesData.filter(orden => {
+                // Filtro por estado
                 if (estado !== 'todas' && orden.estado !== estado) return false;
-                if (proveedor && !orden.razon_social.toLowerCase().includes(proveedor)) return false;
+
+                // Filtro por proveedor
+                if (proveedor && !orden.proveedor.razon_social.toLowerCase().includes(proveedor)) return false;
+
+                // Filtro por fecha desde
                 if (fechaDesde && orden.fecha < fechaDesde) return false;
+
+                // Filtro por fecha hasta
                 if (fechaHasta && orden.fecha > fechaHasta) return false;
+
+                // Búsqueda general
                 if (busqueda) {
-                    const searchIn = `${orden.numero_orden} ${orden.razon_social} ${orden.ruc}`.toLowerCase();
+                    const searchIn = `${orden.numero_orden} ${orden.proveedor.razon_social} ${orden.proveedor.ruc}`.toLowerCase();
                     if (!searchIn.includes(busqueda)) return false;
                 }
+
                 return true;
             });
 
@@ -710,7 +859,7 @@
         }
 
         // =============================================
-        // ESTADÍSTICAS
+        // 5. ACTUALIZAR ESTADÍSTICAS
         // =============================================
 
         function actualizarEstadisticas(ordenes) {
@@ -724,12 +873,16 @@
         }
 
         // =============================================
-        // NOTIFICACIONES
+        // 6. NOTIFICACIONES
         // =============================================
 
         function mostrarNotificacion(tipo, mensaje) {
             const container = document.getElementById('notificacionesContainer');
-            const icons = { success: 'bi-check-circle-fill', error: 'bi-x-circle-fill', info: 'bi-info-circle-fill' };
+            const icons = {
+                success: 'bi-check-circle-fill',
+                error: 'bi-x-circle-fill',
+                info: 'bi-info-circle-fill'
+            };
 
             const notif = document.createElement('div');
             notif.className = `notification notification-${tipo}`;
@@ -747,9 +900,10 @@
         }
 
         // =============================================
-        // EVENTOS
+        // 7. EVENTOS Y EXPORTACIÓN
         // =============================================
 
+        // Eventos de filtros
         document.getElementById('filtroEstado').addEventListener('change', filtrarOrdenes);
         document.getElementById('filtroProveedor').addEventListener('input', filtrarOrdenes);
         document.getElementById('fechaDesde').addEventListener('change', filtrarOrdenes);
@@ -757,65 +911,70 @@
         document.getElementById('buscador').addEventListener('input', filtrarOrdenes);
         document.getElementById('btnRefrescar').addEventListener('click', filtrarOrdenes);
 
-        // =============================================
-        // EXPORTAR
-        // =============================================
-
+        // Exportar a CSV
         document.getElementById('btnExportar').addEventListener('click', function() {
-            if (ordenesData.length === 0) {
+            // Obtener las órdenes actualmente visibles (filtradas)
+            const tbody = document.getElementById('tbodyOrdenes');
+            const rows = tbody.querySelectorAll('tr');
+            if (rows.length === 0 || rows[0].querySelector('.text-muted')) {
                 mostrarNotificacion('error', 'No hay datos para exportar.');
                 return;
             }
 
+            // Cabeceras del CSV
             const headers = [
-                'ITEM', 'N° Orden', 'Fecha', 'RUC', 'Razón Social', 'Teléfono',
-                'Método Pago', 'Lugar Entrega', 'Fecha Entrega', 'Horario Entrega',
-                'Cantidad', 'Unidad', 'Precio Unitario', 'Sub Total', 'Estado'
+                'N° Orden', 'Fecha', 'Proveedor', 'RUC', 'Método Pago',
+                'Lugar Entrega', 'Fecha Entrega', 'Ítems', 'Subtotal', 'IGV', 'Total', 'Estado'
             ];
 
             let csvContent = headers.join(',') + '\n';
-            ordenesData.forEach((orden, index) => {
+
+            // Obtener datos de las filas visibles
+            ordenesData.forEach(orden => {
                 const row = [
-                    index + 1,
                     `"${orden.numero_orden}"`,
                     `"${orden.fecha}"`,
-                    `"${orden.ruc}"`,
-                    `"${orden.razon_social}"`,
-                    `"${orden.telefono}"`,
+                    `"${orden.proveedor.razon_social}"`,
+                    `"${orden.proveedor.ruc}"`,
                     `"${orden.metodo_pago}"`,
                     `"${orden.lugar_entrega}"`,
                     `"${orden.fecha_entrega}"`,
-                    `"${orden.horario_entrega}"`,
-                    orden.cantidad,
-                    `"${orden.unidad_medida}"`,
-                    orden.precio_unitario,
-                    orden.subtotal,
+                    `"${orden.items.map(i => `${i.cantidad}x ${i.descripcion}`).join('; ')}"`,
+                    orden.subtotal.toFixed(2),
+                    orden.igv.toFixed(2),
+                    orden.total.toFixed(2),
                     `"${orden.estado}"`
                 ];
                 csvContent += row.join(',') + '\n';
             });
 
+            // Descargar archivo CSV
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
             link.download = 'ordenes_compra.csv';
             link.click();
             URL.revokeObjectURL(link.href);
+
             mostrarNotificacion('success', 'Exportación completada exitosamente.');
         });
 
         // =============================================
-        // INICIALIZAR
+        // 8. INICIALIZAR LA TABLA
         // =============================================
 
+        // Renderizar la tabla con los datos de ejemplo
         renderizarTabla(ordenesData);
 
+        // Exponer funciones globales para los botones de la tabla
         window.ordenesData = ordenesData;
+        window.renderizarTabla = renderizarTabla;
         window.mostrarNotificacion = mostrarNotificacion;
 
-        console.log('✅ Sistema de Gestión de Compras inicializado.');
-        console.log('📊 Estructura de tabla lista para recibir datos.');
+        console.log('✅ Sistema de Gestión de Compras inicializado correctamente.');
+        console.log('📊 Datos cargados:', ordenesData.length, 'órdenes');
 
+        // Agregar una notificación de bienvenida
         setTimeout(() => {
             mostrarNotificacion('info', 'Bienvenido al Gestor de Compras KCF CORPORACION');
         }, 500);
