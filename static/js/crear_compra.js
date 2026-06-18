@@ -29,15 +29,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // FUNCIÓN PARA ASEGURAR QUE NOMBRE_COMERCIAL SIEMPRE TENGA VALOR
     // =========================
     function asegurarNombreComercial(proveedor) {
-        // Si el proveedor tiene nombre_comercial, usarlo
         if (proveedor.nombre_comercial && proveedor.nombre_comercial.trim() !== '') {
             return proveedor.nombre_comercial.trim();
         }
-        // Si no tiene nombre_comercial, usar razon_social
         if (proveedor.razon_social && proveedor.razon_social.trim() !== '') {
             return proveedor.razon_social.trim();
         }
-        // Si no tiene nada, usar un valor por defecto
         return proveedor.razon_social || 'SIN RAZON SOCIAL';
     }
 
@@ -49,39 +46,38 @@ document.addEventListener('DOMContentLoaded', () => {
     let usuarioActual = null;
     let esBorrador = true;
 
-   async function obtenerUsuarioActual() {
-    try {
-        const response = await fetch('/api/usuarios/actual');
-        const data = await response.json();
-        if (data.success && data.data) {
-            usuarioActual = data.data;
-            
-            const codigoCompradorSpan = document.getElementById('codigo_comprador');
-            if (codigoCompradorSpan && usuarioActual.codigo_vendedor) {
-                codigoCompradorSpan.textContent = usuarioActual.codigo_vendedor;
-            }
-            
-            // 🔥 CORREGIDO: El campo es "comprador", no "comprador_responsable"
-            const compradorInput = document.getElementById('comprador');
-            if (compradorInput && usuarioActual.nombre_completo) {
-                compradorInput.value = usuarioActual.nombre_completo;
-                const usuarioIdInput = document.getElementById('usuario_id');
-                const emailContacto = document.getElementById('email_contacto');
-                const telefonoUser = document.getElementById('telefono_contacto_user');
+    async function obtenerUsuarioActual() {
+        try {
+            const response = await fetch('/api/usuarios/actual');
+            const data = await response.json();
+            if (data.success && data.data) {
+                usuarioActual = data.data;
                 
-                if (usuarioIdInput) usuarioIdInput.value = usuarioActual.id;
-                if (emailContacto) emailContacto.value = usuarioActual.email || '';
-                if (telefonoUser) telefonoUser.value = usuarioActual.telefono || '';
+                const codigoCompradorSpan = document.getElementById('codigo_comprador');
+                if (codigoCompradorSpan && usuarioActual.codigo_vendedor) {
+                    codigoCompradorSpan.textContent = usuarioActual.codigo_vendedor;
+                }
+                
+                const compradorInput = document.getElementById('comprador');
+                if (compradorInput && usuarioActual.nombre_completo) {
+                    compradorInput.value = usuarioActual.nombre_completo;
+                    const usuarioIdInput = document.getElementById('usuario_id');
+                    const emailContacto = document.getElementById('email_contacto');
+                    const telefonoUser = document.getElementById('telefono_contacto_user');
+                    
+                    if (usuarioIdInput) usuarioIdInput.value = usuarioActual.id;
+                    if (emailContacto) emailContacto.value = usuarioActual.email || '';
+                    if (telefonoUser) telefonoUser.value = usuarioActual.telefono || '';
+                }
+                
+                return usuarioActual;
             }
-            
-            return usuarioActual;
+            return null;
+        } catch (error) {
+            console.error('Error obteniendo usuario:', error);
+            return null;
         }
-        return null;
-    } catch (error) {
-        console.error('Error obteniendo usuario:', error);
-        return null;
     }
-}
 
     async function obtenerUltimoCorrelativoCompra(usuarioId) {
         try {
@@ -217,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // CONSULTA A SUNAT PARA PROVEEDORES (PRIORIZANDO DATOS LOCALES)
+    // CONSULTA A SUNAT PARA PROVEEDORES
     // =========================
     async function consultarSunat(ruc) {
         try {
@@ -311,7 +307,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (resultado.success) {
                 const nombreComercial = resultado.nombre_comercial || resultado.razon_social || 'SIN RAZON SOCIAL';
                 
-                // LLENAR TODOS LOS CAMPOS DEL MODAL
                 document.getElementById('nuevo_razon_social').value = resultado.razon_social || '';
                 document.getElementById('nuevo_nombre_comercial').value = nombreComercial;
                 document.getElementById('nuevo_razon_comercial').value = nombreComercial;
@@ -475,7 +470,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // BOTÓN BUSCAR PROVEEDOR POR RUC (MEJORADO)
+    // BOTÓN BUSCAR PROVEEDOR POR RUC
     // =========================
     const btnBuscarProveedorPorRuc = document.getElementById('btnBuscarProveedorPorRuc');
     const buscarRucInput = document.getElementById('buscar_ruc');
@@ -507,13 +502,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (resultado.success) {
                     const nombreComercial = resultado.nombre_comercial || resultado.razon_social || 'SIN RAZON SOCIAL';
                     
-                    // 🔥 LLENAR TODOS LOS CAMPOS DEL FORMULARIO PRINCIPAL
                     document.getElementById('proveedor_razon_social').value = resultado.razon_social || '';
-                    document.getElementById('proveedor_razon_comercial').value = nombreComercial; // 🔥 ESTE ES EL IMPORTANTE
+                    document.getElementById('proveedor_razon_comercial').value = nombreComercial;
                     document.getElementById('proveedor_doc').value = ruc;
                     document.getElementById('proveedor_direccion').value = resultado.direccion || '';
                     
-                    // LLENAR TODOS LOS CAMPOS DEL MODAL DE NUEVO PROVEEDOR
                     document.getElementById('nuevo_razon_social').value = resultado.razon_social || '';
                     document.getElementById('nuevo_nombre_comercial').value = nombreComercial;
                     document.getElementById('nuevo_razon_comercial').value = nombreComercial;
@@ -1160,7 +1153,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // MODAL DE CONFIRMACIÓN
+    // MODAL DE CONFIRMACIÓN - CORREGIDO CON BOTÓN VER LISTADO
     // =========================
     function mostrarModalConfirmacion(datos) {
         const modalBody = document.getElementById('modalConfirmacionBody');
@@ -1213,6 +1206,29 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('btnNuevaOrdenModal').onclick = () => {
             window.location.href = '/crear_compra';
         };
+        
+        // 🔥 BOTÓN PARA IR AL LISTADO DE COMPRAS
+        const btnVerListado = document.createElement('button');
+        btnVerListado.className = 'btn btn-primary';
+        btnVerListado.innerHTML = '<i class="bi bi-list-ul"></i> Ver Listado de Compras';
+        btnVerListado.onclick = () => {
+            window.location.href = '/compras';
+        };
+        
+        const modalFooter = document.querySelector('#modalConfirmacion .modal-footer');
+        if (modalFooter) {
+            // Remover botón duplicado si existe
+            const existente = modalFooter.querySelector('.btn-ver-listado');
+            if (existente) existente.remove();
+            
+            btnVerListado.className += ' btn-ver-listado';
+            const btnCerrar = modalFooter.querySelector('[data-bs-dismiss="modal"]');
+            if (btnCerrar) {
+                modalFooter.insertBefore(btnVerListado, btnCerrar);
+            } else {
+                modalFooter.appendChild(btnVerListado);
+            }
+        }
     }
 
     // =========================
@@ -1245,7 +1261,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // OBTENER LISTA DE PRODUCTOS
+    // OBTENER LISTA DE PRODUCTOS - CORREGIDO
     // =========================
     function obtenerListaProductos() {
         const filas = document.querySelectorAll("#table-body tr");
@@ -1263,7 +1279,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const producto = {
                 producto_id: Number(getInput('.producto_id')) || null,
-                codigo: getInput('.codigo_producto') || '',
+                codigo: getInput('.codigo_producto') || '', // 🔥 Esto envía el código
                 descripcion: getInput('.descripcion') || '',
                 modelo: getInput('.modelo') || '',
                 marca: getInput('.marca') || '',
@@ -1873,28 +1889,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-   function aplicarBloqueoUI() {
-    const disabled = ordenBloqueada;
-    document.querySelectorAll('#table-body input').forEach(i => i.disabled = disabled);
-    
-    ['proveedor_razon_social', 'proveedor_doc', 'telefono_contacto', 'proveedor_contacto', 
-     'email_contacto_proveedor', 'num_cotizacion', 'estado'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.disabled = disabled;
-    });
-    
-    // 🔥 CORREGIDO: Usar los IDs correctos del HTML
-    ['comprador', 'email_contacto', 'telefono_contacto_user', 'condicion_pago', 
-     'tiempo_entrega', 'fecha_requerida', 'lugar_entrega', 'nota_compra', 
-     'notas', 'descuento_porcentaje_input', 'descuento_tipo'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.disabled = disabled;
-    });
-    
-    const btnAgregar = document.getElementById('btnAgregarItem');
-    if (btnAgregar) btnAgregar.disabled = disabled;
-    document.querySelectorAll('#table-body .btn-del').forEach(b => b.disabled = disabled);
-}
+    function aplicarBloqueoUI() {
+        const disabled = ordenBloqueada;
+        document.querySelectorAll('#table-body input').forEach(i => i.disabled = disabled);
+        
+        ['proveedor_razon_social', 'proveedor_doc', 'telefono_contacto', 'proveedor_contacto', 
+         'email_contacto_proveedor', 'num_cotizacion', 'estado'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.disabled = disabled;
+        });
+        
+        ['comprador', 'email_contacto', 'telefono_contacto_user', 'condicion_pago', 
+         'tiempo_entrega', 'fecha_requerida', 'lugar_entrega', 'nota_compra', 
+         'notas', 'descuento_porcentaje_input', 'descuento_tipo'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.disabled = disabled;
+        });
+        
+        const btnAgregar = document.getElementById('btnAgregarItem');
+        if (btnAgregar) btnAgregar.disabled = disabled;
+        document.querySelectorAll('#table-body .btn-del').forEach(b => b.disabled = disabled);
+    }
+
     function showModificarModal() {
         const modalElement = document.getElementById('modalModificar');
         if (modalElement) {
@@ -1903,130 +1919,124 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-   async function cargarOrdenCompra(id) {
-    try {
-        console.log("🔍 Cargando orden de compra ID:", id);
-        const res = await fetch(`/api/orden_compra/${id}`);
-        const json = await res.json();
-        console.log("📦 Datos recibidos:", json);
-        
-        if (!json.success) { 
-            mostrarNotificacion("Error al cargar orden de compra", "danger"); 
-            return; 
-        }
-        
-        const data = json.data;
-        console.log("✅ Datos de orden:", data);
-        
-        if (data.codigo_orden) {
-            codigoOrdenActual = data.codigo_orden;
-            correlativoActual = data.correlativo || 0;
-            esBorrador = data.codigo_orden.startsWith('TMP-');
-            actualizarNumeroOrdenUI(data.codigo_orden, esBorrador);
-        }
-        
-        // 🔥 ASIGNAR VALORES CON VERIFICACIÓN DE EXISTENCIA
-        const elementos = {
-            'proveedor_id': data.proveedor_id,
-            'proveedor_razon_social': data.proveedor || data.razon_social || '',
-            'proveedor_razon_comercial': data.razon_comercial || data.proveedor || data.razon_social || '',
-            'proveedor_doc': data.numero_documento || '',
-            'proveedor_direccion': data.direccion_fiscal || '',
-            'proveedor_contacto': data.proveedor_contacto || '',
-            'email_contacto_proveedor': data.email_contacto_proveedor || '',
-            'telefono_contacto': data.telefono_contacto || '',
-            'num_cotizacion': data.num_cotizacion || '',
-            'estado': data.estado || 'pendiente',
-            'notas': data.notas || '',
-            'condicion_pago': data.condicion_pago || 'Contado',
-            'tiempo_entrega': data.tiempo_entrega || '',
-            'fecha_requerida': data.fecha_requerida || '',
-            'lugar_entrega': data.lugar_entrega || '',
-            'nota_compra': data.nota_compra || '',
-            'usuario_id': data.usuario_id || '',
-            'comprador': data.nombre_completo || data.comprador || '',
-            'email_contacto': data.email || data.comprador_email || '',
-            'telefono_contacto_user': data.telefono || data.comprador_telefono || ''
-        };
-        
-        // Asignar cada valor verificando que el elemento exista
-        for (const [id, valor] of Object.entries(elementos)) {
-            const el = document.getElementById(id);
-            if (el) {
-                el.value = valor;
-            } else {
-                console.warn(`⚠️ Elemento no encontrado: #${id}`);
+    async function cargarOrdenCompra(id) {
+        try {
+            console.log("🔍 Cargando orden de compra ID:", id);
+            const res = await fetch(`/api/orden_compra/${id}`);
+            const json = await res.json();
+            console.log("📦 Datos recibidos:", json);
+            
+            if (!json.success) { 
+                mostrarNotificacion("Error al cargar orden de compra", "danger"); 
+                return; 
             }
-        }
-        
-        // Descuento
-        if (data.descuento_porcentaje !== undefined && data.descuento_porcentaje !== null) {
-            const descuentoInput = document.getElementById('descuento_porcentaje_input');
-            const descuentoTipo = document.getElementById('descuento_tipo');
-            if (descuentoInput) descuentoInput.value = data.descuento_porcentaje;
-            if (descuentoTipo && data.descuento_tipo) descuentoTipo.value = data.descuento_tipo;
-        }
-        
-        // Totales
-        const total = Number(data.total || 0);
-        const totalValorVentaElem = document.getElementById('total_valor_venta');
-        if (totalValorVentaElem) totalValorVentaElem.textContent = formatCantidad(total);
-        
-        const summarySubtotal = document.getElementById('summary_subtotal_venta');
-        if (summarySubtotal) summarySubtotal.textContent = formatCantidad(total);
-        
-        const summaryIgv = document.getElementById('summary_igv');
-        if (summaryIgv) summaryIgv.textContent = formatCantidad(Number(data.igv || 0));
-        
-        const summaryTotal = document.getElementById('summary_total_venta');
-        if (summaryTotal) summaryTotal.textContent = formatCantidad(total);
-        
-        // Limpiar tabla
-        const tableBody = document.getElementById('table-body');
-        if (tableBody) {
-            tableBody.innerHTML = '';
-            itemCounter = 0;
-        }
-        
-        // Cargar detalles
-        if (data.detalle && data.detalle.length > 0) {
-            data.detalle.forEach(item => {
-                addItem();
-                const row = document.querySelector("#table-body tr:last-child");
-                if (row) {
-                    const campos = {
-                        '.producto_id': item.producto_id || '',
-                        '.cantidad': formatCantidad(item.cantidad || 0),
-                        '.precio_venta_unitario': item.precio_unitario || 0,
-                        '.codigo_producto': item.codigo || '',
-                        '.descripcion': item.descripcion || '',
-                        '.modelo': item.modelo || '',
-                        '.marca': item.marca || '',
-                        '.unidad_medida': item.unidad_medida || 'UNIDAD'
-                    };
-                    for (const [selector, valor] of Object.entries(campos)) {
-                        const el = row.querySelector(selector);
-                        if (el) el.value = valor;
-                    }
+            
+            const data = json.data;
+            console.log("✅ Datos de orden:", data);
+            
+            if (data.codigo_orden) {
+                codigoOrdenActual = data.codigo_orden;
+                correlativoActual = data.correlativo || 0;
+                esBorrador = data.codigo_orden.startsWith('TMP-');
+                actualizarNumeroOrdenUI(data.codigo_orden, esBorrador);
+            }
+            
+            const elementos = {
+                'proveedor_id': data.proveedor_id,
+                'proveedor_razon_social': data.proveedor || data.razon_social || '',
+                'proveedor_razon_comercial': data.razon_comercial || data.proveedor || data.razon_social || '',
+                'proveedor_doc': data.numero_documento || '',
+                'proveedor_direccion': data.direccion_fiscal || '',
+                'proveedor_contacto': data.proveedor_contacto || '',
+                'email_contacto_proveedor': data.email_contacto_proveedor || '',
+                'telefono_contacto': data.telefono_contacto || '',
+                'num_cotizacion': data.num_cotizacion || '',
+                'estado': data.estado || 'pendiente',
+                'notas': data.notas || '',
+                'condicion_pago': data.condicion_pago || 'Contado',
+                'tiempo_entrega': data.tiempo_entrega || '',
+                'fecha_requerida': data.fecha_requerida || '',
+                'lugar_entrega': data.lugar_entrega || '',
+                'nota_compra': data.nota_compra || '',
+                'usuario_id': data.usuario_id || '',
+                'comprador': data.nombre_completo || data.comprador || '',
+                'email_contacto': data.email || data.comprador_email || '',
+                'telefono_contacto_user': data.telefono || data.comprador_telefono || ''
+            };
+            
+            for (const [id, valor] of Object.entries(elementos)) {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.value = valor;
+                } else {
+                    console.warn(`⚠️ Elemento no encontrado: #${id}`);
                 }
-            });
+            }
+            
+            if (data.descuento_porcentaje !== undefined && data.descuento_porcentaje !== null) {
+                const descuentoInput = document.getElementById('descuento_porcentaje_input');
+                const descuentoTipo = document.getElementById('descuento_tipo');
+                if (descuentoInput) descuentoInput.value = data.descuento_porcentaje;
+                if (descuentoTipo && data.descuento_tipo) descuentoTipo.value = data.descuento_tipo;
+            }
+            
+            const total = Number(data.total || 0);
+            const totalValorVentaElem = document.getElementById('total_valor_venta');
+            if (totalValorVentaElem) totalValorVentaElem.textContent = formatCantidad(total);
+            
+            const summarySubtotal = document.getElementById('summary_subtotal_venta');
+            if (summarySubtotal) summarySubtotal.textContent = formatCantidad(total);
+            
+            const summaryIgv = document.getElementById('summary_igv');
+            if (summaryIgv) summaryIgv.textContent = formatCantidad(Number(data.igv || 0));
+            
+            const summaryTotal = document.getElementById('summary_total_venta');
+            if (summaryTotal) summaryTotal.textContent = formatCantidad(total);
+            
+            const tableBody = document.getElementById('table-body');
+            if (tableBody) {
+                tableBody.innerHTML = '';
+                itemCounter = 0;
+            }
+            
+            if (data.detalle && data.detalle.length > 0) {
+                data.detalle.forEach(item => {
+                    addItem();
+                    const row = document.querySelector("#table-body tr:last-child");
+                    if (row) {
+                        const campos = {
+                            '.producto_id': item.producto_id || '',
+                            '.cantidad': formatCantidad(item.cantidad || 0),
+                            '.precio_venta_unitario': item.precio_unitario || 0,
+                            '.codigo_producto': item.codigo || '',
+                            '.descripcion': item.descripcion || '',
+                            '.modelo': item.modelo || '',
+                            '.marca': item.marca || '',
+                            '.unidad_medida': item.unidad_medida || 'UNIDAD'
+                        };
+                        for (const [selector, valor] of Object.entries(campos)) {
+                            const el = row.querySelector(selector);
+                            if (el) el.value = valor;
+                        }
+                    }
+                });
+            }
+            
+            recalculateAll();
+            configurarTiempoEntrega();
+            configurarLugarEntrega();
+            
+            if (data.proveedor_id) {
+                await cargarDireccionesProveedor(data.proveedor_id);
+            }
+            
+            actualizarEstadoBotonPDF();
+            
+        } catch (err) { 
+            console.error("🔥 ERROR en cargarOrdenCompra:", err); 
+            mostrarNotificacion("Error cargando orden de compra", "danger"); 
         }
-        
-        recalculateAll();
-        configurarTiempoEntrega();
-        configurarLugarEntrega();
-        
-        if (data.proveedor_id) {
-            await cargarDireccionesProveedor(data.proveedor_id);
-        }
-        
-        actualizarEstadoBotonPDF();
-        
-    } catch (err) { 
-        console.error("🔥 ERROR en cargarOrdenCompra:", err); 
-        mostrarNotificacion("Error cargando orden de compra", "danger"); 
     }
-}
 
     async function cargarProveedoresCache() {
         if (proveedoresCargados) return;
@@ -2045,6 +2055,9 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error cargando proveedores:', error);
         }
     }
+
+    let proveedoresCache = [];
+    let proveedoresCargados = false;
 
     function attachProveedorAutocompleteRapido(inputId) {
         const input = document.getElementById(inputId);
