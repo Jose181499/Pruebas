@@ -1260,7 +1260,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // OBTENER LISTA DE PRODUCTOS - CORREGIDO
+    // OBTENER LISTA DE PRODUCTOS
     // =========================
     function obtenerListaProductos() {
         const filas = document.querySelectorAll("#table-body tr");
@@ -1330,34 +1330,52 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // GUARDAR ORDEN DE COMPRA - CORREGIDO CON PROVEEDOR_ID
+    // GUARDAR ORDEN DE COMPRA - CORREGIDO
     // =========================
     async function guardarOrdenCompra() {
         // 🔥 OBTENER PROVEEDOR_ID CORRECTAMENTE
         let proveedorId = document.getElementById('proveedor_id')?.value;
         
+        console.log('🔍 proveedorId del campo hidden:', proveedorId);
+        
         // Si no hay proveedor_id, intentar buscar por RUC
         if (!proveedorId || proveedorId === '' || proveedorId === '0') {
             const ruc = document.getElementById('proveedor_doc')?.value.trim();
+            console.log('🔍 Buscando proveedor por RUC:', ruc);
+            
             if (ruc) {
                 try {
-                    const result = await consultarSunat(ruc);
-                    if (result.success && result.existe_en_sistema) {
-                        proveedorId = result.proveedor_id;
+                    // Buscar proveedor en la base de datos
+                    const response = await fetch(`/api/proveedores/buscar-por-ruc?ruc=${ruc}`);
+                    const result = await response.json();
+                    console.log('🔍 Resultado búsqueda proveedor:', result);
+                    
+                    if (result.success && result.found && result.data) {
+                        proveedorId = result.data.id;
                         document.getElementById('proveedor_id').value = proveedorId;
                         console.log('✅ Proveedor encontrado por RUC:', proveedorId);
+                    } else {
+                        console.log('❌ Proveedor no encontrado en la base de datos');
+                        mostrarNotificacion("⚠️ El RUC no existe en el sistema. Debe registrar el proveedor primero.", "warning");
+                        return;
                     }
                 } catch (e) {
                     console.error('Error buscando proveedor por RUC:', e);
+                    mostrarNotificacion("⚠️ Error al verificar el proveedor", "warning");
+                    return;
                 }
             }
         }
         
-        // 🔥 VALIDAR QUE TENGA PROVEEDOR_ID
+        // 🔥 VALIDAR QUE TENGAMOS PROVEEDOR_ID
         if (!proveedorId || proveedorId === '' || proveedorId === '0') {
             mostrarNotificacion("⚠️ Debe seleccionar un proveedor válido (RUC existente en el sistema)", "warning");
             return;
         }
+        
+        // Convertir a número
+        proveedorId = parseInt(proveedorId);
+        console.log('✅ proveedorId final:', proveedorId);
         
         const proveedorData = {
             razon_social: document.getElementById('proveedor_razon_social')?.value.trim() || '',
@@ -1416,7 +1434,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const payload = {
             id: orden_id && orden_id !== '' && orden_id !== 'None' ? parseInt(orden_id) : null,
-            proveedor_id: parseInt(proveedorId), // 🔥 Asegurar que sea número
+            proveedor_id: proveedorId,
             proveedor_data: {
                 razon_social: proveedorData.razon_social,
                 numero_documento: proveedorData.numero_documento,
@@ -1505,7 +1523,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // CONVERTIR A OFICIAL
+    // CONVERTIR A OFICIAL - CORREGIDO
     // =========================
     async function convertirAOficial() {
         if (!esBorrador) { 
@@ -1513,8 +1531,44 @@ document.addEventListener('DOMContentLoaded', () => {
             return; 
         }
         
+        // 🔥 VERIFICAR PROVEEDOR
+        let proveedorId = document.getElementById('proveedor_id')?.value;
         const razonSocial = document.getElementById('proveedor_razon_social')?.value.trim();
         const numeroDocumento = document.getElementById('proveedor_doc')?.value.trim();
+        
+        console.log('🔍 Verificando proveedor para conversión:');
+        console.log('  - proveedor_id:', proveedorId);
+        console.log('  - RUC:', numeroDocumento);
+        console.log('  - Razón Social:', razonSocial);
+        
+        // Si no hay proveedor_id, intentar buscar por RUC
+        if (!proveedorId || proveedorId === '' || proveedorId === '0') {
+            if (numeroDocumento) {
+                try {
+                    const response = await fetch(`/api/proveedores/buscar-por-ruc?ruc=${numeroDocumento}`);
+                    const result = await response.json();
+                    console.log('🔍 Resultado búsqueda proveedor:', result);
+                    
+                    if (result.success && result.found && result.data) {
+                        proveedorId = result.data.id;
+                        document.getElementById('proveedor_id').value = proveedorId;
+                        console.log('✅ Proveedor encontrado por RUC:', proveedorId);
+                    } else {
+                        mostrarNotificacion("⚠️ El RUC no existe en el sistema. Debe registrar el proveedor primero.", "warning");
+                        return;
+                    }
+                } catch (e) {
+                    console.error('Error buscando proveedor:', e);
+                    mostrarNotificacion("⚠️ Error al verificar el proveedor", "warning");
+                    return;
+                }
+            }
+        }
+        
+        if (!proveedorId || proveedorId === '' || proveedorId === '0') {
+            mostrarNotificacion("⚠️ Debe seleccionar un proveedor válido (RUC existente en el sistema)", "warning");
+            return;
+        }
         
         if (!razonSocial || !numeroDocumento) {
             mostrarNotificacion("⚠️ Complete los datos del proveedor (Razón Social y RUC)", "warning");
@@ -1528,6 +1582,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         for (let i = 0; i < listaProductos.length; i++) {
+            if (!listaProductos[i].producto_id) {
+                mostrarNotificacion(`⚠️ Producto ${i+1} no tiene ID válido`, "warning");
+                return;
+            }
             if (!listaProductos[i].precio_venta_unitario || listaProductos[i].precio_venta_unitario <= 0) {
                 mostrarNotificacion(`⚠️ El producto ${listaProductos[i].codigo || 'sin código'} no tiene precio de venta válido`, "warning");
                 return;
