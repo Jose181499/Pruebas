@@ -26,6 +26,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
+    // FUNCIÓN PARA ASEGURAR QUE NOMBRE_COMERCIAL SIEMPRE TENGA VALOR
+    // =========================
+    function asegurarNombreComercial(proveedor) {
+        // Si el proveedor tiene nombre_comercial, usarlo
+        if (proveedor.nombre_comercial && proveedor.nombre_comercial.trim() !== '') {
+            return proveedor.nombre_comercial.trim();
+        }
+        // Si no tiene nombre_comercial, usar razon_social
+        if (proveedor.razon_social && proveedor.razon_social.trim() !== '') {
+            return proveedor.razon_social.trim();
+        }
+        // Si no tiene nada, usar un valor por defecto
+        return proveedor.razon_social || 'SIN RAZON SOCIAL';
+    }
+
+    // =========================
     // GENERACIÓN DE CÓDIGOS PERSONALIZADOS PARA COMPRAS
     // =========================
     let codigoOrdenActual = '';
@@ -202,131 +218,138 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================
     // CONSULTA A SUNAT PARA PROVEEDORES (PRIORIZANDO DATOS LOCALES)
     // =========================
-   async function consultarSunat(ruc) {
-    try {
-        mostrarNotificacion(`🔍 Verificando RUC ${ruc} en sistema local...`, 'info');
-        
-        const checkResponse = await fetch(`/api/proveedores/buscar?q=${ruc}`);
-        const checkData = await checkResponse.json();
-        
-        let existeLocal = false;
-        let proveedorLocal = null;
-        
-        if (checkData.success && checkData.data && checkData.data.length > 0) {
-            proveedorLocal = checkData.data.find(p => p.numero_documento === ruc);
-            if (proveedorLocal) {
-                existeLocal = true;
-                console.log('✅ Proveedor encontrado en base local:', proveedorLocal);
-            }
-        }
-        
-        if (existeLocal && proveedorLocal) {
-            mostrarNotificacion(`🏢 Proveedor ENCONTRADO en sistema: ${proveedorLocal.razon_social}`, 'success');
+    async function consultarSunat(ruc) {
+        try {
+            mostrarNotificacion(`🔍 Verificando RUC ${ruc} en sistema local...`, 'info');
             
-            return {
-                success: true,
-                existe_en_sistema: true,
-                proveedor_id: proveedorLocal.id,
-                razon_social: proveedorLocal.razon_social || '',
-                nombre_comercial: proveedorLocal.nombre_comercial || proveedorLocal.razon_social || '',
-                direccion: proveedorLocal.direccion_fiscal || '',
-                estado: proveedorLocal.estado || 'ACTIVO',
-                telefono_contacto: proveedorLocal.telefono_contacto || '',
-                email_contacto: proveedorLocal.email_contacto || '',
-                nombre_contacto: proveedorLocal.nombre_contacto || ''
-            };
+            const checkResponse = await fetch(`/api/proveedores/buscar?q=${ruc}`);
+            const checkData = await checkResponse.json();
+            
+            let existeLocal = false;
+            let proveedorLocal = null;
+            
+            if (checkData.success && checkData.data && checkData.data.length > 0) {
+                proveedorLocal = checkData.data.find(p => p.numero_documento === ruc);
+                if (proveedorLocal) {
+                    existeLocal = true;
+                    console.log('✅ Proveedor encontrado en base local:', proveedorLocal);
+                }
+            }
+            
+            if (existeLocal && proveedorLocal) {
+                // 🔥 USAR LA FUNCIÓN PARA ASEGURAR NOMBRE_COMERCIAL
+                const nombreComercial = asegurarNombreComercial(proveedorLocal);
+                
+                mostrarNotificacion(`🏢 Proveedor ENCONTRADO en sistema: ${proveedorLocal.razon_social}`, 'success');
+                
+                return {
+                    success: true,
+                    existe_en_sistema: true,
+                    proveedor_id: proveedorLocal.id,
+                    razon_social: proveedorLocal.razon_social || '',
+                    nombre_comercial: nombreComercial,
+                    razon_comercial: proveedorLocal.razon_comercial || nombreComercial,
+                    direccion: proveedorLocal.direccion_fiscal || '',
+                    estado: proveedorLocal.estado || 'ACTIVO',
+                    telefono_contacto: proveedorLocal.telefono_contacto || '',
+                    email_contacto: proveedorLocal.email_contacto || '',
+                    nombre_contacto: proveedorLocal.nombre_contacto || ''
+                };
+            }
+            
+            mostrarNotificacion(`🌐 Consultando RUC ${ruc} en SUNAT...`, 'info');
+            const response = await fetch(`/api/sunat/consulta_proveedor?ruc=${ruc}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                mostrarNotificacion(`🆕 Proveedor NUEVO (no existe en sistema), cargando datos de SUNAT...`, 'info');
+                return {
+                    success: true,
+                    existe_en_sistema: false,
+                    razon_social: data.razon_social || '',
+                    nombre_comercial: data.razon_social || '', // SUNAT no devuelve nombre_comercial
+                    razon_comercial: data.razon_social || '',
+                    direccion: data.direccion || '',
+                    estado: data.estado || '',
+                    telefono_contacto: '',
+                    email_contacto: '',
+                    nombre_contacto: ''
+                };
+            } else {
+                return { success: false, error: data.error || 'No se encontraron datos en SUNAT' };
+            }
+        } catch (error) {
+            console.error('Error consultando:', error);
+            return { success: false, error: error.message };
         }
-        
-        mostrarNotificacion(`🌐 Consultando RUC ${ruc} en SUNAT...`, 'info');
-        const response = await fetch(`/api/sunat/consulta_proveedor?ruc=${ruc}`);
-        const data = await response.json();
-        
-        if (data.success) {
-            // 🔥 CORREGIDO: SUNAT solo devuelve razon_social, no nombre_comercial
-            mostrarNotificacion(`🆕 Proveedor NUEVO (no existe en sistema), cargando datos de SUNAT...`, 'info');
-            return {
-                success: true,
-                existe_en_sistema: false,
-                razon_social: data.razon_social || '',
-                nombre_comercial: data.razon_social || '', // Usar razon_social como nombre_comercial
-                direccion: data.direccion || '',
-                estado: data.estado || '',
-                telefono_contacto: '',
-                email_contacto: '',
-                nombre_contacto: ''
-            };
-        } else {
-            return { success: false, error: data.error || 'No se encontraron datos en SUNAT' };
-        }
-    } catch (error) {
-        console.error('Error consultando:', error);
-        return { success: false, error: error.message };
     }
-}
 
     async function autocompletarConSunat() {
-    const tipoDocumento = document.getElementById('nuevo_tipo_documento')?.value;
-    const numeroDocumento = document.getElementById('nuevo_numero_documento')?.value.trim();
-    
-    if (tipoDocumento !== 'RUC') {
-        mostrarNotificacion('⚠️ La búsqueda en SUNAT solo está disponible para RUC', 'warning');
-        return;
-    }
-    
-    if (!numeroDocumento || numeroDocumento.length !== 11) {
-        mostrarNotificacion('⚠️ Ingrese un RUC válido de 11 dígitos', 'warning');
-        return;
-    }
-    
-    const btnBuscar = document.getElementById('btnBuscarSunat');
-    const textoOriginal = btnBuscar?.innerHTML;
-    if (btnBuscar) {
-        btnBuscar.innerHTML = '<i class="bi bi-hourglass-split"></i> Verificando...';
-        btnBuscar.disabled = true;
-    }
-    
-    try {
-        const resultado = await consultarSunat(numeroDocumento);
+        const tipoDocumento = document.getElementById('nuevo_tipo_documento')?.value;
+        const numeroDocumento = document.getElementById('nuevo_numero_documento')?.value.trim();
         
-        if (resultado.success) {
-            // Asignar valores
-            document.getElementById('nuevo_razon_social').value = resultado.razon_social || '';
-            // 🔥 CORREGIDO: Usar razon_social si nombre_comercial está vacío
-            document.getElementById('nuevo_nombre_comercial').value = resultado.nombre_comercial || resultado.razon_social || '';
-            document.getElementById('nuevo_direccion_fiscal').value = resultado.direccion || '';
-            
-            if (resultado.existe_en_sistema) {
-                mostrarNotificacionExistente(resultado);
-                document.getElementById('nuevo_telefono').value = resultado.telefono_contacto || '';
-                document.getElementById('nuevo_email').value = resultado.email_contacto || '';
-                document.getElementById('nuevo_nombre_contacto').value = resultado.nombre_contacto || '';
-                resaltarCamposExistentes();
-                mostrarIndicadorProveedorExistente(resultado);
-            } else {
-                document.getElementById('nuevo_telefono').value = '';
-                document.getElementById('nuevo_email').value = '';
-                document.getElementById('nuevo_nombre_contacto').value = '';
-                quitarResaltadoCampos();
-                ocultarIndicadorProveedorExistente();
-                
-                // Si es nuevo, mostrar el RUC en el campo de documento
-                document.getElementById('nuevo_numero_documento').value = numeroDocumento;
-            }
-            
-            mostrarNotificacion('✅ Datos cargados correctamente', 'success');
-        } else {
-            mostrarNotificacion('❌ ' + (resultado.error || 'No se encontraron datos para este RUC'), 'danger');
+        if (tipoDocumento !== 'RUC') {
+            mostrarNotificacion('⚠️ La búsqueda en SUNAT solo está disponible para RUC', 'warning');
+            return;
         }
-    } catch (error) {
-        console.error('Error:', error);
-        mostrarNotificacion('❌ Error al consultar', 'danger');
-    } finally {
+        
+        if (!numeroDocumento || numeroDocumento.length !== 11) {
+            mostrarNotificacion('⚠️ Ingrese un RUC válido de 11 dígitos', 'warning');
+            return;
+        }
+        
+        const btnBuscar = document.getElementById('btnBuscarSunat');
+        const textoOriginal = btnBuscar?.innerHTML;
         if (btnBuscar) {
-            btnBuscar.innerHTML = textoOriginal;
-            btnBuscar.disabled = false;
+            btnBuscar.innerHTML = '<i class="bi bi-hourglass-split"></i> Verificando...';
+            btnBuscar.disabled = true;
+        }
+        
+        try {
+            const resultado = await consultarSunat(numeroDocumento);
+            
+            if (resultado.success) {
+                // 🔥 FORZAR QUE NOMBRE_COMERCIAL SIEMPRE TENGA VALOR
+                const nombreComercial = resultado.nombre_comercial || resultado.razon_social || 'SIN RAZON SOCIAL';
+                
+                // 🔥 CORREGIDO: Llenar AMBOS campos (nombre_comercial Y razon_comercial)
+                document.getElementById('nuevo_razon_social').value = resultado.razon_social || '';
+                document.getElementById('nuevo_nombre_comercial').value = nombreComercial;
+                document.getElementById('nuevo_razon_comercial').value = nombreComercial;
+                document.getElementById('nuevo_direccion_fiscal').value = resultado.direccion || '';
+                
+                if (resultado.existe_en_sistema) {
+                    mostrarNotificacionExistente(resultado);
+                    document.getElementById('nuevo_telefono').value = resultado.telefono_contacto || '';
+                    document.getElementById('nuevo_email').value = resultado.email_contacto || '';
+                    document.getElementById('nuevo_nombre_contacto').value = resultado.nombre_contacto || '';
+                    resaltarCamposExistentes();
+                    mostrarIndicadorProveedorExistente(resultado);
+                } else {
+                    document.getElementById('nuevo_telefono').value = '';
+                    document.getElementById('nuevo_email').value = '';
+                    document.getElementById('nuevo_nombre_contacto').value = '';
+                    quitarResaltadoCampos();
+                    ocultarIndicadorProveedorExistente();
+                    
+                    // Si es nuevo, mostrar el RUC en el campo de documento
+                    document.getElementById('nuevo_numero_documento').value = numeroDocumento;
+                }
+                
+                mostrarNotificacion('✅ Datos cargados correctamente', 'success');
+            } else {
+                mostrarNotificacion('❌ ' + (resultado.error || 'No se encontraron datos para este RUC'), 'danger');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            mostrarNotificacion('❌ Error al consultar', 'danger');
+        } finally {
+            if (btnBuscar) {
+                btnBuscar.innerHTML = textoOriginal;
+                btnBuscar.disabled = false;
+            }
         }
     }
-}
 
     function mostrarNotificacionExistente(proveedor) {
         const notificacionDiv = document.createElement('div');
@@ -461,75 +484,77 @@ document.addEventListener('DOMContentLoaded', () => {
     const buscarRucInput = document.getElementById('buscar_ruc');
     const btnLimpiarProveedor = document.getElementById('btnLimpiarProveedor');
 
-   if (btnBuscarProveedorPorRuc) {
-    btnBuscarProveedorPorRuc.addEventListener('click', async function(e) {
-        e.preventDefault();
-        
-        const ruc = buscarRucInput?.value.trim();
-        
-        if (!ruc) {
-            mostrarNotificacion('⚠️ Ingrese un RUC para buscar', 'warning');
-            return;
-        }
-        
-        if (ruc.length !== 11) {
-            mostrarNotificacion('⚠️ El RUC debe tener 11 dígitos', 'warning');
-            return;
-        }
-        
-        const textoOriginal = btnBuscarProveedorPorRuc.innerHTML;
-        btnBuscarProveedorPorRuc.innerHTML = '<i class="bi bi-hourglass-split"></i> Verificando...';
-        btnBuscarProveedorPorRuc.disabled = true;
-        
-        try {
-            const resultado = await consultarSunat(ruc);
+    if (btnBuscarProveedorPorRuc) {
+        btnBuscarProveedorPorRuc.addEventListener('click', async function(e) {
+            e.preventDefault();
             
-            if (resultado.success) {
-                // 🔥 CORREGIDO: Usar razon_social si nombre_comercial está vacío
-                const nombreComercial = resultado.nombre_comercial || resultado.razon_social || '';
-                
-                document.getElementById('proveedor_razon_social').value = resultado.razon_social || '';
-                document.getElementById('proveedor_doc').value = ruc;
-                document.getElementById('proveedor_direccion').value = resultado.direccion || '';
-                
-                document.getElementById('nuevo_razon_social').value = resultado.razon_social || '';
-                document.getElementById('nuevo_nombre_comercial').value = nombreComercial;
-                document.getElementById('nuevo_direccion_fiscal').value = resultado.direccion || '';
-                document.getElementById('nuevo_numero_documento').value = ruc;
-                
-                if (resultado.existe_en_sistema) {
-                    document.getElementById('telefono_contacto').value = resultado.telefono_contacto || '';
-                    document.getElementById('proveedor_contacto').value = resultado.nombre_contacto || '';
-                    document.getElementById('email_contacto_proveedor').value = resultado.email_contacto || '';
-                    document.getElementById('proveedor_id').value = resultado.proveedor_id || '';
-                    
-                    mostrarNotificacionExistente(resultado);
-                    
-                    if (resultado.proveedor_id) {
-                        await cargarDireccionesProveedor(resultado.proveedor_id);
-                    }
-                    
-                    mostrarNotificacion('✅ Proveedor existente cargado con todos sus datos', 'success');
-                } else {
-                    document.getElementById('telefono_contacto').value = '';
-                    document.getElementById('proveedor_contacto').value = '';
-                    document.getElementById('email_contacto_proveedor').value = '';
-                    document.getElementById('proveedor_id').value = '';
-                    
-                    mostrarNotificacion('✅ Datos de SUNAT cargados (proveedor nuevo)', 'success');
-                }
-            } else {
-                mostrarNotificacion('❌ ' + (resultado.error || 'No se encontraron datos para este RUC en SUNAT'), 'danger');
+            const ruc = buscarRucInput?.value.trim();
+            
+            if (!ruc) {
+                mostrarNotificacion('⚠️ Ingrese un RUC para buscar', 'warning');
+                return;
             }
-        } catch (error) {
-            console.error('Error:', error);
-            mostrarNotificacion('❌ Error al consultar: ' + error.message, 'danger');
-        } finally {
-            btnBuscarProveedorPorRuc.innerHTML = textoOriginal;
-            btnBuscarProveedorPorRuc.disabled = false;
-        }
-    });
-}
+            
+            if (ruc.length !== 11) {
+                mostrarNotificacion('⚠️ El RUC debe tener 11 dígitos', 'warning');
+                return;
+            }
+            
+            const textoOriginal = btnBuscarProveedorPorRuc.innerHTML;
+            btnBuscarProveedorPorRuc.innerHTML = '<i class="bi bi-hourglass-split"></i> Verificando...';
+            btnBuscarProveedorPorRuc.disabled = true;
+            
+            try {
+                const resultado = await consultarSunat(ruc);
+                
+                if (resultado.success) {
+                    // 🔥 FORZAR QUE NOMBRE_COMERCIAL SIEMPRE TENGA VALOR
+                    const nombreComercial = resultado.nombre_comercial || resultado.razon_social || 'SIN RAZON SOCIAL';
+                    
+                    document.getElementById('proveedor_razon_social').value = resultado.razon_social || '';
+                    document.getElementById('proveedor_doc').value = ruc;
+                    document.getElementById('proveedor_direccion').value = resultado.direccion || '';
+                    
+                    // 🔥 Llenar campos del modal de nuevo proveedor (AMBOS)
+                    document.getElementById('nuevo_razon_social').value = resultado.razon_social || '';
+                    document.getElementById('nuevo_nombre_comercial').value = nombreComercial;
+                    document.getElementById('nuevo_razon_comercial').value = nombreComercial;
+                    document.getElementById('nuevo_direccion_fiscal').value = resultado.direccion || '';
+                    document.getElementById('nuevo_numero_documento').value = ruc;
+                    
+                    if (resultado.existe_en_sistema) {
+                        document.getElementById('telefono_contacto').value = resultado.telefono_contacto || '';
+                        document.getElementById('proveedor_contacto').value = resultado.nombre_contacto || '';
+                        document.getElementById('email_contacto_proveedor').value = resultado.email_contacto || '';
+                        document.getElementById('proveedor_id').value = resultado.proveedor_id || '';
+                        
+                        mostrarNotificacionExistente(resultado);
+                        
+                        if (resultado.proveedor_id) {
+                            await cargarDireccionesProveedor(resultado.proveedor_id);
+                        }
+                        
+                        mostrarNotificacion('✅ Proveedor existente cargado con todos sus datos', 'success');
+                    } else {
+                        document.getElementById('telefono_contacto').value = '';
+                        document.getElementById('proveedor_contacto').value = '';
+                        document.getElementById('email_contacto_proveedor').value = '';
+                        document.getElementById('proveedor_id').value = '';
+                        
+                        mostrarNotificacion('✅ Datos de SUNAT cargados (proveedor nuevo)', 'success');
+                    }
+                } else {
+                    mostrarNotificacion('❌ ' + (resultado.error || 'No se encontraron datos para este RUC en SUNAT'), 'danger');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('❌ Error al consultar: ' + error.message, 'danger');
+            } finally {
+                btnBuscarProveedorPorRuc.innerHTML = textoOriginal;
+                btnBuscarProveedorPorRuc.disabled = false;
+            }
+        });
+    }
 
     if (btnLimpiarProveedor) {
         btnLimpiarProveedor.addEventListener('click', function() {
@@ -841,6 +866,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 numero_documento: numeroDocumento,
                 razon_social: razonSocial,
                 nombre_comercial: document.getElementById('nuevo_nombre_comercial')?.value.trim() || '',
+                razon_comercial: document.getElementById('nuevo_razon_comercial')?.value.trim() || '',
                 direccion_fiscal: document.getElementById('nuevo_direccion_fiscal')?.value.trim() || '',
                 telefono_contacto: document.getElementById('nuevo_telefono')?.value.trim() || '',
                 email_contacto: document.getElementById('nuevo_email')?.value.trim() || '',
