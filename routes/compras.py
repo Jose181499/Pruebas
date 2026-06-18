@@ -93,13 +93,14 @@ def editar_compra(orden_id):
                           modo='editar')
 
 # ==========================================
-# FUNCIONES AUXILIARES
+# FUNCIONES AUXILIARES (CORREGIDAS)
 # ==========================================
 
 def obtener_ordenes_recientes(limit=100):
+    """Obtener órdenes de compra recientes con TODOS los campos necesarios"""
     try:
         conn = get_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
 
         cursor.execute("""
             SELECT 
@@ -109,47 +110,183 @@ def obtener_ordenes_recientes(limit=100):
                 o.correlativo,
                 o.fecha_creacion,
                 o.estado,
-                COALESCE(p.razon_social, 'Sin proveedor') AS proveedor,
-                COALESCE(SUM(d.subtotal_venta_con_descuento), 0) AS total
+                o.total,
+                o.subtotal,
+                o.igv,
+                o.condicion_pago,
+                o.nota_compra,
+                o.notas,
+                o.lugar_entrega,
+                o.fecha_requerida,
+                o.tiempo_entrega,
+                o.num_cotizacion,
+                o.proveedor_id,
+                o.contacto_proveedor,
+                o.telefono_proveedor,
+                o.email_proveedor,
+                -- Datos del proveedor
+                p.ruc as proveedor_ruc,
+                p.razon_social as proveedor,
+                p.razon_comercial as nombre_comercial,
+                p.contacto as proveedor_contacto,
+                p.telefono as telefono_contacto,
+                p.email as email_contacto_proveedor,
+                p.direccion as proveedor_direccion,
+                p.codigo_proveedor as codigo_proveedor,
+                -- Datos del usuario
+                u.nombre_completo as comprador,
+                u.email as comprador_email,
+                u.telefono as comprador_telefono,
+                -- Contadores
+                COUNT(d.id) as total_items,
+                COALESCE(SUM(d.cantidad), 0) as cantidad_total_items,
+                COALESCE(SUM(d.subtotal_venta_con_descuento), 0) as total_detalle
             FROM ordenes_compra o
             LEFT JOIN proveedores p ON o.proveedor_id = p.id
+            LEFT JOIN usuarios u ON o.usuario_id = u.id
             LEFT JOIN orden_compra_detalle d ON o.id = d.orden_id
-            GROUP BY o.id, p.razon_social, o.numero_orden, o.codigo_orden, o.correlativo, o.fecha_creacion, o.estado
+            GROUP BY 
+                o.id, o.numero_orden, o.codigo_orden, o.correlativo, 
+                o.fecha_creacion, o.estado, o.total, o.subtotal, o.igv,
+                o.condicion_pago, o.nota_compra, o.notas,
+                o.lugar_entrega, o.fecha_requerida, o.tiempo_entrega,
+                o.num_cotizacion, o.proveedor_id,
+                o.contacto_proveedor, o.telefono_proveedor, o.email_proveedor,
+                p.ruc, p.razon_social, p.razon_comercial, p.contacto,
+                p.telefono, p.email, p.direccion, p.codigo_proveedor,
+                u.nombre_completo, u.email, u.telefono
             ORDER BY o.id DESC
             LIMIT %s
         """, (limit,))
 
-        columnas = [col[0] for col in cursor.description]
-        ordenes = [dict(zip(columnas, row)) for row in cursor.fetchall()]
-
+        ordenes = cursor.fetchall()
         conn.close()
-        return ordenes
+        
+        # Convertir a lista de diccionarios con valores por defecto
+        resultado = []
+        for orden in ordenes:
+            resultado.append({
+                'id': orden.get('id'),
+                'numero_orden': orden.get('numero_orden'),
+                'codigo_orden': orden.get('codigo_orden'),
+                'correlativo': orden.get('correlativo'),
+                'fecha_creacion': orden.get('fecha_creacion').strftime('%Y-%m-%d %H:%M:%S') if orden.get('fecha_creacion') else '',
+                'estado': orden.get('estado', 'pendiente'),
+                'total': float(orden.get('total') or 0),
+                'subtotal': float(orden.get('subtotal') or 0),
+                'igv': float(orden.get('igv') or 0),
+                'condicion_pago': orden.get('condicion_pago') or '--',
+                'nota_compra': orden.get('nota_compra') or '--',
+                'notas': orden.get('notas') or '--',
+                'descripcion': obtener_descripcion_orden(orden.get('id')),
+                'lugar_entrega': orden.get('lugar_entrega') or '--',
+                'fecha_requerida': orden.get('fecha_requerida') or '--',
+                'tiempo_entrega': orden.get('tiempo_entrega') or '--',
+                'num_cotizacion': orden.get('num_cotizacion') or '--',
+                'proveedor_id': orden.get('proveedor_id'),
+                'proveedor_ruc': orden.get('proveedor_ruc') or '--',
+                'proveedor': orden.get('proveedor') or 'Sin proveedor',
+                'nombre_comercial': orden.get('nombre_comercial') or '--',
+                'proveedor_contacto': orden.get('proveedor_contacto') or orden.get('contacto_proveedor') or '--',
+                'telefono_contacto': orden.get('telefono_contacto') or orden.get('telefono_proveedor') or '--',
+                'email_contacto_proveedor': orden.get('email_contacto_proveedor') or orden.get('email_proveedor') or '--',
+                'proveedor_direccion': orden.get('proveedor_direccion') or '--',
+                'codigo_proveedor': orden.get('codigo_proveedor') or '--',
+                'comprador': orden.get('comprador') or '--',
+                'comprador_email': orden.get('comprador_email') or '--',
+                'comprador_telefono': orden.get('comprador_telefono') or '--',
+                'total_items': int(orden.get('total_items') or 0),
+                'cantidad_total_items': int(orden.get('cantidad_total_items') or 0),
+                'total_detalle': float(orden.get('total_detalle') or 0),
+                'contacto_proveedor': orden.get('contacto_proveedor') or '--',
+                'telefono_proveedor': orden.get('telefono_proveedor') or '--',
+                'email_proveedor': orden.get('email_proveedor') or '--'
+            })
+        
+        return resultado
         
     except Exception as e:
         print(f"🔥 Error en obtener_ordenes_recientes: {str(e)}")
         traceback.print_exc()
         return []
 
-# 🔥 FUNCIÓN CORREGIDA - Usa los nombres correctos de columnas de proveedores
+
+def obtener_descripcion_orden(orden_id):
+    """Obtener descripción de la orden desde sus productos"""
+    try:
+        if not orden_id:
+            return '--'
+        
+        conn = get_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        cursor.execute("""
+            SELECT STRING_AGG(pr.descripcion, ' / ') as descripcion
+            FROM orden_compra_detalle d
+            LEFT JOIN productos pr ON d.producto_id = pr.id
+            WHERE d.orden_id = %s
+            LIMIT 3
+        """, (orden_id,))
+        
+        result = cursor.fetchone()
+        conn.close()
+        
+        if result and result.get('descripcion'):
+            desc = result['descripcion']
+            if len(desc) > 100:
+                desc = desc[:100] + '...'
+            return desc
+        return '--'
+        
+    except Exception as e:
+        print(f"Error en obtener_descripcion_orden: {e}")
+        return '--'
+
+
 def obtener_orden_completa(orden_id):
-    """Obtener orden de compra completa con cabecera y detalle"""
+    """Obtener orden de compra completa con cabecera y detalles - CORREGIDO"""
     try:
         conn = get_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
-        # 🔥 CORREGIDO: Usar los nombres correctos de columnas de proveedores
         cursor.execute("""
             SELECT 
-                o.*,
+                o.id,
+                o.numero_orden,
+                o.codigo_orden,
+                o.correlativo,
+                o.fecha_creacion,
+                o.estado,
+                o.subtotal,
+                o.igv,
+                o.total,
+                o.condicion_pago,
+                o.tiempo_entrega,
+                o.fecha_requerida,
+                o.lugar_entrega,
+                o.num_cotizacion,
+                o.nota_compra,
+                o.usuario_id,
+                o.notas,
+                o.descuento_porcentaje,
+                o.descuento_monto,
+                o.descuento_tipo,
+                o.contacto_proveedor,
+                o.telefono_proveedor,
+                o.email_proveedor,
+                -- Datos del proveedor
                 p.razon_social as proveedor,
                 p.ruc as proveedor_ruc,
-                p.direccion,
-                p.telefono,
-                p.contacto,
-                p.email,
-                u.nombre_completo,
-                u.email as user_email,
-                u.telefono as user_telefono
+                p.direccion as proveedor_direccion,
+                p.contacto as proveedor_contacto,
+                p.telefono as telefono_contacto,
+                p.email as email_contacto_proveedor,
+                p.codigo_proveedor as codigo_proveedor,
+                p.razon_comercial as nombre_comercial,
+                -- Datos del usuario
+                u.nombre_completo as comprador,
+                u.email as comprador_email,
+                u.telefono as comprador_telefono
             FROM ordenes_compra o
             LEFT JOIN proveedores p ON o.proveedor_id = p.id
             LEFT JOIN usuarios u ON o.usuario_id = u.id
@@ -159,52 +296,82 @@ def obtener_orden_completa(orden_id):
         cabecera = cursor.fetchone()
         if not cabecera:
             conn.close()
-            print(f"❌ No se encontró la orden con ID: {orden_id}")
             return None
         
-        print(f"✅ Orden {orden_id} encontrada")
-        
-        # Obtener detalle de productos
         cursor.execute("""
             SELECT 
-                d.*,
+                d.id,
+                d.orden_id,
+                d.producto_id,
+                d.cantidad,
+                d.costo_unitario,
+                d.subtotal_costo,
+                d.margen_porcentaje,
+                d.precio_venta_unitario,
+                d.subtotal_venta,
+                d.descuento_porcentaje,
+                d.precio_venta_con_descuento,
+                d.subtotal_venta_con_descuento,
+                d.descuento_total,
+                d.margen_final,
                 pr.codigo,
                 pr.descripcion,
-                pr.modelo,
                 pr.marca,
+                pr.modelo,
                 pr.unidad as unidad_medida
             FROM orden_compra_detalle d
             LEFT JOIN productos pr ON d.producto_id = pr.id
             WHERE d.orden_id = %s
         """, (orden_id,))
         
-        detalle = cursor.fetchall()
-        
+        detalles = cursor.fetchall()
         conn.close()
         
-        # Convertir a diccionario
         cabecera_dict = dict(cabecera)
+        cabecera_dict['proveedor'] = cabecera_dict.get('proveedor') or 'Sin proveedor'
+        cabecera_dict['proveedor_ruc'] = cabecera_dict.get('proveedor_ruc') or '--'
+        cabecera_dict['proveedor_direccion'] = cabecera_dict.get('proveedor_direccion') or '--'
+        cabecera_dict['proveedor_contacto'] = cabecera_dict.get('proveedor_contacto') or cabecera_dict.get('contacto_proveedor') or '--'
+        cabecera_dict['telefono_contacto'] = cabecera_dict.get('telefono_contacto') or cabecera_dict.get('telefono_proveedor') or '--'
+        cabecera_dict['email_contacto_proveedor'] = cabecera_dict.get('email_contacto_proveedor') or cabecera_dict.get('email_proveedor') or '--'
+        cabecera_dict['codigo_proveedor'] = cabecera_dict.get('codigo_proveedor') or '--'
+        cabecera_dict['nombre_comercial'] = cabecera_dict.get('nombre_comercial') or '--'
+        cabecera_dict['comprador'] = cabecera_dict.get('comprador') or '--'
+        cabecera_dict['condicion_pago'] = cabecera_dict.get('condicion_pago') or '--'
+        cabecera_dict['nota_compra'] = cabecera_dict.get('nota_compra') or '--'
+        cabecera_dict['notas'] = cabecera_dict.get('notas') or '--'
+        cabecera_dict['lugar_entrega'] = cabecera_dict.get('lugar_entrega') or '--'
+        cabecera_dict['tiempo_entrega'] = cabecera_dict.get('tiempo_entrega') or '--'
+        cabecera_dict['num_cotizacion'] = cabecera_dict.get('num_cotizacion') or '--'
+        cabecera_dict['descripcion'] = obtener_descripcion_orden(orden_id)
         
-        # Renombrar campos para el frontend
-        if 'direccion' in cabecera_dict:
-            cabecera_dict['direccion_fiscal'] = cabecera_dict['direccion']
-        if 'telefono' in cabecera_dict:
-            cabecera_dict['telefono_proveedor'] = cabecera_dict['telefono']
-        if 'contacto' in cabecera_dict:
-            cabecera_dict['contacto_proveedor'] = cabecera_dict['contacto']
-        if 'email' in cabecera_dict:
-            cabecera_dict['email_proveedor'] = cabecera_dict['email']
+        if cabecera_dict.get('fecha_creacion'):
+            if hasattr(cabecera_dict['fecha_creacion'], 'strftime'):
+                cabecera_dict['fecha_creacion'] = cabecera_dict['fecha_creacion'].strftime('%Y-%m-%d %H:%M:%S')
+        
+        detalles_list = []
+        for detalle in detalles:
+            detalle_dict = dict(detalle)
+            detalle_dict['codigo'] = detalle_dict.get('codigo') or '--'
+            detalle_dict['descripcion'] = detalle_dict.get('descripcion') or '--'
+            detalle_dict['marca'] = detalle_dict.get('marca') or '--'
+            detalle_dict['modelo'] = detalle_dict.get('modelo') or '--'
+            detalle_dict['unidad_medida'] = detalle_dict.get('unidad_medida') or 'Unid'
+            detalle_dict['cantidad'] = float(detalle_dict.get('cantidad') or 0)
+            detalle_dict['precio_venta_unitario'] = float(detalle_dict.get('precio_venta_unitario') or 0)
+            detalle_dict['subtotal_venta_con_descuento'] = float(detalle_dict.get('subtotal_venta_con_descuento') or 0)
+            detalles_list.append(detalle_dict)
         
         return {
             "cabecera": cabecera_dict,
-            "detalle": [dict(row) for row in detalle]
+            "detalle": detalles_list
         }
         
     except Exception as e:
         print(f"🔥 Error en obtener_orden_completa: {str(e)}")
-        import traceback
         traceback.print_exc()
         return None
+
 
 def buscar_proveedor_por_ruc(ruc):
     """Buscar proveedor por RUC"""
@@ -249,11 +416,9 @@ def diagnostico_listar_ordenes():
         conn = get_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
-        # Contar órdenes
         cursor.execute("SELECT COUNT(*) as total FROM ordenes_compra")
         count = cursor.fetchone()
         
-        # Listar órdenes básicas
         cursor.execute("""
             SELECT id, numero_orden, codigo_orden, estado, fecha_creacion 
             FROM ordenes_compra 
@@ -282,7 +447,6 @@ def diagnostico_listar_ordenes():
 def diagnostico_orden_especifica(orden_id):
     """Diagnóstico: Ver detalles de una orden específica"""
     try:
-        # Verificar si existe la orden
         conn = get_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
@@ -296,7 +460,6 @@ def diagnostico_orden_especifica(orden_id):
                 "sugerencia": "Verifica que el ID sea correcto o crea una orden primero"
             }), 404
         
-        # Obtener detalles de productos
         cursor.execute("""
             SELECT d.*, pr.codigo, pr.descripcion 
             FROM orden_compra_detalle d
@@ -345,7 +508,7 @@ def test_conexion():
         }), 500
 
 # ==========================================
-# API ENDPOINTS PRINCIPALES
+# API ENDPOINTS PRINCIPALES (CORREGIDOS)
 # ==========================================
 
 @compras_bp.route("/api/usuarios/actual", methods=["GET"])
@@ -639,8 +802,7 @@ def crear_proveedor():
         data = request.json
         print(f"📝 Datos recibidos para crear proveedor: {data}")
         
-        # Obtener datos del frontend
-        ruc = data.get('numero_documento')  # RUC
+        ruc = data.get('numero_documento')
         razon_social = data.get('razon_social')
         razon_comercial = data.get('nombre_comercial', '') or razon_social
         direccion = data.get('direccion_fiscal', '')
@@ -654,10 +816,7 @@ def crear_proveedor():
         if not razon_social:
             return jsonify({'success': False, 'error': 'Razón social requerida'}), 400
         
-        # Verificar si ya existe proveedor con ese RUC
-        existente = db_query("""
-            SELECT id FROM proveedores WHERE ruc = %s
-        """, (ruc,))
+        existente = db_query("SELECT id FROM proveedores WHERE ruc = %s", (ruc,))
         
         if existente:
             return jsonify({
@@ -699,9 +858,9 @@ def crear_proveedor():
         
     except Exception as e:
         print(f"❌ Error en /api/proveedores/crear: {str(e)}")
-        import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @compras_bp.route("/api/proveedores/<int:proveedor_id>/direcciones", methods=["GET"])
 def obtener_direcciones_proveedor(proveedor_id):
@@ -730,19 +889,17 @@ def obtener_direcciones_proveedor(proveedor_id):
 
 @compras_bp.route("/api/orden_compra/guardar", methods=["POST"])
 def guardar_orden_compra():
-    """Guardar orden de compra - VERSIÓN CORREGIDA"""
+    """Guardar orden de compra"""
     data = request.json
     print("📦 Datos recibidos en guardar_orden_compra:", data)
     
     try:
-        # Validar datos requeridos
         proveedor_id = data.get("proveedor_id")
         if not proveedor_id:
             return jsonify({"success": False, "error": "proveedor_id es requerido"}), 400
         
         usuario_id = data.get("usuario_id")
         if not usuario_id:
-            # Intentar obtener de la sesión
             usuario_id = session.get('usuario_id')
             if not usuario_id:
                 return jsonify({"success": False, "error": "usuario_id es requerido"}), 400
@@ -751,12 +908,10 @@ def guardar_orden_compra():
         if not productos:
             return jsonify({"success": False, "error": "Debe agregar al menos un producto"}), 400
         
-        # Calcular totales si no vienen
         subtotal = float(data.get("subtotal", 0))
         igv = float(data.get("igv", 0))
         total = float(data.get("total", 0))
         
-        # Si los totales son 0, calcularlos
         if total == 0 and productos:
             total_sin_descuento = 0
             for p in productos:
@@ -776,7 +931,6 @@ def guardar_orden_compra():
             cur = conn.cursor()
             
             if orden_id:
-                # ACTUALIZAR orden existente
                 cur.execute("""
                     UPDATE ordenes_compra 
                     SET proveedor_id = %s,
@@ -825,11 +979,8 @@ def guardar_orden_compra():
                 ))
                 
                 result = cur.fetchone()
-                
-                # Eliminar detalles antiguos
                 cur.execute("DELETE FROM orden_compra_detalle WHERE orden_id = %s", (orden_id,))
                 
-                # Insertar nuevos detalles
                 for idx, p in enumerate(productos):
                     cantidad = float(p.get("cantidad", 1))
                     precio_unitario = float(p.get("precio_venta_unitario", p.get("precio_unitario", 0)))
@@ -849,14 +1000,14 @@ def guardar_orden_compra():
                         cantidad,
                         p.get("costo_unitario", 0),
                         p.get("subtotal_costo", 0),
-                        20,  # margen_porcentaje por defecto
+                        20,
                         precio_unitario,
                         subtotal_producto,
-                        0,  # descuento_porcentaje
+                        0,
                         precio_unitario,
                         subtotal_producto,
-                        0,  # descuento_total
-                        20   # margen_final
+                        0,
+                        20
                     ))
                 
                 return jsonify({
@@ -870,14 +1021,11 @@ def guardar_orden_compra():
                 })
             
             else:
-                # CREAR nueva orden
-                # Obtener último número de orden
                 cur.execute("SELECT MAX(id) as ultimo FROM ordenes_compra")
                 row = cur.fetchone()
                 nuevo_numero = (row[0] or 0) + 1
                 numero_orden = f"OC-{nuevo_numero:05d}"
                 
-                # Generar código de orden
                 codigo_orden = data.get("codigo_orden")
                 if not codigo_orden:
                     if data.get("es_borrador", True):
@@ -885,7 +1033,6 @@ def guardar_orden_compra():
                         codigo_orden = f"TMP-COMPRA-{timestamp}"
                         correlativo = 0
                     else:
-                        # Código oficial
                         fecha = datetime.now()
                         codigo_orden = f"OC-{fecha.year}{str(fecha.month).zfill(2)}{str(fecha.day).zfill(2)}-{str(nuevo_numero).zfill(4)}"
                         correlativo = nuevo_numero
@@ -932,7 +1079,6 @@ def guardar_orden_compra():
                 nueva_orden_id = result[0]
                 codigo_generado = result[1]
                 
-                # Insertar detalles
                 for idx, p in enumerate(productos):
                     cantidad = float(p.get("cantidad", 1))
                     precio_unitario = float(p.get("precio_venta_unitario", p.get("precio_unitario", 0)))
@@ -974,15 +1120,17 @@ def guardar_orden_compra():
     
     except Exception as e:
         print("🔥 ERROR en guardar_orden_compra:", e)
-        import traceback
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-# 🔥 ENDPOINT API GET ORDEN CORREGIDO
+# ==========================================
+# 🔥 API ENDPOINTS CORREGIDOS - LISTADO
+# ==========================================
+
 @compras_bp.route("/api/orden_compra/<int:orden_id>", methods=["GET"])
 def api_get_orden_compra(orden_id):
-    """Obtener orden de compra por ID"""
+    """Obtener orden de compra por ID - CORREGIDO"""
     try:
         print(f"🔍 Buscando orden con ID: {orden_id}")
         
@@ -995,9 +1143,8 @@ def api_get_orden_compra(orden_id):
         cabecera = data.get("cabecera", {})
         detalle = data.get("detalle", [])
         
-        print(f"✅ Orden {orden_id} encontrada. Proveedor: {cabecera.get('proveedor', 'N/A')}")
+        print(f"✅ Orden {orden_id} encontrada")
         
-        # Preparar respuesta para el frontend
         return jsonify({
             "success": True, 
             "data": {
@@ -1013,14 +1160,15 @@ def api_get_orden_compra(orden_id):
                 "proveedor_id": cabecera.get("proveedor_id"),
                 "proveedor": cabecera.get("proveedor"),
                 "proveedor_ruc": cabecera.get("proveedor_ruc"),
-                "proveedor_direccion": cabecera.get("direccion"),
-                "proveedor_contacto": cabecera.get("contacto"),
-                "telefono_contacto": cabecera.get("telefono"),
-                "email_contacto_proveedor": cabecera.get("email"),
-                "usuario_id": cabecera.get("usuario_id"),
-                "nombre_completo": cabecera.get("nombre_completo"),
-                "email": cabecera.get("user_email"),
-                "telefono": cabecera.get("user_telefono"),
+                "proveedor_direccion": cabecera.get("proveedor_direccion"),
+                "proveedor_contacto": cabecera.get("proveedor_contacto"),
+                "telefono_contacto": cabecera.get("telefono_contacto"),
+                "email_contacto_proveedor": cabecera.get("email_contacto_proveedor"),
+                "codigo_proveedor": cabecera.get("codigo_proveedor"),
+                "nombre_comercial": cabecera.get("nombre_comercial"),
+                "comprador": cabecera.get("comprador"),
+                "comprador_email": cabecera.get("comprador_email"),
+                "comprador_telefono": cabecera.get("comprador_telefono"),
                 "condicion_pago": cabecera.get("condicion_pago"),
                 "tiempo_entrega": cabecera.get("tiempo_entrega"),
                 "fecha_requerida": cabecera.get("fecha_requerida"),
@@ -1028,6 +1176,10 @@ def api_get_orden_compra(orden_id):
                 "num_cotizacion": cabecera.get("num_cotizacion"),
                 "nota_compra": cabecera.get("nota_compra"),
                 "notas": cabecera.get("notas"),
+                "descripcion": cabecera.get("descripcion"),
+                "contacto_proveedor": cabecera.get("contacto_proveedor"),
+                "telefono_proveedor": cabecera.get("telefono_proveedor"),
+                "email_proveedor": cabecera.get("email_proveedor"),
                 "detalle": detalle
             }
         })
@@ -1039,41 +1191,35 @@ def api_get_orden_compra(orden_id):
 
 @compras_bp.route("/api/ordenes_compra", methods=["GET"])
 def listar_ordenes():
-    """Listar órdenes de compra"""
+    """Listar órdenes de compra - VERSIÓN CORREGIDA CON TODOS LOS CAMPOS"""
     try:
         buscar = request.args.get('buscar', '')
+        estado = request.args.get('estado', '')
         
-        query = """
-            SELECT o.id, o.numero_orden, o.codigo_orden, o.fecha_creacion, 
-                   o.estado, o.total, COALESCE(p.razon_social, 'Sin proveedor') as proveedor,
-                   u.nombre_completo as comprador
-            FROM ordenes_compra o
-            LEFT JOIN proveedores p ON o.proveedor_id = p.id
-            LEFT JOIN usuarios u ON o.usuario_id = u.id
-        """
+        print(f"📡 API: Listar órdenes - buscar='{buscar}', estado='{estado}'")
         
-        if buscar and buscar.strip():
-            query += f" WHERE o.codigo_orden ILIKE '%{buscar}%' OR p.razon_social ILIKE '%{buscar}%'"
+        # Obtener todas las órdenes usando la función corregida
+        ordenes = obtener_ordenes_recientes(limit=300)
         
-        query += " ORDER BY o.id DESC"
+        # Aplicar filtros si existen
+        if buscar:
+            buscar_lower = buscar.lower()
+            ordenes = [o for o in ordenes if 
+                       buscar_lower in (o.get('numero_orden') or '').lower() or
+                       buscar_lower in (o.get('codigo_orden') or '').lower() or
+                       buscar_lower in (o.get('proveedor') or '').lower() or
+                       buscar_lower in (o.get('proveedor_ruc') or '').lower()]
         
-        rows = db_query(query)
+        if estado and estado != 'todas':
+            ordenes = [o for o in ordenes if o.get('estado') == estado]
         
-        resultado = []
-        for row in rows:
-            resultado.append({
-                'id': row['id'],
-                'numero_orden': row['numero_orden'],
-                'codigo_orden': row['codigo_orden'],
-                'fecha_creacion': row['fecha_creacion'].strftime('%Y-%m-%d %H:%M:%S') if row['fecha_creacion'] else '',
-                'estado': row['estado'],
-                'proveedor': row['proveedor'],
-                'comprador': row['comprador'],
-                'total': float(row['total']) if row['total'] else 0
-            })
+        print(f"✅ API: {len(ordenes)} órdenes encontradas")
         
-        print(f"📋 Listando {len(resultado)} órdenes de compra")
-        return jsonify({"success": True, "data": resultado})
+        return jsonify({
+            "success": True,
+            "data": ordenes,
+            "total": len(ordenes)
+        })
         
     except Exception as e:
         print(f"🔥 ERROR LISTAR: {str(e)}")
