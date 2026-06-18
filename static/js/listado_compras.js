@@ -1,4 +1,4 @@
-// listado_compras.js - Gestor de Compras
+// listado_compras.js - Gestor de Compras (VERSIÓN COMPLETA)
 
 // Variables globales
 let ordenesData = [];
@@ -63,7 +63,7 @@ function mostrarLoading(mostrar) {
     if (mostrar && tbody) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" class="text-center py-5">
+                <td colspan="13" class="text-center py-5">
                     <div class="spinner-border text-primary mb-3" style="color: #0a2540;"></div>
                     <div class="text-muted">Cargando órdenes de compra...</div>
                 </td>
@@ -80,7 +80,7 @@ function mostrarTablaVacia() {
     if (tbody) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" class="text-center py-5">
+                <td colspan="13" class="text-center py-5">
                     <i class="bi bi-inbox fs-1 text-muted"></i>
                     <p class="text-muted mt-2">No hay órdenes de compra registradas</p>
                 </td>
@@ -90,7 +90,7 @@ function mostrarTablaVacia() {
 }
 
 // =========================
-// RENDERIZAR TABLA
+// RENDERIZAR TABLA - TODAS LAS COLUMNAS
 // =========================
 function renderTable() {
     const tbody = document.getElementById('tbodyOrdenes');
@@ -101,27 +101,88 @@ function renderTable() {
     }
     
     tbody.innerHTML = ordenesFiltradas.map(orden => {
+        // Obtener datos del proveedor
+        const proveedor = orden.proveedor || 'Sin proveedor';
+        const proveedorRuc = orden.proveedor_ruc || orden.ruc || '--';
+        const codigoProveedor = orden.codigo_proveedor || '--';
+        const razonSocial = orden.razon_social || proveedor || '--';
+        const nombreComercial = orden.nombre_comercial || '--';
+        
+        // Obtener estado
         const estado = estadoMap[orden.estado] || estadoMap.pendiente;
-        const codigoMostrar = orden.codigo_orden || orden.numero_orden || '-';
-        const fechaMostrar = orden.fecha_creacion;
-        const proveedorMostrar = orden.proveedor || 'Sin proveedor';
+        
+        // Número de orden
+        const codigoMostrar = orden.numero_orden || orden.codigo_orden || '--';
+        
+        // Fecha y hora
+        const fechaMostrar = orden.fecha_creacion || orden.fecha;
+        
+        // Monto total
         const montoMostrar = orden.total || 0;
+        
+        // Descripción
+        const descripcion = orden.descripcion || '--';
+        
+        // Nota aclaratoria
+        const notaAclaratoria = orden.nota_aclaratoria || orden.nota_compra || orden.notas || '--';
+        
+        // Condición de pago
+        const condicionPago = orden.condicion_pago || '--';
+        
+        // Total de ítems
+        const totalItems = orden.total_items || (orden.detalle ? orden.detalle.length : 0);
         
         return `
             <tr>
-                <td><span class="order-code">${escapeHtml(codigoMostrar)}</span></td>
-                <td class="datetime-cell">
+                <!-- Ítems -->
+                <td class="text-center">
+                    <span class="items-badge">${totalItems}</span>
+                </td>
+                
+                <!-- Fecha y Hora -->
+                <td>
                     <div class="fecha">${formatFecha(fechaMostrar)}</div>
                     <div class="hora"><i class="bi bi-clock"></i> ${formatHora(fechaMostrar)}</div>
                 </td>
-                <td class="fw-medium">${escapeHtml(proveedorMostrar)}</td>
+                
+                <!-- Estado -->
                 <td>
                     <span class="badge-status ${estado.class}">
                         <i class="bi ${estado.icon}"></i>
                         ${estado.text}
                     </span>
                 </td>
-                <td class="text-end"><span class="amount">S/ ${formatMonto(montoMostrar)}</span></td>
+                
+                <!-- N° Orden -->
+                <td><span class="order-code">${escapeHtml(codigoMostrar)}</span></td>
+                
+                <!-- RUC -->
+                <td><span class="proveedor-ruc">${escapeHtml(proveedorRuc)}</span></td>
+                
+                <!-- Código Proveedor -->
+                <td><span style="font-size:0.7rem; font-weight:600;">${escapeHtml(codigoProveedor)}</span></td>
+                
+                <!-- R. Comercial -->
+                <td><span style="font-size:0.7rem;">${escapeHtml(nombreComercial)}</span></td>
+                
+                <!-- R. Social -->
+                <td><span style="font-size:0.7rem; font-weight:500;">${escapeHtml(razonSocial)}</span></td>
+                
+                <!-- Descripción -->
+                <td><span style="font-size:0.7rem;">${escapeHtml(descripcion)}</span></td>
+                
+                <!-- Monto (Con IGV) -->
+                <td class="text-end">
+                    <span class="amount">S/ ${formatMonto(montoMostrar)}</span>
+                </td>
+                
+                <!-- Nota Aclaratoria -->
+                <td><span style="font-size:0.65rem; color:#6c7e8e;">${escapeHtml(notaAclaratoria)}</span></td>
+                
+                <!-- Condición Pago -->
+                <td><span style="font-size:0.65rem;">${escapeHtml(condicionPago)}</span></td>
+                
+                <!-- Acciones -->
                 <td>
                     <div class="action-icons">
                         <button class="action-icon action-view" onclick="verDetalle(${orden.id})" title="Ver detalle">
@@ -174,16 +235,25 @@ function aplicarFiltros() {
         if (!orden) return false;
         
         if (estadoFiltro !== 'todas' && orden.estado !== estadoFiltro) return false;
-        if (proveedorFiltro && !orden.proveedor?.toLowerCase().includes(proveedorFiltro)) return false;
         
-        const fechaOrden = orden.fecha_creacion;
-        if (fechaDesde && fechaOrden && fechaOrden.split(' ')[0] < fechaDesde) return false;
-        if (fechaHasta && fechaOrden && fechaOrden.split(' ')[0] > fechaHasta) return false;
+        const proveedorNombre = orden.proveedor || orden.razon_social || '';
+        if (proveedorFiltro && !proveedorNombre.toLowerCase().includes(proveedorFiltro)) return false;
+        
+        const fechaOrden = orden.fecha_creacion || orden.fecha;
+        if (fechaDesde && fechaOrden) {
+            const fechaStr = fechaOrden.split(' ')[0] || fechaOrden;
+            if (fechaStr < fechaDesde) return false;
+        }
+        if (fechaHasta && fechaOrden) {
+            const fechaStr = fechaOrden.split(' ')[0] || fechaOrden;
+            if (fechaStr > fechaHasta) return false;
+        }
         
         if (busqueda) {
-            const codigo = orden.codigo_orden || orden.numero_orden || '';
-            return codigo.toLowerCase().includes(busqueda) || 
-                   orden.proveedor?.toLowerCase().includes(busqueda);
+            const codigo = orden.numero_orden || orden.codigo_orden || '';
+            const ruc = orden.proveedor_ruc || orden.ruc || '';
+            const searchText = `${codigo} ${proveedorNombre} ${ruc}`.toLowerCase();
+            return searchText.includes(busqueda);
         }
         
         return true;
@@ -202,7 +272,6 @@ window.verDetalle = async function(id) {
         const response = await fetch(`/api/orden_compra/${id}`);
         
         if (!response.ok) {
-            // Verificar si es redirección a login
             const contentType = response.headers.get("content-type");
             if (contentType && contentType.includes("text/html")) {
                 mostrarNotificacion('Su sesión ha expirado. Redirigiendo al login...', 'warning');
@@ -222,10 +291,13 @@ window.verDetalle = async function(id) {
         
         const orden = result.data;
         const estado = estadoMap[orden.estado] || estadoMap.pendiente;
-        const codigoMostrar = orden.codigo_orden || orden.numero_orden || '-';
-        const fechaMostrar = orden.fecha_creacion;
+        const codigoMostrar = orden.numero_orden || orden.codigo_orden || '-';
+        const fechaMostrar = orden.fecha_creacion || orden.fecha;
         
-        document.getElementById('detalleBody').innerHTML = `
+        const detalleBody = document.getElementById('detalleBody');
+        if (!detalleBody) return;
+        
+        detalleBody.innerHTML = `
             <div class="p-3">
                 <div class="row mb-3 pb-2 border-bottom">
                     <div class="col-6">
@@ -241,15 +313,16 @@ window.verDetalle = async function(id) {
                 <div class="row mb-3">
                     <div class="col-12">
                         <small class="text-muted text-uppercase">Proveedor</small>
-                        <p class="fw-bold mb-0">${escapeHtml(orden.proveedor || 'Sin proveedor')}</p>
-                        ${orden.proveedor_ruc ? `<p class="text-muted small mb-0">RUC: ${escapeHtml(orden.proveedor_ruc)}</p>` : ''}
+                        <p class="fw-bold mb-0">${escapeHtml(orden.proveedor || orden.razon_social || 'Sin proveedor')}</p>
+                        ${orden.proveedor_ruc || orden.ruc ? `<p class="text-muted small mb-0">RUC: ${escapeHtml(orden.proveedor_ruc || orden.ruc)}</p>` : ''}
+                        ${orden.proveedor_direccion || orden.direccion ? `<p class="text-muted small mb-0">${escapeHtml(orden.proveedor_direccion || orden.direccion)}</p>` : ''}
                     </div>
                 </div>
                 
                 <div class="row mb-3">
                     <div class="col-12">
                         <small class="text-muted text-uppercase">Comprador</small>
-                        <p class="mb-0">${escapeHtml(orden.comprador || orden.nombre_completo || 'No asignado')}</p>
+                        <p class="mb-0">${escapeHtml(orden.comprador || orden.nombre_completo || orden.usuario_nombre || 'No asignado')}</p>
                     </div>
                 </div>
                 
@@ -273,8 +346,8 @@ window.verDetalle = async function(id) {
                                             <td>${escapeHtml(p.codigo || '-')}</td>
                                             <td>${escapeHtml(p.descripcion || '-')}</td>
                                             <td class="text-center">${formatCantidad(p.cantidad || 0)}</td>
-                                            <td class="text-end">S/ ${formatMonto(p.precio_venta_unitario || 0)}</td>
-                                            <td class="text-end">S/ ${formatMonto(p.subtotal_venta_con_descuento || 0)}</td>
+                                            <td class="text-end">S/ ${formatMonto(p.precio_venta_unitario || p.precio_unitario || 0)}</td>
+                                            <td class="text-end">S/ ${formatMonto(p.subtotal_venta_con_descuento || p.subtotal || 0)}</td>
                                         </tr>
                                     `).join('')}
                                     ${(!orden.detalle || orden.detalle.length === 0) ? '<tr><td colspan="5" class="text-center">Sin productos</td></tr>' : ''}
@@ -330,22 +403,12 @@ window.verDetalle = async function(id) {
                 </div>
                 ` : ''}
                 
-                ${orden.nota_compra ? `
+                ${orden.nota_compra || orden.notas ? `
                 <hr>
                 <div class="row mt-3">
                     <div class="col-12">
-                        <small class="text-muted text-uppercase">Nota de Compra</small>
-                        <p class="mb-0">${escapeHtml(orden.nota_compra)}</p>
-                    </div>
-                </div>
-                ` : ''}
-                
-                ${orden.notas ? `
-                <hr>
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <small class="text-muted text-uppercase">Notas Internas</small>
-                        <p class="mb-0">${escapeHtml(orden.notas)}</p>
+                        <small class="text-muted text-uppercase">Nota / Observaciones</small>
+                        <p class="mb-0">${escapeHtml(orden.nota_compra || orden.notas)}</p>
                     </div>
                 </div>
                 ` : ''}
@@ -375,7 +438,9 @@ window.generarPDF = async function(id) {
     mostrarNotificacion('Generando orden de compra en PDF...', 'info');
     try {
         window.open(`/api/orden_compra/pdf/${id}`, '_blank');
-        mostrarNotificacion('PDF generado exitosamente', 'success');
+        setTimeout(() => {
+            mostrarNotificacion('PDF generado exitosamente', 'success');
+        }, 1000);
     } catch (error) {
         console.error('Error:', error);
         mostrarNotificacion('Error al generar el PDF', 'error');
@@ -387,8 +452,14 @@ window.generarPDF = async function(id) {
 // =========================
 window.eliminarOrden = function(id) {
     const orden = ordenesData.find(o => o && o.id === id);
-    const codigo = orden ? (orden.codigo_orden || orden.numero_orden || 'N/A') : 'N/A';
-    document.getElementById('eliminarInfo').innerHTML = `Orden: ${codigo} - ${orden?.proveedor || ''}`;
+    const codigo = orden ? (orden.numero_orden || orden.codigo_orden || 'N/A') : 'N/A';
+    const proveedor = orden ? (orden.proveedor || orden.razon_social || '') : '';
+    
+    document.getElementById('eliminarInfo').innerHTML = `
+        <strong>${escapeHtml(codigo)}</strong> - ${escapeHtml(proveedor)}
+        <br><span class="text-muted small">Esta acción no se puede deshacer.</span>
+    `;
+    
     const modal = new bootstrap.Modal(document.getElementById('modalEliminar'));
     modal.show();
     
@@ -423,21 +494,29 @@ function formatCantidad(cant) {
 }
 
 function formatFecha(fecha) {
-    if (!fecha) return '-';
-    const date = new Date(fecha);
-    if (isNaN(date.getTime())) return '-';
-    return date.toLocaleDateString('es-PE');
+    if (!fecha) return '--/--/----';
+    try {
+        const date = new Date(fecha);
+        if (isNaN(date.getTime())) return '--/--/----';
+        return date.toLocaleDateString('es-PE');
+    } catch {
+        return '--/--/----';
+    }
 }
 
 function formatHora(fecha) {
     if (!fecha) return '--:--';
-    const date = new Date(fecha);
-    if (isNaN(date.getTime())) return '--:--';
-    return date.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+    try {
+        const date = new Date(fecha);
+        if (isNaN(date.getTime())) return '--:--';
+        return date.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+    } catch {
+        return '--:--';
+    }
 }
 
 function formatMonto(monto) {
-    if (!monto) return '0.00';
+    if (monto === null || monto === undefined) return '0.00';
     return parseFloat(monto).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
@@ -448,13 +527,15 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-function mostrarNotificacion(mensaje, tipo) {
+function mostrarNotificacion(mensaje, tipo = 'info') {
     const container = document.getElementById('notificacionesContainer');
     if (!container) return;
     
     const notification = document.createElement('div');
     notification.className = `notification notification-${tipo}`;
-    const icon = tipo === 'success' ? 'bi-check-circle-fill' : tipo === 'error' ? 'bi-x-circle-fill' : 'bi-info-circle-fill';
+    const icon = tipo === 'success' ? 'bi-check-circle-fill' : 
+                 tipo === 'error' ? 'bi-x-circle-fill' : 
+                 tipo === 'warning' ? 'bi-exclamation-triangle-fill' : 'bi-info-circle-fill';
     notification.innerHTML = `<i class="bi ${icon} fs-5"></i><span>${mensaje}</span>`;
     container.appendChild(notification);
     
@@ -485,11 +566,49 @@ function refrescarDatos() {
 }
 
 function exportarExcel() {
-    mostrarNotificacion('Exportando datos a Excel...', 'info');
-    window.open('/api/ordenes_compra/exportar/excel', '_blank');
-    setTimeout(() => {
-        mostrarNotificacion('Exportación completada', 'success');
-    }, 1000);
+    mostrarNotificacion('Exportando datos...', 'info');
+    
+    // Crear CSV con todas las columnas
+    const headers = [
+        'Ítems', 'Fecha', 'Hora', 'Estado', 'N° Orden', 'RUC',
+        'Código Proveedor', 'R. Comercial', 'R. Social', 'Descripción',
+        'Monto Total', 'Nota Aclaratoria', 'Condición Pago'
+    ];
+    
+    let csvContent = headers.join(',') + '\n';
+    
+    ordenesFiltradas.forEach(orden => {
+        const totalItems = orden.total_items || (orden.detalle ? orden.detalle.length : 0);
+        const fecha = orden.fecha_creacion || orden.fecha || '';
+        const estado = orden.estado || '';
+        const codigo = orden.numero_orden || orden.codigo_orden || '';
+        
+        const row = [
+            totalItems,
+            `"${formatFecha(fecha)}"`,
+            `"${formatHora(fecha)}"`,
+            `"${estado}"`,
+            `"${codigo}"`,
+            `"${orden.proveedor_ruc || orden.ruc || ''}"`,
+            `"${orden.codigo_proveedor || ''}"`,
+            `"${orden.nombre_comercial || ''}"`,
+            `"${orden.proveedor || orden.razon_social || ''}"`,
+            `"${orden.descripcion || ''}"`,
+            parseFloat(orden.total || 0).toFixed(2),
+            `"${orden.nota_aclaratoria || orden.nota_compra || orden.notas || ''}"`,
+            `"${orden.condicion_pago || ''}"`
+        ];
+        csvContent += row.join(',') + '\n';
+    });
+    
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'ordenes_compra.csv';
+    link.click();
+    URL.revokeObjectURL(link.href);
+    
+    mostrarNotificacion('Exportación completada exitosamente', 'success');
 }
 
 // =========================
