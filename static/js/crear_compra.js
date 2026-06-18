@@ -1153,7 +1153,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // MODAL DE CONFIRMACIÓN - CORREGIDO CON BOTÓN VER LISTADO
+    // MODAL DE CONFIRMACIÓN
     // =========================
     function mostrarModalConfirmacion(datos) {
         const modalBody = document.getElementById('modalConfirmacionBody');
@@ -1207,7 +1207,7 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = '/crear_compra';
         };
         
-        // 🔥 BOTÓN PARA IR AL LISTADO DE COMPRAS
+        // BOTÓN PARA IR AL LISTADO DE COMPRAS
         const btnVerListado = document.createElement('button');
         btnVerListado.className = 'btn btn-primary';
         btnVerListado.innerHTML = '<i class="bi bi-list-ul"></i> Ver Listado de Compras';
@@ -1356,8 +1356,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.log('✅ Proveedor encontrado por RUC:', proveedorId);
                     } else {
                         console.log('❌ Proveedor no encontrado en la base de datos');
-                        mostrarNotificacion("⚠️ El RUC no existe en el sistema. Debe registrar el proveedor primero.", "warning");
-                        return;
+                        // 🔥 Si no existe, lo crearemos automáticamente
+                        mostrarNotificacion("⚠️ El RUC no existe en el sistema. Se creará automáticamente.", "warning");
+                        // No retornamos, continuamos para que el backend lo cree
                     }
                 } catch (e) {
                     console.error('Error buscando proveedor por RUC:', e);
@@ -1367,10 +1368,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // 🔥 VALIDAR QUE TENGAMOS PROVEEDOR_ID
+        // Si no hay proveedor_id, dejamos que el backend lo cree automáticamente
         if (!proveedorId || proveedorId === '' || proveedorId === '0') {
-            mostrarNotificacion("⚠️ Debe seleccionar un proveedor válido (RUC existente en el sistema)", "warning");
-            return;
+            proveedorId = 0;
         }
         
         // Convertir a número
@@ -1397,9 +1397,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return; 
         }
         
+        // 🔥 PERMITIR PRODUCTOS SIN ID (se crearán en el backend)
+        // Solo validamos que tengan descripción o código
         for (let i = 0; i < listaProductos.length; i++) {
-            if (!listaProductos[i].producto_id) { 
-                mostrarNotificacion(`⚠️ Falta seleccionar producto en la fila ${i + 1}`, "warning"); 
+            if (!listaProductos[i].codigo && !listaProductos[i].descripcion) {
+                mostrarNotificacion(`⚠️ El producto en la fila ${i + 1} debe tener código o descripción`, "warning"); 
                 return; 
             }
         }
@@ -1554,20 +1556,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         document.getElementById('proveedor_id').value = proveedorId;
                         console.log('✅ Proveedor encontrado por RUC:', proveedorId);
                     } else {
-                        mostrarNotificacion("⚠️ El RUC no existe en el sistema. Debe registrar el proveedor primero.", "warning");
-                        return;
+                        // 🔥 Si no existe, el backend lo creará automáticamente
+                        console.log('⚠️ Proveedor no encontrado, se creará automáticamente');
+                        proveedorId = 0;
                     }
                 } catch (e) {
                     console.error('Error buscando proveedor:', e);
-                    mostrarNotificacion("⚠️ Error al verificar el proveedor", "warning");
-                    return;
+                    proveedorId = 0;
                 }
             }
-        }
-        
-        if (!proveedorId || proveedorId === '' || proveedorId === '0') {
-            mostrarNotificacion("⚠️ Debe seleccionar un proveedor válido (RUC existente en el sistema)", "warning");
-            return;
         }
         
         if (!razonSocial || !numeroDocumento) {
@@ -1581,9 +1578,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
+        // 🔥 PERMITIR PRODUCTOS SIN ID (se crearán en el backend)
+        // Solo validamos que tengan código o descripción
         for (let i = 0; i < listaProductos.length; i++) {
-            if (!listaProductos[i].producto_id) {
-                mostrarNotificacion(`⚠️ Producto ${i+1} no tiene ID válido`, "warning");
+            if (!listaProductos[i].codigo && !listaProductos[i].descripcion) {
+                mostrarNotificacion(`⚠️ El producto en la fila ${i + 1} debe tener código o descripción`, "warning");
                 return;
             }
             if (!listaProductos[i].precio_venta_unitario || listaProductos[i].precio_venta_unitario <= 0) {
@@ -1648,7 +1647,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // SET PRODUCTO EN FILA
+    // SET PRODUCTO EN FILA - CORREGIDO
     // =========================
     function setProductoEnFila(row, p) {  
         const productoIdInput = row.querySelector('.producto_id');
@@ -1660,14 +1659,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const precioVentaInput = row.querySelector('.precio_venta_unitario');
         const cantidadInput = row.querySelector('.cantidad');
         
-        if (productoIdInput) productoIdInput.value = p.id;
-        if (codigoInput) codigoInput.value = p.codigo || "";
-        if (descripcionInput) descripcionInput.value = p.descripcion || "";
-        if (modeloInput) modeloInput.value = p.modelo || "";
-        if (marcaInput) marcaInput.value = p.marca || "";
+        if (productoIdInput) productoIdInput.value = p.id || '';
+        if (codigoInput) codigoInput.value = p.codigo || p.codigo_producto || '';
+        if (descripcionInput) descripcionInput.value = p.descripcion || '';
+        if (modeloInput) modeloInput.value = p.modelo || '';
+        if (marcaInput) marcaInput.value = p.marca || '';
         if (unidadMedidaInput) unidadMedidaInput.value = p.unidad_medida || "UNIDAD";
         
-        if (precioVentaInput && p.precio_unitario) precioVentaInput.value = p.precio_unitario;
+        // 🔥 CORREGIDO: Manejar precio_unitario que puede ser null o undefined
+        const precio = p.precio_unitario || p.precio_venta_unitario || 0;
+        if (precioVentaInput) precioVentaInput.value = parseFloat(precio) || 0;
         
         if (cantidadInput && (cantidadInput.value === '0' || !cantidadInput.value)) {
             cantidadInput.value = 1;
@@ -1677,7 +1678,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================
-    // AUTOCOMPLETAR PRODUCTO EN FILA
+    // AUTOCOMPLETAR PRODUCTO EN FILA - CORREGIDO
     // =========================
     function attachProductoAutocomplete(row) {
         const input = row.querySelector('.codigo_producto');
@@ -1707,20 +1708,24 @@ document.addEventListener('DOMContentLoaded', () => {
                         return;
                     }
 
-                    const html = productos.map(p => `
-                        <div class="item" 
-                            data-id="${p.id}" 
-                            data-codigo="${p.codigo || ''}" 
-                            data-descripcion="${p.descripcion || ''}" 
-                            data-modelo="${p.modelo || ''}" 
-                            data-marca="${p.marca || ''}" 
-                            data-unidad="${p.unidad_medida || 'UNIDAD'}" 
-                            data-costo="${p.costo_unitario || 0}" 
-                            data-precio="${p.precio_unitario || 0}">
-                            <strong>📦 ${p.codigo}</strong> - ${p.descripcion}
-                            <div class="meta">${p.marca || ''} • Precio: S/ ${(p.precio_unitario || 0).toFixed(2)}</div>
-                        </div>
-                    `).join('');
+                    const html = productos.map(p => {
+                        // 🔥 CORREGIDO: Manejar precio_unitario que puede ser null o undefined
+                        const precio = parseFloat(p.precio_unitario || 0) || 0;
+                        return `
+                            <div class="item" 
+                                data-id="${p.id}" 
+                                data-codigo="${p.codigo || ''}" 
+                                data-descripcion="${p.descripcion || ''}" 
+                                data-modelo="${p.modelo || ''}" 
+                                data-marca="${p.marca || ''}" 
+                                data-unidad="${p.unidad_medida || 'UNIDAD'}" 
+                                data-costo="${p.costo_unitario || 0}" 
+                                data-precio="${precio}">
+                                <strong>📦 ${p.codigo}</strong> - ${p.descripcion}
+                                <div class="meta">${p.marca || ''} • Precio: S/ ${precio.toFixed(2)}</div>
+                            </div>
+                        `;
+                    }).join('');
                     
                     portalShow(input, html);
 
@@ -1891,12 +1896,12 @@ document.addEventListener('DOMContentLoaded', () => {
         row.innerHTML = `
             <td class="col-item">${itemCounter}</td>
             <td class="col-codigo">
-                <input type="text" class="codigo_producto" placeholder="Buscar producto..." style="width:100%; min-width:120px;">
+                <input type="text" class="codigo_producto" placeholder="Buscar o escribir producto..." style="width:100%; min-width:120px;">
                 <input type="hidden" class="producto_id">
             </td>
-            <td class="col-desc"><input type="text" class="descripcion" readonly style="width:100%;"></td>
-            <td class="col-modelo"><input type="text" class="modelo" readonly style="width:100%;"></td>
-            <td class="col-marca"><input type="text" class="marca" readonly style="width:100%;"></td>
+            <td class="col-desc"><input type="text" class="descripcion" placeholder="Descripción" style="width:100%;"></td>
+            <td class="col-modelo"><input type="text" class="modelo" placeholder="Modelo" style="width:100%;"></td>
+            <td class="col-marca"><input type="text" class="marca" placeholder="Marca" style="width:100%;"></td>
             <td class="col-unidad"><input type="text" class="unidad_medida" value="UNIDAD" style="width:100%;"></td>
             <td class="col-cantidad"><input type="number" class="cantidad" value="1" step="0.01" style="width:100%;"></td>
             <td class="col-precio"><input type="number" class="precio_venta_unitario" value="0" step="0.01" style="width:100%;"></td>
