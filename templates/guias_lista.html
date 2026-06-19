@@ -11,9 +11,11 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); }
+        
+        /* NAVBAR - COMPACTO */
         .erp-navbar {
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            padding: 16px 32px;
+            padding: 8px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -24,104 +26,232 @@
         .navbar-left {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 16px;
         }
         .navbar-left .btn-volver {
             color: white;
             background: rgba(255,255,255,0.1);
             border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 10px;
-            padding: 8px 16px;
-            font-size: 13px;
+            border-radius: 8px;
+            padding: 5px 14px;
+            font-size: 12px;
             font-weight: 500;
             transition: all 0.2s;
             text-decoration: none;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
         .navbar-left .btn-volver:hover {
             background: rgba(255,255,255,0.2);
             color: white;
         }
+        
+        /* HERO - COMPACTO */
         .hero-card {
             background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
-            padding: 32px;
-            border-radius: 24px;
-            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.08);
+            padding: 12px 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px -5px rgba(0, 0, 0, 0.06);
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            margin-bottom: 24px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(0,0,0,0.04);
         }
         .hero-title {
             font-weight: 800;
-            font-size: 28px;
+            font-size: 20px;
             margin: 0;
             background: linear-gradient(135deg, #111827, #374151);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
+        .hero-title i {
+            -webkit-text-fill-color: initial;
+        }
         .hero-subtitle {
             color: #6b7280;
-            margin-top: 8px;
-            font-size: 14px;
+            margin-top: 2px;
+            font-size: 12px;
+        }
+        .hero-subtitle i {
+            -webkit-text-fill-color: initial;
         }
         .btn-erp {
-            border-radius: 12px;
-            padding: 10px 24px;
+            border-radius: 10px;
+            padding: 6px 18px;
             font-weight: 600;
+            font-size: 13px;
             transition: all 0.2s ease;
         }
         .btn-erp:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
+        
+        /* CARDS */
         .erp-card {
             background: white;
-            border-radius: 24px;
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 15px -5px rgba(0, 0, 0, 0.05);
             border: 1px solid rgba(0, 0, 0, 0.05);
         }
         .card-header-custom {
             background: linear-gradient(135deg, #1f2937, #111827);
             color: white;
-            padding: 16px 24px;
+            padding: 10px 18px;
             font-weight: 700;
+            font-size: 14px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
+        
+        /* STATS - COMPACTOS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .stat-card {
+            background: white;
+            padding: 10px 16px;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px -5px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 4px solid #e2e8f0;
+            transition: 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.08); }
+        .stat-card .stat-icon { font-size: 20px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: #f1f5f9; }
+        .stat-card .stat-number { font-size: 20px; font-weight: 800; line-height: 1.1; }
+        .stat-card .stat-label { font-size: 10px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.3px; }
+        .stat-total { border-left-color: #3b82f6; }
+        .stat-total .stat-icon { background: #dbeafe; color: #1e40af; }
+        .stat-borrador { border-left-color: #f59e0b; }
+        .stat-borrador .stat-icon { background: #fef3c7; color: #92400e; }
+        .stat-aceptada { border-left-color: #10b981; }
+        .stat-aceptada .stat-icon { background: #d1fae5; color: #065f46; }
+        
+        /* FILTROS - COMPACTOS */
+        .filtros {
+            background: white;
+            border-radius: 14px;
+            padding: 12px 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 15px -5px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+        .filtros .form-label {
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        .filtros .form-control, .filtros .form-select {
+            border-radius: 10px;
+            border: 1.5px solid #e2e8f0;
+            padding: 6px 12px;
+            font-size: 12px;
+            min-height: 34px;
+        }
+        .search-box { position: relative; }
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            z-index: 10;
+            font-size: 14px;
+        }
+        .search-input { padding-left: 34px; }
+        .search-input:focus {
+            border-color: #ea580c;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
+        }
+        .btn-exportar {
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 6px 16px;
+            font-weight: 600;
+            font-size: 12px;
+            transition: all 0.2s;
+            min-height: 34px;
+        }
+        .btn-exportar:hover {
+            background: #059669;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+        }
+        .btn-exportar i { margin-right: 4px; }
+        
+        /* TABLA - CON CABECERA FIJA */
+        .tabla-wrapper {
+            max-height: 62vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        .tabla-wrapper::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .tabla-wrapper::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        .tabla-wrapper::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .tabla-wrapper::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
         .table-modern {
             margin: 0;
+            font-size: 13px;
         }
         .table-modern thead th {
             background: #f8fafc;
             font-weight: 700;
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 14px 12px;
+            letter-spacing: 0.3px;
+            padding: 8px 10px;
             border-bottom: 2px solid #e2e8f0;
             color: #1e293b;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: #f8fafc;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
         .table-modern tbody td {
-            padding: 12px;
+            padding: 8px 10px;
             vertical-align: middle;
             border-bottom: 1px solid #f1f5f9;
-            font-size: 13px;
+            font-size: 12px;
         }
         .table-modern tbody tr:hover {
             background: #f8fafc;
-            transition: all 0.3s;
+            transition: all 0.2s;
         }
+        
         .badge-estado {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 10px;
             font-weight: 600;
             display: inline-block;
         }
@@ -133,8 +263,8 @@
         .dropdown-acciones .dropdown-toggle {
             background: none;
             border: none;
-            padding: 6px 12px;
-            border-radius: 8px;
+            padding: 4px 10px;
+            border-radius: 6px;
             color: #64748b;
             transition: all 0.2s;
         }
@@ -142,82 +272,55 @@
             background: #f1f5f9;
             color: #1a1a1a;
         }
-        .dropdown-acciones .dropdown-toggle::after {
-            display: none;
-        }
+        .dropdown-acciones .dropdown-toggle::after { display: none; }
         .dropdown-acciones .dropdown-menu {
-            border-radius: 12px;
-            padding: 6px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+            border-radius: 10px;
+            padding: 4px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
             border: 1px solid #e2e8f0;
-            min-width: 200px;
+            min-width: 190px;
+            font-size: 12px;
         }
         .dropdown-acciones .dropdown-item {
-            border-radius: 8px;
-            padding: 8px 14px;
-            font-size: 13px;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 12px;
             font-weight: 500;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
-        .dropdown-acciones .dropdown-item:hover {
-            background: #f1f5f9;
-        }
-        .dropdown-acciones .dropdown-item i {
-            font-size: 16px;
-            width: 20px;
-            text-align: center;
-        }
+        .dropdown-acciones .dropdown-item:hover { background: #f1f5f9; }
+        .dropdown-acciones .dropdown-item i { font-size: 15px; width: 18px; text-align: center; }
         .dropdown-item-ver i { color: #3b82f6; }
         .dropdown-item-pdf i { color: #ef4444; }
         .dropdown-item-editar i { color: #f59e0b; }
         .dropdown-item-rotulo i { color: #8b5cf6; }
         .dropdown-item-eliminar i { color: #dc2626; }
-        .dropdown-divider {
-            margin: 4px 0;
-            border-color: #e2e8f0;
+        .dropdown-item-eliminar:hover { background: #fef2f2; color: #dc2626; }
+        .dropdown-divider { margin: 4px 0; border-color: #e2e8f0; }
+        
+        .col-item {
+            width: 40px;
+            text-align: center;
+            font-weight: 600;
+            color: #64748b;
         }
-        .dropdown-item-eliminar:hover {
-            background: #fef2f2;
-            color: #dc2626;
+        .badge-placa {
+            background: #e2e8f0;
+            color: #1e293b;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
         }
-
-        .filtros {
-            background: white;
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 24px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-        }
-        .search-box {
-            position: relative;
-        }
-        .search-box i {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #94a3b8;
-            z-index: 10;
-        }
-        .search-input {
-            padding-left: 40px;
-            border-radius: 12px;
-            border: 1.5px solid #e2e8f0;
-            padding: 10px 15px 10px 40px;
-        }
-        .search-input:focus {
-            border-color: #ea580c;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
-        }
+        
         .toast-notification {
             position: fixed;
             top: 20px;
             right: 20px;
             z-index: 9999;
-            min-width: 300px;
+            min-width: 280px;
             animation: slideIn 0.3s ease;
         }
         @keyframes slideIn {
@@ -228,133 +331,70 @@
             from { transform: translateX(0); opacity: 1; }
             to { transform: translateX(100%); opacity: 0; }
         }
+        
         .empty-state {
             text-align: center;
-            padding: 60px 20px;
+            padding: 40px 20px;
             color: #94a3b8;
         }
-        .empty-state i {
-            font-size: 64px;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-        .pagination {
-            justify-content: center;
-            padding: 20px;
-        }
-        .page-link {
-            border-radius: 10px;
-            margin: 0 3px;
-            color: #1e293b;
-        }
-        .page-link:hover {
-            background: #ea580c;
-            color: white;
-            border-color: #ea580c;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-        .stat-card {
-            background: white;
-            padding: 16px 20px;
+        .empty-state i { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+        
+        /* MODALES - ESTILOS ORIGINALES MANTENIDOS */
+        .modal-content {
             border-radius: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            border-left: 5px solid #e2e8f0;
-            transition: 0.2s;
+            overflow: hidden;
+            border: none;
         }
-        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
-        .stat-card .stat-icon { font-size: 28px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 14px; background: #f1f5f9; }
-        .stat-card .stat-info { display: flex; flex-direction: column; }
-        .stat-card .stat-number { font-size: 24px; font-weight: 800; line-height: 1.2; }
-        .stat-card .stat-label { font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
-        .stat-total { border-left-color: #3b82f6; }
-        .stat-total .stat-icon { background: #dbeafe; color: #1e40af; }
-        .stat-borrador { border-left-color: #f59e0b; }
-        .stat-borrador .stat-icon { background: #fef3c7; color: #92400e; }
-        .stat-aceptada { border-left-color: #10b981; }
-        .stat-aceptada .stat-icon { background: #d1fae5; color: #065f46; }
-        .col-item {
-            width: 50px;
-            text-align: center;
-            font-weight: 600;
-            color: #64748b;
+        .modal-header {
+            padding: 14px 20px;
+            color: white;
+            border: none;
         }
-        .badge-placa {
-            background: #e2e8f0;
-            color: #1e293b;
-            font-weight: 600;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 11px;
+        .modal-header .btn-close { filter: brightness(0) invert(1); }
+        .modal-body { padding: 20px; }
+        .modal-footer {
+            padding: 12px 20px;
+            border-top: 1px solid #e2e8f0;
         }
-        /* Estilos para el modal de ver detalle */
+        
         .detalle-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 16px;
+            gap: 14px;
         }
-        @media (max-width: 768px) {
-            .detalle-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+        @media (max-width: 768px) { .detalle-grid { grid-template-columns: 1fr; } }
+        
         .detalle-card {
             background: #f8fafc;
-            border-radius: 16px;
-            padding: 16px 18px;
+            border-radius: 14px;
+            padding: 14px 16px;
             border: 1px solid #e2e8f0;
             box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            transition: all 0.2s;
-        }
-        .detalle-card:hover {
-            border-color: #cbd5e1;
         }
         .detalle-card .card-titulo {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
             color: #1e293b;
-            margin-bottom: 10px;
-            padding-bottom: 8px;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
             border-bottom: 2px solid #e2e8f0;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
-        .detalle-card .card-titulo i {
-            font-size: 16px;
-        }
+        .detalle-card .card-titulo i { font-size: 14px; }
         .detalle-card .campo {
             display: flex;
             justify-content: space-between;
-            padding: 4px 0;
-            font-size: 13px;
+            padding: 3px 0;
+            font-size: 12px;
             border-bottom: 1px dashed #f1f5f9;
         }
-        .detalle-card .campo:last-child {
-            border-bottom: none;
-        }
-        .detalle-card .campo .label {
-            color: #64748b;
-            font-weight: 500;
-        }
-        .detalle-card .campo .valor {
-            color: #0f172a;
-            font-weight: 600;
-            text-align: right;
-            max-width: 60%;
-            word-break: break-word;
-        }
-        .detalle-card .campo .valor-small {
-            font-size: 12px;
-            font-weight: 500;
-        }
+        .detalle-card .campo:last-child { border-bottom: none; }
+        .detalle-card .campo .label { color: #64748b; font-weight: 500; }
+        .detalle-card .campo .valor { color: #0f172a; font-weight: 600; text-align: right; max-width: 60%; word-break: break-word; }
+        .detalle-card .campo .valor-small { font-size: 11px; font-weight: 500; }
+        
         .detalle-card-remitente .card-titulo { color: #2563eb; border-bottom-color: #2563eb; }
         .detalle-card-destinatario .card-titulo { color: #059669; border-bottom-color: #059669; }
         .detalle-card-vehiculo .card-titulo { color: #ea580c; border-bottom-color: #ea580c; }
@@ -362,81 +402,78 @@
         .detalle-card-registro .card-titulo { color: #0d9488; border-bottom-color: #0d9488; }
         .detalle-card-transportista .card-titulo { color: #8b5cf6; border-bottom-color: #8b5cf6; }
         .detalle-card-observaciones .card-titulo { color: #6b7280; border-bottom-color: #6b7280; }
-
+        
         .productos-table {
-            margin-top: 12px;
-            border-radius: 12px;
+            margin-top: 10px;
+            border-radius: 10px;
             overflow: hidden;
             border: 1px solid #e2e8f0;
         }
         .productos-table thead th {
             background: #1e293b;
             color: white;
-            font-size: 11px;
-            padding: 8px 12px;
+            font-size: 10px;
+            padding: 6px 10px;
             text-transform: uppercase;
             letter-spacing: 0.3px;
         }
         .productos-table tbody td {
-            padding: 6px 12px;
-            font-size: 12px;
+            padding: 5px 10px;
+            font-size: 11px;
             vertical-align: middle;
         }
-        .productos-table tbody tr:nth-child(even) {
-            background: #f8fafc;
-        }
-        .productos-table tbody tr:hover {
-            background: #eef2ff;
-        }
-
-        /* Botón Exportar */
-        .btn-exportar {
-            background: #10b981;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 8px 20px;
-            font-weight: 600;
-            font-size: 13px;
-            transition: all 0.2s;
-        }
-        .btn-exportar:hover {
-            background: #059669;
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
-        }
-        .btn-exportar i {
-            margin-right: 6px;
+        .productos-table tbody tr:nth-child(even) { background: #f8fafc; }
+        .productos-table tbody tr:hover { background: #eef2ff; }
+        
+        @media (max-width: 768px) {
+            .erp-navbar { padding: 6px 12px; flex-wrap: wrap; gap: 4px; }
+            .navbar-left { flex-wrap: wrap; gap: 8px; }
+            .stats-grid { grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+            .stat-card { padding: 6px 10px; }
+            .stat-card .stat-number { font-size: 16px; }
+            .stat-card .stat-icon { width: 30px; height: 30px; font-size: 16px; }
+            .hero-card { padding: 10px 14px; flex-direction: column; align-items: stretch; gap: 8px; }
+            .hero-title { font-size: 17px; }
+            .filtros .row > div { margin-bottom: 6px; }
+            .table-modern { font-size: 10px; }
+            .table-modern thead th { font-size: 8px; padding: 4px 4px; }
+            .table-modern tbody td { padding: 4px 4px; font-size: 10px; }
+            .tabla-wrapper { max-height: 45vh; }
+            .col-item { width: 28px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- NAVBAR ERP -->
+    <!-- =========================== -->
+    <!-- NAVBAR -->
+    <!-- =========================== -->
     <div class="erp-navbar">
         <div class="navbar-left">
             <a href="/mantenedor" class="btn-volver">
                 <i class="bi bi-arrow-left"></i> Volver
             </a>
-            <div class="d-flex align-items-center gap-3">
-                <div class="bg-white rounded-3 p-2"><i class="bi bi-truck fs-4 text-dark"></i></div>
+            <div class="d-flex align-items-center gap-2">
+                <div class="bg-white rounded-2 p-1"><i class="bi bi-truck fs-5 text-dark"></i></div>
                 <div>
-                    <div class="text-white fw-bold fs-5">KCF CORPORACION</div>
-                    <div class="text-white-50 small">ERP Comercial · Guías de Remisión</div>
+                    <div class="text-white fw-bold fs-6">KCF CORPORACION</div>
+                    <div class="text-white-50 small" style="font-size:9px;">ERP Comercial · Guías de Remisión</div>
                 </div>
             </div>
         </div>
-        <div class="d-flex gap-3 align-items-center">
+        <div class="d-flex gap-2 align-items-center">
             <div class="text-white-50 small">
                 <i class="bi bi-person-circle"></i> {{ session.nombre_completo }}
             </div>
         </div>
     </div>
 
-    <div class="container-fluid py-4">
+    <!-- =========================== -->
+    <!-- CONTENIDO -->
+    <!-- =========================== -->
+    <div class="container-fluid py-2">
         
-        <!-- HEADER -->
+        <!-- HEADER COMPACTO -->
         <div class="hero-card">
             <div>
                 <h1 class="hero-title">
@@ -479,23 +516,23 @@
             </div>
         </div>
         
-        <!-- FILTROS CON EXPORTAR -->
+        <!-- FILTROS -->
         <div class="filtros">
-            <div class="row g-3 align-items-end">
+            <div class="row g-2 align-items-end">
                 <div class="col-md-3">
                     <label class="form-label fw-semibold">
                         <i class="bi bi-search"></i> Buscar
                     </label>
                     <div class="search-box">
                         <i class="bi bi-search"></i>
-                        <input type="text" id="filtroBusqueda" class="form-control search-input" placeholder="Buscar por N° Guía, RUC o Cliente...">
+                        <input type="text" id="filtroBusqueda" class="form-control search-input" placeholder="N° Guía, RUC o Cliente...">
                     </div>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label fw-semibold">
                         <i class="bi bi-funnel"></i> Estado
                     </label>
-                    <select id="filtroEstado" class="form-select" style="border-radius: 12px; border: 1.5px solid #e2e8f0;">
+                    <select id="filtroEstado" class="form-select">
                         <option value="">Todos</option>
                         <option value="BORRADOR">📝 Borrador</option>
                         <option value="PROCESANDO">⏳ Procesando</option>
@@ -507,13 +544,13 @@
                     <label class="form-label fw-semibold">
                         <i class="bi bi-calendar"></i> Fecha desde
                     </label>
-                    <input type="date" id="filtroFechaDesde" class="form-control" style="border-radius: 12px; border: 1.5px solid #e2e8f0;">
+                    <input type="date" id="filtroFechaDesde" class="form-control">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label fw-semibold">
                         <i class="bi bi-calendar"></i> Fecha hasta
                     </label>
-                    <input type="date" id="filtroFechaHasta" class="form-control" style="border-radius: 12px; border: 1.5px solid #e2e8f0;">
+                    <input type="date" id="filtroFechaHasta" class="form-control">
                 </div>
                 <div class="col-md-3">
                     <button class="btn btn-exportar w-100" id="btnExportarExcel">
@@ -523,13 +560,13 @@
             </div>
         </div>
         
-        <!-- TABLA DE GUÍAS -->
+        <!-- TABLA CON CABECERA FIJA -->
         <div class="erp-card">
             <div class="card-header-custom">
                 <i class="bi bi-list-ul"></i> Listado de Guías de Remisión
                 <span class="ms-auto badge bg-light text-dark" id="totalRegistros">0 registros</span>
             </div>
-            <div class="table-responsive">
+            <div class="tabla-wrapper" id="tablaWrapper">
                 <table class="table table-modern">
                     <thead>
                         <tr>
@@ -548,7 +585,7 @@
                     </thead>
                     <tbody id="tablaGuias">
                         <tr>
-                            <td colspan="11" class="text-center py-5">
+                            <td colspan="11" class="text-center py-4">
                                 <div class="spinner-border text-primary" role="status"></div>
                                 <br>Cargando guías...
                             </td>
@@ -560,21 +597,25 @@
         </div>
     </div>
     
+    <!-- =========================== -->
+    <!-- MODALES - TODOS MANTENIDOS -->
+    <!-- =========================== -->
+    
     <!-- MODAL VER DETALLE -->
     <div class="modal fade" id="modalVerGuia" tabindex="-1">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content" style="border-radius: 24px; overflow: hidden;">
-                <div class="modal-header" style="background: linear-gradient(135deg, #1f2937, #111827); color: white; padding: 16px 24px;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #1f2937, #111827); color: white; padding: 14px 20px;">
                     <h5 class="modal-title"><i class="bi bi-eye-fill"></i> Detalle de Guía de Remisión</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body" id="modalVerBody" style="padding: 24px; background: #f1f5f9;">
+                <div class="modal-body" id="modalVerBody" style="padding: 20px; background: #f1f5f9;">
                     <div class="text-center py-5">
                         <div class="spinner-border text-primary" role="status"></div>
                         <p class="mt-2">Cargando...</p>
                     </div>
                 </div>
-                <div class="modal-footer" style="background: white; border-top: 1px solid #e2e8f0; padding: 12px 24px;">
+                <div class="modal-footer" style="background: white; border-top: 1px solid #e2e8f0; padding: 10px 20px;">
                     <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                     <button class="btn btn-success" id="btnDescargarPDFModal">
                         <i class="bi bi-file-earmark-pdf-fill"></i> Descargar PDF
@@ -588,11 +629,11 @@
     <div class="modal fade" id="modalConfirmarEliminar" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="border-radius: 20px; overflow: hidden;">
-                <div class="modal-header" style="background: #dc2626; color: white; padding: 16px 24px;">
+                <div class="modal-header" style="background: #dc2626; color: white; padding: 14px 20px;">
                     <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill"></i> Confirmar Eliminación</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body" style="padding: 24px;">
+                <div class="modal-body" style="padding: 20px;">
                     <p>¿Estás seguro de que deseas eliminar esta guía de remisión?</p>
                     <p class="text-danger small"><i class="bi bi-info-circle"></i> Esta acción no se puede deshacer.</p>
                     <div class="bg-light p-3 rounded-3">
@@ -600,7 +641,7 @@
                         <p><strong>Destinatario:</strong> <span id="eliminarDestinatario"></span></p>
                     </div>
                 </div>
-                <div class="modal-footer" style="padding: 12px 24px;">
+                <div class="modal-footer" style="padding: 10px 20px;">
                     <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button class="btn btn-danger" id="btnConfirmarEliminar">
                         <i class="bi bi-trash-fill"></i> Sí, Eliminar
@@ -614,17 +655,17 @@
     <div class="modal fade" id="modalRotulo" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content" style="border-radius: 24px; overflow: hidden;">
-                <div class="modal-header" style="background: linear-gradient(135deg, #1f2937, #111827); color: white;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #1f2937, #111827); color: white; padding: 14px 20px;">
                     <h5 class="modal-title"><i class="bi bi-tags-fill"></i> Rótulo de Embalaje</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body" id="modalRotuloBody" style="background: #f1f5f9; padding: 24px;">
+                <div class="modal-body" id="modalRotuloBody" style="background: #f1f5f9; padding: 20px;">
                     <div class="text-center py-5">
                         <div class="spinner-border text-primary"></div>
                         <p class="mt-2">Generando rótulo de embalaje...</p>
                     </div>
                 </div>
-                <div class="modal-footer" style="background: white; border-top: 1px solid #e2e8f0;">
+                <div class="modal-footer" style="background: white; border-top: 1px solid #e2e8f0; padding: 10px 20px;">
                     <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                     <button class="btn btn-warning" id="btnImprimirRotulo">
                         <i class="bi bi-printer-fill"></i> Imprimir Rótulo
@@ -693,10 +734,10 @@
             toast.className = 'toast-notification';
             toast.style.background = colores[tipo] || colores.info;
             toast.style.color = 'white';
-            toast.style.padding = '12px 20px';
-            toast.style.borderRadius = '12px';
-            toast.style.boxShadow = '0 10px 25px rgba(0,0,0,0.2)';
-            toast.innerHTML = `<div style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 20px;">${iconos[tipo]}</span><span>${mensaje}</span></div>`;
+            toast.style.padding = '10px 16px';
+            toast.style.borderRadius = '10px';
+            toast.style.boxShadow = '0 8px 20px rgba(0,0,0,0.15)';
+            toast.innerHTML = `<div style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 18px;">${iconos[tipo]}</span><span>${mensaje}</span></div>`;
             
             document.body.appendChild(toast);
             setTimeout(() => {
@@ -746,7 +787,7 @@
         // ==========================================
         async function cargarGuias() {
             const tbody = document.getElementById('tablaGuias');
-            tbody.innerHTML = `<tr><td colspan="11" class="text-center py-5"><div class="spinner-border text-primary"></div><br>Cargando...</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="11" class="text-center py-4"><div class="spinner-border text-primary"></div><br>Cargando...</td></tr>`;
             
             try {
                 const response = await fetch('/guias/api/listar');
@@ -758,11 +799,11 @@
                     actualizarDashboard(todasGuias);
                     aplicarFiltros();
                 } else {
-                    tbody.innerHTML = `<tr><td colspan="11" class="text-center py-5 text-danger">Error al cargar guías</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="11" class="text-center py-4 text-danger">Error al cargar guías</td></tr>`;
                 }
             } catch (error) {
                 console.error('Error:', error);
-                tbody.innerHTML = `<tr><td colspan="11" class="text-center py-5 text-danger">Error de conexión</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11" class="text-center py-4 text-danger">Error de conexión</td></tr>`;
             }
         }
         
@@ -877,7 +918,7 @@
         }
         
         // ==========================================
-        // VER GUÍA (MODAL) - Con motivo en texto
+        // VER GUÍA (MODAL) - TODA LA FUNCIÓN ORIGINAL
         // ==========================================
         window.verGuia = async function(id) {
             guiaActualId = id;
@@ -896,7 +937,6 @@
                     const g = result.data;
                     const items = typeof g.items_json === 'string' ? JSON.parse(g.items_json) : (g.items_json || []);
                     
-                    // Tabla de productos con 5 columnas: Item, Código, Descripción, Cant., Unidad
                     let itemsHtml = '';
                     if (items.length > 0) {
                         itemsHtml = `
@@ -929,13 +969,10 @@
                     
                     const pesoTotal = parseFloat(g.peso_total) || 0;
                     const fechaCreacionDetalle = formatFechaHora(g.created_at);
-                    // Motivo en texto
                     const motivoTexto = getMotivoTexto(g.motivo_traslado);
                     
                     modalBody.innerHTML = `
-                        <!-- GRID DE TARJETAS -->
                         <div class="detalle-grid">
-                            <!-- Remitente -->
                             <div class="detalle-card detalle-card-remitente">
                                 <div class="card-titulo"><i class="bi bi-building"></i> Remitente</div>
                                 <div class="campo"><span class="label">RUC</span><span class="valor">${g.ruc_remitente || '-'}</span></div>
@@ -944,7 +981,6 @@
                                 <div class="campo"><span class="label">Ubigeo</span><span class="valor">${g.ubigeo_remitente || '-'}</span></div>
                             </div>
                             
-                            <!-- Destinatario -->
                             <div class="detalle-card detalle-card-destinatario">
                                 <div class="card-titulo"><i class="bi bi-people"></i> Destinatario</div>
                                 <div class="campo"><span class="label">RUC</span><span class="valor">${g.ruc_destinatario || '-'}</span></div>
@@ -956,7 +992,6 @@
                                 ${g.factura ? `<div class="campo"><span class="label">Factura</span><span class="valor">${escapeHtml(g.factura)}</span></div>` : ''}
                             </div>
                             
-                            <!-- Vehículo -->
                             <div class="detalle-card detalle-card-vehiculo">
                                 <div class="card-titulo"><i class="bi bi-truck"></i> Vehículo</div>
                                 <div class="campo"><span class="label">Placa</span><span class="valor">${g.placa_vehiculo || '-'}</span></div>
@@ -966,7 +1001,6 @@
                                 <div class="campo"><span class="label">Modalidad</span><span class="valor">${g.modalidad_transporte || 'PRIVADO'}</span></div>
                             </div>
                             
-                            <!-- Traslado -->
                             <div class="detalle-card detalle-card-traslado">
                                 <div class="card-titulo"><i class="bi bi-calendar-event"></i> Traslado</div>
                                 <div class="campo"><span class="label">Motivo</span><span class="valor">${motivoTexto}</span></div>
@@ -977,7 +1011,6 @@
                                 <div class="campo"><span class="label">Unidad Peso</span><span class="valor">${g.unidad_peso_bruto || 'KGM'}</span></div>
                             </div>
                             
-                            <!-- Transportista (si existe) -->
                             ${g.transportista_ruc ? `
                             <div class="detalle-card detalle-card-transportista" style="grid-column: span 2;">
                                 <div class="card-titulo"><i class="bi bi-building"></i> Transportista</div>
@@ -986,7 +1019,6 @@
                             </div>
                             ` : ''}
                             
-                            <!-- Observaciones (si existe) -->
                             ${g.observaciones ? `
                             <div class="detalle-card detalle-card-observaciones" style="grid-column: span 2;">
                                 <div class="card-titulo"><i class="bi bi-chat-text"></i> Observaciones</div>
@@ -995,7 +1027,6 @@
                             ` : ''}
                         </div>
                         
-                        <!-- Registro -->
                         <div class="detalle-card detalle-card-registro" style="margin-top:16px;background:#f8fafc;border-radius:16px;padding:12px 18px;border:1px solid #e2e8f0;">
                             <div class="card-titulo"><i class="bi bi-clock-history"></i> Registro</div>
                             <div class="campo"><span class="label">Fecha de Creación</span><span class="valor">${fechaCreacionDetalle}</span></div>
@@ -1003,7 +1034,6 @@
                             <div class="campo"><span class="label">N° Guía</span><span class="valor">${g.serie || 'T001'}-${g.numero || '?'}</span></div>
                         </div>
                         
-                        <!-- Productos -->
                         <div style="margin-top:16px;">
                             <h6 style="font-weight:700;color:#1e293b;margin-bottom:10px;"><i class="bi bi-box-seam"></i> Productos</h6>
                             ${itemsHtml || '<div class="text-muted small">No hay productos registrados</div>'}
@@ -1033,7 +1063,7 @@
         };
 
         // ==========================================
-        // GENERAR RÓTULO DE EMBALAJE
+        // GENERAR RÓTULO DE EMBALAJE - ORIGINAL
         // ==========================================
         window.generarRotulo = async function(id) {
             const modalBody = document.getElementById('modalRotuloBody');
@@ -1070,53 +1100,40 @@
                 const codigoBarras = generarCodigoBarras(numeroGuia);
                 
                 modalBody.innerHTML = `
-                    <div style="
-                        width: 90mm;
-                        max-width: 90mm;
-                        margin: 0 auto;
-                        background: #ffffff;
-                        border: 2px solid #1a2a6c;
-                        border-radius: 4px;
-                        padding: 10px 12px;
-                        font-family: 'Courier New', monospace;
-                        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-                        display: flex;
-                        flex-direction: column;
-                        min-height: 130mm;
-                    ">
-                        <div style="text-align: center; border-bottom: 2px solid #e94560; padding-bottom: 4px; margin-bottom: 6px;">
-                            <div style="font-size: 12px; font-weight: 900; color: #1a2a6c;">${escapeHtml(REMITENTE)}</div>
-                            <div style="font-size: 8px; font-weight: 600; color: #555;">RUC: ${escapeHtml(RUC_REMITENTE)}</div>
+                    <div style="width:90mm;max-width:90mm;margin:0 auto;background:#ffffff;border:2px solid #1a2a6c;border-radius:4px;padding:10px 12px;font-family:'Courier New',monospace;box-shadow:0 4px 20px rgba(0,0,0,0.15);display:flex;flex-direction:column;min-height:130mm;">
+                        <div style="text-align:center;border-bottom:2px solid #e94560;padding-bottom:4px;margin-bottom:6px;">
+                            <div style="font-size:12px;font-weight:900;color:#1a2a6c;">${escapeHtml(REMITENTE)}</div>
+                            <div style="font-size:8px;font-weight:600;color:#555;">RUC: ${escapeHtml(RUC_REMITENTE)}</div>
                         </div>
-                        <div style="flex: 1;">
-                            <div style="margin: 2px 0;">
-                                <div style="font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase;">CLIENTE:</div>
-                                <div style="font-size: 11px; font-weight: 700; color: #1a1a1a;">${escapeHtml(destinatario)}</div>
-                                <div style="font-size: 9px; font-weight: 500; color: #555;">RUC: ${escapeHtml(rucDestinatario)}</div>
+                        <div style="flex:1;">
+                            <div style="margin:2px 0;">
+                                <div style="font-size:8px;font-weight:700;color:#888;text-transform:uppercase;">CLIENTE:</div>
+                                <div style="font-size:11px;font-weight:700;color:#1a1a1a;">${escapeHtml(destinatario)}</div>
+                                <div style="font-size:9px;font-weight:500;color:#555;">RUC: ${escapeHtml(rucDestinatario)}</div>
                             </div>
-                            <div style="border-top: 1px dashed #ddd; margin: 3px 0;"></div>
-                            <div style="margin: 2px 0;">
-                                <div style="font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase;">DIRECCIÓN DE ENTREGA:</div>
-                                <div style="font-size: 10px; font-weight: 600; color: #1a1a1a;">${escapeHtml(direccionEntrega)}</div>
+                            <div style="border-top:1px dashed #ddd;margin:3px 0;"></div>
+                            <div style="margin:2px 0;">
+                                <div style="font-size:8px;font-weight:700;color:#888;text-transform:uppercase;">DIRECCIÓN DE ENTREGA:</div>
+                                <div style="font-size:10px;font-weight:600;color:#1a1a1a;">${escapeHtml(direccionEntrega)}</div>
                             </div>
-                            <div style="border-top: 1px dashed #ddd; margin: 3px 0;"></div>
-                            <div style="margin: 2px 0;">
-                                <div style="font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase;">CONSIGNADOS:</div>
-                                <div style="font-size: 10px; font-weight: 600; color: #1a1a1a;">${escapeHtml(conductor)}</div>
-                                <div style="font-size: 9px; font-weight: 500; color: #555;">DNI: ${escapeHtml(dniConductor)}</div>
+                            <div style="border-top:1px dashed #ddd;margin:3px 0;"></div>
+                            <div style="margin:2px 0;">
+                                <div style="font-size:8px;font-weight:700;color:#888;text-transform:uppercase;">CONSIGNADOS:</div>
+                                <div style="font-size:10px;font-weight:600;color:#1a1a1a;">${escapeHtml(conductor)}</div>
+                                <div style="font-size:9px;font-weight:500;color:#555;">DNI: ${escapeHtml(dniConductor)}</div>
                             </div>
-                            <div style="border-top: 1px dashed #ddd; margin: 3px 0;"></div>
-                            <div style="display: flex; justify-content: space-between; margin: 2px 0;">
-                                <div style="flex:1;"><div style="font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase;">N° BULTOS:</div><div style="font-size: 14px; font-weight: 800; color: #e94560;">${bultos}</div></div>
-                                <div style="flex:1;"><div style="font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase;">N° GUÍA:</div><div style="font-size: 10px; font-weight: 600; color: #1a1a1a;">${escapeHtml(numeroGuia)}</div></div>
-                                <div style="flex:1;"><div style="font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase;">FACTURA:</div><div style="font-size: 10px; font-weight: 600; color: #1a1a1a;">${escapeHtml(numeroFactura)}</div></div>
+                            <div style="border-top:1px dashed #ddd;margin:3px 0;"></div>
+                            <div style="display:flex;justify-content:space-between;margin:2px 0;">
+                                <div style="flex:1;"><div style="font-size:8px;font-weight:700;color:#888;text-transform:uppercase;">N° BULTOS:</div><div style="font-size:14px;font-weight:800;color:#e94560;">${bultos}</div></div>
+                                <div style="flex:1;"><div style="font-size:8px;font-weight:700;color:#888;text-transform:uppercase;">N° GUÍA:</div><div style="font-size:10px;font-weight:600;color:#1a1a1a;">${escapeHtml(numeroGuia)}</div></div>
+                                <div style="flex:1;"><div style="font-size:8px;font-weight:700;color:#888;text-transform:uppercase;">FACTURA:</div><div style="font-size:10px;font-weight:600;color:#1a1a1a;">${escapeHtml(numeroFactura)}</div></div>
                             </div>
-                            <div style="text-align: center; font-family: 'Courier New', monospace; font-size: 18px; letter-spacing: 2px; padding: 4px 0; margin: 4px 0; background: #f8f9fa; border-radius: 4px;">${codigoBarras}</div>
+                            <div style="text-align:center;font-family:'Courier New',monospace;font-size:18px;letter-spacing:2px;padding:4px 0;margin:4px 0;background:#f8f9fa;border-radius:4px;">${codigoBarras}</div>
                         </div>
-                        <div style="text-align: center; border-top: 1px solid #ddd; padding-top: 5px; margin-top: 5px;">
-                            <div style="font-weight: 700; color: #1a2a6c; font-size: 8px; margin-bottom: 2px;">📞 CONTÁCTANOS</div>
-                            <div style="font-size: 7px; color: #333; letter-spacing: 0.3px;">${escapeHtml(TELEFONO)} | ${escapeHtml(EMAIL)}</div>
-                            <div style="font-size: 6px; color: #aaa; margin-top: 3px; border-top: 1px solid #eee; padding-top: 3px;">RÓTULO DE EMBALAJE · Verificar integridad del producto</div>
+                        <div style="text-align:center;border-top:1px solid #ddd;padding-top:5px;margin-top:5px;">
+                            <div style="font-weight:700;color:#1a2a6c;font-size:8px;margin-bottom:2px;">📞 CONTÁCTANOS</div>
+                            <div style="font-size:7px;color:#333;letter-spacing:0.3px;">${escapeHtml(TELEFONO)} | ${escapeHtml(EMAIL)}</div>
+                            <div style="font-size:6px;color:#aaa;margin-top:3px;border-top:1px solid #eee;padding-top:3px;">RÓTULO DE EMBALAJE · Verificar integridad del producto</div>
                         </div>
                     </div>
                 `;
@@ -1231,7 +1248,7 @@
         });
         
         // ==========================================
-        // EXPORTAR A EXCEL - Con depuración para ver todos los campos
+        // EXPORTAR A EXCEL - ORIGINAL COMPLETO
         // ==========================================
         document.getElementById('btnExportarExcel')?.addEventListener('click', function() {
             const guias = guiasFiltradasActuales || todasGuias;
@@ -1241,7 +1258,6 @@
                 return;
             }
             
-            // Ver qué datos están disponibles en la primera guía
             if (guias.length > 0) {
                 console.log('🔍 DATOS DE LA PRIMERA GUÍA PARA DEPURACIÓN:');
                 console.log('📌 Todas las propiedades:', Object.keys(guias[0]));
@@ -1254,38 +1270,26 @@
                 console.log('📌 Guía completa:', guias[0]);
             }
             
-            // Construir el archivo CSV con todos los campos
-            let csv = '\uFEFF'; // BOM para UTF-8
+            let csv = '\uFEFF';
             
-            // Encabezados
             const headers = [
-                // Datos generales
                 'N° Guía', 'Serie', 'Número', 'Estado SUNAT', 'Fecha Creación',
-                // Destinatario
                 'RUC Destinatario', 'Razón Social Destinatario', 'Dirección Destinatario', 'Ubigeo Destinatario',
                 'Orden Compra Cliente', 'Documento Asociado', 'Factura',
-                // Vehículo
                 'Placa Vehículo', 'Conductor', 'DNI Conductor', 'Licencia Conductor', 'Modalidad Transporte',
-                // Transportista
                 'RUC Transportista', 'Razón Social Transportista',
-                // Traslado
                 'Motivo Traslado', 'Fecha Emisión', 'Fecha Traslado', 'Peso Total (kg)', 'Unidad Peso', 'N° Bultos',
-                // Productos
                 'Cantidad Total Productos', 'Descripción Productos',
                 'Observaciones'
             ];
             csv += headers.join(';') + '\n';
             
-            // Datos
             guias.forEach((guia, index) => {
                 const items = typeof guia.items_json === 'string' ? JSON.parse(guia.items_json) : (guia.items_json || []);
                 const descripciones = items.map(item => `${item.cantidad || 0}x ${item.descripcion || ''} (${item.codigo || ''})`).join(' | ');
                 const totalItems = items.reduce((sum, item) => sum + (parseFloat(item.cantidad) || 0), 0);
-                
-                // Motivo en texto
                 const motivoTexto = getMotivoTexto(guia.motivo_traslado);
                 
-                // Obtener los valores con diferentes nombres posibles
                 const conductorNombre = guia.conductor_nombre || guia.conductor || guia.nombre_conductor || '';
                 const conductorDNI = guia.conductor_dni || guia.dni_conductor || guia.dni || '';
                 const licencia = guia.licencia_conductor || guia.licencia || guia.numero_licencia || '';
@@ -1293,13 +1297,11 @@
                 const observacion = guia.observaciones || guia.observacion || guia.notas || '';
                 
                 const row = [
-                    // Datos generales
                     `${guia.serie || 'T001'}-${guia.numero || '?'}`,
                     guia.serie || 'T001',
                     guia.numero || '?',
                     guia.estado_sunat || 'BORRADOR',
                     formatFechaHora(guia.created_at),
-                    // Destinatario
                     guia.ruc_destinatario || guia.destinatario_ruc || '',
                     guia.destinatario_nombre || guia.nombre_destinatario || '',
                     guia.destinatario_direccion || guia.direccion_destinatario || '',
@@ -1307,29 +1309,24 @@
                     guia.orden_compra_cliente || guia.orden_compra || '',
                     guia.documento_asociado || guia.doc_asociado || '',
                     guia.factura || guia.numero_factura || '',
-                    // Vehículo
                     guia.placa_vehiculo || guia.placa || '',
                     conductorNombre,
                     conductorDNI,
                     licencia,
                     guia.modalidad_transporte || guia.modalidad || 'PRIVADO',
-                    // Transportista
                     guia.transportista_ruc || '',
                     guia.transportista_nombre || '',
-                    // Traslado
                     motivoTexto,
                     formatFecha(guia.fecha_emision),
                     formatFecha(guia.fecha_traslado),
                     parseFloat(guia.peso_total || 0).toFixed(2),
                     guia.unidad_peso_bruto || guia.unidad_peso || 'KGM',
                     nroBultos,
-                    // Productos
                     totalItems,
                     descripciones,
                     observacion
                 ];
                 
-                // Escapar comillas y punto y coma
                 const rowEscaped = row.map(cell => {
                     if (typeof cell === 'string') {
                         return `"${cell.replace(/"/g, '""')}"`;
@@ -1339,7 +1336,6 @@
                 csv += rowEscaped.join(';') + '\n';
             });
             
-            // Crear y descargar el archivo
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
