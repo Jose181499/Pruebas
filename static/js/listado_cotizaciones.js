@@ -73,7 +73,30 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnBuscarSunatListado) {
         btnBuscarSunatListado.addEventListener("click", autocompletarConSunatListado);
     }
+
+    // 📌 Ajustar altura de la tabla
+    setTimeout(ajustarAlturaTabla, 200);
+    window.addEventListener('resize', ajustarAlturaTabla);
 });
+
+// ===========================
+// AJUSTAR ALTURA DE LA TABLA PARA SCROLL
+// ===========================
+function ajustarAlturaTabla() {
+    const container = document.querySelector('.tabla-cotizaciones-container');
+    if (!container) return;
+    
+    const windowHeight = window.innerHeight;
+    let offsetTop = 0;
+    let elem = container;
+    while (elem) {
+        offsetTop += elem.offsetTop || 0;
+        elem = elem.offsetParent;
+    }
+    
+    const availableHeight = windowHeight - offsetTop - 80;
+    container.style.maxHeight = Math.max(availableHeight, 250) + 'px';
+}
 
 // ===========================
 // FUNCIÓN PARA FORMATEAR CANTIDAD (elimina .000)
@@ -245,7 +268,6 @@ async function cargarConteoDocumentos(cotizaciones) {
     }
 
     try {
-        // Hacer peticiones en paralelo para obtener los conteos
         const promesas = cotizaciones.map(cot => 
             fetch(`/api/cotizacion/${cot.id}/documentos/count`)
                 .then(res => res.json())
@@ -263,7 +285,6 @@ async function cargarConteoDocumentos(cotizaciones) {
 
         const resultados = await Promise.all(promesas);
         
-        // Agregar los conteos a las cotizaciones
         const mapa = {};
         resultados.forEach(r => {
             mapa[r.id] = { count: r.count, hasDocumentos: r.hasDocumentos };
@@ -416,7 +437,6 @@ function renderizarTabla(cotizaciones) {
         const codigoMostrar = c.codigo_cotizacion || c.numero_cotizacion;
         let estadoHtml = renderEstado(c.estado, esBorrador);
         
-        // Tus datos existentes
         const ruc = c.ruc || '---';
         const codigoCliente = c.codigo_cliente || '---';
         const razonComercial = c.razon_comercial || c.nombre_comercial || '---';
@@ -425,57 +445,31 @@ function renderizarTabla(cotizaciones) {
         const notaAclaratoria = c.nota_aclaratoria || '---';
         const condicionPago = c.condicion_pago || 'Contado';
         
-        // 🆕 Obtener conteo de documentos vinculados
         const tieneDocumentos = c.tiene_documentos || false;
         const documentosCount = c.documents_count || 0;
         
         return `
             <tr data-id="${c.id}" data-codigo="${escapeHtml(codigoMostrar)}">
-                <!-- 1. Ítems -->
                 <td class="text-center fw-bold">${index + 1}</td>
-                
-                <!-- 2. Fecha y Hora -->
                 <td class="fecha-cell">
                     <div class="fecha-hora">
                         <div class="fecha"><strong>${fecha}</strong></div>
                         <div class="hora small text-muted">${hora}</div>
                     </div>
                 </td>
-                
-                <!-- 3. ESTADO -->
                 <td class="estado-cell">${estadoHtml}</td>
-                
-                <!-- 4. N° Cotización -->
                 <td class="codigo-cell">
                     <strong>${escapeHtml(codigoMostrar || '-')}</strong>
                     ${c.correlativo ? `<br><small class="text-muted">Correl: ${c.correlativo}</small>` : ''}
                 </td>
-                
-                <!-- 5. RUC -->
                 <td>${escapeHtml(ruc)}</td>
-                
-                <!-- 6. Código Cliente -->
                 <td><span class="badge-codigo">${escapeHtml(codigoCliente)}</span></td>
-                
-                <!-- 7. R comercial -->
                 <td><small>${escapeHtml(razonComercial)}</small></td>
-                
-                <!-- 8. R social -->
                 <td><strong>${escapeHtml(razonSocial)}</strong></td>
-                
-                <!-- 9. Descripción -->
                 <td><small title="${escapeHtml(descripcion)}">${escapeHtml(descripcion.length > 50 ? descripcion.substring(0, 50) + '...' : descripcion)}</small></td>
-                
-                <!-- 10. Monto (Con IGV) -->
                 <td class="monto text-end fw-bold text-success">S/ ${Number(total).toLocaleString('es-PE', { minimumFractionDigits: 2 })}</td>
-                
-                <!-- 11. Nota aclaratoria -->
                 <td><small class="text-muted" title="${escapeHtml(notaAclaratoria)}">${escapeHtml(notaAclaratoria.length > 40 ? notaAclaratoria.substring(0, 40) + '...' : notaAclaratoria)}</small></td>
-                
-                <!-- 12. Condición pago -->
                 <td><small>${escapeHtml(condicionPago)}</small></td>
-                
-                <!-- 13. Acciones -->
                 <td class="acciones text-center">
                     <div class="dropdown">
                         <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -497,7 +491,6 @@ function renderizarTabla(cotizaciones) {
                             <li><a class="dropdown-item" href="#" onclick="exportarPDF(${c.id})">
                                 <i class="bi bi-file-pdf"></i> Exportar PDF
                             </a></li>
-                            <!-- 🆕 BOTÓN DOCUMENTOS VINCULADOS -->
                             <li><a class="dropdown-item text-info" href="#" onclick="verDocumentos(${c.id})">
                                 <i class="bi bi-link-45deg"></i> Documentos vinculados
                                 ${tieneDocumentos ? `<span class="badge bg-primary ms-1">${documentosCount}</span>` : ''}
@@ -530,6 +523,9 @@ function renderizarTabla(cotizaciones) {
             </tr>
         `;
     }).join('');
+    
+    // Ajustar altura después de renderizar
+    setTimeout(ajustarAlturaTabla, 50);
 }
 
 // ===========================
@@ -646,7 +642,7 @@ function editar(id) {
 }
 
 // ===========================
-// DUPLICAR COTIZACIÓN - FUNCIÓN PRINCIPAL
+// DUPLICAR COTIZACIÓN
 // ===========================
 async function duplicarCotizacion(id) {
     try {
@@ -674,7 +670,7 @@ async function duplicarCotizacion(id) {
 }
 
 // ===========================
-// CREAR COMPROBANTE (FACTURA/BOLETA) DESDE COTIZACIÓN ACEPTADA
+// CREAR COMPROBANTE (FACTURA/BOLETA)
 // ===========================
 async function crearComprobante(cotizacionId, tipoComprobante) {
     try {
@@ -795,18 +791,14 @@ async function aceptarCotizacion(id, codigo) {
         const result = await response.json();
         
         if (result.success) {
-            // Actualizar el estado en los datos locales
             const cotizacion = cotizacionesData.find(c => c.id === id);
             if (cotizacion) {
                 cotizacion.estado = 'Aceptada por Cliente';
             }
             
-            // Reordenar: mover la cotización aceptada al principio
             cotizacionesData.sort((a, b) => {
-                // Si 'a' es la cotización aceptada, va primero
                 if (a.id === id) return -1;
                 if (b.id === id) return 1;
-                // El resto mantiene orden: aceptadas, generadas, otros
                 const orden = { 'Aceptada por Cliente': 0, 'aceptada': 0, 'Generada': 1, 'generada': 1 };
                 const ordenA = orden[a.estado] ?? 2;
                 const ordenB = orden[b.estado] ?? 2;
@@ -826,7 +818,7 @@ async function aceptarCotizacion(id, codigo) {
 }
 
 // ===========================
-// CREAR GUÍA DE REMISIÓN DESDE COTIZACIÓN ACEPTADA
+// CREAR GUÍA DE REMISIÓN
 // ===========================
 async function crearGuiaRemision(cotizacionId) {
     try {
@@ -918,7 +910,7 @@ async function eliminarCotizacionConfirmado() {
 }
 
 // ===========================
-// ESTADO CON COLOR SEMÁFORO - VERSIÓN MEJORADA
+// ESTADO CON COLOR SEMÁFORO
 // ===========================
 function renderEstado(estado, esBorrador = false) {
     if (esBorrador) {
@@ -1042,7 +1034,7 @@ async function guardarNuevoClienteListado() {
 }
 
 // ===========================
-// 🆕 VER DOCUMENTOS VINCULADOS (DATOS REALES)
+// 🆕 VER DOCUMENTOS VINCULADOS
 // ===========================
 window.verDocumentos = async function(id) {
     const lista = document.getElementById('documentosLista');
@@ -1180,7 +1172,7 @@ function getDocumentoColor(tipo) {
 }
 
 // ===========================
-// ESTILOS ADICIONALES - CON COLORES MEJORADOS
+// ESTILOS ADICIONALES
 // ===========================
 const style = document.createElement('style');
 style.textContent = `
@@ -1204,7 +1196,6 @@ style.textContent = `
         display: inline-block;
     }
     
-    /* 🟢 VERDE INTENSO CHILLÓN para ACEPTADA */
     .estado-aceptada {
         background: #00FF00 !important;
         color: #000000 !important;
@@ -1219,7 +1210,6 @@ style.textContent = `
         border: 1px solid #00CC00;
     }
     
-    /* 🔵 AZUL FUERTE para GENERADA */
     .estado-generada {
         background: #0055FF !important;
         color: #FFFFFF !important;
@@ -1290,7 +1280,6 @@ style.textContent = `
         margin-right: 8px;
     }
 
-    /* Estilos para el modal de documentos vinculados */
     .documento-item {
         display: flex;
         justify-content: space-between;
