@@ -1132,6 +1132,7 @@ window.generarRotulo = async function(id) {
         const RUC_REMITENTE = guia.ruc_remitente || '20602095704';
         const TELEFONO = guia.telefono || '987-654-321';
         const EMAIL = guia.email || 'ventas@kcf.pe';
+        const PAGINA_WEB = guia.pagina_web || 'www.kcfcorporacion.com';
         const destinatario = guia.destinatario_nombre || '';
         const rucDestinatario = guia.ruc_destinatario || '';
         const direccionEntrega = guia.destinatario_direccion || '';
@@ -1165,15 +1166,20 @@ window.generarRotulo = async function(id) {
                     <div style="font-size:8px;color:#555;">DNI: ${escapeHtml(dniConductor)}</div>
                 </div>
                 <div style="border-top:1px dashed #ddd;margin:3px 0;"></div>
-                <!-- CAMBIO AQUÍ: "______________" en lugar de "BULTOS" -->
+                <!-- "______________" en lugar de "BULTOS" -->
                 <div style="display:flex;justify-content:space-between;margin:3px 0;">
                     <div><div style="font-size:7px;font-weight:700;color:#888;">______________</div><div style="font-size:13px;font-weight:800;color:#e94560;">${bultos}</div></div>
                     <div><div style="font-size:7px;font-weight:700;color:#888;">N° GUÍA</div><div style="font-size:9px;font-weight:600;">${escapeHtml(numeroGuia)}</div></div>
                     <div><div style="font-size:7px;font-weight:700;color:#888;">FACTURA</div><div style="font-size:9px;font-weight:600;">${escapeHtml(numeroFactura)}</div></div>
                 </div>
                 <div style="text-align:center;font-size:13px;letter-spacing:2px;padding:3px 0;background:#f8f9fa;border-radius:4px;font-weight:700;">${codigoBarras}</div>
-                <div style="text-align:center;border-top:1px solid #ddd;padding-top:3px;margin-top:3px;">
-                    <div style="font-size:6px;color:#aaa;">RÓTULO DE EMBALAJE</div>
+                <!-- DATOS DE CONTACTO: TELÉFONO, EMAIL Y PÁGINA WEB -->
+                <div style="text-align:center;border-top:1px solid #ddd;padding-top:4px;margin-top:4px;">
+                    <div style="font-weight:700;color:#1a2a6c;font-size:7px;margin-bottom:2px;">📞 CONTÁCTANOS</div>
+                    <div style="font-size:7px;color:#333;letter-spacing:0.3px;">
+                        📱 ${escapeHtml(TELEFONO)} &nbsp;|&nbsp; ✉️ ${escapeHtml(EMAIL)} &nbsp;|&nbsp; 🌐 ${escapeHtml(PAGINA_WEB)}
+                    </div>
+                    <div style="font-size:5px;color:#aaa;margin-top:2px;border-top:1px solid #eee;padding-top:2px;">RÓTULO DE EMBALAJE · Verificar integridad del producto</div>
                 </div>
             </div>
         `;
