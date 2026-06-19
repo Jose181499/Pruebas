@@ -339,9 +339,7 @@
         }
         .empty-state i { font-size: 40px; margin-bottom: 12px; opacity: 0.5; }
         
-        /* =========================== */
         /* MODAL DE VER DETALLE - COMPACTO */
-        /* =========================== */
         .modal-content {
             border-radius: 16px;
             overflow: hidden;
@@ -392,14 +390,28 @@
         .detalle-card .card-titulo i { font-size: 13px; }
         .detalle-card .campo {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start;
             padding: 2px 0;
             font-size: 11px;
             border-bottom: 1px dashed #f1f5f9;
+            gap: 8px;
         }
         .detalle-card .campo:last-child { border-bottom: none; }
-        .detalle-card .campo .label { color: #64748b; font-weight: 500; font-size: 10px; }
-        .detalle-card .campo .valor { color: #0f172a; font-weight: 600; text-align: right; max-width: 60%; word-break: break-word; font-size: 11px; }
+        .detalle-card .campo .label { 
+            color: #64748b; 
+            font-weight: 500; 
+            font-size: 10px; 
+            min-width: 90px;
+            flex-shrink: 0;
+        }
+        .detalle-card .campo .valor { 
+            color: #0f172a; 
+            font-weight: 600; 
+            font-size: 11px;
+            text-align: left;
+            word-break: break-word;
+            flex: 1;
+        }
         .detalle-card .campo .valor-small { font-size: 10px; font-weight: 500; }
         
         .detalle-card-remitente .card-titulo { color: #2563eb; border-bottom-color: #2563eb; }
@@ -410,7 +422,6 @@
         .detalle-card-transportista .card-titulo { color: #8b5cf6; border-bottom-color: #8b5cf6; }
         .detalle-card-observaciones .card-titulo { color: #6b7280; border-bottom-color: #6b7280; }
         
-        /* PRODUCTOS TABLE - COMPACTA */
         .productos-table {
             margin-top: 6px;
             border-radius: 8px;
@@ -442,14 +453,26 @@
         }
         .detalle-registro-compacto .campo {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start;
             padding: 2px 0;
             font-size: 11px;
             border-bottom: 1px dashed #f1f5f9;
+            gap: 8px;
         }
         .detalle-registro-compacto .campo:last-child { border-bottom: none; }
-        .detalle-registro-compacto .campo .label { color: #64748b; font-weight: 500; font-size: 10px; }
-        .detalle-registro-compacto .campo .valor { color: #0f172a; font-weight: 600; font-size: 11px; }
+        .detalle-registro-compacto .campo .label { 
+            color: #64748b; 
+            font-weight: 500; 
+            font-size: 10px; 
+            min-width: 90px;
+            flex-shrink: 0;
+        }
+        .detalle-registro-compacto .campo .valor { 
+            color: #0f172a; 
+            font-weight: 600; 
+            font-size: 11px;
+            text-align: left;
+        }
         
         .productos-titulo {
             font-size: 11px;
@@ -457,6 +480,7 @@
             color: #1e293b;
             margin-bottom: 4px;
             margin-top: 8px;
+            text-align: left;
         }
         .productos-titulo i { font-size: 12px; margin-right: 4px; }
         
@@ -478,6 +502,7 @@
             .modal-body { padding: 10px; }
             .detalle-card { padding: 6px 8px; }
             .detalle-card .campo { font-size: 10px; }
+            .detalle-card .campo .label { min-width: 70px; }
         }
         @media (max-width: 480px) {
             .stats-grid { grid-template-columns: 1fr 1fr 1fr; gap: 3px; }
@@ -490,9 +515,7 @@
 </head>
 <body>
 
-    <!-- =========================== -->
     <!-- NAVBAR -->
-    <!-- =========================== -->
     <div class="erp-navbar">
         <div class="navbar-left">
             <a href="/mantenedor" class="btn-volver">
@@ -513,9 +536,7 @@
         </div>
     </div>
 
-    <!-- =========================== -->
     <!-- CONTENIDO -->
-    <!-- =========================== -->
     <div class="container-fluid py-1">
         
         <!-- HEADER COMPACTO -->
@@ -639,9 +660,7 @@
         </div>
     </div>
     
-    <!-- =========================== -->
-    <!-- MODALES - OPTIMIZADOS -->
-    <!-- =========================== -->
+    <!-- MODALES -->
     
     <!-- MODAL VER DETALLE - COMPACTO -->
     <div class="modal fade" id="modalVerGuia" tabindex="-1">
@@ -710,7 +729,7 @@
                 <div class="modal-footer" style="padding:8px 14px;">
                     <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
                     <button class="btn btn-warning btn-sm" id="btnImprimirRotulo">
-                        <i class="bi bi-printer-fill"></i> Imprimir
+                        <i class="bi bi-printer-fill"></i> DESCARGAR RÓTULO DE EMBALAJE
                     </button>
                 </div>
             </div>
@@ -944,7 +963,7 @@
         }
         
         // ==========================================
-        // VER GUÍA (MODAL) - COMPACTO
+        // VER GUÍA (MODAL) - VALORES ALINEADOS A LA IZQUIERDA
         // ==========================================
         window.verGuia = async function(id) {
             guiaActualId = id;
@@ -999,21 +1018,24 @@
                     
                     modalBody.innerHTML = `
                         <div class="detalle-grid">
+                            <!-- Remitente -->
                             <div class="detalle-card detalle-card-remitente">
                                 <div class="card-titulo"><i class="bi bi-building"></i> Remitente</div>
                                 <div class="campo"><span class="label">RUC</span><span class="valor">${g.ruc_remitente || '-'}</span></div>
                                 <div class="campo"><span class="label">Razón Social</span><span class="valor">${escapeHtml(g.remitente_nombre || '-')}</span></div>
-                                <div class="campo"><span class="label">Dirección</span><span class="valor valor-small">${escapeHtml(g.remitente_direccion || '-')}</span></div>
+                                <div class="campo"><span class="label">Dirección</span><span class="valor" style="font-size:10px;">${escapeHtml(g.remitente_direccion || '-')}</span></div>
                             </div>
                             
+                            <!-- Destinatario -->
                             <div class="detalle-card detalle-card-destinatario">
                                 <div class="card-titulo"><i class="bi bi-people"></i> Destinatario</div>
                                 <div class="campo"><span class="label">RUC</span><span class="valor">${g.ruc_destinatario || '-'}</span></div>
                                 <div class="campo"><span class="label">Razón Social</span><span class="valor">${escapeHtml(g.destinatario_nombre || '-')}</span></div>
-                                <div class="campo"><span class="label">Dirección</span><span class="valor valor-small">${escapeHtml(g.destinatario_direccion || '-')}</span></div>
+                                <div class="campo"><span class="label">Dirección</span><span class="valor" style="font-size:10px;">${escapeHtml(g.destinatario_direccion || '-')}</span></div>
                                 ${g.documento_asociado ? `<div class="campo"><span class="label">Doc. Asociado</span><span class="valor">${escapeHtml(g.documento_asociado)}</span></div>` : ''}
                             </div>
                             
+                            <!-- Vehículo -->
                             <div class="detalle-card detalle-card-vehiculo">
                                 <div class="card-titulo"><i class="bi bi-truck"></i> Vehículo</div>
                                 <div class="campo"><span class="label">Placa</span><span class="valor">${g.placa_vehiculo || '-'}</span></div>
@@ -1021,6 +1043,7 @@
                                 <div class="campo"><span class="label">DNI Conductor</span><span class="valor">${g.conductor_dni || '-'}</span></div>
                             </div>
                             
+                            <!-- Traslado -->
                             <div class="detalle-card detalle-card-traslado">
                                 <div class="card-titulo"><i class="bi bi-calendar-event"></i> Traslado</div>
                                 <div class="campo"><span class="label">Motivo</span><span class="valor" style="font-size:10px;">${motivoTexto}</span></div>
@@ -1040,19 +1063,21 @@
                             ${g.observaciones ? `
                             <div class="detalle-card detalle-card-observaciones" style="grid-column: span 2;">
                                 <div class="card-titulo"><i class="bi bi-chat-text"></i> Observaciones</div>
-                                <div style="font-size:11px;color:#1e293b;padding:2px 0;">${escapeHtml(g.observaciones)}</div>
+                                <div style="font-size:11px;color:#1e293b;padding:2px 0;text-align:left;">${escapeHtml(g.observaciones)}</div>
                             </div>
                             ` : ''}
                         </div>
                         
+                        <!-- Registro -->
                         <div class="detalle-registro-compacto">
                             <div class="campo"><span class="label">N° Guía</span><span class="valor">${g.serie || 'T001'}-${g.numero || '?'}</span></div>
                             <div class="campo"><span class="label">Estado</span><span class="valor">${g.estado_sunat || 'BORRADOR'}</span></div>
                             <div class="campo"><span class="label">Creado</span><span class="valor">${fechaCreacionDetalle}</span></div>
                         </div>
                         
+                        <!-- Productos -->
                         <div class="productos-titulo"><i class="bi bi-box-seam"></i> Productos</div>
-                        ${itemsHtml || '<div class="text-muted small">No hay productos registrados</div>'}
+                        ${itemsHtml || '<div class="text-muted small text-start">No hay productos registrados</div>'}
                     `;
                 } else {
                     modalBody.innerHTML = `<div class="text-center py-4 text-danger small">${result.error || 'Error al cargar datos'}</div>`;
