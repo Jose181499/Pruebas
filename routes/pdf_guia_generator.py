@@ -322,6 +322,25 @@ def generar_pdf_guia(guia_data):
         background: #f9f9f9;
     }
     
+    .referencias {
+        margin-top: 6px;
+        padding: 5px 10px;
+        border: 1px solid #ccc;
+        background: #f9f9f9;
+        font-size: 8.5px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px 20px;
+    }
+    
+    .referencias .ref-item {
+        display: inline-block;
+    }
+    
+    .referencias .label {
+        font-weight: bold;
+    }
+    
     .observaciones {
         margin-top: 8px;
         padding: 5px 10px;
@@ -590,15 +609,23 @@ def renderizar_html_guia(guia_data):
             <div class="datos-transporte">
                 <div class="info-line">
                     <span class="label">TRANSPORTISTA:</span>
-                    <span class="value">{% if transportista_nombre %}{{ transportista_nombre }}{% else %}---{% endif %}</span>
-                </div>
-                <div class="info-line">
-                    <span class="label">VEHICULO:</span>
-                    <span class="value">{{ placa_vehiculo or '' }}</span>
+                    <span class="value">{{ transportista_nombre or '---' }}</span>
                 </div>
                 <div class="info-line">
                     <span class="label">CONDUCTOR:</span>
-                    <span class="value">D.N.I. {{ conductor_dni or '' }} - {{ conductor_nombre or '' }}</span>
+                    <span class="value">{{ conductor_nombre or '---' }}</span>
+                </div>
+                <div class="info-line">
+                    <span class="label">DNI:</span>
+                    <span class="value">{{ conductor_dni or '---' }}</span>
+                </div>
+                <div class="info-line">
+                    <span class="label">PLACA:</span>
+                    <span class="value">{{ placa_vehiculo or '---' }}</span>
+                </div>
+                <div class="info-line">
+                    <span class="label">LICENCIA:</span>
+                    <span class="value">{{ licencia_conductor or '---' }}</span>
                 </div>
             </div>
         </div>
@@ -609,19 +636,23 @@ def renderizar_html_guia(guia_data):
             <table class="products-table">
                 <thead>
                     <tr>
-                        <th style="width:8%">Nro</th>
-                        <th style="width:15%">CÓD.</th>
-                        <th style="width:32%">DESCRIPCIÓN</th>
-                        <th style="width:10%">U/M</th>
+                        <th style="width:5%">NRO</th>
+                        <th style="width:5%">ITEM</th>
+                        <th style="width:10%">CODIGO</th>
+                        <th style="width:10%">BR</th>
+                        <th style="width:27%">PRODUCTO</th>
+                        <th style="width:8%">U/M</th>
                         <th style="width:10%">CANTIDAD</th>
-                        <th style="width:25%">SERIES</th>
+                        <th style="width:25%">#</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in items %}
                     <tr>
                         <td>{{ loop.index }}</td>
+                        <td>{{ item.item or '' }}</td>
                         <td>{{ item.codigo or '-' }}</td>
+                        <td>{{ item.br or '' }}</td>
                         <td class="descripcion">{{ item.descripcion }}</td>
                         <td>{{ item.unidad or 'NIU' }}</td>
                         <td>{{ '%.1f'|format(item.cantidad|float) if item.cantidad else '0.0' }}</td>
@@ -630,6 +661,14 @@ def renderizar_html_guia(guia_data):
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+        
+        <!-- REFERENCIAS -->
+        <div class="referencias">
+            <span class="ref-item"><span class="label">REFERENCIAS:</span></span>
+            <span class="ref-item"><span class="label">NRO DE COTIZACION:</span> {{ nro_cotizacion or '' }}</span>
+            <span class="ref-item"><span class="label">PEDIDO DE COMPRA CLIENTE:</span> {{ pedido_compra_cliente or '' }}</span>
+            <span class="ref-item"><span class="label">NRO DE FACTURA:</span> {{ nro_factura or '' }}</span>
         </div>
         
         <!-- OBSERVACIONES -->
