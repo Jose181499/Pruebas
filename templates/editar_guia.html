@@ -172,20 +172,31 @@
         .table-modern thead th {
             background: #1e293b;
             color: white;
-            padding: 4px 8px;
+            padding: 4px 6px;
             font-size: 9px;
             text-align: center;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.3px;
             border: none;
+            vertical-align: middle;
         }
-        .table-modern tbody td { padding: 3px 4px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
+        .table-modern thead th span { font-weight: 400; font-size: 8px; }
+        .table-modern tbody td { 
+            padding: 3px 4px; 
+            vertical-align: middle; 
+            border-bottom: 1px solid #f1f5f9; 
+            font-size: 11px;
+        }
         .table-modern .custom-input, .table-modern .custom-select {
             font-size: 10px;
             padding: 2px 6px;
             min-height: 24px;
             border-radius: 4px;
+        }
+        .table-modern .custom-input[readonly] {
+            background: #f1f5f9;
+            cursor: not-allowed;
         }
         .btn-del {
             background: #fee2e2;
@@ -197,6 +208,7 @@
             font-size: 10px;
         }
         .btn-del:hover { background: #fecaca; }
+        .btn-del:disabled { opacity: 0.4; cursor: not-allowed; }
 
         /* TOAST */
         .toast-notification {
@@ -583,7 +595,9 @@
             </div>
         </div>
 
-        <!-- TABLA PRODUCTOS -->
+        <!-- ========================================== -->
+        <!-- TABLA PRODUCTOS - MODIFICADA -->
+        <!-- ========================================== -->
         <div class="erp-card">
             <div class="card-header-custom teal">
                 <i class="bi bi-box-seam-fill"></i> Productos
@@ -594,12 +608,12 @@
                     <table class="table table-modern" id="products-table">
                         <thead>
                             <tr>
-                                <th style="width:30px;">#</th>
-                                <th style="width:100px;">Código</th>
-                                <th>Descripción</th>
-                                <th style="width:80px;">Unidad</th>
-                                <th style="width:70px;">Cantidad</th>
-                                <th style="width:40px;"></th>
+                                <th style="width:40px;text-align:center;">Item</th>
+                                <th style="min-width:100px;text-align:center;">Código<br><span style="font-weight:400;font-size:8px;">Producto</span></th>
+                                <th style="text-align:center;">Descripción</th>
+                                <th style="width:90px;text-align:center;">Unidad</th>
+                                <th style="width:80px;text-align:center;">Cantidad</th>
+                                <th style="width:40px;text-align:center;"></th>
                             </tr>
                         </thead>
                         <tbody id="table-body"></tbody>
@@ -871,7 +885,7 @@
         document.getElementById('modalidad_transporte')?.addEventListener('change', toggleTransportista);
 
         // ==========================================
-        // CARGAR PRODUCTOS
+        // CARGAR PRODUCTOS - MODIFICADO
         // ==========================================
         function cargarProductos() {
             let items = [];
@@ -887,53 +901,59 @@
                 itemCount++;
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${idx + 1}</td>
-                    <td><input type="text" class="custom-input" value="${escapeHtml(item.codigo || '')}" placeholder="Código" style="font-size:10px;"></td>
+                    <td style="text-align:center;font-weight:600;font-size:11px;">${idx + 1}</td>
+                    <td><input type="text" class="custom-input" value="${escapeHtml(item.codigo || '')}" placeholder="Código" style="font-size:10px;text-align:center;"></td>
                     <td><input type="text" class="custom-input" value="${escapeHtml(item.descripcion || '')}" placeholder="Descripción" style="font-size:10px;"></td>
                     <td>
-                        <select class="custom-select" style="font-size:10px;">
+                        <select class="custom-select" style="font-size:10px;text-align:center;">
                             <option value="NIU" ${item.unidad === 'NIU' ? 'selected' : ''}>NIU</option>
                             <option value="KGM" ${item.unidad === 'KGM' ? 'selected' : ''}>KGM</option>
                             <option value="LTR" ${item.unidad === 'LTR' ? 'selected' : ''}>LTR</option>
                             <option value="MTR" ${item.unidad === 'MTR' ? 'selected' : ''}>MTR</option>
                         </select>
                     </td>
-                    <td><input type="number" class="custom-input cantidad-readonly" value="${item.cantidad || 1}" readonly style="font-size:10px;text-align:center;"></td>
-                    <td><button class="btn-del">🗑</button></td>
+                    <td><input type="number" class="custom-input" value="${item.cantidad || 1}" readonly style="font-size:10px;text-align:center;background:#f1f5f9;cursor:not-allowed;"></td>
+                    <td style="text-align:center;"><button class="btn-del" ${esSoloLectura ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>🗑</button></td>
                 `;
                 tbody.appendChild(tr);
-                tr.querySelector('.btn-del').addEventListener('click', () => { if (!esSoloLectura) { tr.remove(); renumerarItems(); } });
+                if (!esSoloLectura) {
+                    tr.querySelector('.btn-del').addEventListener('click', () => { tr.remove(); renumerarItems(); });
+                }
             });
         }
 
         function escapeHtml(text) { if (!text) return ''; const d = document.createElement('div'); d.textContent = text; return d.innerHTML; }
+        
         function renumerarItems() {
             document.querySelectorAll('#table-body tr').forEach((f, i) => { f.cells[0].textContent = i + 1; });
             itemCount = document.querySelectorAll('#table-body tr').length;
         }
 
+        // ==========================================
+        // AGREGAR FILA PRODUCTO - MODIFICADO
+        // ==========================================
         function agregarFilaProducto() {
             if (esSoloLectura) return;
             itemCount++;
             const tbody = document.getElementById('table-body');
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${itemCount}</td>
-                <td><input type="text" class="custom-input" placeholder="Código" style="font-size:10px;"></td>
+                <td style="text-align:center;font-weight:600;font-size:11px;">${itemCount}</td>
+                <td><input type="text" class="custom-input" placeholder="Código" style="font-size:10px;text-align:center;"></td>
                 <td><input type="text" class="custom-input" placeholder="Descripción" style="font-size:10px;"></td>
                 <td>
-                    <select class="custom-select" style="font-size:10px;">
+                    <select class="custom-select" style="font-size:10px;text-align:center;">
                         <option value="NIU">NIU</option>
                         <option value="KGM">KGM</option>
                         <option value="LTR">LTR</option>
                         <option value="MTR">MTR</option>
                     </select>
                 </td>
-                <td><input type="number" class="custom-input cantidad-readonly" value="1" readonly style="font-size:10px;text-align:center;"></td>
-                <td><button class="btn-del">🗑</button></td>
+                <td><input type="number" class="custom-input" value="1" readonly style="font-size:10px;text-align:center;background:#f1f5f9;cursor:not-allowed;"></td>
+                <td style="text-align:center;"><button class="btn-del">🗑</button></td>
             `;
             tbody.appendChild(tr);
-            tr.querySelector('.btn-del').addEventListener('click', () => { if (!esSoloLectura) { tr.remove(); renumerarItems(); } });
+            tr.querySelector('.btn-del').addEventListener('click', () => { tr.remove(); renumerarItems(); });
         }
         document.getElementById('btnAgregarProducto')?.addEventListener('click', agregarFilaProducto);
 
@@ -1057,7 +1077,7 @@
                 const codigo = f.querySelector('td:nth-child(2) input')?.value || '';
                 const descripcion = f.querySelector('td:nth-child(3) input')?.value || '';
                 const unidad = f.querySelector('td:nth-child(4) select')?.value || 'NIU';
-                const cantidad = parseFloat(f.querySelector('.cantidad-readonly')?.value) || 0;
+                const cantidad = parseFloat(f.querySelector('td:nth-child(5) input')?.value) || 0;
                 if (descripcion && cantidad > 0) {
                     items.push({ item: idx + 1, codigo: codigo || `ITEM-${idx+1}`, descripcion, unidad, cantidad });
                 }
