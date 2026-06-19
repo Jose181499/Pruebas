@@ -130,7 +130,6 @@
         .estado-ACEPTADA { background: #d1fae5; color: #065f46; }
         .estado-RECHAZADA { background: #fee2e2; color: #991b1b; }
         
-        /* Dropdown de acciones */
         .dropdown-acciones .dropdown-toggle {
             background: none;
             border: none;
@@ -295,13 +294,127 @@
             border-radius: 6px;
             font-size: 11px;
         }
-        /* Estilo para el campo Peso Unit. en el modal */
+        /* Estilos para el modal de ver detalle - Más ordenado */
+        .detalle-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        @media (max-width: 768px) {
+            .detalle-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .detalle-card {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 16px 18px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            transition: all 0.2s;
+        }
+        .detalle-card:hover {
+            border-color: #cbd5e1;
+        }
+        .detalle-card .card-titulo {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .detalle-card .card-titulo i {
+            font-size: 16px;
+        }
+        .detalle-card .campo {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 13px;
+            border-bottom: 1px dashed #f1f5f9;
+        }
+        .detalle-card .campo:last-child {
+            border-bottom: none;
+        }
+        .detalle-card .campo .label {
+            color: #64748b;
+            font-weight: 500;
+        }
+        .detalle-card .campo .valor {
+            color: #0f172a;
+            font-weight: 600;
+            text-align: right;
+            max-width: 60%;
+            word-break: break-word;
+        }
+        .detalle-card .campo .valor-small {
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .detalle-card-remitente .card-titulo { color: #2563eb; border-bottom-color: #2563eb; }
+        .detalle-card-destinatario .card-titulo { color: #059669; border-bottom-color: #059669; }
+        .detalle-card-vehiculo .card-titulo { color: #ea580c; border-bottom-color: #ea580c; }
+        .detalle-card-traslado .card-titulo { color: #7c3aed; border-bottom-color: #7c3aed; }
+        .detalle-card-registro .card-titulo { color: #0d9488; border-bottom-color: #0d9488; }
+        .detalle-card-transportista .card-titulo { color: #8b5cf6; border-bottom-color: #8b5cf6; }
+        .detalle-card-observaciones .card-titulo { color: #6b7280; border-bottom-color: #6b7280; }
+
         .campo-peso-unitario {
             background: #f0fdf4;
             border-radius: 6px;
             padding: 2px 8px;
             font-weight: 600;
             color: #065f46;
+        }
+        .productos-table {
+            margin-top: 12px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+        .productos-table thead th {
+            background: #1e293b;
+            color: white;
+            font-size: 11px;
+            padding: 8px 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .productos-table tbody td {
+            padding: 6px 12px;
+            font-size: 12px;
+            vertical-align: middle;
+        }
+        .productos-table tbody tr:nth-child(even) {
+            background: #f8fafc;
+        }
+        .productos-table tbody tr:hover {
+            background: #eef2ff;
+        }
+
+        /* Botón Exportar */
+        .btn-exportar {
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 8px 20px;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .btn-exportar:hover {
+            background: #059669;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+        }
+        .btn-exportar i {
+            margin-right: 6px;
         }
     </style>
 </head>
@@ -341,7 +454,7 @@
                     Gestión de documentos de traslado electrónicos - SUNAT
                 </div>
             </div>
-            <div class="hero-actions">
+            <div class="hero-actions d-flex gap-2">
                 <a href="/guias/crear" class="btn btn-danger btn-erp">
                     <i class="bi bi-plus-circle-fill"></i> Nueva Guía
                 </a>
@@ -373,9 +486,9 @@
             </div>
         </div>
         
-        <!-- FILTROS -->
+        <!-- FILTROS CON EXPORTAR -->
         <div class="filtros">
-            <div class="row g-3">
+            <div class="row g-3 align-items-end">
                 <div class="col-md-3">
                     <label class="form-label fw-semibold">
                         <i class="bi bi-search"></i> Buscar
@@ -408,6 +521,11 @@
                         <i class="bi bi-calendar"></i> Fecha hasta
                     </label>
                     <input type="date" id="filtroFechaHasta" class="form-control" style="border-radius: 12px; border: 1.5px solid #e2e8f0;">
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-exportar w-100" id="btnExportarExcel">
+                        <i class="bi bi-file-earmark-excel-fill"></i> Exportar a Excel
+                    </button>
                 </div>
             </div>
         </div>
@@ -449,21 +567,21 @@
         </div>
     </div>
     
-    <!-- MODAL VER DETALLE -->
+    <!-- MODAL VER DETALLE - MEJORADO Y MÁS ORDENADO -->
     <div class="modal fade" id="modalVerGuia" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header" style="background: linear-gradient(135deg, #1f2937, #111827); color: white;">
-                    <h5 class="modal-title"><i class="bi bi-eye-fill"></i> Detalle de Guía</h5>
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 24px; overflow: hidden;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #1f2937, #111827); color: white; padding: 16px 24px;">
+                    <h5 class="modal-title"><i class="bi bi-eye-fill"></i> Detalle de Guía de Remisión</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body" id="modalVerBody">
+                <div class="modal-body" id="modalVerBody" style="padding: 24px; background: #f1f5f9;">
                     <div class="text-center py-5">
-                        <div class="spinner-border text-primary"></div>
-                        <p>Cargando...</p>
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-2">Cargando...</p>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer" style="background: white; border-top: 1px solid #e2e8f0; padding: 12px 24px;">
                     <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                     <button class="btn btn-success" id="btnDescargarPDFModal">
                         <i class="bi bi-file-earmark-pdf-fill"></i> Descargar PDF
@@ -476,18 +594,20 @@
     <!-- MODAL CONFIRMAR ELIMINACIÓN -->
     <div class="modal fade" id="modalConfirmarEliminar" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header" style="background: #dc2626; color: white;">
+            <div class="modal-content" style="border-radius: 20px; overflow: hidden;">
+                <div class="modal-header" style="background: #dc2626; color: white; padding: 16px 24px;">
                     <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill"></i> Confirmar Eliminación</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body" style="padding: 24px;">
                     <p>¿Estás seguro de que deseas eliminar esta guía de remisión?</p>
                     <p class="text-danger small"><i class="bi bi-info-circle"></i> Esta acción no se puede deshacer.</p>
-                    <p><strong>N° Guía:</strong> <span id="eliminarNumeroGuia"></span></p>
-                    <p><strong>Destinatario:</strong> <span id="eliminarDestinatario"></span></p>
+                    <div class="bg-light p-3 rounded-3">
+                        <p><strong>N° Guía:</strong> <span id="eliminarNumeroGuia"></span></p>
+                        <p><strong>Destinatario:</strong> <span id="eliminarDestinatario"></span></p>
+                    </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer" style="padding: 12px 24px;">
                     <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button class="btn btn-danger" id="btnConfirmarEliminar">
                         <i class="bi bi-trash-fill"></i> Sí, Eliminar
@@ -500,18 +620,18 @@
     <!-- MODAL RÓTULO DE EMBALAJE -->
     <div class="modal fade" id="modalRotulo" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
+            <div class="modal-content" style="border-radius: 24px; overflow: hidden;">
                 <div class="modal-header" style="background: linear-gradient(135deg, #1f2937, #111827); color: white;">
                     <h5 class="modal-title"><i class="bi bi-tags-fill"></i> Rótulo de Embalaje</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body" id="modalRotuloBody">
+                <div class="modal-body" id="modalRotuloBody" style="background: #f1f5f9; padding: 24px;">
                     <div class="text-center py-5">
                         <div class="spinner-border text-primary"></div>
-                        <p>Generando rótulo de embalaje...</p>
+                        <p class="mt-2">Generando rótulo de embalaje...</p>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer" style="background: white; border-top: 1px solid #e2e8f0;">
                     <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                     <button class="btn btn-warning" id="btnImprimirRotulo">
                         <i class="bi bi-printer-fill"></i> Imprimir Rótulo
@@ -529,6 +649,7 @@
         let guiaAEliminarId = null;
         let guiaAEliminarNumero = '';
         let guiaAEliminarDestinatario = '';
+        let guiasFiltradasActuales = [];
         
         // ==========================================
         // NOTIFICACIONES
@@ -638,12 +759,13 @@
                 return true;
             });
             
+            guiasFiltradasActuales = guiasFiltradas;
             renderizarTabla(guiasFiltradas);
             document.getElementById('totalRegistros').innerHTML = `${guiasFiltradas.length} registros`;
         }
         
         // ==========================================
-        // RENDERIZAR TABLA - CON DROPDOWN DE ACCIONES
+        // RENDERIZAR TABLA
         // ==========================================
         function renderizarTabla(guias) {
             const tbody = document.getElementById('tablaGuias');
@@ -668,13 +790,11 @@
                 else if (estadoTexto === 'PROCESANDO') estadoIcono = '⏳';
                 else if (estadoTexto === 'RECHAZADA') estadoIcono = '❌';
                 
-                // Solo mostrar "Eliminar" si está en BORRADOR
                 const eliminarHtml = guia.estado_sunat === 'BORRADOR' ? 
                     `<li><a class="dropdown-item dropdown-item-eliminar" href="#" onclick="confirmarEliminar(${guia.id}, '${numeroGuia}', '${escapeHtml(guia.destinatario_nombre || '-')}')">
                         <i class="bi bi-trash-fill"></i> Eliminar
                     </a></li>` : '';
                 
-                // Separador solo si hay eliminar
                 const separadorHtml = guia.estado_sunat === 'BORRADOR' ? 
                     `<li><hr class="dropdown-divider"></li>` : '';
                 
@@ -691,7 +811,6 @@
                         <td><span class="badge-estado ${estadoClase}">${estadoIcono} ${estadoTexto}</span></td>
                         <td><small>${fechaCreacion}</small></td>
                         <td class="text-center">
-                            <!-- DROPDOWN DE ACCIONES -->
                             <div class="dropdown dropdown-acciones">
                                 <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Acciones">
                                     <i class="bi bi-three-dots-vertical fs-5"></i>
@@ -727,12 +846,12 @@
         }
         
         // ==========================================
-        // VER GUÍA (MODAL) - Con Peso Unitario en Traslado
+        // VER GUÍA (MODAL) - ORDENADO CON TARJETAS
         // ==========================================
         window.verGuia = async function(id) {
             guiaActualId = id;
             const modalBody = document.getElementById('modalVerBody');
-            modalBody.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div><p>Cargando guía ID: ${id}...</p></div>`;
+            modalBody.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div><p>Cargando guía...</p></div>`;
             
             const modalElement = document.getElementById('modalVerGuia');
             const modal = new bootstrap.Modal(modalElement);
@@ -746,55 +865,43 @@
                     const g = result.data;
                     const items = typeof g.items_json === 'string' ? JSON.parse(g.items_json) : (g.items_json || []);
                     
-                    // Calcular el peso unitario para cada producto (si no viene, lo calculamos)
+                    // Calcular pesos unitarios
+                    const pesoTotal = parseFloat(g.peso_total) || 0;
+                    const totalCantidad = items.reduce((sum, item) => sum + (parseFloat(item.cantidad) || 0), 0);
+                    
                     let itemsHtml = '';
                     if (items.length > 0) {
-                        // Obtener el peso total de la guía
-                        const pesoTotal = parseFloat(g.peso_total) || 0;
-                        
-                        // Calcular la suma de cantidades para distribuir el peso
-                        const totalCantidad = items.reduce((sum, item) => sum + (parseFloat(item.cantidad) || 0), 0);
-                        
                         itemsHtml = `
-                            <div class="table-responsive mt-3">
-                                <table class="table table-sm">
-                                    <thead class="table-light">
+                            <div class="productos-table">
+                                <table class="table table-sm mb-0">
+                                    <thead>
                                         <tr>
-                                            <th>Item</th>
+                                            <th style="width:50px;">#</th>
                                             <th>Código</th>
                                             <th>Descripción</th>
-                                            <th>Cantidad</th>
-                                            <th>Unidad</th>
-                                            <th class="text-center">Peso Unit.</th>
+                                            <th style="width:80px;text-align:center;">Cant.</th>
+                                            <th style="width:80px;">Unidad</th>
+                                            <th style="width:110px;text-align:center;">Peso Unit.</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         ${items.map((item, idx) => {
-                                            // Calcular peso unitario: si el item tiene peso_unitario, usarlo, sino calcular según proporción
                                             let pesoUnitario = parseFloat(item.peso_unitario) || 0;
-                                            
-                                            // Si no tiene peso_unitario y hay cantidad y peso total, calcularlo
                                             if (pesoUnitario === 0 && totalCantidad > 0 && pesoTotal > 0) {
                                                 const cantidad = parseFloat(item.cantidad) || 0;
                                                 pesoUnitario = (cantidad / totalCantidad) * pesoTotal;
-                                                // Redondear a 3 decimales para mayor precisión
                                                 pesoUnitario = Math.round(pesoUnitario * 1000) / 1000;
                                             }
-                                            
-                                            // Si el item tiene un campo 'peso_unitario' guardado, usarlo con prioridad
                                             const pesoMostrar = parseFloat(item.peso_unitario) || pesoUnitario;
-                                            
                                             return `
                                                 <tr>
                                                     <td>${idx + 1}</td>
                                                     <td>${escapeHtml(item.codigo || '-')}</td>
                                                     <td>${escapeHtml(item.descripcion || '-')}</td>
-                                                    <td>${item.cantidad || 0}</td>
+                                                    <td style="text-align:center;">${item.cantidad || 0}</td>
                                                     <td>${item.unidad || 'NIU'}</td>
-                                                    <td class="text-center">
-                                                        <span class="campo-peso-unitario">
-                                                            ${pesoMostrar > 0 ? pesoMostrar.toFixed(3) : '0.000'} kg
-                                                        </span>
+                                                    <td style="text-align:center;">
+                                                        <span class="campo-peso-unitario">${pesoMostrar > 0 ? pesoMostrar.toFixed(3) : '0.000'} kg</span>
                                                     </td>
                                                 </tr>
                                             `;
@@ -805,76 +912,82 @@
                         `;
                     }
                     
-                    const pesoTotalNum = parseFloat(g.peso_total) || 0;
                     const fechaCreacionDetalle = formatFechaHora(g.created_at);
+                    const motivoTexto = g.motivo_traslado || '-';
                     
                     modalBody.innerHTML = `
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <div class="card bg-light p-3">
-                                    <h6><i class="bi bi-building text-primary"></i> Remitente</h6>
-                                    <small><strong>RUC:</strong> ${g.ruc_remitente || '-'}</small>
-                                    <small><strong>Razón Social:</strong> ${escapeHtml(g.remitente_nombre || '-')}</small>
-                                    <small><strong>Dirección:</strong> ${escapeHtml(g.remitente_direccion || '-')}</small>
-                                </div>
+                        <!-- GRID DE TARJETAS -->
+                        <div class="detalle-grid">
+                            <!-- Remitente -->
+                            <div class="detalle-card detalle-card-remitente">
+                                <div class="card-titulo"><i class="bi bi-building"></i> Remitente</div>
+                                <div class="campo"><span class="label">RUC</span><span class="valor">${g.ruc_remitente || '-'}</span></div>
+                                <div class="campo"><span class="label">Razón Social</span><span class="valor">${escapeHtml(g.remitente_nombre || '-')}</span></div>
+                                <div class="campo"><span class="label">Dirección</span><span class="valor valor-small">${escapeHtml(g.remitente_direccion || '-')}</span></div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="card bg-light p-3">
-                                    <h6><i class="bi bi-people text-success"></i> Destinatario</h6>
-                                    <small><strong>RUC:</strong> ${g.ruc_destinatario || '-'}</small>
-                                    <small><strong>Razón Social:</strong> ${escapeHtml(g.destinatario_nombre || '-')}</small>
-                                    <small><strong>Dirección:</strong> ${escapeHtml(g.destinatario_direccion || '-')}</small>
-                                </div>
+                            
+                            <!-- Destinatario -->
+                            <div class="detalle-card detalle-card-destinatario">
+                                <div class="card-titulo"><i class="bi bi-people"></i> Destinatario</div>
+                                <div class="campo"><span class="label">RUC</span><span class="valor">${g.ruc_destinatario || '-'}</span></div>
+                                <div class="campo"><span class="label">Razón Social</span><span class="valor">${escapeHtml(g.destinatario_nombre || '-')}</span></div>
+                                <div class="campo"><span class="label">Dirección</span><span class="valor valor-small">${escapeHtml(g.destinatario_direccion || '-')}</span></div>
+                                ${g.orden_compra_cliente ? `<div class="campo"><span class="label">Orden Compra</span><span class="valor">${escapeHtml(g.orden_compra_cliente)}</span></div>` : ''}
+                                ${g.documento_asociado ? `<div class="campo"><span class="label">Doc. Asociado</span><span class="valor">${escapeHtml(g.documento_asociado)}</span></div>` : ''}
+                                ${g.factura ? `<div class="campo"><span class="label">Factura</span><span class="valor">${escapeHtml(g.factura)}</span></div>` : ''}
                             </div>
-                            <div class="col-md-6">
-                                <div class="card bg-light p-3">
-                                    <h6><i class="bi bi-truck text-warning"></i> Vehículo</h6>
-                                    <small><strong>Placa:</strong> ${g.placa_vehiculo || '-'}</small>
-                                    <small><strong>Conductor:</strong> ${escapeHtml(g.conductor_nombre || '-')} (DNI: ${g.conductor_dni || '-'})</small>
-                                    <small><strong>Modalidad:</strong> ${g.modalidad_transporte || 'PRIVADO'}</small>
-                                </div>
+                            
+                            <!-- Vehículo -->
+                            <div class="detalle-card detalle-card-vehiculo">
+                                <div class="card-titulo"><i class="bi bi-truck"></i> Vehículo</div>
+                                <div class="campo"><span class="label">Placa</span><span class="valor">${g.placa_vehiculo || '-'}</span></div>
+                                <div class="campo"><span class="label">Conductor</span><span class="valor">${escapeHtml(g.conductor_nombre || '-')}</span></div>
+                                <div class="campo"><span class="label">DNI Conductor</span><span class="valor">${g.conductor_dni || '-'}</span></div>
+                                <div class="campo"><span class="label">Licencia</span><span class="valor">${g.licencia_conductor || '-'}</span></div>
+                                <div class="campo"><span class="label">Modalidad</span><span class="valor">${g.modalidad_transporte || 'PRIVADO'}</span></div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="card bg-light p-3">
-                                    <h6><i class="bi bi-calendar"></i> Traslado</h6>
-                                    <small><strong>Motivo:</strong> ${g.motivo_traslado || '-'}</small>
-                                    <small><strong>Fecha Emisión:</strong> ${formatFecha(g.fecha_emision)}</small>
-                                    <small><strong>Fecha Traslado:</strong> ${formatFecha(g.fecha_traslado)}</small>
-                                    <small><strong>Peso Total:</strong> ${pesoTotalNum.toFixed(2)} kg</small>
-                                    <small><strong>N° Bultos:</strong> ${g.numero_bultos || '-'}</small>
-                                    <small><strong>Unidad Peso:</strong> ${g.unidad_peso_bruto || 'KGM'}</small>
-                                </div>
+                            
+                            <!-- Traslado -->
+                            <div class="detalle-card detalle-card-traslado">
+                                <div class="card-titulo"><i class="bi bi-calendar-event"></i> Traslado</div>
+                                <div class="campo"><span class="label">Motivo</span><span class="valor">${motivoTexto}</span></div>
+                                <div class="campo"><span class="label">Fecha Emisión</span><span class="valor">${formatFecha(g.fecha_emision)}</span></div>
+                                <div class="campo"><span class="label">Fecha Traslado</span><span class="valor">${formatFecha(g.fecha_traslado)}</span></div>
+                                <div class="campo"><span class="label">Peso Total</span><span class="valor">${pesoTotal.toFixed(2)} kg</span></div>
+                                <div class="campo"><span class="label">N° Bultos</span><span class="valor">${g.numero_bultos || '-'}</span></div>
+                                <div class="campo"><span class="label">Unidad Peso</span><span class="valor">${g.unidad_peso_bruto || 'KGM'}</span></div>
                             </div>
-                            <div class="col-12">
-                                <div class="card bg-light p-3">
-                                    <h6><i class="bi bi-clock-history text-info"></i> Registro</h6>
-                                    <small><strong>Fecha de Creación:</strong> ${fechaCreacionDetalle}</small>
-                                    ${g.factura ? `<small><strong>Factura:</strong> ${escapeHtml(g.factura)}</small>` : ''}
-                                    ${g.orden_compra_cliente ? `<small><strong>Orden de Compra:</strong> ${escapeHtml(g.orden_compra_cliente)}</small>` : ''}
-                                    ${g.documento_asociado ? `<small><strong>Documento Asociado:</strong> ${escapeHtml(g.documento_asociado)}</small>` : ''}
-                                </div>
-                            </div>
+                            
+                            <!-- Transportista (si existe) -->
                             ${g.transportista_ruc ? `
-                            <div class="col-12">
-                                <div class="card bg-light p-3">
-                                    <h6><i class="bi bi-building"></i> Transportista</h6>
-                                    <small><strong>RUC:</strong> ${g.transportista_ruc}</small>
-                                    <small><strong>Razón Social:</strong> ${escapeHtml(g.transportista_nombre || '-')}</small>
-                                </div>
+                            <div class="detalle-card detalle-card-transportista" style="grid-column: span 2;">
+                                <div class="card-titulo"><i class="bi bi-building"></i> Transportista</div>
+                                <div class="campo"><span class="label">RUC</span><span class="valor">${g.transportista_ruc}</span></div>
+                                <div class="campo"><span class="label">Razón Social</span><span class="valor">${escapeHtml(g.transportista_nombre || '-')}</span></div>
                             </div>
                             ` : ''}
+                            
+                            <!-- Observaciones (si existe) -->
                             ${g.observaciones ? `
-                            <div class="col-12">
-                                <div class="card bg-light p-3">
-                                    <h6><i class="bi bi-chat-text"></i> Observaciones</h6>
-                                    <small>${escapeHtml(g.observaciones)}</small>
-                                </div>
+                            <div class="detalle-card detalle-card-observaciones" style="grid-column: span 2;">
+                                <div class="card-titulo"><i class="bi bi-chat-text"></i> Observaciones</div>
+                                <div style="font-size:13px;color:#1e293b;padding:4px 0;">${escapeHtml(g.observaciones)}</div>
                             </div>
                             ` : ''}
-                            <div class="col-12">
-                                <h6 class="mt-2"><i class="bi bi-box-seam"></i> Productos</h6>
-                                ${itemsHtml}
-                            </div>
+                        </div>
+                        
+                        <!-- Registro - abajo del grid -->
+                        <div class="detalle-card detalle-card-registro" style="margin-top:16px;background:#f8fafc;border-radius:16px;padding:12px 18px;border:1px solid #e2e8f0;">
+                            <div class="card-titulo"><i class="bi bi-clock-history"></i> Registro</div>
+                            <div class="campo"><span class="label">Fecha de Creación</span><span class="valor">${fechaCreacionDetalle}</span></div>
+                            <div class="campo"><span class="label">Estado</span><span class="valor">${g.estado_sunat || 'BORRADOR'}</span></div>
+                            <div class="campo"><span class="label">N° Guía</span><span class="valor">${g.serie || 'T001'}-${g.numero || '?'}</span></div>
+                        </div>
+                        
+                        <!-- Productos -->
+                        <div style="margin-top:16px;">
+                            <h6 style="font-weight:700;color:#1e293b;margin-bottom:10px;"><i class="bi bi-box-seam"></i> Productos</h6>
+                            ${itemsHtml || '<div class="text-muted small">No hay productos registrados</div>'}
                         </div>
                     `;
                 } else {
@@ -923,12 +1036,10 @@
                 const guia = result.data;
                 const items = typeof guia.items_json === 'string' ? JSON.parse(guia.items_json) : (guia.items_json || []);
                 
-                // DATOS FIJOS DE KCF
                 const REMITENTE = guia.remitente_nombre || 'KCF CORPORACION S.A.C';
                 const RUC_REMITENTE = guia.ruc_remitente || '20602095704';
                 const TELEFONO = guia.telefono || '987-654-321';
                 const EMAIL = guia.email || 'ventas@kcf.pe';
-                
                 const destinatario = guia.destinatario_nombre || '';
                 const rucDestinatario = guia.ruc_destinatario || '';
                 const direccionEntrega = guia.destinatario_direccion || '';
@@ -983,7 +1094,6 @@
                             </div>
                             <div style="text-align: center; font-family: 'Courier New', monospace; font-size: 18px; letter-spacing: 2px; padding: 4px 0; margin: 4px 0; background: #f8f9fa; border-radius: 4px;">${codigoBarras}</div>
                         </div>
-                        <!-- PIE CON CONTÁCTANOS -->
                         <div style="text-align: center; border-top: 1px solid #ddd; padding-top: 5px; margin-top: 5px;">
                             <div style="font-weight: 700; color: #1a2a6c; font-size: 8px; margin-bottom: 2px;">📞 CONTÁCTANOS</div>
                             <div style="font-size: 7px; color: #333; letter-spacing: 0.3px;">${escapeHtml(TELEFONO)} | ${escapeHtml(EMAIL)}</div>
@@ -1099,6 +1209,111 @@
                     mostrarNotificacion('❌ No se pudo abrir la ventana de impresión', 'error');
                 }
             }
+        });
+        
+        // ==========================================
+        // EXPORTAR A EXCEL
+        // ==========================================
+        document.getElementById('btnExportarExcel')?.addEventListener('click', function() {
+            const guias = guiasFiltradasActuales || todasGuias;
+            
+            if (guias.length === 0) {
+                mostrarNotificacion('⚠️ No hay datos para exportar', 'warning');
+                return;
+            }
+            
+            // Construir el archivo CSV con todos los campos
+            let csv = '\uFEFF'; // BOM para UTF-8
+            
+            // Encabezados - todos los campos del crear guía
+            const headers = [
+                'N° Guía', 'Serie', 'Número',
+                'Estado SUNAT', 'Fecha Creación', 'Fecha Emisión', 'Fecha Traslado',
+                'Motivo Traslado', 'Modalidad Transporte',
+                // Remitente
+                'RUC Remitente', 'Razón Social Remitente', 'Dirección Remitente', 'Ubigeo Remitente',
+                // Destinatario
+                'RUC Destinatario', 'Razón Social Destinatario', 'Dirección Destinatario', 'Ubigeo Destinatario',
+                'Orden Compra Cliente', 'Documento Asociado', 'Factura',
+                // Vehículo
+                'Placa Vehículo', 'Conductor', 'DNI Conductor', 'Licencia Conductor',
+                // Transportista (público)
+                'RUC Transportista', 'Razón Social Transportista',
+                // Traslado
+                'Peso Total (kg)', 'Unidad Peso', 'N° Bultos',
+                // Productos (resumen)
+                'Cantidad Productos', 'Descripción Productos',
+                'Observaciones'
+            ];
+            csv += headers.join(';') + '\n';
+            
+            // Datos
+            guias.forEach(guia => {
+                const items = typeof guia.items_json === 'string' ? JSON.parse(guia.items_json) : (guia.items_json || []);
+                const descripciones = items.map(item => `${item.cantidad || 0}x ${item.descripcion || ''}`).join(' | ');
+                const totalItems = items.reduce((sum, item) => sum + (parseFloat(item.cantidad) || 0), 0);
+                
+                const row = [
+                    `${guia.serie || 'T001'}-${guia.numero || '?'}`,
+                    guia.serie || 'T001',
+                    guia.numero || '?',
+                    guia.estado_sunat || 'BORRADOR',
+                    formatFechaHora(guia.created_at),
+                    formatFecha(guia.fecha_emision),
+                    formatFecha(guia.fecha_traslado),
+                    guia.motivo_traslado || '',
+                    guia.modalidad_transporte || 'PRIVADO',
+                    // Remitente
+                    guia.ruc_remitente || '',
+                    guia.remitente_nombre || '',
+                    guia.remitente_direccion || '',
+                    guia.ubigeo_remitente || '',
+                    // Destinatario
+                    guia.ruc_destinatario || '',
+                    guia.destinatario_nombre || '',
+                    guia.destinatario_direccion || '',
+                    guia.ubigeo_destinatario || '',
+                    guia.orden_compra_cliente || '',
+                    guia.documento_asociado || '',
+                    guia.factura || '',
+                    // Vehículo
+                    guia.placa_vehiculo || '',
+                    guia.conductor_nombre || '',
+                    guia.conductor_dni || '',
+                    guia.licencia_conductor || '',
+                    // Transportista
+                    guia.transportista_ruc || '',
+                    guia.transportista_nombre || '',
+                    // Traslado
+                    parseFloat(guia.peso_total || 0).toFixed(2),
+                    guia.unidad_peso_bruto || 'KGM',
+                    guia.numero_bultos || '',
+                    totalItems,
+                    descripciones,
+                    guia.observaciones || ''
+                ];
+                
+                // Escapar comillas y punto y coma
+                const rowEscaped = row.map(cell => {
+                    if (typeof cell === 'string') {
+                        return `"${cell.replace(/"/g, '""')}"`;
+                    }
+                    return cell;
+                });
+                csv += rowEscaped.join(';') + '\n';
+            });
+            
+            // Crear y descargar el archivo
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `guias_remision_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+            
+            mostrarNotificacion(`✅ ${guias.length} guías exportadas correctamente`, 'exito');
         });
         
         // ==========================================
