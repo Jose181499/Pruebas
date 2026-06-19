@@ -1105,74 +1105,84 @@
         // ==========================================
         // GENERAR RÓTULO DE EMBALAJE
         // ==========================================
-        window.generarRotulo = async function(id) {
-            const modalBody = document.getElementById('modalRotuloBody');
-            modalBody.innerHTML = `<div class="text-center py-4"><div class="spinner-border text-primary spinner-border-sm"></div><p class="mt-1 small">Generando rótulo...</p></div>`;
-            
-            const modalElement = document.getElementById('modalRotulo');
-            const modal = new bootstrap.Modal(modalElement);
-            modal.show();
-            
-            try {
-                const response = await fetch(`/guias/api/obtener/${id}`);
-                const result = await response.json();
-                
-                if (!result.success || !result.data) {
-                    modalBody.innerHTML = `<div class="text-center py-4 text-danger small">Error al obtener datos</div>`;
-                    return;
-                }
-                
-                const guia = result.data;
-                const items = typeof guia.items_json === 'string' ? JSON.parse(guia.items_json) : (guia.items_json || []);
-                
-                const REMITENTE = guia.remitente_nombre || 'KCF CORPORACION S.A.C';
-                const RUC_REMITENTE = guia.ruc_remitente || '20602095704';
-                const TELEFONO = guia.telefono || '987-654-321';
-                const EMAIL = guia.email || 'ventas@kcf.pe';
-                const destinatario = guia.destinatario_nombre || '';
-                const rucDestinatario = guia.ruc_destinatario || '';
-                const direccionEntrega = guia.destinatario_direccion || '';
-                const conductor = guia.conductor_nombre || '';
-                const dniConductor = guia.conductor_dni || '';
-                const numeroGuia = guia.codigo_ruta || `${guia.serie || 'T001'}-${guia.numero || '000001'}`;
-                const numeroFactura = guia.documento_asociado || 'E001-496';
-                const bultos = calcularBultos(items);
-                const codigoBarras = generarCodigoBarras(numeroGuia);
-                
-                modalBody.innerHTML = `
-                    <div style="width:80mm;max-width:80mm;margin:0 auto;background:#ffffff;border:2px solid #1a2a6c;border-radius:4px;padding:8px 10px;font-family:'Courier New',monospace;box-shadow:0 4px 15px rgba(0,0,0,0.12);">
-                        <div style="text-align:center;border-bottom:2px solid #e94560;padding-bottom:3px;margin-bottom:4px;">
-                            <div style="font-size:10px;font-weight:900;color:#1a2a6c;">${escapeHtml(REMITENTE)}</div>
-                            <div style="font-size:7px;font-weight:600;color:#555;">RUC: ${escapeHtml(RUC_REMITENTE)}</div>
-                        </div>
-                        <div style="margin:3px 0;">
-                            <div style="font-size:7px;font-weight:700;color:#888;">CLIENTE:</div>
-                            <div style="font-size:10px;font-weight:700;color:#1a1a1a;">${escapeHtml(destinatario)}</div>
-                            <div style="font-size:8px;color:#555;">RUC: ${escapeHtml(rucDestinatario)}</div>
-                        </div>
-                        <div style="border-top:1px dashed #ddd;margin:3px 0;"></div>
-                        <div style="margin:3px 0;">
-                            <div style="font-size:7px;font-weight:700;color:#888;">DIRECCIÓN DE ENTREGA:</div>
-                            <div style="font-size:9px;font-weight:600;color:#1a1a1a;">${escapeHtml(direccionEntrega)}</div>
-                        </div>
-                        <div style="border-top:1px dashed #ddd;margin:3px 0;"></div>
-                        <div style="display:flex;justify-content:space-between;margin:3px 0;">
-                            <div><div style="font-size:7px;font-weight:700;color:#888;">BULTOS</div><div style="font-size:13px;font-weight:800;color:#e94560;">${bultos}</div></div>
-                            <div><div style="font-size:7px;font-weight:700;color:#888;">N° GUÍA</div><div style="font-size:9px;font-weight:600;">${escapeHtml(numeroGuia)}</div></div>
-                            <div><div style="font-size:7px;font-weight:700;color:#888;">FACTURA</div><div style="font-size:9px;font-weight:600;">${escapeHtml(numeroFactura)}</div></div>
-                        </div>
-                        <div style="text-align:center;font-size:13px;letter-spacing:2px;padding:3px 0;background:#f8f9fa;border-radius:4px;font-weight:700;">${codigoBarras}</div>
-                        <div style="text-align:center;border-top:1px solid #ddd;padding-top:3px;margin-top:3px;">
-                            <div style="font-size:6px;color:#aaa;">RÓTULO DE EMBALAJE</div>
-                        </div>
-                    </div>
-                `;
-                guiaActualId = id;
-            } catch (error) {
-                console.error("❌ Error al generar rótulo:", error);
-                modalBody.innerHTML = `<div class="text-center py-4 text-danger small">Error: ${error.message}</div>`;
-            }
-        };
+       // ==========================================
+// GENERAR RÓTULO DE EMBALAJE
+// ==========================================
+window.generarRotulo = async function(id) {
+    const modalBody = document.getElementById('modalRotuloBody');
+    modalBody.innerHTML = `<div class="text-center py-4"><div class="spinner-border text-primary spinner-border-sm"></div><p class="mt-1 small">Generando rótulo...</p></div>`;
+    
+    const modalElement = document.getElementById('modalRotulo');
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+    
+    try {
+        const response = await fetch(`/guias/api/obtener/${id}`);
+        const result = await response.json();
+        
+        if (!result.success || !result.data) {
+            modalBody.innerHTML = `<div class="text-center py-4 text-danger small">Error al obtener datos</div>`;
+            return;
+        }
+        
+        const guia = result.data;
+        const items = typeof guia.items_json === 'string' ? JSON.parse(guia.items_json) : (guia.items_json || []);
+        
+        const REMITENTE = guia.remitente_nombre || 'KCF CORPORACION S.A.C';
+        const RUC_REMITENTE = guia.ruc_remitente || '20602095704';
+        const TELEFONO = guia.telefono || '987-654-321';
+        const EMAIL = guia.email || 'ventas@kcf.pe';
+        const destinatario = guia.destinatario_nombre || '';
+        const rucDestinatario = guia.ruc_destinatario || '';
+        const direccionEntrega = guia.destinatario_direccion || '';
+        const conductor = guia.conductor_nombre || '';
+        const dniConductor = guia.conductor_dni || '';
+        const numeroGuia = guia.codigo_ruta || `${guia.serie || 'T001'}-${guia.numero || '000001'}`;
+        const numeroFactura = guia.documento_asociado || 'E001-496';
+        const bultos = calcularBultos(items);
+        const codigoBarras = generarCodigoBarras(numeroGuia);
+        
+        modalBody.innerHTML = `
+            <div style="width:80mm;max-width:80mm;margin:0 auto;background:#ffffff;border:2px solid #1a2a6c;border-radius:4px;padding:8px 10px;font-family:'Courier New',monospace;box-shadow:0 4px 15px rgba(0,0,0,0.12);">
+                <div style="text-align:center;border-bottom:2px solid #e94560;padding-bottom:3px;margin-bottom:4px;">
+                    <div style="font-size:10px;font-weight:900;color:#1a2a6c;">${escapeHtml(REMITENTE)}</div>
+                    <div style="font-size:7px;font-weight:600;color:#555;">RUC: ${escapeHtml(RUC_REMITENTE)}</div>
+                </div>
+                <div style="margin:3px 0;">
+                    <div style="font-size:7px;font-weight:700;color:#888;">CLIENTE:</div>
+                    <div style="font-size:10px;font-weight:700;color:#1a1a1a;">${escapeHtml(destinatario)}</div>
+                    <div style="font-size:8px;color:#555;">RUC: ${escapeHtml(rucDestinatario)}</div>
+                </div>
+                <div style="border-top:1px dashed #ddd;margin:3px 0;"></div>
+                <div style="margin:3px 0;">
+                    <div style="font-size:7px;font-weight:700;color:#888;">DIRECCIÓN DE ENTREGA:</div>
+                    <div style="font-size:9px;font-weight:600;color:#1a1a1a;">${escapeHtml(direccionEntrega)}</div>
+                </div>
+                <div style="border-top:1px dashed #ddd;margin:3px 0;"></div>
+                <div style="margin:3px 0;">
+                    <div style="font-size:7px;font-weight:700;color:#888;">CONSIGNADOS:</div>
+                    <div style="font-size:9px;font-weight:600;color:#1a1a1a;">${escapeHtml(conductor)}</div>
+                    <div style="font-size:8px;color:#555;">DNI: ${escapeHtml(dniConductor)}</div>
+                </div>
+                <div style="border-top:1px dashed #ddd;margin:3px 0;"></div>
+                <!-- CAMBIO AQUÍ: "______________" en lugar de "BULTOS" -->
+                <div style="display:flex;justify-content:space-between;margin:3px 0;">
+                    <div><div style="font-size:7px;font-weight:700;color:#888;">______________</div><div style="font-size:13px;font-weight:800;color:#e94560;">${bultos}</div></div>
+                    <div><div style="font-size:7px;font-weight:700;color:#888;">N° GUÍA</div><div style="font-size:9px;font-weight:600;">${escapeHtml(numeroGuia)}</div></div>
+                    <div><div style="font-size:7px;font-weight:700;color:#888;">FACTURA</div><div style="font-size:9px;font-weight:600;">${escapeHtml(numeroFactura)}</div></div>
+                </div>
+                <div style="text-align:center;font-size:13px;letter-spacing:2px;padding:3px 0;background:#f8f9fa;border-radius:4px;font-weight:700;">${codigoBarras}</div>
+                <div style="text-align:center;border-top:1px solid #ddd;padding-top:3px;margin-top:3px;">
+                    <div style="font-size:6px;color:#aaa;">RÓTULO DE EMBALAJE</div>
+                </div>
+            </div>
+        `;
+        guiaActualId = id;
+    } catch (error) {
+        console.error("❌ Error al generar rótulo:", error);
+        modalBody.innerHTML = `<div class="text-center py-4 text-danger small">Error: ${error.message}</div>`;
+    }
+};
 
         // ==========================================
         // CALCULAR BULTOS
