@@ -100,75 +100,85 @@ def generar_pdf_guia(guia_data):
         color: #1a1a1a;
     }
     
-    .header-empresa {
-        border: 2px solid #000;
-        padding: 8px 10px;
-        margin-bottom: 8px;
+    /* HEADER SUPERIOR - LOGO IZQUIERDA, RECUADRO DERECHA */
+    .header-superior {
         display: flex;
-        align-items: center;
-        gap: 10px;
+        justify-content: space-between;
+        align-items: stretch;
+        margin-bottom: 10px;
+        gap: 15px;
     }
     
-    .header-empresa .logo-container {
+    /* PARTE IZQUIERDA - LOGO Y DATOS DE EMPRESA */
+    .empresa-izquierda {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 5px 0;
+    }
+    
+    .empresa-izquierda .logo-container {
         flex-shrink: 0;
-        border-right: 2px solid #000;
-        padding-right: 10px;
-        min-width: 80px;
-        min-height: 60px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
     }
     
-    .header-empresa .logo-container img {
-        max-height: 55px;
+    .empresa-izquierda .logo-container img {
+        max-height: 60px;
         max-width: 100px;
     }
     
-    .header-empresa .empresa-info {
-        flex: 1;
+    .empresa-izquierda .info-texto {
         font-size: 8px;
         line-height: 1.4;
     }
     
-    .header-empresa .empresa-info .nombre {
+    .empresa-izquierda .info-texto .nombre {
         font-size: 10px;
         font-weight: bold;
         text-transform: uppercase;
     }
     
-    .header-empresa .empresa-info .direccion {
+    .empresa-izquierda .info-texto .direccion {
         font-size: 8px;
     }
     
-    .header-empresa .empresa-info .contacto {
+    .empresa-izquierda .info-texto .contacto {
         font-size: 8px;
     }
     
-    .header-empresa .empresa-info .contacto span {
-        margin-right: 15px;
+    .empresa-izquierda .info-texto .contacto span {
+        margin-right: 10px;
     }
     
-    .ruc-header {
+    /* PARTE DERECHA - RECUADRO CURVO CON RUC Y TÍTULO */
+    .recuadro-derecha {
+        flex-shrink: 0;
+        border: 2px solid #000;
+        border-radius: 12px;
+        padding: 10px 20px;
         text-align: center;
+        min-width: 200px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        background: #ffffff;
+    }
+    
+    .recuadro-derecha .ruc {
         font-size: 10px;
         font-weight: bold;
-        margin-bottom: 2px;
     }
     
-    .titulo-guia {
-        text-align: center;
+    .recuadro-derecha .titulo {
+        font-size: 11px;
+        font-weight: bold;
+        letter-spacing: 1px;
+        margin: 2px 0;
+    }
+    
+    .recuadro-derecha .numero {
         font-size: 13px;
         font-weight: bold;
-        margin: 4px 0 2px 0;
-        letter-spacing: 1px;
-    }
-    
-    .numero-guia {
-        text-align: center;
-        font-size: 12px;
-        font-weight: bold;
-        margin-bottom: 10px;
     }
     
     .seccion {
@@ -477,30 +487,35 @@ def renderizar_html_guia(guia_data):
         <title>Guía de Remisión {{ serie }}-{{ numero }}</title>
     </head>
     <body>
-        <!-- RECUADRO EMPRESA -->
-        <div class="header-empresa">
-            <div class="logo-container">
-                {% if logo_base64 %}
-                <img src="data:image/png;base64,{{ logo_base64 }}" alt="Logo">
-                {% else %}
-                <div style="font-size:18px; font-weight:bold;">LOGO</div>
-                {% endif %}
-            </div>
-            <div class="empresa-info">
-                <div class="nombre">{{ remitente_nombre or '' }}</div>
-                <div class="direccion">{{ remitente_direccion or '' }}</div>
-                <div class="contacto">
-                    <span>Telf: {{ telefono or '' }}</span>
-                    <span>Web: {{ web or '' }}</span>
-                    <span>Email: {{ email or '' }}</span>
+        <!-- HEADER SUPERIOR: LOGO + DATOS IZQUIERDA | RECUADRO CURVO DERECHA -->
+        <div class="header-superior">
+            <!-- PARTE IZQUIERDA: LOGO Y DATOS DE EMPRESA -->
+            <div class="empresa-izquierda">
+                <div class="logo-container">
+                    {% if logo_base64 %}
+                    <img src="data:image/png;base64,{{ logo_base64 }}" alt="Logo">
+                    {% else %}
+                    <div style="font-size:24px; font-weight:bold;">LOGO</div>
+                    {% endif %}
+                </div>
+                <div class="info-texto">
+                    <div class="nombre">{{ remitente_nombre or '' }}</div>
+                    <div class="direccion">{{ remitente_direccion or '' }}</div>
+                    <div class="contacto">
+                        <span>Telf: {{ telefono or '' }}</span>
+                        <span>Web: {{ web or '' }}</span>
+                        <span>Email: {{ email or '' }}</span>
+                    </div>
                 </div>
             </div>
+            
+            <!-- PARTE DERECHA: RECUADRO CURVO CON RUC Y TÍTULO -->
+            <div class="recuadro-derecha">
+                <div class="ruc">R.U.C. Nº {{ ruc_remitente or '' }}</div>
+                <div class="titulo">GUIA DE REMISIÓN REMITENTE ELECTRÓNICA</div>
+                <div class="numero">{{ serie }}-{{ numero }}</div>
+            </div>
         </div>
-        
-        <!-- RUC Y TÍTULO -->
-        <div class="ruc-header">R.U.C. Nº {{ ruc_remitente or '' }}</div>
-        <div class="titulo-guia">GUIA DE REMISIÓN REMITENTE ELECTRÓNICA</div>
-        <div class="numero-guia">{{ serie }}-{{ numero }}</div>
         
         <!-- DESTINATARIO -->
         <div class="seccion">
