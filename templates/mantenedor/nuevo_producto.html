@@ -1,367 +1,690 @@
 <!DOCTYPE html>
-<html>
-<head> <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <title>Nuevo Producto - KCF CORPORACION</title>
-    <style>
-        body {  font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif; margin: 0; background: linear-gradient(135deg, #34ff0b, #79ff5f);}
-        .container { max-width: 900px; margin: 40px auto; background: rgba(253, 250, 89, 0.788); padding: 25px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.08);backdrop-filter: blur(10px); }
-        .form-group { margin-bottom: 15px;padding: 2px;}
-        .observaciones { height: 60px; padding: 2px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #dddddd; border-radius: 5px; font-size: 14px; }
-        textarea { resize: vertical; }
-        .descripcion-corta { height: 60px; padding: 2px;}
-        .descripcion-larga { height: 100px; padding: 2px; }
-        .btn { padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; margin-right: 10px; }
-        .btn-guardar { background: #4CAF50; color: white; }
-        .btn-cancelar { background: #ccc; color: #333; text-decoration: none; display: inline-block; }
-        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #1bff26; padding-bottom: 10px; }
-        .form-row { display: flex;padding: 2px; }
-        .form-row .form-group { flex: 1; }
-        .info-codigo { background: #e3f2fd; padding: 10px; border-radius: 5px; margin-bottom: 15px; border-left: 4px solid #ffe137; }
-        .select2-container .select2-selection--single {
-    height: 40px !important;
-    padding-top: 5px;
-    border-radius: 6px !important;
-    
-}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>📦 Nuevo Producto</h1>
-            <p>Usuario: {{ session.nombre_completo }}</p>
-        </div>
-
-        <div class="info-codigo">
-            <strong>💡 Información:</strong> El código del producto se generará automáticamente al guardar, basado en la familia seleccionada.
-        </div>
-
-        <form method="POST" action="/mantenedor/productos/guardar">
-            <!-- Paso 1: Seleccionar Familia -->
-            <div class="form-group">
-
-    <label for="familia">1. FAMILIA DEL PRODUCTO *:</label>
-
-    <select 
-        id="familia" 
-        name="familia" 
-        required 
-        onchange="actualizarInfoFamilia()"
-    >
-
-        <option value="">Seleccione la familia</option>
-
-        <option value="EQUIPOS DE COMUNICACIÓN Y ELECTRÓNICA">📱 EQUIPOS DE COMUNICACIÓN Y ELECTRÓNICA</option>
-
-        <option value="EQUIPOS DE PROTECCIÓN PERSONAL (EPP)">🛡️ EQUIPOS DE PROTECCIÓN PERSONAL (EPP)</option>
-
-        <option value="EQUIPOS DE SOLDADURA">🔥 EQUIPOS DE SOLDADURA</option>
-
-        <option value="HERRAMIENTAS ELÉCTRICAS">⚡ HERRAMIENTAS ELÉCTRICAS</option>
-
-        <option value="HERRAMIENTAS MANUALES">🔧 HERRAMIENTAS MANUALES</option>
-
-        <option value="MATERIALES DE EMBALAJE">📦 MATERIALES DE EMBALAJE</option>
-
-        <option value="MATERIALES DE LIMPIEZA Y MANTENIMIENTO">🧹 MATERIALES DE LIMPIEZA Y MANTENIMIENTO</option>
-
-        <option value="MATERIALES DE SEGURIDAD Y SEÑALIZACIÓN">🚧 MATERIALES DE SEGURIDAD Y SEÑALIZACIÓN</option>
-
-        <option value="MATERIALES ELÉCTRICOS">🔌 MATERIALES ELÉCTRICOS</option>
-
-        <option value="MOBILIARIO Y EQUIPOS DE OFICINA">💺 MOBILIARIO Y EQUIPOS DE OFICINA</option>
-
-        <option value="PRODUCTOS QUÍMICOS Y ADHESIVOS">🧪 PRODUCTOS QUÍMICOS Y ADHESIVOS</option>
-
-        <option value="REPUESTOS Y ACCESORIOS AUTOMOTRICES">🚗 REPUESTOS Y ACCESORIOS AUTOMOTRICES</option>
-
-        <option value="ROPA DE PROTECCIÓN">🦺 ROPA DE PROTECCIÓN</option>
-
-    </select>
-
-</div>
-
-            <!-- Paso 2: Descripciones -->
-            <div class="form-group">
-                <label for="descripcion">2. Descripción Corta *:</label>
-                <textarea id="descripcion" name="descripcion" class="descripcion-corta" 
-                    placeholder="Ej: CELULAR M24 ULTRA - 256GB 12 RAM 200 MP + 50 MP + 12 MP + 10 MP 6.8&#34;"
-                    required></textarea>
-                <small>Esta descripción aparecerá en las cotizaciones y órdenes de compra</small>
-            </div>
-
-            <div class="form-group">
-                <label for="descripcion_larga">3. Descripción Larga (Comentarios):</label>
-                <textarea id="descripcion_larga" name="descripcion_larga" class="descripcion-larga"
-                    placeholder="Ej: CELULAR M24 ULTRA - 256GB 12 RAM 200 MP + 50 MP + 12 MP + 10 MP 6.8&#34; con cámara IA y lápiz para escritura sobre pantalla, doble chip y de procedencia china"></textarea>
-                <small>Información adicional para referencia interna</small>
-            </div>
-
-            <!--  Marca  -->
-            <div class="form-row">
-         <div class="form-group">
-
-          <label for="marca">4. MARCA *:</label>
-
-            <select id="marca" name="marca" required>
-            <option value="">Seleccione una marca</option>
-
-            <option value="dimerc">Dimerc</option>
-            <option value="magnaflux">Magnaflux</option>
-            <option value="shurtape">Shurtape</option>
-            <option value="vistony">Vistony</option>
-
-              </select>
-
-           </div>
-
-                <div class="form-group">
-                    <label for="modelo">5. Modelo:</label>
-                    <input type="text" id="modelo" name="modelo" placeholder="Modelo del producto">
-                </div>
-            </div>
-
-            <!-- Paso 4: Unidad -->
-            <div class="form-group">
-
-    <label for="unidad">6. UNIDAD DE MEDIDA *:</label>
-
-    <select id="unidad" name="unidad" required>
-        <option value="">Seleccione una unidad</option>
-
-        <option value="Blister">Blister</option>
-        <option value="Caja">Caja</option>
-        <option value="Galón">Galón</option>
-        <option value="Kilogramo">Kilogramo</option>
-        <option value="Litro">Litro</option>
-        <option value="Metro">Metro</option>
-        <option value="Mililitro (ml)">Mililitro (ml)</option>
-        <option value="Paquete">Paquete</option>
-        <option value="Par">Par</option>
-        <option value="Rollo">Rollo</option>
-        <option value="Set">Set</option>
-        <option value="Unidad">Unidad</option>
-
-    </select>
-
-                <!-- Paso 5: Peso -->
-            <div class="form-row">
-
-    <!-- Tipo de ingreso -->
-    <div class="form-group">
-
-        <label for="tipo_peso">
-            7. PESO DEL PRODUCTO *
-        </label>
-
-        <select id="tipo_peso">
-
-            <option value="rango">
-                Seleccionar rango
-            </option>
-
-            <option value="exacto">
-                Ingresar peso exacto
-            </option>
-
-        </select>
-
-    </div>
-
-    <!-- Contenido dinámico -->
-    <div class="form-group">
-
-        <!-- RANGOS -->
-        <div id="contenedor-rango">
-
-            <label>Rango de Peso</label>
-
-            <select id="peso_rango" name="peso_rango">
-
-                <option value="">
-                    Seleccione un rango
-                </option>
-
-                <option value="0-1 kg">
-                    0 - 1 kg
-                </option>
-
-                <option value="1-2 kg">
-                    1 - 2 kg
-                </option>
-
-                <option value="2-3 kg">
-                    2 - 3 kg
-                </option>
-
-                <option value="3-4 kg">
-                    3 - 4 kg
-                </option>
-
-                <option value="4-5 kg">
-                    4 - 5 kg
-                </option>
-
-                <option value="5-10 kg">
-                    5 - 10 kg
-                </option>
-
-                <option value="10-20 kg">
-                    10 - 20 kg
-                </option>
-
-                <option value="20+ kg">
-                    Más de 20 kg
-                </option>
-
-            </select>
-
-        </div>
-
-        <!-- PESO EXACTO -->
-        <div id="contenedor-exacto" style="display:none;">
-
-            <label>Peso Exacto</label>
-
-            <input 
-                type="number"
-                id="peso_exacto"
-                name="peso_exacto"
-                placeholder="Ejemplo: 2.75"
-                step="0.01"
-                min="0"
-            >
-
-        </div>
-
-    </div>  
-    </div>
-
-
-            <div class="form-group">
-                <label for="volumen">8. Volumen del producto *:</label>
-                <select id="volumen" name="volumen" required>
-                  <option value="">Seleccione una opción</option>
-                  <option value="0-1000">0 - 1000 cm³</option>
-                  <option value="1000-5000">1000 - 5000 cm³</option>
-                  <option value="5000-10000">5000 - 10000 cm³</option>
-                  <option value="10000+">Más de 10000 cm³</option>
-                </select>
-            </div>
-
-           
-            <div class="form-group">
-                <label for="observaciones">9. Observaciones *:</label>
-                <textarea id="observaciones" name="observaciones" class="observaciones" 
-                    placeholder="Ej: Este producto requiere movilidad grande"
-                    required></textarea>
-            </div>
-
-             <div class="form-group">
-                <label for="transporte">10. Transporte *:</label>
-                <select id="transporte" name="transporte" required>
-                  <option value="">Seleccione un vehículo</option>
-                  <option value="motorizado">Motorizado</option>
-                  <option value="auto">Auto</option>
-                  <option value="miniban">Miniban</option>
-                  <option value="camioneta">Camioneta</option>
-                  <option value="camion">Camión</option>
-                </select>
-            </div>
-
-            <button type="submit" class="btn btn-guardar">💾 Guardar Producto</button>
-            <a href="/mantenedor" class="btn btn-cancelar">❌ Cancelar</a>
-        </form>
-    </div>
-
-    <script>
-        function actualizarInfoFamilia() {
-            const familiaSelect = document.getElementById('familia');
-            const infoDiv = document.querySelector('.info-codigo');
-            
-            if (familiaSelect.value) {
-                const prefijos = {
-                    "EQUIPOS DE PROTECCIÓN PERSONAL (EPP)": "EPP",
-                    "HERRAMIENTAS MANUALES": "HMA",
-                    "HERRAMIENTAS ELÉCTRICAS": "HEL",
-                    "MATERIALES ELÉCTRICOS": "MEL",
-                    "PRODUCTOS QUÍMICOS Y ADHESIVOS": "QUI",
-                    "MATERIALES DE SEGURIDAD Y SEÑALIZACIÓN": "SEG",
-                    "EQUIPOS DE SOLDADURA": "SOL",
-                    "MATERIALES DE EMBALAJE": "EMB",
-                    "EQUIPOS DE COMUNICACIÓN Y ELECTRÓNICA": "ELE",
-                    "MOBILIARIO Y EQUIPOS DE OFICINA": "OFI",
-                    "MATERIALES DE LIMPIEZA Y MANTENIMIENTO": "LIM",
-                    "REPUESTOS Y ACCESORIOS AUTOMOTRICES": "AUT",
-                    "ROPA DE PROTECCIÓN": "RPP" 
-                };
-                
-                const prefijo = prefijos[familiaSelect.value] || 'GEN';
-                infoDiv.innerHTML = `<strong>📝 Código generado:</strong> Se creará automáticamente con el formato <strong>${prefijo}###</strong> (Ej: ${prefijo}001, ${prefijo}002, etc.)`;
-            } else {
-                infoDiv.innerHTML = `<strong>💡 Información:</strong> El código del producto se generará automáticamente al guardar, basado en la familia seleccionada.`;
-            }
-        }
-    </script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script>
-    $(document).ready(function() {
-        $('#unidad').select2({
-            placeholder: "Buscar unidad...",
-            allowClear: true,
-            width: '100%'
-        });
-    });
-</script>
-<script>
-    $(document).ready(function() {
-        $('#marca').select2({
-            placeholder: "Buscar marca...",
-            allowClear: true,
-            width: '100%'
-        });
-    });
-</script>
-<script>
-document.getElementById('tipo_peso')
-    .addEventListener('change', function() {
-
-    const rango =
-        document.getElementById('contenedor-rango');
-
-    const exacto =
-        document.getElementById('contenedor-exacto');
-
-    if (this.value === 'exacto') {
-
-        rango.style.display = 'none';
-        exacto.style.display = 'block';
-
-    } else {
-
-        rango.style.display = 'block';
-        exacto.style.display = 'none';
-
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nuevo producto · UI</title>
+  <!-- Font Awesome (opcional, para iconos) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* Reset & base */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
 
-});
-</script>
+    body {
+      background: #f4f6fa;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      padding: 2rem 1rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #1e293b;
+    }
+
+    .product-card {
+      max-width: 900px;
+      width: 100%;
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+      padding: 2rem 2rem 2.5rem;
+      transition: 0.2s;
+    }
+
+    /* título principal */
+    .product-card h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+      color: #0b1b33;
+      margin-bottom: 0.2rem;
+    }
+
+    .product-card .subhead {
+      font-size: 0.95rem;
+      color: #5e6f8d;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid #e9edf4;
+      padding-bottom: 0.75rem;
+    }
+
+    /* foto + tipos de operación (dos columnas) */
+    .top-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.8rem;
+      margin-bottom: 2rem;
+    }
+
+    /* foto upload */
+    .photo-upload {
+      background: #f8faff;
+      border: 1.5px dashed #cbd5e1;
+      border-radius: 20px;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      transition: 0.15s;
+      cursor: pointer;
+      min-height: 130px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .photo-upload:hover {
+      background: #f1f6fe;
+      border-color: #94a3b8;
+    }
+
+    .photo-upload i {
+      font-size: 2.2rem;
+      color: #6c7f9e;
+      margin-bottom: 6px;
+    }
+
+    .photo-upload .drag-text {
+      font-weight: 500;
+      color: #1e293b;
+      font-size: 0.95rem;
+    }
+
+    .photo-upload .drag-hint {
+      font-size: 0.8rem;
+      color: #6c7f9e;
+      margin-top: 4px;
+    }
+
+    .photo-upload .file-badge {
+      background: #eef2f6;
+      border-radius: 30px;
+      padding: 4px 14px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #1e293b;
+      margin-top: 8px;
+      display: inline-block;
+    }
+
+    /* operación: venta, compra, inventariable */
+    .operation-group {
+      background: #f8faff;
+      border-radius: 20px;
+      padding: 1rem 1.2rem;
+    }
+
+    .operation-group .label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #1e293b;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .op-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .op-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .op-item input[type="radio"] {
+      margin-top: 3px;
+      accent-color: #2563eb;
+      width: 17px;
+      height: 17px;
+      flex-shrink: 0;
+    }
+
+    .op-item .op-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #0b1b33;
+    }
+
+    .op-item .op-desc {
+      font-size: 0.85rem;
+      color: #5e6f8d;
+      line-height: 1.3;
+    }
+
+    /* separador */
+    .divider {
+      border: none;
+      border-top: 1px solid #e9edf4;
+      margin: 1.8rem 0;
+    }
+
+    /* información del producto (grid) */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem 2rem;
+      margin-top: 0.5rem;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .field-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .field-group label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #3b4a62;
+      letter-spacing: 0.2px;
+      text-transform: uppercase;
+    }
+
+    .field-group .value-static {
+      background: #f1f5f9;
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #0b1b33;
+      display: inline-block;
+      width: fit-content;
+      min-width: 120px;
+    }
+
+    .field-group input,
+    .field-group select,
+    .field-group textarea {
+      background: #ffffff;
+      border: 1px solid #dce1ec;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      color: #0b1b33;
+      transition: 0.15s;
+      width: 100%;
+    }
+
+    .field-group input:focus,
+    .field-group select:focus,
+    .field-group textarea:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .field-group input::placeholder,
+    .field-group select:invalid {
+      color: #94a3b8;
+    }
+
+    .field-group textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+
+    .field-group .hint {
+      font-size: 0.7rem;
+      color: #6c7f9e;
+      margin-top: 2px;
+    }
+
+    /* acciones */
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      margin-top: 2.2rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: none;
+      background: transparent;
+      padding: 0.6rem 1.8rem;
+      border-radius: 40px;
+      font-weight: 500;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid #d0d9e8;
+      color: #2c3f5e;
+    }
+
+    .btn-outline:hover {
+      background: #f1f5f9;
+      border-color: #b0c0d4;
+    }
+
+    .btn-primary {
+      background: #2563eb;
+      color: white;
+      box-shadow: 0 4px 8px rgba(37, 99, 235, 0.2);
+    }
+
+    .btn-primary:hover {
+      background: #1d4ed8;
+      transform: scale(0.98);
+    }
+
+    /* precios (grid especial) */
+    .prices-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      background: #fafcff;
+      padding: 1.2rem 1.5rem;
+      border-radius: 20px;
+      margin-top: 0.5rem;
+    }
+
+    .price-item label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #3b4a62;
+      text-transform: uppercase;
+      letter-spacing: 0.2px;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .price-item .price-input-wrap {
+      display: flex;
+      align-items: center;
+      background: white;
+      border: 1px solid #dce1ec;
+      border-radius: 14px;
+      padding: 4px 12px 4px 16px;
+    }
+
+    .price-item .price-input-wrap span {
+      font-weight: 500;
+      color: #1e293b;
+      margin-right: 6px;
+    }
+
+    .price-item .price-input-wrap input {
+      border: none;
+      padding: 10px 0;
+      font-size: 1rem;
+      font-weight: 500;
+      width: 100%;
+      background: transparent;
+      font-family: inherit;
+      color: #0b1b33;
+    }
+
+    .price-item .price-input-wrap input:focus {
+      outline: none;
+    }
+
+    .price-item .tax-note {
+      font-size: 0.7rem;
+      color: #6c7f9e;
+      margin-top: 4px;
+    }
+
+    /* responsive */
+    @media (max-width: 700px) {
+      .top-grid, .info-grid, .prices-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      .product-card {
+        padding: 1.5rem;
+      }
+      .actions {
+        justify-content: stretch;
+      }
+      .actions .btn {
+        flex: 1;
+        justify-content: center;
+      }
+    }
+
+    /* pequeños ajustes */
+    .mt-1 { margin-top: 0.2rem; }
+    .mb-1 { margin-bottom: 0.3rem; }
+    .flex { display: flex; align-items: center; gap: 6px; }
+    .text-muted { color: #5e6f8d; }
+  </style>
+</head>
+<body>
+<div class="product-card">
+  <h1>Nuevo producto</h1>
+  <div class="subhead">Crea o edita la información principal del producto.</div>
+
+  <!-- Foto + Tipo operación -->
+  <div class="top-grid">
+    <!-- Foto -->
+    <div class="photo-upload" id="photoUploadArea">
+      <i class="fas fa-cloud-upload-alt"></i>
+      <div class="drag-text">Arrastra o selecciona PNG, JPG o WEBP</div>
+      <div class="drag-hint">Mix. SMB</div>
+      <div class="file-badge" id="fileBadge">📎 Ningún archivo</div>
+      <input type="file" id="fileInput" accept=".png,.jpg,.jpeg,.webp" style="display: none;">
+    </div>
+
+    <!-- Operación -->
+    <div class="operation-group">
+      <span class="label">Típo de operación</span>
+      <div class="op-item">
+        <input type="radio" name="operation" id="opVenta" value="venta" checked>
+        <div>
+          <div class="op-title">Venta</div>
+          <div class="op-desc">El producto estará disponible para ventas.</div>
+        </div>
+      </div>
+      <div class="op-item">
+        <input type="radio" name="operation" id="opCompra" value="compra">
+        <div>
+          <div class="op-title">Compra</div>
+          <div class="op-desc">El producto se podrá adquirir a proveedores.</div>
+        </div>
+      </div>
+      <div class="op-item">
+        <input type="radio" name="operation" id="opInventario" value="inventariable">
+        <div>
+          <div class="op-title">Inventariable</div>
+          <div class="op-desc">El inventario será controlado en almacén.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Información del producto -->
+  <div style="font-weight: 600; font-size: 1rem; color: #0b1b33; margin-bottom: 1.2rem;">Información del producto</div>
+
+  <div class="info-grid">
+    <!-- código (estático) -->
+    <div class="field-group">
+      <label>Código de producto</label>
+      <div class="value-static">PRD-000126</div>
+    </div>
+    <!-- nombre -->
+    <div class="field-group">
+      <label>Nombre del producto</label>
+      <input type="text" placeholder="Ingrese el nombre del producto" value="">
+    </div>
+    <!-- modelo -->
+    <div class="field-group">
+      <label>Modelo</label>
+      <input type="text" placeholder="Ej. M100">
+    </div>
+    <!-- marca -->
+    <div class="field-group">
+      <label>Marca (opcional)</label>
+      <input type="text" placeholder="Ej. Nike">
+    </div>
+    <!-- unidad medida -->
+    <div class="field-group">
+      <label>Unidad de medida</label>
+      <select>
+        <option value="" disabled selected>Seleccione una unidad</option>
+        <option value="unidad">Unidad</option>
+        <option value="kg">Kilogramo</option>
+        <option value="g">Gramo</option>
+        <option value="l">Litro</option>
+        <option value="ml">Mililitro</option>
+        <option value="caja">Caja</option>
+        <option value="paquete">Paquete</option>
+      </select>
+    </div>
+    <!-- categoría -->
+    <div class="field-group">
+      <label>Categoría</label>
+      <select>
+        <option value="" disabled selected>Seleccione una categoría</option>
+        <option value="electronica">Electrónica</option>
+        <option value="ropa">Ropa</option>
+        <option value="hogar">Hogar</option>
+        <option value="alimentos">Alimentos</option>
+        <option value="belleza">Belleza</option>
+      </select>
+    </div>
+    <!-- subcategoría -->
+    <div class="field-group">
+      <label>Subcategoría (opcional)</label>
+      <select>
+        <option value="" disabled selected>Seleccione una subcategoría</option>
+        <option value="smartphones">Smartphones</option>
+        <option value="laptops">Laptops</option>
+        <option value="camisas">Camisas</option>
+        <option value="zapatos">Zapatos</option>
+      </select>
+    </div>
+    <!-- presentación proveedor -->
+    <div class="field-group">
+      <label>Presentación del proveedor</label>
+      <input type="text" placeholder="Ej. Caja x 12 unidades">
+    </div>
+    <!-- presentación venta -->
+    <div class="field-group">
+      <label>Presentación de venta</label>
+      <input type="text" placeholder="Ej. 1 unidad">
+    </div>
+    <!-- venta mínima -->
+    <div class="field-group">
+      <label>Venta mínima (mínimo para el cliente)</label>
+      <input type="number" value="1" min="1">
+    </div>
+    <!-- código de barras -->
+    <div class="field-group">
+      <label>Código de barras</label>
+      <input type="text" placeholder="Ej. 7701234567890">
+    </div>
+    <!-- peso -->
+    <div class="field-group">
+      <label>Peso (kg)</label>
+      <input type="text" placeholder="Ej. 0.50">
+    </div>
+    <!-- volumen -->
+    <div class="field-group">
+      <label>Volumen (m³)</label>
+      <input type="text" placeholder="Ej. 0.001">
+    </div>
+    <!-- origen -->
+    <div class="field-group">
+      <label>Origen del producto (opcional)</label>
+      <select>
+        <option value="" disabled selected>Seleccione origen</option>
+        <option value="nacional">Nacional</option>
+        <option value="importado">Importado</option>
+        <option value="otro">Otro</option>
+      </select>
+    </div>
+    <!-- tiempo est entrega -->
+    <div class="field-group">
+      <label>Tiempo est. de entrega (opcional)</label>
+      <select>
+        <option value="" disabled selected>Seleccione tiempo</option>
+        <option value="1-2d">1-2 días</option>
+        <option value="3-5d">3-5 días</option>
+        <option value="1sem">1 semana</option>
+        <option value="2sem">2 semanas</option>
+      </select>
+    </div>
+    <!-- abastecimiento -->
+    <div class="field-group">
+      <label>Abastecimiento (opcional)</label>
+      <select>
+        <option value="" disabled selected>Seleccione abastecimiento</option>
+        <option value="local">Local</option>
+        <option value="externo">Externo</option>
+        <option value="mixto">Mixto</option>
+      </select>
+    </div>
+    <!-- stock mínimo -->
+    <div class="field-group">
+      <label>Stock mínimo (opcional)</label>
+      <input type="text" placeholder="Ej. 0">
+    </div>
+    <!-- transporte referencial -->
+    <div class="field-group">
+      <label>Transporte referencial</label>
+      <select>
+        <option value="" disabled selected>Seleccione un transporte referencial</option>
+        <option value="terrestre">Terrestre</option>
+        <option value="aereo">Aéreo</option>
+        <option value="maritimo">Marítimo</option>
+      </select>
+    </div>
+    <!-- descripción (full) -->
+    <div class="field-group full-width">
+      <label>Descripción (opcional)</label>
+      <textarea placeholder="Ingrese una descripción del producto"></textarea>
+    </div>
+    <!-- observaciones (full) -->
+    <div class="field-group full-width">
+      <label>Observaciones (opcional)</label>
+      <textarea placeholder="Ingrese observaciones adicionales del producto"></textarea>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Precios -->
+  <div style="font-weight: 600; font-size: 1rem; color: #0b1b33; margin-bottom: 0.8rem;">Precios</div>
+
+  <div class="prices-grid">
+    <div class="price-item">
+      <label>Valor venta (S/)</label>
+      <div class="price-input-wrap">
+        <span>S/</span>
+        <input type="text" value="0.00" placeholder="0.00">
+      </div>
+      <div class="tax-note">No incluye IGV</div>
+    </div>
+    <div class="price-item">
+      <label>Valor costo (S/)</label>
+      <div class="price-input-wrap">
+        <span>S/</span>
+        <input type="text" value="0.00" placeholder="0.00">
+      </div>
+      <div class="tax-note">No incluye IGV</div>
+    </div>
+  </div>
+
+  <!-- acciones -->
+  <div class="actions">
+    <button class="btn btn-outline" id="cancelBtn"><i class="fas fa-times"></i> Cancelar</button>
+    <button class="btn btn-primary" id="saveBtn"><i class="fas fa-save"></i> Guardar producto</button>
+  </div>
+</div>
+
 <script>
-$(document).ready(function() {
+  (function() {
+    const fileInput = document.getElementById('fileInput');
+    const uploadArea = document.getElementById('photoUploadArea');
+    const fileBadge = document.getElementById('fileBadge');
 
-    $('#familia').select2({
-
-        placeholder: "Buscar familia...",
-        allowClear: true,
-        width: '100%'
-
+    // click en el área de foto -> abrir selector
+    uploadArea.addEventListener('click', function(e) {
+      // evitar que si se hace clic en el badge se dispare dos veces
+      if (e.target.closest('.file-badge')) return;
+      fileInput.click();
     });
 
-});
+    // manejar selección de archivo
+    fileInput.addEventListener('change', function(e) {
+      const file = this.files[0];
+      if (file) {
+        const fileName = file.name;
+        const fileSize = (file.size / 1024).toFixed(1);
+        fileBadge.textContent = `📎 ${fileName} (${fileSize} KB)`;
+        // Cambiar estilo visual
+        uploadArea.style.borderColor = '#2563eb';
+        uploadArea.style.background = '#f0f7ff';
+      } else {
+        fileBadge.textContent = '📎 Ningún archivo';
+        uploadArea.style.borderColor = '#cbd5e1';
+        uploadArea.style.background = '#f8faff';
+      }
+    });
+
+    // arrastrar y soltar (básico)
+    uploadArea.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      this.style.borderColor = '#2563eb';
+      this.style.background = '#ecf3fe';
+    });
+
+    uploadArea.addEventListener('dragleave', function(e) {
+      e.preventDefault();
+      this.style.borderColor = '#cbd5e1';
+      this.style.background = '#f8faff';
+    });
+
+    uploadArea.addEventListener('drop', function(e) {
+      e.preventDefault();
+      this.style.borderColor = '#cbd5e1';
+      this.style.background = '#f8faff';
+      
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        const file = files[0];
+        // validar tipo (simple)
+        const validTypes = ['image/png', 'image/jpeg', 'image/webp'];
+        if (validTypes.includes(file.type)) {
+          fileInput.files = files;
+          // disparar evento change para actualizar badge
+          const evt = new Event('change', { bubbles: true });
+          fileInput.dispatchEvent(evt);
+        } else {
+          alert('Formato no soportado. Usa PNG, JPG o WEBP.');
+        }
+      }
+    });
+
+    // botones (ejemplo interactivo)
+    document.getElementById('cancelBtn').addEventListener('click', function() {
+      if (confirm('¿Cancelar edición? Los cambios no guardados se perderán.')) {
+        // resetear algunos campos (ejemplo)
+        document.querySelectorAll('input, textarea, select').forEach(el => {
+          if (el.tagName === 'SELECT') {
+            el.selectedIndex = 0; // primer option (placeholder)
+          } else if (el.type !== 'file' && el.type !== 'radio' && el.type !== 'checkbox') {
+            if (el.placeholder) el.value = '';
+          }
+        });
+        // resetear precio
+        document.querySelectorAll('.price-input-wrap input').forEach(inp => inp.value = '0.00');
+        // resetear badge y foto
+        fileBadge.textContent = '📎 Ningún archivo';
+        uploadArea.style.borderColor = '#cbd5e1';
+        uploadArea.style.background = '#f8faff';
+        fileInput.value = '';
+        // operación por defecto: venta
+        document.getElementById('opVenta').checked = true;
+      }
+    });
+
+    document.getElementById('saveBtn').addEventListener('click', function() {
+      alert('Producto guardado (simulación)');
+    });
+
+  })();
 </script>
+
 </body>
 </html>

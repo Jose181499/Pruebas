@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KCF Corporación | Dashboard de Productos</title>
+    <title>KCF Corporación | Nuevo Producto</title>
     <!-- Bootstrap 5 + Icons + Select2 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -11,6 +11,7 @@
     <!-- Google Fonts: Inter para look corporativo -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        /* ====== RESET & GLOBAL ====== */
         * {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
@@ -19,7 +20,7 @@
             margin: 0;
             overflow-x: hidden;
         }
-        /* ========= SIDEBAR CORPORATIVO LATERAL ========= */
+        /* ====== SIDEBAR CORPORATIVO ====== */
         .kcf-sidebar {
             position: fixed;
             top: 0;
@@ -90,41 +91,306 @@
             border-top: 1px solid rgba(255,255,255,0.08);
             font-size: 0.8rem;
         }
-        /* MAIN CONTENT */
+        /* ====== MAIN CONTENT ====== */
         .main-dashboard {
             margin-left: 280px;
             padding: 1.8rem 2rem;
             transition: 0.2s;
         }
-        /* Tarjetas */
-        .card-elegant {
+        /* ====== TARJETA DEL NUEVO PRODUCTO ====== */
+        .product-card {
+            max-width: 1200px;
+            margin: 0 auto;
             background: #ffffff;
-            border: none;
             border-radius: 28px;
             box-shadow: 0 8px 20px rgba(0,0,0,0.02), 0 2px 6px rgba(0,0,0,0.03);
-            transition: all 0.2s;
+            padding: 2rem 2rem 2.5rem;
+            transition: 0.2s;
         }
-        .badge-stock-bajo { background-color: #f5b042; color: #1e1e2a; font-weight: 600; }
-        .badge-stock-cero { background-color: #e55353; }
-        .badge-stock-normal { background-color: #2c9e6e; }
-        .table-corporate thead th {
-            background: #f1f6fd;
-            color: #1a3b4f;
+
+        .product-card h1 {
+            font-size: 1.8rem;
             font-weight: 600;
+            letter-spacing: -0.3px;
+            color: #0b1b33;
+            margin-bottom: 0.2rem;
+        }
+        .product-card .subhead {
+            font-size: 0.95rem;
+            color: #5e6f8d;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #e9edf4;
+            padding-bottom: 0.75rem;
+        }
+        /* foto + tipos de operación (dos columnas) */
+        .top-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.8rem;
+            margin-bottom: 2rem;
+        }
+        /* foto upload */
+        .photo-upload {
+            background: #f8faff;
+            border: 1.5px dashed #cbd5e1;
+            border-radius: 20px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            transition: 0.15s;
+            cursor: pointer;
+            min-height: 130px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .photo-upload:hover {
+            background: #f1f6fe;
+            border-color: #94a3b8;
+        }
+        .photo-upload i {
+            font-size: 2.2rem;
+            color: #6c7f9e;
+            margin-bottom: 6px;
+        }
+        .photo-upload .drag-text {
+            font-weight: 500;
+            color: #1e293b;
+            font-size: 0.95rem;
+        }
+        .photo-upload .drag-hint {
+            font-size: 0.8rem;
+            color: #6c7f9e;
+            margin-top: 4px;
+        }
+        .photo-upload .file-badge {
+            background: #eef2f6;
+            border-radius: 30px;
+            padding: 4px 14px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #1e293b;
+            margin-top: 8px;
+            display: inline-block;
+        }
+        /* operación: venta, compra, inventariable */
+        .operation-group {
+            background: #f8faff;
+            border-radius: 20px;
+            padding: 1rem 1.2rem;
+        }
+        .operation-group .label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #1e293b;
+            display: block;
+            margin-bottom: 10px;
+        }
+        .op-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .op-item:last-child {
+            margin-bottom: 0;
+        }
+        .op-item input[type="radio"] {
+            margin-top: 3px;
+            accent-color: #2563eb;
+            width: 17px;
+            height: 17px;
+            flex-shrink: 0;
+        }
+        .op-item .op-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #0b1b33;
+        }
+        .op-item .op-desc {
             font-size: 0.85rem;
+            color: #5e6f8d;
+            line-height: 1.3;
+        }
+        .divider {
+            border: none;
+            border-top: 1px solid #e9edf4;
+            margin: 1.8rem 0;
+        }
+        /* información del producto (grid) */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.2rem 2rem;
+            margin-top: 0.5rem;
+        }
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .field-group.full-width {
+            grid-column: 1 / -1;
+        }
+        .field-group label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #3b4a62;
+            letter-spacing: 0.2px;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
-            border-bottom: 1px solid #e2e8f0;
         }
-        .table-corporate td {
-            vertical-align: middle;
-            padding: 0.9rem 0.8rem;
+        .field-group .value-static {
+            background: #f1f5f9;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #0b1b33;
+            display: inline-block;
+            width: fit-content;
+            min-width: 120px;
         }
-        .filtros-wrapper {
+        .field-group input,
+        .field-group select,
+        .field-group textarea {
+            background: #ffffff;
+            border: 1px solid #dce1ec;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            color: #0b1b33;
+            transition: 0.15s;
+            width: 100%;
+        }
+        .field-group input:focus,
+        .field-group select:focus,
+        .field-group textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+        .field-group input::placeholder,
+        .field-group select:invalid {
+            color: #94a3b8;
+        }
+        .field-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        .field-group .hint {
+            font-size: 0.7rem;
+            color: #6c7f9e;
+            margin-top: 2px;
+        }
+        /* precios (grid especial) */
+        .prices-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            background: #fafcff;
+            padding: 1.2rem 1.5rem;
+            border-radius: 20px;
+            margin-top: 0.5rem;
+        }
+        .price-item label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #3b4a62;
+            text-transform: uppercase;
+            letter-spacing: 0.2px;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .price-item .price-input-wrap {
+            display: flex;
+            align-items: center;
             background: white;
-            border-radius: 24px;
-            padding: 1rem 1.5rem;
+            border: 1px solid #dce1ec;
+            border-radius: 14px;
+            padding: 4px 12px 4px 16px;
         }
+        .price-item .price-input-wrap span {
+            font-weight: 500;
+            color: #1e293b;
+            margin-right: 6px;
+        }
+        .price-item .price-input-wrap input {
+            border: none;
+            padding: 10px 0;
+            font-size: 1rem;
+            font-weight: 500;
+            width: 100%;
+            background: transparent;
+            font-family: inherit;
+            color: #0b1b33;
+        }
+        .price-item .price-input-wrap input:focus {
+            outline: none;
+        }
+        .price-item .tax-note {
+            font-size: 0.7rem;
+            color: #6c7f9e;
+            margin-top: 4px;
+        }
+        /* acciones */
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 2.2rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .btn {
+            border-radius: 40px;
+            padding: 0.6rem 1.8rem;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: 0.15s;
+        }
+        .btn-outline-custom {
+            background: transparent;
+            border: 1px solid #d0d9e8;
+            color: #2c3f5e;
+        }
+        .btn-outline-custom:hover {
+            background: #f1f5f9;
+            border-color: #b0c0d4;
+        }
+        .btn-primary-custom {
+            background: #2563eb;
+            color: white;
+            box-shadow: 0 4px 8px rgba(37, 99, 235, 0.2);
+            border: none;
+        }
+        .btn-primary-custom:hover {
+            background: #1d4ed8;
+            transform: scale(0.98);
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .kcf-sidebar { transform: translateX(-100%); width: 260px; }
+            .main-dashboard { margin-left: 0; }
+            .top-grid, .info-grid, .prices-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            .product-card {
+                padding: 1.5rem;
+            }
+            .actions {
+                justify-content: stretch;
+            }
+            .actions .btn {
+                flex: 1;
+                justify-content: center;
+            }
+        }
+
+        /* Notificaciones */
         .notificacion {
             position: fixed;
             top: 24px;
@@ -142,13 +408,6 @@
             from { transform: translateX(0); opacity: 1; }
             to { transform: translateX(100%); opacity: 0; }
         }
-        @media (max-width: 768px) {
-            .kcf-sidebar { transform: translateX(-100%); width: 260px; }
-            .main-dashboard { margin-left: 0; }
-        }
-        .btn-sm-icon {
-            border-radius: 40px;
-        }
         .loading-spinner {
             display: inline-block;
             width: 1rem;
@@ -163,968 +422,366 @@
 </head>
 <body>
 
-<!-- SIDEBAR LATERAL CORPORATIVO -->
-<div class="kcf-sidebar">
-    <div class="sidebar-brand">
-        <h3><i class="bi bi-briefcase-fill me-2"></i> KCF CORP</h3>
-        <span>Sistema Integrado de Gestión</span>
-    </div>
-    <ul class="nav-sidebar-custom">
-        <li><a href="#" class="active-link" id="sidebarDashboardLink"><i class="bi bi-grid-1x2-fill"></i> <span>Panel Productos</span></a></li>
-        <li><a href="#" id="sidebarKardexLink"><i class="bi bi-journal-bookmark-fill"></i> <span>Kárdex & Movimientos</span></a></li>
-        <li><a href="#" id="sidebarReportesLink"><i class="bi bi-bar-chart-steps"></i> <span>Estadísticas</span></a></li>
-        <li><a href="/mantenedor" id="volverPanelLink"><i class="bi bi-arrow-return-left"></i> <span>Volver al Panel</span></a></li>
-    </ul>
-    <div class="sidebar-footer">
-        <div><i class="bi bi-person-circle me-2"></i> <strong id="usuarioSidebar">{{ session.nombre_completo|default('Admin KCF') }}</strong></div>
-        <div class="small opacity-50 mt-1">Acceso corporativo</div>
-    </div>
-</div>
-
-<!-- CONTENIDO PRINCIPAL -->
-<div class="main-dashboard">
-    <!-- Header con métrica rápida -->
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-        <div>
-            <h1 class="fw-bold mb-1" style="color: #0b2b3c;"><i class="bi bi-box-seam text-primary me-2"></i>Gestión de Productos</h1>
-            <p class="text-secondary m-0">Monitoreo de inventario, precios y movimientos</p>
+    <!-- ===== SIDEBAR LATERAL CORPORATIVO ===== -->
+    <div class="kcf-sidebar">
+        <div class="sidebar-brand">
+            <h3><i class="bi bi-briefcase-fill me-2"></i> KCF CORP</h3>
+            <span>Sistema Integrado de Gestión</span>
         </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-success shadow-sm px-4" data-bs-toggle="modal" data-bs-target="#modalNuevoProducto"><i class="bi bi-plus-circle me-1"></i> Nuevo Producto</button>
-            <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#modalKardex"><i class="bi bi-journal-text me-1"></i> Ver Kárdex</button>
-            <form action="/mantenedor/productos/importar" method="POST" enctype="multipart/form-data" id="importExcelForm" style="display: none;"><input type="file" id="fileExcelInput" name="archivo" accept=".xlsx, .xls" required></form>
-            <button type="button" class="btn btn-outline-danger" id="btnImportarExcelTrigger"><i class="bi bi-upload"></i> Importar Excel</button>
-            <a href="/mantenedor" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
+        <ul class="nav-sidebar-custom">
+            <li><a href="#" class="active-link"><i class="bi bi-box-seam-fill"></i> <span>Nuevo Producto</span></a></li>
+            <li><a href="#" id="sidebarDashboardLink"><i class="bi bi-grid-1x2-fill"></i> <span>Panel Productos</span></a></li>
+            <li><a href="#" id="sidebarKardexLink"><i class="bi bi-journal-bookmark-fill"></i> <span>Kárdex & Movimientos</span></a></li>
+            <li><a href="/mantenedor" id="volverPanelLink"><i class="bi bi-arrow-return-left"></i> <span>Volver al Panel</span></a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <div><i class="bi bi-person-circle me-2"></i> <strong id="usuarioSidebar">Admin KCF</strong></div>
+            <div class="small opacity-50 mt-1">Acceso corporativo</div>
         </div>
     </div>
 
-    <!-- FILTROS mejorados -->
-    <div class="filtros-wrapper mb-4 shadow-sm">
-        <div class="row g-3 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label fw-semibold text-secondary small text-uppercase"><i class="bi bi-tags"></i> Familia</label>
-                <select id="filtro-familia" class="form-select">
-                    <option value="">Todas las familias</option>
-                    <option value="EQUIPOS DE PROTECCIÓN PERSONAL">EPP - Equipos Protección</option>
-                    <option value="HERRAMIENTAS MANUALES">HMA - Herramientas Manuales</option>
-                    <option value="HERRAMIENTAS ELÉCTRICAS">HEL - Herramientas Eléctricas</option>
-                    <option value="MATERIALES ELÉCTRICOS">MEL - Materiales Eléctricos</option>
-                    <option value="PRODUCTOS QUÍMICOS">QUI - Productos Químicos</option>
-                    <option value="SEGURIDAD Y SEÑALIZACIÓN">SEG - Seguridad</option>
-                    <option value="EQUIPOS DE SOLDADURA">SOL - Soldadura</option>
-                    <option value="MATERIALES DE EMBALAJE">EMB - Embalaje</option>
-                    <option value="ELECTRÓNICA Y COMUNICACIÓN">ELE - Electrónica</option>
-                    <option value="MOBILIARIO OFICINA">OFI - Oficina</option>
-                    <option value="LIMPIEZA Y MANTENIMIENTO">LIM - Limpieza</option>
-                    <option value="REPUESTOS AUTOMOTRICES">AUT - Automotriz</option>
-                </select>
+    <!-- ===== CONTENIDO PRINCIPAL ===== -->
+    <div class="main-dashboard">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+            <div>
+                <h1 class="fw-bold mb-1" style="color: #0b2b3c;"><i class="bi bi-plus-circle text-primary me-2"></i>Nuevo Producto</h1>
+                <p class="text-secondary m-0">Crea o edita la información principal del producto.</p>
             </div>
-            <div class="col-md-5">
-                <label class="form-label fw-semibold text-secondary small text-uppercase"><i class="bi bi-search"></i> Búsqueda</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                    <input type="text" id="filtro-busqueda" class="form-control border-start-0 ps-0" placeholder="Código, descripción, marca o modelo">
+            <div class="d-flex gap-2">
+                <a href="/mantenedor" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Volver al Panel</a>
+            </div>
+        </div>
+
+        <!-- ===== TARJETA NUEVO PRODUCTO (DISEÑO SOLICITADO) ===== -->
+        <div class="product-card">
+            <!-- Foto + Tipo operación -->
+            <div class="top-grid">
+                <!-- Foto -->
+                <div class="photo-upload" id="photoUploadArea">
+                    <i class="bi bi-cloud-upload"></i>
+                    <div class="drag-text">Arrastra o selecciona PNG, JPG o WEBP</div>
+                    <div class="drag-hint">Mix. SMB</div>
+                    <div class="file-badge" id="fileBadge">📎 Ningún archivo</div>
+                    <input type="file" id="fileInput" accept=".png,.jpg,.jpeg,.webp" style="display: none;">
+                </div>
+
+                <!-- Operación -->
+                <div class="operation-group">
+                    <span class="label">Típo de operación</span>
+                    <div class="op-item">
+                        <input type="radio" name="operation" id="opVenta" value="venta" checked>
+                        <div>
+                            <div class="op-title">Venta</div>
+                            <div class="op-desc">El producto estará disponible para ventas.</div>
+                        </div>
+                    </div>
+                    <div class="op-item">
+                        <input type="radio" name="operation" id="opCompra" value="compra">
+                        <div>
+                            <div class="op-title">Compra</div>
+                            <div class="op-desc">El producto se podrá adquirir a proveedores.</div>
+                        </div>
+                    </div>
+                    <div class="op-item">
+                        <input type="radio" name="operation" id="opInventario" value="inventariable">
+                        <div>
+                            <div class="op-title">Inventariable</div>
+                            <div class="op-desc">El inventario será controlado en almacén.</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="bg-primary-soft rounded-4 p-2 text-center bg-light border">
-                    <span class="text-secondary small fw-semibold">Total productos activos</span>
-                    <h3 class="mb-0 text-primary fw-bold" id="totalProductosCount">0</h3>
+
+            <hr class="divider">
+
+            <!-- Información del producto -->
+            <div style="font-weight: 600; font-size: 1rem; color: #0b1b33; margin-bottom: 1.2rem;">Información del producto</div>
+
+            <div class="info-grid">
+                <!-- código (estático) -->
+                <div class="field-group">
+                    <label>Código de producto</label>
+                    <div class="value-static">PRD-000126</div>
                 </div>
+                <!-- nombre -->
+                <div class="field-group">
+                    <label>Nombre del producto</label>
+                    <input type="text" placeholder="Ingrese el nombre del producto" value="">
+                </div>
+                <!-- modelo -->
+                <div class="field-group">
+                    <label>Modelo</label>
+                    <input type="text" placeholder="Ej. M100">
+                </div>
+                <!-- marca -->
+                <div class="field-group">
+                    <label>Marca (opcional)</label>
+                    <input type="text" placeholder="Ej. Nike">
+                </div>
+                <!-- unidad medida -->
+                <div class="field-group">
+                    <label>Unidad de medida</label>
+                    <select>
+                        <option value="" disabled selected>Seleccione una unidad</option>
+                        <option value="unidad">Unidad</option>
+                        <option value="kg">Kilogramo</option>
+                        <option value="g">Gramo</option>
+                        <option value="l">Litro</option>
+                        <option value="ml">Mililitro</option>
+                        <option value="caja">Caja</option>
+                        <option value="paquete">Paquete</option>
+                    </select>
+                </div>
+                <!-- categoría -->
+                <div class="field-group">
+                    <label>Categoría</label>
+                    <select>
+                        <option value="" disabled selected>Seleccione una categoría</option>
+                        <option value="electronica">Electrónica</option>
+                        <option value="ropa">Ropa</option>
+                        <option value="hogar">Hogar</option>
+                        <option value="alimentos">Alimentos</option>
+                        <option value="belleza">Belleza</option>
+                    </select>
+                </div>
+                <!-- subcategoría -->
+                <div class="field-group">
+                    <label>Subcategoría (opcional)</label>
+                    <select>
+                        <option value="" disabled selected>Seleccione una subcategoría</option>
+                        <option value="smartphones">Smartphones</option>
+                        <option value="laptops">Laptops</option>
+                        <option value="camisas">Camisas</option>
+                        <option value="zapatos">Zapatos</option>
+                    </select>
+                </div>
+                <!-- presentación proveedor -->
+                <div class="field-group">
+                    <label>Presentación del proveedor</label>
+                    <input type="text" placeholder="Ej. Caja x 12 unidades">
+                </div>
+                <!-- presentación venta -->
+                <div class="field-group">
+                    <label>Presentación de venta</label>
+                    <input type="text" placeholder="Ej. 1 unidad">
+                </div>
+                <!-- venta mínima -->
+                <div class="field-group">
+                    <label>Venta mínima (mínimo para el cliente)</label>
+                    <input type="number" value="1" min="1">
+                </div>
+                <!-- código de barras -->
+                <div class="field-group">
+                    <label>Código de barras</label>
+                    <input type="text" placeholder="Ej. 7701234567890">
+                </div>
+                <!-- peso -->
+                <div class="field-group">
+                    <label>Peso (kg)</label>
+                    <input type="text" placeholder="Ej. 0.50">
+                </div>
+                <!-- volumen -->
+                <div class="field-group">
+                    <label>Volumen (m³)</label>
+                    <input type="text" placeholder="Ej. 0.001">
+                </div>
+                <!-- origen -->
+                <div class="field-group">
+                    <label>Origen del producto (opcional)</label>
+                    <select>
+                        <option value="" disabled selected>Seleccione origen</option>
+                        <option value="nacional">Nacional</option>
+                        <option value="importado">Importado</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                </div>
+                <!-- tiempo est entrega -->
+                <div class="field-group">
+                    <label>Tiempo est. de entrega (opcional)</label>
+                    <select>
+                        <option value="" disabled selected>Seleccione tiempo</option>
+                        <option value="1-2d">1-2 días</option>
+                        <option value="3-5d">3-5 días</option>
+                        <option value="1sem">1 semana</option>
+                        <option value="2sem">2 semanas</option>
+                    </select>
+                </div>
+                <!-- abastecimiento -->
+                <div class="field-group">
+                    <label>Abastecimiento (opcional)</label>
+                    <select>
+                        <option value="" disabled selected>Seleccione abastecimiento</option>
+                        <option value="local">Local</option>
+                        <option value="externo">Externo</option>
+                        <option value="mixto">Mixto</option>
+                    </select>
+                </div>
+                <!-- stock mínimo -->
+                <div class="field-group">
+                    <label>Stock mínimo (opcional)</label>
+                    <input type="text" placeholder="Ej. 0">
+                </div>
+                <!-- transporte referencial -->
+                <div class="field-group">
+                    <label>Transporte referencial</label>
+                    <select>
+                        <option value="" disabled selected>Seleccione un transporte referencial</option>
+                        <option value="terrestre">Terrestre</option>
+                        <option value="aereo">Aéreo</option>
+                        <option value="maritimo">Marítimo</option>
+                    </select>
+                </div>
+                <!-- descripción (full) -->
+                <div class="field-group full-width">
+                    <label>Descripción (opcional)</label>
+                    <textarea placeholder="Ingrese una descripción del producto"></textarea>
+                </div>
+                <!-- observaciones (full) -->
+                <div class="field-group full-width">
+                    <label>Observaciones (opcional)</label>
+                    <textarea placeholder="Ingrese observaciones adicionales del producto"></textarea>
+                </div>
+            </div>
+
+            <hr class="divider">
+
+            <!-- Precios -->
+            <div style="font-weight: 600; font-size: 1rem; color: #0b1b33; margin-bottom: 0.8rem;">Precios</div>
+
+            <div class="prices-grid">
+                <div class="price-item">
+                    <label>Valor venta (S/)</label>
+                    <div class="price-input-wrap">
+                        <span>S/</span>
+                        <input type="text" value="0.00" placeholder="0.00">
+                    </div>
+                    <div class="tax-note">No incluye IGV</div>
+                </div>
+                <div class="price-item">
+                    <label>Valor costo (S/)</label>
+                    <div class="price-input-wrap">
+                        <span>S/</span>
+                        <input type="text" value="0.00" placeholder="0.00">
+                    </div>
+                    <div class="tax-note">No incluye IGV</div>
+                </div>
+            </div>
+
+            <!-- acciones -->
+            <div class="actions">
+                <button class="btn btn-outline-custom" id="cancelBtn"><i class="bi bi-x-circle"></i> Cancelar</button>
+                <button class="btn btn-primary-custom" id="saveBtn"><i class="bi bi-save"></i> Guardar producto</button>
             </div>
         </div>
     </div>
 
-    <!-- TABLA DE PRODUCTOS (datos desde backend con Jinja) -->
-    <div class="card-elegant overflow-hidden">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0 table-corporate" id="tabla-productos">
-                <thead>
-                    <tr>
-                        <th>ID</th><th>Código</th><th>Familia</th><th>Descripción / Modelo</th><th>Marca</th><th>Unidad</th>
-                        <th class="text-end">Costo (S/)</th><th class="text-end">Precio (S/)</th><th class="text-center">Margen</th>
-                        <th class="text-center">Stock</th><th class="text-center">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="tbody-productos">
-                    <!-- Datos renderizados directamente desde Flask (Jinja) -->
-                    {% for p in productos %}
-                    <tr data-id="{{ p.id }}" data-familia="{{ p.familia }}" data-codigo="{{ p.codigo }}" data-descripcion="{{ p.descripcion }} {{ p.marca }} {{ p.modelo }}">
-                        <td class="fw-semibold">{{ p.id }}</td>
-                        <td><span class="badge bg-secondary">{{ p.codigo }}</span></td>
-                        <td><span class="badge bg-info text-dark">{{ p.familia|truncate(25) }}</span></td>
-                        <td>{{ p.descripcion }} {{ p.modelo or '' }}</td>
-                        <td>{{ p.marca or '-' }}</td>
-                        <td>{{ p.unidad }}</td>
-                        <td class="text-end">S/ {{ p.costo_unitario|float|round(2) }}</td>
-                        <td class="text-end">S/ {{ p.precio_unitario|float|round(2) }}</td>
-                        <td class="text-center">
-                            {% if p.costo_unitario > 0 %}
-                                <span class="badge bg-light text-dark border">{{ ((p.precio_unitario - p.costo_unitario) / p.costo_unitario * 100)|round(1) }}%</span>
-                            {% else %}
-                                <span class="badge bg-secondary">-</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-center">
-                            {% if p.stock <= 5 and p.stock > 0 %}
-                                <span class="badge bg-warning text-dark">{{ p.stock }}</span>
-                            {% elif p.stock == 0 %}
-                                <span class="badge bg-danger">0</span>
-                            {% else %}
-                                <span class="badge bg-success">{{ p.stock }}</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-center">
-                            <button class="btn btn-sm btn-outline-warning me-1 btn-editar-producto"
-                                    data-id="{{ p.id }}"
-                                    data-familia="{{ p.familia }}"
-                                    data-descripcion="{{ p.descripcion }}"
-                                    data-descripcion_larga="{{ p.descripcion_larga|default('') }}"
-                                    data-marca="{{ p.marca }}"
-                                    data-modelo="{{ p.modelo }}"
-                                    data-unidad="{{ p.unidad }}"
-                                    data-peso="{{ p.peso|default('') }}"
-                                    data-volumen="{{ p.volumen|default('') }}"
-                                    data-observaciones="{{ p.observaciones|default('') }}"
-                                    data-transporte="{{ p.transporte }}"
-                                    data-costo_unitario="{{ p.costo_unitario }}"
-                                    data-precio_unitario="{{ p.precio_unitario }}"
-                                    data-stock="{{ p.stock }}">
-                                <i class="bi bi-pencil-square"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger btn-eliminar-producto"
-                                    data-id="{{ p.id }}"
-                                    data-descripcion="{{ p.descripcion }}">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+    <!-- ===== SCRIPTS ===== -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function() {
+            // ==================== UPLOAD FOTO ====================
+            const fileInput = document.getElementById('fileInput');
+            const uploadArea = document.getElementById('photoUploadArea');
+            const fileBadge = document.getElementById('fileBadge');
 
-<!-- ========= MODALES ========= -->
+            uploadArea.addEventListener('click', function(e) {
+                if (e.target.closest('.file-badge')) return;
+                fileInput.click();
+            });
 
-<!-- MODAL NUEVO PRODUCTO -->
-<div class="modal fade" id="modalNuevoProducto" tabindex="-1">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-primary text-white">
-                <div>
-                    <h4 class="modal-title fw-bold"><i class="bi bi-box-seam"></i> Nuevo Producto</h4>
-                    <small class="text-light">Registro avanzado ERP</small>
-                </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle-fill"></i> El código se generará automáticamente según la familia seleccionada.
-                </div>
-                <form method="POST" action="/mantenedor/productos/guardar" id="formNuevoProducto">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="fw-semibold">Familia *</label>
-                            <select name="familia" class="form-select" required>
-                                <option value="">Seleccione</option>
-                                <option>EQUIPOS DE COMUNICACIÓN Y ELECTRÓNICA</option>
-                                <option>EQUIPOS DE PROTECCIÓN PERSONAL (EPP)</option>
-                                <option>EQUIPOS DE SOLDADURA</option>
-                                <option>HERRAMIENTAS ELÉCTRICAS</option>
-                                <option>HERRAMIENTAS MANUALES</option>
-                                <option>MATERIALES ELÉCTRICOS</option>
-                                <option>PRODUCTOS QUÍMICOS Y ADHESIVOS</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="fw-semibold">Marca *</label>
-                            <select name="marca" class="form-select" required>
-                                <option value="">Seleccione</option>
-                                <option>dimerc</option>
-                                <option>magnaflux</option>
-                                <option>shurtape</option>
-                                <option>vistony</option>
-                            </select>
-                        </div>
-                        <div class="col-md-8">
-                            <label>Descripción *</label>
-                            <textarea name="descripcion" rows="2" class="form-control" required></textarea>
-                        </div>
-                        <div class="col-md-4">
-                            <label>Modelo</label>
-                            <input name="modelo" class="form-control">
-                        </div>
-                        <div class="col-md-4">
-                            <label>Unidad *</label>
-                            <select name="unidad" class="form-select">
-                                <option>Unidad</option>
-                                <option>Caja</option>
-                                <option>Galón</option>
-                                <option>Litro</option>
-                                <option>Metro</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label>Peso (rango)</label>
-                            <input name="peso_rango" class="form-control" placeholder="ej: 0-1 kg">
-                        </div>
-                        <div class="col-md-4">
-                            <label>Transporte *</label>
-                            <select name="transporte" class="form-select">
-                                <option>motorizado</option>
-                                <option>auto</option>
-                                <option>camioneta</option>
-                                <option>camion</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label>Costo Unitario S/ *</label>
-                            <input type="number" step="0.01" name="costo_unitario" class="form-control" required>
-                        </div>
-                        <div class="col-md-3">
-                            <label>Precio Unitario S/ *</label>
-                            <input type="number" step="0.01" name="precio_unitario" class="form-control" required>
-                        </div>
-                        <div class="col-md-3">
-                            <label>Margen (%)</label>
-                            <input type="text" id="margen_calculado_nuevo" class="form-control bg-light" readonly>
-                        </div>
-                        <div class="col-md-3">
-                            <label>Stock Inicial</label>
-                            <input type="number" name="stock" value="0" class="form-control">
-                        </div>
-                        <div class="col-12">
-                            <label>Descripción Larga</label>
-                            <textarea name="descripcion_larga" rows="2" class="form-control"></textarea>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" form="formNuevoProducto" class="btn btn-success"><i class="bi bi-check-circle"></i> Guardar</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL EDITAR PRODUCTO - CORREGIDO -->
-<div class="modal fade" id="modalEditarProducto" tabindex="-1">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-warning text-dark">
-                <div>
-                    <h4 class="modal-title fw-bold mb-1">
-                        <i class="bi bi-pencil-square"></i> Editar Producto
-                    </h4>
-                    <small>Modificación de información del producto</small>
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="formEditarProducto">
-                    <input type="hidden" id="edit_id" name="id">
-                    
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Familia *</label>
-                            <select id="edit_familia" name="familia" class="form-select" required>
-                                <option value="">Seleccione familia</option>
-                                <option value="EQUIPOS DE COMUNICACIÓN Y ELECTRÓNICA">📱 EQUIPOS DE COMUNICACIÓN Y ELECTRÓNICA</option>
-                                <option value="EQUIPOS DE PROTECCIÓN PERSONAL (EPP)">🛡️ EQUIPOS DE PROTECCIÓN PERSONAL (EPP)</option>
-                                <option value="EQUIPOS DE SOLDADURA">🔥 EQUIPOS DE SOLDADURA</option>
-                                <option value="HERRAMIENTAS ELÉCTRICAS">⚡ HERRAMIENTAS ELÉCTRICAS</option>
-                                <option value="HERRAMIENTAS MANUALES">🔧 HERRAMIENTAS MANUALES</option>
-                                <option value="MATERIALES DE EMBALAJE">📦 MATERIALES DE EMBALAJE</option>
-                                <option value="MATERIALES DE LIMPIEZA Y MANTENIMIENTO">🧹 MATERIALES DE LIMPIEZA Y MANTENIMIENTO</option>
-                                <option value="MATERIALES DE SEGURIDAD Y SEÑALIZACIÓN">🚧 MATERIALES DE SEGURIDAD Y SEÑALIZACIÓN</option>
-                                <option value="MATERIALES ELÉCTRICOS">🔌 MATERIALES ELÉCTRICOS</option>
-                                <option value="MOBILIARIO Y EQUIPOS DE OFICINA">💺 MOBILIARIO Y EQUIPOS DE OFICINA</option>
-                                <option value="PRODUCTOS QUÍMICOS Y ADHESIVOS">🧪 PRODUCTOS QUÍMICOS Y ADHESIVOS</option>
-                                <option value="REPUESTOS Y ACCESORIOS AUTOMOTRICES">🚗 REPUESTOS Y ACCESORIOS AUTOMOTRICES</option>
-                                <option value="ROPA DE PROTECCIÓN">🦺 ROPA DE PROTECCIÓN</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Marca *</label>
-                            <select id="edit_marca" name="marca" class="form-select" required>
-                                <option value="">Seleccione marca</option>
-                                <option value="dimerc">Dimerc</option>
-                                <option value="magnaflux">Magnaflux</option>
-                                <option value="shurtape">Shurtape</option>
-                                <option value="vistony">Vistony</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="mt-3">
-                        <label class="form-label fw-semibold">Descripción *</label>
-                        <textarea id="edit_descripcion" name="descripcion" class="form-control" rows="3" required></textarea>
-                    </div>
-
-                    <div class="row g-3 mt-3">
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Modelo</label>
-                            <input type="text" id="edit_modelo" name="modelo" class="form-control">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Unidad *</label>
-                            <select id="edit_unidad" name="unidad" class="form-select" required>
-                                <option value="">Seleccione</option>
-                                <option value="Unidad">Unidad</option>
-                                <option value="Caja">Caja</option>
-                                <option value="Galón">Galón</option>
-                                <option value="Litro">Litro</option>
-                                <option value="Metro">Metro</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Transporte *</label>
-                            <select id="edit_transporte" name="transporte" class="form-select" required>
-                                <option value="">Seleccione</option>
-                                <option value="motorizado">Motorizado</option>
-                                <option value="auto">Auto</option>
-                                <option value="camioneta">Camioneta</option>
-                                <option value="camion">Camión</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="row g-3 mt-3">
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Costo Unitario (S/) *</label>
-                            <div class="input-group">
-                                <span class="input-group-text">S/</span>
-                                <input type="number" id="edit_costo_unitario" name="costo_unitario" class="form-control" step="0.01" required>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Precio Unitario (S/) *</label>
-                            <div class="input-group">
-                                <span class="input-group-text">S/</span>
-                                <input type="number" id="edit_precio_unitario" name="precio_unitario" class="form-control" step="0.01" required>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Margen (%)</label>
-                            <div class="input-group">
-                                <input type="text" id="edit_margen" class="form-control bg-light fw-bold text-center" readonly>
-                                <span class="input-group-text">%</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row g-3 mt-3">
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Stock</label>
-                            <input type="number" id="edit_stock" name="stock" class="form-control" min="0">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Volumen</label>
-                            <select id="edit_volumen" name="volumen" class="form-select">
-                                <option value="">Seleccione</option>
-                                <option value="0-1000">0 - 1000 cm³</option>
-                                <option value="1000-5000">1000 - 5000 cm³</option>
-                                <option value="5000-10000">5000 - 10000 cm³</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Peso</label>
-                            <input type="text" id="edit_peso" name="peso" class="form-control" placeholder="ej: 0-1 kg">
-                        </div>
-                    </div>
-
-                    <div class="mt-3">
-                        <label class="form-label fw-semibold">Observaciones</label>
-                        <textarea id="edit_observaciones" name="observaciones" class="form-control" rows="2"></textarea>
-                    </div>
-
-                    <div class="mt-3">
-                        <label class="form-label fw-semibold">Descripción Larga</label>
-                        <textarea id="edit_descripcion_larga" name="descripcion_larga" class="form-control" rows="3"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" id="btnGuardarEdicionProducto" class="btn btn-warning">
-                    <i class="bi bi-check-circle"></i> Guardar Cambios
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL ELIMINAR PRODUCTO - CORREGIDO -->
-<div class="modal fade" id="modalEliminarProducto" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    Eliminar Producto
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>⚠️ ¿Está seguro que desea eliminar este producto?</p>
-                <p class="text-muted small">Producto: <strong id="textoProductoEliminar"></strong></p>
-                <p class="text-danger small">Esta acción no se puede deshacer.</p>
-                <input type="hidden" id="eliminar_id_producto">
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="bi bi-x-circle"></i> Cancelar
-                </button>
-                <button type="button" class="btn btn-danger" id="confirmarEliminarProductoBtn">
-                    <i class="bi bi-trash"></i> Sí, Eliminar
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL KARDEX + movimientos -->
-<div class="modal fade" id="modalKardex" tabindex="-1">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5><i class="bi bi-journal-text"></i> Kárdex de Inventario</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label>Producto</label>
-                        <select id="kardex_producto_id" class="form-select"></select>
-                    </div>
-                    <div class="col-md-3">
-                        <label>Desde</label>
-                        <input type="date" id="kardex_fecha_desde" class="form-control">
-                    </div>
-                    <div class="col-md-3">
-                        <label>Hasta</label>
-                        <input type="date" id="kardex_fecha_hasta" class="form-control">
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <div class="bg-light p-3 rounded text-center">
-                            <small>Stock Actual</small>
-                            <h3 id="kardex_stock_actual" class="text-success">0</h3>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="bg-light p-3 rounded text-center">
-                            <small>Valor Total</small>
-                            <h3 id="kardex_valor_total" class="text-primary">S/ 0.00</h3>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <button class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#modalNuevoMovimientoKardex">
-                            <i class="bi bi-plus-circle"></i> Nuevo Movimiento
-                        </button>
-                    </div>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Fecha</th>
-                                <th>Tipo</th>
-                                <th>Referencia</th>
-                                <th>Motivo</th>
-                                <th class="text-end">Entrada</th>
-                                <th class="text-end">Salida</th>
-                                <th class="text-end">Saldo</th>
-                                <th>Costo Unit.</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbody-kardex">
-                            <tr><td colspan="8" class="text-center">Seleccione un producto</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL NUEVO MOVIMIENTO -->
-<div class="modal fade" id="modalNuevoMovimientoKardex" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5>Registrar movimiento de stock</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="formMovimientoKardex">
-                    <div class="row g-2">
-                        <div class="col-md-6">
-                            <label>Producto</label>
-                            <select id="mov_kardex_producto_id" name="producto_id" class="form-select" required></select>
-                        </div>
-                        <div class="col-md-3">
-                            <label>Tipo</label>
-                            <select id="mov_kardex_tipo" name="tipo" class="form-select">
-                                <option>ENTRADA</option>
-                                <option>SALIDA</option>
-                                <option>AJUSTE</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label>Fecha</label>
-                            <input type="date" id="mov_kardex_fecha" name="fecha" class="form-control">
-                        </div>
-                        <div class="col-md-4">
-                            <label>Cantidad</label>
-                            <input type="number" id="mov_kardex_cantidad" name="cantidad" class="form-control" min="1" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label>Costo Unitario (S/)</label>
-                            <input type="number" step="0.01" id="mov_kardex_costo" name="costo_unitario" class="form-control">
-                        </div>
-                        <div class="col-md-4">
-                            <label>Referencia</label>
-                            <input type="text" id="mov_kardex_referencia" name="referencia" class="form-control" placeholder="#Factura">
-                        </div>
-                        <div class="col-12">
-                            <label>Motivo</label>
-                            <textarea id="mov_kardex_motivo" name="motivo" rows="2" class="form-control"></textarea>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button id="btnGuardarMovimientoKardex" class="btn btn-success">Registrar movimiento</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script>
-    // ==================== GESTIÓN DE PRODUCTOS - KCF CORPORACIÓN ====================
-
-    // Variables globales
-    let editModal, deleteModal;
-
-    // ==================== NOTIFICACIONES ====================
-    function mostrarNotificacion(mensaje, tipo) {
-        const div = document.createElement('div');
-        div.className = `alert alert-${tipo} notificacion`;
-        div.innerHTML = `<i class="bi bi-${tipo === 'success' ? 'check-circle' : tipo === 'danger' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>${mensaje}`;
-        div.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 10000;
-            min-width: 300px;
-            animation: slideIn 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        `;
-        document.body.appendChild(div);
-        setTimeout(() => {
-            div.style.animation = 'slideOut 0.3s ease';
-            setTimeout(() => div.remove(), 300);
-        }, 3000);
-    }
-
-    // ==================== FILTRAR TABLA PRODUCTOS ====================
-    function filtrarTablaProductos() {
-        let familia = $("#filtro-familia").val();
-        let busqueda = $("#filtro-busqueda").val().toLowerCase();
-        let visibleCount = 0;
-        
-        $("#tbody-productos tr").each(function() {
-            let $row = $(this);
-            let rowFamilia = $row.data("familia") || "";
-            let textoBusqueda = ($row.data("descripcion") || "") + " " + ($row.data("codigo") || "");
-            let matchFamilia = !familia || rowFamilia === familia;
-            let matchBusqueda = !busqueda || textoBusqueda.toLowerCase().includes(busqueda);
-            
-            if(matchFamilia && matchBusqueda) { 
-                $row.show(); 
-                visibleCount++; 
-            } else { 
-                $row.hide(); 
-            }
-        });
-        
-        $("#totalProductosCount").text(visibleCount);
-    }
-
-    function cargarSelectoresKardex() {
-        let options = '<option value="">-- Seleccionar producto --</option>';
-        $("#tbody-productos tr:visible").each(function() {
-            let id = $(this).find(".btn-editar-producto").data("id");
-            let desc = $(this).find("td:eq(3)").text().trim();
-            if(id) options += `<option value="${id}">${desc}</option>`;
-        });
-        $("#kardex_producto_id, #mov_kardex_producto_id").html(options);
-    }
-
-    // ==================== EDITAR PRODUCTO ====================
-    function calcularMargenEdicion() {
-        const costo = parseFloat($('#edit_costo_unitario').val()) || 0;
-        const precio = parseFloat($('#edit_precio_unitario').val()) || 0;
-        
-        if (costo > 0 && precio > 0) {
-            const margen = ((precio - costo) / costo * 100).toFixed(2);
-            $('#edit_margen').val(margen);
-        } else {
-            $('#edit_margen').val('');
-        }
-    }
-
-    function guardarEdicion() {
-        const id = $('#edit_id').val();
-        
-        if (!id) {
-            mostrarNotificacion("Error: ID de producto no encontrado", "danger");
-            return;
-        }
-        
-        const datos = {
-            familia: $('#edit_familia').val(),
-            descripcion: $('#edit_descripcion').val(),
-            descripcion_larga: $('#edit_descripcion_larga').val(),
-            marca: $('#edit_marca').val(),
-            modelo: $('#edit_modelo').val(),
-            unidad: $('#edit_unidad').val(),
-            volumen: $('#edit_volumen').val(),
-            observaciones: $('#edit_observaciones').val(),
-            transporte: $('#edit_transporte').val(),
-            costo_unitario: parseFloat($('#edit_costo_unitario').val()) || 0,
-            precio_unitario: parseFloat($('#edit_precio_unitario').val()) || 0,
-            stock: parseInt($('#edit_stock').val()) || 0,
-            peso: $('#edit_peso').val()
-        };
-        
-        const btn = $('#btnGuardarEdicionProducto');
-        const textoOriginal = btn.html();
-        btn.prop('disabled', true);
-        btn.html('<span class="spinner-border spinner-border-sm me-2"></span>Guardando...');
-        
-        $.ajax({
-            url: '/api/productos/' + id,
-            method: 'PUT',
-            contentType: 'application/json',
-            data: JSON.stringify(datos),
-            success: function(response) {
-                if (response.success) {
-                    mostrarNotificacion("✅ Producto actualizado correctamente", "success");
-                    if (editModal) editModal.hide();
-                    setTimeout(() => location.reload(), 1000);
+            fileInput.addEventListener('change', function(e) {
+                const file = this.files[0];
+                if (file) {
+                    const fileName = file.name;
+                    const fileSize = (file.size / 1024).toFixed(1);
+                    fileBadge.textContent = `📎 ${fileName} (${fileSize} KB)`;
+                    uploadArea.style.borderColor = '#2563eb';
+                    uploadArea.style.background = '#f0f7ff';
                 } else {
-                    mostrarNotificacion("❌ Error: " + (response.error || "No se pudo actualizar"), "danger");
+                    fileBadge.textContent = '📎 Ningún archivo';
+                    uploadArea.style.borderColor = '#cbd5e1';
+                    uploadArea.style.background = '#f8faff';
                 }
-            },
-            error: function(xhr) {
-                console.error("Error al guardar edición:", xhr);
-                let errorMsg = "Error de conexión al servidor";
-                if (xhr.responseJSON && xhr.responseJSON.error) {
-                    errorMsg = xhr.responseJSON.error;
-                }
-                mostrarNotificacion("❌ " + errorMsg, "danger");
-            },
-            complete: function() {
-                btn.prop('disabled', false);
-                btn.html(textoOriginal);
-            }
-        });
-    }
+            });
 
-    // ==================== ELIMINAR PRODUCTO ====================
-    function eliminarProducto() {
-        const id = $('#eliminar_id_producto').val();
-        
-        if (!id) {
-            mostrarNotificacion("Error: ID de producto no encontrado", "danger");
-            return;
-        }
-        
-        const btn = $('#confirmarEliminarProductoBtn');
-        const textoOriginal = btn.html();
-        btn.prop('disabled', true);
-        btn.html('<span class="spinner-border spinner-border-sm me-2"></span>Eliminando...');
-        
-        $.ajax({
-            url: '/api/productos/' + id,
-            method: 'DELETE',
-            success: function(response) {
-                if (response.success) {
-                    mostrarNotificacion("✅ Producto eliminado correctamente", "success");
-                    if (deleteModal) deleteModal.hide();
-                    setTimeout(() => location.reload(), 1000);
-                } else {
-                    mostrarNotificacion("❌ Error: " + (response.error || "No se pudo eliminar"), "danger");
-                }
-            },
-            error: function(xhr) {
-                console.error("Error al eliminar producto:", xhr);
-                mostrarNotificacion("❌ Error de conexión al servidor", "danger");
-            },
-            complete: function() {
-                btn.prop('disabled', false);
-                btn.html(textoOriginal);
-            }
-        });
-    }
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.style.borderColor = '#2563eb';
+                this.style.background = '#ecf3fe';
+            });
 
-    // ==================== KÁRDEX ====================
-    function cargarKardex(productoId) {
-        const tbody = $('#tbody-kardex');
-        if (!productoId) {
-            tbody.html('<tr><td colspan="8" class="text-center">Seleccione un producto</td></tr>');
-            $('#kardex_stock_actual').text('0');
-            $('#kardex_valor_total').text('S/ 0.00');
-            return;
-        }
-        
-        tbody.html('<tr><td colspan="8" class="text-center"><div class="spinner-border spinner-border-sm me-2"></div>Cargando...</td></tr>');
-        
-        $.ajax({
-            url: '/api/movimientos_stock?producto_id=' + productoId,
-            method: 'GET',
-            success: function(movimientos) {
-                if (movimientos.length === 0) {
-                    tbody.html('<tr><td colspan="8" class="text-center">No hay movimientos para este producto</td></tr>');
-                    actualizarStockProducto(productoId);
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.style.borderColor = '#cbd5e1';
+                this.style.background = '#f8faff';
+            });
+
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.style.borderColor = '#cbd5e1';
+                this.style.background = '#f8faff';
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const file = files[0];
+                    const validTypes = ['image/png', 'image/jpeg', 'image/webp'];
+                    if (validTypes.includes(file.type)) {
+                        fileInput.files = files;
+                        const evt = new Event('change', { bubbles: true });
+                        fileInput.dispatchEvent(evt);
+                    } else {
+                        alert('Formato no soportado. Usa PNG, JPG o WEBP.');
+                    }
+                }
+            });
+
+            // ==================== BOTONES ====================
+            document.getElementById('cancelBtn').addEventListener('click', function() {
+                if (confirm('¿Cancelar edición? Los cambios no guardados se perderán.')) {
+                    document.querySelectorAll('input, textarea, select').forEach(el => {
+                        if (el.tagName === 'SELECT') {
+                            el.selectedIndex = 0;
+                        } else if (el.type !== 'file' && el.type !== 'radio' && el.type !== 'checkbox') {
+                            if (el.placeholder) el.value = '';
+                        }
+                    });
+                    document.querySelectorAll('.price-input-wrap input').forEach(inp => inp.value = '0.00');
+                    fileBadge.textContent = '📎 Ningún archivo';
+                    uploadArea.style.borderColor = '#cbd5e1';
+                    uploadArea.style.background = '#f8faff';
+                    fileInput.value = '';
+                    document.getElementById('opVenta').checked = true;
+                }
+            });
+
+            document.getElementById('saveBtn').addEventListener('click', function() {
+                // Validación básica
+                let nombre = document.querySelector('input[placeholder="Ingrese el nombre del producto"]');
+                if (nombre && nombre.value.trim() === '') {
+                    alert('Por favor, ingrese el nombre del producto.');
+                    nombre.focus();
                     return;
                 }
-                
-                tbody.empty();
-                let saldo = 0;
-                
-                movimientos.forEach(mov => {
-                    if (mov.tipo === 'ENTRADA') saldo += mov.cantidad;
-                    else if (mov.tipo === 'SALIDA') saldo -= mov.cantidad;
-                    else if (mov.tipo === 'AJUSTE') saldo = mov.cantidad;
-                    
-                    const fecha = mov.created_at ? new Date(mov.created_at).toLocaleDateString('es-PE') : '-';
-                    
-                    tbody.append(`
-                        <tr>
-                            <td>${fecha}</td>
-                            <td><span class="badge ${mov.tipo === 'ENTRADA' ? 'bg-success' : mov.tipo === 'SALIDA' ? 'bg-danger' : 'bg-warning'}">${mov.tipo}</span></td>
-                            <td>${mov.referencia || '-'}</td>
-                            <td>${mov.motivo || '-'}</td>
-                            <td class="text-end text-success">${mov.tipo === 'ENTRADA' ? mov.cantidad : '-'}</td>
-                            <td class="text-end text-danger">${mov.tipo === 'SALIDA' ? mov.cantidad : '-'}</td>
-                            <td class="text-end fw-bold">${saldo}</td>
-                            <td class="text-end">${mov.costo_unitario ? 'S/ ' + mov.costo_unitario.toFixed(2) : '-'}</td>
-                        </tr>
-                    `);
-                });
-                
-                $('#kardex_stock_actual').text(saldo);
-                actualizarValorTotal(productoId, saldo);
-            },
-            error: function(xhr) {
-                console.error("Error al cargar kárdex:", xhr);
-                tbody.html('<tr><td colspan="8" class="text-center text-danger">Error al cargar movimientos</td></tr>');
-                mostrarNotificacion("Error al cargar kárdex", "danger");
-            }
-        });
-    }
+                alert('✅ Producto guardado exitosamente (simulación)');
+            });
 
-    function actualizarStockProducto(productoId) {
-        $.ajax({
-            url: '/api/productos/' + productoId,
-            method: 'GET',
-            success: function(p) {
-                $('#kardex_stock_actual').text(p.stock || 0);
-                actualizarValorTotal(productoId, p.stock || 0);
-            }
-        });
-    }
+            // ==================== SIDEBAR LINKS ====================
+            document.getElementById('sidebarDashboardLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = '/mantenedor';
+            });
 
-    function actualizarValorTotal(productoId, stock) {
-        $.ajax({
-            url: '/api/productos/' + productoId,
-            method: 'GET',
-            success: function(p) {
-                const valor = stock * (p.costo_unitario || 0);
-                $('#kardex_valor_total').text(`S/ ${valor.toFixed(2)}`);
-            }
-        });
-    }
+            document.getElementById('sidebarKardexLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                alert('Abrir Kárdex (funcionalidad integrada en el dashboard principal)');
+            });
 
-    function guardarMovimiento() {
-        const productoId = $('#mov_kardex_producto_id').val();
-        const tipo = $('#mov_kardex_tipo').val();
-        const cantidad = $('#mov_kardex_cantidad').val();
-        const costo = $('#mov_kardex_costo').val();
-        const referencia = $('#mov_kardex_referencia').val();
-        const motivo = $('#mov_kardex_motivo').val();
-        const fecha = $('#mov_kardex_fecha').val();
-        
-        if (!productoId) {
-            mostrarNotificacion("Seleccione un producto", "warning");
-            return;
-        }
-        if (!cantidad || cantidad <= 0) {
-            mostrarNotificacion("Cantidad válida requerida", "warning");
-            return;
-        }
-        
-        const datos = {
-            producto_id: parseInt(productoId),
-            tipo: tipo,
-            cantidad: parseInt(cantidad),
-            costo_unitario: costo ? parseFloat(costo) : null,
-            referencia: referencia || null,
-            motivo: motivo || null,
-            fecha: fecha || new Date().toISOString().split('T')[0]
-        };
-        
-        const btn = $('#btnGuardarMovimientoKardex');
-        const textoOriginal = btn.html();
-        btn.prop('disabled', true);
-        btn.html('<span class="spinner-border spinner-border-sm me-2"></span>Guardando...');
-        
-        $.ajax({
-            url: '/api/movimientos_stock',
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(datos),
-            success: function(response) {
-                if (response.success) {
-                    mostrarNotificacion("✅ Movimiento registrado correctamente", "success");
-                    
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('modalNuevoMovimientoKardex'));
-                    if (modal) modal.hide();
-                    
-                    const select = $('#kardex_producto_id');
-                    if (select.val()) {
-                        cargarKardex(select.val());
-                    }
-                    
-                    $('#mov_kardex_cantidad').val('');
-                    $('#mov_kardex_costo').val('');
-                    $('#mov_kardex_referencia').val('');
-                    $('#mov_kardex_motivo').val('');
-                    
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    mostrarNotificacion("❌ " + (response.error || "Error al registrar movimiento"), "danger");
-                }
-            },
-            error: function(xhr) {
-                console.error("Error guardando movimiento:", xhr);
-                mostrarNotificacion("❌ Error de conexión al servidor", "danger");
-            },
-            complete: function() {
-                btn.prop('disabled', false);
-                btn.html(textoOriginal);
-            }
-        });
-    }
-
-    // ==================== INICIALIZACIÓN ====================
-    $(document).ready(function() {
-        console.log("🟢 Inicializando sistema de gestión de productos...");
-        
-        // Inicializar modales
-        const modalEditarElement = document.getElementById('modalEditarProducto');
-        const modalEliminarElement = document.getElementById('modalEliminarProducto');
-        
-        if (modalEditarElement) {
-            editModal = new bootstrap.Modal(modalEditarElement);
-        }
-        if (modalEliminarElement) {
-            deleteModal = new bootstrap.Modal(modalEliminarElement);
-        }
-        
-        // Filtros
-        $("#filtro-familia, #filtro-busqueda").on("change keyup", function() {
-            filtrarTablaProductos();
-            cargarSelectoresKardex();
-        });
-        filtrarTablaProductos();
-        cargarSelectoresKardex();
-        
-        // Sidebar Kárdex
-        $("#sidebarKardexLink").click(function(e) { 
-            e.preventDefault(); 
-            $("#modalKardex").modal("show"); 
-            cargarSelectoresKardex(); 
-        });
-        
-        // Botón guardar edición
-        $("#btnGuardarEdicionProducto").click(guardarEdicion);
-        
-        // Botón confirmar eliminación
-        $("#confirmarEliminarProductoBtn").click(eliminarProducto);
-        
-        // Botón guardar movimiento
-        $("#btnGuardarMovimientoKardex").click(guardarMovimiento);
-        
-        // Calcular margen en edición
-        $("#edit_costo_unitario, #edit_precio_unitario").on("input", calcularMargenEdicion);
-        
-        // Cargar kárdex al seleccionar producto
-        $("#kardex_producto_id").change(function() {
-            cargarKardex($(this).val());
-        });
-        
-        // Abrir modales desde los botones de la tabla
-        $(document).on("click", ".btn-editar-producto", function() {
-            let btn = $(this);
-            $("#edit_id").val(btn.data("id"));
-            $("#edit_familia").val(btn.data("familia"));
-            $("#edit_descripcion").val(btn.data("descripcion"));
-            $("#edit_descripcion_larga").val(btn.data("descripcion_larga") || "");
-            $("#edit_marca").val(btn.data("marca"));
-            $("#edit_modelo").val(btn.data("modelo"));
-            $("#edit_unidad").val(btn.data("unidad"));
-            $("#edit_volumen").val(btn.data("volumen") || "");
-            $("#edit_observaciones").val(btn.data("observaciones") || "");
-            $("#edit_transporte").val(btn.data("transporte") === "SI" ? "motorizado" : (btn.data("transporte") || ""));
-            $("#edit_costo_unitario").val(btn.data("costo_unitario"));
-            $("#edit_precio_unitario").val(btn.data("precio_unitario"));
-            $("#edit_stock").val(btn.data("stock"));
-            $("#edit_peso").val(btn.data("peso") || "");
-            
-            calcularMargenEdicion();
-            
-            if (editModal) editModal.show();
-        });
-        
-        $(document).on("click", ".btn-eliminar-producto", function() {
-            let id = $(this).data("id");
-            let nombre = $(this).data("descripcion");
-            $("#eliminar_id_producto").val(id);
-            $("#textoProductoEliminar").text(nombre);
-            if (deleteModal) deleteModal.show();
-        });
-        
-        // Importar Excel
-        $("#btnImportarExcelTrigger").click(function() { 
-            $("#fileExcelInput").click(); 
-        });
-        
-        $("#fileExcelInput").change(function() { 
-            if(this.files.length) $("#importExcelForm").submit(); 
-        });
-        
-        // Fecha por defecto en movimiento
-        if ($("#mov_kardex_fecha").val() === '') {
-            $("#mov_kardex_fecha").val(new Date().toISOString().split('T')[0]);
-        }
-        
-        console.log("✅ Inicialización completa");
-    });
-</script>
+            document.getElementById('volverPanelLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = '/mantenedor';
+            });
+        })();
+    </script>
 </body>
 </html>
