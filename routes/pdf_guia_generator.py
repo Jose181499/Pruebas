@@ -1,3 +1,4 @@
+# guia_pdf_generator.py
 from weasyprint import HTML, CSS
 from jinja2 import Template
 import qrcode
@@ -5,7 +6,6 @@ import base64
 from io import BytesIO
 import json
 from datetime import datetime, date
-import re
 import os
 
 def convertir_a_serializable(obj):
@@ -19,7 +19,6 @@ def obtener_logo_base64():
     Obtiene el logo de la empresa en formato base64 para incrustar en el PDF
     """
     try:
-        # Ruta del logo - ajusta según tu estructura
         logo_path = os.path.join(os.path.dirname(__file__), '..', 'static', 'img', 'logo_kcf.png')
         
         if os.path.exists(logo_path):
@@ -27,7 +26,6 @@ def obtener_logo_base64():
                 logo_data = f.read()
                 return base64.b64encode(logo_data).decode('utf-8')
         else:
-            # Logo por defecto en base64 (letras KCF)
             return None
     except Exception as e:
         print(f"Error cargando logo: {e}")
@@ -36,12 +34,6 @@ def obtener_logo_base64():
 def generar_pdf_guia(guia_data):
     """
     Genera el PDF de la Guía de Remisión con código QR y logo de la empresa
-    
-    Args:
-        guia_data: Diccionario con los datos de la guía
-    
-    Returns:
-        BytesIO: Archivo PDF listo para descargar
     """
     
     # Convertir fechas a string si son objetos date
@@ -54,11 +46,11 @@ def generar_pdf_guia(guia_data):
     if isinstance(guia_data.get('fecha_inicio_traslado'), (date, datetime)):
         guia_data['fecha_inicio_traslado'] = guia_data['fecha_inicio_traslado'].strftime('%Y-%m-%d')
     
-    # Generar código QR con los datos de la guía
+    # Generar código QR
     qr_data = generar_qr_data(guia_data)
     qr_base64 = generar_qr_base64(qr_data)
     
-    # Obtener logo de la empresa
+    # Obtener logo
     logo_base64 = obtener_logo_base64()
     
     # Agregar QR y logo a los datos
@@ -68,14 +60,14 @@ def generar_pdf_guia(guia_data):
     guia_data['fecha_traslado_formato'] = formatear_fecha(guia_data.get('fecha_traslado'))
     guia_data['fecha_inicio_formato'] = formatear_fecha(guia_data.get('fecha_inicio_traslado'))
     
-    # Procesar items (si viene como string JSON)
+    # Procesar items
     if isinstance(guia_data.get('items_json'), str):
         items = json.loads(guia_data['items_json'])
         guia_data['items'] = items
     else:
         guia_data['items'] = guia_data.get('items_json', [])
     
-    # Procesar motivos de traslado - mantener el código y texto
+    # Procesar motivos de traslado
     guia_data['motivo_codigo'] = guia_data.get('motivo_traslado', '')
     guia_data['motivo_texto'] = get_motivo_texto(guia_data.get('motivo_traslado', ''))
     
@@ -91,14 +83,10 @@ def generar_pdf_guia(guia_data):
     # Obtener modalidad de transporte texto
     guia_data['modalidad_texto'] = 'Transporte privado' if guia_data.get('modalidad_transporte') == 'PRIVADO' else 'Transporte público'
     
-    # Obtener el nombre de la empresa remitente
-    guia_data['remitente_nombre'] = guia_data.get('remitente_nombre', 'KCF CORPORACION SAC')
-    guia_data['remitente_direccion'] = guia_data.get('remitente_direccion', 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES')
-    
     # Renderizar HTML
     html_content = renderizar_html_guia(guia_data)
     
-    # CSS para el PDF con estilo mejorado y colores KCF
+    # CSS para el PDF
     css_content = """
     @page {
         size: A4;
@@ -112,55 +100,53 @@ def generar_pdf_guia(guia_data):
         color: #1a1a1a;
     }
     
-    /* HEADER CON LOGO */
     .header-empresa {
+        border: 2px solid #000;
+        padding: 8px 10px;
+        margin-bottom: 8px;
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        border-bottom: 2px solid #D32F2F;
-        padding-bottom: 8px;
-        margin-bottom: 10px;
+        gap: 10px;
     }
     
-    .header-left {
+    .header-empresa .logo-container {
+        flex-shrink: 0;
+        border-right: 2px solid #000;
+        padding-right: 10px;
+        min-width: 80px;
+        min-height: 60px;
         display: flex;
         align-items: center;
-        gap: 12px;
+        justify-content: center;
     }
     
-    .header-left .logo {
-        max-height: 50px;
-        max-width: 120px;
+    .header-empresa .logo-container img {
+        max-height: 55px;
+        max-width: 100px;
     }
     
-    .header-left .logo img {
-        height: auto;
-        max-height: 50px;
-        max-width: 120px;
-    }
-    
-    .header-info {
+    .header-empresa .empresa-info {
         flex: 1;
-        text-align: right;
+        font-size: 8px;
+        line-height: 1.4;
     }
     
-    .header-info .nombre-empresa {
-        font-size: 12px;
+    .header-empresa .empresa-info .nombre {
+        font-size: 10px;
         font-weight: bold;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: #D32F2F;
     }
     
-    .header-info .direccion-empresa {
+    .header-empresa .empresa-info .direccion {
         font-size: 8px;
-        color: #555;
-        margin-top: 2px;
     }
     
-    .header-info .contacto-empresa {
+    .header-empresa .empresa-info .contacto {
         font-size: 8px;
-        color: #555;
+    }
+    
+    .header-empresa .empresa-info .contacto span {
+        margin-right: 15px;
     }
     
     .ruc-header {
@@ -168,24 +154,21 @@ def generar_pdf_guia(guia_data):
         font-size: 10px;
         font-weight: bold;
         margin-bottom: 2px;
-        color: #D32F2F;
     }
     
     .titulo-guia {
         text-align: center;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: bold;
-        margin: 6px 0 2px 0;
+        margin: 4px 0 2px 0;
         letter-spacing: 1px;
-        color: #D32F2F;
     }
     
     .numero-guia {
         text-align: center;
-        font-size: 13px;
+        font-size: 12px;
         font-weight: bold;
         margin-bottom: 10px;
-        color: #1a1a1a;
     }
     
     .seccion {
@@ -197,12 +180,10 @@ def generar_pdf_guia(guia_data):
         font-size: 9.5px;
         margin-bottom: 3px;
         text-transform: uppercase;
-        color: #D32F2F;
-        border-bottom: 1px solid #D32F2F;
+        border-bottom: 1px solid #000;
         padding-bottom: 2px;
     }
     
-    /* RECUADRO DESTINATARIO */
     .info-destinatario {
         border: 1px solid #ccc;
         padding: 6px 10px;
@@ -225,7 +206,6 @@ def generar_pdf_guia(guia_data):
         display: inline-block;
     }
     
-    /* RECUADRO DATOS DEL TRASLADO */
     .datos-traslado {
         border: 1px solid #ccc;
         padding: 6px 10px;
@@ -250,7 +230,6 @@ def generar_pdf_guia(guia_data):
         font-weight: bold;
     }
     
-    /* RECUADRO DATOS DE RUTA */
     .datos-ruta {
         border: 1px solid #ccc;
         padding: 6px 10px;
@@ -273,7 +252,6 @@ def generar_pdf_guia(guia_data):
         display: inline-block;
     }
     
-    /* RECUADRO DEL TRANSPORTE */
     .datos-transporte {
         border: 2px solid #333;
         padding: 8px 12px;
@@ -296,7 +274,6 @@ def generar_pdf_guia(guia_data):
         display: inline-block;
     }
     
-    /* TABLA DE PRODUCTOS */
     .products-table {
         width: 100%;
         border-collapse: collapse;
@@ -305,11 +282,11 @@ def generar_pdf_guia(guia_data):
     }
     
     .products-table th {
-        background: #D32F2F;
+        background: #333;
         color: white;
         padding: 4px 5px;
         text-align: center;
-        border: 1px solid #B71C1C;
+        border: 1px solid #000;
         font-size: 8px;
         text-transform: uppercase;
     }
@@ -331,7 +308,10 @@ def generar_pdf_guia(guia_data):
         color: #444;
     }
     
-    /* OBSERVACIONES */
+    .products-table tr:nth-child(even) {
+        background: #f9f9f9;
+    }
+    
     .observaciones {
         margin-top: 8px;
         padding: 5px 10px;
@@ -344,13 +324,11 @@ def generar_pdf_guia(guia_data):
         font-weight: bold;
     }
     
-    /* CÓDIGO QR */
     .qr-container {
         text-align: center;
         margin: 8px 0 5px 0;
         padding: 6px;
         border: 1px solid #ddd;
-        border-radius: 3px;
         background: #fafafa;
     }
     
@@ -365,7 +343,6 @@ def generar_pdf_guia(guia_data):
         margin-top: 3px;
     }
     
-    /* FOOTER */
     .footer {
         margin-top: 12px;
         text-align: center;
@@ -490,7 +467,7 @@ def get_unidad_peso_texto(codigo):
     return unidades.get(codigo, 'KGM')
 
 def renderizar_html_guia(guia_data):
-    """Renderiza el HTML para el PDF con logo de la empresa"""
+    """Renderiza el HTML para el PDF"""
     
     template = Template('''
     <!DOCTYPE html>
@@ -500,31 +477,29 @@ def renderizar_html_guia(guia_data):
         <title>Guía de Remisión {{ serie }}-{{ numero }}</title>
     </head>
     <body>
-        <!-- HEADER EMPRESA CON LOGO -->
+        <!-- RECUADRO EMPRESA -->
         <div class="header-empresa">
-            <div class="header-left">
+            <div class="logo-container">
                 {% if logo_base64 %}
-                <div class="logo">
-                    <img src="data:image/png;base64,{{ logo_base64 }}" alt="KCF Logo">
-                </div>
+                <img src="data:image/png;base64,{{ logo_base64 }}" alt="Logo">
                 {% else %}
-                <div style="font-size:14px; font-weight:bold; color:#D32F2F;">KCF</div>
+                <div style="font-size:18px; font-weight:bold;">LOGO</div>
                 {% endif %}
-                <div style="border-left:2px solid #D32F2F; padding-left:10px;">
-                    <div style="font-size:10px; font-weight:bold; color:#D32F2F;">{{ remitente_nombre or 'KCF CORPORACION SAC' }}</div>
-                    <div style="font-size:7.5px; color:#555;">RUC: {{ ruc_remitente or '20602095704' }}</div>
-                </div>
             </div>
-            <div class="header-info">
-                <div class="nombre-empresa">{{ remitente_nombre or 'KCF CORPORACION SAC' }}</div>
-                <div class="direccion-empresa">{{ remitente_direccion or '' }}</div>
-                <div class="contacto-empresa">Tel: {{ telefono or '987-654-321' }} | Email: {{ email or 'ventas@kcf.pe' }} | Web: {{ web or 'www.kcf.pe' }}</div>
+            <div class="empresa-info">
+                <div class="nombre">{{ remitente_nombre or '' }}</div>
+                <div class="direccion">{{ remitente_direccion or '' }}</div>
+                <div class="contacto">
+                    <span>Telf: {{ telefono or '' }}</span>
+                    <span>Web: {{ web or '' }}</span>
+                    <span>Email: {{ email or '' }}</span>
+                </div>
             </div>
         </div>
         
         <!-- RUC Y TÍTULO -->
         <div class="ruc-header">R.U.C. Nº {{ ruc_remitente or '' }}</div>
-        <div class="titulo-guia">GUIA DE REMISION REMITENTE ELECTRONICA</div>
+        <div class="titulo-guia">GUIA DE REMISIÓN REMITENTE ELECTRÓNICA</div>
         <div class="numero-guia">{{ serie }}-{{ numero }}</div>
         
         <!-- DESTINATARIO -->
@@ -538,10 +513,6 @@ def renderizar_html_guia(guia_data):
                 <div class="info-line">
                     <span class="label">DENOMINACIÓN:</span>
                     <span class="value">{{ destinatario_nombre or '' }}</span>
-                </div>
-                <div class="info-line">
-                    <span class="label">DIRECCIÓN:</span>
-                    <span class="value">{{ destinatario_direccion or '' }}</span>
                 </div>
             </div>
         </div>
@@ -649,11 +620,7 @@ def renderizar_html_guia(guia_data):
         <!-- OBSERVACIONES -->
         <div class="observaciones">
             <span class="label">OBSERVACIONES :</span>
-            {% if orden_compra_cliente %}
-            Orden de Compra {{ destinatario_nombre or 'Cliente' }} : {{ orden_compra_cliente }}
-            {% endif %}
             {% if observaciones %}
-            {% if orden_compra_cliente %} {% endif %}
             {{ observaciones }}
             {% endif %}
         </div>
