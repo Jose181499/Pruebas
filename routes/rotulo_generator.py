@@ -379,6 +379,8 @@ def generar_rotulo_html(guia):
             padding: 10px 12px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
             position: relative;
+            display: flex;
+            flex-direction: column;
         }}
         .header {{
             display: flex;
@@ -461,13 +463,32 @@ def generar_rotulo_html(guia):
             border-radius: 4px;
             font-family: 'Courier New', monospace;
         }}
+        .contenido {{
+            flex: 1;
+        }}
         .pie {{
             text-align: center;
-            font-size: 6px;
-            color: #888;
             border-top: 1px solid #ddd;
-            padding-top: 4px;
-            margin-top: 4px;
+            padding-top: 5px;
+            margin-top: 5px;
+        }}
+        .pie .contactanos {{
+            font-weight: 700;
+            color: #1a2a6c;
+            font-size: 8px;
+            margin-bottom: 2px;
+        }}
+        .pie .datos-contacto {{
+            font-size: 7px;
+            color: #333;
+            letter-spacing: 0.3px;
+        }}
+        .pie .mensaje {{
+            font-size: 6px;
+            color: #aaa;
+            margin-top: 3px;
+            border-top: 1px solid #eee;
+            padding-top: 3px;
         }}
         .btn-imprimir {{
             position: fixed;
@@ -513,53 +534,60 @@ def generar_rotulo_html(guia):
             </div>
         </div>
 
-        <!-- CLIENTE -->
-        <div class="campo">
-            <div class="label">CLIENTE:</div>
-            <div class="valor-grande">{destinatario if destinatario else ''}</div>
-            <div class="valor-gris">RUC: {ruc_destinatario if ruc_destinatario else ''}</div>
-        </div>
-
-        <div class="separador"></div>
-
-        <!-- DIRECCIÓN DE ENTREGA -->
-        <div class="campo">
-            <div class="label">DIRECCIÓN DE ENTREGA:</div>
-            <div class="valor">{direccion_entrega if direccion_entrega else ''}</div>
-        </div>
-
-        <div class="separador"></div>
-
-        <!-- CONSIGNADOS (CONDUCTOR) -->
-        <div class="campo">
-            <div class="label">CONSIGNADOS:</div>
-            <div class="valor">{conductor if conductor else ''}</div>
-            <div class="valor-gris">DNI: {dni_conductor if dni_conductor else ''}</div>
-        </div>
-
-        <div class="separador"></div>
-
-        <!-- N° BULTOS, N° GUÍA, FACTURA -->
-        <div class="fila">
-            <div class="campo" style="flex:1;">
-                <div class="label">N° BULTOS:</div>
-                <div class="valor" style="font-size:14px;font-weight:800;color:#e94560;">{bultos}</div>
+        <!-- CONTENIDO PRINCIPAL -->
+        <div class="contenido">
+            <!-- CLIENTE -->
+            <div class="campo">
+                <div class="label">CLIENTE:</div>
+                <div class="valor-grande">{destinatario if destinatario else ''}</div>
+                <div class="valor-gris">RUC: {ruc_destinatario if ruc_destinatario else ''}</div>
             </div>
-            <div class="campo" style="flex:1;">
-                <div class="label">N° GUÍA:</div>
-                <div class="valor">{numero_guia}</div>
+
+            <div class="separador"></div>
+
+            <!-- DIRECCIÓN DE ENTREGA -->
+            <div class="campo">
+                <div class="label">DIRECCIÓN DE ENTREGA:</div>
+                <div class="valor">{direccion_entrega if direccion_entrega else ''}</div>
             </div>
-            <div class="campo" style="flex:1;">
-                <div class="label">FACTURA:</div>
-                <div class="valor">{numero_factura}</div>
+
+            <div class="separador"></div>
+
+            <!-- CONSIGNADOS (CONDUCTOR) -->
+            <div class="campo">
+                <div class="label">CONSIGNADOS:</div>
+                <div class="valor">{conductor if conductor else ''}</div>
+                <div class="valor-gris">DNI: {dni_conductor if dni_conductor else ''}</div>
             </div>
+
+            <div class="separador"></div>
+
+            <!-- N° BULTOS, N° GUÍA, FACTURA -->
+            <div class="fila">
+                <div class="campo" style="flex:1;">
+                    <div class="label">N° BULTOS:</div>
+                    <div class="valor" style="font-size:14px;font-weight:800;color:#e94560;">{bultos}</div>
+                </div>
+                <div class="campo" style="flex:1;">
+                    <div class="label">N° GUÍA:</div>
+                    <div class="valor">{numero_guia}</div>
+                </div>
+                <div class="campo" style="flex:1;">
+                    <div class="label">FACTURA:</div>
+                    <div class="valor">{numero_factura}</div>
+                </div>
+            </div>
+
+            <!-- CÓDIGO DE BARRAS -->
+            <div class="codigo-barras">{codigo_barras}</div>
         </div>
 
-        <!-- CÓDIGO DE BARRAS -->
-        <div class="codigo-barras">{codigo_barras}</div>
-
-        <!-- PIE -->
-        <div class="pie">RÓTULO DE EMBALAJE · Verificar integridad del producto</div>
+        <!-- PIE CON CONTÁCTANOS -->
+        <div class="pie">
+            <div class="contactanos">📞 CONTÁCTANOS</div>
+            <div class="datos-contacto">{telefono} | {email}</div>
+            <div class="mensaje">RÓTULO DE EMBALAJE · Verificar integridad del producto</div>
+        </div>
     </div>
 
     <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir Rótulo</button>
