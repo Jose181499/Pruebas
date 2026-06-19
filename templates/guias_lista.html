@@ -1231,7 +1231,7 @@
         });
         
         // ==========================================
-        // EXPORTAR A EXCEL - Todos los campos con nombres correctos
+        // EXPORTAR A EXCEL - Con depuración para ver todos los campos
         // ==========================================
         document.getElementById('btnExportarExcel')?.addEventListener('click', function() {
             const guias = guiasFiltradasActuales || todasGuias;
@@ -1239,6 +1239,19 @@
             if (guias.length === 0) {
                 mostrarNotificacion('⚠️ No hay datos para exportar', 'warning');
                 return;
+            }
+            
+            // Ver qué datos están disponibles en la primera guía
+            if (guias.length > 0) {
+                console.log('🔍 DATOS DE LA PRIMERA GUÍA PARA DEPURACIÓN:');
+                console.log('📌 Todas las propiedades:', Object.keys(guias[0]));
+                console.log('📌 conductor_nombre:', guias[0].conductor_nombre);
+                console.log('📌 conductor_dni:', guias[0].conductor_dni);
+                console.log('📌 licencia_conductor:', guias[0].licencia_conductor);
+                console.log('📌 numero_bultos:', guias[0].numero_bultos);
+                console.log('📌 observaciones:', guias[0].observaciones);
+                console.log('📌 placa_vehiculo:', guias[0].placa_vehiculo);
+                console.log('📌 Guía completa:', guias[0]);
             }
             
             // Construir el archivo CSV con todos los campos
@@ -1251,7 +1264,7 @@
                 // Destinatario
                 'RUC Destinatario', 'Razón Social Destinatario', 'Dirección Destinatario', 'Ubigeo Destinatario',
                 'Orden Compra Cliente', 'Documento Asociado', 'Factura',
-                // Vehículo (usando los mismos nombres que el modal de ver)
+                // Vehículo
                 'Placa Vehículo', 'Conductor', 'DNI Conductor', 'Licencia Conductor', 'Modalidad Transporte',
                 // Transportista
                 'RUC Transportista', 'Razón Social Transportista',
@@ -1264,13 +1277,20 @@
             csv += headers.join(';') + '\n';
             
             // Datos
-            guias.forEach(guia => {
+            guias.forEach((guia, index) => {
                 const items = typeof guia.items_json === 'string' ? JSON.parse(guia.items_json) : (guia.items_json || []);
                 const descripciones = items.map(item => `${item.cantidad || 0}x ${item.descripcion || ''} (${item.codigo || ''})`).join(' | ');
                 const totalItems = items.reduce((sum, item) => sum + (parseFloat(item.cantidad) || 0), 0);
                 
                 // Motivo en texto
                 const motivoTexto = getMotivoTexto(guia.motivo_traslado);
+                
+                // Obtener los valores con diferentes nombres posibles
+                const conductorNombre = guia.conductor_nombre || guia.conductor || guia.nombre_conductor || '';
+                const conductorDNI = guia.conductor_dni || guia.dni_conductor || guia.dni || '';
+                const licencia = guia.licencia_conductor || guia.licencia || guia.numero_licencia || '';
+                const nroBultos = guia.numero_bultos || guia.nro_bultos || guia.bultos || '';
+                const observacion = guia.observaciones || guia.observacion || guia.notas || '';
                 
                 const row = [
                     // Datos generales
@@ -1280,19 +1300,19 @@
                     guia.estado_sunat || 'BORRADOR',
                     formatFechaHora(guia.created_at),
                     // Destinatario
-                    guia.ruc_destinatario || '',
-                    guia.destinatario_nombre || '',
-                    guia.destinatario_direccion || '',
-                    guia.ubigeo_destinatario || '',
-                    guia.orden_compra_cliente || '',
-                    guia.documento_asociado || '',
-                    guia.factura || '',
-                    // Vehículo - usando los mismos nombres que el modal de ver
-                    guia.placa_vehiculo || '',
-                    guia.conductor_nombre || '',
-                    guia.conductor_dni || '',
-                    guia.licencia_conductor || '',
-                    guia.modalidad_transporte || 'PRIVADO',
+                    guia.ruc_destinatario || guia.destinatario_ruc || '',
+                    guia.destinatario_nombre || guia.nombre_destinatario || '',
+                    guia.destinatario_direccion || guia.direccion_destinatario || '',
+                    guia.ubigeo_destinatario || guia.destinatario_ubigeo || '',
+                    guia.orden_compra_cliente || guia.orden_compra || '',
+                    guia.documento_asociado || guia.doc_asociado || '',
+                    guia.factura || guia.numero_factura || '',
+                    // Vehículo
+                    guia.placa_vehiculo || guia.placa || '',
+                    conductorNombre,
+                    conductorDNI,
+                    licencia,
+                    guia.modalidad_transporte || guia.modalidad || 'PRIVADO',
                     // Transportista
                     guia.transportista_ruc || '',
                     guia.transportista_nombre || '',
@@ -1301,12 +1321,12 @@
                     formatFecha(guia.fecha_emision),
                     formatFecha(guia.fecha_traslado),
                     parseFloat(guia.peso_total || 0).toFixed(2),
-                    guia.unidad_peso_bruto || 'KGM',
-                    guia.numero_bultos || '',
+                    guia.unidad_peso_bruto || guia.unidad_peso || 'KGM',
+                    nroBultos,
                     // Productos
                     totalItems,
                     descripciones,
-                    guia.observaciones || ''
+                    observacion
                 ];
                 
                 // Escapar comillas y punto y coma
