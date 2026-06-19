@@ -294,7 +294,7 @@
             border-radius: 6px;
             font-size: 11px;
         }
-        /* Estilos para el modal de ver detalle - Más ordenado */
+        /* Estilos para el modal de ver detalle */
         .detalle-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -363,13 +363,6 @@
         .detalle-card-transportista .card-titulo { color: #8b5cf6; border-bottom-color: #8b5cf6; }
         .detalle-card-observaciones .card-titulo { color: #6b7280; border-bottom-color: #6b7280; }
 
-        .campo-peso-unitario {
-            background: #f0fdf4;
-            border-radius: 6px;
-            padding: 2px 8px;
-            font-weight: 600;
-            color: #065f46;
-        }
         .productos-table {
             margin-top: 12px;
             border-radius: 12px;
@@ -567,7 +560,7 @@
         </div>
     </div>
     
-    <!-- MODAL VER DETALLE - MEJORADO Y MÁS ORDENADO -->
+    <!-- MODAL VER DETALLE -->
     <div class="modal fade" id="modalVerGuia" tabindex="-1">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content" style="border-radius: 24px; overflow: hidden;">
@@ -846,7 +839,7 @@
         }
         
         // ==========================================
-        // VER GUÍA (MODAL) - ORDENADO CON TARJETAS
+        // VER GUÍA (MODAL) - Tabla con 5 columnas
         // ==========================================
         window.verGuia = async function(id) {
             guiaActualId = id;
@@ -865,10 +858,7 @@
                     const g = result.data;
                     const items = typeof g.items_json === 'string' ? JSON.parse(g.items_json) : (g.items_json || []);
                     
-                    // Calcular pesos unitarios
-                    const pesoTotal = parseFloat(g.peso_total) || 0;
-                    const totalCantidad = items.reduce((sum, item) => sum + (parseFloat(item.cantidad) || 0), 0);
-                    
+                    // Tabla de productos con 5 columnas: Item, Código, Descripción, Cant., Unidad
                     let itemsHtml = '';
                     if (items.length > 0) {
                         itemsHtml = `
@@ -876,42 +866,30 @@
                                 <table class="table table-sm mb-0">
                                     <thead>
                                         <tr>
-                                            <th style="width:50px;">#</th>
+                                            <th style="width:50px;">Item</th>
                                             <th>Código</th>
                                             <th>Descripción</th>
                                             <th style="width:80px;text-align:center;">Cant.</th>
                                             <th style="width:80px;">Unidad</th>
-                                            <th style="width:110px;text-align:center;">Peso Unit.</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        ${items.map((item, idx) => {
-                                            let pesoUnitario = parseFloat(item.peso_unitario) || 0;
-                                            if (pesoUnitario === 0 && totalCantidad > 0 && pesoTotal > 0) {
-                                                const cantidad = parseFloat(item.cantidad) || 0;
-                                                pesoUnitario = (cantidad / totalCantidad) * pesoTotal;
-                                                pesoUnitario = Math.round(pesoUnitario * 1000) / 1000;
-                                            }
-                                            const pesoMostrar = parseFloat(item.peso_unitario) || pesoUnitario;
-                                            return `
-                                                <tr>
-                                                    <td>${idx + 1}</td>
-                                                    <td>${escapeHtml(item.codigo || '-')}</td>
-                                                    <td>${escapeHtml(item.descripcion || '-')}</td>
-                                                    <td style="text-align:center;">${item.cantidad || 0}</td>
-                                                    <td>${item.unidad || 'NIU'}</td>
-                                                    <td style="text-align:center;">
-                                                        <span class="campo-peso-unitario">${pesoMostrar > 0 ? pesoMostrar.toFixed(3) : '0.000'} kg</span>
-                                                    </td>
-                                                </tr>
-                                            `;
-                                        }).join('')}
+                                        ${items.map((item, idx) => `
+                                            <tr>
+                                                <td>${idx + 1}</td>
+                                                <td>${escapeHtml(item.codigo || '-')}</td>
+                                                <td>${escapeHtml(item.descripcion || '-')}</td>
+                                                <td style="text-align:center;">${item.cantidad || 0}</td>
+                                                <td>${item.unidad || 'NIU'}</td>
+                                            </tr>
+                                        `).join('')}
                                     </tbody>
                                 </table>
                             </div>
                         `;
                     }
                     
+                    const pesoTotal = parseFloat(g.peso_total) || 0;
                     const fechaCreacionDetalle = formatFechaHora(g.created_at);
                     const motivoTexto = g.motivo_traslado || '-';
                     
@@ -924,6 +902,7 @@
                                 <div class="campo"><span class="label">RUC</span><span class="valor">${g.ruc_remitente || '-'}</span></div>
                                 <div class="campo"><span class="label">Razón Social</span><span class="valor">${escapeHtml(g.remitente_nombre || '-')}</span></div>
                                 <div class="campo"><span class="label">Dirección</span><span class="valor valor-small">${escapeHtml(g.remitente_direccion || '-')}</span></div>
+                                <div class="campo"><span class="label">Ubigeo</span><span class="valor">${g.ubigeo_remitente || '-'}</span></div>
                             </div>
                             
                             <!-- Destinatario -->
@@ -932,6 +911,7 @@
                                 <div class="campo"><span class="label">RUC</span><span class="valor">${g.ruc_destinatario || '-'}</span></div>
                                 <div class="campo"><span class="label">Razón Social</span><span class="valor">${escapeHtml(g.destinatario_nombre || '-')}</span></div>
                                 <div class="campo"><span class="label">Dirección</span><span class="valor valor-small">${escapeHtml(g.destinatario_direccion || '-')}</span></div>
+                                <div class="campo"><span class="label">Ubigeo</span><span class="valor">${g.ubigeo_destinatario || '-'}</span></div>
                                 ${g.orden_compra_cliente ? `<div class="campo"><span class="label">Orden Compra</span><span class="valor">${escapeHtml(g.orden_compra_cliente)}</span></div>` : ''}
                                 ${g.documento_asociado ? `<div class="campo"><span class="label">Doc. Asociado</span><span class="valor">${escapeHtml(g.documento_asociado)}</span></div>` : ''}
                                 ${g.factura ? `<div class="campo"><span class="label">Factura</span><span class="valor">${escapeHtml(g.factura)}</span></div>` : ''}
@@ -976,7 +956,7 @@
                             ` : ''}
                         </div>
                         
-                        <!-- Registro - abajo del grid -->
+                        <!-- Registro -->
                         <div class="detalle-card detalle-card-registro" style="margin-top:16px;background:#f8fafc;border-radius:16px;padding:12px 18px;border:1px solid #e2e8f0;">
                             <div class="card-titulo"><i class="bi bi-clock-history"></i> Registro</div>
                             <div class="campo"><span class="label">Fecha de Creación</span><span class="valor">${fechaCreacionDetalle}</span></div>
@@ -1212,7 +1192,7 @@
         });
         
         // ==========================================
-        // EXPORTAR A EXCEL
+        // EXPORTAR A EXCEL - TODOS LOS CAMPOS
         // ==========================================
         document.getElementById('btnExportarExcel')?.addEventListener('click', function() {
             const guias = guiasFiltradasActuales || todasGuias;
@@ -1225,24 +1205,23 @@
             // Construir el archivo CSV con todos los campos
             let csv = '\uFEFF'; // BOM para UTF-8
             
-            // Encabezados - todos los campos del crear guía
+            // Encabezados - TODOS los campos del crear guía
             const headers = [
-                'N° Guía', 'Serie', 'Número',
-                'Estado SUNAT', 'Fecha Creación', 'Fecha Emisión', 'Fecha Traslado',
-                'Motivo Traslado', 'Modalidad Transporte',
+                // Datos generales
+                'N° Guía', 'Serie', 'Número', 'Estado SUNAT', 'Fecha Creación',
                 // Remitente
                 'RUC Remitente', 'Razón Social Remitente', 'Dirección Remitente', 'Ubigeo Remitente',
                 // Destinatario
                 'RUC Destinatario', 'Razón Social Destinatario', 'Dirección Destinatario', 'Ubigeo Destinatario',
                 'Orden Compra Cliente', 'Documento Asociado', 'Factura',
                 // Vehículo
-                'Placa Vehículo', 'Conductor', 'DNI Conductor', 'Licencia Conductor',
+                'Placa Vehículo', 'Conductor', 'DNI Conductor', 'Licencia Conductor', 'Modalidad Transporte',
                 // Transportista (público)
                 'RUC Transportista', 'Razón Social Transportista',
                 // Traslado
-                'Peso Total (kg)', 'Unidad Peso', 'N° Bultos',
+                'Motivo Traslado', 'Fecha Emisión', 'Fecha Traslado', 'Peso Total (kg)', 'Unidad Peso', 'N° Bultos',
                 // Productos (resumen)
-                'Cantidad Productos', 'Descripción Productos',
+                'Cantidad Total Productos', 'Descripción Productos',
                 'Observaciones'
             ];
             csv += headers.join(';') + '\n';
@@ -1250,7 +1229,7 @@
             // Datos
             guias.forEach(guia => {
                 const items = typeof guia.items_json === 'string' ? JSON.parse(guia.items_json) : (guia.items_json || []);
-                const descripciones = items.map(item => `${item.cantidad || 0}x ${item.descripcion || ''}`).join(' | ');
+                const descripciones = items.map(item => `${item.cantidad || 0}x ${item.descripcion || ''} (${item.codigo || ''})`).join(' | ');
                 const totalItems = items.reduce((sum, item) => sum + (parseFloat(item.cantidad) || 0), 0);
                 
                 const row = [
@@ -1259,10 +1238,6 @@
                     guia.numero || '?',
                     guia.estado_sunat || 'BORRADOR',
                     formatFechaHora(guia.created_at),
-                    formatFecha(guia.fecha_emision),
-                    formatFecha(guia.fecha_traslado),
-                    guia.motivo_traslado || '',
-                    guia.modalidad_transporte || 'PRIVADO',
                     // Remitente
                     guia.ruc_remitente || '',
                     guia.remitente_nombre || '',
@@ -1281,13 +1256,18 @@
                     guia.conductor_nombre || '',
                     guia.conductor_dni || '',
                     guia.licencia_conductor || '',
+                    guia.modalidad_transporte || 'PRIVADO',
                     // Transportista
                     guia.transportista_ruc || '',
                     guia.transportista_nombre || '',
                     // Traslado
+                    guia.motivo_traslado || '',
+                    formatFecha(guia.fecha_emision),
+                    formatFecha(guia.fecha_traslado),
                     parseFloat(guia.peso_total || 0).toFixed(2),
                     guia.unidad_peso_bruto || 'KGM',
                     guia.numero_bultos || '',
+                    // Productos
                     totalItems,
                     descripciones,
                     guia.observaciones || ''
