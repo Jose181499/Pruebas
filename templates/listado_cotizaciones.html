@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>123Gestor de Cotizaciones - KCF CORPORACION</title>
+    <title>Gestor de Cotizaciones - KCF CORPORACION</title>
     
     <!-- CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/cotizaciones.css') }}">
@@ -15,372 +15,368 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
     <style>
-        /* Estilos adicionales específicos para listado */
-        .card-custom {
-            border-radius: 20px;
-            border: none;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.05);
-            overflow: hidden;
-        }
-        
-        .page-title {
-            font-size: 28px;
-            font-weight: 800;
-            color: #111827;
-        }
-        
-        .subtitle {
-            color: #6b7280;
-            font-size: 14px;
-        }
-        
-        .btn-custom {
-            border-radius: 12px;
-            padding: 10px 20px;
-            font-weight: 600;
-            transition: all 0.2s ease;
-        }
-        
-        .btn-custom:hover {
-            transform: translateY(-2px);
-            filter: brightness(1.05);
-        }
-        
-        .search-input {
-            border-radius: 40px;
-            padding: 10px 15px 10px 40px;
-            border: 1px solid #e5e7eb;
-            transition: all 0.2s ease;
-        }
-        
-        .search-input:focus {
-            border-color: #d90429;
-            box-shadow: 0 0 0 3px rgba(217,4,41,0.1);
-            outline: none;
-        }
-        
-        .table thead th {
-            background: #111827;
-            color: white;
-            font-weight: 600;
-            padding: 15px;
-            border: none;
-        }
-        
-        .table tbody td {
-            padding: 15px;
-            vertical-align: middle;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        
-        .table tbody tr:hover {
-            background: rgba(217,4,41,0.03);
-        }
-        
-        /* ESTILOS SEMÁFORO - SOLO COLOR DE FONDO Y TEXTO, SIN BORDES LATERALES */
-        .estado-borrador {
-            background: #FEF3C7;
-            color: #92400E;
-            padding: 6px 14px;
-            border-radius: 40px;
-            font-size: 12px;
-            font-weight: 700;
-            text-align: center;
-            display: inline-block;
-        }
-        
-        .estado-generada {
-            background: #0055FF;
-            color: #FFFFFF;
-            padding: 6px 14px;
-            border-radius: 40px;
-            font-size: 12px;
-            font-weight: 700;
-            text-align: center;
-            display: inline-block;
-            box-shadow: 0 0 12px rgba(0, 85, 255, 0.4);
-            border: 1px solid #0044CC;
-        }
-        
-        .estado-aceptada {
-            background: #00FF00;
-            color: #000000;
-            padding: 6px 14px;
-            border-radius: 40px;
-            font-size: 12px;
-            font-weight: 900;
-            text-align: center;
-            display: inline-block;
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.6);
-            text-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
-            border: 1px solid #00CC00;
-        }
-        
-        .estado-rechazada {
-            background: #FEE2E2;
-            color: #991B1B;
-            padding: 6px 14px;
-            border-radius: 40px;
-            font-size: 12px;
-            font-weight: 700;
-            text-align: center;
-            display: inline-block;
-        }
-        
-        .estado-en-proceso {
-            background: #E0E7FF;
-            color: #3730A3;
-            padding: 6px 14px;
-            border-radius: 40px;
-            font-size: 12px;
-            font-weight: 700;
-            text-align: center;
-            display: inline-block;
-        }
-        
-        .monto {
-            font-weight: 700;
-            color: #111827;
-        }
-        
-        .acciones {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-        }
-        
-        .acciones .btn {
-            width: 34px;
-            height: 34px;
-            border-radius: 10px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-        }
-        
-        .acciones .btn:hover {
-            transform: scale(1.05);
-        }
-        
-        .badge-codigo {
-            font-family: monospace;
+        /* =========================== */
+        /* ESTILOS COMPACTOS */
+        /* =========================== */
+        * {
             font-size: 13px;
-            font-weight: 700;
-            background: #f3f4f6;
-            padding: 4px 10px;
-            border-radius: 8px;
-            color: #374151;
         }
         
-        .codigo-tmp {
-            color: #f59e0b;
-            background: #fef3c7;
+        body {
+            background: #f3f6fa;
+            padding: 8px !important;
         }
         
-        .fecha-hora {
-            font-size: 12px;
-            line-height: 1.4;
+        .container-fluid {
+            padding: 0 8px !important;
         }
         
-        .fecha-hora .fecha {
-            font-weight: 600;
-            color: #111827;
-        }
-        
-        .fecha-hora .hora {
-            font-size: 11px;
-            color: #6b7280;
-        }
-        
-        /* Modal de confirmación */
-        .modal-confirmacion {
-            border-radius: 20px;
-        }
-        
-        .modal-confirmacion .modal-header {
-            background: linear-gradient(135deg, #111827, #1f2937);
-            color: white;
-            border-radius: 20px 20px 0 0;
-        }
-        
-        /* Modal Documentos Vinculados */
-        .modal-documentos .modal-header {
-            background: linear-gradient(135deg, #4f46e5, #6366f1);
-        }
-        
-        .documento-item {
+        /* Header compacto */
+        .header-compacto {
+            background: white;
+            border-radius: 10px;
+            padding: 8px 16px;
+            margin-bottom: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 16px;
-            border-bottom: 1px solid #f0f0f0;
-            transition: background 0.2s;
-            border-radius: 8px;
-            margin-bottom: 4px;
         }
         
-        .documento-item:hover {
-            background: #f8fafc;
-        }
-        
-        .documento-item:last-child {
-            border-bottom: none;
-        }
-        
-        .documento-tipo {
+        .header-compacto h5 {
+            font-size: 15px;
             font-weight: 700;
-            font-size: 14px;
+            margin: 0;
             color: #111827;
-            display: flex;
-            align-items: center;
         }
         
-        .documento-tipo i {
-            margin-right: 10px;
-            font-size: 20px;
-        }
-        
-        .documento-detalle {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-        
-        .documento-numero {
-            font-family: monospace;
-            font-weight: 600;
-            color: #374151;
-            background: #f3f4f6;
-            padding: 2px 12px;
-            border-radius: 6px;
-            font-size: 13px;
-        }
-        
-        .documento-fecha {
-            font-size: 12px;
-            color: #6b7280;
-        }
-        
-        .documento-cliente {
-            font-size: 13px;
-            color: #4b5563;
-        }
-        
-        .documentos-header-info {
-            background: #f8fafc;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            font-size: 14px;
-        }
-        
-        /* Badges para tipos de documentos */
-        .badge-cotizacion {
-            background: #e0e7ff;
-            color: #3730a3;
-        }
-        
-        .badge-guia {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-        
-        .badge-boleta {
-            background: #d1fae5;
-            color: #065f46;
-        }
-        
-        .badge-factura {
-            background: #fef3c7;
-            color: #92400e;
-        }
-        
-        .badge-sin-documentos {
-            background: #f3f4f6;
-            color: #6b7280;
-        }
-        
-        /* Toolbar stats - VERSIÓN MÁS PEQUEÑA */
-        .stats-bar {
-            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-            border-radius: 14px;
-            padding: 8px 12px;
-            margin-bottom: 20px;
-        }
-        
-        .stat-item {
-            text-align: center;
-            padding: 6px 4px;
-        }
-        
-        .stat-number {
-            font-size: 20px;
-            font-weight: 800;
-            color: #111827;
-            line-height: 1.2;
-        }
-        
-        .stat-label {
+        .header-compacto .subtitle {
             font-size: 11px;
             color: #6b7280;
-            margin-top: 2px;
+            margin: 0;
+        }
+        
+        .header-compacto .badge-kcf {
+            font-size: 11px;
+            padding: 4px 12px;
+            background: #111827;
+            color: white;
+            border-radius: 20px;
+        }
+        
+        /* Stats compactos */
+        .stats-compacto {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 6px 10px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border-left: 3px solid #e5e7eb;
+        }
+        
+        .stat-card .num {
+            font-size: 20px;
+            font-weight: 800;
+            line-height: 1.1;
+            color: #111827;
+        }
+        
+        .stat-card .label {
+            font-size: 10px;
+            color: #6b7280;
+            text-transform: uppercase;
             letter-spacing: 0.3px;
         }
         
-        /* Modal crear cliente */
-        .modal-crear-cliente .modal-body {
-            max-height: 70vh;
+        .stat-card.total { border-left-color: #4f46e5; }
+        .stat-card.borradores { border-left-color: #f59e0b; }
+        .stat-card.generadas { border-left-color: #0055FF; }
+        .stat-card.aceptadas { border-left-color: #00CC00; }
+        
+        /* Toolbar compacto */
+        .toolbar-compacto {
+            background: white;
+            border-radius: 8px;
+            padding: 6px 10px;
+            margin-bottom: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .toolbar-compacto .btn {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        
+        .toolbar-compacto .btn-sm-custom {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+        
+        .toolbar-compacto .form-select {
+            font-size: 12px;
+            padding: 4px 28px 4px 10px;
+            border-radius: 6px;
+            width: 140px;
+            min-height: 30px;
+        }
+        
+        .toolbar-compacto .search-input {
+            font-size: 12px;
+            padding: 4px 10px 4px 32px;
+            border-radius: 20px;
+            min-width: 200px;
+            height: 30px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .toolbar-compacto .search-input:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 2px rgba(79,70,229,0.1);
+            outline: none;
+        }
+        
+        .toolbar-compacto .search-icon {
+            left: 12px;
+            top: 7px;
+            font-size: 12px;
+            color: #9ca3af;
+        }
+        
+        /* Separador */
+        .separador {
+            width: 1px;
+            height: 24px;
+            background: #e5e7eb;
+            margin: 0 4px;
+        }
+        
+        /* Tabla compacta */
+        .tabla-cotizaciones-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            overflow: hidden;
+            max-height: 65vh;
             overflow-y: auto;
+        }
+        
+        .tabla-cotizaciones-container table {
+            margin-bottom: 0;
+            font-size: 12px;
+        }
+        
+        .tabla-cotizaciones-container table thead th {
+            background: #111827 !important;
+            color: #ffffff !important;
+            padding: 6px 6px !important;
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+            border: none;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .tabla-cotizaciones-container table tbody td {
+            padding: 5px 6px !important;
+            vertical-align: middle;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 12px;
+        }
+        
+        .tabla-cotizaciones-container table tbody tr:hover {
+            background: #f8fafc;
+        }
+        
+        .tabla-cotizaciones-container table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        /* Estados compactos */
+        .estado-badge {
+            padding: 2px 10px;
+            border-radius: 30px;
+            font-size: 10px;
+            font-weight: 700;
+            display: inline-block;
+            white-space: nowrap;
+        }
+        
+        .estado-badge.borrador {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+        
+        .estado-badge.generada {
+            background: #0055FF;
+            color: #FFFFFF;
+            box-shadow: 0 0 8px rgba(0, 85, 255, 0.3);
+        }
+        
+        .estado-badge.aceptada {
+            background: #00FF00;
+            color: #000000;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.4);
+            font-weight: 900;
+        }
+        
+        .estado-badge.rechazada {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+        
+        .estado-badge.proceso {
+            background: #E0E7FF;
+            color: #3730A3;
+        }
+        
+        /* Fecha compacta */
+        .fecha-compacta {
+            line-height: 1.2;
+        }
+        
+        .fecha-compacta .fecha {
+            font-weight: 600;
+            font-size: 11px;
+            color: #111827;
+        }
+        
+        .fecha-compacta .hora {
+            font-size: 10px;
+            color: #6b7280;
+        }
+        
+        /* Código cliente */
+        .badge-codigo-cliente {
+            font-family: monospace;
+            font-size: 11px;
+            font-weight: 600;
+            background: #f3f4f6;
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: #374151;
+        }
+        
+        /* Monto */
+        .monto-texto {
+            font-weight: 700;
+            color: #059669;
+            font-size: 12px;
+        }
+        
+        /* Dropdown compacto */
+        .dropdown-acciones .btn-acciones {
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            font-size: 14px;
+            background: #e5e7eb;
+            border: none;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+        
+        .dropdown-acciones .btn-acciones:hover {
+            background: #d1d5db;
+            transform: scale(1.05);
+        }
+        
+        .dropdown-acciones .dropdown-menu {
+            min-width: 160px;
+            padding: 4px 0;
+            border-radius: 8px;
+            font-size: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .dropdown-acciones .dropdown-item {
+            padding: 4px 12px;
+            font-size: 12px;
+        }
+        
+        .dropdown-acciones .dropdown-item i {
+            margin-right: 6px;
+            font-size: 13px;
+            width: 16px;
+            text-align: center;
+        }
+        
+        .dropdown-acciones .dropdown-divider {
+            margin: 2px 0;
+        }
+        
+        /* Scrollbar */
+        .tabla-cotizaciones-container::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        
+        .tabla-cotizaciones-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .tabla-cotizaciones-container::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 10px;
+        }
+        
+        .tabla-cotizaciones-container::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
         }
         
         /* Notificaciones */
         #notificacionesContainer {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 10000;
+            top: 12px;
+            right: 12px;
+            z-index: 9999;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 6px;
         }
         
         .notificacion {
-            padding: 15px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 15px;
-            min-width: 300px;
-            max-width: 500px;
-            animation: slideIn 0.3s ease;
-            font-family: Arial, sans-serif;
-            font-size: 14px;
+            gap: 10px;
+            min-width: 250px;
+            animation: slideIn 0.25s ease;
+            color: white;
         }
         
-        .notificacion-exito { background: #4CAF50; color: white; }
-        .notificacion-error { background: #f44336; color: white; }
-        .notificacion-info { background: #2196F3; color: white; }
-        .notificacion-warning { background: #ff9800; color: white; }
+        .notificacion-exito { background: #059669; }
+        .notificacion-error { background: #dc2626; }
+        .notificacion-info { background: #2563eb; }
+        .notificacion-warning { background: #d97706; }
         
-        /* Celda de estado con semáforo */
-        .estado-cell {
-            text-align: center;
-        }
-        
-        /* Columna Ítems con badge */
-        .items-badge {
-            background: #E5E7EB;
-            color: #374151;
-            font-weight: 700;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 13px;
-            display: inline-block;
-            text-align: center;
+        .notificacion .btn-close {
+            filter: brightness(0) invert(1);
+            font-size: 10px;
         }
         
         @keyframes slideIn {
@@ -393,359 +389,248 @@
             to { transform: translateX(100%); opacity: 0; }
         }
         
-        /* =========================== */
-        /* 🆕 CABECERA FIJA AL HACER SCROLL */
-        /* =========================== */
-        .tabla-cotizaciones-container {
-            max-height: 70vh;
-            overflow-y: auto;
-            position: relative;
-        }
-
-        .tabla-cotizaciones-container table thead {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .tabla-cotizaciones-container table thead th {
-            background: #111827 !important;
-            color: #ffffff !important;
-            position: sticky;
-            top: 0;
-            z-index: 101;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            white-space: nowrap;
-            padding: 12px 8px;
-        }
-
-        .tabla-cotizaciones-container table thead th:first-child {
-            z-index: 102;
-        }
-
-        /* Scroll personalizado */
-        .tabla-cotizaciones-container::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        .tabla-cotizaciones-container::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-
-        .tabla-cotizaciones-container::-webkit-scrollbar-thumb {
-            background: #c1c7cd;
-            border-radius: 10px;
-        }
-
-        .tabla-cotizaciones-container::-webkit-scrollbar-thumb:hover {
-            background: #a0a7ae;
-        }
-
-        /* Para Firefox */
-        .tabla-cotizaciones-container {
-            scrollbar-width: thin;
-            scrollbar-color: #c1c7cd #f1f1f1;
-        }
-        
+        /* Responsive */
         @media (max-width: 768px) {
-            .top-bar {
+            .stats-compacto {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .toolbar-compacto {
                 flex-direction: column;
-                align-items: stretch !important;
+                align-items: stretch;
             }
             
-            .left-actions, .right-actions {
-                justify-content: center;
+            .toolbar-compacto .search-input {
+                min-width: 100%;
             }
             
-            .search-input {
+            .toolbar-compacto .form-select {
                 width: 100%;
-                min-width: auto !important;
             }
             
-            .acciones {
-                flex-wrap: wrap;
-            }
-            
-            .stat-number {
-                font-size: 18px;
-            }
-            
-            .stat-label {
-                font-size: 10px;
-            }
-            
-            .documento-detalle {
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-            
-            .documento-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
+            .separador {
+                display: none;
             }
             
             .tabla-cotizaciones-container {
                 max-height: 50vh;
+            }
+            
+            .header-compacto {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
             }
         }
     </style>
 </head>
 <body>
 
-<div class="container-fluid px-4 py-4">
+<div class="container-fluid">
 
-    <!-- HEADER -->
-    <div class="card card-custom mb-4">
-        <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
-            <div>
-                <h1 class="page-title mb-1">
-                    <i class="bi bi-clipboard-data-fill text-primary"></i>
-                    Gestor de Cotizaciones
-                </h1>
-                <div class="subtitle">
-                    Administración de cotizaciones comerciales y órdenes de compra
-                </div>
-            </div>
-            <div>
-                <span class="badge bg-primary fs-6 px-3 py-2">
-                    <i class="bi bi-buildings-fill me-1"></i>
-                    KCF CORPORACION
-                </span>
-            </div>
+    <!-- HEADER COMPACTO -->
+    <div class="header-compacto">
+        <div>
+            <h5><i class="bi bi-clipboard-data-fill text-primary me-1"></i> Gestor de Cotizaciones</h5>
+            <div class="subtitle">Administración de cotizaciones comerciales</div>
+        </div>
+        <span class="badge-kcf"><i class="bi bi-buildings-fill me-1"></i> KCF CORPORACION</span>
+    </div>
+
+    <!-- STATS COMPACTOS -->
+    <div class="stats-compacto">
+        <div class="stat-card total">
+            <div class="num" id="totalCotizaciones">0</div>
+            <div class="label">Total</div>
+        </div>
+        <div class="stat-card borradores">
+            <div class="num" id="totalBorradores">0</div>
+            <div class="label">Borradores</div>
+        </div>
+        <div class="stat-card generadas">
+            <div class="num" id="totalGeneradas">0</div>
+            <div class="label">Generadas</div>
+        </div>
+        <div class="stat-card aceptadas">
+            <div class="num" id="totalAceptadas">0</div>
+            <div class="label">Aceptadas</div>
         </div>
     </div>
 
-    <!-- STATS BAR - VERSIÓN MÁS PEQUEÑA -->
-    <div class="stats-bar" id="statsBar">
-        <div class="row text-center g-0">
-            <div class="col-6 col-md-3 stat-item">
-                <div class="stat-number" id="totalCotizaciones">0</div>
-                <div class="stat-label">Total Cotizaciones</div>
-            </div>
-            <div class="col-6 col-md-3 stat-item">
-                <div class="stat-number" id="totalBorradores">0</div>
-                <div class="stat-label">Borradores</div>
-            </div>
-            <div class="col-6 col-md-3 stat-item">
-                <div class="stat-number" id="totalGeneradas">0</div>
-                <div class="stat-label">Generadas</div>
-            </div>
-            <div class="col-6 col-md-3 stat-item">
-                <div class="stat-number" id="totalAceptadas">0</div>
-                <div class="stat-label">Aceptadas</div>
-            </div>
+    <!-- TOOLBAR COMPACTO -->
+    <div class="toolbar-compacto">
+        <!-- Izquierda -->
+        <a href="/index" class="btn btn-secondary btn-sm-custom">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+
+        <select id="filtroTipo" class="form-select">
+            <option value="todas">📋 Ver Todo</option>
+            <option value="borrador">📝 Borradores</option>
+            <option value="generada">📄 Generadas</option>
+            <option value="aceptada">✅ Aceptadas</option>
+            <option value="rechazada">❌ Rechazadas</option>
+            <option value="en_proceso">⏳ En Proceso</option>
+        </select>
+
+        <div class="position-relative" style="flex:1; min-width:150px;">
+            <i class="bi bi-search position-absolute search-icon"></i>
+            <input type="text" id="buscador" class="form-control search-input"
+                   placeholder="Buscar por N° / Cliente / Vendedor...">
         </div>
+
+        <span class="separador"></span>
+
+        <!-- Derecha -->
+        <button class="btn btn-info btn-sm-custom" id="btnRefrescar">
+            <i class="bi bi-arrow-repeat"></i>
+        </button>
+
+        <a href="/crear_cotizacion" class="btn btn-success btn-sm-custom">
+            <i class="bi bi-plus-circle"></i> Nueva
+        </a>
     </div>
 
-    <!-- ACCIONES -->
-    <div class="card card-custom mb-4">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 top-bar">
-
-                <!-- IZQUIERDA -->
-                <div class="d-flex align-items-center flex-wrap gap-2 left-actions">
-                    <a href="/index" class="btn btn-secondary btn-custom">
-                        <i class="bi bi-arrow-left"></i>
-                        Volver
-                    </a>
-
-                    <select id="filtroTipo" class="form-select" style="width: 220px; border-radius: 12px;">
-                        <option value="todas">📋 Ver Todo</option>
-                        <option value="borrador">📝 Borradores</option>
-                        <option value="generada">📄 Generadas</option>
-                        <option value="aceptada">✅ Aceptadas</option>
-                        <option value="rechazada">❌ Rechazadas</option>
-                        <option value="en_proceso">⏳ En Proceso</option>
-                    </select>
-
-                    <div class="position-relative">
-                        <i class="bi bi-search position-absolute" style="left:15px; top:11px; color:#888;"></i>
-                        <input type="text" id="buscador" class="form-control search-input ps-5"
-                               placeholder="Buscar por N° / Código / Cliente / Vendedor..."
-                               style="min-width:300px;">
-                    </div>
-                </div>
-
-                <!-- DERECHA -->
-                <div class="d-flex gap-2 right-actions">
-                    <button class="btn btn-info btn-custom" id="btnRefrescar">
-                        <i class="bi bi-arrow-repeat"></i>
-                        Refrescar
-                    </button>
-                    <a href="/crear_cotizacion" class="btn btn-success btn-custom">
-                        <i class="bi bi-plus-circle"></i>
-                        Nueva Cotización
-                    </a>
-                </div>
-
-            </div>
-        </div>
+    <!-- TABLA COMPACTA -->
+    <div class="tabla-cotizaciones-container">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th style="width:32px;">#</th>
+                    <th style="min-width:80px;">Fecha / Hora</th>
+                    <th style="min-width:70px;">Estado</th>
+                    <th style="min-width:100px;">N° Cotización</th>
+                    <th style="min-width:80px;">RUC</th>
+                    <th style="min-width:90px;">Cód. Cliente</th>
+                    <th style="min-width:90px;">R. Comercial</th>
+                    <th style="min-width:100px;">R. Social</th>
+                    <th style="min-width:100px;">Descripción</th>
+                    <th style="min-width:80px;" class="text-end">Monto</th>
+                    <th style="min-width:70px;">Nota</th>
+                    <th style="min-width:80px;">Cond. Pago</th>
+                    <th style="width:50px;" class="text-center">Acc.</th>
+                </tr>
+            </thead>
+            <tbody id="tbodyCotizaciones">
+                <tr>
+                    <td colspan="13" class="text-center py-4 text-muted">
+                        <div class="spinner-border text-primary spinner-border-sm mb-1"></div>
+                        <div class="small">Cargando...</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
-    <!-- TABLA CON CONTENEDOR PARA SCROLL FIJO -->
-    <div class="card card-custom">
-        <div class="card-body p-0">
-            <!-- 🆕 CONTENEDOR CON SCROLL PARA CABECERA FIJA -->
-            <div class="tabla-cotizaciones-container">
-                <table class="table table-hover align-middle mb-0" id="tablaCotizaciones">
-                    <thead>
-                        <tr>
-                            <th style="width:50px; min-width:50px;">Ítems</th>
-                            <th style="min-width:120px;">Fecha y Hora</th>
-                            <th style="min-width:110px;">Estado</th>
-                            <th style="min-width:130px;">N° Cotización</th>
-                            <th style="min-width:100px;">RUC</th>
-                            <th style="min-width:120px;">Código Cliente</th>
-                            <th style="min-width:120px;">R comercial</th>
-                            <th style="min-width:150px;">R social</th>
-                            <th style="min-width:150px;">Descripción</th>
-                            <th style="min-width:130px;" class="text-end">Monto (Con IGV)</th>
-                            <th style="min-width:120px;">Nota aclaratoria</th>
-                            <th style="min-width:110px;">Condición pago</th>
-                            <th style="min-width:100px;" class="text-center">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbodyCotizaciones">
-                        <tr>
-                            <td colspan="13" class="text-center py-5">
-                                <div class="spinner-border text-primary mb-3"></div>
-                                <div class="text-muted">Cargando cotizaciones...</div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
 </div>
 
 <!-- ============================================= -->
-<!-- 🆕 MODAL DOCUMENTOS VINCULADOS                -->
+<!-- MODALES -->
 <!-- ============================================= -->
+
+<!-- MODAL DOCUMENTOS VINCULADOS -->
 <div class="modal fade" id="modalDocumentosVinculados" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content modal-confirmacion modal-documentos">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-link-45deg me-2"></i>
-                    Documentos Vinculados
-                </h5>
+        <div class="modal-content">
+            <div class="modal-header py-2 bg-dark text-white">
+                <h6 class="modal-title"><i class="bi bi-link-45deg me-1"></i> Documentos Vinculados</h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" id="documentosBody">
-                <div class="documentos-header-info">
-                    <i class="bi bi-file-earmark-text me-2"></i>
-                    Cotización: <strong id="docCotizacionNumero">--</strong>
-                    <span class="ms-3"><i class="bi bi-person me-1"></i> Cliente: <strong id="docClienteNombre">--</strong></span>
-                    <span class="ms-3"><i class="bi bi-person-badge me-1"></i> Vendedor: <strong id="docVendedorNombre">--</strong></span>
+            <div class="modal-body" id="documentosBody" style="font-size:13px;">
+                <div class="bg-light p-2 rounded mb-2 small">
+                    <i class="bi bi-file-earmark-text me-1"></i> Cotización: <strong id="docCotizacionNumero">--</strong>
+                    <span class="ms-2"><i class="bi bi-person me-1"></i> <strong id="docClienteNombre">--</strong></span>
+                    <span class="ms-2"><i class="bi bi-person-badge me-1"></i> <strong id="docVendedorNombre">--</strong></span>
                 </div>
-                <div id="documentosLista">
-                    <!-- Los documentos se cargan dinámicamente -->
-                </div>
+                <div id="documentosLista"></div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="bi bi-x-circle"></i> Cerrar
-                </button>
+            <div class="modal-footer py-2">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- MODAL CREAR NUEVO CLIENTE (desde listado) CON BOTÓN SUNAT -->
+<!-- MODAL CREAR CLIENTE -->
 <div class="modal fade" id="modalNuevoClienteListado" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content modal-confirmacion">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-person-plus-fill text-success"></i>
-                    Nuevo Cliente
-                </h5>
+        <div class="modal-content">
+            <div class="modal-header py-2 bg-dark text-white">
+                <h6 class="modal-title"><i class="bi bi-person-plus-fill me-1"></i> Nuevo Cliente</h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body modal-crear-cliente">
+            <div class="modal-body" style="font-size:13px;">
                 <form id="formNuevoClienteListado">
-                    <div class="row g-3">
+                    <div class="row g-2">
                         <div class="col-md-6">
-                            <label class="form-label">Tipo Documento <span class="text-danger">*</span></label>
-                            <select class="form-select" id="nuevo_tipo_documento_listado" required>
+                            <label class="form-label small">Tipo Documento</label>
+                            <select class="form-select form-select-sm" id="nuevo_tipo_documento_listado">
                                 <option value="RUC">RUC</option>
                                 <option value="DNI">DNI</option>
                                 <option value="CE">Carnet de Extranjería</option>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Número Documento <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="nuevo_numero_documento_listado" required placeholder="11 dígitos para RUC">
-                                <button class="btn btn-primary" type="button" id="btnBuscarSunatListado">
-                                    <i class="bi bi-search"></i> Buscar en SUNAT
+                            <label class="form-label small">Número Documento</label>
+                            <div class="input-group input-group-sm">
+                                <input type="text" class="form-control" id="nuevo_numero_documento_listado" placeholder="11 dígitos RUC">
+                                <button class="btn btn-primary btn-sm" type="button" id="btnBuscarSunatListado">
+                                    <i class="bi bi-search"></i> SUNAT
                                 </button>
                             </div>
-                            <small class="text-muted">Para RUC, puede buscar datos automáticamente en SUNAT</small>
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label">Razón Social / Nombre <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="nuevo_razon_social_listado" required>
+                            <label class="form-label small">Razón Social</label>
+                            <input type="text" class="form-control form-control-sm" id="nuevo_razon_social_listado">
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label">Nombre Comercial</label>
-                            <input type="text" class="form-control" id="nuevo_nombre_comercial_listado">
+                            <label class="form-label small">Nombre Comercial</label>
+                            <input type="text" class="form-control form-control-sm" id="nuevo_nombre_comercial_listado">
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label">Dirección Fiscal</label>
-                            <input type="text" class="form-control" id="nuevo_direccion_fiscal_listado">
+                            <label class="form-label small">Dirección Fiscal</label>
+                            <input type="text" class="form-control form-control-sm" id="nuevo_direccion_fiscal_listado">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Teléfono Contacto</label>
-                            <input type="text" class="form-control" id="nuevo_telefono_listado">
+                            <label class="form-label small">Teléfono</label>
+                            <input type="text" class="form-control form-control-sm" id="nuevo_telefono_listado">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Email Contacto</label>
-                            <input type="email" class="form-control" id="nuevo_email_listado">
+                            <label class="form-label small">Email</label>
+                            <input type="email" class="form-control form-control-sm" id="nuevo_email_listado">
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label">Nombre Contacto</label>
-                            <input type="text" class="form-control" id="nuevo_nombre_contacto_listado">
+                            <label class="form-label small">Contacto</label>
+                            <input type="text" class="form-control form-control-sm" id="nuevo_nombre_contacto_listado">
                         </div>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="bi bi-x-circle"></i> Cancelar
-                </button>
-                <button type="button" class="btn btn-success" id="btnGuardarNuevoClienteListado">
-                    <i class="bi bi-save-fill"></i> Guardar Cliente
+            <div class="modal-footer py-2">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success btn-sm" id="btnGuardarNuevoClienteListado">
+                    <i class="bi bi-save"></i> Guardar
                 </button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- MODAL DE ELIMINACIÓN -->
+<!-- MODAL ELIMINAR -->
 <div class="modal fade" id="modalEliminar" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content modal-confirmacion">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
-                    Confirmar Eliminación
-                </h5>
+        <div class="modal-content">
+            <div class="modal-header py-2 bg-dark text-white">
+                <h6 class="modal-title"><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i> Confirmar</h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <p>¿Está seguro que desea eliminar esta cotización?</p>
+            <div class="modal-body" style="font-size:13px;">
+                <p class="mb-0">¿Eliminar esta cotización?</p>
                 <p class="text-muted small" id="eliminarInfo">Esta acción no se puede deshacer.</p>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="bi bi-x-circle"></i> Cancelar
-                </button>
-                <button type="button" class="btn btn-danger" id="btnConfirmarEliminar">
+            <div class="modal-footer py-2">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger btn-sm" id="btnConfirmarEliminar">
                     <i class="bi bi-trash"></i> Eliminar
                 </button>
             </div>
@@ -753,30 +638,23 @@
     </div>
 </div>
 
-<!-- MODAL DE VER DETALLE -->
+<!-- MODAL DETALLE -->
 <div class="modal fade" id="modalDetalle" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content modal-confirmacion">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-file-text-fill me-2"></i>
-                    Detalle de Cotización
-                </h5>
+        <div class="modal-content">
+            <div class="modal-header py-2 bg-dark text-white">
+                <h6 class="modal-title"><i class="bi bi-file-text-fill me-1"></i> Detalle Cotización</h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" id="detalleBody">
-                <!-- Contenido dinámico -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="bi bi-x-circle"></i> Cerrar
-                </button>
+            <div class="modal-body" id="detalleBody" style="font-size:13px;"></div>
+            <div class="modal-footer py-2">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Notificaciones Container -->
+<!-- NOTIFICACIONES -->
 <div id="notificacionesContainer"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

@@ -1,4 +1,4 @@
-// listado_cotizaciones.js
+// listado_cotizaciones.js - VERSIÓN COMPACTA Y OPTIMIZADA
 let filtro;
 let buscador;
 let timeout;
@@ -189,9 +189,9 @@ async function cargarCotizaciones() {
     if (tbody) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="13" class="text-center py-5">
-                    <div class="spinner-border text-primary mb-3"></div>
-                    <div class="text-muted">Cargando cotizaciones...</div>
+                <td colspan="13" class="text-center py-4">
+                    <div class="spinner-border text-primary spinner-border-sm mb-1"></div>
+                    <div class="small text-muted">Cargando cotizaciones...</div>
                 </td>
             </tr>
         `;
@@ -248,10 +248,9 @@ async function cargarCotizaciones() {
         if (tbody) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="13" class="text-center py-5 text-danger">
-                        <i class="bi bi-wifi-off fs-1"></i>
-                        <div class="mt-2">Error de conexión: ${e.message}</div>
-                        <div class="mt-2 small">Recargue la página o contacte al administrador</div>
+                    <td colspan="13" class="text-center py-4 text-danger">
+                        <i class="bi bi-wifi-off fs-3"></i>
+                        <div class="small mt-1">Error de conexión: ${e.message}</div>
                     </td>
                 </tr>
             `;
@@ -410,7 +409,7 @@ function escapeHtml(str) {
 }
 
 // ===========================
-// RENDERIZAR TABLA - CON BOTÓN DE DOCUMENTOS VINCULADOS
+// RENDERIZAR TABLA - VERSIÓN COMPACTA Y OPTIMIZADA
 // ===========================
 function renderizarTabla(cotizaciones) {
     const tbody = document.getElementById('tbodyCotizaciones');
@@ -420,9 +419,9 @@ function renderizarTabla(cotizaciones) {
     if (!cotizaciones || cotizaciones.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="13" class="text-center py-5 text-muted">
-                    <i class="bi bi-inbox fs-1"></i>
-                    <div class="mt-2">No hay cotizaciones para mostrar</div>
+                <td colspan="13" class="text-center py-4 text-muted">
+                    <i class="bi bi-inbox fs-4 d-block"></i>
+                    <small>No hay cotizaciones para mostrar</small>
                 </td>
             </tr>
         `;
@@ -435,7 +434,7 @@ function renderizarTabla(cotizaciones) {
         const total = Number(c.total || 0).toFixed(2);
         const esBorrador = c.codigo_cotizacion && c.codigo_cotizacion.startsWith('TMP-');
         const codigoMostrar = c.codigo_cotizacion || c.numero_cotizacion;
-        let estadoHtml = renderEstado(c.estado, esBorrador);
+        let estadoHtml = renderEstadoCompacto(c.estado, esBorrador);
         
         const ruc = c.ruc || '---';
         const codigoCliente = c.codigo_cliente || '---';
@@ -448,75 +447,96 @@ function renderizarTabla(cotizaciones) {
         const tieneDocumentos = c.tiene_documentos || false;
         const documentosCount = c.documents_count || 0;
         
+        // ID único para el dropdown
+        const dropdownId = `dropdown-${c.id}-${index}`;
+        
+        // Construir items del dropdown
+        let dropdownItems = `
+            <li><a class="dropdown-item" href="#" onclick="verDetalle(${c.id}); return false;">
+                <i class="bi bi-eye"></i> Ver detalle
+            </a></li>
+            <li><a class="dropdown-item" href="#" onclick="editar(${c.id}); return false;">
+                <i class="bi bi-pencil"></i> Editar
+            </a></li>
+            <li><a class="dropdown-item" href="#" onclick="duplicarCotizacion(${c.id}); return false;">
+                <i class="bi bi-files"></i> Duplicar
+            </a></li>
+            <li><a class="dropdown-item" href="#" onclick="enviarPorEmail(${c.id}); return false;">
+                <i class="bi bi-envelope"></i> Email
+            </a></li>
+            <li><a class="dropdown-item" href="#" onclick="exportarPDF(${c.id}); return false;">
+                <i class="bi bi-file-pdf"></i> PDF
+            </a></li>
+            <li><a class="dropdown-item text-info" href="#" onclick="verDocumentos(${c.id}); return false;">
+                <i class="bi bi-link-45deg"></i> Documentos
+                ${tieneDocumentos ? `<span class="badge bg-primary ms-1" style="font-size:9px;">${documentosCount}</span>` : ''}
+            </a></li>
+        `;
+        
+        // Agregar opción "Aceptada" solo si está Generada
+        if (c.estado === 'Generada' || c.estado === 'generada') {
+            dropdownItems += `
+                <li><a class="dropdown-item text-success" href="#" onclick="aceptarCotizacion(${c.id}, '${escapeHtml(codigoMostrar)}'); return false;">
+                    <i class="bi bi-check-circle-fill"></i> Aceptada
+                </a></li>
+            `;
+        }
+        
+        // Agregar opciones para Aceptadas
+        if (c.estado === 'Aceptada por Cliente' || c.estado === 'aceptada') {
+            dropdownItems += `
+                <li><a class="dropdown-item text-primary" href="#" onclick="crearGuiaRemision(${c.id}); return false;">
+                    <i class="bi bi-truck"></i> Guía
+                </a></li>
+                <li><a class="dropdown-item text-success" href="#" onclick="crearComprobante(${c.id}, 'FACTURA'); return false;">
+                    <i class="bi bi-receipt"></i> Factura
+                </a></li>
+                <li><a class="dropdown-item text-info" href="#" onclick="crearComprobante(${c.id}, 'BOLETA'); return false;">
+                    <i class="bi bi-ticket-perforated"></i> Boleta
+                </a></li>
+            `;
+        }
+        
+        // Agregar separador y eliminar
+        dropdownItems += `
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="#" onclick="mostrarModalEliminar(${c.id}, '${escapeHtml(codigoMostrar)}'); return false;">
+                <i class="bi bi-trash"></i> Eliminar
+            </a></li>
+        `;
+        
         return `
             <tr data-id="${c.id}" data-codigo="${escapeHtml(codigoMostrar)}">
-                <td class="text-center fw-bold">${index + 1}</td>
-                <td class="fecha-cell">
-                    <div class="fecha-hora">
-                        <div class="fecha"><strong>${fecha}</strong></div>
-                        <div class="hora small text-muted">${hora}</div>
+                <td class="text-center fw-bold" style="font-size:12px;">${index + 1}</td>
+                <td>
+                    <div class="fecha-compacta">
+                        <div class="fecha">${fecha}</div>
+                        <div class="hora">${hora}</div>
                     </div>
                 </td>
-                <td class="estado-cell">${estadoHtml}</td>
-                <td class="codigo-cell">
-                    <strong>${escapeHtml(codigoMostrar || '-')}</strong>
-                    ${c.correlativo ? `<br><small class="text-muted">Correl: ${c.correlativo}</small>` : ''}
+                <td>${estadoHtml}</td>
+                <td>
+                    <strong style="font-size:12px;">${escapeHtml(codigoMostrar || '-')}</strong>
+                    ${c.correlativo ? `<br><small style="font-size:9px;color:#6b7280;">${c.correlativo}</small>` : ''}
                 </td>
-                <td>${escapeHtml(ruc)}</td>
-                <td><span class="badge-codigo">${escapeHtml(codigoCliente)}</span></td>
-                <td><small>${escapeHtml(razonComercial)}</small></td>
-                <td><strong>${escapeHtml(razonSocial)}</strong></td>
-                <td><small title="${escapeHtml(descripcion)}">${escapeHtml(descripcion.length > 50 ? descripcion.substring(0, 50) + '...' : descripcion)}</small></td>
-                <td class="monto text-end fw-bold text-success">S/ ${Number(total).toLocaleString('es-PE', { minimumFractionDigits: 2 })}</td>
-                <td><small class="text-muted" title="${escapeHtml(notaAclaratoria)}">${escapeHtml(notaAclaratoria.length > 40 ? notaAclaratoria.substring(0, 40) + '...' : notaAclaratoria)}</small></td>
-                <td><small>${escapeHtml(condicionPago)}</small></td>
-                <td class="acciones text-center">
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <td style="font-size:11px;">${escapeHtml(ruc)}</td>
+                <td><span class="badge-codigo-cliente">${escapeHtml(codigoCliente)}</span></td>
+                <td><small style="font-size:11px;">${escapeHtml(razonComercial)}</small></td>
+                <td><strong style="font-size:12px;">${escapeHtml(razonSocial)}</strong></td>
+                <td><small style="font-size:11px;" title="${escapeHtml(descripcion)}">${escapeHtml(descripcion.length > 35 ? descripcion.substring(0, 35) + '...' : descripcion)}</small></td>
+                <td class="text-end monto-texto">S/ ${Number(total).toLocaleString('es-PE', { minimumFractionDigits: 2 })}</td>
+                <td><small style="font-size:10px;color:#6b7280;" title="${escapeHtml(notaAclaratoria)}">${escapeHtml(notaAclaratoria.length > 20 ? notaAclaratoria.substring(0, 20) + '...' : notaAclaratoria)}</small></td>
+                <td><small style="font-size:11px;">${escapeHtml(condicionPago)}</small></td>
+                <td class="text-center">
+                    <div class="dropdown dropdown-acciones" data-cotizacion-id="${c.id}">
+                        <button class="btn-acciones" type="button" 
+                                data-bs-toggle="dropdown" 
+                                aria-expanded="false"
+                                id="${dropdownId}">
                             <i class="bi bi-three-dots-vertical"></i>
                         </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#" onclick="verDetalle(${c.id})">
-                                <i class="bi bi-eye"></i> Ver detalle
-                            </a></li>
-                            <li><a class="dropdown-item" href="#" onclick="editar(${c.id})">
-                                <i class="bi bi-pencil"></i> Editar
-                            </a></li>
-                            <li><a class="dropdown-item" href="#" onclick="duplicarCotizacion(${c.id})">
-                                <i class="bi bi-files"></i> Duplicar
-                            </a></li>
-                            <li><a class="dropdown-item" href="#" onclick="enviarPorEmail(${c.id})">
-                                <i class="bi bi-envelope"></i> Enviar email
-                            </a></li>
-                            <li><a class="dropdown-item" href="#" onclick="exportarPDF(${c.id})">
-                                <i class="bi bi-file-pdf"></i> Exportar PDF
-                            </a></li>
-                            <li><a class="dropdown-item text-info" href="#" onclick="verDocumentos(${c.id})">
-                                <i class="bi bi-link-45deg"></i> Documentos vinculados
-                                ${tieneDocumentos ? `<span class="badge bg-primary ms-1">${documentosCount}</span>` : ''}
-                            </a></li>
-                            ${(c.estado === 'Generada' || c.estado === 'generada') ? `
-                             <li><a class="dropdown-item text-success" href="#" onclick="aceptarCotizacion(${c.id}, '${escapeHtml(codigoMostrar)}')">
-                             <i class="bi bi-check-circle-fill"></i> Aceptada
-                             </a></li>
-                            ` : ''}
-                             ${(c.estado === 'Aceptada por Cliente' || c.estado === 'aceptada') ? `
-                            <li><a class="dropdown-item text-primary" href="#" onclick="crearGuiaRemision(${c.id})">
-                              <i class="bi bi-truck"></i> Crear guía de remisión
-                            </a></li>
-                            ` : ''}
-                            ${(c.estado === 'Aceptada por Cliente' || c.estado === 'aceptada') ? `
-                            <li><a class="dropdown-item text-success" href="#" onclick="crearComprobante(${c.id}, 'FACTURA')">
-                            <i class="bi bi-receipt"></i> Crear Factura
-                            </a></li>
-                            <li><a class="dropdown-item text-info" href="#" onclick="crearComprobante(${c.id}, 'BOLETA')">
-                            <i class="bi bi-ticket-perforated"></i> Crear Boleta
-                            </a></li>
-                            ` : ''}
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="#" onclick="mostrarModalEliminar(${c.id}, '${escapeHtml(codigoMostrar)}')">
-                                <i class="bi bi-trash"></i> Eliminar
-                            </a></li>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="${dropdownId}">
+                            ${dropdownItems}
                         </ul>
                     </div>
                 </td>
@@ -526,6 +546,31 @@ function renderizarTabla(cotizaciones) {
     
     // Ajustar altura después de renderizar
     setTimeout(ajustarAlturaTabla, 50);
+}
+
+// ===========================
+// RENDER ESTADO - VERSIÓN COMPACTA
+// ===========================
+function renderEstadoCompacto(estado, esBorrador = false) {
+    if (esBorrador) {
+        return `<span class="estado-badge borrador">📝 BORRADOR</span>`;
+    }
+    let clase = 'proceso';
+    let texto = estado || 'En Proceso';
+    if (texto === 'En Proceso') {
+        clase = 'proceso';
+        texto = '⏳ Proceso';
+    } else if (texto === 'Generada' || texto === 'generada') {
+        clase = 'generada';
+        texto = '📄 Generada';
+    } else if (texto === 'Aceptada por Cliente' || texto === 'aceptada') {
+        clase = 'aceptada';
+        texto = '✅ Aceptada';
+    } else if (texto === 'Rechazada' || texto === 'rechazada') {
+        clase = 'rechazada';
+        texto = '❌ Rechazada';
+    }
+    return `<span class="estado-badge ${clase}">${texto}</span>`;
 }
 
 // ===========================
@@ -543,7 +588,7 @@ async function verDetalle(id) {
             const fecha = formatearFecha(data.fecha_creacion);
             const hora = formatearHora(data.fecha_creacion);
             const total = Number(data.total || 0).toFixed(2);
-            let estadoBadge = renderEstado(data.estado, esBorrador);
+            let estadoBadge = renderEstadoCompacto(data.estado, esBorrador);
             
             const productosHtml = (data.detalle || []).map((p, index) => {
                 const subtotalSinIGV = Number(p.subtotal_venta_con_descuento || 0);
@@ -566,7 +611,7 @@ async function verDetalle(id) {
             const modalBody = document.getElementById('detalleBody');
             if (modalBody) {
                 modalBody.innerHTML = `
-                    <div class="row mb-3">
+                    <div class="row mb-2">
                         <div class="col-md-6">
                             <div class="text-muted small">NÚMERO</div>
                             <strong>${escapeHtml(data.codigo_cotizacion || data.numero_cotizacion)}</strong>
@@ -577,7 +622,7 @@ async function verDetalle(id) {
                             ${estadoBadge}
                         </div>
                     </div>
-                    <div class="row mb-3">
+                    <div class="row mb-2">
                         <div class="col-md-6">
                             <div class="text-muted small">FECHA Y HORA</div>
                             <strong>${fecha} - ${hora}</strong>
@@ -587,39 +632,39 @@ async function verDetalle(id) {
                             <strong class="text-success">S/ ${Number(total).toLocaleString('es-PE', { minimumFractionDigits: 2 })}</strong>
                         </div>
                     </div>
-                    <hr>
-                    <div class="mb-3">
+                    <hr class="my-2">
+                    <div class="mb-2">
                         <div class="text-muted small">CLIENTE</div>
                         <strong>${escapeHtml(data.cliente || 'Sin cliente')}</strong>
                         ${data.cliente_ruc ? `<br><small>RUC: ${escapeHtml(data.cliente_ruc)}</small>` : ''}
                     </div>
-                    ${data.direccion_fiscal ? `<div class="mb-3"><div class="text-muted small">DIRECCIÓN FISCAL</div>${escapeHtml(data.direccion_fiscal)}</div>` : ''}
-                    <hr>
-                    <div class="mb-3">
+                    ${data.direccion_fiscal ? `<div class="mb-2"><div class="text-muted small">DIRECCIÓN FISCAL</div>${escapeHtml(data.direccion_fiscal)}</div>` : ''}
+                    <hr class="my-2">
+                    <div class="mb-2">
                         <div class="text-muted small">PRODUCTOS</div>
-                        <div class="table-responsive mt-2">
-                            <table class="table table-sm">
+                        <div class="table-responsive mt-1">
+                            <table class="table table-sm table-bordered" style="font-size:12px;">
                                 <thead class="table-light">
                                     <tr>
-                                        <th class="text-center">Item</th>
-                                        <th>Código Producto</th>
+                                        <th class="text-center">#</th>
+                                        <th>Código</th>
                                         <th>Descripción</th>
                                         <th>Marca</th>
                                         <th class="text-center">Cant</th>
-                                        <th class="text-end">Valor total (sin IG)</th>
-                                        <th class="text-end">Precio total (con IG)</th>
+                                        <th class="text-end">Valor s/IGV</th>
+                                        <th class="text-end">Precio c/IGV</th>
                                     </tr>
                                 </thead>
                                 <tbody>${productosHtml || '<tr><td colspan="7" class="text-center">Sin productos</td></tr>'}</tbody>
                             </table>
                         </div>
                     </div>
-                    ${data.condicion_pago ? `<div class="row mb-2"><div class="col-4 text-muted small">Condición Pago:</div><div class="col-8">${escapeHtml(data.condicion_pago)}</div></div>` : ''}
-                    ${data.tiempo_entrega ? `<div class="row mb-2"><div class="col-4 text-muted small">Tiempo Entrega:</div><div class="col-8">${escapeHtml(data.tiempo_entrega)}</div></div>` : ''}
-                    ${data.direccion_entrega ? `<div class="row mb-2"><div class="col-4 text-muted small">Dirección Entrega:</div><div class="col-8">${escapeHtml(data.direccion_entrega)}</div></div>` : ''}
-                    ${data.validez_oferta ? `<div class="row mb-2"><div class="col-4 text-muted small">Validez Oferta:</div><div class="col-8">${escapeHtml(data.validez_oferta)}</div></div>` : ''}
-                    ${data.nota_cotizacion ? `<hr><div class="mb-2"><div class="text-muted small">NOTA COMERCIAL</div>${escapeHtml(data.nota_cotizacion)}</div>` : ''}
-                    ${data.notas ? `<hr><div class="mb-2"><div class="text-muted small">NOTAS INTERNAS</div>${escapeHtml(data.notas)}</div>` : ''}
+                    ${data.condicion_pago ? `<div class="row mb-1"><div class="col-4 text-muted small">Condición Pago:</div><div class="col-8">${escapeHtml(data.condicion_pago)}</div></div>` : ''}
+                    ${data.tiempo_entrega ? `<div class="row mb-1"><div class="col-4 text-muted small">Tiempo Entrega:</div><div class="col-8">${escapeHtml(data.tiempo_entrega)}</div></div>` : ''}
+                    ${data.direccion_entrega ? `<div class="row mb-1"><div class="col-4 text-muted small">Dirección Entrega:</div><div class="col-8">${escapeHtml(data.direccion_entrega)}</div></div>` : ''}
+                    ${data.validez_oferta ? `<div class="row mb-1"><div class="col-4 text-muted small">Validez Oferta:</div><div class="col-8">${escapeHtml(data.validez_oferta)}</div></div>` : ''}
+                    ${data.nota_cotizacion ? `<hr class="my-1"><div class="mb-1"><div class="text-muted small">NOTA COMERCIAL</div>${escapeHtml(data.nota_cotizacion)}</div>` : ''}
+                    ${data.notas ? `<hr class="my-1"><div class="mb-1"><div class="text-muted small">NOTAS INTERNAS</div>${escapeHtml(data.notas)}</div>` : ''}
                 `;
             }
             
@@ -910,30 +955,10 @@ async function eliminarCotizacionConfirmado() {
 }
 
 // ===========================
-// ESTADO CON COLOR SEMÁFORO
+// ESTADO CON COLOR SEMÁFORO - VERSIÓN LEGACY (para compatibilidad)
 // ===========================
 function renderEstado(estado, esBorrador = false) {
-    if (esBorrador) {
-        return `<span class="estado-borrador">📝 BORRADOR</span>`;
-    }
-    let clase = '';
-    let texto = estado || 'En Proceso';
-    if (texto === 'En Proceso') {
-        clase = 'estado-en-proceso';
-        texto = '⏳ En Proceso';
-    } else if (texto === 'Generada' || texto === 'generada') {
-        clase = 'estado-generada';
-        texto = '📄 Generada';
-    } else if (texto === 'Aceptada por Cliente' || texto === 'aceptada') {
-        clase = 'estado-aceptada';
-        texto = '✅ Aceptada';
-    } else if (texto === 'Rechazada' || texto === 'rechazada') {
-        clase = 'estado-rechazada';
-        texto = '❌ Rechazada';
-    } else {
-        clase = 'estado-en-proceso';
-    }
-    return `<span class="${clase}">${texto}</span>`;
+    return renderEstadoCompacto(estado, esBorrador);
 }
 
 // ===========================
@@ -1041,8 +1066,8 @@ window.verDocumentos = async function(id) {
     if (lista) {
         lista.innerHTML = `
             <div class="text-center py-4">
-                <div class="spinner-border text-primary"></div>
-                <p class="mt-2 text-muted">Cargando documentos vinculados...</p>
+                <div class="spinner-border text-primary spinner-border-sm"></div>
+                <p class="mt-1 small text-muted">Cargando documentos...</p>
             </div>
         `;
     }
@@ -1062,8 +1087,8 @@ window.verDocumentos = async function(id) {
             if (lista) {
                 lista.innerHTML = `
                     <div class="text-center py-4 text-danger">
-                        <i class="bi bi-exclamation-triangle fs-1 d-block"></i>
-                        <p>Error al cargar los documentos</p>
+                        <i class="bi bi-exclamation-triangle fs-3 d-block"></i>
+                        <p class="small">Error al cargar los documentos</p>
                     </div>
                 `;
             }
@@ -1085,10 +1110,9 @@ window.verDocumentos = async function(id) {
         let html = '';
         if (documentos.length === 0) {
             html = `
-                <div class="text-center py-5 text-muted">
-                    <i class="bi bi-file-earmark-x fs-1 d-block mb-3"></i>
-                    <h6>No hay documentos vinculados</h6>
-                    <p class="small">Esta cotización no tiene documentos adicionales asociados.</p>
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-file-earmark-x fs-3 d-block mb-2"></i>
+                    <h6 class="small">No hay documentos vinculados</h6>
                 </div>
             `;
         } else {
@@ -1113,9 +1137,9 @@ window.verDocumentos = async function(id) {
                 html += `
                     <div class="documento-item" style="${estiloFila}">
                         <div class="documento-tipo">
-                            <i class="bi ${icon}" style="color: ${color}; font-size: 20px;"></i>
-                            <span class="ms-2">${escapeHtml(doc.tipo || 'Documento')}</span>
-                            ${esCotizacion ? '<span class="badge bg-primary ms-2">Principal</span>' : ''}
+                            <i class="bi ${icon}" style="color: ${color}; font-size: 18px;"></i>
+                            <span class="ms-2 small">${escapeHtml(doc.tipo || 'Documento')}</span>
+                            ${esCotizacion ? '<span class="badge bg-primary ms-1" style="font-size:9px;">Principal</span>' : ''}
                         </div>
                         <div class="documento-detalle">
                             <span class="documento-numero">${escapeHtml(doc.numero || '--')}</span>
@@ -1136,8 +1160,8 @@ window.verDocumentos = async function(id) {
         if (lista) {
             lista.innerHTML = `
                 <div class="text-center py-4 text-danger">
-                    <i class="bi bi-wifi-off fs-1 d-block"></i>
-                    <p>Error de conexión: ${escapeHtml(error.message)}</p>
+                    <i class="bi bi-wifi-off fs-3 d-block"></i>
+                    <p class="small">Error de conexión: ${escapeHtml(error.message)}</p>
                 </div>
             `;
         }
@@ -1172,7 +1196,7 @@ function getDocumentoColor(tipo) {
 }
 
 // ===========================
-// ESTILOS ADICIONALES
+// ESTILOS ADICIONALES - VERSIÓN COMPACTA
 // ===========================
 const style = document.createElement('style');
 style.textContent = `
@@ -1185,166 +1209,248 @@ style.textContent = `
         to { transform: translateX(100%); opacity: 0; }
     }
     
-    .estado-borrador {
+    /* Estados compactos */
+    .estado-badge {
+        padding: 2px 10px;
+        border-radius: 30px;
+        font-size: 10px;
+        font-weight: 700;
+        display: inline-block;
+        white-space: nowrap;
+    }
+    
+    .estado-badge.borrador {
         background: #FEF3C7;
         color: #92400E;
-        padding: 6px 14px;
-        border-radius: 40px;
-        font-size: 12px;
-        font-weight: 700;
-        text-align: center;
-        display: inline-block;
     }
     
-    .estado-aceptada {
-        background: #00FF00 !important;
-        color: #000000 !important;
-        padding: 6px 14px;
-        border-radius: 40px;
-        font-size: 12px;
-        font-weight: 900;
-        text-align: center;
-        display: inline-block;
-        box-shadow: 0 0 15px rgba(0, 255, 0, 0.6);
-        text-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
-        border: 1px solid #00CC00;
-    }
-    
-    .estado-generada {
+    .estado-badge.generada {
         background: #0055FF !important;
         color: #FFFFFF !important;
-        padding: 6px 14px;
-        border-radius: 40px;
-        font-size: 12px;
-        font-weight: 700;
-        text-align: center;
-        display: inline-block;
-        box-shadow: 0 0 12px rgba(0, 85, 255, 0.4);
+        box-shadow: 0 0 8px rgba(0, 85, 255, 0.3);
         border: 1px solid #0044CC;
     }
     
-    .estado-rechazada {
+    .estado-badge.aceptada {
+        background: #00FF00 !important;
+        color: #000000 !important;
+        box-shadow: 0 0 10px rgba(0, 255, 0, 0.4);
+        font-weight: 900;
+        border: 1px solid #00CC00;
+    }
+    
+    .estado-badge.rechazada {
         background: #FEE2E2;
         color: #991B1B;
-        padding: 6px 14px;
-        border-radius: 40px;
-        font-size: 12px;
-        font-weight: 700;
-        text-align: center;
-        display: inline-block;
     }
     
-    .estado-en-proceso {
+    .estado-badge.proceso {
         background: #E0E7FF;
         color: #3730A3;
-        padding: 6px 14px;
-        border-radius: 40px;
-        font-size: 12px;
-        font-weight: 700;
-        text-align: center;
-        display: inline-block;
     }
     
-    .badge-codigo {
-        font-family: monospace;
-        font-size: 13px;
-        font-weight: 700;
-        background: #f3f4f6;
-        padding: 4px 10px;
-        border-radius: 8px;
-        color: #374151;
-        display: inline-block;
+    /* Fecha compacta */
+    .fecha-compacta {
+        line-height: 1.2;
     }
     
-    .monto {
-        font-weight: 700;
-        color: #111827;
-    }
-    
-    .fecha-hora .fecha {
+    .fecha-compacta .fecha {
         font-weight: 600;
+        font-size: 11px;
         color: #111827;
     }
     
-    .fecha-hora .hora {
-        font-size: 11px;
+    .fecha-compacta .hora {
+        font-size: 10px;
         color: #6b7280;
     }
     
-    .acciones .dropdown-toggle {
-        background-color: #6c757d;
-        border: none;
+    /* Código cliente compacto */
+    .badge-codigo-cliente {
+        font-family: monospace;
+        font-size: 11px;
+        font-weight: 600;
+        background: #f3f4f6;
+        padding: 2px 8px;
+        border-radius: 4px;
+        color: #374151;
     }
     
-    .dropdown-item i {
-        margin-right: 8px;
+    /* Monto compacto */
+    .monto-texto {
+        font-weight: 700;
+        color: #059669;
+        font-size: 12px;
     }
-
+    
+    /* Dropdown compacto y optimizado */
+    .dropdown-acciones {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .dropdown-acciones .btn-acciones {
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        font-size: 14px;
+        background: #e5e7eb;
+        border: none;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s ease;
+        cursor: pointer;
+    }
+    
+    .dropdown-acciones .btn-acciones:hover {
+        background: #d1d5db;
+        transform: scale(1.05);
+    }
+    
+    .dropdown-acciones .btn-acciones:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(108, 117, 125, 0.3);
+    }
+    
+    .dropdown-acciones .dropdown-menu {
+        min-width: 160px;
+        padding: 4px 0;
+        border-radius: 8px;
+        font-size: 12px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        border: 1px solid rgba(0,0,0,0.05);
+        z-index: 1050;
+    }
+    
+    .dropdown-acciones .dropdown-menu.show {
+        animation: dropdownFadeIn 0.15s ease;
+    }
+    
+    @keyframes dropdownFadeIn {
+        from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    
+    .dropdown-acciones .dropdown-item {
+        padding: 4px 12px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.1s ease;
+    }
+    
+    .dropdown-acciones .dropdown-item:hover {
+        background: #f3f4f6;
+    }
+    
+    .dropdown-acciones .dropdown-item i {
+        margin-right: 6px;
+        font-size: 13px;
+        width: 16px;
+        text-align: center;
+    }
+    
+    .dropdown-acciones .dropdown-item.text-danger:hover {
+        background: #fef2f2;
+    }
+    
+    .dropdown-acciones .dropdown-item.text-success:hover {
+        background: #f0fdf4;
+    }
+    
+    .dropdown-acciones .dropdown-item.text-info:hover {
+        background: #eff6ff;
+    }
+    
+    .dropdown-acciones .dropdown-item.text-primary:hover {
+        background: #eff6ff;
+    }
+    
+    .dropdown-acciones .dropdown-divider {
+        margin: 2px 0;
+        border-color: #e5e7eb;
+    }
+    
+    /* Documentos */
     .documento-item {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 12px 16px;
+        padding: 8px 12px;
         border-bottom: 1px solid #f0f0f0;
         transition: background 0.2s;
-        border-radius: 8px;
-        margin-bottom: 4px;
+        border-radius: 6px;
+        margin-bottom: 2px;
+        font-size: 13px;
     }
-
+    
     .documento-item:hover {
         background: #f8fafc;
     }
-
+    
     .documento-item:last-child {
         border-bottom: none;
     }
-
+    
     .documento-tipo {
         font-weight: 700;
-        font-size: 14px;
+        font-size: 13px;
         color: #111827;
         display: flex;
         align-items: center;
     }
-
+    
     .documento-tipo i {
-        margin-right: 10px;
-        font-size: 20px;
+        margin-right: 8px;
+        font-size: 18px;
     }
-
+    
     .documento-detalle {
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 12px;
         flex-wrap: wrap;
     }
-
+    
     .documento-numero {
         font-family: monospace;
         font-weight: 600;
         color: #374151;
         background: #f3f4f6;
-        padding: 2px 12px;
-        border-radius: 6px;
-        font-size: 13px;
-    }
-
-    .documento-fecha {
+        padding: 2px 10px;
+        border-radius: 4px;
         font-size: 12px;
+    }
+    
+    .documento-fecha {
+        font-size: 11px;
         color: #6b7280;
     }
-
+    
     .documento-cliente {
-        font-size: 13px;
+        font-size: 12px;
         color: #4b5563;
     }
-
-    .documentos-header-info {
-        background: #f8fafc;
-        padding: 12px 16px;
-        border-radius: 8px;
-        margin-bottom: 16px;
-        font-size: 14px;
+    
+    /* Scrollbar */
+    .tabla-cotizaciones-container::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+    }
+    
+    .tabla-cotizaciones-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .tabla-cotizaciones-container::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 10px;
+    }
+    
+    .tabla-cotizaciones-container::-webkit-scrollbar-thumb:hover {
+        background: #9ca3af;
     }
 `;
 document.head.appendChild(style);
