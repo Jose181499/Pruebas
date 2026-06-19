@@ -43,6 +43,11 @@
             z-index: 1000;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
         .erp-logo {
             width: 28px;
             height: 28px;
@@ -65,6 +70,17 @@
             font-size: 8px;
             line-height: 1;
         }
+        .navbar-left .btn-sm-custom {
+            font-size: 10px;
+            padding: 2px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        .navbar-divider {
+            width: 1px;
+            height: 22px;
+            background: rgba(255,255,255,0.15);
+        }
         .erp-right {
             display: flex;
             align-items: center;
@@ -81,12 +97,6 @@
         .erp-status .bi {
             font-size: 6px;
             margin-right: 3px;
-        }
-        .btn-sm-custom {
-            font-size: 10px;
-            padding: 2px 10px;
-            border-radius: 6px;
-            font-weight: 600;
         }
 
         /* =========================== */
@@ -451,27 +461,42 @@
             .container-fluid {
                 padding: 3px 6px !important;
             }
+            .navbar-left .btn-sm-custom {
+                font-size: 8px;
+                padding: 1px 6px;
+            }
+            .navbar-left .erp-company {
+                font-size: 11px;
+            }
+            .navbar-divider {
+                display: none;
+            }
         }
     </style>
 </head>
 <body>
 
 <!-- =========================== -->
-<!-- NAVBAR -->
+<!-- NAVBAR CON BOTONES A LA IZQUIERDA -->
 <!-- =========================== -->
 <nav class="erp-navbar">
-    <div class="d-flex align-items-center gap-2">
+    <!-- IZQUIERDA: Logo + Botones -->
+    <div class="navbar-left">
         <div class="erp-logo"><i class="bi bi-building"></i></div>
         <div>
             <div class="erp-company">KCF CORPORACION</div>
             <div class="erp-system">ERP Comercial</div>
         </div>
+        <span class="navbar-divider"></span>
+        <a href="/cotizacion" class="btn btn-secondary btn-sm-custom"><i class="bi bi-arrow-left"></i> Volver</a>
+        <a href="/listado_cotizaciones" class="btn btn-outline-light btn-sm-custom"><i class="bi bi-list-ul"></i> Listado</a>
     </div>
+
+    <!-- DERECHA: Estado -->
     <div class="erp-right">
         <div class="erp-status" id="estado_fixed">
             <i class="bi bi-circle-fill"></i> <span id="estado_texto">EN PROCESO</span>
         </div>
-        <a href="/cotizacion" class="btn btn-secondary btn-sm-custom"><i class="bi bi-arrow-left"></i> Volver</a>
     </div>
 </nav>
 
