@@ -21,6 +21,29 @@
             top: 0;
             z-index: 1000;
         }
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .navbar-left .btn-volver {
+            color: white;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .navbar-left .btn-volver:hover {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
         .hero-card {
             background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
             padding: 32px;
@@ -106,25 +129,60 @@
         .estado-PROCESANDO { background: #dbeafe; color: #1e40af; }
         .estado-ACEPTADA { background: #d1fae5; color: #065f46; }
         .estado-RECHAZADA { background: #fee2e2; color: #991b1b; }
-        .btn-accion {
+        
+        /* Dropdown de acciones */
+        .dropdown-acciones .dropdown-toggle {
             background: none;
             border: none;
-            padding: 6px 10px;
+            padding: 6px 12px;
             border-radius: 8px;
-            cursor: pointer;
+            color: #64748b;
             transition: all 0.2s;
-            margin: 0 2px;
         }
-        .btn-ver { color: #3b82f6; }
-        .btn-ver:hover { background: rgba(59, 130, 246, 0.1); }
-        .btn-pdf { color: #ef4444; }
-        .btn-pdf:hover { background: rgba(239, 68, 68, 0.1); }
-        .btn-editar { color: #f59e0b; }
-        .btn-editar:hover { background: rgba(245, 158, 11, 0.1); }
-        .btn-eliminar { color: #dc2626; }
-        .btn-eliminar:hover { background: rgba(220, 38, 38, 0.1); }
-        .btn-rotulo { color: #8b5cf6; }
-        .btn-rotulo:hover { background: rgba(139, 92, 246, 0.1); }
+        .dropdown-acciones .dropdown-toggle:hover {
+            background: #f1f5f9;
+            color: #1a1a1a;
+        }
+        .dropdown-acciones .dropdown-toggle::after {
+            display: none;
+        }
+        .dropdown-acciones .dropdown-menu {
+            border-radius: 12px;
+            padding: 6px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+            border: 1px solid #e2e8f0;
+            min-width: 200px;
+        }
+        .dropdown-acciones .dropdown-item {
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .dropdown-acciones .dropdown-item:hover {
+            background: #f1f5f9;
+        }
+        .dropdown-acciones .dropdown-item i {
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+        }
+        .dropdown-item-ver i { color: #3b82f6; }
+        .dropdown-item-pdf i { color: #ef4444; }
+        .dropdown-item-editar i { color: #f59e0b; }
+        .dropdown-item-rotulo i { color: #8b5cf6; }
+        .dropdown-item-eliminar i { color: #dc2626; }
+        .dropdown-divider {
+            margin: 4px 0;
+            border-color: #e2e8f0;
+        }
+        .dropdown-item-eliminar:hover {
+            background: #fef2f2;
+            color: #dc2626;
+        }
 
         .filtros {
             background: white;
@@ -229,22 +287,13 @@
             font-weight: 600;
             color: #64748b;
         }
-        .btn-rotulo-tooltip {
-            position: relative;
-        }
-        .btn-rotulo-tooltip:hover::after {
-            content: "Generar Rótulo de Embalaje";
-            position: absolute;
-            background: #1a1a1a;
-            color: white;
+        .badge-placa {
+            background: #e2e8f0;
+            color: #1e293b;
+            font-weight: 600;
             padding: 4px 10px;
             border-radius: 6px;
             font-size: 11px;
-            white-space: nowrap;
-            bottom: 120%;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 100;
         }
     </style>
 </head>
@@ -252,20 +301,23 @@
 
     <!-- NAVBAR ERP -->
     <div class="erp-navbar">
-        <div class="d-flex align-items-center gap-3">
-            <div class="bg-white rounded-3 p-2"><i class="bi bi-truck fs-4 text-dark"></i></div>
-            <div>
-                <div class="text-white fw-bold fs-5">KCF CORPORACION</div>
-                <div class="text-white-50 small">ERP Comercial · Guías de Remisión</div>
+        <div class="navbar-left">
+            <!-- Botón Volver - Ahora está en la parte superior izquierda -->
+            <a href="/mantenedor" class="btn-volver">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-white rounded-3 p-2"><i class="bi bi-truck fs-4 text-dark"></i></div>
+                <div>
+                    <div class="text-white fw-bold fs-5">KCF CORPORACION</div>
+                    <div class="text-white-50 small">ERP Comercial · Guías de Remisión</div>
+                </div>
             </div>
         </div>
-        <div class="d-flex gap-3">
+        <div class="d-flex gap-3 align-items-center">
             <div class="text-white-50 small">
                 <i class="bi bi-person-circle"></i> {{ session.nombre_completo }}
             </div>
-            <a href="/mantenedor" class="btn btn-dark btn-sm">
-                <i class="bi bi-arrow-left"></i> Volver
-            </a>
         </div>
     </div>
 
@@ -363,7 +415,7 @@
                 <table class="table table-modern">
                     <thead>
                         <tr>
-                            <th class="col-item">Item</th>
+                            <th class="col-item">#</th>
                             <th>N° Guía</th>
                             <th>Destinatario</th>
                             <th>RUC</th>
@@ -584,7 +636,7 @@
         }
         
         // ==========================================
-        // RENDERIZAR TABLA
+        // RENDERIZAR TABLA - CON DROPDOWN DE ACCIONES
         // ==========================================
         function renderizarTabla(guias) {
             const tbody = document.getElementById('tablaGuias');
@@ -609,10 +661,15 @@
                 else if (estadoTexto === 'PROCESANDO') estadoIcono = '⏳';
                 else if (estadoTexto === 'RECHAZADA') estadoIcono = '❌';
                 
-                const eliminarBtn = guia.estado_sunat === 'BORRADOR' ? 
-                    `<button class="btn-accion btn-eliminar" onclick="confirmarEliminar(${guia.id}, '${numeroGuia}', '${escapeHtml(guia.destinatario_nombre || '-')}')" title="Eliminar">
-                        <i class="bi bi-trash-fill"></i>
-                    </button>` : '';
+                // Solo mostrar "Eliminar" si está en BORRADOR
+                const eliminarHtml = guia.estado_sunat === 'BORRADOR' ? 
+                    `<li><a class="dropdown-item dropdown-item-eliminar" href="#" onclick="confirmarEliminar(${guia.id}, '${numeroGuia}', '${escapeHtml(guia.destinatario_nombre || '-')}')">
+                        <i class="bi bi-trash-fill"></i> Eliminar
+                    </a></li>` : '';
+                
+                // Separador solo si hay eliminar
+                const separadorHtml = guia.estado_sunat === 'BORRADOR' ? 
+                    `<li><hr class="dropdown-divider"></li>` : '';
                 
                 return `
                     <tr>
@@ -622,24 +679,33 @@
                         <td>${guia.ruc_destinatario || '-'}</td>
                         <td>${fechaEmision}</td>
                         <td>${fechaTraslado}</td>
-                        <td><span class="badge bg-secondary">${guia.placa_vehiculo || '-'}</span></td>
+                        <td><span class="badge-placa">${guia.placa_vehiculo || '-'}</span></td>
                         <td>${pesoTotal} kg</td>
                         <td><span class="badge-estado ${estadoClase}">${estadoIcono} ${estadoTexto}</span></td>
                         <td><small>${fechaCreacion}</small></td>
                         <td class="text-center">
-                            <button class="btn-accion btn-ver" onclick="verGuia(${guia.id})" title="Ver Detalle">
-                                <i class="bi bi-eye-fill"></i>
-                            </button>
-                            <button class="btn-accion btn-pdf" onclick="descargarPDF(${guia.id})" title="Descargar PDF">
-                                <i class="bi bi-file-earmark-pdf-fill"></i>
-                            </button>
-                            <button class="btn-accion btn-editar" onclick="editarGuia(${guia.id})" title="Editar">
-                                <i class="bi bi-pencil-fill"></i>
-                            </button>
-                            <button class="btn-accion btn-rotulo btn-rotulo-tooltip" onclick="generarRotulo(${guia.id})" title="Generar Rótulo de Embalaje">
-                                <i class="bi bi-tags-fill"></i>
-                            </button>
-                            ${eliminarBtn}
+                            <!-- DROPDOWN DE ACCIONES -->
+                            <div class="dropdown dropdown-acciones">
+                                <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Acciones">
+                                    <i class="bi bi-three-dots-vertical fs-5"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item dropdown-item-ver" href="#" onclick="verGuia(${guia.id})">
+                                        <i class="bi bi-eye-fill"></i> Ver Detalle
+                                    </a></li>
+                                    <li><a class="dropdown-item dropdown-item-pdf" href="#" onclick="descargarPDF(${guia.id})">
+                                        <i class="bi bi-file-earmark-pdf-fill"></i> Descargar PDF
+                                    </a></li>
+                                    <li><a class="dropdown-item dropdown-item-editar" href="#" onclick="editarGuia(${guia.id})">
+                                        <i class="bi bi-pencil-fill"></i> Editar
+                                    </a></li>
+                                    <li><a class="dropdown-item dropdown-item-rotulo" href="#" onclick="generarRotulo(${guia.id})">
+                                        <i class="bi bi-tags-fill"></i> Rótulo de Embalaje
+                                    </a></li>
+                                    ${separadorHtml}
+                                    ${eliminarHtml}
+                                </ul>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -789,7 +855,7 @@
         };
 
         // ==========================================
-        // GENERAR RÓTULO DE EMBALAJE - NUEVO FORMATO
+        // GENERAR RÓTULO DE EMBALAJE
         // ==========================================
         window.generarRotulo = async function(id) {
             const modalBody = document.getElementById('modalRotuloBody');
@@ -813,9 +879,10 @@
                 
                 // DATOS FIJOS DE KCF
                 const REMITENTE = guia.remitente_nombre || 'KCF CORPORACION S.A.C';
-                const RUC_REMITENTE = guia.ruc_remitente || '20612345678';
+                const RUC_REMITENTE = guia.ruc_remitente || '20602095704';
+                const TELEFONO = guia.telefono || '987-654-321';
+                const EMAIL = guia.email || 'ventas@kcf.pe';
                 
-                // DATOS DE LA GUÍA
                 const destinatario = guia.destinatario_nombre || '';
                 const rucDestinatario = guia.ruc_destinatario || '';
                 const direccionEntrega = guia.destinatario_direccion || '';
@@ -837,122 +904,48 @@
                         padding: 10px 12px;
                         font-family: 'Courier New', monospace;
                         box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+                        display: flex;
+                        flex-direction: column;
+                        min-height: 130mm;
                     ">
-                        <!-- HEADER: REMITENTE -->
-                        <div style="
-                            text-align: center;
-                            border-bottom: 2px solid #e94560;
-                            padding-bottom: 4px;
-                            margin-bottom: 6px;
-                        ">
-                            <div style="font-size: 12px; font-weight: 900; color: #1a2a6c; letter-spacing: 0.5px;">
-                                ${escapeHtml(REMITENTE)}
-                            </div>
-                            <div style="font-size: 8px; font-weight: 600; color: #555;">
-                                RUC: ${escapeHtml(RUC_REMITENTE)}
-                            </div>
+                        <div style="text-align: center; border-bottom: 2px solid #e94560; padding-bottom: 4px; margin-bottom: 6px;">
+                            <div style="font-size: 12px; font-weight: 900; color: #1a2a6c;">${escapeHtml(REMITENTE)}</div>
+                            <div style="font-size: 8px; font-weight: 600; color: #555;">RUC: ${escapeHtml(RUC_REMITENTE)}</div>
                         </div>
-
-                        <!-- CLIENTE -->
-                        <div style="margin: 2px 0;">
-                            <div style="font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px;">
-                                CLIENTE:
+                        <div style="flex: 1;">
+                            <div style="margin: 2px 0;">
+                                <div style="font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase;">CLIENTE:</div>
+                                <div style="font-size: 11px; font-weight: 700; color: #1a1a1a;">${escapeHtml(destinatario)}</div>
+                                <div style="font-size: 9px; font-weight: 500; color: #555;">RUC: ${escapeHtml(rucDestinatario)}</div>
                             </div>
-                            <div style="font-size: 11px; font-weight: 700; color: #1a1a1a;">
-                                ${escapeHtml(destinatario)}
+                            <div style="border-top: 1px dashed #ddd; margin: 3px 0;"></div>
+                            <div style="margin: 2px 0;">
+                                <div style="font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase;">DIRECCIÓN DE ENTREGA:</div>
+                                <div style="font-size: 10px; font-weight: 600; color: #1a1a1a;">${escapeHtml(direccionEntrega)}</div>
                             </div>
-                            <div style="font-size: 9px; font-weight: 500; color: #555;">
-                                RUC: ${escapeHtml(rucDestinatario)}
+                            <div style="border-top: 1px dashed #ddd; margin: 3px 0;"></div>
+                            <div style="margin: 2px 0;">
+                                <div style="font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase;">CONSIGNADOS:</div>
+                                <div style="font-size: 10px; font-weight: 600; color: #1a1a1a;">${escapeHtml(conductor)}</div>
+                                <div style="font-size: 9px; font-weight: 500; color: #555;">DNI: ${escapeHtml(dniConductor)}</div>
                             </div>
+                            <div style="border-top: 1px dashed #ddd; margin: 3px 0;"></div>
+                            <div style="display: flex; justify-content: space-between; margin: 2px 0;">
+                                <div style="flex:1;"><div style="font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase;">N° BULTOS:</div><div style="font-size: 14px; font-weight: 800; color: #e94560;">${bultos}</div></div>
+                                <div style="flex:1;"><div style="font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase;">N° GUÍA:</div><div style="font-size: 10px; font-weight: 600; color: #1a1a1a;">${escapeHtml(numeroGuia)}</div></div>
+                                <div style="flex:1;"><div style="font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase;">FACTURA:</div><div style="font-size: 10px; font-weight: 600; color: #1a1a1a;">${escapeHtml(numeroFactura)}</div></div>
+                            </div>
+                            <div style="text-align: center; font-family: 'Courier New', monospace; font-size: 18px; letter-spacing: 2px; padding: 4px 0; margin: 4px 0; background: #f8f9fa; border-radius: 4px;">${codigoBarras}</div>
                         </div>
-
-                        <div style="border-top: 1px dashed #ddd; margin: 3px 0;"></div>
-
-                        <!-- DIRECCIÓN DE ENTREGA -->
-                        <div style="margin: 2px 0;">
-                            <div style="font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px;">
-                                DIRECCIÓN DE ENTREGA:
-                            </div>
-                            <div style="font-size: 10px; font-weight: 600; color: #1a1a1a;">
-                                ${escapeHtml(direccionEntrega)}
-                            </div>
-                        </div>
-
-                        <div style="border-top: 1px dashed #ddd; margin: 3px 0;"></div>
-
-                        <!-- CONSIGNADOS (CONDUCTOR) -->
-                        <div style="margin: 2px 0;">
-                            <div style="font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px;">
-                                CONSIGNADOS:
-                            </div>
-                            <div style="font-size: 10px; font-weight: 600; color: #1a1a1a;">
-                                ${escapeHtml(conductor)}
-                            </div>
-                            <div style="font-size: 9px; font-weight: 500; color: #555;">
-                                DNI: ${escapeHtml(dniConductor)}
-                            </div>
-                        </div>
-
-                        <div style="border-top: 1px dashed #ddd; margin: 3px 0;"></div>
-
-                        <!-- N° BULTOS, N° GUÍA, FACTURA -->
-                        <div style="display: flex; justify-content: space-between; margin: 2px 0;">
-                            <div style="flex:1;">
-                                <div style="font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px;">
-                                    N° BULTOS:
-                                </div>
-                                <div style="font-size: 14px; font-weight: 800; color: #e94560;">
-                                    ${bultos}
-                                </div>
-                            </div>
-                            <div style="flex:1;">
-                                <div style="font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px;">
-                                    N° GUÍA:
-                                </div>
-                                <div style="font-size: 10px; font-weight: 600; color: #1a1a1a;">
-                                    ${escapeHtml(numeroGuia)}
-                                </div>
-                            </div>
-                            <div style="flex:1;">
-                                <div style="font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px;">
-                                    FACTURA:
-                                </div>
-                                <div style="font-size: 10px; font-weight: 600; color: #1a1a1a;">
-                                    ${escapeHtml(numeroFactura)}
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- CÓDIGO DE BARRAS -->
-                        <div style="
-                            text-align: center;
-                            font-family: 'Courier New', monospace;
-                            font-size: 18px;
-                            letter-spacing: 2px;
-                            padding: 4px 0;
-                            margin: 4px 0;
-                            background: #f8f9fa;
-                            border-radius: 4px;
-                        ">
-                            ${codigoBarras}
-                        </div>
-
-                        <!-- PIE -->
-                        <div style="
-                            text-align: center;
-                            font-size: 6px;
-                            color: #888;
-                            border-top: 1px solid #ddd;
-                            padding-top: 4px;
-                            margin-top: 4px;
-                        ">
-                            RÓTULO DE EMBALAJE · Verificar integridad del producto
+                        <!-- PIE CON CONTÁCTANOS -->
+                        <div style="text-align: center; border-top: 1px solid #ddd; padding-top: 5px; margin-top: 5px;">
+                            <div style="font-weight: 700; color: #1a2a6c; font-size: 8px; margin-bottom: 2px;">📞 CONTÁCTANOS</div>
+                            <div style="font-size: 7px; color: #333; letter-spacing: 0.3px;">${escapeHtml(TELEFONO)} | ${escapeHtml(EMAIL)}</div>
+                            <div style="font-size: 6px; color: #aaa; margin-top: 3px; border-top: 1px solid #eee; padding-top: 3px;">RÓTULO DE EMBALAJE · Verificar integridad del producto</div>
                         </div>
                     </div>
                 `;
-
                 guiaActualId = id;
-
             } catch (error) {
                 console.error("❌ Error al generar rótulo:", error);
                 modalBody.innerHTML = `<div class="text-center py-5 text-danger">Error al generar el rótulo: ${error.message}</div>`;
