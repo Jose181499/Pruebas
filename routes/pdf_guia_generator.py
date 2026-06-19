@@ -7,6 +7,7 @@ from io import BytesIO
 import json
 from datetime import datetime, date
 import os
+import sys
 
 def convertir_a_serializable(obj):
     """Convierte objetos no serializables a tipos serializables"""
@@ -19,16 +20,31 @@ def obtener_logo_base64():
     Obtiene el logo de la empresa en formato base64 para incrustar en el PDF
     """
     try:
-        logo_path = os.path.join(os.path.dirname(__file__), '..', 'static', 'img', 'logo_kcf.png')
+        # OPCION 1: Ruta relativa al archivo actual (../static/img/logo_kcf.png)
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        logo_path = os.path.join(current_dir, '..', 'static', 'img', 'logo_kcf.png')
+        
+        # OPCION 2: Ruta en el mismo directorio
+        if not os.path.exists(logo_path):
+            logo_path = os.path.join(current_dir, 'logo_kcf.png')
+        
+        # OPCION 3: Ruta absoluta (cámbiala por tu ruta real)
+        if not os.path.exists(logo_path):
+            logo_path = r'C:\Users\TuUsuario\static\img\logo_kcf.png'  # Cambia esta ruta
+        
+        # OPCION 4: Buscar en el directorio actual
+        if not os.path.exists(logo_path):
+            logo_path = 'logo_kcf.png'
         
         if os.path.exists(logo_path):
             with open(logo_path, 'rb') as f:
                 logo_data = f.read()
                 return base64.b64encode(logo_data).decode('utf-8')
         else:
+            print(f"❌ Logo no encontrado en: {logo_path}")
             return None
     except Exception as e:
-        print(f"Error cargando logo: {e}")
+        print(f"❌ Error cargando logo: {e}")
         return None
 
 def generar_pdf_guia(guia_data):
@@ -52,6 +68,10 @@ def generar_pdf_guia(guia_data):
     
     # Obtener logo
     logo_base64 = obtener_logo_base64()
+    
+    # Si no hay logo, usar un logo de texto
+    if not logo_base64:
+        logo_base64 = crear_logo_texto_base64()
     
     # Agregar QR y logo a los datos
     guia_data['qr_base64'] = qr_base64
@@ -120,11 +140,24 @@ def generar_pdf_guia(guia_data):
     
     .empresa-izquierda .logo-container {
         flex-shrink: 0;
+        width: 80px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
     .empresa-izquierda .logo-container img {
         max-height: 60px;
         max-width: 100px;
+        object-fit: contain;
+    }
+    
+    .empresa-izquierda .logo-container .logo-texto {
+        font-size: 20px;
+        font-weight: bold;
+        color: #D32F2F;
+        text-align: center;
     }
     
     .empresa-izquierda .info-texto {
@@ -317,6 +350,31 @@ def generar_pdf_guia(guia_data):
     
     return pdf_file
 
+def crear_logo_texto_base64():
+    """Crea un logo de texto en base64 por si no se encuentra la imagen"""
+    from PIL import Image, ImageDraw, ImageFont
+    
+    try:
+        # Crear una imagen simple con texto "KCF"
+        img = Image.new('RGB', (120, 60), color='white')
+        d = ImageDraw.Draw(img)
+        
+        # Intentar usar una fuente
+        try:
+            font = ImageFont.truetype("arial.ttf", 28)
+        except:
+            font = ImageFont.load_default()
+        
+        # Dibujar texto
+        d.text((10, 10), "KCF", fill=(211, 47, 47), font=font)
+        
+        # Convertir a base64
+        buffered = BytesIO()
+        img.save(buffered, format="PNG")
+        return base64.b64encode(buffered.getvalue()).decode()
+    except:
+        return None
+
 def generar_qr_data(guia_data):
     """Genera los datos que irán en el código QR según formato SUNAT"""
     qr_info = {
@@ -431,7 +489,7 @@ def renderizar_html_guia(guia_data):
                     {% if logo_base64 %}
                     <img src="data:image/png;base64,{{ logo_base64 }}" alt="Logo">
                     {% else %}
-                    <div style="font-size:24px; font-weight:bold;">LOGO</div>
+                    <div class="logo-texto">KCF</div>
                     {% endif %}
                 </div>
                 <div class="info-texto">
