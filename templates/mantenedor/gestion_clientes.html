@@ -162,8 +162,44 @@
         }
         .btn-agregar-link:hover { background: #eef2ff; }
 
+        /* =========================================== */
+        /* ESTILOS PARA LA TABLA CON HEADER STICKY */
+        /* =========================================== */
+        
+        /* Contenedor de la tabla con scroll */
+        .card-ordenada .table-responsive {
+            max-height: 600px; /* Ajusta según prefieras */
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* Encabezado sticky (pegajoso) */
+        .table-styled thead {
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+        }
+
+        /* Fondo sólido para que no se vea transparente al hacer scroll */
+        .table-styled thead th {
+            background: #f8fafd !important;
+            border-bottom: 2px solid #d1d9e6 !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+        }
+
+        /* Asegura que el cuerpo de la tabla tenga fondo blanco */
+        .table-styled tbody {
+            background: white;
+        }
+
+        /* =========================================== */
+        /* FIN ESTILOS STICKY */
+        /* =========================================== */
+
         .table-styled th {
-            background: #f8fafd;
             font-weight: 700;
             font-size: 0.7rem;
             text-transform: uppercase;
@@ -421,7 +457,7 @@
                     </tr>
                 </thead>
                 <tbody id="tbody-clientes">
-                    <tr><td colspan="11" class="text-center py-5"><div class="spinner-border spinner-border-sm text-secondary"></div> Cargando...<\/td></tr>
+                    <tr><td colspan="11" class="text-center py-5"><div class="spinner-border spinner-border-sm text-secondary"></div> Cargando...</td></tr>
                 </tbody>
              </table>
         </div>
@@ -722,7 +758,7 @@
     
     async function cargarClientes(filtro={}){ 
         let tbody=document.getElementById('tbody-clientes'); 
-        tbody.innerHTML='<tr><td colspan="11" class="text-center p-4"><i class="bi bi-arrow-repeat"></i> Cargando...<\/td></tr>'; 
+        tbody.innerHTML='<tr><td colspan="11" class="text-center p-4"><i class="bi bi-arrow-repeat"></i> Cargando...</td></tr>'; 
         try{ 
             let url='/api/clientes/buscar?'; 
             let params=new URLSearchParams(); 
@@ -732,7 +768,7 @@
             let json=await res.json(); 
             let clientes=json.data||[]; 
             if(!clientes.length){ 
-                tbody.innerHTML='<tr><td colspan="11" class="text-center">Sin clientes registrados<\/td></tr>'; 
+                tbody.innerHTML='<tr><td colspan="11" class="text-center">Sin clientes registrados</td></tr>'; 
                 return; 
             } 
             
@@ -773,7 +809,7 @@
             `}).join(''); 
         } catch(e){ 
             console.error('Error cargando clientes:', e);
-            tbody.innerHTML='<tr><td colspan="11" class="text-danger">Error al cargar clientes<\/td></tr>'; 
+            tbody.innerHTML='<tr><td colspan="11" class="text-danger">Error al cargar clientes</td></tr>'; 
         } 
     }
     
@@ -843,7 +879,7 @@
                     <tr><th>Nombre Comercial</th><td>${escapeHtml(c.nombre_comercial || '-')}</td></tr>
                     <tr><th>Dirección Fiscal</th><td>${escapeHtml(c.direccion_fiscal || '-')}</td></tr>
                     <tr><th>Contactos</th><td>${contactosHtml}</td></tr>
-                    <tr><th>Puntos de Entrega</th><td>${puntosHtml}NonNull
+                    <tr><th>Puntos de Entrega</th><td>${puntosHtml}</td></tr>
                 </table>
             `;
             
