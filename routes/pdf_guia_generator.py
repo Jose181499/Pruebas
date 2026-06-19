@@ -96,7 +96,7 @@ def generar_pdf_guia(guia_data):
     body {
         font-family: 'Helvetica', 'Arial', sans-serif;
         font-size: 9.5px;
-        line-height: 1.5;
+        line-height: 1.6;
         color: #1a1a1a;
     }
     
@@ -205,16 +205,19 @@ def generar_pdf_guia(guia_data):
     .info-destinatario .info-line {
         padding: 1px 0;
         font-size: 9px;
+        display: flex;
+        align-items: center;
     }
     
     .info-destinatario .label {
         font-weight: bold;
-        display: inline-block;
-        min-width: 110px;
+        min-width: 120px;
+        flex-shrink: 0;
     }
     
     .info-destinatario .value {
-        display: inline-block;
+        flex: 1;
+        text-align: center;
     }
     
     .datos-traslado {
@@ -226,20 +229,20 @@ def generar_pdf_guia(guia_data):
     }
     
     .datos-traslado .fila {
-        display: flex;
-        flex-wrap: wrap;
         padding: 1px 0;
-    }
-    
-    .datos-traslado .campo {
-        flex: 1;
-        min-width: 140px;
-        padding: 1px 5px 1px 0;
-        font-size: 9px;
+        display: flex;
+        align-items: center;
     }
     
     .datos-traslado .label {
         font-weight: bold;
+        min-width: 200px;
+        flex-shrink: 0;
+    }
+    
+    .datos-traslado .value {
+        flex: 1;
+        text-align: center;
     }
     
     .datos-ruta {
@@ -253,16 +256,19 @@ def generar_pdf_guia(guia_data):
     .datos-ruta .info-line {
         padding: 1px 0;
         font-size: 9px;
+        display: flex;
+        align-items: center;
     }
     
     .datos-ruta .label {
         font-weight: bold;
-        display: inline-block;
-        min-width: 110px;
+        min-width: 120px;
+        flex-shrink: 0;
     }
     
     .datos-ruta .value {
-        display: inline-block;
+        flex: 1;
+        text-align: center;
     }
     
     .datos-transporte {
@@ -276,16 +282,19 @@ def generar_pdf_guia(guia_data):
     .datos-transporte .info-line {
         padding: 2px 0;
         font-size: 9px;
+        display: flex;
+        align-items: center;
     }
     
     .datos-transporte .label {
         font-weight: bold;
-        display: inline-block;
-        min-width: 110px;
+        min-width: 120px;
+        flex-shrink: 0;
     }
     
     .datos-transporte .value {
-        display: inline-block;
+        flex: 1;
+        text-align: center;
     }
     
     .products-table {
@@ -318,12 +327,6 @@ def generar_pdf_guia(guia_data):
         text-align: left;
     }
     
-    .products-table td.series {
-        text-align: left;
-        font-size: 7.5px;
-        color: #444;
-    }
-    
     .products-table tr:nth-child(even) {
         background: #f9f9f9;
     }
@@ -345,13 +348,21 @@ def generar_pdf_guia(guia_data):
         font-size: 8.5px;
     }
     
-    .referencias .ref-item {
-        display: inline-block;
-        margin-right: 15px;
+    .referencias .ref-line {
+        padding: 1px 0;
+        display: flex;
+        align-items: center;
     }
     
     .referencias .label {
         font-weight: bold;
+        min-width: 180px;
+        flex-shrink: 0;
+    }
+    
+    .referencias .value {
+        flex: 1;
+        text-align: center;
     }
     
     .observaciones {
@@ -361,10 +372,19 @@ def generar_pdf_guia(guia_data):
         border-radius: 8px;
         background: #f9f9f9;
         font-size: 8.5px;
+        display: flex;
+        align-items: center;
     }
     
     .observaciones .label {
         font-weight: bold;
+        min-width: 120px;
+        flex-shrink: 0;
+    }
+    
+    .observaciones .value {
+        flex: 1;
+        text-align: center;
     }
     
     .qr-container {
@@ -571,34 +591,28 @@ def renderizar_html_guia(guia_data):
             <div class="seccion-titulo">DATOS DEL TRASLADO</div>
             <div class="datos-traslado">
                 <div class="fila">
-                    <div class="campo">
-                        <span class="label">FECHA EMISIÓN:</span>
-                        {{ fecha_emision_formato }}
-                    </div>
-                    <div class="campo">
-                        <span class="label">FECHA INICIO DE TRASLADO:</span>
-                        {{ fecha_inicio_formato }}
-                    </div>
+                    <span class="label">FECHA EMISIÓN:</span>
+                    <span class="value">{{ fecha_emision_formato }}</span>
                 </div>
                 <div class="fila">
-                    <div class="campo">
-                        <span class="label">MOTIVO DE TRASLADO:</span>
-                        {{ motivo_texto }}
-                    </div>
-                    <div class="campo">
-                        <span class="label">MODALIDAD DE TRANSPORTE:</span>
-                        {{ modalidad_texto }}
-                    </div>
+                    <span class="label">FECHA INICIO DE TRASLADO:</span>
+                    <span class="value">{{ fecha_inicio_formato }}</span>
                 </div>
                 <div class="fila">
-                    <div class="campo">
-                        <span class="label">PESO BRUTO TOTAL ({{ unidad_peso_texto }}):</span>
-                        {{ '%.1f'|format(peso_bruto_total|float) if peso_bruto_total else '0.0' }}
-                    </div>
-                    <div class="campo">
-                        <span class="label">NÚMERO DE BULTOS:</span>
-                        {{ numero_bultos or '1' }}
-                    </div>
+                    <span class="label">MOTIVO DE TRASLADO:</span>
+                    <span class="value">{{ motivo_texto }}</span>
+                </div>
+                <div class="fila">
+                    <span class="label">MODALIDAD DE TRANSPORTE:</span>
+                    <span class="value">{{ modalidad_texto }}</span>
+                </div>
+                <div class="fila">
+                    <span class="label">PESO BRUTO TOTAL ({{ unidad_peso_texto }}):</span>
+                    <span class="value">{{ '%.1f'|format(peso_bruto_total|float) if peso_bruto_total else '0.0' }}</span>
+                </div>
+                <div class="fila">
+                    <span class="label">NÚMERO DE BULTOS:</span>
+                    <span class="value">{{ numero_bultos or '1' }}</span>
                 </div>
             </div>
         </div>
@@ -676,18 +690,28 @@ def renderizar_html_guia(guia_data):
         
         <!-- REFERENCIAS -->
         <div class="referencias">
-            <div><span class="label">REFERENCIAS:</span></div>
-            <div><span class="label">NRO DE COTIZACION:</span> {{ nro_cotizacion or '' }}</div>
-            <div><span class="label">PEDIDO DE COMPRA CLIENTE:</span> {{ pedido_compra_cliente or '' }}</div>
-            <div><span class="label">NRO DE FACTURA:</span> {{ nro_factura or '' }}</div>
+            <div class="ref-line">
+                <span class="label">REFERENCIAS:</span>
+                <span class="value"></span>
+            </div>
+            <div class="ref-line">
+                <span class="label">NRO DE COTIZACION:</span>
+                <span class="value">{{ nro_cotizacion or '' }}</span>
+            </div>
+            <div class="ref-line">
+                <span class="label">PEDIDO DE COMPRA CLIENTE:</span>
+                <span class="value">{{ pedido_compra_cliente or '' }}</span>
+            </div>
+            <div class="ref-line">
+                <span class="label">NRO DE FACTURA:</span>
+                <span class="value">{{ nro_factura or '' }}</span>
+            </div>
         </div>
         
         <!-- OBSERVACIONES -->
         <div class="observaciones">
             <span class="label">OBSERVACIONES :</span>
-            {% if observaciones %}
-            {{ observaciones }}
-            {% endif %}
+            <span class="value">{% if observaciones %}{{ observaciones }}{% endif %}</span>
         </div>
         
         <!-- QR Y FOOTER -->
