@@ -4,530 +4,177 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crear Guía de Remisión kcf - ERP KCF</title>
-    
+
     <!-- BOOTSTRAP -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); }
-        
-        .erp-navbar {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            padding: 16px 32px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-        
-        .btn-toolbar {
-            border-radius: 12px;
-            padding: 10px 24px;
+
+        /* ---- ESTILOS COMPACTOS (TODO MÁS PEQUEÑO) ---- */
+        .erp-navbar { padding: 8px 16px !important; }
+        .erp-navbar .fs-5 { font-size: 1rem !important; }
+        .erp-navbar .small { font-size: 0.6rem !important; }
+        .erp-navbar .bg-white.rounded-3.p-2 { padding: 4px 6px !important; }
+        .erp-navbar .bg-white.rounded-3.p-2 i { font-size: 1.2rem !important; }
+        .erp-navbar .d-flex.gap-3 { gap: 0.5rem !important; }
+
+        .container-fluid { padding: 8px 12px !important; }
+        .erp-card { border-radius: 12px !important; margin-bottom: 10px !important; }
+        .card-header-custom { padding: 6px 12px !important; font-size: 0.7rem !important; }
+        .card-header-custom i { font-size: 0.85rem; }
+        .card-body-custom { padding: 10px 12px !important; }
+
+        .form-label { font-size: 0.65rem !important; margin-bottom: 2px !important; font-weight: 600; }
+        .custom-input { padding: 4px 8px !important; font-size: 0.7rem !important; border-radius: 6px !important; }
+        .form-select { padding: 4px 8px !important; font-size: 0.7rem !important; border-radius: 6px !important; }
+        .btn-toolbar { padding: 4px 10px !important; font-size: 0.65rem !important; border-radius: 6px !important; }
+        .btn-toolbar i { font-size: 0.75rem; }
+
+        .vehiculo-card { padding: 8px !important; }
+        .grupo-peso-bruto { padding: 8px 10px !important; }
+        .help-text-small { font-size: 0.55rem !important; margin-top: 1px !important; }
+        .ubigeo-help-text { font-size: 0.6rem !important; }
+
+        .table-modern thead th { padding: 4px 6px !important; font-size: 0.6rem !important; }
+        .table-modern td { padding: 2px 4px !important; vertical-align: middle; }
+        .table-modern .form-control-sm { font-size: 0.65rem !important; padding: 2px 4px !important; height: 24px; }
+        .table-modern .form-select-sm { font-size: 0.65rem !important; padding: 2px 4px !important; height: 24px; }
+        .table-modern .btn-del { padding: 0px 4px; font-size: 0.6rem; line-height: 1.2; }
+
+        .badge-sunat { font-size: 0.5rem !important; padding: 0 4px !important; }
+        .btn-agregar-conductor { padding: 2px 8px !important; font-size: 0.65rem !important; }
+        .select-conductor-wrapper { gap: 4px !important; }
+        .h1 { font-size: 1.2rem !important; }
+        .row.g-3 { --bs-gutter-y: 0.4rem; --bs-gutter-x: 0.4rem; }
+        .row.g-4 { --bs-gutter-y: 0.4rem; --bs-gutter-x: 0.4rem; }
+        .toast-notification { padding: 6px 12px !important; font-size: 0.7rem !important; min-width: 180px !important; }
+
+        /* ---- MODALES COMPACTOS ---- */
+        .modal-confirmacion .modal-header { padding: 10px 16px !important; }
+        .modal-confirmacion .modal-title { font-size: 0.85rem !important; }
+        .modal-confirmacion .modal-body { padding: 14px !important; }
+        .modal-confirmacion .modal-body .mensaje-principal { font-size: 0.85rem !important; }
+        .modal-confirmacion .modal-body .mensaje-secundario { font-size: 0.7rem !important; }
+        .modal-confirmacion .modal-body .info-adicional { padding: 8px 12px !important; }
+        .modal-confirmacion .modal-body .info-adicional .fila-info { font-size: 0.65rem !important; padding: 2px 0 !important; }
+        .modal-confirmacion .modal-footer { padding: 10px 16px !important; }
+        .modal-confirmacion .modal-footer .btn { padding: 4px 14px !important; font-size: 0.7rem !important; }
+        .modal-conductor .modal-header { padding: 8px 14px !important; }
+        .modal-conductor .modal-body { padding: 10px 14px !important; }
+        .modal-conductor .modal-footer { padding: 8px 14px !important; }
+
+        /* ---- ETIQUETAS DE UBIGEO (texto pequeño arriba) ---- */
+        .ubigeo-label {
+            font-size: 0.55rem;
             font-weight: 600;
-            transition: all 0.2s ease;
-            border: none;
+            color: #475569;
+            display: block;
+            margin-bottom: 1px;
+            letter-spacing: 0.3px;
         }
-        
-        .erp-card {
-            background: white;
-            border-radius: 24px;
-            overflow: hidden;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-            margin-bottom: 24px;
-            border: 1px solid rgba(0, 0, 0, 0.05);
-        }
-        
-        .card-header-custom {
-            background: linear-gradient(135deg, #1f2937, #111827);
-            color: white;
-            padding: 16px 24px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
+
+        /* ---- COLORES ORIGINALES ---- */
+        .erp-card { background: white; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.05); }
         .card-header-custom.blue { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
         .card-header-custom.green { background: linear-gradient(135deg, #059669, #047857); }
         .card-header-custom.orange { background: linear-gradient(135deg, #ea580c, #c2410c); }
         .card-header-custom.purple { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
         .card-header-custom.teal { background: linear-gradient(135deg, #0d9488, #0f766e); }
         .card-header-custom.slate { background: linear-gradient(135deg, #475569, #334155); }
-        
-        .custom-input {
-            border-radius: 12px !important;
-            border: 1.5px solid #e5e7eb;
-            padding: 10px 14px;
-            font-size: 14px;
-        }
-        
-        .custom-input:focus {
-            border-color: #ea580c;
-            box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
-        }
-        
-        .custom-input:read-only {
-            background-color: #f8f9fa;
-            cursor: not-allowed;
-        }
-        
-        .table-modern thead th {
-            background: linear-gradient(135deg, #1e293b, #0f172a);
-            color: white;
-            padding: 12px;
-            font-size: 12px;
-            text-align: center;
-        }
-        
-        .form-label {
-            font-weight: 600;
-            font-size: 13px;
-            margin-bottom: 6px;
-            color: #111827;
-        }
-        
-        .form-label .required {
-            color: #dc2626;
-            margin-left: 2px;
-        }
-        
-        .vehiculo-card {
-            background: #f8fafc;
-            border-radius: 16px;
-            padding: 16px;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .toast-notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-            min-width: 300px;
-            animation: slideIn 0.3s ease;
-        }
-        
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        @keyframes slideOut {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
-        }
-        
-        .btn-del {
-            background: #fee2e2;
-            border: none;
-            border-radius: 6px;
-            padding: 5px 8px;
-            color: #dc2626;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .btn-del:hover {
-            background: #fecaca;
-            transform: scale(1.05);
-        }
-        
-        .ubigeo-help-text {
-            font-size: 12px;
-            color: #6c757d;
-            margin-top: 5px;
-        }
-        
-        select.form-select:disabled {
-            background-color: #e9ecef;
-            cursor: not-allowed;
-        }
-        
-        .cantidad-readonly {
-            background-color: #f8f9fa;
-            text-align: center;
-            font-weight: 500;
-        }
-        
-        .badge-sunat {
-            font-size: 10px;
-            background: #1e293b;
-            color: #94a3b8;
-            padding: 2px 8px;
-            border-radius: 4px;
-            margin-left: 6px;
-        }
-        
-        .help-text-small {
-            font-size: 11px;
-            color: #6c757d;
-            margin-top: 4px;
-        }
-        
-        .campo-obligatorio {
-            border-left: 3px solid #dc2626 !important;
-        }
+        .custom-input:focus { border-color: #ea580c; box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1); }
+        .table-modern thead th { background: linear-gradient(135deg, #1e293b, #0f172a); color: white; }
 
-        .grupo-peso-bruto {
-            background: #f8fafc;
-            border-radius: 16px;
-            padding: 16px 20px;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .grupo-peso-bruto .row {
-            align-items: end;
-        }
-        
-        .grupo-peso-bruto .form-label {
-            font-size: 12px;
-            margin-bottom: 4px;
-        }
-
-        .modal-confirmacion {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(8px);
-        }
-        
-        .modal-confirmacion .modal-content {
-            border-radius: 24px;
-            border: none;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-            max-width: 560px;
-            margin: 0 auto;
-        }
-        
-        .modal-confirmacion .modal-header {
-            background: linear-gradient(135deg, #dc2626, #b91c1c);
-            padding: 20px 28px;
-            border: none;
-        }
-        
-        .modal-confirmacion .modal-header .modal-title {
-            color: white;
-            font-weight: 700;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .modal-confirmacion .modal-header .modal-title i {
-            font-size: 28px;
-        }
-        
-        .modal-confirmacion .modal-header .btn-close {
-            filter: brightness(0) invert(1);
-            opacity: 0.8;
-        }
-        
-        .modal-confirmacion .modal-header .btn-close:hover {
-            opacity: 1;
-        }
-        
-        .modal-confirmacion .modal-body {
-            padding: 28px 28px 20px;
-            background: #f8fafc;
-        }
-        
-        .modal-confirmacion .modal-body .icono-advertencia {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 16px;
-        }
-        
-        .modal-confirmacion .modal-body .icono-advertencia .circulo {
-            width: 72px;
-            height: 72px;
-            border-radius: 50%;
-            background: #fef2f2;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid #fca5a5;
-        }
-        
-        .modal-confirmacion .modal-body .icono-advertencia .circulo i {
-            font-size: 36px;
-            color: #dc2626;
-        }
-        
-        .modal-confirmacion .modal-body .mensaje-principal {
-            text-align: center;
-            font-size: 16px;
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 6px;
-        }
-        
-        .modal-confirmacion .modal-body .mensaje-secundario {
-            text-align: center;
-            font-size: 14px;
-            color: #64748b;
-            margin-bottom: 20px;
-        }
-        
-        .modal-confirmacion .modal-body .info-adicional {
-            background: white;
-            border-radius: 12px;
-            padding: 16px 20px;
-            border: 1px solid #e2e8f0;
-            margin-bottom: 16px;
-        }
-        
-        .modal-confirmacion .modal-body .info-adicional .fila-info {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 0;
-            font-size: 13px;
-        }
-        
-        .modal-confirmacion .modal-body .info-adicional .fila-info .label {
-            color: #64748b;
-            font-weight: 500;
-        }
-        
-        .modal-confirmacion .modal-body .info-adicional .fila-info .valor {
-            color: #1e293b;
-            font-weight: 600;
-        }
-        
-        .modal-confirmacion .modal-body .info-adicional .fila-info .valor.destacado {
-            color: #dc2626;
-        }
-        
-        .modal-confirmacion .modal-body .info-adicional .divisor {
-            border-top: 1px solid #e2e8f0;
-            margin: 8px 0;
-        }
-        
-        .modal-confirmacion .modal-body .info-adicional .hora-actual {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            background: #f1f5f9;
-            padding: 8px 14px;
-            border-radius: 8px;
-            margin-top: 10px;
-            font-size: 13px;
-            color: #334155;
-        }
-        
-        .modal-confirmacion .modal-body .info-adicional .hora-actual i {
-            color: #64748b;
-            font-size: 16px;
-        }
-        
-        .modal-confirmacion .modal-body .info-adicional .hora-actual .hora-texto {
-            font-weight: 600;
-            color: #0f172a;
-            font-family: 'Courier New', monospace;
-            font-size: 15px;
-        }
-        
-        .modal-confirmacion .modal-footer {
-            padding: 16px 28px 28px;
-            background: #f8fafc;
-            border-top: 1px solid #e2e8f0;
-            gap: 12px;
-        }
-        
-        .modal-confirmacion .modal-footer .btn {
-            border-radius: 12px;
-            padding: 10px 28px;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.2s ease;
-        }
-        
-        .modal-confirmacion .modal-footer .btn-cancelar {
-            background: #f1f5f9;
-            color: #475569;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .modal-confirmacion .modal-footer .btn-cancelar:hover {
-            background: #e2e8f0;
-        }
-        
-        .modal-confirmacion .modal-footer .btn-aceptar {
-            background: linear-gradient(135deg, #dc2626, #b91c1c);
-            color: white;
-            border: none;
-            min-width: 140px;
-        }
-        
-        .modal-confirmacion .modal-footer .btn-aceptar:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(220, 38, 38, 0.35);
-        }
-        
-        .modal-confirmacion .modal-footer .btn-aceptar:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .modal-confirmacion .modal-footer .btn-aceptar i {
-            margin-right: 8px;
-        }
-        
-        .modal-confirmacion.fade .modal-dialog {
-            transform: scale(0.95) translateY(-20px);
-            transition: transform 0.25s ease, opacity 0.25s ease;
-        }
-        
-        .modal-confirmacion.show .modal-dialog {
-            transform: scale(1) translateY(0);
-        }
-
+        /* ---- OTROS ---- */
+        .custom-input:read-only { background-color: #f8f9fa; cursor: not-allowed; }
+        .campo-obligatorio { border-left: 3px solid #dc2626 !important; }
         .tabla-solo-vista .form-control,
-        .tabla-solo-vista .form-select {
-            background-color: #f8fafc !important;
-            border-color: #e2e8f0 !important;
-            cursor: default !important;
-            pointer-events: none !important;
-            opacity: 0.85;
-        }
-        
-        .tabla-solo-vista .btn-del {
-            opacity: 0.4;
-            cursor: not-allowed !important;
-            pointer-events: none !important;
-        }
-        
-        .tabla-solo-vista .btn-del:hover {
-            transform: none !important;
-            background: #fee2e2 !important;
-        }
-        
-        .tabla-solo-vista .btn-agregar-producto {
-            display: none !important;
-        }
-
-        /* Estilos para el select con opción agregar nuevo */
-        .select-conductor-wrapper {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        
-        .select-conductor-wrapper .form-select {
-            flex: 1;
-        }
-        
-        .btn-agregar-conductor {
-            white-space: nowrap;
-            padding: 8px 14px;
-            border-radius: 12px;
-            border: 1.5px solid #e5e7eb;
-            background: white;
-            color: #2563eb;
-            transition: all 0.2s;
-            font-size: 13px;
-            cursor: pointer;
-        }
-        
-        .btn-agregar-conductor:hover {
-            background: #2563eb;
-            color: white;
-            border-color: #2563eb;
-        }
-        
-        .btn-agregar-conductor i {
-            font-size: 14px;
-        }
-
-        /* Modal Nuevo Conductor */
-        .modal-conductor .modal-header {
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
-            color: white;
-            border: none;
-        }
-        
-        .modal-conductor .modal-header .btn-close {
-            filter: brightness(0) invert(1);
-        }
-        
-        .modal-conductor .modal-footer .btn-primary {
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
-            border: none;
-            padding: 10px 24px;
-            border-radius: 12px;
-            font-weight: 600;
-        }
-        
-        .modal-conductor .modal-footer .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-        }
+        .tabla-solo-vista .form-select { background-color: #f8fafc !important; border-color: #e2e8f0 !important; cursor: default !important; pointer-events: none !important; opacity: 0.85; }
+        .tabla-solo-vista .btn-del { opacity: 0.4; cursor: not-allowed !important; pointer-events: none !important; }
+        .modal-confirmacion { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); }
+        .modal-confirmacion .modal-content { border-radius: 24px; border: none; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3); overflow: hidden; max-width: 560px; margin: 0 auto; }
+        .modal-confirmacion .modal-header { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+        .modal-confirmacion .modal-header .modal-title { color: white; font-weight: 700; display: flex; align-items: center; gap: 12px; }
+        .modal-confirmacion .modal-header .btn-close { filter: brightness(0) invert(1); opacity: 0.8; }
+        .modal-confirmacion .modal-header .btn-close:hover { opacity: 1; }
+        .modal-confirmacion .modal-body { background: #f8fafc; }
+        .modal-confirmacion .modal-body .icono-advertencia { display: flex; justify-content: center; margin-bottom: 12px; }
+        .modal-confirmacion .modal-body .icono-advertencia .circulo { width: 56px; height: 56px; border-radius: 50%; background: #fef2f2; display: flex; align-items: center; justify-content: center; border: 2px solid #fca5a5; }
+        .modal-confirmacion .modal-body .icono-advertencia .circulo i { font-size: 28px; color: #dc2626; }
+        .modal-confirmacion .modal-body .info-adicional { background: white; border-radius: 12px; border: 1px solid #e2e8f0; }
+        .modal-confirmacion .modal-body .info-adicional .divisor { border-top: 1px solid #e2e8f0; margin: 6px 0; }
+        .modal-confirmacion .modal-body .info-adicional .hora-actual { display: flex; align-items: center; justify-content: center; gap: 8px; background: #f1f5f9; padding: 6px 12px; border-radius: 8px; margin-top: 8px; font-size: 0.7rem; color: #334155; }
+        .modal-confirmacion .modal-body .info-adicional .hora-actual .hora-texto { font-weight: 600; color: #0f172a; font-family: 'Courier New', monospace; font-size: 0.8rem; }
+        .modal-confirmacion .modal-footer { background: #f8fafc; border-top: 1px solid #e2e8f0; }
+        .modal-confirmacion .modal-footer .btn-cancelar { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+        .modal-confirmacion .modal-footer .btn-cancelar:hover { background: #e2e8f0; }
+        .modal-confirmacion .modal-footer .btn-aceptar { background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; border: none; min-width: 120px; }
+        .modal-confirmacion .modal-footer .btn-aceptar:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(220, 38, 38, 0.35); }
+        .modal-confirmacion .modal-footer .btn-aceptar:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .modal-confirmacion.fade .modal-dialog { transform: scale(0.95) translateY(-20px); transition: transform 0.25s ease, opacity 0.25s ease; }
+        .modal-confirmacion.show .modal-dialog { transform: scale(1) translateY(0); }
+        .modal-conductor .modal-header { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; border: none; }
+        .modal-conductor .modal-header .btn-close { filter: brightness(0) invert(1); }
+        .modal-conductor .modal-footer .btn-primary { background: linear-gradient(135deg, #2563eb, #1d4ed8); border: none; padding: 6px 18px; border-radius: 12px; font-weight: 600; font-size: 0.75rem; }
+        .modal-conductor .modal-footer .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
+        .btn-agregar-conductor { white-space: nowrap; border-radius: 12px; border: 1.5px solid #e5e7eb; background: white; color: #2563eb; transition: all 0.2s; cursor: pointer; }
+        .btn-agregar-conductor:hover { background: #2563eb; color: white; border-color: #2563eb; }
+        .toast-notification { position: fixed; top: 20px; right: 20px; z-index: 9999; animation: slideIn 0.3s ease; border-radius: 8px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
     </style>
 </head>
 <body>
 
     <!-- NAVBAR ERP -->
     <div class="erp-navbar">
-        <div class="d-flex align-items-center gap-3">
-            <div class="bg-white rounded-3 p-2"><i class="bi bi-truck fs-4 text-dark"></i></div>
+        <div class="d-flex align-items-center gap-2">
+            <div class="bg-white rounded-3 p-1"><i class="bi bi-truck fs-5 text-dark"></i></div>
             <div>
-                <div class="text-white fw-bold fs-5">KCF CORPORACION</div>
-                <div class="text-white-50 small">ERP Comercial · Guías de Remisión</div>
+                <div class="text-white fw-bold" style="font-size: 0.9rem;">KCF CORPORACION</div>
+                <div class="text-white-50" style="font-size: 0.6rem;">ERP Comercial · Guías de Remisión</div>
             </div>
         </div>
-        <div class="d-flex gap-3">
-            <div class="bg-warning bg-opacity-25 rounded-pill px-3 py-2 text-warning small fw-bold" id="estadoBadge">
-                <i class="bi bi-circle-fill fs-10 me-1"></i> NUEVA GUÍA
+        <div class="d-flex gap-2">
+            <div class="bg-warning bg-opacity-25 rounded-pill px-2 py-1 text-warning small fw-bold" id="estadoBadge" style="font-size: 0.55rem;">
+                <i class="bi bi-circle-fill me-1" style="font-size: 0.4rem;"></i> NUEVA GUÍA
             </div>
-            <a href="/guias" class="btn btn-dark btn-sm">
+            <a href="/guias" class="btn btn-dark btn-sm" style="font-size: 0.6rem; padding: 2px 8px;">
                 <i class="bi bi-arrow-left"></i> Volver
             </a>
         </div>
     </div>
 
-    <div class="container-fluid py-4">
-        
+    <div class="container-fluid py-2">
+
         <!-- TÍTULO Y ACCIONES -->
-        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-1">
             <div>
-                <h1 class="fw-bold mb-1" style="font-size: 28px;">Nueva Guía de Remisión</h1>
-                <p class="text-muted small mb-0"><i class="bi bi-info-circle"></i> Documento obligatorio para traslado de mercancías</p>
+                <h1 class="fw-bold mb-0" style="font-size: 1.1rem;">Nueva Guía de Remisión</h1>
+                <p class="text-muted small mb-0" style="font-size: 0.6rem;"><i class="bi bi-info-circle"></i> Documento obligatorio para traslado de mercancías</p>
             </div>
-            <div class="d-flex gap-2 flex-wrap">
-                <button class="btn btn-warning btn-toolbar" id="btnGuardarBorrador">
-                    <i class="bi bi-save-fill"></i> Guardar Borrador
-                </button>
-                <button class="btn btn-primary btn-toolbar" id="btnEnviarSunat">
-                    <i class="bi bi-cloud-upload-fill"></i> Enviar a SUNAT
-                </button>
-                <button class="btn btn-success btn-toolbar" id="btnPdf" disabled>
-                    <i class="bi bi-file-earmark-pdf-fill"></i> PDF con QR
-                </button>
-                <button class="btn btn-secondary btn-toolbar" id="btnLimpiar">
-                    <i class="bi bi-eraser-fill"></i> Limpiar
-                </button>
-                <button class="btn btn-danger btn-toolbar" id="btnCancelar">
-                    <i class="bi bi-x-circle-fill"></i> Cancelar
-                </button>
+            <div class="d-flex gap-1 flex-wrap">
+                <button class="btn btn-warning btn-toolbar" id="btnGuardarBorrador"><i class="bi bi-save-fill"></i> Borrador</button>
+                <button class="btn btn-primary btn-toolbar" id="btnEnviarSunat"><i class="bi bi-cloud-upload-fill"></i> SUNAT</button>
+                <button class="btn btn-success btn-toolbar" id="btnPdf" disabled><i class="bi bi-file-earmark-pdf-fill"></i> PDF</button>
+                <button class="btn btn-secondary btn-toolbar" id="btnLimpiar"><i class="bi bi-eraser-fill"></i> Limpiar</button>
+                <button class="btn btn-danger btn-toolbar" id="btnCancelar"><i class="bi bi-x-circle-fill"></i> Cancelar</button>
             </div>
         </div>
 
         <!-- FILA 1: REMITENTE Y DESTINATARIO -->
-        <div class="row g-4">
+        <div class="row g-2">
             <!-- REMITENTE -->
             <div class="col-md-6">
                 <div class="erp-card">
                     <div class="card-header-custom blue">
                         <i class="bi bi-building"></i> Remitente (Origen)
                     </div>
-                    <div class="card-body-custom p-4">
-                        <div class="row g-3">
+                    <div class="card-body-custom">
+                        <div class="row g-2">
                             <div class="col-12">
                                 <label class="form-label">RUC</label>
                                 <input type="text" class="form-control custom-input" id="remitente_ruc" value="20602095704" readonly disabled>
@@ -538,28 +185,30 @@
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Dirección de Partida (Almacén)</label>
-                                <input type="text" class="form-control custom-input" id="direccion_partida" value="JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN
-DE PORRES">
-                                
-                                <div class="row mt-2">
+                                <input type="text" class="form-control custom-input" id="direccion_partida" value="JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES">
+
+                                <div class="row mt-1">
                                     <div class="col-md-4">
+                                        <span class="ubigeo-label">DEPARTAMENTO</span>
                                         <select class="form-select form-select-sm" id="departamento_partida">
-                                            <option value="">Seleccione Departamento</option>
+                                            <option value="">Seleccione</option>
                                         </select>
                                     </div>
                                     <div class="col-md-4">
+                                        <span class="ubigeo-label">PROVINCIA</span>
                                         <select class="form-select form-select-sm" id="provincia_partida" disabled>
-                                            <option value="">Primero seleccione Departamento</option>
+                                            <option value="">Primero Departamento</option>
                                         </select>
                                     </div>
                                     <div class="col-md-4">
+                                        <span class="ubigeo-label">DISTRITO</span>
                                         <select class="form-select form-select-sm" id="distrito_partida" disabled>
-                                            <option value="">Primero seleccione Provincia</option>
+                                            <option value="">Primero Provincia</option>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="ubigeo-help-text" id="ubigeo_partida_texto">
-                                    <i class="bi bi-geo-alt-fill"></i> Ubigeo seleccionado: <span id="ubigeo_partida_valor">Ninguno</span>
+                                    <i class="bi bi-geo-alt-fill"></i> Ubigeo: <span id="ubigeo_partida_valor">Ninguno</span>
                                 </div>
                                 <input type="hidden" id="ubigeo_partida_hidden" value="">
                             </div>
@@ -574,14 +223,14 @@ DE PORRES">
                     <div class="card-header-custom green">
                         <i class="bi bi-people-fill"></i> Destinatario (Cliente)
                     </div>
-                    <div class="card-body-custom p-4">
-                        <div class="row g-3">
+                    <div class="card-body-custom">
+                        <div class="row g-2">
                             <div class="col-12">
                                 <label class="form-label">Buscar Cliente por RUC</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control custom-input" id="buscar_cliente_ruc" placeholder="Ingrese RUC">
-                                    <button class="btn btn-primary" id="btnBuscarCliente">
-                                        <i class="bi bi-search"></i> Buscar
+                                <div class="input-group" style="flex-wrap: nowrap;">
+                                    <input type="text" class="form-control custom-input" id="buscar_cliente_ruc" placeholder="RUC" style="font-size:0.65rem;">
+                                    <button class="btn btn-primary btn-sm" id="btnBuscarCliente" style="font-size:0.6rem; padding:2px 8px;">
+                                        <i class="bi bi-search"></i>
                                     </button>
                                 </div>
                             </div>
@@ -596,46 +245,48 @@ DE PORRES">
                             <div class="col-12">
                                 <label class="form-label">Dirección de Llegada</label>
                                 <input type="text" class="form-control custom-input" id="direccion_llegada" placeholder="Dirección del cliente">
-                                
-                                <div class="row mt-2">
+
+                                <div class="row mt-1">
                                     <div class="col-md-4">
+                                        <span class="ubigeo-label">DEPARTAMENTO</span>
                                         <select class="form-select form-select-sm" id="departamento_llegada">
-                                            <option value="">Seleccione Departamento</option>
+                                            <option value="">Seleccione</option>
                                         </select>
                                     </div>
                                     <div class="col-md-4">
+                                        <span class="ubigeo-label">PROVINCIA</span>
                                         <select class="form-select form-select-sm" id="provincia_llegada" disabled>
-                                            <option value="">Primero seleccione Departamento</option>
+                                            <option value="">Primero Departamento</option>
                                         </select>
                                     </div>
                                     <div class="col-md-4">
+                                        <span class="ubigeo-label">DISTRITO</span>
                                         <select class="form-select form-select-sm" id="distrito_llegada" disabled>
-                                            <option value="">Primero seleccione Provincia</option>
+                                            <option value="">Primero Provincia</option>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="ubigeo-help-text" id="ubigeo_llegada_texto">
-                                    <i class="bi bi-geo-alt-fill"></i> Ubigeo - seleccionado: <span id="ubigeo_llegada_valor">Ninguno</span>
+                                    <i class="bi bi-geo-alt-fill"></i> Ubigeo: <span id="ubigeo_llegada_valor">Ninguno</span>
                                 </div>
                                 <input type="hidden" id="ubigeo_llegada_hidden" value="">
                             </div>
-                            
+
                             <div class="col-12">
-                                <div class="row g-3">
+                                <div class="row g-2">
                                     <div class="col-md-6">
-                                        <label class="form-label">
-                                            <i class="bi bi-receipt"></i> Pedido Compra (Cliente)
-                                            <span class="badge-sunat">Opcional</span>
-                                        </label>
-                                        <input type="text" class="form-control custom-input" id="orden_compra_cliente" placeholder="Ej: OC-047051B8">
-                                        <div class="help-text-small">Número de orden de compra proporcionado por el cliente</div>
+                                        <label class="form-label"><i class="bi bi-receipt"></i> Pedido Compra <span class="badge-sunat">Opcional</span></label>
+                                        <input type="text" class="form-control custom-input" id="orden_compra_cliente" placeholder="OC-047051B8">
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label">
-                                            <i class="bi bi-file-earmark-text"></i> Documento Asociado
-                                        </label>
+                                        <label class="form-label"><i class="bi bi-file-earmark-text"></i> N° Cotización</label>
                                         <input type="text" class="form-control custom-input" id="documento_asociado" placeholder="F001-123">
-                                        <div class="help-text-small">Factura, boleta o ticket asociado al traslado</div>
+                                    </div>
+                                    <!-- NUEVO CAMPO FACTURA -->
+                                    <div class="col-md-6">
+                                        <label class="form-label"><i class="bi bi-receipt-cutoff"></i> Factura</label>
+                                        <input type="text" class="form-control custom-input" id="campo_factura" placeholder="Escriba si tiene factura">
+                                        <div class="help-text-small">Si hay factura se escribe, si no se deja vacío</div>
                                     </div>
                                 </div>
                             </div>
@@ -646,41 +297,43 @@ DE PORRES">
         </div>
 
         <!-- FILA 2: VEHÍCULO Y TRANSPORTISTA -->
-        <div class="row g-4">
+        <div class="row g-2">
             <div class="col-md-6">
                 <div class="erp-card">
                     <div class="card-header-custom orange">
-                        <i class="bi bi-truck"></i> Datos de Transporte 
+                        <i class="bi bi-truck"></i> Datos de Transporte
                     </div>
-                    <div class="card-body-custom p-4">
+                    <div class="card-body-custom">
                         <div class="vehiculo-card">
-                            <div class="row g-3">
+                            <div class="row g-2">
                                 <div class="col-md-12">
                                     <label class="form-label">Modalidad de Transporte</label>
                                     <select class="form-select custom-input" id="modalidad_transporte">
-                                        <option value="PRIVADO">🚛 Transporte Privado (vehículo propio)</option>
-                                        <option value="PUBLICO">🚚 Transporte Público (tercero)</option>
+                                        <option value="PRIVADO">🚛 Transporte Privado</option>
+                                        <option value="PUBLICO">🚚 Transporte Público</option>
                                     </select>
                                 </div>
                                 <div class="col-md-12">
                                     <label class="form-label">Seleccionar Conductor/Transportista</label>
                                     <div class="select-conductor-wrapper">
                                         <select class="form-select custom-input" id="select_transportista">
-                                            <option value="">-- Seleccione un conductor --</option>
+                                            <option value="">-- Seleccione --</option>
+                                            <!-- OPCIÓN PERSONALIZAR -->
+                                            <option value="personalizar" class="option-personalizar" style="font-weight:600;color:#2563eb;">✏️ Personalizar</option>
                                         </select>
                                         <button type="button" class="btn-agregar-conductor" id="btnAgregarConductor" title="Agregar nuevo conductor">
                                             <i class="bi bi-plus-circle"></i> Nuevo
                                         </button>
                                     </div>
-                                    <div class="help-text-small">Seleccione un conductor existente o agregue uno nuevo</div>
+                                    <div class="help-text-small">Seleccione o use "Personalizar" para llenar manualmente</div>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Placa del Vehículo <span class="text-danger">*</span></label>
+                                    <label class="form-label">Placa <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control custom-input" id="placa_vehiculo" placeholder="ABC-123" required>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">N° Licencia Conductor</label>
-                                    <input type="text" class="form-control custom-input" id="licencia_conductor" placeholder="Ej: 1234567890">
+                                    <label class="form-label">N° Licencia</label>
+                                    <input type="text" class="form-control custom-input" id="licencia_conductor" placeholder="1234567890">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">DNI Conductor</label>
@@ -701,14 +354,14 @@ DE PORRES">
                     <div class="card-header-custom orange">
                         <i class="bi bi-building"></i> Datos del Transportista (Público)
                     </div>
-                    <div class="card-body-custom p-4">
-                        <div class="row g-3">
+                    <div class="card-body-custom">
+                        <div class="row g-2">
                             <div class="col-md-12">
                                 <label class="form-label">RUC Transportista</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control custom-input" id="transportista_ruc" placeholder="RUC de la empresa de transporte">
-                                    <button class="btn btn-outline-primary" id="btnBuscarTransportista">
-                                        <i class="bi bi-search"></i> Buscar
+                                <div class="input-group" style="flex-wrap: nowrap;">
+                                    <input type="text" class="form-control custom-input" id="transportista_ruc" placeholder="RUC empresa">
+                                    <button class="btn btn-outline-primary btn-sm" id="btnBuscarTransportista" style="font-size:0.6rem; padding:2px 8px;">
+                                        <i class="bi bi-search"></i>
                                     </button>
                                 </div>
                             </div>
@@ -717,8 +370,8 @@ DE PORRES">
                                 <input type="text" class="form-control custom-input" id="transportista_nombre" readonly>
                             </div>
                         </div>
-                        <div class="alert alert-info mt-3 small" id="msg_transporte_privado" style="display: none;">
-                            <i class="bi bi-info-circle"></i> En transporte privado, NO se requiere transportista.
+                        <div class="alert alert-info mt-2 small" id="msg_transporte_privado" style="display: none; font-size:0.6rem; padding:4px 8px; margin-bottom:0;">
+                            <i class="bi bi-info-circle"></i> En transporte privado no se requiere transportista.
                         </div>
                     </div>
                 </div>
@@ -730,15 +383,12 @@ DE PORRES">
             <div class="card-header-custom purple">
                 <i class="bi bi-file-text"></i> Datos del Traslado
             </div>
-            <div class="card-body-custom p-4">
-                <div class="row g-3">
+            <div class="card-body-custom">
+                <div class="row g-2">
                     <div class="col-md-3">
-                        <label class="form-label">
-                            Motivo de Traslado <span class="text-danger">*</span>
-                            <span class="badge-sunat">SUNAT</span>
-                        </label>
+                        <label class="form-label">Motivo <span class="text-danger">*</span> <span class="badge-sunat">SUNAT</span></label>
                         <select class="form-select custom-input campo-obligatorio" id="motivo_traslado">
-                            <option value="">-- Seleccione un motivo --</option>
+                            <option value="">-- Seleccione --</option>
                             <option value="01">01 - Venta</option>
                             <option value="02">02 - Compra</option>
                             <option value="03">03 - Traslado entre establecimientos</option>
@@ -769,73 +419,53 @@ DE PORRES">
                             <option value="28">28 - Traslado por consignación para venta con reserva de dominio</option>
                         </select>
                     </div>
-                    
                     <div class="col-md-3">
-                        <label class="form-label">Fecha de Emision</label>
+                        <label class="form-label">Fecha Emisión</label>
                         <input type="date" class="form-control custom-input" id="fecha_traslado">
-                        <div class="help-text-small">Fecha de emisión del documento</div>
                     </div>
-                    
                     <div class="col-md-3">
-                        <label class="form-label">
-                            Fecha de Inicio de Traslado <span class="text-danger">*</span>
-                        </label>
+                        <label class="form-label">Fecha Inicio <span class="text-danger">*</span></label>
                         <input type="date" class="form-control custom-input campo-obligatorio" id="fecha_inicio_traslado">
-                        <div class="help-text-small">Fecha en que inicia el traslado</div>
                     </div>
-                    
                     <div class="col-md-3">
-                        <label class="form-label">
-                            Número de Bultos <span class="text-danger">*</span>
-                        </label>
+                        <label class="form-label">N° Bultos <span class="text-danger">*</span></label>
                         <input type="number" class="form-control custom-input campo-obligatorio" id="numero_bultos" placeholder="0" min="0" value="1">
-                        <div class="help-text-small">Cantidad de paquetes o bultos</div>
                     </div>
                 </div>
-                
-                <div class="row g-3 mt-2">
+
+                <div class="row g-2 mt-1">
                     <div class="col-12">
                         <div class="grupo-peso-bruto">
-                            <div class="row g-3">
+                            <div class="row g-2">
                                 <div class="col-md-6">
-                                    <label class="form-label">
-                                        Unidad de Medida de Peso Bruto <span class="text-danger">*</span>
-                                        <span class="badge-sunat">SUNAT</span>
-                                    </label>
+                                    <label class="form-label">Unidad Peso Bruto <span class="text-danger">*</span> <span class="badge-sunat">SUNAT</span></label>
                                     <select class="form-select custom-input campo-obligatorio" id="unidad_peso_bruto">
                                         <option value="">-- Seleccionar --</option>
-                                        <option value="ESCUBA">ESCUBA - Escala de Unidades Básicas</option>
+                                        <option value="ESCUBA">ESCUBA</option>
                                         <option value="KGM">KGM - Kilogramo</option>
-                                        <option value="TNE">TNE - Tonelada Métrica</option>
+                                        <option value="TNE">TNE - Tonelada</option>
                                         <option value="LBR">LBR - Libra</option>
                                         <option value="GRM">GRM - Gramo</option>
                                         <option value="ONZ">ONZ - Onza</option>
-                                        <option value="CEN">CEN - Cento de Unidades</option>
-                                        <option value="UM">UM - Millón de Unidades</option>
-                                        <option value="ZZ">ZZ - Unidad (ZZ)</option>
-                                        <option value="NU">NU - Unidad (NU)</option>
+                                        <option value="CEN">CEN</option>
+                                        <option value="UM">UM</option>
+                                        <option value="ZZ">ZZ - Unidad</option>
+                                        <option value="NU">NU - Unidad</option>
                                     </select>
-                                    <div class="help-text-small">Unidad de medida para el peso bruto total</div>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">
-                                        Peso Bruto Total de la Carga <span class="text-danger">*</span>
-                                    </label>
+                                    <label class="form-label">Peso Bruto Total <span class="text-danger">*</span></label>
                                     <input type="number" class="form-control custom-input campo-obligatorio" id="peso_bruto_total" placeholder="0.00" step="0.01" value="0.00">
-                                    <div class="help-text-small">Peso total de toda la carga en la unidad seleccionada</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <div class="row g-3 mt-2">
+
+                <div class="row g-2 mt-1">
                     <div class="col-12">
-                        <label class="form-label">
-                            <i class="bi bi-chat-text"></i> Observaciones
-                        </label>
-                        <textarea class="form-control custom-input" id="observaciones" rows="2" placeholder="Notas adicionales para el transportista..."></textarea>
-                        <div class="help-text-small">Información adicional para el traslado</div>
+                        <label class="form-label"><i class="bi bi-chat-text"></i> Observaciones</label>
+                        <textarea class="form-control custom-input" id="observaciones" rows="1" placeholder="Notas adicionales..."></textarea>
                     </div>
                 </div>
             </div>
@@ -845,34 +475,34 @@ DE PORRES">
         <div class="erp-card">
             <div class="card-header-custom teal">
                 <i class="bi bi-box-seam-fill"></i> Productos a Trasladar
-                <span class="badge bg-light text-dark ms-2" style="font-size: 11px; font-weight: 500;">SOLO LECTURA</span>
+                <span class="badge bg-light text-dark ms-1" style="font-size: 0.5rem; font-weight: 500;">SOLO LECTURA</span>
             </div>
             <div class="card-body-custom p-0">
                 <div class="table-responsive tabla-solo-vista">
-                    <table class="table table-modern" id="products-table">
+                    <table class="table table-modern" id="products-table" style="margin-bottom:0;">
                         <thead>
                             <tr>
-                                <th style="width:40px">Item</th>
-                                <th style="width:130px">Código</th>
-                                <th style="width:280px">Descripción</th>
-                                <th style="width:100px">Unidad</th>
-                                <th style="width:100px">Cantidad</th>
-                                <th style="width:60px">Acción</th>
+                                <th style="width:30px">#</th>
+                                <th style="width:90px">Código</th>
+                                <th style="width:180px">Descripción</th>
+                                <th style="width:70px">Unidad</th>
+                                <th style="width:60px">Cant.</th>
+                                <th style="width:30px">Acc.</th>
                             </tr>
                         </thead>
                         <tbody id="table-body">
                             <tr>
                                 <td>1</td>
                                 <td><input type="text" class="form-control form-control-sm" placeholder="Código" value="PROD-001" readonly></td>
-                                <td><input type="text" class="form-control form-control-sm" placeholder="Descripción del producto" value="Producto de ejemplo" readonly></td>
+                                <td><input type="text" class="form-control form-control-sm" placeholder="Descripción" value="Producto de ejemplo" readonly></td>
                                 <td>
                                     <select class="form-select form-select-sm" disabled>
-                                        <option value="NIU" selected>Unidad (NIU)</option>
-                                        <option value="KGM">Kilogramo (KGM)</option>
-                                        <option value="LTR">Litro (LTR)</option>
-                                        <option value="MTR">Metro (MTR)</option>
-                                        <option value="ZZ">Unidad (ZZ)</option>
-                                        <option value="NU">Unidad (NU)</option>
+                                        <option value="NIU" selected>NIU</option>
+                                        <option value="KGM">KGM</option>
+                                        <option value="LTR">LTR</option>
+                                        <option value="MTR">MTR</option>
+                                        <option value="ZZ">ZZ</option>
+                                        <option value="NU">NU</option>
                                     </select>
                                 </td>
                                 <td><input type="number" class="form-control form-control-sm cantidad-readonly" value="1" min="0.01" step="0.01" readonly></td>
@@ -881,13 +511,8 @@ DE PORRES">
                         </tbody>
                     </table>
                 </div>
-                <div class="p-4" style="display: none;">
-                    <button class="btn btn-success btn-sm btn-agregar-producto" id="btnAgregarProducto">
-                        <i class="bi bi-plus-circle-fill"></i> Agregar Producto
-                    </button>
-                </div>
-                <div class="p-3 text-center text-muted small" style="border-top: 1px solid #e2e8f0; background: #fafbfc;">
-                    <i class="bi bi-info-circle"></i> Los productos se cargan automáticamente desde el pedido o cotización asociada
+                <div class="p-1 text-center text-muted small" style="border-top:1px solid #e2e8f0; background:#fafbfc; font-size:0.55rem;">
+                    <i class="bi bi-info-circle"></i> Productos cargados desde pedido o cotización
                 </div>
             </div>
         </div>
@@ -901,65 +526,30 @@ DE PORRES">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <div class="modal-title">
-                        <i class="bi bi-exclamation-triangle-fill"></i>
-                        Confirmar Envío a SUNAT
-                    </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="modal-title"><i class="bi bi-exclamation-triangle-fill"></i> Confirmar Envío a SUNAT</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="icono-advertencia">
-                        <div class="circulo">
-                            <i class="bi bi-shield-exclamation"></i>
-                        </div>
+                        <div class="circulo"><i class="bi bi-shield-exclamation"></i></div>
                     </div>
-                    <div class="mensaje-principal">
-                        ¿Está seguro de emitir la Guía de Remisión Electrónica - Remitente?
-                    </div>
-                    <div class="mensaje-secundario">
-                        Esta acción no se puede revertir
-                    </div>
+                    <div class="mensaje-principal">¿Está seguro de emitir la Guía de Remisión Electrónica?</div>
+                    <div class="mensaje-secundario">Esta acción no se puede revertir</div>
                     <div class="info-adicional" id="infoGuiaConfirmacion">
-                        <div class="fila-info">
-                            <span class="label"><i class="bi bi-file-text"></i> Motivo</span>
-                            <span class="valor" id="confirm_motivo">---</span>
-                        </div>
-                        <div class="fila-info">
-                            <span class="label"><i class="bi bi-box"></i> Total Productos</span>
-                            <span class="valor" id="confirm_productos">0</span>
-                        </div>
-                        <div class="fila-info">
-                            <span class="label"><i class="bi bi-weight-scale"></i> Peso Bruto</span>
-                            <span class="valor" id="confirm_peso">0.00</span>
-                        </div>
-                        <div class="fila-info">
-                            <span class="label"><i class="bi bi-boxes"></i> N° Bultos</span>
-                            <span class="valor" id="confirm_bultos">0</span>
-                        </div>
-                        <div class="fila-info">
-                            <span class="label"><i class="bi bi-truck"></i> Placa</span>
-                            <span class="valor" id="confirm_placa">---</span>
-                        </div>
+                        <div class="fila-info"><span class="label"><i class="bi bi-file-text"></i> Motivo</span><span class="valor" id="confirm_motivo">---</span></div>
+                        <div class="fila-info"><span class="label"><i class="bi bi-box"></i> Productos</span><span class="valor" id="confirm_productos">0</span></div>
+                        <div class="fila-info"><span class="label"><i class="bi bi-weight-scale"></i> Peso</span><span class="valor" id="confirm_peso">0.00</span></div>
+                        <div class="fila-info"><span class="label"><i class="bi bi-boxes"></i> Bultos</span><span class="valor" id="confirm_bultos">0</span></div>
+                        <div class="fila-info"><span class="label"><i class="bi bi-truck"></i> Placa</span><span class="valor" id="confirm_placa">---</span></div>
                         <div class="divisor"></div>
-                        <div class="fila-info">
-                            <span class="label"><i class="bi bi-person"></i> Cliente</span>
-                            <span class="valor" id="confirm_cliente">---</span>
-                        </div>
+                        <div class="fila-info"><span class="label"><i class="bi bi-person"></i> Cliente</span><span class="valor" id="confirm_cliente">---</span></div>
                         <div class="divisor"></div>
-                        <div class="hora-actual">
-                            <i class="bi bi-clock-history"></i>
-                            <span>Hora de emisión:</span>
-                            <span class="hora-texto" id="horaActualConfirmacion">--:--:--</span>
-                        </div>
+                        <div class="hora-actual"><i class="bi bi-clock-history"></i> <span>Hora:</span> <span class="hora-texto" id="horaActualConfirmacion">--:--:--</span></div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-cancelar" data-bs-dismiss="modal">
-                        <i class="bi bi-x-lg"></i> Cancelar
-                    </button>
-                    <button type="button" class="btn btn-aceptar" id="btnConfirmarEnvio">
-                        <i class="bi bi-check-lg"></i> Aceptar
-                    </button>
+                    <button type="button" class="btn btn-cancelar" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i> Cancelar</button>
+                    <button type="button" class="btn btn-aceptar" id="btnConfirmarEnvio"><i class="bi bi-check-lg"></i> Aceptar</button>
                 </div>
             </div>
         </div>
@@ -972,40 +562,36 @@ DE PORRES">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="bi bi-person-plus-fill"></i> Agregar Nuevo Conductor
-                    </h5>
+                    <h5 class="modal-title"><i class="bi bi-person-plus-fill"></i> Agregar Conductor</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="row g-3">
+                    <div class="row g-2">
                         <div class="col-md-6">
                             <label class="form-label">DNI <span class="text-danger">*</span></label>
                             <input type="text" class="form-control custom-input" id="nuevo_conductor_dni" placeholder="8 dígitos" maxlength="8">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Nombres Completos <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control custom-input" id="nuevo_conductor_nombre" placeholder="Ej: Juan Perez">
+                            <label class="form-label">Nombres <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control custom-input" id="nuevo_conductor_nombre" placeholder="Juan Perez">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Placa del Vehículo <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control custom-input" id="nuevo_conductor_placa" placeholder="ABC-123" style="text-transform: uppercase;">
+                            <label class="form-label">Placa <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control custom-input" id="nuevo_conductor_placa" placeholder="ABC-123" style="text-transform:uppercase;">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">N° Licencia</label>
-                            <input type="text" class="form-control custom-input" id="nuevo_conductor_licencia" placeholder="Ej: 1234567890">
+                            <label class="form-label">Licencia</label>
+                            <input type="text" class="form-control custom-input" id="nuevo_conductor_licencia" placeholder="1234567890">
                         </div>
                         <div class="col-12">
                             <label class="form-label">Teléfono</label>
-                            <input type="text" class="form-control custom-input" id="nuevo_conductor_telefono" placeholder="Ej: 987654321">
+                            <input type="text" class="form-control custom-input" id="nuevo_conductor_telefono" placeholder="987654321">
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="btnGuardarNuevoConductor">
-                        <i class="bi bi-save-fill"></i> Guardar Conductor
-                    </button>
+                    <button type="button" class="btn btn-primary" id="btnGuardarNuevoConductor"><i class="bi bi-save-fill"></i> Guardar</button>
                 </div>
             </div>
         </div>
@@ -1014,41 +600,41 @@ DE PORRES">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // ==========================================
-        // DATA COMPLETA DE UBIGEOS
+        // DATA COMPLETA DE UBIGEOS (resumida para demo)
         // ==========================================
         const ubigeoData = {
-            "AMAZONAS": {"CHACHAPOYAS": ["CHACHAPOYAS", "ASUNCION", "BALSAS", "CHETO", "CHILIQUIN", "CHUQUIBAMBA", "GRANADA", "HUANCAS", "LA JALCA", "LEIMEBAMBA", "LEVANTO", "MAGDALENA", "MARISCAL CASTILLA", "MOLINOPAMPA", "MONTEVIDEO", "OLLEROS", "QUINJALCA", "SAN FRANCISCO DE DAGUAS", "SAN ISIDRO DE MAINO", "SOLOCO", "SONCHE"]},
-            "ANCASH": {"HUARAZ": ["HUARAZ", "COCHABAMBA", "COLCABAMBA", "HUANCHAY", "INDEPENDENCIA", "JANGAS", "LA LIBERTAD", "OLLEROS", "PAMPAS", "PARIACOTO", "PIRA", "TARICA"]},
-            "APURIMAC": {"ABANCAY": ["ABANCAY", "CHACOCHE", "CIRCA", "CURAHUASI", "HUAIPI", "LAMBRAMA", "PICHIRHUA", "SAN PEDRO DE CACHORA", "TAMBURCO"]},
-            "AREQUIPA": {"AREQUIPA": ["AREQUIPA", "ALTO SELVA ALEGRE", "CAYMA", "CERRO COLORADO", "CHARACATO", "CHIGUATA", "JACOBO HUNTER", "JOSE LUIS BUSTAMANTE Y RIVERO", "LA JOYA", "MARIANO MELGAR", "MIRAFLORES", "MOLLEBAYA", "PAUCARPATA", "POCSI", "POLOBAYA", "QUEQUEÑA", "SABANDIA", "SACHACA", "SAN JUAN DE SIGUAS", "SAN JUAN DE TARUCANI", "SANTA ISABEL DE SIGUAS", "SANTA RITA DE SIGUAS", "SOCABAYA", "TIABAYA", "UCHUMAYO", "VITOR", "YANAHUARA", "YARABAMBA", "YURA"]},
-            "AYACUCHO": {"HUAMANGA": ["AYACUCHO", "ACOCRO", "ACOS VINCHOS", "CARMEN ALTO", "CHIARA", "OCROS", "PACAYCASA", "QUINUA", "SAN JOSE DE TICLLAS", "SAN JUAN BAUTISTA", "SANTIAGO DE PISCHA", "SOCOS", "TAMBILLO", "VINCHOS"]},
-            "CAJAMARCA": {"CAJAMARCA": ["CAJAMARCA", "ASUNCION", "CHETILLA", "COSPAN", "ENCAÑADA", "JESUS", "LLACANORA", "LOS BAÑOS DEL INCA", "MAGDALENA", "MATARA", "NAMORA", "SAN JUAN"]},
-            "CALLAO": {"CALLAO": ["CALLAO", "BELLAVISTA", "CARMEN DE LA LEGUA REYNOSO", "LA PERLA", "LA PUNTA", "VENTANILLA", "MI PERU"]},
-            "CUSCO": {"CUSCO": ["CUSCO", "CCORCA", "POROY", "SAN JERONIMO", "SAN SEBASTIAN", "SANTIAGO", "SAYLLA", "WANCHAQ"]},
-            "HUANCAVELICA": {"HUANCAVELICA": ["HUANCAVELICA", "ACOBAMBILLA", "ACORIA", "CONAYCA", "CUENCA", "HUACHOCOLPA", "HUAYLLAHUARA", "IZCUCHACA", "LARIA", "MANTA", "MARISCAL CACERES", "MOYA", "NUEVO OCCORO", "PALCA", "PILCHACA", "VILCA", "YAULI"]},
-            "HUANUCO": {"HUANUCO": ["HUANUCO", "AMARILIS", "CHINCHAO", "CHURUBAMBA", "MARGOS", "QUISQUI", "SAN FRANCISCO DE CAYRAN", "SAN PEDRO DE CHAULAN", "SANTA MARIA DEL VALLE", "YARUMAYO"]},
-            "ICA": {"ICA": ["ICA", "LA TINGUIÑA", "LOS AQUIJES", "OCUCAJE", "PACHACUTEC", "PARCONA", "PUEBLO NUEVO", "SALAS", "SAN JOSE DE LOS MOLINOS", "SAN JUAN BAUTISTA", "SANTIAGO", "SUBTANJALLA", "TATE", "YAUCA"]},
-            "JUNIN": {"HUANCAYO": ["HUANCAYO", "CARHUACALLANGA", "CHACAPAMPA", "CHICCHE", "CHILCA", "CHONGOS ALTO", "CHUPURO", "COLCA", "CULLHUAS", "EL TAMBO", "HUACRAPUQUIO", "HUALHUAS", "HUANCAN", "HUASICANCHA", "HUAYUCACHI", "INGENIO", "PARIAHUANCA", "PILCOMAYO", "PUCARA", "QUICHUAY", "QUILCAS", "SAN AGUSTIN", "SAN JERONIMO DE TUNAN", "SANTO DOMINGO DE ACOBAMBA", "SAÑO", "SAPALLANGA", "SICAYA", "VIDOS"]},
-            "LA LIBERTAD": {"TRUJILLO": ["TRUJILLO", "EL PORVENIR", "FLORENCIA DE MORA", "HUANCHACO", "LA ESPERANZA", "LAREDO", "MOCHE", "POROTO", "SALAVERRY", "SIMBAL", "VICTOR LARCO HERRERA"]},
-            "LAMBAYEQUE": {"CHICLAYO": ["CHICLAYO", "CHONGOYAPE", "ETEN", "ETEN PUERTO", "JOSE LEONARDO ORTIZ", "LA VICTORIA", "LAGUNAS", "MONSEFU", "MOTUPE", "OLMOS", "PIMENTEL", "REQUE", "SANTA ROSA", "SAÑA"]},
+            "AMAZONAS": {"CHACHAPOYAS": ["CHACHAPOYAS", "ASUNCION", "BALSAS"]},
+            "ANCASH": {"HUARAZ": ["HUARAZ", "COCHABAMBA", "COLCABAMBA"]},
+            "APURIMAC": {"ABANCAY": ["ABANCAY", "CHACOCHE", "CIRCA"]},
+            "AREQUIPA": {"AREQUIPA": ["AREQUIPA", "ALTO SELVA ALEGRE", "CAYMA"]},
+            "AYACUCHO": {"HUAMANGA": ["AYACUCHO", "ACOCRO", "ACOS VINCHOS"]},
+            "CAJAMARCA": {"CAJAMARCA": ["CAJAMARCA", "ASUNCION", "CHETILLA"]},
+            "CALLAO": {"CALLAO": ["CALLAO", "BELLAVISTA", "CARMEN DE LA LEGUA"]},
+            "CUSCO": {"CUSCO": ["CUSCO", "CCORCA", "POROY"]},
+            "HUANCAVELICA": {"HUANCAVELICA": ["HUANCAVELICA", "ACOBAMBILLA", "ACORIA"]},
+            "HUANUCO": {"HUANUCO": ["HUANUCO", "AMARILIS", "CHINCHAO"]},
+            "ICA": {"ICA": ["ICA", "LA TINGUIÑA", "LOS AQUIJES"]},
+            "JUNIN": {"HUANCAYO": ["HUANCAYO", "CARHUACALLANGA", "CHACAPAMPA"]},
+            "LA LIBERTAD": {"TRUJILLO": ["TRUJILLO", "EL PORVENIR", "FLORENCIA DE MORA"]},
+            "LAMBAYEQUE": {"CHICLAYO": ["CHICLAYO", "CHONGOYAPE", "ETEN"]},
             "LIMA": {"LIMA": ["LIMA", "ANCON", "ATE", "BARRANCO", "BREÑA", "CARABAYLLO", "CHACLACAYO", "CHORRILLOS", "CIENEGUILLA", "COMAS", "EL AGUSTINO", "INDEPENDENCIA", "JESUS MARIA", "LA MOLINA", "LA VICTORIA", "LINCE", "LOS OLIVOS", "LURIGANCHO", "LURIN", "MAGDALENA DEL MAR", "MIRAFLORES", "PACHACAMAC", "PUCUSANA", "PUENTE PIEDRA", "PUNTA HERMOSA", "PUNTA NEGRA", "RIMAC", "SAN BARTOLO", "SAN BORJA", "SAN ISIDRO", "SAN JUAN DE LURIGANCHO", "SAN JUAN DE MIRAFLORES", "SAN LUIS", "SAN MARTIN DE PORRES", "SAN MIGUEL", "SANTA ANITA", "SANTA MARIA DEL MAR", "SANTA ROSA", "SANTIAGO DE SURCO", "SURQUILLO", "VILLA EL SALVADOR", "VILLA MARIA DEL TRIUNFO"]},
-            "LORETO": {"MAYNAS": ["IQUITOS", "ALTO NANAY", "FERNANDO LORES", "INDIANA", "LAS AMAZONAS", "MAZAN", "NAPO", "PUNCHANA", "PUTUMAYO", "TORRES CAUSANA", "BELEN", "SAN JUAN BAUTISTA"]},
-            "MADRE DE DIOS": {"TAMBOPATA": ["PUERTO MALDONADO", "INAMBARI", "LAS PIEDRAS", "LABERINTO"]},
-            "MOQUEGUA": {"MARISCAL NIETO": ["MOQUEGUA", "CARUMAS", "CUCHUMBAYA", "SAMEGUA", "SAN CRISTOBAL", "TORATA"]},
-            "PASCO": {"PASCO": ["CERRO DE PASCO", "CHAUPIMARCA", "HUACHON", "HUARIACA", "HUAYLLAY", "NINACACA", "PALLANCHACRA", "PAUCARTAMBO", "SAN FRANCISCO DE ASIS DE YARUSYACAN", "SIMON BOLIVAR", "TICLACAYAN", "TINYAHUARCO", "VICCO", "YANACANCHA"]},
-            "PIURA": {"PIURA": ["PIURA", "CASTILLA", "CATACAOS", "CURA MORI", "EL TALLAN", "LA ARENA", "LA UNION", "LAS LOMAS", "TAMBO GRANDE"]},
-            "PUNO": {"PUNO": ["PUNO", "ACORA", "AMANTANI", "ATUNCALLA", "CAPACHICA", "CHUCUITO", "COATA", "HUATA", "MAÑAZO", "PAUCARCOLLA", "PICHACANI", "PLATERIA", "SAN ANTONIO", "TIQUILLACA", "VILQUE"]},
-            "SAN MARTIN": {"MOYOBAMBA": ["MOYOBAMBA", "CALZADA", "HABANA", "JEPELACIO", "SORITOR", "YANTALO"]},
-            "TACNA": {"TACNA": ["TACNA", "ALTO DE LA ALIANZA", "CALANA", "CIUDAD NUEVA", "CORONEL GREGORIO ALBARRACIN LANCHIPA", "INCLAN", "PACHIA", "PALCA", "POCOLLAY", "SAMA"]},
-            "TUMBES": {"TUMBES": ["TUMBES", "CORRALES", "LA CRUZ", "PAMPAS DE HOSPITAL", "SAN JACINTO", "SAN JUAN DE LA VIRGEN"]},
-            "UCAYALI": {"CORONEL PORTILLO": ["PUCALLPA", "CALLERIA", "CAMPOVERDE", "IPARIA", "MANANTAY", "MASISEA", "NUEVA REQUENA", "YARINACOCHA"]}
+            "LORETO": {"MAYNAS": ["IQUITOS", "ALTO NANAY", "FERNANDO LORES"]},
+            "MADRE DE DIOS": {"TAMBOPATA": ["PUERTO MALDONADO", "INAMBARI", "LAS PIEDRAS"]},
+            "MOQUEGUA": {"MARISCAL NIETO": ["MOQUEGUA", "CARUMAS", "CUCHUMBAYA"]},
+            "PASCO": {"PASCO": ["CERRO DE PASCO", "CHAUPIMARCA", "HUACHON"]},
+            "PIURA": {"PIURA": ["PIURA", "CASTILLA", "CATACAOS"]},
+            "PUNO": {"PUNO": ["PUNO", "ACORA", "AMANTANI"]},
+            "SAN MARTIN": {"MOYOBAMBA": ["MOYOBAMBA", "CALZADA", "HABANA"]},
+            "TACNA": {"TACNA": ["TACNA", "ALTO DE LA ALIANZA", "CALANA"]},
+            "TUMBES": {"TUMBES": ["TUMBES", "CORRALES", "LA CRUZ"]},
+            "UCAYALI": {"CORONEL PORTILLO": ["PUCALLPA", "CALLERIA", "CAMPOVERDE"]}
         };
 
         const departamentos = Object.keys(ubigeoData).sort();
 
         function llenarDepartamentos(selectId) {
             const select = document.getElementById(selectId);
-            select.innerHTML = '<option value="">Seleccione Departamento</option>';
+            select.innerHTML = '<option value="">Departamento</option>';
             departamentos.forEach(depto => {
                 const option = document.createElement('option');
                 option.value = depto;
@@ -1060,17 +646,15 @@ DE PORRES">
         function llenarProvincias(departamento, provinciaSelectId, distritoSelectId) {
             const provinciaSelect = document.getElementById(provinciaSelectId);
             const distritoSelect = document.getElementById(distritoSelectId);
-            
             if (!departamento || !ubigeoData[departamento]) {
-                provinciaSelect.innerHTML = '<option value="">Primero seleccione Departamento</option>';
+                provinciaSelect.innerHTML = '<option value="">Provincia</option>';
                 provinciaSelect.disabled = true;
-                distritoSelect.innerHTML = '<option value="">Primero seleccione Provincia</option>';
+                distritoSelect.innerHTML = '<option value="">Distrito</option>';
                 distritoSelect.disabled = true;
                 return;
             }
-            
             const provincias = Object.keys(ubigeoData[departamento]);
-            provinciaSelect.innerHTML = '<option value="">Seleccione Provincia</option>';
+            provinciaSelect.innerHTML = '<option value="">Provincia</option>';
             provincias.forEach(prov => {
                 const option = document.createElement('option');
                 option.value = prov;
@@ -1078,23 +662,21 @@ DE PORRES">
                 provinciaSelect.appendChild(option);
             });
             provinciaSelect.disabled = false;
-            distritoSelect.innerHTML = '<option value="">Primero seleccione Provincia</option>';
+            distritoSelect.innerHTML = '<option value="">Distrito</option>';
             distritoSelect.disabled = true;
         }
 
         function llenarDistritos(departamento, provincia, distritoSelectId, ubigeoHiddenId, ubigeoTextSpanId) {
             const distritoSelect = document.getElementById(distritoSelectId);
-            
             if (!departamento || !provincia || !ubigeoData[departamento] || !ubigeoData[departamento][provincia]) {
-                distritoSelect.innerHTML = '<option value="">Primero seleccione Provincia</option>';
+                distritoSelect.innerHTML = '<option value="">Distrito</option>';
                 distritoSelect.disabled = true;
                 document.getElementById(ubigeoHiddenId).value = '';
                 document.getElementById(ubigeoTextSpanId).textContent = 'Ninguno';
                 return;
             }
-            
             const distritos = ubigeoData[departamento][provincia];
-            distritoSelect.innerHTML = '<option value="">Seleccione Distrito</option>';
+            distritoSelect.innerHTML = '<option value="">Distrito</option>';
             distritos.forEach(dist => {
                 const option = document.createElement('option');
                 option.value = dist;
@@ -1106,9 +688,9 @@ DE PORRES">
 
         function actualizarUbigeo(departamento, provincia, distrito, ubigeoHiddenId, ubigeoTextSpanId) {
             if (departamento && provincia && distrito) {
-                const codigoGenerado = `${departamento.substring(0,2)}${provincia.substring(0,2)}${distrito.substring(0,2)}`.toUpperCase();
-                document.getElementById(ubigeoHiddenId).value = codigoGenerado;
-                document.getElementById(ubigeoTextSpanId).textContent = `${departamento} - ${provincia} - ${distrito} (${codigoGenerado})`;
+                const codigo = `${departamento.substring(0,2)}${provincia.substring(0,2)}${distrito.substring(0,2)}`.toUpperCase();
+                document.getElementById(ubigeoHiddenId).value = codigo;
+                document.getElementById(ubigeoTextSpanId).textContent = `${departamento} - ${provincia} - ${distrito} (${codigo})`;
             } else {
                 document.getElementById(ubigeoHiddenId).value = '';
                 document.getElementById(ubigeoTextSpanId).textContent = 'Ninguno';
@@ -1121,25 +703,18 @@ DE PORRES">
             const distritoSelect = document.getElementById(`distrito_${baseId}`);
             const ubigeoHidden = document.getElementById(`ubigeo_${baseId}_hidden`);
             const ubigeoTextSpan = document.getElementById(`ubigeo_${baseId}_valor`);
-            
+
             deptoSelect.addEventListener('change', function() {
-                const depto = this.value;
-                llenarProvincias(depto, `provincia_${baseId}`, `distrito_${baseId}`);
-                actualizarUbigeo(depto, provinciaSelect.value, distritoSelect.value, ubigeoHidden.id, ubigeoTextSpan.id);
+                llenarProvincias(this.value, `provincia_${baseId}`, `distrito_${baseId}`);
+                actualizarUbigeo(this.value, provinciaSelect.value, distritoSelect.value, ubigeoHidden.id, ubigeoTextSpan.id);
             });
-            
             provinciaSelect.addEventListener('change', function() {
                 const depto = deptoSelect.value;
-                const provincia = this.value;
-                llenarDistritos(depto, provincia, `distrito_${baseId}`, ubigeoHidden.id, ubigeoTextSpan.id);
-                actualizarUbigeo(depto, provincia, distritoSelect.value, ubigeoHidden.id, ubigeoTextSpan.id);
+                llenarDistritos(depto, this.value, `distrito_${baseId}`, ubigeoHidden.id, ubigeoTextSpan.id);
+                actualizarUbigeo(depto, this.value, distritoSelect.value, ubigeoHidden.id, ubigeoTextSpan.id);
             });
-            
             distritoSelect.addEventListener('change', function() {
-                const depto = deptoSelect.value;
-                const provincia = provinciaSelect.value;
-                const distrito = this.value;
-                actualizarUbigeo(depto, provincia, distrito, ubigeoHidden.id, ubigeoTextSpan.id);
+                actualizarUbigeo(deptoSelect.value, provinciaSelect.value, this.value, ubigeoHidden.id, ubigeoTextSpan.id);
             });
         }
 
@@ -1147,21 +722,18 @@ DE PORRES">
             const deptoSelect = document.getElementById(`departamento_${baseId}`);
             const provinciaSelect = document.getElementById(`provincia_${baseId}`);
             const distritoSelect = document.getElementById(`distrito_${baseId}`);
-            
             if (departamento && deptoSelect.querySelector(`option[value="${departamento}"]`)) {
                 deptoSelect.value = departamento;
-                const changeEvent = new Event('change');
-                deptoSelect.dispatchEvent(changeEvent);
-                
+                const event = new Event('change');
+                deptoSelect.dispatchEvent(event);
                 setTimeout(() => {
                     if (provincia && provinciaSelect.querySelector(`option[value="${provincia}"]`)) {
                         provinciaSelect.value = provincia;
-                        provinciaSelect.dispatchEvent(changeEvent);
-                        
+                        provinciaSelect.dispatchEvent(event);
                         setTimeout(() => {
                             if (distrito && distritoSelect.querySelector(`option[value="${distrito}"]`)) {
                                 distritoSelect.value = distrito;
-                                distritoSelect.dispatchEvent(changeEvent);
+                                distritoSelect.dispatchEvent(event);
                             }
                         }, 50);
                     }
@@ -1174,6 +746,8 @@ DE PORRES">
         // ==========================================
         let ultimaGuiaId = localStorage.getItem('ultima_guia_id') || null;
         let transportistas = [];
+        let datosParaEnviar = null;
+        let modalSunatInstance = null;
 
         // ==========================================
         // NOTIFICACIONES
@@ -1181,30 +755,25 @@ DE PORRES">
         function mostrarNotificacion(mensaje, tipo) {
             const colores = { exito: '#10b981', error: '#ef4444', info: '#3b82f6', warning: '#f59e0b' };
             const iconos = { exito: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
-            
             const toast = document.createElement('div');
             toast.className = 'toast-notification';
             toast.style.background = colores[tipo] || colores.info;
             toast.style.color = 'white';
-            toast.style.padding = '12px 20px';
-            toast.style.borderRadius = '12px';
-            toast.style.boxShadow = '0 10px 25px rgba(0,0,0,0.2)';
-            toast.innerHTML = `<div style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 20px;">${iconos[tipo]}</span><span>${mensaje}</span></div>`;
-            
+            toast.innerHTML = `<div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;"><span>${iconos[tipo]}</span><span>${mensaje}</span></div>`;
             document.body.appendChild(toast);
             setTimeout(() => {
                 toast.style.animation = 'slideOut 0.3s ease';
                 setTimeout(() => toast.remove(), 300);
-            }, 4000);
+            }, 3500);
         }
-        
+
         // ==========================================
         // TOGGLE TRANSPORTISTA
         // ==========================================
         const modalidadSelect = document.getElementById('modalidad_transporte');
         const transportistaCard = document.getElementById('transportista_card');
         const msgPrivado = document.getElementById('msg_transporte_privado');
-        
+
         function toggleTransportista() {
             if (modalidadSelect.value === 'PRIVADO') {
                 transportistaCard.style.opacity = '0.5';
@@ -1218,10 +787,9 @@ DE PORRES">
                 document.getElementById('transportista_nombre').disabled = false;
             }
         }
-        
         modalidadSelect?.addEventListener('change', toggleTransportista);
         toggleTransportista();
-        
+
         // ==========================================
         // CARGAR TRANSPORTISTAS
         // ==========================================
@@ -1232,12 +800,24 @@ DE PORRES">
                 if (result.success && result.data) {
                     transportistas = result.data;
                     const select = document.getElementById('select_transportista');
-                    select.innerHTML = '<option value="">-- Seleccione un conductor --</option>';
-                    transportistas.forEach(transportista => {
+                    // Mantener la opción "Personalizar"
+                    const personalizarOption = select.querySelector('option[value="personalizar"]');
+                    select.innerHTML = '<option value="">-- Seleccione --</option>';
+                    if (personalizarOption) {
+                        select.appendChild(personalizarOption);
+                    } else {
+                        const opt = document.createElement('option');
+                        opt.value = 'personalizar';
+                        opt.textContent = '✏️ Personalizar';
+                        opt.style.fontWeight = '600';
+                        opt.style.color = '#2563eb';
+                        select.appendChild(opt);
+                    }
+                    transportistas.forEach(t => {
                         const option = document.createElement('option');
-                        option.value = transportista.id;
-                        let texto = transportista.nombre_completo;
-                        if (transportista.placa) texto += ` - ${transportista.placa}`;
+                        option.value = t.id;
+                        let texto = t.nombre_completo;
+                        if (t.placa) texto += ` - ${t.placa}`;
                         option.textContent = texto;
                         select.appendChild(option);
                     });
@@ -1248,83 +828,19 @@ DE PORRES">
         }
 
         // ==========================================
-        // BUSCAR CLIENTE POR RUC
-        // ==========================================
-        document.getElementById('btnBuscarCliente')?.addEventListener('click', async function() {
-            const ruc = document.getElementById('buscar_cliente_ruc').value.trim();
-            if (!ruc || ruc.length !== 11) {
-                mostrarNotificacion('Ingrese un RUC válido de 11 dígitos', 'warning');
-                return;
-            }
-            
-            mostrarNotificacion('🔍 Buscando cliente...', 'info');
-            
-            try {
-                const responseLocal = await fetch(`/api/clientes/buscar-por-ruc?ruc=${ruc}`);
-                const dataLocal = await responseLocal.json();
-                
-                if (dataLocal.success && dataLocal.data) {
-                    const cliente = dataLocal.data;
-                    document.getElementById('destinatario_doc').value = cliente.numero_documento;
-                    document.getElementById('destinatario_nombre').value = cliente.razon_social;
-                    if (cliente.direccion_fiscal) {
-                        document.getElementById('direccion_llegada').value = cliente.direccion_fiscal;
-                    }
-                    if (cliente.orden_compra) {
-                        document.getElementById('orden_compra_cliente').value = cliente.orden_compra;
-                    }
-                    mostrarNotificacion('✅ Cliente encontrado en la base de datos', 'exito');
-                    return;
-                }
-                
-                const responseSunat = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
-                const dataSunat = await responseSunat.json();
-                
-                if (dataSunat.success) {
-                    document.getElementById('destinatario_doc').value = ruc;
-                    document.getElementById('destinatario_nombre').value = dataSunat.razon_social || '';
-                    if (dataSunat.direccion) {
-                        document.getElementById('direccion_llegada').value = dataSunat.direccion;
-                    }
-                    mostrarNotificacion('✅ Cliente cargado desde SUNAT', 'exito');
-                } else {
-                    mostrarNotificacion('❌ No se encontró el RUC en SUNAT', 'error');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                mostrarNotificacion('❌ Error al consultar', 'error');
-            }
-        });
-        
-        // ==========================================
-        // BUSCAR TRANSPORTISTA
-        // ==========================================
-        document.getElementById('btnBuscarTransportista')?.addEventListener('click', async function() {
-            const ruc = document.getElementById('transportista_ruc').value;
-            if (!ruc || ruc.length !== 11) {
-                mostrarNotificacion('Ingrese un RUC válido de 11 dígitos', 'warning');
-                return;
-            }
-            try {
-                const response = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
-                const data = await response.json();
-                if (data.success) {
-                    document.getElementById('transportista_nombre').value = data.razon_social;
-                    mostrarNotificacion('✅ Transportista cargado', 'exito');
-                } else {
-                    mostrarNotificacion('No se encontró el RUC', 'error');
-                }
-            } catch (error) {
-                mostrarNotificacion('Error al consultar SUNAT', 'error');
-            }
-        });
-        
-        // ==========================================
-        // EVENTO: SELECCIONAR CONDUCTOR
+        // EVENTO: SELECCIONAR CONDUCTOR con PERSONALIZAR
         // ==========================================
         document.getElementById('select_transportista')?.addEventListener('change', async function() {
-            const transportistaId = this.value;
-            if (!transportistaId) {
+            const val = this.value;
+            if (val === 'personalizar') {
+                document.getElementById('placa_vehiculo').value = '';
+                document.getElementById('conductor_dni').value = '';
+                document.getElementById('conductor_nombre').value = '';
+                document.getElementById('licencia_conductor').value = '';
+                mostrarNotificacion('✏️ Modo Personalizar: complete los campos manualmente', 'info');
+                return;
+            }
+            if (!val) {
                 document.getElementById('placa_vehiculo').value = '';
                 document.getElementById('conductor_dni').value = '';
                 document.getElementById('conductor_nombre').value = '';
@@ -1332,7 +848,7 @@ DE PORRES">
                 return;
             }
             try {
-                const response = await fetch(`/api/transportistas/${transportistaId}`);
+                const response = await fetch(`/api/transportistas/${val}`);
                 const result = await response.json();
                 if (result.success && result.data) {
                     const t = result.data;
@@ -1348,83 +864,111 @@ DE PORRES">
         });
 
         // ==========================================
-        // EVENTO: AGREGAR NUEVO CONDUCTOR
+        // BUSCAR CLIENTE
         // ==========================================
-        document.getElementById('btnAgregarConductor')?.addEventListener('click', function() {
-            const modal = new bootstrap.Modal(document.getElementById('modalNuevoConductor'));
-            modal.show();
+        document.getElementById('btnBuscarCliente')?.addEventListener('click', async function() {
+            const ruc = document.getElementById('buscar_cliente_ruc').value.trim();
+            if (!ruc || ruc.length !== 11) {
+                mostrarNotificacion('Ingrese RUC de 11 dígitos', 'warning');
+                return;
+            }
+            mostrarNotificacion('🔍 Buscando cliente...', 'info');
+            try {
+                const responseLocal = await fetch(`/api/clientes/buscar-por-ruc?ruc=${ruc}`);
+                const dataLocal = await responseLocal.json();
+                if (dataLocal.success && dataLocal.data) {
+                    const c = dataLocal.data;
+                    document.getElementById('destinatario_doc').value = c.numero_documento;
+                    document.getElementById('destinatario_nombre').value = c.razon_social;
+                    if (c.direccion_fiscal) document.getElementById('direccion_llegada').value = c.direccion_fiscal;
+                    if (c.orden_compra) document.getElementById('orden_compra_cliente').value = c.orden_compra;
+                    mostrarNotificacion('✅ Cliente encontrado', 'exito');
+                    return;
+                }
+                const responseSunat = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
+                const dataSunat = await responseSunat.json();
+                if (dataSunat.success) {
+                    document.getElementById('destinatario_doc').value = ruc;
+                    document.getElementById('destinatario_nombre').value = dataSunat.razon_social || '';
+                    if (dataSunat.direccion) document.getElementById('direccion_llegada').value = dataSunat.direccion;
+                    mostrarNotificacion('✅ Cliente desde SUNAT', 'exito');
+                } else {
+                    mostrarNotificacion('❌ No se encontró el RUC', 'error');
+                }
+            } catch (error) {
+                mostrarNotificacion('❌ Error al consultar', 'error');
+            }
         });
 
         // ==========================================
-        // GUARDAR NUEVO CONDUCTOR
+        // BUSCAR TRANSPORTISTA
         // ==========================================
+        document.getElementById('btnBuscarTransportista')?.addEventListener('click', async function() {
+            const ruc = document.getElementById('transportista_ruc').value.trim();
+            if (!ruc || ruc.length !== 11) {
+                mostrarNotificacion('Ingrese RUC de 11 dígitos', 'warning');
+                return;
+            }
+            try {
+                const response = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('transportista_nombre').value = data.razon_social;
+                    mostrarNotificacion('✅ Transportista cargado', 'exito');
+                } else {
+                    mostrarNotificacion('No se encontró el RUC', 'error');
+                }
+            } catch (error) {
+                mostrarNotificacion('Error al consultar SUNAT', 'error');
+            }
+        });
+
+        // ==========================================
+        // NUEVO CONDUCTOR (modal)
+        // ==========================================
+        document.getElementById('btnAgregarConductor')?.addEventListener('click', function() {
+            new bootstrap.Modal(document.getElementById('modalNuevoConductor')).show();
+        });
+
         document.getElementById('btnGuardarNuevoConductor')?.addEventListener('click', async function() {
             const dni = document.getElementById('nuevo_conductor_dni').value.trim();
             const nombre = document.getElementById('nuevo_conductor_nombre').value.trim();
             const placa = document.getElementById('nuevo_conductor_placa').value.trim().toUpperCase();
             const licencia = document.getElementById('nuevo_conductor_licencia').value.trim();
             const telefono = document.getElementById('nuevo_conductor_telefono').value.trim();
-            
-            if (!dni || dni.length < 8) {
-                mostrarNotificacion('Ingrese un DNI válido (mínimo 8 dígitos)', 'warning');
-                return;
-            }
-            if (!nombre) {
-                mostrarNotificacion('Ingrese el nombre completo del conductor', 'warning');
-                return;
-            }
-            if (!placa) {
-                mostrarNotificacion('Ingrese la placa del vehículo', 'warning');
-                return;
-            }
-            
+
+            if (!dni || dni.length < 8) { mostrarNotificacion('DNI válido (8 dígitos)', 'warning'); return; }
+            if (!nombre) { mostrarNotificacion('Nombre completo', 'warning'); return; }
+            if (!placa) { mostrarNotificacion('Placa del vehículo', 'warning'); return; }
+
             const btn = this;
             const originalText = btn.innerHTML;
             btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Guardando...';
             btn.disabled = true;
-            
+
             try {
                 const response = await fetch('/api/transportistas', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        dni: dni,
-                        nombre_completo: nombre,
-                        placa: placa,
-                        licencia: licencia,
-                        telefono: telefono
-                    })
+                    body: JSON.stringify({ dni, nombre_completo: nombre, placa, licencia, telefono })
                 });
                 const result = await response.json();
-                
                 if (result.success) {
-                    mostrarNotificacion('✅ Conductor guardado exitosamente', 'exito');
-                    
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('modalNuevoConductor'));
-                    if (modal) modal.hide();
-                    
+                    mostrarNotificacion('✅ Conductor guardado', 'exito');
+                    bootstrap.Modal.getInstance(document.getElementById('modalNuevoConductor'))?.hide();
                     document.getElementById('nuevo_conductor_dni').value = '';
                     document.getElementById('nuevo_conductor_nombre').value = '';
                     document.getElementById('nuevo_conductor_placa').value = '';
                     document.getElementById('nuevo_conductor_licencia').value = '';
                     document.getElementById('nuevo_conductor_telefono').value = '';
-                    
                     await cargarTransportistas();
-                    
                     const select = document.getElementById('select_transportista');
                     select.value = result.data.id;
                     select.dispatchEvent(new Event('change'));
-                    
-                    document.getElementById('placa_vehiculo').value = placa;
-                    document.getElementById('conductor_dni').value = dni;
-                    document.getElementById('conductor_nombre').value = nombre;
-                    if (licencia) document.getElementById('licencia_conductor').value = licencia;
-                    
                 } else {
-                    mostrarNotificacion('❌ ' + (result.error || 'Error al guardar el conductor'), 'error');
+                    mostrarNotificacion('❌ ' + (result.error || 'Error'), 'error');
                 }
             } catch (error) {
-                console.error('Error:', error);
                 mostrarNotificacion('❌ Error de conexión', 'error');
             } finally {
                 btn.innerHTML = originalText;
@@ -1433,18 +977,7 @@ DE PORRES">
         });
 
         // ==========================================
-        // LIMPIAR MODAL AL CERRAR
-        // ==========================================
-        document.getElementById('modalNuevoConductor')?.addEventListener('hidden.bs.modal', function() {
-            document.getElementById('nuevo_conductor_dni').value = '';
-            document.getElementById('nuevo_conductor_nombre').value = '';
-            document.getElementById('nuevo_conductor_placa').value = '';
-            document.getElementById('nuevo_conductor_licencia').value = '';
-            document.getElementById('nuevo_conductor_telefono').value = '';
-        });
-        
-        // ==========================================
-        // RECOLECTAR DATOS DEL FORMULARIO
+        // RECOLECTAR DATOS (incluye campo factura)
         // ==========================================
         function recolectarDatosFormulario() {
             const filas = document.querySelectorAll('#table-body tr');
@@ -1462,7 +995,7 @@ DE PORRES">
                     });
                 }
             });
-            
+
             return {
                 serie: "T001",
                 fecha_emision: new Date().toISOString().split('T')[0],
@@ -1475,6 +1008,7 @@ DE PORRES">
                 numero_bultos: parseInt(document.getElementById('numero_bultos').value) || 0,
                 orden_compra_cliente: document.getElementById('orden_compra_cliente').value,
                 documento_asociado: document.getElementById('documento_asociado').value,
+                factura: document.getElementById('campo_factura').value,
                 observaciones: document.getElementById('observaciones').value,
                 remitente: {
                     ruc: document.getElementById('remitente_ruc').value,
@@ -1501,121 +1035,67 @@ DE PORRES">
                 items: items
             };
         }
-        
+
         // ==========================================
         // VALIDAR FORMULARIO
         // ==========================================
         function validarFormulario(data) {
-            if (!data.destinatario.ruc) {
-                mostrarNotificacion('Debe seleccionar un cliente destinatario', 'warning');
-                return false;
-            }
-            if (!data.vehiculo.placa) {
-                mostrarNotificacion('La placa del vehículo es obligatoria', 'warning');
-                return false;
-            }
-            if (!data.motivo_traslado) {
-                mostrarNotificacion('Debe seleccionar un motivo de traslado', 'warning');
-                return false;
-            }
-            if (!data.fecha_inicio_traslado) {
-                mostrarNotificacion('La fecha de inicio de traslado es obligatoria', 'warning');
-                return false;
-            }
-            if (!data.unidad_peso_bruto) {
-                mostrarNotificacion('Debe seleccionar la unidad de medida de peso bruto', 'warning');
-                return false;
-            }
-            if (data.peso_bruto_total <= 0) {
-                mostrarNotificacion('El peso bruto total debe ser mayor a 0', 'warning');
-                return false;
-            }
-            if (data.numero_bultos <= 0) {
-                mostrarNotificacion('El número de bultos debe ser mayor a 0', 'warning');
-                return false;
-            }
-            if (data.items.length === 0) {
-                mostrarNotificacion('Debe agregar al menos un producto', 'warning');
-                return false;
-            }
+            if (!data.destinatario.ruc) { mostrarNotificacion('Seleccione un cliente', 'warning'); return false; }
+            if (!data.vehiculo.placa) { mostrarNotificacion('Placa del vehículo es obligatoria', 'warning'); return false; }
+            if (!data.motivo_traslado) { mostrarNotificacion('Motivo de traslado obligatorio', 'warning'); return false; }
+            if (!data.fecha_inicio_traslado) { mostrarNotificacion('Fecha de inicio obligatoria', 'warning'); return false; }
+            if (!data.unidad_peso_bruto) { mostrarNotificacion('Unidad de peso bruto obligatoria', 'warning'); return false; }
+            if (data.peso_bruto_total <= 0) { mostrarNotificacion('Peso bruto mayor a 0', 'warning'); return false; }
+            if (data.numero_bultos <= 0) { mostrarNotificacion('N° bultos mayor a 0', 'warning'); return false; }
+            if (data.items.length === 0) { mostrarNotificacion('Agregue al menos un producto', 'warning'); return false; }
             return true;
         }
-        
+
         // ==========================================
-        // ACTUALIZAR ESTADO DEL BOTÓN PDF
+        // ACTUALIZAR ESTADO PDF
         // ==========================================
         function actualizarEstadoPDF(guiaId, numeroGuia = null) {
             ultimaGuiaId = guiaId;
             localStorage.setItem('ultima_guia_id', guiaId);
-            const btnPdf = document.getElementById('btnPdf');
-            btnPdf.disabled = false;
-            
-            const estadoBadge = document.getElementById('estadoBadge');
+            document.getElementById('btnPdf').disabled = false;
+            const badge = document.getElementById('estadoBadge');
             if (numeroGuia) {
-                estadoBadge.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> GUÍA ${numeroGuia}`;
-                estadoBadge.classList.remove('bg-warning', 'bg-opacity-25', 'text-warning');
-                estadoBadge.classList.add('bg-success', 'bg-opacity-25', 'text-success');
+                badge.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> GUÍA ${numeroGuia}`;
+                badge.className = 'bg-success bg-opacity-25 text-success rounded-pill px-2 py-1 small fw-bold';
             }
         }
-        
+
         // ==========================================
-        // MODAL DE CONFIRMACIÓN PARA SUNAT
+        // MODAL CONFIRMACIÓN SUNAT
         // ==========================================
-        let datosParaEnviar = null;
-        let modalSunatInstance = null;
-        
         function prepararModalConfirmacion(data) {
             datosParaEnviar = data;
-            
-            const motivoSelect = document.getElementById('motivo_traslado');
-            const motivoTexto = motivoSelect.options[motivoSelect.selectedIndex]?.text || '---';
-            document.getElementById('confirm_motivo').textContent = motivoTexto;
-            
-            const totalProductos = data.items.length;
-            document.getElementById('confirm_productos').textContent = totalProductos;
-            
-            const peso = data.peso_bruto_total || 0;
-            const unidadPeso = document.getElementById('unidad_peso_bruto').value || '';
-            document.getElementById('confirm_peso').textContent = `${peso.toFixed(2)} ${unidadPeso}`;
-            
+            const motivo = document.getElementById('motivo_traslado');
+            document.getElementById('confirm_motivo').textContent = motivo.options[motivo.selectedIndex]?.text || '---';
+            document.getElementById('confirm_productos').textContent = data.items.length;
+            document.getElementById('confirm_peso').textContent = `${data.peso_bruto_total.toFixed(2)} ${data.unidad_peso_bruto}`;
             document.getElementById('confirm_bultos').textContent = data.numero_bultos || 0;
             document.getElementById('confirm_placa').textContent = data.vehiculo.placa || '---';
-            
-            const clienteNombre = data.destinatario.nombre || '---';
-            document.getElementById('confirm_cliente').textContent = clienteNombre;
-            
-            const ahora = new Date();
-            const horaStr = ahora.toLocaleTimeString('es-PE', { 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit',
-                hour12: false
-            });
-            document.getElementById('horaActualConfirmacion').textContent = horaStr;
-            
+            document.getElementById('confirm_cliente').textContent = data.destinatario.nombre || '---';
+            document.getElementById('horaActualConfirmacion').textContent = new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
             if (!modalSunatInstance) {
-                modalSunatInstance = new bootstrap.Modal(document.getElementById('modalConfirmarSunat'), {
-                    backdrop: 'static',
-                    keyboard: false
-                });
+                modalSunatInstance = new bootstrap.Modal(document.getElementById('modalConfirmarSunat'), { backdrop: 'static', keyboard: false });
             }
             modalSunatInstance.show();
         }
-        
+
         document.getElementById('btnEnviarSunat')?.addEventListener('click', function() {
             const data = recolectarDatosFormulario();
             if (!validarFormulario(data)) return;
             prepararModalConfirmacion(data);
         });
-        
+
         document.getElementById('btnConfirmarEnvio')?.addEventListener('click', async function() {
             if (!datosParaEnviar) return;
-            
             const btn = this;
             const originalText = btn.innerHTML;
             btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Enviando...';
             btn.disabled = true;
-            
             try {
                 const response = await fetch('/guias/api/enviar-sunat', {
                     method: 'POST',
@@ -1623,37 +1103,34 @@ DE PORRES">
                     body: JSON.stringify(datosParaEnviar)
                 });
                 const result = await response.json();
-                
                 if (result.success) {
-                    mostrarNotificacion(`✅ Guía enviada a SUNAT: ${result.numero_guia}`, 'exito');
+                    mostrarNotificacion(`✅ Guía enviada: ${result.numero_guia}`, 'exito');
                     actualizarEstadoPDF(result.guia_id, result.numero_guia);
-                    if (modalSunatInstance) {
-                        modalSunatInstance.hide();
-                    }
+                    if (modalSunatInstance) modalSunatInstance.hide();
                 } else {
-                    mostrarNotificacion('❌ ' + (result.error || 'Error al enviar a SUNAT'), 'error');
+                    mostrarNotificacion('❌ ' + (result.error || 'Error'), 'error');
                 }
             } catch (error) {
-                console.error('Error:', error);
-                mostrarNotificacion('❌ Error de conexión con el servidor', 'error');
+                mostrarNotificacion('❌ Error de conexión', 'error');
             } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
                 datosParaEnviar = null;
             }
         });
-        
+
         // ==========================================
-        // LIMPIAR FORMULARIO
+        // BOTONES: LIMPIAR, CANCELAR, GUARDAR BORRADOR, PDF
         // ==========================================
         document.getElementById('btnLimpiar')?.addEventListener('click', function() {
-            if (confirm('¿Estás seguro de que deseas limpiar todos los campos?')) {
+            if (confirm('¿Limpiar todos los campos?')) {
                 document.getElementById('buscar_cliente_ruc').value = '';
                 document.getElementById('destinatario_doc').value = '';
                 document.getElementById('destinatario_nombre').value = '';
                 document.getElementById('direccion_llegada').value = '';
                 document.getElementById('orden_compra_cliente').value = '';
                 document.getElementById('documento_asociado').value = '';
+                document.getElementById('campo_factura').value = '';
                 document.getElementById('placa_vehiculo').value = '';
                 document.getElementById('licencia_conductor').value = '';
                 document.getElementById('conductor_dni').value = '';
@@ -1666,46 +1143,31 @@ DE PORRES">
                 document.getElementById('peso_bruto_total').value = '0.00';
                 document.getElementById('numero_bultos').value = '1';
                 document.getElementById('observaciones').value = '';
-                
                 const hoy = new Date().toISOString().split('T')[0];
                 document.getElementById('fecha_traslado').value = hoy;
                 document.getElementById('fecha_inicio_traslado').value = hoy;
-                
-                const estadoBadge = document.getElementById('estadoBadge');
-                estadoBadge.innerHTML = '<i class="bi bi-circle-fill fs-10 me-1"></i> NUEVA GUÍA';
-                estadoBadge.classList.remove('bg-success', 'bg-opacity-25', 'text-success');
-                estadoBadge.classList.add('bg-warning', 'bg-opacity-25', 'text-warning');
-                
+                const badge = document.getElementById('estadoBadge');
+                badge.innerHTML = '<i class="bi bi-circle-fill me-1"></i> NUEVA GUÍA';
+                badge.className = 'bg-warning bg-opacity-25 text-warning rounded-pill px-2 py-1 small fw-bold';
                 ultimaGuiaId = null;
                 localStorage.removeItem('ultima_guia_id');
                 document.getElementById('btnPdf').disabled = true;
                 toggleTransportista();
-                
-                mostrarNotificacion('Formulario limpiado correctamente', 'info');
+                mostrarNotificacion('Formulario limpiado', 'info');
             }
         });
-        
-        // ==========================================
-        // CANCELAR
-        // ==========================================
+
         document.getElementById('btnCancelar')?.addEventListener('click', function() {
-            if (confirm('¿Estás seguro de que deseas cancelar?')) {
-                window.location.href = '/guias/';
-            }
+            if (confirm('¿Cancelar?')) window.location.href = '/guias/';
         });
-        
-        // ==========================================
-        // GUARDAR BORRADOR
-        // ==========================================
+
         document.getElementById('btnGuardarBorrador')?.addEventListener('click', async function() {
             const data = recolectarDatosFormulario();
             if (!validarFormulario(data)) return;
-            
             const btn = this;
             const originalText = btn.innerHTML;
             btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Guardando...';
             btn.disabled = true;
-            
             try {
                 const response = await fetch('/guias/api/guardar-borrador', {
                     method: 'POST',
@@ -1713,12 +1175,11 @@ DE PORRES">
                     body: JSON.stringify(data)
                 });
                 const result = await response.json();
-                
                 if (result.success) {
                     mostrarNotificacion(`✅ Borrador guardado: ${result.numero_guia}`, 'exito');
                     actualizarEstadoPDF(result.guia_id, result.numero_guia);
                 } else {
-                    mostrarNotificacion('❌ ' + (result.error || 'Error al guardar'), 'error');
+                    mostrarNotificacion('❌ ' + (result.error || 'Error'), 'error');
                 }
             } catch (error) {
                 mostrarNotificacion('❌ Error de conexión', 'error');
@@ -1727,97 +1188,67 @@ DE PORRES">
                 btn.disabled = false;
             }
         });
-        
-        // ==========================================
-        // PDF
-        // ==========================================
-        document.getElementById('btnPdf')?.addEventListener('click', async function() {
+
+        document.getElementById('btnPdf')?.addEventListener('click', function() {
             const guiaId = ultimaGuiaId || localStorage.getItem('ultima_guia_id');
-            if (!guiaId) {
-                mostrarNotificacion('⚠️ No hay una guía para descargar', 'warning');
-                return;
-            }
-            try {
-                window.open(`/guias/api/pdf/${guiaId}`, '_blank');
-            } catch (error) {
-                mostrarNotificacion('Error al generar el PDF', 'error');
-            }
+            if (!guiaId) { mostrarNotificacion('⚠️ No hay guía para descargar', 'warning'); return; }
+            window.open(`/guias/api/pdf/${guiaId}`, '_blank');
         });
-        
+
         // ==========================================
         // INICIALIZAR
         // ==========================================
-        const hoy = new Date().toISOString().split('T')[0];
-        document.getElementById('fecha_traslado').value = hoy;
-        document.getElementById('fecha_inicio_traslado').value = hoy;
-        
-        function autocompletarDesdeCotizacion() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const fromCotizacion = urlParams.get('from_cotizacion');
-            if (!fromCotizacion) return;
-            
-            const datosGuardados = localStorage.getItem('datos_cotizacion_para_guia');
-            if (!datosGuardados) return;
-            
-            try {
-                const datos = JSON.parse(datosGuardados);
-                if (datos.cliente) {
-                    if (datos.cliente.ruc) document.getElementById('destinatario_doc').value = datos.cliente.ruc;
-                    if (datos.cliente.razon_social) document.getElementById('destinatario_nombre').value = datos.cliente.razon_social;
-                    if (datos.cliente.direccion) document.getElementById('direccion_llegada').value = datos.cliente.direccion;
-                }
-                if (datos.productos && datos.productos.length > 0) {
-                    const tbody = document.getElementById('table-body');
-                    tbody.innerHTML = '';
-                    datos.productos.forEach((producto, idx) => {
-                        if (producto.cantidad > 0) {
-                            const nuevaFila = document.createElement('tr');
-                            nuevaFila.innerHTML = `
-                                <td>${idx + 1}</td>
-                                <td><input type="text" class="form-control form-control-sm" value="${escapeHtml(producto.codigo || '')}" placeholder="Código" readonly></td>
-                                <td><input type="text" class="form-control form-control-sm" value="${escapeHtml(producto.descripcion || '')}" placeholder="Descripción" readonly></td>
-                                <td>
-                                    <select class="form-select form-select-sm" disabled>
-                                        <option value="NIU" ${producto.unidad === 'NIU' ? 'selected' : ''}>NIU</option>
-                                        <option value="KGM" ${producto.unidad === 'KGM' ? 'selected' : ''}>KGM</option>
-                                        <option value="LTR" ${producto.unidad === 'LTR' ? 'selected' : ''}>LTR</option>
-                                        <option value="MTR" ${producto.unidad === 'MTR' ? 'selected' : ''}>MTR</option>
-                                        <option value="ZZ" ${producto.unidad === 'ZZ' ? 'selected' : ''}>ZZ</option>
-                                        <option value="NU" ${producto.unidad === 'NU' ? 'selected' : ''}>NU</option>
-                                    </select>
-                                </td>
-                                <td><input type="number" class="form-control form-control-sm cantidad-readonly" value="${producto.cantidad}" readonly></td>
-                                <td><button class="btn-del btn-sm" disabled>🗑️</button></td>
-                            `;
-                            tbody.appendChild(nuevaFila);
-                        }
-                    });
-                }
-                if (datos.documento_asociado) document.getElementById('documento_asociado').value = datos.documento_asociado;
-                if (datos.orden_compra) document.getElementById('orden_compra_cliente').value = datos.orden_compra;
-                if (datos.peso_bruto_total) document.getElementById('peso_bruto_total').value = datos.peso_bruto_total;
-                if (datos.numero_bultos) document.getElementById('numero_bultos').value = datos.numero_bultos;
-                if (datos.observaciones) document.getElementById('observaciones').value = datos.observaciones;
-                if (datos.unidad_peso_bruto) document.getElementById('unidad_peso_bruto').value = datos.unidad_peso_bruto;
-                mostrarNotificacion('✅ Datos de cotización cargados', 'exito');
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
-        
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        }
-        
         document.addEventListener('DOMContentLoaded', function() {
+            const hoy = new Date().toISOString().split('T')[0];
+            document.getElementById('fecha_traslado').value = hoy;
+            document.getElementById('fecha_inicio_traslado').value = hoy;
             llenarDepartamentos('departamento_partida');
             llenarDepartamentos('departamento_llegada');
             configurarGrupoUbigeo('partida');
             configurarGrupoUbigeo('llegada');
             preseleccionarUbigeo('partida', 'LIMA', 'LIMA', 'SAN MARTIN DE PORRES');
             cargarTransportistas();
-            autocompletarDesdeCotizacion();
+
+            // Autocompletar desde cotización
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('from_cotizacion')) {
+                const datosGuardados = localStorage.getItem('datos_cotizacion_para_guia');
+                if (datosGuardados) {
+                    try {
+                        const datos = JSON.parse(datosGuardados);
+                        if (datos.cliente) {
+                            if (datos.cliente.ruc) document.getElementById('destinatario_doc').value = datos.cliente.ruc;
+                            if (datos.cliente.razon_social) document.getElementById('destinatario_nombre').value = datos.cliente.razon_social;
+                            if (datos.cliente.direccion) document.getElementById('direccion_llegada').value = datos.cliente.direccion;
+                        }
+                        if (datos.productos && datos.productos.length > 0) {
+                            const tbody = document.getElementById('table-body');
+                            tbody.innerHTML = '';
+                            datos.productos.forEach((p, idx) => {
+                                if (p.cantidad > 0) {
+                                    const tr = document.createElement('tr');
+                                    tr.innerHTML = `
+                                        <td>${idx+1}</td>
+                                        <td><input type="text" class="form-control form-control-sm" value="${p.codigo || ''}" readonly></td>
+                                        <td><input type="text" class="form-control form-control-sm" value="${p.descripcion || ''}" readonly></td>
+                                        <td><select class="form-select form-select-sm" disabled><option value="NIU" ${p.unidad==='NIU'?'selected':''}>NIU</option><option value="KGM" ${p.unidad==='KGM'?'selected':''}>KGM</option><option value="LTR" ${p.unidad==='LTR'?'selected':''}>LTR</option><option value="MTR" ${p.unidad==='MTR'?'selected':''}>MTR</option><option value="ZZ" ${p.unidad==='ZZ'?'selected':''}>ZZ</option><option value="NU" ${p.unidad==='NU'?'selected':''}>NU</option></select></td>
+                                        <td><input type="number" class="form-control form-control-sm cantidad-readonly" value="${p.cantidad}" readonly></td>
+                                        <td><button class="btn-del btn-sm" disabled>🗑️</button></td>
+                                    `;
+                                    tbody.appendChild(tr);
+                                }
+                            });
+                        }
+                        if (datos.documento_asociado) document.getElementById('documento_asociado').value = datos.documento_asociado;
+                        if (datos.orden_compra) document.getElementById('orden_compra_cliente').value = datos.orden_compra;
+                        if (datos.peso_bruto_total) document.getElementById('peso_bruto_total').value = datos.peso_bruto_total;
+                        if (datos.numero_bultos) document.getElementById('numero_bultos').value = datos.numero_bultos;
+                        if (datos.observaciones) document.getElementById('observaciones').value = datos.observaciones;
+                        if (datos.unidad_peso_bruto) document.getElementById('unidad_peso_bruto').value = datos.unidad_peso_bruto;
+                        mostrarNotificacion('✅ Datos de cotización cargados', 'exito');
+                    } catch (e) { console.error(e); }
+                }
+            }
         });
     </script>
 </body>
