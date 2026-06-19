@@ -1231,7 +1231,7 @@
         });
         
         // ==========================================
-        // EXPORTAR A EXCEL - Todos los campos
+        // EXPORTAR A EXCEL - Todos los campos con nombres correctos
         // ==========================================
         document.getElementById('btnExportarExcel')?.addEventListener('click', function() {
             const guias = guiasFiltradasActuales || todasGuias;
@@ -1244,20 +1244,20 @@
             // Construir el archivo CSV con todos los campos
             let csv = '\uFEFF'; // BOM para UTF-8
             
-            // Encabezados - TODOS los campos del crear guía (sin datos de remitente)
+            // Encabezados
             const headers = [
                 // Datos generales
                 'N° Guía', 'Serie', 'Número', 'Estado SUNAT', 'Fecha Creación',
-                // Destinatario (solo lo necesario)
+                // Destinatario
                 'RUC Destinatario', 'Razón Social Destinatario', 'Dirección Destinatario', 'Ubigeo Destinatario',
                 'Orden Compra Cliente', 'Documento Asociado', 'Factura',
-                // Vehículo
+                // Vehículo (usando los mismos nombres que el modal de ver)
                 'Placa Vehículo', 'Conductor', 'DNI Conductor', 'Licencia Conductor', 'Modalidad Transporte',
-                // Transportista (público)
+                // Transportista
                 'RUC Transportista', 'Razón Social Transportista',
                 // Traslado
                 'Motivo Traslado', 'Fecha Emisión', 'Fecha Traslado', 'Peso Total (kg)', 'Unidad Peso', 'N° Bultos',
-                // Productos (resumen)
+                // Productos
                 'Cantidad Total Productos', 'Descripción Productos',
                 'Observaciones'
             ];
@@ -1273,6 +1273,7 @@
                 const motivoTexto = getMotivoTexto(guia.motivo_traslado);
                 
                 const row = [
+                    // Datos generales
                     `${guia.serie || 'T001'}-${guia.numero || '?'}`,
                     guia.serie || 'T001',
                     guia.numero || '?',
@@ -1286,7 +1287,7 @@
                     guia.orden_compra_cliente || '',
                     guia.documento_asociado || '',
                     guia.factura || '',
-                    // Vehículo
+                    // Vehículo - usando los mismos nombres que el modal de ver
                     guia.placa_vehiculo || '',
                     guia.conductor_nombre || '',
                     guia.conductor_dni || '',
