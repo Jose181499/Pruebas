@@ -295,6 +295,14 @@
             border-radius: 6px;
             font-size: 11px;
         }
+        /* Estilo para el campo Peso Unit. en el modal */
+        .campo-peso-unitario {
+            background: #f0fdf4;
+            border-radius: 6px;
+            padding: 2px 8px;
+            font-weight: 600;
+            color: #065f46;
+        }
     </style>
 </head>
 <body>
@@ -302,7 +310,6 @@
     <!-- NAVBAR ERP -->
     <div class="erp-navbar">
         <div class="navbar-left">
-            <!-- Botón Volver - Ahora está en la parte superior izquierda -->
             <a href="/mantenedor" class="btn-volver">
                 <i class="bi bi-arrow-left"></i> Volver
             </a>
@@ -720,7 +727,7 @@
         }
         
         // ==========================================
-        // VER GUÍA (MODAL)
+        // VER GUÍA (MODAL) - Con Peso Unitario en Traslado
         // ==========================================
         window.verGuia = async function(id) {
             guiaActualId = id;
@@ -739,25 +746,59 @@
                     const g = result.data;
                     const items = typeof g.items_json === 'string' ? JSON.parse(g.items_json) : (g.items_json || []);
                     
+                    // Calcular el peso unitario para cada producto (si no viene, lo calculamos)
                     let itemsHtml = '';
                     if (items.length > 0) {
+                        // Obtener el peso total de la guía
+                        const pesoTotal = parseFloat(g.peso_total) || 0;
+                        
+                        // Calcular la suma de cantidades para distribuir el peso
+                        const totalCantidad = items.reduce((sum, item) => sum + (parseFloat(item.cantidad) || 0), 0);
+                        
                         itemsHtml = `
                             <div class="table-responsive mt-3">
                                 <table class="table table-sm">
                                     <thead class="table-light">
-                                        <tr><th>Item</th><th>Código</th><th>Descripción</th><th>Cantidad</th><th>Unidad</th><th>Peso Unit.</th></tr>
+                                        <tr>
+                                            <th>Item</th>
+                                            <th>Código</th>
+                                            <th>Descripción</th>
+                                            <th>Cantidad</th>
+                                            <th>Unidad</th>
+                                            <th class="text-center">Peso Unit.</th>
+                                        </tr>
                                     </thead>
                                     <tbody>
-                                        ${items.map(item => `
-                                            <tr>
-                                                <td>${item.item || '-'}</td>
-                                                <td>${escapeHtml(item.codigo || '-')}</td>
-                                                <td>${escapeHtml(item.descripcion || '-')}</td>
-                                                <td>${item.cantidad || 0}</td>
-                                                <td>${item.unidad || 'NIU'}</td>
-                                                <td>${(parseFloat(item.peso_unitario) || 0).toFixed(2)} kg</td>
-                                            </tr>
-                                        `).join('')}
+                                        ${items.map((item, idx) => {
+                                            // Calcular peso unitario: si el item tiene peso_unitario, usarlo, sino calcular según proporción
+                                            let pesoUnitario = parseFloat(item.peso_unitario) || 0;
+                                            
+                                            // Si no tiene peso_unitario y hay cantidad y peso total, calcularlo
+                                            if (pesoUnitario === 0 && totalCantidad > 0 && pesoTotal > 0) {
+                                                const cantidad = parseFloat(item.cantidad) || 0;
+                                                pesoUnitario = (cantidad / totalCantidad) * pesoTotal;
+                                                // Redondear a 3 decimales para mayor precisión
+                                                pesoUnitario = Math.round(pesoUnitario * 1000) / 1000;
+                                            }
+                                            
+                                            // Si el item tiene un campo 'peso_unitario' guardado, usarlo con prioridad
+                                            const pesoMostrar = parseFloat(item.peso_unitario) || pesoUnitario;
+                                            
+                                            return `
+                                                <tr>
+                                                    <td>${idx + 1}</td>
+                                                    <td>${escapeHtml(item.codigo || '-')}</td>
+                                                    <td>${escapeHtml(item.descripcion || '-')}</td>
+                                                    <td>${item.cantidad || 0}</td>
+                                                    <td>${item.unidad || 'NIU'}</td>
+                                                    <td class="text-center">
+                                                        <span class="campo-peso-unitario">
+                                                            ${pesoMostrar > 0 ? pesoMostrar.toFixed(3) : '0.000'} kg
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
                                     </tbody>
                                 </table>
                             </div>
@@ -800,12 +841,17 @@
                                     <small><strong>Fecha Emisión:</strong> ${formatFecha(g.fecha_emision)}</small>
                                     <small><strong>Fecha Traslado:</strong> ${formatFecha(g.fecha_traslado)}</small>
                                     <small><strong>Peso Total:</strong> ${pesoTotalNum.toFixed(2)} kg</small>
+                                    <small><strong>N° Bultos:</strong> ${g.numero_bultos || '-'}</small>
+                                    <small><strong>Unidad Peso:</strong> ${g.unidad_peso_bruto || 'KGM'}</small>
                                 </div>
                             </div>
                             <div class="col-12">
                                 <div class="card bg-light p-3">
                                     <h6><i class="bi bi-clock-history text-info"></i> Registro</h6>
                                     <small><strong>Fecha de Creación:</strong> ${fechaCreacionDetalle}</small>
+                                    ${g.factura ? `<small><strong>Factura:</strong> ${escapeHtml(g.factura)}</small>` : ''}
+                                    ${g.orden_compra_cliente ? `<small><strong>Orden de Compra:</strong> ${escapeHtml(g.orden_compra_cliente)}</small>` : ''}
+                                    ${g.documento_asociado ? `<small><strong>Documento Asociado:</strong> ${escapeHtml(g.documento_asociado)}</small>` : ''}
                                 </div>
                             </div>
                             ${g.transportista_ruc ? `
