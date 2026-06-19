@@ -96,7 +96,7 @@ def generar_pdf_guia(guia_data):
     body {
         font-family: 'Helvetica', 'Arial', sans-serif;
         font-size: 9.5px;
-        line-height: 1.6;
+        line-height: 1.8;
         color: #1a1a1a;
     }
     
@@ -194,109 +194,39 @@ def generar_pdf_guia(guia_data):
         padding-bottom: 2px;
     }
     
-    .info-destinatario {
+    /* Estilo para todas las filas de datos */
+    .info-destinatario,
+    .datos-traslado,
+    .datos-ruta,
+    .datos-transporte,
+    .referencias,
+    .observaciones {
         border: 1px solid #ccc;
         border-radius: 8px;
-        padding: 6px 10px;
+        padding: 6px 12px;
         margin-bottom: 6px;
         background: #f9f9f9;
     }
     
-    .info-destinatario .info-line {
-        padding: 1px 0;
-        font-size: 9px;
+    .fila {
         display: flex;
-        align-items: center;
-    }
-    
-    .info-destinatario .label {
-        font-weight: bold;
-        min-width: 120px;
-        flex-shrink: 0;
-    }
-    
-    .info-destinatario .value {
-        flex: 1;
-        text-align: center;
-    }
-    
-    .datos-traslado {
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        padding: 6px 10px;
-        margin-bottom: 6px;
-        background: #f9f9f9;
-    }
-    
-    .datos-traslado .fila {
         padding: 1px 0;
-        display: flex;
-        align-items: center;
+        align-items: baseline;
     }
     
-    .datos-traslado .label {
+    .fila .label {
         font-weight: bold;
         min-width: 200px;
         flex-shrink: 0;
     }
     
-    .datos-traslado .value {
+    .fila .value {
         flex: 1;
-        text-align: center;
+        text-align: left;
+        padding-left: 5px;
     }
     
-    .datos-ruta {
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        padding: 6px 10px;
-        margin-bottom: 6px;
-        background: #f9f9f9;
-    }
-    
-    .datos-ruta .info-line {
-        padding: 1px 0;
-        font-size: 9px;
-        display: flex;
-        align-items: center;
-    }
-    
-    .datos-ruta .label {
-        font-weight: bold;
-        min-width: 120px;
-        flex-shrink: 0;
-    }
-    
-    .datos-ruta .value {
-        flex: 1;
-        text-align: center;
-    }
-    
-    .datos-transporte {
-        border: 2px solid #333;
-        border-radius: 8px;
-        padding: 8px 12px;
-        margin-bottom: 6px;
-        background: #f5f5f5;
-    }
-    
-    .datos-transporte .info-line {
-        padding: 2px 0;
-        font-size: 9px;
-        display: flex;
-        align-items: center;
-    }
-    
-    .datos-transporte .label {
-        font-weight: bold;
-        min-width: 120px;
-        flex-shrink: 0;
-    }
-    
-    .datos-transporte .value {
-        flex: 1;
-        text-align: center;
-    }
-    
+    /* Para la tabla de productos */
     .products-table {
         width: 100%;
         border-collapse: collapse;
@@ -337,54 +267,6 @@ def generar_pdf_guia(guia_data):
     
     .products-table th:last-child {
         border-top-right-radius: 8px;
-    }
-    
-    .referencias {
-        margin-top: 6px;
-        padding: 5px 10px;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        background: #f9f9f9;
-        font-size: 8.5px;
-    }
-    
-    .referencias .ref-line {
-        padding: 1px 0;
-        display: flex;
-        align-items: center;
-    }
-    
-    .referencias .label {
-        font-weight: bold;
-        min-width: 180px;
-        flex-shrink: 0;
-    }
-    
-    .referencias .value {
-        flex: 1;
-        text-align: center;
-    }
-    
-    .observaciones {
-        margin-top: 8px;
-        padding: 5px 10px;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        background: #f9f9f9;
-        font-size: 8.5px;
-        display: flex;
-        align-items: center;
-    }
-    
-    .observaciones .label {
-        font-weight: bold;
-        min-width: 120px;
-        flex-shrink: 0;
-    }
-    
-    .observaciones .value {
-        flex: 1;
-        text-align: center;
     }
     
     .qr-container {
@@ -575,11 +457,11 @@ def renderizar_html_guia(guia_data):
         <div class="seccion">
             <div class="seccion-titulo">DESTINATARIO</div>
             <div class="info-destinatario">
-                <div class="info-line">
+                <div class="fila">
                     <span class="label">R.U.C.:</span>
                     <span class="value">{{ ruc_destinatario or '' }}</span>
                 </div>
-                <div class="info-line">
+                <div class="fila">
                     <span class="label">DENOMINACIÓN:</span>
                     <span class="value">{{ destinatario_nombre or '' }}</span>
                 </div>
@@ -621,11 +503,11 @@ def renderizar_html_guia(guia_data):
         <div class="seccion">
             <div class="seccion-titulo">DATOS DE RUTA</div>
             <div class="datos-ruta">
-                <div class="info-line">
+                <div class="fila">
                     <span class="label">PUNTO DE PARTIDA:</span>
                     <span class="value">({{ remitente_ubigeo or '' }}) {{ remitente_direccion or '' }}, Perú</span>
                 </div>
-                <div class="info-line">
+                <div class="fila">
                     <span class="label">PUNTO DE LLEGADA:</span>
                     <span class="value">({{ destinatario_ubigeo or '' }}) {{ destinatario_direccion or '' }}, Perú</span>
                 </div>
@@ -636,23 +518,23 @@ def renderizar_html_guia(guia_data):
         <div class="seccion">
             <div class="seccion-titulo">DATOS DEL TRANSPORTE</div>
             <div class="datos-transporte">
-                <div class="info-line">
+                <div class="fila">
                     <span class="label">TRANSPORTISTA:</span>
                     <span class="value">{{ transportista_nombre or '---' }}</span>
                 </div>
-                <div class="info-line">
+                <div class="fila">
                     <span class="label">CONDUCTOR:</span>
                     <span class="value">{{ conductor_nombre or '---' }}</span>
                 </div>
-                <div class="info-line">
+                <div class="fila">
                     <span class="label">DNI:</span>
                     <span class="value">{{ conductor_dni or '---' }}</span>
                 </div>
-                <div class="info-line">
+                <div class="fila">
                     <span class="label">PLACA:</span>
                     <span class="value">{{ placa_vehiculo or '---' }}</span>
                 </div>
-                <div class="info-line">
+                <div class="fila">
                     <span class="label">LICENCIA:</span>
                     <span class="value">{{ licencia_conductor or '---' }}</span>
                 </div>
@@ -689,29 +571,30 @@ def renderizar_html_guia(guia_data):
         </div>
         
         <!-- REFERENCIAS -->
-        <div class="referencias">
-            <div class="ref-line">
-                <span class="label">REFERENCIAS:</span>
-                <span class="value"></span>
-            </div>
-            <div class="ref-line">
-                <span class="label">NRO DE COTIZACION:</span>
-                <span class="value">{{ nro_cotizacion or '' }}</span>
-            </div>
-            <div class="ref-line">
-                <span class="label">PEDIDO DE COMPRA CLIENTE:</span>
-                <span class="value">{{ pedido_compra_cliente or '' }}</span>
-            </div>
-            <div class="ref-line">
-                <span class="label">NRO DE FACTURA:</span>
-                <span class="value">{{ nro_factura or '' }}</span>
+        <div class="seccion">
+            <div class="seccion-titulo">REFERENCIAS</div>
+            <div class="referencias">
+                <div class="fila">
+                    <span class="label">NRO DE COTIZACION:</span>
+                    <span class="value">{{ nro_cotizacion or '' }}</span>
+                </div>
+                <div class="fila">
+                    <span class="label">PEDIDO DE COMPRA CLIENTE:</span>
+                    <span class="value">{{ pedido_compra_cliente or '' }}</span>
+                </div>
+                <div class="fila">
+                    <span class="label">NRO DE FACTURA:</span>
+                    <span class="value">{{ nro_factura or '' }}</span>
+                </div>
             </div>
         </div>
         
         <!-- OBSERVACIONES -->
         <div class="observaciones">
-            <span class="label">OBSERVACIONES :</span>
-            <span class="value">{% if observaciones %}{{ observaciones }}{% endif %}</span>
+            <div class="fila">
+                <span class="label">OBSERVACIONES :</span>
+                <span class="value">{% if observaciones %}{{ observaciones }}{% endif %}</span>
+            </div>
         </div>
         
         <!-- QR Y FOOTER -->
