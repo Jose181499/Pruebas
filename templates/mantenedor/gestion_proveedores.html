@@ -14,7 +14,7 @@
 
         .navbar-erp {
             background: linear-gradient(135deg, #0B132B 0%, #1C2541 100%);
-            padding: 0.9rem 2rem;
+            padding: 0.5rem 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -23,109 +23,153 @@
             top: 0;
             z-index: 1030;
         }
-        .logo-area { display: flex; gap: 12px; align-items: center; }
-        .logo-icon { background: rgba(255,255,255,0.12); border-radius: 14px; padding: 8px 12px; font-size: 1.7rem; color: white; }
-        .empresa-title { font-weight: 800; font-size: 1.25rem; color: white; letter-spacing: -0.2px; }
-        .empresa-sub { font-size: 0.7rem; opacity: 0.75; color: #b9d0f0; }
-        .user-badge { background: #2c3e66; border-radius: 40px; padding: 0.4rem 1.2rem; font-size: 0.85rem; color: white; }
+        .logo-area { display: flex; gap: 10px; align-items: center; }
+        .logo-icon { background: rgba(255,255,255,0.12); border-radius: 12px; padding: 6px 10px; font-size: 1.3rem; color: white; }
+        .empresa-title { font-weight: 800; font-size: 1rem; color: white; letter-spacing: -0.2px; }
+        .empresa-sub { font-size: 0.6rem; opacity: 0.75; color: #b9d0f0; }
+        .user-badge { background: #2c3e66; border-radius: 30px; padding: 0.3rem 1rem; font-size: 0.75rem; color: white; }
 
         .hero-modern {
             background: linear-gradient(115deg, #1F2B5C, #2A3E7C);
-            border-radius: 28px;
-            padding: 1.8rem 2rem;
+            border-radius: 20px;
+            padding: 0.8rem 1.5rem;
             color: white;
-            margin-bottom: 2rem;
-            box-shadow: 0 12px 20px rgba(0,0,0,0.08);
+            margin-bottom: 1.2rem;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.06);
             position: relative;
         }
 
         .btn-back-header {
-            background: rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.12);
             backdrop-filter: blur(8px);
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 40px;
-            padding: 0.5rem 1.2rem;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 30px;
+            padding: 0.25rem 0.9rem;
             color: white;
             font-weight: 500;
+            font-size: 0.8rem;
             transition: all 0.2s ease;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 5px;
             text-decoration: none;
         }
         .btn-back-header:hover {
-            background: rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.2);
             color: white;
-            transform: translateX(-3px);
+            transform: translateX(-2px);
         }
 
-        .hero-title { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.5px; }
+        .hero-title { 
+            font-size: 1.2rem; 
+            font-weight: 800; 
+            letter-spacing: -0.3px;
+            margin: 0;
+        }
+        .hero-subtitle {
+            font-size: 0.7rem;
+            opacity: 0.8;
+            margin: 0;
+        }
 
         .card-ordenada {
             background: white;
-            border-radius: 24px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.03);
+            border-radius: 18px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
             overflow-x: auto;
-            margin-bottom: 1.8rem;
+            margin-bottom: 1.2rem;
             border: 1px solid #eef2f8;
         }
         .card-header-orden {
             background: #ffffff;
-            padding: 1rem 1.5rem;
+            padding: 0.6rem 1.2rem;
             border-bottom: 2px solid #eff3f8;
             font-weight: 700;
-            font-size: 0.95rem;
+            font-size: 0.8rem;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             color: #1a2c4e;
         }
-        .card-body-orden { padding: 1.5rem; }
+        .card-body-orden { padding: 1rem 1.2rem; }
 
         .form-label-peq {
             font-weight: 600;
-            font-size: 0.7rem;
+            font-size: 0.6rem;
             text-transform: uppercase;
             letter-spacing: 0.3px;
             color: #4a627a;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.15rem;
         }
         .input-moderno {
-            border-radius: 12px;
+            border-radius: 10px;
             border: 1.5px solid #e2e8f0;
-            padding: 0.55rem 0.9rem;
-            font-size: 0.9rem;
+            padding: 0.35rem 0.8rem;
+            font-size: 0.8rem;
             transition: 0.2s;
         }
         .input-moderno:focus {
             border-color: #3b71ca;
-            box-shadow: 0 0 0 3px rgba(59,113,202,0.15);
+            box-shadow: 0 0 0 3px rgba(59,113,202,0.12);
         }
         .btn-sunat-sm {
             background: #1e2a47;
             border: none;
-            border-radius: 12px;
-            padding: 0 1rem;
+            border-radius: 10px;
+            padding: 0 0.8rem;
             font-weight: 500;
-            font-size: 0.75rem;
+            font-size: 0.65rem;
             white-space: nowrap;
             color: white;
         }
         .btn-sunat-sm:hover { background: #2c3e66; transform: translateY(-1px); }
 
+        /* =========================================== */
+        /* ESTILOS PARA LA TABLA CON HEADER STICKY */
+        /* =========================================== */
+        
+        .card-ordenada .table-responsive {
+            max-height: 600px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .table-styled thead {
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+        }
+
+        .table-styled thead th {
+            background: #f8fafd !important;
+            border-bottom: 2px solid #d1d9e6 !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+        }
+
+        .table-styled tbody {
+            background: white;
+        }
+
+        /* =========================================== */
+        /* FIN ESTILOS STICKY */
+        /* =========================================== */
+
         .table-styled th {
             background: #f8fafd;
             font-weight: 700;
-            font-size: 0.7rem;
+            font-size: 0.6rem;
             text-transform: uppercase;
             border-bottom: 1px solid #e2e8f0;
-            padding: 1rem 0.75rem;
+            padding: 0.7rem 0.6rem;
             white-space: nowrap;
         }
         .table-styled td {
-            padding: 1rem 0.75rem;
+            padding: 0.7rem 0.6rem;
             vertical-align: middle;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             border-bottom: 1px solid #ecf3fa;
         }
         
@@ -133,11 +177,11 @@
             background: linear-gradient(135deg, #E8F0FE 0%, #D4E4FC 100%);
             color: #0047AB;
             font-weight: 800;
-            padding: 6px 12px;
-            border-radius: 20px;
+            padding: 4px 10px;
+            border-radius: 16px;
             display: inline-block;
-            font-size: 0.85rem;
-            letter-spacing: 0.3px;
+            font-size: 0.7rem;
+            letter-spacing: 0.2px;
             border: 1px solid #b9d4ff;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
@@ -145,11 +189,12 @@
         .badge-doc {
             background: #eef2ff;
             color: #1e3a8a;
-            border-radius: 40px;
-            padding: 0.2rem 0.8rem;
+            border-radius: 30px;
+            padding: 0.1rem 0.6rem;
             font-weight: 500;
             display: inline-block;
             white-space: nowrap;
+            font-size: 0.7rem;
         }
         
         .acciones-cell {
@@ -159,8 +204,8 @@
         .btn-accion { 
             background: transparent; 
             border: none; 
-            font-size: 1.1rem; 
-            padding: 0.4rem 0.7rem; 
+            font-size: 0.9rem; 
+            padding: 0.3rem 0.5rem; 
             border-radius: 30px; 
             transition: 0.2s;
             display: inline-flex;
@@ -178,15 +223,16 @@
         .toast-notify-custom {
             position: fixed; bottom: 25px; right: 25px; z-index: 9999;
             background: #1f2937; color: white; border-radius: 48px;
-            padding: 0.7rem 1.5rem; font-weight: 500; display: flex; gap: 10px;
+            padding: 0.5rem 1.2rem; font-weight: 500; display: flex; gap: 8px;
             animation: fadeUp 0.2s ease;
             z-index: 10000;
+            font-size: 0.8rem;
         }
         @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
         
         .modal-header-clean {
             background: #0f172a; color: white; border-radius: 24px 24px 0 0;
-            padding: 1rem 1.5rem;
+            padding: 0.8rem 1.2rem;
         }
         .modal-content-radius { border-radius: 24px; border: none; }
         .btn-limpiar {
@@ -195,6 +241,8 @@
             border: 1px solid #ddd;
             color: #374151;
             font-weight: 500;
+            font-size: 0.8rem;
+            padding: 0.3rem 1rem;
         }
         .btn-limpiar:hover { background: #e5e7eb; }
         
@@ -203,9 +251,10 @@
             border-collapse: collapse;
         }
         .detail-table td, .detail-table th {
-            padding: 12px 16px;
+            padding: 10px 14px;
             border-bottom: 1px solid #eef2f8;
             vertical-align: top;
+            font-size: 0.8rem;
         }
         .detail-table tr:last-child td, .detail-table tr:last-child th {
             border-bottom: none;
@@ -219,23 +268,23 @@
         .fecha-grande {
             background: linear-gradient(135deg, #1e3a8a, #3b71ca);
             color: white;
-            border-radius: 16px;
-            padding: 15px 24px;
-            font-size: 1rem;
+            border-radius: 14px;
+            padding: 12px 20px;
+            font-size: 0.9rem;
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 14px;
-            margin-bottom: 20px;
+            gap: 12px;
+            margin-bottom: 16px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             width: 100%;
         }
-        .fecha-grande i { font-size: 1.5rem; }
+        .fecha-grande i { font-size: 1.2rem; }
         
         .fecha-hora-cell {
             font-family: 'Inter', monospace;
-            font-size: 0.75rem;
-            font-weight: 600;
+            font-size: 0.7rem;
+            font-weight: 700;
             color: #1e3a8a;
             white-space: nowrap;
         }
@@ -269,9 +318,9 @@
         
         .item-card-mini {
             background: #fafcff;
-            border-radius: 20px;
-            padding: 0.9rem 1rem 1rem 1rem;
-            margin-bottom: 0.9rem;
+            border-radius: 16px;
+            padding: 0.7rem 0.9rem 0.9rem 0.9rem;
+            margin-bottom: 0.7rem;
             border: 1px solid #e9edf2;
             position: relative;
             transition: 0.2s;
@@ -279,42 +328,69 @@
         .item-card-mini:hover { background: white; border-color: #dce5ef; }
         .btn-remove-mini {
             position: absolute;
-            top: 10px;
-            right: 10px;
+            top: 8px;
+            right: 8px;
             background: #fee2e2;
             border: none;
             border-radius: 30px;
-            width: 28px;
-            height: 28px;
+            width: 24px;
+            height: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #b91c1c;
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             cursor: pointer;
         }
         .btn-remove-mini:hover { background: #f5c6c6; transform: scale(1.02); }
-        .checkbox-linea { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
-        .checkbox-linea input { width: 18px; height: 18px; margin: 0; cursor: pointer; }
+        .checkbox-linea { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+        .checkbox-linea input { width: 16px; height: 16px; margin: 0; cursor: pointer; }
         .section-mini-title {
             font-weight: 700;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             color: #1e2f5e;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1rem;
+            margin-bottom: 0.7rem;
         }
         .btn-agregar-link {
             background: none;
             border: none;
-            font-size: 0.75rem;
+            font-size: 0.65rem;
             font-weight: 600;
             color: #1e2f5e;
             border-radius: 20px;
-            padding: 0.2rem 0.8rem;
+            padding: 0.1rem 0.6rem;
         }
         .btn-agregar-link:hover { background: #eef2ff; }
+
+        .btn-light.rounded-pill {
+            font-size: 0.75rem;
+            padding: 0.25rem 1.2rem;
+        }
+        .btn-primary.rounded-pill {
+            font-size: 0.75rem;
+            padding: 0.25rem 1.5rem;
+        }
+        .modal-footer .btn {
+            font-size: 0.8rem;
+        }
+        .modal-body {
+            font-size: 0.85rem;
+        }
+        .row.g-3 {
+            --bs-gutter-y: 0.5rem;
+        }
+        .mb-4 {
+            margin-bottom: 0.8rem !important;
+        }
+        .mb-3 {
+            margin-bottom: 0.5rem !important;
+        }
+        .mt-2 {
+            margin-top: 0.3rem !important;
+        }
     </style>
 </head>
 <body>
@@ -334,41 +410,41 @@
             <div class="empresa-sub">ERP · Gestión de Proveedores</div>
         </div>
     </div>
-    <div class="user-badge"><i class="bi bi-person-circle me-1"></i> Administrador</div>
+    <div class="user-badge"><i class="bi bi-person-circle me-1"></i> Admin</div>
 </div>
 
-<div class="container-fluid py-4 px-lg-5">
+<div class="container-fluid py-3 px-lg-4">
     <div class="hero-modern d-flex flex-wrap justify-content-between align-items-center">
-        <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center gap-2">
             <a href="#" class="btn-back-header" id="btnBackMain">
-                <i class="bi bi-arrow-left-short fs-4"></i> Atrás
+                <i class="bi bi-arrow-left-short"></i> Atrás
             </a>
             <div>
-                <h1 class="hero-title"><i class="bi bi-truck me-2"></i>Gestión de Proveedores</h1>
-                <p class="opacity-75 mb-0">Administración central de proveedores ERP</p>
+                <h1 class="hero-title"><i class="bi bi-truck me-1"></i>Proveedores</h1>
+                <p class="hero-subtitle">Administración central de proveedores ERP</p>
             </div>
         </div>
-        <div class="mt-2 mt-sm-0">
-            <button class="btn btn-light rounded-pill px-4 fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNuevoProveedor">
-                <i class="bi bi-plus-circle-fill me-1 text-primary"></i> Nuevo Proveedor
+        <div class="mt-1 mt-sm-0">
+            <button class="btn btn-light rounded-pill px-3 fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNuevoProveedor" style="font-size:0.75rem; padding:0.25rem 1rem;">
+                <i class="bi bi-plus-circle-fill me-1 text-primary"></i> Nuevo
             </button>
         </div>
     </div>
 
     <div class="card-ordenada">
-        <div class="card-header-orden"><i class="bi bi-funnel-fill"></i> Filtros de búsqueda</div>
+        <div class="card-header-orden"><i class="bi bi-funnel-fill"></i> Filtros</div>
         <div class="card-body-orden">
-            <div class="row g-3 align-items-end">
+            <div class="row g-2 align-items-end">
                 <div class="col-md-5">
                     <label class="form-label-peq">Buscar por RUC o Razón Social</label>
                     <input type="text" id="filtro-busqueda" class="form-control input-moderno" placeholder="RUC o razón social...">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label-peq">Buscar por Código de Proveedor</label>
+                    <label class="form-label-peq">Buscar por Código</label>
                     <input type="text" id="search-codigo" class="form-control input-moderno" placeholder="Ej: PROV-00001">
                 </div>
                 <div class="col-md-3">
-                    <div class="text-muted small mt-2"><i class="bi bi-info-circle"></i> Búsqueda automática</div>
+                    <div class="text-muted small" style="font-size:0.65rem;"><i class="bi bi-info-circle"></i> Búsqueda automática</div>
                 </div>
             </div>
         </div>
@@ -382,7 +458,7 @@
                     <tr>
                         <th>Item</th>
                         <th>Fecha y Hora</th>
-                        <th>Código Proveedor</th>
+                        <th>Código</th>
                         <th>Nombre Comercial</th>
                         <th>Razón Social</th>
                         <th>RUC</th>
@@ -394,7 +470,7 @@
                     </tr>
                 </thead>
                 <tbody id="tbody-proveedores">
-                    <tr><td colspan="11" class="text-center py-5"><div class="spinner-border spinner-border-sm text-secondary"></div> Cargando...<\/td></tr>
+                    <tr><td colspan="11" class="text-center py-4"><div class="spinner-border spinner-border-sm text-secondary"></div> Cargando...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -406,23 +482,23 @@
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content modal-content-radius">
             <div class="modal-header-clean d-flex justify-content-between">
-                <h5 class="modal-title fw-bold"><i class="bi bi-truck me-2"></i> Nuevo Proveedor</h5>
+                <h5 class="modal-title fw-bold" style="font-size:1rem;"><i class="bi bi-truck me-2"></i> Nuevo Proveedor</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-4">
+            <div class="modal-body p-3">
                 <form id="formProveedor">
-                    <div class="mb-4">
-                        <div class="d-flex align-items-center gap-2 border-start border-4 border-primary ps-3 mb-3">
-                            <i class="bi bi-card-list fs-5 text-primary"></i>
-                            <h6 class="fw-bold m-0">Información General</h6>
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center gap-2 border-start border-4 border-primary ps-2 mb-2">
+                            <i class="bi bi-card-list fs-6 text-primary"></i>
+                            <h6 class="fw-bold m-0" style="font-size:0.85rem;">Información General</h6>
                         </div>
-                        <div class="row g-3">
+                        <div class="row g-2">
                             <div class="col-md-5">
                                 <label class="form-label-peq">RUC *</label>
                                 <div class="input-group">
                                     <input type="text" class="form-control input-moderno" id="ruc" maxlength="11" placeholder="11 dígitos" required>
                                     <button class="btn btn-sunat-sm" type="button" id="btnSunatProveedor">
-                                        <i class="bi bi-building me-1"></i> Consultar Sunat
+                                        <i class="bi bi-building me-1"></i> Sunat
                                     </button>
                                 </div>
                             </div>
@@ -476,12 +552,12 @@
                         </div>
                     </div>
 
-                    <div class="mb-4">
-                        <div class="d-flex align-items-center gap-2 border-start border-4 border-success ps-3 mb-3">
-                            <i class="bi bi-bank2 fs-5 text-success"></i>
-                            <h6 class="fw-bold m-0">Información Bancaria</h6>
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center gap-2 border-start border-4 border-success ps-2 mb-2">
+                            <i class="bi bi-bank2 fs-6 text-success"></i>
+                            <h6 class="fw-bold m-0" style="font-size:0.85rem;">Información Bancaria</h6>
                         </div>
-                        <div class="row g-3">
+                        <div class="row g-2">
                             <div class="col-md-4">
                                 <label class="form-label-peq">Banco</label>
                                 <select class="form-select input-moderno" id="banco">
@@ -504,9 +580,9 @@
                     </div>
                 </form>
             </div>
-            <div class="modal-footer border-0 pt-0 pb-4 px-4 d-flex justify-content-between">
-                <div><button type="button" class="btn btn-limpiar px-4" id="btnLimpiarFormulario"><i class="bi bi-eraser"></i> Limpiar todo</button></div>
-                <div><button class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button><button type="submit" form="formProveedor" class="btn btn-primary rounded-pill px-5 shadow-sm"><i class="bi bi-save"></i> Guardar Proveedor</button></div>
+            <div class="modal-footer border-0 pt-0 pb-3 px-3 d-flex justify-content-between">
+                <div><button type="button" class="btn btn-limpiar" id="btnLimpiarFormulario"><i class="bi bi-eraser"></i> Limpiar</button></div>
+                <div><button class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal" style="font-size:0.8rem;">Cancelar</button><button type="submit" form="formProveedor" class="btn btn-primary rounded-pill px-4 shadow-sm" style="font-size:0.8rem;"><i class="bi bi-save"></i> Guardar</button></div>
             </div>
         </div>
     </div>
@@ -515,12 +591,12 @@
 <div class="modal fade" id="modalEditarProveedor" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content modal-content-radius">
-            <div class="modal-header-clean"><h5 class="modal-title"><i class="bi bi-pencil-square"></i> Editar Proveedor</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body p-4">
+            <div class="modal-header-clean"><h5 class="modal-title" style="font-size:1rem;"><i class="bi bi-pencil-square"></i> Editar Proveedor</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body p-3">
                 <form id="formEditarProveedor">
                     <input type="hidden" id="edit_id_proveedor">
-                    <div class="mb-4"><div class="border-start border-4 border-warning ps-3 mb-3"><h6 class="fw-bold">Información General</h6></div>
-                    <div class="row g-3">
+                    <div class="mb-3"><div class="border-start border-4 border-warning ps-2 mb-2"><h6 class="fw-bold" style="font-size:0.85rem;">Información General</h6></div>
+                    <div class="row g-2">
                         <div class="col-md-5"><label class="form-label-peq">RUC *</label><div class="input-group"><input type="text" class="form-control input-moderno" id="edit_ruc" maxlength="11" required><button class="btn btn-sunat-sm" type="button" id="btnEditSunatProveedor"><i class="bi bi-building"></i> Sunat</button></div></div>
                         <div class="col-md-7"><label class="form-label-peq">Razón Social *</label><input type="text" class="form-control input-moderno" id="edit_razon_social" required></div>
                         <div class="col-md-4"><label class="form-label-peq">Nombre Comercial</label><input type="text" class="form-control input-moderno" id="edit_razon_comercial"></div>
@@ -548,15 +624,15 @@
                         
                         <div class="col-md-12"><label class="form-label-peq">Lugar de Recojo</label><input type="text" class="form-control input-moderno" id="edit_lugar_recojo" placeholder="Dirección donde se recogen los productos"></div>
                     </div></div>
-                    <div class="mb-4"><div class="d-flex align-items-center gap-2 border-start border-4 border-success ps-3 mb-3"><i class="bi bi-bank2 fs-5 text-success"></i><h6 class="fw-bold m-0">Información Bancaria</h6></div>
-                    <div class="row g-3">
+                    <div class="mb-3"><div class="d-flex align-items-center gap-2 border-start border-4 border-success ps-2 mb-2"><i class="bi bi-bank2 fs-6 text-success"></i><h6 class="fw-bold m-0" style="font-size:0.85rem;">Información Bancaria</h6></div>
+                    <div class="row g-2">
                         <div class="col-md-4"><label class="form-label-peq">Banco</label><select class="form-select input-moderno" id="edit_banco"><option value="">Seleccione</option><option value="BCP">BCP</option><option value="BBVA">BBVA</option><option value="Interbank">Interbank</option><option value="Scotiabank">Scotiabank</option></select></div>
                         <div class="col-md-4"><label class="form-label-peq">Número Cuenta</label><input type="text" class="form-control input-moderno" id="edit_numero_cuenta"></div>
                         <div class="col-md-4"><label class="form-label-peq">CCI</label><input type="text" class="form-control input-moderno" id="edit_cci"></div>
                     </div></div>
                 </form>
             </div>
-            <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" form="formEditarProveedor" class="btn btn-primary">Actualizar</button></div>
+            <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal" style="font-size:0.8rem;">Cancelar</button><button type="submit" form="formEditarProveedor" class="btn btn-primary" style="font-size:0.8rem;">Actualizar</button></div>
         </div>
     </div>
 </div>
@@ -564,9 +640,9 @@
 <div class="modal fade" id="modalVerProveedor" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content modal-content-radius">
-            <div class="modal-header-clean"><h5 class="modal-title"><i class="bi bi-eye-fill me-2"></i> Detalle del Proveedor</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body p-4" id="modalVerBodyProveedor"><div class="text-center py-4">Cargando...</div></div>
-            <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button></div>
+            <div class="modal-header-clean"><h5 class="modal-title" style="font-size:1rem;"><i class="bi bi-eye-fill me-2"></i> Detalle del Proveedor</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body p-3" id="modalVerBodyProveedor"><div class="text-center py-4">Cargando...</div></div>
+            <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal" style="font-size:0.8rem;">Cerrar</button></div>
         </div>
     </div>
 </div>
@@ -574,19 +650,19 @@
 <div class="modal fade" id="modalEliminarProveedor" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-danger text-white"><h5 class="modal-title"><i class="bi bi-trash-fill me-2"></i> Eliminar Proveedor</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-header bg-danger text-white"><h5 class="modal-title" style="font-size:1rem;"><i class="bi bi-trash-fill me-2"></i> Eliminar Proveedor</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
                 <input type="hidden" id="delete_id_proveedor">
                 <div class="text-center py-3">
-                    <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3rem;"></i>
-                    <p class="mt-3 fw-semibold">¿Está seguro que desea eliminar este proveedor?</p>
-                    <p class="text-muted small">Esta acción no se puede deshacer.</p>
+                    <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 2.5rem;"></i>
+                    <p class="mt-2 fw-semibold" style="font-size:0.9rem;">¿Está seguro que desea eliminar este proveedor?</p>
+                    <p class="text-muted small" style="font-size:0.75rem;">Esta acción no se puede deshacer.</p>
                     <div id="errorDetalle" class="alert alert-danger mt-3 small" style="display:none;"></div>
                 </div>
             </div>
             <div class="modal-footer justify-content-center">
-                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancelar</button>
-                <button type="button" class="btn btn-danger px-4" id="btnConfirmarEliminarProveedor"><i class="bi bi-trash me-1"></i> Eliminar</button>
+                <button type="button" class="btn btn-secondary px-3" data-bs-dismiss="modal" style="font-size:0.8rem;"><i class="bi bi-x-circle me-1"></i> Cancelar</button>
+                <button type="button" class="btn btn-danger px-3" id="btnConfirmarEliminarProveedor" style="font-size:0.8rem;"><i class="bi bi-trash me-1"></i> Eliminar</button>
             </div>
         </div>
     </div>
@@ -620,18 +696,11 @@
         }); 
     }
     
-    // 🔥 CORRECCIÓN 1: Función para formatear fecha CORRECTAMENTE
-    // Si el servidor devuelve la hora en UTC, mostramos la local (Perú UTC-5)
-    // Si el servidor devuelve la hora local, la mostramos tal cual sin restar
     function formatearFechaHoraCorta(fechaStr) {
         if(!fechaStr) return '—';
         try {
             let fecha = new Date(fechaStr);
             if (isNaN(fecha.getTime())) return '—';
-            
-            // Intentamos detectar si la fecha viene en UTC o local
-            // Simplemente mostramos la fecha como está, sin conversión adicional
-            // porque el servidor debería guardar la hora correcta de Perú
             const dia = fecha.getDate().toString().padStart(2, '0');
             const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
             const anio = fecha.getFullYear();
@@ -643,7 +712,6 @@
         }
     }
     
-    // Para el modal Ver - formato extendido
     function formatFechaGrande(fechaStr){
         if(!fechaStr) return 'No registrada';
         try {
@@ -700,7 +768,7 @@
     
     async function cargarProveedores(filtro={}){ 
         let tbody=document.getElementById('tbody-proveedores'); 
-        tbody.innerHTML='<tr><td colspan="11" class="text-center p-4"><div class="spinner-border spinner-border-sm text-secondary"></div> Cargando...<\/td></tr>'; 
+        tbody.innerHTML='<tr><td colspan="11" class="text-center p-4"><div class="spinner-border spinner-border-sm text-secondary"></div> Cargando...</td></tr>'; 
         try{ 
             let url='/api/proveedores/listar?'; 
             let params=new URLSearchParams(); 
@@ -710,11 +778,10 @@
             let json=await res.json(); 
             let proveedores=json.data||[]; 
             
-            // 🔥 CORRECCIÓN 2: Ordenar por ID descendente (los más nuevos primero)
             proveedores.sort((a, b) => (b.id || 0) - (a.id || 0));
             
             if(!proveedores.length){ 
-                tbody.innerHTML='<tr><td colspan="11" class="text-center">Sin proveedores registrados<\/td></td>'; 
+                tbody.innerHTML='<tr><td colspan="11" class="text-center">Sin proveedores registrados</td></tr>'; 
                 return; 
             } 
             tbody.innerHTML=proveedores.map((p, idx)=> {
@@ -749,7 +816,7 @@
             `}).join(''); 
         } catch(e){ 
             console.error('Error cargando proveedores:', e);
-            tbody.innerHTML='<tr><td colspan="11" class="text-danger">Error al cargar proveedores: ' + e.message + '<\/td></tr>'; 
+            tbody.innerHTML='<tr><td colspan="11" class="text-danger">Error al cargar proveedores: ' + e.message + '</td></tr>'; 
         } 
     }
     
@@ -774,17 +841,17 @@
                 <table class="detail-table">
                     <tr><th>Código Proveedor</th><td><span class="codigo-proveedor">${escapeHtml(p.codigo_proveedor || ('PROV-' + String(p.id).padStart(5,'0')))}</span></td></tr>
                     <tr><th>Razón Social</th><td><strong>${escapeHtml(p.razon_social || '-')}</strong></td></tr>
-                    <tr><th>Nombre Comercial</th><td>${escapeHtml(p.razon_comercial || '-')}<\/td></tr>
-                    <tr><th>RUC</th><td>${escapeHtml(p.ruc || '-')}<\/td></tr>
-                    <tr><th>Dirección Fiscal</th><td>${escapeHtml(p.direccion || '-')}<\/td></tr>
-                    <tr><th>Persona de Contacto</th><td>${escapeHtml(p.contacto || '-')}<\/td></tr>
-                    <tr><th>Teléfono</th><td>${escapeHtml(p.telefono || '-')}<\/td></tr>
-                    <tr><th>Email</th><td>${escapeHtml(p.email || '-')}<\/td></tr>
-                    <tr><th>Condición de Pago</th><td>${escapeHtml(condicionMostrada)}<\/td></tr>
-                    <tr><th>Banco</th><td>${escapeHtml(p.banco || '-')}<\/td></tr>
-                    <tr><th>Número de Cuenta</th><td>${escapeHtml(p.numero_cuenta || '-')}<\/td></tr>
-                    <tr><th>CCI</th><td>${escapeHtml(p.cci || '-')}<\/td></tr>
-                    <tr><th>Lugar de Recojo</th><td>${escapeHtml(p.lugar_recojo || '-')}<\/td></tr>
+                    <tr><th>Nombre Comercial</th><td>${escapeHtml(p.razon_comercial || '-')}</td></tr>
+                    <tr><th>RUC</th><td>${escapeHtml(p.ruc || '-')}</td></tr>
+                    <tr><th>Dirección Fiscal</th><td>${escapeHtml(p.direccion || '-')}</td></tr>
+                    <tr><th>Persona de Contacto</th><td>${escapeHtml(p.contacto || '-')}</td></tr>
+                    <tr><th>Teléfono</th><td>${escapeHtml(p.telefono || '-')}</td></tr>
+                    <tr><th>Email</th><td>${escapeHtml(p.email || '-')}</td></tr>
+                    <tr><th>Condición de Pago</th><td>${escapeHtml(condicionMostrada)}</td></tr>
+                    <tr><th>Banco</th><td>${escapeHtml(p.banco || '-')}</td></tr>
+                    <tr><th>Número de Cuenta</th><td>${escapeHtml(p.numero_cuenta || '-')}</td></tr>
+                    <tr><th>CCI</th><td>${escapeHtml(p.cci || '-')}</td></tr>
+                    <tr><th>Lugar de Recojo</th><td>${escapeHtml(p.lugar_recojo || '-')}</td></tr>
                 </table>`;
             modalBody.innerHTML = html;
             new bootstrap.Modal(document.getElementById('modalVerProveedor')).show();
