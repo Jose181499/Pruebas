@@ -205,6 +205,14 @@ async function cargarCotizaciones() {
 
         cotizacionesData = result.data || [];
         
+        // Ordenar: primero las aceptadas, luego las generadas, luego el resto
+        cotizacionesData.sort((a, b) => {
+            const orden = { 'Aceptada por Cliente': 0, 'aceptada': 0, 'Generada': 1, 'generada': 1 };
+            const ordenA = orden[a.estado] ?? 2;
+            const ordenB = orden[b.estado] ?? 2;
+            return ordenA - ordenB;
+        });
+        
         // 🆕 Cargar conteos de documentos vinculados
         await cargarConteoDocumentos(cotizacionesData);
         
@@ -767,7 +775,7 @@ function exportarPDF(id) {
 }
 
 // ===========================
-// ACEPTAR COTIZACIÓN
+// ACEPTAR COTIZACIÓN - MOVER AL PRINCIPIO
 // ===========================
 async function aceptarCotizacion(id, codigo) {
     const confirmar = confirm(`¿Estás seguro que la cotización ${codigo} está aceptada?\n\nYa llegó el comprobante y esta acción no se puede corregir.\n\n¿Deseas marcarla como ACEPTADA?`);
@@ -787,8 +795,27 @@ async function aceptarCotizacion(id, codigo) {
         const result = await response.json();
         
         if (result.success) {
+            // Actualizar el estado en los datos locales
+            const cotizacion = cotizacionesData.find(c => c.id === id);
+            if (cotizacion) {
+                cotizacion.estado = 'Aceptada por Cliente';
+            }
+            
+            // Reordenar: mover la cotización aceptada al principio
+            cotizacionesData.sort((a, b) => {
+                // Si 'a' es la cotización aceptada, va primero
+                if (a.id === id) return -1;
+                if (b.id === id) return 1;
+                // El resto mantiene orden: aceptadas, generadas, otros
+                const orden = { 'Aceptada por Cliente': 0, 'aceptada': 0, 'Generada': 1, 'generada': 1 };
+                const ordenA = orden[a.estado] ?? 2;
+                const ordenB = orden[b.estado] ?? 2;
+                return ordenA - ordenB;
+            });
+            
             mostrarNotificacion('✅ Cotización marcada como ACEPTADA correctamente', 'success');
-            await cargarCotizaciones();
+            actualizarEstadisticas();
+            renderizarTabla(cotizacionesData);
         } else {
             mostrarNotificacion('❌ Error al aceptar: ' + (result.error || 'Error desconocido'), 'danger');
         }
@@ -891,7 +918,7 @@ async function eliminarCotizacionConfirmado() {
 }
 
 // ===========================
-// ESTADO CON COLOR SEMÁFORO
+// ESTADO CON COLOR SEMÁFORO - VERSIÓN MEJORADA
 // ===========================
 function renderEstado(estado, esBorrador = false) {
     if (esBorrador) {
@@ -902,13 +929,13 @@ function renderEstado(estado, esBorrador = false) {
     if (texto === 'En Proceso') {
         clase = 'estado-en-proceso';
         texto = '⏳ En Proceso';
-    } else if (texto === 'Generada') {
+    } else if (texto === 'Generada' || texto === 'generada') {
         clase = 'estado-generada';
         texto = '📄 Generada';
-    } else if (texto === 'Aceptada por Cliente') {
+    } else if (texto === 'Aceptada por Cliente' || texto === 'aceptada') {
         clase = 'estado-aceptada';
         texto = '✅ Aceptada';
-    } else if (texto === 'Rechazada') {
+    } else if (texto === 'Rechazada' || texto === 'rechazada') {
         clase = 'estado-rechazada';
         texto = '❌ Rechazada';
     } else {
@@ -1153,7 +1180,7 @@ function getDocumentoColor(tipo) {
 }
 
 // ===========================
-// ESTILOS ADICIONALES PARA SEMÁFORO
+// ESTILOS ADICIONALES - CON COLORES MEJORADOS
 // ===========================
 const style = document.createElement('style');
 style.textContent = `
@@ -1177,26 +1204,33 @@ style.textContent = `
         display: inline-block;
     }
     
-    .estado-generada {
-        background: #DCFCE7;
-        color: #166534;
+    /* 🟢 VERDE INTENSO CHILLÓN para ACEPTADA */
+    .estado-aceptada {
+        background: #00FF00 !important;
+        color: #000000 !important;
         padding: 6px 14px;
         border-radius: 40px;
         font-size: 12px;
-        font-weight: 700;
+        font-weight: 900;
         text-align: center;
         display: inline-block;
+        box-shadow: 0 0 15px rgba(0, 255, 0, 0.6);
+        text-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
+        border: 1px solid #00CC00;
     }
     
-    .estado-aceptada {
-        background: #D1FAE5;
-        color: #065F46;
+    /* 🔵 AZUL FUERTE para GENERADA */
+    .estado-generada {
+        background: #0055FF !important;
+        color: #FFFFFF !important;
         padding: 6px 14px;
         border-radius: 40px;
         font-size: 12px;
         font-weight: 700;
         text-align: center;
         display: inline-block;
+        box-shadow: 0 0 12px rgba(0, 85, 255, 0.4);
+        border: 1px solid #0044CC;
     }
     
     .estado-rechazada {
