@@ -196,6 +196,7 @@ def generar_pdf_guia(guia_data):
     
     .info-destinatario {
         border: 1px solid #ccc;
+        border-radius: 8px;
         padding: 6px 10px;
         margin-bottom: 6px;
         background: #f9f9f9;
@@ -218,6 +219,7 @@ def generar_pdf_guia(guia_data):
     
     .datos-traslado {
         border: 1px solid #ccc;
+        border-radius: 8px;
         padding: 6px 10px;
         margin-bottom: 6px;
         background: #f9f9f9;
@@ -242,6 +244,7 @@ def generar_pdf_guia(guia_data):
     
     .datos-ruta {
         border: 1px solid #ccc;
+        border-radius: 8px;
         padding: 6px 10px;
         margin-bottom: 6px;
         background: #f9f9f9;
@@ -264,6 +267,7 @@ def generar_pdf_guia(guia_data):
     
     .datos-transporte {
         border: 2px solid #333;
+        border-radius: 8px;
         padding: 8px 12px;
         margin-bottom: 6px;
         background: #f5f5f5;
@@ -289,6 +293,8 @@ def generar_pdf_guia(guia_data):
         border-collapse: collapse;
         margin: 4px 0;
         font-size: 8.5px;
+        border-radius: 8px;
+        overflow: hidden;
     }
     
     .products-table th {
@@ -322,19 +328,26 @@ def generar_pdf_guia(guia_data):
         background: #f9f9f9;
     }
     
+    .products-table th:first-child {
+        border-top-left-radius: 8px;
+    }
+    
+    .products-table th:last-child {
+        border-top-right-radius: 8px;
+    }
+    
     .referencias {
         margin-top: 6px;
         padding: 5px 10px;
         border: 1px solid #ccc;
+        border-radius: 8px;
         background: #f9f9f9;
         font-size: 8.5px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 5px 20px;
     }
     
     .referencias .ref-item {
         display: inline-block;
+        margin-right: 15px;
     }
     
     .referencias .label {
@@ -345,6 +358,7 @@ def generar_pdf_guia(guia_data):
         margin-top: 8px;
         padding: 5px 10px;
         border: 1px solid #ccc;
+        border-radius: 8px;
         background: #f9f9f9;
         font-size: 8.5px;
     }
@@ -358,6 +372,7 @@ def generar_pdf_guia(guia_data):
         margin: 8px 0 5px 0;
         padding: 6px;
         border: 1px solid #ddd;
+        border-radius: 8px;
         background: #fafafa;
     }
     
@@ -636,27 +651,23 @@ def renderizar_html_guia(guia_data):
             <table class="products-table">
                 <thead>
                     <tr>
-                        <th style="width:5%">NRO</th>
-                        <th style="width:5%">ITEM</th>
-                        <th style="width:10%">CODIGO</th>
+                        <th style="width:8%">ITEM</th>
+                        <th style="width:12%">CODIGO</th>
                         <th style="width:10%">BR</th>
-                        <th style="width:27%">PRODUCTO</th>
-                        <th style="width:8%">U/M</th>
-                        <th style="width:10%">CANTIDAD</th>
-                        <th style="width:25%">#</th>
+                        <th style="width:30%">PRODUCTO</th>
+                        <th style="width:10%">U/M</th>
+                        <th style="width:12%">CANTIDAD</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in items %}
                     <tr>
-                        <td>{{ loop.index }}</td>
-                        <td>{{ item.item or '' }}</td>
+                        <td>{{ item.item or loop.index }}</td>
                         <td>{{ item.codigo or '-' }}</td>
                         <td>{{ item.br or '' }}</td>
                         <td class="descripcion">{{ item.descripcion }}</td>
                         <td>{{ item.unidad or 'NIU' }}</td>
                         <td>{{ '%.1f'|format(item.cantidad|float) if item.cantidad else '0.0' }}</td>
-                        <td class="series">{{ item.series or '' }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -665,10 +676,10 @@ def renderizar_html_guia(guia_data):
         
         <!-- REFERENCIAS -->
         <div class="referencias">
-            <span class="ref-item"><span class="label">REFERENCIAS:</span></span>
-            <span class="ref-item"><span class="label">NRO DE COTIZACION:</span> {{ nro_cotizacion or '' }}</span>
-            <span class="ref-item"><span class="label">PEDIDO DE COMPRA CLIENTE:</span> {{ pedido_compra_cliente or '' }}</span>
-            <span class="ref-item"><span class="label">NRO DE FACTURA:</span> {{ nro_factura or '' }}</span>
+            <div><span class="label">REFERENCIAS:</span></div>
+            <div><span class="label">NRO DE COTIZACION:</span> {{ nro_cotizacion or '' }}</div>
+            <div><span class="label">PEDIDO DE COMPRA CLIENTE:</span> {{ pedido_compra_cliente or '' }}</div>
+            <div><span class="label">NRO DE FACTURA:</span> {{ nro_factura or '' }}</div>
         </div>
         
         <!-- OBSERVACIONES -->
