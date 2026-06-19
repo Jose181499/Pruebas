@@ -636,6 +636,44 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // ==========================================
+        // MAPA DE MOTIVOS DE TRASLADO
+        // ==========================================
+        const MOTIVOS_TRASLADO = {
+            '01': '01 - Venta',
+            '02': '02 - Compra',
+            '03': '03 - Traslado entre establecimientos',
+            '04': '04 - Consignación',
+            '05': '05 - Devolución',
+            '06': '06 - Exportación',
+            '07': '07 - Importación',
+            '08': '08 - Donación',
+            '09': '09 - Traslado por cuenta de terceros',
+            '10': '10 - Traslado para transformación',
+            '11': '11 - Traslado por reparación',
+            '12': '12 - Traslado por garantía',
+            '13': '13 - Traslado por consignación para venta',
+            '14': '14 - Traslado por consignación para transformación',
+            '15': '15 - Traslado por consignación para reparación',
+            '16': '16 - Traslado por devolución de consignación',
+            '17': '17 - Traslado por permuta',
+            '18': '18 - Traslado por comodato',
+            '19': '19 - Traslado por arrendamiento',
+            '20': '20 - Traslado por anticipo de venta',
+            '21': '21 - Traslado por anticipo de compra',
+            '22': '22 - Traslado por maquila',
+            '23': '23 - Traslado por consignación para maquila',
+            '24': '24 - Traslado por devolución de maquila',
+            '25': '25 - Traslado por consignación para venta a plazo',
+            '26': '26 - Traslado por consignación para venta al contado',
+            '27': '27 - Traslado por consignación para venta con anticipo',
+            '28': '28 - Traslado por consignación para venta con reserva de dominio'
+        };
+
+        function getMotivoTexto(codigo) {
+            return MOTIVOS_TRASLADO[codigo] || codigo || '-';
+        }
+
         // Variables globales
         let todasGuias = [];
         let guiaActualId = null;
@@ -839,7 +877,7 @@
         }
         
         // ==========================================
-        // VER GUÍA (MODAL) - Tabla con 5 columnas
+        // VER GUÍA (MODAL) - Con motivo en texto
         // ==========================================
         window.verGuia = async function(id) {
             guiaActualId = id;
@@ -891,7 +929,8 @@
                     
                     const pesoTotal = parseFloat(g.peso_total) || 0;
                     const fechaCreacionDetalle = formatFechaHora(g.created_at);
-                    const motivoTexto = g.motivo_traslado || '-';
+                    // Motivo en texto
+                    const motivoTexto = getMotivoTexto(g.motivo_traslado);
                     
                     modalBody.innerHTML = `
                         <!-- GRID DE TARJETAS -->
@@ -1192,7 +1231,7 @@
         });
         
         // ==========================================
-        // EXPORTAR A EXCEL - TODOS LOS CAMPOS
+        // EXPORTAR A EXCEL - Todos los campos
         // ==========================================
         document.getElementById('btnExportarExcel')?.addEventListener('click', function() {
             const guias = guiasFiltradasActuales || todasGuias;
@@ -1205,13 +1244,11 @@
             // Construir el archivo CSV con todos los campos
             let csv = '\uFEFF'; // BOM para UTF-8
             
-            // Encabezados - TODOS los campos del crear guía
+            // Encabezados - TODOS los campos del crear guía (sin datos de remitente)
             const headers = [
                 // Datos generales
                 'N° Guía', 'Serie', 'Número', 'Estado SUNAT', 'Fecha Creación',
-                // Remitente
-                'RUC Remitente', 'Razón Social Remitente', 'Dirección Remitente', 'Ubigeo Remitente',
-                // Destinatario
+                // Destinatario (solo lo necesario)
                 'RUC Destinatario', 'Razón Social Destinatario', 'Dirección Destinatario', 'Ubigeo Destinatario',
                 'Orden Compra Cliente', 'Documento Asociado', 'Factura',
                 // Vehículo
@@ -1232,17 +1269,15 @@
                 const descripciones = items.map(item => `${item.cantidad || 0}x ${item.descripcion || ''} (${item.codigo || ''})`).join(' | ');
                 const totalItems = items.reduce((sum, item) => sum + (parseFloat(item.cantidad) || 0), 0);
                 
+                // Motivo en texto
+                const motivoTexto = getMotivoTexto(guia.motivo_traslado);
+                
                 const row = [
                     `${guia.serie || 'T001'}-${guia.numero || '?'}`,
                     guia.serie || 'T001',
                     guia.numero || '?',
                     guia.estado_sunat || 'BORRADOR',
                     formatFechaHora(guia.created_at),
-                    // Remitente
-                    guia.ruc_remitente || '',
-                    guia.remitente_nombre || '',
-                    guia.remitente_direccion || '',
-                    guia.ubigeo_remitente || '',
                     // Destinatario
                     guia.ruc_destinatario || '',
                     guia.destinatario_nombre || '',
@@ -1261,7 +1296,7 @@
                     guia.transportista_ruc || '',
                     guia.transportista_nombre || '',
                     // Traslado
-                    guia.motivo_traslado || '',
+                    motivoTexto,
                     formatFecha(guia.fecha_emision),
                     formatFecha(guia.fecha_traslado),
                     parseFloat(guia.peso_total || 0).toFixed(2),
