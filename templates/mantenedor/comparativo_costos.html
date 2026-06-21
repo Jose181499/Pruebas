@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KCF | Comparativo costos por producto</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #f0f4f8; }
+        .kcf-sidebar {
+            position: fixed; top: 0; left: 0; bottom: 0; width: 280px;
+            background: linear-gradient(180deg, #0a2b3c 0%, #07212e 100%);
+            color: #e2edf2; z-index: 1035; transition: 0.2s; overflow-y: auto;
+        }
+        .sidebar-brand { padding: 1.6rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .sidebar-brand h3 { font-weight: 700; font-size: 1.6rem; color: white; }
+        .sidebar-brand .logo-icon { display: inline-block; width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #0b67f2, #14b8a6); margin-right: 10px; vertical-align: middle; }
+        .sidebar-brand span { font-size: 0.7rem; opacity: 0.7; display: block; margin-top: 6px; }
+        .nav-sidebar-custom { list-style: none; padding: 0 1rem; }
+        .nav-sidebar-custom li { margin-bottom: 0.5rem; }
+        .nav-sidebar-custom a { display: flex; align-items: center; gap: 14px; padding: 0.7rem 1rem; border-radius: 14px; color: #cbdbe2; text-decoration: none; font-weight: 500; transition: 0.2s; }
+        .nav-sidebar-custom a i { font-size: 1.35rem; width: 28px; }
+        .nav-sidebar-custom a:hover { background: rgba(255,255,255,0.1); color: white; }
+        .nav-sidebar-custom .active-link { background: #2c7da0; color: white; box-shadow: 0 6px 12px rgba(0,0,0,0.2); }
+        .sidebar-footer { position: sticky; bottom: 0; padding: 1rem 1.8rem; border-top: 1px solid rgba(255,255,255,0.08); font-size: 0.8rem; background: #0a2b3c; }
+
+        .main-dashboard { margin-left: 280px; padding: 1.8rem 2rem; min-height: 100vh; }
+        .card-custom { background: white; border-radius: 24px; box-shadow: 0 8px 30px rgba(0,0,0,0.05); padding: 1.8rem; border: 1px solid #e9edf4; }
+
+        .winner-row { background: #f0fdf4 !important; }
+        .winner-row td { border-bottom-color: #bbf7d0 !important; }
+        .evaluar-row { background: #fffbeb !important; }
+        .perdedor-row { background: #fef2f2 !important; }
+
+        .status-badge {
+            padding: 4px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 5px;
+        }
+        .status-badge.winner { background: #dcfce7; color: #16a34a; }
+        .status-badge.evaluar { background: #fef3c7; color: #d97706; }
+        .status-badge.perdedor { background: #fee2e2; color: #dc2626; }
+
+        .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1034; }
+        .sidebar-overlay.show { display: block; }
+        .hamburger-btn { display: none; background: none; border: none; font-size: 1.5rem; color: #0b1b33; padding: 8px 12px; border-radius: 12px; }
+        .hamburger-btn:hover { background: #f1f5f9; }
+
+        @media (max-width: 992px) {
+            .kcf-sidebar { transform: translateX(-100%); width: 280px; }
+            .kcf-sidebar.open { transform: translateX(0); }
+            .main-dashboard { margin-left: 0; }
+            .hamburger-btn { display: flex !important; }
+        }
+        @media (max-width: 576px) {
+            .main-dashboard { padding: 1rem; }
+            .card-custom { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== SIDEBAR ===== -->
+    <div class="kcf-sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <h3><span class="logo-icon"></span> KCF CORP</h3>
+            <span>Sistema Integrado de Gestión</span>
+        </div>
+        <ul class="nav-sidebar-custom">
+            <li><a href="{{ url_for('mantenedor_productos.insertar_producto') }}"><i class="bi bi-box-seam-fill"></i> <span>Nuevo Producto</span></a></li>
+            <li><a href="{{ url_for('mantenedor_productos.listar_productos') }}"><i class="bi bi-grid-1x2-fill"></i> <span>Panel Productos</span></a></li>
+            <li><a href="#" id="sidebarKardexLink"><i class="bi bi-journal-bookmark-fill"></i> <span>Kárdex & Movimientos</span></a></li>
+            <li><a href="{{ url_for('mantenedor_productos.comparativo_costos') }}" class="active-link"><i class="bi bi-bar-chart-fill"></i> <span>Comparativo Costos</span></a></li>
+            <li><a href="{{ url_for('mantenedor_productos.base_datos_productos') }}"><i class="bi bi-database-fill"></i> <span>Base de Datos</span></a></li>
+            <li><a href="{{ url_for('mantenedor_productos.gestionar_productos') }}"><i class="bi bi-arrow-return-left"></i> <span>Volver al Panel</span></a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <div><i class="bi bi-person-circle me-2"></i> <strong>Admin KCF</strong></div>
+            <div class="small opacity-50 mt-1">Acceso corporativo</div>
+        </div>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- ===== MAIN ===== -->
+    <div class="main-dashboard">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+            <div class="d-flex align-items-center gap-3">
+                <button class="hamburger-btn" id="hamburgerBtn"><i class="bi bi-list"></i></button>
+                <div>
+                    <h1 class="fw-bold mb-1" style="color: #0b2b3c;"><i class="bi bi-bar-chart-fill text-primary me-2"></i>Comparativo Costos</h1>
+                    <p class="text-secondary m-0">Comparativa de cotizaciones por producto</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Selector de producto -->
+        <div class="card-custom mb-4">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold small text-uppercase">Seleccionar producto</label>
+                    <select id="productoSelect" class="form-select">
+                        <option value="">-- Seleccionar producto --</option>
+                        {% for p in productos %}
+                        <option value="{{ p.id }}">{{ p.codigo }} - {{ p.descripcion }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-primary w-100" id="btnCargarComparativo">
+                        <i class="bi bi-search me-1"></i> Cargar comparativo
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-success w-100" id="btnCalcularGanador">
+                        <i class="bi bi-trophy me-1"></i> Calcular ganador
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumen -->
+        <div class="card-custom mb-4" id="resumenCard" style="display:none;">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="bg-light rounded-3 p-3 text-center">
+                        <small class="text-muted text-uppercase">Proveedores</small>
+                        <h3 class="mb-0" id="totalProveedores">0</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="bg-success bg-opacity-10 rounded-3 p-3 text-center">
+                        <small class="text-muted text-uppercase">Mejor costo</small>
+                        <h3 class="mb-0 text-success" id="mejorCosto">S/ 0.00</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="bg-warning bg-opacity-10 rounded-3 p-3 text-center">
+                        <small class="text-muted text-uppercase">Menor tiempo</small>
+                        <h3 class="mb-0 text-warning" id="menorTiempo">0 días</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="bg-primary bg-opacity-10 rounded-3 p-3 text-center">
+                        <small class="text-muted text-uppercase">Ganador</small>
+                        <h3 class="mb-0 text-primary" id="proveedorGanador">-</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla -->
+        <div class="card-custom" id="tablaCard" style="display:none;">
+            <div class="table-responsive">
+                <table class="table table-hover" id="tablaComparativo">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Proveedor</th>
+                            <th>Cantidad</th>
+                            <th>Costo Unitario</th>
+                            <th>Costo Total</th>
+                            <th>Precio Venta</th>
+                            <th>Tiempo</th>
+                            <th>Transporte</th>
+                            <th>Lugar</th>
+                            <th>Estatus</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyComparativo"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Sidebar toggle
+            $('#hamburgerBtn').click(function() {
+                $('#sidebar').toggleClass('open');
+                $('#sidebarOverlay').toggleClass('show');
+            });
+            $('#sidebarOverlay').click(function() {
+                $('#sidebar').removeClass('open');
+                $('#sidebarOverlay').removeClass('show');
+            });
+
+            // Datos de ejemplo para el comparativo
+            const datosComparativo = {
+                '1': [
+                    { proveedor: 'GOALSA', cantidad: 50, costo: 18.20, venta: 45.00, tiempo: 2, transporte: 25.00, lugar: 'Recojo', estatus: 'winner' },
+                    { proveedor: 'TAILOY SAC', cantidad: 50, costo: 18.80, venta: 45.00, tiempo: 3, transporte: 20.00, lugar: 'Almacén SMP', estatus: 'evaluar' },
+                    { proveedor: 'COBIRAM', cantidad: 50, costo: 19.50, venta: 45.00, tiempo: 5, transporte: 30.00, lugar: 'Almacén Lima', estatus: 'perdedor' },
+                    { proveedor: 'PLAZA VEA', cantidad: 50, costo: 20.10, venta: 45.00, tiempo: 7, transporte: 40.00, lugar: 'Almacén Lima', estatus: 'perdedor' }
+                ]
+            };
+
+            $('#btnCargarComparativo').click(function() {
+                const id = $('#productoSelect').val();
+                if (!id) {
+                    alert('Seleccione un producto');
+                    return;
+                }
+
+                const datos = datosComparativo[id];
+                if (!datos) {
+                    alert('No hay datos para este producto');
+                    return;
+                }
+
+                const tbody = $('#tbodyComparativo');
+                tbody.empty();
+
+                let mejorCosto = Infinity;
+                let menorTiempo = Infinity;
+                let ganador = '';
+
+                datos.forEach((item, idx) => {
+                    const costoTotal = item.cantidad * item.costo;
+                    const rowClass = item.estatus === 'winner' ? 'winner-row' : 
+                                    item.estatus === 'evaluar' ? 'evaluar-row' : 'perdedor-row';
+                    
+                    if (item.costo < mejorCosto) {
+                        mejorCosto = item.costo;
+                        ganador = item.proveedor;
+                    }
+                    if (item.tiempo < menorTiempo) {
+                        menorTiempo = item.tiempo;
+                    }
+
+                    const statusLabel = {
+                        'winner': '🏆 Ganador',
+                        'evaluar': '📋 Evaluar',
+                        'perdedor': '❌ Perdedor'
+                    };
+
+                    tbody.append(`
+                        <tr class="${rowClass}">
+                            <td>${idx + 1}</td>
+                            <td><strong>${item.proveedor}</strong></td>
+                            <td>${item.cantidad}</td>
+                            <td>S/ ${item.costo.toFixed(2)}</td>
+                            <td>S/ ${costoTotal.toFixed(2)}</td>
+                            <td>S/ ${item.venta.toFixed(2)}</td>
+                            <td>${item.tiempo} días</td>
+                            <td>S/ ${item.transporte.toFixed(2)}</td>
+                            <td>${item.lugar}</td>
+                            <td><span class="status-badge ${item.estatus}">${statusLabel[item.estatus]}</span></td>
+                        </tr>
+                    `);
+                });
+
+                $('#totalProveedores').text(datos.length);
+                $('#mejorCosto').text('S/ ' + mejorCosto.toFixed(2));
+                $('#menorTiempo').text(menorTiempo + ' días');
+                $('#proveedorGanador').text(ganador);
+
+                $('#resumenCard').show();
+                $('#tablaCard').show();
+            });
+
+            $('#btnCalcularGanador').click(function() {
+                const id = $('#productoSelect').val();
+                if (!id) {
+                    alert('Seleccione un producto');
+                    return;
+                }
+                // Recalcular ganador
+                $('#btnCargarComparativo').click();
+                alert('🏆 Ganador calculado: ' + $('#proveedorGanador').text());
+            });
+
+            $('#sidebarKardexLink').click(function(e) {
+                e.preventDefault();
+                window.location.href = '/mantenedor/productos/kardex';
+            });
+        });
+    </script>
+</body>
+</html>

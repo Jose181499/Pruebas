@@ -8,7 +8,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
-    <!-- Google Fonts: Inter para look corporativo -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* ====== RESET & GLOBAL ====== */
@@ -20,7 +19,8 @@
             margin: 0;
             overflow-x: hidden;
         }
-        /* ====== SIDEBAR CORPORATIVO ====== */
+        
+        /* ====== SIDEBAR CORPORATIVO MEJORADO ====== */
         .kcf-sidebar {
             position: fixed;
             top: 0;
@@ -32,6 +32,7 @@
             z-index: 1035;
             transition: all 0.2s ease;
             box-shadow: 6px 0 18px rgba(0,0,0,0.05);
+            overflow-y: auto;
         }
         .sidebar-brand {
             padding: 1.6rem 1.5rem;
@@ -44,6 +45,16 @@
             letter-spacing: -0.3px;
             margin: 0;
             color: white;
+        }
+        .sidebar-brand .logo-icon {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #0b67f2, #14b8a6);
+            margin-right: 10px;
+            vertical-align: middle;
+            box-shadow: inset 0 0 0 2px rgba(255,255,255,0.15);
         }
         .sidebar-brand span {
             font-size: 0.7rem;
@@ -82,22 +93,33 @@
             color: white;
             box-shadow: 0 6px 12px rgba(0,0,0,0.2);
         }
+        .nav-sidebar-custom .badge-sidebar {
+            margin-left: auto;
+            background: rgba(255,255,255,0.15);
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+        }
         .sidebar-footer {
-            position: absolute;
-            bottom: 20px;
+            position: sticky;
+            bottom: 0;
             left: 0;
             right: 0;
             padding: 1rem 1.8rem;
             border-top: 1px solid rgba(255,255,255,0.08);
             font-size: 0.8rem;
+            background: #0a2b3c;
         }
+
         /* ====== MAIN CONTENT ====== */
         .main-dashboard {
             margin-left: 280px;
             padding: 1.8rem 2rem;
             transition: 0.2s;
+            min-height: 100vh;
         }
-        /* ====== TARJETA DEL NUEVO PRODUCTO ====== */
+
+        /* ====== TARJETA DEL NUEVO PRODUCTO MEJORADA ====== */
         .product-card {
             max-width: 1200px;
             margin: 0 auto;
@@ -122,6 +144,7 @@
             border-bottom: 1px solid #e9edf4;
             padding-bottom: 0.75rem;
         }
+
         /* foto + tipos de operación (dos columnas) */
         .top-grid {
             display: grid;
@@ -129,7 +152,8 @@
             gap: 1.8rem;
             margin-bottom: 2rem;
         }
-        /* foto upload */
+
+        /* foto upload mejorado */
         .photo-upload {
             background: #f8faff;
             border: 1.5px dashed #cbd5e1;
@@ -173,6 +197,18 @@
             margin-top: 8px;
             display: inline-block;
         }
+        .photo-upload .preview-image {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 12px;
+            margin-top: 8px;
+            object-fit: contain;
+        }
+        .photo-upload.has-image {
+            border-color: #2563eb;
+            background: #f0f7ff;
+        }
+
         /* operación: venta, compra, inventariable */
         .operation-group {
             background: #f8faff;
@@ -191,6 +227,13 @@
             align-items: flex-start;
             gap: 10px;
             margin-bottom: 14px;
+            padding: 8px 12px;
+            border-radius: 12px;
+            transition: 0.15s;
+            cursor: pointer;
+        }
+        .op-item:hover {
+            background: rgba(37, 99, 235, 0.05);
         }
         .op-item:last-child {
             margin-bottom: 0;
@@ -201,6 +244,7 @@
             width: 17px;
             height: 17px;
             flex-shrink: 0;
+            cursor: pointer;
         }
         .op-item .op-title {
             font-weight: 600;
@@ -217,6 +261,7 @@
             border-top: 1px solid #e9edf4;
             margin: 1.8rem 0;
         }
+
         /* información del producto (grid) */
         .info-grid {
             display: grid;
@@ -239,6 +284,10 @@
             letter-spacing: 0.2px;
             text-transform: uppercase;
         }
+        .field-group label .required {
+            color: #dc2626;
+            margin-left: 2px;
+        }
         .field-group .value-static {
             background: #f1f5f9;
             padding: 6px 12px;
@@ -249,6 +298,14 @@
             display: inline-block;
             width: fit-content;
             min-width: 120px;
+        }
+        .field-group .value-static .badge-auto {
+            font-size: 0.6rem;
+            background: #2563eb;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 20px;
+            margin-left: 8px;
         }
         .field-group input,
         .field-group select,
@@ -283,6 +340,7 @@
             color: #6c7f9e;
             margin-top: 2px;
         }
+
         /* precios (grid especial) */
         .prices-grid {
             display: grid;
@@ -309,6 +367,11 @@
             border: 1px solid #dce1ec;
             border-radius: 14px;
             padding: 4px 12px 4px 16px;
+            transition: 0.15s;
+        }
+        .price-item .price-input-wrap:focus-within {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
         }
         .price-item .price-input-wrap span {
             font-weight: 500;
@@ -333,6 +396,99 @@
             color: #6c7f9e;
             margin-top: 4px;
         }
+
+        /* Margen de ganancia */
+        .margin-display {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+            background: #fafcff;
+            padding: 0.8rem 1.5rem 1.5rem;
+            border-radius: 20px;
+        }
+        .margin-item {
+            padding: 10px 16px;
+            background: white;
+            border-radius: 14px;
+            border: 1px solid #e9edf4;
+            text-align: center;
+        }
+        .margin-item .label {
+            font-size: 0.75rem;
+            color: #6c7f9e;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        .margin-item .value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #0b1b33;
+            margin-top: 4px;
+        }
+        .margin-item .value.positive {
+            color: #16a34a;
+        }
+        .margin-item .value.negative {
+            color: #dc2626;
+        }
+
+        /* Estado disponible */
+        .state-section {
+            margin-top: 1.5rem;
+        }
+        .state-select-wrap {
+            background: #fafcff;
+            padding: 1.2rem 1.5rem;
+            border-radius: 20px;
+            border: 1px solid #e9edf4;
+        }
+        .state-select-wrap select {
+            border: 1px solid #dce1ec;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-weight: 500;
+            width: 100%;
+            background: white;
+            color: #0b1b33;
+        }
+        .state-select-wrap select:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+        .state-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.8rem;
+        }
+        .state-chip {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .state-chip .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .state-chip.active { background: #eaf9f0; color: #16a34a; }
+        .state-chip.active .dot { background: #16a34a; }
+        .state-chip.inactive { background: #f1f5f9; color: #64748b; }
+        .state-chip.inactive .dot { background: #94a3b8; }
+        .state-chip.pending { background: #fff4dc; color: #f59e0b; }
+        .state-chip.pending .dot { background: #f59e0b; }
+        .state-chip.available { background: #eaf2ff; color: #2563eb; }
+        .state-chip.available .dot { background: #2563eb; }
+        .state-chip.blocked { background: #fef2f2; color: #dc2626; }
+        .state-chip.blocked .dot { background: #dc2626; }
+
         /* acciones */
         .actions {
             display: flex;
@@ -369,14 +525,84 @@
             transform: scale(0.98);
             color: white;
         }
+        .btn-success-custom {
+            background: #16a34a;
+            color: white;
+            border: none;
+            box-shadow: 0 4px 8px rgba(22, 163, 74, 0.2);
+        }
+        .btn-success-custom:hover {
+            background: #15803d;
+            transform: scale(0.98);
+            color: white;
+        }
+
+        /* Notificaciones */
+        .notificacion {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 9999;
+            min-width: 320px;
+            max-width: 450px;
+            animation: slideIn 0.3s ease;
+            border-radius: 20px;
+            padding: 16px 20px;
+            background: white;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            border: 1px solid #e9edf4;
+        }
+        .notificacion .icon {
+            font-size: 1.5rem;
+            margin-right: 12px;
+        }
+        .notificacion .title {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .notificacion .message {
+            font-size: 0.85rem;
+            color: #5e6f8d;
+            margin-top: 2px;
+        }
+        .notificacion .close-noti {
+            cursor: pointer;
+            opacity: 0.5;
+            transition: 0.15s;
+            font-size: 1.2rem;
+            margin-left: auto;
+            background: none;
+            border: none;
+            padding: 0 8px;
+        }
+        .notificacion .close-noti:hover {
+            opacity: 1;
+        }
+        .notificacion.success { border-left: 4px solid #16a34a; }
+        .notificacion.error { border-left: 4px solid #dc2626; }
+        .notificacion.warning { border-left: 4px solid #f59e0b; }
+        .notificacion.info { border-left: 4px solid #2563eb; }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
 
         /* Responsive */
-        @media (max-width: 768px) {
-            .kcf-sidebar { transform: translateX(-100%); width: 260px; }
+        @media (max-width: 992px) {
+            .kcf-sidebar { transform: translateX(-100%); width: 280px; }
+            .kcf-sidebar.open { transform: translateX(0); }
             .main-dashboard { margin-left: 0; }
             .top-grid, .info-grid, .prices-grid {
                 grid-template-columns: 1fr;
                 gap: 1rem;
+            }
+            .margin-display {
+                grid-template-columns: 1fr;
             }
             .product-card {
                 padding: 1.5rem;
@@ -388,51 +614,58 @@
                 flex: 1;
                 justify-content: center;
             }
+            .hamburger-btn {
+                display: flex !important;
+            }
+        }
+        @media (max-width: 576px) {
+            .main-dashboard { padding: 1rem; }
+            .product-card { padding: 1rem; }
+            .notificacion { min-width: auto; right: 12px; left: 12px; top: 12px; }
         }
 
-        /* Notificaciones */
-        .notificacion {
+        .hamburger-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #0b1b33;
+            padding: 8px 12px;
+            border-radius: 12px;
+            transition: 0.15s;
+        }
+        .hamburger-btn:hover {
+            background: #f1f5f9;
+        }
+        .sidebar-overlay {
+            display: none;
             position: fixed;
-            top: 24px;
-            right: 24px;
-            z-index: 9999;
-            min-width: 300px;
-            animation: slideIn 0.3s ease;
-            border-radius: 20px;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 1034;
         }
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+        .sidebar-overlay.show {
+            display: block;
         }
-        @keyframes slideOut {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
-        }
-        .loading-spinner {
-            display: inline-block;
-            width: 1rem;
-            height: 1rem;
-            border: 2px solid rgba(0,0,0,0.1);
-            border-radius: 50%;
-            border-top-color: #2c7da0;
-            animation: spin 0.6s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
     <!-- ===== SIDEBAR LATERAL CORPORATIVO ===== -->
-    <div class="kcf-sidebar">
+    <div class="kcf-sidebar" id="sidebar">
         <div class="sidebar-brand">
-            <h3><i class="bi bi-briefcase-fill me-2"></i> KCF CORP</h3>
+            <h3>
+                <span class="logo-icon"></span> KCF CORP
+            </h3>
             <span>Sistema Integrado de Gestión</span>
         </div>
         <ul class="nav-sidebar-custom">
             <li><a href="#" class="active-link"><i class="bi bi-box-seam-fill"></i> <span>Nuevo Producto</span></a></li>
-            <li><a href="#" id="sidebarDashboardLink"><i class="bi bi-grid-1x2-fill"></i> <span>Panel Productos</span></a></li>
+            <li><a href="#" id="sidebarDashboardLink"><i class="bi bi-grid-1x2-fill"></i> <span>Panel Productos</span> <span class="badge-sidebar">245</span></a></li>
             <li><a href="#" id="sidebarKardexLink"><i class="bi bi-journal-bookmark-fill"></i> <span>Kárdex & Movimientos</span></a></li>
-            <li><a href="/mantenedor" id="volverPanelLink"><i class="bi bi-arrow-return-left"></i> <span>Volver al Panel</span></a></li>
+            <li><a href="#" id="sidebarComparativoLink"><i class="bi bi-bar-chart-fill"></i> <span>Comparativo Costos</span></a></li>
+            <li><a href="#" id="sidebarBaseDatosLink"><i class="bi bi-database-fill"></i> <span>Base de Datos</span></a></li>
+            <li><a href="#" id="volverPanelLink"><i class="bi bi-arrow-return-left"></i> <span>Volver al Panel</span></a></li>
         </ul>
         <div class="sidebar-footer">
             <div><i class="bi bi-person-circle me-2"></i> <strong id="usuarioSidebar">Admin KCF</strong></div>
@@ -440,50 +673,59 @@
         </div>
     </div>
 
+    <!-- ===== OVERLAY PARA MOBILE ===== -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <!-- ===== CONTENIDO PRINCIPAL ===== -->
     <div class="main-dashboard">
-        <!-- Header -->
+        <!-- Header con hamburguesa -->
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-            <div>
-                <h1 class="fw-bold mb-1" style="color: #0b2b3c;"><i class="bi bi-plus-circle text-primary me-2"></i>Nuevo Producto</h1>
-                <p class="text-secondary m-0">Crea o edita la información principal del producto.</p>
+            <div class="d-flex align-items-center gap-3">
+                <button class="hamburger-btn" id="hamburgerBtn" aria-label="Abrir menú">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div>
+                    <h1 class="fw-bold mb-1" style="color: #0b2b3c;"><i class="bi bi-plus-circle text-primary me-2"></i>Nuevo Producto</h1>
+                    <p class="text-secondary m-0">Crea o edita la información principal del producto.</p>
+                </div>
             </div>
             <div class="d-flex gap-2">
-                <a href="/mantenedor" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Volver al Panel</a>
+                <a href="#" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Volver al Panel</a>
             </div>
         </div>
 
         <!-- ===== TARJETA NUEVO PRODUCTO (DISEÑO SOLICITADO) ===== -->
-        <div class="product-card">
+        <div class="product-card" id="productCard">
             <!-- Foto + Tipo operación -->
             <div class="top-grid">
                 <!-- Foto -->
                 <div class="photo-upload" id="photoUploadArea">
                     <i class="bi bi-cloud-upload"></i>
                     <div class="drag-text">Arrastra o selecciona PNG, JPG o WEBP</div>
-                    <div class="drag-hint">Mix. SMB</div>
+                    <div class="drag-hint">Máx. 5MB</div>
                     <div class="file-badge" id="fileBadge">📎 Ningún archivo</div>
+                    <div id="previewContainer"></div>
                     <input type="file" id="fileInput" accept=".png,.jpg,.jpeg,.webp" style="display: none;">
                 </div>
 
                 <!-- Operación -->
                 <div class="operation-group">
-                    <span class="label">Típo de operación</span>
-                    <div class="op-item">
+                    <span class="label">Tipo de operación</span>
+                    <div class="op-item" onclick="document.getElementById('opVenta').click()">
                         <input type="radio" name="operation" id="opVenta" value="venta" checked>
                         <div>
                             <div class="op-title">Venta</div>
                             <div class="op-desc">El producto estará disponible para ventas.</div>
                         </div>
                     </div>
-                    <div class="op-item">
+                    <div class="op-item" onclick="document.getElementById('opCompra').click()">
                         <input type="radio" name="operation" id="opCompra" value="compra">
                         <div>
                             <div class="op-title">Compra</div>
                             <div class="op-desc">El producto se podrá adquirir a proveedores.</div>
                         </div>
                     </div>
-                    <div class="op-item">
+                    <div class="op-item" onclick="document.getElementById('opInventario').click()">
                         <input type="radio" name="operation" id="opInventario" value="inventariable">
                         <div>
                             <div class="op-title">Inventariable</div>
@@ -501,28 +743,31 @@
             <div class="info-grid">
                 <!-- código (estático) -->
                 <div class="field-group">
-                    <label>Código de producto</label>
-                    <div class="value-static">PRD-000126</div>
+                    <label>Código de producto <span class="required">*</span></label>
+                    <div class="value-static">
+                        <span id="codigoProducto">PRD-000126</span>
+                        <span class="badge-auto">Automático</span>
+                    </div>
                 </div>
                 <!-- nombre -->
                 <div class="field-group">
-                    <label>Nombre del producto</label>
-                    <input type="text" placeholder="Ingrese el nombre del producto" value="">
+                    <label>Nombre del producto <span class="required">*</span></label>
+                    <input type="text" id="nombreProducto" placeholder="Ingrese el nombre del producto" value="">
                 </div>
                 <!-- modelo -->
                 <div class="field-group">
-                    <label>Modelo</label>
-                    <input type="text" placeholder="Ej. M100">
+                    <label>Modelo <span class="required">*</span></label>
+                    <input type="text" id="modeloProducto" placeholder="Ej. M100">
                 </div>
                 <!-- marca -->
                 <div class="field-group">
-                    <label>Marca (opcional)</label>
-                    <input type="text" placeholder="Ej. Nike">
+                    <label>Marca <span class="text-muted">(opcional)</span></label>
+                    <input type="text" id="marcaProducto" placeholder="Ej. Nike">
                 </div>
                 <!-- unidad medida -->
                 <div class="field-group">
-                    <label>Unidad de medida</label>
-                    <select>
+                    <label>Unidad de medida <span class="required">*</span></label>
+                    <select id="unidadMedida">
                         <option value="" disabled selected>Seleccione una unidad</option>
                         <option value="unidad">Unidad</option>
                         <option value="kg">Kilogramo</option>
@@ -531,116 +776,135 @@
                         <option value="ml">Mililitro</option>
                         <option value="caja">Caja</option>
                         <option value="paquete">Paquete</option>
+                        <option value="rollo">Rollo</option>
+                        <option value="metro">Metro</option>
+                        <option value="galon">Galón</option>
                     </select>
                 </div>
                 <!-- categoría -->
                 <div class="field-group">
-                    <label>Categoría</label>
-                    <select>
+                    <label>Categoría <span class="required">*</span></label>
+                    <select id="categoriaProducto">
                         <option value="" disabled selected>Seleccione una categoría</option>
-                        <option value="electronica">Electrónica</option>
-                        <option value="ropa">Ropa</option>
-                        <option value="hogar">Hogar</option>
-                        <option value="alimentos">Alimentos</option>
-                        <option value="belleza">Belleza</option>
+                        <option value="seguridad-industrial">Seguridad Industrial</option>
+                        <option value="mobiliario-oficina">Mobiliario de Oficina</option>
+                        <option value="tecnologia">Tecnología</option>
+                        <option value="ferreteria">Ferretería</option>
+                        <option value="limpieza">Limpieza</option>
+                        <option value="cuidado-personal">Cuidado Personal</option>
+                        <option value="iluminacion">Iluminación</option>
                     </select>
                 </div>
                 <!-- subcategoría -->
                 <div class="field-group">
-                    <label>Subcategoría (opcional)</label>
-                    <select>
+                    <label>Subcategoría <span class="text-muted">(opcional)</span></label>
+                    <select id="subcategoriaProducto">
                         <option value="" disabled selected>Seleccione una subcategoría</option>
-                        <option value="smartphones">Smartphones</option>
-                        <option value="laptops">Laptops</option>
-                        <option value="camisas">Camisas</option>
-                        <option value="zapatos">Zapatos</option>
+                        <option value="senalizacion">Señalización</option>
+                        <option value="chalecos">Chalecos</option>
+                        <option value="herramientas">Herramientas</option>
+                        <option value="extintores">Extintores</option>
+                        <option value="proteccion-personal">Protección Personal</option>
+                        <option value="cintas">Cintas</option>
+                        <option value="primeros-auxilios">Primeros Auxilios</option>
+                        <option value="calzado">Calzado</option>
+                        <option value="lámparas">Lámparas</option>
                     </select>
                 </div>
                 <!-- presentación proveedor -->
                 <div class="field-group">
-                    <label>Presentación del proveedor</label>
-                    <input type="text" placeholder="Ej. Caja x 12 unidades">
+                    <label>Presentación del proveedor <span class="required">*</span></label>
+                    <input type="text" id="presentacionProveedor" placeholder="Ej. Caja x 12 unidades">
                 </div>
                 <!-- presentación venta -->
                 <div class="field-group">
-                    <label>Presentación de venta</label>
-                    <input type="text" placeholder="Ej. 1 unidad">
+                    <label>Presentación de venta <span class="required">*</span></label>
+                    <input type="text" id="presentacionVenta" placeholder="Ej. 1 unidad">
                 </div>
                 <!-- venta mínima -->
                 <div class="field-group">
-                    <label>Venta mínima (mínimo para el cliente)</label>
-                    <input type="number" value="1" min="1">
+                    <label>Venta mínima <span class="required">*</span></label>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="number" id="ventaMinima" value="1" min="1" style="flex:1;">
+                        <span class="text-muted small">und.</span>
+                    </div>
                 </div>
                 <!-- código de barras -->
                 <div class="field-group">
-                    <label>Código de barras</label>
-                    <input type="text" placeholder="Ej. 7701234567890">
+                    <label>Código de barras <span class="required">*</span></label>
+                    <input type="text" id="codigoBarras" placeholder="Ej. 7701234567890">
                 </div>
                 <!-- peso -->
                 <div class="field-group">
-                    <label>Peso (kg)</label>
-                    <input type="text" placeholder="Ej. 0.50">
+                    <label>Peso (kg) <span class="required">*</span></label>
+                    <input type="number" id="pesoProducto" step="0.01" placeholder="Ej. 0.50">
                 </div>
                 <!-- volumen -->
                 <div class="field-group">
-                    <label>Volumen (m³)</label>
-                    <input type="text" placeholder="Ej. 0.001">
+                    <label>Volumen (m³) <span class="required">*</span></label>
+                    <input type="number" id="volumenProducto" step="0.001" placeholder="Ej. 0.001">
                 </div>
                 <!-- origen -->
                 <div class="field-group">
-                    <label>Origen del producto (opcional)</label>
-                    <select>
+                    <label>Origen del producto <span class="text-muted">(opcional)</span></label>
+                    <select id="origenProducto">
                         <option value="" disabled selected>Seleccione origen</option>
                         <option value="nacional">Nacional</option>
                         <option value="importado">Importado</option>
-                        <option value="otro">Otro</option>
+                        <option value="mixto">Mixto</option>
                     </select>
                 </div>
                 <!-- tiempo est entrega -->
                 <div class="field-group">
-                    <label>Tiempo est. de entrega (opcional)</label>
-                    <select>
+                    <label>Tiempo est. de entrega <span class="text-muted">(opcional)</span></label>
+                    <select id="tiempoEntrega">
                         <option value="" disabled selected>Seleccione tiempo</option>
-                        <option value="1-2d">1-2 días</option>
-                        <option value="3-5d">3-5 días</option>
-                        <option value="1sem">1 semana</option>
-                        <option value="2sem">2 semanas</option>
+                        <option value="1-2d">1 a 2 días</option>
+                        <option value="3-5d">3 a 5 días</option>
+                        <option value="7-10d">7 a 10 días</option>
+                        <option value="30-90d">30 a 90 días</option>
                     </select>
                 </div>
                 <!-- abastecimiento -->
                 <div class="field-group">
-                    <label>Abastecimiento (opcional)</label>
-                    <select>
+                    <label>Abastecimiento <span class="text-muted">(opcional)</span></label>
+                    <select id="abastecimientoProducto">
                         <option value="" disabled selected>Seleccione abastecimiento</option>
-                        <option value="local">Local</option>
-                        <option value="externo">Externo</option>
-                        <option value="mixto">Mixto</option>
+                        <option value="stock">Stock</option>
+                        <option value="bajo-pedido">Bajo pedido</option>
+                        <option value="según-disponibilidad">Según disponibilidad</option>
                     </select>
                 </div>
                 <!-- stock mínimo -->
                 <div class="field-group">
-                    <label>Stock mínimo (opcional)</label>
-                    <input type="text" placeholder="Ej. 0">
+                    <label>Stock mínimo <span class="text-muted">(opcional)</span></label>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="number" id="stockMinimo" placeholder="Ej. 0" style="flex:1;">
+                        <span class="text-muted small">und.</span>
+                    </div>
                 </div>
                 <!-- transporte referencial -->
                 <div class="field-group">
-                    <label>Transporte referencial</label>
-                    <select>
+                    <label>Transporte referencial <span class="required">*</span></label>
+                    <select id="transporteReferencial">
                         <option value="" disabled selected>Seleccione un transporte referencial</option>
-                        <option value="terrestre">Terrestre</option>
-                        <option value="aereo">Aéreo</option>
-                        <option value="maritimo">Marítimo</option>
+                        <option value="motorizado">Motorizado</option>
+                        <option value="auto">Auto</option>
+                        <option value="minivan">Minivan</option>
+                        <option value="camioneta">Camioneta</option>
+                        <option value="camion">Camión</option>
+                        <option value="agencia">Agencia</option>
                     </select>
                 </div>
                 <!-- descripción (full) -->
                 <div class="field-group full-width">
-                    <label>Descripción (opcional)</label>
-                    <textarea placeholder="Ingrese una descripción del producto"></textarea>
+                    <label>Descripción <span class="text-muted">(opcional)</span></label>
+                    <textarea id="descripcionProducto" placeholder="Ingrese una descripción del producto"></textarea>
                 </div>
                 <!-- observaciones (full) -->
                 <div class="field-group full-width">
-                    <label>Observaciones (opcional)</label>
-                    <textarea placeholder="Ingrese observaciones adicionales del producto"></textarea>
+                    <label>Observaciones <span class="text-muted">(opcional)</span></label>
+                    <textarea id="observacionesProducto" placeholder="Ingrese observaciones adicionales del producto"></textarea>
                 </div>
             </div>
 
@@ -654,7 +918,7 @@
                     <label>Valor venta (S/)</label>
                     <div class="price-input-wrap">
                         <span>S/</span>
-                        <input type="text" value="0.00" placeholder="0.00">
+                        <input type="number" id="valorVenta" step="0.01" value="0.00" placeholder="0.00" oninput="calcularMargen()">
                     </div>
                     <div class="tax-note">No incluye IGV</div>
                 </div>
@@ -662,16 +926,49 @@
                     <label>Valor costo (S/)</label>
                     <div class="price-input-wrap">
                         <span>S/</span>
-                        <input type="text" value="0.00" placeholder="0.00">
+                        <input type="number" id="valorCosto" step="0.01" value="0.00" placeholder="0.00" oninput="calcularMargen()">
                     </div>
                     <div class="tax-note">No incluye IGV</div>
+                </div>
+            </div>
+
+            <!-- Margen de ganancia -->
+            <div class="margin-display">
+                <div class="margin-item">
+                    <div class="label">Margen (%)</div>
+                    <div class="value" id="margenPct">0.00%</div>
+                </div>
+                <div class="margin-item">
+                    <div class="label">Margen (S/)</div>
+                    <div class="value" id="margenSol">S/ 0.00</div>
+                </div>
+            </div>
+
+            <!-- Estado disponible -->
+            <div class="state-section">
+                <div class="state-select-wrap">
+                    <label style="font-weight:600; font-size:0.85rem; color:#3b4a62;">Estado disponible</label>
+                    <select id="estadoProducto" onchange="actualizarEstadoChips()">
+                        <option value="active">🟢 Activo</option>
+                        <option value="inactive">⚪ Inactivo</option>
+                        <option value="pending">🟠 Bajo pedido</option>
+                        <option value="available">🔵 Disponible</option>
+                        <option value="blocked">🔴 Bloqueado</option>
+                    </select>
+                    <div class="state-chips" id="stateChips">
+                        <span class="state-chip active"><span class="dot"></span>Activo</span>
+                        <span class="state-chip inactive"><span class="dot"></span>Inactivo</span>
+                        <span class="state-chip pending"><span class="dot"></span>Bajo pedido</span>
+                        <span class="state-chip available"><span class="dot"></span>Disponible</span>
+                        <span class="state-chip blocked"><span class="dot"></span>Bloqueado</span>
+                    </div>
                 </div>
             </div>
 
             <!-- acciones -->
             <div class="actions">
                 <button class="btn btn-outline-custom" id="cancelBtn"><i class="bi bi-x-circle"></i> Cancelar</button>
-                <button class="btn btn-primary-custom" id="saveBtn"><i class="bi bi-save"></i> Guardar producto</button>
+                <button class="btn btn-success-custom" id="saveBtn"><i class="bi bi-save"></i> Guardar producto</button>
             </div>
         </div>
     </div>
@@ -681,31 +978,83 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         (function() {
-            // ==================== UPLOAD FOTO ====================
+            'use strict';
+
+            // ==================== VARIABLES ====================
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
             const fileInput = document.getElementById('fileInput');
             const uploadArea = document.getElementById('photoUploadArea');
             const fileBadge = document.getElementById('fileBadge');
+            const previewContainer = document.getElementById('previewContainer');
 
+            // ==================== SIDEBAR TOGGLE ====================
+            function toggleSidebar() {
+                sidebar.classList.toggle('open');
+                overlay.classList.toggle('show');
+                document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+            }
+
+            hamburgerBtn.addEventListener('click', toggleSidebar);
+            overlay.addEventListener('click', toggleSidebar);
+
+            // Cerrar sidebar al hacer click en un link (mobile)
+            document.querySelectorAll('.nav-sidebar-custom a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    if (window.innerWidth <= 992) {
+                        toggleSidebar();
+                    }
+                });
+            });
+
+            // ==================== UPLOAD FOTO ====================
             uploadArea.addEventListener('click', function(e) {
-                if (e.target.closest('.file-badge')) return;
+                if (e.target.closest('.file-badge') || e.target.closest('#previewContainer')) return;
                 fileInput.click();
             });
 
+            function handleFile(file) {
+                if (!file) {
+                    resetFileInput();
+                    return;
+                }
+
+                const validTypes = ['image/png', 'image/jpeg', 'image/webp'];
+                if (!validTypes.includes(file.type)) {
+                    mostrarNotificacion('error', 'Formato no soportado', 'Usa PNG, JPG o WEBP.');
+                    resetFileInput();
+                    return;
+                }
+
+                if (file.size > 5 * 1024 * 1024) {
+                    mostrarNotificacion('error', 'Archivo muy grande', 'La imagen no debe superar los 5MB.');
+                    resetFileInput();
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewContainer.innerHTML = `<img src="${e.target.result}" alt="Foto del producto" class="preview-image">`;
+                    uploadArea.classList.add('has-image');
+                    fileBadge.textContent = `📎 ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            function resetFileInput() {
+                fileInput.value = '';
+                previewContainer.innerHTML = '';
+                uploadArea.classList.remove('has-image');
+                fileBadge.textContent = '📎 Ningún archivo';
+            }
+
             fileInput.addEventListener('change', function(e) {
                 const file = this.files[0];
-                if (file) {
-                    const fileName = file.name;
-                    const fileSize = (file.size / 1024).toFixed(1);
-                    fileBadge.textContent = `📎 ${fileName} (${fileSize} KB)`;
-                    uploadArea.style.borderColor = '#2563eb';
-                    uploadArea.style.background = '#f0f7ff';
-                } else {
-                    fileBadge.textContent = '📎 Ningún archivo';
-                    uploadArea.style.borderColor = '#cbd5e1';
-                    uploadArea.style.background = '#f8faff';
-                }
+                handleFile(file);
             });
 
+            // Drag and Drop
             uploadArea.addEventListener('dragover', function(e) {
                 e.preventDefault();
                 this.style.borderColor = '#2563eb';
@@ -724,63 +1073,195 @@
                 this.style.background = '#f8faff';
                 const files = e.dataTransfer.files;
                 if (files.length > 0) {
-                    const file = files[0];
-                    const validTypes = ['image/png', 'image/jpeg', 'image/webp'];
-                    if (validTypes.includes(file.type)) {
-                        fileInput.files = files;
-                        const evt = new Event('change', { bubbles: true });
-                        fileInput.dispatchEvent(evt);
-                    } else {
-                        alert('Formato no soportado. Usa PNG, JPG o WEBP.');
-                    }
+                    handleFile(files[0]);
                 }
             });
+
+            // ==================== CALCULAR MARGEN ====================
+            function calcularMargen() {
+                const venta = parseFloat(document.getElementById('valorVenta').value) || 0;
+                const costo = parseFloat(document.getElementById('valorCosto').value) || 0;
+                const margen = venta - costo;
+                const pct = venta > 0 ? (margen / venta) * 100 : 0;
+
+                const margenPct = document.getElementById('margenPct');
+                const margenSol = document.getElementById('margenSol');
+
+                margenPct.textContent = pct.toFixed(2) + '%';
+                margenPct.className = 'value ' + (pct >= 0 ? 'positive' : 'negative');
+                margenSol.textContent = 'S/ ' + margen.toFixed(2);
+                margenSol.className = 'value ' + (margen >= 0 ? 'positive' : 'negative');
+            }
+
+            // ==================== ESTADO CHIPS ====================
+            function actualizarEstadoChips() {
+                const valor = document.getElementById('estadoProducto').value;
+                const chips = document.querySelectorAll('.state-chip');
+                const estados = ['active', 'inactive', 'pending', 'available', 'blocked'];
+                chips.forEach((chip, index) => {
+                    const estado = estados[index];
+                    if (estado === valor) {
+                        chip.style.opacity = '1';
+                        chip.style.filter = 'none';
+                        chip.style.transform = 'scale(1.05)';
+                    } else {
+                        chip.style.opacity = '0.5';
+                        chip.style.filter = 'grayscale(0.3)';
+                        chip.style.transform = 'scale(1)';
+                    }
+                });
+            }
+
+            // ==================== NOTIFICACIONES ====================
+            function mostrarNotificacion(tipo, titulo, mensaje) {
+                const existing = document.querySelector('.notificacion');
+                if (existing) {
+                    existing.style.animation = 'slideOut 0.3s ease forwards';
+                    setTimeout(() => existing.remove(), 350);
+                }
+
+                const iconos = {
+                    success: '✅',
+                    error: '❌',
+                    warning: '⚠️',
+                    info: 'ℹ️'
+                };
+
+                const noti = document.createElement('div');
+                noti.className = `notificacion ${tipo}`;
+                noti.innerHTML = `
+                    <div class="d-flex align-items-start">
+                        <span class="icon">${iconos[tipo] || 'ℹ️'}</span>
+                        <div class="flex-grow-1">
+                            <div class="title">${titulo}</div>
+                            <div class="message">${mensaje}</div>
+                        </div>
+                        <button class="close-noti" onclick="this.closest('.notificacion').remove()">✕</button>
+                    </div>
+                `;
+                document.body.appendChild(noti);
+
+                setTimeout(() => {
+                    if (noti.parentNode) {
+                        noti.style.animation = 'slideOut 0.3s ease forwards';
+                        setTimeout(() => noti.remove(), 350);
+                    }
+                }, 5000);
+            }
 
             // ==================== BOTONES ====================
             document.getElementById('cancelBtn').addEventListener('click', function() {
                 if (confirm('¿Cancelar edición? Los cambios no guardados se perderán.')) {
-                    document.querySelectorAll('input, textarea, select').forEach(el => {
-                        if (el.tagName === 'SELECT') {
-                            el.selectedIndex = 0;
-                        } else if (el.type !== 'file' && el.type !== 'radio' && el.type !== 'checkbox') {
-                            if (el.placeholder) el.value = '';
+                    // Resetear formulario
+                    document.querySelectorAll('.info-grid input, .info-grid textarea').forEach(el => {
+                        if (el.type === 'number' && el.id !== 'ventaMinima') {
+                            el.value = '';
+                        } else if (el.type === 'text' || el.type === 'number') {
+                            if (el.id !== 'ventaMinima') el.value = '';
                         }
                     });
-                    document.querySelectorAll('.price-input-wrap input').forEach(inp => inp.value = '0.00');
-                    fileBadge.textContent = '📎 Ningún archivo';
-                    uploadArea.style.borderColor = '#cbd5e1';
-                    uploadArea.style.background = '#f8faff';
-                    fileInput.value = '';
+                    document.querySelectorAll('.info-grid select').forEach(el => {
+                        el.selectedIndex = 0;
+                    });
+                    document.getElementById('valorVenta').value = '0.00';
+                    document.getElementById('valorCosto').value = '0.00';
+                    document.getElementById('estadoProducto').value = 'active';
+                    resetFileInput();
                     document.getElementById('opVenta').checked = true;
+                    calcularMargen();
+                    actualizarEstadoChips();
+                    mostrarNotificacion('info', 'Formulario limpiado', 'Todos los campos han sido reiniciados.');
                 }
             });
 
             document.getElementById('saveBtn').addEventListener('click', function() {
                 // Validación básica
-                let nombre = document.querySelector('input[placeholder="Ingrese el nombre del producto"]');
-                if (nombre && nombre.value.trim() === '') {
-                    alert('Por favor, ingrese el nombre del producto.');
-                    nombre.focus();
+                const nombre = document.getElementById('nombreProducto');
+                const modelo = document.getElementById('modeloProducto');
+                const unidad = document.getElementById('unidadMedida');
+                const categoria = document.getElementById('categoriaProducto');
+                const presentacionProv = document.getElementById('presentacionProveedor');
+                const presentacionVenta = document.getElementById('presentacionVenta');
+                const ventaMinima = document.getElementById('ventaMinima');
+                const codigoBarras = document.getElementById('codigoBarras');
+                const peso = document.getElementById('pesoProducto');
+                const volumen = document.getElementById('volumenProducto');
+                const transporte = document.getElementById('transporteReferencial');
+
+                const campos = [
+                    { el: nombre, label: 'Nombre del producto' },
+                    { el: modelo, label: 'Modelo' },
+                    { el: unidad, label: 'Unidad de medida' },
+                    { el: categoria, label: 'Categoría' },
+                    { el: presentacionProv, label: 'Presentación del proveedor' },
+                    { el: presentacionVenta, label: 'Presentación de venta' },
+                    { el: ventaMinima, label: 'Venta mínima' },
+                    { el: codigoBarras, label: 'Código de barras' },
+                    { el: peso, label: 'Peso' },
+                    { el: volumen, label: 'Volumen' },
+                    { el: transporte, label: 'Transporte referencial' }
+                ];
+
+                const faltantes = campos.filter(c => !c.el.value || c.el.value === 'Seleccione una unidad' || c.el.value === 'Seleccione una categoría' || c.el.value === 'Seleccione un transporte referencial');
+                if (faltantes.length > 0) {
+                    mostrarNotificacion('error', 'Campos obligatorios', 'Faltan completar: ' + faltantes.map(c => c.label).join(', '));
+                    faltantes[0].el.focus();
                     return;
                 }
-                alert('✅ Producto guardado exitosamente (simulación)');
+
+                // Simular guardado
+                const codigo = document.getElementById('codigoProducto').textContent;
+                const estado = document.getElementById('estadoProducto').options[document.getElementById('estadoProducto').selectedIndex].text;
+                const operacion = document.querySelector('input[name="operation"]:checked');
+                const operacionLabel = operacion ? operacion.parentElement.querySelector('.op-title').textContent : 'No definida';
+
+                mostrarNotificacion('success', '✅ Producto guardado', `Código: ${codigo} | Estado: ${estado} | Operación: ${operacionLabel}`);
             });
 
             // ==================== SIDEBAR LINKS ====================
             document.getElementById('sidebarDashboardLink').addEventListener('click', function(e) {
                 e.preventDefault();
-                window.location.href = '/mantenedor';
+                mostrarNotificacion('info', 'Panel Productos', 'Redirigiendo al panel de productos...');
             });
 
             document.getElementById('sidebarKardexLink').addEventListener('click', function(e) {
                 e.preventDefault();
-                alert('Abrir Kárdex (funcionalidad integrada en el dashboard principal)');
+                mostrarNotificacion('info', 'Kárdex', 'Abriendo kárdex y movimientos...');
+            });
+
+            document.getElementById('sidebarComparativoLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                mostrarNotificacion('info', 'Comparativo Costos', 'Abriendo comparativo de costos por producto...');
+            });
+
+            document.getElementById('sidebarBaseDatosLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                mostrarNotificacion('info', 'Base de Datos', 'Abriendo base de datos de productos...');
             });
 
             document.getElementById('volverPanelLink').addEventListener('click', function(e) {
                 e.preventDefault();
-                window.location.href = '/mantenedor';
+                mostrarNotificacion('info', 'Volver al Panel', 'Redirigiendo al panel principal...');
             });
+
+            // ==================== INICIALIZACIÓN ====================
+            calcularMargen();
+            actualizarEstadoChips();
+
+            // ==================== EXPONER FUNCIONES GLOBALES ====================
+            window.calcularMargen = calcularMargen;
+            window.actualizarEstadoChips = actualizarEstadoChips;
+            window.mostrarNotificacion = mostrarNotificacion;
+
+            // ==================== CIERRE DE SIDEBAR AL REDIMENSIONAR ====================
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 992 && sidebar.classList.contains('open')) {
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('show');
+                    document.body.style.overflow = '';
+                }
+            });
+
         })();
     </script>
 </body>

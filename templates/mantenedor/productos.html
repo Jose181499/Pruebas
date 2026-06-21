@@ -1,97 +1,443 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Lista de Productos</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KCF Corporación | Productos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            background: #f4f6f9;
+        /* ====== RESET & GLOBAL ====== */
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #f0f4f8; margin: 0; }
+
+        /* ====== SIDEBAR ====== */
+        .kcf-sidebar {
+            position: fixed; top: 0; left: 0; bottom: 0; width: 280px;
+            background: linear-gradient(180deg, #0a2b3c 0%, #07212e 100%);
+            color: #e2edf2; z-index: 1035; transition: 0.2s; overflow-y: auto;
         }
-        .card {
-            border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        .sidebar-brand {
+            padding: 1.6rem 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 1.8rem;
         }
-        .table thead {
-            background: #0d6efd;
-            color: white;
+        .sidebar-brand h3 {
+            font-weight: 700; font-size: 1.6rem; margin: 0; color: white;
+        }
+        .sidebar-brand .logo-icon {
+            display: inline-block; width: 32px; height: 32px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #0b67f2, #14b8a6);
+            margin-right: 10px; vertical-align: middle;
+        }
+        .sidebar-brand span { font-size: 0.7rem; opacity: 0.7; display: block; margin-top: 6px; }
+        .nav-sidebar-custom { list-style: none; padding: 0 1rem; }
+        .nav-sidebar-custom li { margin-bottom: 0.5rem; }
+        .nav-sidebar-custom a {
+            display: flex; align-items: center; gap: 14px;
+            padding: 0.7rem 1rem; border-radius: 14px;
+            color: #cbdbe2; text-decoration: none; font-weight: 500;
+            transition: 0.2s;
+        }
+        .nav-sidebar-custom a i { font-size: 1.35rem; width: 28px; }
+        .nav-sidebar-custom a:hover { background: rgba(255,255,255,0.1); color: white; }
+        .nav-sidebar-custom .active-link {
+            background: #2c7da0; color: white;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+        .nav-sidebar-custom .badge-sidebar {
+            margin-left: auto;
+            background: rgba(255,255,255,0.15);
+            padding: 2px 10px; border-radius: 20px; font-size: 0.7rem;
+        }
+        .sidebar-footer {
+            position: sticky; bottom: 0; padding: 1rem 1.8rem;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            font-size: 0.8rem; background: #0a2b3c;
+        }
+
+        /* ====== MAIN ====== */
+        .main-dashboard {
+            margin-left: 280px;
+            padding: 1.8rem 2rem;
+            transition: 0.2s;
+            min-height: 100vh;
+        }
+
+        /* ====== CARD ====== */
+        .card-custom {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+            padding: 1.8rem;
+            border: 1px solid #e9edf4;
+        }
+
+        .table-custom {
+            font-size: 0.85rem;
+        }
+        .table-custom thead th {
+            background: #f8faff;
+            font-weight: 600;
+            color: #1e293b;
+            border-bottom: 2px solid #e9edf4;
+            padding: 12px 14px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .table-custom tbody td {
+            padding: 12px 14px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .table-custom tbody tr:hover {
+            background: #f8faff;
+        }
+
+        .status-badge {
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .status-badge .dot {
+            width: 7px; height: 7px; border-radius: 50%; display: inline-block;
+        }
+        .status-badge.active { background: #eaf9f0; color: #16a34a; }
+        .status-badge.active .dot { background: #16a34a; }
+        .status-badge.inactive { background: #f1f5f9; color: #64748b; }
+        .status-badge.inactive .dot { background: #94a3b8; }
+        .status-badge.pending { background: #fff4dc; color: #f59e0b; }
+        .status-badge.pending .dot { background: #f59e0b; }
+        .status-badge.available { background: #eaf2ff; color: #2563eb; }
+        .status-badge.available .dot { background: #2563eb; }
+        .status-badge.blocked { background: #fef2f2; color: #dc2626; }
+        .status-badge.blocked .dot { background: #dc2626; }
+
+        .btn-accion {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            transition: 0.15s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-accion:hover {
+            background: #e9edf4;
+            color: #0b1b33;
+        }
+        .btn-accion.edit:hover { background: #eaf2ff; color: #2563eb; }
+        .btn-accion.delete:hover { background: #fef2f2; color: #dc2626; }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.4); z-index: 1034;
+        }
+        .sidebar-overlay.show { display: block; }
+        .hamburger-btn {
+            display: none; background: none; border: none;
+            font-size: 1.5rem; color: #0b1b33; padding: 8px 12px;
+            border-radius: 12px;
+        }
+        .hamburger-btn:hover { background: #f1f5f9; }
+
+        @media (max-width: 992px) {
+            .kcf-sidebar { transform: translateX(-100%); width: 280px; }
+            .kcf-sidebar.open { transform: translateX(0); }
+            .main-dashboard { margin-left: 0; }
+            .hamburger-btn { display: flex !important; }
+        }
+        @media (max-width: 576px) {
+            .main-dashboard { padding: 1rem; }
+            .card-custom { padding: 1rem; }
         }
     </style>
 </head>
 <body>
 
-<div class="container mt-5">
-
-    <div class="card p-4">
-
-        <div class="d-flex justify-content-between align-items-center mb-3">
-              <h3 class="me-3 mb-0">📦 Lista de Productos</h3>
-    
-    <!-- DERECHA -->
-    <div class="d-flex gap-2">
-
-    <a href="/mantenedor/productos/nuevo" class="btn btn-success me-2">
-        ➕ Nuevo Producto
-    </a>
-
+    <!-- ===== SIDEBAR ===== -->
+    <div class="kcf-sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <h3><span class="logo-icon"></span> KCF CORP</h3>
+            <span>Sistema Integrado de Gestión</span>
+        </div>
+        <ul class="nav-sidebar-custom">
+            <li><a href="/mantenedor/productos/nuevo"><i class="bi bi-box-seam-fill"></i> <span>Nuevo Producto</span></a></li>
+            <li><a href="/mantenedor/productos" class="active-link"><i class="bi bi-grid-1x2-fill"></i> <span>Panel Productos</span> <span class="badge-sidebar" id="totalProductos">0</span></a></li>
+            <li><a href="#" id="sidebarKardexLink"><i class="bi bi-journal-bookmark-fill"></i> <span>Kárdex & Movimientos</span></a></li>
+            <li><a href="/mantenedor/productos/comparativo"><i class="bi bi-bar-chart-fill"></i> <span>Comparativo Costos</span></a></li>
+            <li><a href="/mantenedor/productos/base-datos"><i class="bi bi-database-fill"></i> <span>Base de Datos</span></a></li>
+            <li><a href="/mantenedor/productos/gestion"><i class="bi bi-arrow-return-left"></i> <span>Volver al Panel</span></a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <div><i class="bi bi-person-circle me-2"></i> <strong>Admin KCF</strong></div>
+            <div class="small opacity-50 mt-1">Acceso corporativo</div>
+        </div>
     </div>
-</div>
 
+    <!-- ===== OVERLAY ===== -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-        <div class="table-responsive">
-            <table class="table table-hover">
-
-                <thead>
-                    <tr>
-                        <th>Item</th>
-                        <th>Código</th>
-                        <th>Familia</th>
-                        <th>Descripción</th>
-                        <th>Modelo</th>
-                        <th>Marca</th>
-                        <th>Presentación</th>
-                        <th>Peso</th>
-                        <th>Transporte</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {% for p in productos %}
-                    <tr>
-                        <td>{{ p.id }}</td>
-                        <td><strong>{{ p.codigo }}</strong></td>
-                        <td>{{ p.familia }}</td>
-                        <td>{{ p.descripcion }}</td>
-                        <td>{{ p.modelo }}</td>
-                        <td>{{ p.marca }}</td>
-                        <td>{{ p.unidad }}</td>
-                        <td>{{ p.peso }}</td>
-                        <td>{{ p.transporte }}</td>
-                        
-                        
-                      
-                    </tr>
-                    {% endfor %}
-                </tbody>
-
-            </table>
+    <!-- ===== MAIN ===== -->
+    <div class="main-dashboard">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+            <div class="d-flex align-items-center gap-3">
+                <button class="hamburger-btn" id="hamburgerBtn"><i class="bi bi-list"></i></button>
+                <div>
+                    <h1 class="fw-bold mb-1" style="color: #0b2b3c;"><i class="bi bi-grid-1x2-fill text-primary me-2"></i>Productos</h1>
+                    <p class="text-secondary m-0">Gestión completa de productos KCF</p>
+                </div>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="/mantenedor/productos/nuevo" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i> Nuevo Producto
+                </a>
+                <button class="btn btn-success" id="btnExportar">
+                    <i class="bi bi-file-excel me-1"></i> Exportar
+                </button>
+            </div>
         </div>
 
+        <!-- Filtros -->
+        <div class="card-custom mb-4">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold small text-uppercase">Buscar</label>
+                    <input type="text" id="filtroBusqueda" class="form-control" placeholder="Buscar por nombre, código, marca...">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold small text-uppercase">Familia</label>
+                    <select id="filtroFamilia" class="form-select">
+                        <option value="">Todas</option>
+                        <option value="Seguridad Industrial">Seguridad Industrial</option>
+                        <option value="Mobiliario de Oficina">Mobiliario de Oficina</option>
+                        <option value="Tecnología">Tecnología</option>
+                        <option value="Ferretería">Ferretería</option>
+                        <option value="Limpieza">Limpieza</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold small text-uppercase">Estado</label>
+                    <select id="filtroEstado" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="activo">Activo</option>
+                        <option value="inactivo">Inactivo</option>
+                        <option value="bajo_pedido">Bajo pedido</option>
+                        <option value="disponible">Disponible</option>
+                        <option value="bloqueado">Bloqueado</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-secondary w-100" id="btnLimpiarFiltros">
+                        <i class="bi bi-eraser me-1"></i> Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla -->
+        <div class="card-custom">
+            <div class="table-responsive">
+                <table class="table table-custom" id="tablaProductos">
+                    <thead>
+                        <tr>
+                            <th style="width:50px;">#</th>
+                            <th style="width:120px;">Código</th>
+                            <th>Descripción</th>
+                            <th style="width:100px;">Familia</th>
+                            <th style="width:100px;">Marca</th>
+                            <th style="width:80px;">Stock</th>
+                            <th style="width:100px;">Costo</th>
+                            <th style="width:100px;">Precio</th>
+                            <th style="width:100px;">Estado</th>
+                            <th style="width:120px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyProductos">
+                        {% for p in productos %}
+                        <tr data-id="{{ p.id }}" data-familia="{{ p.familia }}" data-estado="{{ p.estado }}">
+                            <td>{{ loop.index }}</td>
+                            <td><code class="text-primary fw-bold">{{ p.codigo }}</code></td>
+                            <td>{{ p.descripcion }}</td>
+                            <td><span class="badge bg-light text-dark">{{ p.familia or '-' }}</span></td>
+                            <td>{{ p.marca or '-' }}</td>
+                            <td class="fw-bold {% if p.stock <= 5 %}text-danger{% elif p.stock <= 20 %}text-warning{% else %}text-success{% endif %}">
+                                {{ p.stock or 0 }}
+                            </td>
+                            <td>S/ {{ "%.2f"|format(p.costo_unitario or 0) }}</td>
+                            <td>S/ {{ "%.2f"|format(p.precio_unitario or 0) }}</td>
+                            <td>
+                                <span class="status-badge {{ p.estado or 'inactive' }}">
+                                    <span class="dot"></span>
+                                    {{ p.estado|capitalize or 'Inactivo' }}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn-accion edit" data-id="{{ p.id }}" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn-accion delete" data-id="{{ p.id }}" title="Eliminar">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                                <button class="btn-accion btn-kardex" data-id="{{ p.id }}" title="Kárdex">
+                                  <i class="bi bi-journal"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="10" class="text-center py-4 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                No hay productos registrados
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
-</div>
+    <!-- ===== MODAL ELIMINAR ===== -->
+    <div class="modal fade" id="modalEliminar" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Confirmar eliminación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Estás seguro de eliminar el producto <strong id="eliminarNombre"></strong>?</p>
+                    <p class="text-danger small">Esta acción no se puede deshacer.</p>
+                    <input type="hidden" id="eliminarId">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="confirmarEliminar">
+                        <i class="bi bi-trash3 me-1"></i> Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-</body>
+    <!-- ===== SCRIPTS ===== -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // ===== SIDEBAR TOGGLE =====
+            $('#hamburgerBtn').click(function() {
+                $('#sidebar').toggleClass('open');
+                $('#sidebarOverlay').toggleClass('show');
+            });
+            $('#sidebarOverlay').click(function() {
+                $('#sidebar').removeClass('open');
+                $('#sidebarOverlay').removeClass('show');
+            });
 
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const input = document.getElementById('fileInput');
-    if (input) {
-        input.addEventListener('change', function() {
-            this.form.submit();
+            // ===== FILTROS =====
+            function filtrarTabla() {
+                const busqueda = $('#filtroBusqueda').val().toLowerCase();
+                const familia = $('#filtroFamilia').val();
+                const estado = $('#filtroEstado').val();
+
+                let visibles = 0;
+                $('#tbodyProductos tr').each(function() {
+                    const $row = $(this);
+                    const texto = $row.text().toLowerCase();
+                    const rowFamilia = $row.data('familia') || '';
+                    const rowEstado = $row.data('estado') || '';
+
+                    const matchBusqueda = texto.includes(busqueda);
+                    const matchFamilia = !familia || rowFamilia === familia;
+                    const matchEstado = !estado || rowEstado === estado;
+
+                    if (matchBusqueda && matchFamilia && matchEstado) {
+                        $row.show();
+                        visibles++;
+                    } else {
+                        $row.hide();
+                    }
+                });
+
+                $('#totalProductos').text(visibles);
+            }
+
+            $('#filtroBusqueda, #filtroFamilia, #filtroEstado').on('change keyup', filtrarTabla);
+
+            $('#btnLimpiarFiltros').click(function() {
+                $('#filtroBusqueda').val('');
+                $('#filtroFamilia').val('');
+                $('#filtroEstado').val('');
+                filtrarTabla();
+            });
+
+            // ===== CONTADOR =====
+            const total = $('#tbodyProductos tr:visible').length;
+            $('#totalProductos').text(total);
+
+            // ===== ELIMINAR =====
+            let eliminarModal = new bootstrap.Modal(document.getElementById('modalEliminar'));
+
+            $(document).on('click', '.btn-accion.delete', function() {
+                const id = $(this).data('id');
+                const nombre = $(this).closest('tr').find('td:eq(2)').text().trim();
+                $('#eliminarId').val(id);
+                $('#eliminarNombre').text(nombre);
+                eliminarModal.show();
+            });
+
+            $('#confirmarEliminar').click(function() {
+                const id = $('#eliminarId').val();
+                $.ajax({
+                    url: '/mantenedor/productos/api/productos/' + id,
+                    method: 'DELETE',
+                    success: function() {
+                        eliminarModal.hide();
+                        location.reload();
+                    },
+                    error: function() {
+                        alert('Error al eliminar el producto');
+                    }
+                });
+            });
+
+            // ===== EDITAR =====
+            $(document).on('click', '.btn-accion.edit', function() {
+                const id = $(this).data('id');
+                window.location.href = '/mantenedor/productos/editar/' + id;
+            });
+
+            // ===== EXPORTAR =====
+            $('#btnExportar').click(function() {
+                window.location.href = '/mantenedor/productos/exportar';
+            });
+
+            // ===== KÁRDEX =====
+            window.verKardex = function(id) {
+                window.location.href = '/mantenedor/productos/kardex?producto_id=' + id;
+            };
+
+            // ===== SIDEBAR LINKS =====
+            $('#sidebarKardexLink').click(function(e) {
+                e.preventDefault();
+                window.location.href = '/mantenedor/productos/kardex';
+            });
+
+            filtrarTabla();
         });
-    }
-});
-</script>
+    </script>
+</body>
 </html>
