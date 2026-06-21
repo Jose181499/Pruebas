@@ -79,6 +79,7 @@
             text-decoration: none;
             font-weight: 500;
             transition: 0.2s;
+            cursor: pointer;
         }
         .nav-sidebar-custom a i {
             font-size: 1.35rem;
@@ -660,12 +661,12 @@
             <span>Sistema Integrado de Gestión</span>
         </div>
         <ul class="nav-sidebar-custom">
-            <li><a href="#" class="active-link"><i class="bi bi-box-seam-fill"></i> <span>Nuevo Producto</span></a></li>
-            <li><a href="#" id="sidebarDashboardLink"><i class="bi bi-grid-1x2-fill"></i> <span>Panel Productos</span> <span class="badge-sidebar">245</span></a></li>
-            <li><a href="#" id="sidebarKardexLink"><i class="bi bi-journal-bookmark-fill"></i> <span>Kárdex & Movimientos</span></a></li>
-            <li><a href="#" id="sidebarComparativoLink"><i class="bi bi-bar-chart-fill"></i> <span>Comparativo Costos</span></a></li>
-            <li><a href="#" id="sidebarBaseDatosLink"><i class="bi bi-database-fill"></i> <span>Base de Datos</span></a></li>
-            <li><a href="#" id="volverPanelLink"><i class="bi bi-arrow-return-left"></i> <span>Volver al Panel</span></a></li>
+            <li><a href="/mantenedor/productos/nuevo" class="active-link"><i class="bi bi-box-seam-fill"></i> <span>Nuevo Producto</span></a></li>
+            <li><a href="/mantenedor/productos"><i class="bi bi-grid-1x2-fill"></i> <span>Panel Productos</span> <span class="badge-sidebar">245</span></a></li>
+            <li><a href="/mantenedor/productos/kardex"><i class="bi bi-journal-bookmark-fill"></i> <span>Kárdex & Movimientos</span></a></li>
+            <li><a href="/mantenedor/productos/comparativo"><i class="bi bi-bar-chart-fill"></i> <span>Comparativo Costos</span></a></li>
+            <li><a href="/mantenedor/productos/base-datos"><i class="bi bi-database-fill"></i> <span>Base de Datos</span></a></li>
+            <li><a href="/mantenedor"><i class="bi bi-arrow-return-left"></i> <span>Volver al Panel</span></a></li>
         </ul>
         <div class="sidebar-footer">
             <div><i class="bi bi-person-circle me-2"></i> <strong id="usuarioSidebar">Admin KCF</strong></div>
@@ -690,11 +691,11 @@
                 </div>
             </div>
             <div class="d-flex gap-2">
-                <a href="#" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Volver al Panel</a>
+                <a href="/mantenedor" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Volver al Panel</a>
             </div>
         </div>
 
-        <!-- ===== TARJETA NUEVO PRODUCTO (DISEÑO SOLICITADO) ===== -->
+        <!-- ===== TARJETA NUEVO PRODUCTO ===== -->
         <div class="product-card" id="productCard">
             <!-- Foto + Tipo operación -->
             <div class="top-grid">
@@ -999,15 +1000,6 @@
             hamburgerBtn.addEventListener('click', toggleSidebar);
             overlay.addEventListener('click', toggleSidebar);
 
-            // Cerrar sidebar al hacer click en un link (mobile)
-            document.querySelectorAll('.nav-sidebar-custom a').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    if (window.innerWidth <= 992) {
-                        toggleSidebar();
-                    }
-                });
-            });
-
             // ==================== UPLOAD FOTO ====================
             uploadArea.addEventListener('click', function(e) {
                 if (e.target.closest('.file-badge') || e.target.closest('#previewContainer')) return;
@@ -1152,7 +1144,6 @@
             // ==================== BOTONES ====================
             document.getElementById('cancelBtn').addEventListener('click', function() {
                 if (confirm('¿Cancelar edición? Los cambios no guardados se perderán.')) {
-                    // Resetear formulario
                     document.querySelectorAll('.info-grid input, .info-grid textarea').forEach(el => {
                         if (el.type === 'number' && el.id !== 'ventaMinima') {
                             el.value = '';
@@ -1175,7 +1166,6 @@
             });
 
             document.getElementById('saveBtn').addEventListener('click', function() {
-                // Validación básica
                 const nombre = document.getElementById('nombreProducto');
                 const modelo = document.getElementById('modeloProducto');
                 const unidad = document.getElementById('unidadMedida');
@@ -1209,39 +1199,12 @@
                     return;
                 }
 
-                // Simular guardado
                 const codigo = document.getElementById('codigoProducto').textContent;
                 const estado = document.getElementById('estadoProducto').options[document.getElementById('estadoProducto').selectedIndex].text;
                 const operacion = document.querySelector('input[name="operation"]:checked');
                 const operacionLabel = operacion ? operacion.parentElement.querySelector('.op-title').textContent : 'No definida';
 
                 mostrarNotificacion('success', '✅ Producto guardado', `Código: ${codigo} | Estado: ${estado} | Operación: ${operacionLabel}`);
-            });
-
-            // ==================== SIDEBAR LINKS ====================
-            document.getElementById('sidebarDashboardLink').addEventListener('click', function(e) {
-                e.preventDefault();
-                mostrarNotificacion('info', 'Panel Productos', 'Redirigiendo al panel de productos...');
-            });
-
-            document.getElementById('sidebarKardexLink').addEventListener('click', function(e) {
-                e.preventDefault();
-                mostrarNotificacion('info', 'Kárdex', 'Abriendo kárdex y movimientos...');
-            });
-
-            document.getElementById('sidebarComparativoLink').addEventListener('click', function(e) {
-                e.preventDefault();
-                mostrarNotificacion('info', 'Comparativo Costos', 'Abriendo comparativo de costos por producto...');
-            });
-
-            document.getElementById('sidebarBaseDatosLink').addEventListener('click', function(e) {
-                e.preventDefault();
-                mostrarNotificacion('info', 'Base de Datos', 'Abriendo base de datos de productos...');
-            });
-
-            document.getElementById('volverPanelLink').addEventListener('click', function(e) {
-                e.preventDefault();
-                mostrarNotificacion('info', 'Volver al Panel', 'Redirigiendo al panel principal...');
             });
 
             // ==================== INICIALIZACIÓN ====================
