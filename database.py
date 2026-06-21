@@ -290,18 +290,24 @@ def obtener_productos():
             modelo, 
             unidad,
             peso,
+            volumen,
             observaciones,
             transporte,
             costo_unitario,
             precio_unitario,
             stock,
+            stock_minimo,
+            estado,
+            presentacion_proveedor,
+            presentacion_venta,
+            venta_minima,
+            codigo_barras,
             activo,
             fecha_creacion
         FROM productos
         WHERE activo = TRUE
         ORDER BY familia, codigo
     """)
-
 
 # =========================
 # Insertar nuevo proveedor (Versión Actualizada)
@@ -962,44 +968,69 @@ def obtener_producto_completo_por_id(producto_id):
 # =========================
 def crear_producto_con_stock(data):
     """
-    Inserta un nuevo producto y registra el stock inicial en el kardex
+    Inserta un nuevo producto con TODOS los campos
     """
     with db_tx() as conn:
         cur = conn.cursor(cursor_factory=RealDictCursor)
 
-        # Insertar el producto
         cur.execute("""
-            INSERT INTO productos 
-            (familia, codigo, descripcion, descripcion_larga, marca, modelo, 
-             unidad, peso, observaciones, transporte, 
-             costo_unitario, precio_unitario, stock, activo)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE)
+            INSERT INTO productos (
+                familia, 
+                codigo, 
+                descripcion, 
+                descripcion_larga, 
+                marca, 
+                modelo, 
+                unidad, 
+                peso, 
+                volumen,
+                observaciones, 
+                transporte, 
+                costo_unitario, 
+                precio_unitario, 
+                stock,
+                stock_minimo,
+                estado,
+                presentacion_proveedor,
+                presentacion_venta,
+                venta_minima,
+                codigo_barras,
+                activo
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE)
             RETURNING id
         """, (
-            data['familia'],
-            data['codigo'],
-            data['descripcion'],
+            data.get('familia'),
+            data.get('codigo'),
+            data.get('descripcion'),
             data.get('descripcion_larga', ''),
             data.get('marca', ''),
             data.get('modelo', ''),
             data.get('unidad', 'Unidad'),
-            data.get('peso', ''),
+            str(data.get('peso', '0')),  # Convertir a string
+            str(data.get('volumen', '0')),  # Convertir a string
             data.get('observaciones', ''),
             data.get('transporte', ''),
             float(data.get('costo_unitario', 0)),
             float(data.get('precio_unitario', 0)),
-            int(data.get('stock', 0))
+            int(data.get('stock', 0)),
+            int(data.get('stock_minimo', 0)),
+            data.get('estado', 'activo'),
+            data.get('presentacion_proveedor', ''),
+            data.get('presentacion_venta', ''),
+            int(data.get('venta_minima', 1)),
+            data.get('codigo_barras', '')
         ))
 
         producto_id = cur.fetchone()['id']
 
-        # Si hay stock inicial, registrar en kardex
+        # Registrar stock inicial en kardex
         stock_inicial = int(data.get('stock', 0))
         if stock_inicial > 0:
             cur.execute("""
                 INSERT INTO movimientos_stock 
-                (producto_id, tipo, cantidad, motivo, referencia, created_at)
-                VALUES (%s, 'ENTRADA', %s, 'Stock Inicial', 'Registro al crear producto', NOW())
+                (producto_id, tipo, cantidad, motivo, referencia)
+                VALUES (%s, 'ENTRADA', %s, 'Stock Inicial', 'Registro al crear producto')
             """, (producto_id, stock_inicial))
 
         return producto_id
