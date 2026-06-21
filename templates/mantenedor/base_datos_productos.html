@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KCF | Kárdex de Productos</title>
+    <title>KCF | Base de Datos Productos</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { font-family: 'Inter', sans-serif; }
         body { background: #f0f4f8; }
+        
         .kcf-sidebar {
             position: fixed; top: 0; left: 0; bottom: 0; width: 280px;
             background: linear-gradient(180deg, #0a2b3c 0%, #07212e 100%);
@@ -35,14 +36,123 @@
         .hamburger-btn { display: none; background: none; border: none; font-size: 1.5rem; color: #0b1b33; padding: 8px 12px; border-radius: 12px; }
         .hamburger-btn:hover { background: #f1f5f9; }
 
-        .status-badge { padding: 4px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
-        .status-badge.entrada { background: #dcfce7; color: #16a34a; }
-        .status-badge.salida { background: #fee2e2; color: #dc2626; }
-        .status-badge.ajuste { background: #fef3c7; color: #d97706; }
+        .table-custom { font-size: 0.8rem; }
+        .table-custom thead th { 
+            background: #f8faff; 
+            font-weight: 600; 
+            color: #1e293b; 
+            border-bottom: 2px solid #e9edf4; 
+            padding: 8px 10px; 
+            font-size: 0.65rem; 
+            text-transform: uppercase; 
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+        .table-custom tbody td { 
+            padding: 8px 10px; 
+            vertical-align: middle; 
+            border-bottom: 1px solid #f1f5f9; 
+            font-size: 0.75rem;
+        }
+        .table-custom tbody tr:hover { background: #f8faff; }
 
-        .table-custom { font-size: 0.85rem; }
-        .table-custom thead th { background: #f8faff; font-weight: 600; color: #1e293b; border-bottom: 2px solid #e9edf4; padding: 10px 12px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; }
-        .table-custom tbody td { padding: 10px 12px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
+        .status-badge {
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .status-badge .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-badge.active { background: #dcfce7; color: #16a34a; }
+        .status-badge.active .dot { background: #16a34a; }
+        .status-badge.inactive { background: #f1f5f9; color: #64748b; }
+        .status-badge.inactive .dot { background: #94a3b8; }
+        .status-badge.bajo_pedido { background: #fef3c7; color: #d97706; }
+        .status-badge.bajo_pedido .dot { background: #d97706; }
+        .status-badge.disponible { background: #dbeafe; color: #2563eb; }
+        .status-badge.disponible .dot { background: #2563eb; }
+        .status-badge.bloqueado { background: #fee2e2; color: #dc2626; }
+        .status-badge.bloqueado .dot { background: #dc2626; }
+        .status-badge.bajo_stock { background: #fef3c7; color: #d97706; }
+        .status-badge.bajo_stock .dot { background: #d97706; }
+
+        .badge-dato { 
+            background: #f1f5f9; 
+            color: #1e293b; 
+            font-weight: 500; 
+            padding: 2px 8px; 
+            border-radius: 4px; 
+            font-size: 0.65rem;
+            white-space: nowrap;
+        }
+
+        .search-box {
+            border: 1px solid #dce1ec;
+            border-radius: 12px;
+            padding: 8px 16px;
+            width: 100%;
+            font-size: 0.9rem;
+            font-family: inherit;
+            transition: 0.15s;
+        }
+        .search-box:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        .btn-primary-custom {
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 40px;
+            padding: 0.5rem 1.5rem;
+            font-weight: 500;
+            transition: 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary-custom:hover {
+            background: #1d4ed8;
+            color: white;
+            transform: scale(0.98);
+        }
+        .btn-outline-custom {
+            background: transparent;
+            border: 1px solid #d0d9e8;
+            color: #2c3f5e;
+            border-radius: 40px;
+            padding: 0.5rem 1.5rem;
+            font-weight: 500;
+            transition: 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-outline-custom:hover {
+            background: #f1f5f9;
+            border-color: #b0c0d4;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .table-scroll thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
 
         @media (max-width: 992px) {
             .kcf-sidebar { transform: translateX(-100%); width: 280px; }
@@ -53,6 +163,7 @@
         @media (max-width: 576px) {
             .main-dashboard { padding: 1rem; }
             .card-custom { padding: 1rem; }
+            .table-custom { font-size: 0.7rem; }
         }
     </style>
 </head>
@@ -66,9 +177,9 @@
         <ul class="nav-sidebar-custom">
             <li><a href="/mantenedor/productos/nuevo"><i class="bi bi-box-seam-fill"></i> <span>Nuevo Producto</span></a></li>
             <li><a href="/mantenedor/productos"><i class="bi bi-grid-1x2-fill"></i> <span>Panel Productos</span></a></li>
-            <li><a href="/mantenedor/productos/kardex" class="active-link"><i class="bi bi-journal-bookmark-fill"></i> <span>Kárdex & Movimientos</span></a></li>
+            <li><a href="/mantenedor/productos/kardex"><i class="bi bi-journal-bookmark-fill"></i> <span>Kárdex & Movimientos</span></a></li>
             <li><a href="/mantenedor/productos/comparativo"><i class="bi bi-bar-chart-fill"></i> <span>Comparativo Costos</span></a></li>
-            <li><a href="/mantenedor/productos/base-datos"><i class="bi bi-database-fill"></i> <span>Base de Datos</span></a></li>
+            <li><a href="/mantenedor/productos/base-datos" class="active-link"><i class="bi bi-database-fill"></i> <span>Base de Datos</span></a></li>
             <li><a href="/mantenedor"><i class="bi bi-arrow-return-left"></i> <span>Volver al Panel</span></a></li>
         </ul>
         <div class="sidebar-footer">
@@ -80,122 +191,112 @@
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <div class="main-dashboard">
+        <!-- Header -->
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
             <div class="d-flex align-items-center gap-3">
                 <button class="hamburger-btn" id="hamburgerBtn"><i class="bi bi-list"></i></button>
                 <div>
-                    <h1 class="fw-bold mb-1" style="color: #0b2b3c;"><i class="bi bi-journal-bookmark-fill text-primary me-2"></i>Kárdex</h1>
-                    <p class="text-secondary m-0">Movimientos de inventario por producto</p>
+                    <h1 class="fw-bold mb-1" style="color: #0b2b3c;"><i class="bi bi-database-fill text-primary me-2"></i>Base de Datos</h1>
+                    <p class="text-secondary m-0">Datos complementarios de productos</p>
                 </div>
             </div>
-            <div>
-                <button class="btn btn-primary" id="btnNuevoMovimiento"><i class="bi bi-plus-circle me-1"></i> Nuevo Movimiento</button>
+            <div class="d-flex gap-2">
+                <button class="btn-outline-custom" id="btnExportarExcel">
+                    <i class="bi bi-file-excel" style="color: #16a34a;"></i> Exportar Excel
+                </button>
+                <button class="btn-primary-custom" onclick="crearProducto()">
+                    <i class="bi bi-plus-circle"></i> Crear Producto
+                </button>
             </div>
         </div>
 
-        <!-- Selector de producto -->
+        <!-- Buscador -->
         <div class="card-custom mb-4">
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold small text-uppercase">Producto</label>
-                    <select id="productoSelect" class="form-select">
-                        <option value="">-- Seleccionar producto --</option>
-                        {% for p in productos %}
-                        <option value="{{ p.id }}" {% if request.args.get('producto_id')|int == p.id %}selected{% endif %}>
-                            {{ p.codigo }} - {{ p.descripcion }}
-                        </option>
-                        {% endfor %}
+            <div class="row g-3 align-items-center">
+                <div class="col-md-8">
+                    <input type="text" id="searchInput" class="search-box" placeholder="🔍 Buscar por código, descripción, marca, modelo, categoría...">
+                </div>
+                <div class="col-md-2">
+                    <select id="filterEstado" class="form-select">
+                        <option value="">Todos los estados</option>
+                        <option value="activo">Activo</option>
+                        <option value="inactivo">Inactivo</option>
+                        <option value="bajo_pedido">Bajo pedido</option>
+                        <option value="disponible">Disponible</option>
+                        <option value="bloqueado">Bloqueado</option>
+                        <option value="bajo_stock">Bajo stock</option>
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold small text-uppercase">Stock Actual</label>
-                    <h4 class="text-success" id="stockActual">0</h4>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold small text-uppercase">Valor Total</label>
-                    <h4 class="text-primary" id="valorTotal">S/ 0.00</h4>
+                <div class="col-md-2">
+                    <button class="btn btn-secondary w-100" onclick="limpiarFiltros()">
+                        <i class="bi bi-eraser"></i> Limpiar
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- Tabla de movimientos -->
+        <!-- Tabla -->
         <div class="card-custom">
-            <div class="table-responsive">
-                <table class="table table-custom" id="tablaKardex">
+            <div class="table-scroll">
+                <table class="table table-custom" id="tablaBaseDatos">
                     <thead>
                         <tr>
-                            <th>Fecha</th>
-                            <th>Tipo</th>
-                            <th>Referencia</th>
-                            <th>Motivo</th>
-                            <th>Entrada</th>
-                            <th>Salida</th>
-                            <th>Saldo</th>
-                            <th>Costo Unit.</th>
+                            <th>Código</th>
+                            <th>Descripción</th>
+                            <th>Presentación<br>Proveedor</th>
+                            <th>Presentación<br>Venta</th>
+                            <th>Venta<br>Mínima</th>
+                            <th>Código<br>Barras</th>
+                            <th>Volumen<br>(m³)</th>
+                            <th>Origen</th>
+                            <th>Tiempo<br>Entrega</th>
+                            <th>Abastecimiento</th>
+                            <th>Stock<br>Mínimo</th>
+                            <th>Observación</th>
+                            <th>Estado</th>
                         </tr>
                     </thead>
-                    <tbody id="tbodyKardex">
-                        <tr>
-                            <td colspan="8" class="text-center text-muted py-4">
-                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                                Seleccione un producto para ver su kárdex
+                    <tbody id="tbodyBaseDatos">
+                        {% for p in productos %}
+                        <tr data-estado="{{ p.estado or 'activo' }}">
+                            <td><code class="text-primary fw-bold">{{ p.codigo }}</code></td>
+                            <td><span class="fw-semibold">{{ p.descripcion }}</span></td>
+                            <td><span class="badge-dato">{{ p.presentacion_proveedor or '-' }}</span></td>
+                            <td><span class="badge-dato">{{ p.presentacion_venta or '-' }}</span></td>
+                            <td class="text-center">{{ p.venta_minima or 1 }}</td>
+                            <td><code class="text-muted">{{ p.codigo_barras or '-' }}</code></td>
+                            <td class="text-center">{{ p.volumen or 0 }}</td>
+                            <td>{{ p.origen or '-' }}</td>
+                            <td>{{ p.tiempo_entrega or '-' }}</td>
+                            <td>{{ p.abastecimiento or '-' }}</td>
+                            <td class="text-center">{{ p.stock_minimo or 0 }}</td>
+                            <td class="text-muted small" style="max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                {{ p.observaciones or '-' }}
+                            </td>
+                            <td>
+                                <span class="status-badge {{ p.estado or 'inactive' }}">
+                                    <span class="dot"></span>
+                                    {{ (p.estado or 'Inactivo')|replace('_', ' ')|title }}
+                                </span>
                             </td>
                         </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="13" class="text-center py-4 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                No hay datos disponibles
+                            </td>
+                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
-        </div>
-    </div>
 
-    <!-- ===== MODAL NUEVO MOVIMIENTO ===== -->
-    <div class="modal fade" id="modalMovimiento" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Nuevo Movimiento</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="formMovimiento">
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Producto</label>
-                            <select id="movProductoId" class="form-select" required>
-                                <option value="">Seleccionar</option>
-                                {% for p in productos %}
-                                <option value="{{ p.id }}">{{ p.codigo }} - {{ p.descripcion }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Tipo</label>
-                            <select id="movTipo" class="form-select" required>
-                                <option value="ENTRADA">✅ Entrada</option>
-                                <option value="SALIDA">❌ Salida</option>
-                                <option value="AJUSTE">📝 Ajuste</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Cantidad</label>
-                            <input type="number" id="movCantidad" class="form-control" min="1" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Costo Unitario <span class="text-muted">(opcional)</span></label>
-                            <input type="number" id="movCosto" class="form-control" step="0.01" min="0" placeholder="0.00">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Referencia</label>
-                            <input type="text" id="movReferencia" class="form-control" placeholder="Ej. Compra #123">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Motivo</label>
-                            <input type="text" id="movMotivo" class="form-control" placeholder="Ej. Compra a proveedor">
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="btnGuardarMovimiento">
-                        <i class="bi bi-save me-1"></i> Guardar
+            <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                <span class="text-muted small" id="countText">Mostrando <span id="visibleCount">{{ productos|length }}</span> de {{ productos|length }} productos</span>
+                <div>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="exportarExcel()">
+                        <i class="bi bi-file-excel me-1"></i> Exportar
                     </button>
                 </div>
             </div>
@@ -206,8 +307,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         $(document).ready(function() {
-            let modalMovimiento = new bootstrap.Modal(document.getElementById('modalMovimiento'));
-
             // ===== SIDEBAR TOGGLE =====
             $('#hamburgerBtn').click(function() {
                 $('#sidebar').toggleClass('open');
@@ -218,161 +317,60 @@
                 $('#sidebarOverlay').removeClass('show');
             });
 
-            // ===== CARGAR KÁRDEX =====
-            function cargarKardex(productoId) {
-                if (!productoId) {
-                    $('#tbodyKardex').html(`
-                        <tr><td colspan="8" class="text-center text-muted py-4">
-                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                            Seleccione un producto para ver su kárdex
-                        </td></tr>
-                    `);
-                    $('#stockActual').text('0');
-                    $('#valorTotal').text('S/ 0.00');
-                    return;
-                }
+            // ===== FILTROS Y BÚSQUEDA =====
+            function filtrarTabla() {
+                const busqueda = $('#searchInput').val().toLowerCase();
+                const estado = $('#filterEstado').val();
 
-                $('#tbodyKardex').html(`
-                    <tr><td colspan="8" class="text-center py-4">
-                        <div class="spinner-border spinner-border-sm me-2"></div> Cargando...
-                    </td></tr>
-                `);
+                let visibles = 0;
+                $('#tbodyBaseDatos tr').each(function() {
+                    const $row = $(this);
+                    const texto = $row.text().toLowerCase();
+                    const rowEstado = $row.data('estado') || '';
 
-                $.ajax({
-                    url: '/mantenedor/productos/api/kardex/' + productoId,
-                    method: 'GET',
-                    success: function(data) {
-                        if (!data.movimientos || data.movimientos.length === 0) {
-                            $('#tbodyKardex').html(`
-                                <tr><td colspan="8" class="text-center text-muted py-4">
-                                    No hay movimientos para este producto
-                                </td></tr>
-                            `);
-                            $('#stockActual').text(data.stock_actual || 0);
-                            $('#valorTotal').text('S/ ' + (data.stock_actual * (data.costo_unitario || 0)).toFixed(2));
-                            return;
-                        }
+                    const matchBusqueda = texto.includes(busqueda);
+                    const matchEstado = !estado || rowEstado === estado;
 
-                        const tbody = $('#tbodyKardex');
-                        tbody.empty();
-                        let saldo = 0;
-
-                        data.movimientos.forEach(function(mov) {
-                            if (mov.tipo === 'ENTRADA') saldo += mov.cantidad;
-                            else if (mov.tipo === 'SALIDA') saldo -= mov.cantidad;
-                            else if (mov.tipo === 'AJUSTE') saldo = mov.cantidad;
-
-                            const fecha = mov.created_at ? new Date(mov.created_at).toLocaleDateString('es-PE') : '-';
-                            const tipoBadge = {
-                                'ENTRADA': '<span class="status-badge entrada"><i class="bi bi-arrow-down-circle me-1"></i>ENTRADA</span>',
-                                'SALIDA': '<span class="status-badge salida"><i class="bi bi-arrow-up-circle me-1"></i>SALIDA</span>',
-                                'AJUSTE': '<span class="status-badge ajuste"><i class="bi bi-pencil-square me-1"></i>AJUSTE</span>'
-                            };
-
-                            tbody.append(`
-                                <tr>
-                                    <td>${fecha}</td>
-                                    <td>${tipoBadge[mov.tipo] || mov.tipo}</td>
-                                    <td>${mov.referencia || '-'}</td>
-                                    <td>${mov.motivo || '-'}</td>
-                                    <td class="text-success text-end">${mov.tipo === 'ENTRADA' ? mov.cantidad : '-'}</td>
-                                    <td class="text-danger text-end">${mov.tipo === 'SALIDA' ? mov.cantidad : '-'}</td>
-                                    <td class="fw-bold text-end">${saldo}</td>
-                                    <td class="text-end">${mov.costo_unitario ? 'S/ ' + mov.costo_unitario.toFixed(2) : '-'}</td>
-                                </tr>
-                            `);
-                        });
-
-                        // Saldo final
-                        tbody.append(`
-                            <tr class="table-info fw-bold">
-                                <td colspan="6" class="text-end">SALDO FINAL</td>
-                                <td class="text-end">${saldo}</td>
-                                <td class="text-end">S/ ${(saldo * (data.costo_unitario || 0)).toFixed(2)}</td>
-                            </tr>
-                        `);
-
-                        $('#stockActual').text(saldo);
-                        $('#valorTotal').text('S/ ' + (saldo * (data.costo_unitario || 0)).toFixed(2));
-                    },
-                    error: function(xhr) {
-                        console.error('Error:', xhr);
-                        $('#tbodyKardex').html(`
-                            <tr><td colspan="8" class="text-center text-danger py-4">
-                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                Error al cargar el kárdex: ${xhr.responseJSON?.error || 'Error de conexión'}
-                            </td></tr>
-                        `);
+                    if (matchBusqueda && matchEstado) {
+                        $row.show();
+                        visibles++;
+                    } else {
+                        $row.hide();
                     }
                 });
+
+                $('#visibleCount').text(visibles);
+                const total = $('#tbodyBaseDatos tr').length;
+                $('#countText').html(`Mostrando <span id="visibleCount">${visibles}</span> de ${total} productos`);
             }
 
-            // ===== CAMBIO DE PRODUCTO =====
-            $('#productoSelect').change(function() {
-                cargarKardex($(this).val());
+            $('#searchInput').on('keyup', filtrarTabla);
+            $('#filterEstado').on('change', filtrarTabla);
+
+            // ===== LIMPIAR FILTROS =====
+            window.limpiarFiltros = function() {
+                $('#searchInput').val('');
+                $('#filterEstado').val('');
+                filtrarTabla();
+            };
+
+            // ===== EXPORTAR EXCEL =====
+            window.exportarExcel = function() {
+                window.location.href = '/mantenedor/productos/exportar';
+            };
+
+            // ===== CREAR PRODUCTO =====
+            window.crearProducto = function() {
+                window.location.href = '/mantenedor/productos/nuevo';
+            };
+
+            // ===== BOTÓN EXPORTAR EXCEL =====
+            $('#btnExportarExcel').click(function() {
+                exportarExcel();
             });
 
-            // ===== CARGAR SI HAY PARÁMETRO EN URL =====
-            const productoId = new URLSearchParams(window.location.search).get('producto_id');
-            if (productoId) {
-                $('#productoSelect').val(productoId);
-                cargarKardex(productoId);
-            }
-
-            // ===== NUEVO MOVIMIENTO =====
-            $('#btnNuevoMovimiento').click(function() {
-                const id = $('#productoSelect').val();
-                if (id) {
-                    $('#movProductoId').val(id);
-                }
-                modalMovimiento.show();
-            });
-
-            // ===== GUARDAR MOVIMIENTO =====
-            $('#btnGuardarMovimiento').click(function() {
-                const data = {
-                    producto_id: parseInt($('#movProductoId').val()),
-                    tipo: $('#movTipo').val(),
-                    cantidad: parseInt($('#movCantidad').val()),
-                    costo_unitario: parseFloat($('#movCosto').val()) || null,
-                    referencia: $('#movReferencia').val() || null,
-                    motivo: $('#movMotivo').val() || null
-                };
-
-                if (!data.producto_id || !data.cantidad) {
-                    alert('Complete todos los campos requeridos');
-                    return;
-                }
-
-                const btn = $('#btnGuardarMovimiento');
-                const originalText = btn.html();
-                btn.prop('disabled', true);
-                btn.html('<span class="spinner-border spinner-border-sm me-2"></span>Guardando...');
-
-                $.ajax({
-                    url: '/mantenedor/productos/api/movimientos',
-                    method: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify(data),
-                    success: function(response) {
-                        if (response.success) {
-                            modalMovimiento.hide();
-                            cargarKardex($('#productoSelect').val());
-                            alert('✅ Movimiento registrado correctamente');
-                        } else {
-                            alert('❌ ' + (response.error || 'Error al registrar movimiento'));
-                        }
-                    },
-                    error: function(xhr) {
-                        console.error('Error:', xhr);
-                        alert('❌ Error de conexión al servidor');
-                    },
-                    complete: function() {
-                        btn.prop('disabled', false);
-                        btn.html(originalText);
-                    }
-                });
-            });
+            // ===== INICIALIZAR =====
+            filtrarTabla();
         });
     </script>
 </body>
