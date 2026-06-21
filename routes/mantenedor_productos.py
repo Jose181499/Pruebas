@@ -7,6 +7,7 @@ from io import BytesIO
 from datetime import datetime, date
 import json
 import os
+import re
 
 from database import db_query, db_execute, obtener_productos, crear_producto_con_stock
 
@@ -17,13 +18,21 @@ mantenedor_productos_bp = Blueprint("mantenedor_productos", __name__)
 
 @mantenedor_productos_bp.route("/mantenedor/productos/gestion")
 def gestionar_productos():
-    productos = obtener_productos()
-    return render_template("mantenedor/gestion_productos.html", productos=productos)
+    try:
+        productos = obtener_productos()
+        return render_template("mantenedor/gestion_productos.html", productos=productos)
+    except Exception as e:
+        print(f"❌ Error en gestionar_productos: {e}")
+        return render_template("mantenedor/gestion_productos.html", productos=[])
 
 @mantenedor_productos_bp.route("/mantenedor/productos")
 def listar_productos():
-    productos = obtener_productos()
-    return render_template("mantenedor/productos.html", productos=productos)
+    try:
+        productos = obtener_productos()
+        return render_template("mantenedor/productos.html", productos=productos)
+    except Exception as e:
+        print(f"❌ Error en listar_productos: {e}")
+        return render_template("mantenedor/productos.html", productos=[])
 
 @mantenedor_productos_bp.route("/mantenedor/productos/nuevo")
 def insertar_producto():
@@ -37,17 +46,32 @@ def nuevo_producto_completo():
 @mantenedor_productos_bp.route("/mantenedor/productos/comparativo")
 def comparativo_costos():
     """Vista del comparativo de costos por producto"""
-    return render_template("mantenedor/comparativo_costos.html")
+    try:
+        productos = obtener_productos()  # <-- OBTENER PRODUCTOS
+        return render_template("mantenedor/comparativo_costos.html", productos=productos)
+    except Exception as e:
+        print(f"❌ Error en comparativo_costos: {e}")
+        return render_template("mantenedor/comparativo_costos.html", productos=[])
 
 @mantenedor_productos_bp.route("/mantenedor/productos/base-datos")
 def base_datos_productos():
     """Vista de la base de datos de productos"""
-    return render_template("mantenedor/base_datos_productos.html")
+    try:
+        productos = obtener_productos()
+        return render_template("mantenedor/base_datos_productos.html", productos=productos)
+    except Exception as e:
+        print(f"❌ Error en base_datos_productos: {e}")
+        return render_template("mantenedor/base_datos_productos.html", productos=[])
 
 @mantenedor_productos_bp.route("/mantenedor/productos/kardex")
 def kardex_productos():
     """Vista del kárdex de productos"""
-    return render_template("mantenedor/kardex_productos.html")
+    try:
+        productos = obtener_productos()  # <-- OBTENER PRODUCTOS
+        return render_template("mantenedor/kardex_productos.html", productos=productos)
+    except Exception as e:
+        print(f"❌ Error en kardex_productos: {e}")
+        return render_template("mantenedor/kardex_productos.html", productos=[])
 
 # ==================== GUARDAR PRODUCTO ====================
 @mantenedor_productos_bp.route("/mantenedor/productos/guardar", methods=["POST"])
@@ -653,7 +677,6 @@ def api_ultimo_codigo():
             try:
                 # Extraer número del código
                 codigo = resultados[0]['codigo']
-                import re
                 match = re.search(r'\d+$', codigo)
                 if match:
                     numero = int(match.group())

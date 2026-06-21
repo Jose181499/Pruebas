@@ -64,12 +64,12 @@
             <span>Sistema Integrado de Gestión</span>
         </div>
         <ul class="nav-sidebar-custom">
-            <li><a href="{{ url_for('mantenedor_productos.insertar_producto') }}"><i class="bi bi-box-seam-fill"></i> <span>Nuevo Producto</span></a></li>
-            <li><a href="{{ url_for('mantenedor_productos.listar_productos') }}"><i class="bi bi-grid-1x2-fill"></i> <span>Panel Productos</span></a></li>
-            <li><a href="#" class="active-link"><i class="bi bi-journal-bookmark-fill"></i> <span>Kárdex & Movimientos</span></a></li>
-            <li><a href="{{ url_for('mantenedor_productos.comparativo_costos') }}"><i class="bi bi-bar-chart-fill"></i> <span>Comparativo Costos</span></a></li>
-            <li><a href="{{ url_for('mantenedor_productos.base_datos_productos') }}"><i class="bi bi-database-fill"></i> <span>Base de Datos</span></a></li>
-            <li><a href="{{ url_for('mantenedor_productos.gestionar_productos') }}"><i class="bi bi-arrow-return-left"></i> <span>Volver al Panel</span></a></li>
+            <li><a href="/mantenedor/productos/nuevo"><i class="bi bi-box-seam-fill"></i> <span>Nuevo Producto</span></a></li>
+            <li><a href="/mantenedor/productos"><i class="bi bi-grid-1x2-fill"></i> <span>Panel Productos</span></a></li>
+            <li><a href="/mantenedor/productos/kardex" class="active-link"><i class="bi bi-journal-bookmark-fill"></i> <span>Kárdex & Movimientos</span></a></li>
+            <li><a href="/mantenedor/productos/comparativo"><i class="bi bi-bar-chart-fill"></i> <span>Comparativo Costos</span></a></li>
+            <li><a href="/mantenedor/productos/base-datos"><i class="bi bi-database-fill"></i> <span>Base de Datos</span></a></li>
+            <li><a href="/mantenedor"><i class="bi bi-arrow-return-left"></i> <span>Volver al Panel</span></a></li>
         </ul>
         <div class="sidebar-footer">
             <div><i class="bi bi-person-circle me-2"></i> <strong>Admin KCF</strong></div>
@@ -169,9 +169,9 @@
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Tipo</label>
                             <select id="movTipo" class="form-select" required>
-                                <option value="ENTRADA">Entrada</option>
-                                <option value="SALIDA">Salida</option>
-                                <option value="AJUSTE">Ajuste</option>
+                                <option value="ENTRADA">✅ Entrada</option>
+                                <option value="SALIDA">❌ Salida</option>
+                                <option value="AJUSTE">📝 Ajuste</option>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -179,8 +179,8 @@
                             <input type="number" id="movCantidad" class="form-control" min="1" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Costo Unitario (opcional)</label>
-                            <input type="number" id="movCosto" class="form-control" step="0.01" min="0">
+                            <label class="form-label fw-semibold">Costo Unitario <span class="text-muted">(opcional)</span></label>
+                            <input type="number" id="movCosto" class="form-control" step="0.01" min="0" placeholder="0.00">
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Referencia</label>
@@ -208,7 +208,7 @@
         $(document).ready(function() {
             let modalMovimiento = new bootstrap.Modal(document.getElementById('modalMovimiento'));
 
-            // Sidebar
+            // ===== SIDEBAR TOGGLE =====
             $('#hamburgerBtn').click(function() {
                 $('#sidebar').toggleClass('open');
                 $('#sidebarOverlay').toggleClass('show');
@@ -218,7 +218,7 @@
                 $('#sidebarOverlay').removeClass('show');
             });
 
-            // Cargar kárdex
+            // ===== CARGAR KÁRDEX =====
             function cargarKardex(productoId) {
                 if (!productoId) {
                     $('#tbodyKardex').html(`
@@ -275,50 +275,51 @@
                                     <td>${tipoBadge[mov.tipo] || mov.tipo}</td>
                                     <td>${mov.referencia || '-'}</td>
                                     <td>${mov.motivo || '-'}</td>
-                                    <td class="text-success">${mov.tipo === 'ENTRADA' ? mov.cantidad : '-'}</td>
-                                    <td class="text-danger">${mov.tipo === 'SALIDA' ? mov.cantidad : '-'}</td>
-                                    <td class="fw-bold">${saldo}</td>
-                                    <td>${mov.costo_unitario ? 'S/ ' + mov.costo_unitario.toFixed(2) : '-'}</td>
+                                    <td class="text-success text-end">${mov.tipo === 'ENTRADA' ? mov.cantidad : '-'}</td>
+                                    <td class="text-danger text-end">${mov.tipo === 'SALIDA' ? mov.cantidad : '-'}</td>
+                                    <td class="fw-bold text-end">${saldo}</td>
+                                    <td class="text-end">${mov.costo_unitario ? 'S/ ' + mov.costo_unitario.toFixed(2) : '-'}</td>
                                 </tr>
                             `);
                         });
 
                         // Saldo final
                         tbody.append(`
-                            <tr class="table-light fw-bold">
+                            <tr class="table-info fw-bold">
                                 <td colspan="6" class="text-end">SALDO FINAL</td>
-                                <td>${saldo}</td>
-                                <td>S/ ${(saldo * (data.costo_unitario || 0)).toFixed(2)}</td>
+                                <td class="text-end">${saldo}</td>
+                                <td class="text-end">S/ ${(saldo * (data.costo_unitario || 0)).toFixed(2)}</td>
                             </tr>
                         `);
 
                         $('#stockActual').text(saldo);
                         $('#valorTotal').text('S/ ' + (saldo * (data.costo_unitario || 0)).toFixed(2));
                     },
-                    error: function() {
+                    error: function(xhr) {
+                        console.error('Error:', xhr);
                         $('#tbodyKardex').html(`
                             <tr><td colspan="8" class="text-center text-danger py-4">
                                 <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                Error al cargar el kárdex
+                                Error al cargar el kárdex: ${xhr.responseJSON?.error || 'Error de conexión'}
                             </td></tr>
                         `);
                     }
                 });
             }
 
-            // Cambio de producto
+            // ===== CAMBIO DE PRODUCTO =====
             $('#productoSelect').change(function() {
                 cargarKardex($(this).val());
             });
 
-            // Cargar si hay parámetro en URL
+            // ===== CARGAR SI HAY PARÁMETRO EN URL =====
             const productoId = new URLSearchParams(window.location.search).get('producto_id');
             if (productoId) {
                 $('#productoSelect').val(productoId);
                 cargarKardex(productoId);
             }
 
-            // Nuevo movimiento
+            // ===== NUEVO MOVIMIENTO =====
             $('#btnNuevoMovimiento').click(function() {
                 const id = $('#productoSelect').val();
                 if (id) {
@@ -327,7 +328,7 @@
                 modalMovimiento.show();
             });
 
-            // Guardar movimiento
+            // ===== GUARDAR MOVIMIENTO =====
             $('#btnGuardarMovimiento').click(function() {
                 const data = {
                     producto_id: parseInt($('#movProductoId').val()),
@@ -343,6 +344,11 @@
                     return;
                 }
 
+                const btn = $('#btnGuardarMovimiento');
+                const originalText = btn.html();
+                btn.prop('disabled', true);
+                btn.html('<span class="spinner-border spinner-border-sm me-2"></span>Guardando...');
+
                 $.ajax({
                     url: '/mantenedor/productos/api/movimientos',
                     method: 'POST',
@@ -357,15 +363,15 @@
                             alert('❌ ' + (response.error || 'Error al registrar movimiento'));
                         }
                     },
-                    error: function() {
+                    error: function(xhr) {
+                        console.error('Error:', xhr);
                         alert('❌ Error de conexión al servidor');
+                    },
+                    complete: function() {
+                        btn.prop('disabled', false);
+                        btn.html(originalText);
                     }
                 });
-            });
-
-            $('#sidebarKardexLink').click(function(e) {
-                e.preventDefault();
-                window.location.href = '/mantenedor/productos/kardex';
             });
         });
     </script>
