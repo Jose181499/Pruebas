@@ -8,11 +8,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* ====== RESET & GLOBAL ====== */
         * { font-family: 'Inter', sans-serif; }
         body { background: #f0f4f8; margin: 0; }
 
-        /* ====== SIDEBAR ====== */
         .kcf-sidebar {
             position: fixed; top: 0; left: 0; bottom: 0; width: 280px;
             background: linear-gradient(180deg, #0a2b3c 0%, #07212e 100%);
@@ -58,7 +56,6 @@
             font-size: 0.8rem; background: #0a2b3c;
         }
 
-        /* ====== MAIN ====== */
         .main-dashboard {
             margin-left: 280px;
             padding: 1.8rem 2rem;
@@ -66,7 +63,6 @@
             min-height: 100vh;
         }
 
-        /* ====== CARD ====== */
         .card-custom {
             background: white;
             border-radius: 24px;
@@ -75,7 +71,6 @@
             border: 1px solid #e9edf4;
         }
 
-        /* ====== TABLA CON SCROLL HORIZONTAL ====== */
         .table-wrapper {
             overflow-x: auto;
             position: relative;
@@ -97,7 +92,7 @@
 
         .table-custom {
             font-size: 0.85rem;
-            min-width: 2200px;
+            min-width: 2800px;
         }
         .table-custom thead th {
             background: #f8faff;
@@ -202,6 +197,14 @@
             height: 3rem;
         }
 
+        .badge-custom {
+            background: #e9edf4;
+            color: #1e293b;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+        }
+
         @media (max-width: 992px) {
             .kcf-sidebar { transform: translateX(-100%); width: 280px; }
             .kcf-sidebar.open { transform: translateX(0); }
@@ -293,7 +296,7 @@
             </div>
         </div>
 
-        <!-- Tabla con scroll horizontal -->
+        <!-- Tabla -->
         <div class="card-custom">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div class="scroll-indicator">
@@ -307,26 +310,26 @@
                     <thead>
                         <tr>
                             <th style="min-width:50px;">Ítem</th>
-                            <th style="min-width:110px;">Código</th>
+                            <th style="min-width:100px;">Código</th>
                             <th style="min-width:200px;">Descripción</th>
-                            <th style="min-width:110px;">Modelo</th>
+                            <th style="min-width:100px;">Modelo</th>
                             <th style="min-width:100px;">Marca</th>
-                            <th style="min-width:130px;">Cat. Principal</th>
-                            <th style="min-width:130px;">Cat. Derivada</th>
+                            <th style="min-width:150px;">Cat. Principal</th>
+                            <th style="min-width:150px;">Cat. Derivada</th>
                             <th style="min-width:80px;">Peso (kg)</th>
-                            <th style="min-width:140px;">Transporte ref.</th>
+                            <th style="min-width:120px;">Transporte ref.</th>
                             <th style="min-width:100px;">Valor costo</th>
                             <th style="min-width:100px;">Valor venta</th>
-                            <th style="min-width:140px;">Presentación<br><small>proveedor</small></th>
-                            <th style="min-width:140px;">Presentación<br><small>venta</small></th>
-                            <th style="min-width:100px;">Venta mínima</th>
+                            <th style="min-width:140px;">Presentación proveedor</th>
+                            <th style="min-width:140px;">Presentación venta</th>
+                            <th style="min-width:90px;">Venta mínima</th>
                             <th style="min-width:130px;">Código de barras</th>
-                            <th style="min-width:100px;">Volumen (m³)</th>
-                            <th style="min-width:130px;">Origen producto</th>
+                            <th style="min-width:90px;">Volumen (m³)</th>
+                            <th style="min-width:120px;">Origen producto</th>
                             <th style="min-width:130px;">Tiempo est. entrega</th>
                             <th style="min-width:120px;">Abastecimiento</th>
                             <th style="min-width:100px;">Stock mínimo</th>
-                            <th style="min-width:200px;">Descripción</th>
+                            <th style="min-width:200px;">Descripción larga</th>
                             <th style="min-width:200px;">Observación</th>
                             <th style="min-width:100px;">Acciones</th>
                         </tr>
@@ -389,10 +392,9 @@
             let productosData = [];
             let eliminarModal = new bootstrap.Modal(document.getElementById('modalEliminar'));
 
-            // ===== CARGAR PRODUCTOS DESDE API =====
+            // ===== CARGAR PRODUCTOS =====
             function cargarProductos() {
                 $('#loadingStateRow').show();
-                $('#emptyStateRow').remove();
                 
                 $.ajax({
                     url: '/mantenedor/productos/api/productos',
@@ -406,22 +408,13 @@
                     },
                     error: function(xhr, status, error) {
                         console.error('Error al cargar productos:', error);
-                        console.error('Respuesta del servidor:', xhr.responseText);
                         $('#loadingStateRow').hide();
-                        
-                        let errorMsg = 'Error al cargar productos. ';
-                        try {
-                            const response = JSON.parse(xhr.responseText);
-                            errorMsg += response.error || 'Intenta recargar la página.';
-                        } catch(e) {
-                            errorMsg += 'Intenta recargar la página.';
-                        }
-                        mostrarEmptyState(errorMsg);
+                        mostrarEmptyState('Error al cargar productos. Intenta recargar la página.');
                     }
                 });
             }
 
-            // ===== CARGAR FILTROS DINÁMICOS =====
+            // ===== CARGAR FILTROS =====
             function cargarFiltros(productos) {
                 const familias = new Set();
                 const marcas = new Set();
@@ -435,24 +428,18 @@
 
                 const $catSelect = $('#filtroCategoriaPrincipal');
                 $catSelect.find('option:not(:first)').remove();
-                familias.forEach(f => {
-                    $catSelect.append(`<option value="${f}">${f}</option>`);
-                });
+                familias.forEach(f => $catSelect.append(`<option value="${f}">${f}</option>`));
 
                 const $marcaSelect = $('#filtroMarca');
                 $marcaSelect.find('option:not(:first)').remove();
-                marcas.forEach(m => {
-                    $marcaSelect.append(`<option value="${m}">${m}</option>`);
-                });
+                marcas.forEach(m => $marcaSelect.append(`<option value="${m}">${m}</option>`));
 
                 const $subcatSelect = $('#filtroSubcategoria');
                 $subcatSelect.find('option:not(:first)').remove();
-                subcategorias.forEach(s => {
-                    $subcatSelect.append(`<option value="${s}">${s}</option>`);
-                });
+                subcategorias.forEach(s => $subcatSelect.append(`<option value="${s}">${s}</option>`));
             }
 
-            // ===== RENDERIZAR TABLA =====
+            // ===== RENDERIZAR TABLA CON TODOS LOS CAMPOS =====
             function renderizarTabla(productos) {
                 const tbody = $('#tbodyProductos');
                 tbody.find('tr:not(#loadingStateRow)').remove();
@@ -465,6 +452,8 @@
                 let html = '';
                 productos.forEach((p, index) => {
                     const item = index + 1;
+                    
+                    // Mostrar todos los campos con valores por defecto
                     const codigo = p.codigo || '-';
                     const descripcion = p.descripcion || '-';
                     const modelo = p.modelo || '-';
@@ -564,10 +553,7 @@
                 
                 $('#tbodyProductos tr').each(function() {
                     const $row = $(this);
-                    
-                    if ($row.attr('id') === 'loadingStateRow' || $row.attr('id') === 'emptyStateRow') {
-                        return;
-                    }
+                    if ($row.attr('id') === 'loadingStateRow' || $row.attr('id') === 'emptyStateRow') return;
                     
                     const rowCatPrincipal = $row.data('categoria-principal') || '';
                     const rowSubcategoria = $row.data('subcategoria') || '';
@@ -589,8 +575,7 @@
                 });
 
                 if (!tieneDatos && productosData.length > 0) {
-                    const emptyRow = $('#emptyStateRow');
-                    if (emptyRow.length === 0) {
+                    if ($('#emptyStateRow').length === 0) {
                         mostrarEmptyState('No hay productos que coincidan con los filtros seleccionados');
                     }
                 } else if (tieneDatos) {
@@ -607,7 +592,7 @@
                 $('#totalProductosTabla').text(total);
             }
 
-            // ===== EVENTOS DE FILTROS =====
+            // ===== EVENTOS =====
             $('#filtroCategoriaPrincipal, #filtroSubcategoria, #filtroMarca, #filtroModelo').on('change keyup', filtrarTabla);
 
             $('#btnLimpiarFiltros').click(function() {
@@ -676,9 +661,7 @@
                     </div>
                 `;
                 $('.main-dashboard').prepend(alertHtml);
-                setTimeout(() => {
-                    $('.alert').alert('close');
-                }, 4000);
+                setTimeout(() => $('.alert').alert('close'), 4000);
             }
 
             // ===== INICIAL =====
