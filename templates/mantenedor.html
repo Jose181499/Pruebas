@@ -262,6 +262,11 @@
             border: 1px solid #eef2ff;
         }
 
+        .erp-card:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+
         .card-header-custom {
             display: flex;
             justify-content: space-between;
@@ -299,6 +304,84 @@
         .btn-deshabilitado {
             opacity: 0.6;
             cursor: not-allowed;
+        }
+
+        /* Estilos para la tarjeta de productos con SVG */
+        .module-card {
+            background: white;
+            border-radius: 1.2rem;
+            padding: 1.2rem 1.4rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            transition: all 0.2s;
+            border: 1px solid #eef2ff;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            position: relative;
+        }
+
+        .module-card:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .module-card .tag {
+            position: absolute;
+            top: 12px;
+            right: 14px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            background: #dbeafe;
+            color: #1e3a8a;
+            padding: 0.15rem 0.7rem;
+            border-radius: 30px;
+            letter-spacing: 0.3px;
+        }
+
+        .module-card .icon-svg {
+            margin-bottom: 0.6rem;
+        }
+
+        .module-card h4 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+            color: #0f172a;
+        }
+
+        .module-card span {
+            font-size: 0.8rem;
+            color: #5b6e8c;
+        }
+
+        .module-card .card-buttons {
+            margin-top: 0.8rem;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+            .sidebar .logo h3 {
+                font-size: 1rem;
+            }
+            .sidebar .menu-item span:not(.badge-custom) {
+                display: none;
+            }
+            .sidebar .submenu {
+                padding-left: 0.5rem;
+            }
+            .sidebar .submenu-item span {
+                display: none;
+            }
+            .main-content {
+                padding: 1rem;
+            }
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -358,8 +441,11 @@
                     Productos
                 </button>
                 <div class="collapse submenu" id="submenuProductos">
+                    <a href="/mantenedor/productos/gestion" class="submenu-item">
+                        <i class="bi bi-grid-3x3"></i> Gestión de productos
+                    </a>
                     <a href="#" class="submenu-item" data-bs-toggle="modal" data-bs-target="#modalProductos">
-                        <i class="bi bi-grid-3x3"></i> Lista de productos
+                        <i class="bi bi-list-ul"></i> Lista de productos
                     </a>
                 </div>
             </div>
@@ -412,43 +498,44 @@
                 </div>
             </div>
 
-          <!-- ========= INVENTARIO ========= -->
-<div class="dropdown">
-    <button class="menu-item dropdown-toggle-btn w-100 text-start border-0 bg-transparent" 
-            type="button" 
-            data-bs-toggle="collapse" 
-            data-bs-target="#submenuInventario" 
-            aria-expanded="false">
-        <i class="bi bi-archive"></i>
-        Inventario
-    </button>
-    <div class="collapse submenu" id="submenuInventario">
-        <a href="/inventario/kardex" class="submenu-item">
-            <i class="bi bi-card-list"></i> Kardex de productos
-        </a>
-        <a href="/inventario/estado-stock" class="submenu-item">
-            <i class="bi bi-clipboard-data"></i> Estado de stock
-        </a>
-        <a href="/inventario/entrada" class="submenu-item">
-            <i class="bi bi-arrow-down-short"></i> Entrada mercadería
-        </a>
-        <a href="/inventario/salida" class="submenu-item">
-            <i class="bi bi-arrow-up-short"></i> Salida mercadería
-        </a>
-        <a href="/inventario/transferencia" class="submenu-item">
-            <i class="bi bi-arrow-left-right"></i> Transferencia
-        </a>
-        <a href="/inventario/revalorizacion" class="submenu-item">
-            <i class="bi bi-calculator"></i> Revalorización de inventario
-        </a>
-        <a href="/inventario/recuentos" class="submenu-item">
-            <i class="bi bi-check2-square"></i> Recuentos
-        </a>
-        <a href="/inventario/reposicion" class="submenu-item">
-            <i class="bi bi-arrow-repeat"></i> Reposición Stock
-        </a>
-    </div>
-</div>
+            <!-- ========= INVENTARIO ========= -->
+            <div class="dropdown">
+                <button class="menu-item dropdown-toggle-btn w-100 text-start border-0 bg-transparent" 
+                        type="button" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#submenuInventario" 
+                        aria-expanded="false">
+                    <i class="bi bi-archive"></i>
+                    Inventario
+                </button>
+                <div class="collapse submenu" id="submenuInventario">
+                    <a href="/inventario/kardex" class="submenu-item">
+                        <i class="bi bi-card-list"></i> Kardex de productos
+                    </a>
+                    <a href="/inventario/estado-stock" class="submenu-item">
+                        <i class="bi bi-clipboard-data"></i> Estado de stock
+                    </a>
+                    <a href="/inventario/entrada" class="submenu-item">
+                        <i class="bi bi-arrow-down-short"></i> Entrada mercadería
+                    </a>
+                    <a href="/inventario/salida" class="submenu-item">
+                        <i class="bi bi-arrow-up-short"></i> Salida mercadería
+                    </a>
+                    <a href="/inventario/transferencia" class="submenu-item">
+                        <i class="bi bi-arrow-left-right"></i> Transferencia
+                    </a>
+                    <a href="/inventario/revalorizacion" class="submenu-item">
+                        <i class="bi bi-calculator"></i> Revalorización de inventario
+                    </a>
+                    <a href="/inventario/recuentos" class="submenu-item">
+                        <i class="bi bi-check2-square"></i> Recuentos
+                    </a>
+                    <a href="/inventario/reposicion" class="submenu-item">
+                        <i class="bi bi-arrow-repeat"></i> Reposición Stock
+                    </a>
+                </div>
+            </div>
+
             <!-- ========= FINANZAS ========= -->
             <div class="dropdown">
                 <button class="menu-item dropdown-toggle-btn w-100 text-start border-0 bg-transparent" 
@@ -547,6 +634,37 @@
                     <a href="#" class="btn btn-dark btn-sm-custom">Exportar</a>
                 </div>
             </div>
+
+            <!-- ========= TARJETA PRODUCTOS (NUEVA) ========= -->
+            <a href="/mantenedor/productos/gestion" class="module-card">
+                <span class="tag">Inventario</span>
+                <div class="icon-svg">
+                    <svg width="45" height="45" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M15 6 Q15 3 24 3 Q33 3 33 6 L33 22 Q33 25 24 25 Q15 25 15 22 Z" stroke="#1e3a8a" stroke-width="2.2" stroke-linejoin="round" fill="none"/>
+                        <path d="M15 14 L10 14 Q8 14 8 16 L8 20 Q8 22 10 22 L15 22" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                        <path d="M33 14 L38 14 Q40 14 40 16 L40 20 Q40 22 38 22 L33 22" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                        <path d="M13 25 Q13 29 24 29 Q35 29 35 25" stroke="#1e3a8a" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+                        <line x1="24" y1="29" x2="24" y2="37" stroke="#1e3a8a" stroke-width="2.2" stroke-linecap="round"/>
+                        <line x1="24" y1="37" x2="14" y2="44" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="24" y1="37" x2="34" y2="44" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="24" y1="37" x2="24" y2="45" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="24" y1="37" x2="10" y2="39" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="24" y1="37" x2="38" y2="39" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="14" cy="44" r="1.5" stroke="#1e3a8a" stroke-width="1.8" fill="none"/>
+                        <circle cx="34" cy="44" r="1.5" stroke="#1e3a8a" stroke-width="1.8" fill="none"/>
+                        <circle cx="24" cy="45" r="1.5" stroke="#1e3a8a" stroke-width="1.8" fill="none"/>
+                        <circle cx="10" cy="39" r="1.5" stroke="#1e3a8a" stroke-width="1.8" fill="none"/>
+                        <circle cx="38" cy="39" r="1.5" stroke="#1e3a8a" stroke-width="1.8" fill="none"/>
+                    </svg>
+                </div>
+                <h4>Productos</h4>
+                <span>Costo, Precio y Kardex · Gestión completa de productos</span>
+                <div class="card-buttons">
+                    <span class="btn btn-primary btn-sm-custom">Gestionar</span>
+                    <span class="btn btn-light btn-sm-custom">Listar</span>
+                    <span class="btn btn-dark btn-sm-custom">Exportar</span>
+                </div>
+            </a>
 
             <!-- Tarjeta Gestión de Usuarios (solo admin) -->
             {% if session.rol == 'administrador' %}
