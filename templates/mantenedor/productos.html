@@ -75,8 +75,29 @@
             border: 1px solid #e9edf4;
         }
 
+        /* ====== TABLA CON SCROLL HORIZONTAL ====== */
+        .table-wrapper {
+            overflow-x: auto;
+            position: relative;
+        }
+        .table-wrapper::-webkit-scrollbar {
+            height: 8px;
+        }
+        .table-wrapper::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        .table-wrapper::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .table-wrapper::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
         .table-custom {
             font-size: 0.85rem;
+            min-width: 2200px;
         }
         .table-custom thead th {
             background: #f8faff;
@@ -87,38 +108,20 @@
             font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
         .table-custom tbody td {
             padding: 12px 14px;
             vertical-align: middle;
             border-bottom: 1px solid #f1f5f9;
+            white-space: nowrap;
         }
         .table-custom tbody tr:hover {
             background: #f8faff;
         }
-
-        .status-badge {
-            padding: 4px 14px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .status-badge .dot {
-            width: 7px; height: 7px; border-radius: 50%; display: inline-block;
-        }
-        .status-badge.active { background: #eaf9f0; color: #16a34a; }
-        .status-badge.active .dot { background: #16a34a; }
-        .status-badge.inactive { background: #f1f5f9; color: #64748b; }
-        .status-badge.inactive .dot { background: #94a3b8; }
-        .status-badge.pending { background: #fff4dc; color: #f59e0b; }
-        .status-badge.pending .dot { background: #f59e0b; }
-        .status-badge.available { background: #eaf2ff; color: #2563eb; }
-        .status-badge.available .dot { background: #2563eb; }
-        .status-badge.blocked { background: #fef2f2; color: #dc2626; }
-        .status-badge.blocked .dot { background: #dc2626; }
 
         .btn-accion {
             width: 32px; height: 32px;
@@ -150,6 +153,44 @@
             border-radius: 12px;
         }
         .hamburger-btn:hover { background: #f1f5f9; }
+
+        .scroll-indicator {
+            background: linear-gradient(90deg, #0b67f2, #14b8a6);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 12px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #94a3b8;
+        }
+        .empty-state i {
+            font-size: 4rem;
+            display: block;
+            margin-bottom: 20px;
+            color: #cbd5e1;
+        }
+        .empty-state h5 {
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+        .empty-state p {
+            font-size: 0.9rem;
+        }
 
         @media (max-width: 992px) {
             .kcf-sidebar { transform: translateX(-100%); width: 280px; }
@@ -212,13 +253,9 @@
         <!-- Filtros -->
         <div class="card-custom mb-4">
             <div class="row g-3 align-items-end">
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold small text-uppercase">Buscar</label>
-                    <input type="text" id="filtroBusqueda" class="form-control" placeholder="Buscar por nombre, código, marca...">
-                </div>
                 <div class="col-md-3">
-                    <label class="form-label fw-semibold small text-uppercase">Familia</label>
-                    <select id="filtroFamilia" class="form-select">
+                    <label class="form-label fw-semibold small text-uppercase">Categoría principal</label>
+                    <select id="filtroCategoriaPrincipal" class="form-select">
                         <option value="">Todas</option>
                         <option value="Seguridad Industrial">Seguridad Industrial</option>
                         <option value="Mobiliario de Oficina">Mobiliario de Oficina</option>
@@ -228,15 +265,31 @@
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label fw-semibold small text-uppercase">Estado</label>
-                    <select id="filtroEstado" class="form-select">
-                        <option value="">Todos</option>
-                        <option value="activo">Activo</option>
-                        <option value="inactivo">Inactivo</option>
-                        <option value="bajo_pedido">Bajo pedido</option>
-                        <option value="disponible">Disponible</option>
-                        <option value="bloqueado">Bloqueado</option>
+                    <label class="form-label fw-semibold small text-uppercase">Subcategoría</label>
+                    <select id="filtroSubcategoria" class="form-select">
+                        <option value="">Todas</option>
+                        <option value="Electrónica">Electrónica</option>
+                        <option value="Protección Personal">Protección Personal</option>
+                        <option value="Sillas">Sillas</option>
+                        <option value="Escritorios">Escritorios</option>
+                        <option value="Herramientas">Herramientas</option>
+                        <option value="Insumos">Insumos</option>
                     </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold small text-uppercase">Marca</label>
+                    <select id="filtroMarca" class="form-select">
+                        <option value="">Todas</option>
+                        <option value="3M">3M</option>
+                        <option value="HP">HP</option>
+                        <option value="Bosch">Bosch</option>
+                        <option value="Sony">Sony</option>
+                        <option value="LG">LG</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold small text-uppercase">Modelo</label>
+                    <input type="text" id="filtroModelo" class="form-control" placeholder="Buscar modelo...">
                 </div>
                 <div class="col-md-2">
                     <button class="btn btn-outline-secondary w-100" id="btnLimpiarFiltros">
@@ -246,63 +299,62 @@
             </div>
         </div>
 
-        <!-- Tabla -->
+        <!-- Tabla con scroll horizontal -->
         <div class="card-custom">
-            <div class="table-responsive">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="scroll-indicator">
+                    <i class="bi bi-arrow-left-right"></i>
+                    Desplázate horizontalmente para ver más columnas
+                </div>
+                <span class="text-muted small">Total: <span id="totalProductosTabla">0</span> productos</span>
+            </div>
+            <div class="table-wrapper">
                 <table class="table table-custom" id="tablaProductos">
                     <thead>
                         <tr>
-                            <th style="width:50px;">#</th>
-                            <th style="width:120px;">Código</th>
-                            <th>Descripción</th>
-                            <th style="width:100px;">Familia</th>
-                            <th style="width:100px;">Marca</th>
-                            <th style="width:80px;">Stock</th>
-                            <th style="width:100px;">Costo</th>
-                            <th style="width:100px;">Precio</th>
-                            <th style="width:100px;">Estado</th>
-                            <th style="width:120px;">Acciones</th>
+                            <!-- Columnas principales -->
+                            <th style="min-width:50px;">Ítem</th>
+                            <th style="min-width:110px;">Código</th>
+                            <th style="min-width:200px;">Descripción</th>
+                            <th style="min-width:110px;">Modelo</th>
+                            <th style="min-width:100px;">Marca</th>
+                            <th style="min-width:130px;">Cat. Principal</th>
+                            <th style="min-width:130px;">Cat. Derivada</th>
+                            <th style="min-width:80px;">Peso (kg)</th>
+                            <th style="min-width:140px;">Transporte ref.</th>
+                            <th style="min-width:100px;">Valor costo</th>
+                            <th style="min-width:100px;">Valor venta</th>
+                            
+                            <!-- Columnas adicionales (ocultas al inicio) -->
+                            <th style="min-width:140px;">Presentación<br><small>proveedor</small></th>
+                            <th style="min-width:140px;">Presentación<br><small>venta</small></th>
+                            <th style="min-width:100px;">Venta mínima</th>
+                            <th style="min-width:130px;">Código de barras</th>
+                            <th style="min-width:100px;">Volumen (m³)</th>
+                            <th style="min-width:130px;">Origen producto</th>
+                            <th style="min-width:130px;">Tiempo est. entrega</th>
+                            <th style="min-width:120px;">Abastecimiento</th>
+                            <th style="min-width:100px;">Stock mínimo</th>
+                            <th style="min-width:200px;">Descripción</th>
+                            <th style="min-width:200px;">Observación</th>
+                            
+                            <th style="min-width:100px;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tbodyProductos">
-                        {% for p in productos %}
-                        <tr data-id="{{ p.id }}" data-familia="{{ p.familia }}" data-estado="{{ p.estado }}">
-                            <td>{{ loop.index }}</td>
-                            <td><code class="text-primary fw-bold">{{ p.codigo }}</code></td>
-                            <td>{{ p.descripcion }}</td>
-                            <td><span class="badge bg-light text-dark">{{ p.familia or '-' }}</span></td>
-                            <td>{{ p.marca or '-' }}</td>
-                            <td class="fw-bold {% if p.stock <= 5 %}text-danger{% elif p.stock <= 20 %}text-warning{% else %}text-success{% endif %}">
-                                {{ p.stock or 0 }}
-                            </td>
-                            <td>S/ {{ "%.2f"|format(p.costo_unitario or 0) }}</td>
-                            <td>S/ {{ "%.2f"|format(p.precio_unitario or 0) }}</td>
-                            <td>
-                                <span class="status-badge {{ p.estado or 'inactive' }}">
-                                    <span class="dot"></span>
-                                    {{ p.estado|capitalize or 'Inactivo' }}
-                                </span>
-                            </td>
-                            <td>
-                                <button class="btn-accion edit" data-id="{{ p.id }}" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn-accion delete" data-id="{{ p.id }}" title="Eliminar">
-                                    <i class="bi bi-trash3"></i>
-                                </button>
-                                <button class="btn-accion btn-kardex" data-id="{{ p.id }}" title="Kárdex">
-                                  <i class="bi bi-journal"></i>
-                                </button>
+                        <!-- Fila de estado vacío -->
+                        <tr id="emptyStateRow">
+                            <td colspan="23">
+                                <div class="empty-state">
+                                    <i class="bi bi-inbox"></i>
+                                    <h5>No hay productos registrados</h5>
+                                    <p>Comienza agregando tu primer producto haciendo clic en "Nuevo Producto"</p>
+                                    <a href="/mantenedor/productos/nuevo" class="btn btn-primary mt-3">
+                                        <i class="bi bi-plus-circle me-1"></i> Agregar Producto
+                                    </a>
+                                </div>
                             </td>
                         </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="10" class="text-center py-4 text-muted">
-                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                                No hay productos registrados
-                            </td>
-                        </tr>
-                        {% endfor %}
                     </tbody>
                 </table>
             </div>
@@ -349,44 +401,61 @@
 
             // ===== FILTROS =====
             function filtrarTabla() {
-                const busqueda = $('#filtroBusqueda').val().toLowerCase();
-                const familia = $('#filtroFamilia').val();
-                const estado = $('#filtroEstado').val();
+                const catPrincipal = $('#filtroCategoriaPrincipal').val();
+                const subcategoria = $('#filtroSubcategoria').val();
+                const marca = $('#filtroMarca').val();
+                const modelo = $('#filtroModelo').val().toLowerCase();
 
                 let visibles = 0;
+                let tieneDatos = false;
+                
                 $('#tbodyProductos tr').each(function() {
                     const $row = $(this);
-                    const texto = $row.text().toLowerCase();
-                    const rowFamilia = $row.data('familia') || '';
-                    const rowEstado = $row.data('estado') || '';
+                    
+                    // Saltar la fila de estado vacío
+                    if ($row.attr('id') === 'emptyStateRow') {
+                        return;
+                    }
+                    
+                    const rowCatPrincipal = $row.data('categoria-principal') || '';
+                    const rowSubcategoria = $row.data('subcategoria') || '';
+                    const rowMarca = $row.data('marca') || '';
+                    const rowModelo = $row.data('modelo') || '';
 
-                    const matchBusqueda = texto.includes(busqueda);
-                    const matchFamilia = !familia || rowFamilia === familia;
-                    const matchEstado = !estado || rowEstado === estado;
+                    const matchCatPrincipal = !catPrincipal || rowCatPrincipal === catPrincipal;
+                    const matchSubcategoria = !subcategoria || rowSubcategoria === subcategoria;
+                    const matchMarca = !marca || rowMarca === marca;
+                    const matchModelo = !modelo || rowModelo.toLowerCase().includes(modelo);
 
-                    if (matchBusqueda && matchFamilia && matchEstado) {
+                    if (matchCatPrincipal && matchSubcategoria && matchMarca && matchModelo) {
                         $row.show();
                         visibles++;
+                        tieneDatos = true;
                     } else {
                         $row.hide();
                     }
                 });
 
+                // Mostrar/ocultar estado vacío
+                if (!tieneDatos) {
+                    $('#emptyStateRow').show();
+                } else {
+                    $('#emptyStateRow').hide();
+                }
+
                 $('#totalProductos').text(visibles);
+                $('#totalProductosTabla').text(visibles);
             }
 
-            $('#filtroBusqueda, #filtroFamilia, #filtroEstado').on('change keyup', filtrarTabla);
+            $('#filtroCategoriaPrincipal, #filtroSubcategoria, #filtroMarca, #filtroModelo').on('change keyup', filtrarTabla);
 
             $('#btnLimpiarFiltros').click(function() {
-                $('#filtroBusqueda').val('');
-                $('#filtroFamilia').val('');
-                $('#filtroEstado').val('');
+                $('#filtroCategoriaPrincipal').val('');
+                $('#filtroSubcategoria').val('');
+                $('#filtroMarca').val('');
+                $('#filtroModelo').val('');
                 filtrarTabla();
             });
-
-            // ===== CONTADOR =====
-            const total = $('#tbodyProductos tr:visible').length;
-            $('#totalProductos').text(total);
 
             // ===== ELIMINAR =====
             let eliminarModal = new bootstrap.Modal(document.getElementById('modalEliminar'));
@@ -401,41 +470,29 @@
 
             $('#confirmarEliminar').click(function() {
                 const id = $('#eliminarId').val();
-                $.ajax({
-                    url: '/mantenedor/productos/api/productos/' + id,
-                    method: 'DELETE',
-                    success: function() {
-                        eliminarModal.hide();
-                        location.reload();
-                    },
-                    error: function() {
-                        alert('Error al eliminar el producto');
-                    }
-                });
+                alert('Producto ' + id + ' eliminado (simulación)');
+                eliminarModal.hide();
+                // location.reload();
             });
 
             // ===== EDITAR =====
             $(document).on('click', '.btn-accion.edit', function() {
                 const id = $(this).data('id');
-                window.location.href = '/mantenedor/productos/editar/' + id;
+                alert('Editar producto ID: ' + id + ' (simulación)');
             });
 
             // ===== EXPORTAR =====
             $('#btnExportar').click(function() {
-                window.location.href = '/mantenedor/productos/exportar';
+                alert('Exportar datos (simulación)');
             });
 
             // ===== KÁRDEX =====
-            window.verKardex = function(id) {
-                window.location.href = '/mantenedor/productos/kardex?producto_id=' + id;
-            };
-
-            // ===== SIDEBAR LINKS =====
             $('#sidebarKardexLink').click(function(e) {
                 e.preventDefault();
-                window.location.href = '/mantenedor/productos/kardex';
+                alert('Kárdex & Movimientos (simulación)');
             });
 
+            // ===== INICIAL =====
             filtrarTabla();
         });
     </script>
