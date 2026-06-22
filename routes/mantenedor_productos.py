@@ -1,4 +1,4 @@
-# ==================== MANTENEDOR_PRODUCTOS.PY - KCF CORPORACIÓN ====================
+# ==================== APP.PY - KCF CORPORACIÓN ====================
 # Backend completo con todas las funcionalidades integradas
 
 from flask import Blueprint, render_template, request, redirect, flash, jsonify, send_file, url_for
@@ -47,7 +47,7 @@ def nuevo_producto_completo():
 def comparativo_costos():
     """Vista del comparativo de costos por producto"""
     try:
-        productos = obtener_productos()
+        productos = obtener_productos()  # <-- OBTENER PRODUCTOS
         return render_template("mantenedor/comparativo_costos.html", productos=productos)
     except Exception as e:
         print(f"❌ Error en comparativo_costos: {e}")
@@ -67,7 +67,7 @@ def base_datos_productos():
 def kardex_productos():
     """Vista del kárdex de productos"""
     try:
-        productos = obtener_productos()
+        productos = obtener_productos()  # <-- OBTENER PRODUCTOS
         return render_template("mantenedor/kardex_productos.html", productos=productos)
     except Exception as e:
         print(f"❌ Error en kardex_productos: {e}")
@@ -88,10 +88,6 @@ def guardar_producto():
         observaciones = request.form.get("observaciones", "")
         transporte = request.form.get("transporte", "")
         estado = request.form.get("estado", "activo")
-        origen = request.form.get("origen", "")
-        tiempo_entrega = request.form.get("tiempo_entrega", "")
-        abastecimiento = request.form.get("abastecimiento", "")
-        categoria_derivada = request.form.get("categoria_derivada", "")
 
         costo_unitario = float(request.form.get("costo_unitario", 0))
         precio_unitario = float(request.form.get("precio_unitario", 0))
@@ -121,15 +117,7 @@ def guardar_producto():
             "Cintas": "CIN",
             "Primeros Auxilios": "PRI",
             "Calzado": "CAL",
-            "Lámparas": "LAM",
-            "PRODUCTOS QUÍMICOS Y ADHESIVOS": "QUI",
-            "MATERIALES DE SEGURIDAD Y SEÑALIZACIÓN": "SEG",
-            "HERRAMIENTAS MANUALES": "HMA",
-            "MATERIALES ELÉCTRICOS": "MEL",
-            "EQUIPOS DE SOLDADURA": "SOL",
-            "EQUIPOS DE PROTECCIÓN PERSONAL (EPP)": "EPP",
-            "EQUIPOS DE COMUNICACIÓN Y ELECTRÓNICA": "ELE",
-            "GENERAL": "GEN"
+            "Lámparas": "LAM"
         }
 
         prefijo = prefijos.get(familia, "GEN")
@@ -137,9 +125,9 @@ def guardar_producto():
         result = db_query("SELECT COUNT(*) as total FROM productos WHERE familia = %s", (familia,))
         row = result[0] if result else {'total': 0}
         numero = (row.get('total') if isinstance(row, dict) else row[0]) + 1
-        codigo = f"{prefijo}{str(numero).zfill(3)}"
+        codigo = f"{prefijo}-{str(numero).zfill(3)}"
 
-        # Preparar datos con todas las columnas
+        # Preparar datos
         data = {
             'codigo': codigo,
             'familia': familia,
@@ -160,12 +148,21 @@ def guardar_producto():
             'presentacion_proveedor': presentacion_proveedor,
             'presentacion_venta': presentacion_venta,
             'venta_minima': venta_minima,
-            'codigo_barras': codigo_barras,
-            'origen': origen,
-            'tiempo_entrega': tiempo_entrega,
-            'abastecimiento': abastecimiento,
-            'categoria_derivada': categoria_derivada
+            'codigo_barras': codigo_barras
         }
+
+        # Verificar si la tabla tiene las columnas adicionales
+        try:
+            db_query("SELECT presentacion_proveedor FROM productos LIMIT 1")
+        except:
+            # Agregar columnas si no existen
+            db_execute("ALTER TABLE productos ADD COLUMN presentacion_proveedor VARCHAR(100)")
+            db_execute("ALTER TABLE productos ADD COLUMN presentacion_venta VARCHAR(100)")
+            db_execute("ALTER TABLE productos ADD COLUMN venta_minima INTEGER DEFAULT 1")
+            db_execute("ALTER TABLE productos ADD COLUMN codigo_barras VARCHAR(50)")
+            db_execute("ALTER TABLE productos ADD COLUMN estado VARCHAR(20) DEFAULT 'activo'")
+            db_execute("ALTER TABLE productos ADD COLUMN stock_minimo INTEGER DEFAULT 0")
+            db_execute("ALTER TABLE productos ADD COLUMN volumen DECIMAL(10,3) DEFAULT 0")
 
         producto_id = crear_producto_con_stock(data)
 
@@ -173,9 +170,6 @@ def guardar_producto():
 
     except Exception as e:
         flash(f'❌ Error al guardar el producto: {str(e)}', 'danger')
-        print(f"❌ Error en guardar_producto: {e}")
-        import traceback
-        traceback.print_exc()
 
     return redirect("/mantenedor/productos")
 
@@ -227,7 +221,7 @@ def importar_productos():
                 prefijo = prefijos.get(familia, "GEN")
                 result = db_query("SELECT COUNT(*) as total FROM productos WHERE familia = %s", (familia,))
                 numero = (result[0].get('total') if result else 0) + idx + 1
-                codigo = f"{prefijo}{str(numero).zfill(3)}"
+                codigo = f"{prefijo}-{str(numero).zfill(3)}"
                 
                 data = {
                     'codigo': codigo,
@@ -245,11 +239,7 @@ def importar_productos():
                     'precio_unitario': precio,
                     'stock': stock,
                     'stock_minimo': int(row.get('stock_minimo') or row.get('Stock Mínimo') or 0),
-                    'estado': 'activo',
-                    'origen': row.get('origen') or '',
-                    'tiempo_entrega': row.get('tiempo_entrega') or '',
-                    'abastecimiento': row.get('abastecimiento') or '',
-                    'categoria_derivada': row.get('categoria_derivada') or ''
+                    'estado': 'activo'
                 }
                 
                 crear_producto_con_stock(data)
@@ -279,8 +269,7 @@ def exportar_productos():
             SELECT id, codigo, familia, descripcion, descripcion_larga, marca, modelo, 
                    unidad, peso, volumen, transporte, costo_unitario, precio_unitario, 
                    stock, stock_minimo, estado, presentacion_proveedor, presentacion_venta,
-                   venta_minima, codigo_barras, observaciones, origen, tiempo_entrega,
-                   abastecimiento, categoria_derivada
+                   venta_minima, codigo_barras, observaciones
             FROM productos
             ORDER BY id
         """)
@@ -297,9 +286,7 @@ def exportar_productos():
                       'Marca', 'Modelo', 'Unidad', 'Peso (kg)', 'Volumen (m³)', 
                       'Transporte', 'Costo Unitario', 'Precio Unitario', 
                       'Stock', 'Stock Mínimo', 'Estado', 'Presentación Proveedor',
-                      'Presentación Venta', 'Venta Mínima', 'Código Barras', 
-                      'Observaciones', 'Origen', 'Tiempo Entrega', 
-                      'Abastecimiento', 'Categoría Derivada']
+                      'Presentación Venta', 'Venta Mínima', 'Código Barras', 'Observaciones']
         
         # Crear archivo Excel
         output = BytesIO()
@@ -359,10 +346,6 @@ def editar_producto():
         presentacion_venta = request.form.get('presentacion_venta', '')
         venta_minima = int(request.form.get('venta_minima', 1))
         codigo_barras = request.form.get('codigo_barras', '')
-        origen = request.form.get('origen', '')
-        tiempo_entrega = request.form.get('tiempo_entrega', '')
-        abastecimiento = request.form.get('abastecimiento', '')
-        categoria_derivada = request.form.get('categoria_derivada', '')
 
         db_execute("""
             UPDATE productos
@@ -384,18 +367,13 @@ def editar_producto():
                 presentacion_proveedor = %s,
                 presentacion_venta = %s,
                 venta_minima = %s,
-                codigo_barras = %s,
-                origen = %s,
-                tiempo_entrega = %s,
-                abastecimiento = %s,
-                categoria_derivada = %s
+                codigo_barras = %s
             WHERE id = %s
         """, (familia, descripcion, descripcion_larga, marca, modelo, unidad, 
               peso, volumen, observaciones, transporte, costo_unitario, 
               precio_unitario, stock, stock_minimo, estado, 
               presentacion_proveedor, presentacion_venta, venta_minima,
-              codigo_barras, origen, tiempo_entrega, abastecimiento,
-              categoria_derivada, id_producto))
+              codigo_barras, id_producto))
 
         flash('✅ Producto actualizado correctamente', 'success')
 
@@ -416,95 +394,34 @@ def eliminar_producto():
 
 @mantenedor_productos_bp.route("/mantenedor/productos/api/productos", methods=["GET"])
 def api_get_productos():
-    """API: Obtener todos los productos - Versión mejorada con detección automática de columnas"""
+    """API: Obtener todos los productos"""
     try:
-        # Primero, obtener las columnas de la tabla
-        try:
-            columnas_info = db_query("PRAGMA table_info(productos)")
-            columnas_existentes = [c['name'] for c in columnas_info] if columnas_info else []
-            print(f"📋 Columnas existentes en la tabla productos: {columnas_existentes}")
-        except Exception as e:
-            print(f"⚠️ Error al obtener columnas: {e}")
-            columnas_existentes = []
-        
-        # Definir todas las columnas que queremos consultar
-        todas_las_columnas = [
-            'id', 'codigo', 'familia', 'descripcion', 'descripcion_larga', 
-            'marca', 'modelo', 'unidad', 'peso', 'volumen', 'transporte', 
-            'costo_unitario', 'precio_unitario', 'stock', 'stock_minimo', 
-            'estado', 'presentacion_proveedor', 'presentacion_venta',
-            'venta_minima', 'codigo_barras', 'observaciones',
-            'origen', 'tiempo_entrega', 'abastecimiento', 'categoria_derivada'
-        ]
-        
-        # Filtrar solo las columnas que existen en la tabla
-        columnas_finales = [col for col in todas_las_columnas if col in columnas_existentes]
-        
-        # Si no hay columnas, usar las básicas como fallback
-        if not columnas_finales:
-            columnas_finales = ['id', 'codigo', 'familia', 'descripcion']
-        
-        # Construir la consulta SQL dinámica
-        sql = f"SELECT {', '.join(columnas_finales)} FROM productos ORDER BY id"
-        print(f"📝 SQL ejecutado: {sql}")
-        
-        productos = db_query(sql)
-        print(f"✅ Productos encontrados: {len(productos)}")
+        productos = db_query("""
+            SELECT id, codigo, familia, descripcion, descripcion_larga, marca, modelo, 
+                   unidad, peso, volumen, transporte, costo_unitario, precio_unitario, 
+                   stock, stock_minimo, estado, presentacion_proveedor, presentacion_venta,
+                   venta_minima, codigo_barras, observaciones 
+            FROM productos
+            ORDER BY id
+        """)
         
         # Procesar datos para JSON
         for p in productos:
-            # Convertir valores numéricos
-            for key in ['costo_unitario', 'precio_unitario', 'peso', 'volumen']:
-                if key in p and p[key] is not None:
-                    try:
-                        p[key] = float(p[key])
-                    except:
-                        p[key] = 0
-                elif key in p:
-                    p[key] = 0
-            
-            # Asegurar valores por defecto
-            if 'stock' not in p or p['stock'] is None:
-                p['stock'] = 0
-            if 'stock_minimo' not in p or p['stock_minimo'] is None:
-                p['stock_minimo'] = 0
-            if 'venta_minima' not in p or p['venta_minima'] is None:
-                p['venta_minima'] = 1
-            if 'estado' not in p or p['estado'] is None:
-                p['estado'] = 'activo'
-            if 'descripcion_larga' not in p or p['descripcion_larga'] is None:
-                p['descripcion_larga'] = ''
-            if 'marca' not in p or p['marca'] is None:
-                p['marca'] = ''
-            if 'modelo' not in p or p['modelo'] is None:
-                p['modelo'] = ''
-            if 'unidad' not in p or p['unidad'] is None:
-                p['unidad'] = 'Und'
-            if 'transporte' not in p or p['transporte'] is None:
-                p['transporte'] = ''
-            if 'presentacion_proveedor' not in p or p['presentacion_proveedor'] is None:
-                p['presentacion_proveedor'] = ''
-            if 'presentacion_venta' not in p or p['presentacion_venta'] is None:
-                p['presentacion_venta'] = ''
-            if 'codigo_barras' not in p or p['codigo_barras'] is None:
-                p['codigo_barras'] = ''
-            if 'observaciones' not in p or p['observaciones'] is None:
-                p['observaciones'] = ''
-            if 'origen' not in p or p['origen'] is None:
-                p['origen'] = ''
-            if 'tiempo_entrega' not in p or p['tiempo_entrega'] is None:
-                p['tiempo_entrega'] = ''
-            if 'abastecimiento' not in p or p['abastecimiento'] is None:
-                p['abastecimiento'] = ''
-            if 'categoria_derivada' not in p or p['categoria_derivada'] is None:
-                p['categoria_derivada'] = ''
+            if p.get('costo_unitario'):
+                p['costo_unitario'] = float(p['costo_unitario'])
+            if p.get('precio_unitario'):
+                p['precio_unitario'] = float(p['precio_unitario'])
+            if p.get('peso'):
+                p['peso'] = float(p['peso'])
+            if p.get('volumen'):
+                p['volumen'] = float(p['volumen'])
+            p['stock'] = p.get('stock') or 0
+            p['stock_minimo'] = p.get('stock_minimo') or 0
+            p['venta_minima'] = p.get('venta_minima') or 1
                 
         return jsonify(productos)
-        
     except Exception as e:
         print(f"❌ Error en api_get_productos: {e}")
-        import traceback
-        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @mantenedor_productos_bp.route("/mantenedor/productos/api/productos/<int:id>", methods=["GET"])
@@ -515,8 +432,7 @@ def api_get_producto(id):
             SELECT id, codigo, familia, descripcion, descripcion_larga, marca, modelo, 
                    unidad, peso, volumen, transporte, costo_unitario, precio_unitario, 
                    stock, stock_minimo, estado, presentacion_proveedor, presentacion_venta,
-                   venta_minima, codigo_barras, observaciones, origen, tiempo_entrega,
-                   abastecimiento, categoria_derivada
+                   venta_minima, codigo_barras, observaciones 
             FROM productos 
             WHERE id = %s
         """, (id,))
@@ -558,8 +474,7 @@ def api_update_producto(id):
             'unidad', 'peso', 'volumen', 'transporte', 'costo_unitario', 
             'precio_unitario', 'stock', 'stock_minimo', 'observaciones', 
             'estado', 'presentacion_proveedor', 'presentacion_venta', 
-            'venta_minima', 'codigo_barras', 'origen', 'tiempo_entrega',
-            'abastecimiento', 'categoria_derivada'
+            'venta_minima', 'codigo_barras'
         ]
         
         for campo in campos_permitidos:
@@ -812,11 +727,7 @@ def crear_tablas():
             'codigo_barras': 'VARCHAR(50)',
             'estado': "VARCHAR(20) DEFAULT 'activo'",
             'stock_minimo': 'INTEGER DEFAULT 0',
-            'volumen': 'DECIMAL(10,3) DEFAULT 0',
-            'origen': 'VARCHAR(100)',
-            'tiempo_entrega': 'VARCHAR(50)',
-            'abastecimiento': 'VARCHAR(100)',
-            'categoria_derivada': 'VARCHAR(100)'
+            'volumen': 'DECIMAL(10,3) DEFAULT 0'
         }
         
         for col, tipo in columnas_nuevas.items():

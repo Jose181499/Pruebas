@@ -279,35 +279,16 @@ def actualizar_usuario_db(id, data):
 # Productos - ACTUALIZADA
 # =========================
 def obtener_productos():
+    """Obtener todos los productos con TODAS las columnas"""
     return db_query("""
         SELECT 
-            id, 
-            familia, 
-            codigo, 
-            descripcion, 
-            descripcion_larga,
-            marca, 
-            modelo, 
-            unidad,
-            peso,
-            volumen,
-            observaciones,
-            transporte,
-            costo_unitario,
-            precio_unitario,
-            stock,
-            stock_minimo,
-            estado,
-            presentacion_proveedor,
-            presentacion_venta,
-            venta_minima,
-            codigo_barras,
-            origen,              # ← NUEVA COLUMNA
-            tiempo_entrega,      # ← NUEVA COLUMNA
-            abastecimiento,      # ← NUEVA COLUMNA
-            categoria_derivada,  # ← NUEVA COLUMNA
-            activo,
-            fecha_creacion
+            id, familia, codigo, descripcion, descripcion_larga,
+            marca, modelo, unidad, peso, observaciones, transporte,
+            costo_unitario, precio_unitario, stock, stock_minimo,
+            estado, presentacion_proveedor, presentacion_venta,
+            venta_minima, codigo_barras, volumen,
+            categoria_derivada, origen, tiempo_entrega, abastecimiento,
+            activo, fecha_creacion
         FROM productos
         WHERE activo = TRUE
         ORDER BY familia, codigo
@@ -971,35 +952,18 @@ def obtener_producto_completo_por_id(producto_id):
 # Crear Producto con Stock Inicial (Kardex)
 # =========================
 def crear_producto_con_stock(data):
+    """Inserta un nuevo producto con TODOS los campos"""
     with db_tx() as conn:
         cur = conn.cursor(cursor_factory=RealDictCursor)
 
         cur.execute("""
             INSERT INTO productos (
-                familia, 
-                codigo, 
-                descripcion, 
-                descripcion_larga, 
-                marca, 
-                modelo, 
-                unidad, 
-                peso, 
-                volumen,
-                observaciones, 
-                transporte, 
-                costo_unitario, 
-                precio_unitario, 
-                stock,
-                stock_minimo,
-                estado,
-                presentacion_proveedor,
-                presentacion_venta,
-                venta_minima,
-                codigo_barras,
-                origen,              # ← NUEVA COLUMNA
-                tiempo_entrega,      # ← NUEVA COLUMNA
-                abastecimiento,      # ← NUEVA COLUMNA
-                categoria_derivada,  # ← NUEVA COLUMNA
+                familia, codigo, descripcion, descripcion_larga,
+                marca, modelo, unidad, peso, volumen, observaciones,
+                transporte, costo_unitario, precio_unitario, stock,
+                stock_minimo, estado, presentacion_proveedor,
+                presentacion_venta, venta_minima, codigo_barras,
+                categoria_derivada, origen, tiempo_entrega, abastecimiento,
                 activo
             )
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE)
@@ -1012,8 +976,8 @@ def crear_producto_con_stock(data):
             data.get('marca', ''),
             data.get('modelo', ''),
             data.get('unidad', 'Unidad'),
-            float(data.get('peso', 0) or 0),
-            float(data.get('volumen', 0) or 0),
+            data.get('peso', '0'),
+            data.get('volumen', '0'),
             data.get('observaciones', ''),
             data.get('transporte', ''),
             float(data.get('costo_unitario', 0) or 0),
@@ -1025,15 +989,14 @@ def crear_producto_con_stock(data):
             data.get('presentacion_venta', ''),
             int(data.get('venta_minima', 1) or 1),
             data.get('codigo_barras', ''),
-            data.get('origen', ''),              # ← NUEVO VALOR
-            data.get('tiempo_entrega', ''),      # ← NUEVO VALOR
-            data.get('abastecimiento', ''),      # ← NUEVO VALOR
-            data.get('categoria_derivada', '')   # ← NUEVO VALOR
+            data.get('categoria_derivada', ''),
+            data.get('origen', ''),
+            data.get('tiempo_entrega', ''),
+            data.get('abastecimiento', '')
         ))
 
         producto_id = cur.fetchone()['id']
         return producto_id
-
 # =========================
 # Cotizaciones recientes
 # =========================
