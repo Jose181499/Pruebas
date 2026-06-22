@@ -302,6 +302,10 @@ def obtener_productos():
             presentacion_venta,
             venta_minima,
             codigo_barras,
+            origen,              # ← NUEVA COLUMNA
+            tiempo_entrega,      # ← NUEVA COLUMNA
+            abastecimiento,      # ← NUEVA COLUMNA
+            categoria_derivada,  # ← NUEVA COLUMNA
             activo,
             fecha_creacion
         FROM productos
@@ -967,9 +971,6 @@ def obtener_producto_completo_por_id(producto_id):
 # Crear Producto con Stock Inicial (Kardex)
 # =========================
 def crear_producto_con_stock(data):
-    """
-    Inserta un nuevo producto con TODOS los campos
-    """
     with db_tx() as conn:
         cur = conn.cursor(cursor_factory=RealDictCursor)
 
@@ -995,9 +996,13 @@ def crear_producto_con_stock(data):
                 presentacion_venta,
                 venta_minima,
                 codigo_barras,
+                origen,              # ← NUEVA COLUMNA
+                tiempo_entrega,      # ← NUEVA COLUMNA
+                abastecimiento,      # ← NUEVA COLUMNA
+                categoria_derivada,  # ← NUEVA COLUMNA
                 activo
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE)
             RETURNING id
         """, (
             data.get('familia'),
@@ -1007,34 +1012,27 @@ def crear_producto_con_stock(data):
             data.get('marca', ''),
             data.get('modelo', ''),
             data.get('unidad', 'Unidad'),
-            str(data.get('peso', '0')),  # Convertir a string
-            str(data.get('volumen', '0')),  # Convertir a string
+            float(data.get('peso', 0) or 0),
+            float(data.get('volumen', 0) or 0),
             data.get('observaciones', ''),
             data.get('transporte', ''),
-            float(data.get('costo_unitario', 0)),
-            float(data.get('precio_unitario', 0)),
-            int(data.get('stock', 0)),
-            int(data.get('stock_minimo', 0)),
+            float(data.get('costo_unitario', 0) or 0),
+            float(data.get('precio_unitario', 0) or 0),
+            int(data.get('stock', 0) or 0),
+            int(data.get('stock_minimo', 0) or 0),
             data.get('estado', 'activo'),
             data.get('presentacion_proveedor', ''),
             data.get('presentacion_venta', ''),
-            int(data.get('venta_minima', 1)),
-            data.get('codigo_barras', '')
+            int(data.get('venta_minima', 1) or 1),
+            data.get('codigo_barras', ''),
+            data.get('origen', ''),              # ← NUEVO VALOR
+            data.get('tiempo_entrega', ''),      # ← NUEVO VALOR
+            data.get('abastecimiento', ''),      # ← NUEVO VALOR
+            data.get('categoria_derivada', '')   # ← NUEVO VALOR
         ))
 
         producto_id = cur.fetchone()['id']
-
-        # Registrar stock inicial en kardex
-        stock_inicial = int(data.get('stock', 0))
-        if stock_inicial > 0:
-            cur.execute("""
-                INSERT INTO movimientos_stock 
-                (producto_id, tipo, cantidad, motivo, referencia)
-                VALUES (%s, 'ENTRADA', %s, 'Stock Inicial', 'Registro al crear producto')
-            """, (producto_id, stock_inicial))
-
         return producto_id
-
 
 # =========================
 # Cotizaciones recientes
@@ -3180,3 +3178,41 @@ def eliminar_transportista_db(transportista_id):
     except Exception as e:
         print(f"❌ Error en eliminar_transportista_db: {e}")
         return False
+
+def verificar_columnas_productos():
+    """Verificar y agregar columnas faltantes en la tabla productos"""
+    try:
+        # Obtener columnas existentes
+        columnas = db_query("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'productos'
+        """)
+        columnas_existentes = [c['column_name'] for c in columnas]
+        
+        # Columnas que deben existir
+        columnas_necesarias = {
+            'origen': 'VARCHAR(100)',
+            'tiempo_entrega': 'VARCHAR(50)',
+            'abastecimiento': 'VARCHAR(100)',
+            'categoria_derivada': 'VARCHAR(100)',
+            'presentacion_proveedor': 'VARCHAR(100)',
+            'presentacion_venta': 'VARCHAR(100)',
+            'venta_minima': 'INTEGER DEFAULT 1',
+            'codigo_barras': 'VARCHAR(50)',
+            'stock_minimo': 'INTEGER DEFAULT 0',
+            'volumen': 'DECIMAL(10,3) DEFAULT 0'
+        }
+        
+        for col, tipo in columnas_necesarias.items():
+            if col not in columnas_existentes:
+                try:
+                    db_execute(f"ALTER TABLE productos ADD COLUMN {col} {tipo}")
+                    print(f"✅ Columna '{col}' agregada a productos")
+                except Exception as e:
+                    print(f"⚠️ No se pudo agregar columna {col}: {e}")
+        
+        print("✅ Verificación de columnas completada")
+        
+    except Exception as e:
+        print(f"❌ Error en verificar_columnas_productos: {e}")
