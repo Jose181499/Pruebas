@@ -88,6 +88,10 @@ def guardar_producto():
         observaciones = request.form.get("observaciones", "")
         transporte = request.form.get("transporte", "")
         estado = request.form.get("estado", "activo")
+        origen = request.form.get("origen", "")
+        tiempo_entrega = request.form.get("tiempo_entrega", "")
+        abastecimiento = request.form.get("abastecimiento", "")
+        categoria_derivada = request.form.get("categoria_derivada", "")
 
         costo_unitario = float(request.form.get("costo_unitario", 0))
         precio_unitario = float(request.form.get("precio_unitario", 0))
@@ -117,7 +121,15 @@ def guardar_producto():
             "Cintas": "CIN",
             "Primeros Auxilios": "PRI",
             "Calzado": "CAL",
-            "Lámparas": "LAM"
+            "Lámparas": "LAM",
+            "PRODUCTOS QUÍMICOS Y ADHESIVOS": "QUI",
+            "MATERIALES DE SEGURIDAD Y SEÑALIZACIÓN": "SEG",
+            "HERRAMIENTAS MANUALES": "HMA",
+            "MATERIALES ELÉCTRICOS": "MEL",
+            "EQUIPOS DE SOLDADURA": "SOL",
+            "EQUIPOS DE PROTECCIÓN PERSONAL (EPP)": "EPP",
+            "EQUIPOS DE COMUNICACIÓN Y ELECTRÓNICA": "ELE",
+            "GENERAL": "GEN"
         }
 
         prefijo = prefijos.get(familia, "GEN")
@@ -125,9 +137,9 @@ def guardar_producto():
         result = db_query("SELECT COUNT(*) as total FROM productos WHERE familia = %s", (familia,))
         row = result[0] if result else {'total': 0}
         numero = (row.get('total') if isinstance(row, dict) else row[0]) + 1
-        codigo = f"{prefijo}-{str(numero).zfill(3)}"
+        codigo = f"{prefijo}{str(numero).zfill(3)}"
 
-        # Preparar datos
+        # Preparar datos con todas las columnas
         data = {
             'codigo': codigo,
             'familia': familia,
@@ -148,21 +160,12 @@ def guardar_producto():
             'presentacion_proveedor': presentacion_proveedor,
             'presentacion_venta': presentacion_venta,
             'venta_minima': venta_minima,
-            'codigo_barras': codigo_barras
+            'codigo_barras': codigo_barras,
+            'origen': origen,
+            'tiempo_entrega': tiempo_entrega,
+            'abastecimiento': abastecimiento,
+            'categoria_derivada': categoria_derivada
         }
-
-        # Verificar si la tabla tiene las columnas adicionales
-        try:
-            db_query("SELECT presentacion_proveedor FROM productos LIMIT 1")
-        except:
-            # Agregar columnas si no existen
-            db_execute("ALTER TABLE productos ADD COLUMN presentacion_proveedor VARCHAR(100)")
-            db_execute("ALTER TABLE productos ADD COLUMN presentacion_venta VARCHAR(100)")
-            db_execute("ALTER TABLE productos ADD COLUMN venta_minima INTEGER DEFAULT 1")
-            db_execute("ALTER TABLE productos ADD COLUMN codigo_barras VARCHAR(50)")
-            db_execute("ALTER TABLE productos ADD COLUMN estado VARCHAR(20) DEFAULT 'activo'")
-            db_execute("ALTER TABLE productos ADD COLUMN stock_minimo INTEGER DEFAULT 0")
-            db_execute("ALTER TABLE productos ADD COLUMN volumen DECIMAL(10,3) DEFAULT 0")
 
         producto_id = crear_producto_con_stock(data)
 
@@ -170,6 +173,9 @@ def guardar_producto():
 
     except Exception as e:
         flash(f'❌ Error al guardar el producto: {str(e)}', 'danger')
+        print(f"❌ Error en guardar_producto: {e}")
+        import traceback
+        traceback.print_exc()
 
     return redirect("/mantenedor/productos")
 
@@ -221,7 +227,7 @@ def importar_productos():
                 prefijo = prefijos.get(familia, "GEN")
                 result = db_query("SELECT COUNT(*) as total FROM productos WHERE familia = %s", (familia,))
                 numero = (result[0].get('total') if result else 0) + idx + 1
-                codigo = f"{prefijo}-{str(numero).zfill(3)}"
+                codigo = f"{prefijo}{str(numero).zfill(3)}"
                 
                 data = {
                     'codigo': codigo,
@@ -239,7 +245,11 @@ def importar_productos():
                     'precio_unitario': precio,
                     'stock': stock,
                     'stock_minimo': int(row.get('stock_minimo') or row.get('Stock Mínimo') or 0),
-                    'estado': 'activo'
+                    'estado': 'activo',
+                    'origen': row.get('origen') or '',
+                    'tiempo_entrega': row.get('tiempo_entrega') or '',
+                    'abastecimiento': row.get('abastecimiento') or '',
+                    'categoria_derivada': row.get('categoria_derivada') or ''
                 }
                 
                 crear_producto_con_stock(data)
@@ -269,7 +279,8 @@ def exportar_productos():
             SELECT id, codigo, familia, descripcion, descripcion_larga, marca, modelo, 
                    unidad, peso, volumen, transporte, costo_unitario, precio_unitario, 
                    stock, stock_minimo, estado, presentacion_proveedor, presentacion_venta,
-                   venta_minima, codigo_barras, observaciones
+                   venta_minima, codigo_barras, observaciones, origen, tiempo_entrega,
+                   abastecimiento, categoria_derivada
             FROM productos
             ORDER BY id
         """)
@@ -286,7 +297,9 @@ def exportar_productos():
                       'Marca', 'Modelo', 'Unidad', 'Peso (kg)', 'Volumen (m³)', 
                       'Transporte', 'Costo Unitario', 'Precio Unitario', 
                       'Stock', 'Stock Mínimo', 'Estado', 'Presentación Proveedor',
-                      'Presentación Venta', 'Venta Mínima', 'Código Barras', 'Observaciones']
+                      'Presentación Venta', 'Venta Mínima', 'Código Barras', 
+                      'Observaciones', 'Origen', 'Tiempo Entrega', 
+                      'Abastecimiento', 'Categoría Derivada']
         
         # Crear archivo Excel
         output = BytesIO()
@@ -346,6 +359,10 @@ def editar_producto():
         presentacion_venta = request.form.get('presentacion_venta', '')
         venta_minima = int(request.form.get('venta_minima', 1))
         codigo_barras = request.form.get('codigo_barras', '')
+        origen = request.form.get('origen', '')
+        tiempo_entrega = request.form.get('tiempo_entrega', '')
+        abastecimiento = request.form.get('abastecimiento', '')
+        categoria_derivada = request.form.get('categoria_derivada', '')
 
         db_execute("""
             UPDATE productos
@@ -367,13 +384,18 @@ def editar_producto():
                 presentacion_proveedor = %s,
                 presentacion_venta = %s,
                 venta_minima = %s,
-                codigo_barras = %s
+                codigo_barras = %s,
+                origen = %s,
+                tiempo_entrega = %s,
+                abastecimiento = %s,
+                categoria_derivada = %s
             WHERE id = %s
         """, (familia, descripcion, descripcion_larga, marca, modelo, unidad, 
               peso, volumen, observaciones, transporte, costo_unitario, 
               precio_unitario, stock, stock_minimo, estado, 
               presentacion_proveedor, presentacion_venta, venta_minima,
-              codigo_barras, id_producto))
+              codigo_barras, origen, tiempo_entrega, abastecimiento,
+              categoria_derivada, id_producto))
 
         flash('✅ Producto actualizado correctamente', 'success')
 
@@ -411,7 +433,8 @@ def api_get_productos():
             'marca', 'modelo', 'unidad', 'peso', 'volumen', 'transporte', 
             'costo_unitario', 'precio_unitario', 'stock', 'stock_minimo', 
             'estado', 'presentacion_proveedor', 'presentacion_venta',
-            'venta_minima', 'codigo_barras', 'observaciones'
+            'venta_minima', 'codigo_barras', 'observaciones',
+            'origen', 'tiempo_entrega', 'abastecimiento', 'categoria_derivada'
         ]
         
         # Filtrar solo las columnas que existen en la tabla
@@ -437,6 +460,8 @@ def api_get_productos():
                         p[key] = float(p[key])
                     except:
                         p[key] = 0
+                elif key in p:
+                    p[key] = 0
             
             # Asegurar valores por defecto
             if 'stock' not in p or p['stock'] is None:
@@ -447,6 +472,32 @@ def api_get_productos():
                 p['venta_minima'] = 1
             if 'estado' not in p or p['estado'] is None:
                 p['estado'] = 'activo'
+            if 'descripcion_larga' not in p or p['descripcion_larga'] is None:
+                p['descripcion_larga'] = ''
+            if 'marca' not in p or p['marca'] is None:
+                p['marca'] = ''
+            if 'modelo' not in p or p['modelo'] is None:
+                p['modelo'] = ''
+            if 'unidad' not in p or p['unidad'] is None:
+                p['unidad'] = 'Und'
+            if 'transporte' not in p or p['transporte'] is None:
+                p['transporte'] = ''
+            if 'presentacion_proveedor' not in p or p['presentacion_proveedor'] is None:
+                p['presentacion_proveedor'] = ''
+            if 'presentacion_venta' not in p or p['presentacion_venta'] is None:
+                p['presentacion_venta'] = ''
+            if 'codigo_barras' not in p or p['codigo_barras'] is None:
+                p['codigo_barras'] = ''
+            if 'observaciones' not in p or p['observaciones'] is None:
+                p['observaciones'] = ''
+            if 'origen' not in p or p['origen'] is None:
+                p['origen'] = ''
+            if 'tiempo_entrega' not in p or p['tiempo_entrega'] is None:
+                p['tiempo_entrega'] = ''
+            if 'abastecimiento' not in p or p['abastecimiento'] is None:
+                p['abastecimiento'] = ''
+            if 'categoria_derivada' not in p or p['categoria_derivada'] is None:
+                p['categoria_derivada'] = ''
                 
         return jsonify(productos)
         
@@ -464,7 +515,8 @@ def api_get_producto(id):
             SELECT id, codigo, familia, descripcion, descripcion_larga, marca, modelo, 
                    unidad, peso, volumen, transporte, costo_unitario, precio_unitario, 
                    stock, stock_minimo, estado, presentacion_proveedor, presentacion_venta,
-                   venta_minima, codigo_barras, observaciones 
+                   venta_minima, codigo_barras, observaciones, origen, tiempo_entrega,
+                   abastecimiento, categoria_derivada
             FROM productos 
             WHERE id = %s
         """, (id,))
@@ -506,7 +558,8 @@ def api_update_producto(id):
             'unidad', 'peso', 'volumen', 'transporte', 'costo_unitario', 
             'precio_unitario', 'stock', 'stock_minimo', 'observaciones', 
             'estado', 'presentacion_proveedor', 'presentacion_venta', 
-            'venta_minima', 'codigo_barras'
+            'venta_minima', 'codigo_barras', 'origen', 'tiempo_entrega',
+            'abastecimiento', 'categoria_derivada'
         ]
         
         for campo in campos_permitidos:
@@ -759,7 +812,11 @@ def crear_tablas():
             'codigo_barras': 'VARCHAR(50)',
             'estado': "VARCHAR(20) DEFAULT 'activo'",
             'stock_minimo': 'INTEGER DEFAULT 0',
-            'volumen': 'DECIMAL(10,3) DEFAULT 0'
+            'volumen': 'DECIMAL(10,3) DEFAULT 0',
+            'origen': 'VARCHAR(100)',
+            'tiempo_entrega': 'VARCHAR(50)',
+            'abastecimiento': 'VARCHAR(100)',
+            'categoria_derivada': 'VARCHAR(100)'
         }
         
         for col, tipo in columnas_nuevas.items():
