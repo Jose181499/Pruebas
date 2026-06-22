@@ -192,6 +192,16 @@
             font-size: 0.9rem;
         }
 
+        .loading-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+        .loading-state .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+
         @media (max-width: 992px) {
             .kcf-sidebar { transform: translateX(-100%); width: 280px; }
             .kcf-sidebar.open { transform: translateX(0); }
@@ -257,34 +267,18 @@
                     <label class="form-label fw-semibold small text-uppercase">Categoría principal</label>
                     <select id="filtroCategoriaPrincipal" class="form-select">
                         <option value="">Todas</option>
-                        <option value="Seguridad Industrial">Seguridad Industrial</option>
-                        <option value="Mobiliario de Oficina">Mobiliario de Oficina</option>
-                        <option value="Tecnología">Tecnología</option>
-                        <option value="Ferretería">Ferretería</option>
-                        <option value="Limpieza">Limpieza</option>
                     </select>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-semibold small text-uppercase">Subcategoría</label>
                     <select id="filtroSubcategoria" class="form-select">
                         <option value="">Todas</option>
-                        <option value="Electrónica">Electrónica</option>
-                        <option value="Protección Personal">Protección Personal</option>
-                        <option value="Sillas">Sillas</option>
-                        <option value="Escritorios">Escritorios</option>
-                        <option value="Herramientas">Herramientas</option>
-                        <option value="Insumos">Insumos</option>
                     </select>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label fw-semibold small text-uppercase">Marca</label>
                     <select id="filtroMarca" class="form-select">
                         <option value="">Todas</option>
-                        <option value="3M">3M</option>
-                        <option value="HP">HP</option>
-                        <option value="Bosch">Bosch</option>
-                        <option value="Sony">Sony</option>
-                        <option value="LG">LG</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -325,7 +319,7 @@
                             <th style="min-width:100px;">Valor costo</th>
                             <th style="min-width:100px;">Valor venta</th>
                             
-                            <!-- Columnas adicionales (ocultas al inicio) -->
+                            <!-- Columnas adicionales -->
                             <th style="min-width:140px;">Presentación<br><small>proveedor</small></th>
                             <th style="min-width:140px;">Presentación<br><small>venta</small></th>
                             <th style="min-width:100px;">Venta mínima</th>
@@ -342,16 +336,14 @@
                         </tr>
                     </thead>
                     <tbody id="tbodyProductos">
-                        <!-- Fila de estado vacío -->
-                        <tr id="emptyStateRow">
+                        <!-- Loading state -->
+                        <tr id="loadingStateRow">
                             <td colspan="23">
-                                <div class="empty-state">
-                                    <i class="bi bi-inbox"></i>
-                                    <h5>No hay productos registrados</h5>
-                                    <p>Comienza agregando tu primer producto haciendo clic en "Nuevo Producto"</p>
-                                    <a href="/mantenedor/productos/nuevo" class="btn btn-primary mt-3">
-                                        <i class="bi bi-plus-circle me-1"></i> Agregar Producto
-                                    </a>
+                                <div class="loading-state">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Cargando...</span>
+                                    </div>
+                                    <h5 class="mt-3">Cargando productos...</h5>
                                 </div>
                             </td>
                         </tr>
@@ -399,6 +391,169 @@
                 $('#sidebarOverlay').removeClass('show');
             });
 
+            let productosData = [];
+            let eliminarModal = new bootstrap.Modal(document.getElementById('modalEliminar'));
+
+            // ===== CARGAR PRODUCTOS DESDE API =====
+            function cargarProductos() {
+                $('#loadingStateRow').show();
+                $('#emptyStateRow').hide();
+                
+                $.ajax({
+                    url: '/mantenedor/productos/api/productos',
+                    method: 'GET',
+                    dataType: 'json',
+                    success: function(data) {
+                        productosData = data;
+                        // Cargar filtros
+                        cargarFiltros(data);
+                        // Renderizar tabla
+                        renderizarTabla(data);
+                        $('#loadingStateRow').hide();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error al cargar productos:', error);
+                        $('#loadingStateRow').hide();
+                        mostrarEmptyState('Error al cargar productos. Intenta recargar la página.');
+                    }
+                });
+            }
+
+            // ===== CARGAR FILTROS DINÁMICOS =====
+            function cargarFiltros(productos) {
+                const familias = new Set();
+                const marcas = new Set();
+                const subcategorias = new Set();
+
+                productos.forEach(p => {
+                    if (p.familia) familias.add(p.familia);
+                    if (p.marca) marcas.add(p.marca);
+                    // Usar categoria_derivada o similar
+                    if (p.categoria_derivada) subcategorias.add(p.categoria_derivada);
+                });
+
+                // Llenar select de categorías
+                const $catSelect = $('#filtroCategoriaPrincipal');
+                $catSelect.find('option:not(:first)').remove();
+                familias.forEach(f => {
+                    $catSelect.append(`<option value="${f}">${f}</option>`);
+                });
+
+                // Llenar select de marcas
+                const $marcaSelect = $('#filtroMarca');
+                $marcaSelect.find('option:not(:first)').remove();
+                marcas.forEach(m => {
+                    $marcaSelect.append(`<option value="${m}">${m}</option>`);
+                });
+
+                // Llenar select de subcategorías
+                const $subcatSelect = $('#filtroSubcategoria');
+                $subcatSelect.find('option:not(:first)').remove();
+                subcategorias.forEach(s => {
+                    $subcatSelect.append(`<option value="${s}">${s}</option>`);
+                });
+            }
+
+            // ===== RENDERIZAR TABLA =====
+            function renderizarTabla(productos) {
+                const tbody = $('#tbodyProductos');
+                tbody.find('tr:not(#loadingStateRow)').remove();
+
+                if (!productos || productos.length === 0) {
+                    mostrarEmptyState('No hay productos registrados');
+                    return;
+                }
+
+                let html = '';
+                productos.forEach((p, index) => {
+                    const item = index + 1;
+                    const codigo = p.codigo || '-';
+                    const descripcion = p.descripcion || '-';
+                    const modelo = p.modelo || '-';
+                    const marca = p.marca || '-';
+                    const familia = p.familia || '-';
+                    const categoriaDerivada = p.categoria_derivada || '-';
+                    const peso = p.peso || '0';
+                    const transporte = p.transporte || '-';
+                    const costo = p.costo_unitario ? `S/ ${p.costo_unitario.toFixed(2)}` : 'S/ 0.00';
+                    const venta = p.precio_unitario ? `S/ ${p.precio_unitario.toFixed(2)}` : 'S/ 0.00';
+                    const presentacionProveedor = p.presentacion_proveedor || '-';
+                    const presentacionVenta = p.presentacion_venta || '-';
+                    const ventaMinima = p.venta_minima || '1';
+                    const codigoBarras = p.codigo_barras || '-';
+                    const volumen = p.volumen || '0';
+                    const origen = p.origen || '-';
+                    const tiempoEntrega = p.tiempo_entrega || '-';
+                    const abastecimiento = p.abastecimiento || '-';
+                    const stockMinimo = p.stock_minimo || '0';
+                    const descripcionLarga = p.descripcion_larga || '-';
+                    const observaciones = p.observaciones || '-';
+
+                    html += `
+                        <tr data-id="${p.id}" 
+                            data-categoria-principal="${familia}" 
+                            data-subcategoria="${categoriaDerivada}" 
+                            data-marca="${marca}" 
+                            data-modelo="${modelo}">
+                            <td>${item}</td>
+                            <td><code class="text-primary fw-bold">${codigo}</code></td>
+                            <td>${descripcion}</td>
+                            <td>${modelo}</td>
+                            <td>${marca}</td>
+                            <td>${familia}</td>
+                            <td>${categoriaDerivada}</td>
+                            <td>${peso}</td>
+                            <td>${transporte}</td>
+                            <td>${costo}</td>
+                            <td>${venta}</td>
+                            <td>${presentacionProveedor}</td>
+                            <td>${presentacionVenta}</td>
+                            <td>${ventaMinima}</td>
+                            <td>${codigoBarras}</td>
+                            <td>${volumen}</td>
+                            <td>${origen}</td>
+                            <td>${tiempoEntrega}</td>
+                            <td>${abastecimiento}</td>
+                            <td>${stockMinimo}</td>
+                            <td>${descripcionLarga}</td>
+                            <td>${observaciones}</td>
+                            <td>
+                                <button class="btn-accion edit" data-id="${p.id}" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn-accion delete" data-id="${p.id}" title="Eliminar">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                tbody.append(html);
+                actualizarContadores();
+                filtrarTabla();
+            }
+
+            function mostrarEmptyState(mensaje) {
+                const tbody = $('#tbodyProductos');
+                tbody.find('tr:not(#loadingStateRow)').remove();
+                tbody.append(`
+                    <tr id="emptyStateRow">
+                        <td colspan="23">
+                            <div class="empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <h5>${mensaje || 'No hay productos registrados'}</h5>
+                                <p>Comienza agregando tu primer producto haciendo clic en "Nuevo Producto"</p>
+                                <a href="/mantenedor/productos/nuevo" class="btn btn-primary mt-3">
+                                    <i class="bi bi-plus-circle me-1"></i> Agregar Producto
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                `);
+                actualizarContadores();
+            }
+
             // ===== FILTROS =====
             function filtrarTabla() {
                 const catPrincipal = $('#filtroCategoriaPrincipal').val();
@@ -412,8 +567,7 @@
                 $('#tbodyProductos tr').each(function() {
                     const $row = $(this);
                     
-                    // Saltar la fila de estado vacío
-                    if ($row.attr('id') === 'emptyStateRow') {
+                    if ($row.attr('id') === 'loadingStateRow' || $row.attr('id') === 'emptyStateRow') {
                         return;
                     }
                     
@@ -436,17 +590,28 @@
                     }
                 });
 
-                // Mostrar/ocultar estado vacío
-                if (!tieneDatos) {
-                    $('#emptyStateRow').show();
-                } else {
-                    $('#emptyStateRow').hide();
+                // Mostrar/ocultar estado vacío si no hay datos
+                if (!tieneDatos && productosData.length > 0) {
+                    // Si hay datos pero ningún filtro coincide, mostrar mensaje
+                    const emptyRow = $('#emptyStateRow');
+                    if (emptyRow.length === 0) {
+                        mostrarEmptyState('No hay productos que coincidan con los filtros seleccionados');
+                    }
+                } else if (tieneDatos) {
+                    $('#emptyStateRow').remove();
                 }
 
                 $('#totalProductos').text(visibles);
                 $('#totalProductosTabla').text(visibles);
             }
 
+            function actualizarContadores() {
+                const total = $('#tbodyProductos tr:not(#loadingStateRow):not(#emptyStateRow):visible').length;
+                $('#totalProductos').text(total);
+                $('#totalProductosTabla').text(total);
+            }
+
+            // ===== EVENTOS DE FILTROS =====
             $('#filtroCategoriaPrincipal, #filtroSubcategoria, #filtroMarca, #filtroModelo').on('change keyup', filtrarTabla);
 
             $('#btnLimpiarFiltros').click(function() {
@@ -458,8 +623,6 @@
             });
 
             // ===== ELIMINAR =====
-            let eliminarModal = new bootstrap.Modal(document.getElementById('modalEliminar'));
-
             $(document).on('click', '.btn-accion.delete', function() {
                 const id = $(this).data('id');
                 const nombre = $(this).closest('tr').find('td:eq(2)').text().trim();
@@ -470,30 +633,57 @@
 
             $('#confirmarEliminar').click(function() {
                 const id = $('#eliminarId').val();
-                alert('Producto ' + id + ' eliminado (simulación)');
-                eliminarModal.hide();
-                // location.reload();
+                $.ajax({
+                    url: '/mantenedor/productos/api/productos/' + id,
+                    method: 'DELETE',
+                    success: function(response) {
+                        eliminarModal.hide();
+                        if (response.success) {
+                            // Recargar productos
+                            cargarProductos();
+                            // Mostrar mensaje de éxito
+                            const alertHtml = `
+                                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    Producto eliminado correctamente
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            `;
+                            $('.main-dashboard').prepend(alertHtml);
+                            setTimeout(() => {
+                                $('.alert').alert('close');
+                            }, 3000);
+                        } else {
+                            alert('Error al eliminar el producto: ' + (response.error || 'Error desconocido'));
+                        }
+                    },
+                    error: function(xhr) {
+                        eliminarModal.hide();
+                        const errorMsg = xhr.responseJSON?.error || 'Error al eliminar el producto';
+                        alert(errorMsg);
+                    }
+                });
             });
 
             // ===== EDITAR =====
             $(document).on('click', '.btn-accion.edit', function() {
                 const id = $(this).data('id');
-                alert('Editar producto ID: ' + id + ' (simulación)');
+                window.location.href = '/mantenedor/productos/editar/' + id;
             });
 
             // ===== EXPORTAR =====
             $('#btnExportar').click(function() {
-                alert('Exportar datos (simulación)');
+                window.location.href = '/mantenedor/productos/exportar';
             });
 
             // ===== KÁRDEX =====
             $('#sidebarKardexLink').click(function(e) {
                 e.preventDefault();
-                alert('Kárdex & Movimientos (simulación)');
+                window.location.href = '/mantenedor/productos/kardex';
             });
 
             // ===== INICIAL =====
-            filtrarTabla();
+            cargarProductos();
         });
     </script>
 </body>
