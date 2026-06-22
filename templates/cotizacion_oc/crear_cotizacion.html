@@ -4,34 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crear Cotización - ERP KCF</title>
-
     <!-- BOOTSTRAP -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
     <!-- ICONOS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
     <!-- FUENTE -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        /* ====== RESET & BASE ====== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', sans-serif;
             background: #f1f5f9;
             font-size: 12px;
         }
-        .container-fluid {
-            padding: 4px 10px !important;
-        }
+        .container-fluid { padding: 4px 10px !important; }
 
-        /* =========================== */
-        /* NAVBAR - MUY COMPACTO */
-        /* =========================== */
+        /* ====== NAVBAR ====== */
         .erp-navbar {
             background: #0f172a;
             padding: 4px 14px;
@@ -47,6 +36,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            flex-wrap: wrap;
         }
         .erp-logo {
             width: 28px;
@@ -59,17 +49,8 @@
             color: white;
             font-size: 14px;
         }
-        .erp-company {
-            color: white;
-            font-weight: 700;
-            font-size: 13px;
-            line-height: 1.1;
-        }
-        .erp-system {
-            color: #94a3b8;
-            font-size: 8px;
-            line-height: 1;
-        }
+        .erp-company { color: white; font-weight: 700; font-size: 13px; line-height: 1.1; }
+        .erp-system { color: #94a3b8; font-size: 8px; line-height: 1; }
         .navbar-left .btn-sm-custom {
             font-size: 10px;
             padding: 2px 10px;
@@ -94,14 +75,9 @@
             font-weight: 600;
             color: #fbbf24;
         }
-        .erp-status .bi {
-            font-size: 6px;
-            margin-right: 3px;
-        }
+        .erp-status .bi { font-size: 6px; margin-right: 3px; }
 
-        /* =========================== */
-        /* HERO - MUY COMPACTO */
-        /* =========================== */
+        /* ====== HERO ====== */
         .hero-compacto {
             background: white;
             border-radius: 8px;
@@ -132,28 +108,19 @@
             color: white;
             font-size: 13px;
         }
-        .hero-title {
-            font-size: 13px;
-            font-weight: 700;
-            color: #111827;
-            line-height: 1.1;
-        }
-        .hero-sub {
-            font-size: 9px;
-            color: #6b7280;
-            line-height: 1;
-        }
+        .hero-title { font-size: 13px; font-weight: 700; color: #111827; line-height: 1.1; }
+        .hero-sub { font-size: 9px; color: #6b7280; line-height: 1; }
         .hero-info {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
             flex-wrap: wrap;
         }
         .hero-info .item {
             display: flex;
             align-items: center;
-            gap: 3px;
-            font-size: 11px;
+            gap: 4px;
+            font-size: 10px;
             background: #f8fafc;
             padding: 2px 8px;
             border-radius: 4px;
@@ -164,18 +131,10 @@
             font-weight: 500;
             text-transform: uppercase;
         }
-        .hero-info .item .label i {
-            font-size: 8px;
-        }
         .hero-info .item .value {
             font-weight: 600;
             color: #111827;
-            font-size: 11px;
-        }
-        .hero-info .item .badge-status {
-            font-size: 7px;
-            padding: 1px 5px;
-            border-radius: 10px;
+            font-size: 10px;
         }
         .hero-divider {
             width: 1px;
@@ -183,9 +142,60 @@
             background: #e5e7eb;
         }
 
-        /* =========================== */
-        /* CARDS */
-        /* =========================== */
+        /* ====== ESTATUS LIST ====== */
+        .estatus-list {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8fafc;
+            padding: 2px 10px 2px 8px;
+            border-radius: 4px;
+            flex-wrap: wrap;
+        }
+        .estatus-list .label {
+            color: #6b7280;
+            font-size: 8px;
+            font-weight: 500;
+            text-transform: uppercase;
+            margin-right: 2px;
+        }
+        .estatus-item {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 9px;
+            font-weight: 500;
+            color: #9ca3af;
+            padding: 1px 4px;
+            border-radius: 3px;
+            transition: all 0.2s;
+            cursor: default;
+        }
+        .estatus-item .num {
+            font-weight: 700;
+            font-size: 8px;
+            color: #9ca3af;
+        }
+        .estatus-item.active {
+            color: #111827;
+            background: #fef3c7;
+            font-weight: 600;
+        }
+        .estatus-item.active .num {
+            color: #92400e;
+        }
+        .estatus-item.completed {
+            color: #059669;
+        }
+        .estatus-item.completed .num {
+            color: #059669;
+        }
+        .estatus-separator {
+            color: #d1d5db;
+            font-size: 8px;
+        }
+
+        /* ====== CARDS ====== */
         .card-custom {
             background: white;
             border-radius: 8px;
@@ -193,6 +203,7 @@
             border: 1px solid #e5e7eb;
             margin-bottom: 4px;
             overflow: hidden;
+            height: 100%;
         }
         .card-custom .card-header {
             padding: 4px 10px;
@@ -201,14 +212,22 @@
             color: white;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 6px;
             min-height: 28px;
+        }
+        .card-custom .card-header .header-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
         .card-custom .card-header.bg-dark-custom { background: #1e293b; }
         .card-custom .card-header.bg-red { background: #d90429; }
         .card-custom .card-header.bg-green { background: #059669; }
+        .card-custom .card-header.bg-blue { background: #1e40af; }
+        .card-custom .card-header.bg-purple { background: #6d28d9; }
         .card-custom .card-body {
-            padding: 8px 10px;
+            padding: 6px 10px;
         }
         .card-custom .card-body .form-label {
             font-size: 9px;
@@ -234,12 +253,22 @@
             padding: 2px 8px;
         }
 
-        /* =========================== */
-        /* TOOLBAR */
-        /* =========================== */
+        /* ---- BÚSQUEDA RUC MÁS PEQUEÑA ---- */
+        .ruc-search-group .form-control {
+            max-width: 140px;
+            min-width: 100px;
+            flex: 0 0 auto;
+        }
+        .ruc-search-group .btn {
+            font-size: 10px;
+            padding: 2px 8px;
+        }
+
+        /* ====== TOOLBAR ====== */
         .toolbar-compacto {
             display: flex;
             flex-wrap: wrap;
+            justify-content: flex-end;
             gap: 3px;
             margin-bottom: 4px;
         }
@@ -249,14 +278,31 @@
             border-radius: 6px;
             font-weight: 600;
         }
-        .toolbar-compacto .btn i {
-            margin-right: 3px;
-            font-size: 10px;
+        .toolbar-compacto .btn i { margin-right: 3px; font-size: 10px; }
+
+        /* ====== BOTÓN AGREGAR PRODUCTO DESTACADO ====== */
+        .btn-agregar-producto {
+            background: linear-gradient(145deg, #10b981, #059669);
+            border: none;
+            color: white;
+            font-weight: 700;
+            font-size: 11px;
+            padding: 4px 16px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(5, 150, 105, 0.4);
+            transition: all 0.2s ease;
+        }
+        .btn-agregar-producto:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 25px rgba(5, 150, 105, 0.6);
+            color: white;
+        }
+        .btn-agregar-producto i {
+            font-size: 13px;
+            margin-right: 5px;
         }
 
-        /* =========================== */
-        /* TABLA */
-        /* =========================== */
+        /* ====== TABLA ====== */
         .table-cotizacion {
             margin: 0;
             font-size: 9px;
@@ -264,21 +310,26 @@
         .table-cotizacion thead th {
             background: #1e293b;
             color: white;
-            padding: 2px 3px;
+            padding: 4px 3px;
             text-align: center;
             font-size: 8px;
             font-weight: 600;
             border: none;
             white-space: nowrap;
+            vertical-align: middle;
+        }
+        .table-cotizacion thead th small {
+            font-weight: 300;
+            font-size: 7px;
+            display: block;
+            color: #94a3b8;
         }
         .table-cotizacion tbody td {
             padding: 2px 2px;
             vertical-align: middle;
             border-bottom: 1px solid #f1f5f9;
         }
-        .table-cotizacion tbody tr:hover {
-            background: rgba(217,4,41,0.03);
-        }
+        .table-cotizacion tbody tr:hover { background: rgba(217,4,41,0.03); }
         .table-cotizacion input,
         .table-cotizacion select {
             width: 100%;
@@ -295,9 +346,7 @@
             outline: none;
             box-shadow: 0 0 0 2px rgba(217,4,41,0.06);
         }
-        .table-cotizacion input:disabled {
-            background: #f3f4f6;
-        }
+        .table-cotizacion input:disabled { background: #f3f4f6; }
         .btn-del {
             background: #fee2e2;
             border: none;
@@ -307,9 +356,7 @@
             font-size: 10px;
             cursor: pointer;
         }
-        .btn-del:hover {
-            background: #fecaca;
-        }
+        .btn-del:hover { background: #fecaca; }
         .stock-badge {
             display: inline-block;
             padding: 1px 6px;
@@ -318,88 +365,99 @@
             font-weight: 600;
         }
 
-        /* =========================== */
-        /* RESUMEN */
-        /* =========================== */
-        .summary-compacto {
-            background: white;
-            border-radius: 8px;
-            padding: 8px 12px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-            border: 1px solid #e5e7eb;
+        /* ====== RESUMEN COTIZACIÓN ====== */
+        .summary-table {
+            width: 100%;
+            font-size: 11px;
+            border-collapse: collapse;
         }
-        .summary-compacto .row-summary {
-            display: flex;
-            justify-content: space-between;
-            padding: 2px 0;
-            font-size: 10px;
+        .summary-table tr {
             border-bottom: 1px solid #f1f5f9;
         }
-        .summary-compacto .row-summary.total {
+        .summary-table tr:last-child {
             border-bottom: none;
-            font-size: 13px;
-            font-weight: 700;
-            color: #d90429;
-            padding-top: 4px;
-            border-top: 2px solid #d90429;
         }
-        .summary-compacto .row-summary .label {
+        .summary-table td {
+            padding: 4px 0;
+        }
+        .summary-table .label {
             color: #6b7280;
+            font-weight: 500;
         }
-        .summary-compacto .row-summary .value {
+        .summary-table .value {
             font-weight: 600;
             color: #111827;
+            text-align: right;
         }
-        .summary-compacto .row-summary.total .value {
+        .summary-table .value.currency {
+            font-family: 'Inter', monospace;
+        }
+        .summary-table .total-row td {
+            padding-top: 6px;
+            border-top: 2px solid #d90429;
+            font-size: 14px;
+            font-weight: 700;
             color: #d90429;
         }
+        .summary-table .total-row .value {
+            color: #d90429;
+        }
+        .summary-table .discount-row .value {
+            color: #dc2626;
+        }
+        .summary-table .subtotal-desc-row .value {
+            color: #059669;
+        }
 
-        /* =========================== */
-        /* DESCUENTO */
-        /* =========================== */
+        /* ====== DESCUENTO ====== */
         .descuento-box {
             background: #eff6ff;
             border-radius: 6px;
             padding: 4px 8px;
             margin-top: 4px;
         }
-        .descuento-box .form-label {
+        .descuento-box .form-label { font-size: 9px; font-weight: 600; color: #1e293b; }
+
+        /* ====== INFORMACIÓN ADICIONAL ====== */
+        .info-adicional-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 4px 12px;
+        }
+        .info-adicional-grid .form-label {
             font-size: 9px;
             font-weight: 600;
-            color: #1e293b;
+            color: #374151;
+            margin-bottom: 1px;
+        }
+        .info-adicional-grid .form-control,
+        .info-adicional-grid .form-select {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 5px;
+            border: 1.5px solid #e5e7eb;
+            min-height: 24px;
+        }
+        .info-adicional-grid .form-control:focus,
+        .info-adicional-grid .form-select:focus {
+            border-color: #d90429;
+            box-shadow: 0 0 0 2px rgba(217,4,41,0.08);
         }
 
-        /* =========================== */
-        /* MODALES */
-        /* =========================== */
-        .modal-content {
-            border-radius: 12px;
-            border: none;
-        }
+        /* ====== MODALES ====== */
+        .modal-content { border-radius: 12px; border: none; }
         .modal-header {
             padding: 8px 14px;
             background: #1e293b;
             color: white;
             border-radius: 12px 12px 0 0;
         }
-        .modal-header .btn-close {
-            filter: brightness(0) invert(1);
-        }
-        .modal-body {
-            padding: 12px;
-            font-size: 12px;
-        }
-        .modal-footer {
-            padding: 8px 12px;
-        }
-        .modal-footer .btn {
-            font-size: 11px;
-            padding: 3px 12px;
-        }
+        .modal-header .btn-close { filter: brightness(0) invert(1); }
+        .modal-body { padding: 12px; font-size: 12px; }
+        .modal-footer { padding: 8px 12px; }
+        .modal-footer .btn { font-size: 11px; padding: 3px 12px; }
 
-        /* =========================== */
-        /* PORTAL AUTOCOMPLETE */
-        /* =========================== */
+        /* ====== PORTAL AUTOCOMPLETE ====== */
         #portalSuggestions {
             position: fixed;
             background: white;
@@ -418,22 +476,27 @@
             border-bottom: 1px solid #f1f5f9;
             font-size: 11px;
         }
-        #portalSuggestions .item:hover {
-            background: #fef2f2;
-        }
+        #portalSuggestions .item:hover { background: #fef2f2; }
         #portalSuggestions .item strong {
             display: block;
             font-size: 11px;
             color: #111827;
         }
-        #portalSuggestions .item .meta {
-            font-size: 9px;
-            color: #6b7280;
-        }
+        #portalSuggestions .item .meta { font-size: 9px; color: #6b7280; }
 
-        /* =========================== */
-        /* RESPONSIVE */
-        /* =========================== */
+        /* ====== RESPONSIVE ====== */
+        @media (max-width: 992px) {
+            .col-xl-4 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+            .info-adicional-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .toolbar-compacto {
+                justify-content: flex-start;
+            }
+        }
         @media (max-width: 768px) {
             .hero-compacto {
                 flex-direction: column;
@@ -442,45 +505,44 @@
                 padding: 6px 10px;
             }
             .hero-info {
-                justify-content: space-between;
+                justify-content: flex-start;
                 gap: 4px;
             }
-            .hero-divider {
-                display: none;
-            }
-            .table-cotizacion {
-                font-size: 8px;
-            }
-            .table-cotizacion thead th {
-                font-size: 7px;
-                padding: 1px;
-            }
-            .table-cotizacion tbody td {
-                padding: 1px;
-            }
-            .container-fluid {
-                padding: 3px 6px !important;
-            }
+            .hero-divider { display: none; }
+            .table-cotizacion { font-size: 8px; }
+            .table-cotizacion thead th { font-size: 7px; padding: 2px 1px; }
+            .table-cotizacion thead th small { font-size: 6px; }
+            .table-cotizacion tbody td { padding: 1px; }
+            .container-fluid { padding: 3px 6px !important; }
             .navbar-left .btn-sm-custom {
                 font-size: 8px;
                 padding: 1px 6px;
             }
-            .navbar-left .erp-company {
-                font-size: 11px;
+            .navbar-left .erp-company { font-size: 11px; }
+            .navbar-divider { display: none; }
+            .info-adicional-grid {
+                grid-template-columns: 1fr;
             }
-            .navbar-divider {
-                display: none;
+            .toolbar-compacto {
+                justify-content: flex-start;
+            }
+            .estatus-list {
+                gap: 4px;
+                padding: 2px 6px;
+            }
+            .estatus-item {
+                font-size: 7px;
+            }
+            .estatus-separator {
+                font-size: 6px;
             }
         }
     </style>
 </head>
 <body>
 
-<!-- =========================== -->
-<!-- NAVBAR CON BOTONES A LA IZQUIERDA -->
-<!-- =========================== -->
+<!-- ====== NAVBAR ====== -->
 <nav class="erp-navbar">
-    <!-- IZQUIERDA: Logo + Botones -->
     <div class="navbar-left">
         <div class="erp-logo"><i class="bi bi-building"></i></div>
         <div>
@@ -488,11 +550,8 @@
             <div class="erp-system">ERP Comercial</div>
         </div>
         <span class="navbar-divider"></span>
-        <a href="/cotizacion" class="btn btn-secondary btn-sm-custom"><i class="bi bi-arrow-left"></i> Volver</a>
         <a href="/listado_cotizaciones" class="btn btn-outline-light btn-sm-custom"><i class="bi bi-list-ul"></i> Listado</a>
     </div>
-
-    <!-- DERECHA: Estado -->
     <div class="erp-right">
         <div class="erp-status" id="estado_fixed">
             <i class="bi bi-circle-fill"></i> <span id="estado_texto">EN PROCESO</span>
@@ -500,66 +559,62 @@
     </div>
 </nav>
 
-<!-- =========================== -->
-<!-- CONTENIDO PRINCIPAL -->
-<!-- =========================== -->
+<!-- ====== CONTENIDO PRINCIPAL ====== -->
 <div class="container-fluid py-1">
 
-    <!-- HIDDEN -->
-    <input type="hidden" id="cotizacion_id" value="{{ cotizacion_id if cotizacion_id else '' }}">
+    <input type="hidden" id="cotizacion_id" value="">
     <input type="hidden" id="usuario_id" value="">
     <input type="hidden" id="descuento_porcentaje" value="0">
 
-    <!-- =========================== -->
-    <!-- HERO - MUY COMPACTO -->
-    <!-- =========================== -->
+    <!-- ====== HERO ====== -->
     <div class="hero-compacto">
         <div class="hero-left">
             <div class="hero-icon"><i class="bi bi-file-earmark-text-fill"></i></div>
             <div>
-                <div class="hero-title">Crear Cotización</div>
-                <div class="hero-sub">Gestión de cotizaciones comerciales</div>
+                <div class="hero-title">Crear Nueva Cotización</div>
+                <div class="hero-sub">Gestión de cotizaciones comerciales — Crear nueva cotización</div>
             </div>
         </div>
         <div class="hero-info">
+            <!-- ESTATUS LIST -->
+            <div class="estatus-list">
+                <span class="label"><i class="bi bi-info-circle"></i> Estatus:</span>
+                <span class="estatus-item" data-estatus="1"><span class="num">1</span> Borrador</span>
+                <span class="estatus-separator">|</span>
+                <span class="estatus-item" data-estatus="2"><span class="num">2</span> En revisión</span>
+                <span class="estatus-separator">|</span>
+                <span class="estatus-item" data-estatus="3"><span class="num">3</span> Cotización validada</span>
+                <span class="estatus-separator">|</span>
+                <span class="estatus-item" data-estatus="4"><span class="num">4</span> Cotización generada</span>
+                <span class="estatus-separator">|</span>
+                <span class="estatus-item" data-estatus="5"><span class="num">5</span> Cotización rechazada</span>
+            </div>
+            <span class="hero-divider"></span>
             <div class="item">
                 <span class="label"><i class="bi bi-hash"></i> N°</span>
-                <span class="value" id="numero_cotizacion">Se asigna</span>
-                <span class="badge bg-warning text-dark badge-status" id="estado_badge">BORRADOR</span>
-            </div>
-            <span class="hero-divider"></span>
-            <div class="item">
-                <span class="label"><i class="bi bi-person-badge"></i> Vendedor</span>
-                <span class="value" id="codigo_vendedor">---</span>
-            </div>
-            <span class="hero-divider"></span>
-            <div class="item">
-                <span class="label"><i class="bi bi-file-text"></i> Tipo</span>
-                <span class="value" id="tipo_documento"><span class="badge bg-warning text-dark" style="font-size:8px;padding:1px 6px;">BORRADOR</span></span>
+                <span class="value" id="numero_cotizacion">-</span>
             </div>
         </div>
     </div>
 
-    <!-- =========================== -->
-    <!-- TOOLBAR -->
-    <!-- =========================== -->
+    <!-- ====== TOOLBAR ====== -->
     <div class="toolbar-compacto">
+        <button class="btn btn-secondary" id="btnVolver" onclick="window.history.back();"><i class="bi bi-arrow-left"></i> Volver</button>
         <button class="btn btn-warning" id="btnGuardarBorrador"><i class="bi bi-save-fill"></i> Borrador</button>
-        <button class="btn btn-danger" id="btnGuardarOficial"><i class="bi bi-file-check-fill"></i> Oficial</button>
+        <button class="btn btn-danger" id="btnGuardarOficial"><i class="bi bi-file-check-fill"></i> Generar Cotización Oficial</button>
         <button class="btn btn-primary" id="btnPdf" disabled><i class="bi bi-file-earmark-pdf-fill"></i> PDF</button>
         <button class="btn btn-warning" id="btnModificar" disabled><i class="bi bi-pencil-square"></i> Modificar</button>
         <button class="btn btn-success" id="btnAceptada" disabled><i class="bi bi-check-circle-fill"></i> Aceptada</button>
+        <button class="btn btn-secondary" id="btnCancelar" onclick="window.history.back();"><i class="bi bi-x-circle"></i> Cancelar</button>
     </div>
 
-    <!-- =========================== -->
-    <!-- CLIENTE + CONDICIONES -->
-    <!-- =========================== -->
+    <!-- ====== 3 COLUMNAS: CLIENTE + CONDICIONES + RESUMEN ====== -->
     <div class="row g-1">
 
-        <!-- COLUMNA: CLIENTE -->
-        <div class="col-xl-6">
+        <!-- COLUMNA 1: CLIENTE -->
+        <div class="col-xl-4">
             <div class="card-custom">
-                <div class="card-header bg-dark-custom"><i class="bi bi-people-fill"></i> Información del Cliente</div>
+                <div class="card-header bg-dark-custom"><i class="bi bi-people-fill"></i> 1. Datos del cliente</div>
                 <div class="card-body">
                     <input type="hidden" id="cliente_id" value="">
 
@@ -567,115 +622,111 @@
                     <div class="row g-1 mb-1">
                         <div class="col-12">
                             <label class="form-label"><i class="bi bi-search"></i> Buscar por RUC</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="buscar_ruc" placeholder="11 dígitos">
+                            <div class="input-group ruc-search-group">
+                                <input type="text" class="form-control" id="buscar_ruc" placeholder="Ingrese o pegue el RUC del cliente" maxlength="11">
                                 <button class="btn btn-primary" type="button" id="btnBuscarClientePorRuc"><i class="bi bi-search"></i></button>
                                 <button class="btn btn-outline-secondary" type="button" id="btnLimpiarCliente"><i class="bi bi-x-circle"></i></button>
                             </div>
-                            <small class="text-muted">Ingrese RUC para autocompletar desde SUNAT</small>
                         </div>
                     </div>
 
                     <!-- Datos Cliente -->
                     <div class="row g-1">
-                        <div class="col-md-6">
-                            <label class="form-label"><i class="bi bi-card-text"></i> RUC / DNI</label>
-                            <input type="text" class="form-control" id="cliente_doc" placeholder="Documento">
+                        <div class="col-4">
+                            <label class="form-label"><i class="bi bi-card-text"></i> RUC</label>
+                            <input type="text" class="form-control" id="cliente_doc" placeholder="RUC">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label"><i class="bi bi-building"></i> Razón Social <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="cliente_razon_social" placeholder="Buscar cliente..." autocomplete="off">
+                        <div class="col-8">
+                            <label class="form-label"><i class="bi bi-building"></i> Razón social</label>
+                            <input type="text" class="form-control" id="cliente_razon_social" placeholder="Razón social" autocomplete="off">
                         </div>
-                        <div class="col-12">
-                            <label class="form-label"><i class="bi bi-shop"></i> Razón Comercial</label>
-                            <input type="text" class="form-control" id="cliente_razon_comercial" placeholder="Nombre comercial">
+                    </div>
+                    <div class="row g-1">
+                        <div class="col-6">
+                            <label class="form-label"><i class="bi bi-shop"></i> Razón comercial</label>
+                            <input type="text" class="form-control" id="cliente_razon_comercial" placeholder="Razón comercial">
                         </div>
-                        <div class="col-12">
-                            <label class="form-label"><i class="bi bi-geo-alt"></i> Dirección Fiscal</label>
-                            <input type="text" class="form-control" id="cliente_direccion" placeholder="Dirección">
+                        <div class="col-6">
+                            <label class="form-label"><i class="bi bi-hash"></i> Código cliente</label>
+                            <input type="text" class="form-control" id="cliente_codigo" placeholder="Código cliente">
                         </div>
-                        <div class="col-md-6">
+                    </div>
+                    <div class="row g-1">
+                        <div class="col-4">
+                            <label class="form-label"><i class="bi bi-geo-alt"></i> Dirección fiscal</label>
+                            <input type="text" class="form-control" id="cliente_direccion" placeholder="Dirección fiscal">
+                        </div>
+                        <div class="col-3">
                             <label class="form-label"><i class="bi bi-person"></i> Contacto</label>
-                            <input type="text" class="form-control" id="cliente_contacto" placeholder="Nombre contacto">
+                            <input type="text" class="form-control" id="cliente_contacto" placeholder="Contacto">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label"><i class="bi bi-envelope"></i> Correo</label>
-                            <input type="email" class="form-control" id="email_contacto_cliente" placeholder="Email">
-                        </div>
-                        <div class="col-md-6">
+                        <div class="col-2">
                             <label class="form-label"><i class="bi bi-telephone"></i> Teléfono</label>
                             <input type="text" class="form-control" id="telefono_contacto" placeholder="Teléfono">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label"><i class="bi bi-file-text"></i> Requerimiento</label>
-                            <input type="text" class="form-control" id="requerimiento" placeholder="N° Requerimiento">
+                        <div class="col-3">
+                            <label class="form-label"><i class="bi bi-envelope"></i> Correo</label>
+                            <input type="email" class="form-control" id="email_contacto_cliente" placeholder="Correo">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label"><i class="bi bi-flag"></i> Estado</label>
-                            <select class="form-select" id="estado">
-                                <option value="En Proceso">🟡 En Proceso</option>
-                                <option value="Generada">🔵 Generada</option>
-                                <option value="Aceptada por Cliente">🟢 Aceptada</option>
-                                <option value="Rechazada">🔴 Rechazada</option>
+                    </div>
+                    <div class="row g-1">
+                        <div class="col-6">
+                            <label class="form-label"><i class="bi bi-file-text"></i> N° de requerimiento</label>
+                            <input type="text" class="form-control" id="requerimiento" placeholder="Ingrese el número de requisitos">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label"><i class="bi bi-flag"></i> Fuente del requerimiento</label>
+                            <select class="form-select" id="fuente_requerimiento">
+                                <option value="">Seleccione una opción</option>
+                                <option value="Llamada">📞 Llamada</option>
+                                <option value="Correo">📧 Correo</option>
+                                <option value="WhatsApp">💬 WhatsApp</option>
+                                <option value="Visita">🏢 Visita</option>
+                                <option value="Web">🌐 Web</option>
+                                <option value="Otro">📌 Otro</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="mt-1">
-                        <button class="btn btn-success w-100 btn-sm" id="btnCrearCliente"><i class="bi bi-person-plus-fill"></i> Crear Cliente</button>
+                        <button class="btn btn-success w-100 btn-sm" id="btnCrearCliente"><i class="bi bi-person-plus-fill"></i> Guardar Cliente para futuras cotizaciones</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- COLUMNA: CONDICIONES COMERCIALES -->
-        <div class="col-xl-6">
+        <!-- COLUMNA 2: CONDICIONES COMERCIALES -->
+        <div class="col-xl-4">
             <div class="card-custom">
-                <div class="card-header bg-red"><i class="bi bi-journal-check"></i> Condiciones Comerciales</div>
+                <div class="card-header bg-red"><i class="bi bi-journal-check"></i> 2. Condiciones comerciales</div>
                 <div class="card-body">
+                    <!-- Línea 1: Asesor + Email Asesor + Teléfono Asesor -->
                     <div class="row g-1">
-                        <div class="col-md-6">
-                            <label class="form-label"><i class="bi bi-person-circle"></i> Ejecutiva</label>
-                            <input type="text" class="form-control" id="asesor_comercial" placeholder="Seleccione asesor">
+                        <div class="col-4">
+                            <label class="form-label"><i class="bi bi-person-circle"></i> Asesor</label>
+                            <input type="text" class="form-control" id="asesor_comercial" placeholder="Asesor">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label"><i class="bi bi-envelope"></i> Email Asesor</label>
-                            <input type="text" class="form-control" id="email_contacto" readonly>
+                        <div class="col-4">
+                            <label class="form-label"><i class="bi bi-envelope"></i> Email asesor</label>
+                            <input type="text" class="form-control" id="email_contacto" placeholder="Email asesor" readonly>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label"><i class="bi bi-telephone"></i> Teléfono Asesor</label>
-                            <input type="text" class="form-control" id="telefono_contacto_user" readonly>
+                        <div class="col-4">
+                            <label class="form-label"><i class="bi bi-telephone"></i> Teléfono asesor</label>
+                            <input type="text" class="form-control" id="telefono_contacto_user" placeholder="Teléfono asesor" readonly>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label"><i class="bi bi-clock"></i> Tiempo Entrega</label>
-                            <select class="form-select" id="tiempo_entrega_select">
-                                <option value="">-- Seleccionar --</option>
-                                <option value="Inmediato">⚡ Inmediato</option>
-                                <option value="1 día">📦 1 día</option>
-                                <option value="2 días">📦 2 días</option>
-                                <option value="3 días">📦 3 días</option>
-                                <option value="5 días">📦 5 días</option>
-                                <option value="7 días">📦 7 días</option>
-                                <option value="15 días">📦 15 días</option>
-                                <option value="personalizado">✏️ Personalizado</option>
+                    </div>
+
+                    <!-- Línea 2: Moneda + Condición de pago + Tiempo de entrega -->
+                    <div class="row g-1">
+                        <div class="col-3">
+                            <label class="form-label"><i class="bi bi-coin"></i> Moneda</label>
+                            <select class="form-select" id="moneda">
+                                <option value="PEN">🇵🇪 Soles (S/.)</option>
+                                <option value="USD">🇺🇸 Dólares ($)</option>
                             </select>
-                            <input type="text" class="form-control mt-1" id="tiempo_entrega" placeholder="Ej: 10 días" style="display:none;">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label"><i class="bi bi-calendar-check"></i> Validez Oferta</label>
-                            <select class="form-select" id="validez_oferta_select">
-                                <option value="">-- Seleccionar --</option>
-                                <option value="7 días">📅 7 días</option>
-                                <option value="15 días" selected>📅 15 días</option>
-                                <option value="30 días">📅 30 días</option>
-                                <option value="45 días">📅 45 días</option>
-                                <option value="60 días">📅 60 días</option>
-                                <option value="personalizado">✏️ Personalizado</option>
-                            </select>
-                            <input type="text" class="form-control mt-1" id="validez_oferta" placeholder="Ej: 20 días" style="display:none;">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label"><i class="bi bi-credit-card"></i> Condición Pago</label>
+                        <div class="col-4">
+                            <label class="form-label"><i class="bi bi-credit-card"></i> Condición de pago</label>
                             <select class="form-select" id="condicion_pago_select">
                                 <option value="">-- Seleccionar --</option>
                                 <option value="Contado">💵 Contado</option>
@@ -689,8 +740,40 @@
                             </select>
                             <input type="text" class="form-control mt-1" id="condicion_pago" placeholder="Ej: Crédito 20 días" style="display:none;">
                         </div>
-                        <div class="col-md-12">
-                            <label class="form-label"><i class="bi bi-truck"></i> Dirección Entrega</label>
+                        <div class="col-5">
+                            <label class="form-label"><i class="bi bi-clock"></i> Tiempo de entrega</label>
+                            <select class="form-select" id="tiempo_entrega_select">
+                                <option value="">-- Seleccionar --</option>
+                                <option value="Inmediato">⚡ Inmediato</option>
+                                <option value="1 día">📦 1 día</option>
+                                <option value="2 días">📦 2 días</option>
+                                <option value="3 días">📦 3 días</option>
+                                <option value="5 días hábiles">📦 5 días hábiles</option>
+                                <option value="7 días">📦 7 días</option>
+                                <option value="15 días">📦 15 días</option>
+                                <option value="personalizado">✏️ Personalizado</option>
+                            </select>
+                            <input type="text" class="form-control mt-1" id="tiempo_entrega" placeholder="Ej: 10 días" style="display:none;">
+                        </div>
+                    </div>
+
+                    <!-- Línea 3: Validez de la oferta + Dirección de entrega -->
+                    <div class="row g-1">
+                        <div class="col-5">
+                            <label class="form-label"><i class="bi bi-calendar-check"></i> Validez de la oferta</label>
+                            <select class="form-select" id="validez_oferta_select">
+                                <option value="">-- Seleccionar --</option>
+                                <option value="7 días">📅 7 días</option>
+                                <option value="15 días">📅 15 días</option>
+                                <option value="30 días">📅 30 días</option>
+                                <option value="45 días">📅 45 días</option>
+                                <option value="60 días">📅 60 días</option>
+                                <option value="personalizado">✏️ Personalizado</option>
+                            </select>
+                            <input type="text" class="form-control mt-1" id="validez_oferta" placeholder="Ej: 20 días" style="display:none;">
+                        </div>
+                        <div class="col-7">
+                            <label class="form-label"><i class="bi bi-truck"></i> Dirección de entrega</label>
                             <select class="form-select" id="direccion_entrega_select">
                                 <option value="">-- Seleccionar --</option>
                                 <option value="personalizado">✏️ Personalizar</option>
@@ -699,102 +782,180 @@
                         </div>
                     </div>
 
-                    <!-- Descuento -->
-                    <div class="descuento-box">
-                        <label class="form-label"><i class="bi bi-tag-fill text-danger"></i> Descuento Especial</label>
-                        <div class="row g-1">
-                            <div class="col-8">
+                    <!-- Línea 4: Descuento especial + Nota Comercial -->
+                    <div class="row g-1">
+                        <div class="col-4">
+                            <div class="descuento-box" style="margin-top:0;">
+                                <label class="form-label"><i class="bi bi-tag-fill text-danger"></i> Descuento especial</label>
                                 <div class="input-group">
-                                    <input type="number" class="form-control" id="descuento_porcentaje_input" min="0" step="0.01" value="0" placeholder="0">
-                                    <span class="input-group-text bg-danger text-white" id="descuento_simbolo">%</span>
+                                    <input type="number" class="form-control" id="descuento_porcentaje_input" min="0" step="0.01" value="0" placeholder="0" style="font-size:10px;padding:2px 8px;min-height:24px;">
+                                    <span class="input-group-text bg-danger text-white" id="descuento_simbolo" style="font-size:10px;padding:2px 8px;">%</span>
                                 </div>
-                            </div>
-                            <div class="col-4">
-                                <select class="form-select" id="descuento_tipo">
+                                <select class="form-select mt-1" id="descuento_tipo" style="font-size:10px;padding:2px 8px;min-height:24px;">
                                     <option value="porcentaje">%</option>
                                     <option value="monto">S/</option>
                                 </select>
                             </div>
                         </div>
-                        <small class="text-muted">Aplica descuento sobre el subtotal</small>
+                        <div class="col-8">
+                            <label class="form-label"><i class="bi bi-chat-text"></i> Nota Comercial</label>
+                            <textarea class="form-control" id="nota_cotizacion" rows="3" placeholder="Ingrese comentarios generales de la cotización..." style="min-height:60px;"></textarea>
+                        </div>
                     </div>
+                </div>
+            </div>
+        </div>
 
-                    <div class="mt-1">
-                        <label class="form-label"><i class="bi bi-chat-text"></i> Nota Comercial</label>
-                        <textarea class="form-control" id="nota_cotizacion" rows="1" placeholder="Notas adicionales..."></textarea>
-                    </div>
+        <!-- COLUMNA 3: RESUMEN DE LA COTIZACIÓN -->
+        <div class="col-xl-4">
+            <div class="card-custom">
+                <div class="card-header bg-blue"><i class="bi bi-calculator-fill"></i> 3. Resumen de la cotización</div>
+                <div class="card-body">
+                    <table class="summary-table" id="summaryTable">
+                        <tbody>
+                            <tr>
+                                <td class="label">Subtotal</td>
+                                <td class="value currency" id="summary_subtotal_venta">S/ 0.00</td>
+                            </tr>
+                            <tr>
+                                <td class="label">Descuento global</td>
+                                <td class="value currency" id="summary_descuento_global">0 %</td>
+                            </tr>
+                            <tr>
+                                <td class="label discount-row">Descuento aplicado</td>
+                                <td class="value currency discount-row" id="summary_descuento">- S/ 0.00</td>
+                            </tr>
+                            <tr>
+                                <td class="label subtotal-desc-row">Valor de venta</td>
+                                <td class="value currency subtotal-desc-row" id="summary_subtotal_descuento">S/ 0.00</td>
+                            </tr>
+                            <tr>
+                                <td class="label">IGV (18%)</td>
+                                <td class="value currency" id="summary_igv">S/ 0.00</td>
+                            </tr>
+                            <tr class="total-row">
+                                <td>TOTAL</td>
+                                <td class="value currency" id="summary_total_venta">S/ 0.00</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- =========================== -->
-    <!-- TABLA PRODUCTOS -->
-    <!-- =========================== -->
+    <!-- ====== TABLA PRODUCTOS ====== -->
     <div class="card-custom mt-1">
-        <div class="card-header bg-green"><i class="bi bi-box-seam-fill"></i> Detalle de Productos</div>
+        <div class="card-header bg-green">
+            <div class="header-left">
+                <i class="bi bi-box-seam-fill"></i> Detalle de Productos
+            </div>
+            <button class="btn-agregar-producto" id="btnAgregarItem">
+                <i class="bi bi-plus-circle-fill"></i> Agregar Producto
+            </button>
+        </div>
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-cotizacion" id="products-table">
                     <thead>
                         <tr>
-                            <th style="width:30px;">#</th>
-                            <th style="width:110px;">Código</th>
-                            <th style="width:160px;">Descripción</th>
+                            <th style="width:30px;">Item</th>
+                            <th style="width:100px;">Código<br><small>Producto</small></th>
+                            <th style="width:150px;">Descripción</th>
                             <th style="width:60px;">Modelo</th>
                             <th style="width:60px;">Marca</th>
-                            <th style="width:60px;">Unidad</th>
-                            <th style="width:50px;">Cant</th>
-                            <th style="width:80px;">P. Unit S/.</th>
-                            <th style="width:90px;">Total S/.</th>
+                            <th style="width:50px;">Unidad</th>
+                            <th style="width:45px;">Cant</th>
+                            <th style="width:80px;">Valor venta<br><small>Unitario S/.</small></th>
+                            <th style="width:80px;">Valor total<br><small>Tabla S/.</small></th>
                             <th style="width:35px;">✕</th>
                             <th style="width:50px;">Stock</th>
                         </tr>
                     </thead>
-                    <tbody id="table-body"></tbody>
+                    <tbody id="table-body">
+                        <!-- Las filas se agregarán dinámicamente con JavaScript -->
+                    </tbody>
                     <tfoot>
                         <tr class="fw-bold bg-light">
                             <td colspan="8" class="text-end">SUBTOTAL:</td>
-                            <td id="total_valor_venta">0.00</td>
+                            <td id="total_valor_venta" style="font-weight:700;color:#059669;">0.00</td>
                             <td colspan="2"></td>
                         </tr>
                     </tfoot>
                 </table>
             </div>
-            <div class="p-1">
-                <button class="btn btn-success btn-sm" id="btnAgregarItem"><i class="bi bi-plus-circle-fill"></i> Agregar</button>
-            </div>
         </div>
     </div>
 
-    <!-- =========================== -->
-    <!-- RESUMEN + NOTAS -->
-    <!-- =========================== -->
+    <!-- ====== INFORMACIÓN ADICIONAL ====== -->
     <div class="row g-1 mt-1">
-        <div class="col-md-4 col-lg-3">
-            <div class="summary-compacto">
-                <div class="row-summary"><span class="label">Subtotal:</span><span class="value" id="summary_subtotal_venta">0.00</span></div>
-                <div class="row-summary text-danger"><span class="label">Descuento:</span><span class="value" id="summary_descuento">0.00</span></div>
-                <div class="row-summary"><span class="label">Subtotal desc.:</span><span class="value" id="summary_subtotal_descuento">0.00</span></div>
-                <div class="row-summary"><span class="label">IGV (18%):</span><span class="value" id="summary_igv">0.00</span></div>
-                <div class="row-summary total"><span class="label">TOTAL:</span><span class="value" id="summary_total_venta">0.00</span></div>
-            </div>
-        </div>
-        <div class="col-md-8 col-lg-9">
+        <div class="col-12">
             <div class="card-custom">
-                <div class="card-header bg-dark-custom"><i class="bi bi-journal-text"></i> Notas Internas</div>
+                <div class="card-header bg-purple"><i class="bi bi-info-circle-fill"></i> 4. Información adicional</div>
                 <div class="card-body">
-                    <textarea class="form-control" id="notas" rows="2" placeholder="Notas internas u observaciones..."></textarea>
+                    <div class="info-adicional-grid">
+                        <!-- Seguimiento por -->
+                        <div>
+                            <label class="form-label"><i class="bi bi-person-check"></i> Seguimiento por</label>
+                            <select class="form-select" id="seguimiento_por">
+                                <option value="">Seleccionar</option>
+                            </select>
+                        </div>
+
+                        <!-- Motivo de la cotización -->
+                        <div>
+                            <label class="form-label"><i class="bi bi-target"></i> Motivo de la cotización</label>
+                            <select class="form-select" id="motivo_cotizacion">
+                                <option value="">Seleccionar</option>
+                                <option value="Nueva oportunidad">Nueva oportunidad</option>
+                                <option value="Recompra">Recompra</option>
+                                <option value="Licitación">Licitación</option>
+                                <option value="Actualización de precio">Actualización de precio</option>
+                                <option value="Reposición / stock">Reposición / stock</option>
+                                <option value="Cliente frecuente">Cliente frecuente</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+
+                        <!-- Tipo de transporte -->
+                        <div>
+                            <label class="form-label"><i class="bi bi-truck"></i> Tipo de transporte</label>
+                            <select class="form-select" id="tipo_transporte">
+                                <option value="">Seleccionar</option>
+                                <option value="Transporte propio">Transporte propio</option>
+                                <option value="Agencia externa">Agencia externa</option>
+                                <option value="Recojo en almacén">Recojo en almacén</option>
+                                <option value="Proveedor entrega directo">Proveedor entrega directo</option>
+                                <option value="Por coordinar">Por coordinar</option>
+                            </select>
+                        </div>
+
+                        <!-- ¿Incluye parihuela? -->
+                        <div>
+                            <label class="form-label"><i class="bi bi-box"></i> ¿Incluye parihuela?</label>
+                            <select class="form-select" id="incluye_parihuela">
+                                <option value="">Seleccionar</option>
+                                <option value="No">No</option>
+                                <option value="Sí - estándar">Sí - estándar</option>
+                                <option value="Sí - a medida">Sí - a medida</option>
+                                <option value="Por confirmar">Por confirmar</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Nota interna -->
+                    <div class="mt-2">
+                        <label class="form-label"><i class="bi bi-journal-text"></i> Nota interna</label>
+                        <textarea class="form-control" id="nota_interna" rows="2" placeholder="Ingrese notas internas u observaciones relevantes..."></textarea>
+                        <small class="text-muted">Campos internos / no visibles para el cliente</small>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- =========================== -->
-<!-- MODALES -->
-<!-- =========================== -->
-
+<!-- ====== MODALES ====== -->
 <!-- MODAL CONFIRMACIÓN -->
 <div class="modal fade" id="modalConfirmacion" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -835,31 +996,31 @@
                         </div>
                         <div class="col-12">
                             <label class="form-label">Razón Social <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="nuevo_razon_social">
+                            <input type="text" class="form-control" id="nuevo_razon_social" placeholder="Razón Social">
                         </div>
                         <div class="col-12">
                             <label class="form-label">Razón Comercial</label>
-                            <input type="text" class="form-control" id="nuevo_razon_comercial">
+                            <input type="text" class="form-control" id="nuevo_razon_comercial" placeholder="Razón Comercial">
                         </div>
                         <div class="col-12">
                             <label class="form-label">Nombre Comercial</label>
-                            <input type="text" class="form-control" id="nuevo_nombre_comercial">
+                            <input type="text" class="form-control" id="nuevo_nombre_comercial" placeholder="Nombre Comercial">
                         </div>
                         <div class="col-12">
                             <label class="form-label">Dirección Fiscal</label>
-                            <input type="text" class="form-control" id="nuevo_direccion_fiscal">
+                            <input type="text" class="form-control" id="nuevo_direccion_fiscal" placeholder="Dirección Fiscal">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Teléfono</label>
-                            <input type="text" class="form-control" id="nuevo_telefono">
+                            <input type="text" class="form-control" id="nuevo_telefono" placeholder="Teléfono">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Email</label>
-                            <input type="email" class="form-control" id="nuevo_email">
+                            <input type="email" class="form-control" id="nuevo_email" placeholder="Email">
                         </div>
                         <div class="col-12">
                             <label class="form-label">Nombre Contacto</label>
-                            <input type="text" class="form-control" id="nuevo_nombre_contacto">
+                            <input type="text" class="form-control" id="nuevo_nombre_contacto" placeholder="Nombre Contacto">
                         </div>
                     </div>
                 </form>
@@ -878,7 +1039,7 @@
         <div class="modal-content">
             <div class="modal-header"><h5 class="modal-title"><i class="bi bi-check-circle-fill text-success"></i> Confirmar Cotización</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
-                <div class="mb-2"><label class="form-label">Pedido / Orden</label><input type="text" class="form-control" id="pedido_cliente"></div>
+                <div class="mb-2"><label class="form-label">Pedido / Orden</label><input type="text" class="form-control" id="pedido_cliente" placeholder="N° Pedido"></div>
                 <div><label class="form-label">Fecha Confirmación</label><input type="date" class="form-control" id="fecha_confirmacion"></div>
             </div>
             <div class="modal-footer">
