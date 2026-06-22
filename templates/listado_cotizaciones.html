@@ -100,68 +100,94 @@
         .stat-card.generadas { border-left-color: #0055FF; }
         .stat-card.aceptadas { border-left-color: #00CC00; }
         
-        /* Toolbar compacto */
-        .toolbar-compacto {
-            background: white;
-            border-radius: 8px;
-            padding: 6px 10px;
+        /* ====== FILA SUPERIOR: SOLO BOTÓN VOLVER ====== */
+        .fila-volver {
             margin-bottom: 8px;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 6px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
         
-        .toolbar-compacto .btn {
+        .fila-volver .btn-volver {
             font-size: 12px;
-            padding: 4px 10px;
+            padding: 4px 14px;
             border-radius: 6px;
             font-weight: 600;
         }
         
-        .toolbar-compacto .btn-sm-custom {
+        .fila-volver .btn-volver i {
+            margin-right: 4px;
+        }
+        
+        /* ====== TOOLBAR SUPERIOR ====== */
+        .toolbar-superior {
+            background: white;
+            border-radius: 8px;
+            padding: 6px 12px;
+            margin-bottom: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .toolbar-superior .btn {
             font-size: 12px;
             padding: 4px 10px;
             border-radius: 6px;
+            font-weight: 600;
+            white-space: nowrap;
         }
         
-        .toolbar-compacto .form-select {
-            font-size: 12px;
-            padding: 4px 28px 4px 10px;
-            border-radius: 6px;
-            width: 140px;
-            min-height: 30px;
+        .toolbar-superior .btn i {
+            margin-right: 4px;
         }
         
-        .toolbar-compacto .search-input {
+        .toolbar-superior .separador {
+            width: 1px;
+            height: 24px;
+            background: #e5e7eb;
+            margin: 0 2px;
+        }
+        
+        .toolbar-superior .search-input-pequeno {
             font-size: 12px;
-            padding: 4px 10px 4px 32px;
+            padding: 4px 10px 4px 28px;
             border-radius: 20px;
-            min-width: 200px;
+            width: 160px;
             height: 30px;
             border: 1px solid #e5e7eb;
         }
         
-        .toolbar-compacto .search-input:focus {
+        .toolbar-superior .search-input-pequeno:focus {
             border-color: #4f46e5;
             box-shadow: 0 0 0 2px rgba(79,70,229,0.1);
             outline: none;
         }
         
-        .toolbar-compacto .search-icon {
-            left: 12px;
-            top: 7px;
+        .toolbar-superior .search-icon-pequeno {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
             font-size: 12px;
             color: #9ca3af;
         }
         
-        /* Separador */
-        .separador {
-            width: 1px;
-            height: 24px;
-            background: #e5e7eb;
-            margin: 0 4px;
+        .toolbar-superior .dropdown-toggle-ver-todo {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            color: #374151;
+        }
+        
+        .toolbar-superior .dropdown-toggle-ver-todo:hover {
+            background: #f1f5f9;
+        }
+        
+        /* Toolbar original oculta */
+        .toolbar-compacto {
+            display: none !important;
         }
         
         /* Tabla compacta */
@@ -395,20 +421,16 @@
                 grid-template-columns: repeat(2, 1fr);
             }
             
-            .toolbar-compacto {
+            .toolbar-superior {
                 flex-direction: column;
                 align-items: stretch;
             }
             
-            .toolbar-compacto .search-input {
-                min-width: 100%;
-            }
-            
-            .toolbar-compacto .form-select {
+            .toolbar-superior .search-input-pequeno {
                 width: 100%;
             }
             
-            .separador {
+            .toolbar-superior .separador {
                 display: none;
             }
             
@@ -437,6 +459,13 @@
         <span class="badge-kcf"><i class="bi bi-buildings-fill me-1"></i> KCF CORPORACION</span>
     </div>
 
+    <!-- ====== FILA SUPERIOR: SOLO BOTÓN VOLVER ====== -->
+    <div class="fila-volver">
+        <a href="/index" class="btn btn-secondary btn-volver">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+
     <!-- STATS COMPACTOS -->
     <div class="stats-compacto">
         <div class="stat-card total">
@@ -457,9 +486,53 @@
         </div>
     </div>
 
-    <!-- TOOLBAR COMPACTO -->
+    <!-- ====== TOOLBAR SUPERIOR ====== -->
+    <div class="toolbar-superior">
+        <!-- Barra de búsqueda más pequeña -->
+        <div class="position-relative" style="flex:0 0 auto;">
+            <i class="bi bi-search position-absolute search-icon-pequeno"></i>
+            <input type="text" id="buscador" class="form-control search-input-pequeno"
+                   placeholder="Buscar...">
+        </div>
+
+        <span class="separador"></span>
+
+        <!-- Desplegable "Ver todo" -->
+        <div class="dropdown">
+            <button class="btn dropdown-toggle-ver-todo dropdown-toggle" type="button" 
+                    id="dropdownVerTodo" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-eye"></i> Ver todo
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownVerTodo">
+                <li><a class="dropdown-item" href="#" data-filtro="todas">📋 Todo</a></li>
+                <li><a class="dropdown-item" href="#" data-filtro="borrador">📝 Borradores</a></li>
+                <li><a class="dropdown-item" href="#" data-filtro="generada">📄 Generadas</a></li>
+                <li><a class="dropdown-item" href="#" data-filtro="aceptada">✅ Aceptadas</a></li>
+                <li><a class="dropdown-item" href="#" data-filtro="rechazada">❌ Rechazadas</a></li>
+                <li><a class="dropdown-item" href="#" data-filtro="en_proceso">⏳ En Proceso</a></li>
+            </ul>
+        </div>
+
+        <span class="separador"></span>
+
+        <!-- Botón Refrescar -->
+        <button class="btn btn-outline-primary" id="btnRefrescar">
+            <i class="bi bi-arrow-repeat"></i> Refrescar
+        </button>
+
+        <!-- Botón Exportar a Excel -->
+        <button class="btn btn-success" id="btnExportarExcel">
+            <i class="bi bi-file-excel"></i> Excel
+        </button>
+
+        <!-- Botón Crear Nueva Cotización -->
+        <a href="/crear_cotizacion" class="btn btn-danger">
+            <i class="bi bi-plus-circle"></i> Crear Cotización
+        </a>
+    </div>
+
+    <!-- ====== TOOLBAR ORIGINAL (oculta) ====== -->
     <div class="toolbar-compacto">
-        <!-- Izquierda -->
         <a href="/index" class="btn btn-secondary btn-sm-custom">
             <i class="bi bi-arrow-left"></i> Volver
         </a>
@@ -475,14 +548,13 @@
 
         <div class="position-relative" style="flex:1; min-width:150px;">
             <i class="bi bi-search position-absolute search-icon"></i>
-            <input type="text" id="buscador" class="form-control search-input"
+            <input type="text" id="buscador_original" class="form-control search-input"
                    placeholder="Buscar por N° / Cliente / Vendedor...">
         </div>
 
         <span class="separador"></span>
 
-        <!-- Derecha -->
-        <button class="btn btn-info btn-sm-custom" id="btnRefrescar">
+        <button class="btn btn-info btn-sm-custom" id="btnRefrescarOriginal">
             <i class="bi bi-arrow-repeat"></i>
         </button>
 
@@ -659,6 +731,85 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/static/js/listado_cotizaciones.js"></script>
+
+<script>
+    // Sincronizar buscador nuevo con el original
+    document.addEventListener('DOMContentLoaded', function() {
+        const buscadorNuevo = document.getElementById('buscador');
+        const buscadorOriginal = document.getElementById('buscador_original');
+        const filtroTipo = document.getElementById('filtroTipo');
+        const dropdownItems = document.querySelectorAll('#dropdownVerTodo + .dropdown-menu .dropdown-item');
+        
+        // Sincronizar búsqueda
+        if (buscadorNuevo && buscadorOriginal) {
+            buscadorNuevo.addEventListener('input', function() {
+                buscadorOriginal.value = this.value;
+                buscadorOriginal.dispatchEvent(new Event('input'));
+            });
+            
+            buscadorOriginal.addEventListener('input', function() {
+                buscadorNuevo.value = this.value;
+            });
+        }
+        
+        // Sincronizar filtros del dropdown con el select original
+        dropdownItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const filtro = this.dataset.filtro;
+                if (filtroTipo) {
+                    filtroTipo.value = filtro;
+                    filtroTipo.dispatchEvent(new Event('change'));
+                }
+                const btn = document.getElementById('dropdownVerTodo');
+                if (btn) {
+                    const texto = this.textContent.trim();
+                    btn.innerHTML = `<i class="bi bi-eye"></i> ${texto}`;
+                }
+            });
+        });
+        
+        // Refrescar
+        const btnRefrescarNuevo = document.getElementById('btnRefrescar');
+        const btnRefrescarOriginal = document.getElementById('btnRefrescarOriginal');
+        if (btnRefrescarNuevo && btnRefrescarOriginal) {
+            btnRefrescarNuevo.addEventListener('click', function() {
+                btnRefrescarOriginal.click();
+            });
+        }
+        
+        // Exportar Excel
+        document.getElementById('btnExportarExcel')?.addEventListener('click', function() {
+            mostrarNotificacion('info', 'Exportando a Excel...');
+        });
+    });
+    
+    function mostrarNotificacion(tipo, mensaje) {
+        const container = document.getElementById('notificacionesContainer');
+        if (!container) return;
+        
+        const notif = document.createElement('div');
+        notif.className = `notificacion notificacion-${tipo}`;
+        notif.innerHTML = `
+            <span>${mensaje}</span>
+            <button type="button" class="btn-close btn-close-white" aria-label="Close"></button>
+        `;
+        
+        notif.querySelector('.btn-close').addEventListener('click', function() {
+            notif.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => notif.remove(), 300);
+        });
+        
+        container.appendChild(notif);
+        
+        setTimeout(() => {
+            if (notif.parentNode) {
+                notif.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notif.remove(), 300);
+            }
+        }, 4000);
+    }
+</script>
 
 </body>
 </html>
