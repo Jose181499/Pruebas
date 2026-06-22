@@ -148,30 +148,38 @@
             margin: 0 2px;
         }
         
-        .toolbar-superior .search-input-pequeno {
-            font-size: 12px;
-            padding: 4px 10px 4px 28px;
-            border-radius: 20px;
-            width: 160px;
-            height: 30px;
-            border: 1px solid #e5e7eb;
+        /* ====== BÚSQUEDA MÁS GRANDE ====== */
+        .search-wrapper {
+            position: relative;
+            flex: 0 0 auto;
+            width: 220px;
         }
-        
-        .toolbar-superior .search-input-pequeno:focus {
-            border-color: #4f46e5;
-            box-shadow: 0 0 0 2px rgba(79,70,229,0.1);
-            outline: none;
-        }
-        
-        .toolbar-superior .search-icon-pequeno {
+        .search-wrapper .search-icon {
             position: absolute;
             left: 10px;
             top: 50%;
             transform: translateY(-50%);
-            font-size: 12px;
+            font-size: 13px;
             color: #9ca3af;
         }
+        .search-wrapper .search-input {
+            width: 100%;
+            font-size: 13px;
+            padding: 4px 10px 4px 30px;
+            border-radius: 20px;
+            height: 30px;
+            border: 1px solid #e5e7eb;
+            background: #f9fafb;
+            transition: 0.15s;
+        }
+        .search-wrapper .search-input:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79,70,229,0.08);
+            outline: none;
+            background: white;
+        }
         
+        /* Dropdown "Ver todo" */
         .toolbar-superior .dropdown-toggle-ver-todo {
             font-size: 12px;
             padding: 4px 10px;
@@ -179,16 +187,47 @@
             background: #f8fafc;
             border: 1px solid #e5e7eb;
             color: #374151;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
-        
         .toolbar-superior .dropdown-toggle-ver-todo:hover {
             background: #f1f5f9;
+        }
+        
+        /* Grupo derecho: Refrescar, Excel (verde claro), Nueva */
+        .toolbar-derecha {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: auto;
+            flex-wrap: wrap;
+        }
+        
+        /* Botón Excel verde claro */
+        .btn-excel-verde-claro {
+            background: #d1fae5 !important;
+            border: 1px solid #a7f3d0 !important;
+            color: #065f46 !important;
+        }
+        .btn-excel-verde-claro:hover {
+            background: #a7f3d0 !important;
+            border-color: #6ee7b7 !important;
+            color: #064e3b !important;
         }
         
         /* Toolbar original oculta */
         .toolbar-compacto {
             display: none !important;
         }
+        
+        /* Ocultar elementos originales que ya no usamos */
+        .search-input-pequeno { display: none; }
+        .search-icon-pequeno { display: none; }
+        #buscador_original { display: none; }
+        #filtroTipo { display: none; }
+        #btnRefrescarOriginal { display: none; }
         
         /* Tabla compacta */
         .tabla-cotizaciones-container {
@@ -426,8 +465,13 @@
                 align-items: stretch;
             }
             
-            .toolbar-superior .search-input-pequeno {
+            .search-wrapper {
                 width: 100%;
+            }
+            
+            .toolbar-derecha {
+                margin-left: 0;
+                justify-content: flex-start;
             }
             
             .toolbar-superior .separador {
@@ -488,10 +532,10 @@
 
     <!-- ====== TOOLBAR SUPERIOR ====== -->
     <div class="toolbar-superior">
-        <!-- Barra de búsqueda más pequeña -->
-        <div class="position-relative" style="flex:0 0 auto;">
-            <i class="bi bi-search position-absolute search-icon-pequeno"></i>
-            <input type="text" id="buscador" class="form-control search-input-pequeno"
+        <!-- Barra de búsqueda más grande (220px) -->
+        <div class="search-wrapper">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text" id="buscador" class="form-control search-input"
                    placeholder="Buscar...">
         </div>
 
@@ -515,23 +559,26 @@
 
         <span class="separador"></span>
 
-        <!-- Botón Refrescar -->
-        <button class="btn btn-outline-primary" id="btnRefrescar">
-            <i class="bi bi-arrow-repeat"></i> Refrescar
-        </button>
+        <!-- Grupo derecho: Refrescar, Excel (verde claro), Nueva -->
+        <div class="toolbar-derecha">
+            <!-- Botón Refrescar -->
+            <button class="btn btn-outline-primary" id="btnRefrescar">
+                <i class="bi bi-arrow-repeat"></i> Refrescar
+            </button>
 
-        <!-- Botón Exportar a Excel -->
-        <button class="btn btn-success" id="btnExportarExcel">
-            <i class="bi bi-file-excel"></i> Excel
-        </button>
+            <!-- Botón Exportar a Excel (verde claro) -->
+            <button class="btn btn-excel-verde-claro" id="btnExportarExcel">
+                <i class="bi bi-file-excel"></i> Excel
+            </button>
 
-        <!-- Botón Crear Nueva Cotización -->
-        <a href="/crear_cotizacion" class="btn btn-danger">
-            <i class="bi bi-plus-circle"></i> Crear Nueva Cotización
-        </a>
+            <!-- Botón Crear Nueva Cotización -->
+            <a href="/crear_cotizacion" class="btn btn-danger">
+                <i class="bi bi-plus-circle"></i> Crear Nueva Cotización
+            </a>
+        </div>
     </div>
 
-    <!-- ====== TOOLBAR ORIGINAL (oculta) ====== -->
+    <!-- ====== TOOLBAR ORIGINAL (oculta, solo para sincronización) ====== -->
     <div class="toolbar-compacto">
         <a href="/index" class="btn btn-secondary btn-sm-custom">
             <i class="bi bi-arrow-left"></i> Volver
