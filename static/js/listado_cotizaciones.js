@@ -1168,6 +1168,403 @@ window.verDocumentos = async function(id) {
     }
 };
 
+
+
+
+
+// ===========================
+// EXPORTAR A EXCEL
+// ===========================
+function exportarExcel() {
+    try {
+        // Obtener los datos actuales (filtrados o no)
+        const filtroTipo = document.getElementById('filtroTipo')?.value || 'todas';
+        const busqueda = document.getElementById('buscador')?.value?.toLowerCase() || '';
+        
+        let datos = [...cotizacionesData];
+        
+        // Aplicar filtros
+        if (filtroTipo !== 'todas') {
+            datos = datos.filter(c => {
+                if (filtroTipo === 'borrador') {
+                    return c.codigo_cotizacion && c.codigo_cotizacion.startsWith('TMP-');
+                } else if (filtroTipo === 'generada') {
+                    return c.estado === 'Generada' || c.estado === 'generada';
+                } else if (filtroTipo === 'aceptada') {
+                    return c.estado === 'Aceptada por Cliente' || c.estado === 'aceptada';
+                } else if (filtroTipo === 'rechazada') {
+                    return c.estado === 'Rechazada' || c.estado === 'rechazada';
+                } else if (filtroTipo === 'en_proceso') {
+                    return c.estado === 'En Proceso' || c.estado === 'en_proceso';
+                }
+                return true;
+            });
+        }
+        
+        if (busqueda) {
+            datos = datos.filter(c => {
+                return (
+                    (c.numero_cotizacion && c.numero_cotizacion.toLowerCase().includes(busqueda)) ||
+                    (c.codigo_cotizacion && c.codigo_cotizacion.toLowerCase().includes(busqueda)) ||
+                    (c.cliente && c.cliente.toLowerCase().includes(busqueda)) ||
+                    (c.vendedor && c.vendedor.toLowerCase().includes(busqueda)) ||
+                    (c.ruc && c.ruc.toLowerCase().includes(busqueda))
+                );
+            });
+        }
+
+        if (datos.length === 0) {
+            mostrarNotificacion('⚠️ No hay datos para exportar', 'warning');
+            return;
+        }
+
+        mostrarNotificacion('📊 Generando archivo Excel...', 'info');
+
+        // Crear encabezados
+        const headers = [
+            'N°',
+            'Código Cotización',
+            'Estado',
+            'Fecha',
+            'Hora',
+            'RUC',
+            'Código Cliente',
+            'Razón Comercial',
+            'Razón Social',
+            'Descripción',
+            'Monto (S/)',
+            'Nota Aclaratoria',
+            'Condición Pago',
+            'Vendedor'
+        ];
+
+        // Preparar datos para Excel
+        const rows = datos.map((c, index) => {
+            const fecha = formatearFecha(c.fecha_creacion);
+            const hora = formatearHora(c.fecha_creacion);
+            const total = Number(c.total || 0).toFixed(2);
+            const esBorrador = c.codigo_cotizacion && c.codigo_cotizacion.startsWith('TMP-');
+            let estado = c.estado || 'En Proceso';
+            if (esBorrador) estado = 'BORRADOR';
+            
+            return [
+                index + 1,
+                c.codigo_cotizacion || c.numero_cotizacion || '-',
+                estado,
+                fecha,
+                hora,
+                c.ruc || '---',
+                c.codigo_cliente || '---',
+                c.razon_comercial || c.nombre_comercial || '---',
+                c.razon_social || c.cliente || '---',
+                c.descripcion || '---',
+                total,
+                c.nota_aclaratoria || '---',
+                c.condicion_pago || 'Contado',
+                c.vendedor || '---'
+            ];
+        });
+
+        // Construir contenido CSV/Excel
+        let csvContent = '\uFEFF'; // BOM para UTF-8
+        csvContent += headers.join(',') + '\n';
+        
+        rows.forEach(row => {
+            const escapedRow = row.map(cell => {
+                if (typeof cell === 'string') {
+                    // Escapar comillas y manejar comas
+                    if (cell.includes(',') || cell.includes('"') || cell.includes('\n')) {
+                        return `"${cell.replace(/"/g, '""')}"`;
+                    }
+                    return cell;
+                }
+                return cell;
+            });
+            csvContent += escapedRow.join(',') + '\n';
+        });
+
+        // Crear blob y descargar
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        
+        const fechaActual = new Date();
+        const fechaStr = fechaActual.toISOString().slice(0, 10);
+        link.setAttribute('download', `cotizaciones_${fechaStr}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        mostrarNotificacion(`✅ Excel exportado correctamente (${datos.length} registros)`, 'success');
+
+    } catch (error) {
+        console.error('Error al exportar Excel:', error);
+        mostrarNotificacion('❌ Error al exportar: ' + error.message, 'danger');
+    }
+}
+
+// ===========================
+// EXPORTAR A EXCEL CON XLSX (versión mejorada - requiere librería)
+// ===========================
+async function exportarExcelAvanzado() {
+    try {
+        // Verificar si la librería XLSX está disponible
+        if (typeof XLSX === 'undefined') {
+            // Cargar librería dinámicamente
+            await cargarLibreriaXLSX();
+        }
+
+        const filtroTipo = document.getElementById('filtroTipo')?.value || 'todas';
+        const busqueda = document.getElementById('buscador')?.value?.toLowerCase() || '';
+        
+        let datos = [...cotizacionesData];
+        
+        // Aplicar filtros
+        if (filtroTipo !== 'todas') {
+            datos = datos.filter(c => {
+                if (filtroTipo === 'borrador') {
+                    return c.codigo_cotizacion && c.codigo_cotizacion.startsWith('TMP-');
+                } else if (filtroTipo === 'generada') {
+                    return c.estado === 'Generada' || c.estado === 'generada';
+                } else if (filtroTipo === 'aceptada') {
+                    return c.estado === 'Aceptada por Cliente' || c.estado === 'aceptada';
+                } else if (filtroTipo === 'rechazada') {
+                    return c.estado === 'Rechazada' || c.estado === 'rechazada';
+                } else if (filtroTipo === 'en_proceso') {
+                    return c.estado === 'En Proceso' || c.estado === 'en_proceso';
+                }
+                return true;
+            });
+        }
+        
+        if (busqueda) {
+            datos = datos.filter(c => {
+                return (
+                    (c.numero_cotizacion && c.numero_cotizacion.toLowerCase().includes(busqueda)) ||
+                    (c.codigo_cotizacion && c.codigo_cotizacion.toLowerCase().includes(busqueda)) ||
+                    (c.cliente && c.cliente.toLowerCase().includes(busqueda)) ||
+                    (c.vendedor && c.vendedor.toLowerCase().includes(busqueda)) ||
+                    (c.ruc && c.ruc.toLowerCase().includes(busqueda))
+                );
+            });
+        }
+
+        if (datos.length === 0) {
+            mostrarNotificacion('⚠️ No hay datos para exportar', 'warning');
+            return;
+        }
+
+        mostrarNotificacion('📊 Generando archivo Excel...', 'info');
+
+        // Crear datos para el libro
+        const excelData = datos.map((c, index) => {
+            const fecha = formatearFecha(c.fecha_creacion);
+            const hora = formatearHora(c.fecha_creacion);
+            const total = Number(c.total || 0).toFixed(2);
+            const esBorrador = c.codigo_cotizacion && c.codigo_cotizacion.startsWith('TMP-');
+            let estado = c.estado || 'En Proceso';
+            if (esBorrador) estado = 'BORRADOR';
+            
+            return {
+                'N°': index + 1,
+                'Código Cotización': c.codigo_cotizacion || c.numero_cotizacion || '-',
+                'Estado': estado,
+                'Fecha': fecha,
+                'Hora': hora,
+                'RUC': c.ruc || '---',
+                'Código Cliente': c.codigo_cliente || '---',
+                'Razón Comercial': c.razon_comercial || c.nombre_comercial || '---',
+                'Razón Social': c.razon_social || c.cliente || '---',
+                'Descripción': c.descripcion || '---',
+                'Monto (S/)': total,
+                'Nota Aclaratoria': c.nota_aclaratoria || '---',
+                'Condición Pago': c.condicion_pago || 'Contado',
+                'Vendedor': c.vendedor || '---'
+            };
+        });
+
+        // Crear libro de trabajo
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(excelData);
+        
+        // Ajustar anchos de columnas
+        const colWidths = [
+            { wch: 6 },   // N°
+            { wch: 18 },  // Código Cotización
+            { wch: 12 },  // Estado
+            { wch: 12 },  // Fecha
+            { wch: 10 },  // Hora
+            { wch: 14 },  // RUC
+            { wch: 14 },  // Código Cliente
+            { wch: 20 },  // Razón Comercial
+            { wch: 25 },  // Razón Social
+            { wch: 30 },  // Descripción
+            { wch: 14 },  // Monto
+            { wch: 25 },  // Nota Aclaratoria
+            { wch: 18 },  // Condición Pago
+            { wch: 18 }   // Vendedor
+        ];
+        ws['!cols'] = colWidths;
+
+        XLSX.utils.book_append_sheet(wb, ws, 'Cotizaciones');
+        
+        // Generar archivo
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([wbout], { type: 'application/octet-stream' });
+        
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        
+        const fechaActual = new Date();
+        const fechaStr = fechaActual.toISOString().slice(0, 10);
+        link.setAttribute('download', `cotizaciones_${fechaStr}.xlsx`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        mostrarNotificacion(`✅ Excel exportado correctamente (${datos.length} registros)`, 'success');
+
+    } catch (error) {
+        console.error('Error al exportar Excel:', error);
+        mostrarNotificacion('❌ Error al exportar: ' + error.message, 'danger');
+    }
+}
+
+// ===========================
+// CARGAR LIBRERÍA XLSX
+// ===========================
+function cargarLibreriaXLSX() {
+    return new Promise((resolve, reject) => {
+        if (typeof XLSX !== 'undefined') {
+            resolve();
+            return;
+        }
+        
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Error al cargar la librería XLSX'));
+        document.head.appendChild(script);
+    });
+}
+
+// ===========================
+// ASIGNAR EVENTO AL BOTÓN DE EXPORTAR
+// ===========================
+function inicializarExportacion() {
+    const btnExportar = document.getElementById('btnExportarExcel');
+    if (btnExportar) {
+        btnExportar.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Usar versión avanzada si es posible, o la básica
+            if (typeof XLSX !== 'undefined') {
+                exportarExcelAvanzado();
+            } else {
+                // Intentar cargar la librería primero
+                cargarLibreriaXLSX()
+                    .then(() => exportarExcelAvanzado())
+                    .catch(() => {
+                        // Fallback a CSV si no se puede cargar XLSX
+                        mostrarNotificacion('⚠️ Usando formato CSV (instalando librería...)', 'warning');
+                        exportarExcel();
+                    });
+            }
+        });
+    }
+}
+
+// ===========================
+// EXPORTAR SOLO LOS DATOS VISIBLES (filtrados)
+// ===========================
+function exportarFiltrados() {
+    // Esta función usa los datos ya filtrados en la tabla actual
+    const tbody = document.getElementById('tbodyCotizaciones');
+    if (!tbody) return;
+    
+    const rows = tbody.querySelectorAll('tr[data-id]');
+    if (rows.length === 0) {
+        mostrarNotificacion('⚠️ No hay datos visibles para exportar', 'warning');
+        return;
+    }
+    
+    // Extraer datos de la tabla visible
+    const datosVisibles = [];
+    rows.forEach((row, index) => {
+        const celdas = row.querySelectorAll('td');
+        if (celdas.length >= 12) {
+            datosVisibles.push({
+                'N°': index + 1,
+                'Código Cotización': celdas[3]?.textContent?.trim() || '-',
+                'Estado': celdas[2]?.textContent?.trim() || '-',
+                'Fecha': celdas[0]?.querySelector('.fecha')?.textContent?.trim() || '-',
+                'Hora': celdas[0]?.querySelector('.hora')?.textContent?.trim() || '-',
+                'RUC': celdas[4]?.textContent?.trim() || '-',
+                'Código Cliente': celdas[5]?.textContent?.trim() || '-',
+                'Razón Comercial': celdas[6]?.textContent?.trim() || '-',
+                'Razón Social': celdas[7]?.textContent?.trim() || '-',
+                'Descripción': celdas[8]?.textContent?.trim() || '-',
+                'Monto (S/)': celdas[9]?.textContent?.replace('S/ ', '')?.trim() || '0.00',
+                'Nota Aclaratoria': celdas[10]?.textContent?.trim() || '-',
+                'Condición Pago': celdas[11]?.textContent?.trim() || 'Contado'
+            });
+        }
+    });
+    
+    if (datosVisibles.length === 0) {
+        mostrarNotificacion('⚠️ No hay datos para exportar', 'warning');
+        return;
+    }
+    
+    // Crear CSV con los datos visibles
+    let csvContent = '\uFEFF';
+    const headers = Object.keys(datosVisibles[0]);
+    csvContent += headers.join(',') + '\n';
+    
+    datosVisibles.forEach(row => {
+        const values = headers.map(key => {
+            let val = row[key] || '';
+            if (typeof val === 'string' && (val.includes(',') || val.includes('"') || val.includes('\n'))) {
+                return `"${val.replace(/"/g, '""')}"`;
+            }
+            return val;
+        });
+        csvContent += values.join(',') + '\n';
+    });
+    
+    // Descargar
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    const fechaActual = new Date();
+    const fechaStr = fechaActual.toISOString().slice(0, 10);
+    link.setAttribute('download', `cotizaciones_filtradas_${fechaStr}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    mostrarNotificacion(`✅ Exportadas ${datosVisibles.length} cotizaciones visibles`, 'success');
+}
+
+// ===========================
+// INICIALIZAR AL CARGAR LA PÁGINA
+// ===========================
+// Agregar al DOMContentLoaded existente
+const originalDOMContentLoaded = window.addEventListener('DOMContentLoaded', function() {
+    inicializarExportacion();
+});
+
+// También agregar al final del archivo para asegurar
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    inicializarExportacion();
+} else {
+    document.addEventListener('DOMContentLoaded', inicializarExportacion);
+}
 // ===========================
 // FUNCIONES AUXILIARES PARA DOCUMENTOS
 // ===========================
