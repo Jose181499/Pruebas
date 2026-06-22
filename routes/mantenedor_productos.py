@@ -1,4 +1,4 @@
-# ==================== APP.PY - KCF CORPORACIÓN ====================
+# ==================== MANTENEDOR_PRODUCTOS.PY - KCF CORPORACIÓN ====================
 # Backend completo con todas las funcionalidades integradas
 
 from flask import Blueprint, render_template, request, redirect, flash, jsonify, send_file, url_for
@@ -47,7 +47,7 @@ def nuevo_producto_completo():
 def comparativo_costos():
     """Vista del comparativo de costos por producto"""
     try:
-        productos = obtener_productos()  # <-- OBTENER PRODUCTOS
+        productos = obtener_productos()
         return render_template("mantenedor/comparativo_costos.html", productos=productos)
     except Exception as e:
         print(f"❌ Error en comparativo_costos: {e}")
@@ -67,7 +67,7 @@ def base_datos_productos():
 def kardex_productos():
     """Vista del kárdex de productos"""
     try:
-        productos = obtener_productos()  # <-- OBTENER PRODUCTOS
+        productos = obtener_productos()
         return render_template("mantenedor/kardex_productos.html", productos=productos)
     except Exception as e:
         print(f"❌ Error en kardex_productos: {e}")
@@ -394,34 +394,66 @@ def eliminar_producto():
 
 @mantenedor_productos_bp.route("/mantenedor/productos/api/productos", methods=["GET"])
 def api_get_productos():
-    """API: Obtener todos los productos"""
+    """API: Obtener todos los productos - Versión mejorada con detección automática de columnas"""
     try:
-        productos = db_query("""
-            SELECT id, codigo, familia, descripcion, descripcion_larga, marca, modelo, 
-                   unidad, peso, volumen, transporte, costo_unitario, precio_unitario, 
-                   stock, stock_minimo, estado, presentacion_proveedor, presentacion_venta,
-                   venta_minima, codigo_barras, observaciones 
-            FROM productos
-            ORDER BY id
-        """)
+        # Primero, obtener las columnas de la tabla
+        try:
+            columnas_info = db_query("PRAGMA table_info(productos)")
+            columnas_existentes = [c['name'] for c in columnas_info] if columnas_info else []
+            print(f"📋 Columnas existentes en la tabla productos: {columnas_existentes}")
+        except Exception as e:
+            print(f"⚠️ Error al obtener columnas: {e}")
+            columnas_existentes = []
+        
+        # Definir todas las columnas que queremos consultar
+        todas_las_columnas = [
+            'id', 'codigo', 'familia', 'descripcion', 'descripcion_larga', 
+            'marca', 'modelo', 'unidad', 'peso', 'volumen', 'transporte', 
+            'costo_unitario', 'precio_unitario', 'stock', 'stock_minimo', 
+            'estado', 'presentacion_proveedor', 'presentacion_venta',
+            'venta_minima', 'codigo_barras', 'observaciones'
+        ]
+        
+        # Filtrar solo las columnas que existen en la tabla
+        columnas_finales = [col for col in todas_las_columnas if col in columnas_existentes]
+        
+        # Si no hay columnas, usar las básicas como fallback
+        if not columnas_finales:
+            columnas_finales = ['id', 'codigo', 'familia', 'descripcion']
+        
+        # Construir la consulta SQL dinámica
+        sql = f"SELECT {', '.join(columnas_finales)} FROM productos ORDER BY id"
+        print(f"📝 SQL ejecutado: {sql}")
+        
+        productos = db_query(sql)
+        print(f"✅ Productos encontrados: {len(productos)}")
         
         # Procesar datos para JSON
         for p in productos:
-            if p.get('costo_unitario'):
-                p['costo_unitario'] = float(p['costo_unitario'])
-            if p.get('precio_unitario'):
-                p['precio_unitario'] = float(p['precio_unitario'])
-            if p.get('peso'):
-                p['peso'] = float(p['peso'])
-            if p.get('volumen'):
-                p['volumen'] = float(p['volumen'])
-            p['stock'] = p.get('stock') or 0
-            p['stock_minimo'] = p.get('stock_minimo') or 0
-            p['venta_minima'] = p.get('venta_minima') or 1
+            # Convertir valores numéricos
+            for key in ['costo_unitario', 'precio_unitario', 'peso', 'volumen']:
+                if key in p and p[key] is not None:
+                    try:
+                        p[key] = float(p[key])
+                    except:
+                        p[key] = 0
+            
+            # Asegurar valores por defecto
+            if 'stock' not in p or p['stock'] is None:
+                p['stock'] = 0
+            if 'stock_minimo' not in p or p['stock_minimo'] is None:
+                p['stock_minimo'] = 0
+            if 'venta_minima' not in p or p['venta_minima'] is None:
+                p['venta_minima'] = 1
+            if 'estado' not in p or p['estado'] is None:
+                p['estado'] = 'activo'
                 
         return jsonify(productos)
+        
     except Exception as e:
         print(f"❌ Error en api_get_productos: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @mantenedor_productos_bp.route("/mantenedor/productos/api/productos/<int:id>", methods=["GET"])

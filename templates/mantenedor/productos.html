@@ -306,7 +306,6 @@
                 <table class="table table-custom" id="tablaProductos">
                     <thead>
                         <tr>
-                            <!-- Columnas principales -->
                             <th style="min-width:50px;">Ítem</th>
                             <th style="min-width:110px;">Código</th>
                             <th style="min-width:200px;">Descripción</th>
@@ -318,8 +317,6 @@
                             <th style="min-width:140px;">Transporte ref.</th>
                             <th style="min-width:100px;">Valor costo</th>
                             <th style="min-width:100px;">Valor venta</th>
-                            
-                            <!-- Columnas adicionales -->
                             <th style="min-width:140px;">Presentación<br><small>proveedor</small></th>
                             <th style="min-width:140px;">Presentación<br><small>venta</small></th>
                             <th style="min-width:100px;">Venta mínima</th>
@@ -331,12 +328,10 @@
                             <th style="min-width:100px;">Stock mínimo</th>
                             <th style="min-width:200px;">Descripción</th>
                             <th style="min-width:200px;">Observación</th>
-                            
                             <th style="min-width:100px;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tbodyProductos">
-                        <!-- Loading state -->
                         <tr id="loadingStateRow">
                             <td colspan="23">
                                 <div class="loading-state">
@@ -397,7 +392,7 @@
             // ===== CARGAR PRODUCTOS DESDE API =====
             function cargarProductos() {
                 $('#loadingStateRow').show();
-                $('#emptyStateRow').hide();
+                $('#emptyStateRow').remove();
                 
                 $.ajax({
                     url: '/mantenedor/productos/api/productos',
@@ -405,16 +400,23 @@
                     dataType: 'json',
                     success: function(data) {
                         productosData = data;
-                        // Cargar filtros
                         cargarFiltros(data);
-                        // Renderizar tabla
                         renderizarTabla(data);
                         $('#loadingStateRow').hide();
                     },
                     error: function(xhr, status, error) {
                         console.error('Error al cargar productos:', error);
+                        console.error('Respuesta del servidor:', xhr.responseText);
                         $('#loadingStateRow').hide();
-                        mostrarEmptyState('Error al cargar productos. Intenta recargar la página.');
+                        
+                        let errorMsg = 'Error al cargar productos. ';
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            errorMsg += response.error || 'Intenta recargar la página.';
+                        } catch(e) {
+                            errorMsg += 'Intenta recargar la página.';
+                        }
+                        mostrarEmptyState(errorMsg);
                     }
                 });
             }
@@ -428,25 +430,21 @@
                 productos.forEach(p => {
                     if (p.familia) familias.add(p.familia);
                     if (p.marca) marcas.add(p.marca);
-                    // Usar categoria_derivada o similar
                     if (p.categoria_derivada) subcategorias.add(p.categoria_derivada);
                 });
 
-                // Llenar select de categorías
                 const $catSelect = $('#filtroCategoriaPrincipal');
                 $catSelect.find('option:not(:first)').remove();
                 familias.forEach(f => {
                     $catSelect.append(`<option value="${f}">${f}</option>`);
                 });
 
-                // Llenar select de marcas
                 const $marcaSelect = $('#filtroMarca');
                 $marcaSelect.find('option:not(:first)').remove();
                 marcas.forEach(m => {
                     $marcaSelect.append(`<option value="${m}">${m}</option>`);
                 });
 
-                // Llenar select de subcategorías
                 const $subcatSelect = $('#filtroSubcategoria');
                 $subcatSelect.find('option:not(:first)').remove();
                 subcategorias.forEach(s => {
@@ -475,8 +473,8 @@
                     const categoriaDerivada = p.categoria_derivada || '-';
                     const peso = p.peso || '0';
                     const transporte = p.transporte || '-';
-                    const costo = p.costo_unitario ? `S/ ${p.costo_unitario.toFixed(2)}` : 'S/ 0.00';
-                    const venta = p.precio_unitario ? `S/ ${p.precio_unitario.toFixed(2)}` : 'S/ 0.00';
+                    const costo = p.costo_unitario ? `S/ ${parseFloat(p.costo_unitario).toFixed(2)}` : 'S/ 0.00';
+                    const venta = p.precio_unitario ? `S/ ${parseFloat(p.precio_unitario).toFixed(2)}` : 'S/ 0.00';
                     const presentacionProveedor = p.presentacion_proveedor || '-';
                     const presentacionVenta = p.presentacion_venta || '-';
                     const ventaMinima = p.venta_minima || '1';
@@ -590,9 +588,7 @@
                     }
                 });
 
-                // Mostrar/ocultar estado vacío si no hay datos
                 if (!tieneDatos && productosData.length > 0) {
-                    // Si hay datos pero ningún filtro coincide, mostrar mensaje
                     const emptyRow = $('#emptyStateRow');
                     if (emptyRow.length === 0) {
                         mostrarEmptyState('No hay productos que coincidan con los filtros seleccionados');
@@ -639,28 +635,16 @@
                     success: function(response) {
                         eliminarModal.hide();
                         if (response.success) {
-                            // Recargar productos
                             cargarProductos();
-                            // Mostrar mensaje de éxito
-                            const alertHtml = `
-                                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                    <i class="bi bi-check-circle me-2"></i>
-                                    Producto eliminado correctamente
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                </div>
-                            `;
-                            $('.main-dashboard').prepend(alertHtml);
-                            setTimeout(() => {
-                                $('.alert').alert('close');
-                            }, 3000);
+                            mostrarAlerta('success', 'Producto eliminado correctamente');
                         } else {
-                            alert('Error al eliminar el producto: ' + (response.error || 'Error desconocido'));
+                            mostrarAlerta('danger', 'Error: ' + (response.error || 'Error desconocido'));
                         }
                     },
                     error: function(xhr) {
                         eliminarModal.hide();
                         const errorMsg = xhr.responseJSON?.error || 'Error al eliminar el producto';
-                        alert(errorMsg);
+                        mostrarAlerta('danger', errorMsg);
                     }
                 });
             });
@@ -681,6 +665,21 @@
                 e.preventDefault();
                 window.location.href = '/mantenedor/productos/kardex';
             });
+
+            // ===== ALERTAS =====
+            function mostrarAlerta(tipo, mensaje) {
+                const alertHtml = `
+                    <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
+                        <i class="bi bi-${tipo === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                        ${mensaje}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                $('.main-dashboard').prepend(alertHtml);
+                setTimeout(() => {
+                    $('.alert').alert('close');
+                }, 4000);
+            }
 
             // ===== INICIAL =====
             cargarProductos();
