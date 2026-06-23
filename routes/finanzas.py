@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, jsonify, request, session, flash
+from flask import Blueprint, render_template, jsonify, request, session, flash, redirect, url_for
 from functools import wraps
 from datetime import datetime, date
 
@@ -38,7 +38,6 @@ def api_cuentas_por_pagar():
     """API para obtener datos de cuentas por pagar"""
     try:
         # 🔥 AQUÍ DEBES CONECTAR A TU BASE DE DATOS 🔥
-        # Ejemplo con tu database.py:
         # from database import obtener_facturas_por_pagar
         # facturas = obtener_facturas_por_pagar()
         

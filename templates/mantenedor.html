@@ -542,35 +542,23 @@
                 </div>
             </div>
 
-            <!-- ========= FINANZAS ========= -->
+            <!-- ========= FINANZAS (SOLO 2 RUTAS) ========= -->
             <div class="dropdown">
-                <button class="menu-item dropdown-toggle-btn w-100 text-start border-0 bg-transparent active" 
+                <button class="menu-item dropdown-toggle-btn w-100 text-start border-0 bg-transparent" 
                         type="button" 
                         data-bs-toggle="collapse" 
                         data-bs-target="#submenuFinanzas" 
-                        aria-expanded="true">
+                        aria-expanded="false">
                     <i class="bi bi-graph-up"></i>
                     Finanzas
                     <span class="badge-custom badge-finanzas">💰</span>
                 </button>
-                <div class="collapse submenu show" id="submenuFinanzas">
+                <div class="collapse submenu" id="submenuFinanzas">
                     <a href="{{ url_for('finanzas.cuentas_por_cobrar') }}" class="submenu-item">
                         <i class="bi bi-coin"></i> Cuentas por Cobrar
                     </a>
                     <a href="{{ url_for('finanzas.cuentas_por_pagar') }}" class="submenu-item">
                         <i class="bi bi-credit-card"></i> Cuentas por Pagar
-                    </a>
-                    <a href="{{ url_for('finanzas.tesoreria') }}" class="submenu-item">
-                        <i class="bi bi-wallet2"></i> Tesorería
-                    </a>
-                    <a href="{{ url_for('finanzas.bancos') }}" class="submenu-item">
-                        <i class="bi bi-bank"></i> Bancos y Cuentas
-                    </a>
-                    <a href="#" class="submenu-item">
-                        <i class="bi bi-pie-chart"></i> Estados financieros
-                    </a>
-                    <a href="#" class="submenu-item">
-                        <i class="bi bi-arrow-left-right"></i> Flujo de caja
                     </a>
                 </div>
             </div>
@@ -694,29 +682,6 @@
                 <div class="card-buttons">
                     <span class="btn btn-primary btn-sm-custom">Ver Dashboard</span>
                     <span class="btn btn-light btn-sm-custom">Facturas</span>
-                    <span class="btn btn-dark btn-sm-custom">Exportar</span>
-                </div>
-            </a>
-
-            <!-- Tarjeta FINANZAS - Tesorería -->
-            <a href="{{ url_for('finanzas.tesoreria') }}" class="module-card">
-                <span class="tag">Finanzas</span>
-                <div class="icon-svg">
-                    <svg width="45" height="45" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="24" cy="24" r="20" stroke="#8b5cf6" stroke-width="2"/>
-                        <rect x="16" y="18" width="16" height="12" rx="1" stroke="#8b5cf6" stroke-width="2"/>
-                        <line x1="20" y1="18" x2="20" y2="30" stroke="#8b5cf6" stroke-width="1.5"/>
-                        <line x1="28" y1="18" x2="28" y2="30" stroke="#8b5cf6" stroke-width="1.5"/>
-                        <line x1="16" y1="22" x2="32" y2="22" stroke="#8b5cf6" stroke-width="1.5"/>
-                        <line x1="16" y1="26" x2="32" y2="26" stroke="#8b5cf6" stroke-width="1.5"/>
-                        <circle cx="24" cy="24" r="2" fill="#8b5cf6" fill-opacity="0.3" stroke="#8b5cf6" stroke-width="1.5"/>
-                    </svg>
-                </div>
-                <h4>Tesorería</h4>
-                <span>Flujo de caja, conciliaciones y disponibilidad</span>
-                <div class="card-buttons">
-                    <span class="btn btn-primary btn-sm-custom">Ver Dashboard</span>
-                    <span class="btn btn-light btn-sm-custom">Movimientos</span>
                     <span class="btn btn-dark btn-sm-custom">Exportar</span>
                 </div>
             </a>
