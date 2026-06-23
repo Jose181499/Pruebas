@@ -209,26 +209,27 @@
             padding: 4px 10px;
             font-size: 11px;
             font-weight: 600;
-            color: white;
+            color: #1f2937;
             display: flex;
             align-items: center;
             justify-content: flex-start;
             gap: 6px;
             min-height: 28px;
-            background: #6b7280 !important; /* GRIS MÁS CLARO (PLOMO) */
+            background: #d1d5db !important; /* GRIS MÁS SUAVE Y CLARO */
         }
         .card-custom .card-header .header-left {
             display: flex;
             align-items: center;
             gap: 6px;
         }
-        /* ====== TODOS LOS HEADERS EN GRIS CLARO (PLOMO) ====== */
+        /* ====== TODOS LOS HEADERS EN GRIS SUAVE ====== */
         .card-custom .card-header.bg-dark-custom,
         .card-custom .card-header.bg-red,
         .card-custom .card-header.bg-green,
         .card-custom .card-header.bg-blue,
         .card-custom .card-header.bg-purple {
-            background: #6b7280 !important; /* GRIS CLARO */
+            background: #d1d5db !important; /* GRIS SUAVE */
+            color: #1f2937;
         }
         /* ====== HEADER DE PRODUCTOS - BOTÓN A LA DERECHA ====== */
         .card-custom .card-header.bg-green {
@@ -370,13 +371,14 @@
         .table-scroll-container .table-cotizacion thead th {
             position: sticky;
             top: 0;
-            background: #6b7280 !important; /* GRIS CLARO (PLOMO) */
-            color: white;
+            background: #d1d5db !important; /* GRIS SUAVE */
+            color: #1f2937;
             padding: 4px 3px;
             text-align: center;
             font-size: 8px;
             font-weight: 600;
             border: none;
+            border-bottom: 2px solid #9ca3af;
             white-space: nowrap;
             vertical-align: middle;
             z-index: 11;
@@ -386,7 +388,7 @@
             font-weight: 300;
             font-size: 7px;
             display: block;
-            color: #d1d5db;
+            color: #4b5563;
         }
 
         .table-scroll-container .table-cotizacion tbody td {
@@ -472,12 +474,12 @@
         }
 
         .table-scroll-container::-webkit-scrollbar-thumb {
-            background: #6b7280;
+            background: #9ca3af;
             border-radius: 4px;
         }
 
         .table-scroll-container::-webkit-scrollbar-thumb:hover {
-            background: #4b5563;
+            background: #6b7280;
         }
 
         /* ====== RESUMEN COTIZACIÓN ====== */
@@ -592,11 +594,11 @@
         .modal-content { border-radius: 12px; border: none; }
         .modal-header {
             padding: 8px 14px;
-            background: #6b7280; /* GRIS CLARO (PLOMO) */
-            color: white;
+            background: #d1d5db; /* GRIS SUAVE */
+            color: #1f2937;
             border-radius: 12px 12px 0 0;
         }
-        .modal-header .btn-close { filter: brightness(0) invert(1); }
+        .modal-header .btn-close { filter: brightness(0) invert(0); }
         .modal-body { padding: 12px; font-size: 12px; }
         .modal-footer { padding: 8px 12px; }
         .modal-footer .btn { font-size: 11px; padding: 3px 12px; }
@@ -1133,12 +1135,13 @@
                         <div>
                             <label class="form-label"><i class="bi bi-truck"></i> Transporte</label>
                             <select class="form-select" id="tipo_transporte">
-                                <option value="">Seleccionar</option>
-                                <option value="Transporte propio">Transporte propio</option>
-                                <option value="Agencia externa">Agencia externa</option>
-                                <option value="Recojo en almacén">Recojo en almacén</option>
-                                <option value="Proveedor entrega directo">Proveedor entrega directo</option>
-                                <option value="Por coordinar">Por coordinar</option>
+                                 <option value="">Seleccione</option>
+                                    <option value="motorizado">Motorizado</option>
+                                    <option value="auto">Auto</option>
+                                    <option value="minivan">Minivan</option>
+                                    <option value="camioneta">Camioneta</option>
+                                    <option value="camion">Camión</option>
+                                    <option value="agencia">Agencia</option>
                             </select>
                         </div>
                         <div>
@@ -1155,7 +1158,7 @@
 
                     <div class="nota-interna-compacta mt-1">
                         <label class="form-label"><i class="bi bi-journal-text"></i> Nota interna</label>
-                        <textarea class="form-control" id="nota_interna" rows="1" placeholder="Notas internas..."></textarea>
+                        <textarea class="form-control" id="nota_interna" rows="1" placeholder="Ingrese notas internas u observaciones relevantes "></textarea>
                         <small>Campos internos / no visibles para el cliente</small>
                     </div>
                 </div>
