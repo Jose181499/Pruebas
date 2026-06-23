@@ -188,101 +188,246 @@ async function autocompletarConSunatListado() {
 // ===========================
 // CARGAR COTIZACIONES - CON ORDEN: Aceptadas y Generadas primero
 // ===========================
-async function cargarCotizaciones() {
-    const tbody = document.getElementById('tbodyCotizaciones');
-    if (tbody) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="13" class="text-center py-4">
-                    <div class="spinner-border text-primary spinner-border-sm mb-1"></div>
-                    <div class="small text-muted">Cargando cotizaciones...</div>
-                </td>
-            </tr>
-        `;
-    }
-
+async function cargarCotizacion(id) {
     try {
-        let buscar = buscador ? buscador.value : "";
+        console.log("🔍 Cargando cotización ID:", id);
+        const res = await fetch(`/api/cotizacion/${id}`);
+        const json = await res.json();
+        console.log("📦 Datos recibidos:", json);
         
-        if (buscar === ':1' || buscar === ':' || buscar === null) {
-            console.warn("⚠️ Limpiando valor inválido del buscador:", buscar);
-            buscar = "";
-            if (buscador) buscador.value = "";
+        if (!json.success) { 
+            mostrarNotificacion("Error al cargar cotización", "danger"); 
+            return; 
         }
         
-        const url = buscar ? `/api/cotizacion_comercial?buscar=${encodeURIComponent(buscar)}` : '/api/cotizacion_comercial';
-        console.log("🌐 Fetching URL:", url);
-        
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("❌ Error response:", response.status, errorText.substring(0, 200));
-            throw new Error(`HTTP ${response.status}: ${errorText.substring(0, 100)}`);
-        }
-        
-        const result = await response.json();
-
-        console.log("🔥 DATA:", result);
-
-        if (!result.success) {
-            mostrarNotificacion('Error al cargar cotizaciones: ' + (result.error || 'Error desconocido'), 'danger');
-            return;
-        }
-
-        cotizacionesData = result.data || [];
+        const data = json.data;
+        console.log("✅ Datos de cotización:", data);
         
         // ==========================================
-        // ✅ ORDENAR: Aceptadas y Generadas primero
+        // 1. ACTUALIZAR CÓDIGO Y ESTADO
         // ==========================================
-        cotizacionesData.sort((a, b) => {
-            // Definir prioridad de estados
-            const prioridad = {
-                'Aceptada por Cliente': 0,
-                'aceptada': 0,
-                'Generada': 1,
-                'generada': 1,
-                'En Proceso': 2,
-                'en_proceso': 2,
-                'Rechazada': 3,
-                'rechazada': 3,
-                'Borrador': 4,
-                'borrador': 4
-            };
-            
-            // Obtener prioridad de cada estado
-            const prioridadA = prioridad[a.estado?.toLowerCase()] ?? 99;
-            const prioridadB = prioridad[b.estado?.toLowerCase()] ?? 99;
-            
-            // Si tienen la misma prioridad, ordenar por fecha (más reciente primero)
-            if (prioridadA === prioridadB) {
-                const fechaA = new Date(a.fecha_creacion || 0);
-                const fechaB = new Date(b.fecha_creacion || 0);
-                return fechaB - fechaA;
+        if (data.codigo_cotizacion) {
+            codigoCotizacionActual = data.codigo_cotizacion;
+            correlativoActual = data.correlativo || 0;
+            esBorrador = data.codigo_cotizacion.startsWith('TMP-');
+            actualizarNumeroCotizacionUI(data.codigo_cotizacion, esBorrador);
+        }
+        
+        // ✅ ACTUALIZAR ESTADO GLOBAL
+        estadoCotizacion = data.estado || 'En Proceso';
+        
+        // ✅ ACTUALIZAR ESTADO VISUAL
+        actualizarEstadoVisual();
+        
+        // ==========================================
+        // 2. CARGAR DATOS DEL CLIENTE
+        // ==========================================
+        if (data.cliente_id) {
+            document.getElementById('cliente_id').value = data.cliente_id;
+        }
+        document.getElementById('cliente_razon_social').value = data.cliente || data.razon_social || '';
+        setValueSafely('cliente_razon_comercial', data.razon_comercial || '');
+        document.getElementById('cliente_doc').value = data.numero_documento || data.cliente_ruc || '';
+        document.getElementById('cliente_direccion').value = data.direccion_fiscal || '';
+        document.getElementById('cliente_contacto').value = data.cliente_contacto || '';
+        document.getElementById('email_contacto_cliente').value = data.email_contacto_cliente || '';
+        document.getElementById('telefono_contacto').value = data.telefono_contacto || '';
+        
+        // ==========================================
+        // 3. CARGAR CONDICIONES COMERCIALES
+        // ==========================================
+        setValueSafely('notas', data.notas || '');
+        document.getElementById('requerimiento').value = data.requerimiento || '';
+        
+        // CONDICIÓN DE PAGO
+        const condicionPagoSelect = document.getElementById('condicion_pago_select');
+        const condicionPagoInput = document.getElementById('condicion_pago');
+        if (condicionPagoSelect && data.condicion_pago) {
+            let existeEnSelect = false;
+            for (let i = 0; i < condicionPagoSelect.options.length; i++) {
+                if (condicionPagoSelect.options[i].value === data.condicion_pago) {
+                    existeEnSelect = true;
+                    break;
+                }
             }
-            
-            return prioridadA - prioridadB;
-        });
-        
-        // Cargar conteos de documentos vinculados
-        await cargarConteoDocumentos(cotizacionesData);
-        
-        actualizarEstadisticas();
-        renderizarTabla(cotizacionesData);
-
-    } catch (e) {
-        console.error("🔥 ERROR:", e);
-        mostrarNotificacion('Error de conexión con el servidor: ' + e.message, 'danger');
-        if (tbody) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="13" class="text-center py-4 text-danger">
-                        <i class="bi bi-wifi-off fs-3"></i>
-                        <div class="small mt-1">Error de conexión: ${e.message}</div>
-                    </td>
-                </tr>
-            `;
+            if (existeEnSelect) {
+                condicionPagoSelect.value = data.condicion_pago;
+                if (condicionPagoInput) condicionPagoInput.style.display = 'none';
+            } else {
+                condicionPagoSelect.value = 'personalizado';
+                if (condicionPagoInput) {
+                    condicionPagoInput.style.display = 'block';
+                    condicionPagoInput.value = data.condicion_pago;
+                }
+            }
         }
+        
+        // TIEMPO DE ENTREGA
+        const tiempoEntregaSelect = document.getElementById('tiempo_entrega_select');
+        const tiempoEntregaInput = document.getElementById('tiempo_entrega');
+        if (tiempoEntregaSelect && data.tiempo_entrega) {
+            let existeEnSelect = false;
+            for (let i = 0; i < tiempoEntregaSelect.options.length; i++) {
+                if (tiempoEntregaSelect.options[i].value === data.tiempo_entrega) {
+                    existeEnSelect = true;
+                    break;
+                }
+            }
+            if (existeEnSelect) {
+                tiempoEntregaSelect.value = data.tiempo_entrega;
+                if (tiempoEntregaInput) tiempoEntregaInput.style.display = 'none';
+            } else {
+                tiempoEntregaSelect.value = 'personalizado';
+                if (tiempoEntregaInput) {
+                    tiempoEntregaInput.style.display = 'block';
+                    tiempoEntregaInput.value = data.tiempo_entrega;
+                }
+            }
+        }
+        
+        // VALIDEZ DE OFERTA
+        const validezOfertaSelect = document.getElementById('validez_oferta_select');
+        const validezOfertaInput = document.getElementById('validez_oferta');
+        if (validezOfertaSelect && data.validez_oferta) {
+            let existeEnSelect = false;
+            for (let i = 0; i < validezOfertaSelect.options.length; i++) {
+                if (validezOfertaSelect.options[i].value === data.validez_oferta) {
+                    existeEnSelect = true;
+                    break;
+                }
+            }
+            if (existeEnSelect) {
+                validezOfertaSelect.value = data.validez_oferta;
+                if (validezOfertaInput) validezOfertaInput.style.display = 'none';
+            } else {
+                validezOfertaSelect.value = 'personalizado';
+                if (validezOfertaInput) {
+                    validezOfertaInput.style.display = 'block';
+                    validezOfertaInput.value = data.validez_oferta;
+                }
+            }
+        }
+        
+        // DIRECCIÓN DE ENTREGA
+        const direccionEntregaSelect = document.getElementById('direccion_entrega_select');
+        const direccionEntregaInput = document.getElementById('direccion_entrega');
+        if (direccionEntregaSelect && data.direccion_entrega) {
+            let existeEnSelect = false;
+            for (let i = 0; i < direccionEntregaSelect.options.length; i++) {
+                if (direccionEntregaSelect.options[i].value === data.direccion_entrega) {
+                    existeEnSelect = true;
+                    break;
+                }
+            }
+            if (existeEnSelect) {
+                direccionEntregaSelect.value = data.direccion_entrega;
+                if (direccionEntregaInput) direccionEntregaInput.style.display = 'none';
+            } else {
+                direccionEntregaSelect.value = 'personalizado';
+                if (direccionEntregaInput) {
+                    direccionEntregaInput.style.display = 'block';
+                    direccionEntregaInput.value = data.direccion_entrega;
+                }
+            }
+        }
+        
+        document.getElementById('nota_cotizacion').value = data.nota_cotizacion || '';
+        
+        // ==========================================
+        // 4. CARGAR DATOS DEL ASESOR
+        // ==========================================
+        document.getElementById('usuario_id').value = data.usuario_id || '';
+        document.getElementById('asesor_comercial').value = data.nombre_completo || '';
+        document.getElementById('email_contacto').value = data.email || '';
+        document.getElementById('telefono_contacto_user').value = data.telefono || '';
+        
+        // ==========================================
+        // 5. CARGAR DESCUENTO
+        // ==========================================
+        if (data.descuento_porcentaje !== undefined && data.descuento_porcentaje !== null) {
+            const descuentoInput = document.getElementById('descuento_porcentaje_input');
+            const descuentoTipo = document.getElementById('descuento_tipo');
+            if (descuentoInput) descuentoInput.value = data.descuento_porcentaje;
+            if (descuentoTipo && data.descuento_tipo) descuentoTipo.value = data.descuento_tipo;
+        }
+        
+        // ==========================================
+        // 6. CARGAR TOTALES
+        // ==========================================
+        const total = Number(data.total || 0);
+        const totalValorVentaElem = document.getElementById('total_valor_venta');
+        if (totalValorVentaElem) totalValorVentaElem.textContent = formatCantidad(total);
+        
+        const summarySubtotal = document.getElementById('summary_subtotal_venta');
+        if (summarySubtotal) summarySubtotal.textContent = formatCantidad(total);
+        
+        const summaryIgv = document.getElementById('summary_igv');
+        if (summaryIgv) summaryIgv.textContent = formatCantidad(Number(data.igv || 0));
+        
+        const summaryTotal = document.getElementById('summary_total_venta');
+        if (summaryTotal) summaryTotal.textContent = formatCantidad(total);
+        
+        // ==========================================
+        // 7. CARGAR PRODUCTOS
+        // ==========================================
+        document.getElementById('table-body').innerHTML = '';
+        itemCounter = 0;
+        
+        if (data.detalle && data.detalle.length > 0) {
+            data.detalle.forEach(item => {
+                addItem();
+                const row = document.querySelector("#table-body tr:last-child");
+                if (row) {
+                    row.querySelector('.producto_id').value = item.producto_id || '';
+                    row.querySelector('.cantidad').value = formatCantidad(item.cantidad || 0);
+                    row.querySelector('.precio_venta_unitario').value = formatCantidad(item.precio_venta_unitario || 0);
+                    row.querySelector('.codigo_producto').value = item.codigo || '';
+                    row.querySelector('.descripcion').value = item.descripcion || '';
+                    row.querySelector('.modelo').value = item.modelo || '';
+                    row.querySelector('.marca').value = item.marca || '';
+                    row.querySelector('.unidad_medida').value = item.unidad_medida || 'UNIDAD';
+                    if (row.querySelector('.costo_unitario')) {
+                        row.querySelector('.costo_unitario').value = formatCantidad(item.costo_unitario || 0);
+                    }
+                    const stockBadge = row.querySelector('.stock-badge');
+                    if (stockBadge && item.stock !== undefined) {
+                        stockBadge.textContent = item.stock;
+                        stockBadge.style.backgroundColor = item.stock < 5 ? '#fee2e2' : '#d1fae5';
+                        stockBadge.style.color = item.stock < 5 ? '#dc2626' : '#065f46';
+                    }
+                }
+            });
+        }
+        
+        // ==========================================
+        // 8. RECALCULAR Y CONFIGURAR
+        // ==========================================
+        recalculateAll();
+        configurarTiempoEntrega();
+        configurarDireccionEntrega();
+        
+        if (data.cliente_id) {
+            await cargarDireccionesCliente(data.cliente_id);
+        }
+        
+        // ✅ ACTUALIZAR ESTADO DEL BOTÓN PDF
+        actualizarEstadoBotonPDF();
+        
+        // ✅ ACTUALIZAR BOTONES SEGÚN EL ESTADO
+        actualizarBotones();
+        
+        // ✅ SI ES OFICIAL, BLOQUEAR EDICIÓN
+        if (!esBorrador) {
+            cotizacionBloqueada = true;
+            aplicarBloqueoUI();
+            mostrarNotificacion(`🔒 Cotización oficial cargada (${estadoCotizacion})`, 'info');
+        } else {
+            mostrarNotificacion('📝 Cotización en modo edición (Borrador)', 'info');
+        }
+        
+    } catch (err) { 
+        console.error("🔥 ERROR en cargarCotizacion:", err); 
+        mostrarNotificacion("Error cargando cotización", "danger"); 
     }
 }
 // ===========================
