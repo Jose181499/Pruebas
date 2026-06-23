@@ -2229,6 +2229,9 @@
             .layout > div:last-child .state-card { margin-top: 0; }
         }
 
+        /* El botón hamburguesa solo se muestra en móvil */
+        .sidebar-toggle { display: none; }
+
         @media (max-width: 992px) {
             .topbar { padding: 0 16px; }
             .global-search { width: 180px; }
@@ -2240,13 +2243,12 @@
             }
             .layout > div:last-child .state-card { margin-top: 0; }
             .grid { grid-template-columns: 1fr 1fr; }
-            /* On tablet, sidebar starts collapsed */
-            .sidebar { width: var(--sidebar-collapsed-w); }
-            .main { margin-left: var(--sidebar-collapsed-w); }
-            .main.sidebar-collapsed { margin-left: var(--sidebar-collapsed-w); }
         }
 
         @media (max-width: 768px) {
+            /* En móvil aparece el botón hamburguesa */
+            .sidebar-toggle { display: grid; }
+
             .page-head { flex-direction: column; align-items: stretch; }
             .actions { justify-content: flex-start; }
             .top-actions .user { display: none; }
@@ -2258,7 +2260,7 @@
             .brand .brand-text strong { font-size: 18px; }
             .brand .brand-text span { font-size: 9px; }
             .notificacion { min-width: auto; right: 12px; left: 12px; top: 12px; }
-            /* On mobile, sidebar is hidden off-screen, toggled as overlay */
+            /* Sidebar oculto fuera de pantalla, se abre como overlay */
             .sidebar {
                 width: var(--sidebar-w) !important;
                 transform: translateX(-100%);
@@ -2393,8 +2395,8 @@
                 </div>
                 <div class="submenu open" id="subInventario">
                     <a class="sub-item active" href="#">Nuevo producto</a>
-                    <a class="sub-item" href="#">Lista de productos</a>
-                    <a class="sub-item" href="#">Movimientos</a>
+                    <a class="sub-item" href="#">Datos de producto</a>
+                    <a class="sub-item" href="#">Listado de producto</a>
                     <a class="sub-item" href="#">Ajuste de stock</a>
                 </div>
 
@@ -2724,63 +2726,33 @@
         const overlay = document.getElementById('sidebarOverlay');
         const isMobile = () => window.innerWidth <= 768;
 
-        let collapsed = false;
-
         function openSidebar() {
-            if (isMobile()) {
-                sidebar.classList.add('mobile-open');
-                overlay.classList.add('show');
-            } else {
-                sidebar.classList.remove('collapsed');
-                main.classList.remove('sidebar-collapsed');
-                collapsed = false;
-            }
+            sidebar.classList.add('mobile-open');
+            overlay.classList.add('show');
         }
 
         function closeSidebar() {
-            if (isMobile()) {
-                sidebar.classList.remove('mobile-open');
-                overlay.classList.remove('show');
-            } else {
-                sidebar.classList.add('collapsed');
-                main.classList.add('sidebar-collapsed');
-                collapsed = true;
-            }
+            sidebar.classList.remove('mobile-open');
+            overlay.classList.remove('show');
         }
 
+        // El toggle solo actúa en móvil
         toggle.addEventListener('click', () => {
-            if (isMobile()) {
-                sidebar.classList.contains('mobile-open') ? closeSidebar() : openSidebar();
-            } else {
-                collapsed ? openSidebar() : closeSidebar();
-            }
+            sidebar.classList.contains('mobile-open') ? closeSidebar() : openSidebar();
         });
 
         overlay.addEventListener('click', closeSidebar);
 
-        // Handle resize
+        // Al pasar de móvil a desktop, limpia el estado móvil
         window.addEventListener('resize', () => {
             if (!isMobile()) {
                 sidebar.classList.remove('mobile-open');
                 overlay.classList.remove('show');
-                if (window.innerWidth <= 992) {
-                    sidebar.classList.add('collapsed');
-                    main.classList.add('sidebar-collapsed');
-                    collapsed = true;
-                }
             }
         });
 
-        // Collapse on tablet by default
-        if (window.innerWidth <= 992 && window.innerWidth > 768) {
-            sidebar.classList.add('collapsed');
-            main.classList.add('sidebar-collapsed');
-            collapsed = true;
-        }
-
         // ===== SUBMENU TOGGLE =====
         window.toggleSub = function(id, el) {
-            if (sidebar.classList.contains('collapsed')) return;
             const sub = document.getElementById(id);
             const isOpen = sub.classList.contains('open');
             sub.classList.toggle('open', !isOpen);
