@@ -1767,11 +1767,15 @@ function mostrarModalConfirmacion(datos) {
             actualizarEstadoBotonPDF();
         }
         
-        mostrarModalConfirmacion({ 
-            id: json.data.id, 
-            numero: json.data.codigo_cotizacion, 
-            tipo: esBorrador ? 'BORRADOR' : 'OFICIAL' 
-        });
+      mostrarModalExito({
+    codigo: json.data.codigo_cotizacion,
+    tipo: esBorrador ? 'BORRADOR' : 'OFICIAL',
+    asesor: usuarioActual?.nombre_completo || 'No asignado',
+    cliente: document.getElementById('cliente_razon_social')?.value || 'No especificado',
+    total: Number(document.getElementById('summary_total_venta')?.textContent || 0),
+    fecha: new Date().toLocaleDateString('es-PE'),
+    hora: new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })
+});
         
     } catch (err) { 
         console.error(err); 
@@ -1790,8 +1794,6 @@ async function convertirAOficial() {
         return; 
     }
     
-    // 🔥 CAMBIO: Ya no validamos que cliente_id exista
-    // Solo validamos que haya datos del cliente en los campos
     const razonSocial = document.getElementById('cliente_razon_social')?.value.trim();
     const numeroDocumento = document.getElementById('cliente_doc')?.value.trim();
     
@@ -1813,7 +1815,12 @@ async function convertirAOficial() {
         }
     }
     
-    if (!confirm("¿Convertir este borrador a cotización oficial?\n\nEsta acción generará un código único y definitivo.")) return;
+    // 🔥 Mostrar modal de confirmación personalizado
+    const confirmado = await mostrarModalConfirmacionOficial();
+    if (!confirmado) {
+        mostrarNotificacion('⏹️ Operación cancelada', 'info');
+        return;
+    }
     
     const nuevoCodigo = await generarCodigoOficial();
     if (nuevoCodigo) {
@@ -1821,27 +1828,309 @@ async function convertirAOficial() {
         actualizarNumeroCotizacionUI(nuevoCodigo, false);
         document.getElementById('estado').value = 'Generada';
         
-        // 🔥 Guardar la cotización y mostrar el modal
+        // Guardar la cotización
         await guardarCotizacion();
         
-        // 🔥 Notificación adicional en caso de que el modal no se muestre
-        mostrarNotificacion(`✅ Cotización OFICIAL generada\nNúmero: ${nuevoCodigo}`, "success");
+        // 🔥 Mostrar modal de éxito con todos los datos
+        const total = Number(document.getElementById('summary_total_venta')?.textContent || 0);
+        const cliente = document.getElementById('cliente_razon_social')?.value || 'No especificado';
         
-        // 🔥 Actualizar el estado del botón PDF
+        mostrarModalExito({
+            codigo: nuevoCodigo,
+            tipo: 'OFICIAL',
+            asesor: usuarioActual?.nombre_completo || 'No asignado',
+            cliente: cliente,
+            total: total,
+            fecha: new Date().toLocaleDateString('es-PE'),
+            hora: new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })
+        });
+        
+        // Actualizar estado del botón PDF
         actualizarEstadoBotonPDF();
-        
-        // 🔥 Recargar la página después de un tiempo para ver el nuevo registro
-        setTimeout(() => {
-            if (confirm("¿Desea ir al listado de cotizaciones para ver el registro?")) {
-                window.location.href = '/cotizaciones/listado';
-            }
-        }, 2000);
         
     } else {
         mostrarNotificacion("❌ Error al generar código oficial. Intente nuevamente.", "danger");
     }
 }
+    // ===========
     // =========================
+// MODAL DE CONFIRMACIÓN ANTES DE CONVERTIR A OFICIAL
+// =========================
+function mostrarModalConfirmacionOficial() {
+    return new Promise((resolve) => {
+        // Crear el modal dinámicamente
+        const modalHTML = `
+            <div class="modal fade" id="modalConfirmacionOficial" tabindex="-1" data-bs-backdrop="static">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content" style="border-radius: 16px; overflow: hidden;">
+                        <div class="modal-header" style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none; padding: 20px 24px;">
+                            <h5 class="modal-title text-white" style="font-weight: 700;">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i> Convertir a Cotización Oficial
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body" style="padding: 24px;">
+                            <div class="text-center mb-4">
+                                <div style="background: #fef3c7; border-radius: 50%; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                                    <i class="bi bi-file-check-fill" style="font-size: 36px; color: #d97706;"></i>
+                                </div>
+                            </div>
+                            
+                            <h6 class="text-center fw-bold mb-3" style="color: #1f2937;">¿Estás seguro de convertir esta cotización a OFICIAL?</h6>
+                            
+                            <div style="background: #f8fafc; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <i class="bi bi-info-circle-fill text-warning"></i>
+                                    <span style="font-size: 13px; font-weight: 600; color: #374151;">Esta acción:</span>
+                                </div>
+                                <ul style="margin: 0; padding-left: 24px; font-size: 13px; color: #4b5563; line-height: 1.8;">
+                                    <li>✅ Generará un <strong>código único y definitivo</strong></li>
+                                    <li>✅ La cotización <strong>quedará registrada</strong> en el sistema</li>
+                                    <li>✅ <strong>No se podrá modificar</strong> después de convertir</li>
+                                    <li>✅ Se habilitará la <strong>descarga del PDF</strong></li>
+                                </ul>
+                            </div>
+                            
+                            <div class="alert alert-warning" style="border-radius: 10px; font-size: 13px;">
+                                <i class="bi bi-exclamation-circle me-2"></i>
+                                <strong>Importante:</strong> Asegúrate de que todos los datos sean correctos antes de continuar.
+                            </div>
+                        </div>
+                        <div class="modal-footer" style="border-top: 1px solid #e5e7eb; padding: 16px 24px;">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 10px; font-weight: 600;">
+                                Cancelar
+                            </button>
+                            <button type="button" id="btnConfirmarOficial" class="btn btn-warning" style="border-radius: 10px; font-weight: 700; padding: 10px 24px;">
+                                <i class="bi bi-check-lg me-2"></i> Sí, Convertir a Oficial
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Eliminar modal anterior si existe
+        const oldModal = document.getElementById('modalConfirmacionOficial');
+        if (oldModal) oldModal.remove();
+        
+        // Agregar modal al DOM
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+        const modalElement = document.getElementById('modalConfirmacionOficial');
+        const modal = new bootstrap.Modal(modalElement, {
+            backdrop: 'static',
+            keyboard: true
+        });
+        
+        // Manejar confirmación
+        const btnConfirmar = document.getElementById('btnConfirmarOficial');
+        btnConfirmar.onclick = function() {
+            modal.hide();
+            // Esperar a que se cierre el modal
+            setTimeout(() => {
+                resolve(true);
+            }, 300);
+        };
+        
+        // Manejar cancelación
+        modalElement.addEventListener('hidden.bs.modal', function() {
+            // Si no se confirmó, resolver con false
+            resolve(false);
+        }, { once: true });
+        
+        modal.show();
+    });
+}
+
+// =========================
+// MODAL DE ÉXITO - COTIZACIÓN GENERADA
+// =========================
+function mostrarModalExito(datos) {
+    const modalBody = document.getElementById('modalConfirmacionBody');
+    if (!modalBody) {
+        console.error('❌ No se encontró el elemento modalConfirmacionBody');
+        mostrarNotificacion('✅ Cotización guardada: ' + datos.codigo, 'success');
+        return;
+    }
+    
+    const ahora = new Date();
+    const fecha = ahora.toLocaleDateString('es-PE', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+    const hora = ahora.toLocaleTimeString('es-PE', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+    
+    const total = datos.total || 0;
+    const codigo = datos.codigo || codigoCotizacionActual || '---';
+    const asesor = datos.asesor || usuarioActual?.nombre_completo || 'No asignado';
+    const cliente = datos.cliente || document.getElementById('cliente_razon_social')?.value || 'No especificado';
+    const esOficial = datos.tipo !== 'BORRADOR';
+    
+    modalBody.innerHTML = `
+        <div style="text-align: center; padding: 8px 0 16px 0;">
+            <div style="background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);">
+                <i class="bi bi-check-lg" style="font-size: 44px; color: white;"></i>
+            </div>
+        </div>
+        
+        <div style="background: linear-gradient(135deg, #ecfdf5, #d1fae5); border-radius: 12px; padding: 12px 16px; text-align: center; margin-bottom: 20px; border: 1px solid #a7f3d0;">
+            <strong style="color: #065f46; font-size: 16px;">✅ ¡Cotización ${esOficial ? 'GENERADA' : 'GUARDADA'} EXITOSAMENTE!</strong>
+        </div>
+        
+        <div style="background: #f8fafc; border-radius: 12px; padding: 16px;">
+            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e5e7eb;">
+                <span style="color: #6b7280; font-size: 13px;"><i class="bi bi-hash me-2"></i>Código</span>
+                <span style="font-weight: 700; color: #1f2937; font-size: 15px; background: #e5e7eb; padding: 0 12px; border-radius: 4px;">${escapeHtml(codigo)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e5e7eb;">
+                <span style="color: #6b7280; font-size: 13px;"><i class="bi bi-tag me-2"></i>Tipo</span>
+                <span style="font-weight: 600; color: ${esOficial ? '#10b981' : '#f59e0b'}; font-size: 13px; background: ${esOficial ? '#ecfdf5' : '#fef3c7'}; padding: 0 12px; border-radius: 4px;">
+                    ${esOficial ? '📄 OFICIAL' : '📝 BORRADOR'}
+                </span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e5e7eb;">
+                <span style="color: #6b7280; font-size: 13px;"><i class="bi bi-person me-2"></i>Asesor</span>
+                <span style="font-weight: 600; color: #1f2937; font-size: 13px;">${escapeHtml(asesor)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e5e7eb;">
+                <span style="color: #6b7280; font-size: 13px;"><i class="bi bi-building me-2"></i>Cliente</span>
+                <span style="font-weight: 600; color: #1f2937; font-size: 13px;">${escapeHtml(cliente)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e5e7eb;">
+                <span style="color: #6b7280; font-size: 13px;"><i class="bi bi-coin me-2"></i>Total</span>
+                <span style="font-weight: 700; color: #059669; font-size: 16px;">S/ ${Number(total).toFixed(2)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e5e7eb;">
+                <span style="color: #6b7280; font-size: 13px;"><i class="bi bi-calendar me-2"></i>Fecha</span>
+                <span style="font-weight: 600; color: #1f2937; font-size: 13px;">${fecha}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+                <span style="color: #6b7280; font-size: 13px;"><i class="bi bi-clock me-2"></i>Hora</span>
+                <span style="font-weight: 600; color: #1f2937; font-size: 13px;">${hora}</span>
+            </div>
+        </div>
+        
+        ${esOficial ? `
+        <div style="background: #eff6ff; border-radius: 10px; padding: 12px; margin-top: 16px; border: 1px solid #bfdbfe;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-info-circle-fill" style="color: #2563eb;"></i>
+                <span style="font-size: 12px; color: #1e40af;">
+                    <strong>✅ Ya puedes generar el PDF</strong> de esta cotización oficial.
+                </span>
+            </div>
+        </div>
+        ` : `
+        <div style="background: #fef3c7; border-radius: 10px; padding: 12px; margin-top: 16px; border: 1px solid #fde68a;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-info-circle-fill" style="color: #d97706;"></i>
+                <span style="font-size: 12px; color: #92400e;">
+                    <strong>📝 Borrador guardado.</strong> Conviértelo a oficial cuando esté listo.
+                </span>
+            </div>
+        </div>
+        `}
+    `;
+    
+    // Obtener el modal
+    const modalElement = document.getElementById('modalConfirmacion');
+    if (!modalElement) {
+        console.error('❌ No se encontró el modal #modalConfirmacion');
+        mostrarNotificacion('✅ Cotización guardada: ' + codigo, 'success');
+        return;
+    }
+    
+    // Crear una instancia nueva del modal
+    let modal = bootstrap.Modal.getInstance(modalElement);
+    if (modal) {
+        modal.dispose();
+    }
+    
+    modal = new bootstrap.Modal(modalElement, {
+        backdrop: 'static',
+        keyboard: true
+    });
+    
+    // Configurar botón PDF
+    const btnPdf = document.getElementById('btnDescargarPDFModal');
+    if (btnPdf) {
+        const nuevoBtnPdf = btnPdf.cloneNode(true);
+        btnPdf.parentNode.replaceChild(nuevoBtnPdf, btnPdf);
+        
+        nuevoBtnPdf.onclick = function() {
+            const cotId = document.getElementById('cotizacion_id')?.value;
+            if (cotId && !esBorrador) {
+                const params = new URLSearchParams({
+                    telefono_contacto: document.getElementById('telefono_contacto')?.value || '',
+                    cliente_contacto: document.getElementById('cliente_contacto')?.value || '',
+                    email_contacto_cliente: document.getElementById('email_contacto_cliente')?.value || '',
+                    requerimiento: document.getElementById('requerimiento')?.value || '',
+                    direccion_entrega: document.getElementById('direccion_entrega')?.value || ''
+                });
+                const pdfUrl = `/api/cotizacion/pdf/${cotId}?${params.toString()}`;
+                window.open(pdfUrl, '_blank');
+                modal.hide();
+            } else {
+                mostrarNotificacion('⚠️ Debe convertir a oficial antes de generar PDF', 'warning');
+            }
+        };
+        
+        if (!esOficial || esBorrador) {
+            nuevoBtnPdf.disabled = true;
+            nuevoBtnPdf.classList.add('opacity-50');
+            nuevoBtnPdf.title = 'Convierta a oficial para generar PDF';
+        } else {
+            nuevoBtnPdf.disabled = false;
+            nuevoBtnPdf.classList.remove('opacity-50');
+        }
+    }
+    
+    // Configurar botón Nueva Cotización
+    const btnNueva = document.getElementById('btnNuevaCotizacionModal');
+    if (btnNueva) {
+        const nuevoBtnNueva = btnNueva.cloneNode(true);
+        btnNueva.parentNode.replaceChild(nuevoBtnNueva, btnNueva);
+        
+        nuevoBtnNueva.onclick = function() {
+            modal.hide();
+            window.location.href = '/cotizacion/nueva';
+        };
+    }
+    
+    // Configurar botón Cerrar
+    const btnCerrar = modalElement.querySelector('[data-bs-dismiss="modal"]');
+    if (btnCerrar) {
+        const nuevoBtnCerrar = btnCerrar.cloneNode(true);
+        btnCerrar.parentNode.replaceChild(nuevoBtnCerrar, btnCerrar);
+        
+        nuevoBtnCerrar.onclick = function() {
+            modal.hide();
+            if (esOficial) {
+                setTimeout(() => {
+                    if (confirm('✅ Cotización generada correctamente.\n¿Desea ir al listado de cotizaciones?')) {
+                        window.location.href = '/cotizaciones/listado';
+                    }
+                }, 300);
+            }
+        };
+    }
+    
+    // Mostrar el modal
+    try {
+        modal.show();
+        console.log('✅ Modal de éxito mostrado correctamente');
+    } catch (error) {
+        console.error('❌ Error al mostrar modal:', error);
+        mostrarNotificacion('✅ Cotización guardada: ' + codigo, 'success');
+    }
+}
+ 
+ 
+    // ==============
     // GENERAR PDF
     // =========================
     function generatePdf() {
