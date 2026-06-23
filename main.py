@@ -24,6 +24,7 @@ from routes.comprobantes_compra import comprobantes_compra_bp
 from routes.guias_remision_compra import guias_compra_bp
 from routes.transportistas import transportistas_bp
 from routes.inventario_routes import inventario_bp
+from routes.finanzas import finanzas_bp  
 
 from database import (
     verificar_usuario,
@@ -66,6 +67,7 @@ app.register_blueprint(comprobantes_compra_bp)
 app.register_blueprint(guias_compra_bp)
 app.register_blueprint(transportistas_bp)
 app.register_blueprint(inventario_bp)
+app.register_blueprint(finanzas_bp) 
 
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-only-change-me")
 
