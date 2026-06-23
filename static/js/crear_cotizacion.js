@@ -1375,51 +1375,86 @@ if (btnBuscarClientePorRucOriginal) {
     // =========================
     // MODAL DE CONFIRMACIÓN
     // =========================
-    function mostrarModalConfirmacion(datos) {
-        const modalBody = document.getElementById('modalConfirmacionBody');
-        if (!modalBody) return;
+    // =========================
+// MODAL DE CONFIRMACIÓN - VERSIÓN MEJORADA
+// =========================
+function mostrarModalConfirmacion(datos) {
+    const modalBody = document.getElementById('modalConfirmacionBody');
+    if (!modalBody) {
+        console.error('❌ No se encontró el elemento modalConfirmacionBody');
+        mostrarNotificacion('❌ Error al mostrar el modal de confirmación', 'danger');
+        return;
+    }
+    
+    const telefonoActual = document.getElementById('telefono_contacto')?.value || '';
+    const atencionActual = document.getElementById('cliente_contacto')?.value || '';
+    const correoActual = document.getElementById('email_contacto_cliente')?.value || '';
+    const requerimientoActual = document.getElementById('requerimiento')?.value || '';
+    const direccionActual = document.getElementById('direccion_entrega')?.value || '';
+    
+    const ahora = new Date();
+    const fechaActual = ahora.toLocaleDateString('es-PE');
+    const horaActual = ahora.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+    
+    const codigoCotizacion = datos.numero || datos.codigo_cotizacion || codigoCotizacionActual || '---';
+    const tipo = datos.tipo || (esBorrador ? 'BORRADOR' : 'OFICIAL');
+    
+    modalBody.innerHTML = `
+        <div class="text-center mb-3">
+            <i class="bi bi-check-circle-fill" style="font-size: 48px; color: #10b981;"></i>
+        </div>
+        <div class="alert alert-success text-center">
+            <strong>✅ ¡Cotización ${tipo === 'OFICIAL' ? 'generada' : 'guardada'} exitosamente!</strong>
+        </div>
+        <div class="row g-2">
+            <div class="col-6"><strong>Número:</strong></div>
+            <div class="col-6"><span class="badge bg-primary" style="font-size: 14px;">${escapeHtml(codigoCotizacion)}</span></div>
+        </div>
+        <div class="row g-2 mt-1">
+            <div class="col-6"><strong>Tipo:</strong></div>
+            <div class="col-6"><span class="badge ${tipo === 'OFICIAL' ? 'bg-success' : 'bg-warning'}">${tipo}</span></div>
+        </div>
+        <div class="row g-2 mt-1">
+            <div class="col-6"><strong>Asesor:</strong></div>
+            <div class="col-6">${usuarioActual?.nombre_completo || 'No asignado'}</div>
+        </div>
+        <div class="row g-2 mt-1">
+            <div class="col-6"><strong>Fecha:</strong></div>
+            <div class="col-6">${fechaActual}</div>
+        </div>
+        <div class="row g-2 mt-1">
+            <div class="col-6"><strong>Hora:</strong></div>
+            <div class="col-6">${horaActual}</div>
+        </div>
+        <hr>
+        <div class="text-muted small">
+            <i class="bi bi-info-circle"></i> El código es único y quedará registrado.
+            ${tipo === 'OFICIAL' ? ' Ya puedes generar el PDF.' : ''}
+        </div>
+    `;
+    
+    // Obtener el modal
+    const modalElement = document.getElementById('modalConfirmacion');
+    if (!modalElement) {
+        console.error('❌ No se encontró el modal #modalConfirmacion');
+        mostrarNotificacion('✅ Cotización guardada: ' + codigoCotizacion, 'success');
+        return;
+    }
+    
+    // Crear una instancia nueva del modal
+    const modal = new bootstrap.Modal(modalElement, {
+        backdrop: 'static',
+        keyboard: true
+    });
+    
+    // Configurar el botón PDF
+    const btnPdf = document.getElementById('btnDescargarPDFModal');
+    if (btnPdf) {
+        // Remover eventos anteriores clonando el botón
+        const nuevoBtnPdf = btnPdf.cloneNode(true);
+        btnPdf.parentNode.replaceChild(nuevoBtnPdf, btnPdf);
         
-        const telefonoActual = document.getElementById('telefono_contacto')?.value || '';
-        const atencionActual = document.getElementById('cliente_contacto')?.value || '';
-        const correoActual = document.getElementById('email_contacto_cliente')?.value || '';
-        const requerimientoActual = document.getElementById('requerimiento')?.value || '';
-        const direccionActual = document.getElementById('direccion_entrega')?.value || '';
-        
-        const ahora = new Date();
-        const fechaActual = ahora.toLocaleDateString('es-PE');
-        const horaActual = ahora.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
-        
-        modalBody.innerHTML = `
-            <div class="text-center mb-3"><i class="bi bi-check-circle-fill" style="font-size: 48px; color: #10b981;"></i></div>
-            <div class="alert alert-success"><strong>✅ ¡Cotización guardada exitosamente!</strong></div>
-            <div class="row">
-                <div class="col-6"><strong>Número:</strong></div>
-                <div class="col-6">${datos.numero || datos.codigo_cotizacion}</div>
-            </div>
-            <div class="row mt-2">
-                <div class="col-6"><strong>Tipo:</strong></div>
-                <div class="col-6">${datos.tipo || (esBorrador ? 'BORRADOR' : 'OFICIAL')}</div>
-            </div>
-            <div class="row mt-2">
-                <div class="col-6"><strong>Asesor:</strong></div>
-                <div class="col-6">${usuarioActual?.nombre_completo || 'No asignado'}</div>
-            </div>
-            <div class="row mt-2">
-                <div class="col-6"><strong>Fecha:</strong></div>
-                <div class="col-6">${fechaActual}</div>
-            </div>
-            <div class="row mt-2">
-                <div class="col-6"><strong>Hora:</strong></div>
-                <div class="col-6">${horaActual}</div>
-            </div>
-            <hr>
-            <div class="text-muted small"><i class="bi bi-info-circle"></i> El código es único y quedará registrado.</div>
-        `;
-        
-        const modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
-        modal.show();
-        
-        document.getElementById('btnDescargarPDFModal').onclick = () => {
+        nuevoBtnPdf.onclick = function() {
             const cotId = document.getElementById('cotizacion_id')?.value;
             if (cotId && !esBorrador) {
                 const params = new URLSearchParams({
@@ -1435,11 +1470,28 @@ if (btnBuscarClientePorRucOriginal) {
                 mostrarNotificacion('⚠️ Debe convertir a oficial antes de generar PDF', 'warning');
             }
         };
+    }
+    
+    // Configurar el botón Nueva Cotización
+    const btnNueva = document.getElementById('btnNuevaCotizacionModal');
+    if (btnNueva) {
+        const nuevoBtnNueva = btnNueva.cloneNode(true);
+        btnNueva.parentNode.replaceChild(nuevoBtnNueva, btnNueva);
         
-        document.getElementById('btnNuevaCotizacionModal').onclick = () => {
+        nuevoBtnNueva.onclick = function() {
             window.location.href = '/cotizacion/nueva';
         };
     }
+    
+    // Mostrar el modal
+    try {
+        modal.show();
+        console.log('✅ Modal de confirmación mostrado correctamente');
+    } catch (error) {
+        console.error('❌ Error al mostrar modal:', error);
+        mostrarNotificacion('✅ Cotización guardada: ' + codigoCotizacion, 'success');
+    }
+}
 
     // =========================
     // ESTADO GLOBAL
@@ -1732,7 +1784,7 @@ if (btnBuscarClientePorRucOriginal) {
     }
  }
 
-  async function convertirAOficial() {
+async function convertirAOficial() {
     if (!esBorrador) { 
         mostrarNotificacion("⚠️ Esta cotización ya es oficial", "warning"); 
         return; 
@@ -1768,12 +1820,27 @@ if (btnBuscarClientePorRucOriginal) {
         esBorrador = false;
         actualizarNumeroCotizacionUI(nuevoCodigo, false);
         document.getElementById('estado').value = 'Generada';
+        
+        // 🔥 Guardar la cotización y mostrar el modal
         await guardarCotizacion();
-        mostrarNotificacion(`✅ Cotización convertida a OFICIAL\nNúmero: ${nuevoCodigo}`, "success");
+        
+        // 🔥 Notificación adicional en caso de que el modal no se muestre
+        mostrarNotificacion(`✅ Cotización OFICIAL generada\nNúmero: ${nuevoCodigo}`, "success");
+        
+        // 🔥 Actualizar el estado del botón PDF
+        actualizarEstadoBotonPDF();
+        
+        // 🔥 Recargar la página después de un tiempo para ver el nuevo registro
+        setTimeout(() => {
+            if (confirm("¿Desea ir al listado de cotizaciones para ver el registro?")) {
+                window.location.href = '/cotizaciones/listado';
+            }
+        }, 2000);
+        
     } else {
         mostrarNotificacion("❌ Error al generar código oficial. Intente nuevamente.", "danger");
     }
- }
+}
     // =========================
     // GENERAR PDF
     // =========================
