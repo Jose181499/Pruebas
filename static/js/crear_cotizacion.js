@@ -2952,7 +2952,7 @@ function attachProductoAutocomplete(row) {
         // ==========================================
         // 3. CARGAR CONDICIONES COMERCIALES
         // ==========================================
-        document.getElementById('estado').value = data.estado || 'En Proceso';
+        
         document.getElementById('notas').value = data.notas || '';
         document.getElementById('requerimiento').value = data.requerimiento || '';
         document.getElementById('condicion_pago').value = data.condicion_pago || 'Contado';
