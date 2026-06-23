@@ -1818,14 +1818,10 @@ async function convertirAOficial() {
     // 🔥 Mostrar modal de confirmación personalizado
     const confirmado = await mostrarModalConfirmacionOficial();
     
-    // 🔥 CORREGIDO: Verificar correctamente
     if (confirmado === false) {
         mostrarNotificacion('⏹️ Operación cancelada por el usuario', 'info');
         return;
     }
-    
-    // Si llegamos aquí, el usuario confirmó (confirmado === true)
-    console.log("✅ Usuario confirmó la conversión a oficial");
     
     const nuevoCodigo = await generarCodigoOficial();
     if (nuevoCodigo) {
@@ -1833,36 +1829,21 @@ async function convertirAOficial() {
         actualizarNumeroCotizacionUI(nuevoCodigo, false);
         document.getElementById('estado').value = 'Generada';
         
-        // Guardar la cotización
+        // 🔥 Guardar la cotización (esto llamará a mostrarModalConfirmacion con todos los datos)
         await guardarCotizacion();
         
-        // 🔥 Mostrar modal de éxito con todos los datos
-        const total = Number(document.getElementById('summary_total_venta')?.textContent || 0);
-        const cliente = document.getElementById('cliente_razon_social')?.value || 'No especificado';
-        
-        mostrarModalExito({
-            codigo: nuevoCodigo,
-            tipo: 'OFICIAL',
-            asesor: usuarioActual?.nombre_completo || 'No asignado',
-            cliente: cliente,
-            total: total,
-            fecha: new Date().toLocaleDateString('es-PE'),
-            hora: new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })
-        });
-        
-        // Actualizar estado del botón PDF
+        // 🔥 Actualizar el estado del botón PDF
         actualizarEstadoBotonPDF();
         
     } else {
         mostrarNotificacion("❌ Error al generar código oficial. Intente nuevamente.", "danger");
     }
 }
-    // ===========
-    // =========================
-// MODAL DE CONFIRMACIÓN ANTES DE CONVERTIR A OFICIAL
-// =========================
-// =========================
+  
 // MODAL DE CONFIRMACIÓN ANTES DE CONVERTIR A OFICIAL - CORREGIDO
+// =========================
+// =========================
+// MODAL DE CONFIRMACIÓN ANTES DE CONVERTIR A OFICIAL
 // =========================
 function mostrarModalConfirmacionOficial() {
     return new Promise((resolve) => {
@@ -1935,15 +1916,13 @@ function mostrarModalConfirmacionOficial() {
             if (modal) {
                 modal.hide();
             }
-            // Resolver después de un pequeño delay para que el modal se cierre
             setTimeout(() => {
                 resolve(true);
             }, 300);
         };
         
-        // Manejar cancelación (click en X, fondo o botón Cancelar)
+        // Manejar cancelación
         modalElement.addEventListener('hidden.bs.modal', function() {
-            // Solo resolver con false si no se confirmó
             if (!resolved) {
                 resolve(false);
             }
@@ -1967,7 +1946,6 @@ function mostrarModalConfirmacionOficial() {
         modal.show();
     });
 }
-
 // =========================
 // MODAL DE ÉXITO - COTIZACIÓN GENERADA
 // =========================
