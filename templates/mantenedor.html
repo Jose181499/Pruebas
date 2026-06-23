@@ -148,6 +148,11 @@
             padding-left: 1rem;
         }
 
+        .submenu-item.active {
+            background: rgba(37, 99, 235, 0.25);
+            color: #93c5fd;
+        }
+
         .menu-divider {
             height: 1px;
             background: rgba(255, 255, 255, 0.08);
@@ -166,6 +171,7 @@
 
         .badge-ventas { background: #f97316; color: #1e1b2c; }
         .badge-compras { background: #06b6d4; color: #0f172a; }
+        .badge-finanzas { background: #8b5cf6; color: white; }
         .badge-sunat { background: #10b981; color: white; }
         .badge-comercial { background: #f59e0b; color: #1e293b; }
         .badge-activo { background: #10b981; color: white; }
@@ -538,20 +544,33 @@
 
             <!-- ========= FINANZAS ========= -->
             <div class="dropdown">
-                <button class="menu-item dropdown-toggle-btn w-100 text-start border-0 bg-transparent" 
+                <button class="menu-item dropdown-toggle-btn w-100 text-start border-0 bg-transparent active" 
                         type="button" 
                         data-bs-toggle="collapse" 
                         data-bs-target="#submenuFinanzas" 
-                        aria-expanded="false">
+                        aria-expanded="true">
                     <i class="bi bi-graph-up"></i>
                     Finanzas
+                    <span class="badge-custom badge-finanzas">💰</span>
                 </button>
-                <div class="collapse submenu" id="submenuFinanzas">
-                    <a href="#" class="submenu-item">
-                        <i class="bi bi-wallet2"></i> Flujo de caja
+                <div class="collapse submenu show" id="submenuFinanzas">
+                    <a href="{{ url_for('finanzas.cuentas_por_cobrar') }}" class="submenu-item">
+                        <i class="bi bi-coin"></i> Cuentas por Cobrar
+                    </a>
+                    <a href="{{ url_for('finanzas.cuentas_por_pagar') }}" class="submenu-item">
+                        <i class="bi bi-credit-card"></i> Cuentas por Pagar
+                    </a>
+                    <a href="{{ url_for('finanzas.tesoreria') }}" class="submenu-item">
+                        <i class="bi bi-wallet2"></i> Tesorería
+                    </a>
+                    <a href="{{ url_for('finanzas.bancos') }}" class="submenu-item">
+                        <i class="bi bi-bank"></i> Bancos y Cuentas
                     </a>
                     <a href="#" class="submenu-item">
                         <i class="bi bi-pie-chart"></i> Estados financieros
+                    </a>
+                    <a href="#" class="submenu-item">
+                        <i class="bi bi-arrow-left-right"></i> Flujo de caja
                     </a>
                 </div>
             </div>
@@ -635,33 +654,69 @@
                 </div>
             </div>
 
-            <!-- ========= TARJETA PRODUCTOS (NUEVA) ========= -->
-            <a href="/mantenedor/productos/gestion" class="module-card">
-                <span class="tag">Inventario</span>
+            <!-- Tarjeta FINANZAS - Cuentas por Cobrar -->
+            <a href="{{ url_for('finanzas.cuentas_por_cobrar') }}" class="module-card">
+                <span class="tag">Finanzas</span>
                 <div class="icon-svg">
                     <svg width="45" height="45" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M15 6 Q15 3 24 3 Q33 3 33 6 L33 22 Q33 25 24 25 Q15 25 15 22 Z" stroke="#1e3a8a" stroke-width="2.2" stroke-linejoin="round" fill="none"/>
-                        <path d="M15 14 L10 14 Q8 14 8 16 L8 20 Q8 22 10 22 L15 22" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                        <path d="M33 14 L38 14 Q40 14 40 16 L40 20 Q40 22 38 22 L33 22" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                        <path d="M13 25 Q13 29 24 29 Q35 29 35 25" stroke="#1e3a8a" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-                        <line x1="24" y1="29" x2="24" y2="37" stroke="#1e3a8a" stroke-width="2.2" stroke-linecap="round"/>
-                        <line x1="24" y1="37" x2="14" y2="44" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"/>
-                        <line x1="24" y1="37" x2="34" y2="44" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"/>
-                        <line x1="24" y1="37" x2="24" y2="45" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"/>
-                        <line x1="24" y1="37" x2="10" y2="39" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"/>
-                        <line x1="24" y1="37" x2="38" y2="39" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"/>
-                        <circle cx="14" cy="44" r="1.5" stroke="#1e3a8a" stroke-width="1.8" fill="none"/>
-                        <circle cx="34" cy="44" r="1.5" stroke="#1e3a8a" stroke-width="1.8" fill="none"/>
-                        <circle cx="24" cy="45" r="1.5" stroke="#1e3a8a" stroke-width="1.8" fill="none"/>
-                        <circle cx="10" cy="39" r="1.5" stroke="#1e3a8a" stroke-width="1.8" fill="none"/>
-                        <circle cx="38" cy="39" r="1.5" stroke="#1e3a8a" stroke-width="1.8" fill="none"/>
+                        <circle cx="24" cy="24" r="20" stroke="#8b5cf6" stroke-width="2"/>
+                        <path d="M16 30 L20 22 L24 26 L28 18 L32 24" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="16" cy="30" r="1.5" stroke="#8b5cf6" stroke-width="1.8"/>
+                        <circle cx="20" cy="22" r="1.5" stroke="#8b5cf6" stroke-width="1.8"/>
+                        <circle cx="24" cy="26" r="1.5" stroke="#8b5cf6" stroke-width="1.8"/>
+                        <circle cx="28" cy="18" r="1.5" stroke="#8b5cf6" stroke-width="1.8"/>
+                        <circle cx="32" cy="24" r="1.5" stroke="#8b5cf6" stroke-width="1.8"/>
                     </svg>
                 </div>
-                <h4>Productos</h4>
-                <span>Costo, Precio y Kardex · Gestión completa de productos</span>
+                <h4>Cuentas por Cobrar</h4>
+                <span>Gestión de facturas pendientes, vencidas y pagos recibidos</span>
                 <div class="card-buttons">
-                    <span class="btn btn-primary btn-sm-custom">Gestionar</span>
-                    <span class="btn btn-light btn-sm-custom">Listar</span>
+                    <span class="btn btn-primary btn-sm-custom">Ver Dashboard</span>
+                    <span class="btn btn-light btn-sm-custom">Facturas</span>
+                    <span class="btn btn-dark btn-sm-custom">Exportar</span>
+                </div>
+            </a>
+
+            <!-- Tarjeta FINANZAS - Cuentas por Pagar -->
+            <a href="{{ url_for('finanzas.cuentas_por_pagar') }}" class="module-card">
+                <span class="tag">Finanzas</span>
+                <div class="icon-svg">
+                    <svg width="45" height="45" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="10" y="14" width="28" height="20" rx="2" stroke="#8b5cf6" stroke-width="2"/>
+                        <path d="M16 24 L20 28 L24 24" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M32 20 L28 16 L24 20" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="10" y1="34" x2="38" y2="34" stroke="#8b5cf6" stroke-width="2"/>
+                        <circle cx="24" cy="24" r="3" stroke="#8b5cf6" stroke-width="1.8"/>
+                    </svg>
+                </div>
+                <h4>Cuentas por Pagar</h4>
+                <span>Control de facturas de proveedores, vencimientos y pagos</span>
+                <div class="card-buttons">
+                    <span class="btn btn-primary btn-sm-custom">Ver Dashboard</span>
+                    <span class="btn btn-light btn-sm-custom">Facturas</span>
+                    <span class="btn btn-dark btn-sm-custom">Exportar</span>
+                </div>
+            </a>
+
+            <!-- Tarjeta FINANZAS - Tesorería -->
+            <a href="{{ url_for('finanzas.tesoreria') }}" class="module-card">
+                <span class="tag">Finanzas</span>
+                <div class="icon-svg">
+                    <svg width="45" height="45" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="24" cy="24" r="20" stroke="#8b5cf6" stroke-width="2"/>
+                        <rect x="16" y="18" width="16" height="12" rx="1" stroke="#8b5cf6" stroke-width="2"/>
+                        <line x1="20" y1="18" x2="20" y2="30" stroke="#8b5cf6" stroke-width="1.5"/>
+                        <line x1="28" y1="18" x2="28" y2="30" stroke="#8b5cf6" stroke-width="1.5"/>
+                        <line x1="16" y1="22" x2="32" y2="22" stroke="#8b5cf6" stroke-width="1.5"/>
+                        <line x1="16" y1="26" x2="32" y2="26" stroke="#8b5cf6" stroke-width="1.5"/>
+                        <circle cx="24" cy="24" r="2" fill="#8b5cf6" fill-opacity="0.3" stroke="#8b5cf6" stroke-width="1.5"/>
+                    </svg>
+                </div>
+                <h4>Tesorería</h4>
+                <span>Flujo de caja, conciliaciones y disponibilidad</span>
+                <div class="card-buttons">
+                    <span class="btn btn-primary btn-sm-custom">Ver Dashboard</span>
+                    <span class="btn btn-light btn-sm-custom">Movimientos</span>
                     <span class="btn btn-dark btn-sm-custom">Exportar</span>
                 </div>
             </a>
@@ -847,6 +902,30 @@
                 }
             });
         }
+    });
+
+    // Marcar el ítem activo del menú según la URL actual
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentPath = window.location.pathname;
+        const menuItems = document.querySelectorAll('.submenu-item');
+        
+        menuItems.forEach(item => {
+            const href = item.getAttribute('href');
+            if (href && currentPath.includes(href)) {
+                item.classList.add('active');
+                // Expandir el dropdown padre
+                const parentDropdown = item.closest('.dropdown');
+                if (parentDropdown) {
+                    const collapse = parentDropdown.querySelector('.collapse');
+                    const btn = parentDropdown.querySelector('.dropdown-toggle-btn');
+                    if (collapse && btn) {
+                        collapse.classList.add('show');
+                        btn.setAttribute('aria-expanded', 'true');
+                        btn.classList.add('active');
+                    }
+                }
+            }
+        });
     });
 </script>
 
