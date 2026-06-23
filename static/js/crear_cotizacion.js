@@ -1838,7 +1838,7 @@ async function convertirAOficial() {
         esBorrador = false;
         actualizarNumeroCotizacionUI(nuevoCodigo, false);
         
-        // ✅ CORRECCIÓN: Usar variable global en lugar de buscar elemento DOM
+        // ✅ Usar variable global en lugar de buscar elemento DOM
         estadoCotizacion = 'Generada';
         
         // ✅ También actualizar el estado visual
@@ -1852,8 +1852,7 @@ async function convertirAOficial() {
     }
 }
   
-// MODAL DE CONFIRMACIÓN ANTES DE CONVERTIR A OFICIAL - CORREGIDO
-// =========================
+
 // =========================
 // MODAL DE CONFIRMACIÓN ANTES DE CONVERTIR A OFICIAL
 // =========================
@@ -1922,23 +1921,51 @@ function mostrarModalConfirmacionOficial() {
         const modalElement = document.getElementById('modalConfirmacionOficial');
         let resolved = false;
         
+        // ✅ FUNCIÓN PARA LIMPIAR EL FOCO Y RESOLVER
+        function limpiarFocoYResolver(valor) {
+            // Quitar foco de cualquier elemento dentro del modal
+            if (document.activeElement) {
+                document.activeElement.blur();
+            }
+            
+            // Forzar que el modal no tenga aria-hidden
+            if (modalElement) {
+                modalElement.removeAttribute('aria-hidden');
+            }
+            
+            if (!resolved) {
+                resolved = true;
+                resolve(valor);
+            }
+        }
+        
         // Manejar confirmación
         const btnConfirmar = document.getElementById('btnConfirmarOficial');
         btnConfirmar.onclick = function() {
-            resolved = true;
+            // ✅ QUITAR EL FOCO DEL BOTÓN ANTES DE CERRAR
+            this.blur();
+            
             const modal = bootstrap.Modal.getInstance(modalElement);
             if (modal) {
                 modal.hide();
             }
             setTimeout(() => {
-                resolve(true);
+                limpiarFocoYResolver(true);
             }, 300);
         };
         
         // Manejar cancelación
         modalElement.addEventListener('hidden.bs.modal', function() {
+            // ✅ QUITAR EL FOCO DE CUALQUIER ELEMENTO DENTRO DEL MODAL
+            if (document.activeElement && modalElement.contains(document.activeElement)) {
+                document.activeElement.blur();
+            }
+            
+            // ✅ REMOVER ARIA-HIDDEN
+            modalElement.removeAttribute('aria-hidden');
+            
             if (!resolved) {
-                resolve(false);
+                limpiarFocoYResolver(false);
             }
         }, { once: true });
         
@@ -1947,10 +1974,34 @@ function mostrarModalConfirmacionOficial() {
         if (closeBtn) {
             closeBtn.addEventListener('click', function() {
                 if (!resolved) {
-                    resolve(false);
+                    // ✅ QUITAR EL FOCO
+                    this.blur();
+                    
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) {
+                        modal.hide();
+                    }
+                    setTimeout(() => {
+                        limpiarFocoYResolver(false);
+                    }, 300);
                 }
             });
         }
+        
+        // Manejar clic en el backdrop (fuera del modal)
+        modalElement.addEventListener('click', function(e) {
+            if (e.target === modalElement) {
+                if (!resolved) {
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) {
+                        modal.hide();
+                    }
+                    setTimeout(() => {
+                        limpiarFocoYResolver(false);
+                    }, 300);
+                }
+            }
+        });
         
         // Mostrar el modal
         const modal = new bootstrap.Modal(modalElement, {
@@ -1960,7 +2011,6 @@ function mostrarModalConfirmacionOficial() {
         modal.show();
     });
 }
-
 // =========================
 // MODAL DE ÉXITO - COTIZACIÓN GENERADA (CORREGIDO)
 // =========================
