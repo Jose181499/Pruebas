@@ -377,23 +377,23 @@ function mostrarNotificacionExistente(cliente) {
         top: 20px;
         right: 20px;
         z-index: 10000;
-        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
         color: white;
         padding: 16px 24px;
         border-radius: 16px;
         box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         max-width: 400px;
         animation: slideInRight 0.3s ease-out;
-        border-left: 4px solid #ffd700;
+        border-left: 4px solid #60a5fa;
     `;
     
     notificacionDiv.innerHTML = `
         <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="font-size: 28px;">🏢</div>
+            <div style="font-size: 28px;">🔵</div>
             <div style="flex: 1;">
-                <strong style="font-size: 16px;">¡CLIENTE YA REGISTRADO!</strong>
-                <div style="font-size: 13px; margin-top: 4px;">
-                    Este RUC ya existe en el sistema con los siguientes datos:
+                <strong style="font-size: 16px;">📌 CLIENTE REGISTRADO EN SISTEMA</strong>
+                <div style="font-size: 13px; margin-top: 4px; opacity: 0.95;">
+                    Este RUC ya existe en la base de datos local con los siguientes datos:
                 </div>
                 <div style="background: rgba(255,255,255,0.2); border-radius: 8px; padding: 8px; margin-top: 8px; font-size: 12px;">
                     <div>📞 Teléfono: ${cliente.telefono_contacto || 'No registrado'}</div>
@@ -401,7 +401,7 @@ function mostrarNotificacionExistente(cliente) {
                     <div>👤 Contacto: ${cliente.nombre_contacto || 'No registrado'}</div>
                 </div>
                 <div style="font-size: 11px; margin-top: 6px; opacity: 0.9;">
-                    ✅ Los datos de contacto han sido autocompletados automáticamente
+                    ✅ Datos de contacto autocompletados automáticamente
                 </div>
             </div>
             <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;">✕</button>
@@ -422,7 +422,6 @@ function mostrarNotificacionExistente(cliente) {
         }
     }, 8000);
 }
-
 // NUEVA FUNCIÓN: Resaltar campos que fueron autocompletados con datos existentes
 function resaltarCamposExistentes() {
     const campos = ['nuevo_telefono', 'nuevo_email', 'nuevo_nombre_contacto'];
@@ -1764,7 +1763,6 @@ function setProductoEnFila(row, p) {
     let cantidadActual = cantidadInput ? parseFloat(cantidadInput.value) || 1 : 1;
     if (cantidadActual > stock && stock > 0) {
         mostrarNotificacion(`⚠️ Stock insuficiente. Solo hay ${stock} unidades disponibles`, "warning");
-        if (cantidadInput) cantidadInput.value = stock;
         setTimeout(() => recalculateAll(), 50);
     }
 }
@@ -2074,15 +2072,15 @@ function attachClienteAutocomplete(inputId) {
     // =========================
     // RECALCULAR CON DESCUENTO PERSONALIZABLE Y VALIDACIÓN DE STOCK
     // =========================
-   function recalculateAll() {
+  function recalculateAll() {
     const rows = document.querySelectorAll("#table-body tr");
     let totalValorVenta = 0;
-    let hayErrorStock = false;
 
     rows.forEach(r => {
         const cantidad = Number(r.querySelector('.cantidad')?.value || 0);
         const precioVenta = Number(r.querySelector('.precio_venta_unitario')?.value || 0);
         
+        // 🔥 NUEVO: Obtener stock solo para mostrar, NO para validar
         const stockBadge = r.querySelector('.stock-badge');
         let stockActual = 0;
         if (stockBadge) {
@@ -2092,23 +2090,7 @@ function attachClienteAutocomplete(inputId) {
             if (stockHidden) stockActual = parseInt(stockHidden.value) || 0;
         }
         
-        const cantidadInput = r.querySelector('.cantidad');
-        const codigoProducto = r.querySelector('.codigo_producto')?.value || 'producto';
-        
-        if (stockActual > 0 && cantidad > stockActual) {
-            if (!hayErrorStock) {
-                mostrarNotificacion(`⚠️ Stock insuficiente para "${codigoProducto}". Máximo disponible: ${stockActual}`, "warning");
-                hayErrorStock = true;
-            }
-            if (cantidadInput) cantidadInput.value = stockActual;
-            const cantidadCorregida = stockActual;
-            const valorVentaTotalCorregido = cantidadCorregida * precioVenta;
-            const valorVentaTotalElem = r.querySelector('.valor_venta_total');
-            if (valorVentaTotalElem) valorVentaTotalElem.textContent = formatCantidad(valorVentaTotalCorregido);
-            totalValorVenta += valorVentaTotalCorregido;
-            return;
-        }
-        
+        // ✅ CALCULAR SIEMPRE el valor total sin importar el stock
         const valorVentaTotal = cantidad * precioVenta;
         const valorVentaTotalElem = r.querySelector('.valor_venta_total');
         if (valorVentaTotalElem) valorVentaTotalElem.textContent = formatCantidad(valorVentaTotal);

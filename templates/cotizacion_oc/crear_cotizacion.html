@@ -215,20 +215,20 @@
             justify-content: flex-start;
             gap: 6px;
             min-height: 28px;
-            background: #4a5568 !important;
+            background: #6b7280 !important; /* GRIS MÁS CLARO (PLOMO) */
         }
         .card-custom .card-header .header-left {
             display: flex;
             align-items: center;
             gap: 6px;
         }
-        /* ====== TODOS LOS HEADERS EN GRIS CORPORATIVO ====== */
+        /* ====== TODOS LOS HEADERS EN GRIS CLARO (PLOMO) ====== */
         .card-custom .card-header.bg-dark-custom,
         .card-custom .card-header.bg-red,
         .card-custom .card-header.bg-green,
         .card-custom .card-header.bg-blue,
         .card-custom .card-header.bg-purple {
-            background: #4a5568 !important;
+            background: #6b7280 !important; /* GRIS CLARO */
         }
         /* ====== HEADER DE PRODUCTOS - BOTÓN A LA DERECHA ====== */
         .card-custom .card-header.bg-green {
@@ -344,13 +344,33 @@
             margin-right: 3px;
         }
 
-        /* ====== TABLA ====== */
-        .table-cotizacion {
+        /* ====== TABLA CON SCROLL VERTICAL ====== */
+        .table-scroll-container {
+            position: relative;
+            max-height: 350px;
+            overflow-y: auto;
+            overflow-x: auto;
+            width: 100%;
+        }
+
+        .table-scroll-container .table-cotizacion {
             margin: 0;
             font-size: 9px;
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
         }
-        .table-cotizacion thead th {
-            background: #4a5568;
+
+        .table-scroll-container .table-cotizacion thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .table-scroll-container .table-cotizacion thead th {
+            position: sticky;
+            top: 0;
+            background: #6b7280 !important; /* GRIS CLARO (PLOMO) */
             color: white;
             padding: 4px 3px;
             text-align: center;
@@ -359,52 +379,105 @@
             border: none;
             white-space: nowrap;
             vertical-align: middle;
+            z-index: 11;
         }
-        .table-cotizacion thead th small {
+
+        .table-scroll-container .table-cotizacion thead th small {
             font-weight: 300;
             font-size: 7px;
             display: block;
-            color: #94a3b8;
+            color: #d1d5db;
         }
-        .table-cotizacion tbody td {
+
+        .table-scroll-container .table-cotizacion tbody td {
             padding: 2px 2px;
             vertical-align: middle;
             border-bottom: 1px solid #f1f5f9;
         }
-        .table-cotizacion tbody tr:hover { background: rgba(217,4,41,0.03); }
-        .table-cotizacion input,
-        .table-cotizacion select {
+
+        .table-scroll-container .table-cotizacion tbody tr:hover {
+            background: rgba(217, 4, 41, 0.03);
+        }
+
+        .table-scroll-container .table-cotizacion tfoot {
+            position: sticky;
+            bottom: 0;
+            z-index: 10;
+        }
+
+        .table-scroll-container .table-cotizacion tfoot td {
+            background: #f8fafc !important;
+            border-top: 2px solid #d90429;
+            position: sticky;
+            bottom: 0;
+            z-index: 11;
+            padding: 4px 3px;
+            font-size: 9px;
+        }
+
+        .table-scroll-container .table-cotizacion input,
+        .table-scroll-container .table-cotizacion select {
             width: 100%;
             padding: 1px 3px;
             border-radius: 4px;
             border: 1.5px solid #e5e7eb;
-            font-size: 9px;
+            font-size: 8px;
             background: white;
-            min-height: 20px;
+            min-height: 18px;
+            height: 18px;
         }
-        .table-cotizacion input:focus,
-        .table-cotizacion select:focus {
+
+        .table-scroll-container .table-cotizacion input:focus,
+        .table-scroll-container .table-cotizacion select:focus {
             border-color: #d90429;
             outline: none;
             box-shadow: 0 0 0 2px rgba(217,4,41,0.06);
         }
-        .table-cotizacion input:disabled { background: #f3f4f6; }
-        .btn-del {
+
+        .table-scroll-container .table-cotizacion input:disabled {
+            background: #f3f4f6;
+        }
+
+        .table-scroll-container .btn-del {
             background: #fee2e2;
             border: none;
             border-radius: 4px;
-            padding: 1px 5px;
+            padding: 0px 4px;
             color: #dc2626;
-            font-size: 10px;
+            font-size: 9px;
             cursor: pointer;
         }
-        .btn-del:hover { background: #fecaca; }
-        .stock-badge {
+
+        .table-scroll-container .btn-del:hover {
+            background: #fecaca;
+        }
+
+        .table-scroll-container .stock-badge {
             display: inline-block;
             padding: 1px 6px;
             border-radius: 8px;
-            font-size: 8px;
+            font-size: 7px;
             font-weight: 600;
+        }
+
+        /* Barra de scroll personalizada */
+        .table-scroll-container::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .table-scroll-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .table-scroll-container::-webkit-scrollbar-thumb {
+            background: #6b7280;
+            border-radius: 4px;
+        }
+
+        .table-scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
         }
 
         /* ====== RESUMEN COTIZACIÓN ====== */
@@ -519,7 +592,7 @@
         .modal-content { border-radius: 12px; border: none; }
         .modal-header {
             padding: 8px 14px;
-            background: #4a5568;
+            background: #6b7280; /* GRIS CLARO (PLOMO) */
             color: white;
             border-radius: 12px 12px 0 0;
         }
@@ -580,10 +653,10 @@
                 gap: 4px;
             }
             .hero-divider { display: none; }
-            .table-cotizacion { font-size: 8px; }
-            .table-cotizacion thead th { font-size: 7px; padding: 2px 1px; }
-            .table-cotizacion thead th small { font-size: 6px; }
-            .table-cotizacion tbody td { padding: 1px; }
+            .table-scroll-container .table-cotizacion { font-size: 8px; }
+            .table-scroll-container .table-cotizacion thead th { font-size: 7px; padding: 2px 1px; }
+            .table-scroll-container .table-cotizacion thead th small { font-size: 6px; }
+            .table-scroll-container .table-cotizacion tbody td { padding: 1px; }
             .container-fluid { padding: 3px 6px !important; }
             .navbar-left .btn-sm-custom {
                 font-size: 8px;
@@ -614,6 +687,9 @@
             .toolbar-right {
                 width: 100%;
                 justify-content: center;
+            }
+            .table-scroll-container {
+                max-height: 250px;
             }
         }
 
@@ -983,18 +1059,18 @@
         </div>
     </div>
 
-    <!-- ====== TABLA PRODUCTOS ====== -->
+    <!-- ====== TABLA PRODUCTOS CON SCROLL ====== -->
     <div class="card-custom mt-1">
         <div class="card-header bg-green">
             <div class="header-left">
-                <i class="bi bi-box-seam-fill"></i> 4.Detalle de Productos
+                <i class="bi bi-box-seam-fill"></i> 4. Detalle de Productos
             </div>
             <button class="btn-agregar-producto" id="btnAgregarItem">
                 <i class="bi bi-plus-circle-fill"></i> Agregar Producto
             </button>
         </div>
         <div class="card-body p-0">
-            <div class="table-responsive">
+            <div class="table-scroll-container">
                 <table class="table table-cotizacion" id="products-table">
                     <thead>
                         <tr>
