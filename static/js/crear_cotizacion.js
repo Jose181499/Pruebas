@@ -612,6 +612,8 @@ function ocultarIndicadorClienteExistente() {
 
 // MODIFICACIÓN: También mejorar la función de búsqueda por RUC del cliente principal
 // Actualizar el evento del botón btnBuscarClientePorRuc
+// MODIFICACIÓN: También mejorar la función de búsqueda por RUC del cliente principal
+// Actualizar el evento del botón btnBuscarClientePorRuc
 const btnBuscarClientePorRucOriginal = document.getElementById('btnBuscarClientePorRuc');
 if (btnBuscarClientePorRucOriginal) {
     // Reemplazar el evento existente con uno nuevo mejorado
@@ -648,6 +650,13 @@ if (btnBuscarClientePorRucOriginal) {
                 document.getElementById('cliente_doc').value = ruc;
                 document.getElementById('cliente_direccion').value = resultado.direccion || '';
                 
+                // 🔥 NUEVO: Asignar el código de cliente si existe
+                if (resultado.codigo_cliente) {
+                    document.getElementById('cliente_codigo').value = resultado.codigo_cliente;
+                } else {
+                    document.getElementById('cliente_codigo').value = '';
+                }
+                
                 document.getElementById('nuevo_razon_social').value = resultado.razon_social || '';
                 document.getElementById('nuevo_nombre_comercial').value = resultado.nombre_comercial || '';
                 document.getElementById('nuevo_razon_comercial').value = resultado.razon_comercial || '';
@@ -676,6 +685,7 @@ if (btnBuscarClientePorRucOriginal) {
                     document.getElementById('cliente_contacto').value = '';
                     document.getElementById('email_contacto_cliente').value = '';
                     document.getElementById('cliente_id').value = '';
+                    document.getElementById('cliente_codigo').value = '';
                     
                     mostrarNotificacion('✅ Datos de SUNAT cargados (cliente nuevo)', 'success');
                 }
@@ -690,33 +700,6 @@ if (btnBuscarClientePorRucOriginal) {
             nuevoBtn.disabled = false;
         }
     });
-}
-
-// Agregar estilos CSS para las animaciones si no existen
-if (!document.querySelector('#sunat-animation-styles')) {
-    const style = document.createElement('style');
-    style.id = 'sunat-animation-styles';
-    style.textContent = `
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        @keyframes fadeOut {
-            from {
-                opacity: 1;
-            }
-            to {
-                opacity: 0;
-            }
-        }
-    `;
-    document.head.appendChild(style);
 }
 
     // =========================
