@@ -1845,8 +1845,15 @@ async function convertirAOficial() {
 // =========================
 // MODAL DE CONFIRMACIÓN ANTES DE CONVERTIR A OFICIAL
 // =========================
+// =========================
+// MODAL DE CONFIRMACIÓN ANTES DE CONVERTIR A OFICIAL
+// =========================
 function mostrarModalConfirmacionOficial() {
     return new Promise((resolve) => {
+        // Eliminar modal anterior si existe
+        const oldModal = document.getElementById('modalConfirmacionOficial');
+        if (oldModal) oldModal.remove();
+        
         // Crear el modal dinámicamente
         const modalHTML = `
             <div class="modal fade" id="modalConfirmacionOficial" tabindex="-1" data-bs-backdrop="static">
@@ -1898,11 +1905,6 @@ function mostrarModalConfirmacionOficial() {
             </div>
         `;
         
-        // Eliminar modal anterior si existe
-        const oldModal = document.getElementById('modalConfirmacionOficial');
-        if (oldModal) oldModal.remove();
-        
-        // Agregar modal al DOM
         document.body.insertAdjacentHTML('beforeend', modalHTML);
         
         const modalElement = document.getElementById('modalConfirmacionOficial');
@@ -1946,8 +1948,9 @@ function mostrarModalConfirmacionOficial() {
         modal.show();
     });
 }
+
 // =========================
-// MODAL DE ÉXITO - COTIZACIÓN GENERADA
+// MODAL DE ÉXITO - COTIZACIÓN GENERADA (CORREGIDO)
 // =========================
 function mostrarModalExito(datos) {
     const modalBody = document.getElementById('modalConfirmacionBody');
@@ -1975,6 +1978,10 @@ function mostrarModalExito(datos) {
     const cliente = datos.cliente || document.getElementById('cliente_razon_social')?.value || 'No especificado';
     const esOficial = datos.tipo !== 'BORRADOR';
     
+    // 🔥 LIMPIAR el modal antes de agregar contenido
+    modalBody.innerHTML = '';
+    
+    // 🔥 Agregar contenido al modal
     modalBody.innerHTML = `
         <div style="text-align: center; padding: 8px 0 16px 0;">
             <div style="background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);">
@@ -2048,12 +2055,17 @@ function mostrarModalExito(datos) {
         return;
     }
     
-    // Crear una instancia nueva del modal
+    // 🔥 Cerrar cualquier instancia previa del modal
     let modal = bootstrap.Modal.getInstance(modalElement);
     if (modal) {
         modal.dispose();
+        // Eliminar el backdrop si existe
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) backdrop.remove();
+        document.body.classList.remove('modal-open');
     }
     
+    // 🔥 Crear nueva instancia del modal
     modal = new bootstrap.Modal(modalElement, {
         backdrop: 'static',
         keyboard: true
@@ -2123,7 +2135,7 @@ function mostrarModalExito(datos) {
         };
     }
     
-    // Mostrar el modal
+    // 🔥 Mostrar el modal
     try {
         modal.show();
         console.log('✅ Modal de éxito mostrado correctamente');
