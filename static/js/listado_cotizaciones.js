@@ -206,7 +206,7 @@ async function cargarCotizaciones() {
             if (buscador) buscador.value = "";
         }
         
-       const url = buscar ? `/api/cotizacion?buscar=${encodeURIComponent(buscar)}` : '/api/cotizacion';
+        const url = buscar ? `/api/cotizacion_comercial?buscar=${encodeURIComponent(buscar)}` : '/api/cotizacion_comercial';
         console.log("🌐 Fetching URL:", url);
         
         const response = await fetch(url);
@@ -934,10 +934,9 @@ async function eliminarCotizacionConfirmado() {
     if (!cotizacionAEliminar) return;
     
     try {
-       // ✅ DEBERÍA SER:
-const response = await fetch(`/api/cotizacion/${cotizacionAEliminar}`, {
-    method: 'DELETE'
-});
+        const response = await fetch(`/api/cotizacion_comercial/${cotizacionAEliminar}`, {
+            method: 'DELETE'
+        });
         const result = await response.json();
         
         if (result.success) {
