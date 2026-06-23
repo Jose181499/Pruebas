@@ -183,7 +183,10 @@ async function autocompletarConSunatListado() {
 
 
 // ===========================
-// CARGAR COTIZACIONES - VERSIÓN CORREGIDA
+// CARGAR COTIZACIONES - CON ORDEN DESCENDENTE (más reciente primero)
+// ===========================
+// ===========================
+// CARGAR COTIZACIONES - CON ORDEN: Aceptadas y Generadas primero
 // ===========================
 async function cargarCotizaciones() {
     const tbody = document.getElementById('tbodyCotizaciones');
@@ -207,7 +210,6 @@ async function cargarCotizaciones() {
             if (buscador) buscador.value = "";
         }
         
-        // ✅ CORRECCIÓN: Usar /api/cotizacion_comercial que SÍ existe
         const url = buscar ? `/api/cotizacion_comercial?buscar=${encodeURIComponent(buscar)}` : '/api/cotizacion_comercial';
         console.log("🌐 Fetching URL:", url);
         
@@ -230,15 +232,39 @@ async function cargarCotizaciones() {
 
         cotizacionesData = result.data || [];
         
-        // Ordenar: primero las aceptadas, luego las generadas, luego el resto
+        // ==========================================
+        // ✅ ORDENAR: Aceptadas y Generadas primero
+        // ==========================================
         cotizacionesData.sort((a, b) => {
-            const orden = { 'Aceptada por Cliente': 0, 'aceptada': 0, 'Generada': 1, 'generada': 1 };
-            const ordenA = orden[a.estado] ?? 2;
-            const ordenB = orden[b.estado] ?? 2;
-            return ordenA - ordenB;
+            // Definir prioridad de estados
+            const prioridad = {
+                'Aceptada por Cliente': 0,
+                'aceptada': 0,
+                'Generada': 1,
+                'generada': 1,
+                'En Proceso': 2,
+                'en_proceso': 2,
+                'Rechazada': 3,
+                'rechazada': 3,
+                'Borrador': 4,
+                'borrador': 4
+            };
+            
+            // Obtener prioridad de cada estado
+            const prioridadA = prioridad[a.estado?.toLowerCase()] ?? 99;
+            const prioridadB = prioridad[b.estado?.toLowerCase()] ?? 99;
+            
+            // Si tienen la misma prioridad, ordenar por fecha (más reciente primero)
+            if (prioridadA === prioridadB) {
+                const fechaA = new Date(a.fecha_creacion || 0);
+                const fechaB = new Date(b.fecha_creacion || 0);
+                return fechaB - fechaA;
+            }
+            
+            return prioridadA - prioridadB;
         });
         
-        // 🆕 Cargar conteos de documentos vinculados
+        // Cargar conteos de documentos vinculados
         await cargarConteoDocumentos(cotizacionesData);
         
         actualizarEstadisticas();
