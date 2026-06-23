@@ -33,6 +33,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Pero mantener hasta 3 decimales si son significativos
     return parseFloat(numero.toFixed(3)).toString();
 }
+
+// 🔥 AGREGAR AQUÍ:
+    // =========================
+    // FUNCIÓN SEGURA PARA ASIGNAR VALOR A UN CAMPO
+    // =========================
+    function setValueSafely(id, value) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.value = value || '';
+        }
+    }
     
         // =========================
         // GENERACIÓN DE CÓDIGOS PERSONALIZADOS
@@ -652,7 +663,7 @@ if (btnBuscarClientePorRucOriginal) {
                 
                 // 🔥 NUEVO: Asignar el código de cliente si existe
                 if (resultado.codigo_cliente) {
-                    document.getElementById('cliente_codigo').value = resultado.codigo_cliente;
+                   setValueSafely('cliente_codigo', resultado.codigo_cliente || '');
                 } else {
                     document.getElementById('cliente_codigo').value = '';
                 }
@@ -1815,7 +1826,6 @@ async function convertirAOficial() {
         }
     }
     
-    // 🔥 Mostrar modal de confirmación personalizado
     const confirmado = await mostrarModalConfirmacionOficial();
     
     if (confirmado === false) {
@@ -1827,12 +1837,14 @@ async function convertirAOficial() {
     if (nuevoCodigo) {
         esBorrador = false;
         actualizarNumeroCotizacionUI(nuevoCodigo, false);
-        document.getElementById('estado').value = 'Generada';
         
-        // 🔥 Guardar la cotización (esto llamará a mostrarModalConfirmacion con todos los datos)
+        // ✅ CORRECCIÓN: Usar variable global en lugar de buscar elemento DOM
+        estadoCotizacion = 'Generada';
+        
+        // ✅ También actualizar el estado visual
+        actualizarEstadoVisual();
+        
         await guardarCotizacion();
-        
-        // 🔥 Actualizar el estado del botón PDF
         actualizarEstadoBotonPDF();
         
     } else {
@@ -2731,19 +2743,26 @@ function attachProductoAutocomplete(row) {
     // =========================
     // ESTADO VISUAL
     // =========================
-    function actualizarEstadoVisual() {
-        const estadoElement = document.getElementById('estado_fixed');
-        const estadoTexto = document.getElementById('estado_texto');
-        if (!estadoElement || !estadoTexto) return;
-        estadoTexto.textContent = estadoCotizacion.toUpperCase();
-        estadoElement.className = 'erp-status ';
-        if (estadoCotizacion === 'En Proceso') estadoElement.classList.add('estado-en-proceso');
-        else if (estadoCotizacion === 'Generada') estadoElement.classList.add('estado-generada');
-        else if (estadoCotizacion === 'Aceptada por Cliente') estadoElement.classList.add('estado-aceptada');
-        else if (estadoCotizacion === 'Rechazada') estadoElement.classList.add('estado-rechazada');
-        else estadoElement.classList.add('estado-en-proceso');
-        actualizarBotones();
+   function actualizarEstadoVisual() {
+    const estadoElement = document.getElementById('estado_fixed');
+    const estadoTexto = document.getElementById('estado_texto');
+    if (!estadoElement || !estadoTexto) return;
+    
+    estadoTexto.textContent = estadoCotizacion.toUpperCase();
+    estadoElement.className = 'erp-status ';
+    
+    if (estadoCotizacion === 'En Proceso') {
+        estadoElement.classList.add('estado-en-proceso');
+    } else if (estadoCotizacion === 'Generada') {
+        estadoElement.classList.add('estado-generada');
+    } else if (estadoCotizacion === 'Aceptada por Cliente') {
+        estadoElement.classList.add('estado-aceptada');
+    } else if (estadoCotizacion === 'Rechazada') {
+        estadoElement.classList.add('estado-rechazada');
+    } else {
+        estadoElement.classList.add('estado-en-proceso');
     }
+}
 
     function actualizarBotones() {
         const pdfBtn = document.getElementById('btnPdf');
@@ -2825,7 +2844,7 @@ function attachProductoAutocomplete(row) {
                 document.getElementById('cliente_id').value = data.cliente_id;
             }
             document.getElementById('cliente_razon_social').value = data.cliente || data.razon_social || '';
-            document.getElementById('cliente_razon_comercial').value = data.razon_comercial || ''; 
+            setValueSafely('cliente_razon_comercial', data.razon_comercial || '');
             document.getElementById('cliente_doc').value = data.numero_documento || data.cliente_ruc || '';
             document.getElementById('cliente_direccion').value = data.direccion_fiscal || '';
              document.getElementById('cliente_contacto').value = data.cliente_contacto || '';

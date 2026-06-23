@@ -206,7 +206,9 @@ async function cargarCotizaciones() {
             if (buscador) buscador.value = "";
         }
         
-        const url = buscar ? `/api/cotizacion_comercial?buscar=${encodeURIComponent(buscar)}` : '/api/cotizacion_comercial';
+        // ✅ CORRECCIÓN AQUÍ: Cambiar /api/cotizacion_comercial por /api/cotizacion
+        // o por el endpoint que devuelve TODAS las cotizaciones
+        const url = buscar ? `/api/cotizacion?buscar=${encodeURIComponent(buscar)}` : '/api/cotizacion';
         console.log("🌐 Fetching URL:", url);
         
         const response = await fetch(url);
@@ -236,7 +238,6 @@ async function cargarCotizaciones() {
             return ordenA - ordenB;
         });
         
-        // 🆕 Cargar conteos de documentos vinculados
         await cargarConteoDocumentos(cotizacionesData);
         
         actualizarEstadisticas();
