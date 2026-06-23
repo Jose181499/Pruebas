@@ -2790,25 +2790,64 @@ function attachProductoAutocomplete(row) {
     // =========================
     // ESTADO VISUAL
     // =========================
-   function actualizarEstadoVisual() {
-    const estadoElement = document.getElementById('estado_fixed');
-    const estadoTexto = document.getElementById('estado_texto');
-    if (!estadoElement || !estadoTexto) return;
-    
-    estadoTexto.textContent = estadoCotizacion.toUpperCase();
-    estadoElement.className = 'erp-status ';
-    
-    if (estadoCotizacion === 'En Proceso') {
-        estadoElement.classList.add('estado-en-proceso');
-    } else if (estadoCotizacion === 'Generada') {
-        estadoElement.classList.add('estado-generada');
-    } else if (estadoCotizacion === 'Aceptada por Cliente') {
-        estadoElement.classList.add('estado-aceptada');
-    } else if (estadoCotizacion === 'Rechazada') {
-        estadoElement.classList.add('estado-rechazada');
-    } else {
-        estadoElement.classList.add('estado-en-proceso');
+  function actualizarEstadoVisual() {
+    // 1. Actualizar el badge de estado en el hero
+    const estatusList = document.querySelector('.estatus-list');
+    if (estatusList) {
+        // Limpiar estados activos
+        estatusList.querySelectorAll('.estatus-item').forEach(item => {
+            item.classList.remove('active', 'completed');
+        });
+        
+        // Marcar el estado actual
+        const items = estatusList.querySelectorAll('.estatus-item');
+        const estadoLower = estadoCotizacion.toLowerCase();
+        
+        items.forEach(item => {
+            const num = parseInt(item.dataset.estatus);
+            let debeActivar = false;
+            
+            if (estadoLower === 'en proceso' || estadoLower === 'en_proceso') {
+                debeActivar = (num === 2);
+            } else if (estadoLower === 'generada') {
+                debeActivar = (num === 4);
+            } else if (estadoLower === 'aceptada por cliente' || estadoLower === 'aceptada') {
+                debeActivar = (num === 4);
+            } else if (estadoLower === 'rechazada') {
+                debeActivar = (num === 5);
+            } else if (estadoLower === 'borrador') {
+                debeActivar = (num === 1);
+            }
+            
+            if (debeActivar) {
+                item.classList.add('active');
+            }
+        });
     }
+    
+    // 2. Actualizar el número de cotización (si existe)
+    const numeroDiv = document.getElementById('numero_cotizacion');
+    if (numeroDiv) {
+        // El número ya se actualiza en actualizarNumeroCotizacionUI()
+        // Solo actualizamos el badge visual si existe
+        const badge = numeroDiv.querySelector('.estado-badge');
+        if (badge) {
+            badge.textContent = estadoCotizacion.toUpperCase();
+        }
+    }
+    
+    // 3. Actualizar el color del badge en el número de cotización
+    const tipoDocSpan = document.getElementById('tipo_documento');
+    if (tipoDocSpan) {
+        const esOficial = estadoCotizacion === 'Generada' || estadoCotizacion === 'Aceptada por Cliente';
+        if (esOficial) {
+            tipoDocSpan.innerHTML = '<span class="badge-success">OFICIAL</span>';
+        } else {
+            tipoDocSpan.innerHTML = '<span class="badge-warning">BORRADOR</span>';
+        }
+    }
+    
+    console.log(`✅ Estado visual actualizado: ${estadoCotizacion}`);
 }
 
     function actualizarBotones() {
@@ -2865,118 +2904,160 @@ function attachProductoAutocomplete(row) {
         if (modal) modal.style.display = 'block';
     }
 
-    async function cargarCotizacion(id) {
-        try {
-            console.log("🔍 Cargando cotización ID:", id);
-            const res = await fetch(`/api/cotizacion/${id}`);
-            const json = await res.json();
-            console.log("📦 Datos recibidos:", json);
-            
-            if (!json.success) { 
-                mostrarNotificacion("Error al cargar cotización", "danger"); 
-                return; 
-            }
-            
-            const data = json.data;
-            console.log("✅ Datos de cotización:", data);
-            
-            if (data.codigo_cotizacion) {
-                codigoCotizacionActual = data.codigo_cotizacion;
-                correlativoActual = data.correlativo || 0;
-                esBorrador = data.codigo_cotizacion.startsWith('TMP-');
-                actualizarNumeroCotizacionUI(data.codigo_cotizacion, esBorrador);
-            }
-            
-            if (data.cliente_id) {
-                document.getElementById('cliente_id').value = data.cliente_id;
-            }
-            document.getElementById('cliente_razon_social').value = data.cliente || data.razon_social || '';
-            setValueSafely('cliente_razon_comercial', data.razon_comercial || '');
-            document.getElementById('cliente_doc').value = data.numero_documento || data.cliente_ruc || '';
-            document.getElementById('cliente_direccion').value = data.direccion_fiscal || '';
-             document.getElementById('cliente_contacto').value = data.cliente_contacto || '';
-            document.getElementById('email_contacto_cliente').value = data.email_contacto_cliente || '';
-            document.getElementById('telefono_contacto').value = data.telefono_contacto || '';
-            
-            document.getElementById('estado').value = data.estado || 'En Proceso';
-            document.getElementById('notas').value = data.notas || '';
-            document.getElementById('requerimiento').value = data.requerimiento || '';
-            document.getElementById('condicion_pago').value = data.condicion_pago || 'Contado';
-            document.getElementById('tiempo_entrega').value = data.tiempo_entrega || '';
-            document.getElementById('validez_oferta').value = data.validez_oferta || '15 días';
-            document.getElementById('direccion_entrega').value = data.direccion_entrega || '';
-            document.getElementById('nota_cotizacion').value = data.nota_cotizacion || '';
-            
-            document.getElementById('usuario_id').value = data.usuario_id || '';
-            document.getElementById('asesor_comercial').value = data.nombre_completo || '';
-            document.getElementById('email_contacto').value = data.email || '';
-            document.getElementById('telefono_contacto_user').value = data.telefono || '';
-            
-            // Cargar descuento si existe
-            if (data.descuento_porcentaje !== undefined && data.descuento_porcentaje !== null) {
-                const descuentoInput = document.getElementById('descuento_porcentaje_input');
-                const descuentoTipo = document.getElementById('descuento_tipo');
-                if (descuentoInput) descuentoInput.value = data.descuento_porcentaje;
-                if (descuentoTipo && data.descuento_tipo) descuentoTipo.value = data.descuento_tipo;
-            }
-            
-            const total = Number(data.total || 0);
-            const totalValorVentaElem = document.getElementById('total_valor_venta');
-            if (totalValorVentaElem) totalValorVentaElem.textContent = formatCantidad(total);
-            
-            const summarySubtotal = document.getElementById('summary_subtotal_venta');
-            if (summarySubtotal) summarySubtotal.textContent = formatCantidad(total);
-            
-            const summaryIgv = document.getElementById('summary_igv');
-            if (summaryIgv) summaryIgv.textContent = formatCantidad(Number(data.igv || 0));
-            
-            const summaryTotal = document.getElementById('summary_total_venta');
-            if (summaryTotal) summaryTotal.textContent = formatCantidad(total);
-            
-            document.getElementById('table-body').innerHTML = '';
-            itemCounter = 0;
-            
-           if (data.detalle && data.detalle.length > 0) {
-        data.detalle.forEach(item => {
-        addItem();
-        const row = document.querySelector("#table-body tr:last-child");
-        if (row) {
-            row.querySelector('.producto_id').value = item.producto_id || '';
-            row.querySelector('.cantidad').value = formatCantidad(item.cantidad || 0);
-            row.querySelector('.precio_venta_unitario').value = formatCantidad(item.precio_venta_unitario || 0);
-            row.querySelector('.codigo_producto').value = item.codigo || '';
-            row.querySelector('.descripcion').value = item.descripcion || '';
-            row.querySelector('.modelo').value = item.modelo || '';
-            row.querySelector('.marca').value = item.marca || '';
-            row.querySelector('.unidad_medida').value = item.unidad_medida || 'UNIDAD';
-            if (row.querySelector('.costo_unitario')) {
-                row.querySelector('.costo_unitario').value = formatCantidad(item.costo_unitario || 0);
-            }
-            const stockBadge = row.querySelector('.stock-badge');
-            if (stockBadge && item.stock !== undefined) {
-                stockBadge.textContent = item.stock;
-                stockBadge.style.backgroundColor = item.stock < 5 ? '#fee2e2' : '#d1fae5';
-                stockBadge.style.color = item.stock < 5 ? '#dc2626' : '#065f46';
-            }
+  async function cargarCotizacion(id) {
+    try {
+        console.log("🔍 Cargando cotización ID:", id);
+        const res = await fetch(`/api/cotizacion/${id}`);
+        const json = await res.json();
+        console.log("📦 Datos recibidos:", json);
+        
+        if (!json.success) { 
+            mostrarNotificacion("Error al cargar cotización", "danger"); 
+            return; 
         }
-    });
-}
-            
-            recalculateAll();
-            configurarTiempoEntrega();
-            configurarDireccionEntrega();
-            
-            if (data.cliente_id) {
-                await cargarDireccionesCliente(data.cliente_id);
-            }
-            
-            actualizarEstadoBotonPDF();
-            
-        } catch (err) { 
-            console.error("🔥 ERROR en cargarCotizacion:", err); 
-            mostrarNotificacion("Error cargando cotización", "danger"); 
+        
+        const data = json.data;
+        console.log("✅ Datos de cotización:", data);
+        
+        // ==========================================
+        // 1. ACTUALIZAR CÓDIGO Y ESTADO
+        // ==========================================
+        if (data.codigo_cotizacion) {
+            codigoCotizacionActual = data.codigo_cotizacion;
+            correlativoActual = data.correlativo || 0;
+            esBorrador = data.codigo_cotizacion.startsWith('TMP-');
+            actualizarNumeroCotizacionUI(data.codigo_cotizacion, esBorrador);
         }
+        
+        // ✅ ACTUALIZAR ESTADO GLOBAL
+        estadoCotizacion = data.estado || 'En Proceso';
+        
+        // ✅ ACTUALIZAR ESTADO VISUAL
+        actualizarEstadoVisual();
+        
+        // ==========================================
+        // 2. CARGAR DATOS DEL CLIENTE
+        // ==========================================
+        if (data.cliente_id) {
+            document.getElementById('cliente_id').value = data.cliente_id;
+        }
+        document.getElementById('cliente_razon_social').value = data.cliente || data.razon_social || '';
+        setValueSafely('cliente_razon_comercial', data.razon_comercial || '');
+        document.getElementById('cliente_doc').value = data.numero_documento || data.cliente_ruc || '';
+        document.getElementById('cliente_direccion').value = data.direccion_fiscal || '';
+        document.getElementById('cliente_contacto').value = data.cliente_contacto || '';
+        document.getElementById('email_contacto_cliente').value = data.email_contacto_cliente || '';
+        document.getElementById('telefono_contacto').value = data.telefono_contacto || '';
+        
+        // ==========================================
+        // 3. CARGAR CONDICIONES COMERCIALES
+        // ==========================================
+        document.getElementById('estado').value = data.estado || 'En Proceso';
+        document.getElementById('notas').value = data.notas || '';
+        document.getElementById('requerimiento').value = data.requerimiento || '';
+        document.getElementById('condicion_pago').value = data.condicion_pago || 'Contado';
+        document.getElementById('tiempo_entrega').value = data.tiempo_entrega || '';
+        document.getElementById('validez_oferta').value = data.validez_oferta || '15 días';
+        document.getElementById('direccion_entrega').value = data.direccion_entrega || '';
+        document.getElementById('nota_cotizacion').value = data.nota_cotizacion || '';
+        
+        // ==========================================
+        // 4. CARGAR DATOS DEL ASESOR
+        // ==========================================
+        document.getElementById('usuario_id').value = data.usuario_id || '';
+        document.getElementById('asesor_comercial').value = data.nombre_completo || '';
+        document.getElementById('email_contacto').value = data.email || '';
+        document.getElementById('telefono_contacto_user').value = data.telefono || '';
+        
+        // ==========================================
+        // 5. CARGAR DESCUENTO
+        // ==========================================
+        if (data.descuento_porcentaje !== undefined && data.descuento_porcentaje !== null) {
+            const descuentoInput = document.getElementById('descuento_porcentaje_input');
+            const descuentoTipo = document.getElementById('descuento_tipo');
+            if (descuentoInput) descuentoInput.value = data.descuento_porcentaje;
+            if (descuentoTipo && data.descuento_tipo) descuentoTipo.value = data.descuento_tipo;
+        }
+        
+        // ==========================================
+        // 6. CARGAR TOTALES
+        // ==========================================
+        const total = Number(data.total || 0);
+        const totalValorVentaElem = document.getElementById('total_valor_venta');
+        if (totalValorVentaElem) totalValorVentaElem.textContent = formatCantidad(total);
+        
+        const summarySubtotal = document.getElementById('summary_subtotal_venta');
+        if (summarySubtotal) summarySubtotal.textContent = formatCantidad(total);
+        
+        const summaryIgv = document.getElementById('summary_igv');
+        if (summaryIgv) summaryIgv.textContent = formatCantidad(Number(data.igv || 0));
+        
+        const summaryTotal = document.getElementById('summary_total_venta');
+        if (summaryTotal) summaryTotal.textContent = formatCantidad(total);
+        
+        // ==========================================
+        // 7. CARGAR PRODUCTOS
+        // ==========================================
+        document.getElementById('table-body').innerHTML = '';
+        itemCounter = 0;
+        
+        if (data.detalle && data.detalle.length > 0) {
+            data.detalle.forEach(item => {
+                addItem();
+                const row = document.querySelector("#table-body tr:last-child");
+                if (row) {
+                    row.querySelector('.producto_id').value = item.producto_id || '';
+                    row.querySelector('.cantidad').value = formatCantidad(item.cantidad || 0);
+                    row.querySelector('.precio_venta_unitario').value = formatCantidad(item.precio_venta_unitario || 0);
+                    row.querySelector('.codigo_producto').value = item.codigo || '';
+                    row.querySelector('.descripcion').value = item.descripcion || '';
+                    row.querySelector('.modelo').value = item.modelo || '';
+                    row.querySelector('.marca').value = item.marca || '';
+                    row.querySelector('.unidad_medida').value = item.unidad_medida || 'UNIDAD';
+                    if (row.querySelector('.costo_unitario')) {
+                        row.querySelector('.costo_unitario').value = formatCantidad(item.costo_unitario || 0);
+                    }
+                    const stockBadge = row.querySelector('.stock-badge');
+                    if (stockBadge && item.stock !== undefined) {
+                        stockBadge.textContent = item.stock;
+                        stockBadge.style.backgroundColor = item.stock < 5 ? '#fee2e2' : '#d1fae5';
+                        stockBadge.style.color = item.stock < 5 ? '#dc2626' : '#065f46';
+                    }
+                }
+            });
+        }
+        
+        // ==========================================
+        // 8. RECALCULAR Y CONFIGURAR
+        // ==========================================
+        recalculateAll();
+        configurarTiempoEntrega();
+        configurarDireccionEntrega();
+        
+        if (data.cliente_id) {
+            await cargarDireccionesCliente(data.cliente_id);
+        }
+        
+        // ✅ ACTUALIZAR ESTADO DEL BOTÓN PDF
+        actualizarEstadoBotonPDF();
+        
+        // ✅ ACTUALIZAR BOTONES SEGÚN EL ESTADO
+        actualizarBotones();
+        
+        // ✅ SI ES OFICIAL, BLOQUEAR EDICIÓN
+        if (!esBorrador) {
+            cotizacionBloqueada = true;
+            aplicarBloqueoUI();
+            mostrarNotificacion(`🔒 Cotización oficial cargada (${estadoCotizacion})`, 'info');
+        } else {
+            mostrarNotificacion('📝 Cotización en modo edición (Borrador)', 'info');
+        }
+        
+    } catch (err) { 
+        console.error("🔥 ERROR en cargarCotizacion:", err); 
+        mostrarNotificacion("Error cargando cotización", "danger"); 
     }
+}
 
     // =========================
     // EVENTOS
