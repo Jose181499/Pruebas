@@ -181,8 +181,9 @@ async function autocompletarConSunatListado() {
     }
 }
 
+
 // ===========================
-// CARGAR COTIZACIONES - VERSIÓN CON CONTEO DE DOCUMENTOS
+// CARGAR COTIZACIONES - VERSIÓN CORREGIDA
 // ===========================
 async function cargarCotizaciones() {
     const tbody = document.getElementById('tbodyCotizaciones');
@@ -206,9 +207,8 @@ async function cargarCotizaciones() {
             if (buscador) buscador.value = "";
         }
         
-        // ✅ CORRECCIÓN AQUÍ: Cambiar /api/cotizacion_comercial por /api/cotizacion
-        // o por el endpoint que devuelve TODAS las cotizaciones
-        const url = buscar ? `/api/cotizacion?buscar=${encodeURIComponent(buscar)}` : '/api/cotizacion';
+        // ✅ CORRECCIÓN: Usar /api/cotizacion_comercial que SÍ existe
+        const url = buscar ? `/api/cotizacion_comercial?buscar=${encodeURIComponent(buscar)}` : '/api/cotizacion_comercial';
         console.log("🌐 Fetching URL:", url);
         
         const response = await fetch(url);
@@ -238,6 +238,7 @@ async function cargarCotizaciones() {
             return ordenA - ordenB;
         });
         
+        // 🆕 Cargar conteos de documentos vinculados
         await cargarConteoDocumentos(cotizacionesData);
         
         actualizarEstadisticas();
@@ -258,7 +259,6 @@ async function cargarCotizaciones() {
         }
     }
 }
-
 // ===========================
 // CARGAR CONTEO DE DOCUMENTOS PARA CADA COTIZACIÓN
 // ===========================
