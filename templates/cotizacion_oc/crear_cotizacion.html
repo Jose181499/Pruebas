@@ -215,23 +215,21 @@
             justify-content: flex-start;
             gap: 6px;
             min-height: 28px;
-            background: #d1d5db !important; /* GRIS MÁS SUAVE Y CLARO */
+            background: #d1d5db !important;
         }
         .card-custom .card-header .header-left {
             display: flex;
             align-items: center;
             gap: 6px;
         }
-        /* ====== TODOS LOS HEADERS EN GRIS SUAVE ====== */
         .card-custom .card-header.bg-dark-custom,
         .card-custom .card-header.bg-red,
         .card-custom .card-header.bg-green,
         .card-custom .card-header.bg-blue,
         .card-custom .card-header.bg-purple {
-            background: #d1d5db !important; /* GRIS SUAVE */
+            background: #d1d5db !important;
             color: #1f2937;
         }
-        /* ====== HEADER DE PRODUCTOS - BOTÓN A LA DERECHA ====== */
         .card-custom .card-header.bg-green {
             justify-content: space-between !important;
         }
@@ -262,7 +260,6 @@
             padding: 2px 8px;
         }
 
-        /* ---- BÚSQUEDA RUC MÁS PEQUEÑA ---- */
         .ruc-search-group .form-control {
             max-width: 140px;
             min-width: 100px;
@@ -298,7 +295,6 @@
         }
         .toolbar-compacto .btn i { margin-right: 3px; font-size: 10px; }
 
-        /* ====== BOTÓN AGREGAR PRODUCTO - AZUL ELÉCTRICO ====== */
         .btn-agregar-producto {
             background: linear-gradient(145deg, #3b82f6, #1d4ed8);
             border: none;
@@ -321,7 +317,6 @@
             margin-right: 5px;
         }
 
-        /* ====== BOTÓN GUARDAR CLIENTE - MITAD DEL ANCHO ====== */
         .btn-guardar-cliente {
             font-size: 9px !important;
             padding: 2px 8px !important;
@@ -353,7 +348,6 @@
             overflow-x: auto;
             width: 100%;
         }
-
         .table-scroll-container .table-cotizacion {
             margin: 0;
             font-size: 9px;
@@ -361,17 +355,15 @@
             border-collapse: separate;
             border-spacing: 0;
         }
-
         .table-scroll-container .table-cotizacion thead {
             position: sticky;
             top: 0;
             z-index: 10;
         }
-
         .table-scroll-container .table-cotizacion thead th {
             position: sticky;
             top: 0;
-            background: #d1d5db !important; /* GRIS SUAVE */
+            background: #d1d5db !important;
             color: #1f2937;
             padding: 4px 3px;
             text-align: center;
@@ -383,30 +375,25 @@
             vertical-align: middle;
             z-index: 11;
         }
-
         .table-scroll-container .table-cotizacion thead th small {
             font-weight: 300;
             font-size: 7px;
             display: block;
             color: #4b5563;
         }
-
         .table-scroll-container .table-cotizacion tbody td {
             padding: 2px 2px;
             vertical-align: middle;
             border-bottom: 1px solid #f1f5f9;
         }
-
         .table-scroll-container .table-cotizacion tbody tr:hover {
             background: rgba(217, 4, 41, 0.03);
         }
-
         .table-scroll-container .table-cotizacion tfoot {
             position: sticky;
             bottom: 0;
             z-index: 10;
         }
-
         .table-scroll-container .table-cotizacion tfoot td {
             background: #f8fafc !important;
             border-top: 2px solid #d90429;
@@ -416,7 +403,6 @@
             padding: 4px 3px;
             font-size: 9px;
         }
-
         .table-scroll-container .table-cotizacion input,
         .table-scroll-container .table-cotizacion select {
             width: 100%;
@@ -428,18 +414,15 @@
             min-height: 18px;
             height: 18px;
         }
-
         .table-scroll-container .table-cotizacion input:focus,
         .table-scroll-container .table-cotizacion select:focus {
             border-color: #d90429;
             outline: none;
             box-shadow: 0 0 0 2px rgba(217,4,41,0.06);
         }
-
         .table-scroll-container .table-cotizacion input:disabled {
             background: #f3f4f6;
         }
-
         .table-scroll-container .btn-del {
             background: #fee2e2;
             border: none;
@@ -449,11 +432,9 @@
             font-size: 9px;
             cursor: pointer;
         }
-
         .table-scroll-container .btn-del:hover {
             background: #fecaca;
         }
-
         .table-scroll-container .stock-badge {
             display: inline-block;
             padding: 1px 6px;
@@ -461,69 +442,102 @@
             font-size: 7px;
             font-weight: 600;
         }
-
-        /* Barra de scroll personalizada */
         .table-scroll-container::-webkit-scrollbar {
             width: 6px;
             height: 6px;
         }
-
         .table-scroll-container::-webkit-scrollbar-track {
             background: #f1f1f1;
             border-radius: 4px;
         }
-
         .table-scroll-container::-webkit-scrollbar-thumb {
             background: #9ca3af;
             border-radius: 4px;
         }
-
         .table-scroll-container::-webkit-scrollbar-thumb:hover {
             background: #6b7280;
         }
 
-        /* ====== RESUMEN COTIZACIÓN ====== */
-        .summary-table {
+        /* ====== RESUMEN - CARD ANGOSTA CON TEXTO MÁS GRANDE ====== */
+        .resumen-angosto {
+            max-width: 100%;
+        }
+        .resumen-angosto .card-body {
+            padding: 6px 8px !important;
+        }
+        .resumen-angosto .card-header {
+            padding: 3px 8px !important;
+            min-height: 22px !important;
+            font-size: 9px !important;
+            justify-content: center !important;
+        }
+        .resumen-angosto .summary-table {
+            font-size: 11px !important;
+            margin: 0 !important;
             width: 100%;
-            font-size: 11px;
-            border-collapse: collapse;
         }
-        .summary-table tr {
-            border-bottom: 1px solid #f1f5f9;
+        .resumen-angosto .summary-table td {
+            padding: 3px 0 !important;
+            font-size: 11px !important;
         }
-        .summary-table tr:last-child {
-            border-bottom: none;
-        }
-        .summary-table td {
-            padding: 4px 0;
-        }
-        .summary-table .label {
+        .resumen-angosto .summary-table .label {
+            font-size: 10px !important;
             color: #6b7280;
             font-weight: 500;
+            text-align: left;
+            padding-right: 4px;
+            width: 48%;
+            white-space: nowrap;
         }
-        .summary-table .value {
+        .resumen-angosto .summary-table .value {
+            font-size: 11px !important;
             font-weight: 600;
             color: #111827;
             text-align: right;
+            width: 52%;
+            white-space: nowrap;
         }
-        .summary-table .value.currency {
-            font-family: 'Inter', monospace;
-        }
-        .summary-table .total-row td {
-            padding-top: 6px;
+        .resumen-angosto .summary-table .total-row td {
+            padding-top: 4px !important;
+            padding-bottom: 2px !important;
+            font-size: 13px !important;
             border-top: 2px solid #d90429;
-            font-size: 14px;
+        }
+        .resumen-angosto .summary-table .total-row .label {
+            font-size: 13px !important;
             font-weight: 700;
             color: #d90429;
         }
-        .summary-table .total-row .value {
+        .resumen-angosto .summary-table .total-row .value {
+            font-size: 13px !important;
+            font-weight: 700;
             color: #d90429;
         }
-        .summary-table .discount-row .value {
+        .resumen-angosto .summary-table .discount-row .value {
             color: #dc2626;
         }
-        .summary-table .subtotal-desc-row .value {
+        .resumen-angosto .summary-table .subtotal-desc-row .value {
             color: #059669;
+        }
+        .resumen-angosto .summary-table tr {
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .resumen-angosto .summary-table tr:last-child {
+            border-bottom: none;
+        }
+
+        /* Proporciones de columnas */
+        .col-resumen-angosto {
+            flex: 0 0 25% !important;
+            max-width: 25% !important;
+        }
+        .col-cliente-ancho {
+            flex: 0 0 40% !important;
+            max-width: 40% !important;
+        }
+        .col-condiciones-ancho {
+            flex: 0 0 35% !important;
+            max-width: 35% !important;
         }
 
         /* ====== DESCUENTO ====== */
@@ -535,7 +549,7 @@
         }
         .descuento-box .form-label { font-size: 9px; font-weight: 600; color: #1e293b; }
 
-        /* ====== INFORMACIÓN ADICIONAL - MUCHO MÁS PEQUEÑA ====== */
+        /* ====== INFORMACIÓN ADICIONAL ====== */
         .info-adicional-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr;
@@ -594,7 +608,7 @@
         .modal-content { border-radius: 12px; border: none; }
         .modal-header {
             padding: 8px 14px;
-            background: #d1d5db; /* GRIS SUAVE */
+            background: #d1d5db;
             color: #1f2937;
             border-radius: 12px 12px 0 0;
         }
@@ -632,9 +646,11 @@
 
         /* ====== RESPONSIVE ====== */
         @media (max-width: 992px) {
-            .col-xl-4 {
-                flex: 0 0 100%;
-                max-width: 100%;
+            .col-cliente-ancho,
+            .col-condiciones-ancho,
+            .col-resumen-angosto {
+                flex: 0 0 100% !important;
+                max-width: 100% !important;
             }
             .info-adicional-grid {
                 grid-template-columns: 1fr 1fr;
@@ -695,7 +711,6 @@
             }
         }
 
-        /* ---------- ALINEACIÓN A LA IZQUIERDA Y RELLENO SUAVE ---------- */
         .card-custom .card-header,
         .card-custom .card-body,
         .hero-compacto,
@@ -736,7 +751,6 @@
             background: #ffffff;
         }
 
-        /* ====== BOTÓN GENERAR COTIZACIÓN OFICIAL - AZUL ELÉCTRICO ====== */
         .btn-electric-blue {
             background: #00b4ff;
             background: linear-gradient(145deg, #00b4ff, #0088cc);
@@ -772,11 +786,9 @@
             <div class="erp-company">KCF CORPORACION</div>
             <div class="erp-system">ERP Comercial</div>
         </div>
-        
     </div>
     <div class="erp-right">
-            <button class="btn btn-electric-blue" id="btnGuardarOficial"><i class="bi bi-file-check-fill"></i> Generar Cotización Oficial</button>
-        </div>
+        <button class="btn btn-electric-blue" id="btnGuardarOficial"><i class="bi bi-file-check-fill"></i> Generar Cotización Oficial</button>
     </div>
 </nav>
 
@@ -829,16 +841,15 @@
         </div>
     </div>
 
-    <!-- ====== 3 COLUMNAS: CLIENTE + CONDICIONES + RESUMEN ====== -->
+    <!-- ====== 3 COLUMNAS CON PROPORCIONES AJUSTADAS ====== -->
     <div class="row g-1">
 
-        <!-- COLUMNA 1: CLIENTE -->
-        <div class="col-xl-4">
+        <!-- COLUMNA 1: CLIENTE (40%) -->
+        <div class="col-cliente-ancho">
             <div class="card-custom">
                 <div class="card-header bg-dark-custom"><i class="bi bi-people-fill"></i> 1. Datos del cliente</div>
                 <div class="card-body">
                     <input type="hidden" id="cliente_id" value="">
-
                     <div class="row g-1 mb-1">
                         <div class="col-12">
                             <label class="form-label"><i class="bi bi-search"></i> Buscar por RUC</label>
@@ -849,7 +860,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="row g-1">
                         <div class="col-4">
                             <label class="form-label"><i class="bi bi-card-text"></i> RUC</label>
@@ -906,7 +916,6 @@
                             </select>
                         </div>
                     </div>
-
                     <div class="mt-1 text-center">
                         <button class="btn-guardar-cliente" id="btnCrearCliente">
                             <i class="bi bi-person-plus-fill"></i> Guardar Cliente
@@ -916,8 +925,8 @@
             </div>
         </div>
 
-        <!-- COLUMNA 2: CONDICIONES COMERCIALES -->
-        <div class="col-xl-4">
+        <!-- COLUMNA 2: CONDICIONES COMERCIALES (35%) -->
+        <div class="col-condiciones-ancho">
             <div class="card-custom">
                 <div class="card-header bg-red"><i class="bi bi-journal-check"></i> 2. Condiciones comerciales</div>
                 <div class="card-body">
@@ -935,7 +944,6 @@
                             <input type="text" class="form-control" id="telefono_contacto_user" placeholder="Teléfono asesor" readonly>
                         </div>
                     </div>
-
                     <div class="row g-1">
                         <div class="col-3">
                             <label class="form-label"><i class="bi bi-coin"></i> Moneda</label>
@@ -975,7 +983,6 @@
                             <input type="text" class="form-control mt-1" id="tiempo_entrega" placeholder="Ej: 10 días hábiles" style="display:none;">
                         </div>
                     </div>
-
                     <div class="row g-1">
                         <div class="col-5">
                             <label class="form-label"><i class="bi bi-calendar-check"></i> Validez de la oferta</label>
@@ -999,7 +1006,6 @@
                             <input type="text" class="form-control mt-1" id="direccion_entrega" placeholder="Dirección completa" style="display:none;">
                         </div>
                     </div>
-
                     <div class="row g-1">
                         <div class="col-4">
                             <div class="descuento-box" style="margin-top:0;">
@@ -1023,36 +1029,36 @@
             </div>
         </div>
 
-        <!-- COLUMNA 3: RESUMEN DE LA COTIZACIÓN -->
-        <div class="col-xl-4">
-            <div class="card-custom">
-                <div class="card-header bg-blue"><i class="bi bi-calculator-fill"></i> 3. Resumen de la cotización</div>
+        <!-- COLUMNA 3: RESUMEN - ANGOSTO CON TEXTO MÁS GRANDE -->
+        <div class="col-resumen-angosto">
+            <div class="card-custom resumen-angosto">
+                <div class="card-header bg-blue"><i class="bi bi-calculator-fill"></i> 3. Resumen</div>
                 <div class="card-body">
                     <table class="summary-table" id="summaryTable">
                         <tbody>
                             <tr>
                                 <td class="label">Subtotal</td>
-                                <td class="value currency" id="summary_subtotal_venta">S/ 0.00</td>
+                                <td class="value currency" id="summary_subtotal_venta">S/ 0</td>
                             </tr>
                             <tr>
-                                <td class="label">Descuento global</td>
-                                <td class="value currency" id="summary_descuento_global">0 %</td>
+                                <td class="label">Descuento</td>
+                                <td class="value" id="summary_descuento_global">0%</td>
                             </tr>
                             <tr>
-                                <td class="label discount-row">Descuento aplicado</td>
-                                <td class="value currency discount-row" id="summary_descuento">- S/ 0.00</td>
+                                <td class="label discount-row">Dscto</td>
+                                <td class="value currency discount-row" id="summary_descuento">-S/ 0</td>
                             </tr>
                             <tr>
-                                <td class="label subtotal-desc-row">Valor de venta</td>
-                                <td class="value currency subtotal-desc-row" id="summary_subtotal_descuento">S/ 0.00</td>
+                                <td class="label subtotal-desc-row">Valor venta</td>
+                                <td class="value currency subtotal-desc-row" id="summary_subtotal_descuento">S/ 0</td>
                             </tr>
                             <tr>
-                                <td class="label">IGV (18%)</td>
-                                <td class="value currency" id="summary_igv">S/ 0.00</td>
+                                <td class="label">IGV 18%</td>
+                                <td class="value currency" id="summary_igv">S/ 0</td>
                             </tr>
                             <tr class="total-row">
-                                <td>TOTAL</td>
-                                <td class="value currency" id="summary_total_venta">S/ 0.00</td>
+                                <td class="label"><strong>TOTAL</strong></td>
+                                <td class="value currency"><strong id="summary_total_venta">S/ 0</strong></td>
                             </tr>
                         </tbody>
                     </table>
@@ -1104,7 +1110,7 @@
         </div>
     </div>
 
-    <!-- ====== INFORMACIÓN ADICIONAL - MUCHO MÁS COMPACTA ====== -->
+    <!-- ====== INFORMACIÓN ADICIONAL ====== -->
     <div class="row g-1 mt-1">
         <div class="col-12">
             <div class="card-custom">
@@ -1135,13 +1141,13 @@
                         <div>
                             <label class="form-label"><i class="bi bi-truck"></i> Transporte</label>
                             <select class="form-select" id="tipo_transporte">
-                                 <option value="">Seleccione</option>
-                                    <option value="motorizado">Motorizado</option>
-                                    <option value="auto">Auto</option>
-                                    <option value="minivan">Minivan</option>
-                                    <option value="camioneta">Camioneta</option>
-                                    <option value="camion">Camión</option>
-                                    <option value="agencia">Agencia</option>
+                                <option value="">Seleccione</option>
+                                <option value="motorizado">Motorizado</option>
+                                <option value="auto">Auto</option>
+                                <option value="minivan">Minivan</option>
+                                <option value="camioneta">Camioneta</option>
+                                <option value="camion">Camión</option>
+                                <option value="agencia">Agencia</option>
                             </select>
                         </div>
                         <div>
@@ -1155,10 +1161,9 @@
                             </select>
                         </div>
                     </div>
-
                     <div class="nota-interna-compacta mt-1">
                         <label class="form-label"><i class="bi bi-journal-text"></i> Nota interna</label>
-                        <textarea class="form-control" id="nota_interna" rows="1" placeholder="Ingrese notas internas u observaciones relevantes "></textarea>
+                        <textarea class="form-control" id="nota_interna" rows="1" placeholder="Ingrese notas internas u observaciones relevantes"></textarea>
                         <small>Campos internos / no visibles para el cliente</small>
                     </div>
                 </div>

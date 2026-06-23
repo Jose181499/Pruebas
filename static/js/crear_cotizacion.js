@@ -215,6 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => notificacion.remove(), 3000);
     }
 // FUNCIÓN MODIFICADA: Consultar SUNAT pero PRIORIZANDO datos locales
+// FUNCIÓN MODIFICADA: Consultar SUNAT pero PRIORIZANDO datos locales
 async function consultarSunat(ruc) {
     try {
         mostrarNotificacion(`🔍 Verificando RUC ${ruc} en sistema local...`, 'info');
@@ -255,6 +256,7 @@ async function consultarSunat(ruc) {
                 success: true,
                 existe_en_sistema: true,
                 cliente_id: clienteLocal.id,
+                codigo_cliente: clienteLocal.codigo_cliente || `CLI-${String(clienteLocal.id).padStart(6, '0')}`,
                 razon_social: clienteLocal.razon_social || '',
                 nombre_comercial: clienteLocal.nombre_comercial || '',
                 razon_comercial: clienteLocal.razon_comercial || '',
@@ -297,6 +299,7 @@ async function consultarSunat(ruc) {
 }
 
 // FUNCIÓN MODIFICADA: Autocompletar con SUNAT pero preservando datos locales
+// FUNCIÓN MODIFICADA: Autocompletar con SUNAT pero preservando datos locales
 async function autocompletarConSunat() {
     const tipoDocumento = document.getElementById('nuevo_tipo_documento')?.value;
     const numeroDocumento = document.getElementById('nuevo_numero_documento')?.value.trim();
@@ -330,13 +333,16 @@ async function autocompletarConSunat() {
             
             // 🔥 NUEVO: Si el cliente YA EXISTE en sistema, cargar sus datos de contacto
             if (resultado.existe_en_sistema) {
-                // Mostrar notificación destacada de que ya existe
-                mostrarNotificacionExistente(resultado);
+                // Mostrar notificación destacada de que ya existe con el código de cliente
+                mostrarNotificacionExistenteConCodigo(resultado);
                 
                 // Autocompletar campos de contacto con los datos locales
                 document.getElementById('nuevo_telefono').value = resultado.telefono_contacto || '';
                 document.getElementById('nuevo_email').value = resultado.email_contacto || '';
                 document.getElementById('nuevo_nombre_contacto').value = resultado.nombre_contacto || '';
+                
+                // 🔥 NUEVO: Mostrar el código de cliente en un campo o badge
+                mostrarCodigoClienteEnFormulario(resultado);
                 
                 // Cambiar color de los campos para indicar que son datos existentes
                 resaltarCamposExistentes();
@@ -350,6 +356,7 @@ async function autocompletarConSunat() {
                 document.getElementById('nuevo_nombre_contacto').value = '';
                 quitarResaltadoCampos();
                 ocultarIndicadorClienteExistente();
+                ocultarCodigoCliente();
             }
             
             mostrarNotificacion('✅ Datos cargados correctamente', 'success');
@@ -364,6 +371,109 @@ async function autocompletarConSunat() {
             btnBuscar.innerHTML = textoOriginal;
             btnBuscar.disabled = false;
         }
+    }
+}
+///
+// NUEVA FUNCIÓN: Notificación con código de cliente
+function mostrarNotificacionExistenteConCodigo(cliente) {
+    const notificacionDiv = document.createElement('div');
+    notificacionDiv.id = 'cliente-existente-notificacion';
+    notificacionDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        color: white;
+        padding: 16px 24px;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        max-width: 400px;
+        animation: slideInRight 0.3s ease-out;
+        border-left: 4px solid #60a5fa;
+    `;
+    
+    notificacionDiv.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="font-size: 28px;">🔵</div>
+            <div style="flex: 1;">
+                <strong style="font-size: 16px;">📌 CLIENTE REGISTRADO EN SISTEMA</strong>
+                <div style="font-size: 13px; margin-top: 4px; opacity: 0.95;">
+                    Código: <strong style="background: rgba(255,255,255,0.2); padding: 2px 10px; border-radius: 4px; font-size: 14px;">${cliente.codigo_cliente || '---'}</strong>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); border-radius: 8px; padding: 8px; margin-top: 8px; font-size: 12px;">
+                    <div>📞 Teléfono: ${cliente.telefono_contacto || 'No registrado'}</div>
+                    <div>✉️ Email: ${cliente.email_contacto || 'No registrado'}</div>
+                    <div>👤 Contacto: ${cliente.nombre_contacto || 'No registrado'}</div>
+                </div>
+                <div style="font-size: 11px; margin-top: 6px; opacity: 0.9;">
+                    ✅ Datos de contacto autocompletados automáticamente
+                </div>
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;">✕</button>
+        </div>
+    `;
+    
+    const oldNotif = document.getElementById('cliente-existente-notificacion');
+    if (oldNotif) oldNotif.remove();
+    
+    document.body.appendChild(notificacionDiv);
+    
+    setTimeout(() => {
+        if (notificacionDiv && notificacionDiv.parentNode) {
+            notificacionDiv.style.animation = 'fadeOut 0.3s ease-out';
+            setTimeout(() => notificacionDiv.remove(), 300);
+        }
+    }, 8000);
+}
+
+// NUEVA FUNCIÓN: Mostrar código de cliente en el formulario
+function mostrarCodigoClienteEnFormulario(cliente) {
+    // Crear o actualizar el campo de código de cliente
+    let codigoContainer = document.getElementById('codigo-cliente-container');
+    
+    // Buscar el contenedor donde mostrar el código
+    const formContainer = document.getElementById('formNuevoCliente')?.querySelector('.modal-body');
+    if (!formContainer) return;
+    
+    if (!codigoContainer) {
+        codigoContainer = document.createElement('div');
+        codigoContainer.id = 'codigo-cliente-container';
+        codigoContainer.style.cssText = `
+            background: #eff6ff;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        `;
+        
+        // Insertar al inicio del formulario
+        const firstChild = formContainer.firstChild;
+        formContainer.insertBefore(codigoContainer, firstChild);
+    }
+    
+    codigoContainer.innerHTML = `
+        <div>
+            <span style="font-size: 12px; color: #1e40af; font-weight: 600;">🔑 CÓDIGO DE CLIENTE</span>
+            <div style="font-size: 20px; font-weight: 700; color: #1d4ed8;">${cliente.codigo_cliente || '---'}</div>
+        </div>
+        <div style="text-align: right;">
+            <span style="background: #10b981; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">
+                ✅ EXISTENTE
+            </span>
+            <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">Cliente ID: ${cliente.cliente_id}</div>
+        </div>
+    `;
+    codigoContainer.style.display = 'flex';
+}
+
+function ocultarCodigoCliente() {
+    const container = document.getElementById('codigo-cliente-container');
+    if (container) {
+        container.style.display = 'none';
     }
 }
 
