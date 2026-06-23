@@ -1650,7 +1650,7 @@ function mostrarModalConfirmacion(datos) {
     // =========================
     // GUARDAR COTIZACIÓN CON DESCUENTO PERSONALIZADO
     // =========================
- async function guardarCotizacion() {
+async function guardarCotizacion() {
     // 🔥 NUEVO: Obtener datos del cliente de los campos visibles, no del ID
     const clienteData = {
         razon_social: document.getElementById('cliente_razon_social')?.value.trim() || '',
@@ -1705,11 +1705,9 @@ function mostrarModalConfirmacion(datos) {
     
     const cotizacion_id = document.getElementById('cotizacion_id')?.value;
     
-    // 🔥 NUEVO: Incluir los datos del cliente directamente en el payload
     const payload = {
         id: cotizacion_id && cotizacion_id !== '' && cotizacion_id !== 'None' ? parseInt(cotizacion_id) : null,
-        cliente_id: Number(document.getElementById('cliente_id')?.value || 0), // Puede ser 0 si no existe
-        // 🔥 DATOS DEL CLIENTE (para crear cliente si no existe)
+        cliente_id: Number(document.getElementById('cliente_id')?.value || 0),
         cliente_data: {
             razon_social: clienteData.razon_social,
             numero_documento: clienteData.numero_documento,
@@ -1720,7 +1718,7 @@ function mostrarModalConfirmacion(datos) {
             tipo_documento: clienteData.numero_documento.length === 11 ? 'RUC' : 'DNI'
         },
         usuario_id: Number(document.getElementById("usuario_id")?.value || 0),
-        estado: document.getElementById("estado")?.value || "En Proceso",
+        estado: estadoCotizacion, // ✅ CORREGIDO: Usar variable global
         subtotal: subtotal,
         igv: igv,
         total: totalConDescuento,
@@ -1765,7 +1763,6 @@ function mostrarModalConfirmacion(datos) {
         
         document.getElementById('cotizacion_id').value = json.data.id;
         
-        // Si el servidor devolvió un cliente_id, actualizamos el campo
         if (json.data.cliente_id) {
             document.getElementById('cliente_id').value = json.data.cliente_id;
         }
@@ -1778,15 +1775,15 @@ function mostrarModalConfirmacion(datos) {
             actualizarEstadoBotonPDF();
         }
         
-      mostrarModalExito({
-    codigo: json.data.codigo_cotizacion,
-    tipo: esBorrador ? 'BORRADOR' : 'OFICIAL',
-    asesor: usuarioActual?.nombre_completo || 'No asignado',
-    cliente: document.getElementById('cliente_razon_social')?.value || 'No especificado',
-    total: Number(document.getElementById('summary_total_venta')?.textContent || 0),
-    fecha: new Date().toLocaleDateString('es-PE'),
-    hora: new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })
-});
+        mostrarModalExito({
+            codigo: json.data.codigo_cotizacion,
+            tipo: esBorrador ? 'BORRADOR' : 'OFICIAL',
+            asesor: usuarioActual?.nombre_completo || 'No asignado',
+            cliente: document.getElementById('cliente_razon_social')?.value || 'No especificado',
+            total: Number(document.getElementById('summary_total_venta')?.textContent || 0),
+            fecha: new Date().toLocaleDateString('es-PE'),
+            hora: new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })
+        });
         
     } catch (err) { 
         console.error(err); 
@@ -1797,7 +1794,7 @@ function mostrarModalConfirmacion(datos) {
             btnGuardar.disabled = false;
         }
     }
- }
+}
 
 async function convertirAOficial() {
     if (!esBorrador) { 
