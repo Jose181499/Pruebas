@@ -1719,7 +1719,7 @@ async function guardarCotizacion() {
         direccion_entrega: document.getElementById("direccion_entrega")?.value || "",
         requerimiento: document.getElementById("requerimiento")?.value || "",
         nota_cotizacion: document.getElementById("nota_cotizacion")?.value || "",
-        notas: document.getElementById('notas')?.value || "",
+        notas: document.getElementById('nota_interna')?.value || "",
         productos: listaProductos,
         codigo_cotizacion: codigoCotizacionActual,
         correlativo: esBorrador ? 0 : correlativoActual,
@@ -2868,11 +2868,11 @@ function attachProductoAutocomplete(row) {
     function aplicarBloqueoUI() {
         const disabled = cotizacionBloqueada;
         document.querySelectorAll('#table-body input').forEach(i => i.disabled = disabled);
-        ['cliente_razon_social', 'cliente_doc', 'telefono_contacto', 'cliente_contacto', 'email_contacto_cliente', 'requerimiento', 'direccion_entrega', 'estado'].forEach(id => {
+        ['cliente_razon_social', 'cliente_doc', 'telefono_contacto', 'cliente_contacto', 'email_contacto_cliente', 'requerimiento', 'direccion_entrega'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.disabled = disabled;
         });
-        ['asesor_comercial', 'email_contacto', 'telefono_contacto_user', 'condicion_pago', 'tiempo_entrega', 'validez_oferta', 'nota_cotizacion', 'notas', 'descuento_porcentaje_input', 'descuento_tipo'].forEach(id => {
+        ['asesor_comercial', 'email_contacto', 'telefono_contacto_user', 'condicion_pago', 'tiempo_entrega', 'validez_oferta', 'nota_cotizacion','nota_interna', 'descuento_porcentaje_input', 'descuento_tipo'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.disabled = disabled;
         });
@@ -2941,7 +2941,7 @@ async function cargarCotizacion(id) {
         // ==========================================
         // 3. CARGAR CONDICIONES COMERCIALES
         // ==========================================
-        setValueSafely('notas', data.notas || '');
+        setValueSafely('nota_interna', data.notas || '');
         setValueSafely('requerimiento', data.requerimiento || '');
         setValueSafely('condicion_pago', data.condicion_pago || 'Contado');
         setValueSafely('tiempo_entrega', data.tiempo_entrega || '');
