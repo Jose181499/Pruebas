@@ -954,13 +954,18 @@ async function verDetalle(id) {
     }
 }
 
+
 // ===========================
 // EDITAR
 // ===========================
 function editar(id) {
+    console.log("✏️ EDITAR - ID recibido:", id);
+    if (!id) {
+        alert("Error: ID de cotización no válido");
+        return;
+    }
     window.location.href = `/cotizacion/consultar/${id}`;
 }
-
 // ===========================
 // DUPLICAR COTIZACIÓN
 // ===========================
