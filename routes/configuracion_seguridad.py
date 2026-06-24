@@ -539,9 +539,6 @@ def get_roles():
         }), 200
 
 
-# ============================================================
-# 3. CORRELATIVOS
-# ============================================================
 
 # ============================================================
 # 3. CORRELATIVOS - VERSIÓN COMPLETA CORREGIDA
@@ -567,7 +564,6 @@ def get_correlativos():
                 c.updated_at
             FROM erp_correlativos c
             JOIN erp_empresas e ON e.id = c.empresa_id
-            WHERE c.estado = 'activo'
             ORDER BY e.codigo, c.documento
         """)
         
@@ -631,7 +627,7 @@ def get_correlativo(correlativo_id):
 
 @config_seguridad_bp.route('/correlativos', methods=['POST'])
 def create_correlativo():
-    """Crear un nuevo correlativo"""
+    """Crear un nuevo correlativo o reactivar uno existente"""
     try:
         data = request.get_json()
         print(f"📝 Creando correlativo - Datos recibidos: {data}")
@@ -643,22 +639,51 @@ def create_correlativo():
                 return jsonify({'success': False, 'error': f'Campo {field} es requerido'}), 400
         
         # Verificar que la empresa existe
-        empresa = db_query("SELECT id FROM erp_empresas WHERE id = %s AND estado = 'activo'", (data.get('empresa_id'),))
+        empresa = db_query("SELECT id, codigo FROM erp_empresas WHERE id = %s AND estado = 'activo'", (data.get('empresa_id'),))
         if not empresa:
             return jsonify({'success': False, 'error': 'Empresa no encontrada o inactiva'}), 404
         
-        # Verificar que no exista un correlativo duplicado
+        # Verificar si ya existe (activo o inactivo)
         anio = data.get('anio', 2026)
         documento = data.get('documento')
         empresa_id = data.get('empresa_id')
         
         existente = db_query("""
-            SELECT id FROM erp_correlativos 
-            WHERE empresa_id = %s AND documento = %s AND anio = %s AND estado = 'activo'
+            SELECT id, estado, ultimo_numero, prefijo 
+            FROM erp_correlativos 
+            WHERE empresa_id = %s AND documento = %s AND anio = %s
         """, (empresa_id, documento, anio))
         
         if existente:
-            return jsonify({'success': False, 'error': f'Ya existe un correlativo para "{documento}" en el año {anio}'}), 400
+            existing = existente[0]
+            # Si existe y está inactivo, lo reactivamos con los nuevos datos
+            if existing['estado'] == 'inactivo':
+                estado_db = 'activo' if data.get('estado') == 'Activo' else 'inactivo'
+                db_execute("""
+                    UPDATE erp_correlativos SET
+                        prefijo = %s,
+                        ultimo_numero = %s,
+                        estado = %s,
+                        updated_at = NOW()
+                    WHERE id = %s
+                """, (
+                    data.get('prefijo'),
+                    data.get('ultimo_numero', 0),
+                    estado_db,
+                    existing['id']
+                ))
+                
+                return jsonify({
+                    'success': True,
+                    'data': {'id': existing['id']},
+                    'message': f'Correlativo "{documento}" reactivado exitosamente'
+                })
+            else:
+                # Ya existe activo
+                return jsonify({
+                    'success': False, 
+                    'error': f'Ya existe un correlativo activo para "{documento}" en el año {anio}'
+                }), 400
         
         # Determinar estado
         estado_db = 'activo' if data.get('estado') == 'Activo' else 'inactivo'
@@ -675,7 +700,7 @@ def create_correlativo():
             """, (
                 empresa_id,
                 documento,
-                data.get('codigo_documento', documento.upper().replace(' ', '_')),
+                data.get('codigo_documento', documento.upper().replace(' ', '')),
                 data.get('prefijo'),
                 anio,
                 data.get('ultimo_numero', 0),
@@ -709,7 +734,7 @@ def update_correlativo(correlativo_id):
         if not existente:
             return jsonify({'success': False, 'error': 'Correlativo no encontrado'}), 404
         
-        # Verificar duplicados (excepto el actual)
+        # Verificar duplicados (excepto el actual) - SOLO para registros activos
         empresa_id = data.get('empresa_id') or existente[0]['empresa_id']
         documento = data.get('documento') or existente[0]['documento']
         anio = data.get('anio', 2026)
@@ -721,7 +746,10 @@ def update_correlativo(correlativo_id):
         """, (empresa_id, documento, anio, correlativo_id))
         
         if duplicado:
-            return jsonify({'success': False, 'error': f'Ya existe otro correlativo para "{documento}" en el año {anio}'}), 400
+            return jsonify({
+                'success': False, 
+                'error': f'Ya existe otro correlativo activo para "{documento}" en el año {anio}'
+            }), 400
         
         # Determinar estado
         estado_db = 'activo' if data.get('estado') == 'Activo' else 'inactivo'
@@ -738,7 +766,7 @@ def update_correlativo(correlativo_id):
             WHERE id = %s
         """, (
             data.get('documento'),
-            data.get('codigo_documento', data.get('documento', '').upper().replace(' ', '_')),
+            data.get('codigo_documento', data.get('documento', '').upper().replace(' ', '')),
             data.get('prefijo'),
             data.get('anio'),
             data.get('ultimo_numero', 0),
@@ -801,13 +829,13 @@ def tomar_correlativo():
             return jsonify({'success': False, 'error': 'empresa_codigo y documento son requeridos'}), 400
         
         # Buscar la empresa
-        empresa = db_query("SELECT id FROM erp_empresas WHERE codigo = %s AND estado = 'activo'", (empresa_codigo,))
+        empresa = db_query("SELECT id, codigo FROM erp_empresas WHERE codigo = %s AND estado = 'activo'", (empresa_codigo,))
         if not empresa:
             return jsonify({'success': False, 'error': f'Empresa "{empresa_codigo}" no encontrada'}), 404
         
         empresa_id = empresa[0]['id']
         
-        # Buscar el correlativo
+        # Buscar el correlativo (solo activos)
         correlativo = db_query("""
             SELECT id, ultimo_numero, prefijo, documento
             FROM erp_correlativos 
@@ -815,6 +843,27 @@ def tomar_correlativo():
         """, (empresa_id, documento, anio))
         
         if not correlativo:
+            # Verificar si existe inactivo para reactivar
+            inactivo = db_query("""
+                SELECT id, prefijo FROM erp_correlativos 
+                WHERE empresa_id = %s AND documento = %s AND anio = %s AND estado = 'inactivo'
+            """, (empresa_id, documento, anio))
+            
+            if inactivo:
+                # Reactivar y resetear contador
+                prefijo = inactivo[0]['prefijo']
+                db_execute("""
+                    UPDATE erp_correlativos 
+                    SET ultimo_numero = 0, estado = 'activo', updated_at = NOW()
+                    WHERE id = %s
+                """, (inactivo[0]['id'],))
+                
+                codigo = f"{prefijo}-{anio}-0001"
+                return jsonify({
+                    'success': True,
+                    'data': {'codigo': codigo, 'id': inactivo[0]['id']}
+                })
+            
             # Crear correlativo por defecto
             prefijo = f"{documento[:3].upper()}-{empresa_codigo}"
             with db_tx() as conn:
@@ -825,7 +874,7 @@ def tomar_correlativo():
                         prefijo, anio, ultimo_numero, estado
                     ) VALUES (%s, %s, %s, %s, %s, %s, %s)
                     RETURNING id
-                """, (empresa_id, documento, documento.upper().replace(' ', '_'), prefijo, anio, 0, 'activo'))
+                """, (empresa_id, documento, documento.upper().replace(' ', ''), prefijo, anio, 0, 'activo'))
                 nuevo_id = cur.fetchone()['id']
                 
                 codigo = f"{prefijo}-{anio}-0001"
@@ -857,7 +906,6 @@ def tomar_correlativo():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 # ============================================================
 # 4. PARÁMETROS GENERALES
