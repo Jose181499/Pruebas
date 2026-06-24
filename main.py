@@ -119,20 +119,16 @@ def login():
         password = request.form.get("password", "")
         empresa = request.form.get("empresa", "KCF")
 
-        # ✅ LOGS DE DEPURACIÓN
         print(f"🔍 Intentando login - Usuario: '{usuario}', Empresa: '{empresa}'")
-        print(f"🔍 Password recibida: {'*' * len(password) if password else 'VACÍA'}")
 
         if not usuario or not password:
             flash("Por favor, ingresa usuario y contraseña.", "error")
             return render_template("login.html")
 
         # ✅ Verificar si el usuario es un email o un nombre de usuario
-        # Si contiene @, es un email, si no, es un nombre de usuario
         if '@' in usuario:
             email = usuario
         else:
-            # Buscar el email del usuario en la base de datos
             try:
                 from database import db_query
                 user_result = db_query("""
@@ -144,7 +140,7 @@ def login():
                     email = user_result[0]['correo']
                     print(f"✅ Email encontrado para usuario '{usuario}': '{email}'")
                 else:
-                    email = usuario  # Si no se encuentra, intentar con el valor original
+                    email = usuario
             except Exception as e:
                 print(f"❌ Error buscando email: {e}")
                 email = usuario
@@ -156,20 +152,50 @@ def login():
         print(f"📋 Resultado del login: {resultado}")
 
         if resultado and resultado.get('success'):
+            # ✅ GUARDAR SESIÓN CORRECTAMENTE
+            session.clear()  # Limpiar sesión anterior
             session["usuario_id"] = resultado["user_id"]
             session["usuario"] = resultado["usuario_sistema"]
-            session["nombre_completo"] = resultado["nombres_apellidos"]
+            session["nombre_completo"] = resultado["nombres_apellidos"] or usuario
             session["rol"] = resultado["rol"]
             session["empresa"] = empresa
             session["auth_user_id"] = resultado["auth_user_id"]
+            
+            # ✅ Forzar que la sesión se guarde
+            session.modified = True
+            
+            print(f"✅ SESIÓN GUARDADA: {dict(session)}")
 
-            flash(f'✅ Bienvenido/a {resultado["nombres_apellidos"]}!', "success")
+            flash(f'✅ Bienvenido/a {session["nombre_completo"]}!', "success")
+            
+            # ✅ Redirigir con un pequeño delay para asegurar que la sesión se guarde
             return redirect(url_for("index"))
 
         flash(resultado.get('error', '❌ Usuario o contraseña incorrectos.'), "error")
         return render_template("login.html")
 
     return render_template("login.html")
+
+
+@app.route("/index")
+@login_required
+def index():
+    """Dashboard principal - Pasar variables de sesión al template"""
+    print(f"📋 INDEX - Sesión actual: {dict(session)}")
+    return render_template("index.html",
+                          nombre=session.get('nombre_completo', 'Usuario'),
+                          usuario=session.get('usuario', ''),
+                          empresa=session.get('empresa', 'KCF'),
+                          rol=session.get('rol', 'usuario'))
+
+@app.route("/debug/session")
+def debug_session():
+    """Ver el contenido de la sesión actual"""
+    return jsonify({
+        'session': dict(session),
+        'session_keys': list(session.keys()),
+        'is_logged_in': 'usuario_id' in session
+    })
 
 @app.route("/logout")
 def logout():
