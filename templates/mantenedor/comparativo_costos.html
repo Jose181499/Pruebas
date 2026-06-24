@@ -1,372 +1,1057 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-empresa="KCF">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KCF | Comparativo Costos</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        * { font-family: 'Inter', sans-serif; }
-        body { background: #f0f4f8; margin: 0; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ERP Multiempresa — Comparativo de Costos</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+/* ============================================================
+   VARIABLES DE TEMA (KCF / AGD)
+   ============================================================ */
+:root {
+  --empresa:            #EF233C;
+  --empresa-dark:       #B91C2E;
+  --empresa-soft:       #FFE4E8;
+  --empresa-sidebar:    #FFECEF;
+  --empresa-sub:        #FFF0F2;
+  --empresa-sub-border: rgba(239,35,60,.30);
+  --empresa-shadow:     rgba(239,35,60,.18);
 
-        .kcf-sidebar {
-            position: fixed; top: 0; left: 0; bottom: 0; width: 280px;
-            background: linear-gradient(180deg, #0a2b3c 0%, #07212e 100%);
-            color: #e2edf2; z-index: 1035; transition: 0.2s; overflow-y: auto;
-        }
-        .sidebar-brand {
-            padding: 1.6rem 1.5rem;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-            margin-bottom: 1.8rem;
-        }
-        .sidebar-brand h3 {
-            font-weight: 700; font-size: 1.6rem; margin: 0; color: white;
-        }
-        .sidebar-brand .logo-icon {
-            display: inline-block; width: 32px; height: 32px;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #0b67f2, #14b8a6);
-            margin-right: 10px; vertical-align: middle;
-        }
-        .sidebar-brand span { font-size: 0.7rem; opacity: 0.7; display: block; margin-top: 6px; }
-        .nav-sidebar-custom { list-style: none; padding: 0 1rem; }
-        .nav-sidebar-custom li { margin-bottom: 0.5rem; }
-        .nav-sidebar-custom a {
-            display: flex; align-items: center; gap: 14px;
-            padding: 0.7rem 1rem; border-radius: 14px;
-            color: #cbdbe2; text-decoration: none; font-weight: 500;
-            transition: 0.2s;
-        }
-        .nav-sidebar-custom a i { font-size: 1.35rem; width: 28px; }
-        .nav-sidebar-custom a:hover { background: rgba(255,255,255,0.1); color: white; }
-        .nav-sidebar-custom .active-link {
-            background: #2c7da0; color: white;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
-        }
-        .sidebar-footer {
-            position: sticky; bottom: 0; padding: 1rem 1.8rem;
-            border-top: 1px solid rgba(255,255,255,0.08);
-            font-size: 0.8rem; background: #0a2b3c;
-        }
+  --bg:     #F0F4F8;
+  --panel:  #FFFFFF;
+  --text:   #0F172A;
+  --muted:  #64748B;
+  --line:   #E5E7EB;
+  --ok:     #16A34A;
+  --ok-soft:#DFFAD9;
+  --danger: #DC2626;
+  --danger-soft: #FFE8E8;
+  --warn:   #D97706;
+  --warn-soft: #FFF4DC;
+  --purple: #9333EA;
+  --purple-soft: #F0DDFF;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 6px 20px rgba(7,24,60,.05);
 
-        .main-dashboard {
-            margin-left: 280px;
-            padding: 1.8rem 2rem;
-            transition: 0.2s;
-            min-height: 100vh;
-        }
+  --sidebar-w: 218px;
+  --topbar-h:  52px;
+}
 
-        .card-custom {
-            background: white;
-            border-radius: 24px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.05);
-            padding: 1.8rem;
-            border: 1px solid #e9edf4;
-        }
+[data-empresa="AGD"] {
+  --empresa:            #FC6200;
+  --empresa-dark:       #c44d00;
+  --empresa-soft:       #FFE7D1;
+  --empresa-sidebar:    #FFEEDC;
+  --empresa-sub:        #FFF5EC;
+  --empresa-sub-border: rgba(252,98,0,.30);
+  --empresa-shadow:     rgba(252,98,0,.18);
+}
 
-        .status-badge {
-            padding: 4px 14px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .status-badge.winner { background: #dcfce7; color: #16a34a; }
-        .status-badge.evaluar { background: #fef3c7; color: #d97706; }
-        .status-badge.perdedor { background: #fee2e2; color: #dc2626; }
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; font-family: Inter, 'Segoe UI', Roboto, system-ui, sans-serif; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--text); font-size: 13px; line-height: 1.5; overflow-x: hidden; }
+button, input, select, textarea { font: inherit; }
 
-        .winner-row { background: #f0fdf4 !important; }
-        .winner-row td { border-bottom-color: #bbf7d0 !important; }
-        .evaluar-row { background: #fffbeb !important; }
-        .perdedor-row { background: #fef2f2 !important; }
+/* ============================================================
+   APP LAYOUT
+   ============================================================ */
+.app {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  min-height: 100vh;
+}
 
-        .sidebar-overlay {
-            display: none;
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,0.4); z-index: 1034;
-        }
-        .sidebar-overlay.show { display: block; }
-        .hamburger-btn {
-            display: none; background: none; border: none;
-            font-size: 1.5rem; color: #0b1b33; padding: 8px 12px;
-            border-radius: 12px;
-        }
-        .hamburger-btn:hover { background: #f1f5f9; }
+/* ============================================================
+   TOPBAR
+   ============================================================ */
+.topbar-strip {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--topbar-h);
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 1px 4px rgba(15,23,42,.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px 0 16px;
+  z-index: 100;
+}
+.topbar-brand { display: flex; align-items: center; gap: 10px; }
+.brand-dot {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  background: linear-gradient(145deg, var(--empresa-soft), var(--empresa));
+  box-shadow: 0 3px 8px var(--empresa-shadow);
+  flex-shrink: 0;
+  transition: background .3s, box-shadow .3s;
+}
+.brand-name {
+  font-size: 20px; font-weight: 950;
+  color: var(--empresa);
+  letter-spacing: -0.03em;
+  transition: color .3s;
+}
+.brand-sub { font-size: 10px; font-weight: 700; color: var(--muted); letter-spacing: .05em; margin-left: 2px; }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.select-box-top {
+  background: #fff; border: 1px solid var(--line);
+  border-radius: 10px; padding: 5px 10px; min-width: 220px;
+}
+.select-box-top label { display: block; font-size: 9px; color: var(--muted); font-weight: 900; margin-bottom: 1px; text-transform: uppercase; letter-spacing: .06em; }
+.select-box-top select { border: 0; outline: 0; background: transparent; width: 100%; font-weight: 900; color: #0F172A; font-size: 12px; }
+.user-box {
+  height: 36px; padding: 0 12px;
+  border: 1px solid var(--line); background: #fff;
+  border-radius: 10px; display: flex; align-items: center; gap: 8px;
+  font-weight: 900; font-size: 12px;
+}
+.avatar-sm {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--empresa-soft); color: var(--empresa);
+  display: grid; place-items: center;
+  font-size: 11px; font-weight: 950;
+  transition: background .3s, color .3s;
+}
 
-        @media (max-width: 992px) {
-            .kcf-sidebar { transform: translateX(-100%); width: 280px; }
-            .kcf-sidebar.open { transform: translateX(0); }
-            .main-dashboard { margin-left: 0; }
-            .hamburger-btn { display: flex !important; }
-        }
-        @media (max-width: 576px) {
-            .main-dashboard { padding: 1rem; }
-            .card-custom { padding: 1rem; }
-        }
-    </style>
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.sidebar {
+  position: fixed;
+  top: var(--topbar-h); left: 0; bottom: 0;
+  width: var(--sidebar-w);
+  overflow-y: auto; overflow-x: hidden;
+  background: linear-gradient(180deg, var(--empresa-sidebar) 0%, #FFF9FA 60%, #FFFFFF 100%);
+  border-right: 1px solid rgba(15,23,42,.08);
+  padding: 10px 9px 20px;
+  z-index: 90;
+  transition: background .3s;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(15,23,42,.15) transparent;
+}
+.sidebar::-webkit-scrollbar { width: 5px; }
+.sidebar::-webkit-scrollbar-thumb { background: rgba(15,23,42,.15); border-radius: 20px; }
+
+.sidebar-section-title {
+  font-size: 9px; font-weight: 950; letter-spacing: .09em;
+  text-transform: uppercase; color: #334155;
+  margin: 14px 2px 8px;
+}
+.menu-tree { display: flex; flex-direction: column; gap: 4px; }
+
+.menu-group {
+  background: rgba(255,255,255,.88);
+  border: 1px solid rgba(15,23,42,.07);
+  border-radius: 12px; overflow: hidden;
+}
+.menu-header {
+  width: 100%; border: 0; background: transparent;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 9px; min-height: 38px;
+  font-size: 12px; font-weight: 900; color: #0F172A;
+  text-align: left; cursor: pointer;
+  transition: background .15s, color .15s, border-left .15s;
+}
+.menu-header:hover { background: #fff; }
+.menu-header.active {
+  background: linear-gradient(90deg, var(--empresa-soft) 0%, #fff 100%);
+  color: var(--empresa); border-left: 4px solid var(--empresa); font-weight: 950;
+}
+.menu-left { display: flex; align-items: center; gap: 6px; }
+.menu-left span { display: block; white-space: normal; }
+.menu-caret {
+  font-size: 13px; font-weight: 950; color: #64748B;
+  margin-left: 4px; transition: transform .2s, color .15s;
+}
+.menu-header.active .menu-caret { color: var(--empresa); }
+.menu-group.open .menu-caret { transform: rotate(90deg); }
+
+.menu-children {
+  display: none; flex-direction: column; gap: 2px;
+  padding: 4px 7px 8px 14px;
+  margin-left: 8px;
+  border-left: 2px solid rgba(15,23,42,.07);
+  background: rgba(255,255,255,.3);
+}
+.menu-group.open .menu-children { display: flex; }
+
+.child-btn {
+  width: 100%; border: 0; background: transparent;
+  text-align: left; padding: 5px 9px; min-height: 30px;
+  border-radius: 8px; font-size: 11px; font-weight: 850;
+  color: #0F172A; cursor: pointer;
+  transition: background .15s, color .15s, border-left .15s, box-shadow .15s;
+}
+.child-btn:hover { background: #fff; color: var(--empresa); }
+.child-btn.active {
+  background: var(--empresa-sub); color: var(--empresa);
+  border-left: 3px solid var(--empresa-sub-border);
+  box-shadow: 0 2px 8px rgba(15,23,42,.05); font-weight: 950;
+}
+
+/* ============================================================
+   MAIN
+   ============================================================ */
+.main {
+  grid-column: 2;
+  margin-top: var(--topbar-h);
+  min-height: calc(100vh - var(--topbar-h));
+  padding: 20px 26px 36px 20px;
+}
+.main-inner { max-width: 1400px; margin: 0 auto; }
+
+/* ============================================================
+   BREADCRUMB
+   ============================================================ */
+.breadcrumb {
+  font-size: 12px;
+  font-weight: 900;
+  color: #0F172A;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.crumb-btn {
+  border: 0;
+  background: transparent;
+  color: #0F172A;
+  font-size: 12px;
+  font-weight: 950;
+  cursor: pointer;
+  padding: 2px 0;
+}
+.crumb-btn:hover { color: var(--empresa); text-decoration: underline; }
+.crumb-btn.active-crumb { color: var(--empresa); }
+
+/* ============================================================
+   PAGE HEAD
+   ============================================================ */
+.page-head {
+  display: flex; align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
+}
+.page-head h1 {
+  font-size: 24px; font-weight: 950;
+  color: var(--empresa); letter-spacing: -0.04em;
+  transition: color .3s;
+}
+.page-head h1::before { content: "├ "; }
+.page-head .subtitle { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+/* ============================================================
+   BOTONES
+   ============================================================ */
+.btn {
+  height: 42px; border-radius: 40px;
+  border: 1px solid var(--line); background: #fff;
+  color: var(--text); font-weight: 700; padding: 0 18px;
+  cursor: pointer; font-size: 13px;
+  transition: background .15s, border-color .15s, transform .1s, box-shadow .15s;
+  display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+}
+.btn:hover { background: var(--bg); border-color: var(--muted); transform: translateY(-1px); box-shadow: var(--shadow); }
+.btn.primary {
+  background: var(--empresa); color: #fff;
+  border-color: var(--empresa);
+  box-shadow: 0 4px 14px var(--empresa-shadow);
+  transition: background .3s, border-color .3s, box-shadow .3s, transform .1s;
+}
+.btn.primary:hover { background: var(--empresa-dark); border-color: var(--empresa-dark); transform: translateY(-1px); }
+.btn.big { height: 50px; font-size: 14px; border-radius: 14px; padding: 0 22px; }
+
+/* ============================================================
+   ACTIONS ROW
+   ============================================================ */
+.actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+.search-wrap {
+  flex: 1; min-width: 200px;
+  height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 40px;
+  background: #fff;
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 16px;
+  transition: border-color .15s, box-shadow .15s;
+}
+.search-wrap:focus-within {
+  border-color: var(--empresa);
+  box-shadow: 0 0 0 3px var(--empresa-soft);
+}
+.search-wrap i { color: var(--muted); font-size: 14px; flex-shrink: 0; }
+.search-wrap input {
+  border: 0; outline: 0; flex: 1;
+  font-size: 13px; color: var(--text); background: transparent;
+}
+.search-wrap input::placeholder { color: var(--muted); }
+
+/* ============================================================
+   PRODUCT CARD
+   ============================================================ */
+.product-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  padding: 18px 22px;
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow);
+}
+.product-photo {
+  width: 90px; height: 90px; border-radius: 12px;
+  background: var(--empresa-soft);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 50px;
+  transition: background .3s;
+}
+.product-info {
+  display: flex; flex-wrap: wrap; gap: 0;
+}
+.info-cell {
+  flex: 1; min-width: 110px;
+  padding: 0 18px;
+  border-left: 1px solid var(--line);
+}
+.info-cell:first-child { border-left: 0; padding-left: 0; }
+.info-label {
+  font-size: 10px; color: var(--muted);
+  font-weight: 800; margin-bottom: 6px;
+  text-transform: uppercase; letter-spacing: .05em;
+}
+.info-value {
+  font-size: 14px; color: var(--text);
+  font-weight: 800; line-height: 1.3;
+}
+.info-value.price {
+  font-size: 20px; color: var(--empresa);
+  font-weight: 950; transition: color .3s;
+}
+
+/* ============================================================
+   TABLA
+   ============================================================ */
+.table-wrap {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  margin-bottom: 18px;
+}
+.table-scroll {
+  overflow-x: auto;
+  scrollbar-color: #9ca3af #edf2f7;
+  scrollbar-width: thin;
+}
+.table-scroll::-webkit-scrollbar { height: 6px; }
+.table-scroll::-webkit-scrollbar-thumb { background: #c4cdd8; border-radius: 6px; }
+
+table { width: 100%; min-width: 1520px; border-collapse: collapse; table-layout: fixed; }
+
+th, td {
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 11px 10px; text-align: center; vertical-align: middle;
+  font-size: 12.5px; line-height: 1.35; color: var(--text);
+}
+th {
+  background: var(--empresa-soft);
+  font-size: 11px; font-weight: 900;
+  color: var(--empresa);
+  transition: background .3s, color .3s;
+  position: sticky; top: 0;
+}
+td { font-weight: 700; background: #fff; }
+tr:last-child td { border-bottom: 0; }
+td:last-child, th:last-child { border-right: 0; }
+
+.col-item    { width: 44px; }
+.col-code    { width: 100px; }
+.col-desc    { width: 140px; text-align: left; }
+.col-brand   { width: 74px; }
+.col-model   { width: 68px; }
+.col-provider{ width: 88px; }
+.col-qty     { width: 58px; }
+.col-money   { width: 88px; }
+.col-date    { width: 94px; }
+.col-days    { width: 68px; }
+.col-type    { width: 80px; }
+.col-place   { width: 90px; }
+.col-comment { width: 90px; }
+.col-status  { width: 96px; }
+
+.t-code    { color: var(--empresa); font-weight: 900; transition: color .3s; }
+.t-green   { color: var(--ok); font-size: 15px; font-weight: 900; }
+.t-red     { color: var(--danger); font-size: 15px; font-weight: 900; }
+.t-orange  { color: var(--warn); font-size: 15px; font-weight: 900; }
+.t-empresa { color: var(--empresa); font-size: 15px; font-weight: 900; transition: color .3s; }
+.t-bold    { font-weight: 900; font-size: 14px; color: var(--text); }
+
+.row-winner td { background: #f1fff0; }
+.row-soft   td { background: #fffaf0; }
+.row-lost   td { background: #fff5f5; }
+
+.status-chip {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  padding: 6px 11px; border-radius: 8px;
+  font-weight: 800; font-size: 11px; white-space: nowrap;
+}
+.chip-winner { background: var(--ok-soft); color: var(--ok); }
+.chip-eval   { background: var(--warn-soft); color: var(--warn); }
+.chip-lost   { background: var(--danger-soft); color: var(--danger); }
+
+/* ============================================================
+   SUMMARY
+   ============================================================ */
+.summary {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  padding: 20px 24px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+}
+.summary-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 0 18px;
+  border-right: 1px solid var(--line);
+}
+.summary-item:first-child { padding-left: 0; }
+.summary-item:last-child  { border-right: 0; }
+.summary-icon {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--empresa-soft); color: var(--empresa);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; flex-shrink: 0;
+  transition: background .3s, color .3s;
+}
+.summary-icon.green-bg { background: var(--ok-soft); color: var(--ok); }
+.summary-icon.purple-bg { background: var(--purple-soft); color: var(--purple); }
+.summary-label { display: block; font-weight: 700; color: var(--muted); margin-bottom: 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+.summary-value { font-size: 20px; font-weight: 950; color: var(--text); }
+.summary-value.empresa-text { color: var(--empresa); transition: color .3s; }
+.summary-value.green-text   { color: var(--ok); }
+.summary-value.purple-text  { color: var(--purple); }
+
+/* ============================================================
+   NOTE
+   ============================================================ */
+.note {
+  border-radius: var(--radius-sm);
+  background: var(--empresa-soft);
+  color: var(--empresa);
+  font-weight: 700;
+  padding: 14px 18px;
+  display: flex; align-items: center; gap: 12px;
+  font-size: 12.5px;
+  transition: background .3s, color .3s;
+}
+.note i { font-size: 18px; flex-shrink: 0; }
+
+/* ============================================================
+   NOTIFICACIONES
+   ============================================================ */
+.notificacion {
+  position: fixed; top: 66px; right: 24px; z-index: 9999;
+  min-width: 300px; max-width: 420px;
+  animation: notiIn .3s ease;
+  border-radius: 14px; padding: 14px 18px;
+  background: #fff;
+  box-shadow: 0 16px 48px rgba(0,0,0,.14);
+  border: 1px solid #e9edf4;
+}
+.notificacion .noti-inner { display: flex; align-items: flex-start; gap: 10px; }
+.notificacion .noti-icon  { font-size: 1.3rem; flex-shrink: 0; margin-top: 1px; }
+.notificacion .noti-title { font-weight: 700; font-size: 0.88rem; }
+.notificacion .noti-msg   { font-size: 0.80rem; color: var(--muted); margin-top: 2px; }
+.notificacion .noti-close {
+  cursor: pointer; opacity: 0.5; transition: opacity .15s; font-size: 1rem;
+  margin-left: auto; background: none; border: none; padding: 0 6px; flex-shrink: 0;
+}
+.notificacion .noti-close:hover { opacity: 1; }
+.notificacion.success { border-left: 4px solid var(--ok); }
+.notificacion.error   { border-left: 4px solid var(--danger); }
+.notificacion.warning { border-left: 4px solid var(--warn); }
+.notificacion.info    { border-left: 4px solid var(--empresa); }
+
+@keyframes notiIn  { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes notiOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(110%); opacity: 0; } }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 1280px) {
+  .summary { grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .summary-item { border-right: 0; padding: 0; }
+  .product-info { gap: 0; }
+  .info-cell { min-width: 90px; padding: 0 12px; }
+}
+@media (max-width: 980px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .main { padding: 14px 16px 28px; }
+  .summary { grid-template-columns: 1fr 1fr; gap: 14px; }
+  .product-card { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .summary { grid-template-columns: 1fr; }
+  .actions-row { flex-direction: column; align-items: stretch; }
+  .page-head h1 { font-size: 20px; }
+}
+</style>
 </head>
 <body>
 
-    <!-- ===== SIDEBAR ===== -->
-    <div class="kcf-sidebar" id="sidebar">
-        <div class="sidebar-brand">
-            <h3><span class="logo-icon"></span> KCF CORP</h3>
-            <span>Sistema Integrado de Gestión</span>
-        </div>
-        <ul class="nav-sidebar-custom">
-            <li><a href="/mantenedor/productos/nuevo"><i class="bi bi-box-seam-fill"></i> <span>Nuevo Producto</span></a></li>
-            <li><a href="/mantenedor/productos"><i class="bi bi-grid-1x2-fill"></i> <span>Panel Productos</span></a></li>
-            <li><a href="/mantenedor/productos/kardex"><i class="bi bi-journal-bookmark-fill"></i> <span>Kárdex & Movimientos</span></a></li>
-            <li><a href="/mantenedor/productos/comparativo" class="active-link"><i class="bi bi-bar-chart-fill"></i> <span>Comparativo Costos</span></a></li>
-            <li><a href="/mantenedor/productos/base-datos"><i class="bi bi-database-fill"></i> <span>Base de Datos</span></a></li>
-            <li><a href="/mantenedor"><i class="bi bi-arrow-return-left"></i> <span>Volver al Panel</span></a></li>
-        </ul>
-        <div class="sidebar-footer">
-            <div><i class="bi bi-person-circle me-2"></i> <strong>Admin KCF</strong></div>
-            <div class="small opacity-50 mt-1">Acceso corporativo</div>
-        </div>
+<!-- ============================================================
+     TOPBAR
+     ============================================================ -->
+<header class="topbar-strip">
+  <div class="topbar-brand">
+    <div class="brand-dot"></div>
+    <div>
+      <div class="brand-name" id="brandName">KCF</div>
+      <div class="brand-sub">ERP Multiempresa</div>
     </div>
-
-    <!-- ===== OVERLAY ===== -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-    <!-- ===== MAIN ===== -->
-    <div class="main-dashboard">
-        <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-            <div class="d-flex align-items-center gap-3">
-                <button class="hamburger-btn" id="hamburgerBtn"><i class="bi bi-list"></i></button>
-                <div>
-                    <h1 class="fw-bold mb-1" style="color: #0b2b3c;"><i class="bi bi-bar-chart-fill text-primary me-2"></i>Comparativo Costos</h1>
-                    <p class="text-secondary m-0">Comparativa de cotizaciones por producto</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Selector de producto -->
-        <div class="card-custom mb-4">
-            <div class="row g-3 align-items-end">
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold small text-uppercase">Seleccionar producto</label>
-                    <select id="productoSelect" class="form-select">
-                        <option value="">-- Seleccionar producto --</option>
-                        {% for p in productos %}
-                        <option value="{{ p.id }}">{{ p.codigo }} - {{ p.descripcion }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <button class="btn btn-primary w-100" id="btnCargarComparativo">
-                        <i class="bi bi-search me-1"></i> Cargar comparativo
-                    </button>
-                </div>
-                <div class="col-md-3">
-                    <button class="btn btn-success w-100" id="btnCalcularGanador">
-                        <i class="bi bi-trophy me-1"></i> Calcular ganador
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Resumen -->
-        <div class="card-custom mb-4" id="resumenCard" style="display:none;">
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <div class="bg-light rounded-3 p-3 text-center">
-                        <small class="text-muted text-uppercase">Proveedores</small>
-                        <h3 class="mb-0" id="totalProveedores">0</h3>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="bg-success bg-opacity-10 rounded-3 p-3 text-center">
-                        <small class="text-muted text-uppercase">Mejor costo</small>
-                        <h3 class="mb-0 text-success" id="mejorCosto">S/ 0.00</h3>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="bg-warning bg-opacity-10 rounded-3 p-3 text-center">
-                        <small class="text-muted text-uppercase">Menor tiempo</small>
-                        <h3 class="mb-0 text-warning" id="menorTiempo">0 días</h3>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="bg-primary bg-opacity-10 rounded-3 p-3 text-center">
-                        <small class="text-muted text-uppercase">Ganador</small>
-                        <h3 class="mb-0 text-primary" id="proveedorGanador">-</h3>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tabla -->
-        <div class="card-custom" id="tablaCard" style="display:none;">
-            <div class="table-responsive">
-                <table class="table table-hover" id="tablaComparativo">
-                    <thead class="table-light">
-                        <tr>
-                            <th>#</th>
-                            <th>Proveedor</th>
-                            <th>Cantidad</th>
-                            <th>Costo Unitario</th>
-                            <th>Costo Total</th>
-                            <th>Precio Venta</th>
-                            <th>Tiempo</th>
-                            <th>Transporte</th>
-                            <th>Lugar</th>
-                            <th>Estatus</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbodyComparativo">
-                        <tr>
-                            <td colspan="10" class="text-center text-muted py-4">
-                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                                Seleccione un producto para ver el comparativo
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+  </div>
+  <div class="topbar-right">
+    <div class="select-box-top">
+      <label>Empresa activa</label>
+      <select id="empresaActiva">
+        <option value="KCF">KCF — KC Corporación</option>
+        <option value="AGD">AGD — AGD Group S.A.C.</option>
+      </select>
     </div>
+    <div class="user-box">
+      <div class="avatar-sm">E</div>
+      Erika
+    </div>
+  </div>
+</header>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            // ===== SIDEBAR TOGGLE =====
-            $('#hamburgerBtn').click(function() {
-                $('#sidebar').toggleClass('open');
-                $('#sidebarOverlay').toggleClass('show');
-            });
-            $('#sidebarOverlay').click(function() {
-                $('#sidebar').removeClass('open');
-                $('#sidebarOverlay').removeClass('show');
-            });
+<!-- ============================================================
+     APP SHELL
+     ============================================================ -->
+<div class="app">
 
-            // ===== DATOS DE EJEMPLO PARA COMPARATIVO =====
-            const datosComparativo = {
-                '1': [
-                    { proveedor: 'GOALSA', cantidad: 50, costo: 18.20, venta: 45.00, tiempo: 2, transporte: 25.00, lugar: 'Recojo', estatus: 'winner' },
-                    { proveedor: 'TAILOY SAC', cantidad: 50, costo: 18.80, venta: 45.00, tiempo: 3, transporte: 20.00, lugar: 'Almacén SMP', estatus: 'evaluar' },
-                    { proveedor: 'COBIRAM', cantidad: 50, costo: 19.50, venta: 45.00, tiempo: 5, transporte: 30.00, lugar: 'Almacén Lima', estatus: 'perdedor' },
-                    { proveedor: 'PLAZA VEA', cantidad: 50, costo: 20.10, venta: 45.00, tiempo: 7, transporte: 40.00, lugar: 'Almacén Lima', estatus: 'perdedor' }
-                ],
-                '2': [
-                    { proveedor: 'PROVEEDOR A', cantidad: 100, costo: 12.50, venta: 25.00, tiempo: 3, transporte: 30.00, lugar: 'Lima', estatus: 'winner' },
-                    { proveedor: 'PROVEEDOR B', cantidad: 100, costo: 14.00, venta: 25.00, tiempo: 5, transporte: 25.00, lugar: 'Callao', estatus: 'evaluar' },
-                    { proveedor: 'PROVEEDOR C', cantidad: 100, costo: 15.20, venta: 25.00, tiempo: 8, transporte: 35.00, lugar: 'Lima', estatus: 'perdedor' }
-                ]
-            };
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar">
+    <div class="sidebar-section-title">Estructura ERP</div>
+    <div class="menu-tree">
 
-            // ===== CARGAR COMPARATIVO =====
-            $('#btnCargarComparativo').click(function() {
-                const id = $('#productoSelect').val();
-                if (!id) {
-                    alert('Seleccione un producto');
-                    return;
-                }
+      <div class="menu-group">
+        <button type="button" class="menu-header" data-screen="dashboard">
+          <div class="menu-left"><span>0 ─ Dashboard</span></div>
+          <span class="menu-caret">›</span>
+        </button>
+        <div class="menu-children">
+          <button type="button" class="child-btn">Resumen general</button>
+        </div>
+      </div>
 
-                // Intentar obtener datos reales de la API
-                $.ajax({
-                    url: '/mantenedor/productos/api/comparativo?producto_id=' + id,
-                    method: 'GET',
-                    success: function(data) {
-                        if (data && data.length > 0) {
-                            renderComparativo(data);
-                        } else {
-                            // Usar datos de ejemplo si no hay datos reales
-                            const datos = datosComparativo[id];
-                            if (datos) {
-                                renderComparativo(datos);
-                            } else {
-                                alert('No hay datos de comparativo para este producto');
-                            }
-                        }
-                    },
-                    error: function() {
-                        // Usar datos de ejemplo si falla la API
-                        const datos = datosComparativo[id];
-                        if (datos) {
-                            renderComparativo(datos);
-                        } else {
-                            alert('No hay datos de comparativo para este producto');
-                        }
-                    }
-                });
-            });
+      <div class="menu-group">
+        <button type="button" class="menu-header">
+          <div class="menu-left"><span>1 ─ Configuración y seguridad</span></div>
+          <span class="menu-caret">›</span>
+        </button>
+        <div class="menu-children">
+          <button type="button" class="child-btn">Empresas</button>
+          <button type="button" class="child-btn">Usuarios y permisos</button>
+          <button type="button" class="child-btn">Correlativos</button>
+          <button type="button" class="child-btn">Parámetros generales</button>
+          <button type="button" class="child-btn">Integración ERP</button>
+        </div>
+      </div>
 
-            // ===== RENDERIZAR COMPARATIVO =====
-            function renderComparativo(datos) {
-                const tbody = $('#tbodyComparativo');
-                tbody.empty();
+      <div class="menu-group">
+        <button type="button" class="menu-header">
+          <div class="menu-left"><span>2 ─ Maestros</span></div>
+          <span class="menu-caret">›</span>
+        </button>
+        <div class="menu-children">
+          <button type="button" class="child-btn">Clientes</button>
+          <button type="button" class="child-btn">Proveedores</button>
+          <button type="button" class="child-btn">Almacenes</button>
+          <button type="button" class="child-btn">Categorías</button>
+          <button type="button" class="child-btn">Marcas</button>
+          <button type="button" class="child-btn">Unidades de medida</button>
+        </div>
+      </div>
 
-                let mejorCosto = Infinity;
-                let menorTiempo = Infinity;
-                let ganador = '';
-                let totalProveedores = 0;
+      <div class="menu-group open">
+        <button type="button" class="menu-header active">
+          <div class="menu-left"><span>3 ─ Productos</span></div>
+          <span class="menu-caret">›</span>
+        </button>
+        <div class="menu-children">
+          <button type="button" class="child-btn">Nuevo producto</button>
+          <button type="button" class="child-btn">Listado de productos</button>
+          <button type="button" class="child-btn">Ficha de producto</button>
+          <button type="button" class="child-btn active">Comparativo Costos</button>
+        </div>
+      </div>
 
-                datos.forEach((item, idx) => {
-                    const costoTotal = item.cantidad * item.costo;
-                    const rowClass = item.estatus === 'winner' ? 'winner-row' : 
-                                    item.estatus === 'evaluar' ? 'evaluar-row' : 'perdedor-row';
-                    
-                    if (item.costo < mejorCosto) {
-                        mejorCosto = item.costo;
-                        ganador = item.proveedor;
-                    }
-                    if (item.tiempo < menorTiempo) {
-                        menorTiempo = item.tiempo;
-                    }
+      <div class="menu-group">
+        <button type="button" class="menu-header">
+          <div class="menu-left"><span>4 ─ Ventas</span></div>
+          <span class="menu-caret">›</span>
+        </button>
+        <div class="menu-children">
+          <button type="button" class="child-btn">Cotizaciones</button>
+          <button type="button" class="child-btn">Comprobantes cliente</button>
+          <button type="button" class="child-btn">Guías de remisión</button>
+          <button type="button" class="child-btn">Notas de crédito</button>
+        </div>
+      </div>
 
-                    const statusLabel = {
-                        'winner': '🏆 Ganador',
-                        'evaluar': '📋 Evaluar',
-                        'perdedor': '❌ Perdedor'
-                    };
+      <div class="menu-group">
+        <button type="button" class="menu-header">
+          <div class="menu-left"><span>5 ─ Compras</span></div>
+          <span class="menu-caret">›</span>
+        </button>
+        <div class="menu-children">
+          <button type="button" class="child-btn">Solicitud de compra</button>
+          <button type="button" class="child-btn">Comparativo</button>
+          <button type="button" class="child-btn">Orden de compra</button>
+          <button type="button" class="child-btn">Comprobantes proveedor</button>
+          <button type="button" class="child-btn">Recepción</button>
+        </div>
+      </div>
 
-                    tbody.append(`
-                        <tr class="${rowClass}">
-                            <td>${idx + 1}</td>
-                            <td><strong>${item.proveedor}</strong></td>
-                            <td>${item.cantidad}</td>
-                            <td>S/ ${item.costo.toFixed(2)}</td>
-                            <td>S/ ${costoTotal.toFixed(2)}</td>
-                            <td>S/ ${item.venta.toFixed(2)}</td>
-                            <td>${item.tiempo} días</td>
-                            <td>S/ ${item.transporte.toFixed(2)}</td>
-                            <td>${item.lugar}</td>
-                            <td><span class="status-badge ${item.estatus}">${statusLabel[item.estatus]}</span></td>
-                        </tr>
-                    `);
-                    totalProveedores++;
-                });
+      <div class="menu-group">
+        <button type="button" class="menu-header">
+          <div class="menu-left"><span>6 ─ Inventario</span></div>
+          <span class="menu-caret">›</span>
+        </button>
+        <div class="menu-children">
+          <button type="button" class="child-btn">Estado de stock</button>
+          <button type="button" class="child-btn">Kardex</button>
+          <button type="button" class="child-btn">Entradas y salidas</button>
+          <button type="button" class="child-btn">Transferencias</button>
+        </div>
+      </div>
 
-                $('#totalProveedores').text(totalProveedores);
-                $('#mejorCosto').text('S/ ' + mejorCosto.toFixed(2));
-                $('#menorTiempo').text(menorTiempo + ' días');
-                $('#proveedorGanador').text(ganador);
+      <div class="menu-group">
+        <button type="button" class="menu-header">
+          <div class="menu-left"><span>7 ─ Finanzas / Tesorería</span></div>
+          <span class="menu-caret">›</span>
+        </button>
+        <div class="menu-children">
+          <button type="button" class="child-btn">Cuentas por cobrar</button>
+          <button type="button" class="child-btn">Cuentas por pagar</button>
+          <button type="button" class="child-btn">Caja y bancos</button>
+          <button type="button" class="child-btn">Flujo de caja</button>
+        </div>
+      </div>
 
-                $('#resumenCard').show();
-                $('#tablaCard').show();
-            }
+      <div class="menu-group">
+        <button type="button" class="menu-header">
+          <div class="menu-left"><span>8 ─ Reportes</span></div>
+          <span class="menu-caret">›</span>
+        </button>
+        <div class="menu-children">
+          <button type="button" class="child-btn">Reporte de ventas</button>
+          <button type="button" class="child-btn">Reporte de compras</button>
+          <button type="button" class="child-btn">Reporte de inventario</button>
+          <button type="button" class="child-btn">Reporte de finanzas</button>
+          <button type="button" class="child-btn">SUNAT</button>
+        </div>
+      </div>
 
-            // ===== CALCULAR GANADOR =====
-            $('#btnCalcularGanador').click(function() {
-                const id = $('#productoSelect').val();
-                if (!id) {
-                    alert('Seleccione un producto');
-                    return;
-                }
-                $('#btnCargarComparativo').click();
-                setTimeout(() => {
-                    alert('🏆 Ganador calculado: ' + $('#proveedorGanador').text());
-                }, 500);
-            });
-        });
-    </script>
+      <div class="menu-group">
+        <button type="button" class="menu-header">
+          <div class="menu-left"><span>9 ─ Herramientas</span></div>
+          <span class="menu-caret">›</span>
+        </button>
+        <div class="menu-children">
+          <button type="button" class="child-btn">Carga masiva</button>
+        </div>
+      </div>
+
+      <div class="menu-group">
+        <button type="button" class="menu-header">
+          <div class="menu-left"><span>10 ─ Papelera / Auditoría</span></div>
+          <span class="menu-caret">›</span>
+        </button>
+        <div class="menu-children">
+          <button type="button" class="child-btn">Documentos anulados</button>
+          <button type="button" class="child-btn">Registros eliminados</button>
+          <button type="button" class="child-btn">Historial de cambios</button>
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <main class="main">
+    <div class="main-inner">
+
+      <!-- Breadcrumb -->
+      <div class="breadcrumb">
+        <button type="button" class="crumb-btn">Inicio</button>
+        <span>/</span>
+        <button type="button" class="crumb-btn">Productos</button>
+        <span>/</span>
+        <button type="button" class="crumb-btn active-crumb">Nuevo producto</button>
+      </div>
+
+      <!-- Page head -->
+      <div class="page-head">
+        <div>
+          <h1>Comparativo costos por producto</h1>
+          <p class="subtitle">Evalúa y compara ofertas de proveedores para seleccionar el mejor costo.</p>
+        </div>
+      </div>
+
+      <!-- Actions row -->
+      <div class="actions-row">
+        <div class="search-wrap">
+          <i class="bi bi-search"></i>
+          <input id="productSearch" placeholder="Buscar o seleccionar producto..." />
+          <i class="bi bi-chevron-down" style="color:var(--muted);font-size:12px;margin-left:auto;flex-shrink:0"></i>
+        </div>
+        <button class="btn" onclick="cargarDatos()"><i class="bi bi-cloud-download"></i> Cargar datos</button>
+        <button class="btn" onclick="agregarProveedor()"><i class="bi bi-person-plus"></i> Agregar proveedor</button>
+        <button class="btn primary" onclick="calcularGanador()"><i class="bi bi-trophy"></i> Calcular ganador</button>
+        <button class="btn" onclick="exportarCSV()"><i class="bi bi-file-earmark-excel" style="color:var(--ok)"></i> Exportar Excel</button>
+        <button class="btn primary big" onclick="nuevoComparativo()"><i class="bi bi-plus-lg"></i> Nuevo comparativo</button>
+      </div>
+
+      <!-- Product card -->
+      <div class="product-card">
+        <div class="product-photo">🚧</div>
+        <div class="product-info">
+          <div class="info-cell">
+            <div class="info-label">Código producto</div>
+            <div class="info-value">PRO-000126</div>
+          </div>
+          <div class="info-cell">
+            <div class="info-label">Descripción producto</div>
+            <div class="info-value">Cono de seguridad 90 cm<br>con base de PVC</div>
+          </div>
+          <div class="info-cell">
+            <div class="info-label">Modelo</div>
+            <div class="info-value">CS-90</div>
+          </div>
+          <div class="info-cell">
+            <div class="info-label">Marca</div>
+            <div class="info-value">KCF Safety</div>
+          </div>
+          <div class="info-cell">
+            <div class="info-label">Categoría principal</div>
+            <div class="info-value">Seguridad Industrial</div>
+          </div>
+          <div class="info-cell">
+            <div class="info-label">Transporte referencial</div>
+            <div class="info-value">Motorizado</div>
+          </div>
+          <div class="info-cell">
+            <div class="info-label">Valor venta referencial</div>
+            <div class="info-value price">S/ 45.00</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla -->
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table id="tablaComparativo">
+            <thead>
+              <tr>
+                <th class="col-item">Ítem</th>
+                <th class="col-code">Código<br>producto</th>
+                <th class="col-desc">Descripción<br>producto</th>
+                <th class="col-brand">Marca</th>
+                <th class="col-model">Modelo</th>
+                <th class="col-provider">Proveedor</th>
+                <th class="col-qty">Cantidad</th>
+                <th class="col-money">Costo histórico</th>
+                <th class="col-money">Valor costo<br>unitario</th>
+                <th class="col-money">Costo<br>total</th>
+                <th class="col-money">Precio histórico</th>
+                <th class="col-money">Valor venta<br>unitario</th>
+                <th class="col-money">Valor venta<br>total</th>
+                <th class="col-days">Tiempo de<br>entrega</th>
+                <th class="col-type">Tipo de<br>entrega</th>
+                <th class="col-place">Lugar de<br>entrega</th>
+                <th class="col-money">Costo de<br>transporte</th>
+                <th class="col-comment">Comentario</th>
+                <th class="col-status">Estatus</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div class="summary">
+        <div class="summary-item">
+          <div class="summary-icon">👥</div>
+          <div>
+            <span class="summary-label">Proveedores cotizados</span>
+            <div class="summary-value" id="proveedoresCount">4</div>
+          </div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-icon green-bg">💲</div>
+          <div>
+            <span class="summary-label">Mejor costo unitario</span>
+            <div class="summary-value green-text" id="mejorCosto">S/ 18.20</div>
+          </div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-icon">🕘</div>
+          <div>
+            <span class="summary-label">Menor tiempo de entrega</span>
+            <div class="summary-value" id="menorTiempo">2 días</div>
+          </div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-icon green-bg">🏆</div>
+          <div>
+            <span class="summary-label">Proveedor ganador</span>
+            <div class="summary-value green-text" id="proveedorGanador">GOALSA</div>
+          </div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-icon purple-bg">📍</div>
+          <div>
+            <span class="summary-label">Lugar de entrega ganador</span>
+            <div class="summary-value purple-text" id="lugarGanador">Recojo</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Note -->
+      <div class="note">
+        <i class="bi bi-info-circle-fill"></i>
+        El sistema mantiene el historial de cotizaciones por proveedor, incluyendo costo y fecha/hora, para que puedas recotizar más rápido en el futuro.
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ============================================================
+     JS
+     ============================================================ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ── TEMA / EMPRESA ACTIVA ─────────────────────────────── */
+  function applyTheme(code) {
+    document.documentElement.setAttribute('data-empresa', code);
+    const brand = document.getElementById('brandName');
+    if (brand) brand.textContent = code;
+    const sel = document.getElementById('empresaActiva');
+    if (sel && sel.value !== code) sel.value = code;
+  }
+
+  document.getElementById('empresaActiva').addEventListener('change', function () {
+    applyTheme(this.value);
+    mostrarNotificacion('info', 'Empresa cambiada', 'Tema actualizado a ' + this.value);
+  });
+
+  /* ── SIDEBAR ACCORDION ─────────────────────────────────── */
+  function closeAllGroups() {
+    document.querySelectorAll('.menu-group').forEach(g => g.classList.remove('open'));
+    document.querySelectorAll('.menu-header').forEach(h => h.classList.remove('active'));
+    document.querySelectorAll('.child-btn').forEach(b => b.classList.remove('active'));
+  }
+
+  document.querySelectorAll('.menu-header').forEach(header => {
+    header.addEventListener('click', function () {
+      const group = this.closest('.menu-group');
+      const alreadyOpen = group.classList.contains('open');
+      closeAllGroups();
+      if (!alreadyOpen) {
+        group.classList.add('open');
+        this.classList.add('active');
+      }
+    });
+  });
+
+  document.querySelectorAll('.child-btn').forEach(btn => {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      const group = this.closest('.menu-group');
+      const header = group.querySelector('.menu-header');
+      closeAllGroups();
+      group.classList.add('open');
+      if (header) header.classList.add('active');
+      this.classList.add('active');
+    });
+  });
+
+  /* ── DATOS ─────────────────────────────────────────────── */
+  const proveedores = [
+    {
+      codigo:'PRO-000126', desc:'Cono de seguridad 90 cm con base de PVC',
+      marca:'KCF Safety', modelo:'CS-90', proveedor:'GOALSA',
+      cantidad:50, costoHist:19.50, fechaCosto:'10/06/2026 09:45 a.m.',
+      costo:18.20, precioHist:26.00, fechaPrecio:'10/06/2026 09:45 a.m.',
+      venta:45.00, tiempo:2, tipo:'Motorizado', lugar:'Recojo',
+      transporte:25.00, comentario:'Stock disponible inmediato', estatus:'Ganador'
+    },
+    {
+      codigo:'PRO-000126', desc:'Cono de seguridad 90 cm con base de PVC',
+      marca:'KCF Safety', modelo:'CS-90', proveedor:'TAILOY SAC',
+      cantidad:50, costoHist:19.00, fechaCosto:'10/06/2026 10:25 a.m.',
+      costo:18.80, precioHist:24.00, fechaPrecio:'10/06/2026 10:25 a.m.',
+      venta:45.00, tiempo:3, tipo:'Motorizado', lugar:'Entrega en almacén SMP',
+      transporte:20.00, comentario:'Buen servicio postventa', estatus:'Evaluar'
+    },
+    {
+      codigo:'PRO-000126', desc:'Cono de seguridad 90 cm con base de PVC',
+      marca:'KCF Safety', modelo:'CS-90', proveedor:'COBIRAM',
+      cantidad:50, costoHist:20.30, fechaCosto:'10/06/2026 09:30 a.m.',
+      costo:19.50, precioHist:25.50, fechaPrecio:'10/06/2026 09:30 a.m.',
+      venta:45.00, tiempo:5, tipo:'Motorizado', lugar:'Entrega en almacén Lima',
+      transporte:30.00, comentario:'Entrega en almacén Lima', estatus:'Perdedor'
+    },
+    {
+      codigo:'PRO-000126', desc:'Cono de seguridad 90 cm con base de PVC',
+      marca:'KCF Safety', modelo:'CS-90', proveedor:'PLAZA VEA',
+      cantidad:50, costoHist:20.50, fechaCosto:'10/06/2026 11:10 a.m.',
+      costo:20.10, precioHist:26.00, fechaPrecio:'10/06/2026 11:10 a.m.',
+      venta:45.00, tiempo:7, tipo:'Agencia', lugar:'Entrega en almacén Lima',
+      transporte:40.00, comentario:'Mayor tiempo de entrega', estatus:'Perdedor'
+    }
+  ];
+
+  function soles(num) {
+    return 'S/ ' + Number(num).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  /* ── RENDER TABLA ──────────────────────────────────────── */
+  function renderTabla() {
+    const tbody = document.getElementById('tbody');
+    tbody.innerHTML = '';
+    proveedores.forEach((p, idx) => {
+      const costoTotal = p.cantidad * p.costo;
+      const ventaTotal = p.cantidad * p.venta;
+      const rowClass  = p.estatus === 'Ganador' ? 'row-winner' : p.estatus === 'Evaluar' ? 'row-soft' : 'row-lost';
+      const chipClass = p.estatus === 'Ganador' ? 'chip-winner' : p.estatus === 'Evaluar' ? 'chip-eval' : 'chip-lost';
+      const costoClass = idx === 0 ? 't-green' : idx === 1 ? 't-orange' : 't-red';
+      tbody.innerHTML += `
+        <tr class="${rowClass}">
+          <td>${idx + 1}</td>
+          <td class="t-code">${p.codigo}</td>
+          <td class="col-desc" style="text-align:left">${p.desc}</td>
+          <td>${p.marca}</td>
+          <td>${p.modelo}</td>
+          <td><strong>${p.proveedor}</strong></td>
+          <td>${p.cantidad}</td>
+          <td>
+            <strong>${soles(p.costoHist)}</strong><br>
+            <small style="color:var(--muted);font-weight:600;font-size:10px">${p.fechaCosto}</small>
+          </td>
+          <td class="${costoClass}">${soles(p.costo)}</td>
+          <td class="t-bold">${soles(costoTotal)}</td>
+          <td>
+            <strong>${soles(p.precioHist)}</strong><br>
+            <small style="color:var(--muted);font-weight:600;font-size:10px">${p.fechaPrecio}</small>
+          </td>
+          <td class="t-empresa">${soles(p.venta)}</td>
+          <td class="t-bold">${soles(ventaTotal)}</td>
+          <td>${p.tiempo} días</td>
+          <td>${p.tipo}</td>
+          <td>${p.lugar}</td>
+          <td>${soles(p.transporte)}</td>
+          <td>${p.comentario}</td>
+          <td><span class="status-chip ${chipClass}">${p.estatus === 'Ganador' ? '🏆 ' : ''}${p.estatus}</span></td>
+        </tr>`;
+    });
+  }
+
+  /* ── CALCULAR GANADOR ──────────────────────────────────── */
+  window.calcularGanador = function () {
+    const ganador = [...proveedores].sort((a, b) =>
+      (a.costo * a.cantidad + a.transporte) - (b.costo * b.cantidad + b.transporte)
+    )[0];
+    document.getElementById('proveedoresCount').textContent = proveedores.length;
+    document.getElementById('mejorCosto').textContent = soles(ganador.costo);
+    document.getElementById('menorTiempo').textContent = Math.min(...proveedores.map(p => p.tiempo)) + ' días';
+    document.getElementById('proveedorGanador').textContent = ganador.proveedor;
+    document.getElementById('lugarGanador').textContent = ganador.lugar;
+    mostrarNotificacion('success', '🏆 Ganador calculado', 'Proveedor sugerido: ' + ganador.proveedor + ' — ' + soles(ganador.costo) + '/und.');
+  };
+
+  /* ── ACCIONES ──────────────────────────────────────────── */
+  window.cargarDatos = function () {
+    mostrarNotificacion('info', 'Datos cargados', 'Información del producto cargada desde la base de datos.');
+  };
+
+  window.agregarProveedor = function () {
+    mostrarNotificacion('info', 'Agregar proveedor', 'Aquí se abriría el formulario para agregar un proveedor al comparativo.');
+  };
+
+  window.nuevoComparativo = function () {
+    mostrarNotificacion('success', 'Nuevo comparativo', 'Comparativo creado correctamente.');
+  };
+
+  /* ── EXPORTAR CSV ──────────────────────────────────────── */
+  window.exportarCSV = function () {
+    const headers = ['Item','Codigo producto','Descripcion producto','Marca','Modelo','Proveedor','Cantidad',
+      'Costo historico','Valor costo unitario','Costo total','Precio historico','Valor venta unitario',
+      'Valor venta total','Tiempo entrega','Tipo entrega','Lugar entrega','Costo transporte','Comentario','Estatus'];
+    const rows = proveedores.map((p, i) => [
+      i + 1, p.codigo, p.desc, p.marca, p.modelo, p.proveedor, p.cantidad,
+      p.costoHist, p.costo, (p.cantidad * p.costo), p.precioHist, p.venta,
+      (p.cantidad * p.venta), p.tiempo + ' dias', p.tipo, p.lugar,
+      p.transporte, p.comentario, p.estatus
+    ]);
+    const csv = [headers, ...rows]
+      .map(r => r.map(v => '"' + String(v).replaceAll('"', '""') + '"').join(','))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'comparativo_costos_producto.csv';
+    link.click();
+    mostrarNotificacion('success', 'Exportado', 'Archivo CSV descargado correctamente.');
+  };
+
+  /* ── NOTIFICACIONES ────────────────────────────────────── */
+  window.mostrarNotificacion = function (tipo, titulo, mensaje) {
+    const ex = document.querySelector('.notificacion');
+    if (ex) { ex.style.animation = 'notiOut .3s ease forwards'; setTimeout(() => ex.remove(), 350); }
+    const iconos = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+    const noti = document.createElement('div');
+    noti.className = `notificacion ${tipo}`;
+    noti.innerHTML = `<div class="noti-inner"><span class="noti-icon">${iconos[tipo] || 'ℹ️'}</span><div style="flex:1"><div class="noti-title">${titulo}</div><div class="noti-msg">${mensaje}</div></div><button class="noti-close" onclick="this.closest('.notificacion').remove()">✕</button></div>`;
+    document.body.appendChild(noti);
+    setTimeout(() => {
+      if (noti.parentNode) { noti.style.animation = 'notiOut .3s ease forwards'; setTimeout(() => noti.remove(), 350); }
+    }, 5000);
+  };
+
+  /* ── INIT ──────────────────────────────────────────────── */
+  applyTheme('KCF');
+  renderTabla();
+
+})();
+</script>
 </body>
 </html>
