@@ -34,16 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return parseFloat(numero.toFixed(3)).toString();
 }
 
-// 🔥 AGREGAR AQUÍ:
-    // =========================
-    // FUNCIÓN SEGURA PARA ASIGNAR VALOR A UN CAMPO
-    // =========================
-    function setValueSafely(id, value) {
-        const el = document.getElementById(id);
-        if (el) {
-            el.value = value || '';
-        }
-    }
+
     
         // =========================
         // GENERACIÓN DE CÓDIGOS PERSONALIZADOS
@@ -2936,7 +2927,7 @@ async function cargarCotizacion(id) {
         actualizarEstadoVisual();
         
         // ==========================================
-        // 2. CARGAR DATOS DEL CLIENTE (CON VERIFICACIÓN)
+        // 2. CARGAR DATOS DEL CLIENTE
         // ==========================================
         setValueSafely('cliente_id', data.cliente_id || '');
         setValueSafely('cliente_razon_social', data.cliente || data.razon_social || '');
@@ -2948,7 +2939,7 @@ async function cargarCotizacion(id) {
         setValueSafely('telefono_contacto', data.telefono_contacto || '');
         
         // ==========================================
-        // 3. CARGAR CONDICIONES COMERCIALES (CON VERIFICACIÓN)
+        // 3. CARGAR CONDICIONES COMERCIALES
         // ==========================================
         setValueSafely('notas', data.notas || '');
         setValueSafely('requerimiento', data.requerimiento || '');
@@ -2959,7 +2950,7 @@ async function cargarCotizacion(id) {
         setValueSafely('nota_cotizacion', data.nota_cotizacion || '');
         
         // ==========================================
-        // 4. CARGAR DATOS DEL ASESOR (CON VERIFICACIÓN)
+        // 4. CARGAR DATOS DEL ASESOR
         // ==========================================
         setValueSafely('usuario_id', data.usuario_id || '');
         setValueSafely('asesor_comercial', data.nombre_completo || '');
@@ -2967,7 +2958,7 @@ async function cargarCotizacion(id) {
         setValueSafely('telefono_contacto_user', data.telefono || '');
         
         // ==========================================
-        // 5. CARGAR DESCUENTO (CON VERIFICACIÓN)
+        // 5. CARGAR DESCUENTO
         // ==========================================
         if (data.descuento_porcentaje !== undefined && data.descuento_porcentaje !== null) {
             const descuentoInput = document.getElementById('descuento_porcentaje_input');
@@ -3006,17 +2997,32 @@ async function cargarCotizacion(id) {
                 addItem();
                 const row = document.querySelector("#table-body tr:last-child");
                 if (row) {
-                    setValueSafely(row.querySelector('.producto_id'), item.producto_id || '');
-                    setValueSafely(row.querySelector('.cantidad'), formatCantidad(item.cantidad || 0));
-                    setValueSafely(row.querySelector('.precio_venta_unitario'), formatCantidad(item.precio_venta_unitario || 0));
-                    setValueSafely(row.querySelector('.codigo_producto'), item.codigo || '');
-                    setValueSafely(row.querySelector('.descripcion'), item.descripcion || '');
-                    setValueSafely(row.querySelector('.modelo'), item.modelo || '');
-                    setValueSafely(row.querySelector('.marca'), item.marca || '');
-                    setValueSafely(row.querySelector('.unidad_medida'), item.unidad_medida || 'UNIDAD');
+                    const productoId = row.querySelector('.producto_id');
+                    if (productoId) productoId.value = item.producto_id || '';
                     
-                    const costoInput = row.querySelector('.costo_unitario');
-                    if (costoInput) costoInput.value = formatCantidad(item.costo_unitario || 0);
+                    const cantidad = row.querySelector('.cantidad');
+                    if (cantidad) cantidad.value = formatCantidad(item.cantidad || 0);
+                    
+                    const precio = row.querySelector('.precio_venta_unitario');
+                    if (precio) precio.value = formatCantidad(item.precio_venta_unitario || 0);
+                    
+                    const codigo = row.querySelector('.codigo_producto');
+                    if (codigo) codigo.value = item.codigo || '';
+                    
+                    const descripcion = row.querySelector('.descripcion');
+                    if (descripcion) descripcion.value = item.descripcion || '';
+                    
+                    const modelo = row.querySelector('.modelo');
+                    if (modelo) modelo.value = item.modelo || '';
+                    
+                    const marca = row.querySelector('.marca');
+                    if (marca) marca.value = item.marca || '';
+                    
+                    const unidad = row.querySelector('.unidad_medida');
+                    if (unidad) unidad.value = item.unidad_medida || 'UNIDAD';
+                    
+                    const costo = row.querySelector('.costo_unitario');
+                    if (costo) costo.value = formatCantidad(item.costo_unitario || 0);
                     
                     const stockBadge = row.querySelector('.stock-badge');
                     if (stockBadge && item.stock !== undefined) {
@@ -3069,9 +3075,13 @@ function setValueSafely(id, value) {
     if (el) {
         el.value = value || '';
     } else {
-        console.warn(`⚠️ Elemento no encontrado: ${id}`);
+        // Solo mostrar advertencia si es un ID string (no un elemento)
+        if (typeof id === 'string') {
+            console.warn(`⚠️ Elemento no encontrado: #${id}`);
+        }
     }
 }
+
 
     // =========================
     // EVENTOS
