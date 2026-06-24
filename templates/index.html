@@ -3564,7 +3564,6 @@ async function fetchAPI(endpoint, options = {}) {
             ...options
         });
         
-        // Si la respuesta no es JSON, intentar leer como texto para depuración
         const contentType = response.headers.get('content-type');
         if (!contentType || !contentType.includes('application/json')) {
             const text = await response.text();
@@ -3583,6 +3582,7 @@ async function fetchAPI(endpoint, options = {}) {
         throw error;
     }
 }
+
 // ============================================================
 // DATOS DE SESIÓN DESDE FLASK - CON VALORES POR DEFECTO
 // ============================================================
@@ -3593,10 +3593,8 @@ const FLASK_SESSION = {
     rol: '{{ rol or "usuario" }}'
 };
 
-// ✅ Determinar isLoggedIn basado en user
 FLASK_SESSION.isLoggedIn = FLASK_SESSION.user && FLASK_SESSION.user !== '';
 
-// ✅ Si no hay sesión de Flask, intentar recuperar de localStorage
 if (!FLASK_SESSION.isLoggedIn) {
     try {
         const data = localStorage.getItem('erp_session');
@@ -3695,7 +3693,6 @@ async function cargarPermisosUsuario(userId, empresaId) {
         console.log('⚠️ Backend no disponible, usando localStorage');
     }
     
-    // FALLBACK: localStorage
     const key = `permisos_${userId}_${empresaId}`;
     try {
         const stored = localStorage.getItem(key);
@@ -3773,29 +3770,6 @@ async function cargarSubmodulos() {
     ];
     
     return submodulosData;
-}
-
-// ============================================================
-// FUNCIONES DE API
-// ============================================================
-async function fetchAPI(endpoint, options = {}) {
-    try {
-        const response = await fetch(endpoint, {
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            ...options
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        return await response.json();
-    } catch (error) {
-        console.error(`Error en fetchAPI (${endpoint}):`, error);
-        throw error;
-    }
 }
 
 // ============================================================
@@ -3946,7 +3920,7 @@ function checkEye(v, user, module){
 }
 
 // ============================================================
-// CORRELATIVOS - COMPLETO CON EDITAR Y ELIMINAR
+// CORRELATIVOS - COMPLETO CON EDITAR, ELIMINAR Y PREFIJO AUTOMÁTICO
 // ============================================================
 
 async function loadCorrelativos(){
@@ -3993,7 +3967,6 @@ function renderCorrelativos(filter=""){
             </tr>
         `).join("") || `<tr><td colspan="8" style="text-align:center;color:#94A3B8;padding:20px;">📭 Sin registros KCF</td></tr>`;
         
-        // Event listeners para botones
         tbodyKCF.querySelectorAll('.btn-edit').forEach(btn => {
             btn.addEventListener('click', function() {
                 cargarCorrelativoParaEditar(this.dataset.id);
@@ -4021,7 +3994,6 @@ function renderCorrelativos(filter=""){
             </tr>
         `).join("") || `<tr><td colspan="8" style="text-align:center;color:#94A3B8;padding:20px;">📭 Sin registros AGD</td></tr>`;
         
-        // Event listeners para botones
         tbodyAGD.querySelectorAll('.btn-edit').forEach(btn => {
             btn.addEventListener('click', function() {
                 cargarCorrelativoParaEditar(this.dataset.id);
@@ -4050,24 +4022,60 @@ function updateCorrPreview() {
     document.getElementById("corrPreview").textContent = `${prefijo}-${anio}-${siguiente}`;
 }
 
+// ============================================================
+// FUNCIÓN PARA ACTUALIZAR PREFIJO AUTOMÁTICAMENTE
+// ============================================================
+function actualizarPrefijoAutomatico() {
+    const empresa = document.getElementById("corrEmpresa").value;
+    const documento = document.getElementById("corrDocumento").value;
+    
+    // Mapeo de documentos a sus siglas
+    const siglas = {
+        'Cotización': 'COT',
+        'Orden compra': 'OC',
+        'Pedido Compra': 'PC',
+        'Factura cliente': 'FAC',
+        'Guía remisión': 'GR',
+        'Solicitud compra': 'SC',
+        'Otro': 'DOC'
+    };
+    
+    // Obtener las siglas del documento seleccionado
+    const sigla = siglas[documento] || documento.substring(0, 3).toUpperCase();
+    
+    // Construir el prefijo automático
+    const prefijo = `${sigla}-${empresa}`;
+    
+    // Actualizar el campo de prefijo
+    const prefijoInput = document.getElementById("corrPrefijo");
+    const editando = document.getElementById("corrFormMode").dataset.editando;
+    if (!editando || editando === '') {
+        prefijoInput.value = prefijo;
+    }
+    
+    // Actualizar la vista previa
+    updateCorrPreview();
+    
+    console.log(`📝 Prefijo actualizado a: ${prefijo}`);
+}
+
 // Limpiar formulario de correlativos
 function limpiarFormularioCorrelativo() {
     document.getElementById("corrEmpresa").value = "KCF";
     document.getElementById("corrDocumento").value = "Cotización";
     document.getElementById("corrEstado").value = "Activo";
-    document.getElementById("corrPrefijo").value = "COT-KCF";
     document.getElementById("corrAnio").value = new Date().getFullYear().toString();
     document.getElementById("corrUltimo").value = "0";
     document.getElementById("corrFormMode").textContent = "Modo: creando nuevo correlativo";
     document.getElementById("corrFormMode").dataset.editando = '';
     document.getElementById("btnGuardarCorrelativoForm2").textContent = "Guardar correlativo";
-    updateCorrPreview();
+    // Actualizar prefijo automático
+    actualizarPrefijoAutomatico();
 }
 
 // Cargar correlativo para editar
 async function cargarCorrelativoParaEditar(id) {
     try {
-        // Buscar el correlativo en los datos locales
         const correlativo = correlativosData.find(c => c.id == id);
         
         if (!correlativo) {
@@ -4075,7 +4083,6 @@ async function cargarCorrelativoParaEditar(id) {
             return;
         }
         
-        // Llenar el formulario
         document.getElementById("corrEmpresa").value = correlativo.empresa_codigo || 'KCF';
         document.getElementById("corrDocumento").value = correlativo.documento || 'Cotización';
         document.getElementById("corrEstado").value = correlativo.estado || 'Activo';
@@ -4083,7 +4090,6 @@ async function cargarCorrelativoParaEditar(id) {
         document.getElementById("corrAnio").value = correlativo.anio || new Date().getFullYear();
         document.getElementById("corrUltimo").value = correlativo.ultimo_numero || 0;
         
-        // Guardar el ID en el formulario
         document.getElementById("corrFormMode").textContent = `✏️ Editando: ${correlativo.documento} | ${correlativo.prefijo}`;
         document.getElementById("corrFormMode").dataset.editando = id;
         document.getElementById("btnGuardarCorrelativoForm2").textContent = "Actualizar correlativo";
@@ -4091,7 +4097,6 @@ async function cargarCorrelativoParaEditar(id) {
         updateCorrPreview();
         toast(`📝 Editando correlativo: ${correlativo.documento}`);
         
-        // Scroll al formulario
         document.querySelector('.corr-workspace').scrollIntoView({ behavior: 'smooth' });
         
     } catch(e) {
@@ -4121,7 +4126,6 @@ async function guardarCorrelativo() {
     const editandoId = document.getElementById("corrFormMode").dataset.editando;
     
     try {
-        // Buscar el ID de la empresa
         const empresaObj = empresasData.find(e => e.codigo === empresa);
         if (!empresaObj) {
             toast('❌ Empresa no encontrada');
@@ -4600,16 +4604,21 @@ async function initDashboard(){
         toast('Formulario listo para nuevo correlativo');
     });
     
-    // Actualizar preview del correlativo en tiempo real
-    document.getElementById("corrEmpresa").addEventListener("change", updateCorrPreview);
-    document.getElementById("corrDocumento").addEventListener("change", updateCorrPreview);
+    // ============================================================
+    // EVENTOS PARA ACTUALIZAR PREFIJO AUTOMÁTICAMENTE
+    // ============================================================
+    document.getElementById("corrEmpresa").addEventListener("change", function() {
+        actualizarPrefijoAutomatico();
+    });
+
+    document.getElementById("corrDocumento").addEventListener("change", function() {
+        actualizarPrefijoAutomatico();
+    });
+
+    // Los demás inputs solo actualizan la vista previa
     document.getElementById("corrPrefijo").addEventListener("input", updateCorrPreview);
     document.getElementById("corrAnio").addEventListener("input", updateCorrPreview);
     document.getElementById("corrUltimo").addEventListener("input", updateCorrPreview);
-    
-    // Botón para tomar correlativo (desde el formulario)
-    // Nota: Este botón ya no existe en el nuevo layout, pero mantenemos la funcionalidad
-    // por si se agrega en el futuro
     
     // Abrir pantalla inicial
     openScreen('empresas');
