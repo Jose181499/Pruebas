@@ -3699,7 +3699,6 @@ async function cargarPermisosUsuario(userId, empresaId) {
         console.log('⚠️ Backend no disponible, usando localStorage');
     }
     
-    // FALLBACK: localStorage
     const key = `permisos_${userId}_${empresaId}`;
     try {
         const stored = localStorage.getItem(key);
@@ -3734,7 +3733,6 @@ async function guardarPermisosUsuario(userId, empresaId, permisosList) {
         console.log('⚠️ Backend no disponible, guardando en localStorage');
     }
     
-    // FALLBACK: localStorage
     const key = `permisos_${userId}_${empresaId}`;
     try {
         localStorage.setItem(key, JSON.stringify({ permisos: permisosList }));
@@ -3754,6 +3752,7 @@ async function cargarSubmodulos() {
             const data = await response.json();
             if (data.success) {
                 submodulosData = data.data || [];
+                console.log('✅ Submódulos cargados desde backend:', submodulosData.length);
                 return submodulosData;
             }
         }
@@ -3761,22 +3760,44 @@ async function cargarSubmodulos() {
         console.log('⚠️ Backend no disponible, usando submódulos por defecto');
     }
     
-   // Verifica que los nombres coincidan con los de la tabla
+    // Mapeo de submódulos por defecto
     submodulosData = [
-    { id: 1, nombre: 'Configuración', codigo: 'CONFIGURACION' },
-    { id: 2, nombre: 'Maestros', codigo: 'MAESTROS' },
-    { id: 3, nombre: 'Productos', codigo: 'PRODUCTOS' },
-    { id: 4, nombre: 'Cotizaciones', codigo: 'COTIZACIONES' },
-    { id: 5, nombre: 'Ventas', codigo: 'VENTAS' },
-    { id: 6, nombre: 'Compras', codigo: 'COMPRAS' },
-    { id: 7, nombre: 'Logística', codigo: 'LOGISTICA' },
-    { id: 8, nombre: 'Inventario', codigo: 'INVENTARIO' },
-    { id: 9, nombre: 'CxC', codigo: 'CXC' },
-    { id: 10, nombre: 'CxP', codigo: 'CXP' },
-    { id: 11, nombre: 'Caja', codigo: 'CAJA' },
-    { id: 12, nombre: 'Reportes', codigo: 'REPORTES' },
-    { id: 13, nombre: 'SUNAT', codigo: 'SUNAT' }
-];
+        { id: 1, codigo: 'EMPRESAS', nombre: 'Configuración' },
+        { id: 2, codigo: 'USUARIOS_PERMISOS', nombre: 'Configuración' },
+        { id: 3, codigo: 'CORRELATIVOS', nombre: 'Configuración' },
+        { id: 4, codigo: 'PARAMETROS', nombre: 'Configuración' },
+        { id: 5, codigo: 'INTEGRACION', nombre: 'Configuración' },
+        { id: 6, codigo: 'CLIENTES', nombre: 'Maestros' },
+        { id: 7, codigo: 'PROVEEDORES', nombre: 'Maestros' },
+        { id: 8, codigo: 'ALMACENES', nombre: 'Maestros' },
+        { id: 9, codigo: 'CATEGORIAS', nombre: 'Maestros' },
+        { id: 10, codigo: 'MARCAS', nombre: 'Maestros' },
+        { id: 11, codigo: 'UNIDADES_MEDIDA', nombre: 'Maestros' },
+        { id: 12, codigo: 'PRODUCTOS_LISTADO', nombre: 'Productos' },
+        { id: 13, codigo: 'PRODUCTOS_FICHA', nombre: 'Productos' },
+        { id: 14, codigo: 'COTIZACIONES', nombre: 'Cotizaciones' },
+        { id: 15, codigo: 'COMPROBANTES_CLIENTE', nombre: 'Ventas' },
+        { id: 16, codigo: 'GUIAS_CLIENTE', nombre: 'Ventas' },
+        { id: 17, codigo: 'NOTAS_CREDITO', nombre: 'Ventas' },
+        { id: 18, codigo: 'SOLICITUD_COMPRA', nombre: 'Compras' },
+        { id: 19, codigo: 'COMPARATIVO_PROVEEDORES', nombre: 'Compras' },
+        { id: 20, codigo: 'ORDEN_COMPRA', nombre: 'Compras' },
+        { id: 21, codigo: 'COMPROBANTES_PROVEEDOR', nombre: 'Compras' },
+        { id: 22, codigo: 'RECEPCION_MERCADERIA', nombre: 'Logística' },
+        { id: 23, codigo: 'ESTADO_STOCK', nombre: 'Inventario' },
+        { id: 24, codigo: 'KARDEX', nombre: 'Inventario' },
+        { id: 25, codigo: 'ENTRADAS_SALIDAS', nombre: 'Inventario' },
+        { id: 26, codigo: 'TRANSFERENCIAS', nombre: 'Inventario' },
+        { id: 27, codigo: 'CUENTAS_COBRAR', nombre: 'CxC' },
+        { id: 28, codigo: 'CUENTAS_PAGAR', nombre: 'CxP' },
+        { id: 29, codigo: 'CAJA_BANCOS', nombre: 'Caja' },
+        { id: 30, codigo: 'FLUJO_CAJA', nombre: 'Caja' },
+        { id: 31, codigo: 'REPORTE_VENTAS', nombre: 'Reportes' },
+        { id: 32, codigo: 'REPORTE_COMPRAS', nombre: 'Reportes' },
+        { id: 33, codigo: 'REPORTE_INVENTARIO', nombre: 'Reportes' },
+        { id: 34, codigo: 'REPORTE_FINANZAS', nombre: 'Reportes' },
+        { id: 35, codigo: 'SUNAT', nombre: 'SUNAT' }
+    ];
     
     return submodulosData;
 }
@@ -3855,7 +3876,7 @@ async function loadUsuarios(){
 }
 
 // ============================================================
-// CHECKBOX INTERACTIVO - VERSIÓN CORREGIDA
+// CHECKBOX INTERACTIVO
 // ============================================================
 function checkEye(tienePermiso, user, module, userId, empresaId) {
     const checked = tienePermiso ? 'checked' : '';
@@ -3871,7 +3892,7 @@ function checkEye(tienePermiso, user, module, userId, empresaId) {
 }
 
 // ============================================================
-// MANEJAR CAMBIO DE PERMISOS - VERSIÓN CON CÓDIGOS
+// MANEJAR CAMBIO DE PERMISOS - VERSIÓN CORREGIDA
 // ============================================================
 async function togglePermiso(event) {
     const checkbox = event.target;
@@ -3955,10 +3976,8 @@ async function togglePermiso(event) {
         const result = await guardarPermisosUsuario(userId, empresaId, permisosList);
         if (result) {
             toast(`✅ ${tienePermiso ? 'Habilitado' : 'Deshabilitado'} ${submodulo.nombre} para ${user}`);
-            // Recargar la tabla para reflejar cambios
             await loadUsuarios();
         } else {
-            // Revertir el checkbox si falló
             checkbox.checked = !tienePermiso;
             toast('❌ Error al guardar permiso');
         }
@@ -3968,111 +3987,6 @@ async function togglePermiso(event) {
         toast('❌ Error al guardar permiso');
     }
 }
-    const checkbox = event.target;
-    const userId = checkbox.dataset.userId;
-    const module = checkbox.dataset.module;
-    const empresaId = checkbox.dataset.empresaId;
-    const user = checkbox.dataset.user;
-    const tienePermiso = checkbox.checked;
-    
-    if (!userId || !empresaId) {
-        toast('❌ No se puede guardar: faltan datos del usuario');
-        return;
-    }
-    
-    // Buscar el submódulo de forma más flexible
-    let submodulo = null;
-    
-    // 1. Buscar por nombre exacto
-    submodulo = submodulosData.find(s => s.nombre === module);
-    
-    // 2. Si no, buscar por coincidencia parcial
-    if (!submodulo) {
-        submodulo = submodulosData.find(s => 
-            module.toLowerCase().includes(s.nombre.toLowerCase()) ||
-            s.nombre.toLowerCase().includes(module.toLowerCase())
-        );
-    }
-    
-    // 3. Si no, buscar por código
-    if (!submodulo) {
-        const codigo = module.toUpperCase().replace(/ /g, '_').replace(/\./g, '');
-        submodulo = submodulosData.find(s => s.codigo === codigo);
-    }
-    
-    // 4. Si no, buscar por código parcial
-    if (!submodulo) {
-        const codigo = module.toUpperCase().replace(/ /g, '_').replace(/\./g, '');
-        submodulo = submodulosData.find(s => 
-            s.codigo.includes(codigo) || codigo.includes(s.codigo)
-        );
-    }
-    
-    // 5. Último intento: buscar por nombre en el módulo
-    if (!submodulo) {
-        // Mapeo manual de nombres comunes
-        const nombreMap = {
-            'Config': 'Configuración',
-            'Config.': 'Configuración',
-            'Maestros': 'Maestros',
-            'Productos': 'Productos',
-            'Cotiz': 'Cotizaciones',
-            'Cotiz.': 'Cotizaciones',
-            'Ventas': 'Ventas',
-            'Compras': 'Compras',
-            'Logística': 'Logística',
-            'Invent': 'Inventario',
-            'Invent.': 'Inventario',
-            'CxC': 'CxC',
-            'CxP': 'CxP',
-            'Caja': 'Caja',
-            'Reportes': 'Reportes',
-            'SUNAT': 'SUNAT'
-        };
-        const nombreReal = nombreMap[module] || module;
-        submodulo = submodulosData.find(s => s.nombre === nombreReal);
-    }
-    
-    if (!submodulo) {
-        toast(`❌ Módulo "${module}" no encontrado en el sistema`);
-        console.error('Módulo no encontrado:', module);
-        console.log('Submódulos disponibles:', submodulosData);
-        checkbox.checked = !tienePermiso;
-        return;
-    }
-    
-    console.log(`✅ Módulo encontrado: ${submodulo.nombre} (ID: ${submodulo.id})`);
-    
-    // Crear el permiso para guardar
-    const permisosList = [{
-        submodulo_id: submodulo.id,
-        puede_ver: tienePermiso,
-        puede_crear: tienePermiso,
-        puede_editar: tienePermiso,
-        puede_aprobar: false,
-        puede_anular: false,
-        puede_eliminar: false,
-        puede_exportar: false,
-        puede_subir_evidencia: false,
-        observacion: `Permiso ${tienePermiso ? 'habilitado' : 'deshabilitado'} desde la tabla`
-    }];
-    
-    try {
-        const result = await guardarPermisosUsuario(userId, empresaId, permisosList);
-        if (result) {
-            toast(`✅ ${tienePermiso ? 'Habilitado' : 'Deshabilitado'} ${submodulo.nombre} para ${user}`);
-            // Recargar la tabla para reflejar cambios
-            await loadUsuarios();
-        } else {
-            // Revertir el checkbox si falló
-            checkbox.checked = !tienePermiso;
-            toast('❌ Error al guardar permiso');
-        }
-    } catch(e) {
-        console.error('Error guardando permiso:', e);
-        checkbox.checked = !tienePermiso;
-        toast('❌ Error al guardar permiso');
-    }
 
 // ============================================================
 // RENDER USUARIOS - VERSIÓN CON CHECKBOXES INTERACTIVOS
@@ -4093,10 +4007,7 @@ async function renderUsuarios(filter=""){
     const tbody = document.getElementById("tbodyUsuarios");
     if(!tbody) return;
 
-    // Obtener la empresa activa para los permisos
     const empresaActiva = document.getElementById('empresaActiva').value;
-
-    // Para cada usuario, cargar sus permisos
     let htmlRows = [];
     
     for (let i = 0; i < lista.length; i++) {
@@ -4105,11 +4016,9 @@ async function renderUsuarios(filter=""){
         const roles = empresas.map(e => e.rol_codigo || '');
         const esAdmin = roles.includes('GERENCIA_TOTAL');
         
-        // Buscar la empresa específica en el usuario
         const empresaUsuario = empresas.find(e => e.empresa_codigo === empresaActiva);
         const empresaId = empresaUsuario?.empresa_id || null;
         
-        // Cargar permisos del usuario para esta empresa
         let permisos = {};
         if (empresaId) {
             const data = await cargarPermisosUsuario(u.id, empresaId);
@@ -4120,9 +4029,7 @@ async function renderUsuarios(filter=""){
             }
         }
         
-        // Función para verificar si tiene permiso (incluyendo admin)
         const tienePermisoModulo = (submoduloNombre) => {
-            // Si es admin, siempre tiene permiso
             if (esAdmin) return true;
             
             const submodulo = submodulosData.find(s => 
@@ -4132,9 +4039,7 @@ async function renderUsuarios(filter=""){
             if (!submodulo) return false;
             
             const permiso = permisos[submodulo.id];
-            // Si no hay permiso en la BD, por defecto tiene permisos de operativo
             if (!permiso) {
-                // Módulos que un operativo debe ver por defecto
                 const modulosOperativos = ['Productos', 'Cotizaciones', 'Ventas', 'Compras', 'Logística', 'Inventario'];
                 return modulosOperativos.includes(submoduloNombre);
             }
@@ -4144,7 +4049,6 @@ async function renderUsuarios(filter=""){
         const empresasHtml = empresas.map(e => badge(e.empresa_codigo || '')).join('');
         const rolesHtml = roles.map(r => `<span class="badge ${r === 'GERENCIA_TOTAL' ? 'badge-info' : 'badge-gray'}">${r}</span>`).join(' ');
         
-        // Generar fila con permisos correctos
         const row = `
         <tr>
             <td class="left"><b>${u.usuario_sistema}</b></td>
@@ -4169,14 +4073,12 @@ async function renderUsuarios(filter=""){
         htmlRows.push(row);
     }
 
-    // Si hay usuarios, mostrar las filas
     if (htmlRows.length > 0) {
         tbody.innerHTML = htmlRows.join('');
     } else {
         tbody.innerHTML = `<tr><td colspan="17" style="text-align:center;color:#94A3B8;padding:20px;">📭 No hay usuarios que coincidan con los filtros</td></tr>`;
     }
 
-    // Actualizar contadores
     document.getElementById("usuariosVisibles").textContent = lista.length;
     document.getElementById("empresaFiltroLabel").textContent = empresaFiltro === "TODAS" ? "Todas" : empresaFiltro;
     document.getElementById("usuariosTotal").textContent = lista.filter(u => {
@@ -4188,14 +4090,10 @@ async function renderUsuarios(filter=""){
         return empresas.some(e => e.rol_codigo === 'OPERATIVO_COMERCIAL_LOGISTICA');
     }).length;
 
-    // ============================================================
-    // EVENTOS PARA CHECKBOXES INTERACTIVOS
-    // ============================================================
     document.querySelectorAll('.perm-checkbox').forEach(checkbox => {
         checkbox.addEventListener('change', togglePermiso);
     });
 
-    // Agregar event listeners a los ojos (abrir modal)
     document.querySelectorAll(".eye").forEach(el => {
         el.addEventListener("click", function() {
             openPermissions(
@@ -4210,12 +4108,12 @@ async function renderUsuarios(filter=""){
 
 // ============================================================
 // OPEN PERMISSIONS - VERSIÓN CORREGIDA
+// ============================================================
 async function openPermissions(user, module, userId, empresaId) {
     console.log('👁️ Abriendo permisos para:', user, module, userId, empresaId);
     
     document.getElementById("modalTitle").textContent = `Detalle de permisos | ${user} | ${module}`;
     
-    // Buscar usuario
     let u = null;
     if (userId) {
         u = usuariosData.find(item => item.id == userId);
@@ -4228,7 +4126,6 @@ async function openPermissions(user, module, userId, empresaId) {
         return;
     }
     
-    // Obtener empresa ID
     let empresaIdFinal = empresaId;
     let empresaCodigo = document.getElementById('empresaActiva').value;
     
@@ -4246,14 +4143,11 @@ async function openPermissions(user, module, userId, empresaId) {
     currentPermissionsEmpresa = empresaIdFinal;
     currentPermissionsUser = user;
     
-    // Cargar permisos actuales
     const permisosData = await cargarPermisosUsuario(u.id, empresaIdFinal);
     
-    // Determinar si es admin
     const empresa = u.empresas_acceso?.find(e => e.empresa_id === empresaIdFinal);
     const esAdmin = empresa?.rol_codigo === 'GERENCIA_TOTAL';
     
-    // Mapeo de nombres de módulos a códigos de submódulos
     const mapeoCodigos = {
         'Configuración': 'EMPRESAS',
         'Config.': 'EMPRESAS',
@@ -4273,7 +4167,6 @@ async function openPermissions(user, module, userId, empresaId) {
         'SUNAT': 'SUNAT'
     };
     
-    // Buscar el submódulo por código
     const codigo = mapeoCodigos[module];
     let submodulo = null;
     
@@ -4295,13 +4188,10 @@ async function openPermissions(user, module, userId, empresaId) {
     
     currentSubmoduloId = submodulo?.id || null;
     
-    // Buscar permisos para este submódulo
     const permiso = permisosData?.permisos?.find(p => p.submodulo_id === currentSubmoduloId) || {};
     
-    // SIEMPRE mostrar el botón guardar
     document.getElementById("saveModal").style.display = 'inline-block';
     
-    // Generar filas de permisos
     const baseRows = [
         {nombre:"Ver", perm: 'puede_ver', value: esAdmin ? true : (permiso.puede_ver !== false)},
         {nombre:"Crear", perm: 'puede_crear', value: esAdmin ? true : (permiso.puede_crear || false)},
@@ -4349,7 +4239,9 @@ async function openPermissions(user, module, userId, empresaId) {
 
     document.getElementById("modalPermisos").classList.add("show");
 }
-// GUARDAR PERMISOS - VERSIÓN CORREGIDA
+
+// ============================================================
+// GUARDAR PERMISOS DESDE EL MODAL
 // ============================================================
 document.getElementById("saveModal").addEventListener("click", async function() {
     if (!currentPermissionsUserId || !currentPermissionsEmpresa) {
@@ -4357,7 +4249,6 @@ document.getElementById("saveModal").addEventListener("click", async function() 
         return;
     }
     
-    // Recopilar permisos del modal
     const checks = document.querySelectorAll('.perm-check');
     const permisosData = {};
     
@@ -4369,31 +4260,25 @@ document.getElementById("saveModal").addEventListener("click", async function() 
     });
     
     try {
-        // Buscar el usuario
         const u = usuariosData.find(item => item.id === currentPermissionsUserId);
         if (!u) {
             toast('❌ Usuario no encontrado');
             return;
         }
         
-        // Buscar el submódulo actual
         const submodulo = submodulosData.find(s => s.id === currentSubmoduloId);
         if (!submodulo) {
             toast('❌ No se encontró el submódulo');
             return;
         }
         
-        // Determinar si es admin (para saber si hay que guardar todos los permisos)
         const empresa = u.empresas_acceso?.find(e => e.empresa_id === currentPermissionsEmpresa);
         const esAdmin = empresa?.rol_codigo === 'GERENCIA_TOTAL';
         
         let permisosList = [];
         
         if (esAdmin) {
-            // Si es admin, guardar TODOS los permisos como verdaderos
-            // o según lo que el usuario haya seleccionado en el modal
             for (const sub of submodulosData) {
-                // Para el submódulo actual, usar los valores del modal
                 if (sub.id === currentSubmoduloId) {
                     permisosList.push({
                         submodulo_id: sub.id,
@@ -4408,7 +4293,6 @@ document.getElementById("saveModal").addEventListener("click", async function() 
                         observacion: ''
                     });
                 } else {
-                    // Para otros submódulos, mantener permisos existentes o dar true
                     const existingPerm = await cargarPermisosUsuario(currentPermissionsUserId, currentPermissionsEmpresa);
                     const existing = existingPerm?.permisos?.find(p => p.submodulo_id === sub.id) || {};
                     
@@ -4427,7 +4311,6 @@ document.getElementById("saveModal").addEventListener("click", async function() 
                 }
             }
         } else {
-            // Para no admin, solo guardar el submódulo actual
             permisosList = [{
                 submodulo_id: currentSubmoduloId,
                 puede_ver: permisosData['puede_ver'] !== undefined ? permisosData['puede_ver'] : true,
@@ -4442,7 +4325,6 @@ document.getElementById("saveModal").addEventListener("click", async function() 
             }];
         }
         
-        // Guardar permisos
         const result = await guardarPermisosUsuario(
             currentPermissionsUserId,
             currentPermissionsEmpresa,
@@ -4451,7 +4333,6 @@ document.getElementById("saveModal").addEventListener("click", async function() 
         
         if (result) {
             document.getElementById("modalPermisos").classList.remove("show");
-            // Recargar usuarios para actualizar los checkboxes
             await loadUsuarios();
             toast('✅ Permisos guardados correctamente');
         } else {
@@ -4558,7 +4439,6 @@ function renderCorrelativos(filter=""){
     document.getElementById("totalDocumentos").textContent = new Set(list.map(c => c.documento)).size;
 }
 
-// Función para actualizar preview del correlativo
 function updateCorrPreview() {
     const prefijo = document.getElementById("corrPrefijo").value || "PRE";
     const anio = document.getElementById("corrAnio").value || new Date().getFullYear();
@@ -4567,9 +4447,6 @@ function updateCorrPreview() {
     document.getElementById("corrPreview").textContent = `${prefijo}-${anio}-${siguiente}`;
 }
 
-// ============================================================
-// FUNCIÓN PARA ACTUALIZAR PREFIJO AUTOMÁTICAMENTE
-// ============================================================
 function actualizarPrefijoAutomatico() {
     const empresa = document.getElementById("corrEmpresa").value;
     const documento = document.getElementById("corrDocumento").value;
@@ -4592,12 +4469,9 @@ function actualizarPrefijoAutomatico() {
     if (!editando || editando === '') {
         prefijoInput.value = prefijo;
     }
-    
     updateCorrPreview();
-    console.log(`📝 Prefijo actualizado a: ${prefijo}`);
 }
 
-// Limpiar formulario de correlativos
 function limpiarFormularioCorrelativo() {
     document.getElementById("corrEmpresa").value = "KCF";
     document.getElementById("corrDocumento").value = "Cotización";
@@ -4610,39 +4484,31 @@ function limpiarFormularioCorrelativo() {
     actualizarPrefijoAutomatico();
 }
 
-// Cargar correlativo para editar
 async function cargarCorrelativoParaEditar(id) {
     try {
         const correlativo = correlativosData.find(c => c.id == id);
-        
         if (!correlativo) {
             toast('❌ Correlativo no encontrado');
             return;
         }
-        
         document.getElementById("corrEmpresa").value = correlativo.empresa_codigo || 'KCF';
         document.getElementById("corrDocumento").value = correlativo.documento || 'Cotización';
         document.getElementById("corrEstado").value = correlativo.estado || 'Activo';
         document.getElementById("corrPrefijo").value = correlativo.prefijo || '';
         document.getElementById("corrAnio").value = correlativo.anio || new Date().getFullYear();
         document.getElementById("corrUltimo").value = correlativo.ultimo_numero || 0;
-        
         document.getElementById("corrFormMode").textContent = `✏️ Editando: ${correlativo.documento} | ${correlativo.prefijo}`;
         document.getElementById("corrFormMode").dataset.editando = id;
         document.getElementById("btnGuardarCorrelativoForm2").textContent = "Actualizar correlativo";
-        
         updateCorrPreview();
         toast(`📝 Editando correlativo: ${correlativo.documento}`);
-        
         document.querySelector('.corr-workspace').scrollIntoView({ behavior: 'smooth' });
-        
     } catch(e) {
         console.error('Error cargando correlativo:', e);
         toast('❌ Error al cargar el correlativo');
     }
 }
 
-// Guardar correlativo (crear o actualizar)
 async function guardarCorrelativo() {
     const empresa = document.getElementById("corrEmpresa").value;
     const documento = document.getElementById("corrDocumento").value;
@@ -4651,23 +4517,14 @@ async function guardarCorrelativo() {
     const anio = parseInt(document.getElementById("corrAnio").value) || new Date().getFullYear();
     const ultimo = parseInt(document.getElementById("corrUltimo").value) || 0;
     
-    if (!prefijo) {
-        toast('❌ El prefijo es obligatorio');
-        return;
-    }
-    if (!documento) {
-        toast('❌ El documento es obligatorio');
-        return;
-    }
+    if (!prefijo) { toast('❌ El prefijo es obligatorio'); return; }
+    if (!documento) { toast('❌ El documento es obligatorio'); return; }
     
     const editandoId = document.getElementById("corrFormMode").dataset.editando;
     
     try {
         const empresaObj = empresasData.find(e => e.codigo === empresa);
-        if (!empresaObj) {
-            toast('❌ Empresa no encontrada');
-            return;
-        }
+        if (!empresaObj) { toast('❌ Empresa no encontrada'); return; }
         
         const data = {
             empresa_id: empresaObj.id,
@@ -4681,7 +4538,6 @@ async function guardarCorrelativo() {
         
         let url = '/api/config/correlativos';
         let method = 'POST';
-        
         if (editandoId && editandoId !== '') {
             url = `/api/config/correlativos/${editandoId}`;
             method = 'PUT';
@@ -4692,7 +4548,6 @@ async function guardarCorrelativo() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-        
         const result = await response.json();
         
         if (result.success) {
@@ -4708,19 +4563,11 @@ async function guardarCorrelativo() {
     }
 }
 
-// Eliminar correlativo
 async function eliminarCorrelativo(id) {
-    if (!confirm('¿Estás seguro de eliminar este correlativo?')) {
-        return;
-    }
-    
+    if (!confirm('¿Estás seguro de eliminar este correlativo?')) return;
     try {
-        const response = await fetch(`/api/config/correlativos/${id}`, {
-            method: 'DELETE'
-        });
-        
+        const response = await fetch(`/api/config/correlativos/${id}`, { method: 'DELETE' });
         const result = await response.json();
-        
         if (result.success) {
             toast('✅ Correlativo eliminado exitosamente');
             await loadCorrelativos();
@@ -4733,18 +4580,12 @@ async function eliminarCorrelativo(id) {
     }
 }
 
-// Tomar correlativo (incrementar y obtener siguiente)
 async function tomarCorrelativo(empresaCodigo, documento, anio = 2026) {
     try {
         const data = await fetchAPI('/api/config/correlativos/tomar', {
             method: 'POST',
-            body: JSON.stringify({
-                empresa_codigo: empresaCodigo,
-                documento: documento,
-                anio: anio
-            })
+            body: JSON.stringify({ empresa_codigo: empresaCodigo, documento: documento, anio: anio })
         });
-        
         if (data.success) {
             toast(`✅ Correlativo generado: ${data.data.codigo}`);
             return data.data.codigo;
@@ -4765,23 +4606,18 @@ async function tomarCorrelativo(empresaCodigo, documento, anio = 2026) {
 
 async function loadParametros() {
     console.log('📋 Cargando parámetros...');
-    
     try {
         const response = await fetch('/api/config/parametros');
         if (response.ok) {
             const data = await response.json();
             if (data.success) {
                 parametrosData = data.data || [];
-                console.log('✅ Parámetros cargados:', parametrosData.length);
                 aplicarParametrosDesdeBackend();
                 return;
             }
         }
-    } catch(e) {
-        console.log('⚠️ Backend no disponible, usando parámetros por defecto');
-    }
+    } catch(e) { console.log('⚠️ Backend no disponible'); }
     
-    // Si no hay backend, usar valores por defecto desde localStorage
     try {
         const stored = localStorage.getItem('erp_parametros');
         if (stored) {
@@ -4791,7 +4627,6 @@ async function loadParametros() {
         }
     } catch(e) {}
     
-    // Parámetros por defecto
     parametrosData = [
         { grupo: 'multiempresa', codigo: 'bloquear_sin_empresa', nombre: 'Bloquear documento sin empresa activa', valor_bool: true },
         { grupo: 'multiempresa', codigo: 'usar_color_logo_ruc', nombre: 'Usar color, logo y RUC por empresa', valor_bool: true },
@@ -4818,21 +4653,16 @@ async function loadParametros() {
         { grupo: 'auditoria', codigo: 'enviar_anulados_papelera', nombre: 'Enviar anulados a papelera', valor_bool: true },
         { grupo: 'auditoria', codigo: 'eliminar_definitivo_sin_permiso', nombre: 'Eliminar definitivo sin permiso', valor_bool: false }
     ];
-    
     aplicarParametrosDesdeBackend();
 }
 
 function aplicarParametrosDesdeBackend() {
-    // Mapear parámetros a los checkboxes
     const paramRows = document.querySelectorAll('#parametros .param-row');
-    
     paramRows.forEach(row => {
         const label = row.querySelector('span');
         const checkbox = row.querySelector('input[type="checkbox"]');
         if (!label || !checkbox) return;
-        
         const nombre = label.textContent.trim();
-        // Buscar el parámetro correspondiente
         const param = parametrosData.find(p => p.nombre === nombre);
         if (param) {
             checkbox.checked = param.valor_bool === true || param.valor_bool === 'true';
@@ -4841,17 +4671,12 @@ function aplicarParametrosDesdeBackend() {
 }
 
 async function guardarParametros() {
-    console.log('💾 Guardando parámetros...');
-    
     const parametros = [];
     const paramRows = document.querySelectorAll('#parametros .param-row');
-    
     paramRows.forEach(row => {
         const label = row.querySelector('span');
         const checkbox = row.querySelector('input[type="checkbox"]');
         if (!label || !checkbox) return;
-        
-        // Determinar el grupo
         let grupo = 'general';
         const panel = row.closest('.param-group');
         if (panel) {
@@ -4863,10 +4688,8 @@ async function guardarParametros() {
             else if (headText.includes('Finanzas')) grupo = 'finanzas';
             else if (headText.includes('Auditoría')) grupo = 'auditoria';
         }
-        
         const nombre = label.textContent.trim();
         const codigo = nombre.toLowerCase().replace(/ /g, '_').replace(/[^a-z0-9_]/g, '');
-        
         parametros.push({
             grupo: grupo,
             codigo: codigo,
@@ -4876,12 +4699,8 @@ async function guardarParametros() {
         });
     });
     
-    // Guardar en localStorage (fallback)
-    try {
-        localStorage.setItem('erp_parametros', JSON.stringify(parametros));
-    } catch(e) {}
+    try { localStorage.setItem('erp_parametros', JSON.stringify(parametros)); } catch(e) {}
     
-    // Enviar al backend
     try {
         let allSuccess = true;
         for (const param of parametros) {
@@ -4890,38 +4709,24 @@ async function guardarParametros() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(param)
             });
-            
-            if (!response.ok) {
-                allSuccess = false;
-            }
+            if (!response.ok) allSuccess = false;
         }
-        
-        if (allSuccess) {
-            toast('✅ Todos los parámetros guardados correctamente');
-        } else {
-            toast('⚠️ Algunos parámetros se guardaron en localStorage (backend no disponible)');
-        }
+        if (allSuccess) toast('✅ Todos los parámetros guardados correctamente');
+        else toast('⚠️ Algunos parámetros se guardaron en localStorage');
     } catch(e) {
-        console.log('⚠️ Backend no disponible, parámetros guardados en localStorage');
-        toast('⚠️ Parámetros guardados localmente (conexión con servidor no disponible)');
+        toast('⚠️ Parámetros guardados localmente (servidor no disponible)');
     }
-    
-    // Actualizar datos locales
     parametrosData = parametros;
 }
 
 // ============================================================
-// INTEGRACIÓN ERP - FUNCIONES
+// INTEGRACIÓN ERP
 // ============================================================
-
 function simularIntegracion() {
     const empresa = document.getElementById("empresaActiva").value;
-    const badgeClass = empresa === "AGD" ? "badge-agd" : "badge-kcf";
     const log = document.getElementById("integrationLog");
-    
     if (!log) return;
     
-    // Simular proceso de integración paso a paso
     const pasos = [
         { tiempo: 0, mensaje: `🔄 Iniciando integración para ${empresa}...` },
         { tiempo: 500, mensaje: `📝 Validando configuración y parámetros...` },
@@ -4934,34 +4739,20 @@ function simularIntegracion() {
         { tiempo: 4000, mensaje: `✅ Integración completada exitosamente` }
     ];
     
-    // Limpiar log anterior
     log.innerHTML = '';
-    
-    // Agregar mensajes con delay
     pasos.forEach((paso, index) => {
         setTimeout(() => {
             const row = document.createElement('div');
             row.className = 'log-row';
-            
             let badgeHtml = '';
             if (index === 0) badgeHtml = `<span class="badge badge-info">INICIO</span>`;
             else if (index === pasos.length - 1) badgeHtml = `<span class="badge badge-ok">OK</span>`;
-            else if (paso.mensaje.includes('Generando')) badgeHtml = `<span class="badge badge-agd">💰</span>`;
-            else if (paso.mensaje.includes('correlativo')) badgeHtml = `<span class="badge badge-kcf">#</span>`;
             else badgeHtml = `<span class="badge badge-gray">⏳</span>`;
-            
-            row.innerHTML = `
-                ${badgeHtml}
-                <b>${paso.mensaje.substring(0, 40)}</b>
-                <span>${paso.mensaje}</span>
-            `;
+            row.innerHTML = `${badgeHtml}<b>${paso.mensaje.substring(0, 40)}</b><span>${paso.mensaje}</span>`;
             log.appendChild(row);
-            
-            // Auto-scroll al final
             log.scrollTop = log.scrollHeight;
         }, paso.tiempo);
     });
-    
     toast('🔄 Simulando flujo de integración...');
 }
 
@@ -4971,7 +4762,6 @@ function simularIntegracion() {
 function setupBreadcrumb() {
     const breadcrumb = document.getElementById('breadcrumb');
     if (!breadcrumb) return;
-    
     breadcrumb.querySelectorAll('.crumb-btn').forEach(item => {
         item.addEventListener('click', function(e) {
             const screen = this.dataset.screen;
@@ -5025,11 +4815,9 @@ const titles = {
 
 function openScreen(screen){
     currentScreen = screen;
-    
     document.querySelectorAll(".section").forEach(sec => sec.classList.remove("active"));
     const target = document.getElementById(screen);
     if(target) target.classList.add("active");
-
     document.querySelectorAll(".menu-header,.child-btn,.tab-btn").forEach(el => el.classList.remove("active"));
     document.querySelectorAll(`[data-screen="${screen}"]`).forEach(el => el.classList.add("active"));
 
@@ -5037,14 +4825,11 @@ function openScreen(screen){
     if (breadcrumb) {
         const breadcrumbText = breadcrumbs[screen] || "Inicio";
         const parts = breadcrumbText.split(' / ');
-        
         breadcrumb.innerHTML = parts.map((part, index) => {
             let targetScreen = null;
-            
             if (index === parts.length - 1) {
                 return `<span class="crumb-btn active-crumb">${part}</span>`;
             }
-            
             const partialPath = parts.slice(0, index + 1).join(' / ');
             for (const [key, value] of Object.entries(breadcrumbs)) {
                 if (value === partialPath || value.startsWith(partialPath + ' / ')) {
@@ -5052,7 +4837,6 @@ function openScreen(screen){
                     break;
                 }
             }
-            
             if (!targetScreen) {
                 for (const [key, value] of Object.entries(breadcrumbs)) {
                     if (value.includes(part)) {
@@ -5061,14 +4845,11 @@ function openScreen(screen){
                     }
                 }
             }
-            
             if (index === 0 && part === 'Inicio') {
                 targetScreen = 'dashboard';
             }
-            
             return `<button type="button" class="crumb-btn" data-screen="${targetScreen || 'dashboard'}">${part}</button>`;
         }).join(' / ');
-        
         breadcrumb.querySelectorAll('.crumb-btn').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 const screen = this.dataset.screen;
@@ -5080,7 +4861,6 @@ function openScreen(screen){
             });
         });
     }
-
     document.getElementById("pageTitle").textContent = titles[screen] || "ERP Multiempresa";
     document.getElementById("mainPanel").scrollTo({top:0, behavior:"smooth"});
 }
@@ -5110,7 +4890,6 @@ async function initDashboard(){
     console.log('📋 FLASK_SESSION:', FLASK_SESSION);
     
     let session = null;
-    
     if (FLASK_SESSION.isLoggedIn && FLASK_SESSION.user) {
         session = {
             user: FLASK_SESSION.user,
@@ -5154,7 +4933,6 @@ async function initDashboard(){
     }
     
     console.log('✅ Sesión encontrada:', session);
-    
     document.getElementById('userName').textContent = session.name || session.user;
     document.getElementById('userAvatar').textContent = (session.name || session.user)[0].toUpperCase();
     
@@ -5174,7 +4952,6 @@ async function initDashboard(){
         toast('Error al cargar datos. Recarga la página.');
     }
     
-    // Eventos de navegación
     document.querySelectorAll(".menu-header, .child-btn, .tab-btn, .crumb-btn").forEach(el => {
         el.addEventListener("click", function(e) {
             const screen = this.dataset.screen;
@@ -5189,7 +4966,6 @@ async function initDashboard(){
         });
     });
     
-    // Filtros
     document.getElementById("searchEmpresas").addEventListener("input", e => renderEmpresas(e.target.value));
     document.getElementById("searchUsuarios").addEventListener("input", async e => await renderUsuarios(e.target.value));
     document.getElementById("searchCorrelativos").addEventListener("input", e => renderCorrelativos(e.target.value));
@@ -5197,7 +4973,6 @@ async function initDashboard(){
     document.getElementById("filterEmpresaUsuarios").addEventListener("change", async () => await renderUsuarios());
     document.getElementById("filterNivelUsuarios").addEventListener("change", async () => await renderUsuarios());
     
-    // Cambio de empresa
     document.getElementById("empresaActiva").addEventListener("change", function(e){
         applyTheme(e.target.value);
         const session = getSession();
@@ -5205,56 +4980,36 @@ async function initDashboard(){
             session.empresa = e.target.value;
             localStorage.setItem('erp_session', JSON.stringify(session));
         }
-        // Recargar usuarios para actualizar permisos con la nueva empresa
         loadUsuarios();
         toast(`Empresa cambiada a ${e.target.value}`);
     });
     
-    // Modal
     document.getElementById("closeModal").addEventListener("click", () => document.getElementById("modalPermisos").classList.remove("show"));
     
-    // ============================================================
-    // EVENTOS DE INTEGRACIÓN ERP
-    // ============================================================
     document.getElementById("btnSimularIntegracion").addEventListener("click", simularIntegracion);
-    
-    // ============================================================
-    // EVENTOS DE PARÁMETROS
-    // ============================================================
     document.getElementById("btnGuardarParametros").addEventListener("click", guardarParametros);
     
-    // ============================================================
-    // EVENTOS DE CORRELATIVOS
-    // ============================================================
     document.getElementById("btnGuardarCorrelativoForm2").addEventListener("click", guardarCorrelativo);
-    
     document.getElementById("btnLimpiarCorrelativo").addEventListener("click", function(){
         limpiarFormularioCorrelativo();
         toast('Formulario limpiado');
     });
-    
     document.getElementById("btnNuevoCorrelativo").addEventListener("click", function(){
         limpiarFormularioCorrelativo();
         toast('Formulario listo para nuevo correlativo');
     });
     
-    // Eventos para actualizar prefijo automáticamente
     document.getElementById("corrEmpresa").addEventListener("change", actualizarPrefijoAutomatico);
     document.getElementById("corrDocumento").addEventListener("change", actualizarPrefijoAutomatico);
     document.getElementById("corrPrefijo").addEventListener("input", updateCorrPreview);
     document.getElementById("corrAnio").addEventListener("input", updateCorrPreview);
     document.getElementById("corrUltimo").addEventListener("input", updateCorrPreview);
     
-    // Abrir pantalla inicial
     openScreen('empresas');
-    
-    // Configurar breadcrumb
     setupBreadcrumb();
-    
     console.log('✅ Dashboard inicializado correctamente');
 }
 
-// Iniciar cuando el DOM esté listo
 document.addEventListener("DOMContentLoaded", initDashboard);
 </script>
 
