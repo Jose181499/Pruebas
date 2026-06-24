@@ -3620,6 +3620,7 @@ console.log('📋 FLASK_SESSION:', FLASK_SESSION);
 let empresasData = [];
 let usuariosData = [];
 let correlativosData = [];
+let parametrosData = [];
 let rolesData = [];
 let submodulosData = [];
 let currentScreen = 'empresas';
@@ -4029,7 +4030,6 @@ function actualizarPrefijoAutomatico() {
     const empresa = document.getElementById("corrEmpresa").value;
     const documento = document.getElementById("corrDocumento").value;
     
-    // Mapeo de documentos a sus siglas
     const siglas = {
         'Cotización': 'COT',
         'Orden compra': 'OC',
@@ -4040,22 +4040,16 @@ function actualizarPrefijoAutomatico() {
         'Otro': 'DOC'
     };
     
-    // Obtener las siglas del documento seleccionado
     const sigla = siglas[documento] || documento.substring(0, 3).toUpperCase();
-    
-    // Construir el prefijo automático
     const prefijo = `${sigla}-${empresa}`;
     
-    // Actualizar el campo de prefijo
     const prefijoInput = document.getElementById("corrPrefijo");
     const editando = document.getElementById("corrFormMode").dataset.editando;
     if (!editando || editando === '') {
         prefijoInput.value = prefijo;
     }
     
-    // Actualizar la vista previa
     updateCorrPreview();
-    
     console.log(`📝 Prefijo actualizado a: ${prefijo}`);
 }
 
@@ -4069,7 +4063,6 @@ function limpiarFormularioCorrelativo() {
     document.getElementById("corrFormMode").textContent = "Modo: creando nuevo correlativo";
     document.getElementById("corrFormMode").dataset.editando = '';
     document.getElementById("btnGuardarCorrelativoForm2").textContent = "Guardar correlativo";
-    // Actualizar prefijo automático
     actualizarPrefijoAutomatico();
 }
 
@@ -4223,6 +4216,212 @@ async function tomarCorrelativo(empresaCodigo, documento, anio = 2026) {
 }
 
 // ============================================================
+// PARÁMETROS - FUNCIONES COMPLETAS
+// ============================================================
+
+async function loadParametros() {
+    console.log('📋 Cargando parámetros...');
+    
+    try {
+        const response = await fetch('/api/config/parametros');
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+                parametrosData = data.data || [];
+                console.log('✅ Parámetros cargados:', parametrosData.length);
+                aplicarParametrosDesdeBackend();
+                return;
+            }
+        }
+    } catch(e) {
+        console.log('⚠️ Backend no disponible, usando parámetros por defecto');
+    }
+    
+    // Si no hay backend, usar valores por defecto desde localStorage
+    try {
+        const stored = localStorage.getItem('erp_parametros');
+        if (stored) {
+            parametrosData = JSON.parse(stored);
+            aplicarParametrosDesdeBackend();
+            return;
+        }
+    } catch(e) {}
+    
+    // Parámetros por defecto
+    parametrosData = [
+        { grupo: 'multiempresa', codigo: 'bloquear_sin_empresa', nombre: 'Bloquear documento sin empresa activa', valor_bool: true },
+        { grupo: 'multiempresa', codigo: 'usar_color_logo_ruc', nombre: 'Usar color, logo y RUC por empresa', valor_bool: true },
+        { grupo: 'multiempresa', codigo: 'separar_bancos_cuentas', nombre: 'Separar bancos y cuentas por empresa', valor_bool: true },
+        { grupo: 'multiempresa', codigo: 'separar_correlativos', nombre: 'Separar correlativos KCF / AGD', valor_bool: true },
+        { grupo: 'ventas', codigo: 'generar_cxc', nombre: 'Generar CxC al emitir venta', valor_bool: true },
+        { grupo: 'ventas', codigo: 'bloquear_venta_sin_cliente', nombre: 'Bloquear venta sin cliente', valor_bool: true },
+        { grupo: 'ventas', codigo: 'usar_correlativo_empresa', nombre: 'Usar correlativo por empresa', valor_bool: true },
+        { grupo: 'ventas', codigo: 'permitir_venta_sin_stock', nombre: 'Permitir venta sin stock', valor_bool: false },
+        { grupo: 'compras', codigo: 'generar_cxp', nombre: 'Generar CxP al registrar compra', valor_bool: true },
+        { grupo: 'compras', codigo: 'exigir_proveedor_oc', nombre: 'Exigir proveedor en OC', valor_bool: true },
+        { grupo: 'compras', codigo: 'enlazar_solicitud_origen', nombre: 'Enlazar compra con solicitud origen', valor_bool: true },
+        { grupo: 'compras', codigo: 'bloquear_oc_sin_aprobacion', nombre: 'Bloquear OC sin aprobación', valor_bool: true },
+        { grupo: 'inventario', codigo: 'actualizar_stock_recepcion', nombre: 'Actualizar inventario con recepción', valor_bool: true },
+        { grupo: 'inventario', codigo: 'generar_kardex', nombre: 'Generar kardex automático', valor_bool: true },
+        { grupo: 'inventario', codigo: 'bloquear_salida_sin_sustento', nombre: 'Bloquear salida sin sustento', valor_bool: true },
+        { grupo: 'inventario', codigo: 'permitir_stock_negativo', nombre: 'Permitir stock negativo', valor_bool: false },
+        { grupo: 'finanzas', codigo: 'actualizar_caja_pagos', nombre: 'Actualizar caja y bancos con pagos', valor_bool: true },
+        { grupo: 'finanzas', codigo: 'alertas_vencimiento', nombre: 'Mostrar alertas de vencimiento', valor_bool: true },
+        { grupo: 'finanzas', codigo: 'exigir_sustento_pago', nombre: 'Exigir sustento de pago', valor_bool: true },
+        { grupo: 'finanzas', codigo: 'permitir_eliminar_pagos', nombre: 'Permitir eliminar pagos', valor_bool: false },
+        { grupo: 'auditoria', codigo: 'registrar_usuario', nombre: 'Registrar usuario que crea/edita', valor_bool: true },
+        { grupo: 'auditoria', codigo: 'guardar_historial', nombre: 'Guardar historial de cambios', valor_bool: true },
+        { grupo: 'auditoria', codigo: 'enviar_anulados_papelera', nombre: 'Enviar anulados a papelera', valor_bool: true },
+        { grupo: 'auditoria', codigo: 'eliminar_definitivo_sin_permiso', nombre: 'Eliminar definitivo sin permiso', valor_bool: false }
+    ];
+    
+    aplicarParametrosDesdeBackend();
+}
+
+function aplicarParametrosDesdeBackend() {
+    // Mapear parámetros a los checkboxes
+    const paramRows = document.querySelectorAll('#parametros .param-row');
+    
+    paramRows.forEach(row => {
+        const label = row.querySelector('span');
+        const checkbox = row.querySelector('input[type="checkbox"]');
+        if (!label || !checkbox) return;
+        
+        const nombre = label.textContent.trim();
+        // Buscar el parámetro correspondiente
+        const param = parametrosData.find(p => p.nombre === nombre);
+        if (param) {
+            checkbox.checked = param.valor_bool === true || param.valor_bool === 'true';
+        }
+    });
+}
+
+async function guardarParametros() {
+    console.log('💾 Guardando parámetros...');
+    
+    const parametros = [];
+    const paramRows = document.querySelectorAll('#parametros .param-row');
+    
+    paramRows.forEach(row => {
+        const label = row.querySelector('span');
+        const checkbox = row.querySelector('input[type="checkbox"]');
+        if (!label || !checkbox) return;
+        
+        // Determinar el grupo
+        let grupo = 'general';
+        const panel = row.closest('.param-group');
+        if (panel) {
+            const headText = panel.querySelector('.param-group-head b')?.textContent || '';
+            if (headText.includes('Multiempresa')) grupo = 'multiempresa';
+            else if (headText.includes('Ventas')) grupo = 'ventas';
+            else if (headText.includes('Compras')) grupo = 'compras';
+            else if (headText.includes('Inventario')) grupo = 'inventario';
+            else if (headText.includes('Finanzas')) grupo = 'finanzas';
+            else if (headText.includes('Auditoría')) grupo = 'auditoria';
+        }
+        
+        const nombre = label.textContent.trim();
+        const codigo = nombre.toLowerCase().replace(/ /g, '_').replace(/[^a-z0-9_]/g, '');
+        
+        parametros.push({
+            grupo: grupo,
+            codigo: codigo,
+            nombre: nombre,
+            valor_bool: checkbox.checked,
+            estado: 'activo'
+        });
+    });
+    
+    // Guardar en localStorage (fallback)
+    try {
+        localStorage.setItem('erp_parametros', JSON.stringify(parametros));
+    } catch(e) {}
+    
+    // Enviar al backend
+    try {
+        let allSuccess = true;
+        for (const param of parametros) {
+            const response = await fetch('/api/config/parametros', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(param)
+            });
+            
+            if (!response.ok) {
+                allSuccess = false;
+            }
+        }
+        
+        if (allSuccess) {
+            toast('✅ Todos los parámetros guardados correctamente');
+        } else {
+            toast('⚠️ Algunos parámetros se guardaron en localStorage (backend no disponible)');
+        }
+    } catch(e) {
+        console.log('⚠️ Backend no disponible, parámetros guardados en localStorage');
+        toast('⚠️ Parámetros guardados localmente (conexión con servidor no disponible)');
+    }
+    
+    // Actualizar datos locales
+    parametrosData = parametros;
+}
+
+// ============================================================
+// INTEGRACIÓN ERP - FUNCIONES
+// ============================================================
+
+function simularIntegracion() {
+    const empresa = document.getElementById("empresaActiva").value;
+    const badgeClass = empresa === "AGD" ? "badge-agd" : "badge-kcf";
+    const log = document.getElementById("integrationLog");
+    
+    if (!log) return;
+    
+    // Simular proceso de integración paso a paso
+    const pasos = [
+        { tiempo: 0, mensaje: `🔄 Iniciando integración para ${empresa}...` },
+        { tiempo: 500, mensaje: `📝 Validando configuración y parámetros...` },
+        { tiempo: 1000, mensaje: `🏢 Empresa seleccionada: ${empresa}` },
+        { tiempo: 1500, mensaje: `📋 Verificando correlativos disponibles...` },
+        { tiempo: 2000, mensaje: `✅ Correlativo asignado: COT-${empresa}-2026-0001` },
+        { tiempo: 2500, mensaje: `📦 Procesando módulo de Ventas...` },
+        { tiempo: 3000, mensaje: `💰 Generando Cuenta por Cobrar...` },
+        { tiempo: 3500, mensaje: `📊 Actualizando inventario y kardex...` },
+        { tiempo: 4000, mensaje: `✅ Integración completada exitosamente` }
+    ];
+    
+    // Limpiar log anterior
+    log.innerHTML = '';
+    
+    // Agregar mensajes con delay
+    pasos.forEach((paso, index) => {
+        setTimeout(() => {
+            const row = document.createElement('div');
+            row.className = 'log-row';
+            
+            let badgeHtml = '';
+            if (index === 0) badgeHtml = `<span class="badge badge-info">INICIO</span>`;
+            else if (index === pasos.length - 1) badgeHtml = `<span class="badge badge-ok">OK</span>`;
+            else if (paso.mensaje.includes('Generando')) badgeHtml = `<span class="badge badge-agd">💰</span>`;
+            else if (paso.mensaje.includes('correlativo')) badgeHtml = `<span class="badge badge-kcf">#</span>`;
+            else badgeHtml = `<span class="badge badge-gray">⏳</span>`;
+            
+            row.innerHTML = `
+                ${badgeHtml}
+                <b>${paso.mensaje.substring(0, 40)}</b>
+                <span>${paso.mensaje}</span>
+            `;
+            log.appendChild(row);
+            
+            // Auto-scroll al final
+            log.scrollTop = log.scrollHeight;
+        }, paso.tiempo);
+    });
+    
+    toast('🔄 Simulando flujo de integración...');
+}
+
+// ============================================================
 // OPEN PERMISSIONS - COMPLETO
 // ============================================================
 async function openPermissions(user, module) {
@@ -4338,7 +4537,7 @@ async function openPermissions(user, module) {
 }
 
 // ============================================================
-// BREADCRUMB CLICKEABLE - FUNCIÓN MEJORADA
+// BREADCRUMB CLICKEABLE
 // ============================================================
 function setupBreadcrumb() {
     const breadcrumb = document.getElementById('breadcrumb');
@@ -4357,7 +4556,7 @@ function setupBreadcrumb() {
 }
 
 // ============================================================
-// NAVEGACIÓN - ACTUALIZADA CON BREADCRUMB DINÁMICO
+// NAVEGACIÓN
 // ============================================================
 const breadcrumbs = {
     dashboard:"Inicio / Dashboard",
@@ -4405,22 +4604,18 @@ function openScreen(screen){
     document.querySelectorAll(".menu-header,.child-btn,.tab-btn").forEach(el => el.classList.remove("active"));
     document.querySelectorAll(`[data-screen="${screen}"]`).forEach(el => el.classList.add("active"));
 
-    // ✅ ACTUALIZAR BREADCRUMB CON ELEMENTOS CLICKEABLES
     const breadcrumb = document.getElementById("breadcrumb");
     if (breadcrumb) {
         const breadcrumbText = breadcrumbs[screen] || "Inicio";
         const parts = breadcrumbText.split(' / ');
         
         breadcrumb.innerHTML = parts.map((part, index) => {
-            // Buscar la pantalla correspondiente a esta parte
             let targetScreen = null;
             
-            // Si es la última parte, no es clickeable (activa)
             if (index === parts.length - 1) {
                 return `<span class="crumb-btn active-crumb">${part}</span>`;
             }
             
-            // Buscar la pantalla para esta parte del breadcrumb
             const partialPath = parts.slice(0, index + 1).join(' / ');
             for (const [key, value] of Object.entries(breadcrumbs)) {
                 if (value === partialPath || value.startsWith(partialPath + ' / ')) {
@@ -4429,7 +4624,6 @@ function openScreen(screen){
                 }
             }
             
-            // Si no se encuentra, buscar coincidencia parcial
             if (!targetScreen) {
                 for (const [key, value] of Object.entries(breadcrumbs)) {
                     if (value.includes(part)) {
@@ -4439,7 +4633,6 @@ function openScreen(screen){
                 }
             }
             
-            // Si es la primera parte (Inicio), siempre ir a dashboard
             if (index === 0 && part === 'Inicio') {
                 targetScreen = 'dashboard';
             }
@@ -4447,7 +4640,6 @@ function openScreen(screen){
             return `<button type="button" class="crumb-btn" data-screen="${targetScreen || 'dashboard'}">${part}</button>`;
         }).join(' / ');
         
-        // Agregar event listeners a los nuevos botones
         breadcrumb.querySelectorAll('.crumb-btn').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 const screen = this.dataset.screen;
@@ -4547,6 +4739,7 @@ async function initDashboard(){
         await loadEmpresas();
         await loadUsuarios();
         await loadCorrelativos();
+        await loadParametros();
     } catch (error) {
         console.error('❌ Error cargando datos:', error);
         toast('Error al cargar datos. Recarga la página.');
@@ -4640,54 +4833,34 @@ async function initDashboard(){
         }
     });
     
-    // Simular integración
-    document.getElementById("btnSimularIntegracion").addEventListener("click", function(){
-        const empresa = document.getElementById("empresaActiva").value;
-        const badgeClass = empresa === "AGD" ? "badge-agd" : "badge-kcf";
-        const log = document.getElementById("integrationLog");
-        if(log){
-            log.innerHTML = `
-                <div class="log-row"><span class="badge ${badgeClass}">${empresa}</span><b>COT-${empresa}-2026-0002</b><span>Cotización aprobada por usuario autorizado.</span></div>
-                <div class="log-row"><span class="badge badge-info">AUTO</span><b>VENTA-${empresa}-2026-0001</b><span>Venta generada automáticamente desde la cotización.</span></div>
-                <div class="log-row"><span class="badge badge-info">AUTO</span><b>CxC</b><span>Cuenta por cobrar creada para seguimiento financiero.</span></div>
-                <div class="log-row"><span class="badge badge-ok">OK</span><b>TRAZABILIDAD</b><span>Documento origen guardado con empresa_id y usuario_id.</span></div>
-            `;
-        }
-        toast('Flujo de integración simulado');
-    });
+    // ============================================================
+    // EVENTOS DE INTEGRACIÓN ERP
+    // ============================================================
+    document.getElementById("btnSimularIntegracion").addEventListener("click", simularIntegracion);
     
-    // Guardar parámetros
-    document.getElementById("btnGuardarParametros").addEventListener("click", function(){
-        toast('Parámetros guardados correctamente');
-    });
+    // ============================================================
+    // EVENTOS DE PARÁMETROS
+    // ============================================================
+    document.getElementById("btnGuardarParametros").addEventListener("click", guardarParametros);
     
-    // Botón para guardar correlativo (crear o actualizar)
+    // ============================================================
+    // EVENTOS DE CORRELATIVOS
+    // ============================================================
     document.getElementById("btnGuardarCorrelativoForm2").addEventListener("click", guardarCorrelativo);
     
-    // Botón limpiar correlativo
     document.getElementById("btnLimpiarCorrelativo").addEventListener("click", function(){
         limpiarFormularioCorrelativo();
         toast('Formulario limpiado');
     });
     
-    // Botón nuevo correlativo
     document.getElementById("btnNuevoCorrelativo").addEventListener("click", function(){
         limpiarFormularioCorrelativo();
         toast('Formulario listo para nuevo correlativo');
     });
     
-    // ============================================================
-    // EVENTOS PARA ACTUALIZAR PREFIJO AUTOMÁTICAMENTE
-    // ============================================================
-    document.getElementById("corrEmpresa").addEventListener("change", function() {
-        actualizarPrefijoAutomatico();
-    });
-
-    document.getElementById("corrDocumento").addEventListener("change", function() {
-        actualizarPrefijoAutomatico();
-    });
-
-    // Los demás inputs solo actualizan la vista previa
+    // Eventos para actualizar prefijo automáticamente
+    document.getElementById("corrEmpresa").addEventListener("change", actualizarPrefijoAutomatico);
+    document.getElementById("corrDocumento").addEventListener("change", actualizarPrefijoAutomatico);
     document.getElementById("corrPrefijo").addEventListener("input", updateCorrPreview);
     document.getElementById("corrAnio").addEventListener("input", updateCorrPreview);
     document.getElementById("corrUltimo").addEventListener("input", updateCorrPreview);
@@ -4695,7 +4868,7 @@ async function initDashboard(){
     // Abrir pantalla inicial
     openScreen('empresas');
     
-    // ✅ CONFIGURAR BREADCRUMB CLICKEABLE
+    // Configurar breadcrumb
     setupBreadcrumb();
     
     console.log('✅ Dashboard inicializado correctamente');
