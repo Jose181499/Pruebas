@@ -4346,6 +4346,136 @@ document.getElementById("saveModal").addEventListener("click", async function() 
 });
 
 // ============================================================
+// APLICAR PERMISOS A LA INTERFAZ (OCULTAR MÓDULOS)
+// ============================================================
+function aplicarPermisosInterfaz(esAdmin, permisosMap) {
+    // Si es admin, mostrar todo
+    if (esAdmin) {
+        document.querySelectorAll('.menu-group, .menu-header, .child-btn, .tab-btn').forEach(el => {
+            el.style.display = '';
+        });
+        return;
+    }
+    
+    // Mapeo de nombres de módulos a nombres de secciones
+    const mapeoSecciones = {
+        'Configuración': 'empresas',
+        'Maestros': 'maestros',
+        'Productos': 'productos',
+        'Cotizaciones': 'ventas',
+        'Ventas': 'ventas',
+        'Compras': 'compras',
+        'Logística': 'inventario',
+        'Inventario': 'inventario',
+        'CxC': 'finanzas',
+        'CxP': 'finanzas',
+        'Caja': 'finanzas',
+        'Reportes': 'reportes',
+        'SUNAT': 'reportes'
+    };
+    
+    // Módulos que un operativo puede ver por defecto
+    const modulosOperativos = ['Productos', 'Cotizaciones', 'Ventas', 'Compras', 'Logística', 'Inventario'];
+    
+    // Para cada submódulo, verificar si tiene permiso
+    submodulosData.forEach(sub => {
+        const nombre = sub.nombre;
+        
+        // Buscar el permiso
+        const permiso = permisosMap[sub.id];
+        const tienePermiso = permiso?.puede_ver || false;
+        
+        // Si es un módulo operativo y no tiene permiso específico, usar el valor por defecto
+        const esOperativo = modulosOperativos.includes(nombre);
+        const debeMostrar = esAdmin || (esOperativo && !permiso) || tienePermiso;
+        
+        // Buscar la sección correspondiente
+        const screenName = mapeoSecciones[nombre] || nombre.toLowerCase();
+        
+        // Ocultar/mostrar en el menú lateral
+        document.querySelectorAll(`.child-btn[data-screen="${screenName}"]`).forEach(el => {
+            if (el.textContent.trim() === nombre || el.textContent.trim().includes(nombre)) {
+                el.style.display = debeMostrar ? '' : 'none';
+            }
+        });
+        
+        // Ocultar/mostrar en los tabs
+        document.querySelectorAll(`.tab-btn[data-screen="${screenName}"]`).forEach(el => {
+            if (el.textContent.trim() === nombre || el.textContent.trim().includes(nombre)) {
+                el.style.display = debeMostrar ? '' : 'none';
+            }
+        });
+    });
+    
+    // Ocultar grupos de menú que no tienen hijos visibles
+    document.querySelectorAll('.menu-group').forEach(group => {
+        const children = group.querySelectorAll('.child-btn');
+        let hasVisible = false;
+        children.forEach(child => {
+            if (child.style.display !== 'none') {
+                hasVisible = true;
+            }
+        });
+        if (!hasVisible && group.querySelector('.menu-header')?.dataset?.screen !== 'dashboard') {
+            group.style.display = 'none';
+        } else {
+            group.style.display = '';
+        }
+    });
+    
+    console.log('✅ Permisos aplicados a la interfaz');
+}
+
+// ============================================================
+// CARGAR PERMISOS DEL USUARIO LOGUEADO
+// ============================================================
+async function cargarPermisosUsuarioLogueado() {
+    const usuario = document.getElementById('userName').textContent;
+    const empresa = document.getElementById('empresaActiva').value;
+    
+    // Buscar el usuario en los datos cargados
+    const user = usuariosData.find(u => u.usuario_sistema === usuario);
+    if (!user) {
+        console.warn('⚠️ Usuario no encontrado en datos');
+        return;
+    }
+    
+    // Buscar la empresa del usuario
+    const empresaUsuario = user.empresas_acceso?.find(e => e.empresa_codigo === empresa);
+    if (!empresaUsuario) {
+        console.warn('⚠️ Usuario no tiene acceso a esta empresa');
+        return;
+    }
+    
+    // Cargar permisos del usuario
+    const permisosData = await cargarPermisosUsuario(user.id, empresaUsuario.empresa_id);
+    
+    // Crear un mapa de permisos por submodulo_id
+    const permisosMap = {};
+    if (permisosData?.permisos) {
+        permisosData.permisos.forEach(p => {
+            permisosMap[p.submodulo_id] = p;
+        });
+    }
+    
+    // Determinar si es admin
+    const esAdmin = empresaUsuario.rol_codigo === 'GERENCIA_TOTAL';
+    
+    // Guardar en una variable global
+    window.usuarioPermisos = {
+        userId: user.id,
+        empresaId: empresaUsuario.empresa_id,
+        esAdmin: esAdmin,
+        permisos: permisosMap
+    };
+    
+    // Aplicar permisos a la interfaz
+    aplicarPermisosInterfaz(esAdmin, permisosMap);
+    
+    console.log('✅ Permisos del usuario cargados:', window.usuarioPermisos);
+}
+
+// ============================================================
 // CORRELATIVOS - COMPLETO CON EDITAR, ELIMINAR Y PREFIJO AUTOMÁTICO
 // ============================================================
 
@@ -4952,6 +5082,9 @@ async function initDashboard(){
         toast('Error al cargar datos. Recarga la página.');
     }
     
+    // Cargar permisos del usuario logueado después de cargar usuarios
+    await cargarPermisosUsuarioLogueado();
+    
     document.querySelectorAll(".menu-header, .child-btn, .tab-btn, .crumb-btn").forEach(el => {
         el.addEventListener("click", function(e) {
             const screen = this.dataset.screen;
@@ -4981,6 +5114,10 @@ async function initDashboard(){
             localStorage.setItem('erp_session', JSON.stringify(session));
         }
         loadUsuarios();
+        // Recargar permisos del usuario después de cambiar empresa
+        setTimeout(async () => {
+            await cargarPermisosUsuarioLogueado();
+        }, 500);
         toast(`Empresa cambiada a ${e.target.value}`);
     });
     
