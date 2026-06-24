@@ -541,7 +541,7 @@ def get_roles():
 
 
 # ============================================================
-# 3. CORRELATIVOS - VERSIÓN COMPLETA CORREGIDA
+# 3. CORRELATIVOS - VERSIÓN CORREGIDA CON UUID
 # ============================================================
 
 @config_seguridad_bp.route('/correlativos', methods=['GET'])
@@ -584,9 +584,9 @@ def get_correlativos():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@config_seguridad_bp.route('/correlativos/<int:correlativo_id>', methods=['GET'])
+@config_seguridad_bp.route('/correlativos/<correlativo_id>', methods=['GET'])
 def get_correlativo(correlativo_id):
-    """Obtener un correlativo específico por ID"""
+    """Obtener un correlativo específico por ID (UUID)"""
     try:
         correlativo = db_query("""
             SELECT 
@@ -643,11 +643,11 @@ def create_correlativo():
         if not empresa:
             return jsonify({'success': False, 'error': 'Empresa no encontrada o inactiva'}), 404
         
-        # Verificar si ya existe (activo o inactivo)
         anio = data.get('anio', 2026)
         documento = data.get('documento')
         empresa_id = data.get('empresa_id')
         
+        # Verificar si ya existe (activo o inactivo)
         existente = db_query("""
             SELECT id, estado, ultimo_numero, prefijo 
             FROM erp_correlativos 
@@ -722,9 +722,9 @@ def create_correlativo():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@config_seguridad_bp.route('/correlativos/<int:correlativo_id>', methods=['PUT'])
+@config_seguridad_bp.route('/correlativos/<correlativo_id>', methods=['PUT'])
 def update_correlativo(correlativo_id):
-    """Actualizar un correlativo existente"""
+    """Actualizar un correlativo existente (UUID)"""
     try:
         data = request.get_json()
         print(f"📝 Actualizando correlativo {correlativo_id}: {data}")
@@ -786,10 +786,12 @@ def update_correlativo(correlativo_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@config_seguridad_bp.route('/correlativos/<int:correlativo_id>', methods=['DELETE'])
+@config_seguridad_bp.route('/correlativos/<correlativo_id>', methods=['DELETE'])
 def delete_correlativo(correlativo_id):
-    """Eliminar correlativo (borrado lógico)"""
+    """Eliminar correlativo (borrado lógico) - UUID"""
     try:
+        print(f"🗑️ Eliminando correlativo con ID: {correlativo_id}")
+        
         # Verificar que existe
         existente = db_query("SELECT id, documento FROM erp_correlativos WHERE id = %s", (correlativo_id,))
         if not existente:
