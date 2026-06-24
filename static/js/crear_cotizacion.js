@@ -2904,7 +2904,7 @@ function attachProductoAutocomplete(row) {
         if (modal) modal.style.display = 'block';
     }
 
-  async function cargarCotizacion(id) {
+async function cargarCotizacion(id) {
     try {
         console.log("🔍 Cargando cotización ID:", id);
         const res = await fetch(`/api/cotizacion/${id}`);
@@ -2942,7 +2942,9 @@ function attachProductoAutocomplete(row) {
             document.getElementById('cliente_id').value = data.cliente_id;
         }
         document.getElementById('cliente_razon_social').value = data.cliente || data.razon_social || '';
-        setValueSafely('cliente_razon_comercial', data.razon_comercial || '');
+        if (document.getElementById('cliente_razon_comercial')) {
+            document.getElementById('cliente_razon_comercial').value = data.razon_comercial || '';
+        }
         document.getElementById('cliente_doc').value = data.numero_documento || data.cliente_ruc || '';
         document.getElementById('cliente_direccion').value = data.direccion_fiscal || '';
         document.getElementById('cliente_contacto').value = data.cliente_contacto || '';
@@ -2952,8 +2954,9 @@ function attachProductoAutocomplete(row) {
         // ==========================================
         // 3. CARGAR CONDICIONES COMERCIALES
         // ==========================================
-        
-        document.getElementById('notas').value = data.notas || '';
+        if (document.getElementById('notas')) {
+            document.getElementById('notas').value = data.notas || '';
+        }
         document.getElementById('requerimiento').value = data.requerimiento || '';
         document.getElementById('condicion_pago').value = data.condicion_pago || 'Contado';
         document.getElementById('tiempo_entrega').value = data.tiempo_entrega || '';
@@ -2998,7 +3001,8 @@ function attachProductoAutocomplete(row) {
         // ==========================================
         // 7. CARGAR PRODUCTOS
         // ==========================================
-        document.getElementById('table-body').innerHTML = '';
+        const tableBody = document.getElementById('table-body');
+        if (tableBody) tableBody.innerHTML = '';
         itemCounter = 0;
         
         if (data.detalle && data.detalle.length > 0) {
