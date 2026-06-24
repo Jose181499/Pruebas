@@ -4338,7 +4338,26 @@ async function openPermissions(user, module) {
 }
 
 // ============================================================
-// NAVEGACIÓN
+// BREADCRUMB CLICKEABLE - FUNCIÓN MEJORADA
+// ============================================================
+function setupBreadcrumb() {
+    const breadcrumb = document.getElementById('breadcrumb');
+    if (!breadcrumb) return;
+    
+    breadcrumb.querySelectorAll('.crumb-btn').forEach(item => {
+        item.addEventListener('click', function(e) {
+            const screen = this.dataset.screen;
+            if (screen) {
+                e.preventDefault();
+                openScreen(screen);
+                toast(`📂 Navegando a: ${this.textContent}`);
+            }
+        });
+    });
+}
+
+// ============================================================
+// NAVEGACIÓN - ACTUALIZADA CON BREADCRUMB DINÁMICO
 // ============================================================
 const breadcrumbs = {
     dashboard:"Inicio / Dashboard",
@@ -4386,9 +4405,62 @@ function openScreen(screen){
     document.querySelectorAll(".menu-header,.child-btn,.tab-btn").forEach(el => el.classList.remove("active"));
     document.querySelectorAll(`[data-screen="${screen}"]`).forEach(el => el.classList.add("active"));
 
-    document.getElementById("breadcrumb").textContent = breadcrumbs[screen] || "Inicio";
-    document.getElementById("pageTitle").textContent = titles[screen] || "ERP Multiempresa";
+    // ✅ ACTUALIZAR BREADCRUMB CON ELEMENTOS CLICKEABLES
+    const breadcrumb = document.getElementById("breadcrumb");
+    if (breadcrumb) {
+        const breadcrumbText = breadcrumbs[screen] || "Inicio";
+        const parts = breadcrumbText.split(' / ');
+        
+        breadcrumb.innerHTML = parts.map((part, index) => {
+            // Buscar la pantalla correspondiente a esta parte
+            let targetScreen = null;
+            
+            // Si es la última parte, no es clickeable (activa)
+            if (index === parts.length - 1) {
+                return `<span class="crumb-btn active-crumb">${part}</span>`;
+            }
+            
+            // Buscar la pantalla para esta parte del breadcrumb
+            const partialPath = parts.slice(0, index + 1).join(' / ');
+            for (const [key, value] of Object.entries(breadcrumbs)) {
+                if (value === partialPath || value.startsWith(partialPath + ' / ')) {
+                    targetScreen = key;
+                    break;
+                }
+            }
+            
+            // Si no se encuentra, buscar coincidencia parcial
+            if (!targetScreen) {
+                for (const [key, value] of Object.entries(breadcrumbs)) {
+                    if (value.includes(part)) {
+                        targetScreen = key;
+                        break;
+                    }
+                }
+            }
+            
+            // Si es la primera parte (Inicio), siempre ir a dashboard
+            if (index === 0 && part === 'Inicio') {
+                targetScreen = 'dashboard';
+            }
+            
+            return `<button type="button" class="crumb-btn" data-screen="${targetScreen || 'dashboard'}">${part}</button>`;
+        }).join(' / ');
+        
+        // Agregar event listeners a los nuevos botones
+        breadcrumb.querySelectorAll('.crumb-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const screen = this.dataset.screen;
+                if (screen) {
+                    e.preventDefault();
+                    openScreen(screen);
+                    toast(`📂 Navegando a: ${this.textContent}`);
+                }
+            });
+        });
+    }
 
+    document.getElementById("pageTitle").textContent = titles[screen] || "ERP Multiempresa";
     document.getElementById("mainPanel").scrollTo({top:0, behavior:"smooth"});
 }
 
@@ -4622,6 +4694,9 @@ async function initDashboard(){
     
     // Abrir pantalla inicial
     openScreen('empresas');
+    
+    // ✅ CONFIGURAR BREADCRUMB CLICKEABLE
+    setupBreadcrumb();
     
     console.log('✅ Dashboard inicializado correctamente');
 }
