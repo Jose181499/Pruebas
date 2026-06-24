@@ -176,7 +176,15 @@ def login():
 
     return render_template("login.html")
 
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("Has cerrado sesión correctamente.", "info")
+    return redirect(url_for("login"))
 
+# ==========================================
+# ✅ RUTA INDEX CORREGIDA - CON VARIABLES (SOLO UNA VEZ)
+# ==========================================
 @app.route("/index")
 @login_required
 def index():
@@ -188,6 +196,9 @@ def index():
                           empresa=session.get('empresa', 'KCF'),
                           rol=session.get('rol', 'usuario'))
 
+# ==========================================
+# RUTA DE DEPURACIÓN
+# ==========================================
 @app.route("/debug/session")
 def debug_session():
     """Ver el contenido de la sesión actual"""
@@ -197,24 +208,6 @@ def debug_session():
         'is_logged_in': 'usuario_id' in session
     })
 
-@app.route("/logout")
-def logout():
-    session.clear()
-    flash("Has cerrado sesión correctamente.", "info")
-    return redirect(url_for("login"))
-
-# ==========================================
-# ✅ RUTA INDEX CORREGIDA - CON VARIABLES
-# ==========================================
-@app.route("/index")
-@login_required
-def index():
-    """Dashboard principal - Pasar variables de sesión al template"""
-    return render_template("index.html",
-                          nombre=session.get('nombre_completo', 'Usuario'),
-                          usuario=session.get('usuario', ''),
-                          empresa=session.get('empresa', 'KCF'),
-                          rol=session.get('rol', 'usuario'))
 # ==========================================
 # ENDPOINTS CLIENTES API
 # ==========================================
