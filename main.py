@@ -119,11 +119,41 @@ def login():
         password = request.form.get("password", "")
         empresa = request.form.get("empresa", "KCF")
 
+        # ✅ LOGS DE DEPURACIÓN
+        print(f"🔍 Intentando login - Usuario: '{usuario}', Empresa: '{empresa}'")
+        print(f"🔍 Password recibida: {'*' * len(password) if password else 'VACÍA'}")
+
         if not usuario or not password:
             flash("Por favor, ingresa usuario y contraseña.", "error")
             return render_template("login.html")
 
-        resultado = verificar_usuario_supabase(usuario, password, empresa)
+        # ✅ Verificar si el usuario es un email o un nombre de usuario
+        # Si contiene @, es un email, si no, es un nombre de usuario
+        if '@' in usuario:
+            email = usuario
+        else:
+            # Buscar el email del usuario en la base de datos
+            try:
+                from database import db_query
+                user_result = db_query("""
+                    SELECT correo FROM usuarios 
+                    WHERE usuario_sistema = %s AND estado = 'activo'
+                    LIMIT 1
+                """, (usuario,))
+                if user_result and user_result[0].get('correo'):
+                    email = user_result[0]['correo']
+                    print(f"✅ Email encontrado para usuario '{usuario}': '{email}'")
+                else:
+                    email = usuario  # Si no se encuentra, intentar con el valor original
+            except Exception as e:
+                print(f"❌ Error buscando email: {e}")
+                email = usuario
+
+        print(f"📧 Email a verificar: '{email}'")
+
+        resultado = verificar_usuario_supabase(email, password, empresa)
+
+        print(f"📋 Resultado del login: {resultado}")
 
         if resultado and resultado.get('success'):
             session["usuario_id"] = resultado["user_id"]
