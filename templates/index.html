@@ -3713,7 +3713,6 @@ function renderEmpresas(filter=""){
         </tr>`;
     }).join("");
 }
-
 async function loadUsuarios(){
     try {
         const data = await fetchAPI('/api/config/usuarios');
@@ -3721,11 +3720,11 @@ async function loadUsuarios(){
         if (data.success) {
             usuariosData = data.data || [];
             
-            // Obtener roles
-            const rolesData = await fetchAPI('/api/config/roles');
-            if (rolesData.success) {
-                rolesData = rolesData.data || [];
-            }
+            // ✅ ELIMINAR ESTA LLAMADA - Los roles ya vienen en usuarios
+            // let rolesData = await fetchAPI('/api/config/roles');
+            // if (rolesData.success) {
+            //     rolesData = rolesData.data || [];
+            // }
             
             document.getElementById('dashUsuarios').textContent = usuariosData.length;
             renderUsuarios();
@@ -3737,7 +3736,6 @@ async function loadUsuarios(){
         toast('Error al cargar usuarios');
     }
 }
-
 function renderUsuarios(filter=""){
     const empresaFiltro = document.getElementById("filterEmpresaUsuarios")?.value || "TODAS";
     const nivelFiltro = document.getElementById("filterNivelUsuarios")?.value || "TODOS";
