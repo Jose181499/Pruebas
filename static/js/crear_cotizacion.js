@@ -3335,6 +3335,6 @@ function setValueSafely(id, value) {
         cargarCotizacion(cotId); 
     } else { 
         esBorrador = true; 
-        document.getElementById('estado').value = 'En Proceso'; 
+        //document.getElementById('estado').value = 'En Proceso'; 
     }
 });
