@@ -473,7 +473,77 @@ async function cargarConteoDocumentos(cotizaciones) {
         return cotizaciones;
     }
 }
-
+// ===========================
+// CARGAR LISTADO DE COTIZACIONES
+// ===========================
+async function cargarCotizaciones() {
+    try {
+        const tbody = document.getElementById('tbodyCotizaciones');
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="13" class="text-center py-4">
+                        <div class="spinner-border text-primary spinner-border-sm" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2 small text-muted">Cargando cotizaciones...</p>
+                    </td>
+                </tr>
+            `;
+        }
+        
+        const response = await fetch('/api/cotizacion_comercial');
+        const result = await response.json();
+        
+        if (result.success) {
+            // Cargar conteo de documentos para cada cotización
+            const cotizaciones = await cargarConteoDocumentos(result.data);
+            cotizacionesData = cotizaciones;
+            
+            // Ordenar: Aceptadas y Generadas primero
+            cotizacionesData.sort((a, b) => {
+                const orden = { 
+                    'Aceptada por Cliente': 0, 
+                    'aceptada': 0, 
+                    'Generada': 1, 
+                    'generada': 1 
+                };
+                const ordenA = orden[a.estado] ?? 2;
+                const ordenB = orden[b.estado] ?? 2;
+                return ordenA - ordenB;
+            });
+            
+            renderizarTabla(cotizacionesData);
+            actualizarEstadisticas();
+        } else {
+            mostrarNotificacion('Error al cargar cotizaciones', 'danger');
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="13" class="text-center py-4 text-danger">
+                            <i class="bi bi-exclamation-triangle fs-4 d-block"></i>
+                            <small>Error al cargar las cotizaciones</small>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+    } catch (error) {
+        console.error('Error al cargar cotizaciones:', error);
+        mostrarNotificacion('Error de conexión al cargar cotizaciones', 'danger');
+        const tbody = document.getElementById('tbodyCotizaciones');
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="13" class="text-center py-4 text-danger">
+                        <i class="bi bi-wifi-off fs-4 d-block"></i>
+                        <small>Error de conexión</small>
+                    </td>
+                </tr>
+            `;
+        }
+    }
+}
 // ===========================
 // ACTUALIZAR ESTADÍSTICAS
 // ===========================
