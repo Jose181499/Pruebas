@@ -3676,7 +3676,7 @@ function getSession(){
 }
 
 // ============================================================
-// FUNCIONES DE PERMISOS - COMPLETAS Y CORREGIDAS
+// FUNCIONES DE PERMISOS - COMPLETAS
 // ============================================================
 
 async function cargarPermisosUsuario(userId, empresaId) {
@@ -3854,19 +3854,83 @@ async function loadUsuarios(){
 }
 
 // ============================================================
-// CHECK EYE - VERSIÓN CORREGIDA
+// CHECKBOX INTERACTIVO - VERSIÓN CORREGIDA
 // ============================================================
 function checkEye(tienePermiso, user, module, userId, empresaId) {
-    // Si tiene permiso, mostrar checkbox checked y ojo
-    if (tienePermiso) {
-        return `<input class="check" type="checkbox" checked><span class="eye" data-user="${user}" data-module="${module}" data-user-id="${userId || ''}" data-empresa-id="${empresaId || ''}">👁</span>`;
-    } else {
-        return `<input class="check" type="checkbox"><span class="eye" data-user="${user}" data-module="${module}" data-user-id="${userId || ''}" data-empresa-id="${empresaId || ''}">👁</span>`;
+    const checked = tienePermiso ? 'checked' : '';
+    return `
+        <input class="check perm-checkbox" type="checkbox" 
+            ${checked} 
+            data-user="${user}" 
+            data-module="${module}" 
+            data-user-id="${userId || ''}" 
+            data-empresa-id="${empresaId || ''}">
+        <span class="eye" data-user="${user}" data-module="${module}" data-user-id="${userId || ''}" data-empresa-id="${empresaId || ''}">👁</span>
+    `;
+}
+
+// ============================================================
+// MANEJAR CAMBIO DE PERMISOS DESDE LA TABLA
+// ============================================================
+async function togglePermiso(event) {
+    const checkbox = event.target;
+    const userId = checkbox.dataset.userId;
+    const module = checkbox.dataset.module;
+    const empresaId = checkbox.dataset.empresaId;
+    const user = checkbox.dataset.user;
+    const tienePermiso = checkbox.checked;
+    
+    if (!userId || !empresaId) {
+        toast('❌ No se puede guardar: faltan datos del usuario');
+        return;
+    }
+    
+    // Buscar el submódulo
+    const submodulo = submodulosData.find(s => 
+        s.nombre === module || 
+        s.codigo === module.toUpperCase() ||
+        module.toLowerCase().includes(s.nombre.toLowerCase())
+    );
+    
+    if (!submodulo) {
+        toast('❌ Módulo no encontrado');
+        return;
+    }
+    
+    // Crear el permiso para guardar
+    const permisosList = [{
+        submodulo_id: submodulo.id,
+        puede_ver: tienePermiso,
+        puede_crear: tienePermiso,
+        puede_editar: tienePermiso,
+        puede_aprobar: false,
+        puede_anular: false,
+        puede_eliminar: false,
+        puede_exportar: false,
+        puede_subir_evidencia: false,
+        observacion: `Permiso ${tienePermiso ? 'habilitado' : 'deshabilitado'} desde la tabla`
+    }];
+    
+    try {
+        const result = await guardarPermisosUsuario(userId, empresaId, permisosList);
+        if (result) {
+            toast(`✅ ${tienePermiso ? 'Habilitado' : 'Deshabilitado'} ${module} para ${user}`);
+            // Recargar la tabla para reflejar cambios
+            await loadUsuarios();
+        } else {
+            // Revertir el checkbox si falló
+            checkbox.checked = !tienePermiso;
+            toast('❌ Error al guardar permiso');
+        }
+    } catch(e) {
+        console.error('Error guardando permiso:', e);
+        checkbox.checked = !tienePermiso;
+        toast('❌ Error al guardar permiso');
     }
 }
 
 // ============================================================
-// RENDER USUARIOS - VERSIÓN CORREGIDA
+// RENDER USUARIOS - VERSIÓN CON CHECKBOXES INTERACTIVOS
 // ============================================================
 async function renderUsuarios(filter=""){
     const empresaFiltro = document.getElementById("filterEmpresaUsuarios")?.value || "TODAS";
@@ -3902,7 +3966,7 @@ async function renderUsuarios(filter=""){
         
         // Cargar permisos del usuario para esta empresa
         let permisos = {};
-        if (empresaId && !esAdmin) {
+        if (empresaId) {
             const data = await cargarPermisosUsuario(u.id, empresaId);
             if (data?.permisos) {
                 data.permisos.forEach(p => {
@@ -3911,7 +3975,7 @@ async function renderUsuarios(filter=""){
             }
         }
         
-        // Función para verificar si tiene permiso
+        // Función para verificar si tiene permiso (incluyendo admin)
         const tienePermisoModulo = (submoduloNombre) => {
             // Si es admin, siempre tiene permiso
             if (esAdmin) return true;
@@ -3923,7 +3987,13 @@ async function renderUsuarios(filter=""){
             if (!submodulo) return false;
             
             const permiso = permisos[submodulo.id];
-            return permiso?.puede_ver || false;
+            // Si no hay permiso en la BD, por defecto tiene permisos de operativo
+            if (!permiso) {
+                // Módulos que un operativo debe ver por defecto
+                const modulosOperativos = ['Productos', 'Cotizaciones', 'Ventas', 'Compras', 'Logística', 'Inventario'];
+                return modulosOperativos.includes(submoduloNombre);
+            }
+            return permiso.puede_ver || false;
         };
         
         const empresasHtml = empresas.map(e => badge(e.empresa_codigo || '')).join('');
@@ -3973,7 +4043,14 @@ async function renderUsuarios(filter=""){
         return empresas.some(e => e.rol_codigo === 'OPERATIVO_COMERCIAL_LOGISTICA');
     }).length;
 
-    // Agregar event listeners a los ojos
+    // ============================================================
+    // EVENTOS PARA CHECKBOXES INTERACTIVOS
+    // ============================================================
+    document.querySelectorAll('.perm-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', togglePermiso);
+    });
+
+    // Agregar event listeners a los ojos (abrir modal)
     document.querySelectorAll(".eye").forEach(el => {
         el.addEventListener("click", function() {
             openPermissions(
@@ -3987,26 +4064,39 @@ async function renderUsuarios(filter=""){
 }
 
 // ============================================================
-// OPEN PERMISSIONS - VERSIÓN CORREGIDA (PERMITE EDITAR ADMINS)
+// OPEN PERMISSIONS - VERSIÓN CORREGIDA
 // ============================================================
 async function openPermissions(user, module, userId, empresaId) {
     console.log('👁️ Abriendo permisos para:', user, module, userId, empresaId);
     
     document.getElementById("modalTitle").textContent = `Detalle de permisos | ${user} | ${module}`;
     
-    // Buscar usuario
-    const u = usuariosData.find(item => item.usuario_sistema === user);
+    // Buscar usuario - AHORA por ID primero
+    let u = null;
+    
+    // Intentar buscar por ID si se proporcionó
+    if (userId) {
+        u = usuariosData.find(item => item.id == userId);
+    }
+    
+    // Si no se encontró por ID, buscar por nombre de usuario
+    if (!u) {
+        u = usuariosData.find(item => item.usuario_sistema === user);
+    }
+    
     if (!u) {
         toast('❌ Usuario no encontrado');
+        console.error('Usuario no encontrado:', user, userId);
         return;
     }
     
-    // Si no se pasó userId o empresaId, obtenerlos
-    let userIdFinal = userId || u.id;
+    console.log('✅ Usuario encontrado:', u);
+    
+    // Obtener empresa ID
     let empresaIdFinal = empresaId;
+    let empresaCodigo = document.getElementById('empresaActiva').value;
     
     if (!empresaIdFinal) {
-        const empresaCodigo = document.getElementById('empresaActiva').value;
         const empresa = u.empresas_acceso?.find(e => e.empresa_codigo === empresaCodigo);
         if (empresa) {
             empresaIdFinal = empresa.empresa_id;
@@ -4016,12 +4106,12 @@ async function openPermissions(user, module, userId, empresaId) {
         }
     }
     
-    currentPermissionsUserId = userIdFinal;
+    currentPermissionsUserId = u.id;
     currentPermissionsEmpresa = empresaIdFinal;
     currentPermissionsUser = user;
     
     // Cargar permisos actuales
-    const permisosData = await cargarPermisosUsuario(userIdFinal, empresaIdFinal);
+    const permisosData = await cargarPermisosUsuario(u.id, empresaIdFinal);
     console.log('📋 Permisos cargados:', permisosData);
     
     // Determinar si es admin
@@ -4036,10 +4126,15 @@ async function openPermissions(user, module, userId, empresaId) {
     );
     currentSubmoduloId = submodulo?.id || null;
     
+    // Si no se encuentra el submódulo, usar el primer submódulo
+    if (!currentSubmoduloId && submodulosData.length > 0) {
+        currentSubmoduloId = submodulosData[0].id;
+    }
+    
     // Buscar permisos para este submódulo
     const permiso = permisosData?.permisos?.find(p => p.submodulo_id === currentSubmoduloId) || {};
     
-    // ✅ SIEMPRE mostrar el botón guardar, incluso para admins
+    // SIEMPRE mostrar el botón guardar
     document.getElementById("saveModal").style.display = 'inline-block';
     
     // Si es admin, mostrar todos los permisos activados pero EDITABLES
