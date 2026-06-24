@@ -476,6 +476,9 @@ async function cargarConteoDocumentos(cotizaciones) {
 // ===========================
 // CARGAR LISTADO DE COTIZACIONES
 // ===========================
+// ===========================
+// CARGAR LISTADO DE COTIZACIONES
+// ===========================
 async function cargarCotizaciones() {
     try {
         const tbody = document.getElementById('tbodyCotizaciones');
@@ -500,21 +503,51 @@ async function cargarCotizaciones() {
             const cotizaciones = await cargarConteoDocumentos(result.data);
             cotizacionesData = cotizaciones;
             
-            // Ordenar: Aceptadas y Generadas primero
+            // ==========================================
+            // ORDENAR: Aceptadas primero, luego Generadas, luego las demás
+            // Y dentro de cada grupo, las más recientes primero
+            // ==========================================
             cotizacionesData.sort((a, b) => {
-                const orden = { 
+                // 1. Prioridad por estado
+                const ordenEstado = { 
                     'Aceptada por Cliente': 0, 
                     'aceptada': 0, 
                     'Generada': 1, 
-                    'generada': 1 
+                    'generada': 1,
+                    'En Proceso': 2,
+                    'en_proceso': 2
                 };
-                const ordenA = orden[a.estado] ?? 2;
-                const ordenB = orden[b.estado] ?? 2;
-                return ordenA - ordenB;
+                
+                const estadoA = ordenEstado[a.estado] ?? 99;
+                const estadoB = ordenEstado[b.estado] ?? 99;
+                
+                // Si los estados son diferentes, ordenar por estado
+                if (estadoA !== estadoB) {
+                    return estadoA - estadoB;
+                }
+                
+                // 2. Si son del mismo estado, ordenar por fecha (más reciente primero)
+                // Convertir fecha a timestamp para comparar
+                const fechaA = new Date(a.fecha_creacion).getTime();
+                const fechaB = new Date(b.fecha_creacion).getTime();
+                
+                // Si alguna fecha es inválida, ponerla al final
+                if (isNaN(fechaA)) return 1;
+                if (isNaN(fechaB)) return -1;
+                
+                return fechaB - fechaA; // Más reciente primero (descendente)
             });
             
             renderizarTabla(cotizacionesData);
             actualizarEstadisticas();
+            
+            // 📊 Mostrar en consola para verificar el orden
+            console.log(`✅ ${cotizacionesData.length} cotizaciones cargadas`);
+            console.log('📌 Primeras 5 cotizaciones:');
+            cotizacionesData.slice(0, 5).forEach((c, i) => {
+                console.log(`  ${i+1}. ${c.codigo_cotizacion} - ${c.estado} - ${c.fecha_creacion}`);
+            });
+            
         } else {
             mostrarNotificacion('Error al cargar cotizaciones', 'danger');
             if (tbody) {
@@ -1060,6 +1093,9 @@ function exportarPDF(id) {
 // ===========================
 // ACEPTAR COTIZACIÓN - MOVER AL PRINCIPIO
 // ===========================
+// ===========================
+// ACEPTAR COTIZACIÓN - MOVER AL PRINCIPIO
+// ===========================
 async function aceptarCotizacion(id, codigo) {
     const confirmar = confirm(`¿Estás seguro que la cotización ${codigo} está aceptada?\n\nYa llegó el comprobante y esta acción no se puede corregir.\n\n¿Deseas marcarla como ACEPTADA?`);
     
@@ -1078,23 +1114,47 @@ async function aceptarCotizacion(id, codigo) {
         const result = await response.json();
         
         if (result.success) {
+            // Actualizar el estado en los datos locales
             const cotizacion = cotizacionesData.find(c => c.id === id);
             if (cotizacion) {
                 cotizacion.estado = 'Aceptada por Cliente';
+                // Actualizar fecha para que quede primero
+                cotizacion.fecha_creacion = new Date().toISOString().replace('T', ' ').slice(0, 19);
             }
             
+            // Reordenar: Aceptadas primero, y dentro de Aceptadas, las más recientes primero
             cotizacionesData.sort((a, b) => {
-                if (a.id === id) return -1;
-                if (b.id === id) return 1;
-                const orden = { 'Aceptada por Cliente': 0, 'aceptada': 0, 'Generada': 1, 'generada': 1 };
-                const ordenA = orden[a.estado] ?? 2;
-                const ordenB = orden[b.estado] ?? 2;
-                return ordenA - ordenB;
+                const ordenEstado = { 
+                    'Aceptada por Cliente': 0, 
+                    'aceptada': 0, 
+                    'Generada': 1, 
+                    'generada': 1,
+                    'En Proceso': 2,
+                    'en_proceso': 2
+                };
+                
+                const estadoA = ordenEstado[a.estado] ?? 99;
+                const estadoB = ordenEstado[b.estado] ?? 99;
+                
+                if (estadoA !== estadoB) {
+                    return estadoA - estadoB;
+                }
+                
+                const fechaA = new Date(a.fecha_creacion).getTime();
+                const fechaB = new Date(b.fecha_creacion).getTime();
+                
+                if (isNaN(fechaA)) return 1;
+                if (isNaN(fechaB)) return -1;
+                
+                return fechaB - fechaA;
             });
             
             mostrarNotificacion('✅ Cotización marcada como ACEPTADA correctamente', 'success');
             actualizarEstadisticas();
             renderizarTabla(cotizacionesData);
+            
+            console.log(`✅ Cotización ${codigo} ACEPTADA - Movida al inicio`);
+            
         } else {
             mostrarNotificacion('❌ Error al aceptar: ' + (result.error || 'Error desconocido'), 'danger');
         }
