@@ -1,0 +1,1128 @@
+# ============================================================
+# CONFIGURACIÓN Y SEGURIDAD - Módulo 1 del ERP
+# ============================================================
+# Este módulo maneja:
+#   - Empresas (KCF, AGD)
+#   - Usuarios y permisos
+#   - Correlativos por empresa
+#   - Parámetros generales
+#   - Integración ERP
+# ============================================================
+
+from flask import Blueprint, request, jsonify, session, render_template
+from datetime import datetime
+import json
+from database import db_query, db_execute, db_tx, get_connection
+from psycopg2.extras import RealDictCursor
+
+# ============================================================
+# BLUEPRINT
+# ============================================================
+config_seguridad_bp = Blueprint('config_seguridad', __name__, url_prefix='/api/config')
+
+# ============================================================
+# 1. EMPRESAS
+# ============================================================
+
+@config_seguridad_bp.route('/empresas', methods=['GET'])
+def get_empresas():
+    """Obtener todas las empresas activas con sus cuentas bancarias"""
+    try:
+        empresas = db_query("""
+            SELECT 
+                e.id,
+                e.codigo,
+                e.nombre_corto,
+                e.nombre_comercial,
+                e.razon_social,
+                e.ruc,
+                e.direccion_fiscal,
+                e.telefono,
+                e.correo_documentos,
+                e.logo_url,
+                e.color_primario,
+                e.color_secundario,
+                e.color_pastel,
+                e.estado,
+                e.created_at,
+                e.updated_at,
+                (
+                    SELECT json_agg(
+                        json_build_object(
+                            'id', cb.id,
+                            'banco', cb.banco,
+                            'tipo_cuenta', cb.tipo_cuenta,
+                            'moneda', cb.moneda,
+                            'numero_cuenta', cb.numero_cuenta,
+                            'cci', cb.cci,
+                            'es_principal', cb.es_principal,
+                            'estado', cb.estado
+                        )
+                    )
+                    FROM erp_empresa_cuentas_bancarias cb
+                    WHERE cb.empresa_id = e.id
+                    AND cb.estado = 'activo'
+                ) as cuentas_bancarias
+            FROM erp_empresas e
+            WHERE e.estado = 'activo'
+            ORDER BY e.codigo
+        """)
+        
+        return jsonify({
+            'success': True,
+            'data': empresas,
+            'total': len(empresas)
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en get_empresas: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@config_seguridad_bp.route('/empresas/<empresa_id>', methods=['GET'])
+def get_empresa(empresa_id):
+    """Obtener una empresa específica con sus cuentas"""
+    try:
+        empresa = db_query("""
+            SELECT 
+                e.id,
+                e.codigo,
+                e.nombre_corto,
+                e.nombre_comercial,
+                e.razon_social,
+                e.ruc,
+                e.direccion_fiscal,
+                e.telefono,
+                e.correo_documentos,
+                e.logo_url,
+                e.color_primario,
+                e.color_secundario,
+                e.color_pastel,
+                e.estado,
+                e.created_at,
+                e.updated_at,
+                (
+                    SELECT json_agg(
+                        json_build_object(
+                            'id', cb.id,
+                            'banco', cb.banco,
+                            'tipo_cuenta', cb.tipo_cuenta,
+                            'moneda', cb.moneda,
+                            'numero_cuenta', cb.numero_cuenta,
+                            'cci', cb.cci,
+                            'es_principal', cb.es_principal,
+                            'estado', cb.estado
+                        )
+                    )
+                    FROM erp_empresa_cuentas_bancarias cb
+                    WHERE cb.empresa_id = e.id
+                    AND cb.estado = 'activo'
+                ) as cuentas_bancarias
+            FROM erp_empresas e
+            WHERE e.id = %s AND e.estado = 'activo'
+        """, (empresa_id,))
+        
+        if not empresa:
+            return jsonify({'success': False, 'error': 'Empresa no encontrada'}), 404
+        
+        return jsonify({
+            'success': True,
+            'data': empresa[0]
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en get_empresa: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@config_seguridad_bp.route('/empresas', methods=['POST'])
+def create_empresa():
+    """Crear una nueva empresa"""
+    try:
+        data = request.get_json()
+        
+        # Validar campos requeridos
+        required = ['codigo', 'nombre_corto', 'nombre_comercial', 'razon_social', 'ruc']
+        for field in required:
+            if not data.get(field):
+                return jsonify({'success': False, 'error': f'Campo {field} es requerido'}), 400
+        
+        with db_tx() as conn:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            
+            # Insertar empresa
+            cur.execute("""
+                INSERT INTO erp_empresas (
+                    codigo, nombre_corto, nombre_comercial, razon_social,
+                    ruc, direccion_fiscal, telefono, correo_documentos,
+                    logo_url, color_primario, color_secundario, color_pastel,
+                    estado
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
+            """, (
+                data.get('codigo'),
+                data.get('nombre_corto'),
+                data.get('nombre_comercial'),
+                data.get('razon_social'),
+                data.get('ruc'),
+                data.get('direccion_fiscal', ''),
+                data.get('telefono', ''),
+                data.get('correo_documentos', ''),
+                data.get('logo_url', ''),
+                data.get('color_primario', '#EF233C'),
+                data.get('color_secundario', '#1F1F1F'),
+                data.get('color_pastel', '#FFECEF'),
+                data.get('estado', 'activo')
+            ))
+            
+            empresa_id = cur.fetchone()['id']
+            
+            # Insertar cuentas bancarias si vienen
+            cuentas = data.get('cuentas_bancarias', [])
+            for cuenta in cuentas:
+                if cuenta.get('banco'):
+                    cur.execute("""
+                        INSERT INTO erp_empresa_cuentas_bancarias (
+                            empresa_id, banco, tipo_cuenta, moneda,
+                            numero_cuenta, cci, es_principal, estado
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    """, (
+                        empresa_id,
+                        cuenta.get('banco'),
+                        cuenta.get('tipo_cuenta'),
+                        cuenta.get('moneda', 'PEN'),
+                        cuenta.get('numero_cuenta'),
+                        cuenta.get('cci'),
+                        cuenta.get('es_principal', False),
+                        cuenta.get('estado', 'activo')
+                    ))
+            
+            return jsonify({
+                'success': True,
+                'data': {'id': empresa_id},
+                'message': 'Empresa creada exitosamente'
+            })
+            
+    except Exception as e:
+        print(f"❌ Error en create_empresa: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@config_seguridad_bp.route('/empresas/<empresa_id>', methods=['PUT'])
+def update_empresa(empresa_id):
+    """Actualizar una empresa existente"""
+    try:
+        data = request.get_json()
+        
+        with db_tx() as conn:
+            cur = conn.cursor()
+            
+            # Actualizar empresa
+            cur.execute("""
+                UPDATE erp_empresas SET
+                    codigo = %s,
+                    nombre_corto = %s,
+                    nombre_comercial = %s,
+                    razon_social = %s,
+                    ruc = %s,
+                    direccion_fiscal = %s,
+                    telefono = %s,
+                    correo_documentos = %s,
+                    logo_url = %s,
+                    color_primario = %s,
+                    color_secundario = %s,
+                    color_pastel = %s,
+                    estado = %s,
+                    updated_at = NOW()
+                WHERE id = %s
+            """, (
+                data.get('codigo'),
+                data.get('nombre_corto'),
+                data.get('nombre_comercial'),
+                data.get('razon_social'),
+                data.get('ruc'),
+                data.get('direccion_fiscal', ''),
+                data.get('telefono', ''),
+                data.get('correo_documentos', ''),
+                data.get('logo_url', ''),
+                data.get('color_primario', '#EF233C'),
+                data.get('color_secundario', '#1F1F1F'),
+                data.get('color_pastel', '#FFECEF'),
+                data.get('estado', 'activo'),
+                empresa_id
+            ))
+            
+            return jsonify({
+                'success': True,
+                'message': 'Empresa actualizada exitosamente'
+            })
+            
+    except Exception as e:
+        print(f"❌ Error en update_empresa: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@config_seguridad_bp.route('/empresas/<empresa_id>', methods=['DELETE'])
+def delete_empresa(empresa_id):
+    """Eliminar empresa (borrado lógico)"""
+    try:
+        db_execute("""
+            UPDATE erp_empresas SET estado = 'inactivo', updated_at = NOW()
+            WHERE id = %s
+        """, (empresa_id,))
+        
+        return jsonify({
+            'success': True,
+            'message': 'Empresa desactivada exitosamente'
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en delete_empresa: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================================
+# 2. USUARIOS Y PERMISOS
+# ============================================================
+
+@config_seguridad_bp.route('/usuarios', methods=['GET'])
+def get_usuarios():
+    """Obtener todos los usuarios con sus empresas y roles"""
+    try:
+        usuarios = db_query("""
+            SELECT 
+                u.id,
+                u.auth_user_id,
+                u.usuario_sistema,
+                u.nombres_apellidos,
+                u.area,
+                u.correo,
+                u.celular,
+                u.estado,
+                u.created_at,
+                u.updated_at,
+                (
+                    SELECT json_agg(
+                        json_build_object(
+                            'id', ue.id,
+                            'empresa_id', ue.empresa_id,
+                            'empresa_codigo', e.codigo,
+                            'empresa_nombre', e.nombre_comercial,
+                            'es_principal', ue.es_empresa_principal,
+                            'estado', ue.estado,
+                            'rol_id', ue.rol_id,
+                            'rol_codigo', r.codigo,
+                            'rol_nombre', r.nombre,
+                            'rol_es_admin', r.es_admin
+                        )
+                    )
+                    FROM erp_usuario_empresas ue
+                    LEFT JOIN erp_empresas e ON e.id = ue.empresa_id
+                    LEFT JOIN erp_roles r ON r.id = ue.rol_id
+                    WHERE ue.auth_user_id = u.auth_user_id
+                    AND ue.estado = 'activo'
+                ) as empresas_acceso
+            FROM usuarios u
+            WHERE u.estado = 'activo'
+            ORDER BY u.usuario_sistema
+        """)
+        
+        return jsonify({
+            'success': True,
+            'data': usuarios,
+            'total': len(usuarios)
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en get_usuarios: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@config_seguridad_bp.route('/usuarios/<usuario_id>', methods=['GET'])
+def get_usuario(usuario_id):
+    """Obtener un usuario específico"""
+    try:
+        usuario = db_query("""
+            SELECT 
+                u.id,
+                u.auth_user_id,
+                u.usuario_sistema,
+                u.nombres_apellidos,
+                u.area,
+                u.correo,
+                u.celular,
+                u.estado,
+                u.created_at,
+                u.updated_at
+            FROM usuarios u
+            WHERE u.id = %s AND u.estado = 'activo'
+        """, (usuario_id,))
+        
+        if not usuario:
+            return jsonify({'success': False, 'error': 'Usuario no encontrado'}), 404
+        
+        return jsonify({
+            'success': True,
+            'data': usuario[0]
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en get_usuario: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@config_seguridad_bp.route('/usuarios', methods=['POST'])
+def create_usuario():
+    """Crear un nuevo usuario con sus asignaciones de empresa y rol"""
+    try:
+        data = request.get_json()
+        
+        # Validar campos requeridos
+        if not data.get('auth_user_id'):
+            return jsonify({'success': False, 'error': 'auth_user_id es requerido'}), 400
+        
+        if not data.get('usuario_sistema'):
+            return jsonify({'success': False, 'error': 'usuario_sistema es requerido'}), 400
+        
+        with db_tx() as conn:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            
+            # Insertar usuario
+            cur.execute("""
+                INSERT INTO usuarios (
+                    auth_user_id, usuario_sistema, nombres_apellidos,
+                    area, correo, celular, estado
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
+            """, (
+                data.get('auth_user_id'),
+                data.get('usuario_sistema'),
+                data.get('nombres_apellidos'),
+                data.get('area'),
+                data.get('correo'),
+                data.get('celular'),
+                data.get('estado', 'activo')
+            ))
+            
+            usuario_id = cur.fetchone()['id']
+            
+            # Asignar empresas y roles
+            empresas_acceso = data.get('empresas_acceso', [])
+            for acceso in empresas_acceso:
+                if acceso.get('empresa_id') and acceso.get('rol_id'):
+                    cur.execute("""
+                        INSERT INTO erp_usuario_empresas (
+                            auth_user_id, empresa_id, rol_id,
+                            es_empresa_principal, estado
+                        ) VALUES (%s, %s, %s, %s, %s)
+                        ON CONFLICT (auth_user_id, empresa_id) 
+                        DO UPDATE SET rol_id = EXCLUDED.rol_id, estado = EXCLUDED.estado
+                    """, (
+                        data.get('auth_user_id'),
+                        acceso.get('empresa_id'),
+                        acceso.get('rol_id'),
+                        acceso.get('es_empresa_principal', False),
+                        acceso.get('estado', 'activo')
+                    ))
+            
+            return jsonify({
+                'success': True,
+                'data': {'id': usuario_id},
+                'message': 'Usuario creado exitosamente'
+            })
+            
+    except Exception as e:
+        print(f"❌ Error en create_usuario: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@config_seguridad_bp.route('/usuarios/<usuario_id>', methods=['PUT'])
+def update_usuario(usuario_id):
+    """Actualizar un usuario existente"""
+    try:
+        data = request.get_json()
+        
+        with db_tx() as conn:
+            cur = conn.cursor()
+            
+            # Actualizar usuario
+            cur.execute("""
+                UPDATE usuarios SET
+                    usuario_sistema = %s,
+                    nombres_apellidos = %s,
+                    area = %s,
+                    correo = %s,
+                    celular = %s,
+                    estado = %s,
+                    updated_at = NOW()
+                WHERE id = %s
+            """, (
+                data.get('usuario_sistema'),
+                data.get('nombres_apellidos'),
+                data.get('area'),
+                data.get('correo'),
+                data.get('celular'),
+                data.get('estado', 'activo'),
+                usuario_id
+            ))
+            
+            return jsonify({
+                'success': True,
+                'message': 'Usuario actualizado exitosamente'
+            })
+            
+    except Exception as e:
+        print(f"❌ Error en update_usuario: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@config_seguridad_bp.route('/usuarios/<usuario_id>', methods=['DELETE'])
+def delete_usuario(usuario_id):
+    """Eliminar usuario (borrado lógico)"""
+    try:
+        db_execute("""
+            UPDATE usuarios SET estado = 'inactivo', updated_at = NOW()
+            WHERE id = %s
+        """, (usuario_id,))
+        
+        return jsonify({
+            'success': True,
+            'message': 'Usuario desactivado exitosamente'
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en delete_usuario: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@config_seguridad_bp.route('/roles', methods=['GET'])
+def get_roles():
+    """Obtener todos los roles"""
+    try:
+        roles = db_query("""
+            SELECT 
+                r.id,
+                r.codigo,
+                r.nombre,
+                r.descripcion,
+                r.es_admin,
+                r.estado,
+                r.created_at,
+                r.updated_at
+            FROM erp_roles r
+            WHERE r.estado = 'activo'
+            ORDER BY r.nombre
+        """)
+        
+        return jsonify({
+            'success': True,
+            'data': roles
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en get_roles: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================================
+# 3. CORRELATIVOS
+# ============================================================
+
+@config_seguridad_bp.route('/correlativos', methods=['GET'])
+def get_correlativos():
+    """Obtener todos los correlativos"""
+    try:
+        correlativos = db_query("""
+            SELECT 
+                c.id,
+                c.empresa_id,
+                e.codigo as empresa_codigo,
+                e.nombre_comercial as empresa_nombre,
+                c.documento,
+                c.codigo_documento,
+                c.prefijo,
+                c.anio,
+                c.ultimo_numero,
+                c.estado,
+                c.created_at,
+                c.updated_at,
+                (c.prefijo || '-' || c.anio::text || '-' || LPAD((c.ultimo_numero + 1)::text, 4, '0')) as siguiente_codigo
+            FROM erp_correlativos c
+            JOIN erp_empresas e ON e.id = c.empresa_id
+            WHERE c.estado = 'activo'
+            ORDER BY e.codigo, c.documento
+        """)
+        
+        return jsonify({
+            'success': True,
+            'data': correlativos,
+            'total': len(correlativos)
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en get_correlativos: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@config_seguridad_bp.route('/correlativos', methods=['POST'])
+def create_correlativo():
+    """Crear un nuevo correlativo"""
+    try:
+        data = request.get_json()
+        
+        # Validar campos requeridos
+        required = ['empresa_id', 'documento', 'prefijo']
+        for field in required:
+            if not data.get(field):
+                return jsonify({'success': False, 'error': f'Campo {field} es requerido'}), 400
+        
+        with db_tx() as conn:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            
+            cur.execute("""
+                INSERT INTO erp_correlativos (
+                    empresa_id, documento, codigo_documento,
+                    prefijo, anio, ultimo_numero, estado
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
+            """, (
+                data.get('empresa_id'),
+                data.get('documento'),
+                data.get('codigo_documento'),
+                data.get('prefijo'),
+                data.get('anio', datetime.now().year),
+                data.get('ultimo_numero', 0),
+                data.get('estado', 'activo')
+            ))
+            
+            correlativo_id = cur.fetchone()['id']
+            
+            return jsonify({
+                'success': True,
+                'data': {'id': correlativo_id},
+                'message': 'Correlativo creado exitosamente'
+            })
+            
+    except Exception as e:
+        print(f"❌ Error en create_correlativo: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@config_seguridad_bp.route('/correlativos/<correlativo_id>', methods=['PUT'])
+def update_correlativo(correlativo_id):
+    """Actualizar un correlativo existente"""
+    try:
+        data = request.get_json()
+        
+        db_execute("""
+            UPDATE erp_correlativos SET
+                documento = %s,
+                codigo_documento = %s,
+                prefijo = %s,
+                anio = %s,
+                ultimo_numero = %s,
+                estado = %s,
+                updated_at = NOW()
+            WHERE id = %s
+        """, (
+            data.get('documento'),
+            data.get('codigo_documento'),
+            data.get('prefijo'),
+            data.get('anio'),
+            data.get('ultimo_numero'),
+            data.get('estado', 'activo'),
+            correlativo_id
+        ))
+        
+        return jsonify({
+            'success': True,
+            'message': 'Correlativo actualizado exitosamente'
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en update_correlativo: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@config_seguridad_bp.route('/correlativos/<correlativo_id>', methods=['DELETE'])
+def delete_correlativo(correlativo_id):
+    """Eliminar correlativo (borrado lógico)"""
+    try:
+        db_execute("""
+            UPDATE erp_correlativos SET estado = 'inactivo', updated_at = NOW()
+            WHERE id = %s
+        """, (correlativo_id,))
+        
+        return jsonify({
+            'success': True,
+            'message': 'Correlativo desactivado exitosamente'
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en delete_correlativo: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@config_seguridad_bp.route('/correlativos/tomar', methods=['POST'])
+def tomar_correlativo():
+    """Tomar un correlativo (incrementar y devolver el siguiente número)"""
+    try:
+        data = request.get_json()
+        empresa_codigo = data.get('empresa_codigo')
+        documento = data.get('documento')
+        anio = data.get('anio', datetime.now().year)
+        
+        if not empresa_codigo or not documento:
+            return jsonify({'success': False, 'error': 'empresa_codigo y documento son requeridos'}), 400
+        
+        # Usar la función de base de datos
+        with db_tx() as conn:
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT erp_tomar_correlativo(%s, %s, %s) as codigo
+            """, (empresa_codigo, documento, anio))
+            
+            resultado = cur.fetchone()
+            codigo = resultado[0] if resultado else None
+            
+            if not codigo:
+                return jsonify({'success': False, 'error': 'No se pudo generar el correlativo'}), 400
+            
+            return jsonify({
+                'success': True,
+                'data': {'codigo': codigo}
+            })
+            
+    except Exception as e:
+        print(f"❌ Error en tomar_correlativo: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================================
+# 4. PARÁMETROS GENERALES
+# ============================================================
+
+@config_seguridad_bp.route('/parametros', methods=['GET'])
+def get_parametros():
+    """Obtener todos los parámetros generales"""
+    try:
+        empresa_id = request.args.get('empresa_id')
+        
+        query = """
+            SELECT 
+                id,
+                empresa_id,
+                grupo,
+                codigo,
+                nombre,
+                valor_bool,
+                valor_text,
+                valor_num,
+                regla,
+                es_critico,
+                estado,
+                created_at,
+                updated_at
+            FROM erp_parametros
+            WHERE estado = 'activo'
+        """
+        params = []
+        
+        if empresa_id:
+            query += " AND (empresa_id = %s OR empresa_id IS NULL)"
+            params.append(empresa_id)
+        
+        query += " ORDER BY grupo, codigo"
+        
+        parametros = db_query(query, params if params else None)
+        
+        return jsonify({
+            'success': True,
+            'data': parametros,
+            'total': len(parametros)
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en get_parametros: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@config_seguridad_bp.route('/parametros', methods=['POST'])
+def create_parametro():
+    """Crear un nuevo parámetro"""
+    try:
+        data = request.get_json()
+        
+        if not data.get('codigo') or not data.get('grupo') or not data.get('nombre'):
+            return jsonify({'success': False, 'error': 'codigo, grupo y nombre son requeridos'}), 400
+        
+        db_execute("""
+            INSERT INTO erp_parametros (
+                empresa_id, grupo, codigo, nombre,
+                valor_bool, valor_text, valor_num, regla,
+                es_critico, estado
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (empresa_id, codigo) DO UPDATE SET
+                valor_bool = EXCLUDED.valor_bool,
+                valor_text = EXCLUDED.valor_text,
+                valor_num = EXCLUDED.valor_num,
+                regla = EXCLUDED.regla,
+                es_critico = EXCLUDED.es_critico,
+                updated_at = NOW()
+        """, (
+            data.get('empresa_id'),
+            data.get('grupo'),
+            data.get('codigo'),
+            data.get('nombre'),
+            data.get('valor_bool'),
+            data.get('valor_text'),
+            data.get('valor_num'),
+            data.get('regla'),
+            data.get('es_critico', False),
+            data.get('estado', 'activo')
+        ))
+        
+        return jsonify({
+            'success': True,
+            'message': 'Parámetro guardado exitosamente'
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en create_parametro: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@config_seguridad_bp.route('/parametros/<parametro_id>', methods=['DELETE'])
+def delete_parametro(parametro_id):
+    """Eliminar parámetro (borrado lógico)"""
+    try:
+        db_execute("""
+            UPDATE erp_parametros SET estado = 'inactivo', updated_at = NOW()
+            WHERE id = %s
+        """, (parametro_id,))
+        
+        return jsonify({
+            'success': True,
+            'message': 'Parámetro desactivado exitosamente'
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en delete_parametro: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================================
+# 5. MÓDULOS Y SUBMÓDULOS
+# ============================================================
+
+@config_seguridad_bp.route('/modulos', methods=['GET'])
+def get_modulos():
+    """Obtener todos los módulos con sus submódulos"""
+    try:
+        modulos = db_query("""
+            SELECT 
+                m.id,
+                m.orden,
+                m.codigo,
+                m.nombre,
+                m.descripcion,
+                m.estado,
+                m.created_at,
+                m.updated_at,
+                (
+                    SELECT json_agg(
+                        json_build_object(
+                            'id', s.id,
+                            'orden', s.orden,
+                            'codigo', s.codigo,
+                            'nombre', s.nombre,
+                            'descripcion', s.descripcion,
+                            'estado', s.estado
+                        ) ORDER BY s.orden
+                    )
+                    FROM erp_submodulos s
+                    WHERE s.modulo_id = m.id
+                    AND s.estado = 'activo'
+                ) as submodulos
+            FROM erp_modulos m
+            WHERE m.estado = 'activo'
+            ORDER BY m.orden
+        """)
+        
+        return jsonify({
+            'success': True,
+            'data': modulos,
+            'total': len(modulos)
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en get_modulos: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================================
+# 6. PERMISOS DE USUARIO POR EMPRESA
+# ============================================================
+
+@config_seguridad_bp.route('/usuarios/<usuario_id>/permisos', methods=['GET'])
+def get_usuario_permisos(usuario_id):
+    """Obtener los permisos de un usuario en una empresa específica"""
+    try:
+        empresa_id = request.args.get('empresa_id')
+        
+        if not empresa_id:
+            return jsonify({'success': False, 'error': 'empresa_id es requerido'}), 400
+        
+        permisos = db_query("""
+            SELECT 
+                up.id,
+                up.auth_user_id,
+                up.empresa_id,
+                up.submodulo_id,
+                s.codigo as submodulo_codigo,
+                s.nombre as submodulo_nombre,
+                m.codigo as modulo_codigo,
+                m.nombre as modulo_nombre,
+                up.puede_ver,
+                up.puede_crear,
+                up.puede_editar,
+                up.puede_aprobar,
+                up.puede_anular,
+                up.puede_eliminar,
+                up.puede_exportar,
+                up.puede_subir_evidencia,
+                up.observacion,
+                up.created_at,
+                up.updated_at
+            FROM erp_usuario_permisos up
+            JOIN erp_submodulos s ON s.id = up.submodulo_id
+            JOIN erp_modulos m ON m.id = s.modulo_id
+            WHERE up.auth_user_id = (SELECT auth_user_id FROM usuarios WHERE id = %s)
+            AND up.empresa_id = %s
+            ORDER BY m.orden, s.orden
+        """, (usuario_id, empresa_id))
+        
+        return jsonify({
+            'success': True,
+            'data': permisos
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en get_usuario_permisos: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@config_seguridad_bp.route('/usuarios/<usuario_id>/permisos', methods=['POST'])
+def update_usuario_permisos(usuario_id):
+    """Actualizar los permisos de un usuario en una empresa"""
+    try:
+        data = request.get_json()
+        empresa_id = data.get('empresa_id')
+        permisos = data.get('permisos', [])
+        
+        if not empresa_id:
+            return jsonify({'success': False, 'error': 'empresa_id es requerido'}), 400
+        
+        # Obtener auth_user_id del usuario
+        usuario = db_query("""
+            SELECT auth_user_id FROM usuarios WHERE id = %s
+        """, (usuario_id,))
+        
+        if not usuario:
+            return jsonify({'success': False, 'error': 'Usuario no encontrado'}), 404
+        
+        auth_user_id = usuario[0]['auth_user_id']
+        
+        with db_tx() as conn:
+            cur = conn.cursor()
+            
+            for permiso in permisos:
+                submodulo_id = permiso.get('submodulo_id')
+                if not submodulo_id:
+                    continue
+                
+                cur.execute("""
+                    INSERT INTO erp_usuario_permisos (
+                        auth_user_id, empresa_id, submodulo_id,
+                        puede_ver, puede_crear, puede_editar,
+                        puede_aprobar, puede_anular, puede_eliminar,
+                        puede_exportar, puede_subir_evidencia,
+                        observacion
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (auth_user_id, empresa_id, submodulo_id) DO UPDATE SET
+                        puede_ver = EXCLUDED.puede_ver,
+                        puede_crear = EXCLUDED.puede_crear,
+                        puede_editar = EXCLUDED.puede_editar,
+                        puede_aprobar = EXCLUDED.puede_aprobar,
+                        puede_anular = EXCLUDED.puede_anular,
+                        puede_eliminar = EXCLUDED.puede_eliminar,
+                        puede_exportar = EXCLUDED.puede_exportar,
+                        puede_subir_evidencia = EXCLUDED.puede_subir_evidencia,
+                        observacion = EXCLUDED.observacion,
+                        updated_at = NOW()
+                """, (
+                    auth_user_id,
+                    empresa_id,
+                    submodulo_id,
+                    permiso.get('puede_ver', False),
+                    permiso.get('puede_crear', False),
+                    permiso.get('puede_editar', False),
+                    permiso.get('puede_aprobar', False),
+                    permiso.get('puede_anular', False),
+                    permiso.get('puede_eliminar', False),
+                    permiso.get('puede_exportar', False),
+                    permiso.get('puede_subir_evidencia', False),
+                    permiso.get('observacion', '')
+                ))
+        
+        return jsonify({
+            'success': True,
+            'message': 'Permisos actualizados exitosamente'
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en update_usuario_permisos: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================================
+# 7. AUDITORÍA
+# ============================================================
+
+@config_seguridad_bp.route('/auditoria', methods=['GET'])
+def get_auditoria():
+    """Obtener registros de auditoría"""
+    try:
+        limit = request.args.get('limit', 100, type=int)
+        offset = request.args.get('offset', 0, type=int)
+        empresa_id = request.args.get('empresa_id')
+        tabla = request.args.get('tabla')
+        accion = request.args.get('accion')
+        
+        query = """
+            SELECT 
+                a.id,
+                a.empresa_id,
+                e.codigo as empresa_codigo,
+                a.auth_user_id,
+                u.usuario_sistema,
+                u.nombres_apellidos,
+                a.tabla,
+                a.registro_id,
+                a.accion,
+                a.data_anterior,
+                a.data_nueva,
+                a.created_at
+            FROM erp_auditoria a
+            LEFT JOIN erp_empresas e ON e.id = a.empresa_id
+            LEFT JOIN usuarios u ON u.auth_user_id = a.auth_user_id
+            WHERE 1=1
+        """
+        params = []
+        
+        if empresa_id:
+            query += " AND a.empresa_id = %s"
+            params.append(empresa_id)
+        
+        if tabla:
+            query += " AND a.tabla = %s"
+            params.append(tabla)
+        
+        if accion:
+            query += " AND a.accion = %s"
+            params.append(accion)
+        
+        query += " ORDER BY a.created_at DESC LIMIT %s OFFSET %s"
+        params.extend([limit, offset])
+        
+        auditoria = db_query(query, params)
+        
+        return jsonify({
+            'success': True,
+            'data': auditoria,
+            'total': len(auditoria),
+            'limit': limit,
+            'offset': offset
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en get_auditoria: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+def registrar_auditoria(empresa_id, auth_user_id, tabla, registro_id, accion, data_anterior=None, data_nueva=None):
+    """Función auxiliar para registrar auditoría"""
+    try:
+        db_execute("""
+            INSERT INTO erp_auditoria (
+                empresa_id, auth_user_id, tabla, registro_id,
+                accion, data_anterior, data_nueva
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (
+            empresa_id,
+            auth_user_id,
+            tabla,
+            registro_id,
+            accion,
+            json.dumps(data_anterior) if data_anterior else None,
+            json.dumps(data_nueva) if data_nueva else None
+        ))
+    except Exception as e:
+        print(f"❌ Error en registrar_auditoria: {e}")
+        # No lanzar excepción para no interrumpir la operación principal
+
+
+# ============================================================
+# 8. INFORMACIÓN DE LA SESIÓN (para el frontend)
+# ============================================================
+
+@config_seguridad_bp.route('/session', methods=['GET'])
+def get_session_info():
+    """Obtener información de la sesión actual"""
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'success': False, 'error': 'No autenticado'}), 401
+        
+        usuario = db_query("""
+            SELECT 
+                u.id,
+                u.auth_user_id,
+                u.usuario_sistema,
+                u.nombres_apellidos,
+                u.area,
+                u.correo,
+                (
+                    SELECT json_agg(
+                        json_build_object(
+                            'empresa_id', ue.empresa_id,
+                            'empresa_codigo', e.codigo,
+                            'empresa_nombre', e.nombre_comercial,
+                            'rol_id', ue.rol_id,
+                            'rol_codigo', r.codigo,
+                            'rol_nombre', r.nombre,
+                            'es_admin', r.es_admin,
+                            'es_principal', ue.es_empresa_principal
+                        )
+                    )
+                    FROM erp_usuario_empresas ue
+                    LEFT JOIN erp_empresas e ON e.id = ue.empresa_id
+                    LEFT JOIN erp_roles r ON r.id = ue.rol_id
+                    WHERE ue.auth_user_id = u.auth_user_id
+                    AND ue.estado = 'activo'
+                ) as empresas_acceso
+            FROM usuarios u
+            WHERE u.id = %s AND u.estado = 'activo'
+        """, (user_id,))
+        
+        if not usuario:
+            return jsonify({'success': False, 'error': 'Usuario no encontrado'}), 404
+        
+        return jsonify({
+            'success': True,
+            'data': usuario[0]
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en get_session_info: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500

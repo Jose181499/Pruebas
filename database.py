@@ -3141,7 +3141,820 @@ def eliminar_transportista_db(transportista_id):
     except Exception as e:
         print(f"❌ Error en eliminar_transportista_db: {e}")
         return False
+# ==========================================
+# ==========================================
+# CONFIGURACIÓN Y SEGURIDAD - NUEVAS FUNCIONES
+# ==========================================
+# ==========================================
 
+# ==========================================
+# 1. EMPRESAS
+# ==========================================
+
+def obtener_empresas(activo=True):
+    """Obtener todas las empresas con sus cuentas bancarias"""
+    try:
+        query = """
+            SELECT 
+                e.id,
+                e.codigo,
+                e.nombre_corto,
+                e.nombre_comercial,
+                e.razon_social,
+                e.ruc,
+                e.direccion_fiscal,
+                e.telefono,
+                e.correo_documentos,
+                e.logo_url,
+                e.color_primario,
+                e.color_secundario,
+                e.color_pastel,
+                e.estado,
+                e.created_at,
+                e.updated_at,
+                (
+                    SELECT json_agg(
+                        json_build_object(
+                            'id', cb.id,
+                            'banco', cb.banco,
+                            'tipo_cuenta', cb.tipo_cuenta,
+                            'moneda', cb.moneda,
+                            'numero_cuenta', cb.numero_cuenta,
+                            'cci', cb.cci,
+                            'es_principal', cb.es_principal,
+                            'estado', cb.estado
+                        )
+                    )
+                    FROM erp_empresa_cuentas_bancarias cb
+                    WHERE cb.empresa_id = e.id
+                    AND cb.estado = 'activo'
+                ) as cuentas_bancarias
+            FROM erp_empresas e
+        """
+        if activo:
+            query += " WHERE e.estado = 'activo'"
+        query += " ORDER BY e.codigo"
+        
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_empresas: {e}")
+        return []
+
+
+def obtener_empresa_por_id(empresa_id):
+    """Obtener una empresa por ID"""
+    try:
+        rows = db_query("""
+            SELECT 
+                e.id,
+                e.codigo,
+                e.nombre_corto,
+                e.nombre_comercial,
+                e.razon_social,
+                e.ruc,
+                e.direccion_fiscal,
+                e.telefono,
+                e.correo_documentos,
+                e.logo_url,
+                e.color_primario,
+                e.color_secundario,
+                e.color_pastel,
+                e.estado,
+                e.created_at,
+                e.updated_at,
+                (
+                    SELECT json_agg(
+                        json_build_object(
+                            'id', cb.id,
+                            'banco', cb.banco,
+                            'tipo_cuenta', cb.tipo_cuenta,
+                            'moneda', cb.moneda,
+                            'numero_cuenta', cb.numero_cuenta,
+                            'cci', cb.cci,
+                            'es_principal', cb.es_principal,
+                            'estado', cb.estado
+                        )
+                    )
+                    FROM erp_empresa_cuentas_bancarias cb
+                    WHERE cb.empresa_id = e.id
+                    AND cb.estado = 'activo'
+                ) as cuentas_bancarias
+            FROM erp_empresas e
+            WHERE e.id = %s AND e.estado = 'activo'
+        """, (empresa_id,))
+        
+        return rows[0] if rows else None
+    except Exception as e:
+        print(f"❌ Error en obtener_empresa_por_id: {e}")
+        return None
+
+
+def crear_empresa(data):
+    """Crear una nueva empresa"""
+    try:
+        with db_tx() as conn:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            
+            cur.execute("""
+                INSERT INTO erp_empresas (
+                    codigo, nombre_corto, nombre_comercial, razon_social,
+                    ruc, direccion_fiscal, telefono, correo_documentos,
+                    logo_url, color_primario, color_secundario, color_pastel,
+                    estado
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
+            """, (
+                data.get('codigo'),
+                data.get('nombre_corto'),
+                data.get('nombre_comercial'),
+                data.get('razon_social'),
+                data.get('ruc'),
+                data.get('direccion_fiscal', ''),
+                data.get('telefono', ''),
+                data.get('correo_documentos', ''),
+                data.get('logo_url', ''),
+                data.get('color_primario', '#EF233C'),
+                data.get('color_secundario', '#1F1F1F'),
+                data.get('color_pastel', '#FFECEF'),
+                data.get('estado', 'activo')
+            ))
+            
+            empresa_id = cur.fetchone()['id']
+            
+            # Insertar cuentas bancarias
+            cuentas = data.get('cuentas_bancarias', [])
+            for cuenta in cuentas:
+                if cuenta.get('banco'):
+                    cur.execute("""
+                        INSERT INTO erp_empresa_cuentas_bancarias (
+                            empresa_id, banco, tipo_cuenta, moneda,
+                            numero_cuenta, cci, es_principal, estado
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    """, (
+                        empresa_id,
+                        cuenta.get('banco'),
+                        cuenta.get('tipo_cuenta'),
+                        cuenta.get('moneda', 'PEN'),
+                        cuenta.get('numero_cuenta'),
+                        cuenta.get('cci'),
+                        cuenta.get('es_principal', False),
+                        cuenta.get('estado', 'activo')
+                    ))
+            
+            return empresa_id
+    except Exception as e:
+        print(f"❌ Error en crear_empresa: {e}")
+        raise
+
+
+def actualizar_empresa(empresa_id, data):
+    """Actualizar una empresa existente"""
+    try:
+        db_execute("""
+            UPDATE erp_empresas SET
+                codigo = %s,
+                nombre_corto = %s,
+                nombre_comercial = %s,
+                razon_social = %s,
+                ruc = %s,
+                direccion_fiscal = %s,
+                telefono = %s,
+                correo_documentos = %s,
+                logo_url = %s,
+                color_primario = %s,
+                color_secundario = %s,
+                color_pastel = %s,
+                estado = %s,
+                updated_at = NOW()
+            WHERE id = %s
+        """, (
+            data.get('codigo'),
+            data.get('nombre_corto'),
+            data.get('nombre_comercial'),
+            data.get('razon_social'),
+            data.get('ruc'),
+            data.get('direccion_fiscal', ''),
+            data.get('telefono', ''),
+            data.get('correo_documentos', ''),
+            data.get('logo_url', ''),
+            data.get('color_primario', '#EF233C'),
+            data.get('color_secundario', '#1F1F1F'),
+            data.get('color_pastel', '#FFECEF'),
+            data.get('estado', 'activo'),
+            empresa_id
+        ))
+        return True
+    except Exception as e:
+        print(f"❌ Error en actualizar_empresa: {e}")
+        raise
+
+
+def eliminar_empresa_db(empresa_id):
+    """Eliminar empresa (borrado lógico)"""
+    try:
+        db_execute("""
+            UPDATE erp_empresas SET estado = 'inactivo', updated_at = NOW()
+            WHERE id = %s
+        """, (empresa_id,))
+        return True
+    except Exception as e:
+        print(f"❌ Error en eliminar_empresa_db: {e}")
+        raise
+
+
+# ==========================================
+# 2. USUARIOS Y PERMISOS
+# ==========================================
+
+def obtener_usuarios(activo=True):
+    """Obtener todos los usuarios con sus empresas y roles"""
+    try:
+        query = """
+            SELECT 
+                u.id,
+                u.auth_user_id,
+                u.usuario_sistema,
+                u.nombres_apellidos,
+                u.area,
+                u.correo,
+                u.celular,
+                u.estado,
+                u.created_at,
+                u.updated_at,
+                (
+                    SELECT json_agg(
+                        json_build_object(
+                            'id', ue.id,
+                            'empresa_id', ue.empresa_id,
+                            'empresa_codigo', e.codigo,
+                            'empresa_nombre', e.nombre_comercial,
+                            'es_principal', ue.es_empresa_principal,
+                            'estado', ue.estado,
+                            'rol_id', ue.rol_id,
+                            'rol_codigo', r.codigo,
+                            'rol_nombre', r.nombre,
+                            'rol_es_admin', r.es_admin
+                        )
+                    )
+                    FROM erp_usuario_empresas ue
+                    LEFT JOIN erp_empresas e ON e.id = ue.empresa_id
+                    LEFT JOIN erp_roles r ON r.id = ue.rol_id
+                    WHERE ue.auth_user_id = u.auth_user_id
+                    AND ue.estado = 'activo'
+                ) as empresas_acceso
+            FROM usuarios u
+        """
+        if activo:
+            query += " WHERE u.estado = 'activo'"
+        query += " ORDER BY u.usuario_sistema"
+        
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_usuarios: {e}")
+        return []
+
+
+def obtener_usuario_por_id(usuario_id):
+    """Obtener un usuario por ID"""
+    try:
+        rows = db_query("""
+            SELECT 
+                u.id,
+                u.auth_user_id,
+                u.usuario_sistema,
+                u.nombres_apellidos,
+                u.area,
+                u.correo,
+                u.celular,
+                u.estado,
+                u.created_at,
+                u.updated_at
+            FROM usuarios u
+            WHERE u.id = %s AND u.estado = 'activo'
+        """, (usuario_id,))
+        return rows[0] if rows else None
+    except Exception as e:
+        print(f"❌ Error en obtener_usuario_por_id: {e}")
+        return None
+
+
+def crear_usuario(data):
+    """Crear un nuevo usuario"""
+    try:
+        with db_tx() as conn:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            
+            cur.execute("""
+                INSERT INTO usuarios (
+                    auth_user_id, usuario_sistema, nombres_apellidos,
+                    area, correo, celular, estado
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
+            """, (
+                data.get('auth_user_id'),
+                data.get('usuario_sistema'),
+                data.get('nombres_apellidos'),
+                data.get('area'),
+                data.get('correo'),
+                data.get('celular'),
+                data.get('estado', 'activo')
+            ))
+            
+            usuario_id = cur.fetchone()['id']
+            
+            # Asignar empresas y roles
+            empresas_acceso = data.get('empresas_acceso', [])
+            for acceso in empresas_acceso:
+                if acceso.get('empresa_id') and acceso.get('rol_id'):
+                    cur.execute("""
+                        INSERT INTO erp_usuario_empresas (
+                            auth_user_id, empresa_id, rol_id,
+                            es_empresa_principal, estado
+                        ) VALUES (%s, %s, %s, %s, %s)
+                        ON CONFLICT (auth_user_id, empresa_id) 
+                        DO UPDATE SET rol_id = EXCLUDED.rol_id, estado = EXCLUDED.estado
+                    """, (
+                        data.get('auth_user_id'),
+                        acceso.get('empresa_id'),
+                        acceso.get('rol_id'),
+                        acceso.get('es_empresa_principal', False),
+                        acceso.get('estado', 'activo')
+                    ))
+            
+            return usuario_id
+    except Exception as e:
+        print(f"❌ Error en crear_usuario: {e}")
+        raise
+
+
+def actualizar_usuario(usuario_id, data):
+    """Actualizar un usuario existente"""
+    try:
+        db_execute("""
+            UPDATE usuarios SET
+                usuario_sistema = %s,
+                nombres_apellidos = %s,
+                area = %s,
+                correo = %s,
+                celular = %s,
+                estado = %s,
+                updated_at = NOW()
+            WHERE id = %s
+        """, (
+            data.get('usuario_sistema'),
+            data.get('nombres_apellidos'),
+            data.get('area'),
+            data.get('correo'),
+            data.get('celular'),
+            data.get('estado', 'activo'),
+            usuario_id
+        ))
+        return True
+    except Exception as e:
+        print(f"❌ Error en actualizar_usuario: {e}")
+        raise
+
+
+def eliminar_usuario_db(usuario_id):
+    """Eliminar usuario (borrado lógico)"""
+    try:
+        db_execute("""
+            UPDATE usuarios SET estado = 'inactivo', updated_at = NOW()
+            WHERE id = %s
+        """, (usuario_id,))
+        return True
+    except Exception as e:
+        print(f"❌ Error en eliminar_usuario_db: {e}")
+        raise
+
+
+def obtener_roles():
+    """Obtener todos los roles activos"""
+    try:
+        return db_query("""
+            SELECT 
+                id,
+                codigo,
+                nombre,
+                descripcion,
+                es_admin,
+                estado,
+                created_at,
+                updated_at
+            FROM erp_roles
+            WHERE estado = 'activo'
+            ORDER BY nombre
+        """)
+    except Exception as e:
+        print(f"❌ Error en obtener_roles: {e}")
+        return []
+
+
+# ==========================================
+# 3. CORRELATIVOS
+# ==========================================
+
+def obtener_correlativos(activo=True):
+    """Obtener todos los correlativos"""
+    try:
+        query = """
+            SELECT 
+                c.id,
+                c.empresa_id,
+                e.codigo as empresa_codigo,
+                e.nombre_comercial as empresa_nombre,
+                c.documento,
+                c.codigo_documento,
+                c.prefijo,
+                c.anio,
+                c.ultimo_numero,
+                c.estado,
+                c.created_at,
+                c.updated_at,
+                (c.prefijo || '-' || c.anio::text || '-' || LPAD((c.ultimo_numero + 1)::text, 4, '0')) as siguiente_codigo
+            FROM erp_correlativos c
+            JOIN erp_empresas e ON e.id = c.empresa_id
+        """
+        if activo:
+            query += " WHERE c.estado = 'activo'"
+        query += " ORDER BY e.codigo, c.documento"
+        
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_correlativos: {e}")
+        return []
+
+
+def crear_correlativo(data):
+    """Crear un nuevo correlativo"""
+    try:
+        with db_tx() as conn:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            
+            cur.execute("""
+                INSERT INTO erp_correlativos (
+                    empresa_id, documento, codigo_documento,
+                    prefijo, anio, ultimo_numero, estado
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
+            """, (
+                data.get('empresa_id'),
+                data.get('documento'),
+                data.get('codigo_documento'),
+                data.get('prefijo'),
+                data.get('anio', datetime.now().year),
+                data.get('ultimo_numero', 0),
+                data.get('estado', 'activo')
+            ))
+            
+            return cur.fetchone()['id']
+    except Exception as e:
+        print(f"❌ Error en crear_correlativo: {e}")
+        raise
+
+
+def actualizar_correlativo(correlativo_id, data):
+    """Actualizar un correlativo existente"""
+    try:
+        db_execute("""
+            UPDATE erp_correlativos SET
+                documento = %s,
+                codigo_documento = %s,
+                prefijo = %s,
+                anio = %s,
+                ultimo_numero = %s,
+                estado = %s,
+                updated_at = NOW()
+            WHERE id = %s
+        """, (
+            data.get('documento'),
+            data.get('codigo_documento'),
+            data.get('prefijo'),
+            data.get('anio'),
+            data.get('ultimo_numero'),
+            data.get('estado', 'activo'),
+            correlativo_id
+        ))
+        return True
+    except Exception as e:
+        print(f"❌ Error en actualizar_correlativo: {e}")
+        raise
+
+
+def eliminar_correlativo_db(correlativo_id):
+    """Eliminar correlativo (borrado lógico)"""
+    try:
+        db_execute("""
+            UPDATE erp_correlativos SET estado = 'inactivo', updated_at = NOW()
+            WHERE id = %s
+        """, (correlativo_id,))
+        return True
+    except Exception as e:
+        print(f"❌ Error en eliminar_correlativo_db: {e}")
+        raise
+
+
+def tomar_correlativo(empresa_codigo, documento, anio=None):
+    """Tomar un correlativo (incrementar y devolver el siguiente número)"""
+    try:
+        if anio is None:
+            anio = datetime.now().year
+        
+        with db_tx() as conn:
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT erp_tomar_correlativo(%s, %s, %s) as codigo
+            """, (empresa_codigo, documento, anio))
+            
+            resultado = cur.fetchone()
+            return resultado[0] if resultado else None
+    except Exception as e:
+        print(f"❌ Error en tomar_correlativo: {e}")
+        raise
+
+
+# ==========================================
+# 4. PARÁMETROS
+# ==========================================
+
+def obtener_parametros(empresa_id=None, activo=True):
+    """Obtener parámetros generales"""
+    try:
+        query = """
+            SELECT 
+                id,
+                empresa_id,
+                grupo,
+                codigo,
+                nombre,
+                valor_bool,
+                valor_text,
+                valor_num,
+                regla,
+                es_critico,
+                estado,
+                created_at,
+                updated_at
+            FROM erp_parametros
+        """
+        params = []
+        condiciones = []
+        
+        if activo:
+            condiciones.append("estado = 'activo'")
+        
+        if empresa_id:
+            condiciones.append("(empresa_id = %s OR empresa_id IS NULL)")
+            params.append(empresa_id)
+        
+        if condiciones:
+            query += " WHERE " + " AND ".join(condiciones)
+        
+        query += " ORDER BY grupo, codigo"
+        
+        return db_query(query, params if params else None)
+    except Exception as e:
+        print(f"❌ Error en obtener_parametros: {e}")
+        return []
+
+
+def guardar_parametro(data):
+    """Guardar o actualizar un parámetro"""
+    try:
+        db_execute("""
+            INSERT INTO erp_parametros (
+                empresa_id, grupo, codigo, nombre,
+                valor_bool, valor_text, valor_num, regla,
+                es_critico, estado
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (empresa_id, codigo) DO UPDATE SET
+                valor_bool = EXCLUDED.valor_bool,
+                valor_text = EXCLUDED.valor_text,
+                valor_num = EXCLUDED.valor_num,
+                regla = EXCLUDED.regla,
+                es_critico = EXCLUDED.es_critico,
+                updated_at = NOW()
+        """, (
+            data.get('empresa_id'),
+            data.get('grupo'),
+            data.get('codigo'),
+            data.get('nombre'),
+            data.get('valor_bool'),
+            data.get('valor_text'),
+            data.get('valor_num'),
+            data.get('regla'),
+            data.get('es_critico', False),
+            data.get('estado', 'activo')
+        ))
+        return True
+    except Exception as e:
+        print(f"❌ Error en guardar_parametro: {e}")
+        raise
+
+
+# ==========================================
+# 5. MÓDULOS Y SUBMÓDULOS
+# ==========================================
+
+def obtener_modulos():
+    """Obtener todos los módulos con sus submódulos"""
+    try:
+        return db_query("""
+            SELECT 
+                m.id,
+                m.orden,
+                m.codigo,
+                m.nombre,
+                m.descripcion,
+                m.estado,
+                m.created_at,
+                m.updated_at,
+                (
+                    SELECT json_agg(
+                        json_build_object(
+                            'id', s.id,
+                            'orden', s.orden,
+                            'codigo', s.codigo,
+                            'nombre', s.nombre,
+                            'descripcion', s.descripcion,
+                            'estado', s.estado
+                        ) ORDER BY s.orden
+                    )
+                    FROM erp_submodulos s
+                    WHERE s.modulo_id = m.id
+                    AND s.estado = 'activo'
+                ) as submodulos
+            FROM erp_modulos m
+            WHERE m.estado = 'activo'
+            ORDER BY m.orden
+        """)
+    except Exception as e:
+        print(f"❌ Error en obtener_modulos: {e}")
+        return []
+
+
+# ==========================================
+# 6. PERMISOS DE USUARIO
+# ==========================================
+
+def obtener_permisos_usuario(auth_user_id, empresa_id):
+    """Obtener permisos de un usuario en una empresa"""
+    try:
+        return db_query("""
+            SELECT 
+                up.id,
+                up.auth_user_id,
+                up.empresa_id,
+                up.submodulo_id,
+                s.codigo as submodulo_codigo,
+                s.nombre as submodulo_nombre,
+                m.codigo as modulo_codigo,
+                m.nombre as modulo_nombre,
+                up.puede_ver,
+                up.puede_crear,
+                up.puede_editar,
+                up.puede_aprobar,
+                up.puede_anular,
+                up.puede_eliminar,
+                up.puede_exportar,
+                up.puede_subir_evidencia,
+                up.observacion,
+                up.created_at,
+                up.updated_at
+            FROM erp_usuario_permisos up
+            JOIN erp_submodulos s ON s.id = up.submodulo_id
+            JOIN erp_modulos m ON m.id = s.modulo_id
+            WHERE up.auth_user_id = %s
+            AND up.empresa_id = %s
+            ORDER BY m.orden, s.orden
+        """, (auth_user_id, empresa_id))
+    except Exception as e:
+        print(f"❌ Error en obtener_permisos_usuario: {e}")
+        return []
+
+
+def guardar_permisos_usuario(auth_user_id, empresa_id, permisos):
+    """Guardar permisos de un usuario en una empresa"""
+    try:
+        with db_tx() as conn:
+            cur = conn.cursor()
+            
+            for permiso in permisos:
+                submodulo_id = permiso.get('submodulo_id')
+                if not submodulo_id:
+                    continue
+                
+                cur.execute("""
+                    INSERT INTO erp_usuario_permisos (
+                        auth_user_id, empresa_id, submodulo_id,
+                        puede_ver, puede_crear, puede_editar,
+                        puede_aprobar, puede_anular, puede_eliminar,
+                        puede_exportar, puede_subir_evidencia,
+                        observacion
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (auth_user_id, empresa_id, submodulo_id) DO UPDATE SET
+                        puede_ver = EXCLUDED.puede_ver,
+                        puede_crear = EXCLUDED.puede_crear,
+                        puede_editar = EXCLUDED.puede_editar,
+                        puede_aprobar = EXCLUDED.puede_aprobar,
+                        puede_anular = EXCLUDED.puede_anular,
+                        puede_eliminar = EXCLUDED.puede_eliminar,
+                        puede_exportar = EXCLUDED.puede_exportar,
+                        puede_subir_evidencia = EXCLUDED.puede_subir_evidencia,
+                        observacion = EXCLUDED.observacion,
+                        updated_at = NOW()
+                """, (
+                    auth_user_id,
+                    empresa_id,
+                    submodulo_id,
+                    permiso.get('puede_ver', False),
+                    permiso.get('puede_crear', False),
+                    permiso.get('puede_editar', False),
+                    permiso.get('puede_aprobar', False),
+                    permiso.get('puede_anular', False),
+                    permiso.get('puede_eliminar', False),
+                    permiso.get('puede_exportar', False),
+                    permiso.get('puede_subir_evidencia', False),
+                    permiso.get('observacion', '')
+                ))
+        
+        return True
+    except Exception as e:
+        print(f"❌ Error en guardar_permisos_usuario: {e}")
+        raise
+
+
+# ==========================================
+# 7. AUDITORÍA
+# ==========================================
+
+def obtener_auditoria(empresa_id=None, tabla=None, accion=None, limit=100, offset=0):
+    """Obtener registros de auditoría"""
+    try:
+        query = """
+            SELECT 
+                a.id,
+                a.empresa_id,
+                e.codigo as empresa_codigo,
+                a.auth_user_id,
+                u.usuario_sistema,
+                u.nombres_apellidos,
+                a.tabla,
+                a.registro_id,
+                a.accion,
+                a.data_anterior,
+                a.data_nueva,
+                a.created_at
+            FROM erp_auditoria a
+            LEFT JOIN erp_empresas e ON e.id = a.empresa_id
+            LEFT JOIN usuarios u ON u.auth_user_id = a.auth_user_id
+            WHERE 1=1
+        """
+        params = []
+        
+        if empresa_id:
+            query += " AND a.empresa_id = %s"
+            params.append(empresa_id)
+        
+        if tabla:
+            query += " AND a.tabla = %s"
+            params.append(tabla)
+        
+        if accion:
+            query += " AND a.accion = %s"
+            params.append(accion)
+        
+        query += " ORDER BY a.created_at DESC LIMIT %s OFFSET %s"
+        params.extend([limit, offset])
+        
+        return db_query(query, params)
+    except Exception as e:
+        print(f"❌ Error en obtener_auditoria: {e}")
+        return []
+
+
+def registrar_auditoria(empresa_id, auth_user_id, tabla, registro_id, accion, data_anterior=None, data_nueva=None):
+    """Registrar un evento de auditoría"""
+    try:
+        db_execute("""
+            INSERT INTO erp_auditoria (
+                empresa_id, auth_user_id, tabla, registro_id,
+                accion, data_anterior, data_nueva
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (
+            empresa_id,
+            auth_user_id,
+            tabla,
+            registro_id,
+            accion,
+            json.dumps(data_anterior) if data_anterior else None,
+            json.dumps(data_nueva) if data_nueva else None
+        ))
+        return True
+    except Exception as e:
+        print(f"❌ Error en registrar_auditoria: {e}")
+        # No lanzar excepción para no interrumpir la operación principal
+        return False
 def verificar_columnas_productos():
     """Verificar y agregar columnas faltantes en la tabla productos"""
     try:
