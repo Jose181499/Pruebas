@@ -2936,44 +2936,38 @@ async function cargarCotizacion(id) {
         actualizarEstadoVisual();
         
         // ==========================================
-        // 2. CARGAR DATOS DEL CLIENTE
+        // 2. CARGAR DATOS DEL CLIENTE (CON VERIFICACIÓN)
         // ==========================================
-        if (data.cliente_id) {
-            document.getElementById('cliente_id').value = data.cliente_id;
-        }
-        document.getElementById('cliente_razon_social').value = data.cliente || data.razon_social || '';
-        if (document.getElementById('cliente_razon_comercial')) {
-            document.getElementById('cliente_razon_comercial').value = data.razon_comercial || '';
-        }
-        document.getElementById('cliente_doc').value = data.numero_documento || data.cliente_ruc || '';
-        document.getElementById('cliente_direccion').value = data.direccion_fiscal || '';
-        document.getElementById('cliente_contacto').value = data.cliente_contacto || '';
-        document.getElementById('email_contacto_cliente').value = data.email_contacto_cliente || '';
-        document.getElementById('telefono_contacto').value = data.telefono_contacto || '';
+        setValueSafely('cliente_id', data.cliente_id || '');
+        setValueSafely('cliente_razon_social', data.cliente || data.razon_social || '');
+        setValueSafely('cliente_razon_comercial', data.razon_comercial || '');
+        setValueSafely('cliente_doc', data.numero_documento || data.cliente_ruc || '');
+        setValueSafely('cliente_direccion', data.direccion_fiscal || '');
+        setValueSafely('cliente_contacto', data.cliente_contacto || '');
+        setValueSafely('email_contacto_cliente', data.email_contacto_cliente || '');
+        setValueSafely('telefono_contacto', data.telefono_contacto || '');
         
         // ==========================================
-        // 3. CARGAR CONDICIONES COMERCIALES
+        // 3. CARGAR CONDICIONES COMERCIALES (CON VERIFICACIÓN)
         // ==========================================
-        if (document.getElementById('notas')) {
-            document.getElementById('notas').value = data.notas || '';
-        }
-        document.getElementById('requerimiento').value = data.requerimiento || '';
-        document.getElementById('condicion_pago').value = data.condicion_pago || 'Contado';
-        document.getElementById('tiempo_entrega').value = data.tiempo_entrega || '';
-        document.getElementById('validez_oferta').value = data.validez_oferta || '15 días';
-        document.getElementById('direccion_entrega').value = data.direccion_entrega || '';
-        document.getElementById('nota_cotizacion').value = data.nota_cotizacion || '';
+        setValueSafely('notas', data.notas || '');
+        setValueSafely('requerimiento', data.requerimiento || '');
+        setValueSafely('condicion_pago', data.condicion_pago || 'Contado');
+        setValueSafely('tiempo_entrega', data.tiempo_entrega || '');
+        setValueSafely('validez_oferta', data.validez_oferta || '15 días');
+        setValueSafely('direccion_entrega', data.direccion_entrega || '');
+        setValueSafely('nota_cotizacion', data.nota_cotizacion || '');
         
         // ==========================================
-        // 4. CARGAR DATOS DEL ASESOR
+        // 4. CARGAR DATOS DEL ASESOR (CON VERIFICACIÓN)
         // ==========================================
-        document.getElementById('usuario_id').value = data.usuario_id || '';
-        document.getElementById('asesor_comercial').value = data.nombre_completo || '';
-        document.getElementById('email_contacto').value = data.email || '';
-        document.getElementById('telefono_contacto_user').value = data.telefono || '';
+        setValueSafely('usuario_id', data.usuario_id || '');
+        setValueSafely('asesor_comercial', data.nombre_completo || '');
+        setValueSafely('email_contacto', data.email || '');
+        setValueSafely('telefono_contacto_user', data.telefono || '');
         
         // ==========================================
-        // 5. CARGAR DESCUENTO
+        // 5. CARGAR DESCUENTO (CON VERIFICACIÓN)
         // ==========================================
         if (data.descuento_porcentaje !== undefined && data.descuento_porcentaje !== null) {
             const descuentoInput = document.getElementById('descuento_porcentaje_input');
@@ -3002,25 +2996,28 @@ async function cargarCotizacion(id) {
         // 7. CARGAR PRODUCTOS
         // ==========================================
         const tableBody = document.getElementById('table-body');
-        if (tableBody) tableBody.innerHTML = '';
-        itemCounter = 0;
+        if (tableBody) {
+            tableBody.innerHTML = '';
+            itemCounter = 0;
+        }
         
         if (data.detalle && data.detalle.length > 0) {
             data.detalle.forEach(item => {
                 addItem();
                 const row = document.querySelector("#table-body tr:last-child");
                 if (row) {
-                    row.querySelector('.producto_id').value = item.producto_id || '';
-                    row.querySelector('.cantidad').value = formatCantidad(item.cantidad || 0);
-                    row.querySelector('.precio_venta_unitario').value = formatCantidad(item.precio_venta_unitario || 0);
-                    row.querySelector('.codigo_producto').value = item.codigo || '';
-                    row.querySelector('.descripcion').value = item.descripcion || '';
-                    row.querySelector('.modelo').value = item.modelo || '';
-                    row.querySelector('.marca').value = item.marca || '';
-                    row.querySelector('.unidad_medida').value = item.unidad_medida || 'UNIDAD';
-                    if (row.querySelector('.costo_unitario')) {
-                        row.querySelector('.costo_unitario').value = formatCantidad(item.costo_unitario || 0);
-                    }
+                    setValueSafely(row.querySelector('.producto_id'), item.producto_id || '');
+                    setValueSafely(row.querySelector('.cantidad'), formatCantidad(item.cantidad || 0));
+                    setValueSafely(row.querySelector('.precio_venta_unitario'), formatCantidad(item.precio_venta_unitario || 0));
+                    setValueSafely(row.querySelector('.codigo_producto'), item.codigo || '');
+                    setValueSafely(row.querySelector('.descripcion'), item.descripcion || '');
+                    setValueSafely(row.querySelector('.modelo'), item.modelo || '');
+                    setValueSafely(row.querySelector('.marca'), item.marca || '');
+                    setValueSafely(row.querySelector('.unidad_medida'), item.unidad_medida || 'UNIDAD');
+                    
+                    const costoInput = row.querySelector('.costo_unitario');
+                    if (costoInput) costoInput.value = formatCantidad(item.costo_unitario || 0);
+                    
                     const stockBadge = row.querySelector('.stock-badge');
                     if (stockBadge && item.stock !== undefined) {
                         stockBadge.textContent = item.stock;
@@ -3060,6 +3057,19 @@ async function cargarCotizacion(id) {
     } catch (err) { 
         console.error("🔥 ERROR en cargarCotizacion:", err); 
         mostrarNotificacion("Error cargando cotización", "danger"); 
+    }
+}
+
+// =========================
+// FUNCIÓN SEGURA PARA ASIGNAR VALOR A UN CAMPO
+// =========================
+function setValueSafely(id, value) {
+    if (!id) return;
+    const el = typeof id === 'string' ? document.getElementById(id) : id;
+    if (el) {
+        el.value = value || '';
+    } else {
+        console.warn(`⚠️ Elemento no encontrado: ${id}`);
     }
 }
 
