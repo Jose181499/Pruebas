@@ -3854,7 +3854,19 @@ async function loadUsuarios(){
 }
 
 // ============================================================
-// RENDER USUARIOS - VERSIÓN CORREGIDA CON PERMISOS
+// CHECK EYE - VERSIÓN CORREGIDA
+// ============================================================
+function checkEye(tienePermiso, user, module, userId, empresaId) {
+    // Si tiene permiso, mostrar checkbox checked y ojo
+    if (tienePermiso) {
+        return `<input class="check" type="checkbox" checked><span class="eye" data-user="${user}" data-module="${module}" data-user-id="${userId || ''}" data-empresa-id="${empresaId || ''}">👁</span>`;
+    } else {
+        return `<input class="check" type="checkbox"><span class="eye" data-user="${user}" data-module="${module}" data-user-id="${userId || ''}" data-empresa-id="${empresaId || ''}">👁</span>`;
+    }
+}
+
+// ============================================================
+// RENDER USUARIOS - VERSIÓN CORREGIDA
 // ============================================================
 async function renderUsuarios(filter=""){
     const empresaFiltro = document.getElementById("filterEmpresaUsuarios")?.value || "TODAS";
@@ -3876,6 +3888,8 @@ async function renderUsuarios(filter=""){
     const empresaActiva = document.getElementById('empresaActiva').value;
 
     // Para cada usuario, cargar sus permisos
+    let htmlRows = [];
+    
     for (let i = 0; i < lista.length; i++) {
         const u = lista[i];
         const empresas = u.empresas_acceso || [];
@@ -3899,12 +3913,15 @@ async function renderUsuarios(filter=""){
         
         // Función para verificar si tiene permiso
         const tienePermisoModulo = (submoduloNombre) => {
+            // Si es admin, siempre tiene permiso
             if (esAdmin) return true;
+            
             const submodulo = submodulosData.find(s => 
                 s.nombre === submoduloNombre || 
                 s.codigo === submoduloNombre.toUpperCase()
             );
             if (!submodulo) return false;
+            
             const permiso = permisos[submodulo.id];
             return permiso?.puede_ver || false;
         };
@@ -3934,16 +3951,13 @@ async function renderUsuarios(filter=""){
             <td>${checkEye(tienePermisoModulo('SUNAT'), u.usuario_sistema, 'SUNAT', u.id, empresaId)}</td>
         </tr>`;
         
-        // Si es la primera iteración, construir todo el HTML
-        if (i === 0) {
-            tbody.innerHTML = row;
-        } else {
-            tbody.innerHTML += row;
-        }
+        htmlRows.push(row);
     }
 
-    // Si no hay usuarios, mostrar mensaje
-    if (lista.length === 0) {
+    // Si hay usuarios, mostrar las filas
+    if (htmlRows.length > 0) {
+        tbody.innerHTML = htmlRows.join('');
+    } else {
         tbody.innerHTML = `<tr><td colspan="17" style="text-align:center;color:#94A3B8;padding:20px;">📭 No hay usuarios que coincidan con los filtros</td></tr>`;
     }
 
@@ -3970,15 +3984,6 @@ async function renderUsuarios(filter=""){
             );
         });
     });
-}
-
-// ============================================================
-// CHECK EYE - VERSIÓN CORREGIDA
-// ============================================================
-function checkEye(tienePermiso, user, module, userId, empresaId) {
-    return tienePermiso
-        ? `<input class="check" type="checkbox" checked disabled><span class="eye" data-user="${user}" data-module="${module}" data-user-id="${userId || ''}" data-empresa-id="${empresaId || ''}">👁</span>`
-        : `<input class="check" type="checkbox" disabled><span class="eye" data-user="${user}" data-module="${module}" data-user-id="${userId || ''}" data-empresa-id="${empresaId || ''}">👁</span>`;
 }
 
 // ============================================================
