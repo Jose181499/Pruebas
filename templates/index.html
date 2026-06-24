@@ -3871,12 +3871,103 @@ function checkEye(tienePermiso, user, module, userId, empresaId) {
 }
 
 // ============================================================
-// MANEJAR CAMBIO DE PERMISOS DESDE LA TABLA
-// ============================================================
-// ============================================================
-// MANEJAR CAMBIO DE PERMISOS DESDE LA TABLA - CORREGIDO
+// MANEJAR CAMBIO DE PERMISOS - VERSIÓN CON CÓDIGOS
 // ============================================================
 async function togglePermiso(event) {
+    const checkbox = event.target;
+    const userId = checkbox.dataset.userId;
+    const module = checkbox.dataset.module;
+    const empresaId = checkbox.dataset.empresaId;
+    const user = checkbox.dataset.user;
+    const tienePermiso = checkbox.checked;
+    
+    if (!userId || !empresaId) {
+        toast('❌ No se puede guardar: faltan datos del usuario');
+        return;
+    }
+    
+    // Mapeo de nombres de módulos a códigos de submódulos
+    const mapeoCodigos = {
+        'Configuración': 'EMPRESAS',
+        'Config.': 'EMPRESAS',
+        'Maestros': 'CLIENTES',
+        'Productos': 'PRODUCTOS_LISTADO',
+        'Cotizaciones': 'COTIZACIONES',
+        'Cotiz.': 'COTIZACIONES',
+        'Ventas': 'COMPROBANTES_CLIENTE',
+        'Compras': 'ORDEN_COMPRA',
+        'Logística': 'RECEPCION_MERCADERIA',
+        'Inventario': 'ESTADO_STOCK',
+        'Invent.': 'ESTADO_STOCK',
+        'CxC': 'CUENTAS_COBRAR',
+        'CxP': 'CUENTAS_PAGAR',
+        'Caja': 'CAJA_BANCOS',
+        'Reportes': 'REPORTE_VENTAS',
+        'SUNAT': 'SUNAT'
+    };
+    
+    // Buscar el submódulo por código
+    const codigo = mapeoCodigos[module];
+    let submodulo = null;
+    
+    if (codigo) {
+        submodulo = submodulosData.find(s => s.codigo === codigo);
+    }
+    
+    // Si no se encontró por código, buscar por nombre exacto
+    if (!submodulo) {
+        submodulo = submodulosData.find(s => s.nombre === module);
+    }
+    
+    // Si no, buscar por coincidencia parcial en nombre
+    if (!submodulo) {
+        submodulo = submodulosData.find(s => 
+            module.toLowerCase().includes(s.nombre.toLowerCase()) ||
+            s.nombre.toLowerCase().includes(module.toLowerCase())
+        );
+    }
+    
+    if (!submodulo) {
+        toast(`❌ Módulo "${module}" no encontrado`);
+        console.error('Módulo no encontrado:', module);
+        console.log('Submódulos disponibles:', submodulosData);
+        checkbox.checked = !tienePermiso;
+        return;
+    }
+    
+    console.log(`✅ Módulo encontrado: ${submodulo.nombre} (Código: ${submodulo.codigo}, ID: ${submodulo.id})`);
+    
+    // Crear el permiso para guardar
+    const permisosList = [{
+        submodulo_id: submodulo.id,
+        puede_ver: tienePermiso,
+        puede_crear: tienePermiso,
+        puede_editar: tienePermiso,
+        puede_aprobar: false,
+        puede_anular: false,
+        puede_eliminar: false,
+        puede_exportar: false,
+        puede_subir_evidencia: false,
+        observacion: `Permiso ${tienePermiso ? 'habilitado' : 'deshabilitado'} desde la tabla`
+    }];
+    
+    try {
+        const result = await guardarPermisosUsuario(userId, empresaId, permisosList);
+        if (result) {
+            toast(`✅ ${tienePermiso ? 'Habilitado' : 'Deshabilitado'} ${submodulo.nombre} para ${user}`);
+            // Recargar la tabla para reflejar cambios
+            await loadUsuarios();
+        } else {
+            // Revertir el checkbox si falló
+            checkbox.checked = !tienePermiso;
+            toast('❌ Error al guardar permiso');
+        }
+    } catch(e) {
+        console.error('Error guardando permiso:', e);
+        checkbox.checked = !tienePermiso;
+        toast('❌ Error al guardar permiso');
+    }
+}
     const checkbox = event.target;
     const userId = checkbox.dataset.userId;
     const module = checkbox.dataset.module;
@@ -4119,35 +4210,23 @@ async function renderUsuarios(filter=""){
 
 // ============================================================
 // OPEN PERMISSIONS - VERSIÓN CORREGIDA
-// ============================================================
-// ============================================================
-// OPEN PERMISSIONS - VERSIÓN CORREGIDA
-// ============================================================
 async function openPermissions(user, module, userId, empresaId) {
     console.log('👁️ Abriendo permisos para:', user, module, userId, empresaId);
     
     document.getElementById("modalTitle").textContent = `Detalle de permisos | ${user} | ${module}`;
     
-    // Buscar usuario - AHORA por ID primero
+    // Buscar usuario
     let u = null;
-    
-    // Intentar buscar por ID si se proporcionó
     if (userId) {
         u = usuariosData.find(item => item.id == userId);
     }
-    
-    // Si no se encontró por ID, buscar por nombre de usuario
     if (!u) {
         u = usuariosData.find(item => item.usuario_sistema === user);
     }
-    
     if (!u) {
         toast('❌ Usuario no encontrado');
-        console.error('Usuario no encontrado:', user, userId);
         return;
     }
-    
-    console.log('✅ Usuario encontrado:', u);
     
     // Obtener empresa ID
     let empresaIdFinal = empresaId;
@@ -4169,60 +4248,49 @@ async function openPermissions(user, module, userId, empresaId) {
     
     // Cargar permisos actuales
     const permisosData = await cargarPermisosUsuario(u.id, empresaIdFinal);
-    console.log('📋 Permisos cargados:', permisosData);
     
     // Determinar si es admin
     const empresa = u.empresas_acceso?.find(e => e.empresa_id === empresaIdFinal);
     const esAdmin = empresa?.rol_codigo === 'GERENCIA_TOTAL';
     
-    // Buscar el submódulo específico de forma flexible
+    // Mapeo de nombres de módulos a códigos de submódulos
+    const mapeoCodigos = {
+        'Configuración': 'EMPRESAS',
+        'Config.': 'EMPRESAS',
+        'Maestros': 'CLIENTES',
+        'Productos': 'PRODUCTOS_LISTADO',
+        'Cotizaciones': 'COTIZACIONES',
+        'Cotiz.': 'COTIZACIONES',
+        'Ventas': 'COMPROBANTES_CLIENTE',
+        'Compras': 'ORDEN_COMPRA',
+        'Logística': 'RECEPCION_MERCADERIA',
+        'Inventario': 'ESTADO_STOCK',
+        'Invent.': 'ESTADO_STOCK',
+        'CxC': 'CUENTAS_COBRAR',
+        'CxP': 'CUENTAS_PAGAR',
+        'Caja': 'CAJA_BANCOS',
+        'Reportes': 'REPORTE_VENTAS',
+        'SUNAT': 'SUNAT'
+    };
+    
+    // Buscar el submódulo por código
+    const codigo = mapeoCodigos[module];
     let submodulo = null;
     
-    // 1. Buscar por nombre exacto
-    submodulo = submodulosData.find(s => s.nombre === module);
-    
-    // 2. Si no, buscar por coincidencia parcial
+    if (codigo) {
+        submodulo = submodulosData.find(s => s.codigo === codigo);
+    }
+    if (!submodulo) {
+        submodulo = submodulosData.find(s => s.nombre === module);
+    }
     if (!submodulo) {
         submodulo = submodulosData.find(s => 
             module.toLowerCase().includes(s.nombre.toLowerCase()) ||
             s.nombre.toLowerCase().includes(module.toLowerCase())
         );
     }
-    
-    // 3. Si no, buscar por código
-    if (!submodulo) {
-        const codigo = module.toUpperCase().replace(/ /g, '_').replace(/\./g, '');
-        submodulo = submodulosData.find(s => s.codigo === codigo);
-    }
-    
-    // 4. Mapeo manual
-    if (!submodulo) {
-        const nombreMap = {
-            'Config': 'Configuración',
-            'Config.': 'Configuración',
-            'Maestros': 'Maestros',
-            'Productos': 'Productos',
-            'Cotiz': 'Cotizaciones',
-            'Cotiz.': 'Cotizaciones',
-            'Ventas': 'Ventas',
-            'Compras': 'Compras',
-            'Logística': 'Logística',
-            'Invent': 'Inventario',
-            'Invent.': 'Inventario',
-            'CxC': 'CxC',
-            'CxP': 'CxP',
-            'Caja': 'Caja',
-            'Reportes': 'Reportes',
-            'SUNAT': 'SUNAT'
-        };
-        const nombreReal = nombreMap[module] || module;
-        submodulo = submodulosData.find(s => s.nombre === nombreReal);
-    }
-    
     if (!submodulo && submodulosData.length > 0) {
-        // Si no se encuentra, usar el primer submódulo como fallback
         submodulo = submodulosData[0];
-        console.warn('⚠️ Usando submódulo por defecto:', submodulo);
     }
     
     currentSubmoduloId = submodulo?.id || null;
@@ -4233,65 +4301,14 @@ async function openPermissions(user, module, userId, empresaId) {
     // SIEMPRE mostrar el botón guardar
     document.getElementById("saveModal").style.display = 'inline-block';
     
-    // Si es admin, mostrar todos los permisos activados pero EDITABLES
-    if (esAdmin) {
-        const baseRows = [
-            {nombre:"Ver", perm: 'puede_ver', value: true},
-            {nombre:"Crear", perm: 'puede_crear', value: true},
-            {nombre:"Editar", perm: 'puede_editar', value: true},
-            {nombre:"Aprobar", perm: 'puede_aprobar', value: true},
-            {nombre:"Anular", perm: 'puede_anular', value: true},
-            {nombre:"Eliminar", perm: 'puede_eliminar', value: true}
-        ];
-        
-        document.getElementById("tbodyPermisos").innerHTML = baseRows.map(r => `
-            <tr>
-                <td class="left"><b>${r.nombre}</b></td>
-                <td>
-                    <input class="check perm-check" type="checkbox" 
-                        data-perm="${r.perm}" 
-                        ${r.value ? 'checked' : ''}>
-                </td>
-                <td>
-                    <input class="check perm-check" type="checkbox" 
-                        data-perm="puede_crear" 
-                        ${r.nombre === "Crear" && r.value ? 'checked' : ''}>
-                </td>
-                <td>
-                    <input class="check perm-check" type="checkbox" 
-                        data-perm="puede_editar" 
-                        ${r.nombre === "Editar" && r.value ? 'checked' : ''}>
-                </td>
-                <td>
-                    <input class="check perm-check" type="checkbox" 
-                        data-perm="puede_aprobar" 
-                        ${r.nombre === "Aprobar" && r.value ? 'checked' : ''}>
-                </td>
-                <td>
-                    <input class="check perm-check" type="checkbox" 
-                        data-perm="puede_anular" 
-                        ${r.nombre === "Anular" && r.value ? 'checked' : ''}>
-                </td>
-                <td>
-                    <input class="check perm-check" type="checkbox" 
-                        data-perm="puede_eliminar" 
-                        ${r.nombre === "Eliminar" && r.value ? 'checked' : ''}>
-                </td>
-            </tr>
-        `).join("");
-        
-        document.getElementById("modalPermisos").classList.add("show");
-        return;
-    }
-    
-    // Para usuarios no admin, mostrar permisos actuales
+    // Generar filas de permisos
     const baseRows = [
-        {nombre:"Ver", perm: 'puede_ver', value: permiso.puede_ver !== false},
-        {nombre:"Crear", perm: 'puede_crear', value: permiso.puede_crear || false},
-        {nombre:"Editar", perm: 'puede_editar', value: permiso.puede_editar || false},
-        {nombre:"Aprobar", perm: 'puede_aprobar', value: permiso.puede_aprobar || false},
-        {nombre:"Anular", perm: 'puede_anular', value: permiso.puede_anular || false},
-        {nombre:"Eliminar", perm: 'puede_eliminar', value: permiso.puede_eliminar || false}
+        {nombre:"Ver", perm: 'puede_ver', value: esAdmin ? true : (permiso.puede_ver !== false)},
+        {nombre:"Crear", perm: 'puede_crear', value: esAdmin ? true : (permiso.puede_crear || false)},
+        {nombre:"Editar", perm: 'puede_editar', value: esAdmin ? true : (permiso.puede_editar || false)},
+        {nombre:"Aprobar", perm: 'puede_aprobar', value: esAdmin ? true : (permiso.puede_aprobar || false)},
+        {nombre:"Anular", perm: 'puede_anular', value: esAdmin ? true : (permiso.puede_anular || false)},
+        {nombre:"Eliminar", perm: 'puede_eliminar', value: esAdmin ? true : (permiso.puede_eliminar || false)}
     ];
 
     document.getElementById("tbodyPermisos").innerHTML = baseRows.map(r => `
@@ -4332,7 +4349,6 @@ async function openPermissions(user, module, userId, empresaId) {
 
     document.getElementById("modalPermisos").classList.add("show");
 }
-// ============================================================
 // GUARDAR PERMISOS - VERSIÓN CORREGIDA
 // ============================================================
 document.getElementById("saveModal").addEventListener("click", async function() {
