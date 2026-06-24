@@ -25,7 +25,7 @@ from routes.guias_remision_compra import guias_compra_bp
 from routes.transportistas import transportistas_bp
 from routes.inventario_routes import inventario_bp
 from routes.finanzas import finanzas_bp  
-from configuracion_seguridad import config_seguridad_bp
+from routes.configuracion_seguridad import config_seguridad_bp
 
 from database import (
     verificar_usuario,
