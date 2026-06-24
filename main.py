@@ -189,7 +189,6 @@ def index():
                           usuario=session.get('usuario', ''),
                           empresa=session.get('empresa', 'KCF'),
                           rol=session.get('rol', 'usuario'))
-
 # ==========================================
 # ENDPOINTS CLIENTES API
 # ==========================================
