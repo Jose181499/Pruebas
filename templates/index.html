@@ -2721,15 +2721,22 @@ h1{
           <p class="subtitle">Empresas, usuarios, permisos, correlativos y parámetros generales del ERP multiempresa.</p>
         </div>
         <div class="top-actions">
-          <div class="select-box">
-            <label>Empresa activa</label>
-            <select id="empresaActiva">
-              <option value="KCF">KC</option>
-              <option value="AGD">AGD Group S.A.C.</option>
-            </select>
-          </div>
-          <div class="user-box" id="userBox"><div class="avatar" id="userAvatar">E</div> <span id="userName">Erika</span></div>
-        </div>
+  <div class="select-box">
+    <label>Empresa activa</label>
+    <select id="empresaActiva">
+      <option value="KCF">KC</option>
+      <option value="AGD">AGD Group S.A.C.</option>
+    </select>
+  </div>
+  <div class="user-box" id="userBox">
+    <div class="avatar" id="userAvatar">E</div> 
+    <span id="userName">Erika</span>
+  </div>
+  <!-- ✅ BOTÓN DE CERRAR SESIÓN -->
+  <a href="/logout" class="btn btn-secondary" style="text-decoration:none;padding:6px 14px;border-radius:8px;border:1px solid #E5E7EB;color:#0F172A;font-weight:900;font-size:12px;background:white;display:flex;align-items:center;gap:6px;transition:all 0.2s;">
+    <i class="bi bi-box-arrow-right"></i> Salir
+  </a>
+</div>
       </header>
 
       <div class="tabs">
@@ -4021,9 +4028,6 @@ async function tomarCorrelativo(empresaCodigo, documento, anio = 2026) {
     }
 }
 
-// ============================================================
-// INICIALIZACIÓN
-// ============================================================
 // ============================================================
 // INICIALIZACIÓN - CORREGIDA
 // ============================================================
