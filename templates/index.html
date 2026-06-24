@@ -4020,11 +4020,7 @@ async function tomarCorrelativo(empresaCodigo, documento, anio = 2026) {
         return null;
     }
 }
-// Timeout para evitar que se quede pegado
-const timeoutId = setTimeout(() => {
-    console.warn('⚠️ El dashboard tardó demasiado en cargar. Recargando...');
-    location.reload();
-}, 30000); // 30 segundos
+
 // ============================================================
 // INICIALIZACIÓN
 // ============================================================
