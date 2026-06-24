@@ -10,3 +10,4 @@ gunicorn
 Flask-SQLAlchemy
 qrcode
 pillow
+supabase-py>=2.0.0
