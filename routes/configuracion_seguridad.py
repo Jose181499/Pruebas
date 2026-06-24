@@ -1144,3 +1144,181 @@ def get_session_info():
     except Exception as e:
         print(f"❌ Error en get_session_info: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+    
+
+# ============================================================
+# 9. PERMISOS DE USUARIO - ENDPOINTS
+# ============================================================
+
+@config_seguridad_bp.route('/usuarios/<usuario_id>/permisos', methods=['GET'])
+def get_usuario_permisos(usuario_id):
+    """Obtener los permisos de un usuario en una empresa específica"""
+    try:
+        empresa_id = request.args.get('empresa_id')
+        
+        if not empresa_id:
+            return jsonify({'success': False, 'error': 'empresa_id es requerido'}), 400
+        
+        # Obtener auth_user_id del usuario
+        usuario = db_query("""
+            SELECT auth_user_id FROM usuarios WHERE id = %s
+        """, (usuario_id,))
+        
+        if not usuario:
+            return jsonify({'success': False, 'error': 'Usuario no encontrado'}), 404
+        
+        auth_user_id = usuario[0]['auth_user_id']
+        
+        # Obtener permisos
+        permisos = db_query("""
+            SELECT 
+                up.id,
+                up.auth_user_id,
+                up.empresa_id,
+                up.submodulo_id,
+                s.codigo as submodulo_codigo,
+                s.nombre as submodulo_nombre,
+                m.codigo as modulo_codigo,
+                m.nombre as modulo_nombre,
+                up.puede_ver,
+                up.puede_crear,
+                up.puede_editar,
+                up.puede_aprobar,
+                up.puede_anular,
+                up.puede_eliminar,
+                up.puede_exportar,
+                up.puede_subir_evidencia,
+                up.observacion,
+                up.created_at,
+                up.updated_at
+            FROM erp_usuario_permisos up
+            JOIN erp_submodulos s ON s.id = up.submodulo_id
+            JOIN erp_modulos m ON m.id = s.modulo_id
+            WHERE up.auth_user_id = %s
+            AND up.empresa_id = %s
+            ORDER BY m.orden, s.orden
+        """, (auth_user_id, empresa_id))
+        
+        # Obtener todos los submódulos para referencia
+        submodulos = db_query("""
+            SELECT 
+                s.id,
+                s.codigo,
+                s.nombre,
+                m.codigo as modulo_codigo,
+                m.nombre as modulo_nombre
+            FROM erp_submodulos s
+            JOIN erp_modulos m ON m.id = s.modulo_id
+            WHERE s.estado = 'activo'
+            ORDER BY m.orden, s.orden
+        """)
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'permisos': permisos,
+                'submodulos': submodulos
+            }
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en get_usuario_permisos: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@config_seguridad_bp.route('/usuarios/<usuario_id>/permisos', methods=['POST'])
+def update_usuario_permisos(usuario_id):
+    """Actualizar los permisos de un usuario en una empresa"""
+    try:
+        data = request.get_json()
+        empresa_id = data.get('empresa_id')
+        permisos = data.get('permisos', [])
+        
+        if not empresa_id:
+            return jsonify({'success': False, 'error': 'empresa_id es requerido'}), 400
+        
+        # Obtener auth_user_id del usuario
+        usuario = db_query("""
+            SELECT auth_user_id FROM usuarios WHERE id = %s
+        """, (usuario_id,))
+        
+        if not usuario:
+            return jsonify({'success': False, 'error': 'Usuario no encontrado'}), 404
+        
+        auth_user_id = usuario[0]['auth_user_id']
+        
+        with db_tx() as conn:
+            cur = conn.cursor()
+            
+            # Eliminar permisos existentes
+            cur.execute("""
+                DELETE FROM erp_usuario_permisos 
+                WHERE auth_user_id = %s AND empresa_id = %s
+            """, (auth_user_id, empresa_id))
+            
+            # Insertar nuevos permisos
+            for permiso in permisos:
+                submodulo_id = permiso.get('submodulo_id')
+                if not submodulo_id:
+                    continue
+                
+                cur.execute("""
+                    INSERT INTO erp_usuario_permisos (
+                        auth_user_id, empresa_id, submodulo_id,
+                        puede_ver, puede_crear, puede_editar,
+                        puede_aprobar, puede_anular, puede_eliminar,
+                        puede_exportar, puede_subir_evidencia,
+                        observacion
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (
+                    auth_user_id,
+                    empresa_id,
+                    submodulo_id,
+                    permiso.get('puede_ver', False),
+                    permiso.get('puede_crear', False),
+                    permiso.get('puede_editar', False),
+                    permiso.get('puede_aprobar', False),
+                    permiso.get('puede_anular', False),
+                    permiso.get('puede_eliminar', False),
+                    permiso.get('puede_exportar', False),
+                    permiso.get('puede_subir_evidencia', False),
+                    permiso.get('observacion', '')
+                ))
+        
+        return jsonify({
+            'success': True,
+            'message': 'Permisos actualizados exitosamente'
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en update_usuario_permisos: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@config_seguridad_bp.route('/submodulos', methods=['GET'])
+def get_submodulos():
+    """Obtener todos los submódulos"""
+    try:
+        submodulos = db_query("""
+            SELECT 
+                s.id,
+                s.codigo,
+                s.nombre,
+                s.descripcion,
+                m.codigo as modulo_codigo,
+                m.nombre as modulo_nombre,
+                m.orden as modulo_orden
+            FROM erp_submodulos s
+            JOIN erp_modulos m ON m.id = s.modulo_id
+            WHERE s.estado = 'activo' AND m.estado = 'activo'
+            ORDER BY m.orden, s.orden
+        """)
+        
+        return jsonify({
+            'success': True,
+            'data': submodulos
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en get_submodulos: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500

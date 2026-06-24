@@ -4082,3 +4082,112 @@ def verificar_usuario_supabase(email: str, password: str, empresa_codigo: str = 
     except Exception as e:
         print(f"❌ Error en verificar_usuario_supabase: {e}")
         return {"success": False, "error": str(e)}
+
+
+# ==========================================
+# 9. PERMISOS DE USUARIO - CRUD COMPLETO
+# ==========================================
+
+def obtener_permisos_usuario(auth_user_id, empresa_id):
+    """Obtener permisos de un usuario en una empresa"""
+    try:
+        return db_query("""
+            SELECT 
+                up.id,
+                up.auth_user_id,
+                up.empresa_id,
+                up.submodulo_id,
+                s.codigo as submodulo_codigo,
+                s.nombre as submodulo_nombre,
+                m.codigo as modulo_codigo,
+                m.nombre as modulo_nombre,
+                up.puede_ver,
+                up.puede_crear,
+                up.puede_editar,
+                up.puede_aprobar,
+                up.puede_anular,
+                up.puede_eliminar,
+                up.puede_exportar,
+                up.puede_subir_evidencia,
+                up.observacion,
+                up.created_at,
+                up.updated_at
+            FROM erp_usuario_permisos up
+            JOIN erp_submodulos s ON s.id = up.submodulo_id
+            JOIN erp_modulos m ON m.id = s.modulo_id
+            WHERE up.auth_user_id = %s
+            AND up.empresa_id = %s
+            ORDER BY m.orden, s.orden
+        """, (auth_user_id, empresa_id))
+    except Exception as e:
+        print(f"❌ Error en obtener_permisos_usuario: {e}")
+        return []
+
+
+def guardar_permisos_usuario(auth_user_id, empresa_id, permisos):
+    """Guardar permisos de un usuario en una empresa"""
+    try:
+        with db_tx() as conn:
+            cur = conn.cursor()
+            
+            # Eliminar permisos existentes
+            cur.execute("""
+                DELETE FROM erp_usuario_permisos 
+                WHERE auth_user_id = %s AND empresa_id = %s
+            """, (auth_user_id, empresa_id))
+            
+            # Insertar nuevos permisos
+            for permiso in permisos:
+                submodulo_id = permiso.get('submodulo_id')
+                if not submodulo_id:
+                    continue
+                
+                cur.execute("""
+                    INSERT INTO erp_usuario_permisos (
+                        auth_user_id, empresa_id, submodulo_id,
+                        puede_ver, puede_crear, puede_editar,
+                        puede_aprobar, puede_anular, puede_eliminar,
+                        puede_exportar, puede_subir_evidencia,
+                        observacion
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (
+                    auth_user_id,
+                    empresa_id,
+                    submodulo_id,
+                    permiso.get('puede_ver', False),
+                    permiso.get('puede_crear', False),
+                    permiso.get('puede_editar', False),
+                    permiso.get('puede_aprobar', False),
+                    permiso.get('puede_anular', False),
+                    permiso.get('puede_eliminar', False),
+                    permiso.get('puede_exportar', False),
+                    permiso.get('puede_subir_evidencia', False),
+                    permiso.get('observacion', '')
+                ))
+        
+        return True
+    except Exception as e:
+        print(f"❌ Error en guardar_permisos_usuario: {e}")
+        raise
+
+
+def obtener_submodulos_por_modulo():
+    """Obtener todos los submódulos agrupados por módulo"""
+    try:
+        return db_query("""
+            SELECT 
+                m.id as modulo_id,
+                m.codigo as modulo_codigo,
+                m.nombre as modulo_nombre,
+                s.id as submodulo_id,
+                s.codigo as submodulo_codigo,
+                s.nombre as submodulo_nombre,
+                s.descripcion as submodulo_descripcion
+            FROM erp_modulos m
+            JOIN erp_submodulos s ON s.modulo_id = m.id
+            WHERE m.estado = 'activo' AND s.estado = 'activo'
+            ORDER BY m.orden, s.orden
+        """)
+    except Exception as e:
+        print(f"❌ Error en obtener_submodulos_por_modulo: {e}")
+        return []
