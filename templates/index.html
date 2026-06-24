@@ -5,8 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ERP Multiempresa - Dashboard + Módulo 01</title>
 
-<!-- Supabase JS -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 
 <style>
 :root{
@@ -3545,13 +3544,6 @@ h1{
 </div>
 
 <script>
-// ============================================================
-// CONFIGURACIÓN DE SUPABASE
-// ============================================================
-// ⚠️ REEMPLAZA CON TUS CREDENCIALES DE SUPABASE
-const SUPABASE_URL = 'https://tu-proyecto.supabase.co';
-const SUPABASE_ANON_KEY = 'tu-anon-key-publica';
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ============================================================
 // VARIABLES GLOBALES
@@ -3588,444 +3580,479 @@ function getSession(){
 }
 
 // ============================================================
-// CARGAR DATOS DESDE SUPABASE
+// LLAMADAS A LA API DE FLASK (BACKEND)
+// ============================================================
+async function fetchAPI(endpoint, options = {}) {
+    try {
+        const response = await fetch(endpoint, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            ...options
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error(`Error en fetchAPI (${endpoint}):`, error);
+        throw error;
+    }
+}
+
+// ============================================================
+// CARGAR DATOS DESDE EL BACKEND
 // ============================================================
 async function loadEmpresas(){
-  try{
-    const {data, error} = await supabase
-      .from('erp_empresas')
-      .select('*, erp_empresa_cuentas_bancarias(*)')
-      .eq('estado', 'activo');
-    
-    if(error) throw error;
-    empresasData = data || [];
-    
-    // Actualizar contadores
-    document.getElementById('empresasTotal').textContent = empresasData.length;
-    document.getElementById('empresasActivas').textContent = empresasData.filter(e => e.estado === 'activo').length;
-    
-    let bancos = 0, cuentas = 0;
-    empresasData.forEach(e => {
-      if(e.erp_empresa_cuentas_bancarias){
-        bancos += new Set(e.erp_empresa_cuentas_bancarias.map(c => c.banco)).size;
-        cuentas += e.erp_empresa_cuentas_bancarias.length;
-      }
-    });
-    document.getElementById('bancosTotal').textContent = bancos;
-    document.getElementById('cuentasTotal').textContent = cuentas;
-    document.getElementById('dashEmpresas').textContent = empresasData.length;
-    
-    renderEmpresas();
-  }catch(e){
-    console.error('Error cargando empresas:', e);
-    toast('Error al cargar empresas');
-  }
+    try {
+        const data = await fetchAPI('/api/config/empresas');
+        
+        if (data.success) {
+            empresasData = data.data || [];
+            
+            // Actualizar contadores
+            document.getElementById('empresasTotal').textContent = empresasData.length;
+            document.getElementById('empresasActivas').textContent = empresasData.filter(e => e.estado === 'activo').length;
+            
+            let bancos = 0, cuentas = 0;
+            empresasData.forEach(e => {
+                if(e.cuentas_bancarias){
+                    bancos += new Set(e.cuentas_bancarias.map(c => c.banco)).size;
+                    cuentas += e.cuentas_bancarias.length;
+                }
+            });
+            document.getElementById('bancosTotal').textContent = bancos;
+            document.getElementById('cuentasTotal').textContent = cuentas;
+            document.getElementById('dashEmpresas').textContent = empresasData.length;
+            
+            renderEmpresas();
+        } else {
+            toast('Error al cargar empresas: ' + (data.error || 'Error desconocido'));
+        }
+    } catch(e) {
+        console.error('Error cargando empresas:', e);
+        toast('Error al cargar empresas');
+    }
 }
 
 function renderEmpresas(filter=""){
-  const q = filter.toLowerCase();
-  const list = empresasData.filter(e => JSON.stringify(e).toLowerCase().includes(q));
-  
-  document.getElementById("tbodyEmpresas").innerHTML = list.map(e => {
-    const cuenta = e.erp_empresa_cuentas_bancarias?.[0] || {};
-    return `
-    <tr>
-      <td>${badge(e.codigo)}</td>
-      <td class="left">${e.nombre_comercial}</td>
-      <td class="left">${e.razon_social}</td>
-      <td>${e.ruc}</td>
-      <td>${cuenta.banco || '-'}</td>
-      <td>${cuenta.tipo_cuenta || '-'}</td>
-      <td>${cuenta.numero_cuenta || '-'}</td>
-      <td>${cuenta.cci || '<span class="badge badge-danger">Completar CCI</span>'}</td>
-      <td class="left">${e.direccion_fiscal || '-'}</td>
-      <td><span class="badge badge-ok">${e.estado}</span></td>
-    </tr>`;
-  }).join("");
+    const q = filter.toLowerCase();
+    const list = empresasData.filter(e => JSON.stringify(e).toLowerCase().includes(q));
+    
+    document.getElementById("tbodyEmpresas").innerHTML = list.map(e => {
+        const cuenta = e.cuentas_bancarias?.[0] || {};
+        return `
+        <tr>
+            <td>${badge(e.codigo)}</td>
+            <td class="left">${e.nombre_comercial}</td>
+            <td class="left">${e.razon_social}</td>
+            <td>${e.ruc}</td>
+            <td>${cuenta.banco || '-'}</td>
+            <td>${cuenta.tipo_cuenta || '-'}</td>
+            <td>${cuenta.numero_cuenta || '-'}</td>
+            <td>${cuenta.cci || '<span class="badge badge-danger">Completar CCI</span>'}</td>
+            <td class="left">${e.direccion_fiscal || '-'}</td>
+            <td><span class="badge badge-ok">${e.estado}</span></td>
+        </tr>`;
+    }).join("");
 }
 
 async function loadUsuarios(){
-  try{
-    // Obtener usuarios con sus empresas y roles
-    const {data, error} = await supabase
-      .from('usuarios')
-      .select(`
-        id,
-        usuario_sistema,
-        nombres_apellidos,
-        area,
-        correo,
-        erp_usuario_empresas(
-          empresa_id,
-          es_empresa_principal,
-          estado,
-          erp_empresas(codigo, nombre_comercial),
-          erp_roles(codigo, nombre, es_admin)
-        )
-      `)
-      .eq('estado', 'activo');
-    
-    if(error) throw error;
-    usuariosData = data || [];
-    
-    // Obtener roles y submodulos para permisos
-    const {data: roles, error: rolesError} = await supabase
-      .from('erp_roles')
-      .select('*')
-      .eq('estado', 'activo');
-    
-    if(!rolesError) rolesData = roles || [];
-    
-    const {data: submodulos, error: subError} = await supabase
-      .from('erp_submodulos')
-      .select('*')
-      .eq('estado', 'activo');
-    
-    if(!subError) submodulosData = submodulos || [];
-    
-    document.getElementById('dashUsuarios').textContent = usuariosData.length;
-    renderUsuarios();
-  }catch(e){
-    console.error('Error cargando usuarios:', e);
-    toast('Error al cargar usuarios');
-  }
+    try {
+        const data = await fetchAPI('/api/config/usuarios');
+        
+        if (data.success) {
+            usuariosData = data.data || [];
+            
+            // Obtener roles
+            const rolesData = await fetchAPI('/api/config/roles');
+            if (rolesData.success) {
+                rolesData = rolesData.data || [];
+            }
+            
+            document.getElementById('dashUsuarios').textContent = usuariosData.length;
+            renderUsuarios();
+        } else {
+            toast('Error al cargar usuarios: ' + (data.error || 'Error desconocido'));
+        }
+    } catch(e) {
+        console.error('Error cargando usuarios:', e);
+        toast('Error al cargar usuarios');
+    }
 }
 
 function renderUsuarios(filter=""){
-  const empresaFiltro = document.getElementById("filterEmpresaUsuarios")?.value || "TODAS";
-  const nivelFiltro = document.getElementById("filterNivelUsuarios")?.value || "TODOS";
-  const q = String(filter || document.getElementById("searchUsuarios")?.value || "").toLowerCase();
+    const empresaFiltro = document.getElementById("filterEmpresaUsuarios")?.value || "TODAS";
+    const nivelFiltro = document.getElementById("filterNivelUsuarios")?.value || "TODOS";
+    const q = String(filter || document.getElementById("searchUsuarios")?.value || "").toLowerCase();
 
-  const lista = usuariosData.filter(u => {
-    const empresas = u.erp_usuario_empresas || [];
-    const tieneEmpresa = empresaFiltro === "TODAS" || empresas.some(e => e.erp_empresas?.codigo === empresaFiltro);
-    const tieneNivel = nivelFiltro === "TODOS" || empresas.some(e => e.erp_roles?.codigo === nivelFiltro);
-    const texto = JSON.stringify(u).toLowerCase().includes(q);
-    return tieneEmpresa && tieneNivel && texto;
-  });
+    const lista = usuariosData.filter(u => {
+        const empresas = u.empresas_acceso || [];
+        const tieneEmpresa = empresaFiltro === "TODAS" || empresas.some(e => e.empresa_codigo === empresaFiltro);
+        const tieneNivel = nivelFiltro === "TODOS" || empresas.some(e => e.rol_codigo === nivelFiltro);
+        const texto = JSON.stringify(u).toLowerCase().includes(q);
+        return tieneEmpresa && tieneNivel && texto;
+    });
 
-  const tbody = document.getElementById("tbodyUsuarios");
-  if(!tbody) return;
+    const tbody = document.getElementById("tbodyUsuarios");
+    if(!tbody) return;
 
-  tbody.innerHTML = lista.map(u => {
-    const empresas = u.erp_usuario_empresas || [];
-    const roles = empresas.map(e => e.erp_roles?.codigo || '');
-    const esAdmin = roles.includes('GERENCIA_TOTAL');
-    
-    // Permisos según rol
-    const tienePermiso = (modulo) => {
-      if(esAdmin) return true;
-      // Operativo tiene acceso a productos, ventas, compras, logística, inventario
-      const modulosOperativos = ['PRODUCTOS_LISTADO','PRODUCTOS_FICHA','COTIZACIONES','COMPROBANTES_CLIENTE','SOLICITUD_COMPRA','COMPARATIVO_PROVEEDORES','ORDEN_COMPRA','RECEPCION_MERCADERIA','ESTADO_STOCK','KARDEX','ENTRADAS_SALIDAS','TRANSFERENCIAS'];
-      return modulosOperativos.includes(modulo);
-    };
-    
-    const empresasHtml = empresas.map(e => badge(e.erp_empresas?.codigo || '')).join('');
-    const rolesHtml = roles.map(r => `<span class="badge ${r === 'GERENCIA_TOTAL' ? 'badge-info' : 'badge-gray'}">${r}</span>`).join(' ');
-    
-    return `
-    <tr>
-      <td class="left"><b>${u.usuario_sistema}</b></td>
-      <td class="left">${u.area || '-'}</td>
-      <td>${empresasHtml}</td>
-      <td>${rolesHtml}</td>
-      <td>${esAdmin ? checkEye(true,u.usuario_sistema,'Configuración') : checkEye(false,u.usuario_sistema,'Configuración')}</td>
-      <td>${esAdmin ? checkEye(true,u.usuario_sistema,'Maestros') : checkEye(tienePermiso('MAESTROS'),u.usuario_sistema,'Maestros')}</td>
-      <td>${esAdmin ? checkEye(true,u.usuario_sistema,'Productos') : checkEye(tienePermiso('PRODUCTOS_LISTADO'),u.usuario_sistema,'Productos')}</td>
-      <td>${esAdmin ? checkEye(true,u.usuario_sistema,'Cotizaciones') : checkEye(tienePermiso('COTIZACIONES'),u.usuario_sistema,'Cotizaciones')}</td>
-      <td>${esAdmin ? checkEye(true,u.usuario_sistema,'Ventas') : checkEye(tienePermiso('COMPROBANTES_CLIENTE'),u.usuario_sistema,'Ventas')}</td>
-      <td>${esAdmin ? checkEye(true,u.usuario_sistema,'Compras') : checkEye(tienePermiso('ORDEN_COMPRA'),u.usuario_sistema,'Compras')}</td>
-      <td>${esAdmin ? checkEye(true,u.usuario_sistema,'Logística') : checkEye(tienePermiso('RECEPCION_MERCADERIA'),u.usuario_sistema,'Logística')}</td>
-      <td>${esAdmin ? checkEye(true,u.usuario_sistema,'Inventario') : checkEye(tienePermiso('ESTADO_STOCK'),u.usuario_sistema,'Inventario')}</td>
-      <td>${esAdmin ? checkEye(true,u.usuario_sistema,'CxC') : checkEye(false,u.usuario_sistema,'CxC')}</td>
-      <td>${esAdmin ? checkEye(true,u.usuario_sistema,'CxP') : checkEye(false,u.usuario_sistema,'CxP')}</td>
-      <td>${esAdmin ? checkEye(true,u.usuario_sistema,'Caja') : checkEye(false,u.usuario_sistema,'Caja')}</td>
-      <td>${esAdmin ? checkEye(true,u.usuario_sistema,'Reportes') : checkEye(false,u.usuario_sistema,'Reportes')}</td>
-      <td>${esAdmin ? checkEye(true,u.usuario_sistema,'SUNAT') : checkEye(false,u.usuario_sistema,'SUNAT')}</td>
-    </tr>`;
-  }).join("");
+    tbody.innerHTML = lista.map(u => {
+        const empresas = u.empresas_acceso || [];
+        const roles = empresas.map(e => e.rol_codigo || '');
+        const esAdmin = roles.includes('GERENCIA_TOTAL');
+        
+        const tienePermiso = (modulo) => {
+            if(esAdmin) return true;
+            const modulosOperativos = ['PRODUCTOS_LISTADO','PRODUCTOS_FICHA','COTIZACIONES','COMPROBANTES_CLIENTE','SOLICITUD_COMPRA','COMPARATIVO_PROVEEDORES','ORDEN_COMPRA','RECEPCION_MERCADERIA','ESTADO_STOCK','KARDEX','ENTRADAS_SALIDAS','TRANSFERENCIAS'];
+            return modulosOperativos.includes(modulo);
+        };
+        
+        const empresasHtml = empresas.map(e => badge(e.empresa_codigo || '')).join('');
+        const rolesHtml = roles.map(r => `<span class="badge ${r === 'GERENCIA_TOTAL' ? 'badge-info' : 'badge-gray'}">${r}</span>`).join(' ');
+        
+        return `
+        <tr>
+            <td class="left"><b>${u.usuario_sistema}</b></td>
+            <td class="left">${u.area || '-'}</td>
+            <td>${empresasHtml}</td>
+            <td>${rolesHtml}</td>
+            <td>${esAdmin ? checkEye(true,u.usuario_sistema,'Configuración') : checkEye(false,u.usuario_sistema,'Configuración')}</td>
+            <td>${esAdmin ? checkEye(true,u.usuario_sistema,'Maestros') : checkEye(tienePermiso('MAESTROS'),u.usuario_sistema,'Maestros')}</td>
+            <td>${esAdmin ? checkEye(true,u.usuario_sistema,'Productos') : checkEye(tienePermiso('PRODUCTOS_LISTADO'),u.usuario_sistema,'Productos')}</td>
+            <td>${esAdmin ? checkEye(true,u.usuario_sistema,'Cotizaciones') : checkEye(tienePermiso('COTIZACIONES'),u.usuario_sistema,'Cotizaciones')}</td>
+            <td>${esAdmin ? checkEye(true,u.usuario_sistema,'Ventas') : checkEye(tienePermiso('COMPROBANTES_CLIENTE'),u.usuario_sistema,'Ventas')}</td>
+            <td>${esAdmin ? checkEye(true,u.usuario_sistema,'Compras') : checkEye(tienePermiso('ORDEN_COMPRA'),u.usuario_sistema,'Compras')}</td>
+            <td>${esAdmin ? checkEye(true,u.usuario_sistema,'Logística') : checkEye(tienePermiso('RECEPCION_MERCADERIA'),u.usuario_sistema,'Logística')}</td>
+            <td>${esAdmin ? checkEye(true,u.usuario_sistema,'Inventario') : checkEye(tienePermiso('ESTADO_STOCK'),u.usuario_sistema,'Inventario')}</td>
+            <td>${esAdmin ? checkEye(true,u.usuario_sistema,'CxC') : checkEye(false,u.usuario_sistema,'CxC')}</td>
+            <td>${esAdmin ? checkEye(true,u.usuario_sistema,'CxP') : checkEye(false,u.usuario_sistema,'CxP')}</td>
+            <td>${esAdmin ? checkEye(true,u.usuario_sistema,'Caja') : checkEye(false,u.usuario_sistema,'Caja')}</td>
+            <td>${esAdmin ? checkEye(true,u.usuario_sistema,'Reportes') : checkEye(false,u.usuario_sistema,'Reportes')}</td>
+            <td>${esAdmin ? checkEye(true,u.usuario_sistema,'SUNAT') : checkEye(false,u.usuario_sistema,'SUNAT')}</td>
+        </tr>`;
+    }).join("");
 
-  document.getElementById("usuariosVisibles").textContent = lista.length;
-  document.getElementById("empresaFiltroLabel").textContent = empresaFiltro === "TODAS" ? "Todas" : empresaFiltro;
-  document.getElementById("usuariosTotal").textContent = lista.filter(u => {
-    const empresas = u.erp_usuario_empresas || [];
-    return empresas.some(e => e.erp_roles?.codigo === 'GERENCIA_TOTAL');
-  }).length;
-  document.getElementById("usuariosOperativos").textContent = lista.filter(u => {
-    const empresas = u.erp_usuario_empresas || [];
-    return empresas.some(e => e.erp_roles?.codigo === 'OPERATIVO_COMERCIAL_LOGISTICA');
-  }).length;
+    document.getElementById("usuariosVisibles").textContent = lista.length;
+    document.getElementById("empresaFiltroLabel").textContent = empresaFiltro === "TODAS" ? "Todas" : empresaFiltro;
+    document.getElementById("usuariosTotal").textContent = lista.filter(u => {
+        const empresas = u.empresas_acceso || [];
+        return empresas.some(e => e.rol_codigo === 'GERENCIA_TOTAL');
+    }).length;
+    document.getElementById("usuariosOperativos").textContent = lista.filter(u => {
+        const empresas = u.empresas_acceso || [];
+        return empresas.some(e => e.rol_codigo === 'OPERATIVO_COMERCIAL_LOGISTICA');
+    }).length;
 
-  document.querySelectorAll(".eye").forEach(el => {
-    el.addEventListener("click", () => openPermissions(el.dataset.user, el.dataset.module));
-  });
+    document.querySelectorAll(".eye").forEach(el => {
+        el.addEventListener("click", () => openPermissions(el.dataset.user, el.dataset.module));
+    });
 }
 
 function checkEye(v, user, module){
-  return v
-    ? `<input class="check" type="checkbox" checked><span class="eye" data-user="${user}" data-module="${module}">👁</span>`
-    : `<input class="check" type="checkbox"><span class="eye" data-user="${user}" data-module="${module}">👁</span>`;
+    return v
+        ? `<input class="check" type="checkbox" checked><span class="eye" data-user="${user}" data-module="${module}">👁</span>`
+        : `<input class="check" type="checkbox"><span class="eye" data-user="${user}" data-module="${module}">👁</span>`;
 }
 
 async function loadCorrelativos(){
-  try{
-    const {data, error} = await supabase
-      .from('erp_correlativos')
-      .select('*, erp_empresas(codigo, nombre_comercial)')
-      .eq('estado', 'activo');
-    
-    if(error) throw error;
-    correlativosData = data || [];
-    renderCorrelativos();
-  }catch(e){
-    console.error('Error cargando correlativos:', e);
-    toast('Error al cargar correlativos');
-  }
+    try {
+        const data = await fetchAPI('/api/config/correlativos');
+        
+        if (data.success) {
+            correlativosData = data.data || [];
+            renderCorrelativos();
+        } else {
+            toast('Error al cargar correlativos: ' + (data.error || 'Error desconocido'));
+        }
+    } catch(e) {
+        console.error('Error cargando correlativos:', e);
+        toast('Error al cargar correlativos');
+    }
 }
 
 function makeCode(prefijo, anio, ultimo){
-  return `${prefijo}-${anio}-${String(Number(ultimo || 0) + 1).padStart(4, '0')}`;
+    return `${prefijo}-${anio}-${String(Number(ultimo || 0) + 1).padStart(4, '0')}`;
 }
 
 function renderCorrelativos(filter=""){
-  const q = String(filter || document.getElementById("searchCorrelativos")?.value || "").toLowerCase();
-  const list = correlativosData.filter(c => JSON.stringify(c).toLowerCase().includes(q));
-  
-  const listKCF = list.filter(c => c.erp_empresas?.codigo === 'KCF');
-  const listAGD = list.filter(c => c.erp_empresas?.codigo === 'AGD');
+    const q = String(filter || document.getElementById("searchCorrelativos")?.value || "").toLowerCase();
+    const list = correlativosData.filter(c => JSON.stringify(c).toLowerCase().includes(q));
+    
+    const listKCF = list.filter(c => c.empresa_codigo === 'KCF');
+    const listAGD = list.filter(c => c.empresa_codigo === 'AGD');
 
-  const tbodyKCF = document.getElementById("tbodyCorrelativosKCF");
-  const tbodyAGD = document.getElementById("tbodyCorrelativosAGD");
-  
-  if(tbodyKCF){
-    tbodyKCF.innerHTML = listKCF.map(c => `
-      <tr>
-        <td class="left">${c.documento}</td>
-        <td><b>${c.prefijo}</b></td>
-        <td>${c.anio}</td>
-        <td>${c.ultimo_numero}</td>
-        <td><b>${makeCode(c.prefijo, c.anio, c.ultimo_numero)}</b></td>
-        <td><span class="badge badge-ok">${c.estado}</span></td>
-        <td><button type="button" class="btn-edit" data-id="${c.id}">Editar</button></td>
-        <td><button type="button" class="btn-delete" data-id="${c.id}">Eliminar</button></td>
-      </tr>
-    `).join("") || `<tr><td colspan="8">Sin registros KCF</td></tr>`;
-  }
-  
-  if(tbodyAGD){
-    tbodyAGD.innerHTML = listAGD.map(c => `
-      <tr>
-        <td class="left">${c.documento}</td>
-        <td><b>${c.prefijo}</b></td>
-        <td>${c.anio}</td>
-        <td>${c.ultimo_numero}</td>
-        <td><b>${makeCode(c.prefijo, c.anio, c.ultimo_numero)}</b></td>
-        <td><span class="badge badge-ok">${c.estado}</span></td>
-        <td><button type="button" class="btn-edit" data-id="${c.id}">Editar</button></td>
-        <td><button type="button" class="btn-delete" data-id="${c.id}">Eliminar</button></td>
-      </tr>
-    `).join("") || `<tr><td colspan="8">Sin registros AGD</td></tr>`;
-  }
+    const tbodyKCF = document.getElementById("tbodyCorrelativosKCF");
+    const tbodyAGD = document.getElementById("tbodyCorrelativosAGD");
+    
+    if(tbodyKCF){
+        tbodyKCF.innerHTML = listKCF.map(c => `
+            <tr>
+                <td class="left">${c.documento}</td>
+                <td><b>${c.prefijo}</b></td>
+                <td>${c.anio}</td>
+                <td>${c.ultimo_numero}</td>
+                <td><b>${makeCode(c.prefijo, c.anio, c.ultimo_numero)}</b></td>
+                <td><span class="badge badge-ok">${c.estado}</span></td>
+                <td><button type="button" class="btn-edit" data-id="${c.id}">Editar</button></td>
+                <td><button type="button" class="btn-delete" data-id="${c.id}">Eliminar</button></td>
+            </tr>
+        `).join("") || `<tr><td colspan="8">Sin registros KCF</td></tr>`;
+    }
+    
+    if(tbodyAGD){
+        tbodyAGD.innerHTML = listAGD.map(c => `
+            <tr>
+                <td class="left">${c.documento}</td>
+                <td><b>${c.prefijo}</b></td>
+                <td>${c.anio}</td>
+                <td>${c.ultimo_numero}</td>
+                <td><b>${makeCode(c.prefijo, c.anio, c.ultimo_numero)}</b></td>
+                <td><span class="badge badge-ok">${c.estado}</span></td>
+                <td><button type="button" class="btn-edit" data-id="${c.id}">Editar</button></td>
+                <td><button type="button" class="btn-delete" data-id="${c.id}">Eliminar</button></td>
+            </tr>
+        `).join("") || `<tr><td colspan="8">Sin registros AGD</td></tr>`;
+    }
 
-  document.getElementById("countKCF").textContent = `${listKCF.length} registro${listKCF.length===1?'':'s'}`;
-  document.getElementById("countAGD").textContent = `${listAGD.length} registro${listAGD.length===1?'':'s'}`;
-  document.getElementById("totalCorrelativos").textContent = list.length;
-  document.getElementById("totalDocumentos").textContent = new Set(list.map(c => c.documento)).size;
+    document.getElementById("countKCF").textContent = `${listKCF.length} registro${listKCF.length===1?'':'s'}`;
+    document.getElementById("countAGD").textContent = `${listAGD.length} registro${listAGD.length===1?'':'s'}`;
+    document.getElementById("totalCorrelativos").textContent = list.length;
+    document.getElementById("totalDocumentos").textContent = new Set(list.map(c => c.documento)).size;
 }
 
 // ============================================================
 // NAVEGACIÓN
 // ============================================================
 const breadcrumbs = {
-  dashboard:"Inicio / Dashboard",
-  empresas:"Inicio / Configuración y seguridad / Empresas",
-  usuarios:"Inicio / Configuración y seguridad / Usuarios y permisos",
-  correlativos:"Inicio / Configuración y seguridad / Correlativos",
-  parametros:"Inicio / Configuración y seguridad / Parámetros generales",
-  integracion:"Inicio / Configuración y seguridad / Integración ERP",
-  maestros:"Inicio / Maestros",
-  productos:"Inicio / Productos",
-  ventas:"Inicio / Ventas",
-  compras:"Inicio / Compras",
-  inventario:"Inicio / Inventario",
-  finanzas:"Inicio / Finanzas / Tesorería",
-  reportes:"Inicio / Reportes",
-  herramientas:"Inicio / Herramientas",
-  papelera:"Inicio / Papelera / Auditoría"
+    dashboard:"Inicio / Dashboard",
+    empresas:"Inicio / Configuración y seguridad / Empresas",
+    usuarios:"Inicio / Configuración y seguridad / Usuarios y permisos",
+    correlativos:"Inicio / Configuración y seguridad / Correlativos",
+    parametros:"Inicio / Configuración y seguridad / Parámetros generales",
+    integracion:"Inicio / Configuración y seguridad / Integración ERP",
+    maestros:"Inicio / Maestros",
+    productos:"Inicio / Productos",
+    ventas:"Inicio / Ventas",
+    compras:"Inicio / Compras",
+    inventario:"Inicio / Inventario",
+    finanzas:"Inicio / Finanzas / Tesorería",
+    reportes:"Inicio / Reportes",
+    herramientas:"Inicio / Herramientas",
+    papelera:"Inicio / Papelera / Auditoría"
 };
 
 const titles = {
-  dashboard:"Dashboard",
-  empresas:"Configuración y seguridad",
-  usuarios:"Configuración y seguridad",
-  correlativos:"Configuración y seguridad",
-  parametros:"Configuración y seguridad",
-  integracion:"Configuración y seguridad",
-  maestros:"Maestros",
-  productos:"Productos",
-  ventas:"Ventas",
-  compras:"Compras",
-  inventario:"Inventario",
-  finanzas:"Finanzas / Tesorería",
-  reportes:"Reportes",
-  herramientas:"Herramientas",
-  papelera:"Papelera / Auditoría"
+    dashboard:"Dashboard",
+    empresas:"Configuración y seguridad",
+    usuarios:"Configuración y seguridad",
+    correlativos:"Configuración y seguridad",
+    parametros:"Configuración y seguridad",
+    integracion:"Configuración y seguridad",
+    maestros:"Maestros",
+    productos:"Productos",
+    ventas:"Ventas",
+    compras:"Compras",
+    inventario:"Inventario",
+    finanzas:"Finanzas / Tesorería",
+    reportes:"Reportes",
+    herramientas:"Herramientas",
+    papelera:"Papelera / Auditoría"
 };
 
 function openScreen(screen){
-  currentScreen = screen;
-  
-  document.querySelectorAll(".section").forEach(sec => sec.classList.remove("active"));
-  const target = document.getElementById(screen);
-  if(target) target.classList.add("active");
+    currentScreen = screen;
+    
+    document.querySelectorAll(".section").forEach(sec => sec.classList.remove("active"));
+    const target = document.getElementById(screen);
+    if(target) target.classList.add("active");
 
-  document.querySelectorAll(".menu-header,.child-btn,.tab-btn").forEach(el => el.classList.remove("active"));
-  document.querySelectorAll(`[data-screen="${screen}"]`).forEach(el => el.classList.add("active"));
+    document.querySelectorAll(".menu-header,.child-btn,.tab-btn").forEach(el => el.classList.remove("active"));
+    document.querySelectorAll(`[data-screen="${screen}"]`).forEach(el => el.classList.add("active"));
 
-  document.getElementById("breadcrumb").textContent = breadcrumbs[screen] || "Inicio";
-  document.getElementById("pageTitle").textContent = titles[screen] || "ERP Multiempresa";
+    document.getElementById("breadcrumb").textContent = breadcrumbs[screen] || "Inicio";
+    document.getElementById("pageTitle").textContent = titles[screen] || "ERP Multiempresa";
 
-  document.getElementById("mainPanel").scrollTo({top:0, behavior:"smooth"});
+    document.getElementById("mainPanel").scrollTo({top:0, behavior:"smooth"});
 }
 
 function applyTheme(code){
-  const root = document.documentElement;
-  if(code === "AGD"){
-    root.style.setProperty("--empresa","#FC6200");
-    root.style.setProperty("--empresa-soft","#FFE7D1");
-    root.style.setProperty("--empresa-sidebar","#FFEEDC");
-    root.style.setProperty("--empresa-dark","#0F172A");
-    document.getElementById("logoEmpresa").textContent = "AGD";
-  }else{
-    root.style.setProperty("--empresa","#EF233C");
-    root.style.setProperty("--empresa-soft","#FFE4E8");
-    root.style.setProperty("--empresa-sidebar","#FFECEF");
-    root.style.setProperty("--empresa-dark","#1F1F1F");
-    document.getElementById("logoEmpresa").textContent = "KCF";
-  }
+    const root = document.documentElement;
+    if(code === "AGD"){
+        root.style.setProperty("--empresa","#FC6200");
+        root.style.setProperty("--empresa-soft","#FFE7D1");
+        root.style.setProperty("--empresa-sidebar","#FFEEDC");
+        root.style.setProperty("--empresa-dark","#0F172A");
+        document.getElementById("logoEmpresa").textContent = "AGD";
+    }else{
+        root.style.setProperty("--empresa","#EF233C");
+        root.style.setProperty("--empresa-soft","#FFE4E8");
+        root.style.setProperty("--empresa-sidebar","#FFECEF");
+        root.style.setProperty("--empresa-dark","#1F1F1F");
+        document.getElementById("logoEmpresa").textContent = "KCF";
+    }
 }
 
 // ============================================================
 // MODAL DE PERMISOS
 // ============================================================
 function openPermissions(user, module){
-  document.getElementById("modalTitle").textContent = `Detalle de permisos | ${user} | ${module}`;
-  
-  // Buscar usuario y determinar si es admin
-  const u = usuariosData.find(item => item.usuario_sistema === user);
-  const esAdmin = u?.erp_usuario_empresas?.some(e => e.erp_roles?.codigo === 'GERENCIA_TOTAL') || false;
-  
-  const baseRows = [
-    {nombre:"Ver", ok:true},
-    {nombre:"Crear", ok:esAdmin || module !== "Configuración"},
-    {nombre:"Editar", ok:esAdmin || module !== "Configuración"},
-    {nombre:"Aprobar", ok:esAdmin},
-    {nombre:"Anular", ok:esAdmin},
-    {nombre:"Eliminar", ok:esAdmin}
-  ];
+    document.getElementById("modalTitle").textContent = `Detalle de permisos | ${user} | ${module}`;
+    
+    const u = usuariosData.find(item => item.usuario_sistema === user);
+    const esAdmin = u?.empresas_acceso?.some(e => e.rol_codigo === 'GERENCIA_TOTAL') || false;
+    
+    const baseRows = [
+        {nombre:"Ver", ok:true},
+        {nombre:"Crear", ok:esAdmin || module !== "Configuración"},
+        {nombre:"Editar", ok:esAdmin || module !== "Configuración"},
+        {nombre:"Aprobar", ok:esAdmin},
+        {nombre:"Anular", ok:esAdmin},
+        {nombre:"Eliminar", ok:esAdmin}
+    ];
 
-  document.getElementById("tbodyPermisos").innerHTML = baseRows.map(r => `
-    <tr>
-      <td class="left"><b>${r.nombre}</b></td>
-      <td>${r.ok ? '<input class="check" type="checkbox" checked>' : '<input class="check" type="checkbox">'}</td>
-      <td>${r.ok ? '<input class="check" type="checkbox" checked>' : '<input class="check" type="checkbox">'}</td>
-      <td>${r.ok ? '<input class="check" type="checkbox" checked>' : '<input class="check" type="checkbox">'}</td>
-      <td>${r.ok ? '<input class="check" type="checkbox" checked>' : '<input class="check" type="checkbox">'}</td>
-      <td>${r.nombre==="Anular" && r.ok ? '<input class="check" type="checkbox" checked>' : '<input class="check" type="checkbox">'}</td>
-      <td>${r.nombre==="Eliminar" && r.ok ? '<input class="check" type="checkbox" checked>' : '<input class="check" type="checkbox">'}</td>
-    </tr>
-  `).join("");
+    document.getElementById("tbodyPermisos").innerHTML = baseRows.map(r => `
+        <tr>
+            <td class="left"><b>${r.nombre}</b></td>
+            <td>${r.ok ? '<input class="check" type="checkbox" checked>' : '<input class="check" type="checkbox">'}</td>
+            <td>${r.ok ? '<input class="check" type="checkbox" checked>' : '<input class="check" type="checkbox">'}</td>
+            <td>${r.ok ? '<input class="check" type="checkbox" checked>' : '<input class="check" type="checkbox">'}</td>
+            <td>${r.ok ? '<input class="check" type="checkbox" checked>' : '<input class="check" type="checkbox">'}</td>
+            <td>${r.nombre==="Anular" && r.ok ? '<input class="check" type="checkbox" checked>' : '<input class="check" type="checkbox">'}</td>
+            <td>${r.nombre==="Eliminar" && r.ok ? '<input class="check" type="checkbox" checked>' : '<input class="check" type="checkbox">'}</td>
+        </tr>
+    `).join("");
 
-  document.getElementById("modalPermisos").classList.add("show");
+    document.getElementById("modalPermisos").classList.add("show");
+}
+
+// ============================================================
+// TOMAR CORRELATIVO
+// ============================================================
+async function tomarCorrelativo(empresaCodigo, documento, anio = 2026) {
+    try {
+        const data = await fetchAPI('/api/config/correlativos/tomar', {
+            method: 'POST',
+            body: JSON.stringify({
+                empresa_codigo: empresaCodigo,
+                documento: documento,
+                anio: anio
+            })
+        });
+        
+        if (data.success) {
+            toast(`✅ Correlativo generado: ${data.data.codigo}`);
+            return data.data.codigo;
+        } else {
+            toast('❌ ' + (data.error || 'Error al tomar correlativo'));
+            return null;
+        }
+    } catch(e) {
+        console.error('Error tomando correlativo:', e);
+        toast('Error al tomar correlativo');
+        return null;
+    }
 }
 
 // ============================================================
 // INICIALIZACIÓN
 // ============================================================
 async function initDashboard(){
-  // Verificar sesión
-  const session = getSession();
-  if(!session){
-    window.location.href = 'login.html';
-    return;
-  }
-  
-  // Mostrar usuario en la interfaz
-  document.getElementById('userName').textContent = session.name || session.user;
-  document.getElementById('userAvatar').textContent = (session.name || session.user)[0].toUpperCase();
-  
-  // Aplicar tema según empresa de sesión
-  const empresaSession = session.empresa || 'KCF';
-  document.getElementById('empresaActiva').value = empresaSession;
-  applyTheme(empresaSession);
-  
-  // Cargar datos
-  await loadEmpresas();
-  await loadUsuarios();
-  await loadCorrelativos();
-  
-  // Eventos de navegación
-  document.querySelectorAll(".menu-header, .child-btn, .tab-btn, .crumb-btn").forEach(el => {
-    el.addEventListener("click", function(e) {
-      const screen = this.dataset.screen;
-      if(screen) {
-        e.preventDefault();
-        openScreen(screen);
-        if(this.classList.contains("menu-header")){
-          const group = this.closest(".menu-group");
-          if(group) group.classList.toggle("open");
-        }
-      }
-    });
-  });
-  
-  // Filtros
-  document.getElementById("searchEmpresas").addEventListener("input", e => renderEmpresas(e.target.value));
-  document.getElementById("searchUsuarios").addEventListener("input", e => renderUsuarios(e.target.value));
-  document.getElementById("searchCorrelativos").addEventListener("input", e => renderCorrelativos(e.target.value));
-  
-  document.getElementById("filterEmpresaUsuarios").addEventListener("change", () => renderUsuarios());
-  document.getElementById("filterNivelUsuarios").addEventListener("change", () => renderUsuarios());
-  
-  // Cambio de empresa
-  document.getElementById("empresaActiva").addEventListener("change", function(e){
-    applyTheme(e.target.value);
-    // Actualizar sesión
+    // Verificar sesión
     const session = getSession();
-    if(session){
-      session.empresa = e.target.value;
-      localStorage.setItem('erp_session', JSON.stringify(session));
+    if(!session){
+        window.location.href = '/login';
+        return;
     }
-    toast(`Empresa cambiada a ${e.target.value}`);
-  });
-  
-  // Modal
-  document.getElementById("closeModal").addEventListener("click", () => document.getElementById("modalPermisos").classList.remove("show"));
-  document.getElementById("saveModal").addEventListener("click", () => document.getElementById("modalPermisos").classList.remove("show"));
-  
-  // Simular integración
-  document.getElementById("btnSimularIntegracion").addEventListener("click", function(){
-    const empresa = document.getElementById("empresaActiva").value;
-    const badgeClass = empresa === "AGD" ? "badge-agd" : "badge-kcf";
-    const log = document.getElementById("integrationLog");
-    if(log){
-      log.innerHTML = `
-        <div class="log-row"><span class="badge ${badgeClass}">${empresa}</span><b>COT-${empresa}-2026-0002</b><span>Cotización aprobada por usuario autorizado.</span></div>
-        <div class="log-row"><span class="badge badge-info">AUTO</span><b>VENTA-${empresa}-2026-0001</b><span>Venta generada automáticamente desde la cotización.</span></div>
-        <div class="log-row"><span class="badge badge-info">AUTO</span><b>CxC</b><span>Cuenta por cobrar creada para seguimiento financiero.</span></div>
-        <div class="log-row"><span class="badge badge-ok">OK</span><b>TRAZABILIDAD</b><span>Documento origen guardado con empresa_id y usuario_id.</span></div>
-      `;
-    }
-    toast('Flujo de integración simulado');
-  });
-  
-  // Guardar parámetros
-  document.getElementById("btnGuardarParametros").addEventListener("click", function(){
-    toast('Parámetros guardados correctamente');
-  });
-  
-  // Abrir pantalla inicial
-  openScreen('empresas');
+    
+    // Mostrar usuario en la interfaz
+    document.getElementById('userName').textContent = session.name || session.user;
+    document.getElementById('userAvatar').textContent = (session.name || session.user)[0].toUpperCase();
+    
+    // Aplicar tema según empresa de sesión
+    const empresaSession = session.empresa || 'KCF';
+    document.getElementById('empresaActiva').value = empresaSession;
+    applyTheme(empresaSession);
+    
+    // Cargar datos
+    await loadEmpresas();
+    await loadUsuarios();
+    await loadCorrelativos();
+    
+    // Eventos de navegación
+    document.querySelectorAll(".menu-header, .child-btn, .tab-btn, .crumb-btn").forEach(el => {
+        el.addEventListener("click", function(e) {
+            const screen = this.dataset.screen;
+            if(screen) {
+                e.preventDefault();
+                openScreen(screen);
+                if(this.classList.contains("menu-header")){
+                    const group = this.closest(".menu-group");
+                    if(group) group.classList.toggle("open");
+                }
+            }
+        });
+    });
+    
+    // Filtros
+    document.getElementById("searchEmpresas").addEventListener("input", e => renderEmpresas(e.target.value));
+    document.getElementById("searchUsuarios").addEventListener("input", e => renderUsuarios(e.target.value));
+    document.getElementById("searchCorrelativos").addEventListener("input", e => renderCorrelativos(e.target.value));
+    
+    document.getElementById("filterEmpresaUsuarios").addEventListener("change", () => renderUsuarios());
+    document.getElementById("filterNivelUsuarios").addEventListener("change", () => renderUsuarios());
+    
+    // Cambio de empresa
+    document.getElementById("empresaActiva").addEventListener("change", function(e){
+        applyTheme(e.target.value);
+        const session = getSession();
+        if(session){
+            session.empresa = e.target.value;
+            localStorage.setItem('erp_session', JSON.stringify(session));
+        }
+        toast(`Empresa cambiada a ${e.target.value}`);
+    });
+    
+    // Modal
+    document.getElementById("closeModal").addEventListener("click", () => document.getElementById("modalPermisos").classList.remove("show"));
+    document.getElementById("saveModal").addEventListener("click", () => document.getElementById("modalPermisos").classList.remove("show"));
+    
+    // Simular integración
+    document.getElementById("btnSimularIntegracion").addEventListener("click", function(){
+        const empresa = document.getElementById("empresaActiva").value;
+        const badgeClass = empresa === "AGD" ? "badge-agd" : "badge-kcf";
+        const log = document.getElementById("integrationLog");
+        if(log){
+            log.innerHTML = `
+                <div class="log-row"><span class="badge ${badgeClass}">${empresa}</span><b>COT-${empresa}-2026-0002</b><span>Cotización aprobada por usuario autorizado.</span></div>
+                <div class="log-row"><span class="badge badge-info">AUTO</span><b>VENTA-${empresa}-2026-0001</b><span>Venta generada automáticamente desde la cotización.</span></div>
+                <div class="log-row"><span class="badge badge-info">AUTO</span><b>CxC</b><span>Cuenta por cobrar creada para seguimiento financiero.</span></div>
+                <div class="log-row"><span class="badge badge-ok">OK</span><b>TRAZABILIDAD</b><span>Documento origen guardado con empresa_id y usuario_id.</span></div>
+            `;
+        }
+        toast('Flujo de integración simulado');
+    });
+    
+    // Guardar parámetros
+    document.getElementById("btnGuardarParametros").addEventListener("click", function(){
+        toast('Parámetros guardados correctamente');
+    });
+    
+    // Botón para tomar correlativo (ejemplo)
+    document.getElementById("btnGuardarCorrelativoForm2").addEventListener("click", async function(){
+        const empresa = document.getElementById("corrEmpresa").value;
+        const documento = document.getElementById("corrDocumento").value;
+        const anio = parseInt(document.getElementById("corrAnio").value) || 2026;
+        
+        await tomarCorrelativo(empresa, documento, anio);
+        await loadCorrelativos();
+    });
+    
+    // Abrir pantalla inicial
+    openScreen('empresas');
 }
 
 // Iniciar cuando el DOM esté listo
