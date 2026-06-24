@@ -3673,10 +3673,7 @@ async function cargarPermisosUsuario(userId, empresaId) {
         }
     } catch(e) {}
     
-    // Datos por defecto si no hay nada
-    return { 
-        permisos: []
-    };
+    return { permisos: [] };
 }
 
 async function guardarPermisosUsuario(userId, empresaId, permisosList) {
@@ -3702,7 +3699,6 @@ async function guardarPermisosUsuario(userId, empresaId, permisosList) {
         console.log('⚠️ Backend no disponible, guardando en localStorage');
     }
     
-    // FALLBACK: localStorage
     const key = `permisos_${userId}_${empresaId}`;
     try {
         localStorage.setItem(key, JSON.stringify({ permisos: permisosList }));
@@ -3729,7 +3725,6 @@ async function cargarSubmodulos() {
         console.log('⚠️ Backend no disponible, usando submódulos por defecto');
     }
     
-    // Submódulos por defecto
     submodulosData = [
         { id: 1, nombre: 'Configuración', codigo: 'CONFIGURACION' },
         { id: 2, nombre: 'Maestros', codigo: 'MAESTROS' },
@@ -3919,6 +3914,10 @@ function checkEye(v, user, module){
         : `<input class="check" type="checkbox"><span class="eye" data-user="${user}" data-module="${module}">👁</span>`;
 }
 
+// ============================================================
+// CORRELATIVOS - COMPLETO CON EDITAR Y ELIMINAR
+// ============================================================
+
 async function loadCorrelativos(){
     try {
         const data = await fetchAPI('/api/config/correlativos');
@@ -3957,11 +3956,24 @@ function renderCorrelativos(filter=""){
                 <td>${c.anio}</td>
                 <td>${c.ultimo_numero}</td>
                 <td><b>${makeCode(c.prefijo, c.anio, c.ultimo_numero)}</b></td>
-                <td><span class="badge badge-ok">${c.estado}</span></td>
-                <td><button type="button" class="btn-edit" data-id="${c.id}">Editar</button></td>
-                <td><button type="button" class="btn-delete" data-id="${c.id}">Eliminar</button></td>
+                <td><span class="badge ${c.estado === 'Activo' ? 'badge-ok' : 'badge-gray'}">${c.estado}</span></td>
+                <td><button type="button" class="btn-edit" data-id="${c.id}">✏️ Editar</button></td>
+                <td><button type="button" class="btn-delete" data-id="${c.id}">🗑️ Eliminar</button></td>
             </tr>
-        `).join("") || `<tr><td colspan="8">Sin registros KCF</td></tr>`;
+        `).join("") || `<tr><td colspan="8" style="text-align:center;color:#94A3B8;padding:20px;">📭 Sin registros KCF</td></tr>`;
+        
+        // Event listeners para botones
+        tbodyKCF.querySelectorAll('.btn-edit').forEach(btn => {
+            btn.addEventListener('click', function() {
+                cargarCorrelativoParaEditar(this.dataset.id);
+            });
+        });
+        
+        tbodyKCF.querySelectorAll('.btn-delete').forEach(btn => {
+            btn.addEventListener('click', function() {
+                eliminarCorrelativo(this.dataset.id);
+            });
+        });
     }
     
     if(tbodyAGD){
@@ -3972,17 +3984,207 @@ function renderCorrelativos(filter=""){
                 <td>${c.anio}</td>
                 <td>${c.ultimo_numero}</td>
                 <td><b>${makeCode(c.prefijo, c.anio, c.ultimo_numero)}</b></td>
-                <td><span class="badge badge-ok">${c.estado}</span></td>
-                <td><button type="button" class="btn-edit" data-id="${c.id}">Editar</button></td>
-                <td><button type="button" class="btn-delete" data-id="${c.id}">Eliminar</button></td>
+                <td><span class="badge ${c.estado === 'Activo' ? 'badge-ok' : 'badge-gray'}">${c.estado}</span></td>
+                <td><button type="button" class="btn-edit" data-id="${c.id}">✏️ Editar</button></td>
+                <td><button type="button" class="btn-delete" data-id="${c.id}">🗑️ Eliminar</button></td>
             </tr>
-        `).join("") || `<tr><td colspan="8">Sin registros AGD</td></tr>`;
+        `).join("") || `<tr><td colspan="8" style="text-align:center;color:#94A3B8;padding:20px;">📭 Sin registros AGD</td></tr>`;
+        
+        // Event listeners para botones
+        tbodyAGD.querySelectorAll('.btn-edit').forEach(btn => {
+            btn.addEventListener('click', function() {
+                cargarCorrelativoParaEditar(this.dataset.id);
+            });
+        });
+        
+        tbodyAGD.querySelectorAll('.btn-delete').forEach(btn => {
+            btn.addEventListener('click', function() {
+                eliminarCorrelativo(this.dataset.id);
+            });
+        });
     }
 
     document.getElementById("countKCF").textContent = `${listKCF.length} registro${listKCF.length===1?'':'s'}`;
     document.getElementById("countAGD").textContent = `${listAGD.length} registro${listAGD.length===1?'':'s'}`;
     document.getElementById("totalCorrelativos").textContent = list.length;
     document.getElementById("totalDocumentos").textContent = new Set(list.map(c => c.documento)).size;
+}
+
+// Función para actualizar preview del correlativo
+function updateCorrPreview() {
+    const prefijo = document.getElementById("corrPrefijo").value || "PRE";
+    const anio = document.getElementById("corrAnio").value || new Date().getFullYear();
+    const ultimo = parseInt(document.getElementById("corrUltimo").value) || 0;
+    const siguiente = String(ultimo + 1).padStart(4, '0');
+    document.getElementById("corrPreview").textContent = `${prefijo}-${anio}-${siguiente}`;
+}
+
+// Limpiar formulario de correlativos
+function limpiarFormularioCorrelativo() {
+    document.getElementById("corrEmpresa").value = "KCF";
+    document.getElementById("corrDocumento").value = "Cotización";
+    document.getElementById("corrEstado").value = "Activo";
+    document.getElementById("corrPrefijo").value = "COT-KCF";
+    document.getElementById("corrAnio").value = new Date().getFullYear().toString();
+    document.getElementById("corrUltimo").value = "0";
+    document.getElementById("corrFormMode").textContent = "Modo: creando nuevo correlativo";
+    document.getElementById("corrFormMode").dataset.editando = '';
+    document.getElementById("btnGuardarCorrelativoForm2").textContent = "Guardar correlativo";
+    updateCorrPreview();
+}
+
+// Cargar correlativo para editar
+async function cargarCorrelativoParaEditar(id) {
+    try {
+        // Buscar el correlativo en los datos locales
+        const correlativo = correlativosData.find(c => c.id == id);
+        
+        if (!correlativo) {
+            toast('❌ Correlativo no encontrado');
+            return;
+        }
+        
+        // Llenar el formulario
+        document.getElementById("corrEmpresa").value = correlativo.empresa_codigo || 'KCF';
+        document.getElementById("corrDocumento").value = correlativo.documento || 'Cotización';
+        document.getElementById("corrEstado").value = correlativo.estado || 'Activo';
+        document.getElementById("corrPrefijo").value = correlativo.prefijo || '';
+        document.getElementById("corrAnio").value = correlativo.anio || new Date().getFullYear();
+        document.getElementById("corrUltimo").value = correlativo.ultimo_numero || 0;
+        
+        // Guardar el ID en el formulario
+        document.getElementById("corrFormMode").textContent = `✏️ Editando: ${correlativo.documento} | ${correlativo.prefijo}`;
+        document.getElementById("corrFormMode").dataset.editando = id;
+        document.getElementById("btnGuardarCorrelativoForm2").textContent = "Actualizar correlativo";
+        
+        updateCorrPreview();
+        toast(`📝 Editando correlativo: ${correlativo.documento}`);
+        
+        // Scroll al formulario
+        document.querySelector('.corr-workspace').scrollIntoView({ behavior: 'smooth' });
+        
+    } catch(e) {
+        console.error('Error cargando correlativo:', e);
+        toast('❌ Error al cargar el correlativo');
+    }
+}
+
+// Guardar correlativo (crear o actualizar)
+async function guardarCorrelativo() {
+    const empresa = document.getElementById("corrEmpresa").value;
+    const documento = document.getElementById("corrDocumento").value;
+    const estado = document.getElementById("corrEstado").value;
+    const prefijo = document.getElementById("corrPrefijo").value;
+    const anio = parseInt(document.getElementById("corrAnio").value) || new Date().getFullYear();
+    const ultimo = parseInt(document.getElementById("corrUltimo").value) || 0;
+    
+    if (!prefijo) {
+        toast('❌ El prefijo es obligatorio');
+        return;
+    }
+    if (!documento) {
+        toast('❌ El documento es obligatorio');
+        return;
+    }
+    
+    const editandoId = document.getElementById("corrFormMode").dataset.editando;
+    
+    try {
+        // Buscar el ID de la empresa
+        const empresaObj = empresasData.find(e => e.codigo === empresa);
+        if (!empresaObj) {
+            toast('❌ Empresa no encontrada');
+            return;
+        }
+        
+        const data = {
+            empresa_id: empresaObj.id,
+            documento: documento,
+            codigo_documento: documento.toUpperCase().replace(/ /g, '_'),
+            prefijo: prefijo,
+            anio: anio,
+            ultimo_numero: ultimo,
+            estado: estado
+        };
+        
+        let url = '/api/config/correlativos';
+        let method = 'POST';
+        
+        if (editandoId && editandoId !== '') {
+            url = `/api/config/correlativos/${editandoId}`;
+            method = 'PUT';
+        }
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            toast(`✅ Correlativo ${editandoId ? 'actualizado' : 'creado'} exitosamente`);
+            await loadCorrelativos();
+            limpiarFormularioCorrelativo();
+        } else {
+            toast('❌ Error: ' + (result.error || 'Desconocido'));
+        }
+    } catch(e) {
+        console.error('Error guardando correlativo:', e);
+        toast('❌ Error al guardar el correlativo');
+    }
+}
+
+// Eliminar correlativo
+async function eliminarCorrelativo(id) {
+    if (!confirm('¿Estás seguro de eliminar este correlativo?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/config/correlativos/${id}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            toast('✅ Correlativo eliminado exitosamente');
+            await loadCorrelativos();
+        } else {
+            toast('❌ Error: ' + (result.error || 'Desconocido'));
+        }
+    } catch(e) {
+        console.error('Error eliminando correlativo:', e);
+        toast('❌ Error al eliminar el correlativo');
+    }
+}
+
+// Tomar correlativo (incrementar y obtener siguiente)
+async function tomarCorrelativo(empresaCodigo, documento, anio = 2026) {
+    try {
+        const data = await fetchAPI('/api/config/correlativos/tomar', {
+            method: 'POST',
+            body: JSON.stringify({
+                empresa_codigo: empresaCodigo,
+                documento: documento,
+                anio: anio
+            })
+        });
+        
+        if (data.success) {
+            toast(`✅ Correlativo generado: ${data.data.codigo}`);
+            return data.data.codigo;
+        } else {
+            toast('❌ ' + (data.error || 'Error al tomar correlativo'));
+            return null;
+        }
+    } catch(e) {
+        console.error('Error tomando correlativo:', e);
+        toast('Error al tomar correlativo');
+        return null;
+    }
 }
 
 // ============================================================
@@ -3993,14 +4195,12 @@ async function openPermissions(user, module) {
     
     document.getElementById("modalTitle").textContent = `Detalle de permisos | ${user} | ${module}`;
     
-    // Buscar usuario
     const u = usuariosData.find(item => item.usuario_sistema === user);
     if (!u) {
         toast('❌ Usuario no encontrado');
         return;
     }
     
-    // Obtener la empresa seleccionada
     const empresaCodigo = document.getElementById('empresaActiva').value;
     const empresa = u.empresas_acceso?.find(e => e.empresa_codigo === empresaCodigo);
     
@@ -4013,14 +4213,11 @@ async function openPermissions(user, module) {
     currentPermissionsEmpresa = empresa.empresa_id;
     currentPermissionsUser = user;
     
-    // Cargar permisos actuales
     const permisosData = await cargarPermisosUsuario(u.id, empresa.empresa_id);
     console.log('📋 Permisos cargados:', permisosData);
     
-    // Determinar si es admin
     const esAdmin = empresa.rol_codigo === 'GERENCIA_TOTAL';
     
-    // Buscar el submódulo específico
     const submodulo = submodulosData.find(s => 
         s.nombre === module || 
         s.codigo === module.toUpperCase() ||
@@ -4028,10 +4225,8 @@ async function openPermissions(user, module) {
     );
     currentSubmoduloId = submodulo?.id || null;
     
-    // Buscar permisos para este submódulo
     const permiso = permisosData?.permisos?.find(p => p.submodulo_id === currentSubmoduloId) || {};
     
-    // Si es admin, mostrar todo activado y deshabilitado
     if (esAdmin) {
         document.getElementById("saveModal").style.display = 'none';
         const baseRows = [
@@ -4059,7 +4254,6 @@ async function openPermissions(user, module) {
     
     document.getElementById("saveModal").style.display = 'inline-block';
     
-    // Mostrar permisos para el submódulo específico
     const baseRows = [
         {nombre:"Ver", perm: 'puede_ver', value: permiso.puede_ver !== false},
         {nombre:"Crear", perm: 'puede_crear', value: permiso.puede_crear || false},
@@ -4181,41 +4375,12 @@ function applyTheme(code){
 }
 
 // ============================================================
-// TOMAR CORRELATIVO
-// ============================================================
-async function tomarCorrelativo(empresaCodigo, documento, anio = 2026) {
-    try {
-        const data = await fetchAPI('/api/config/correlativos/tomar', {
-            method: 'POST',
-            body: JSON.stringify({
-                empresa_codigo: empresaCodigo,
-                documento: documento,
-                anio: anio
-            })
-        });
-        
-        if (data.success) {
-            toast(`✅ Correlativo generado: ${data.data.codigo}`);
-            return data.data.codigo;
-        } else {
-            toast('❌ ' + (data.error || 'Error al tomar correlativo'));
-            return null;
-        }
-    } catch(e) {
-        console.error('Error tomando correlativo:', e);
-        toast('Error al tomar correlativo');
-        return null;
-    }
-}
-
-// ============================================================
 // INICIALIZACIÓN
 // ============================================================
 async function initDashboard(){
     console.log('🚀 Iniciando dashboard...');
     console.log('📋 FLASK_SESSION:', FLASK_SESSION);
     
-    // Verificar sesión
     let session = null;
     
     if (FLASK_SESSION.isLoggedIn && FLASK_SESSION.user) {
@@ -4262,19 +4427,15 @@ async function initDashboard(){
     
     console.log('✅ Sesión encontrada:', session);
     
-    // Mostrar usuario
     document.getElementById('userName').textContent = session.name || session.user;
     document.getElementById('userAvatar').textContent = (session.name || session.user)[0].toUpperCase();
     
-    // Aplicar tema
     const empresaSession = session.empresa || 'KCF';
     document.getElementById('empresaActiva').value = empresaSession;
     applyTheme(empresaSession);
     
-    // Cargar submódulos primero
     await cargarSubmodulos();
     
-    // Cargar datos
     try {
         await loadEmpresas();
         await loadUsuarios();
@@ -4321,14 +4482,13 @@ async function initDashboard(){
     // Modal
     document.getElementById("closeModal").addEventListener("click", () => document.getElementById("modalPermisos").classList.remove("show"));
     
-    // Guardar permisos desde el modal - CORREGIDO
+    // Guardar permisos desde el modal
     document.getElementById("saveModal").addEventListener("click", async function() {
         if (!currentPermissionsUserId || !currentPermissionsEmpresa) {
             toast('❌ No hay usuario seleccionado');
             return;
         }
         
-        // Recopilar permisos del modal
         const checks = document.querySelectorAll('.perm-check');
         const permisosData = {};
         
@@ -4340,14 +4500,6 @@ async function initDashboard(){
         });
         
         try {
-            // Buscar el submódulo actual
-            const submodulo = submodulosData.find(s => s.id === currentSubmoduloId);
-            if (!submodulo) {
-                toast('❌ No se encontró el submódulo');
-                return;
-            }
-            
-            // Crear permisos para el submódulo actual
             const permisosList = [{
                 submodulo_id: currentSubmoduloId,
                 puede_ver: permisosData['puede_ver'] !== undefined ? permisosData['puede_ver'] : true,
@@ -4361,7 +4513,6 @@ async function initDashboard(){
                 observacion: ''
             }];
             
-            // Guardar permisos
             const result = await guardarPermisosUsuario(
                 currentPermissionsUserId,
                 currentPermissionsEmpresa,
@@ -4403,56 +4554,31 @@ async function initDashboard(){
         toast('Parámetros guardados correctamente');
     });
     
-    // Botón para tomar correlativo
-    document.getElementById("btnGuardarCorrelativoForm2").addEventListener("click", async function(){
-        const empresa = document.getElementById("corrEmpresa").value;
-        const documento = document.getElementById("corrDocumento").value;
-        const anio = parseInt(document.getElementById("corrAnio").value) || 2026;
-        
-        await tomarCorrelativo(empresa, documento, anio);
-        await loadCorrelativos();
-    });
+    // Botón para guardar correlativo (crear o actualizar)
+    document.getElementById("btnGuardarCorrelativoForm2").addEventListener("click", guardarCorrelativo);
     
     // Botón limpiar correlativo
     document.getElementById("btnLimpiarCorrelativo").addEventListener("click", function(){
-        document.getElementById("corrEmpresa").value = "KCF";
-        document.getElementById("corrDocumento").value = "Cotización";
-        document.getElementById("corrEstado").value = "Activo";
-        document.getElementById("corrPrefijo").value = "COT-KCF";
-        document.getElementById("corrAnio").value = "2026";
-        document.getElementById("corrUltimo").value = "0";
-        document.getElementById("corrFormMode").textContent = "Modo: creando nuevo correlativo";
-        document.getElementById("corrPreview").textContent = "COT-KCF-2026-0001";
+        limpiarFormularioCorrelativo();
         toast('Formulario limpiado');
     });
     
-    // Actualizar preview del correlativo
+    // Botón nuevo correlativo
+    document.getElementById("btnNuevoCorrelativo").addEventListener("click", function(){
+        limpiarFormularioCorrelativo();
+        toast('Formulario listo para nuevo correlativo');
+    });
+    
+    // Actualizar preview del correlativo en tiempo real
     document.getElementById("corrEmpresa").addEventListener("change", updateCorrPreview);
     document.getElementById("corrDocumento").addEventListener("change", updateCorrPreview);
     document.getElementById("corrPrefijo").addEventListener("input", updateCorrPreview);
     document.getElementById("corrAnio").addEventListener("input", updateCorrPreview);
     document.getElementById("corrUltimo").addEventListener("input", updateCorrPreview);
     
-    function updateCorrPreview() {
-        const prefijo = document.getElementById("corrPrefijo").value || "PRE";
-        const anio = document.getElementById("corrAnio").value || "2026";
-        const ultimo = parseInt(document.getElementById("corrUltimo").value) || 0;
-        const siguiente = String(ultimo + 1).padStart(4, '0');
-        document.getElementById("corrPreview").textContent = `${prefijo}-${anio}-${siguiente}`;
-    }
-    
-    // Botón nuevo correlativo
-    document.getElementById("btnNuevoCorrelativo").addEventListener("click", function(){
-        document.getElementById("corrEmpresa").value = "KCF";
-        document.getElementById("corrDocumento").value = "Cotización";
-        document.getElementById("corrEstado").value = "Activo";
-        document.getElementById("corrPrefijo").value = "COT-KCF";
-        document.getElementById("corrAnio").value = "2026";
-        document.getElementById("corrUltimo").value = "0";
-        document.getElementById("corrFormMode").textContent = "Modo: creando nuevo correlativo";
-        updateCorrPreview();
-        toast('Formulario listo para nuevo correlativo');
-    });
+    // Botón para tomar correlativo (desde el formulario)
+    // Nota: Este botón ya no existe en el nuevo layout, pero mantenemos la funcionalidad
+    // por si se agrega en el futuro
     
     // Abrir pantalla inicial
     openScreen('empresas');
