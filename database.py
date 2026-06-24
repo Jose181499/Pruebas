@@ -3992,3 +3992,93 @@ def verificar_columnas_productos():
         
     except Exception as e:
         print(f"❌ Error en verificar_columnas_productos: {e}")
+
+# ==========================================
+# 8. LOGIN CON SUPABASE AUTH
+# ==========================================
+
+def verificar_usuario_supabase(email: str, password: str, empresa_codigo: str = 'KCF'):
+    """
+    Verifica un usuario en Supabase Auth y valida su acceso a la empresa.
+    
+    Args:
+        email: Email del usuario
+        password: Contraseña
+        empresa_codigo: Código de la empresa (KCF o AGD)
+    
+    Returns:
+        dict: Información del usuario o None
+    """
+    try:
+        # Importar supabase client
+        import supabase
+        import os
+        
+        # Configurar Supabase client
+        SUPABASE_URL = "https://tkfmwvsenvgpyexvdcat.supabase.co"
+        SUPABASE_KEY = "sb_secret_k56lhPYVINqZMj_BZexRbw_JzeBx8Hx"
+        supabase_client = supabase.create_client(SUPABASE_URL, SUPABASE_KEY)
+        
+        # 1. Autenticar con Supabase Auth
+        auth_response = supabase_client.auth.sign_in_with_password({
+            "email": email,
+            "password": password
+        })
+        
+        if not auth_response.user:
+            return {"success": False, "error": "Usuario o contraseña incorrectos"}
+        
+        auth_user = auth_response.user
+        print(f"✅ Usuario autenticado: {auth_user.email}")
+        
+        # 2. Buscar en la tabla usuarios
+        user_result = supabase_client.table('usuarios')\
+            .select('*')\
+            .eq('auth_user_id', auth_user.id)\
+            .single()\
+            .execute()
+        
+        if not user_result.data:
+            return {"success": False, "error": "Usuario no registrado en el sistema ERP"}
+        
+        user_data = user_result.data
+        print(f"✅ Usuario encontrado en tabla usuarios: {user_data.get('usuario_sistema')}")
+        
+        # 3. Verificar acceso a la empresa
+        empresa_result = supabase_client.table('erp_usuario_empresas')\
+            .select('*, erp_empresas!inner(*), erp_roles!inner(*)')\
+            .eq('auth_user_id', auth_user.id)\
+            .eq('estado', 'activo')\
+            .execute()
+        
+        if not empresa_result.data:
+            return {"success": False, "error": "No tiene acceso a ninguna empresa"}
+        
+        # Verificar empresa específica
+        empresa_acceso = None
+        for acceso in empresa_result.data:
+            if acceso.get('erp_empresas', {}).get('codigo') == empresa_codigo:
+                empresa_acceso = acceso
+                break
+        
+        if not empresa_acceso:
+            return {"success": False, "error": f"No tiene acceso a la empresa {empresa_codigo}"}
+        
+        rol_data = empresa_acceso.get('erp_roles', {})
+        
+        return {
+            "success": True,
+            "user_id": user_data.get('id'),
+            "auth_user_id": auth_user.id,
+            "usuario_sistema": user_data.get('usuario_sistema'),
+            "nombres_apellidos": user_data.get('nombres_apellidos'),
+            "area": user_data.get('area'),
+            "email": auth_user.email,
+            "rol": rol_data.get('codigo', 'usuario'),
+            "rol_nombre": rol_data.get('nombre', 'Usuario'),
+            "es_admin": rol_data.get('es_admin', False)
+        }
+        
+    except Exception as e:
+        print(f"❌ Error en verificar_usuario_supabase: {e}")
+        return {"success": False, "error": str(e)}

@@ -1,29 +1,27 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template, session, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.pool import NullPool
 import os
 from urllib.parse import quote_plus
+from functools import wraps
+from datetime import datetime
 
 app = Flask(__name__)
 
-# ==================== CONFIGURACIÓN SUPABASE CORREGIDA ====================
-# Usar variable de entorno o la URL directa
+# ==================== CONFIGURACIÓN SUPABASE ====================
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if not DATABASE_URL:
-    # URL de conexión directa a Supabase (sin base64)
     DATABASE_URL = "postgresql://postgres.tkfmwvsenvgpyexvdcat:admin3561967kcf@aws-1-us-east-1.pooler.supabase.com:6543/postgres"
 
-# Configuración mejorada para evitar timeouts
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'sb_secret_k56lhPYVINqZMj_BZexRbw_JzeBx8Hx'
 
-# Configuración de pool de conexiones para Supabase
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_size': 5,
-    'pool_recycle': 300,  # Reciclar conexiones cada 5 minutos
-    'pool_pre_ping': True,  # Verificar conexión antes de usarla
+    'pool_recycle': 300,
+    'pool_pre_ping': True,
     'pool_use_lifo': True,
     'connect_args': {
         'connect_timeout': 10,
@@ -40,494 +38,107 @@ db.init_app(app)
 # ==================== IMPORTAR MODELOS ====================
 from models.producto import Producto
 from models.movimiento_stock import MovimientoStock
-from datetime import datetime
 
-# ==================== RUTAS DIRECTAS PARA KÁRDEX ====================
+# ==================== FUNCIONES DE AUTENTICACIÓN ====================
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Por favor, inicia sesión para acceder.', 'warning')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
-# Ruta para obtener todos los productos
-@app.route('/api/productos', methods=['GET'])
-def get_productos():
-    print("📦 Llamada a /api/productos")
+# ==================== RUTAS DE AUTENTICACIÓN ====================
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """Página de login usando Supabase Auth"""
+    if request.method == 'GET':
+        return render_template('login.html')
+    
+    # POST - Procesar login
     try:
-        productos = Producto.query.all()
-        resultado = []
-        for p in productos:
-            resultado.append({
-                'id': p.id,
-                'codigo': p.codigo if hasattr(p, 'codigo') else '',
-                'descripcion': p.descripcion,
-                'stock': p.stock if hasattr(p, 'stock') else 0,
-                'costo_unitario': float(p.costo_unitario) if hasattr(p, 'costo_unitario') and p.costo_unitario else 0,
-                'familia': p.familia if hasattr(p, 'familia') else '',
-                'marca': p.marca if hasattr(p, 'marca') else '',
-                'modelo': p.modelo if hasattr(p, 'modelo') else '',
-                'unidad': p.unidad if hasattr(p, 'unidad') else '',
-                'precio_unitario': float(p.precio_unitario) if hasattr(p, 'precio_unitario') and p.precio_unitario else 0
-            })
-        print(f"✅ Se encontraron {len(resultado)} productos")
-        return jsonify(resultado)
-    except Exception as e:
-        print(f"❌ Error: {e}")
-        return jsonify({'error': str(e), 'success': False}), 500
-
-
-# Ruta para obtener un producto por ID
-@app.route('/api/productos/<int:id>', methods=['GET'])
-def get_producto_by_id(id):
-    print(f"🔍 Llamada a /api/productos/{id}")
-    try:
-        producto = Producto.query.get(id)
-        if not producto:
-            return jsonify({'success': False, 'error': 'Producto no encontrado'}), 404
+        from database import verificar_usuario_supabase
+        from flask import request, jsonify
         
-        resultado = {
-            'id': producto.id,
-            'codigo': producto.codigo if hasattr(producto, 'codigo') else '',
-            'familia': producto.familia if hasattr(producto, 'familia') else '',
-            'descripcion': producto.descripcion if hasattr(producto, 'descripcion') else '',
-            'descripcion_larga': producto.descripcion_larga if hasattr(producto, 'descripcion_larga') else '',
-            'modelo': producto.modelo if hasattr(producto, 'modelo') else '',
-            'marca': producto.marca if hasattr(producto, 'marca') else '',
-            'unidad': producto.unidad if hasattr(producto, 'unidad') else '',
-            'peso': producto.peso if hasattr(producto, 'peso') else '',
-            'volumen': producto.volumen if hasattr(producto, 'volumen') else '',
-            'transporte': producto.transporte if hasattr(producto, 'transporte') else '',
-            'costo_unitario': float(producto.costo_unitario) if hasattr(producto, 'costo_unitario') and producto.costo_unitario else 0,
-            'precio_unitario': float(producto.precio_unitario) if hasattr(producto, 'precio_unitario') and producto.precio_unitario else 0,
-            'stock': producto.stock if hasattr(producto, 'stock') else 0,
-            'observaciones': producto.observaciones if hasattr(producto, 'observaciones') else ''
-        }
-        print(f"✅ Producto encontrado: {resultado['codigo']}")
-        return jsonify(resultado)
-    except Exception as e:
-        print(f"❌ Error: {e}")
-        return jsonify({'error': str(e), 'success': False}), 500
-
-
-# Ruta para actualizar producto
-@app.route('/api/productos/<int:id>', methods=['PUT'])
-def update_producto(id):
-    print(f"✏️ Llamada a PUT /api/productos/{id}")
-    try:
-        producto = Producto.query.get(id)
-        if not producto:
-            return jsonify({'success': False, 'error': 'Producto no encontrado'}), 404
+        email = request.form.get('usuario', '').strip()
+        password = request.form.get('password', '')
+        empresa_seleccionada = request.form.get('empresa', 'KCF')
         
-        data = request.get_json()
-        print(f"Datos recibidos para actualizar: {data}")
+        if not email or not password:
+            flash('Por favor, ingresa usuario y contraseña.', 'error')
+            return render_template('login.html')
         
-        if 'familia' in data:
-            producto.familia = data['familia']
-        if 'descripcion' in data:
-            producto.descripcion = data['descripcion']
-        if 'descripcion_larga' in data:
-            producto.descripcion_larga = data['descripcion_larga']
-        if 'modelo' in data:
-            producto.modelo = data['modelo']
-        if 'marca' in data:
-            producto.marca = data['marca']
-        if 'unidad' in data:
-            producto.unidad = data['unidad']
-        if 'peso' in data:
-            producto.peso = data['peso']
-        if 'volumen' in data:
-            producto.volumen = data['volumen']
-        if 'transporte' in data:
-            producto.transporte = data['transporte']
-        if 'costo_unitario' in data:
-            producto.costo_unitario = data['costo_unitario']
-        if 'precio_unitario' in data:
-            producto.precio_unitario = data['precio_unitario']
-        if 'stock' in data:
-            producto.stock = data['stock']
-        if 'observaciones' in data:
-            producto.observaciones = data['observaciones']
-        
-        if hasattr(producto, 'updated_at'):
-            producto.updated_at = datetime.now()
-        
-        db.session.commit()
-        print(f"✅ Producto {id} actualizado correctamente")
-        return jsonify({'success': True, 'message': 'Producto actualizado correctamente'})
-        
-    except Exception as e:
-        db.session.rollback()
-        print(f"❌ Error: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-
-# Ruta para eliminar producto
-@app.route('/api/productos/<int:id>', methods=['DELETE'])
-def delete_producto(id):
-    print(f"🗑️ Llamada a DELETE /api/productos/{id}")
-    try:
-        producto = Producto.query.get(id)
-        if not producto:
-            return jsonify({'success': False, 'error': 'Producto no encontrado'}), 404
-        
-        # Verificar si tiene movimientos asociados
-        try:
-            movimientos = MovimientoStock.query.filter_by(producto_id=id).count()
-            if movimientos > 0:
-                return jsonify({'success': False, 'error': f'No se puede eliminar el producto porque tiene {movimientos} movimiento(s) de kárdex asociados'}), 400
-        except:
-            pass  # Si la tabla no existe, continuar
-        
-        codigo = producto.codigo if hasattr(producto, 'codigo') else 'sin código'
-        
-        db.session.delete(producto)
-        db.session.commit()
-        
-        print(f"✅ Producto {id} ({codigo}) eliminado correctamente")
-        return jsonify({'success': True, 'message': 'Producto eliminado correctamente'})
-        
-    except Exception as e:
-        db.session.rollback()
-        print(f"❌ Error: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-
-# Ruta para obtener movimientos de stock
-@app.route('/api/movimientos_stock', methods=['GET'])
-def get_movimientos():
-    print("📊 Llamada a /api/movimientos_stock")
-    try:
-        producto_id = request.args.get('producto_id', type=int)
-        
-        if producto_id:
-            try:
-                movimientos = MovimientoStock.query.filter_by(producto_id=producto_id).order_by(MovimientoStock.created_at.asc()).all()
-            except:
-                # Si la tabla no existe, devolver lista vacía
-                print("⚠️ Tabla movimientos_stock no existe aún")
-                return jsonify([])
-        else:
-            movimientos = []
-        
-        resultado = []
-        for m in movimientos:
-            resultado.append({
-                'id': m.id,
-                'producto_id': m.producto_id,
-                'tipo': m.tipo,
-                'cantidad': m.cantidad,
-                'motivo': m.motivo,
-                'referencia': m.referencia,
-                'costo_unitario': float(m.costo_unitario) if m.costo_unitario else None,
-                'created_at': m.created_at.isoformat() if m.created_at else None
-            })
-        print(f"✅ Se encontraron {len(resultado)} movimientos")
-        return jsonify(resultado)
-    except Exception as e:
-        print(f"❌ Error: {e}")
-        return jsonify([]), 200  # Devolver lista vacía en lugar de error
-
-
-# Ruta para crear movimientos
-@app.route('/api/movimientos_stock', methods=['POST'])
-def crear_movimiento():
-    print("📝 Llamada a POST /api/movimientos_stock")
-    try:
-        data = request.get_json()
-        print(f"Datos recibidos: {data}")
-        
-        if not data.get('producto_id') or not data.get('tipo') or not data.get('cantidad'):
-            return jsonify({'success': False, 'error': 'Faltan datos: producto_id, tipo y cantidad son requeridos'}), 400
-        
-        producto = Producto.query.get(data['producto_id'])
-        if not producto:
-            return jsonify({'success': False, 'error': 'Producto no encontrado'}), 404
-        
-        cantidad = int(data['cantidad'])
-        
-        if data['tipo'] == 'SALIDA' and (producto.stock or 0) < cantidad:
-            return jsonify({'success': False, 'error': f'Stock insuficiente. Stock actual: {producto.stock or 0}'}), 400
-        
-        try:
-            # Crear el movimiento
-            nuevo = MovimientoStock(
-                producto_id=data['producto_id'],
-                tipo=data['tipo'],
-                cantidad=cantidad,
-                motivo=data.get('motivo'),
-                referencia=data.get('referencia'),
-                costo_unitario=data.get('costo_unitario')
-            )
-            db.session.add(nuevo)
-        except:
-            # Si la tabla no existe, crear tabla primero
-            print("⚠️ Tabla movimientos_stock no existe, creándola...")
-            db.create_all()
-            
-            nuevo = MovimientoStock(
-                producto_id=data['producto_id'],
-                tipo=data['tipo'],
-                cantidad=cantidad,
-                motivo=data.get('motivo'),
-                referencia=data.get('referencia'),
-                costo_unitario=data.get('costo_unitario')
-            )
-            db.session.add(nuevo)
-        
-        # Actualizar stock
-        if data['tipo'] == 'ENTRADA':
-            producto.stock = (producto.stock or 0) + cantidad
-        elif data['tipo'] == 'SALIDA':
-            producto.stock = (producto.stock or 0) - cantidad
-        elif data['tipo'] == 'AJUSTE':
-            producto.stock = cantidad
-        
-        if hasattr(producto, 'updated_at'):
-            producto.updated_at = datetime.now()
-        
-        db.session.commit()
-        print(f"✅ Movimiento creado exitosamente. Nuevo stock: {producto.stock}")
-        return jsonify({'success': True, 'message': 'Movimiento registrado', 'nuevo_stock': producto.stock}), 201
-        
-    except Exception as e:
-        db.session.rollback()
-        print(f"❌ Error: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-
-# Ruta para obtener último código
-@app.route('/api/ultimo_codigo', methods=['GET'])
-def ultimo_codigo():
-    try:
-        prefijo = request.args.get('prefijo', 'GEN')
-        print(f"🔢 Buscando último código para prefijo: {prefijo}")
-        
-        from sqlalchemy import text
-        
-        with db.engine.connect() as conn:
-            result = conn.execute(text("""
-                SELECT codigo FROM productos 
-                WHERE codigo LIKE :prefijo 
-                ORDER BY id DESC LIMIT 1
-            """), {"prefijo": f'{prefijo}-%'})
-            
-            row = result.fetchone()
-            
-            if row and row[0]:
-                try:
-                    numero = int(row[0].split('-')[1])
-                    return jsonify({'success': True, 'ultimo_numero': numero})
-                except (IndexError, ValueError):
-                    return jsonify({'success': True, 'ultimo_numero': 0})
-            else:
-                return jsonify({'success': True, 'ultimo_numero': 0})
-                
-    except Exception as e:
-        print(f"❌ Error: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-
-# # ==================== CLIENTES API ROUTES ====================
-
-# @app.route('/api/clientes/buscar', methods=['GET'])
-# def api_buscar_clientes():
-#     """
-#     API para buscar clientes por RUC, nombre comercial o razón social
-#     """
-#     try:
-#         from database import buscar_clientes_completo  # ← Usar la función nueva
-        
-#         busqueda = request.args.get('q', request.args.get('busqueda', '')).strip()
-        
-#         print(f"🔍 Buscando clientes - Búsqueda: '{busqueda or 'vacía'}'")
-        
-#         # Usar la función CORREGIDA que incluye todos los campos
-#         clientes = buscar_clientes_completo(busqueda, limit=50)
-        
-#         print(f"✅ Se encontraron {len(clientes)} clientes")
-        
-#         # Asegurar que los campos existan
-#         for cliente in clientes:
-#             if 'telefono_contacto' not in cliente or cliente['telefono_contacto'] is None:
-#                 cliente['telefono_contacto'] = ''
-#             if 'email_contacto' not in cliente or cliente['email_contacto'] is None:
-#                 cliente['email_contacto'] = ''
-#             if 'nombre_contacto' not in cliente or cliente['nombre_contacto'] is None:
-#                 cliente['nombre_contacto'] = ''
-        
-#         return jsonify({
-#             'success': True,
-#             'data': clientes
-#         })
-        
-#     except Exception as e:
-#         print(f"❌ Error en api_buscar_clientes: {e}")
-#         import traceback
-#         traceback.print_exc()
-#         return jsonify({
-#             'success': False,
-#             'error': str(e),
-#             'data': []
-#         }), 500
-
-@app.route('/api/clientes/<int:id>/direcciones', methods=['GET'])
-def api_obtener_direcciones_cliente(id):
-    """Obtener las direcciones guardadas de un cliente"""
-    try:
-        from database import obtener_direcciones_cliente
-        
-        direcciones = obtener_direcciones_cliente(id)
-        
-        return jsonify({
-            'success': True,
-            'data': direcciones
-        })
-        
-    except Exception as e:
-        print(f"❌ Error en api_obtener_direcciones_cliente: {e}")
-        return jsonify({
-            'success': False,
-            'error': str(e),
-            'data': []
-        }), 500
-
-
-@app.route('/api/clientes/crear', methods=['POST'])
-def api_crear_cliente():
-    """Crear un nuevo cliente"""
-    try:
-        from database import insertar_cliente_completo
-        
-        data = request.get_json()
-        print(f"📝 Creando nuevo cliente: {data.get('razon_social')}")
-        
-        resultado = insertar_cliente_completo(data)
+        # Verificar en Supabase
+        resultado = verificar_usuario_supabase(email, password, empresa_seleccionada)
         
         if resultado and resultado.get('success'):
-            return jsonify({
-                'success': True,
-                'data': {
-                    'id': resultado.get('id'),
-                    'codigo_cliente': resultado.get('codigo_cliente')
-                },
-                'message': 'Cliente creado exitosamente'
-            }), 201
+            # Guardar sesión
+            session['user_id'] = resultado['user_id']
+            session['usuario'] = resultado['usuario_sistema']
+            session['nombre_completo'] = resultado['nombres_apellidos']
+            session['rol'] = resultado['rol']
+            session['empresa'] = empresa_seleccionada
+            session['auth_user_id'] = resultado['auth_user_id']
+            
+            flash(f'✅ Bienvenido {resultado["nombres_apellidos"]}!', 'success')
+            
+            # Redirigir al dashboard
+            next_page = request.args.get('next')
+            if next_page:
+                return redirect(next_page)
+            return redirect(url_for('index'))
         else:
-            return jsonify({
-                'success': False,
-                'error': resultado.get('error', 'Error al crear cliente')
-            }), 400
-        
+            flash(resultado.get('error', '❌ Usuario o contraseña incorrectos.'), 'error')
+            return render_template('login.html')
+            
     except Exception as e:
-        print(f"❌ Error en api_crear_cliente: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+        print(f"❌ Error en login: {e}")
+        flash('❌ Error al conectar con el servidor.', 'error')
+        return render_template('login.html')
 
 
-@app.route('/api/clientes/<int:id>', methods=['PUT'])
-def api_actualizar_cliente(id):
-    """Actualizar un cliente existente"""
-    try:
-        from database import actualizar_cliente_completo
-        
-        data = request.get_json()
-        print(f"✏️ Actualizando cliente ID: {id}")
-        
-        resultado = actualizar_cliente_completo(id, data)
-        
-        if resultado and resultado.get('success'):
-            return jsonify({
-                'success': True,
-                'message': 'Cliente actualizado exitosamente'
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'error': resultado.get('error', 'Error al actualizar cliente')
-            }), 400
-        
-    except Exception as e:
-        print(f"❌ Error en api_actualizar_cliente: {e}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+@app.route('/logout')
+def logout():
+    """Cerrar sesión"""
+    session.clear()
+    flash('Has cerrado sesión correctamente.', 'info')
+    return redirect(url_for('login'))
 
 
-@app.route('/api/clientes/<int:id>', methods=['DELETE'])
-def api_eliminar_cliente(id):
-    """Eliminar un cliente (borrado lógico)"""
-    try:
-        from database import eliminar_cliente_db
-        
-        print(f"🗑️ Eliminando cliente ID: {id}")
-        
-        resultado = eliminar_cliente_db(id)
-        
-        if resultado and resultado.get('success'):
-            return jsonify({
-                'success': True,
-                'message': 'Cliente eliminado exitosamente'
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'error': resultado.get('error', 'Error al eliminar cliente')
-            }), 400
-        
-    except Exception as e:
-        print(f"❌ Error en api_eliminar_cliente: {e}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+@app.route('/index')
+@login_required
+def index():
+    """Dashboard principal"""
+    return render_template('index.html', 
+                          nombre=session.get('nombre_completo'),
+                          usuario=session.get('usuario'),
+                          empresa=session.get('empresa'))
 
 
-# Ruta para buscar productos
-@app.route('/api/productos/buscar', methods=['GET'])
-def api_buscar_productos():
-    """Buscar productos por código o descripción"""
-    try:
-        q = request.args.get('q', '').strip()
-        
-        if not q or len(q) < 2:
-            return jsonify({'success': True, 'data': []})
-        
-        from sqlalchemy import or_
-        
-        productos = Producto.query.filter(
-            or_(
-                Producto.codigo.ilike(f'%{q}%'),
-                Producto.descripcion.ilike(f'%{q}%'),
-                Producto.marca.ilike(f'%{q}%'),
-                Producto.modelo.ilike(f'%{q}%')
-            )
-        ).limit(20).all()
-        
-        resultado = []
-        for p in productos:
-            resultado.append({
-                'id': p.id,
-                'codigo': p.codigo if hasattr(p, 'codigo') else '',
-                'descripcion': p.descripcion if hasattr(p, 'descripcion') else '',
-                'marca': p.marca if hasattr(p, 'marca') else '',
-                'modelo': p.modelo if hasattr(p, 'modelo') else '',
-                'unidad_medida': p.unidad if hasattr(p, 'unidad') else 'UNIDAD',
-                'stock': p.stock if hasattr(p, 'stock') else 0,
-                'precio_unitario': float(p.precio_unitario) if hasattr(p, 'precio_unitario') and p.precio_unitario else 0
-            })
-        
-        print(f"🔎 Búsqueda de productos '{q}': {len(resultado)} encontrados")
-        return jsonify({'success': True, 'data': resultado})
-        
-    except Exception as e:
-        print(f"❌ Error en api_buscar_productos: {e}")
-        return jsonify({'success': False, 'error': str(e), 'data': []}), 500
-
-
-# Ruta de prueba
 @app.route('/')
 def home():
-    return jsonify({'message': 'Servidor funcionando', 'status': 'ok'})
+    if 'user_id' in session:
+        return redirect(url_for('index'))
+    return redirect(url_for('login'))
+
+
+# ==================== RUTAS DE CONFIGURACIÓN Y SEGURIDAD ====================
+# Importar el blueprint de configuración
+from routes.configuracion_seguridad import config_seguridad_bp
+app.register_blueprint(config_seguridad_bp)
+
+
+# ==================== RUTAS API EXISTENTES ====================
+# (Todas tus rutas API actuales...)
+
+@app.route('/api/productos', methods=['GET'])
+def get_productos():
+    # ... tu código existente ...
+    pass
+
+# ... resto de tus rutas API ...
 
 
 # ==================== BLUEPRINTS ====================
@@ -535,21 +146,19 @@ from routes.usuarios import usuarios_bp
 from routes.cotizaciones import cotizaciones_bp
 from routes.mantenedor_productos import productos_bp
 from routes.mantenedor_clientes import mantenedor_clientes_bp
-from routes.compras import compras_bp  # ← AGREGADO: Importar blueprint de compras
-from routes.proveedores import proveedores_bp  # ← AGREGADO: Importar blueprint de proveedores
-from routes.guias_remision import guias_bp 
+from routes.compras import compras_bp
+from routes.proveedores import proveedores_bp
+from routes.guias_remision import guias_bp
 
-# Registrar blueprints
 app.register_blueprint(usuarios_bp)
 app.register_blueprint(cotizaciones_bp)
 app.register_blueprint(productos_bp)
 app.register_blueprint(mantenedor_clientes_bp)
-app.register_blueprint(compras_bp)  # ← AGREGADO: Registrar blueprint de compras
-app.register_blueprint(proveedores_bp)  # ← AGREGADO: Registrar blueprint de proveedores
-app.register_blueprint(guias_bp)  
+app.register_blueprint(compras_bp)
+app.register_blueprint(proveedores_bp)
+app.register_blueprint(guias_bp)
 
 print("🔵 Blueprints registrados:", list(app.blueprints.keys()))
-print("🚀 Servidor Flask iniciado")
 
 if __name__ == "__main__":
     with app.app_context():
