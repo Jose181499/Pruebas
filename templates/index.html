@@ -3553,9 +3553,6 @@ h1{
 
 <script>
 // ============================================================
-// DATOS DE SESIÓN DESDE FLASK - VERSIÓN SIMPLIFICADA
-// ============================================================
-// ============================================================
 // DATOS DE SESIÓN DESDE FLASK - CON VALORES POR DEFECTO
 // ============================================================
 const FLASK_SESSION = {
@@ -3597,6 +3594,10 @@ let correlativosData = [];
 let rolesData = [];
 let submodulosData = [];
 let currentScreen = 'empresas';
+let currentPermissionsUser = null;
+let currentPermissionsEmpresa = null;
+let currentPermissionsUserId = null;
+let currentSubmoduloId = null;
 
 // ============================================================
 // FUNCIONES DE UTILIDAD
@@ -3615,13 +3616,8 @@ function toast(msg){
     setTimeout(() => el.remove(), 2200);
 }
 
-// ============================================================
-// FUNCIÓN getSession() - CORREGIDA
-// ============================================================
 function getSession(){
-    // ✅ PRIMERO: Usar datos de Flask (vienen del servidor)
     if (FLASK_SESSION.isLoggedIn && FLASK_SESSION.user) {
-        console.log('📋 Sesión desde Flask:', FLASK_SESSION);
         return {
             user: FLASK_SESSION.user,
             name: FLASK_SESSION.name,
@@ -3630,13 +3626,10 @@ function getSession(){
             fromFlask: true
         };
     }
-    
-    // ✅ SEGUNDO: Fallback a localStorage (para compatibilidad)
     try{
         const data = localStorage.getItem('erp_session');
         if (data) {
             const parsed = JSON.parse(data);
-            // Verificar que no haya expirado (8 horas)
             const sessionTime = new Date(parsed.timestamp);
             const now = new Date();
             const diffHours = (now - sessionTime) / (1000 * 60 * 60);
@@ -3653,7 +3646,111 @@ function getSession(){
 }
 
 // ============================================================
-// LLAMADAS A LA API DE FLASK (BACKEND)
+// FUNCIONES DE PERMISOS - COMPLETAS
+// ============================================================
+
+async function cargarPermisosUsuario(userId, empresaId) {
+    console.log('📋 Cargando permisos para usuario:', userId, 'empresa:', empresaId);
+    
+    try {
+        const response = await fetch(`/api/config/usuarios/${userId}/permisos?empresa_id=${empresaId}`);
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+                return data.data || { permisos: [] };
+            }
+        }
+    } catch(e) {
+        console.log('⚠️ Backend no disponible, usando localStorage');
+    }
+    
+    // FALLBACK: localStorage
+    const key = `permisos_${userId}_${empresaId}`;
+    try {
+        const stored = localStorage.getItem(key);
+        if (stored) {
+            return JSON.parse(stored);
+        }
+    } catch(e) {}
+    
+    // Datos por defecto si no hay nada
+    return { 
+        permisos: []
+    };
+}
+
+async function guardarPermisosUsuario(userId, empresaId, permisosList) {
+    console.log('💾 Guardando permisos para usuario:', userId, 'empresa:', empresaId);
+    
+    try {
+        const response = await fetch(`/api/config/usuarios/${userId}/permisos`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                empresa_id: empresaId,
+                permisos: permisosList
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+                return true;
+            }
+        }
+    } catch(e) {
+        console.log('⚠️ Backend no disponible, guardando en localStorage');
+    }
+    
+    // FALLBACK: localStorage
+    const key = `permisos_${userId}_${empresaId}`;
+    try {
+        localStorage.setItem(key, JSON.stringify({ permisos: permisosList }));
+        return true;
+    } catch(e) {
+        console.error('❌ Error guardando en localStorage:', e);
+        return false;
+    }
+}
+
+async function cargarSubmodulos() {
+    console.log('📋 Cargando submódulos...');
+    
+    try {
+        const response = await fetch('/api/config/submodulos');
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+                submodulosData = data.data || [];
+                return submodulosData;
+            }
+        }
+    } catch(e) {
+        console.log('⚠️ Backend no disponible, usando submódulos por defecto');
+    }
+    
+    // Submódulos por defecto
+    submodulosData = [
+        { id: 1, nombre: 'Configuración', codigo: 'CONFIGURACION' },
+        { id: 2, nombre: 'Maestros', codigo: 'MAESTROS' },
+        { id: 3, nombre: 'Productos', codigo: 'PRODUCTOS' },
+        { id: 4, nombre: 'Cotizaciones', codigo: 'COTIZACIONES' },
+        { id: 5, nombre: 'Ventas', codigo: 'VENTAS' },
+        { id: 6, nombre: 'Compras', codigo: 'COMPRAS' },
+        { id: 7, nombre: 'Logística', codigo: 'LOGISTICA' },
+        { id: 8, nombre: 'Inventario', codigo: 'INVENTARIO' },
+        { id: 9, nombre: 'CxC', codigo: 'CXC' },
+        { id: 10, nombre: 'CxP', codigo: 'CXP' },
+        { id: 11, nombre: 'Caja', codigo: 'CAJA' },
+        { id: 12, nombre: 'Reportes', codigo: 'REPORTES' },
+        { id: 13, nombre: 'SUNAT', codigo: 'SUNAT' }
+    ];
+    
+    return submodulosData;
+}
+
+// ============================================================
+// FUNCIONES DE API
 // ============================================================
 async function fetchAPI(endpoint, options = {}) {
     try {
@@ -3668,8 +3765,7 @@ async function fetchAPI(endpoint, options = {}) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        const data = await response.json();
-        return data;
+        return await response.json();
     } catch (error) {
         console.error(`Error en fetchAPI (${endpoint}):`, error);
         throw error;
@@ -3686,7 +3782,6 @@ async function loadEmpresas(){
         if (data.success) {
             empresasData = data.data || [];
             
-            // Actualizar contadores
             document.getElementById('empresasTotal').textContent = empresasData.length;
             document.getElementById('empresasActivas').textContent = empresasData.filter(e => e.estado === 'activo').length;
             
@@ -3732,19 +3827,13 @@ function renderEmpresas(filter=""){
         </tr>`;
     }).join("");
 }
+
 async function loadUsuarios(){
     try {
         const data = await fetchAPI('/api/config/usuarios');
         
         if (data.success) {
             usuariosData = data.data || [];
-            
-            // ✅ ELIMINAR ESTA LLAMADA - Los roles ya vienen en usuarios
-            // let rolesData = await fetchAPI('/api/config/roles');
-            // if (rolesData.success) {
-            //     rolesData = rolesData.data || [];
-            // }
-            
             document.getElementById('dashUsuarios').textContent = usuariosData.length;
             renderUsuarios();
         } else {
@@ -3755,6 +3844,7 @@ async function loadUsuarios(){
         toast('Error al cargar usuarios');
     }
 }
+
 function renderUsuarios(filter=""){
     const empresaFiltro = document.getElementById("filterEmpresaUsuarios")?.value || "TODAS";
     const nivelFiltro = document.getElementById("filterNivelUsuarios")?.value || "TODOS";
@@ -3896,89 +3986,11 @@ function renderCorrelativos(filter=""){
 }
 
 // ============================================================
-// NAVEGACIÓN
+// OPEN PERMISSIONS - COMPLETO
 // ============================================================
-const breadcrumbs = {
-    dashboard:"Inicio / Dashboard",
-    empresas:"Inicio / Configuración y seguridad / Empresas",
-    usuarios:"Inicio / Configuración y seguridad / Usuarios y permisos",
-    correlativos:"Inicio / Configuración y seguridad / Correlativos",
-    parametros:"Inicio / Configuración y seguridad / Parámetros generales",
-    integracion:"Inicio / Configuración y seguridad / Integración ERP",
-    maestros:"Inicio / Maestros",
-    productos:"Inicio / Productos",
-    ventas:"Inicio / Ventas",
-    compras:"Inicio / Compras",
-    inventario:"Inicio / Inventario",
-    finanzas:"Inicio / Finanzas / Tesorería",
-    reportes:"Inicio / Reportes",
-    herramientas:"Inicio / Herramientas",
-    papelera:"Inicio / Papelera / Auditoría"
-};
-
-const titles = {
-    dashboard:"Dashboard",
-    empresas:"Configuración y seguridad",
-    usuarios:"Configuración y seguridad",
-    correlativos:"Configuración y seguridad",
-    parametros:"Configuración y seguridad",
-    integracion:"Configuración y seguridad",
-    maestros:"Maestros",
-    productos:"Productos",
-    ventas:"Ventas",
-    compras:"Compras",
-    inventario:"Inventario",
-    finanzas:"Finanzas / Tesorería",
-    reportes:"Reportes",
-    herramientas:"Herramientas",
-    papelera:"Papelera / Auditoría"
-};
-
-function openScreen(screen){
-    currentScreen = screen;
-    
-    document.querySelectorAll(".section").forEach(sec => sec.classList.remove("active"));
-    const target = document.getElementById(screen);
-    if(target) target.classList.add("active");
-
-    document.querySelectorAll(".menu-header,.child-btn,.tab-btn").forEach(el => el.classList.remove("active"));
-    document.querySelectorAll(`[data-screen="${screen}"]`).forEach(el => el.classList.add("active"));
-
-    document.getElementById("breadcrumb").textContent = breadcrumbs[screen] || "Inicio";
-    document.getElementById("pageTitle").textContent = titles[screen] || "ERP Multiempresa";
-
-    document.getElementById("mainPanel").scrollTo({top:0, behavior:"smooth"});
-}
-
-function applyTheme(code){
-    const root = document.documentElement;
-    if(code === "AGD"){
-        root.style.setProperty("--empresa","#FC6200");
-        root.style.setProperty("--empresa-soft","#FFE7D1");
-        root.style.setProperty("--empresa-sidebar","#FFEEDC");
-        root.style.setProperty("--empresa-dark","#0F172A");
-        document.getElementById("logoEmpresa").textContent = "AGD";
-    }else{
-        root.style.setProperty("--empresa","#EF233C");
-        root.style.setProperty("--empresa-soft","#FFE4E8");
-        root.style.setProperty("--empresa-sidebar","#FFECEF");
-        root.style.setProperty("--empresa-dark","#1F1F1F");
-        document.getElementById("logoEmpresa").textContent = "KCF";
-    }
-}
-
-// ============================================================
-// MODAL DE PERMISOS
-// ============================================================
-// ============================================================
-// MODAL DE PERMISOS - VERSIÓN CORREGIDA
-// ============================================================
-let currentPermissionsUser = null;
-let currentPermissionsEmpresa = null;
-let currentPermissionsUserId = null;
-let currentSubmoduloId = null;
-
 async function openPermissions(user, module) {
+    console.log('👁️ Abriendo permisos para:', user, module);
+    
     document.getElementById("modalTitle").textContent = `Detalle de permisos | ${user} | ${module}`;
     
     // Buscar usuario
@@ -4009,7 +4021,11 @@ async function openPermissions(user, module) {
     const esAdmin = empresa.rol_codigo === 'GERENCIA_TOTAL';
     
     // Buscar el submódulo específico
-    const submodulo = submodulosData.find(s => s.nombre === module || s.codigo === module.toUpperCase());
+    const submodulo = submodulosData.find(s => 
+        s.nombre === module || 
+        s.codigo === module.toUpperCase() ||
+        module.toLowerCase().includes(s.nombre.toLowerCase())
+    );
     currentSubmoduloId = submodulo?.id || null;
     
     // Buscar permisos para este submódulo
@@ -4093,99 +4109,77 @@ async function openPermissions(user, module) {
 }
 
 // ============================================================
-// GUARDAR PERMISOS DESDE EL MODAL - CORREGIDO
+// NAVEGACIÓN
 // ============================================================
-document.getElementById("saveModal").addEventListener("click", async function() {
-    if (!currentPermissionsUserId || !currentPermissionsEmpresa) {
-        toast('❌ No hay usuario seleccionado');
-        return;
+const breadcrumbs = {
+    dashboard:"Inicio / Dashboard",
+    empresas:"Inicio / Configuración y seguridad / Empresas",
+    usuarios:"Inicio / Configuración y seguridad / Usuarios y permisos",
+    correlativos:"Inicio / Configuración y seguridad / Correlativos",
+    parametros:"Inicio / Configuración y seguridad / Parámetros generales",
+    integracion:"Inicio / Configuración y seguridad / Integración ERP",
+    maestros:"Inicio / Maestros",
+    productos:"Inicio / Productos",
+    ventas:"Inicio / Ventas",
+    compras:"Inicio / Compras",
+    inventario:"Inicio / Inventario",
+    finanzas:"Inicio / Finanzas / Tesorería",
+    reportes:"Inicio / Reportes",
+    herramientas:"Inicio / Herramientas",
+    papelera:"Inicio / Papelera / Auditoría"
+};
+
+const titles = {
+    dashboard:"Dashboard",
+    empresas:"Configuración y seguridad",
+    usuarios:"Configuración y seguridad",
+    correlativos:"Configuración y seguridad",
+    parametros:"Configuración y seguridad",
+    integracion:"Configuración y seguridad",
+    maestros:"Maestros",
+    productos:"Productos",
+    ventas:"Ventas",
+    compras:"Compras",
+    inventario:"Inventario",
+    finanzas:"Finanzas / Tesorería",
+    reportes:"Reportes",
+    herramientas:"Herramientas",
+    papelera:"Papelera / Auditoría"
+};
+
+function openScreen(screen){
+    currentScreen = screen;
+    
+    document.querySelectorAll(".section").forEach(sec => sec.classList.remove("active"));
+    const target = document.getElementById(screen);
+    if(target) target.classList.add("active");
+
+    document.querySelectorAll(".menu-header,.child-btn,.tab-btn").forEach(el => el.classList.remove("active"));
+    document.querySelectorAll(`[data-screen="${screen}"]`).forEach(el => el.classList.add("active"));
+
+    document.getElementById("breadcrumb").textContent = breadcrumbs[screen] || "Inicio";
+    document.getElementById("pageTitle").textContent = titles[screen] || "ERP Multiempresa";
+
+    document.getElementById("mainPanel").scrollTo({top:0, behavior:"smooth"});
+}
+
+function applyTheme(code){
+    const root = document.documentElement;
+    if(code === "AGD"){
+        root.style.setProperty("--empresa","#FC6200");
+        root.style.setProperty("--empresa-soft","#FFE7D1");
+        root.style.setProperty("--empresa-sidebar","#FFEEDC");
+        root.style.setProperty("--empresa-dark","#0F172A");
+        document.getElementById("logoEmpresa").textContent = "AGD";
+    }else{
+        root.style.setProperty("--empresa","#EF233C");
+        root.style.setProperty("--empresa-soft","#FFE4E8");
+        root.style.setProperty("--empresa-sidebar","#FFECEF");
+        root.style.setProperty("--empresa-dark","#1F1F1F");
+        document.getElementById("logoEmpresa").textContent = "KCF";
     }
-    
-    // Recopilar permisos del modal
-    const checks = document.querySelectorAll('.perm-check');
-    const permisosData = {};
-    
-    checks.forEach(check => {
-        const perm = check.dataset.perm;
-        if (perm) {
-            permisosData[perm] = check.checked;
-        }
-    });
-    
-    // Buscar el usuario
-    const u = usuariosData.find(item => item.id === currentPermissionsUserId);
-    if (!u) {
-        toast('❌ Usuario no encontrado');
-        return;
-    }
-    
-    try {
-        // Obtener submódulos
-        const submodulosResponse = await fetchAPI('/api/config/submodulos');
-        if (!submodulosResponse.success) {
-            toast('❌ Error al cargar submódulos');
-            return;
-        }
-        
-        const submodulos = submodulosResponse.data;
-        
-        // Crear permisos para CADA submódulo (no solo el actual)
-        const permisosList = [];
-        for (const sub of submodulos) {
-            // Si es el submódulo actual, usar los valores del modal
-            if (sub.id === currentSubmoduloId) {
-                permisosList.push({
-                    submodulo_id: sub.id,
-                    puede_ver: permisosData['puede_ver'] !== undefined ? permisosData['puede_ver'] : true,
-                    puede_crear: permisosData['puede_crear'] || false,
-                    puede_editar: permisosData['puede_editar'] || false,
-                    puede_aprobar: permisosData['puede_aprobar'] || false,
-                    puede_anular: permisosData['puede_anular'] || false,
-                    puede_eliminar: permisosData['puede_eliminar'] || false,
-                    puede_exportar: false,
-                    puede_subir_evidencia: false,
-                    observacion: ''
-                });
-            } else {
-                // Para otros submódulos, mantener los valores existentes o usar por defecto
-                // Buscar permiso existente
-                const existingPerm = await cargarPermisosUsuario(currentPermissionsUserId, currentPermissionsEmpresa);
-                const existing = existingPerm?.permisos?.find(p => p.submodulo_id === sub.id) || {};
-                
-                permisosList.push({
-                    submodulo_id: sub.id,
-                    puede_ver: existing.puede_ver !== undefined ? existing.puede_ver : true,
-                    puede_crear: existing.puede_crear || false,
-                    puede_editar: existing.puede_editar || false,
-                    puede_aprobar: existing.puede_aprobar || false,
-                    puede_anular: existing.puede_anular || false,
-                    puede_eliminar: existing.puede_eliminar || false,
-                    puede_exportar: existing.puede_exportar || false,
-                    puede_subir_evidencia: existing.puede_subir_evidencia || false,
-                    observacion: ''
-                });
-            }
-        }
-        
-        // Guardar permisos
-        const result = await guardarPermisosUsuario(
-            currentPermissionsUserId,
-            currentPermissionsEmpresa,
-            permisosList
-        );
-        
-        if (result) {
-            document.getElementById("modalPermisos").classList.remove("show");
-            // Recargar usuarios para actualizar los checkboxes
-            await loadUsuarios();
-            toast('✅ Permisos guardados correctamente');
-        }
-        
-    } catch (error) {
-        console.error('Error guardando permisos:', error);
-        toast('❌ Error al guardar permisos');
-    }
-});
+}
+
 // ============================================================
 // TOMAR CORRELATIVO
 // ============================================================
@@ -4215,16 +4209,15 @@ async function tomarCorrelativo(empresaCodigo, documento, anio = 2026) {
 }
 
 // ============================================================
-// INICIALIZACIÓN - CORREGIDA
+// INICIALIZACIÓN
 // ============================================================
 async function initDashboard(){
     console.log('🚀 Iniciando dashboard...');
     console.log('📋 FLASK_SESSION:', FLASK_SESSION);
     
-    // ✅ Verificar sesión - PRIMERO Flask, luego localStorage
+    // Verificar sesión
     let session = null;
     
-    // 1. Intentar con Flask
     if (FLASK_SESSION.isLoggedIn && FLASK_SESSION.user) {
         session = {
             user: FLASK_SESSION.user,
@@ -4233,7 +4226,6 @@ async function initDashboard(){
             rol: FLASK_SESSION.rol,
             fromFlask: true
         };
-        // Guardar en localStorage para persistencia
         localStorage.setItem('erp_session', JSON.stringify({
             user: session.user,
             name: session.name,
@@ -4243,7 +4235,6 @@ async function initDashboard(){
         }));
     }
     
-    // 2. Si no hay sesión de Flask, intentar con localStorage
     if (!session) {
         try {
             const data = localStorage.getItem('erp_session');
@@ -4263,7 +4254,6 @@ async function initDashboard(){
         }
     }
     
-    // 3. Si NO hay sesión, redirigir al login
     if (!session || !session.user) {
         console.log('🔴 No hay sesión, redirigiendo a login');
         window.location.href = '/login';
@@ -4272,16 +4262,19 @@ async function initDashboard(){
     
     console.log('✅ Sesión encontrada:', session);
     
-    // ✅ Mostrar usuario en la interfaz
+    // Mostrar usuario
     document.getElementById('userName').textContent = session.name || session.user;
     document.getElementById('userAvatar').textContent = (session.name || session.user)[0].toUpperCase();
     
-    // ✅ Aplicar tema según empresa
+    // Aplicar tema
     const empresaSession = session.empresa || 'KCF';
     document.getElementById('empresaActiva').value = empresaSession;
     applyTheme(empresaSession);
     
-    // ✅ Cargar datos
+    // Cargar submódulos primero
+    await cargarSubmodulos();
+    
+    // Cargar datos
     try {
         await loadEmpresas();
         await loadUsuarios();
@@ -4291,7 +4284,7 @@ async function initDashboard(){
         toast('Error al cargar datos. Recarga la página.');
     }
     
-    // Eventos de navegación...
+    // Eventos de navegación
     document.querySelectorAll(".menu-header, .child-btn, .tab-btn, .crumb-btn").forEach(el => {
         el.addEventListener("click", function(e) {
             const screen = this.dataset.screen;
@@ -4327,7 +4320,67 @@ async function initDashboard(){
     
     // Modal
     document.getElementById("closeModal").addEventListener("click", () => document.getElementById("modalPermisos").classList.remove("show"));
-    document.getElementById("saveModal").addEventListener("click", () => document.getElementById("modalPermisos").classList.remove("show"));
+    
+    // Guardar permisos desde el modal - CORREGIDO
+    document.getElementById("saveModal").addEventListener("click", async function() {
+        if (!currentPermissionsUserId || !currentPermissionsEmpresa) {
+            toast('❌ No hay usuario seleccionado');
+            return;
+        }
+        
+        // Recopilar permisos del modal
+        const checks = document.querySelectorAll('.perm-check');
+        const permisosData = {};
+        
+        checks.forEach(check => {
+            const perm = check.dataset.perm;
+            if (perm) {
+                permisosData[perm] = check.checked;
+            }
+        });
+        
+        try {
+            // Buscar el submódulo actual
+            const submodulo = submodulosData.find(s => s.id === currentSubmoduloId);
+            if (!submodulo) {
+                toast('❌ No se encontró el submódulo');
+                return;
+            }
+            
+            // Crear permisos para el submódulo actual
+            const permisosList = [{
+                submodulo_id: currentSubmoduloId,
+                puede_ver: permisosData['puede_ver'] !== undefined ? permisosData['puede_ver'] : true,
+                puede_crear: permisosData['puede_crear'] || false,
+                puede_editar: permisosData['puede_editar'] || false,
+                puede_aprobar: permisosData['puede_aprobar'] || false,
+                puede_anular: permisosData['puede_anular'] || false,
+                puede_eliminar: permisosData['puede_eliminar'] || false,
+                puede_exportar: false,
+                puede_subir_evidencia: false,
+                observacion: ''
+            }];
+            
+            // Guardar permisos
+            const result = await guardarPermisosUsuario(
+                currentPermissionsUserId,
+                currentPermissionsEmpresa,
+                permisosList
+            );
+            
+            if (result) {
+                document.getElementById("modalPermisos").classList.remove("show");
+                await loadUsuarios();
+                toast('✅ Permisos guardados correctamente');
+            } else {
+                toast('❌ Error al guardar permisos');
+            }
+            
+        } catch (error) {
+            console.error('Error guardando permisos:', error);
+            toast('❌ Error al guardar permisos');
+        }
+    });
     
     // Simular integración
     document.getElementById("btnSimularIntegracion").addEventListener("click", function(){
@@ -4360,11 +4413,53 @@ async function initDashboard(){
         await loadCorrelativos();
     });
     
+    // Botón limpiar correlativo
+    document.getElementById("btnLimpiarCorrelativo").addEventListener("click", function(){
+        document.getElementById("corrEmpresa").value = "KCF";
+        document.getElementById("corrDocumento").value = "Cotización";
+        document.getElementById("corrEstado").value = "Activo";
+        document.getElementById("corrPrefijo").value = "COT-KCF";
+        document.getElementById("corrAnio").value = "2026";
+        document.getElementById("corrUltimo").value = "0";
+        document.getElementById("corrFormMode").textContent = "Modo: creando nuevo correlativo";
+        document.getElementById("corrPreview").textContent = "COT-KCF-2026-0001";
+        toast('Formulario limpiado');
+    });
+    
+    // Actualizar preview del correlativo
+    document.getElementById("corrEmpresa").addEventListener("change", updateCorrPreview);
+    document.getElementById("corrDocumento").addEventListener("change", updateCorrPreview);
+    document.getElementById("corrPrefijo").addEventListener("input", updateCorrPreview);
+    document.getElementById("corrAnio").addEventListener("input", updateCorrPreview);
+    document.getElementById("corrUltimo").addEventListener("input", updateCorrPreview);
+    
+    function updateCorrPreview() {
+        const prefijo = document.getElementById("corrPrefijo").value || "PRE";
+        const anio = document.getElementById("corrAnio").value || "2026";
+        const ultimo = parseInt(document.getElementById("corrUltimo").value) || 0;
+        const siguiente = String(ultimo + 1).padStart(4, '0');
+        document.getElementById("corrPreview").textContent = `${prefijo}-${anio}-${siguiente}`;
+    }
+    
+    // Botón nuevo correlativo
+    document.getElementById("btnNuevoCorrelativo").addEventListener("click", function(){
+        document.getElementById("corrEmpresa").value = "KCF";
+        document.getElementById("corrDocumento").value = "Cotización";
+        document.getElementById("corrEstado").value = "Activo";
+        document.getElementById("corrPrefijo").value = "COT-KCF";
+        document.getElementById("corrAnio").value = "2026";
+        document.getElementById("corrUltimo").value = "0";
+        document.getElementById("corrFormMode").textContent = "Modo: creando nuevo correlativo";
+        updateCorrPreview();
+        toast('Formulario listo para nuevo correlativo');
+    });
+    
     // Abrir pantalla inicial
     openScreen('empresas');
     
     console.log('✅ Dashboard inicializado correctamente');
 }
+
 // Iniciar cuando el DOM esté listo
 document.addEventListener("DOMContentLoaded", initDashboard);
 </script>

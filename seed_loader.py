@@ -1,13 +1,3 @@
-# seed_loader.py
-# Script de carga de datos semilla (casos prueba) a demanda.
-# Idempotente: si ya existe un registro único (usuario/ruc/código), lo omite en vez de fallar.
-#
-# Uso:
-#   python seed_loader.py seed_data.json
-# Opcional (reset total):
-#   python seed_loader.py seed_data.json --reset
-
-# seed_loader.py (VERSIÓN POSTGRESQL)
 import json
 import sys
 
@@ -71,7 +61,7 @@ def load_seed(path: str):
             familia=pr["familia"],
             descripcion=pr["descripcion"],
             descripcion_larga=pr.get("descripcion_larga", ""),
-            marca=pr.get("marca", ""),git add .
+            marca=pr.get("marca", ""),
             modelo=pr.get("modelo", ""),
             unidad=pr.get("unidad", "Unidad")
         )
