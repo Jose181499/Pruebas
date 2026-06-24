@@ -3761,21 +3761,22 @@ async function cargarSubmodulos() {
         console.log('⚠️ Backend no disponible, usando submódulos por defecto');
     }
     
+   // Verifica que los nombres coincidan con los de la tabla
     submodulosData = [
-        { id: 1, nombre: 'Configuración', codigo: 'CONFIGURACION' },
-        { id: 2, nombre: 'Maestros', codigo: 'MAESTROS' },
-        { id: 3, nombre: 'Productos', codigo: 'PRODUCTOS' },
-        { id: 4, nombre: 'Cotizaciones', codigo: 'COTIZACIONES' },
-        { id: 5, nombre: 'Ventas', codigo: 'VENTAS' },
-        { id: 6, nombre: 'Compras', codigo: 'COMPRAS' },
-        { id: 7, nombre: 'Logística', codigo: 'LOGISTICA' },
-        { id: 8, nombre: 'Inventario', codigo: 'INVENTARIO' },
-        { id: 9, nombre: 'CxC', codigo: 'CXC' },
-        { id: 10, nombre: 'CxP', codigo: 'CXP' },
-        { id: 11, nombre: 'Caja', codigo: 'CAJA' },
-        { id: 12, nombre: 'Reportes', codigo: 'REPORTES' },
-        { id: 13, nombre: 'SUNAT', codigo: 'SUNAT' }
-    ];
+    { id: 1, nombre: 'Configuración', codigo: 'CONFIGURACION' },
+    { id: 2, nombre: 'Maestros', codigo: 'MAESTROS' },
+    { id: 3, nombre: 'Productos', codigo: 'PRODUCTOS' },
+    { id: 4, nombre: 'Cotizaciones', codigo: 'COTIZACIONES' },
+    { id: 5, nombre: 'Ventas', codigo: 'VENTAS' },
+    { id: 6, nombre: 'Compras', codigo: 'COMPRAS' },
+    { id: 7, nombre: 'Logística', codigo: 'LOGISTICA' },
+    { id: 8, nombre: 'Inventario', codigo: 'INVENTARIO' },
+    { id: 9, nombre: 'CxC', codigo: 'CXC' },
+    { id: 10, nombre: 'CxP', codigo: 'CXP' },
+    { id: 11, nombre: 'Caja', codigo: 'CAJA' },
+    { id: 12, nombre: 'Reportes', codigo: 'REPORTES' },
+    { id: 13, nombre: 'SUNAT', codigo: 'SUNAT' }
+];
     
     return submodulosData;
 }
@@ -3872,6 +3873,9 @@ function checkEye(tienePermiso, user, module, userId, empresaId) {
 // ============================================================
 // MANEJAR CAMBIO DE PERMISOS DESDE LA TABLA
 // ============================================================
+// ============================================================
+// MANEJAR CAMBIO DE PERMISOS DESDE LA TABLA - CORREGIDO
+// ============================================================
 async function togglePermiso(event) {
     const checkbox = event.target;
     const userId = checkbox.dataset.userId;
@@ -3885,17 +3889,68 @@ async function togglePermiso(event) {
         return;
     }
     
-    // Buscar el submódulo
-    const submodulo = submodulosData.find(s => 
-        s.nombre === module || 
-        s.codigo === module.toUpperCase() ||
-        module.toLowerCase().includes(s.nombre.toLowerCase())
-    );
+    // Buscar el submódulo de forma más flexible
+    let submodulo = null;
+    
+    // 1. Buscar por nombre exacto
+    submodulo = submodulosData.find(s => s.nombre === module);
+    
+    // 2. Si no, buscar por coincidencia parcial
+    if (!submodulo) {
+        submodulo = submodulosData.find(s => 
+            module.toLowerCase().includes(s.nombre.toLowerCase()) ||
+            s.nombre.toLowerCase().includes(module.toLowerCase())
+        );
+    }
+    
+    // 3. Si no, buscar por código
+    if (!submodulo) {
+        const codigo = module.toUpperCase().replace(/ /g, '_').replace(/\./g, '');
+        submodulo = submodulosData.find(s => s.codigo === codigo);
+    }
+    
+    // 4. Si no, buscar por código parcial
+    if (!submodulo) {
+        const codigo = module.toUpperCase().replace(/ /g, '_').replace(/\./g, '');
+        submodulo = submodulosData.find(s => 
+            s.codigo.includes(codigo) || codigo.includes(s.codigo)
+        );
+    }
+    
+    // 5. Último intento: buscar por nombre en el módulo
+    if (!submodulo) {
+        // Mapeo manual de nombres comunes
+        const nombreMap = {
+            'Config': 'Configuración',
+            'Config.': 'Configuración',
+            'Maestros': 'Maestros',
+            'Productos': 'Productos',
+            'Cotiz': 'Cotizaciones',
+            'Cotiz.': 'Cotizaciones',
+            'Ventas': 'Ventas',
+            'Compras': 'Compras',
+            'Logística': 'Logística',
+            'Invent': 'Inventario',
+            'Invent.': 'Inventario',
+            'CxC': 'CxC',
+            'CxP': 'CxP',
+            'Caja': 'Caja',
+            'Reportes': 'Reportes',
+            'SUNAT': 'SUNAT'
+        };
+        const nombreReal = nombreMap[module] || module;
+        submodulo = submodulosData.find(s => s.nombre === nombreReal);
+    }
     
     if (!submodulo) {
-        toast('❌ Módulo no encontrado');
+        toast(`❌ Módulo "${module}" no encontrado en el sistema`);
+        console.error('Módulo no encontrado:', module);
+        console.log('Submódulos disponibles:', submodulosData);
+        checkbox.checked = !tienePermiso;
         return;
     }
+    
+    console.log(`✅ Módulo encontrado: ${submodulo.nombre} (ID: ${submodulo.id})`);
     
     // Crear el permiso para guardar
     const permisosList = [{
@@ -3914,7 +3969,7 @@ async function togglePermiso(event) {
     try {
         const result = await guardarPermisosUsuario(userId, empresaId, permisosList);
         if (result) {
-            toast(`✅ ${tienePermiso ? 'Habilitado' : 'Deshabilitado'} ${module} para ${user}`);
+            toast(`✅ ${tienePermiso ? 'Habilitado' : 'Deshabilitado'} ${submodulo.nombre} para ${user}`);
             // Recargar la tabla para reflejar cambios
             await loadUsuarios();
         } else {
@@ -3928,7 +3983,6 @@ async function togglePermiso(event) {
         toast('❌ Error al guardar permiso');
     }
 }
-
 // ============================================================
 // RENDER USUARIOS - VERSIÓN CON CHECKBOXES INTERACTIVOS
 // ============================================================
@@ -4066,6 +4120,9 @@ async function renderUsuarios(filter=""){
 // ============================================================
 // OPEN PERMISSIONS - VERSIÓN CORREGIDA
 // ============================================================
+// ============================================================
+// OPEN PERMISSIONS - VERSIÓN CORREGIDA
+// ============================================================
 async function openPermissions(user, module, userId, empresaId) {
     console.log('👁️ Abriendo permisos para:', user, module, userId, empresaId);
     
@@ -4118,18 +4175,57 @@ async function openPermissions(user, module, userId, empresaId) {
     const empresa = u.empresas_acceso?.find(e => e.empresa_id === empresaIdFinal);
     const esAdmin = empresa?.rol_codigo === 'GERENCIA_TOTAL';
     
-    // Buscar el submódulo específico
-    const submodulo = submodulosData.find(s => 
-        s.nombre === module || 
-        s.codigo === module.toUpperCase() ||
-        module.toLowerCase().includes(s.nombre.toLowerCase())
-    );
-    currentSubmoduloId = submodulo?.id || null;
+    // Buscar el submódulo específico de forma flexible
+    let submodulo = null;
     
-    // Si no se encuentra el submódulo, usar el primer submódulo
-    if (!currentSubmoduloId && submodulosData.length > 0) {
-        currentSubmoduloId = submodulosData[0].id;
+    // 1. Buscar por nombre exacto
+    submodulo = submodulosData.find(s => s.nombre === module);
+    
+    // 2. Si no, buscar por coincidencia parcial
+    if (!submodulo) {
+        submodulo = submodulosData.find(s => 
+            module.toLowerCase().includes(s.nombre.toLowerCase()) ||
+            s.nombre.toLowerCase().includes(module.toLowerCase())
+        );
     }
+    
+    // 3. Si no, buscar por código
+    if (!submodulo) {
+        const codigo = module.toUpperCase().replace(/ /g, '_').replace(/\./g, '');
+        submodulo = submodulosData.find(s => s.codigo === codigo);
+    }
+    
+    // 4. Mapeo manual
+    if (!submodulo) {
+        const nombreMap = {
+            'Config': 'Configuración',
+            'Config.': 'Configuración',
+            'Maestros': 'Maestros',
+            'Productos': 'Productos',
+            'Cotiz': 'Cotizaciones',
+            'Cotiz.': 'Cotizaciones',
+            'Ventas': 'Ventas',
+            'Compras': 'Compras',
+            'Logística': 'Logística',
+            'Invent': 'Inventario',
+            'Invent.': 'Inventario',
+            'CxC': 'CxC',
+            'CxP': 'CxP',
+            'Caja': 'Caja',
+            'Reportes': 'Reportes',
+            'SUNAT': 'SUNAT'
+        };
+        const nombreReal = nombreMap[module] || module;
+        submodulo = submodulosData.find(s => s.nombre === nombreReal);
+    }
+    
+    if (!submodulo && submodulosData.length > 0) {
+        // Si no se encuentra, usar el primer submódulo como fallback
+        submodulo = submodulosData[0];
+        console.warn('⚠️ Usando submódulo por defecto:', submodulo);
+    }
+    
+    currentSubmoduloId = submodulo?.id || null;
     
     // Buscar permisos para este submódulo
     const permiso = permisosData?.permisos?.find(p => p.submodulo_id === currentSubmoduloId) || {};
@@ -4236,7 +4332,6 @@ async function openPermissions(user, module, userId, empresaId) {
 
     document.getElementById("modalPermisos").classList.add("show");
 }
-
 // ============================================================
 // GUARDAR PERMISOS - VERSIÓN CORREGIDA
 // ============================================================
