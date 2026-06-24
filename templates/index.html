@@ -8,6 +8,7 @@
 
 
 <style>
+
 :root{
   --empresa:#EF233C;
   --empresa-soft:#FFE4E8;
@@ -3544,6 +3545,29 @@ h1{
 </div>
 
 <script>
+// ============================================================
+// DATOS DE SESIÓN DESDE FLASK - VERSIÓN SIMPLIFICADA
+// ============================================================
+const FLASK_SESSION = {
+    user: '{{ usuario or "" }}',
+    name: '{{ nombre or "Usuario" }}',
+    empresa: '{{ empresa or "KCF" }}',
+    rol: '{{ rol or "usuario" }}'
+};
+
+// ✅ Determinar isLoggedIn basado en user
+FLASK_SESSION.isLoggedIn = FLASK_SESSION.user && FLASK_SESSION.user !== '';
+
+// ✅ Si el usuario está vacío, usar valores por defecto
+if (!FLASK_SESSION.isLoggedIn) {
+    console.log('📋 No hay sesión activa');
+    FLASK_SESSION.user = '';
+    FLASK_SESSION.name = 'Usuario';
+    FLASK_SESSION.empresa = 'KCF';
+    FLASK_SESSION.rol = 'usuario';
+}
+
+console.log('📋 FLASK_SESSION:', FLASK_SESSION);
 
 // ============================================================
 // VARIABLES GLOBALES
@@ -3559,24 +3583,54 @@ let currentScreen = 'empresas';
 // FUNCIONES DE UTILIDAD
 // ============================================================
 function badge(code){
-  if(code === "KCF") return '<span class="badge badge-kcf">KCF</span>';
-  if(code === "AGD") return '<span class="badge badge-agd">AGD</span>';
-  return '<span class="badge badge-gray">'+code+'</span>';
+    if(code === "KCF") return '<span class="badge badge-kcf">KCF</span>';
+    if(code === "AGD") return '<span class="badge badge-agd">AGD</span>';
+    return '<span class="badge badge-gray">'+code+'</span>';
 }
 
 function toast(msg){
-  const el = document.createElement("div");
-  el.className = "toast";
-  el.textContent = msg;
-  document.body.appendChild(el);
-  setTimeout(() => el.remove(), 2200);
+    const el = document.createElement("div");
+    el.className = "toast";
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2200);
 }
 
+// ============================================================
+// FUNCIÓN getSession() - CORREGIDA
+// ============================================================
 function getSession(){
-  try{
-    const data = localStorage.getItem('erp_session');
-    return data ? JSON.parse(data) : null;
-  }catch(e){ return null; }
+    // ✅ PRIMERO: Usar datos de Flask (vienen del servidor)
+    if (FLASK_SESSION.isLoggedIn && FLASK_SESSION.user) {
+        console.log('📋 Sesión desde Flask:', FLASK_SESSION);
+        return {
+            user: FLASK_SESSION.user,
+            name: FLASK_SESSION.name,
+            empresa: FLASK_SESSION.empresa,
+            rol: FLASK_SESSION.rol,
+            fromFlask: true
+        };
+    }
+    
+    // ✅ SEGUNDO: Fallback a localStorage (para compatibilidad)
+    try{
+        const data = localStorage.getItem('erp_session');
+        if (data) {
+            const parsed = JSON.parse(data);
+            // Verificar que no haya expirado (8 horas)
+            const sessionTime = new Date(parsed.timestamp);
+            const now = new Date();
+            const diffHours = (now - sessionTime) / (1000 * 60 * 60);
+            if (diffHours < 8) {
+                return parsed;
+            }
+            localStorage.removeItem('erp_session');
+        }
+        return null;
+    }catch(e){ 
+        console.error('Error al leer localStorage:', e);
+        return null; 
+    }
 }
 
 // ============================================================
@@ -3961,21 +4015,39 @@ async function tomarCorrelativo(empresaCodigo, documento, anio = 2026) {
 // INICIALIZACIÓN
 // ============================================================
 async function initDashboard(){
-    // Verificar sesión
+    console.log('🚀 Iniciando dashboard...');
+    
+    // ✅ Verificar sesión usando la función corregida
     const session = getSession();
-    if(!session){
+    console.log('📋 Sesión:', session);
+    
+    if(!session || !session.user){
+        console.log('🔴 No hay sesión, redirigiendo a login');
         window.location.href = '/login';
         return;
     }
     
-    // Mostrar usuario en la interfaz
+    console.log('✅ Sesión encontrada:', session.user);
+    
+    // ✅ Mostrar usuario en la interfaz
     document.getElementById('userName').textContent = session.name || session.user;
     document.getElementById('userAvatar').textContent = (session.name || session.user)[0].toUpperCase();
     
-    // Aplicar tema según empresa de sesión
+    // ✅ Aplicar tema según empresa
     const empresaSession = session.empresa || 'KCF';
     document.getElementById('empresaActiva').value = empresaSession;
     applyTheme(empresaSession);
+    
+    // ✅ Si la sesión viene de Flask, guardar en localStorage para persistencia
+    if (session.fromFlask) {
+        localStorage.setItem('erp_session', JSON.stringify({
+            user: session.user,
+            name: session.name,
+            empresa: session.empresa,
+            rol: session.rol,
+            timestamp: new Date().toISOString()
+        }));
+    }
     
     // Cargar datos
     await loadEmpresas();
