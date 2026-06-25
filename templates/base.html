@@ -1069,57 +1069,48 @@ document.getElementById("saveModal").addEventListener("click", async function() 
 function aplicarPermisosInterfaz(esAdmin, permisosMap) {
     console.log('🔐 Aplicando permisos - esAdmin:', esAdmin);
     
+    // ✅ SIEMPRE MOSTRAR EL DASHBOARD (no se oculta nunca)
+    document.querySelectorAll('.menu-group').forEach(group => {
+        const header = group.querySelector('.menu-header');
+        if (header?.textContent?.includes('Dashboard') || header?.textContent?.includes('0 ─ Dashboard')) {
+            group.style.display = '';
+            group.querySelectorAll('.child-btn').forEach(child => {
+                child.style.display = '';
+            });
+        }
+    });
+    
     if (esAdmin) {
         document.querySelectorAll('.menu-group, .menu-header, .child-btn, .tab-btn').forEach(el => {
             el.style.display = '';
         });
+        console.log('👑 Usuario admin - mostrando todo');
         return;
     }
     
-    // ✅ CREAR UN MAPA DE MÓDULOS CON SUS SUBMÓDULOS
-    // Agrupar submódulos por módulo
-    const modulosAgrupados = {};
-    submodulosData.forEach(sub => {
-        const moduloNombre = sub.modulo_nombre || sub.nombre;
-        if (!modulosAgrupados[moduloNombre]) {
-            modulosAgrupados[moduloNombre] = [];
-        }
-        modulosAgrupados[moduloNombre].push(sub);
-    });
-    
-    console.log('📋 Módulos agrupados:', Object.keys(modulosAgrupados));
-    
-    // ✅ MÓDULOS QUE UN OPERATIVO PUEDE VER POR DEFECTO
     const modulosOperativos = ['Productos', 'Cotizaciones', 'Ventas', 'Compras', 'Logística', 'Inventario'];
-    
-    // ✅ MÓDULOS RESTRINGIDOS (solo con permiso explícito)
     const modulosRestringidos = ['Configuración', 'Maestros', 'CxC', 'CxP', 'Caja', 'Reportes', 'SUNAT'];
     
-    // Para cada submódulo, decidir si mostrar
     submodulosData.forEach(sub => {
         const nombre = sub.nombre;
         const subId = sub.id;
-        const moduloNombre = sub.modulo_nombre || nombre;
-        
-        // Buscar el permiso
         const permiso = permisosMap ? permisosMap[subId] : null;
         const tienePermiso = permiso?.puede_ver || false;
         
-        // Decidir si mostrar
         let debeMostrar = false;
         
-        // ✅ Si tiene permiso explícito, MOSTRAR
+        // ✅ Si tiene permiso explícito, SIEMPRE mostrar
         if (tienePermiso) {
             debeMostrar = true;
             console.log(`✅ ${nombre}: tiene permiso EXPLÍCITO -> mostrar`);
         } 
-        // ✅ Si es operativo, mostrar
+        // ✅ Si es operativo, mostrar por defecto
         else if (modulosOperativos.includes(nombre)) {
             debeMostrar = true;
             console.log(`✅ ${nombre}: es operativo -> mostrar por defecto`);
         } 
         // ✅ Si es restringido y NO tiene permiso, ocultar
-        else if (modulosRestringidos.includes(nombre)) {
+        else if (modulosRestringidos.includes(nombre) && !tienePermiso) {
             debeMostrar = false;
             console.log(`❌ ${nombre}: es restringido y no tiene permiso -> ocultar`);
         } 
@@ -1128,30 +1119,31 @@ function aplicarPermisosInterfaz(esAdmin, permisosMap) {
             console.log(`❌ ${nombre}: sin permiso -> ocultar`);
         }
         
-        // ✅ BUSCAR POR TEXTO EN child-btn
+        // Aplicar a child-btn
         document.querySelectorAll('.child-btn').forEach(el => {
             const texto = el.textContent.trim();
-            // Coincidencia exacta o parcial
-            if (texto === nombre || texto.includes(nombre) || nombre.includes(texto) || 
-                texto === moduloNombre || texto.includes(moduloNombre)) {
+            if (texto === nombre || texto.includes(nombre) || nombre.includes(texto)) {
                 el.style.display = debeMostrar ? '' : 'none';
-                console.log(`   🔹 child-btn "${texto}" -> ${debeMostrar ? 'visible' : 'oculto'}`);
             }
         });
         
-        // ✅ BUSCAR POR TEXTO EN tab-btn
+        // Aplicar a tab-btn
         document.querySelectorAll('.tab-btn').forEach(el => {
             const texto = el.textContent.trim();
-            if (texto === nombre || texto.includes(nombre) || nombre.includes(texto) ||
-                texto === moduloNombre || texto.includes(moduloNombre)) {
+            if (texto === nombre || texto.includes(nombre) || nombre.includes(texto)) {
                 el.style.display = debeMostrar ? '' : 'none';
-                console.log(`   🔹 tab-btn "${texto}" -> ${debeMostrar ? 'visible' : 'oculto'}`);
             }
         });
     });
     
-    // ✅ OCULTAR GRUPOS DE MENÚ SIN HIJOS VISIBLES
+    // ✅ OCULTAR GRUPOS DE MENÚ SIN HIJOS VISIBLES (excepto Dashboard)
     document.querySelectorAll('.menu-group').forEach(group => {
+        const header = group.querySelector('.menu-header');
+        const isDashboard = header?.textContent?.includes('Dashboard') || 
+                           header?.textContent?.includes('0 ─ Dashboard');
+        
+        if (isDashboard) return; // Saltar el Dashboard
+        
         const children = group.querySelectorAll('.child-btn');
         let hasVisible = false;
         children.forEach(child => {
@@ -1160,13 +1152,8 @@ function aplicarPermisosInterfaz(esAdmin, permisosMap) {
             }
         });
         
-        const header = group.querySelector('.menu-header');
-        const isDashboard = header?.textContent?.includes('Dashboard') || 
-                           header?.textContent?.includes('0 ─ Dashboard');
-        
-        if (!hasVisible && !isDashboard) {
+        if (!hasVisible) {
             group.style.display = 'none';
-            console.log(`🔹 Grupo oculto (sin hijos visibles)`);
         } else {
             group.style.display = '';
         }
@@ -1174,10 +1161,6 @@ function aplicarPermisosInterfaz(esAdmin, permisosMap) {
     
     console.log('✅ Permisos aplicados a la interfaz');
 }
-// ============================================================
-// ============================================================
-// CARGAR PERMISOS DEL USUARIO LOGUEADO - CORREGIDA
-// ============================================================
 // ============================================================
 // CARGAR PERMISOS DEL USUARIO LOGUEADO - CORREGIDA DEFINITIVA
 // ============================================================
