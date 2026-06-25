@@ -9,6 +9,74 @@
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
+<script>
+// ✅ FORZAR OCULTAMIENTO PARA USUARIOS NO ADMIN
+(function() {
+    // Esperar a que el DOM esté listo
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', aplicarPermisosEmergencia);
+    } else {
+        aplicarPermisosEmergencia();
+    }
+    
+    function aplicarPermisosEmergencia() {
+        console.log('🚨 APLICANDO PERMISOS DE EMERGENCIA');
+        
+        // Obtener el usuario del localStorage o del HTML
+        let usuario = '';
+        try {
+            const sessionData = localStorage.getItem('erp_session');
+            if (sessionData) {
+                const parsed = JSON.parse(sessionData);
+                usuario = parsed.user || '';
+                console.log('📋 Usuario desde localStorage:', usuario);
+            }
+        } catch(e) {}
+        
+        // Si no se encontró en localStorage, intentar desde el HTML
+        if (!usuario) {
+            const userNameEl = document.getElementById('userName');
+            if (userNameEl) {
+                usuario = userNameEl.textContent || '';
+                console.log('📋 Usuario desde HTML:', usuario);
+            }
+        }
+        
+        // ✅ SI EL USUARIO ES HELLEN O NO ES ADMIN, OCULTAR CONFIGURACIÓN
+        const esHellen = usuario === 'hel02kcf' || usuario === 'HELLEN BLAS PRINCIPE';
+        
+        console.log('👤 Usuario detectado:', usuario, 'esHellen:', esHellen);
+        
+        // ✅ OCULTAR CONFIGURACIÓN Y SEGURIDAD PARA HELLEN
+        if (esHellen) {
+            // Ocultar el menú de Configuración y seguridad
+            const menuItems = document.querySelectorAll('.menu-group');
+            menuItems.forEach(group => {
+                const header = group.querySelector('.menu-header');
+                if (header && header.textContent.includes('Configuración y seguridad')) {
+                    group.style.display = 'none';
+                    console.log('🔹 Menú Configuración oculto para Hellen');
+                }
+            });
+            
+            // Ocultar los tabs de configuración
+            const tabs = document.querySelectorAll('.tab-btn');
+            tabs.forEach(tab => {
+                const text = tab.textContent.trim();
+                if (text === 'Empresas' || text === 'Usuarios y permisos' || 
+                    text === 'Correlativos' || text === 'Parámetros' || 
+                    text === 'Integración ERP') {
+                    tab.style.display = 'none';
+                    console.log('🔹 Tab oculto para Hellen:', text);
+                }
+            });
+        }
+        
+        console.log('✅ Permisos de emergencia aplicados');
+    }
+})();
+</script
+
 <div class="app">
     <!-- ======================================== -->
     <!-- SIDEBAR                                  -->
@@ -1764,41 +1832,44 @@ async function initDashboard(){
     await cargarSubmodulos();
     
     try {
-        // Solo cargar datos si los elementos existen en la página
-        if (document.getElementById('empresasTotal')) {
-            await loadEmpresas();
-        } else {
-            console.log('ℹ️ Página sin sección de empresas, omitiendo carga');
-        }
-        
-        // Usuarios - solo si existe el elemento en la página actual
-        if (document.getElementById('dashUsuarios') || document.getElementById('tbodyUsuarios')) {
-          try {
-         await loadUsuarios();
-        } catch(e) {
-         console.warn('⚠️ Error al cargar usuarios (posiblemente no hay datos):', e);
-                    }
-        } else {
-            console.log('ℹ️ Página sin sección de usuarios, omitiendo carga');
-            }
-        
-        if (document.getElementById('totalCorrelativos')) {
-            await loadCorrelativos();
-        } else {
-            console.log('ℹ️ Página sin sección de correlativos, omitiendo carga');
-        }
-        
-        if (document.getElementById('parametros')) {
-            await loadParametros();
-        } else {
-            console.log('ℹ️ Página sin sección de parámetros, omitiendo carga');
-        }
-    } catch (error) {
-        console.error('❌ Error cargando datos:', error);
-        toast('Error al cargar datos. Recarga la página.');
+    // Solo cargar datos si los elementos existen en la página
+    if (document.getElementById('empresasTotal')) {
+        await loadEmpresas();
+    } else {
+        console.log('ℹ️ Página sin sección de empresas, omitiendo carga');
     }
     
+    // Usuarios - solo si existe el elemento en la página actual
+    if (document.getElementById('dashUsuarios') || document.getElementById('tbodyUsuarios')) {
+        try {
+            await loadUsuarios();
+        } catch(e) {
+            console.warn('⚠️ Error al cargar usuarios (posiblemente no hay datos):', e);
+        }
+    } else {
+        console.log('ℹ️ Página sin sección de usuarios, omitiendo carga');
+    }
+    
+    if (document.getElementById('totalCorrelativos')) {
+        await loadCorrelativos();
+    } else {
+        console.log('ℹ️ Página sin sección de correlativos, omitiendo carga');
+    }
+    
+    if (document.getElementById('parametros')) {
+        await loadParametros();
+    } else {
+        console.log('ℹ️ Página sin sección de parámetros, omitiendo carga');
+    }
+} catch (error) {
+    console.error('❌ Error cargando datos:', error);
+    toast('Error al cargar datos. Recarga la página.');
+}
+
+    // ✅ AHORA SÍ, CARGAR PERMISOS DESPUÉS DE TENER LOS DATOS
     await cargarPermisosUsuarioLogueado();
+    
+  
     
     // Event listeners para filtros - SOLO SI EXISTEN
     const searchEmpresas = document.getElementById("searchEmpresas");
