@@ -1,23 +1,26 @@
-﻿from flask import Blueprint, render_template
-
-empresas_bp = Blueprint('empresas', __name__)
-
-@empresas_bp.route('/empresas')
-def empresas():
-    return render_template('empresas.html')
-
-# routes/empresas.py
-from flask import Blueprint, request, jsonify
+﻿# routes/empresas.py
+from flask import Blueprint, render_template, request, jsonify
 from database import db_query, db_tx
 from psycopg2.extras import RealDictCursor
 
-empresas_bp = Blueprint('empresas', __name__, url_prefix='/api/config')
+# ============================================================
+# BLUEPRINT - UN SOLO Blueprint para todo
+# ============================================================
+empresas_bp = Blueprint('empresas', __name__)
 
 # ============================================================
-# 1. EMPRESAS
+# RUTA PARA LA PÁGINA HTML
+# ============================================================
+@empresas_bp.route('/empresas')
+def empresas_page():
+    """Página de empresas"""
+    return render_template('empresas.html')
+
+# ============================================================
+# ENDPOINTS API PARA EMPRESAS
 # ============================================================
 
-@empresas_bp.route('/empresas', methods=['GET'])
+@empresas_bp.route('/api/config/empresas', methods=['GET'])
 def get_empresas():
     """Obtener todas las empresas activas con sus cuentas bancarias"""
     try:
@@ -72,7 +75,7 @@ def get_empresas():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@empresas_bp.route('/empresas/<empresa_id>', methods=['GET'])
+@empresas_bp.route('/api/config/empresas/<empresa_id>', methods=['GET'])
 def get_empresa(empresa_id):
     """Obtener una empresa específica con sus cuentas"""
     try:
@@ -128,7 +131,7 @@ def get_empresa(empresa_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@empresas_bp.route('/empresas', methods=['POST'])
+@empresas_bp.route('/api/config/empresas', methods=['POST'])
 def create_empresa():
     """Crear una nueva empresa"""
     try:
@@ -198,7 +201,7 @@ def create_empresa():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@empresas_bp.route('/empresas/<empresa_id>', methods=['PUT'])
+@empresas_bp.route('/api/config/empresas/<empresa_id>', methods=['PUT'])
 def update_empresa(empresa_id):
     """Actualizar una empresa existente"""
     try:
@@ -251,7 +254,7 @@ def update_empresa(empresa_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@empresas_bp.route('/empresas/<empresa_id>', methods=['DELETE'])
+@empresas_bp.route('/api/config/empresas/<empresa_id>', methods=['DELETE'])
 def delete_empresa(empresa_id):
     """Eliminar empresa (borrado lógico)"""
     try:

@@ -493,9 +493,10 @@ async function cargarSubmodulos() {
 // ============================================================
 async function loadEmpresas(){
     try {
-        // ✅ VERIFICAR QUE LOS ELEMENTOS EXISTEN
-        if (!document.getElementById('empresasTotal')) {
-            console.warn('⚠️ Elementos de empresas no encontrados en la página actual');
+        // ✅ VERIFICAR QUE TODOS LOS ELEMENTOS EXISTEN
+        const empresasTotal = document.getElementById('empresasTotal');
+        if (!empresasTotal) {
+            console.warn('⚠️ Elementos de empresas no encontrados en la página actual - omitiendo carga');
             return;
         }
         
@@ -504,8 +505,15 @@ async function loadEmpresas(){
         if (data.success) {
             empresasData = data.data || [];
             
-            document.getElementById('empresasTotal').textContent = empresasData.length;
-            document.getElementById('empresasActivas').textContent = empresasData.filter(e => e.estado === 'activo').length;
+            // Solo actualizar si los elementos existen
+            const elEmpresasTotal = document.getElementById('empresasTotal');
+            const elEmpresasActivas = document.getElementById('empresasActivas');
+            const elBancosTotal = document.getElementById('bancosTotal');
+            const elCuentasTotal = document.getElementById('cuentasTotal');
+            const elDashEmpresas = document.getElementById('dashEmpresas');
+            
+            if (elEmpresasTotal) elEmpresasTotal.textContent = empresasData.length;
+            if (elEmpresasActivas) elEmpresasActivas.textContent = empresasData.filter(e => e.estado === 'activo').length;
             
             let bancos = 0, cuentas = 0;
             empresasData.forEach(e => {
@@ -514,9 +522,9 @@ async function loadEmpresas(){
                     cuentas += e.cuentas_bancarias.length;
                 }
             });
-            document.getElementById('bancosTotal').textContent = bancos;
-            document.getElementById('cuentasTotal').textContent = cuentas;
-            document.getElementById('dashEmpresas').textContent = empresasData.length;
+            if (elBancosTotal) elBancosTotal.textContent = bancos;
+            if (elCuentasTotal) elCuentasTotal.textContent = cuentas;
+            if (elDashEmpresas) elDashEmpresas.textContent = empresasData.length;
             
             renderEmpresas();
         } else {
@@ -527,12 +535,11 @@ async function loadEmpresas(){
         toast('Error al cargar empresas');
     }
 }
-
 function renderEmpresas(filter=""){
     // ✅ VERIFICAR QUE EL ELEMENTO EXISTE
     const tbody = document.getElementById("tbodyEmpresas");
     if (!tbody) {
-        console.warn('⚠️ tbodyEmpresas no encontrado');
+        console.warn('⚠️ tbodyEmpresas no encontrado - omitiendo renderizado');
         return;
     }
     
@@ -556,7 +563,6 @@ function renderEmpresas(filter=""){
         </tr>`;
     }).join("");
 }
-
 async function loadUsuarios(){
     try {
         // ✅ VERIFICAR QUE LOS ELEMENTOS EXISTEN
