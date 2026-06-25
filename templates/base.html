@@ -1675,37 +1675,59 @@ async function initDashboard(){
     
     await cargarSubmodulos();
     
-    try {
-        // Solo cargar datos si los elementos existen en la página
-        if (document.getElementById('empresasTotal')) {
+    // ⚠️ IMPORTANTE: SOLO CARGAR DATOS SI LOS ELEMENTOS EXISTEN
+    // Esto evita errores en páginas que no tienen esos elementos
+    
+    // Empresas - solo si existe el elemento en la página actual
+    if (document.getElementById('empresasTotal') || document.getElementById('dashEmpresas')) {
+        try {
             await loadEmpresas();
-        } else {
-            console.log('ℹ️ Página sin sección de empresas, omitiendo carga');
+        } catch(e) {
+            console.warn('⚠️ Error al cargar empresas (posiblemente no hay datos):', e);
         }
-        
-        if (document.getElementById('dashUsuarios')) {
-            await loadUsuarios();
-        } else {
-            console.log('ℹ️ Página sin sección de usuarios, omitiendo carga');
-        }
-        
-        if (document.getElementById('totalCorrelativos')) {
-            await loadCorrelativos();
-        } else {
-            console.log('ℹ️ Página sin sección de correlativos, omitiendo carga');
-        }
-        
-        if (document.getElementById('parametros')) {
-            await loadParametros();
-        } else {
-            console.log('ℹ️ Página sin sección de parámetros, omitiendo carga');
-        }
-    } catch (error) {
-        console.error('❌ Error cargando datos:', error);
-        toast('Error al cargar datos. Recarga la página.');
+    } else {
+        console.log('ℹ️ Página sin sección de empresas, omitiendo carga');
     }
     
-    await cargarPermisosUsuarioLogueado();
+    // Usuarios - solo si existe el elemento en la página actual
+    if (document.getElementById('dashUsuarios') || document.getElementById('tbodyUsuarios')) {
+        try {
+            await loadUsuarios();
+        } catch(e) {
+            console.warn('⚠️ Error al cargar usuarios (posiblemente no hay datos):', e);
+        }
+    } else {
+        console.log('ℹ️ Página sin sección de usuarios, omitiendo carga');
+    }
+    
+    // Correlativos - solo si existe el elemento en la página actual
+    if (document.getElementById('totalCorrelativos') || document.getElementById('tbodyCorrelativosKCF')) {
+        try {
+            await loadCorrelativos();
+        } catch(e) {
+            console.warn('⚠️ Error al cargar correlativos (posiblemente no hay datos):', e);
+        }
+    } else {
+        console.log('ℹ️ Página sin sección de correlativos, omitiendo carga');
+    }
+    
+    // Parámetros - solo si existe el elemento en la página actual
+    if (document.getElementById('parametros')) {
+        try {
+            await loadParametros();
+        } catch(e) {
+            console.warn('⚠️ Error al cargar parámetros (posiblemente no hay datos):', e);
+        }
+    } else {
+        console.log('ℹ️ Página sin sección de parámetros, omitiendo carga');
+    }
+    
+    // Cargar permisos del usuario logueado (solo si hay datos de usuarios)
+    if (usuariosData && usuariosData.length > 0) {
+        await cargarPermisosUsuarioLogueado();
+    } else {
+        console.log('ℹ️ No hay datos de usuarios cargados para permisos');
+    }
     
     // Event listeners para filtros - SOLO SI EXISTEN
     const searchEmpresas = document.getElementById("searchEmpresas");
@@ -1742,7 +1764,10 @@ async function initDashboard(){
                 session.empresa = e.target.value;
                 localStorage.setItem('erp_session', JSON.stringify(session));
             }
-            loadUsuarios();
+            // Solo recargar usuarios si existen en la página
+            if (document.getElementById('tbodyUsuarios')) {
+                loadUsuarios();
+            }
             setTimeout(async () => {
                 await cargarPermisosUsuarioLogueado();
             }, 500);
@@ -1814,8 +1839,6 @@ async function initDashboard(){
     setupBreadcrumb();
     console.log('✅ Dashboard inicializado correctamente');
 }
-
-document.addEventListener("DOMContentLoaded", initDashboard);
 </script>
 </body>
 </html>
