@@ -1066,21 +1066,28 @@ document.getElementById("saveModal").addEventListener("click", async function() 
 // APLICAR PERMISOS A LA INTERFAZ
 // ============================================================
 
-// ============================================================
-// APLICAR PERMISOS A LA INTERFAZ - CORREGIDA CON SELECTOR POR TEXTO
-// ============================================================
 function aplicarPermisosInterfaz(esAdmin, permisosMap) {
     console.log('🔐 Aplicando permisos - esAdmin:', esAdmin);
-    console.log('🔐 permisosMap:', permisosMap);
     
-    // Si es admin, mostrar todo
     if (esAdmin) {
         document.querySelectorAll('.menu-group, .menu-header, .child-btn, .tab-btn').forEach(el => {
             el.style.display = '';
         });
-        console.log('👑 Usuario admin - mostrando todo');
         return;
     }
+    
+    // ✅ CREAR UN MAPA DE MÓDULOS CON SUS SUBMÓDULOS
+    // Agrupar submódulos por módulo
+    const modulosAgrupados = {};
+    submodulosData.forEach(sub => {
+        const moduloNombre = sub.modulo_nombre || sub.nombre;
+        if (!modulosAgrupados[moduloNombre]) {
+            modulosAgrupados[moduloNombre] = [];
+        }
+        modulosAgrupados[moduloNombre].push(sub);
+    });
+    
+    console.log('📋 Módulos agrupados:', Object.keys(modulosAgrupados));
     
     // ✅ MÓDULOS QUE UN OPERATIVO PUEDE VER POR DEFECTO
     const modulosOperativos = ['Productos', 'Cotizaciones', 'Ventas', 'Compras', 'Logística', 'Inventario'];
@@ -1092,6 +1099,7 @@ function aplicarPermisosInterfaz(esAdmin, permisosMap) {
     submodulosData.forEach(sub => {
         const nombre = sub.nombre;
         const subId = sub.id;
+        const moduloNombre = sub.modulo_nombre || nombre;
         
         // Buscar el permiso
         const permiso = permisosMap ? permisosMap[subId] : null;
@@ -1100,35 +1108,42 @@ function aplicarPermisosInterfaz(esAdmin, permisosMap) {
         // Decidir si mostrar
         let debeMostrar = false;
         
+        // ✅ Si tiene permiso explícito, MOSTRAR
         if (tienePermiso) {
             debeMostrar = true;
-            console.log(`✅ ${nombre}: tiene permiso -> mostrar`);
-        } else if (modulosOperativos.includes(nombre)) {
+            console.log(`✅ ${nombre}: tiene permiso EXPLÍCITO -> mostrar`);
+        } 
+        // ✅ Si es operativo, mostrar
+        else if (modulosOperativos.includes(nombre)) {
             debeMostrar = true;
             console.log(`✅ ${nombre}: es operativo -> mostrar por defecto`);
-        } else if (modulosRestringidos.includes(nombre)) {
+        } 
+        // ✅ Si es restringido y NO tiene permiso, ocultar
+        else if (modulosRestringidos.includes(nombre)) {
             debeMostrar = false;
             console.log(`❌ ${nombre}: es restringido y no tiene permiso -> ocultar`);
-        } else {
+        } 
+        else {
             debeMostrar = false;
             console.log(`❌ ${nombre}: sin permiso -> ocultar`);
         }
         
-        // ✅ BUSCAR POR TEXTO DEL BOTÓN EN LUGAR DE DATA-SCREEN
-        // Buscar en el menú lateral (sidebar)
+        // ✅ BUSCAR POR TEXTO EN child-btn
         document.querySelectorAll('.child-btn').forEach(el => {
             const texto = el.textContent.trim();
-            // Verificar si el texto del botón coincide con el nombre del submódulo
-            if (texto === nombre || texto.includes(nombre) || nombre.includes(texto)) {
+            // Coincidencia exacta o parcial
+            if (texto === nombre || texto.includes(nombre) || nombre.includes(texto) || 
+                texto === moduloNombre || texto.includes(moduloNombre)) {
                 el.style.display = debeMostrar ? '' : 'none';
                 console.log(`   🔹 child-btn "${texto}" -> ${debeMostrar ? 'visible' : 'oculto'}`);
             }
         });
         
-        // Buscar en los tabs (parte superior)
+        // ✅ BUSCAR POR TEXTO EN tab-btn
         document.querySelectorAll('.tab-btn').forEach(el => {
             const texto = el.textContent.trim();
-            if (texto === nombre || texto.includes(nombre) || nombre.includes(texto)) {
+            if (texto === nombre || texto.includes(nombre) || nombre.includes(texto) ||
+                texto === moduloNombre || texto.includes(moduloNombre)) {
                 el.style.display = debeMostrar ? '' : 'none';
                 console.log(`   🔹 tab-btn "${texto}" -> ${debeMostrar ? 'visible' : 'oculto'}`);
             }
@@ -1140,7 +1155,6 @@ function aplicarPermisosInterfaz(esAdmin, permisosMap) {
         const children = group.querySelectorAll('.child-btn');
         let hasVisible = false;
         children.forEach(child => {
-            // Verificar si el hijo está visible (no tiene display:none)
             if (child.style.display !== 'none' && child.style.display !== '') {
                 hasVisible = true;
             }
@@ -1150,7 +1164,6 @@ function aplicarPermisosInterfaz(esAdmin, permisosMap) {
         const isDashboard = header?.textContent?.includes('Dashboard') || 
                            header?.textContent?.includes('0 ─ Dashboard');
         
-        // Si no tiene hijos visibles y no es el dashboard, ocultar el grupo
         if (!hasVisible && !isDashboard) {
             group.style.display = 'none';
             console.log(`🔹 Grupo oculto (sin hijos visibles)`);
