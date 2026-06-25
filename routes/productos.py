@@ -1,38 +1,37 @@
 ﻿# routes/productos.py
 from flask import Blueprint, render_template, request, jsonify
-from main import login_required
+from utils import login_required  # ✅ Cambiado de 'main' a 'utils'
 from database import db_query, db_execute, db_tx
 from psycopg2.extras import RealDictCursor
 
 # ============================================================
-# BLUEPRINT - UN SOLO Blueprint para todo
+# BLUEPRINT - CON url_prefix
 # ============================================================
-# ✅ Correcto (con url_prefix)
 productos_bp = Blueprint('productos', __name__, url_prefix='/productos')
 
 # ============================================================
-# RUTAS PARA PÁGINAS HTML
+# RUTAS PARA PÁGINAS HTML - SIN /productos (ya está en el prefijo)
 # ============================================================
 
-@productos_bp.route('/productos')
+@productos_bp.route('/')  # ✅ Esto maneja /productos
 @login_required
 def productos():
     """Página principal de productos - Redirige a nuevo producto"""
     return render_template('productos.html', active_tab='nuevo')
 
-@productos_bp.route('/productos/nuevo')
+@productos_bp.route('/nuevo')  # ✅ Esto maneja /productos/nuevo
 @login_required
 def productos_nuevo():
     """Página de nuevo producto"""
     return render_template('productos.html', active_tab='nuevo')
 
-@productos_bp.route('/productos/base-datos')
+@productos_bp.route('/base-datos')  # ✅ Esto maneja /productos/base-datos
 @login_required
 def productos_base_datos():
     """Página de base de datos de productos"""
     return render_template('productos.html', active_tab='base-datos')
 
-@productos_bp.route('/productos/comparativo')
+@productos_bp.route('/comparativo')  # ✅ Esto maneja /productos/comparativo
 @login_required
 def productos_comparativo():
     """Página de comparativo de costos"""
