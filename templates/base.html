@@ -1067,7 +1067,7 @@ document.getElementById("saveModal").addEventListener("click", async function() 
 // ============================================================
 
 // ============================================================
-// APLICAR PERMISOS A LA INTERFAZ - CORREGIDA
+// APLICAR PERMISOS A LA INTERFAZ - CORREGIDA CON SELECTOR POR TEXTO
 // ============================================================
 function aplicarPermisosInterfaz(esAdmin, permisosMap) {
     console.log('🔐 Aplicando permisos - esAdmin:', esAdmin);
@@ -1114,20 +1114,19 @@ function aplicarPermisosInterfaz(esAdmin, permisosMap) {
             console.log(`❌ ${nombre}: sin permiso -> ocultar`);
         }
         
-        // Buscar la sección correspondiente
-        const screenName = nombre.toLowerCase();
-        
-        // Ocultar/mostrar en el menú lateral
-        document.querySelectorAll(`.child-btn[data-screen="${screenName}"]`).forEach(el => {
+        // ✅ BUSCAR POR TEXTO DEL BOTÓN EN LUGAR DE DATA-SCREEN
+        // Buscar en el menú lateral (sidebar)
+        document.querySelectorAll('.child-btn').forEach(el => {
             const texto = el.textContent.trim();
+            // Verificar si el texto del botón coincide con el nombre del submódulo
             if (texto === nombre || texto.includes(nombre) || nombre.includes(texto)) {
                 el.style.display = debeMostrar ? '' : 'none';
                 console.log(`   🔹 child-btn "${texto}" -> ${debeMostrar ? 'visible' : 'oculto'}`);
             }
         });
         
-        // Ocultar/mostrar en los tabs
-        document.querySelectorAll(`.tab-btn[data-screen="${screenName}"]`).forEach(el => {
+        // Buscar en los tabs (parte superior)
+        document.querySelectorAll('.tab-btn').forEach(el => {
             const texto = el.textContent.trim();
             if (texto === nombre || texto.includes(nombre) || nombre.includes(texto)) {
                 el.style.display = debeMostrar ? '' : 'none';
@@ -1141,7 +1140,8 @@ function aplicarPermisosInterfaz(esAdmin, permisosMap) {
         const children = group.querySelectorAll('.child-btn');
         let hasVisible = false;
         children.forEach(child => {
-            if (child.style.display !== 'none') {
+            // Verificar si el hijo está visible (no tiene display:none)
+            if (child.style.display !== 'none' && child.style.display !== '') {
                 hasVisible = true;
             }
         });
@@ -1150,6 +1150,7 @@ function aplicarPermisosInterfaz(esAdmin, permisosMap) {
         const isDashboard = header?.textContent?.includes('Dashboard') || 
                            header?.textContent?.includes('0 ─ Dashboard');
         
+        // Si no tiene hijos visibles y no es el dashboard, ocultar el grupo
         if (!hasVisible && !isDashboard) {
             group.style.display = 'none';
             console.log(`🔹 Grupo oculto (sin hijos visibles)`);
@@ -1160,7 +1161,6 @@ function aplicarPermisosInterfaz(esAdmin, permisosMap) {
     
     console.log('✅ Permisos aplicados a la interfaz');
 }
-
 // ============================================================
 // ============================================================
 // CARGAR PERMISOS DEL USUARIO LOGUEADO - CORREGIDA
