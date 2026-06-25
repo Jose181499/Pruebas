@@ -1,13 +1,14 @@
 ﻿# routes/productos.py
 from flask import Blueprint, render_template, request, jsonify
-from flask_login import login_required
+from main import login_required
 from database import db_query, db_execute, db_tx
 from psycopg2.extras import RealDictCursor
 
 # ============================================================
 # BLUEPRINT - UN SOLO Blueprint para todo
 # ============================================================
-productos_bp = Blueprint('productos', __name__)
+# ✅ Correcto (con url_prefix)
+productos_bp = Blueprint('productos', __name__, url_prefix='/productos')
 
 # ============================================================
 # RUTAS PARA PÁGINAS HTML
