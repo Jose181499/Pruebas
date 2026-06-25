@@ -11,3 +11,4 @@ Flask-SQLAlchemy
 qrcode
 pillow
 supabase
+flask_login
