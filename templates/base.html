@@ -489,10 +489,16 @@ async function cargarSubmodulos() {
 }
 
 // ============================================================
-// CARGAR DATOS DESDE EL BACKEND
+// CARGAR DATOS DESDE EL BACKEND - CON VERIFICACIONES
 // ============================================================
 async function loadEmpresas(){
     try {
+        // ✅ VERIFICAR QUE LOS ELEMENTOS EXISTEN
+        if (!document.getElementById('empresasTotal')) {
+            console.warn('⚠️ Elementos de empresas no encontrados en la página actual');
+            return;
+        }
+        
         const data = await fetchAPI('/api/config/empresas');
         
         if (data.success) {
@@ -523,10 +529,17 @@ async function loadEmpresas(){
 }
 
 function renderEmpresas(filter=""){
+    // ✅ VERIFICAR QUE EL ELEMENTO EXISTE
+    const tbody = document.getElementById("tbodyEmpresas");
+    if (!tbody) {
+        console.warn('⚠️ tbodyEmpresas no encontrado');
+        return;
+    }
+    
     const q = filter.toLowerCase();
     const list = empresasData.filter(e => JSON.stringify(e).toLowerCase().includes(q));
     
-    document.getElementById("tbodyEmpresas").innerHTML = list.map(e => {
+    tbody.innerHTML = list.map(e => {
         const cuenta = e.cuentas_bancarias?.[0] || {};
         return `
         <tr>
@@ -546,6 +559,12 @@ function renderEmpresas(filter=""){
 
 async function loadUsuarios(){
     try {
+        // ✅ VERIFICAR QUE LOS ELEMENTOS EXISTEN
+        if (!document.getElementById('dashUsuarios')) {
+            console.warn('⚠️ Elementos de usuarios no encontrados en la página actual');
+            return;
+        }
+        
         const data = await fetchAPI('/api/config/usuarios');
         
         if (data.success) {
@@ -1077,11 +1096,17 @@ function aplicarPermisosInterfaz(esAdmin, permisosMap) {
 }
 
 // ============================================================
-// CARGAR PERMISOS DEL USUARIO LOGUEADO
+// CARGAR PERMISOS DEL USUARIO LOGUEADO - CORREGIDO
 // ============================================================
 async function cargarPermisosUsuarioLogueado() {
     const usuario = document.getElementById('userName').textContent;
     const empresa = document.getElementById('empresaActiva').value;
+    
+    // ✅ VERIFICAR QUE HAY DATOS DE USUARIOS
+    if (!usuariosData || usuariosData.length === 0) {
+        console.warn('⚠️ No hay datos de usuarios cargados');
+        return;
+    }
     
     const user = usuariosData.find(u => u.usuario_sistema === usuario);
     if (!user) {
@@ -1123,6 +1148,12 @@ async function cargarPermisosUsuarioLogueado() {
 // ============================================================
 async function loadCorrelativos(){
     try {
+        // ✅ VERIFICAR QUE LOS ELEMENTOS EXISTEN
+        if (!document.getElementById('totalCorrelativos')) {
+            console.warn('⚠️ Elementos de correlativos no encontrados en la página actual');
+            return;
+        }
+        
         const data = await fetchAPI('/api/config/correlativos');
         
         if (data.success) {
@@ -1373,10 +1404,17 @@ async function tomarCorrelativo(empresaCodigo, documento, anio = 2026) {
 }
 
 // ============================================================
-// PARÁMETROS
+// PARÁMETROS - CORREGIDO
 // ============================================================
 async function loadParametros() {
     console.log('📋 Cargando parámetros...');
+    
+    // ✅ VERIFICAR QUE LOS ELEMENTOS EXISTEN
+    if (!document.getElementById('parametros')) {
+        console.warn('⚠️ Elementos de parámetros no encontrados en la página actual');
+        return;
+    }
+    
     try {
         const response = await fetch('/api/config/parametros');
         if (response.ok) {
@@ -1565,7 +1603,7 @@ function applyTheme(code){
 }
 
 // ============================================================
-// INICIALIZACIÓN
+// INICIALIZACIÓN - CORREGIDA
 // ============================================================
 async function initDashboard(){
     console.log('🚀 Iniciando dashboard...');
@@ -1770,6 +1808,7 @@ async function initDashboard(){
     setupBreadcrumb();
     console.log('✅ Dashboard inicializado correctamente');
 }
+
 document.addEventListener("DOMContentLoaded", initDashboard);
 </script>
 </body>
