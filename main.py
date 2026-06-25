@@ -25,7 +25,6 @@ from routes.configuracion_seguridad import config_seguridad_bp
 from routes.dashboard import dashboard_bp
 from routes.productos import productos_bp
 from routes.ventas import ventas_bp
-from routes.compras import compras_bp
 from routes.inventario import inventario_bp
 from routes.finanzas import finanzas_bp
 from routes.reportes import reportes_bp
@@ -77,7 +76,6 @@ app.register_blueprint(config_seguridad_bp)
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(productos_bp)
 app.register_blueprint(ventas_bp)
-app.register_blueprint(compras_bp)
 app.register_blueprint(inventario_bp)
 app.register_blueprint(finanzas_bp)
 app.register_blueprint(reportes_bp)
@@ -453,18 +451,6 @@ def api_listar_productos():
 # RUTAS DE PÁGINAS PRINCIPALES
 # ==========================================
 
-@app.route("/compras")
-@login_required
-def gestor_compras_directo():
-    try:
-        return render_template("compras.html")
-    except Exception as e:
-        return f"Error al cargar template: {str(e)}", 500
-
-# ==========================================
-# RUTAS PARA NUEVOS TEMPLATES
-# ==========================================
-
 @app.route("/configuracion")
 @login_required
 def configuracion_page():
@@ -525,6 +511,16 @@ def reportes_page():
 def ventas_page():
     return render_template("ventas.html")
 
+@app.route("/empresas")
+@login_required
+def empresas_page():
+    return render_template("empresas.html")
+
+@app.route("/usuarios")
+@login_required
+def usuarios_page():
+    return render_template("usuarios.html")
+
 # ==========================================
 # EJECUTAR
 # ==========================================
@@ -547,7 +543,6 @@ if __name__ == "__main__":
     print(f"   - Maestros:   http://localhost:{port}/mantenedor")
     print(f"   - Productos:  http://localhost:{port}/productos")
     print(f"   - Ventas:     http://localhost:{port}/ventas")
-    print(f"   - Compras:    http://localhost:{port}/compras")
     print(f"   - Inventario: http://localhost:{port}/inventario")
     print(f"   - Finanzas:   http://localhost:{port}/finanzas")
     print(f"   - Reportes:   http://localhost:{port}/reportes")
