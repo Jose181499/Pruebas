@@ -1615,20 +1615,47 @@ async function initDashboard(){
     }
     
     console.log('✅ Sesión encontrada:', session);
-    document.getElementById('userName').textContent = session.name || session.user;
-    document.getElementById('userAvatar').textContent = (session.name || session.user)[0].toUpperCase();
+    
+    // Verificar que los elementos existen antes de usarlos
+    const userNameEl = document.getElementById('userName');
+    const userAvatarEl = document.getElementById('userAvatar');
+    const empresaActivaEl = document.getElementById('empresaActiva');
+    const logoEmpresaEl = document.getElementById('logoEmpresa');
+    
+    if (userNameEl) userNameEl.textContent = session.name || session.user;
+    if (userAvatarEl) userAvatarEl.textContent = (session.name || session.user)[0].toUpperCase();
     
     const empresaSession = session.empresa || 'KCF';
-    document.getElementById('empresaActiva').value = empresaSession;
-    applyTheme(empresaSession);
+    if (empresaActivaEl) empresaActivaEl.value = empresaSession;
+    if (logoEmpresaEl) applyTheme(empresaSession);
     
     await cargarSubmodulos();
     
     try {
-        await loadEmpresas();
-        await loadUsuarios();
-        await loadCorrelativos();
-        await loadParametros();
+        // Solo cargar datos si los elementos existen en la página
+        if (document.getElementById('empresasTotal')) {
+            await loadEmpresas();
+        } else {
+            console.log('ℹ️ Página sin sección de empresas, omitiendo carga');
+        }
+        
+        if (document.getElementById('dashUsuarios')) {
+            await loadUsuarios();
+        } else {
+            console.log('ℹ️ Página sin sección de usuarios, omitiendo carga');
+        }
+        
+        if (document.getElementById('totalCorrelativos')) {
+            await loadCorrelativos();
+        } else {
+            console.log('ℹ️ Página sin sección de correlativos, omitiendo carga');
+        }
+        
+        if (document.getElementById('parametros')) {
+            await loadParametros();
+        } else {
+            console.log('ℹ️ Página sin sección de parámetros, omitiendo carga');
+        }
     } catch (error) {
         console.error('❌ Error cargando datos:', error);
         toast('Error al cargar datos. Recarga la página.');
@@ -1636,53 +1663,113 @@ async function initDashboard(){
     
     await cargarPermisosUsuarioLogueado();
     
-    // Event listeners para filtros
-    document.getElementById("searchEmpresas").addEventListener("input", e => renderEmpresas(e.target.value));
-    document.getElementById("searchUsuarios").addEventListener("input", async e => await renderUsuarios(e.target.value));
-    document.getElementById("searchCorrelativos").addEventListener("input", e => renderCorrelativos(e.target.value));
+    // Event listeners para filtros - SOLO SI EXISTEN
+    const searchEmpresas = document.getElementById("searchEmpresas");
+    if (searchEmpresas) {
+        searchEmpresas.addEventListener("input", e => renderEmpresas(e.target.value));
+    }
     
-    document.getElementById("filterEmpresaUsuarios").addEventListener("change", async () => await renderUsuarios());
-    document.getElementById("filterNivelUsuarios").addEventListener("change", async () => await renderUsuarios());
+    const searchUsuarios = document.getElementById("searchUsuarios");
+    if (searchUsuarios) {
+        searchUsuarios.addEventListener("input", async e => await renderUsuarios(e.target.value));
+    }
     
-    document.getElementById("empresaActiva").addEventListener("change", function(e){
-        applyTheme(e.target.value);
-        const session = getSession();
-        if(session){
-            session.empresa = e.target.value;
-            localStorage.setItem('erp_session', JSON.stringify(session));
-        }
-        loadUsuarios();
-        setTimeout(async () => {
-            await cargarPermisosUsuarioLogueado();
-        }, 500);
-        toast(`Empresa cambiada a ${e.target.value}`);
-    });
+    const searchCorrelativos = document.getElementById("searchCorrelativos");
+    if (searchCorrelativos) {
+        searchCorrelativos.addEventListener("input", e => renderCorrelativos(e.target.value));
+    }
     
-    document.getElementById("closeModal").addEventListener("click", () => document.getElementById("modalPermisos").classList.remove("show"));
+    const filterEmpresaUsuarios = document.getElementById("filterEmpresaUsuarios");
+    if (filterEmpresaUsuarios) {
+        filterEmpresaUsuarios.addEventListener("change", async () => await renderUsuarios());
+    }
     
-    document.getElementById("btnSimularIntegracion").addEventListener("click", simularIntegracion);
-    document.getElementById("btnGuardarParametros").addEventListener("click", guardarParametros);
+    const filterNivelUsuarios = document.getElementById("filterNivelUsuarios");
+    if (filterNivelUsuarios) {
+        filterNivelUsuarios.addEventListener("change", async () => await renderUsuarios());
+    }
     
-    document.getElementById("btnGuardarCorrelativoForm2").addEventListener("click", guardarCorrelativo);
-    document.getElementById("btnLimpiarCorrelativo").addEventListener("click", function(){
-        limpiarFormularioCorrelativo();
-        toast('Formulario limpiado');
-    });
-    document.getElementById("btnNuevoCorrelativo").addEventListener("click", function(){
-        limpiarFormularioCorrelativo();
-        toast('Formulario listo para nuevo correlativo');
-    });
+    const empresaActiva = document.getElementById("empresaActiva");
+    if (empresaActiva) {
+        empresaActiva.addEventListener("change", function(e){
+            applyTheme(e.target.value);
+            const session = getSession();
+            if(session){
+                session.empresa = e.target.value;
+                localStorage.setItem('erp_session', JSON.stringify(session));
+            }
+            loadUsuarios();
+            setTimeout(async () => {
+                await cargarPermisosUsuarioLogueado();
+            }, 500);
+            toast(`Empresa cambiada a ${e.target.value}`);
+        });
+    }
     
-    document.getElementById("corrEmpresa").addEventListener("change", actualizarPrefijoAutomatico);
-    document.getElementById("corrDocumento").addEventListener("change", actualizarPrefijoAutomatico);
-    document.getElementById("corrPrefijo").addEventListener("input", updateCorrPreview);
-    document.getElementById("corrAnio").addEventListener("input", updateCorrPreview);
-    document.getElementById("corrUltimo").addEventListener("input", updateCorrPreview);
+    const closeModal = document.getElementById("closeModal");
+    if (closeModal) {
+        closeModal.addEventListener("click", () => document.getElementById("modalPermisos").classList.remove("show"));
+    }
+    
+    const btnSimularIntegracion = document.getElementById("btnSimularIntegracion");
+    if (btnSimularIntegracion) {
+        btnSimularIntegracion.addEventListener("click", simularIntegracion);
+    }
+    
+    const btnGuardarParametros = document.getElementById("btnGuardarParametros");
+    if (btnGuardarParametros) {
+        btnGuardarParametros.addEventListener("click", guardarParametros);
+    }
+    
+    const btnGuardarCorrelativo = document.getElementById("btnGuardarCorrelativoForm2");
+    if (btnGuardarCorrelativo) {
+        btnGuardarCorrelativo.addEventListener("click", guardarCorrelativo);
+    }
+    
+    const btnLimpiarCorrelativo = document.getElementById("btnLimpiarCorrelativo");
+    if (btnLimpiarCorrelativo) {
+        btnLimpiarCorrelativo.addEventListener("click", function(){
+            limpiarFormularioCorrelativo();
+            toast('Formulario limpiado');
+        });
+    }
+    
+    const btnNuevoCorrelativo = document.getElementById("btnNuevoCorrelativo");
+    if (btnNuevoCorrelativo) {
+        btnNuevoCorrelativo.addEventListener("click", function(){
+            limpiarFormularioCorrelativo();
+            toast('Formulario listo para nuevo correlativo');
+        });
+    }
+    
+    const corrEmpresa = document.getElementById("corrEmpresa");
+    if (corrEmpresa) {
+        corrEmpresa.addEventListener("change", actualizarPrefijoAutomatico);
+    }
+    
+    const corrDocumento = document.getElementById("corrDocumento");
+    if (corrDocumento) {
+        corrDocumento.addEventListener("change", actualizarPrefijoAutomatico);
+    }
+    
+    const corrPrefijo = document.getElementById("corrPrefijo");
+    if (corrPrefijo) {
+        corrPrefijo.addEventListener("input", updateCorrPreview);
+    }
+    
+    const corrAnio = document.getElementById("corrAnio");
+    if (corrAnio) {
+        corrAnio.addEventListener("input", updateCorrPreview);
+    }
+    
+    const corrUltimo = document.getElementById("corrUltimo");
+    if (corrUltimo) {
+        corrUltimo.addEventListener("input", updateCorrPreview);
+    }
     
     setupBreadcrumb();
     console.log('✅ Dashboard inicializado correctamente');
 }
-
 document.addEventListener("DOMContentLoaded", initDashboard);
 </script>
 </body>
