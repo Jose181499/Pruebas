@@ -9,73 +9,7 @@
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-<script>
-// ✅ FORZAR OCULTAMIENTO PARA USUARIOS NO ADMIN
-(function() {
-    // Esperar a que el DOM esté listo
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', aplicarPermisosEmergencia);
-    } else {
-        aplicarPermisosEmergencia();
-    }
-    
-    function aplicarPermisosEmergencia() {
-        console.log('🚨 APLICANDO PERMISOS DE EMERGENCIA');
-        
-        // Obtener el usuario del localStorage o del HTML
-        let usuario = '';
-        try {
-            const sessionData = localStorage.getItem('erp_session');
-            if (sessionData) {
-                const parsed = JSON.parse(sessionData);
-                usuario = parsed.user || '';
-                console.log('📋 Usuario desde localStorage:', usuario);
-            }
-        } catch(e) {}
-        
-        // Si no se encontró en localStorage, intentar desde el HTML
-        if (!usuario) {
-            const userNameEl = document.getElementById('userName');
-            if (userNameEl) {
-                usuario = userNameEl.textContent || '';
-                console.log('📋 Usuario desde HTML:', usuario);
-            }
-        }
-        
-        // ✅ SI EL USUARIO ES HELLEN O NO ES ADMIN, OCULTAR CONFIGURACIÓN
-        const esHellen = usuario === 'hel02kcf' || usuario === 'HELLEN BLAS PRINCIPE';
-        
-        console.log('👤 Usuario detectado:', usuario, 'esHellen:', esHellen);
-        
-        // ✅ OCULTAR CONFIGURACIÓN Y SEGURIDAD PARA HELLEN
-        if (esHellen) {
-            // Ocultar el menú de Configuración y seguridad
-            const menuItems = document.querySelectorAll('.menu-group');
-            menuItems.forEach(group => {
-                const header = group.querySelector('.menu-header');
-                if (header && header.textContent.includes('Configuración y seguridad')) {
-                    group.style.display = 'none';
-                    console.log('🔹 Menú Configuración oculto para Hellen');
-                }
-            });
-            
-            // Ocultar los tabs de configuración
-            const tabs = document.querySelectorAll('.tab-btn');
-            tabs.forEach(tab => {
-                const text = tab.textContent.trim();
-                if (text === 'Empresas' || text === 'Usuarios y permisos' || 
-                    text === 'Correlativos' || text === 'Parámetros' || 
-                    text === 'Integración ERP') {
-                    tab.style.display = 'none';
-                    console.log('🔹 Tab oculto para Hellen:', text);
-                }
-            });
-        }
-        
-        console.log('✅ Permisos de emergencia aplicados');
-    }
-})();
-</script
+
 
 <div class="app">
     <!-- ======================================== -->
@@ -687,6 +621,9 @@ function checkEye(tienePermiso, user, module, userId, empresaId) {
 // ============================================================
 // MANEJAR CAMBIO DE PERMISOS
 // ============================================================
+// ============================================================
+// MANEJAR CAMBIO DE PERMISOS - CON ACTUALIZACIÓN INMEDIATA
+// ============================================================
 async function togglePermiso(event) {
     const checkbox = event.target;
     const userId = checkbox.dataset.userId;
@@ -700,6 +637,7 @@ async function togglePermiso(event) {
         return;
     }
     
+    // Mapeo de nombres de módulos a códigos de submódulos
     const mapeoCodigos = {
         'Configuración': 'EMPRESAS',
         'Config.': 'EMPRESAS',
@@ -754,7 +692,16 @@ async function togglePermiso(event) {
         const result = await guardarPermisosUsuario(userId, empresaId, permisosList);
         if (result) {
             toast(`✅ ${tienePermiso ? 'Habilitado' : 'Deshabilitado'} ${submodulo.nombre} para ${user}`);
+            
+            // ✅ RECARGAR USUARIOS Y PERMISOS
             await loadUsuarios();
+            
+            // ✅ RECARGAR PERMISOS DEL USUARIO LOGUEADO (si es el usuario actual)
+            const nombreActual = document.getElementById('userName')?.textContent?.trim() || '';
+            const userActual = usuariosData.find(u => u.nombres_apellidos === nombreActual || u.usuario_sistema === nombreActual);
+            if (userActual && userActual.id == userId) {
+                await cargarPermisosUsuarioLogueado();
+            }
         } else {
             checkbox.checked = !tienePermiso;
             toast('❌ Error al guardar permiso');
@@ -765,7 +712,6 @@ async function togglePermiso(event) {
         toast('❌ Error al guardar permiso');
     }
 }
-
 // ============================================================
 // RENDER USUARIOS
 // ============================================================
@@ -1120,33 +1066,26 @@ document.getElementById("saveModal").addEventListener("click", async function() 
 // APLICAR PERMISOS A LA INTERFAZ
 // ============================================================
 
+// ============================================================
+// APLICAR PERMISOS A LA INTERFAZ - CORREGIDA
+// ============================================================
 function aplicarPermisosInterfaz(esAdmin, permisosMap) {
     console.log('🔐 Aplicando permisos - esAdmin:', esAdmin);
     console.log('🔐 permisosMap:', permisosMap);
-    
-    // ✅ OBTENER EL USUARIO ACTUAL
-    const usuarioActual = document.getElementById('userName')?.textContent?.trim() || '';
-    console.log('👤 Usuario actual:', usuarioActual);
-    
-    // 🔥 FORZAR QUE HELLEN NO SEA ADMIN
-    if (usuarioActual === 'hel02kcf' || usuarioActual === 'HELLEN BLAS PRINCIPE') {
-        esAdmin = false;
-        console.log('🔴 Forzando esAdmin=false para Hellen');
-    }
     
     // Si es admin, mostrar todo
     if (esAdmin) {
         document.querySelectorAll('.menu-group, .menu-header, .child-btn, .tab-btn').forEach(el => {
             el.style.display = '';
         });
-        console.log('✅ Usuario admin - mostrando todo');
+        console.log('👑 Usuario admin - mostrando todo');
         return;
     }
     
-    // ✅ LISTA DE MÓDULOS QUE UN OPERATIVO PUEDE VER
+    // ✅ MÓDULOS QUE UN OPERATIVO PUEDE VER POR DEFECTO
     const modulosOperativos = ['Productos', 'Cotizaciones', 'Ventas', 'Compras', 'Logística', 'Inventario'];
     
-    // ✅ MÓDULOS QUE NUNCA DEBE VER UN OPERATIVO (SOLO CON PERMISO EXPLÍCITO)
+    // ✅ MÓDULOS RESTRINGIDOS (solo con permiso explícito)
     const modulosRestringidos = ['Configuración', 'Maestros', 'CxC', 'CxP', 'Caja', 'Reportes', 'SUNAT'];
     
     // Para cada submódulo, decidir si mostrar
@@ -1166,10 +1105,10 @@ function aplicarPermisosInterfaz(esAdmin, permisosMap) {
             console.log(`✅ ${nombre}: tiene permiso -> mostrar`);
         } else if (modulosOperativos.includes(nombre)) {
             debeMostrar = true;
-            console.log(`✅ ${nombre}: es operativo -> mostrar`);
+            console.log(`✅ ${nombre}: es operativo -> mostrar por defecto`);
         } else if (modulosRestringidos.includes(nombre)) {
             debeMostrar = false;
-            console.log(`❌ ${nombre}: es restringido -> ocultar`);
+            console.log(`❌ ${nombre}: es restringido y no tiene permiso -> ocultar`);
         } else {
             debeMostrar = false;
             console.log(`❌ ${nombre}: sin permiso -> ocultar`);
@@ -1222,22 +1161,23 @@ function aplicarPermisosInterfaz(esAdmin, permisosMap) {
     console.log('✅ Permisos aplicados a la interfaz');
 }
 
-
-
 // ============================================================
 // ============================================================
 // CARGAR PERMISOS DEL USUARIO LOGUEADO - CORREGIDA
 // ============================================================
+// ============================================================
+// CARGAR PERMISOS DEL USUARIO LOGUEADO - CORREGIDA DEFINITIVA
+// ============================================================
 async function cargarPermisosUsuarioLogueado() {
-    const usuario = document.getElementById('userName')?.textContent?.trim() || '';
+    // ✅ USAR FLASK_SESSION.user (que es el usuario_sistema, ej: 'eri01kcf')
+    const usuarioSistema = FLASK_SESSION.user || '';
     const empresa = document.getElementById('empresaActiva')?.value || 'KCF';
     
-    console.log('🔍 Cargando permisos para usuario:', usuario, 'empresa:', empresa);
+    console.log('🔍 Cargando permisos para usuario_sistema:', usuarioSistema, 'empresa:', empresa);
     
-    // ✅ VERIFICAR QUE HAY DATOS DE USUARIOS
+    // Verificar datos de usuarios
     if (!usuariosData || usuariosData.length === 0) {
         console.warn('⚠️ No hay datos de usuarios cargados');
-        // ✅ SI NO HAY DATOS, CARGARLOS
         try {
             const data = await fetchAPI('/api/config/usuarios');
             if (data.success) {
@@ -1250,17 +1190,23 @@ async function cargarPermisosUsuarioLogueado() {
         }
     }
     
-    // ✅ BUSCAR EL USUARIO POR NOMBRE
-    const user = usuariosData.find(u => u.usuario_sistema === usuario);
+    // ✅ BUSCAR POR usuario_sistema PRIMERO
+    let user = usuariosData.find(u => u.usuario_sistema === usuarioSistema);
+    
+    // Si no se encuentra, intentar por nombres_apellidos (fallback)
     if (!user) {
-        console.warn('⚠️ Usuario no encontrado en datos:', usuario);
+        user = usuariosData.find(u => u.nombres_apellidos === usuarioSistema);
+    }
+    
+    if (!user) {
+        console.warn('⚠️ Usuario no encontrado en datos:', usuarioSistema);
         console.log('📋 Usuarios disponibles:', usuariosData.map(u => u.usuario_sistema));
         return;
     }
     
-    console.log('✅ Usuario encontrado:', user.usuario_sistema, 'ID:', user.id);
+    console.log('✅ Usuario encontrado:', user.usuario_sistema, 'ID:', user.id, 'Nombre:', user.nombres_apellidos);
     
-    // ✅ BUSCAR LA EMPRESA DEL USUARIO
+    // Buscar la empresa del usuario
     const empresaUsuario = user.empresas_acceso?.find(e => e.empresa_codigo === empresa);
     if (!empresaUsuario) {
         console.warn('⚠️ Usuario no tiene acceso a la empresa:', empresa);
@@ -1269,11 +1215,11 @@ async function cargarPermisosUsuarioLogueado() {
     
     console.log('✅ Empresa encontrada:', empresaUsuario.empresa_codigo, 'ID:', empresaUsuario.empresa_id);
     
-    // ✅ CARGAR PERMISOS DEL USUARIO
+    // Cargar permisos
     const permisosData = await cargarPermisosUsuario(user.id, empresaUsuario.empresa_id);
     console.log('✅ Permisos cargados:', permisosData);
     
-    // ✅ CREAR MAPA DE PERMISOS
+    // Crear mapa de permisos
     const permisosMap = {};
     if (permisosData?.permisos) {
         permisosData.permisos.forEach(p => {
@@ -1281,25 +1227,25 @@ async function cargarPermisosUsuarioLogueado() {
         });
     }
     
-    // ✅ DETERMINAR SI ES ADMIN
+    // Determinar si es admin
     const esAdmin = empresaUsuario.rol_codigo === 'GERENCIA_TOTAL';
     console.log('👑 esAdmin:', esAdmin, 'Rol:', empresaUsuario.rol_codigo);
     
-    // ✅ GUARDAR EN VARIABLE GLOBAL
+    // Guardar en variable global
     window.usuarioPermisos = {
         userId: user.id,
         empresaId: empresaUsuario.empresa_id,
         esAdmin: esAdmin,
-        permisos: permisosMap
+        permisos: permisosMap,
+        usuario_sistema: user.usuario_sistema,
+        nombres_apellidos: user.nombres_apellidos
     };
     
     console.log('✅ Permisos del usuario guardados:', window.usuarioPermisos);
     
-    // ✅ APLICAR PERMISOS A LA INTERFAZ
+    // Aplicar permisos a la interfaz
     aplicarPermisosInterfaz(esAdmin, permisosMap);
 }
-
-
 // ============================================================
 // CORRELATIVOS - VERSIÓN CORREGIDA
 // ============================================================
