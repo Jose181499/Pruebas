@@ -1,0 +1,130 @@
+<!-- templates/base_datos_producto.html -->
+<div class="page-head">
+    <div>
+        <h1>Base de datos: Producto</h1>
+        <p class="subtitle">Consulta, filtra y gestiona todos los productos del sistema.</p>
+    </div>
+</div>
+
+<div class="bd-toolbar">
+    <div class="bd-search-wrap">
+        <i class="bi bi-search"></i>
+        <input id="bdSearchInput" type="text" placeholder="Buscar por nombre, código, modelo, marca, categoría..." />
+    </div>
+    <button class="btn" type="button" onclick="bdExportarExcel()"><i class="bi bi-file-earmark-excel" style="color:var(--ok)"></i> Exportar Excel</button>
+    <button class="btn" type="button" onclick="bdLimpiarFiltros()"><i class="bi bi-funnel"></i> Limpiar filtros</button>
+    <button class="btn primary" type="button" onclick="window.location.href='/productos/nuevo'"><i class="bi bi-plus-lg"></i> Crear nuevo producto</button>
+</div>
+
+<div class="bd-filters">
+    <div class="bd-filter-field">
+        <label for="bdCategoriaFilter">Categoría principal</label>
+        <select id="bdCategoriaFilter">
+            <option value="">Todas</option>
+            <option>Seguridad Industrial</option>
+            <option>Indumentaria de Oficina</option>
+            <option>Tecnología</option>
+            <option>Limpieza</option>
+            <option>Cuidado Personal</option>
+            <option>Ferretería</option>
+            <option>Iluminación</option>
+        </select>
+    </div>
+    <div class="bd-filter-field">
+        <label for="bdSubcategoriaFilter">Subcategoría</label>
+        <select id="bdSubcategoriaFilter">
+            <option value="">Todas</option>
+            <option>Señalización y tráfico</option>
+            <option>Chalecos</option>
+            <option>Taladros</option>
+            <option>Extintores</option>
+            <option>Protección personal</option>
+            <option>Cintas</option>
+            <option>Primeros Auxilios</option>
+            <option>Lámparas</option>
+            <option>Calzado</option>
+        </select>
+    </div>
+    <div class="bd-filter-field">
+        <label for="bdMarcaFilter">Marca</label>
+        <select id="bdMarcaFilter">
+            <option value="">Todas</option>
+            <option>KCF Safety</option>
+            <option>EasyWon</option>
+            <option>Borweg</option>
+            <option>Kidde</option>
+            <option>3M</option>
+            <option>Protex</option>
+            <option>Nova Safe</option>
+            <option>Philips</option>
+            <option>Tuk</option>
+            <option>Descartame</option>
+        </select>
+    </div>
+    <div class="bd-filter-field">
+        <label for="bdModeloFilter">Modelo</label>
+        <select id="bdModeloFilter">
+            <option value="">Todos</option>
+            <option>CS-75</option>
+            <option>SR-8891</option>
+            <option>TAL-850M</option>
+            <option>PQS-6</option>
+            <option>CS-100R</option>
+            <option>ZP-100</option>
+            <option>BOT-VIP36</option>
+            <option>LED-20W</option>
+            <option>MT-48</option>
+            <option>NIT-010</option>
+        </select>
+    </div>
+</div>
+
+<div class="bd-table-card">
+    <div class="bd-table-scroll">
+        <table class="bd-table">
+            <thead>
+                <tr>
+                    <th class="bd-col-item">Ítem</th>
+                    <th class="bd-col-code">Código<br>producto</th>
+                    <th class="bd-col-desc">Descripción<br>producto</th>
+                    <th class="bd-col-model">Modelo</th>
+                    <th class="bd-col-brand">Marca</th>
+                    <th class="bd-col-cat">Categoría<br>principal</th>
+                    <th class="bd-col-subcat">Categoría<br>derivada</th>
+                    <th class="bd-col-weight">Peso (kg)</th>
+                    <th class="bd-col-transport">Transporte<br>referencial</th>
+                    <th class="bd-col-cost">Valor costo</th>
+                    <th class="bd-col-sale">Valor venta</th>
+                    <th class="bd-col-obs">Observación</th>
+                    <th class="bd-col-status">Estado</th>
+                    <th class="bd-col-actions">Acciones</th>
+                    <th class="bd-col-prov-pres">Presentación<br>proveedor</th>
+                    <th class="bd-col-sale-pres">Presentación<br>venta</th>
+                    <th class="bd-col-min-sale">Venta<br>mínima</th>
+                    <th class="bd-col-barras">Código barras</th>
+                    <th class="bd-col-volumen">Volumen (m³)</th>
+                    <th class="bd-col-origen">Origen<br>producto</th>
+                    <th class="bd-col-tiempo">Tiempo est.<br>entrega</th>
+                    <th class="bd-col-abast">Abastecimiento</th>
+                    <th class="bd-col-stock-min">Stock<br>mínimo</th>
+                    <th class="bd-col-desc-larga">Descripción larga</th>
+                </tr>
+            </thead>
+            <tbody id="bdProductTableBody"></tbody>
+        </table>
+    </div>
+    <div class="bd-footer">
+        <span class="bd-count" id="bdCountText">Mostrando 1 a 10 de 245 productos</span>
+        <div class="pagination">
+            <button class="page-btn">‹</button>
+            <button class="page-btn page-active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn">3</button>
+            <button class="page-btn">…</button>
+            <button class="page-btn">25</button>
+            <button class="page-btn">›</button>
+            <select class="page-select"><option>20 por página</option><option>50 por página</option><option>100 por página</option></select>
+        </div>
+    </div>
+</div>
+<div class="scroll-note"><i class="bi bi-arrows-expand"></i> Las columnas complementarias se visualizan desplazando la barra horizontal de la tabla.</div>
