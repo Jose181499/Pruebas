@@ -1150,7 +1150,7 @@ async function cargarPermisosUsuarioLogueado() {
 }
 
 // ============================================================
-// CORRELATIVOS
+// CORRELATIVOS - VERSIÓN CORREGIDA
 // ============================================================
 async function loadCorrelativos(){
     try {
@@ -1158,6 +1158,14 @@ async function loadCorrelativos(){
         if (!document.getElementById('totalCorrelativos')) {
             console.warn('⚠️ Elementos de correlativos no encontrados en la página actual');
             return;
+        }
+        
+        // ✅ CARGAR EMPRESAS PRIMERO (si no están cargadas)
+        if (empresasData.length === 0) {
+            const empresasResponse = await fetchAPI('/api/config/empresas');
+            if (empresasResponse.success) {
+                empresasData = empresasResponse.data || [];
+            }
         }
         
         const data = await fetchAPI('/api/config/correlativos');
@@ -1332,11 +1340,8 @@ async function guardarCorrelativo() {
     const editandoId = document.getElementById("corrFormMode").dataset.editando;
     
     try {
-        const empresaObj = empresasData.find(e => e.codigo === empresa);
-        if (!empresaObj) { toast('❌ Empresa no encontrada'); return; }
-        
         const data = {
-            empresa_id: empresaObj.id,
+            empresa_codigo: empresa,
             documento: documento,
             codigo_documento: documento.toUpperCase().replace(/ /g, '_'),
             prefijo: prefijo,
@@ -1683,11 +1688,16 @@ async function initDashboard(){
             console.log('ℹ️ Página sin sección de empresas, omitiendo carga');
         }
         
-        if (document.getElementById('dashUsuarios')) {
-            await loadUsuarios();
+        // Usuarios - solo si existe el elemento en la página actual
+        if (document.getElementById('dashUsuarios') || document.getElementById('tbodyUsuarios')) {
+          try {
+         await loadUsuarios();
+        } catch(e) {
+         console.warn('⚠️ Error al cargar usuarios (posiblemente no hay datos):', e);
+                    }
         } else {
             console.log('ℹ️ Página sin sección de usuarios, omitiendo carga');
-        }
+            }
         
         if (document.getElementById('totalCorrelativos')) {
             await loadCorrelativos();
