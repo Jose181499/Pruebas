@@ -1,23 +1,27 @@
-﻿from flask import Blueprint, render_template
-
-parametros_bp = Blueprint('parametros', __name__)
-
-@parametros_bp.route('/parametros')
-def parametros():
-    return render_template('parametros.html')
-# routes/integracion.py
-from flask import Blueprint, request, jsonify, session
+﻿# routes/integracion.py
+from flask import Blueprint, render_template, request, jsonify, session
 from database import db_query, db_execute, db_tx
 from psycopg2.extras import RealDictCursor
 import json
 
-integracion_bp = Blueprint('integracion', __name__, url_prefix='/api/config')
+# ============================================================
+# BLUEPRINT - UN SOLO Blueprint para todo
+# ============================================================
+integracion_bp = Blueprint('integracion', __name__)
 
 # ============================================================
-# 5. MÓDULOS Y SUBMÓDULOS
+# RUTA PARA LA PÁGINA HTML
+# ============================================================
+@integracion_bp.route('/integracion')
+def integracion_page():
+    """Página de integración"""
+    return render_template('integracion.html')
+
+# ============================================================
+# ENDPOINTS API PARA INTEGRACIÓN
 # ============================================================
 
-@integracion_bp.route('/modulos', methods=['GET'])
+@integracion_bp.route('/api/config/modulos', methods=['GET'])
 def get_modulos():
     """Obtener todos los módulos con sus submódulos"""
     try:
@@ -62,7 +66,7 @@ def get_modulos():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@integracion_bp.route('/submodulos', methods=['GET'])
+@integracion_bp.route('/api/config/submodulos', methods=['GET'])
 def get_submodulos():
     """Obtener todos los submódulos"""
     try:
@@ -91,11 +95,7 @@ def get_submodulos():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-# ============================================================
-# 6. PERMISOS DE USUARIO POR EMPRESA Y SUBMÓDULOS
-# ============================================================
-
-@integracion_bp.route('/usuarios/<usuario_id>/permisos', methods=['GET'])
+@integracion_bp.route('/api/config/usuarios/<usuario_id>/permisos', methods=['GET'])
 def get_usuario_permisos(usuario_id):
     """Obtener los permisos de un usuario en una empresa específica"""
     try:
@@ -168,7 +168,7 @@ def get_usuario_permisos(usuario_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@integracion_bp.route('/usuarios/<usuario_id>/permisos', methods=['POST'])
+@integracion_bp.route('/api/config/usuarios/<usuario_id>/permisos', methods=['POST'])
 def update_usuario_permisos(usuario_id):
     """Actualizar los permisos de un usuario en una empresa"""
     try:
@@ -234,11 +234,7 @@ def update_usuario_permisos(usuario_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-# ============================================================
-# 7. AUDITORÍA
-# ============================================================
-
-@integracion_bp.route('/auditoria', methods=['GET'])
+@integracion_bp.route('/api/config/auditoria', methods=['GET'])
 def get_auditoria():
     """Obtener registros de auditoría"""
     try:
@@ -320,11 +316,7 @@ def registrar_auditoria(empresa_id, auth_user_id, tabla, registro_id, accion, da
         print(f"❌ Error en registrar_auditoria: {e}")
 
 
-# ============================================================
-# 8. INFORMACIÓN DE LA SESIÓN
-# ============================================================
-
-@integracion_bp.route('/session', methods=['GET'])
+@integracion_bp.route('/api/config/session', methods=['GET'])
 def get_session_info():
     """Obtener información de la sesión actual"""
     try:

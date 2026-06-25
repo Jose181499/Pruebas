@@ -1,23 +1,26 @@
-﻿from flask import Blueprint, render_template
-
-correlativos_bp = Blueprint('correlativos', __name__)
-
-@correlativos_bp.route('/correlativos')
-def correlativos():
-    return render_template('correlativos.html')
-
-# routes/correlativos.py
-from flask import Blueprint, request, jsonify
+﻿# routes/correlativos.py
+from flask import Blueprint, render_template, request, jsonify
 from database import db_query, db_execute, db_tx
 from psycopg2.extras import RealDictCursor
 
-correlativos_bp = Blueprint('correlativos', __name__, url_prefix='/api/config')
+# ============================================================
+# BLUEPRINT - UN SOLO Blueprint para todo
+# ============================================================
+correlativos_bp = Blueprint('correlativos', __name__)
 
 # ============================================================
-# 3. CORRELATIVOS
+# RUTA PARA LA PÁGINA HTML
+# ============================================================
+@correlativos_bp.route('/correlativos')
+def correlativos_page():
+    """Página de correlativos"""
+    return render_template('correlativos.html')
+
+# ============================================================
+# ENDPOINTS API PARA CORRELATIVOS
 # ============================================================
 
-@correlativos_bp.route('/correlativos', methods=['GET'])
+@correlativos_bp.route('/api/config/correlativos', methods=['GET'])
 def get_correlativos():
     """Obtener todos los correlativos"""
     try:
@@ -57,7 +60,7 @@ def get_correlativos():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@correlativos_bp.route('/correlativos/<correlativo_id>', methods=['GET'])
+@correlativos_bp.route('/api/config/correlativos/<correlativo_id>', methods=['GET'])
 def get_correlativo(correlativo_id):
     """Obtener un correlativo específico por ID (UUID)"""
     try:
@@ -98,7 +101,7 @@ def get_correlativo(correlativo_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@correlativos_bp.route('/correlativos', methods=['POST'])
+@correlativos_bp.route('/api/config/correlativos', methods=['POST'])
 def create_correlativo():
     """Crear un nuevo correlativo o reactivar uno existente"""
     try:
@@ -189,7 +192,7 @@ def create_correlativo():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@correlativos_bp.route('/correlativos/<correlativo_id>', methods=['PUT'])
+@correlativos_bp.route('/api/config/correlativos/<correlativo_id>', methods=['PUT'])
 def update_correlativo(correlativo_id):
     """Actualizar un correlativo existente (UUID)"""
     try:
@@ -250,7 +253,7 @@ def update_correlativo(correlativo_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@correlativos_bp.route('/correlativos/<correlativo_id>', methods=['DELETE'])
+@correlativos_bp.route('/api/config/correlativos/<correlativo_id>', methods=['DELETE'])
 def delete_correlativo(correlativo_id):
     """Eliminar correlativo (borrado lógico) - UUID"""
     try:
@@ -279,7 +282,7 @@ def delete_correlativo(correlativo_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@correlativos_bp.route('/correlativos/tomar', methods=['POST'])
+@correlativos_bp.route('/api/config/correlativos/tomar', methods=['POST'])
 def tomar_correlativo():
     """Tomar un correlativo (incrementar y devolver el siguiente número)"""
     try:

@@ -1,23 +1,26 @@
-from flask import Blueprint, render_template
-
-usuarios_bp = Blueprint('usuarios', __name__)
-
-@usuarios_bp.route('/usuarios')
-def usuarios():
-    return render_template('usuarios.html')
-
 # routes/usuarios.py
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, render_template, request, jsonify, session
 from database import db_query, db_execute, db_tx
 from psycopg2.extras import RealDictCursor
 
-usuarios_bp = Blueprint('usuarios', __name__, url_prefix='/api/config')
+# ============================================================
+# BLUEPRINT - UN SOLO Blueprint para todo
+# ============================================================
+usuarios_bp = Blueprint('usuarios', __name__)
 
 # ============================================================
-# 2. USUARIOS Y PERMISOS
+# RUTA PARA LA PÁGINA HTML
+# ============================================================
+@usuarios_bp.route('/usuarios')
+def usuarios_page():
+    """Página de usuarios"""
+    return render_template('usuarios.html')
+
+# ============================================================
+# ENDPOINTS API PARA USUARIOS
 # ============================================================
 
-@usuarios_bp.route('/usuarios', methods=['GET'])
+@usuarios_bp.route('/api/config/usuarios', methods=['GET'])
 def get_usuarios():
     """Obtener todos los usuarios con sus empresas y roles"""
     try:
@@ -70,7 +73,7 @@ def get_usuarios():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@usuarios_bp.route('/usuarios/<usuario_id>', methods=['GET'])
+@usuarios_bp.route('/api/config/usuarios/<usuario_id>', methods=['GET'])
 def get_usuario(usuario_id):
     """Obtener un usuario específico"""
     try:
@@ -103,7 +106,7 @@ def get_usuario(usuario_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@usuarios_bp.route('/usuarios', methods=['POST'])
+@usuarios_bp.route('/api/config/usuarios', methods=['POST'])
 def create_usuario():
     """Crear un nuevo usuario con sus asignaciones de empresa y rol"""
     try:
@@ -165,7 +168,7 @@ def create_usuario():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@usuarios_bp.route('/usuarios/<usuario_id>', methods=['PUT'])
+@usuarios_bp.route('/api/config/usuarios/<usuario_id>', methods=['PUT'])
 def update_usuario(usuario_id):
     """Actualizar un usuario existente"""
     try:
@@ -204,7 +207,7 @@ def update_usuario(usuario_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@usuarios_bp.route('/usuarios/<usuario_id>', methods=['DELETE'])
+@usuarios_bp.route('/api/config/usuarios/<usuario_id>', methods=['DELETE'])
 def delete_usuario(usuario_id):
     """Eliminar usuario (borrado lógico)"""
     try:
@@ -223,7 +226,7 @@ def delete_usuario(usuario_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@usuarios_bp.route('/roles', methods=['GET'])
+@usuarios_bp.route('/api/config/roles', methods=['GET'])
 def get_roles():
     """Obtener todos los roles"""
     try:
@@ -249,7 +252,6 @@ def get_roles():
                 'total': len(roles)
             })
         else:
-            # Si no hay datos, devolver roles por defecto
             return jsonify({
                 'success': True,
                 'data': [
