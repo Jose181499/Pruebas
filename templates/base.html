@@ -1066,10 +1066,13 @@ document.getElementById("saveModal").addEventListener("click", async function() 
 // APLICAR PERMISOS A LA INTERFAZ
 // ============================================================
 
+// ============================================================
+// APLICAR PERMISOS A LA INTERFAZ - DEFINITIVA
+// ============================================================
 function aplicarPermisosInterfaz(esAdmin, permisosMap) {
     console.log('🔐 Aplicando permisos - esAdmin:', esAdmin);
     
-    // ✅ SIEMPRE MOSTRAR EL DASHBOARD (no se oculta nunca)
+    // ✅ SIEMPRE MOSTRAR EL DASHBOARD
     document.querySelectorAll('.menu-group').forEach(group => {
         const header = group.querySelector('.menu-header');
         if (header?.textContent?.includes('Dashboard') || header?.textContent?.includes('0 ─ Dashboard')) {
@@ -1091,25 +1094,36 @@ function aplicarPermisosInterfaz(esAdmin, permisosMap) {
     const modulosOperativos = ['Productos', 'Cotizaciones', 'Ventas', 'Compras', 'Logística', 'Inventario'];
     const modulosRestringidos = ['Configuración', 'Maestros', 'CxC', 'CxP', 'Caja', 'Reportes', 'SUNAT'];
     
+    // ✅ CREAR UN SET PARA EVITAR DUPLICADOS
+    const modulosProcesados = new Set();
+    
     submodulosData.forEach(sub => {
         const nombre = sub.nombre;
         const subId = sub.id;
+        
+        // ✅ EVITAR PROCESAR EL MISMO MÓDULO DOS VECES
+        if (modulosProcesados.has(nombre)) {
+            console.log(`⏭️ ${nombre}: ya procesado, omitiendo duplicado`);
+            return;
+        }
+        modulosProcesados.add(nombre);
+        
         const permiso = permisosMap ? permisosMap[subId] : null;
         const tienePermiso = permiso?.puede_ver || false;
         
         let debeMostrar = false;
         
-        // ✅ Si tiene permiso explícito, SIEMPRE mostrar
+        // ✅ REGLA 1: Si tiene permiso explícito, MOSTRAR
         if (tienePermiso) {
             debeMostrar = true;
             console.log(`✅ ${nombre}: tiene permiso EXPLÍCITO -> mostrar`);
         } 
-        // ✅ Si es operativo, mostrar por defecto
+        // ✅ REGLA 2: Si es operativo, mostrar por defecto
         else if (modulosOperativos.includes(nombre)) {
             debeMostrar = true;
             console.log(`✅ ${nombre}: es operativo -> mostrar por defecto`);
         } 
-        // ✅ Si es restringido y NO tiene permiso, ocultar
+        // ✅ REGLA 3: Si es restringido y NO tiene permiso, ocultar
         else if (modulosRestringidos.includes(nombre) && !tienePermiso) {
             debeMostrar = false;
             console.log(`❌ ${nombre}: es restringido y no tiene permiso -> ocultar`);
@@ -1119,19 +1133,21 @@ function aplicarPermisosInterfaz(esAdmin, permisosMap) {
             console.log(`❌ ${nombre}: sin permiso -> ocultar`);
         }
         
-        // Aplicar a child-btn
+        // ✅ APLICAR A child-btn
         document.querySelectorAll('.child-btn').forEach(el => {
             const texto = el.textContent.trim();
             if (texto === nombre || texto.includes(nombre) || nombre.includes(texto)) {
                 el.style.display = debeMostrar ? '' : 'none';
+                console.log(`   🔹 child-btn "${texto}" -> ${debeMostrar ? 'visible' : 'oculto'}`);
             }
         });
         
-        // Aplicar a tab-btn
+        // ✅ APLICAR A tab-btn
         document.querySelectorAll('.tab-btn').forEach(el => {
             const texto = el.textContent.trim();
             if (texto === nombre || texto.includes(nombre) || nombre.includes(texto)) {
                 el.style.display = debeMostrar ? '' : 'none';
+                console.log(`   🔹 tab-btn "${texto}" -> ${debeMostrar ? 'visible' : 'oculto'}`);
             }
         });
     });
@@ -1142,7 +1158,7 @@ function aplicarPermisosInterfaz(esAdmin, permisosMap) {
         const isDashboard = header?.textContent?.includes('Dashboard') || 
                            header?.textContent?.includes('0 ─ Dashboard');
         
-        if (isDashboard) return; // Saltar el Dashboard
+        if (isDashboard) return;
         
         const children = group.querySelectorAll('.child-btn');
         let hasVisible = false;
@@ -1152,16 +1168,14 @@ function aplicarPermisosInterfaz(esAdmin, permisosMap) {
             }
         });
         
+        group.style.display = hasVisible ? '' : 'none';
         if (!hasVisible) {
-            group.style.display = 'none';
-        } else {
-            group.style.display = '';
+            console.log(`🔹 Grupo "${header?.textContent?.trim()}" oculto (sin hijos visibles)`);
         }
     });
     
     console.log('✅ Permisos aplicados a la interfaz');
 }
-// ============================================================
 // CARGAR PERMISOS DEL USUARIO LOGUEADO - CORREGIDA DEFINITIVA
 // ============================================================
 async function cargarPermisosUsuarioLogueado() {
