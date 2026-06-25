@@ -10,44 +10,28 @@ from flask import (
 from functools import wraps
 
 # ==========================================
-# IMPORTS DE BLUEPRINTS EXISTENTES
+# IMPORTS DE BLUEPRINTS - SOLO LOS QUE EXISTEN
 # ==========================================
-from routes.clientes import clientes_bp
-from routes.cotizaciones import cotizaciones_bp
-from routes.compras import compras_bp
-from routes.proveedores import proveedores_bp
-from routes.mantenedor_productos import mantenedor_productos_bp
-from routes.usuarios import usuarios_bp
-from routes.mantenedor_principal import mantenedor_principal_bp
-from routes.mantenedor_clientes import mantenedor_clientes_bp
-from routes.mantenedor_proveedores import mantenedor_proveedores_bp
-from routes.mantenedor_usuarios import mantenedor_usuarios_bp
-from routes.guias_remision import guias_bp
-from routes.comprobantes import comprobantes_bp
-from routes.comprobantes_compra import comprobantes_compra_bp
-from routes.guias_remision_compra import guias_compra_bp
-from routes.transportistas import transportistas_bp
-from routes.inventario_routes import inventario_bp
-from routes.finanzas import finanzas_bp
-from routes.configuracion_seguridad import config_seguridad_bp
 
-# ==========================================
-# IMPORTS DE NUEVOS BLUEPRINTS
-# ==========================================
+# BLUEPRINTS DE CONFIGURACIÓN Y SEGURIDAD
 from routes.empresas import empresas_bp
+from routes.usuarios import usuarios_bp
 from routes.correlativos import correlativos_bp
 from routes.parametros import parametros_bp
 from routes.integracion import integracion_bp
+from routes.configuracion_seguridad import config_seguridad_bp
+
+# OTROS BLUEPRINTS (para páginas HTML)
+from routes.dashboard import dashboard_bp
+from routes.productos import productos_bp
+from routes.ventas import ventas_bp
+from routes.compras import compras_bp
+from routes.inventario import inventario_bp
+from routes.finanzas import finanzas_bp
 from routes.reportes import reportes_bp
 from routes.herramientas import herramientas_bp
 from routes.papelera import papelera_bp
-from routes.productos import productos_bp
-from routes.ventas import ventas_bp
-from routes.inventario import inventario_bp as inventario_nuevo_bp
-from routes.finanzas import finanzas_bp as finanzas_nuevo_bp
 from routes.configuracion import configuracion_bp
-from routes.dashboard import dashboard_bp
-from routes.usuarios import usuarios_bp as usuarios_nuevo_bp
 
 # ==========================================
 # IMPORTS DE DATABASE
@@ -78,44 +62,28 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-only-change-me")
 
 # ==========================================
-# REGISTRO DE BLUEPRINTS (TODOS)
+# REGISTRO DE BLUEPRINTS
 # ==========================================
 
-# BLUEPRINTS EXISTENTES
-app.register_blueprint(clientes_bp)
-app.register_blueprint(proveedores_bp)
-app.register_blueprint(cotizaciones_bp)
-app.register_blueprint(compras_bp)
-app.register_blueprint(mantenedor_productos_bp)
-app.register_blueprint(usuarios_bp)
-app.register_blueprint(mantenedor_principal_bp)
-app.register_blueprint(mantenedor_clientes_bp)
-app.register_blueprint(mantenedor_usuarios_bp)
-app.register_blueprint(mantenedor_proveedores_bp)
-app.register_blueprint(guias_bp)
-app.register_blueprint(comprobantes_bp)
-app.register_blueprint(comprobantes_compra_bp)
-app.register_blueprint(guias_compra_bp)
-app.register_blueprint(transportistas_bp)
-app.register_blueprint(inventario_bp)
-app.register_blueprint(finanzas_bp)
-app.register_blueprint(config_seguridad_bp)
-
-# NUEVOS BLUEPRINTS
+# BLUEPRINTS DE CONFIGURACIÓN Y SEGURIDAD
 app.register_blueprint(empresas_bp)
+app.register_blueprint(usuarios_bp)
 app.register_blueprint(correlativos_bp)
 app.register_blueprint(parametros_bp)
 app.register_blueprint(integracion_bp)
+app.register_blueprint(config_seguridad_bp)
+
+# OTROS BLUEPRINTS
+app.register_blueprint(dashboard_bp)
+app.register_blueprint(productos_bp)
+app.register_blueprint(ventas_bp)
+app.register_blueprint(compras_bp)
+app.register_blueprint(inventario_bp)
+app.register_blueprint(finanzas_bp)
 app.register_blueprint(reportes_bp)
 app.register_blueprint(herramientas_bp)
 app.register_blueprint(papelera_bp)
-app.register_blueprint(productos_bp)
-app.register_blueprint(ventas_bp)
-app.register_blueprint(inventario_nuevo_bp)
-app.register_blueprint(finanzas_nuevo_bp)
 app.register_blueprint(configuracion_bp)
-app.register_blueprint(dashboard_bp)
-app.register_blueprint(usuarios_nuevo_bp)
 
 # ==========================================
 # HELPERS
@@ -173,7 +141,6 @@ def login():
             flash("Por favor, ingresa usuario y contraseña.", "error")
             return render_template("login.html")
 
-        # Verificar si el usuario es un email o un nombre de usuario
         if '@' in usuario:
             email = usuario
         else:
