@@ -8,6 +8,7 @@ from flask import (
     Flask, render_template, request, redirect, url_for, session, flash, jsonify
 )
 from functools import wraps
+from utils import login_required
 
 # ==========================================
 # IMPORTS DE BLUEPRINTS - SOLO LOS QUE EXISTEN
@@ -104,14 +105,6 @@ def formato_moneda_soles(valor):
 
 app.jinja_env.filters["formato_soles"] = formato_moneda_soles
 
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'usuario_id' not in session:
-            flash('Por favor, inicia sesión para acceder.', 'warning')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 # ==========================================
 # RUTAS DE AUTENTICACIÓN
