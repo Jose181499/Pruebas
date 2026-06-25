@@ -3,10 +3,15 @@ import sys
 import requests
 import base64
 sys.dont_write_bytecode = True
+
 from flask import (
     Flask, render_template, request, redirect, url_for, session, flash, jsonify
 )
 from functools import wraps
+
+# ==========================================
+# IMPORTS DE BLUEPRINTS EXISTENTES
+# ==========================================
 from routes.clientes import clientes_bp
 from routes.cotizaciones import cotizaciones_bp
 from routes.compras import compras_bp
@@ -23,9 +28,30 @@ from routes.comprobantes_compra import comprobantes_compra_bp
 from routes.guias_remision_compra import guias_compra_bp
 from routes.transportistas import transportistas_bp
 from routes.inventario_routes import inventario_bp
-from routes.finanzas import finanzas_bp  
+from routes.finanzas import finanzas_bp
 from routes.configuracion_seguridad import config_seguridad_bp
 
+# ==========================================
+# IMPORTS DE NUEVOS BLUEPRINTS
+# ==========================================
+from routes.empresas import empresas_bp
+from routes.correlativos import correlativos_bp
+from routes.parametros import parametros_bp
+from routes.integracion import integracion_bp
+from routes.reportes import reportes_bp
+from routes.herramientas import herramientas_bp
+from routes.papelera import papelera_bp
+from routes.productos import productos_bp
+from routes.ventas import ventas_bp
+from routes.inventario import inventario_bp as inventario_nuevo_bp
+from routes.finanzas import finanzas_bp as finanzas_nuevo_bp
+from routes.configuracion import configuracion_bp
+from routes.dashboard import dashboard_bp
+from routes.usuarios import usuarios_bp as usuarios_nuevo_bp
+
+# ==========================================
+# IMPORTS DE DATABASE
+# ==========================================
 from database import (
     verificar_usuario,
     verificar_usuario_supabase,
@@ -45,12 +71,17 @@ from database import (
     db_query
 )
 
+# ==========================================
+# APP CONFIGURACIÓN
+# ==========================================
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-only-change-me")
 
 # ==========================================
-# REGISTRO DE BLUEPRINTS
+# REGISTRO DE BLUEPRINTS (TODOS)
 # ==========================================
+
+# BLUEPRINTS EXISTENTES
 app.register_blueprint(clientes_bp)
 app.register_blueprint(proveedores_bp)
 app.register_blueprint(cotizaciones_bp)
@@ -67,12 +98,29 @@ app.register_blueprint(comprobantes_compra_bp)
 app.register_blueprint(guias_compra_bp)
 app.register_blueprint(transportistas_bp)
 app.register_blueprint(inventario_bp)
-app.register_blueprint(finanzas_bp) 
+app.register_blueprint(finanzas_bp)
 app.register_blueprint(config_seguridad_bp)
+
+# NUEVOS BLUEPRINTS
+app.register_blueprint(empresas_bp)
+app.register_blueprint(correlativos_bp)
+app.register_blueprint(parametros_bp)
+app.register_blueprint(integracion_bp)
+app.register_blueprint(reportes_bp)
+app.register_blueprint(herramientas_bp)
+app.register_blueprint(papelera_bp)
+app.register_blueprint(productos_bp)
+app.register_blueprint(ventas_bp)
+app.register_blueprint(inventario_nuevo_bp)
+app.register_blueprint(finanzas_nuevo_bp)
+app.register_blueprint(configuracion_bp)
+app.register_blueprint(dashboard_bp)
+app.register_blueprint(usuarios_nuevo_bp)
 
 # ==========================================
 # HELPERS
 # ==========================================
+
 def formato_moneda_soles(valor):
     try:
         if valor is None:
@@ -125,7 +173,7 @@ def login():
             flash("Por favor, ingresa usuario y contraseña.", "error")
             return render_template("login.html")
 
-        # ✅ Verificar si el usuario es un email o un nombre de usuario
+        # Verificar si el usuario es un email o un nombre de usuario
         if '@' in usuario:
             email = usuario
         else:
@@ -152,23 +200,17 @@ def login():
         print(f"📋 Resultado del login: {resultado}")
 
         if resultado and resultado.get('success'):
-            # ✅ GUARDAR SESIÓN CORRECTAMENTE
-            session.clear()  # Limpiar sesión anterior
+            session.clear()
             session["usuario_id"] = resultado["user_id"]
             session["usuario"] = resultado["usuario_sistema"]
             session["nombre_completo"] = resultado["nombres_apellidos"] or usuario
             session["rol"] = resultado["rol"]
             session["empresa"] = empresa
             session["auth_user_id"] = resultado["auth_user_id"]
-            
-            # ✅ Forzar que la sesión se guarde
             session.modified = True
             
             print(f"✅ SESIÓN GUARDADA: {dict(session)}")
-
             flash(f'✅ Bienvenido/a {session["nombre_completo"]}!', "success")
-            
-            # ✅ Redirigir con un pequeño delay para asegurar que la sesión se guarde
             return redirect(url_for("index"))
 
         flash(resultado.get('error', '❌ Usuario o contraseña incorrectos.'), "error")
@@ -183,8 +225,9 @@ def logout():
     return redirect(url_for("login"))
 
 # ==========================================
-# ✅ RUTA INDEX CORREGIDA - CON VARIABLES (SOLO UNA VEZ)
+# RUTA INDEX (DASHBOARD)
 # ==========================================
+
 @app.route("/index")
 @login_required
 def index():
@@ -199,6 +242,7 @@ def index():
 # ==========================================
 # RUTA DE DEPURACIÓN
 # ==========================================
+
 @app.route("/debug/session")
 def debug_session():
     """Ver el contenido de la sesión actual"""
@@ -211,6 +255,7 @@ def debug_session():
 # ==========================================
 # ENDPOINTS CLIENTES API
 # ==========================================
+
 @app.route("/api/clientes/guardar", methods=["POST"])
 def api_guardar_cliente():
     try:
@@ -295,6 +340,7 @@ def api_ultimo_codigo():
 # ==========================================
 # ENDPOINTS PROVEEDORES API
 # ==========================================
+
 @app.route("/api/proveedores/guardar", methods=["POST"])
 def api_guardar_proveedor():
     try:
@@ -359,6 +405,7 @@ def api_ultimo_codigo_proveedor():
 # ==========================================
 # ENDPOINT SUNAT
 # ==========================================
+
 @app.route("/api/sunat/consulta", methods=["GET"])
 def api_consulta_sunat():
     ruc = request.args.get('ruc', '')
@@ -389,6 +436,7 @@ def api_consulta_sunat():
 # ==========================================
 # ENDPOINTS PRODUCTOS API
 # ==========================================
+
 @app.route("/api/productos/buscar", methods=["GET"])
 def api_buscar_productos():
     try:
@@ -434,7 +482,12 @@ def api_listar_productos():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+# ==========================================
+# RUTAS DE PÁGINAS PRINCIPALES
+# ==========================================
+
 @app.route("/compras")
+@login_required
 def gestor_compras_directo():
     try:
         return render_template("compras.html")
@@ -442,18 +495,103 @@ def gestor_compras_directo():
         return f"Error al cargar template: {str(e)}", 500
 
 # ==========================================
+# RUTAS PARA NUEVOS TEMPLATES
+# ==========================================
+
+@app.route("/configuracion")
+@login_required
+def configuracion_page():
+    return render_template("configuracion.html")
+
+@app.route("/correlativos")
+@login_required
+def correlativos_page():
+    return render_template("correlativos.html")
+
+@app.route("/finanzas")
+@login_required
+def finanzas_page():
+    return render_template("finanzas.html")
+
+@app.route("/herramientas")
+@login_required
+def herramientas_page():
+    return render_template("herramientas.html")
+
+@app.route("/integracion")
+@login_required
+def integracion_page():
+    return render_template("integracion.html")
+
+@app.route("/inventario")
+@login_required
+def inventario_page():
+    return render_template("inventario.html")
+
+@app.route("/mantenedor")
+@login_required
+def mantenedor_page():
+    return render_template("mantenedor.html")
+
+@app.route("/papelera")
+@login_required
+def papelera_page():
+    return render_template("papelera.html")
+
+@app.route("/parametros")
+@login_required
+def parametros_page():
+    return render_template("parametros.html")
+
+@app.route("/productos")
+@login_required
+def productos_page():
+    return render_template("productos.html")
+
+@app.route("/reportes")
+@login_required
+def reportes_page():
+    return render_template("reportes.html")
+
+@app.route("/ventas")
+@login_required
+def ventas_page():
+    return render_template("ventas.html")
+
+# ==========================================
 # EJECUTAR
 # ==========================================
+
 if __name__ == "__main__":
     host = "0.0.0.0"
     port = 5000
 
-    print(f"🚀 Servidor corriendo en:")
-    print(f"👉 http://localhost:{port}")
-    print(f"👉 http://127.0.0.1:{port}")
-    print(f"\n📋 Rutas disponibles:")
-    print(f"   - Login: http://localhost:{port}/login")
-    print(f"   - Dashboard: http://localhost:{port}/index")
-    print(f"   - Configuración: http://localhost:{port}/api/config/empresas")
+    print("=" * 60)
+    print("🚀 SERVIDOR ERP MULTIEMPRESA INICIADO")
+    print("=" * 60)
+    print(f"📍 Servidor corriendo en:")
+    print(f"   👉 http://localhost:{port}")
+    print(f"   👉 http://127.0.0.1:{port}")
+    print(f"\n📋 RUTAS PRINCIPALES:")
+    print(f"   - Login:      http://localhost:{port}/login")
+    print(f"   - Dashboard:  http://localhost:{port}/index")
+    print(f"   - Empresas:   http://localhost:{port}/empresas")
+    print(f"   - Usuarios:   http://localhost:{port}/usuarios")
+    print(f"   - Maestros:   http://localhost:{port}/mantenedor")
+    print(f"   - Productos:  http://localhost:{port}/productos")
+    print(f"   - Ventas:     http://localhost:{port}/ventas")
+    print(f"   - Compras:    http://localhost:{port}/compras")
+    print(f"   - Inventario: http://localhost:{port}/inventario")
+    print(f"   - Finanzas:   http://localhost:{port}/finanzas")
+    print(f"   - Reportes:   http://localhost:{port}/reportes")
+    print(f"\n📋 RUTAS DE CONFIGURACIÓN:")
+    print(f"   - Correlativos:   http://localhost:{port}/correlativos")
+    print(f"   - Parámetros:     http://localhost:{port}/parametros")
+    print(f"   - Integración:    http://localhost:{port}/integracion")
+    print(f"   - Herramientas:   http://localhost:{port}/herramientas")
+    print(f"   - Papelera:       http://localhost:{port}/papelera")
+    print("=" * 60)
+    print("✅ Servidor listo para recibir peticiones")
+    print("=" * 60)
 
     app.run(debug=True, host=host, port=port)
