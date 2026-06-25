@@ -1066,9 +1066,6 @@ document.getElementById("saveModal").addEventListener("click", async function() 
 // APLICAR PERMISOS A LA INTERFAZ
 // ============================================================
 
-// ============================================================
-// APLICAR PERMISOS A LA INTERFAZ - DEFINITIVA
-// ============================================================
 function aplicarPermisosInterfaz(esAdmin, permisosMap) {
     console.log('🔐 Aplicando permisos - esAdmin:', esAdmin);
     
@@ -1094,83 +1091,116 @@ function aplicarPermisosInterfaz(esAdmin, permisosMap) {
     const modulosOperativos = ['Productos', 'Cotizaciones', 'Ventas', 'Compras', 'Logística', 'Inventario'];
     const modulosRestringidos = ['Configuración', 'Maestros', 'CxC', 'CxP', 'Caja', 'Reportes', 'SUNAT'];
     
-    // ✅ CREAR UN SET PARA EVITAR DUPLICADOS
-    const modulosProcesados = new Set();
+    // ✅ MAPA DE MÓDULOS A SUS SUBMÓDULOS (para mostrar todo el grupo)
+    const modulosPrincipales = {
+        'Configuración': ['Empresas', 'Usuarios y permisos', 'Correlativos', 'Parámetros generales', 'Integración ERP'],
+        'Maestros': ['Clientes', 'Proveedores', 'Almacenes', 'Categorías', 'Marcas', 'Unidades de medida'],
+        'Productos': ['Listado de productos', 'Ficha de producto'],
+        'Ventas': ['Cotizaciones', 'Comprobantes cliente', 'Guías de remisión cliente', 'Notas de crédito'],
+        'Compras': ['Solicitud de compra', 'Comparativo de proveedores', 'Orden de compra', 'Comprobantes proveedor', 'Recepción de mercadería'],
+        'Inventario': ['Estado de stock', 'Kardex', 'Entradas y salidas', 'Transferencias'],
+        'Finanzas / Tesorería': ['Cuentas por cobrar', 'Cuentas por pagar', 'Caja y bancos', 'Flujo de caja'],
+        'Reportes': ['Reporte de ventas', 'Reporte de compras', 'Reporte de inventario', 'Reporte de finanzas', 'SUNAT'],
+        'Herramientas': ['Carga masiva'],
+        'Papelera / Auditoría': ['Documentos anulados', 'Registros eliminados', 'Historial de cambios']
+    };
     
+    // ✅ PROCESAR CADA SUBMÓDULO
+    const modulosProcesados = new Set();
+    let mostrarConfiguracion = false;
+    
+    // Primero, determinar qué módulos principales deben mostrarse
     submodulosData.forEach(sub => {
         const nombre = sub.nombre;
         const subId = sub.id;
-        
-        // ✅ EVITAR PROCESAR EL MISMO MÓDULO DOS VECES
-        if (modulosProcesados.has(nombre)) {
-            console.log(`⏭️ ${nombre}: ya procesado, omitiendo duplicado`);
-            return;
-        }
-        modulosProcesados.add(nombre);
-        
         const permiso = permisosMap ? permisosMap[subId] : null;
         const tienePermiso = permiso?.puede_ver || false;
         
-        let debeMostrar = false;
-        
-        // ✅ REGLA 1: Si tiene permiso explícito, MOSTRAR
-        if (tienePermiso) {
-            debeMostrar = true;
-            console.log(`✅ ${nombre}: tiene permiso EXPLÍCITO -> mostrar`);
-        } 
-        // ✅ REGLA 2: Si es operativo, mostrar por defecto
-        else if (modulosOperativos.includes(nombre)) {
-            debeMostrar = true;
-            console.log(`✅ ${nombre}: es operativo -> mostrar por defecto`);
-        } 
-        // ✅ REGLA 3: Si es restringido y NO tiene permiso, ocultar
-        else if (modulosRestringidos.includes(nombre) && !tienePermiso) {
-            debeMostrar = false;
-            console.log(`❌ ${nombre}: es restringido y no tiene permiso -> ocultar`);
-        } 
-        else {
-            debeMostrar = false;
-            console.log(`❌ ${nombre}: sin permiso -> ocultar`);
+        // Verificar si es Configuración (tiene permiso explícito)
+        if (nombre === 'Configuración' && tienePermiso) {
+            mostrarConfiguracion = true;
+            console.log('✅ Configuración tiene permiso -> mostrando todo el grupo');
         }
-        
-        // ✅ APLICAR A child-btn
-        document.querySelectorAll('.child-btn').forEach(el => {
-            const texto = el.textContent.trim();
-            if (texto === nombre || texto.includes(nombre) || nombre.includes(texto)) {
-                el.style.display = debeMostrar ? '' : 'none';
-                console.log(`   🔹 child-btn "${texto}" -> ${debeMostrar ? 'visible' : 'oculto'}`);
-            }
-        });
-        
-        // ✅ APLICAR A tab-btn
-        document.querySelectorAll('.tab-btn').forEach(el => {
-            const texto = el.textContent.trim();
-            if (texto === nombre || texto.includes(nombre) || nombre.includes(texto)) {
-                el.style.display = debeMostrar ? '' : 'none';
-                console.log(`   🔹 tab-btn "${texto}" -> ${debeMostrar ? 'visible' : 'oculto'}`);
-            }
-        });
     });
     
-    // ✅ OCULTAR GRUPOS DE MENÚ SIN HIJOS VISIBLES (excepto Dashboard)
+    // ✅ MOSTRAR GRUPOS COMPLETOS SEGÚN PERMISOS
     document.querySelectorAll('.menu-group').forEach(group => {
         const header = group.querySelector('.menu-header');
-        const isDashboard = header?.textContent?.includes('Dashboard') || 
-                           header?.textContent?.includes('0 ─ Dashboard');
+        const headerText = header?.textContent?.trim() || '';
         
-        if (isDashboard) return;
+        // Saltar Dashboard (ya se mostró)
+        if (headerText.includes('Dashboard') || headerText.includes('0 ─ Dashboard')) {
+            return;
+        }
         
-        const children = group.querySelectorAll('.child-btn');
-        let hasVisible = false;
-        children.forEach(child => {
-            if (child.style.display !== 'none' && child.style.display !== '') {
-                hasVisible = true;
+        // Determinar si este grupo debe mostrarse
+        let debeMostrarGrupo = false;
+        
+        // Si es Configuración y tiene permiso, mostrar
+        if (headerText.includes('Configuración') && mostrarConfiguracion) {
+            debeMostrarGrupo = true;
+            console.log(`✅ Mostrando grupo: ${headerText}`);
+        }
+        
+        // Si es un módulo operativo, mostrar
+        const esOperativo = modulosOperativos.some(m => headerText.includes(m));
+        if (esOperativo) {
+            debeMostrarGrupo = true;
+            console.log(`✅ Mostrando grupo operativo: ${headerText}`);
+        }
+        
+        // Si tiene algún permiso explícito para sus hijos, mostrar
+        const hijos = group.querySelectorAll('.child-btn');
+        hijos.forEach(child => {
+            const texto = child.textContent.trim();
+            // Buscar si algún hijo tiene permiso
+            const submodulo = submodulosData.find(s => 
+                texto.includes(s.nombre) || s.nombre.includes(texto)
+            );
+            if (submodulo) {
+                const permiso = permisosMap ? permisosMap[submodulo.id] : null;
+                if (permiso?.puede_ver) {
+                    debeMostrarGrupo = true;
+                    console.log(`✅ Mostrando grupo porque "${texto}" tiene permiso`);
+                }
             }
         });
         
-        group.style.display = hasVisible ? '' : 'none';
-        if (!hasVisible) {
-            console.log(`🔹 Grupo "${header?.textContent?.trim()}" oculto (sin hijos visibles)`);
+        // Aplicar visibilidad al grupo
+        group.style.display = debeMostrarGrupo ? '' : 'none';
+        if (!debeMostrarGrupo) {
+            console.log(`🔹 Grupo "${headerText}" oculto`);
+        }
+        
+        // Mostrar todos los hijos si el grupo está visible
+        if (debeMostrarGrupo) {
+            hijos.forEach(child => {
+                child.style.display = '';
+            });
+        }
+    });
+    
+    // ✅ OCULTAR/MOSTRAR TABS
+    document.querySelectorAll('.tab-btn').forEach(tab => {
+        const texto = tab.textContent.trim();
+        let debeMostrarTab = false;
+        
+        // Si es Configuración y tiene permiso, mostrar todos los tabs de configuración
+        if (mostrarConfiguracion) {
+            const tabsConfig = ['Empresas', 'Usuarios y permisos', 'Correlativos', 'Parámetros', 'Integración ERP'];
+            if (tabsConfig.some(t => texto.includes(t))) {
+                debeMostrarTab = true;
+            }
+        }
+        
+        // Si es operativo, mostrar
+        if (modulosOperativos.some(m => texto.includes(m))) {
+            debeMostrarTab = true;
+        }
+        
+        tab.style.display = debeMostrarTab ? '' : 'none';
+        if (!debeMostrarTab) {
+            console.log(`🔹 Tab "${texto}" oculto`);
         }
     });
     
