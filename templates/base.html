@@ -1052,6 +1052,8 @@ document.getElementById("saveModal").addEventListener("click", async function() 
 // APLICAR PERMISOS A LA INTERFAZ
 // ============================================================
 function aplicarPermisosInterfaz(esAdmin, permisosMap) {
+    console.log('🔐 Aplicando permisos - esAdmin:', esAdmin, 'permisosMap:', permisosMap);
+    
     // Si es admin, mostrar todo
     if (esAdmin) {
         document.querySelectorAll('.menu-group, .menu-header, .child-btn, .tab-btn').forEach(el => {
@@ -1080,60 +1082,67 @@ function aplicarPermisosInterfaz(esAdmin, permisosMap) {
     // Módulos que un operativo puede ver por defecto (sin necesidad de permiso)
     const modulosOperativos = ['Productos', 'Cotizaciones', 'Ventas', 'Compras', 'Logística', 'Inventario'];
     
-    // ✅ LISTA DE MÓDULOS QUE NUNCA DEBEN VERSE POR DEFECTO (SOLO CON PERMISO EXPLÍCITO)
+    // ✅ MÓDULOS RESTRINGIDOS (solo visibles con permiso explícito)
     const modulosRestringidos = ['Configuración', 'Maestros', 'CxC', 'CxP', 'Caja', 'Reportes', 'SUNAT'];
     
     // Para cada submódulo, verificar si tiene permiso
     submodulosData.forEach(sub => {
         const nombre = sub.nombre;
+        const subId = sub.id;
         
-        // Buscar el permiso
-        const permiso = permisosMap[sub.id];
+        // Buscar el permiso en el mapa
+        const permiso = permisosMap[subId];
         const tienePermiso = permiso?.puede_ver || false;
         
-        // Determinar si es un módulo operativo
+        // Determinar si es un módulo operativo o restringido
         const esOperativo = modulosOperativos.includes(nombre);
         const esRestringido = modulosRestringidos.includes(nombre);
         
-        // 🔥 NUEVA LÓGICA:
-        // - Si es admin → mostrar
-        // - Si tiene permiso explícito → mostrar
-        // - Si es operativo Y está en la lista de operativos → mostrar (por defecto)
-        // - Si es restringido Y NO tiene permiso → ocultar
+        // 🔥 NUEVA LÓGICA DE PERMISOS:
         let debeMostrar = false;
         
         if (tienePermiso) {
+            // Si tiene permiso explícito, mostrar
             debeMostrar = true;
+            console.log(`✅ ${nombre}: tiene permiso explícito -> mostrar`);
         } else if (esOperativo) {
-            debeMostrar = true; // Los operativos ven estos por defecto
+            // Si es operativo y NO tiene permiso, mostrar por defecto (pero con permisos limitados)
+            debeMostrar = true;
+            console.log(`✅ ${nombre}: es operativo -> mostrar por defecto`);
         } else if (esRestringido) {
-            debeMostrar = false; // Solo se ven con permiso explícito
+            // Si es restringido y NO tiene permiso, ocultar
+            debeMostrar = false;
+            console.log(`❌ ${nombre}: es restringido y no tiene permiso -> ocultar`);
         } else {
-            debeMostrar = false; // Por defecto, oculto
+            // Otros módulos: ocultar por defecto
+            debeMostrar = false;
+            console.log(`❌ ${nombre}: sin permiso y no es operativo -> ocultar`);
         }
         
         // Buscar la sección correspondiente
         const screenName = mapeoSecciones[nombre] || nombre.toLowerCase();
         
-        // Ocultar/mostrar en el menú lateral
+        // ✅ OCULTAR/MOSTRAR EN EL MENÚ LATERAL
         document.querySelectorAll(`.child-btn[data-screen="${screenName}"]`).forEach(el => {
-            // Verificar si el texto del botón coincide con el nombre del submódulo
             const texto = el.textContent.trim();
+            // Coincidencia exacta o parcial
             if (texto === nombre || texto.includes(nombre) || nombre.includes(texto)) {
                 el.style.display = debeMostrar ? '' : 'none';
+                console.log(`   🔹 child-btn "${texto}" -> ${debeMostrar ? 'visible' : 'oculto'}`);
             }
         });
         
-        // Ocultar/mostrar en los tabs
+        // ✅ OCULTAR/MOSTRAR EN LOS TABS
         document.querySelectorAll(`.tab-btn[data-screen="${screenName}"]`).forEach(el => {
             const texto = el.textContent.trim();
             if (texto === nombre || texto.includes(nombre) || nombre.includes(texto)) {
                 el.style.display = debeMostrar ? '' : 'none';
+                console.log(`   🔹 tab-btn "${texto}" -> ${debeMostrar ? 'visible' : 'oculto'}`);
             }
         });
     });
     
-    // Ocultar grupos de menú que no tienen hijos visibles
+    // ✅ OCULTAR GRUPOS DE MENÚ QUE NO TIENEN HIJOS VISIBLES
     document.querySelectorAll('.menu-group').forEach(group => {
         const children = group.querySelectorAll('.child-btn');
         let hasVisible = false;
@@ -1142,19 +1151,43 @@ function aplicarPermisosInterfaz(esAdmin, permisosMap) {
                 hasVisible = true;
             }
         });
-        // Si el grupo no tiene hijos visibles y no es el dashboard, ocultarlo
+        
+        // Verificar si es el dashboard
         const header = group.querySelector('.menu-header');
-        const isDashboard = header?.dataset?.screen === 'dashboard' || header?.textContent?.includes('Dashboard');
+        const isDashboard = header?.dataset?.screen === 'dashboard' || 
+                           header?.textContent?.includes('Dashboard') ||
+                           header?.textContent?.includes('0 ─ Dashboard');
+        
         if (!hasVisible && !isDashboard) {
             group.style.display = 'none';
+            console.log(`🔹 Grupo oculto (sin hijos visibles)`);
         } else {
             group.style.display = '';
         }
     });
     
+    // ✅ OCULTAR BOTONES DE ACCIÓN PARA USUARIOS NO ADMIN
+    if (!esAdmin) {
+        // Ocultar botón "Nueva empresa"
+        document.querySelectorAll('.btn-primary').forEach(btn => {
+            if (btn.textContent.includes('Nueva empresa') || 
+                btn.textContent.includes('Nuevo usuario') ||
+                btn.textContent.includes('Nuevo correlativo')) {
+                btn.style.display = 'none';
+            }
+        });
+        
+        // Ocultar botón "Guardar parámetros" si no tiene permiso de Configuración
+        const tienePermisoConfig = Object.values(permisosMap).some(p => 
+            p.submodulo_id === 1 || p.submodulo_id === 2 || p.submodulo_id === 3 || p.submodulo_id === 4
+        );
+        if (!tienePermisoConfig) {
+            document.getElementById('btnGuardarParametros')?.style.setProperty('display', 'none', 'important');
+        }
+    }
+    
     console.log('✅ Permisos aplicados a la interfaz');
 }
-// ============================================================
 // CARGAR PERMISOS DEL USUARIO LOGUEADO - CORREGIDO
 // ============================================================
 async function cargarPermisosUsuarioLogueado() {
