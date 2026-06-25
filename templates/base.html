@@ -1052,6 +1052,7 @@ document.getElementById("saveModal").addEventListener("click", async function() 
 // APLICAR PERMISOS A LA INTERFAZ
 // ============================================================
 function aplicarPermisosInterfaz(esAdmin, permisosMap) {
+    // Si es admin, mostrar todo
     if (esAdmin) {
         document.querySelectorAll('.menu-group, .menu-header, .child-btn, .tab-btn').forEach(el => {
             el.style.display = '';
@@ -1059,6 +1060,7 @@ function aplicarPermisosInterfaz(esAdmin, permisosMap) {
         return;
     }
     
+    // Mapeo de nombres de módulos a nombres de secciones
     const mapeoSecciones = {
         'Configuración': 'empresas',
         'Maestros': 'maestros',
@@ -1075,30 +1077,63 @@ function aplicarPermisosInterfaz(esAdmin, permisosMap) {
         'SUNAT': 'reportes'
     };
     
+    // Módulos que un operativo puede ver por defecto (sin necesidad de permiso)
     const modulosOperativos = ['Productos', 'Cotizaciones', 'Ventas', 'Compras', 'Logística', 'Inventario'];
     
+    // ✅ LISTA DE MÓDULOS QUE NUNCA DEBEN VERSE POR DEFECTO (SOLO CON PERMISO EXPLÍCITO)
+    const modulosRestringidos = ['Configuración', 'Maestros', 'CxC', 'CxP', 'Caja', 'Reportes', 'SUNAT'];
+    
+    // Para cada submódulo, verificar si tiene permiso
     submodulosData.forEach(sub => {
         const nombre = sub.nombre;
+        
+        // Buscar el permiso
         const permiso = permisosMap[sub.id];
         const tienePermiso = permiso?.puede_ver || false;
-        const esOperativo = modulosOperativos.includes(nombre);
-        const debeMostrar = esAdmin || (esOperativo && !permiso) || tienePermiso;
         
+        // Determinar si es un módulo operativo
+        const esOperativo = modulosOperativos.includes(nombre);
+        const esRestringido = modulosRestringidos.includes(nombre);
+        
+        // 🔥 NUEVA LÓGICA:
+        // - Si es admin → mostrar
+        // - Si tiene permiso explícito → mostrar
+        // - Si es operativo Y está en la lista de operativos → mostrar (por defecto)
+        // - Si es restringido Y NO tiene permiso → ocultar
+        let debeMostrar = false;
+        
+        if (tienePermiso) {
+            debeMostrar = true;
+        } else if (esOperativo) {
+            debeMostrar = true; // Los operativos ven estos por defecto
+        } else if (esRestringido) {
+            debeMostrar = false; // Solo se ven con permiso explícito
+        } else {
+            debeMostrar = false; // Por defecto, oculto
+        }
+        
+        // Buscar la sección correspondiente
         const screenName = mapeoSecciones[nombre] || nombre.toLowerCase();
         
+        // Ocultar/mostrar en el menú lateral
         document.querySelectorAll(`.child-btn[data-screen="${screenName}"]`).forEach(el => {
-            if (el.textContent.trim() === nombre || el.textContent.trim().includes(nombre)) {
+            // Verificar si el texto del botón coincide con el nombre del submódulo
+            const texto = el.textContent.trim();
+            if (texto === nombre || texto.includes(nombre) || nombre.includes(texto)) {
                 el.style.display = debeMostrar ? '' : 'none';
             }
         });
         
+        // Ocultar/mostrar en los tabs
         document.querySelectorAll(`.tab-btn[data-screen="${screenName}"]`).forEach(el => {
-            if (el.textContent.trim() === nombre || el.textContent.trim().includes(nombre)) {
+            const texto = el.textContent.trim();
+            if (texto === nombre || texto.includes(nombre) || nombre.includes(texto)) {
                 el.style.display = debeMostrar ? '' : 'none';
             }
         });
     });
     
+    // Ocultar grupos de menú que no tienen hijos visibles
     document.querySelectorAll('.menu-group').forEach(group => {
         const children = group.querySelectorAll('.child-btn');
         let hasVisible = false;
@@ -1107,14 +1142,18 @@ function aplicarPermisosInterfaz(esAdmin, permisosMap) {
                 hasVisible = true;
             }
         });
-        if (!hasVisible && group.querySelector('.menu-header')?.dataset?.screen !== 'dashboard') {
+        // Si el grupo no tiene hijos visibles y no es el dashboard, ocultarlo
+        const header = group.querySelector('.menu-header');
+        const isDashboard = header?.dataset?.screen === 'dashboard' || header?.textContent?.includes('Dashboard');
+        if (!hasVisible && !isDashboard) {
             group.style.display = 'none';
         } else {
             group.style.display = '';
         }
     });
+    
+    console.log('✅ Permisos aplicados a la interfaz');
 }
-
 // ============================================================
 // CARGAR PERMISOS DEL USUARIO LOGUEADO - CORREGIDO
 // ============================================================
