@@ -566,7 +566,13 @@ function renderEmpresas(filter=""){
 async function loadUsuarios(){
     try {
         // ✅ VERIFICAR QUE LOS ELEMENTOS EXISTEN
-        if (!document.getElementById('dashUsuarios')) {
+        // Buscar en la página actual si hay elementos de usuarios
+        const dashUsuarios = document.getElementById('dashUsuarios');
+        const tbodyUsuarios = document.getElementById('tbodyUsuarios');
+        const filterEmpresa = document.getElementById('filterEmpresaUsuarios');
+        
+        // Si no hay NINGÚN elemento de usuarios en la página, omitir
+        if (!dashUsuarios && !tbodyUsuarios && !filterEmpresa) {
             console.warn('⚠️ Elementos de usuarios no encontrados en la página actual');
             return;
         }
@@ -575,8 +581,16 @@ async function loadUsuarios(){
         
         if (data.success) {
             usuariosData = data.data || [];
-            document.getElementById('dashUsuarios').textContent = usuariosData.length;
-            await renderUsuarios();
+            
+            // Solo actualizar si los elementos existen
+            if (dashUsuarios) {
+                dashUsuarios.textContent = usuariosData.length;
+            }
+            
+            // Si existe la tabla de usuarios, renderizar
+            if (tbodyUsuarios) {
+                await renderUsuarios();
+            }
         } else {
             toast('Error al cargar usuarios: ' + (data.error || 'Error desconocido'));
         }
