@@ -352,6 +352,122 @@
         <button class="btn btn-primary" onclick="cerrarErrorFlotante()">Entendido, voy a completarlos</button>
     </div>
 </div>
+
+<!-- MODAL DE EMPRESA (CREAR/EDITAR) -->
+<div class="modal-bg" id="modalEmpresa">
+    <div class="modal" style="max-width:700px;">
+        <div class="modal-head">
+            <div class="modal-title" id="modalEmpresaTitle">Nueva empresa</div>
+            <button type="button" class="btn btn-secondary" id="closeModalEmpresa">Cerrar</button>
+        </div>
+        <div class="modal-body" style="padding:20px;">
+            <form id="formEmpresa">
+                <input type="hidden" id="empresaId" value="">
+                
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div class="field">
+                        <label>Código <span class="req">*</span></label>
+                        <input type="text" id="empCodigo" placeholder="KCF" required>
+                    </div>
+                    <div class="field">
+                        <label>RUC <span class="req">*</span></label>
+                        <input type="text" id="empRuc" placeholder="12345678901" required maxlength="11">
+                    </div>
+                    <div class="field" style="grid-column: span 2;">
+                        <label>Nombre comercial <span class="req">*</span></label>
+                        <input type="text" id="empNombreComercial" placeholder="KCF Safety" required>
+                    </div>
+                    <div class="field" style="grid-column: span 2;">
+                        <label>Razón social <span class="req">*</span></label>
+                        <input type="text" id="empRazonSocial" placeholder="KCF Safety S.A.C." required>
+                    </div>
+                    <div class="field" style="grid-column: span 2;">
+                        <label>Dirección fiscal</label>
+                        <input type="text" id="empDireccion" placeholder="Av. Ejemplo 123">
+                    </div>
+                    <div class="field">
+                        <label>Teléfono</label>
+                        <input type="text" id="empTelefono" placeholder="(01) 123-4567">
+                    </div>
+                    <div class="field">
+                        <label>Correo documentos</label>
+                        <input type="email" id="empCorreo" placeholder="facturacion@empresa.com">
+                    </div>
+                    <div class="field">
+                        <label>Color primario</label>
+                        <input type="color" id="empColorPrimario" value="#EF233C">
+                    </div>
+                    <div class="field">
+                        <label>Color secundario</label>
+                        <input type="color" id="empColorSecundario" value="#1F1F1F">
+                    </div>
+                    <div class="field">
+                        <label>Estado</label>
+                        <select id="empEstado">
+                            <option value="activo">Activo</option>
+                            <option value="inactivo">Inactivo</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Logo URL</label>
+                        <input type="text" id="empLogo" placeholder="https://ejemplo.com/logo.png">
+                    </div>
+                </div>
+
+                <hr style="margin:16px 0;border:none;border-top:1px solid var(--line);">
+
+                <h4 style="margin-bottom:10px;">🏦 Cuentas bancarias</h4>
+                <div id="cuentasBancariasContainer">
+                    <div class="cuenta-row" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:8px;">
+                        <div class="field">
+                            <label>Banco</label>
+                            <select class="cuenta-banco">
+                                <option value="">Seleccione</option>
+                                <option value="BCP">BCP</option>
+                                <option value="BBVA">BBVA</option>
+                                <option value="Interbank">Interbank</option>
+                                <option value="Scotiabank">Scotiabank</option>
+                                <option value="Banco de la Nación">Banco de la Nación</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Tipo cuenta</label>
+                            <select class="cuenta-tipo">
+                                <option value="ahorros">Ahorros</option>
+                                <option value="corriente">Corriente</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Moneda</label>
+                            <select class="cuenta-moneda">
+                                <option value="PEN">PEN</option>
+                                <option value="USD">USD</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>N° cuenta</label>
+                            <input type="text" class="cuenta-numero" placeholder="1234567890">
+                        </div>
+                        <div class="field" style="display:flex;gap:6px;align-items:end;padding-bottom:2px;">
+                            <button type="button" class="btn btn-secondary btn-remove-cuenta" style="height:34px;padding:0 10px;">✕</button>
+                            <button type="button" class="btn btn-primary btn-add-cuenta" style="height:34px;padding:0 10px;">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top:12px;">
+                    <label style="display:flex;align-items:center;gap:8px;font-weight:700;">
+                        <input type="checkbox" id="empEsPrincipal" value="true"> ¿Es cuenta principal?
+                    </label>
+                </div>
+            </form>
+        </div>
+        <div class="modal-foot">
+            <button type="button" class="btn btn-secondary" id="closeModalEmpresaFoot">Cancelar</button>
+            <button type="button" class="btn btn-primary" id="saveEmpresaBtn">Guardar empresa</button>
+        </div>
+    </div>
+</div>
 </div>
 
 <!-- JAVASCRIPT -->
@@ -727,8 +843,9 @@ async function loadEmpresas(){
         toast('Error al cargar empresas');
     }
 }
+
+
 function renderEmpresas(filter=""){
-    // ✅ VERIFICAR QUE EL ELEMENTO EXISTE
     const tbody = document.getElementById("tbodyEmpresas");
     if (!tbody) {
         console.warn('⚠️ tbodyEmpresas no encontrado - omitiendo renderizado');
@@ -751,10 +868,50 @@ function renderEmpresas(filter=""){
             <td>${cuenta.numero_cuenta || '-'}</td>
             <td>${cuenta.cci || '<span class="badge badge-danger">Completar CCI</span>'}</td>
             <td class="left">${e.direccion_fiscal || '-'}</td>
-            <td><span class="badge badge-ok">${e.estado}</span></td>
+            <td>
+                <span class="badge ${e.estado === 'activo' ? 'badge-ok' : 'badge-gray'}">${e.estado}</span>
+                <br>
+                <div style="display:flex;gap:4px;margin-top:4px;justify-content:center;">
+                    <button class="btn-mini" onclick="editarEmpresa(${e.id})" title="Editar">✏️</button>
+                    <button class="btn-mini" onclick="eliminarEmpresa(${e.id})" title="Eliminar" style="color:#DC2626;">🗑️</button>
+                </div>
+            </td>
         </tr>`;
     }).join("");
 }
+
+// Editar empresa
+function editarEmpresa(id) {
+    abrirModalEmpresa(id);
+}
+
+// Eliminar empresa (desactivar)
+async function eliminarEmpresa(id) {
+    const empresa = empresasData.find(e => e.id === id);
+    if (!confirm(`¿Estás seguro de desactivar la empresa "${empresa?.nombre_comercial || id}"?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/config/empresas/${id}`, {
+            method: 'DELETE'
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            toast('✅ Empresa desactivada correctamente');
+            loadEmpresas();
+        } else {
+            toast('❌ Error: ' + (result.error || 'Error desconocido'));
+        }
+    } catch (error) {
+        console.error('Error eliminando empresa:', error);
+        toast('❌ Error al eliminar la empresa');
+    }
+}
+
+
+
 async function loadUsuarios(){
     try {
         // ✅ VERIFICAR QUE LOS ELEMENTOS EXISTEN
@@ -1519,6 +1676,264 @@ window.limpiarFormulario = function() {
 // ============================================================
 // GUARDAR PRODUCTO - Event Listener
 // ============================================================
+
+// ============================================================
+// FUNCIONES PARA EMPRESAS - CRUD COMPLETO
+// ============================================================
+
+// Abrir modal para nueva empresa
+function abrirModalEmpresa(empresaId = null) {
+    const modal = document.getElementById('modalEmpresa');
+    const title = document.getElementById('modalEmpresaTitle');
+    const form = document.getElementById('formEmpresa');
+    
+    if (!modal) return;
+    
+    // Limpiar formulario
+    form.reset();
+    document.getElementById('empresaId').value = '';
+    document.getElementById('empCodigo').value = '';
+    document.getElementById('empRuc').value = '';
+    document.getElementById('empNombreComercial').value = '';
+    document.getElementById('empRazonSocial').value = '';
+    document.getElementById('empDireccion').value = '';
+    document.getElementById('empTelefono').value = '';
+    document.getElementById('empCorreo').value = '';
+    document.getElementById('empColorPrimario').value = '#EF233C';
+    document.getElementById('empColorSecundario').value = '#1F1F1F';
+    document.getElementById('empEstado').value = 'activo';
+    document.getElementById('empLogo').value = '';
+    document.getElementById('empEsPrincipal').checked = false;
+    
+    // Limpiar cuentas bancarias (dejar solo una)
+    const container = document.getElementById('cuentasBancariasContainer');
+    container.innerHTML = '';
+    agregarFilaCuenta();
+    
+    if (empresaId) {
+        title.textContent = '✏️ Editar empresa';
+        document.getElementById('saveEmpresaBtn').textContent = 'Actualizar empresa';
+        cargarEmpresaParaEditar(empresaId);
+    } else {
+        title.textContent = '🏢 Nueva empresa';
+        document.getElementById('saveEmpresaBtn').textContent = 'Guardar empresa';
+    }
+    
+    modal.classList.add('show');
+}
+
+// Cerrar modal de empresa
+function cerrarModalEmpresa() {
+    const modal = document.getElementById('modalEmpresa');
+    if (modal) modal.classList.remove('show');
+}
+
+// Agregar fila de cuenta bancaria
+function agregarFilaCuenta(banco = '', tipo = 'ahorros', moneda = 'PEN', numero = '') {
+    const container = document.getElementById('cuentasBancariasContainer');
+    if (!container) return;
+    
+    const row = document.createElement('div');
+    row.className = 'cuenta-row';
+    row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:8px;';
+    
+    row.innerHTML = `
+        <div class="field">
+            <label>Banco</label>
+            <select class="cuenta-banco">
+                <option value="">Seleccione</option>
+                <option value="BCP" ${banco === 'BCP' ? 'selected' : ''}>BCP</option>
+                <option value="BBVA" ${banco === 'BBVA' ? 'selected' : ''}>BBVA</option>
+                <option value="Interbank" ${banco === 'Interbank' ? 'selected' : ''}>Interbank</option>
+                <option value="Scotiabank" ${banco === 'Scotiabank' ? 'selected' : ''}>Scotiabank</option>
+                <option value="Banco de la Nación" ${banco === 'Banco de la Nación' ? 'selected' : ''}>Banco de la Nación</option>
+            </select>
+        </div>
+        <div class="field">
+            <label>Tipo cuenta</label>
+            <select class="cuenta-tipo">
+                <option value="ahorros" ${tipo === 'ahorros' ? 'selected' : ''}>Ahorros</option>
+                <option value="corriente" ${tipo === 'corriente' ? 'selected' : ''}>Corriente</option>
+            </select>
+        </div>
+        <div class="field">
+            <label>Moneda</label>
+            <select class="cuenta-moneda">
+                <option value="PEN" ${moneda === 'PEN' ? 'selected' : ''}>PEN</option>
+                <option value="USD" ${moneda === 'USD' ? 'selected' : ''}>USD</option>
+            </select>
+        </div>
+        <div class="field">
+            <label>N° cuenta</label>
+            <input type="text" class="cuenta-numero" placeholder="1234567890" value="${numero}">
+        </div>
+        <div class="field" style="display:flex;gap:6px;align-items:end;padding-bottom:2px;">
+            <button type="button" class="btn btn-secondary btn-remove-cuenta" style="height:34px;padding:0 10px;">✕</button>
+            <button type="button" class="btn btn-primary btn-add-cuenta" style="height:34px;padding:0 10px;">+</button>
+        </div>
+    `;
+    
+    container.appendChild(row);
+    
+    // Event listeners para los botones de la fila
+    row.querySelector('.btn-remove-cuenta').addEventListener('click', function() {
+        if (container.children.length > 1) {
+            row.remove();
+        } else {
+            toast('Debe haber al menos una cuenta bancaria');
+        }
+    });
+    
+    row.querySelector('.btn-add-cuenta').addEventListener('click', function() {
+        agregarFilaCuenta();
+    });
+}
+
+// Cargar empresa para editar
+async function cargarEmpresaParaEditar(empresaId) {
+    try {
+        const response = await fetch(`/api/config/empresas/${empresaId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            const emp = data.data;
+            document.getElementById('empresaId').value = emp.id;
+            document.getElementById('empCodigo').value = emp.codigo || '';
+            document.getElementById('empRuc').value = emp.ruc || '';
+            document.getElementById('empNombreComercial').value = emp.nombre_comercial || '';
+            document.getElementById('empRazonSocial').value = emp.razon_social || '';
+            document.getElementById('empDireccion').value = emp.direccion_fiscal || '';
+            document.getElementById('empTelefono').value = emp.telefono || '';
+            document.getElementById('empCorreo').value = emp.correo_documentos || '';
+            document.getElementById('empColorPrimario').value = emp.color_primario || '#EF233C';
+            document.getElementById('empColorSecundario').value = emp.color_secundario || '#1F1F1F';
+            document.getElementById('empEstado').value = emp.estado || 'activo';
+            document.getElementById('empLogo').value = emp.logo_url || '';
+            
+            // Cargar cuentas bancarias
+            const container = document.getElementById('cuentasBancariasContainer');
+            container.innerHTML = '';
+            
+            if (emp.cuentas_bancarias && emp.cuentas_bancarias.length > 0) {
+                emp.cuentas_bancarias.forEach(cuenta => {
+                    agregarFilaCuenta(cuenta.banco, cuenta.tipo_cuenta, cuenta.moneda, cuenta.numero_cuenta);
+                });
+            } else {
+                agregarFilaCuenta();
+            }
+        }
+    } catch (error) {
+        console.error('Error cargando empresa:', error);
+        toast('Error al cargar los datos de la empresa');
+    }
+}
+
+// Guardar empresa
+async function guardarEmpresa() {
+    const id = document.getElementById('empresaId').value;
+    const codigo = document.getElementById('empCodigo').value.trim();
+    const ruc = document.getElementById('empRuc').value.trim();
+    const nombre_comercial = document.getElementById('empNombreComercial').value.trim();
+    const razon_social = document.getElementById('empRazonSocial').value.trim();
+    
+    // Validar campos requeridos
+    if (!codigo) { toast('❌ El código es obligatorio'); return; }
+    if (!ruc) { toast('❌ El RUC es obligatorio'); return; }
+    if (!nombre_comercial) { toast('❌ El nombre comercial es obligatorio'); return; }
+    if (!razon_social) { toast('❌ La razón social es obligatoria'); return; }
+    
+    // Recoger cuentas bancarias
+    const cuentas = [];
+    document.querySelectorAll('.cuenta-row').forEach(row => {
+        const banco = row.querySelector('.cuenta-banco').value;
+        const tipo_cuenta = row.querySelector('.cuenta-tipo').value;
+        const moneda = row.querySelector('.cuenta-moneda').value;
+        const numero_cuenta = row.querySelector('.cuenta-numero').value.trim();
+        
+        if (banco && numero_cuenta) {
+            cuentas.push({
+                banco,
+                tipo_cuenta,
+                moneda,
+                numero_cuenta,
+                cci: '',
+                es_principal: document.getElementById('empEsPrincipal').checked,
+                estado: 'activo'
+            });
+        }
+    });
+    
+    const data = {
+        codigo,
+        ruc,
+        nombre_comercial,
+        razon_social,
+        direccion_fiscal: document.getElementById('empDireccion').value.trim(),
+        telefono: document.getElementById('empTelefono').value.trim(),
+        correo_documentos: document.getElementById('empCorreo').value.trim(),
+        color_primario: document.getElementById('empColorPrimario').value,
+        color_secundario: document.getElementById('empColorSecundario').value,
+        estado: document.getElementById('empEstado').value,
+        logo_url: document.getElementById('empLogo').value.trim(),
+        cuentas_bancarias: cuentas
+    };
+    
+    try {
+        const url = id ? `/api/config/empresas/${id}` : '/api/config/empresas';
+        const method = id ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            toast(`✅ Empresa ${id ? 'actualizada' : 'creada'} correctamente`);
+            cerrarModalEmpresa();
+            loadEmpresas();
+        } else {
+            toast('❌ Error: ' + (result.error || 'Error desconocido'));
+        }
+    } catch (error) {
+        console.error('Error guardando empresa:', error);
+        toast('❌ Error al guardar la empresa');
+    }
+}
+
+// ============================================================
+// EVENT LISTENERS PARA EMPRESAS
+// ============================================================
+
+// Configurar eventos cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    // Botón "Nueva empresa"
+    const btnNuevaEmpresa = document.querySelector('#empresas .btn-primary');
+    if (btnNuevaEmpresa) {
+        btnNuevaEmpresa.addEventListener('click', function() {
+            abrirModalEmpresa();
+        });
+    }
+    
+    // Botones para cerrar modal
+    document.getElementById('closeModalEmpresa')?.addEventListener('click', cerrarModalEmpresa);
+    document.getElementById('closeModalEmpresaFoot')?.addEventListener('click', cerrarModalEmpresa);
+    
+    // Botón guardar
+    document.getElementById('saveEmpresaBtn')?.addEventListener('click', guardarEmpresa);
+    
+    // Cerrar modal con ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            cerrarModalEmpresa();
+        }
+    });
+});
+
+
+
 // GUARDAR PRODUCTO - Event Listener (VERSIÓN MEJORADA)
 // ============================================================
 
