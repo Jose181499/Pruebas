@@ -1210,21 +1210,24 @@ async function generarCodigoProducto() {
             const generadoEl = document.getElementById('codigoGenerado');
             if (codigoEl) codigoEl.textContent = data.data.codigo;
             if (generadoEl) generadoEl.value = data.data.codigo;
+            console.log('✅ Código generado:', data.data.codigo);
         }
     } catch (e) {
-        console.error('Error generando código:', e);
-        // Fallback: generar código local
+        console.error('❌ Error generando código:', e);
+        // Fallback: generar código local con fecha
         const fecha = new Date();
         const anio = fecha.getFullYear();
         const mes = String(fecha.getMonth() + 1).padStart(2, '0');
         const dia = String(fecha.getDate()).padStart(2, '0');
-        const codigo = `PRD-${anio}${mes}${dia}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
+        const random = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+        const codigo = `PRD-${anio}${mes}${dia}-${random}`;
         const codigoEl = document.getElementById('codigoProducto');
         const generadoEl = document.getElementById('codigoGenerado');
         if (codigoEl) codigoEl.textContent = codigo;
         if (generadoEl) generadoEl.value = codigo;
     }
 }
+
 
 // Calcular margen
 window.calcularMargen = function() {
