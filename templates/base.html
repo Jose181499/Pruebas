@@ -353,108 +353,43 @@
     </div>
 </div>
 
-<!-- MODAL DE EMPRESA (CREAR/EDITAR) - VERSIÓN MEJORADA -->
-<div class="modal-bg" id="modalEmpresa" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:999999;padding:20px;">
-    <div class="modal" style="background:white;border-radius:12px;max-width:700px;width:95%;max-height:90vh;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,0.25);margin:auto;">
-        <div class="modal-head" style="display:flex;justify-content:space-between;align-items:center;padding:14px;border-bottom:1px solid #E5E7EB;">
-            <div class="modal-title" id="modalEmpresaTitle" style="font-size:16px;font-weight:950;">🏢 Nueva empresa</div>
-            <button type="button" class="btn btn-secondary" id="closeModalEmpresa" style="height:34px;border-radius:9px;border:1px solid #E5E7EB;padding:0 12px;font-weight:950;cursor:pointer;background:white;color:#0F172A;">Cerrar</button>
+<!-- MODAL DE EMPRESA (CREAR/EDITAR) - VERSIÓN QUE FUNCIONA -->
+<div id="modalEmpresa" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;z-index:999999;padding:20px;">
+    <div style="background:white;border-radius:12px;max-width:700px;width:95%;max-height:90vh;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,0.25);margin:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:14px;border-bottom:1px solid #E5E7EB;">
+            <div id="modalEmpresaTitle" style="font-size:16px;font-weight:950;">🏢 Nueva empresa</div>
+            <button id="closeModalEmpresaNuevo" style="height:34px;border-radius:9px;border:1px solid #E5E7EB;padding:0 12px;font-weight:950;cursor:pointer;background:white;color:#0F172A;">Cerrar</button>
         </div>
-        <div class="modal-body" style="padding:20px;max-height:70vh;overflow:auto;">
+        <div style="padding:20px;max-height:70vh;overflow:auto;">
             <form id="formEmpresa">
                 <input type="hidden" id="empresaId" value="">
-                
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                    <div class="field">
-                        <label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Código <span style="color:#DC2626;">*</span></label>
-                        <input type="text" id="empCodigo" placeholder="KCF" required style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;">
-                    </div>
-                    <div class="field">
-                        <label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">RUC <span style="color:#DC2626;">*</span></label>
-                        <input type="text" id="empRuc" placeholder="12345678901" required maxlength="11" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;">
-                    </div>
-                    <div class="field" style="grid-column: span 2;">
-                        <label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Nombre comercial <span style="color:#DC2626;">*</span></label>
-                        <input type="text" id="empNombreComercial" placeholder="KCF Safety" required style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;">
-                    </div>
-                    <div class="field" style="grid-column: span 2;">
-                        <label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Razón social <span style="color:#DC2626;">*</span></label>
-                        <input type="text" id="empRazonSocial" placeholder="KCF Safety S.A.C." required style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;">
-                    </div>
-                    <div class="field" style="grid-column: span 2;">
-                        <label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Dirección fiscal</label>
-                        <input type="text" id="empDireccion" placeholder="Av. Ejemplo 123" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;">
-                    </div>
-                    <div class="field">
-                        <label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Teléfono</label>
-                        <input type="text" id="empTelefono" placeholder="(01) 123-4567" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;">
-                    </div>
-                    <div class="field">
-                        <label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Correo documentos</label>
-                        <input type="email" id="empCorreo" placeholder="facturacion@empresa.com" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;">
-                    </div>
-                    <div class="field">
-                        <label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Color primario</label>
-                        <input type="color" id="empColorPrimario" value="#EF233C" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;">
-                    </div>
-                    <div class="field">
-                        <label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Color secundario</label>
-                        <input type="color" id="empColorSecundario" value="#1F1F1F" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;">
-                    </div>
-                    <div class="field">
-                        <label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Estado</label>
-                        <select id="empEstado" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;">
-                            <option value="activo">Activo</option>
-                            <option value="inactivo">Inactivo</option>
-                        </select>
-                    </div>
-                    <div class="field">
-                        <label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Logo URL</label>
-                        <input type="text" id="empLogo" placeholder="https://ejemplo.com/logo.png" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;">
-                    </div>
+                    <div><label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Código <span style="color:#DC2626;">*</span></label><input type="text" id="empCodigo" placeholder="KCF" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;"></div>
+                    <div><label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">RUC <span style="color:#DC2626;">*</span></label><input type="text" id="empRuc" placeholder="12345678901" maxlength="11" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;"></div>
+                    <div style="grid-column: span 2;"><label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Nombre comercial <span style="color:#DC2626;">*</span></label><input type="text" id="empNombreComercial" placeholder="KCF Safety" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;"></div>
+                    <div style="grid-column: span 2;"><label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Razón social <span style="color:#DC2626;">*</span></label><input type="text" id="empRazonSocial" placeholder="KCF Safety S.A.C." style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;"></div>
+                    <div style="grid-column: span 2;"><label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Dirección fiscal</label><input type="text" id="empDireccion" placeholder="Av. Ejemplo 123" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;"></div>
+                    <div><label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Teléfono</label><input type="text" id="empTelefono" placeholder="(01) 123-4567" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;"></div>
+                    <div><label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Correo documentos</label><input type="email" id="empCorreo" placeholder="facturacion@empresa.com" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;"></div>
+                    <div><label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Color primario</label><input type="color" id="empColorPrimario" value="#EF233C" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;"></div>
+                    <div><label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Color secundario</label><input type="color" id="empColorSecundario" value="#1F1F1F" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;"></div>
+                    <div><label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Estado</label><select id="empEstado" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;"><option value="activo">Activo</option><option value="inactivo">Inactivo</option></select></div>
+                    <div><label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Logo URL</label><input type="text" id="empLogo" placeholder="https://ejemplo.com/logo.png" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;"></div>
                 </div>
-
                 <hr style="margin:16px 0;border:none;border-top:1px solid #E5E7EB;">
-
                 <h4 style="margin-bottom:10px;">🏦 Cuentas bancarias</h4>
                 <div id="cuentasBancariasContainer">
-                    <div class="cuenta-row" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:8px;">
-                        <div class="field">
-                            <label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Banco</label>
-                            <select class="cuenta-banco" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;">
-                                <option value="">Seleccione</option>
-                                <option value="BCP">BCP</option>
-                                <option value="BBVA">BBVA</option>
-                                <option value="Interbank">Interbank</option>
-                                <option value="Scotiabank">Scotiabank</option>
-                                <option value="Banco de la Nación">Banco de la Nación</option>
-                            </select>
-                        </div>
-                        <div class="field">
-                            <label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Tipo cuenta</label>
-                            <select class="cuenta-tipo" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;">
-                                <option value="ahorros">Ahorros</option>
-                                <option value="corriente">Corriente</option>
-                            </select>
-                        </div>
-                        <div class="field">
-                            <label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Moneda</label>
-                            <select class="cuenta-moneda" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;">
-                                <option value="PEN">PEN</option>
-                                <option value="USD">USD</option>
-                            </select>
-                        </div>
-                        <div class="field">
-                            <label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">N° cuenta</label>
-                            <input type="text" class="cuenta-numero" placeholder="1234567890" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;">
-                        </div>
-                        <div class="field" style="display:flex;gap:6px;align-items:end;padding-bottom:2px;">
-                            <button type="button" class="btn btn-secondary btn-remove-cuenta" style="height:34px;border-radius:9px;border:1px solid #E5E7EB;padding:0 10px;font-weight:950;cursor:pointer;background:white;color:#0F172A;">✕</button>
-                            <button type="button" class="btn btn-primary btn-add-cuenta" style="height:34px;border-radius:9px;border:0;padding:0 10px;font-weight:950;cursor:pointer;background:#EF233C;color:white;">+</button>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:8px;">
+                        <div><label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Banco</label><select class="cuenta-banco" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;"><option value="">Seleccione</option><option value="BCP">BCP</option><option value="BBVA">BBVA</option><option value="Interbank">Interbank</option><option value="Scotiabank">Scotiabank</option><option value="Banco de la Nación">Banco de la Nación</option></select></div>
+                        <div><label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Tipo cuenta</label><select class="cuenta-tipo" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;"><option value="ahorros">Ahorros</option><option value="corriente">Corriente</option></select></div>
+                        <div><label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Moneda</label><select class="cuenta-moneda" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;"><option value="PEN">PEN</option><option value="USD">USD</option></select></div>
+                        <div><label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">N° cuenta</label><input type="text" class="cuenta-numero" placeholder="1234567890" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;"></div>
+                        <div style="display:flex;gap:6px;align-items:end;padding-bottom:2px;">
+                            <button type="button" class="btn-remove-cuenta" style="height:34px;border-radius:9px;border:1px solid #E5E7EB;padding:0 10px;font-weight:950;cursor:pointer;background:white;color:#0F172A;">✕</button>
+                            <button type="button" class="btn-add-cuenta" style="height:34px;border-radius:9px;border:0;padding:0 10px;font-weight:950;cursor:pointer;background:#EF233C;color:white;">+</button>
                         </div>
                     </div>
                 </div>
-
                 <div style="margin-top:12px;">
                     <label style="display:flex;align-items:center;gap:8px;font-weight:700;">
                         <input type="checkbox" id="empEsPrincipal" value="true"> ¿Es cuenta principal?
@@ -462,9 +397,9 @@
                 </div>
             </form>
         </div>
-        <div class="modal-foot" style="display:flex;justify-content:flex-end;gap:8px;padding:12px 14px;border-top:1px solid #E5E7EB;background:#F8FAFC;">
-            <button type="button" class="btn btn-secondary" id="closeModalEmpresaFoot" style="height:34px;border-radius:9px;border:1px solid #E5E7EB;padding:0 12px;font-weight:950;cursor:pointer;background:white;color:#0F172A;">Cancelar</button>
-            <button type="button" class="btn btn-primary" id="saveEmpresaBtn" style="height:34px;border-radius:9px;border:0;padding:0 12px;font-weight:950;cursor:pointer;background:#EF233C;color:white;">Guardar empresa</button>
+        <div style="display:flex;justify-content:flex-end;gap:8px;padding:12px 14px;border-top:1px solid #E5E7EB;background:#F8FAFC;">
+            <button id="closeModalEmpresaFootNuevo" style="height:34px;border-radius:9px;border:1px solid #E5E7EB;padding:0 12px;font-weight:950;cursor:pointer;background:white;color:#0F172A;">Cancelar</button>
+            <button id="saveEmpresaBtn" style="height:34px;border-radius:9px;border:0;padding:0 12px;font-weight:950;cursor:pointer;background:#EF233C;color:white;">Guardar empresa</button>
         </div>
     </div>
 </div>
@@ -1684,28 +1619,28 @@ window.limpiarFormulario = function() {
 // ============================================================
 // FUNCIONES PARA EMPRESAS - CRUD COMPLETO (VERSIÓN CORREGIDA)
 // ============================================================
-
-// Abrir modal para nueva empresa - VERSIÓN CORREGIDA
+// ============================================================
+// ABRIR MODAL DE EMPRESA - VERSIÓN DEFINITIVA
+// ============================================================
 window.abrirModalEmpresa = function(empresaId) {
     console.log('🟢 abrirModalEmpresa EJECUTADA - empresaId:', empresaId);
     
     // Buscar el modal
     let modal = document.getElementById('modalEmpresa');
     
-    // Si no existe, recrearlo
     if (!modal) {
-        console.log('⚠️ Modal no encontrado, recreando...');
-        // Crear modal de emergencia (usar la función recrearModalCompleto)
-        if (typeof recrearModalCompleto === 'function') {
-            modal = recrearModalCompleto();
+        console.error('❌ Modal no encontrado en el DOM');
+        // Intentar recrear con la función que funciona
+        if (typeof recrearModalPosicion === 'function') {
+            modal = recrearModalPosicion();
         } else {
-            alert('Error: Modal no encontrado');
+            alert('Error: Modal no encontrado. Recarga la página.');
             return;
         }
     }
     
     if (!modal) {
-        console.error('❌ Modal no encontrado');
+        console.error('❌ No se pudo crear el modal');
         return;
     }
     
@@ -1738,9 +1673,20 @@ window.abrirModalEmpresa = function(empresaId) {
     const container = document.getElementById('cuentasBancariasContainer');
     if (container) {
         container.innerHTML = '';
-        if (typeof agregarFilaCuenta === 'function') {
-            agregarFilaCuenta();
-        }
+        // Crear una fila de cuenta
+        const row = document.createElement('div');
+        row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:8px;';
+        row.innerHTML = `
+            <div><label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Banco</label><select class="cuenta-banco" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;"><option value="">Seleccione</option><option value="BCP">BCP</option><option value="BBVA">BBVA</option><option value="Interbank">Interbank</option><option value="Scotiabank">Scotiabank</option><option value="Banco de la Nación">Banco de la Nación</option></select></div>
+            <div><label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Tipo cuenta</label><select class="cuenta-tipo" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;"><option value="ahorros">Ahorros</option><option value="corriente">Corriente</option></select></div>
+            <div><label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">Moneda</label><select class="cuenta-moneda" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;"><option value="PEN">PEN</option><option value="USD">USD</option></select></div>
+            <div><label style="display:block;font-weight:700;font-size:11px;margin-bottom:4px;">N° cuenta</label><input type="text" class="cuenta-numero" placeholder="1234567890" style="width:100%;border:1px solid #D1D5DB;border-radius:6px;height:36px;padding:0 10px;font-size:13px;"></div>
+            <div style="display:flex;gap:6px;align-items:end;padding-bottom:2px;">
+                <button type="button" class="btn-remove-cuenta" style="height:34px;border-radius:9px;border:1px solid #E5E7EB;padding:0 10px;font-weight:950;cursor:pointer;background:white;color:#0F172A;">✕</button>
+                <button type="button" class="btn-add-cuenta" style="height:34px;border-radius:9px;border:0;padding:0 10px;font-weight:950;cursor:pointer;background:#EF233C;color:white;">+</button>
+            </div>
+        `;
+        container.appendChild(row);
     }
     
     // Actualizar título
@@ -1759,25 +1705,23 @@ window.abrirModalEmpresa = function(empresaId) {
         cargarEmpresaParaEditar(empresaId);
     }
     
-    // ✅ ABRIR EL MODAL - FORZAR ESTILOS
+    // ✅ ABRIR EL MODAL
     modal.style.display = 'flex';
     modal.style.position = 'fixed';
-    modal.style.inset = '0';
-    modal.style.background = 'rgba(0,0,0,0.5)';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.background = 'rgba(0,0,0,0.7)';
     modal.style.alignItems = 'center';
     modal.style.justifyContent = 'center';
     modal.style.zIndex = '999999';
     modal.style.padding = '20px';
     modal.style.visibility = 'visible';
     modal.style.opacity = '1';
-    modal.classList.add('show');
     
     console.log('✅ Modal abierto');
-    console.log('📋 Clases del modal:', modal.className);
 };
-
-
-
 // Cerrar modal de empresa
 window.cerrarModalEmpresa = function() {
     const modal = document.getElementById('modalEmpresa');
