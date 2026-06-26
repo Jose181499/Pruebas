@@ -2556,7 +2556,7 @@ async function cargarProductos() {
         if (result.success) {
             window.bdProductos = result.data || [];
             console.log(`✅ ${window.bdProductos.length} productos cargados`);
-            // ✅ Esto llama a la función actualizada
+            // ✅ Usar la función actualizada
             bdRenderProductos(window.bdProductos);
             return window.bdProductos;
         } else {
@@ -2571,7 +2571,6 @@ async function cargarProductos() {
     }
 }
 
-// Renderizar productos en la tabla
 function bdRenderProductos(data) {
     console.log('🖥️ Renderizando productos...', data);
     const tbody = document.getElementById('bdProductTableBody');
@@ -2599,7 +2598,7 @@ function bdRenderProductos(data) {
         const costo = p.costo_unitario ? parseFloat(p.costo_unitario).toFixed(2) : '0.00';
         const precio = p.precio_unitario ? parseFloat(p.precio_unitario).toFixed(2) : '0.00';
         
-        // ✅ USAR LOS NOMBRES CORRECTOS: categoria, subcategoria (vienen del backend)
+        // ✅ Usar los nombres correctos de los campos
         const categoria = p.categoria || p.familia || '-';
         const subcategoria = p.subcategoria || p.categoria_derivada || '-';
         
