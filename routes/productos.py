@@ -521,3 +521,378 @@ def productos_editar(producto_id):
         print(f"❌ Error en productos_editar: {e}")
         flash('Error al cargar el producto', 'error')
         return redirect(url_for('productos.productos_base_datos'))
+
+    
+# ============================================================
+# ENDPOINTS PARA COMPARATIVO DE COSTOS
+# ============================================================
+
+@productos_bp.route('/api/comparativo-costos')
+@login_required
+def get_comparativo_costos():
+    """
+    API: Obtener datos del comparativo de costos
+    Con soporte para filtros opcionales
+    """
+    try:
+        # Obtener parámetros de filtro
+        categoria = request.args.get('categoria', '').strip()
+        marca = request.args.get('marca', '').strip()
+        min_margen = request.args.get('min_margen', '').strip()
+        max_margen = request.args.get('max_margen', '').strip()
+        busqueda = request.args.get('q', '').strip()
+        producto_id = request.args.get('producto_id', '').strip()
+        
+        # Construir la consulta base
+        query = """
+            SELECT 
+                producto_id,
+                codigo,
+                nombre_producto,
+                modelo,
+                marca,
+                categoria,
+                subcategoria,
+                costo_actual,
+                precio_actual,
+                stock,
+                stock_minimo,
+                estado,
+                activo,
+                precio_venta,
+                precio_lista,
+                margen_preferido,
+                total_registros_costos,
+                costo_promedio_historico,
+                costo_minimo_historico,
+                costo_maximo_historico,
+                costo_compra_promedio,
+                costo_transporte_promedio,
+                costo_almacenaje_promedio,
+                costo_manufactura_promedio,
+                ultimo_costo_registrado,
+                fecha_ultimo_costo,
+                margen_actual_porcentaje,
+                margen_historico_porcentaje,
+                diferencia_margen_preferido
+            FROM vista_comparativo_costos
+            WHERE 1=1
+        """
+        params = []
+        
+        # Aplicar filtros
+        if producto_id:
+            query += " AND producto_id = %s"
+            params.append(int(producto_id))
+        
+        if categoria:
+            query += " AND categoria ILIKE %s"
+            params.append(f'%{categoria}%')
+        
+        if marca:
+            query += " AND marca ILIKE %s"
+            params.append(f'%{marca}%')
+        
+        if busqueda:
+            query += """ AND (
+                codigo ILIKE %s OR 
+                nombre_producto ILIKE %s OR 
+                modelo ILIKE %s OR 
+                marca ILIKE %s
+            )"""
+            params.extend([f'%{busqueda}%'] * 4)
+        
+        if min_margen:
+            query += " AND margen_actual_porcentaje >= %s"
+            params.append(float(min_margen))
+        
+        if max_margen:
+            query += " AND margen_actual_porcentaje <= %s"
+            params.append(float(max_margen))
+        
+        # Ordenar
+        query += " ORDER BY nombre_producto"
+        
+        # Ejecutar consulta
+        resultados = db_query(query, params)
+        
+        return jsonify({
+            'success': True,
+            'data': resultados,
+            'total': len(resultados),
+            'filtros_aplicados': {
+                'categoria': categoria if categoria else None,
+                'marca': marca if marca else None,
+                'min_margen': float(min_margen) if min_margen else None,
+                'max_margen': float(max_margen) if max_margen else None,
+                'busqueda': busqueda if busqueda else None
+            }
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en get_comparativo_costos: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@productos_bp.route('/api/comparativo-costos/resumen')
+@login_required
+def get_resumen_costos():
+    """
+    API: Obtener resumen del dashboard de costos
+    """
+    try:
+        resultado = db_query("""
+            SELECT * FROM vista_resumen_costos
+        """)
+        
+        # Si no hay resultados, devolver valores por defecto
+        if not resultado:
+            return jsonify({
+                'success': True,
+                'data': {
+                    'total_productos_con_costos': 0,
+                    'total_registros_costos': 0,
+                    'tipos_costo_utilizados': 0,
+                    'promedio_general_costos': 0,
+                    'costo_minimo_registrado': 0,
+                    'costo_maximo_registrado': 0,
+                    'promedio_costo_compra': 0,
+                    'promedio_costo_transporte': 0,
+                    'promedio_costo_almacenaje': 0,
+                    'promedio_costo_manufactura': 0,
+                    'registros_ultimos_30_dias': 0,
+                    'promedio_ultimos_30_dias': 0
+                }
+            })
+        
+        return jsonify({
+            'success': True,
+            'data': resultado[0]
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en get_resumen_costos: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@productos_bp.route('/api/productos/<int:producto_id>/costos-historicos')
+@login_required
+def get_costos_historicos(producto_id):
+    """
+    API: Obtener el historial de costos de un producto específico
+    """
+    try:
+        # Verificar que el producto existe
+        producto = db_query("""
+            SELECT id, codigo, descripcion 
+            FROM productos 
+            WHERE id = %s AND activo = TRUE
+        """, (producto_id,))
+        
+        if not producto:
+            return jsonify({
+                'success': False, 
+                'error': 'Producto no encontrado'
+            }), 404
+        
+        # Obtener historial de costos
+        historial = db_query("""
+            SELECT 
+                id,
+                fecha_registro,
+                tipo_costo,
+                monto,
+                observaciones
+            FROM costos_productos
+            WHERE producto_id = %s
+            ORDER BY fecha_registro DESC
+        """, (producto_id,))
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'producto': producto[0],
+                'historial': historial,
+                'total_registros': len(historial)
+            }
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en get_costos_historicos: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@productos_bp.route('/api/comparativo-costos/filtros')
+@login_required
+def get_filtros_comparativo():
+    """
+    API: Obtener opciones de filtros para el comparativo
+    """
+    try:
+        # Obtener categorías únicas de la vista
+        categorias = db_query("""
+            SELECT DISTINCT categoria 
+            FROM vista_comparativo_costos 
+            WHERE categoria IS NOT NULL AND categoria != ''
+            ORDER BY categoria
+        """)
+        
+        # Obtener marcas únicas
+        marcas = db_query("""
+            SELECT DISTINCT marca 
+            FROM vista_comparativo_costos 
+            WHERE marca IS NOT NULL AND marca != ''
+            ORDER BY marca
+        """)
+        
+        # Obtener productos con datos
+        productos = db_query("""
+            SELECT DISTINCT producto_id, codigo, nombre_producto
+            FROM vista_comparativo_costos
+            ORDER BY nombre_producto
+            LIMIT 100
+        """)
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'categorias': [c['categoria'] for c in categorias] if categorias else [],
+                'marcas': [m['marca'] for m in marcas] if marcas else [],
+                'productos': productos if productos else []
+            }
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en get_filtros_comparativo: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@productos_bp.route('/api/comparativo-costos/exportar')
+@login_required
+def exportar_comparativo_csv():
+    """
+    API: Exportar datos del comparativo a CSV
+    """
+    try:
+        # Obtener todos los datos
+        resultados = db_query("""
+            SELECT 
+                codigo,
+                nombre_producto,
+                modelo,
+                marca,
+                categoria,
+                costo_actual,
+                precio_actual,
+                costo_promedio_historico,
+                margen_actual_porcentaje,
+                margen_historico_porcentaje,
+                total_registros_costos,
+                fecha_ultimo_costo
+            FROM vista_comparativo_costos
+            ORDER BY nombre_producto
+        """)
+        
+        # Construir CSV
+        import csv
+        from io import StringIO
+        
+        output = StringIO()
+        writer = csv.writer(output)
+        
+        # Encabezados
+        writer.writerow([
+            'Código',
+            'Producto',
+            'Modelo',
+            'Marca',
+            'Categoría',
+            'Costo Actual (S/)',
+            'Precio Venta (S/)',
+            'Costo Promedio Histórico (S/)',
+            'Margen Actual (%)',
+            'Margen Histórico (%)',
+            'N° Registros Costos',
+            'Fecha Último Costo'
+        ])
+        
+        # Datos
+        for row in resultados:
+            writer.writerow([
+                row.get('codigo', ''),
+                row.get('nombre_producto', ''),
+                row.get('modelo', ''),
+                row.get('marca', ''),
+                row.get('categoria', ''),
+                f"{float(row.get('costo_actual', 0)):.2f}",
+                f"{float(row.get('precio_actual', 0)):.2f}",
+                f"{float(row.get('costo_promedio_historico', 0)):.2f}",
+                f"{float(row.get('margen_actual_porcentaje', 0)):.2f}",
+                f"{float(row.get('margen_historico_porcentaje', 0)):.2f}",
+                row.get('total_registros_costos', 0),
+                row.get('fecha_ultimo_costo', '')
+            ])
+        
+        csv_content = output.getvalue()
+        output.close()
+        
+        # Devolver como archivo CSV
+        from flask import Response
+        return Response(
+            csv_content,
+            mimetype='text/csv',
+            headers={
+                'Content-Disposition': f'attachment; filename=comparativo_costos_{datetime.now().strftime("%Y%m%d")}.csv'
+            }
+        )
+        
+    except Exception as e:
+        print(f"❌ Error en exportar_comparativo_csv: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@productos_bp.route('/api/comparativo-costos/mejor-producto')
+@login_required
+def get_mejor_producto():
+    """
+    API: Obtener el producto con mejor margen
+    """
+    try:
+        resultado = db_query("""
+            SELECT 
+                producto_id,
+                codigo,
+                nombre_producto,
+                marca,
+                modelo,
+                categoria,
+                precio_actual,
+                costo_actual,
+                margen_actual_porcentaje,
+                costo_promedio_historico,
+                total_registros_costos
+            FROM vista_comparativo_costos
+            WHERE margen_actual_porcentaje = (
+                SELECT MAX(margen_actual_porcentaje) 
+                FROM vista_comparativo_costos
+            )
+            LIMIT 1
+        """)
+        
+        if not resultado:
+            return jsonify({
+                'success': True,
+                'data': None,
+                'message': 'No hay productos con datos de costos'
+            })
+        
+        return jsonify({
+            'success': True,
+            'data': resultado[0]
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en get_mejor_producto: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500

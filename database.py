@@ -1792,3 +1792,369 @@ def obtener_ultimo_codigo_producto():
     # Si no hay productos o hay error, generar uno nuevo
     from datetime import datetime
     return f"PRD-0001"
+
+# =========================
+# COMPARATIVO DE COSTOS
+# =========================
+
+def obtener_comparativo_costos(filtros=None):
+    """
+    Obtiene datos del comparativo de costos desde la vista
+    """
+    try:
+        query = """
+            SELECT 
+                producto_id,
+                codigo,
+                nombre_producto,
+                modelo,
+                marca,
+                categoria,
+                subcategoria,
+                costo_actual,
+                precio_actual,
+                stock,
+                stock_minimo,
+                estado,
+                activo,
+                precio_venta,
+                precio_lista,
+                margen_preferido,
+                total_registros_costos,
+                costo_promedio_historico,
+                costo_minimo_historico,
+                costo_maximo_historico,
+                costo_compra_promedio,
+                costo_transporte_promedio,
+                costo_almacenaje_promedio,
+                costo_manufactura_promedio,
+                ultimo_costo_registrado,
+                fecha_ultimo_costo,
+                margen_actual_porcentaje,
+                margen_historico_porcentaje,
+                diferencia_margen_preferido
+            FROM vista_comparativo_costos
+            WHERE 1=1
+        """
+        params = []
+        
+        if filtros:
+            if filtros.get('producto_id'):
+                query += " AND producto_id = %s"
+                params.append(int(filtros['producto_id']))
+            
+            if filtros.get('categoria'):
+                query += " AND categoria ILIKE %s"
+                params.append(f'%{filtros["categoria"]}%')
+            
+            if filtros.get('marca'):
+                query += " AND marca ILIKE %s"
+                params.append(f'%{filtros["marca"]}%')
+            
+            if filtros.get('busqueda'):
+                query += """ AND (
+                    codigo ILIKE %s OR 
+                    nombre_producto ILIKE %s OR 
+                    modelo ILIKE %s OR 
+                    marca ILIKE %s
+                )"""
+                params.extend([f'%{filtros["busqueda"]}%'] * 4)
+            
+            if filtros.get('min_margen') is not None:
+                query += " AND margen_actual_porcentaje >= %s"
+                params.append(float(filtros['min_margen']))
+            
+            if filtros.get('max_margen') is not None:
+                query += " AND margen_actual_porcentaje <= %s"
+                params.append(float(filtros['max_margen']))
+        
+        query += " ORDER BY nombre_producto"
+        
+        return db_query(query, params)
+    except Exception as e:
+        print(f"❌ Error en obtener_comparativo_costos: {e}")
+        return []
+
+def obtener_resumen_costos():
+    """
+    Obtiene el resumen del dashboard de costos
+    """
+    try:
+        result = db_query("SELECT * FROM vista_resumen_costos")
+        return result[0] if result else {}
+    except Exception as e:
+        print(f"❌ Error en obtener_resumen_costos: {e}")
+        return {}
+
+def obtener_costos_historicos(producto_id):
+    """
+    Obtiene el historial de costos de un producto específico
+    """
+    try:
+        # Verificar que el producto existe
+        producto = db_query("""
+            SELECT id, codigo, descripcion 
+            FROM productos 
+            WHERE id = %s AND activo = TRUE
+        """, (producto_id,))
+        
+        if not producto:
+            return None
+        
+        # Obtener historial de costos
+        historial = db_query("""
+            SELECT 
+                id,
+                fecha_registro,
+                tipo_costo,
+                monto,
+                observaciones,
+                proveedor_id,
+                factura_referencia,
+                creado_por
+            FROM costos_productos
+            WHERE producto_id = %s
+            ORDER BY fecha_registro DESC
+        """, (producto_id,))
+        
+        return {
+            'producto': producto[0],
+            'historial': historial,
+            'total_registros': len(historial)
+        }
+    except Exception as e:
+        print(f"❌ Error en obtener_costos_historicos: {e}")
+        return None
+
+def obtener_opciones_filtros_comparativo():
+    """
+    Obtiene las opciones de filtros para el comparativo
+    """
+    try:
+        categorias = db_query("""
+            SELECT DISTINCT categoria 
+            FROM vista_comparativo_costos 
+            WHERE categoria IS NOT NULL AND categoria != ''
+            ORDER BY categoria
+        """)
+        
+        marcas = db_query("""
+            SELECT DISTINCT marca 
+            FROM vista_comparativo_costos 
+            WHERE marca IS NOT NULL AND marca != ''
+            ORDER BY marca
+        """)
+        
+        productos = db_query("""
+            SELECT DISTINCT producto_id, codigo, nombre_producto
+            FROM vista_comparativo_costos
+            ORDER BY nombre_producto
+            LIMIT 100
+        """)
+        
+        return {
+            'categorias': [c['categoria'] for c in categorias] if categorias else [],
+            'marcas': [m['marca'] for m in marcas] if marcas else [],
+            'productos': productos if productos else []
+        }
+    except Exception as e:
+        print(f"❌ Error en obtener_opciones_filtros_comparativo: {e}")
+        return {'categorias': [], 'marcas': [], 'productos': []}
+
+def obtener_mejor_producto():
+    """
+    Obtiene el producto con mejor margen
+    """
+    try:
+        result = db_query("""
+            SELECT 
+                producto_id,
+                codigo,
+                nombre_producto,
+                marca,
+                modelo,
+                categoria,
+                precio_actual,
+                costo_actual,
+                margen_actual_porcentaje,
+                costo_promedio_historico,
+                total_registros_costos
+            FROM vista_comparativo_costos
+            WHERE margen_actual_porcentaje = (
+                SELECT MAX(margen_actual_porcentaje) 
+                FROM vista_comparativo_costos
+            )
+            LIMIT 1
+        """)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en obtener_mejor_producto: {e}")
+        return None
+
+def registrar_costo_producto(producto_id, tipo_costo, monto, observaciones=None, proveedor_id=None, factura_referencia=None, creado_por=None):
+    """
+    Registra un nuevo costo para un producto
+    """
+    try:
+        query = """
+            INSERT INTO costos_productos (
+                producto_id, tipo_costo, monto, observaciones,
+                proveedor_id, factura_referencia, creado_por
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
+        """
+        params = (
+            producto_id,
+            tipo_costo,
+            float(monto),
+            observaciones,
+            proveedor_id,
+            factura_referencia,
+            creado_por
+        )
+        result = db_query(query, params)
+        return result[0]['id'] if result else None
+    except Exception as e:
+        print(f"❌ Error en registrar_costo_producto: {e}")
+        raise
+
+def actualizar_precio_producto(producto_id, precio_venta, precio_lista=None, margen_preferido=None):
+    """
+    Actualiza o inserta el precio de un producto
+    """
+    try:
+        # Verificar si ya existe
+        existente = db_query("""
+            SELECT producto_id FROM precios_productos 
+            WHERE producto_id = %s
+        """, (producto_id,))
+        
+        if existente:
+            # Actualizar
+            query = """
+                UPDATE precios_productos SET
+                    precio_venta = %s,
+                    precio_lista = COALESCE(%s, precio_lista),
+                    margen_preferido = COALESCE(%s, margen_preferido),
+                    actualizado_en = NOW()
+                WHERE producto_id = %s
+            """
+            db_execute(query, (float(precio_venta), precio_lista, margen_preferido, producto_id))
+        else:
+            # Insertar
+            query = """
+                INSERT INTO precios_productos (
+                    producto_id, precio_venta, precio_lista, margen_preferido
+                ) VALUES (%s, %s, %s, %s)
+            """
+            db_execute(query, (producto_id, float(precio_venta), precio_lista or precio_venta * 1.1, margen_preferido or 30.0))
+        
+        return True
+    except Exception as e:
+        print(f"❌ Error en actualizar_precio_producto: {e}")
+        raise
+
+def exportar_comparativo_csv():
+    """
+    Exporta los datos del comparativo a formato CSV
+    """
+    try:
+        resultados = db_query("""
+            SELECT 
+                codigo,
+                nombre_producto,
+                modelo,
+                marca,
+                categoria,
+                costo_actual,
+                precio_actual,
+                costo_promedio_historico,
+                margen_actual_porcentaje,
+                margen_historico_porcentaje,
+                total_registros_costos,
+                fecha_ultimo_costo
+            FROM vista_comparativo_costos
+            ORDER BY nombre_producto
+        """)
+        return resultados
+    except Exception as e:
+        print(f"❌ Error en exportar_comparativo_csv: {e}")
+        return []
+
+# =========================
+# FUNCIONES PARA PROVEEDORES EN COMPARATIVO
+# =========================
+
+def obtener_proveedores_para_comparativo(producto_id=None):
+    """
+    Obtiene proveedores para el comparativo de costos
+    """
+    try:
+        query = """
+            SELECT 
+                p.id,
+                p.codigo_proveedor,
+                p.razon_social,
+                p.razon_comercial,
+                p.ruc,
+                p.contacto,
+                p.telefono,
+                p.email,
+                p.lugar_recojo,
+                p.condicion_pago,
+                p.tiempo_credito
+            FROM proveedores p
+            WHERE p.activo = TRUE
+        """
+        params = []
+        
+        if producto_id:
+            # Si se especifica un producto, obtener los proveedores que han cotizado ese producto
+            query += """
+                AND p.id IN (
+                    SELECT DISTINCT proveedor_id 
+                    FROM costos_productos 
+                    WHERE producto_id = %s
+                )
+            """
+            params.append(producto_id)
+        
+        query += " ORDER BY p.razon_social"
+        
+        return db_query(query, params if params else None)
+    except Exception as e:
+        print(f"❌ Error en obtener_proveedores_para_comparativo: {e}")
+        return []
+
+def obtener_costos_por_proveedor(producto_id, proveedor_id=None):
+    """
+    Obtiene los costos de un producto agrupados por proveedor
+    """
+    try:
+        query = """
+            SELECT 
+                cp.id,
+                cp.producto_id,
+                cp.tipo_costo,
+                cp.monto,
+                cp.fecha_registro,
+                cp.observaciones,
+                cp.proveedor_id,
+                p.razon_social as proveedor_nombre,
+                p.codigo_proveedor as proveedor_codigo
+            FROM costos_productos cp
+            LEFT JOIN proveedores p ON p.id = cp.proveedor_id
+            WHERE cp.producto_id = %s
+        """
+        params = [producto_id]
+        
+        if proveedor_id:
+            query += " AND cp.proveedor_id = %s"
+            params.append(proveedor_id)
+        
+        query += " ORDER BY cp.fecha_registro DESC"
+        
+        return db_query(query, params)
+    except Exception as e:
+        print(f"❌ Error en obtener_costos_por_proveedor: {e}")
+        return []

@@ -75,3 +75,524 @@
     <i class="bi bi-info-circle-fill"></i>
     El sistema mantiene el historial de cotizaciones por proveedor, incluyendo costo y fecha/hora, para que puedas recotizar más rápido en el futuro.
 </div>
+<script>
+// ============================================================
+// VARIABLES GLOBALES
+// ============================================================
+let productosData = [];
+let comparativoData = [];
+let proveedoresData = [];
+let productoSeleccionado = null;
+
+// ============================================================
+// 1. CARGAR DATOS INICIALES
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+    cargarProductos();
+    cargarProveedores();
+    cargarComparativo();
+});
+
+// ============================================================
+// 2. FUNCIONES PARA CARGAR DATOS
+// ============================================================
+
+function cargarProductos() {
+    // Cargar lista de productos para el autocomplete
+    fetch('/productos/api/productos')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                productosData = data.data;
+                inicializarAutocomplete();
+            }
+        })
+        .catch(error => console.error('Error cargando productos:', error));
+}
+
+function cargarProveedores() {
+    // Aquí cargas tus proveedores (ajusta la URL según tu API)
+    // Por ahora usamos datos de ejemplo
+    proveedoresData = [
+        { id: 1, nombre: 'GOALSA' },
+        { id: 2, nombre: '3M Perú' },
+        { id: 3, nombre: 'Honeywell' },
+        { id: 4, nombre: 'DuPont' }
+    ];
+    // Si tienes un endpoint de proveedores, usa:
+    // fetch('/proveedores/api/proveedores')...
+}
+
+function cargarComparativo() {
+    // Cargar datos del comparativo
+    fetch('/productos/api/comparativo-costos')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                comparativoData = data.data;
+                actualizarTabla(comparativoData);
+                actualizarResumen(comparativoData);
+            } else {
+                mostrarError('Error cargando datos del comparativo');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Si la API no está lista, usar datos de ejemplo
+            cargarDatosEjemplo();
+        });
+}
+
+// ============================================================
+// 3. DATOS DE EJEMPLO (para pruebas)
+// ============================================================
+function cargarDatosEjemplo() {
+    // Usar datos de ejemplo mientras la API está en desarrollo
+    comparativoData = [
+        {
+            producto_id: 30,
+            codigo: 'SEG-001',
+            nombre_producto: 'EJEMPLO1',
+            modelo: 'M100',
+            marca: 'NIKE',
+            categoria: 'Seguridad Industrial',
+            costo_actual: 2.50,
+            precio_actual: 5.00,
+            costo_promedio_historico: 2.50,
+            margen_actual_porcentaje: 50.00,
+            margen_historico_porcentaje: 50.00
+        },
+        {
+            producto_id: 80,
+            codigo: 'PRD-0008',
+            nombre_producto: 'vaso',
+            modelo: 'ALUM',
+            marca: 'Puma',
+            categoria: 'Equipos de Protección',
+            costo_actual: 4.00,
+            precio_actual: 10.00,
+            costo_promedio_historico: 4.00,
+            margen_actual_porcentaje: 60.00,
+            margen_historico_porcentaje: 60.00
+        },
+        {
+            producto_id: 29,
+            codigo: 'PROD-001',
+            nombre_producto: 'PRODUCTO DE PRUEBA PARA COMPRAS',
+            modelo: 'null',
+            marca: 'null',
+            categoria: 'GENERAL',
+            costo_actual: 80.00,
+            precio_actual: 100.00,
+            costo_promedio_historico: 80.00,
+            margen_actual_porcentaje: 20.00,
+            margen_historico_porcentaje: 20.00
+        }
+    ];
+    actualizarTabla(comparativoData);
+    actualizarResumen(comparativoData);
+}
+
+// ============================================================
+// 4. AUTOCOMPLETE DE PRODUCTOS
+// ============================================================
+function inicializarAutocomplete() {
+    const input = document.getElementById('ccProductSearch');
+    if (!input) return;
+
+    let currentFocus = -1;
+    
+    input.addEventListener('input', function() {
+        const val = this.value.toUpperCase();
+        const suggestions = productosData.filter(p => 
+            p.codigo.toUpperCase().includes(val) || 
+            p.descripcion.toUpperCase().includes(val)
+        );
+        mostrarSugerencias(suggestions);
+    });
+
+    input.addEventListener('keydown', function(e) {
+        const items = document.querySelectorAll('.autocomplete-item');
+        if (!items.length) return;
+
+        if (e.key === 'ArrowDown') {
+            currentFocus = (currentFocus + 1) % items.length;
+            resaltarItem(items, currentFocus);
+            e.preventDefault();
+        } else if (e.key === 'ArrowUp') {
+            currentFocus = (currentFocus - 1 + items.length) % items.length;
+            resaltarItem(items, currentFocus);
+            e.preventDefault();
+        } else if (e.key === 'Enter') {
+            if (currentFocus >= 0 && currentFocus < items.length) {
+                items[currentFocus].click();
+            }
+            e.preventDefault();
+        }
+    });
+
+    // Cerrar sugerencias al hacer click fuera
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.cc-search-wrap')) {
+            cerrarSugerencias();
+        }
+    });
+}
+
+function mostrarSugerencias(items) {
+    cerrarSugerencias();
+    
+    if (!items || !items.length) {
+        return;
+    }
+
+    const container = document.querySelector('.cc-search-wrap');
+    const list = document.createElement('div');
+    list.className = 'autocomplete-list';
+    
+    items.slice(0, 10).forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'autocomplete-item';
+        div.innerHTML = `
+            <strong>${item.codigo}</strong> - ${item.descripcion}
+            <span style="color:#6c757d;font-size:12px;margin-left:8px">${item.familia || ''}</span>
+        `;
+        div.dataset.id = item.id;
+        div.addEventListener('click', function() {
+            seleccionarProducto(item.id);
+            cerrarSugerencias();
+        });
+        list.appendChild(div);
+    });
+    
+    container.appendChild(list);
+}
+
+function cerrarSugerencias() {
+    const lists = document.querySelectorAll('.autocomplete-list');
+    lists.forEach(list => list.remove());
+}
+
+function resaltarItem(items, index) {
+    items.forEach((item, i) => {
+        item.style.background = i === index ? '#e3f0ff' : '';
+    });
+}
+
+function seleccionarProducto(productoId) {
+    const producto = productosData.find(p => p.id === productoId);
+    if (!producto) return;
+    
+    productoSeleccionado = producto;
+    const input = document.getElementById('ccProductSearch');
+    input.value = `${producto.codigo} - ${producto.descripcion}`;
+    
+    // Mostrar información del producto
+    mostrarProductoSeleccionado(producto);
+    
+    // Filtrar la tabla por este producto
+    const filtrados = comparativoData.filter(c => c.producto_id === productoId);
+    if (filtrados.length) {
+        actualizarTabla(filtrados);
+        actualizarResumen(filtrados);
+    } else {
+        // Si no hay datos del producto, mostrar mensaje
+        document.getElementById('ccTbody').innerHTML = `
+            <tr>
+                <td colspan="11" class="text-center" style="padding:40px;color:#6c757d;">
+                    <i class="bi bi-info-circle"></i> No hay datos de costos para este producto
+                </td>
+            </tr>
+        `;
+    }
+}
+
+function mostrarProductoSeleccionado(producto) {
+    // Actualizar la tarjeta de información del producto
+    const card = document.querySelector('.cc-product-info');
+    if (!card) return;
+    
+    const cells = card.querySelectorAll('.cc-info-value');
+    if (cells.length >= 7) {
+        cells[0].textContent = producto.codigo || '---';
+        cells[1].textContent = producto.descripcion || '---';
+        cells[2].textContent = producto.modelo || '---';
+        cells[3].textContent = producto.marca || '---';
+        cells[4].textContent = producto.familia || '---';
+        cells[5].textContent = producto.transporte || '---';
+        cells[6].textContent = `S/ ${producto.precio_unitario || '0.00'}`;
+    }
+}
+
+// ============================================================
+// 5. ACTUALIZAR TABLA
+// ============================================================
+function actualizarTabla(data) {
+    const tbody = document.getElementById('ccTbody');
+    if (!tbody) return;
+
+    if (!data || !data.length) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="11" class="text-center" style="padding:40px;color:#6c757d;">
+                    <i class="bi bi-inbox"></i> No hay datos para mostrar
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    let html = '';
+    data.forEach((item, index) => {
+        const margen = item.margen_actual_porcentaje || 0;
+        const margenClass = margen >= 50 ? 'margen-high' : 
+                           margen >= 30 ? 'margen-medium' : 'margen-low';
+        
+        html += `
+            <tr>
+                <td class="cc-col-item">${index + 1}</td>
+                <td class="cc-col-code"><strong>${item.codigo || '---'}</strong></td>
+                <td class="cc-col-desc">${item.nombre_producto || '---'}</td>
+                <td class="cc-col-brand">${item.marca || '---'}</td>
+                <td class="cc-col-model">${item.modelo || '---'}</td>
+                <td class="cc-col-provider">${item.proveedor || 'GOALSA'}</td>
+                <td class="cc-col-qty">1</td>
+                <td class="cc-col-money">S/ ${(item.costo_promedio_historico || 0).toFixed(2)}</td>
+                <td class="cc-col-money">S/ ${(item.costo_actual || 0).toFixed(2)}</td>
+                <td class="cc-col-money">S/ ${(item.costo_actual || 0).toFixed(2)}</td>
+                <td class="cc-col-money">S/ ${(item.precio_actual || 0).toFixed(2)}</td>
+                <td class="cc-col-money">S/ ${(item.precio_actual || 0).toFixed(2)}</td>
+                <td class="cc-col-money">S/ ${(item.precio_actual || 0).toFixed(2)}</td>
+                <td class="cc-col-days">${item.tiempo_entrega || '3 días'}</td>
+                <td class="cc-col-type">${item.tipo_entrega || 'Recojo'}</td>
+                <td class="cc-col-place">${item.lugar_entrega || 'Lima'}</td>
+                <td class="cc-col-money">S/ ${(item.costo_transporte || 0).toFixed(2)}</td>
+                <td class="cc-col-comment">${item.observaciones || ''}</td>
+                <td class="cc-col-status">
+                    <span class="badge ${margen >= 50 ? 'badge-success' : margen >= 30 ? 'badge-warning' : 'badge-danger'}">
+                        ${margen >= 50 ? '✅ Buen margen' : margen >= 30 ? '⚠️ Margen regular' : '❌ Margen bajo'}
+                    </span>
+                    <br>
+                    <small style="color:#6c757d;font-size:11px;">${margen.toFixed(1)}%</small>
+                </td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+    
+    // Actualizar contador
+    const countElement = document.querySelector('.table-count');
+    if (countElement) {
+        countElement.textContent = `${data.length} registros`;
+    }
+}
+
+// ============================================================
+// 6. ACTUALIZAR RESUMEN (KPIs)
+// ============================================================
+function actualizarResumen(data) {
+    if (!data || !data.length) return;
+
+    // Total productos
+    document.getElementById('ccProveedoresCount').textContent = data.length;
+
+    // Mejor costo unitario
+    const mejorCosto = Math.min(...data.map(d => d.costo_actual || 0));
+    document.getElementById('ccMejorCosto').textContent = `S/ ${mejorCosto.toFixed(2)}`;
+
+    // Mejor margen
+    const mejorMargen = Math.max(...data.map(d => d.margen_actual_porcentaje || 0));
+    const mejorProducto = data.find(d => (d.margen_actual_porcentaje || 0) === mejorMargen);
+    document.getElementById('ccProveedorGanador').textContent = 
+        mejorProducto ? `${mejorProducto.marca || 'Ganador'}` : '---';
+
+    // Menor tiempo de entrega
+    // (Asumiendo que tienes campo tiempo_entrega, usamos un valor fijo por ahora)
+    document.getElementById('ccMenorTiempo').textContent = '2 días';
+    document.getElementById('ccLugarGanador').textContent = 'Recojo';
+}
+
+// ============================================================
+// 7. FUNCIONES PARA ACCIONES DE BOTONES
+// ============================================================
+
+function ccCargarDatos() {
+    // Recargar datos desde la API
+    document.getElementById('ccTbody').innerHTML = `
+        <tr>
+            <td colspan="11" class="text-center" style="padding:40px;">
+                <i class="bi bi-hourglass-split"></i> Cargando datos...
+            </td>
+        </tr>
+    `;
+    cargarComparativo();
+}
+
+function ccAgregarProveedor() {
+    alert('Funcionalidad: Agregar proveedor al comparativo');
+    // Aquí puedes abrir un modal para agregar un nuevo proveedor
+}
+
+function ccCalcularGanador() {
+    // Encontrar el proveedor con mejor relación costo-beneficio
+    if (!comparativoData || !comparativoData.length) {
+        alert('No hay datos para calcular el ganador');
+        return;
+    }
+
+    // Buscar el producto con mejor margen
+    const mejor = comparativoData.reduce((a, b) => 
+        (a.margen_actual_porcentaje || 0) > (b.margen_actual_porcentaje || 0) ? a : b
+    );
+
+    // Mostrar resultado con SweetAlert (opcional)
+    // Por ahora, solo mostramos en consola
+    console.log('🏆 Ganador:', mejor);
+    
+    // Mostrar en el resumen
+    document.getElementById('ccProveedorGanador').textContent = 
+        `${mejor.marca || 'Ganador'} (${mejor.codigo})`;
+    document.getElementById('ccMejorCosto').textContent = 
+        `S/ ${(mejor.costo_actual || 0).toFixed(2)}`;
+
+    alert(`🏆 El mejor producto es:\n${mejor.codigo} - ${mejor.nombre_producto}\nMargen: ${(mejor.margen_actual_porcentaje || 0).toFixed(1)}%`);
+}
+
+function ccExportarCSV() {
+    if (!comparativoData || !comparativoData.length) {
+        alert('No hay datos para exportar');
+        return;
+    }
+
+    // Crear CSV
+    let csv = 'Código,Producto,Marca,Modelo,Costo Actual,Precio Venta,Margen\n';
+    comparativoData.forEach(d => {
+        csv += `${d.codigo},${d.nombre_producto},${d.marca || ''},${d.modelo || ''},${d.costo_actual || 0},${d.precio_actual || 0},${(d.margen_actual_porcentaje || 0).toFixed(2)}\n`;
+    });
+
+    // Descargar
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `comparativo_costos_${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+}
+
+function ccNuevoComparativo() {
+    // Limpiar selección y mostrar todos los productos
+    productoSeleccionado = null;
+    document.getElementById('ccProductSearch').value = '';
+    cargarComparativo();
+    
+    // Resetear información del producto
+    const cells = document.querySelectorAll('.cc-info-value');
+    if (cells.length >= 7) {
+        cells[0].textContent = '---';
+        cells[1].textContent = '---';
+        cells[2].textContent = '---';
+        cells[3].textContent = '---';
+        cells[4].textContent = '---';
+        cells[5].textContent = '---';
+        cells[6].textContent = 'S/ 0.00';
+    }
+}
+
+// ============================================================
+// 8. FUNCIÓN PARA MOSTRAR ERRORES
+// ============================================================
+function mostrarError(mensaje) {
+    console.error(mensaje);
+    // Aquí puedes mostrar un toast o notificación
+    alert(mensaje);
+}
+
+// ============================================================
+// 9. ESTILOS PARA AUTOCOMPLETE
+// ============================================================
+// Agregar estilos dinámicamente para el autocomplete
+const styleAutocomplete = document.createElement('style');
+styleAutocomplete.textContent = `
+    .autocomplete-list {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 0 0 8px 8px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        margin-top: 4px;
+    }
+    .autocomplete-item {
+        padding: 10px 16px;
+        cursor: pointer;
+        border-bottom: 1px solid #f1f3f5;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .autocomplete-item:hover {
+        background: #e3f0ff;
+    }
+    .autocomplete-item strong {
+        color: #0d6efd;
+        font-size: 13px;
+    }
+    .cc-search-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 0 12px;
+        flex: 1;
+        min-width: 250px;
+    }
+    .cc-search-wrap input {
+        border: none;
+        padding: 10px 0;
+        flex: 1;
+        outline: none;
+        font-size: 14px;
+        background: transparent;
+    }
+    .cc-search-wrap input:focus {
+        outline: none;
+    }
+    .cc-search-wrap i {
+        color: #6c757d;
+    }
+    .badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        display: inline-block;
+    }
+    .badge-success { background: #d1e7dd; color: #0f5132; }
+    .badge-warning { background: #fff3cd; color: #856404; }
+    .badge-danger { background: #f8d7da; color: #842029; }
+    .text-center { text-align: center; }
+    .cc-col-status {
+        min-width: 120px;
+    }
+`;
+document.head.appendChild(styleAutocomplete);
+
+// ============================================================
+// 10. EXPONER FUNCIONES GLOBALMENTE
+// ============================================================
+window.ccCargarDatos = ccCargarDatos;
+window.ccAgregarProveedor = ccAgregarProveedor;
+window.ccCalcularGanador = ccCalcularGanador;
+window.ccExportarCSV = ccExportarCSV;
+window.ccNuevoComparativo = ccNuevoComparativo;
+
+console.log('✅ Comparativo de Costos cargado correctamente');
+</script>
