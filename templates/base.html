@@ -316,6 +316,29 @@
         </div>
     </div>
 
+<!-- ============================================================ -->
+<!-- MODAL DE RESULTADOS DEL GANADOR - AGREGAR AQUÍ -->
+<!-- ============================================================ -->
+<div class="modal-ganador" id="modalGanador">
+    <div class="modal-ganador-content">
+        <div class="modal-ganador-header">
+            <div class="modal-ganador-icon">🏆</div>
+            <h2>¡Ganador del Comparativo!</h2>
+            <button class="modal-ganador-close" onclick="cerrarModalGanador()">&times;</button>
+        </div>
+        <div class="modal-ganador-body" id="modalGanadorBody">
+            <!-- Contenido dinámico generado por JavaScript -->
+            <div style="text-align:center;padding:20px;color:#6c757d;">
+                <i class="bi bi-hourglass-split"></i> Cargando resultados...
+            </div>
+        </div>
+        <div class="modal-ganador-footer">
+            <button class="btn primary" onclick="cerrarModalGanador()">
+                <i class="bi bi-check-circle"></i> Entendido
+            </button>
+        </div>
+    </div>
+</div>
 <!-- OVERLAY PARA NOTIFICACIÓN FLOTANTE DE ERROR -->
 <div class="modal-overlay-flotante" id="modalErrorFlotante">
     <div class="notificacion-flotante">
