@@ -14,14 +14,6 @@
 {% block subtitle %}Gestión completa de productos: creación, consulta y comparativo de costos.{% endblock %}
 
 {% block content %}
-<!-- ======================================== -->
-<!-- TABS (navegación entre las 3 pantallas)  -->
-<!-- ======================================== -->
-<div class="tabs" id="productosTabs">
-    <a href="/productos/nuevo" class="tab-btn {% if active_tab == 'nuevo' %}active{% endif %}">Nuevo producto</a>
-    <a href="/productos/base-datos" class="tab-btn {% if active_tab == 'base-datos' %}active{% endif %}">Base de datos: Producto</a>
-    <a href="/productos/comparativo" class="tab-btn {% if active_tab == 'comparativo' %}active{% endif %}">Comparativo costos</a>
-</div>
 
 <!-- ======================================== -->
 <!-- CONTENIDO SEGÚN LA PESTAÑA ACTIVA        -->
