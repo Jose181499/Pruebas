@@ -2644,3 +2644,171 @@ input[type="file"] { display: none; }
 @media (max-width: 980px)  { .cc-product-card { grid-template-columns: 1fr; } }
 @media (max-width: 640px)  { .cc-summary { grid-template-columns: 1fr; } .cc-actions-row { flex-direction: column; align-items: stretch; } }
 
+/* ============================================================
+   FIX - NUEVO PRODUCTO - CAMPOS EN GRILLA
+   ============================================================ */
+
+/* Asegurar que el grid funcione */
+.np-layout .grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 12px !important;
+    margin-top: 10px !important;
+    margin-bottom: 0 !important;
+}
+
+.np-layout .grid.two {
+    grid-template-columns: 1fr 1fr !important;
+}
+
+.np-layout .grid.full {
+    grid-template-columns: 1fr !important;
+}
+
+/* Asegurar que los campos se vean bien */
+.np-layout .field {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+}
+
+.np-layout .field label {
+    display: block !important;
+    font-weight: 700 !important;
+    font-size: 11px !important;
+    color: #374151 !important;
+    margin-bottom: 2px !important;
+}
+
+.np-layout .field input,
+.np-layout .field select,
+.np-layout .field textarea {
+    width: 100% !important;
+    border: 1px solid #D1D5DB !important;
+    border-radius: 6px !important;
+    padding: 8px 10px !important;
+    font-size: 13px !important;
+    background: #fff !important;
+    color: #0F172A !important;
+    outline: none !important;
+    transition: border-color 0.2s, box-shadow 0.2s !important;
+    height: 36px !important;
+}
+
+.np-layout .field textarea {
+    height: 56px !important;
+    resize: vertical !important;
+}
+
+.np-layout .field input:focus,
+.np-layout .field select:focus,
+.np-layout .field textarea:focus {
+    border-color: var(--empresa, #EF233C) !important;
+    box-shadow: 0 0 0 3px rgba(239, 35, 60, 0.1) !important;
+}
+
+/* Input con unidad */
+.np-layout .input-unit {
+    display: flex !important;
+    border: 1px solid #D1D5DB !important;
+    border-radius: 6px !important;
+    overflow: hidden !important;
+    background: #fff !important;
+}
+
+.np-layout .input-unit input {
+    border: none !important;
+    border-radius: 6px 0 0 6px !important;
+    flex: 1 !important;
+    padding: 8px 10px !important;
+    height: 36px !important;
+    font-size: 13px !important;
+    outline: none !important;
+}
+
+.np-layout .input-unit input:focus {
+    box-shadow: none !important;
+    border: none !important;
+}
+
+.np-layout .input-unit span {
+    display: grid !important;
+    place-items: center !important;
+    padding: 0 12px !important;
+    background: #F3F4F6 !important;
+    border-left: 1px solid #D1D5DB !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #6B7280 !important;
+    min-width: 44px !important;
+    height: 36px !important;
+}
+
+/* Responsive */
+@media (max-width: 980px) {
+    .np-layout .grid {
+        grid-template-columns: 1fr 1fr !important;
+    }
+    .np-layout .grid.two {
+        grid-template-columns: 1fr 1fr !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .np-layout .grid {
+        grid-template-columns: 1fr !important;
+    }
+    .np-layout .grid.two {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+
+/* Fix para el header del formulario */
+.np-layout .form-header {
+    display: flex !important;
+    gap: 14px !important;
+    align-items: flex-end !important;
+    margin-bottom: 14px !important;
+    flex-wrap: wrap !important;
+}
+
+.np-layout .code-box {
+    min-width: 160px !important;
+}
+
+.np-layout .code-box label {
+    display: block !important;
+    font-weight: 700 !important;
+    font-size: 11px !important;
+    color: #374151 !important;
+    margin-bottom: 4px !important;
+}
+
+.np-layout .code-value {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    background: var(--empresa-soft, #FFE4E8) !important;
+    padding: 6px 12px !important;
+    border-radius: 6px !important;
+    font-size: 16px !important;
+    font-weight: 900 !important;
+    color: var(--empresa, #EF233C) !important;
+}
+
+.np-layout .code-value .pill {
+    font-size: 9px !important;
+    background: var(--empresa, #EF233C) !important;
+    color: #fff !important;
+    padding: 2px 8px !important;
+    border-radius: 20px !important;
+    font-weight: 700 !important;
+}
+
+@media (max-width: 768px) {
+    .np-layout .form-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+}
