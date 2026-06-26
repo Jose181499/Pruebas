@@ -41,10 +41,14 @@ def db_tx():
 # =========================
 # QUERY
 # =========================
-def db_query(sql, params=()):
+def db_query(sql, params=None):
+    """Ejecuta una consulta SELECT y devuelve los resultados"""
     conn = get_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute(sql, params)
+    if params:
+        cur.execute(sql, params)
+    else:
+        cur.execute(sql)
     data = cur.fetchall()
     cur.close()
     conn.close()
@@ -1701,6 +1705,68 @@ def actualizar_producto(producto_id, data):
     return result[0] if result else None
 
 def obtener_ultimo_codigo_producto():
+    """Obtiene el último código de producto para generar el siguiente"""
+    try:
+        # Buscar el último código PRD-, GEN- o SEG-
+        result = db_query("""
+            SELECT codigo FROM productos 
+            WHERE codigo LIKE 'PRD-%' OR codigo LIKE 'GEN-%' OR codigo LIKE 'SEG-%'
+            ORDER BY id DESC LIMIT 1
+        """)
+        
+        if result and len(result) > 0 and result[0].get('codigo'):
+            codigo = result[0]['codigo']
+            print(f"📝 Último código encontrado: {codigo}")
+            partes = codigo.split('-')
+            if len(partes) >= 2:
+                try:
+                    ultimo_num = int(partes[-1])
+                    nuevo_num = ultimo_num + 1
+                    prefijo = partes[0]
+                    nuevo_codigo = f"{prefijo}-{str(nuevo_num).zfill(4)}"
+                    print(f"✅ Nuevo código generado: {nuevo_codigo}")
+                    return nuevo_codigo
+                except ValueError as e:
+                    print(f"⚠️ Error parseando número: {e}")
+                    pass
+        
+        # Si no hay códigos PRD-, GEN- o SEG-, buscar el mayor número en cualquier código
+        print("📝 Buscando códigos existentes para extraer números...")
+        result = db_query("""
+            SELECT codigo FROM productos 
+            ORDER BY id DESC LIMIT 20
+        """)
+        
+        import re
+        max_num = 0
+        for row in result:
+            codigo = row.get('codigo', '')
+            numeros = re.findall(r'\d+', codigo)
+            for num_str in numeros:
+                try:
+                    num = int(num_str)
+                    if num > max_num:
+                        max_num = num
+                except:
+                    pass
+        
+        if max_num > 0:
+            nuevo_num = max_num + 1
+            nuevo_codigo = f"PRD-{str(nuevo_num).zfill(4)}"
+            print(f"✅ Nuevo código generado desde números: {nuevo_codigo}")
+            return nuevo_codigo
+        
+        # Fallback: usar timestamp
+        print("⚠️ Usando timestamp como fallback")
+        from datetime import datetime
+        timestamp = datetime.now().strftime('%y%m%d%H%M%S')
+        return f"PRD-{timestamp}"
+        
+    except Exception as e:
+        print(f"❌ Error generando código: {e}")
+        import traceback
+        traceback.print_exc()
+        return "PRD-0001"
     """Obtiene el último código de producto para generar el siguiente"""
     result = db_query("""
         SELECT codigo FROM productos 
