@@ -2643,3 +2643,537 @@ input[type="file"] { display: none; }
 @media (max-width: 1280px) { .cc-summary { grid-template-columns: repeat(3, 1fr); gap: 14px; } .cc-summary-item { border-right: 0; padding: 0; } }
 @media (max-width: 980px)  { .cc-product-card { grid-template-columns: 1fr; } }
 @media (max-width: 640px)  { .cc-summary { grid-template-columns: 1fr; } .cc-actions-row { flex-direction: column; align-items: stretch; } }
+
+/* ============================================================
+   NUEVO PRODUCTO - LAYOUT Y ESTILOS COMPLETOS
+   ============================================================ */
+
+/* Layout principal de 3 columnas */
+.np-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr 280px;
+    gap: 20px;
+    align-items: start;
+    margin-top: 16px;
+}
+
+@media (max-width: 1200px) {
+    .np-layout {
+        grid-template-columns: 1fr 1fr;
+    }
+    .np-layout > div:last-child {
+        grid-column: span 2;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+    .np-layout > div:last-child .state-card {
+        margin-top: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .np-layout {
+        grid-template-columns: 1fr;
+    }
+    .np-layout > div:last-child {
+        grid-column: span 1;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+}
+
+/* Cards */
+.card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.card.panel {
+    padding: 16px;
+}
+
+.card.form-card {
+    padding: 18px;
+}
+
+.card.prices {
+    padding: 18px;
+}
+
+.card.state-card {
+    padding: 18px;
+    margin-top: 14px;
+}
+
+.card-title {
+    font-size: 14px;
+    font-weight: 800;
+    margin: 0 0 12px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.card-title i {
+    color: var(--empresa);
+}
+
+/* Upload de foto */
+.upload {
+    height: 196px;
+    border: 2px dashed var(--empresa-sub-border, rgba(239,35,60,.30));
+    border-radius: 10px;
+    background: linear-gradient(180deg, #fff, #fefcfc);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 4px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    overflow: hidden;
+    position: relative;
+}
+
+.upload:hover {
+    border-color: var(--empresa);
+    background: var(--empresa-soft);
+}
+
+.upload .cloud {
+    font-size: 38px;
+    color: var(--empresa);
+    line-height: 1;
+}
+
+.upload strong {
+    color: var(--empresa);
+    font-size: 13px;
+}
+
+.upload .drag-hint {
+    font-size: 11px;
+    color: var(--muted);
+}
+
+.upload .file-badge {
+    background: #eef2f6;
+    border-radius: 30px;
+    padding: 4px 14px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-top: 6px;
+}
+
+.upload img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.upload.has-image {
+    border-color: var(--empresa);
+    background: var(--empresa-soft);
+}
+
+#previewContainer {
+    margin-top: 4px;
+    width: 100%;
+}
+
+input[type="file"] {
+    display: none;
+}
+
+/* Operación */
+.operation {
+    margin-top: 14px;
+    padding: 14px;
+    background: #fafbfd;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+}
+
+.op-item {
+    display: flex;
+    gap: 10px;
+    margin: 10px 0;
+    align-items: flex-start;
+    padding: 7px 10px;
+    border-radius: 9px;
+    transition: background .15s;
+    cursor: pointer;
+}
+
+.op-item:hover {
+    background: var(--empresa-soft);
+}
+
+.op-item input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--empresa);
+    margin-top: 2px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.op-item .op-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.op-item .op-desc {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.4;
+}
+
+/* Formulario */
+.form-header {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+
+.code-box {
+    min-width: 160px;
+}
+
+.code-box label,
+.field label {
+    display: block;
+    font-weight: 800;
+    font-size: 10px;
+    margin-bottom: 4px;
+    color: var(--text);
+    letter-spacing: .03em;
+}
+
+.req {
+    color: var(--danger);
+}
+
+.optional {
+    font-weight: 500;
+    color: var(--muted);
+    font-size: 10px;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.code-value {
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--empresa);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--empresa-soft);
+    padding: 3px 12px 3px 10px;
+    border-radius: 8px;
+}
+
+.code-value .pill {
+    font-size: 9px;
+    background: var(--empresa);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-weight: 700;
+}
+
+/* Grid */
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.grid.two {
+    grid-template-columns: 1fr 1fr;
+}
+
+.grid.full {
+    grid-template-columns: 1fr;
+}
+
+@media (max-width: 768px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+    .grid.two {
+        grid-template-columns: 1fr;
+    }
+    .form-header {
+        flex-direction: column;
+    }
+    .margin-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Campos */
+.field {
+    display: flex;
+    flex-direction: column;
+}
+
+.field input,
+.field select,
+.field textarea {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    height: 34px;
+    padding: 0 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    background: #fff;
+    outline: none;
+    transition: border-color .12s, box-shadow .12s;
+}
+
+.field textarea {
+    height: 56px;
+    resize: vertical;
+    padding: 8px 10px;
+    line-height: 1.4;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+    border-color: var(--empresa);
+    box-shadow: 0 0 0 3px rgba(239,35,60,.07);
+}
+
+[data-empresa="AGD"] .field input:focus,
+[data-empresa="AGD"] .field select:focus,
+[data-empresa="AGD"] .field textarea:focus {
+    box-shadow: 0 0 0 3px rgba(252,98,0,.07);
+}
+
+/* Input con unidad */
+.input-unit {
+    display: flex;
+}
+
+.input-unit input {
+    border-radius: 7px 0 0 7px;
+    flex: 1;
+    height: 34px;
+    border: 1px solid var(--line);
+    padding: 0 10px;
+    font-size: 13px;
+    outline: none;
+}
+
+.input-unit input:focus {
+    border-color: var(--empresa);
+}
+
+.input-unit span {
+    height: 34px;
+    min-width: 44px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--line);
+    border-left: 0;
+    border-radius: 0 7px 7px 0;
+    background: var(--bg);
+    font-weight: 700;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+/* Precios */
+.price-box {
+    margin-bottom: 16px;
+}
+
+.price-label {
+    font-size: 13px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.price-label.sale {
+    color: var(--empresa);
+}
+
+.price-label.cost {
+    color: var(--danger);
+}
+
+.tax {
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 500;
+    margin: 2px 0 6px;
+}
+
+.money {
+    height: 46px;
+    border-radius: 8px;
+    border: 2px solid;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    font-size: 17px;
+    font-weight: 800;
+    background: #fff;
+}
+
+.money.sale {
+    border-color: var(--empresa);
+    color: var(--empresa);
+}
+
+.money.cost {
+    border-color: #FF6969;
+    color: var(--danger);
+    background: #fff5f5;
+}
+
+.money input {
+    border: 0;
+    outline: 0;
+    text-align: right;
+    font-size: 17px;
+    font-weight: 800;
+    max-width: 130px;
+    background: transparent;
+    color: inherit;
+    padding: 2px 0;
+}
+
+.margin-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.margin-box {
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+}
+
+.margin-box b {
+    font-size: 16px;
+    color: var(--text);
+    display: block;
+    margin-top: 2px;
+}
+
+.margin-box b.positive {
+    color: var(--ok);
+}
+
+.margin-box b.negative {
+    color: var(--danger);
+}
+
+/* Estado */
+.state-select {
+    height: 38px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0 10px;
+    width: 100%;
+    font-weight: 700;
+    color: var(--text);
+    background: #fff;
+    font-size: 13px;
+    outline: none;
+}
+
+.state-select:focus {
+    border-color: var(--empresa);
+    box-shadow: 0 0 0 3px rgba(239,35,60,.06);
+}
+
+.state-list {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.state-chip {
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    font-weight: 700;
+    font-size: 11px;
+}
+
+.state-chip .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+}
+
+.state-chip.active-state {
+    background: #EAF9F0;
+    color: var(--ok);
+}
+
+.state-chip.inactive {
+    background: #F2F4F8;
+    color: #64748B;
+}
+
+.state-chip.order {
+    background: #FFF4DB;
+    color: #D97706;
+}
+
+.state-chip.available {
+    background: var(--empresa-soft);
+    color: var(--empresa);
+}
+
+.state-chip.blocked {
+    background: #FFEAEA;
+    color: var(--danger);
+}
+
+.state-chip.highlight {
+    transform: scale(1.04);
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+.state-chip.dim {
+    opacity: 0.38;
+    filter: grayscale(0.4);
+}
