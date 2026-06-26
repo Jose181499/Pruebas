@@ -11,8 +11,26 @@ from datetime import datetime
 productos_bp = Blueprint('productos', __name__, url_prefix='/productos')
 
 # ============================================================
-# FUNCIONES DE UTILIDAD - DEFINIDAS PRIMERO
+# FUNCIONES DE UTILIDAD
 # ============================================================
+
+def safe_float(value, default=0):
+    """Convierte a float de forma segura"""
+    if value is None or value == '':
+        return default
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return default
+
+def safe_int(value, default=0):
+    """Convierte a int de forma segura"""
+    if value is None or value == '':
+        return default
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return default
 
 def obtener_ultimo_codigo_producto():
     """Obtiene el último código de producto para generar el siguiente"""
@@ -25,19 +43,16 @@ def obtener_ultimo_codigo_producto():
         
         if result and len(result) > 0 and result[0].get('codigo'):
             codigo = result[0]['codigo']
-            # Extraer el número del código (ej: PRD-0001 -> 1)
             partes = codigo.split('-')
             if len(partes) >= 2:
                 try:
                     ultimo_num = int(partes[-1])
                     nuevo_num = str(ultimo_num + 1).zfill(4)
-                    # Mantener el prefijo (ej: PRD, GEN, SEG)
                     prefijo = partes[0]
                     return f"{prefijo}-{nuevo_num}"
                 except:
                     pass
         
-        # Si no hay productos o hay error, generar uno nuevo
         return "PRD-0001"
         
     except Exception as e:
@@ -58,7 +73,6 @@ def productos():
 @login_required
 def productos_nuevo():
     """Página de nuevo producto con código automático"""
-    # Generar código automático
     codigo_auto = obtener_ultimo_codigo_producto()
     return render_template('productos.html', active_tab='nuevo', codigo_auto=codigo_auto)
 
@@ -83,62 +97,36 @@ def productos_comparativo():
 def get_productos():
     """Obtener todos los productos con filtros opcionales"""
     try:
-        # Obtener parámetros de filtro
         busqueda = request.args.get('q', '').strip()
         categoria = request.args.get('categoria', '').strip()
         marca = request.args.get('marca', '').strip()
         modelo = request.args.get('modelo', '').strip()
         
-        # Construir consulta base
         query = """
             SELECT 
-                id,
-                codigo,
-                descripcion,
-                descripcion_larga,
-                modelo,
-                marca,
-                familia as categoria,
+                id, codigo, descripcion, descripcion_larga,
+                modelo, marca, familia as categoria,
                 categoria_derivada as subcategoria,
-                unidad,
-                peso,
-                volumen,
-                observaciones,
-                transporte,
-                costo_unitario,
-                precio_unitario,
-                stock,
-                stock_minimo,
-                estado,
-                presentacion_proveedor,
-                presentacion_venta,
-                venta_minima,
-                codigo_barras,
-                origen,
-                tiempo_entrega,
-                abastecimiento,
-                activo,
-                fecha_creacion,
-                updated_at
+                unidad, peso, volumen, observaciones, transporte,
+                costo_unitario, precio_unitario, stock, stock_minimo,
+                estado, presentacion_proveedor, presentacion_venta,
+                venta_minima, codigo_barras, origen, tiempo_entrega,
+                abastecimiento, activo, fecha_creacion, updated_at
             FROM productos
             WHERE activo = TRUE
         """
         params = []
         condiciones = []
         
-        # Aplicar filtros
         if busqueda:
             condiciones.append("(codigo ILIKE %s OR descripcion ILIKE %s OR modelo ILIKE %s OR marca ILIKE %s)")
             params.extend([f'%{busqueda}%'] * 4)
-        
         if categoria:
             condiciones.append("familia = %s")
             params.append(categoria)
-        
         if marca:
             condiciones.append("marca = %s")
             params.append(marca)
-        
         if modelo:
             condiciones.append("modelo = %s")
             params.append(modelo)
@@ -168,34 +156,14 @@ def get_producto(producto_id):
     try:
         producto = db_query("""
             SELECT 
-                id,
-                codigo,
-                descripcion,
-                descripcion_larga,
-                modelo,
-                marca,
-                familia as categoria,
+                id, codigo, descripcion, descripcion_larga,
+                modelo, marca, familia as categoria,
                 categoria_derivada as subcategoria,
-                unidad,
-                peso,
-                volumen,
-                observaciones,
-                transporte,
-                costo_unitario,
-                precio_unitario,
-                stock,
-                stock_minimo,
-                estado,
-                presentacion_proveedor,
-                presentacion_venta,
-                venta_minima,
-                codigo_barras,
-                origen,
-                tiempo_entrega,
-                abastecimiento,
-                activo,
-                fecha_creacion,
-                updated_at
+                unidad, peso, volumen, observaciones, transporte,
+                costo_unitario, precio_unitario, stock, stock_minimo,
+                estado, presentacion_proveedor, presentacion_venta,
+                venta_minima, codigo_barras, origen, tiempo_entrega,
+                abastecimiento, activo, fecha_creacion, updated_at
             FROM productos
             WHERE id = %s AND activo = TRUE
         """, (producto_id,))
@@ -218,16 +186,18 @@ def get_producto(producto_id):
 def create_producto():
     """Crear un nuevo producto"""
     try:
-        # Obtener datos del formulario o JSON
+        print("📥 Recibiendo solicitud POST /api/productos")
+        
+        # Obtener datos
         if request.content_type and 'application/json' in request.content_type:
             data = request.get_json()
         else:
             data = request.form.to_dict()
-            
-            # Procesar archivo de foto si existe
             foto = request.files.get('foto')
             if foto and foto.filename:
                 data['foto'] = foto.filename
+        
+        print(f"📦 Datos recibidos: {data}")
         
         # Validar campos requeridos
         required_fields = ['codigo', 'descripcion', 'modelo', 'marca', 'familia', 'unidad', 'transporte']
@@ -238,7 +208,7 @@ def create_producto():
                     'error': f'El campo "{field}" es requerido'
                 }), 400
         
-        # Insertar producto
+        # Insertar producto usando las funciones seguras
         with db_tx() as conn:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             
@@ -276,18 +246,18 @@ def create_producto():
                 data.get('familia'),
                 data.get('categoria_derivada', '') or data.get('subcategoria', ''),
                 data.get('unidad'),
-                float(data.get('peso', 0) or 0),      # ✅ Maneja string vacío
-                float(data.get('volumen', 0) or 0),   # ✅ Maneja string vacío
+                safe_float(data.get('peso')),
+                safe_float(data.get('volumen')),
                 data.get('observaciones', ''),
                 data.get('transporte'),
-                float(data.get('costo_unitario', 0) or 0),  # ✅ Maneja string vacío
-                float(data.get('precio_unitario', 0) or 0), # ✅ Maneja string vacío
-                int(data.get('stock', 0) or 0),        # ✅ Maneja string vacío
-                int(data.get('stock_minimo', 0) or 0), # ✅ Maneja string vacío
+                safe_float(data.get('costo_unitario')),
+                safe_float(data.get('precio_unitario')),
+                safe_int(data.get('stock')),
+                safe_int(data.get('stock_minimo')),
                 data.get('estado', 'activo'),
                 data.get('presentacion_proveedor', ''),
                 data.get('presentacion_venta', ''),
-                int(data.get('venta_minima', 1) or 1), # ✅ Maneja string vacío
+                safe_int(data.get('venta_minima'), 1),
                 data.get('codigo_barras', ''),
                 data.get('origen', ''),
                 data.get('tiempo_entrega', ''),
@@ -295,6 +265,7 @@ def create_producto():
             ))
             
             resultado = cur.fetchone()
+            print(f"✅ Producto insertado: ID={resultado['id']}, Código={resultado['codigo']}")
             
             return jsonify({
                 'success': True,
@@ -319,37 +290,22 @@ def update_producto(producto_id):
     try:
         data = request.get_json()
         
-        # Verificar que el producto existe
         existente = db_query("SELECT id FROM productos WHERE id = %s AND activo = TRUE", (producto_id,))
         if not existente:
             return jsonify({'success': False, 'error': 'Producto no encontrado'}), 404
         
         db_execute("""
             UPDATE productos SET
-                codigo = %s,
-                descripcion = %s,
-                descripcion_larga = %s,
-                modelo = %s,
-                marca = %s,
-                familia = %s,
-                categoria_derivada = %s,
-                unidad = %s,
-                peso = %s,
-                volumen = %s,
-                observaciones = %s,
-                transporte = %s,
-                costo_unitario = %s,
-                precio_unitario = %s,
-                stock = %s,
-                stock_minimo = %s,
+                codigo = %s, descripcion = %s, descripcion_larga = %s,
+                modelo = %s, marca = %s, familia = %s, categoria_derivada = %s,
+                unidad = %s, peso = %s, volumen = %s,
+                observaciones = %s, transporte = %s,
+                costo_unitario = %s, precio_unitario = %s,
+                stock = %s, stock_minimo = %s,
                 estado = %s,
-                presentacion_proveedor = %s,
-                presentacion_venta = %s,
-                venta_minima = %s,
-                codigo_barras = %s,
-                origen = %s,
-                tiempo_entrega = %s,
-                abastecimiento = %s,
+                presentacion_proveedor = %s, presentacion_venta = %s,
+                venta_minima = %s, codigo_barras = %s,
+                origen = %s, tiempo_entrega = %s, abastecimiento = %s,
                 updated_at = NOW()
             WHERE id = %s
         """, (
@@ -361,18 +317,18 @@ def update_producto(producto_id):
             data.get('familia'),
             data.get('categoria_derivada', '') or data.get('subcategoria', ''),
             data.get('unidad'),
-            float(data.get('peso', 0) or 0),
-            float(data.get('volumen', 0) or 0),
+            safe_float(data.get('peso')),
+            safe_float(data.get('volumen')),
             data.get('observaciones', ''),
             data.get('transporte'),
-            float(data.get('costo_unitario', 0) or 0),
-            float(data.get('precio_unitario', 0) or 0),
-            int(data.get('stock', 0) or 0),
-            int(data.get('stock_minimo', 0) or 0),
+            safe_float(data.get('costo_unitario')),
+            safe_float(data.get('precio_unitario')),
+            safe_int(data.get('stock')),
+            safe_int(data.get('stock_minimo')),
             data.get('estado', 'activo'),
             data.get('presentacion_proveedor', ''),
             data.get('presentacion_venta', ''),
-            int(data.get('venta_minima', 1) or 1),
+            safe_int(data.get('venta_minima'), 1),
             data.get('codigo_barras', ''),
             data.get('origen', ''),
             data.get('tiempo_entrega', ''),
@@ -395,7 +351,6 @@ def update_producto(producto_id):
 def delete_producto(producto_id):
     """Eliminar producto (borrado lógico)"""
     try:
-        # Verificar que el producto existe
         existente = db_query("SELECT id FROM productos WHERE id = %s AND activo = TRUE", (producto_id,))
         if not existente:
             return jsonify({'success': False, 'error': 'Producto no encontrado'}), 404
@@ -425,15 +380,7 @@ def buscar_productos():
             return jsonify({'success': True, 'data': []})
         
         productos = db_query("""
-            SELECT 
-                id,
-                codigo,
-                descripcion,
-                modelo,
-                marca,
-                precio_unitario,
-                stock,
-                unidad
+            SELECT id, codigo, descripcion, modelo, marca, precio_unitario, stock, unidad
             FROM productos
             WHERE activo = TRUE
             AND (codigo ILIKE %s OR descripcion ILIKE %s OR modelo ILIKE %s OR marca ILIKE %s)
@@ -456,27 +403,21 @@ def buscar_productos():
 def get_filtros_productos():
     """Obtener opciones de filtros para productos"""
     try:
-        # Obtener categorías
         categorias = db_query("""
             SELECT DISTINCT familia as categoria
-            FROM productos
-            WHERE activo = TRUE AND familia IS NOT NULL AND familia != ''
+            FROM productos WHERE activo = TRUE AND familia IS NOT NULL AND familia != ''
             ORDER BY familia
         """)
         
-        # Obtener marcas
         marcas = db_query("""
             SELECT DISTINCT marca
-            FROM productos
-            WHERE activo = TRUE AND marca IS NOT NULL AND marca != ''
+            FROM productos WHERE activo = TRUE AND marca IS NOT NULL AND marca != ''
             ORDER BY marca
         """)
         
-        # Obtener modelos
         modelos = db_query("""
             SELECT DISTINCT modelo
-            FROM productos
-            WHERE activo = TRUE AND modelo IS NOT NULL AND modelo != ''
+            FROM productos WHERE activo = TRUE AND modelo IS NOT NULL AND modelo != ''
             ORDER BY modelo
         """)
         
