@@ -7,6 +7,9 @@
     
     <!-- CSS EXTERNO -->
     <link rel="stylesheet" href="/static/css/style.css">
+
+    <!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>
 
@@ -2810,76 +2813,53 @@ function bdRenderProductos(data) {
     const countEl = document.getElementById('bdCountText');
     if (countEl) countEl.textContent = `Mostrando ${data.length} producto${data.length !== 1 ? 's' : ''}`;
 }
-
 // ============================================================
-// FUNCIONES DE ACCIONES PARA PRODUCTOS - MEJORADAS
+// FUNCIONES DE ACCIONES PARA PRODUCTOS
 // ============================================================
 
-// Ver producto - Muestra los detalles en una notificación
+// Ver producto
 function verProducto(id) {
     if (!id) {
         mostrarNotificacion('error', '❌ Error', 'ID de producto no válido');
         return;
     }
     
-    // Buscar el producto en los datos cargados
     const producto = window.bdProductos.find(p => p.id == id);
     if (producto) {
         const mensaje = `
-            📦 ${producto.codigo || 'Sin código'}<br>
-            📝 ${producto.descripcion || 'Sin descripción'}<br>
-            🏷️ Marca: ${producto.marca || 'N/A'}<br>
-            📐 Modelo: ${producto.modelo || 'N/A'}<br>
-            💰 Precio: S/ ${parseFloat(producto.precio_unitario || 0).toFixed(2)}<br>
+            📦 Código: ${producto.codigo || 'N/A'}\n
+            📝 Descripción: ${producto.descripcion || 'N/A'}\n
+            🏷️ Marca: ${producto.marca || 'N/A'}\n
+            📐 Modelo: ${producto.modelo || 'N/A'}\n
+            💰 Precio: S/ ${parseFloat(producto.precio_unitario || 0).toFixed(2)}\n
             📊 Stock: ${producto.stock || 0}
         `;
         mostrarNotificacion('info', '🔍 Detalle del producto', mensaje);
     } else {
-        // Si no está en los datos cargados, obtenerlo de la API
-        fetch(`/productos/api/productos/${id}`)
-            .then(r => r.json())
-            .then(result => {
-                if (result.success) {
-                    const p = result.data;
-                    const mensaje = `
-                        📦 ${p.codigo || 'Sin código'}<br>
-                        📝 ${p.descripcion || 'Sin descripción'}<br>
-                        🏷️ Marca: ${p.marca || 'N/A'}<br>
-                        📐 Modelo: ${p.modelo || 'N/A'}<br>
-                        💰 Precio: S/ ${parseFloat(p.precio_unitario || 0).toFixed(2)}<br>
-                        📊 Stock: ${p.stock || 0}
-                    `;
-                    mostrarNotificacion('info', '🔍 Detalle del producto', mensaje);
-                } else {
-                    mostrarNotificacion('error', '❌ Error', 'Producto no encontrado');
-                }
-            })
-            .catch(() => mostrarNotificacion('error', '❌ Error', 'Error al obtener el producto'));
+        mostrarNotificacion('error', '❌ Error', 'Producto no encontrado');
     }
 }
 
-// Editar producto - Redirige a la página de edición
+// Editar producto
 function editarProducto(id) {
     if (!id) {
         mostrarNotificacion('error', '❌ Error', 'ID de producto no válido');
         return;
     }
-    // Redirigir a la página de edición (si existe)
     window.location.href = `/productos/editar/${id}`;
 }
 
-// Eliminar producto - Con confirmación
+// Eliminar producto
 async function eliminarProducto(id) {
     if (!id) {
         mostrarNotificacion('error', '❌ Error', 'ID de producto no válido');
         return;
     }
     
-    // Buscar el producto para mostrar su nombre
     const producto = window.bdProductos.find(p => p.id == id);
-    const nombre = producto ? producto.descripcion || producto.codigo : 'este producto';
+    const nombre = producto ? (producto.descripcion || producto.codigo) : 'este producto';
     
-    if (!confirm(`¿Estás seguro de eliminar "${nombre}"? Esta acción no se puede deshacer.`)) {
+    if (!confirm(`¿Estás seguro de eliminar "${nombre}"?`)) {
         return;
     }
     
@@ -2890,11 +2870,10 @@ async function eliminarProducto(id) {
         const result = await response.json();
         
         if (result.success) {
-            mostrarNotificacion('success', '✅ Eliminado', `El producto "${nombre}" ha sido eliminado exitosamente.`);
-            // Recargar la tabla
+            mostrarNotificacion('success', '✅ Eliminado', `"${nombre}" eliminado correctamente`);
             cargarProductos();
         } else {
-            mostrarNotificacion('error', '❌ Error', result.error || 'Error al eliminar el producto');
+            mostrarNotificacion('error', '❌ Error', result.error || 'Error al eliminar');
         }
     } catch (error) {
         console.error('Error:', error);

@@ -485,3 +485,36 @@ def get_ultimo_codigo():
     except Exception as e:
         print(f"❌ Error en get_ultimo_codigo: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+@productos_bp.route('/editar/<int:producto_id>')
+@login_required
+def productos_editar(producto_id):
+    """Página de edición de producto"""
+    try:
+        # Obtener el producto
+        producto = db_query("""
+            SELECT 
+                id, codigo, descripcion, descripcion_larga,
+                modelo, marca, familia, categoria_derivada,
+                unidad, peso, volumen, observaciones, transporte,
+                costo_unitario, precio_unitario, stock, stock_minimo,
+                estado, presentacion_proveedor, presentacion_venta,
+                venta_minima, codigo_barras, origen, tiempo_entrega,
+                abastecimiento, activo
+            FROM productos
+            WHERE id = %s AND activo = TRUE
+        """, (producto_id,))
+        
+        if not producto:
+            flash('Producto no encontrado', 'error')
+            return redirect(url_for('productos.productos_base_datos'))
+        
+        # Renderizar la página de edición
+        return render_template('productos.html', 
+                              active_tab='nuevo', 
+                              producto=producto[0],
+                              editando=True)
+    except Exception as e:
+        print(f"❌ Error en productos_editar: {e}")
+        flash('Error al cargar el producto', 'error')
+        return redirect(url_for('productos.productos_base_datos'))
