@@ -276,6 +276,22 @@
         </div>
     </main>
 </div>
+<!-- MODAL DE ÉXITO - PRODUCTO GUARDADO -->
+<div class="modal-overlay" id="modalExito">
+    <div class="modal-box modal-exito">
+        <div class="modal-exito-icon">✅</div>
+        <h2 class="modal-exito-title">¡Producto guardado!</h2>
+        <p class="modal-exito-message" id="modalExitoMensaje">El producto se ha registrado exitosamente.</p>
+        <div class="modal-exito-detail">
+            <span class="modal-exito-label">Código generado</span>
+            <span class="modal-exito-codigo" id="modalExitoCodigo">PRD-0001</span>
+        </div>
+        <div class="modal-exito-actions">
+            <button class="btn btn-outline" onclick="cerrarModalExito()">Ver producto</button>
+            <button class="btn primary" onclick="cerrarModalExitoYLimpiar()">Continuar</button>
+        </div>
+    </div>
+</div>
 
 <!-- MODAL DE PERMISOS -->
 <div class="modal-bg" id="modalPermisos">
@@ -1197,6 +1213,71 @@ document.getElementById("saveModal").addEventListener("click", async function() 
 });
 //////
 // ============================================================
+// MODAL DE ÉXITO PARA PRODUCTOS
+// ============================================================
+
+function mostrarModalExito(codigo) {
+    const modal = document.getElementById('modalExito');
+    const codigoEl = document.getElementById('modalExitoCodigo');
+    
+    if (codigoEl) codigoEl.textContent = codigo || 'PRD-0001';
+    if (modal) modal.classList.add('show');
+    
+    // Cerrar automáticamente después de 5 segundos
+    setTimeout(() => {
+        cerrarModalExito();
+    }, 6000);
+}
+
+function cerrarModalExito() {
+    const modal = document.getElementById('modalExito');
+    if (modal) modal.classList.remove('show');
+    
+    // Redirigir a base de datos
+    window.location.href = '/productos/base-datos';
+}
+
+function cerrarModalExitoYLimpiar() {
+    const modal = document.getElementById('modalExito');
+    if (modal) modal.classList.remove('show');
+    
+    // Limpiar formulario sin preguntar
+    limpiarFormularioSinConfirmar();
+    generarCodigoProducto();
+}
+
+function limpiarFormularioSinConfirmar() {
+    document.querySelectorAll('.form-card input:not([type="hidden"]), .form-card textarea, .form-card select').forEach(el => {
+        if (el.type === 'checkbox') {
+            el.checked = el.value === 'venta';
+        } else if (el.tagName === 'SELECT') {
+            el.selectedIndex = 0;
+        } else if (el.type !== 'file') {
+            el.value = '';
+        }
+    });
+    
+    // Resetear valores
+    const valorVenta = document.getElementById('valorVenta');
+    const valorCosto = document.getElementById('valorCosto');
+    const estadoProducto = document.getElementById('estadoProducto');
+    const fotoProducto = document.getElementById('fotoProducto');
+    const previewContainer = document.getElementById('previewContainer');
+    const fileBadge = document.getElementById('fileBadge');
+    const uploadArea = document.getElementById('uploadArea');
+    
+    if (valorVenta) valorVenta.value = '0.00';
+    if (valorCosto) valorCosto.value = '0.00';
+    if (estadoProducto) estadoProducto.value = 'activo';
+    if (fotoProducto) fotoProducto.value = '';
+    if (previewContainer) previewContainer.innerHTML = '';
+    if (fileBadge) fileBadge.innerHTML = '<i class="bi bi-paperclip"></i> Ningún archivo';
+    if (uploadArea) uploadArea.classList.remove('has-image');
+    
+    calcularMargen();
+    actualizarEstadoChips();
+}
+// ============================================================
 // FUNCIONES PARA NUEVO PRODUCTO
 // ============================================================
 
@@ -1375,35 +1456,33 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             try {
-                mostrarNotificacion('info', 'Guardando...', 'Por favor espera.');
-                
-                const response = await fetch('/productos/api/productos', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    mostrarNotificacion('success', '✅ Producto guardado', `Código: ${result.data.codigo}`);
-                    // Limpiar formulario
-                    if (typeof limpiarFormulario === 'function') limpiarFormulario();
-                    // Generar nuevo código
-                    await generarCodigoProducto();
-                    // Recargar la tabla si estamos en base-datos
-                    if (typeof bdRenderProductos === 'function') {
-                        bdRenderProductos(window.bdProductos);
-                    }
-                } else {
-                    mostrarNotificacion('error', '❌ Error', result.error || 'Error al guardar el producto');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                mostrarNotificacion('error', '❌ Error', 'Error al comunicarse con el servidor');
-            }
+    mostrarNotificacion('info', 'Guardando...', 'Por favor espera.');
+    
+    const response = await fetch('/productos/api/productos', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+        // ✅ Mostrar modal de éxito en lugar de notificación
+        mostrarModalExito(result.data.codigo);
+        
+        // Recargar la tabla si estamos en base-datos
+        if (typeof bdRenderProductos === 'function') {
+            bdRenderProductos(window.bdProductos);
+        }
+    } else {
+        mostrarNotificacion('error', '❌ Error', result.error || 'Error al guardar el producto');
+    }
+} catch (error) {
+    console.error('Error:', error);
+    mostrarNotificacion('error', '❌ Error', 'Error al comunicarse con el servidor');
+}
         });
     }
     
@@ -2466,17 +2545,20 @@ async function initDashboard(){
 // Variable global para almacenar productos
 window.bdProductos = [];
 
-// Cargar productos desde la API
 async function cargarProductos() {
+    console.log('🔄 Cargando productos desde la API...');
     try {
         const response = await fetch('/productos/api/productos');
         const result = await response.json();
+        console.log('📦 Datos recibidos:', result);
         
         if (result.success) {
             window.bdProductos = result.data || [];
+            console.log(`✅ ${window.bdProductos.length} productos cargados`);
             bdRenderProductos(window.bdProductos);
             return window.bdProductos;
         } else {
+            console.error('❌ Error en la respuesta:', result.error);
             mostrarNotificacion('error', 'Error', result.error || 'Error al cargar productos');
             return [];
         }
@@ -2489,8 +2571,12 @@ async function cargarProductos() {
 
 // Renderizar productos en la tabla
 function bdRenderProductos(data) {
+    console.log('🖥️ Renderizando productos...', data);
     const tbody = document.getElementById('bdProductTableBody');
-    if (!tbody) return;
+    if (!tbody) {
+        console.error('❌ No se encontró el elemento bdProductTableBody');
+        return;
+    }
     
     if (!data || data.length === 0) {
         tbody.innerHTML = `<tr><td colspan="24" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay productos registrados</td></tr>`;
@@ -2511,15 +2597,19 @@ function bdRenderProductos(data) {
         const costo = p.costo_unitario ? parseFloat(p.costo_unitario).toFixed(2) : '0.00';
         const precio = p.precio_unitario ? parseFloat(p.precio_unitario).toFixed(2) : '0.00';
         
+        // ✅ Usar los nombres correctos de los campos
+        const categoria = p.categoria || p.familia || '-';
+        const subcategoria = p.subcategoria || p.categoria_derivada || '-';
+        
         return `
         <tr>
             <td class="bd-col-item" style="text-align:center">${index + 1}</td>
-            <td class="bd-col-code"><a class="bd-t-code" href="#">${p.codigo || '-'}</a></td>
+            <td class="bd-col-code"><span class="bd-t-code">${p.codigo || '-'}</span></td>
             <td class="bd-col-desc">${p.descripcion || '-'}</td>
             <td class="bd-col-model">${p.modelo || '-'}</td>
             <td class="bd-col-brand">${p.marca || '-'}</td>
-            <td class="bd-col-cat">${p.familia || '-'}</td>
-            <td class="bd-col-subcat">${p.categoria_derivada || '-'}</td>
+            <td class="bd-col-cat">${categoria}</td>
+            <td class="bd-col-subcat">${subcategoria}</td>
             <td class="bd-col-weight">${p.peso || '0'}</td>
             <td class="bd-col-transport">${p.transporte || '-'}</td>
             <td class="bd-col-cost" style="font-weight:850">S/ ${costo}</td>
@@ -2549,6 +2639,7 @@ function bdRenderProductos(data) {
     const countEl = document.getElementById('bdCountText');
     if (countEl) countEl.textContent = `Mostrando ${data.length} producto${data.length !== 1 ? 's' : ''}`;
 }
+
 
 // Funciones de acciones para productos
 function verProducto(id) {
