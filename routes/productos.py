@@ -105,13 +105,17 @@ def obtener_ultimo_codigo_producto():
 def productos():
     """Página principal de productos - Redirige a nuevo producto"""
     return render_template('productos.html', active_tab='nuevo')
-
 @productos_bp.route('/nuevo')
 @login_required
 def productos_nuevo():
     """Página de nuevo producto con código automático"""
     codigo_auto = obtener_ultimo_codigo_producto()
-    return render_template('productos.html', active_tab='nuevo', codigo_auto=codigo_auto)
+    # ✅ Pasar ambas variables
+    return render_template('productos.html', 
+                          active_tab='nuevo', 
+                          codigo_auto=codigo_auto,
+                          editando=False,     # ← NUEVO
+                          producto=None)      # ← NUEVO
 
 @productos_bp.route('/base-datos')
 @login_required
@@ -485,13 +489,11 @@ def get_ultimo_codigo():
     except Exception as e:
         print(f"❌ Error en get_ultimo_codigo: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-
 @productos_bp.route('/editar/<int:producto_id>')
 @login_required
 def productos_editar(producto_id):
-    """Página de edición de producto"""
+    """Página de edición de producto con datos precargados"""
     try:
-        # Obtener el producto
         producto = db_query("""
             SELECT 
                 id, codigo, descripcion, descripcion_larga,
@@ -509,11 +511,12 @@ def productos_editar(producto_id):
             flash('Producto no encontrado', 'error')
             return redirect(url_for('productos.productos_base_datos'))
         
-        # Renderizar la página de edición
+        # ✅ Agregar editando=True y pasar el producto
         return render_template('productos.html', 
                               active_tab='nuevo', 
                               producto=producto[0],
-                              editando=True)
+                              editando=True)  # ← ESTO FALTA
+        
     except Exception as e:
         print(f"❌ Error en productos_editar: {e}")
         flash('Error al cargar el producto', 'error')
