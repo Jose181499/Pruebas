@@ -679,63 +679,67 @@ function ccNuevoComparativo() {
                 'Usando datos de ejemplo porque la API no respondió');
         });
 }
-
+// ============================================================
+// FUNCIÓN CALCULAR GANADOR - VERSIÓN CORREGIDA
+// ============================================================
 function ccCalcularGanador() {
     console.log('🏆 Calculando ganador...');
     
-    // Usar TODOS los datos del comparativo (no solo los filtrados)
-    let dataParaAnalizar = comparativoData;
-    
-    // Si hay un producto seleccionado, mostrar solo ese
-    if (productoSeleccionado) {
-        const filtrados = comparativoData.filter(c => c.producto_id === productoSeleccionado.id);
-        if (filtrados.length > 0) {
-            dataParaAnalizar = filtrados;
-            console.log('📊 Analizando producto seleccionado:', productoSeleccionado.codigo);
-        }
-    }
-    
-    if (!dataParaAnalizar || !dataParaAnalizar.length) {
-        mostrarNotificacion('warning', '⚠️ Sin datos', 'No hay datos para calcular el ganador. Carga datos primero.');
-        return;
-    }
-    
-    console.log('📊 Analizando', dataParaAnalizar.length, 'registros');
-    
-    // 1. Encontrar el producto con mejor margen
-    const mejor = dataParaAnalizar.reduce((a, b) => {
-        const margenA = parseFloat(a.margen_actual_porcentaje) || 0;
-        const margenB = parseFloat(b.margen_actual_porcentaje) || 0;
-        return margenA > margenB ? a : b;
-    });
-    
-    // 2. Encontrar el producto con menor costo
-    const menorCosto = dataParaAnalizar.reduce((a, b) => {
-        const costoA = parseFloat(a.costo_actual) || Infinity;
-        const costoB = parseFloat(b.costo_actual) || Infinity;
-        return costoA < costoB ? a : b;
-    });
-    
-    // 3. Encontrar el producto con mejor relación costo-beneficio
-    const mejorRelacion = dataParaAnalizar.reduce((a, b) => {
-        const ratioA = (parseFloat(a.precio_actual) || 0) / (parseFloat(a.costo_actual) || 1);
-        const ratioB = (parseFloat(b.precio_actual) || 0) / (parseFloat(b.costo_actual) || 1);
-        return ratioA > ratioB ? a : b;
-    });
-    
-    // 4. Mostrar resultados en el resumen
-    document.getElementById('ccProveedorGanador').textContent = 
-        `${mejor.marca || 'Ganador'} (${mejor.codigo})`;
-    document.getElementById('ccMejorCosto').textContent = 
-        `S/ ${(parseFloat(menorCosto.costo_actual) || 0).toFixed(2)}`;
-    
-    // 5. Mostrar modal con resultados
-    mostrarModalGanador(mejor, menorCosto, mejorRelacion);
-    
-    // Resaltar el ganador en la tabla
-    resaltarGanador(mejor.producto_id);
+    // ✅ USAR TODOS LOS DATOS (no solo los filtrados)
+    // Recargar datos completos desde la API
+    fetch('/productos/api/comparativo-costos')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data && data.data.length > 0) {
+                const todosLosDatos = data.data;
+                console.log('📊 Analizando', todosLosDatos.length, 'productos');
+                
+                // 1. Encontrar el producto con mejor margen
+                const mejor = todosLosDatos.reduce((a, b) => {
+                    const margenA = parseFloat(a.margen_actual_porcentaje) || 0;
+                    const margenB = parseFloat(b.margen_actual_porcentaje) || 0;
+                    return margenA > margenB ? a : b;
+                });
+                
+                // 2. Encontrar el producto con menor costo
+                const menorCosto = todosLosDatos.reduce((a, b) => {
+                    const costoA = parseFloat(a.costo_actual) || Infinity;
+                    const costoB = parseFloat(b.costo_actual) || Infinity;
+                    return costoA < costoB ? a : b;
+                });
+                
+                // 3. Encontrar el producto con mejor relación costo-beneficio
+                const mejorRelacion = todosLosDatos.reduce((a, b) => {
+                    const ratioA = (parseFloat(a.precio_actual) || 0) / (parseFloat(a.costo_actual) || 1);
+                    const ratioB = (parseFloat(b.precio_actual) || 0) / (parseFloat(b.costo_actual) || 1);
+                    return ratioA > ratioB ? a : b;
+                });
+                
+                console.log('🏆 Mejor margen:', mejor.codigo, '-', mejor.margen_actual_porcentaje, '%');
+                console.log('💲 Menor costo:', menorCosto.codigo, '-', menorCosto.costo_actual);
+                console.log('⭐ Mejor relación:', mejorRelacion.codigo);
+                
+                // Actualizar resumen
+                document.getElementById('ccProveedorGanador').textContent = 
+                    `${mejor.marca || 'Ganador'} (${mejor.codigo})`;
+                document.getElementById('ccMejorCosto').textContent = 
+                    `S/ ${(parseFloat(menorCosto.costo_actual) || 0).toFixed(2)}`;
+                
+                // Mostrar modal
+                mostrarModalGanador(mejor, menorCosto, mejorRelacion);
+                
+                // Resaltar en la tabla
+                resaltarGanador(mejor.producto_id);
+                
+            } else {
+                mostrarNotificacion('warning', '⚠️ Sin datos', 'No hay datos para calcular el ganador.');
+            }
+        })
+        .catch(error => {
+            console.error('Error cargando datos:', error);
+            mostrarNotificacion('error', '❌ Error', 'Error al cargar los datos del comparativo.');
+        });
 }
-
 // ============================================================
 // FUNCIÓN PARA MOSTRAR MODAL DEL GANADOR
 // ============================================================
@@ -1029,14 +1033,15 @@ styleAutocomplete.textContent = `
 `;
 document.head.appendChild(styleAutocomplete);
 
-// ============================================================
+// ============================================================f
 // 10. EXPONER FUNCIONES GLOBALMENTE
 // ============================================================
 window.ccCargarDatos = ccCargarDatos;
 window.ccAgregarProveedor = ccAgregarProveedor;
-window.ccCalcularGanador = ccCalcularGanador;
 window.ccExportarCSV = ccExportarCSV;
 window.ccNuevoComparativo = ccNuevoComparativo;
+window.ccCalcularGanador = ccCalcularGanador;
+window.cerrarModalGanador = cerrarModalGanador;
 
 console.log('✅ Comparativo de Costos cargado correctamente');
 </script>
