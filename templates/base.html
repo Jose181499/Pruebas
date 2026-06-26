@@ -1681,47 +1681,190 @@ window.limpiarFormulario = function() {
 // FUNCIONES PARA EMPRESAS - CRUD COMPLETO
 // ============================================================
 
+// ============================================================
+// FUNCIONES PARA EMPRESAS - CRUD COMPLETO (VERSIÓN CORREGIDA)
+// ============================================================
+
 // Abrir modal para nueva empresa
-function abrirModalEmpresa(empresaId = null) {
+window.abrirModalEmpresa = function(empresaId) {
+    console.log('🟢 abrirModalEmpresa EJECUTADA - empresaId:', empresaId);
+    
+    // Buscar el modal
     const modal = document.getElementById('modalEmpresa');
-    const title = document.getElementById('modalEmpresaTitle');
-    const form = document.getElementById('formEmpresa');
-    
-    if (!modal) return;
-    
-    // Limpiar formulario
-    form.reset();
-    document.getElementById('empresaId').value = '';
-    document.getElementById('empCodigo').value = '';
-    document.getElementById('empRuc').value = '';
-    document.getElementById('empNombreComercial').value = '';
-    document.getElementById('empRazonSocial').value = '';
-    document.getElementById('empDireccion').value = '';
-    document.getElementById('empTelefono').value = '';
-    document.getElementById('empCorreo').value = '';
-    document.getElementById('empColorPrimario').value = '#EF233C';
-    document.getElementById('empColorSecundario').value = '#1F1F1F';
-    document.getElementById('empEstado').value = 'activo';
-    document.getElementById('empLogo').value = '';
-    document.getElementById('empEsPrincipal').checked = false;
-    
-    // Limpiar cuentas bancarias (dejar solo una)
-    const container = document.getElementById('cuentasBancariasContainer');
-    container.innerHTML = '';
-    agregarFilaCuenta();
-    
-    if (empresaId) {
-        title.textContent = '✏️ Editar empresa';
-        document.getElementById('saveEmpresaBtn').textContent = 'Actualizar empresa';
-        cargarEmpresaParaEditar(empresaId);
-    } else {
-        title.textContent = '🏢 Nueva empresa';
-        document.getElementById('saveEmpresaBtn').textContent = 'Guardar empresa';
+    if (!modal) {
+        console.error('❌ Modal no encontrado');
+        return;
     }
     
+    console.log('✅ Modal encontrado, abriendo...');
+    
+    // LIMPIAR FORMULARIO
+    const form = document.getElementById('formEmpresa');
+    if (form) form.reset();
+    
+    // Resetear campos principales
+    const campos = ['empresaId', 'empCodigo', 'empRuc', 'empNombreComercial', 
+                    'empRazonSocial', 'empDireccion', 'empTelefono', 'empCorreo',
+                    'empColorPrimario', 'empColorSecundario', 'empEstado', 'empLogo'];
+    campos.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (id === 'empColorPrimario') el.value = '#EF233C';
+            else if (id === 'empColorSecundario') el.value = '#1F1F1F';
+            else if (id === 'empEstado') el.value = 'activo';
+            else if (id === 'empresaId') el.value = '';
+            else el.value = '';
+        }
+    });
+    
+    // Resetear checkbox
+    const chk = document.getElementById('empEsPrincipal');
+    if (chk) chk.checked = false;
+    
+    // Limpiar cuentas bancarias
+    const container = document.getElementById('cuentasBancariasContainer');
+    if (container) {
+        container.innerHTML = '';
+        // Agregar fila de cuenta
+        if (typeof agregarFilaCuenta === 'function') {
+            agregarFilaCuenta();
+        } else {
+            // Crear fila manualmente si la función no existe
+            const row = document.createElement('div');
+            row.className = 'cuenta-row';
+            row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:8px;';
+            row.innerHTML = `
+                <div class="field">
+                    <label>Banco</label>
+                    <select class="cuenta-banco">
+                        <option value="">Seleccione</option>
+                        <option value="BCP">BCP</option>
+                        <option value="BBVA">BBVA</option>
+                        <option value="Interbank">Interbank</option>
+                        <option value="Scotiabank">Scotiabank</option>
+                        <option value="Banco de la Nación">Banco de la Nación</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Tipo cuenta</label>
+                    <select class="cuenta-tipo">
+                        <option value="ahorros">Ahorros</option>
+                        <option value="corriente">Corriente</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Moneda</label>
+                    <select class="cuenta-moneda">
+                        <option value="PEN">PEN</option>
+                        <option value="USD">USD</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>N° cuenta</label>
+                    <input type="text" class="cuenta-numero" placeholder="1234567890">
+                </div>
+                <div class="field" style="display:flex;gap:6px;align-items:end;padding-bottom:2px;">
+                    <button type="button" class="btn btn-secondary btn-remove-cuenta" style="height:34px;padding:0 10px;">✕</button>
+                    <button type="button" class="btn btn-primary btn-add-cuenta" style="height:34px;padding:0 10px;">+</button>
+                </div>
+            `;
+            container.appendChild(row);
+        }
+    }
+    
+    // Actualizar título
+    const title = document.getElementById('modalEmpresaTitle');
+    if (title) {
+        title.textContent = empresaId ? '✏️ Editar empresa' : '🏢 Nueva empresa';
+    }
+    
+    const saveBtn = document.getElementById('saveEmpresaBtn');
+    if (saveBtn) {
+        saveBtn.textContent = empresaId ? 'Actualizar empresa' : 'Guardar empresa';
+    }
+    
+    // Si es edición, cargar datos
+    if (empresaId && typeof cargarEmpresaParaEditar === 'function') {
+        cargarEmpresaParaEditar(empresaId);
+    }
+    
+    // ✅ ABRIR EL MODAL
     modal.classList.add('show');
-}
+    console.log('✅ Modal abierto');
+    console.log('📋 Clases del modal:', modal.className);
+};
 
+// Cerrar modal de empresa
+window.cerrarModalEmpresa = function() {
+    const modal = document.getElementById('modalEmpresa');
+    if (modal) {
+        modal.classList.remove('show');
+        console.log('🔴 Modal cerrado');
+    }
+};
+
+// Agregar fila de cuenta bancaria (si no existe)
+if (typeof agregarFilaCuenta !== 'function') {
+    window.agregarFilaCuenta = function(banco = '', tipo = 'ahorros', moneda = 'PEN', numero = '') {
+        const container = document.getElementById('cuentasBancariasContainer');
+        if (!container) return;
+        
+        const row = document.createElement('div');
+        row.className = 'cuenta-row';
+        row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:8px;';
+        
+        row.innerHTML = `
+            <div class="field">
+                <label>Banco</label>
+                <select class="cuenta-banco">
+                    <option value="">Seleccione</option>
+                    <option value="BCP" ${banco === 'BCP' ? 'selected' : ''}>BCP</option>
+                    <option value="BBVA" ${banco === 'BBVA' ? 'selected' : ''}>BBVA</option>
+                    <option value="Interbank" ${banco === 'Interbank' ? 'selected' : ''}>Interbank</option>
+                    <option value="Scotiabank" ${banco === 'Scotiabank' ? 'selected' : ''}>Scotiabank</option>
+                    <option value="Banco de la Nación" ${banco === 'Banco de la Nación' ? 'selected' : ''}>Banco de la Nación</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Tipo cuenta</label>
+                <select class="cuenta-tipo">
+                    <option value="ahorros" ${tipo === 'ahorros' ? 'selected' : ''}>Ahorros</option>
+                    <option value="corriente" ${tipo === 'corriente' ? 'selected' : ''}>Corriente</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Moneda</label>
+                <select class="cuenta-moneda">
+                    <option value="PEN" ${moneda === 'PEN' ? 'selected' : ''}>PEN</option>
+                    <option value="USD" ${moneda === 'USD' ? 'selected' : ''}>USD</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>N° cuenta</label>
+                <input type="text" class="cuenta-numero" placeholder="1234567890" value="${numero}">
+            </div>
+            <div class="field" style="display:flex;gap:6px;align-items:end;padding-bottom:2px;">
+                <button type="button" class="btn btn-secondary btn-remove-cuenta" style="height:34px;padding:0 10px;">✕</button>
+                <button type="button" class="btn btn-primary btn-add-cuenta" style="height:34px;padding:0 10px;">+</button>
+            </div>
+        `;
+        
+        container.appendChild(row);
+        
+        // Event listeners para los botones de la fila
+        row.querySelector('.btn-remove-cuenta').addEventListener('click', function() {
+            if (container.children.length > 1) {
+                row.remove();
+            } else {
+                toast('Debe haber al menos una cuenta bancaria');
+            }
+        });
+        
+        row.querySelector('.btn-add-cuenta').addEventListener('click', function() {
+            agregarFilaCuenta();
+        });
+    };
+}
 // Cerrar modal de empresa
 function cerrarModalEmpresa() {
     const modal = document.getElementById('modalEmpresa');
@@ -1907,14 +2050,36 @@ async function guardarEmpresa() {
 // EVENT LISTENERS PARA EMPRESAS
 // ============================================================
 
-// Configurar eventos cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
-    // Botón "Nueva empresa"
+    // Botón "Nueva empresa" - VERSIÓN CORREGIDA
     const btnNuevaEmpresa = document.querySelector('#empresas .btn-primary');
     if (btnNuevaEmpresa) {
-        btnNuevaEmpresa.addEventListener('click', function() {
-            abrirModalEmpresa();
+        // ✅ ELIMINAR EVENTOS ANTIGUOS - Reemplazar el botón
+        const newBtn = btnNuevaEmpresa.cloneNode(true);
+        btnNuevaEmpresa.parentNode.replaceChild(newBtn, btnNuevaEmpresa);
+        
+        // ✅ AGREGAR NUEVO EVENT LISTENER
+        newBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🖱️ Click en "+ Nueva empresa"');
+            
+            // ✅ USAR window.abrirModalEmpresa en lugar de abrirModalEmpresa
+            if (typeof window.abrirModalEmpresa === 'function') {
+                window.abrirModalEmpresa();
+            } else if (typeof abrirModalEmpresa === 'function') {
+                abrirModalEmpresa();
+            } else {
+                console.error('❌ abrirModalEmpresa no existe');
+                // Función de emergencia
+                const modal = document.getElementById('modalEmpresa');
+                if (modal) {
+                    modal.classList.add('show');
+                    console.log('✅ Modal abierto (emergencia)');
+                }
+            }
         });
+        console.log('✅ Botón "+ Nueva empresa" configurado correctamente');
     }
     
     // Botones para cerrar modal
@@ -1927,11 +2092,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cerrar modal con ESC
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
-            cerrarModalEmpresa();
+            const modal = document.getElementById('modalEmpresa');
+            if (modal && modal.classList.contains('show')) {
+                modal.classList.remove('show');
+                console.log('🔴 Modal cerrado con ESC');
+            }
         }
     });
 });
-
 
 
 // GUARDAR PRODUCTO - Event Listener (VERSIÓN MEJORADA)
