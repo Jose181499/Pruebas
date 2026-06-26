@@ -64,17 +64,18 @@
                 </div>
             </div>
 
-            <!-- PRODUCTOS -->
-            <div class="menu-group">
-                <a href="/productos" class="menu-header" style="text-decoration:none;">
-                    <div class="menu-left"><span>3 ─ Productos</span></div>
-                    <span class="caret">›</span>
-                </a>
-                <div class="menu-children">
-                    <a href="/productos" class="child-btn" style="text-decoration:none;">Listado de productos</a>
-                    <a href="/productos" class="child-btn" style="text-decoration:none;">Ficha de producto</a>
-                </div>
-            </div>
+       <!-- PRODUCTOS -->
+<div class="menu-group">
+    <a href="/productos" class="menu-header" style="text-decoration:none;">
+        <div class="menu-left"><span>3 ─ Productos</span></div>
+        <span class="caret">›</span>
+    </a>
+    <div class="menu-children">
+        <a href="/productos/nuevo" class="child-btn {% if active_tab == 'nuevo' %}active{% endif %}" style="text-decoration:none;">Nuevo producto</a>
+        <a href="/productos/base-datos" class="child-btn {% if active_tab == 'base-datos' %}active{% endif %}" style="text-decoration:none;">Base de datos: Producto</a>
+        <a href="/productos/comparativo" class="child-btn {% if active_tab == 'comparativo' %}active{% endif %}" style="text-decoration:none;">Comparativo costos</a>
+    </div>
+</div>
 
             <!-- VENTAS -->
             <div class="menu-group">
@@ -180,31 +181,70 @@
     <main class="main" id="mainPanel">
         <div class="main-inner">
             <!-- TOPBAR -->
-            <header class="topbar">
-                <div>
-                    <div class="breadcrumb" id="breadcrumb">
-                        <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
-                        <span>/</span>
-                        {% block breadcrumb %}<span class="crumb-btn active-crumb">Configuración y seguridad</span>{% endblock %}
-                    </div>
-                    <h1 id="pageTitle">{% block page_title %}Configuración y seguridad{% endblock %}</h1>
-                    <p class="subtitle">{% block subtitle %}Empresas, usuarios, permisos, correlativos y parámetros generales del ERP multiempresa.{% endblock %}</p>
-                </div>
-                <div class="top-actions">
-                    <div class="select-box">
-                        <label>Empresa activa</label>
-                        <select id="empresaActiva">
-                            <option value="KCF">KCF</option>
-                            <option value="AGD">AGD Group S.A.C.</option>
-                        </select>
-                    </div>
-                    <div class="user-box" id="userBox">
-                        <div class="avatar" id="userAvatar">E</div>
-                        <span id="userName">{{ nombre or 'Usuario' }}</span>
-                    </div>
-                    <a href="/logout" class="btn btn-secondary" style="text-decoration:none;padding:6px 14px;border-radius:8px;border:1px solid #E5E7EB;color:#0F172A;font-weight:900;font-size:12px;background:white;display:flex;align-items:center;gap:6px;">Salir</a>
-                </div>
-            </header>
+<header class="topbar">
+    <div>
+        <div class="breadcrumb" id="breadcrumb">
+            <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
+            <span>/</span>
+            {% block breadcrumb %}
+                {% if active_tab in ['nuevo', 'base-datos', 'comparativo'] %}
+                    <a href="/productos" class="crumb-btn" style="text-decoration:none;">Productos</a>
+                    <span>/</span>
+                    <span class="crumb-btn active-crumb">
+                        {% if active_tab == 'nuevo' %}Nuevo producto
+                        {% elif active_tab == 'base-datos' %}Base de datos
+                        {% elif active_tab == 'comparativo' %}Comparativo costos
+                        {% endif %}
+                    </span>
+                {% elif active_tab in ['empresas', 'usuarios', 'correlativos', 'parametros', 'integracion'] %}
+                    <span class="crumb-btn active-crumb">Configuración y seguridad</span>
+                {% else %}
+                    <span class="crumb-btn active-crumb">Dashboard</span>
+                {% endif %}
+            {% endblock %}
+        </div>
+        <h1 id="pageTitle">
+            {% block page_title %}
+                {% if active_tab in ['nuevo', 'base-datos', 'comparativo'] %}
+                    Productos
+                {% elif active_tab in ['empresas', 'usuarios', 'correlativos', 'parametros', 'integracion'] %}
+                    Configuración y seguridad
+                {% else %}
+                    Dashboard
+                {% endif %}
+            {% endblock %}
+        </h1>
+        <p class="subtitle">
+            {% block subtitle %}
+                {% if active_tab == 'nuevo' %}
+                    Crea o edita la información principal del producto.
+                {% elif active_tab == 'base-datos' %}
+                    Consulta, filtra y gestiona todos los productos del sistema.
+                {% elif active_tab == 'comparativo' %}
+                    Evalúa y compara ofertas de proveedores para seleccionar el mejor costo.
+                {% elif active_tab in ['empresas', 'usuarios', 'correlativos', 'parametros', 'integracion'] %}
+                    Empresas, usuarios, permisos, correlativos y parámetros generales del ERP multiempresa.
+                {% else %}
+                    Vista principal del ERP con indicadores y acceso rápido.
+                {% endif %}
+            {% endblock %}
+        </p>
+    </div>
+    <div class="top-actions">
+        <div class="select-box">
+            <label>Empresa activa</label>
+            <select id="empresaActiva">
+                <option value="KCF">KCF</option>
+                <option value="AGD">AGD Group S.A.C.</option>
+            </select>
+        </div>
+        <div class="user-box" id="userBox">
+            <div class="avatar" id="userAvatar">E</div>
+            <span id="userName">{{ nombre or 'Usuario' }}</span>
+        </div>
+        <a href="/logout" class="btn btn-secondary" style="text-decoration:none;padding:6px 14px;border-radius:8px;border:1px solid #E5E7EB;color:#0F172A;font-weight:900;font-size:12px;background:white;display:flex;align-items:center;gap:6px;">Salir</a>
+    </div>
+</header>
 
             <!-- TABS -->
             <div class="tabs">
@@ -244,6 +284,84 @@
 
 <!-- JAVASCRIPT -->
 <script>
+// ============================================================
+// RESALTAR MÓDULO ACTIVO EN EL SIDEBAR - MEJORADO
+// ============================================================
+function highlightActiveModule() {
+    // Obtener la URL actual
+    const currentPath = window.location.pathname;
+    console.log('📍 Ruta actual:', currentPath);
+    
+    // Primero, remover todas las clases 'active' de los child-btn
+    document.querySelectorAll('.child-btn').forEach(el => {
+        el.classList.remove('active');
+    });
+    
+    // Remover también la clase 'active' de los menu-header
+    document.querySelectorAll('.menu-header').forEach(el => {
+        el.classList.remove('active');
+    });
+    
+    // Determinar qué módulo está activo según la URL
+    let parentGroup = null;
+    
+    if (currentPath.includes('/productos')) {
+        // Módulo Productos
+        const groups = document.querySelectorAll('.menu-group');
+        for (const group of groups) {
+            const header = group.querySelector('.menu-header');
+            if (header && header.textContent.includes('3 ─ Productos')) {
+                parentGroup = group;
+                // Resaltar el header
+                if (header) header.classList.add('active');
+                // Abrir el grupo
+                group.classList.add('open');
+                break;
+            }
+        }
+        
+        // Resaltar el child específico
+        if (currentPath.includes('/nuevo')) {
+            const child = document.querySelector('.child-btn[href="/productos/nuevo"]');
+            if (child) child.classList.add('active');
+        } else if (currentPath.includes('/base-datos')) {
+            const child = document.querySelector('.child-btn[href="/productos/base-datos"]');
+            if (child) child.classList.add('active');
+        } else if (currentPath.includes('/comparativo')) {
+            const child = document.querySelector('.child-btn[href="/productos/comparativo"]');
+            if (child) child.classList.add('active');
+        } else {
+            // Si es /productos exacto, resaltar el primero
+            const child = document.querySelector('.child-btn[href="/productos/nuevo"]');
+            if (child) child.classList.add('active');
+        }
+    } else if (currentPath.includes('/config') || currentPath.includes('/empresas') || 
+               currentPath.includes('/usuarios') || currentPath.includes('/correlativos') ||
+               currentPath.includes('/parametros') || currentPath.includes('/integracion')) {
+        // Módulo Configuración
+        const groups = document.querySelectorAll('.menu-group');
+        for (const group of groups) {
+            const header = group.querySelector('.menu-header');
+            if (header && header.textContent.includes('1 ─ Configuración y seguridad')) {
+                parentGroup = group;
+                if (header) header.classList.add('active');
+                group.classList.add('open');
+                break;
+            }
+        }
+    }
+    
+    console.log('✅ Módulo activo resaltado en sidebar');
+}
+
+// Llamar a la función al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    highlightActiveModule();
+});
+
+// También ejecutar después de cargar el contenido dinámico
+setTimeout(highlightActiveModule, 500);
+
 // ============================================================
 // FUNCIÓN MEJORADA DE FETCH CON MANEJO DE ERRORES
 // ============================================================
