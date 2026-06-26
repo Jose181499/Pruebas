@@ -91,6 +91,8 @@ document.addEventListener('DOMContentLoaded', function() {
     cargarProductos();
     cargarProveedores();
     cargarComparativo();
+
+       setTimeout(cargarPrimerProducto, 1500);
 });
 
 // ============================================================
@@ -306,38 +308,59 @@ function seleccionarProducto(productoId) {
         `;
     }
 }
-
 function mostrarProductoSeleccionado(producto) {
-    // Actualizar la tarjeta de información del producto
+    console.log('📝 Mostrando producto seleccionado:', producto);
+    
     const card = document.querySelector('.cc-product-info');
-    if (!card) return;
+    if (!card) {
+        console.error('❌ No se encontró .cc-product-info');
+        return;
+    }
     
     const cells = card.querySelectorAll('.cc-info-value');
+    console.log('📋 Número de celdas encontradas:', cells.length);
+    
     if (cells.length >= 7) {
         cells[0].textContent = producto.codigo || '---';
         cells[1].textContent = producto.descripcion || '---';
         cells[2].textContent = producto.modelo || '---';
         cells[3].textContent = producto.marca || '---';
-        cells[4].textContent = producto.familia || '---';
+        cells[4].textContent = producto.familia || producto.categoria || '---';
         cells[5].textContent = producto.transporte || '---';
-        cells[6].textContent = `S/ ${(producto.precio_unitario || 0).toFixed(2)}`;
+        // ✅ CONVERTIR A NÚMERO
+        const precio = parseFloat(producto.precio_unitario) || 0;
+        cells[6].textContent = `S/ ${precio.toFixed(2)}`;
+        console.log('✅ Tarjeta actualizada');
+    } else {
+        console.error('❌ No hay suficientes celdas. Encontradas:', cells.length);
     }
     
     // Actualizar la foto/icono
     const photoElement = document.querySelector('.cc-product-photo');
     if (photoElement) {
-        // Usar la primera letra del nombre o un ícono
         const nombre = producto.descripcion || producto.codigo || 'Producto';
         photoElement.textContent = nombre.charAt(0).toUpperCase();
-        // Cambiar el emoji por la inicial
         photoElement.style.fontSize = '48px';
         photoElement.style.fontWeight = 'bold';
         photoElement.style.color = '#0d6efd';
     }
 }
-
 // ============================================================
 // 5. ACTUALIZAR TABLA
+// ============================================================
+
+// ============================================================
+// FUNCIÓN AUXILIAR PARA PARSEAR NÚMEROS
+// ============================================================
+function safeNumber(value, defaultValue = 0) {
+    if (value === null || value === undefined || value === '') {
+        return defaultValue;
+    }
+    const num = parseFloat(value);
+    return isNaN(num) ? defaultValue : num;
+}
+// ============================================================
+// 5. ACTUALIZAR TABLA (CORREGIDO)
 // ============================================================
 function actualizarTabla(data) {
     const tbody = document.getElementById('ccTbody');
@@ -346,7 +369,7 @@ function actualizarTabla(data) {
     if (!data || !data.length) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="11" class="text-center" style="padding:40px;color:#6c757d;">
+                <td colspan="19" class="text-center" style="padding:40px;color:#6c757d;">
                     <i class="bi bi-inbox"></i> No hay datos para mostrar
                 </td>
             </tr>
@@ -356,7 +379,13 @@ function actualizarTabla(data) {
 
     let html = '';
     data.forEach((item, index) => {
-        const margen = item.margen_actual_porcentaje || 0;
+        // ✅ CONVERTIR A NÚMERO DE FORMA SEGURA
+        const costoHistorico = parseFloat(item.costo_promedio_historico) || 0;
+        const costoActual = parseFloat(item.costo_actual) || 0;
+        const precioActual = parseFloat(item.precio_actual) || 0;
+        const margen = parseFloat(item.margen_actual_porcentaje) || 0;
+        const costoTransporte = parseFloat(item.costo_transporte) || 0;
+        
         const margenClass = margen >= 50 ? 'margen-high' : 
                            margen >= 30 ? 'margen-medium' : 'margen-low';
         
@@ -364,21 +393,21 @@ function actualizarTabla(data) {
             <tr>
                 <td class="cc-col-item">${index + 1}</td>
                 <td class="cc-col-code"><strong>${item.codigo || '---'}</strong></td>
-                <td class="cc-col-desc">${item.nombre_producto || '---'}</td>
+                <td class="cc-col-desc">${item.nombre_producto || item.descripcion || '---'}</td>
                 <td class="cc-col-brand">${item.marca || '---'}</td>
                 <td class="cc-col-model">${item.modelo || '---'}</td>
                 <td class="cc-col-provider">${item.proveedor || 'GOALSA'}</td>
                 <td class="cc-col-qty">1</td>
-                <td class="cc-col-money">S/ ${(item.costo_promedio_historico || 0).toFixed(2)}</td>
-                <td class="cc-col-money">S/ ${(item.costo_actual || 0).toFixed(2)}</td>
-                <td class="cc-col-money">S/ ${(item.costo_actual || 0).toFixed(2)}</td>
-                <td class="cc-col-money">S/ ${(item.precio_actual || 0).toFixed(2)}</td>
-                <td class="cc-col-money">S/ ${(item.precio_actual || 0).toFixed(2)}</td>
-                <td class="cc-col-money">S/ ${(item.precio_actual || 0).toFixed(2)}</td>
+                <td class="cc-col-money">S/ ${costoHistorico.toFixed(2)}</td>
+                <td class="cc-col-money">S/ ${costoActual.toFixed(2)}</td>
+                <td class="cc-col-money">S/ ${costoActual.toFixed(2)}</td>
+                <td class="cc-col-money">S/ ${precioActual.toFixed(2)}</td>
+                <td class="cc-col-money">S/ ${precioActual.toFixed(2)}</td>
+                <td class="cc-col-money">S/ ${precioActual.toFixed(2)}</td>
                 <td class="cc-col-days">${item.tiempo_entrega || '3 días'}</td>
                 <td class="cc-col-type">${item.tipo_entrega || 'Recojo'}</td>
                 <td class="cc-col-place">${item.lugar_entrega || 'Lima'}</td>
-                <td class="cc-col-money">S/ ${(item.costo_transporte || 0).toFixed(2)}</td>
+                <td class="cc-col-money">S/ ${costoTransporte.toFixed(2)}</td>
                 <td class="cc-col-comment">${item.observaciones || ''}</td>
                 <td class="cc-col-status">
                     <span class="badge ${margen >= 50 ? 'badge-success' : margen >= 30 ? 'badge-warning' : 'badge-danger'}">
@@ -399,60 +428,116 @@ function actualizarTabla(data) {
         countElement.textContent = `${data.length} registros`;
     }
 }
-///
 
 
 // ============================================================
 // 11. CARGAR PRIMER PRODUCTO AUTOMÁTICAMENTE
 // ============================================================
-function cargarPrimerProducto() {
-    // Esperar a que los productos estén cargados
-    const intervalo = setInterval(() => {
-        if (productosData && productosData.length > 0) {
-            clearInterval(intervalo);
-            
-            // Buscar el primer producto con datos de costos
-            const primerProducto = productosData[0];
-            if (primerProducto) {
-                console.log('🔄 Cargando primer producto automáticamente:', primerProducto.codigo);
-                seleccionarProducto(primerProducto.id);
-            }
-        }
-    }, 500);
-    
-    // Si después de 5 segundos no hay productos, mostrar mensaje
-    setTimeout(() => {
-        clearInterval(intervalo);
-        if (!productosData || productosData.length === 0) {
-            console.warn('⚠️ No se pudieron cargar productos automáticamente');
-        }
-    }, 5000);
-}
 // ============================================================
-// 6. ACTUALIZAR RESUMEN (KPIs)
+// 11. CARGAR PRIMER PRODUCTO AUTOMÁTICAMENTE (MEJORADO)
+// ============================================================
+function cargarPrimerProducto() {
+    console.log('🔍 Intentando cargar primer producto...');
+    console.log('📦 productosData:', productosData);
+    
+    if (!productosData || productosData.length === 0) {
+        console.warn('⚠️ No hay productos cargados');
+        
+        // Intentar recargar productos
+        fetch('/productos/api/productos')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.data && data.data.length > 0) {
+                    productosData = data.data;
+                    console.log('✅ Productos recargados:', productosData.length);
+                    cargarPrimerProductoReal();
+                } else {
+                    console.error('❌ No se pudieron cargar productos');
+                }
+            })
+            .catch(error => {
+                console.error('❌ Error cargando productos:', error);
+            });
+        return;
+    }
+    
+    cargarPrimerProductoReal();
+}
+
+function cargarPrimerProductoReal() {
+    console.log('🔍 Buscando producto para cargar...');
+    
+    // Buscar un producto con código PRD-0002 (o el que prefieras)
+    let producto = productosData.find(p => p.codigo === 'PRD-0002');
+    
+    // Si no existe, usar el primero
+    if (!producto) {
+        producto = productosData[0];
+        console.log('📦 Usando primer producto:', producto?.codigo);
+    }
+    
+    if (producto) {
+        console.log('🔄 Cargando producto:', producto.codigo, producto.descripcion);
+        seleccionarProducto(producto.id);
+        
+        // Verificar que la tarjeta se actualizó
+        setTimeout(() => {
+            const cells = document.querySelectorAll('.cc-info-value');
+            if (cells.length >= 7) {
+                console.log('📋 Valores en la tarjeta:');
+                console.log('  Código:', cells[0]?.textContent);
+                console.log('  Descripción:', cells[1]?.textContent);
+                console.log('  Modelo:', cells[2]?.textContent);
+                console.log('  Marca:', cells[3]?.textContent);
+                console.log('  Categoría:', cells[4]?.textContent);
+                console.log('  Transporte:', cells[5]?.textContent);
+                console.log('  Precio:', cells[6]?.textContent);
+            }
+        }, 500);
+    } else {
+        console.error('❌ No se encontró ningún producto para cargar');
+        // Mostrar mensaje en la tarjeta
+        const cells = document.querySelectorAll('.cc-info-value');
+        if (cells.length >= 7) {
+            cells[0].textContent = '---';
+            cells[1].textContent = 'No hay productos en la base de datos';
+            cells[2].textContent = '---';
+            cells[3].textContent = '---';
+            cells[4].textContent = '---';
+            cells[5].textContent = '---';
+            cells[6].textContent = 'S/ 0.00';
+        }
+    }
+}
+// 6. ACTUALIZAR RESUMEN (KPIs) - CORREGIDO
 // ============================================================
 function actualizarResumen(data) {
-    if (!data || !data.length) return;
+    if (!data || !data.length) {
+        document.getElementById('ccProveedoresCount').textContent = '0';
+        document.getElementById('ccMejorCosto').textContent = 'S/ 0.00';
+        document.getElementById('ccProveedorGanador').textContent = '---';
+        return;
+    }
 
     // Total productos
     document.getElementById('ccProveedoresCount').textContent = data.length;
 
-    // Mejor costo unitario
-    const mejorCosto = Math.min(...data.map(d => d.costo_actual || 0));
+    // Mejor costo unitario - ✅ CONVERTIR A NÚMERO
+    const costos = data.map(d => parseFloat(d.costo_actual) || 0);
+    const mejorCosto = Math.min(...costos);
     document.getElementById('ccMejorCosto').textContent = `S/ ${mejorCosto.toFixed(2)}`;
 
-    // Mejor margen
-    const mejorMargen = Math.max(...data.map(d => d.margen_actual_porcentaje || 0));
-    const mejorProducto = data.find(d => (d.margen_actual_porcentaje || 0) === mejorMargen);
+    // Mejor margen - ✅ CONVERTIR A NÚMERO
+    const margenes = data.map(d => parseFloat(d.margen_actual_porcentaje) || 0);
+    const mejorMargen = Math.max(...margenes);
+    const mejorProducto = data.find(d => (parseFloat(d.margen_actual_porcentaje) || 0) === mejorMargen);
     document.getElementById('ccProveedorGanador').textContent = 
         mejorProducto ? `${mejorProducto.marca || 'Ganador'}` : '---';
 
     // Menor tiempo de entrega
-    // (Asumiendo que tienes campo tiempo_entrega, usamos un valor fijo por ahora)
     document.getElementById('ccMenorTiempo').textContent = '2 días';
     document.getElementById('ccLugarGanador').textContent = 'Recojo';
 }
-
 // ============================================================
 // 7. FUNCIONES PARA ACCIONES DE BOTONES
 // ============================================================
