@@ -11,6 +11,40 @@ from datetime import datetime
 productos_bp = Blueprint('productos', __name__, url_prefix='/productos')
 
 # ============================================================
+# FUNCIONES DE UTILIDAD - DEFINIDAS PRIMERO
+# ============================================================
+
+def obtener_ultimo_codigo_producto():
+    """Obtiene el último código de producto para generar el siguiente"""
+    try:
+        result = db_query("""
+            SELECT codigo FROM productos 
+            WHERE codigo LIKE 'PRD-%' OR codigo LIKE 'GEN-%' OR codigo LIKE 'SEG-%'
+            ORDER BY id DESC LIMIT 1
+        """)
+        
+        if result and len(result) > 0 and result[0].get('codigo'):
+            codigo = result[0]['codigo']
+            # Extraer el número del código (ej: PRD-0001 -> 1)
+            partes = codigo.split('-')
+            if len(partes) >= 2:
+                try:
+                    ultimo_num = int(partes[-1])
+                    nuevo_num = str(ultimo_num + 1).zfill(4)
+                    # Mantener el prefijo (ej: PRD, GEN, SEG)
+                    prefijo = partes[0]
+                    return f"{prefijo}-{nuevo_num}"
+                except:
+                    pass
+        
+        # Si no hay productos o hay error, generar uno nuevo
+        return "PRD-0001"
+        
+    except Exception as e:
+        print(f"❌ Error generando código: {e}")
+        return "PRD-0001"
+
+# ============================================================
 # RUTAS PARA PÁGINAS HTML
 # ============================================================
 
@@ -39,40 +73,6 @@ def productos_base_datos():
 def productos_comparativo():
     """Página de comparativo de costos"""
     return render_template('productos.html', active_tab='comparativo')
-
-# ============================================================
-# FUNCIONES DE UTILIDAD
-# ============================================================
-
-def obtener_ultimo_codigo_producto():
-    """Obtiene el último código de producto para generar el siguiente"""
-    try:
-        result = db_query("""
-            SELECT codigo FROM productos 
-            WHERE codigo LIKE 'PRD-%' OR codigo LIKE 'GEN-%' OR codigo LIKE 'SEG-%'
-            ORDER BY id DESC LIMIT 1
-        """)
-        
-        if result:
-            codigo = result[0]['codigo']
-            # Extraer el número del código (ej: PRD-0001 -> 1)
-            partes = codigo.split('-')
-            if len(partes) >= 2:
-                try:
-                    ultimo_num = int(partes[-1])
-                    nuevo_num = str(ultimo_num + 1).zfill(4)
-                    # Mantener el prefijo (ej: PRD, GEN, SEG)
-                    prefijo = partes[0]
-                    return f"{prefijo}-{nuevo_num}"
-                except:
-                    pass
-        
-        # Si no hay productos o hay error, generar uno nuevo
-        return "PRD-0001"
-        
-    except Exception as e:
-        print(f"❌ Error generando código: {e}")
-        return "PRD-0001"
 
 # ============================================================
 # ENDPOINTS API PARA PRODUCTOS
@@ -227,7 +227,6 @@ def create_producto():
             # Procesar archivo de foto si existe
             foto = request.files.get('foto')
             if foto and foto.filename:
-                # Aquí puedes guardar la foto en un bucket de Supabase
                 data['foto'] = foto.filename
         
         # Validar campos requeridos
@@ -238,13 +237,6 @@ def create_producto():
                     'success': False, 
                     'error': f'El campo "{field}" es requerido'
                 }), 400
-        
-        # Procesar operaciones
-        operaciones = data.get('operaciones', [])
-        if isinstance(data.get('operation'), list):
-            operaciones = data.get('operation', [])
-        elif data.get('operation'):
-            operaciones = [data.get('operation')]
         
         # Insertar producto
         with db_tx() as conn:
@@ -284,18 +276,18 @@ def create_producto():
                 data.get('familia'),
                 data.get('categoria_derivada', '') or data.get('subcategoria', ''),
                 data.get('unidad'),
-                float(data.get('peso', 0)),
-                float(data.get('volumen', 0)),
+                float(data.get('peso', 0) or 0),      # ✅ Maneja string vacío
+                float(data.get('volumen', 0) or 0),   # ✅ Maneja string vacío
                 data.get('observaciones', ''),
                 data.get('transporte'),
-                float(data.get('costo_unitario', 0)),
-                float(data.get('precio_unitario', 0)),
-                int(data.get('stock', 0)),
-                int(data.get('stock_minimo', 0)),
+                float(data.get('costo_unitario', 0) or 0),  # ✅ Maneja string vacío
+                float(data.get('precio_unitario', 0) or 0), # ✅ Maneja string vacío
+                int(data.get('stock', 0) or 0),        # ✅ Maneja string vacío
+                int(data.get('stock_minimo', 0) or 0), # ✅ Maneja string vacío
                 data.get('estado', 'activo'),
                 data.get('presentacion_proveedor', ''),
                 data.get('presentacion_venta', ''),
-                int(data.get('venta_minima', 1)),
+                int(data.get('venta_minima', 1) or 1), # ✅ Maneja string vacío
                 data.get('codigo_barras', ''),
                 data.get('origen', ''),
                 data.get('tiempo_entrega', ''),
@@ -315,6 +307,8 @@ def create_producto():
             
     except Exception as e:
         print(f"❌ Error en create_producto: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -367,18 +361,18 @@ def update_producto(producto_id):
             data.get('familia'),
             data.get('categoria_derivada', '') or data.get('subcategoria', ''),
             data.get('unidad'),
-            float(data.get('peso', 0)),
-            float(data.get('volumen', 0)),
+            float(data.get('peso', 0) or 0),
+            float(data.get('volumen', 0) or 0),
             data.get('observaciones', ''),
             data.get('transporte'),
-            float(data.get('costo_unitario', 0)),
-            float(data.get('precio_unitario', 0)),
-            int(data.get('stock', 0)),
-            int(data.get('stock_minimo', 0)),
+            float(data.get('costo_unitario', 0) or 0),
+            float(data.get('precio_unitario', 0) or 0),
+            int(data.get('stock', 0) or 0),
+            int(data.get('stock_minimo', 0) or 0),
             data.get('estado', 'activo'),
             data.get('presentacion_proveedor', ''),
             data.get('presentacion_venta', ''),
-            int(data.get('venta_minima', 1)),
+            int(data.get('venta_minima', 1) or 1),
             data.get('codigo_barras', ''),
             data.get('origen', ''),
             data.get('tiempo_entrega', ''),
