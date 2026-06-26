@@ -1483,6 +1483,55 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// ============================================================
+// FUNCIÓN GLOBAL DE NOTIFICACIONES - DISPONIBLE DESDE EL INICIO
+// ============================================================
+window.mostrarNotificacion = function(tipo, titulo, mensaje) {
+    // Eliminar notificación existente
+    const ex = document.querySelector('.notificacion');
+    if (ex) { 
+        ex.style.animation = 'notiOut .3s ease forwards'; 
+        setTimeout(() => ex.remove(), 350); 
+    }
+    
+    const iconos = { 
+        success: '✅', 
+        error: '❌', 
+        warning: '⚠️', 
+        info: 'ℹ️' 
+    };
+    
+    const noti = document.createElement('div');
+    noti.className = 'notificacion ' + tipo;
+    noti.innerHTML = `
+        <div class="noti-inner">
+            <span class="noti-icon">${iconos[tipo] || 'ℹ️'}</span>
+            <div style="flex:1">
+                <div class="noti-title">${titulo}</div>
+                <div class="noti-msg">${mensaje}</div>
+            </div>
+            <button class="noti-close" onclick="this.closest('.notificacion').remove()">✕</button>
+        </div>
+    `;
+    
+    document.body.appendChild(noti);
+    
+    // Auto-cerrar después de 5 segundos
+    setTimeout(() => {
+        if (noti.parentNode) { 
+            noti.style.animation = 'notiOut .3s ease forwards'; 
+            setTimeout(() => noti.remove(), 350); 
+        }
+    }, 5000);
+};
+
+// También agregar toast como alias
+window.toast = function(msg) {
+    window.mostrarNotificacion('info', '', msg);
+};
+
+
+
 function resetFileInput() {
     const fileInput = document.getElementById('fotoProducto');
     const previewContainer = document.getElementById('previewContainer');
@@ -2407,7 +2456,181 @@ async function initDashboard(){
     setupBreadcrumb();
     console.log('✅ Dashboard inicializado correctamente');
 }
+// ============================================================
+// FUNCIONES PARA BASE DE DATOS DE PRODUCTOS
+// ============================================================
 
+// Variable global para almacenar productos
+window.bdProductos = [];
+
+// Cargar productos desde la API
+async function cargarProductos() {
+    try {
+        const response = await fetch('/productos/api/productos');
+        const result = await response.json();
+        
+        if (result.success) {
+            window.bdProductos = result.data || [];
+            bdRenderProductos(window.bdProductos);
+            return window.bdProductos;
+        } else {
+            mostrarNotificacion('error', 'Error', result.error || 'Error al cargar productos');
+            return [];
+        }
+    } catch (error) {
+        console.error('❌ Error cargando productos:', error);
+        mostrarNotificacion('error', 'Error', 'Error al cargar productos desde el servidor');
+        return [];
+    }
+}
+
+// Renderizar productos en la tabla
+function bdRenderProductos(data) {
+    const tbody = document.getElementById('bdProductTableBody');
+    if (!tbody) return;
+    
+    if (!data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="24" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay productos registrados</td></tr>`;
+        const countEl = document.getElementById('bdCountText');
+        if (countEl) countEl.textContent = '0 productos';
+        return;
+    }
+    
+    tbody.innerHTML = data.map((p, index) => {
+        // Determinar clase de estado
+        let estadoClass = 'st-active';
+        const estado = (p.estado || 'activo').toLowerCase();
+        if (estado === 'inactivo') estadoClass = 'st-inactive';
+        else if (estado === 'bajo_pedido') estadoClass = 'st-pending';
+        else if (estado === 'bloqueado') estadoClass = 'st-blocked';
+        else if (estado === 'disponible') estadoClass = 'st-available';
+        
+        const costo = p.costo_unitario ? parseFloat(p.costo_unitario).toFixed(2) : '0.00';
+        const precio = p.precio_unitario ? parseFloat(p.precio_unitario).toFixed(2) : '0.00';
+        
+        return `
+        <tr>
+            <td class="bd-col-item" style="text-align:center">${index + 1}</td>
+            <td class="bd-col-code"><a class="bd-t-code" href="#">${p.codigo || '-'}</a></td>
+            <td class="bd-col-desc">${p.descripcion || '-'}</td>
+            <td class="bd-col-model">${p.modelo || '-'}</td>
+            <td class="bd-col-brand">${p.marca || '-'}</td>
+            <td class="bd-col-cat">${p.familia || '-'}</td>
+            <td class="bd-col-subcat">${p.categoria_derivada || '-'}</td>
+            <td class="bd-col-weight">${p.peso || '0'}</td>
+            <td class="bd-col-transport">${p.transporte || '-'}</td>
+            <td class="bd-col-cost" style="font-weight:850">S/ ${costo}</td>
+            <td class="bd-col-sale" style="color:var(--empresa);font-weight:900">S/ ${precio}</td>
+            <td class="bd-col-obs" style="color:var(--muted)">${p.observaciones || '-'}</td>
+            <td class="bd-col-status"><span class="bd-status ${estadoClass}"><span class="bd-dot"></span>${p.estado || 'Activo'}</span></td>
+            <td class="bd-col-actions">
+                <div class="row-actions">
+                    <button title="Ver" onclick="verProducto(${p.id})"><i class="bi bi-eye"></i></button>
+                    <button title="Editar" onclick="editarProducto(${p.id})"><i class="bi bi-pencil"></i></button>
+                    <button title="Eliminar" onclick="eliminarProducto(${p.id})"><i class="bi bi-trash"></i></button>
+                </div>
+            </td>
+            <td class="bd-col-prov-pres">${p.presentacion_proveedor || '-'}</td>
+            <td class="bd-col-sale-pres">${p.presentacion_venta || '-'}</td>
+            <td class="bd-col-min-sale">${p.venta_minima || '1'}</td>
+            <td class="bd-col-barras">${p.codigo_barras || '-'}</td>
+            <td class="bd-col-volumen">${p.volumen || '0'}</td>
+            <td class="bd-col-origen">${p.origen || '-'}</td>
+            <td class="bd-col-tiempo">${p.tiempo_entrega || '-'}</td>
+            <td class="bd-col-abast">${p.abastecimiento || '-'}</td>
+            <td class="bd-col-stock-min">${p.stock_minimo || '0'}</td>
+            <td class="bd-col-desc-larga" style="color:var(--muted)">${p.descripcion_larga || '-'}</td>
+        </tr>`;
+    }).join('');
+    
+    const countEl = document.getElementById('bdCountText');
+    if (countEl) countEl.textContent = `Mostrando ${data.length} producto${data.length !== 1 ? 's' : ''}`;
+}
+
+// Funciones de acciones para productos
+function verProducto(id) {
+    mostrarNotificacion('info', 'Ver producto', `Mostrando detalles del producto ID: ${id}`);
+}
+
+function editarProducto(id) {
+    window.location.href = `/productos/editar/${id}`;
+}
+
+async function eliminarProducto(id) {
+    if (!confirm('¿Estás seguro de eliminar este producto?')) return;
+    
+    try {
+        const response = await fetch(`/productos/api/productos/${id}`, {
+            method: 'DELETE'
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            mostrarNotificacion('success', '✅ Eliminado', 'Producto eliminado exitosamente');
+            cargarProductos(); // Recargar la tabla
+        } else {
+            mostrarNotificacion('error', '❌ Error', result.error || 'Error al eliminar el producto');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarNotificacion('error', '❌ Error', 'Error al comunicarse con el servidor');
+    }
+}
+
+// Filtros para base de datos
+function bdAplicarFiltros() {
+    const q = document.getElementById('bdSearchInput')?.value?.trim().toLowerCase() || '';
+    const categoria = document.getElementById('bdCategoriaFilter')?.value || '';
+    const subcateg = document.getElementById('bdSubcategoriaFilter')?.value || '';
+    const marca = document.getElementById('bdMarcaFilter')?.value || '';
+    const modelo = document.getElementById('bdModeloFilter')?.value || '';
+    
+    if (!window.bdProductos) return;
+    
+    const filtrados = window.bdProductos.filter(p => {
+        const texto = `${p.codigo || ''} ${p.descripcion || ''} ${p.modelo || ''} ${p.marca || ''} ${p.familia || ''} ${p.categoria_derivada || ''}`.toLowerCase();
+        return (!q || texto.includes(q))
+            && (!categoria || p.familia === categoria)
+            && (!subcateg || p.categoria_derivada === subcateg)
+            && (!marca || p.marca === marca)
+            && (!modelo || p.modelo === modelo);
+    });
+    
+    bdRenderProductos(filtrados);
+}
+
+// Limpiar filtros
+function bdLimpiarFiltros() {
+    const searchInput = document.getElementById('bdSearchInput');
+    const categoriaFilter = document.getElementById('bdCategoriaFilter');
+    const subcategoriaFilter = document.getElementById('bdSubcategoriaFilter');
+    const marcaFilter = document.getElementById('bdMarcaFilter');
+    const modeloFilter = document.getElementById('bdModeloFilter');
+    
+    if (searchInput) searchInput.value = '';
+    if (categoriaFilter) categoriaFilter.selectedIndex = 0;
+    if (subcategoriaFilter) subcategoriaFilter.selectedIndex = 0;
+    if (marcaFilter) marcaFilter.selectedIndex = 0;
+    if (modeloFilter) modeloFilter.selectedIndex = 0;
+    
+    bdRenderProductos(window.bdProductos);
+    mostrarNotificacion('info', 'Filtros limpiados', 'Mostrando todos los productos.');
+}
+
+// Exportar Excel
+function bdExportarExcel() {
+    mostrarNotificacion('success', 'Exportando...', 'El archivo Excel se está generando.');
+}
+
+// Asignar funciones a window para que estén disponibles globalmente
+window.bdAplicarFiltros = bdAplicarFiltros;
+window.bdLimpiarFiltros = bdLimpiarFiltros;
+window.bdExportarExcel = bdExportarExcel;
+window.cargarProductos = cargarProductos;
+window.bdRenderProductos = bdRenderProductos;
+window.verProducto = verProducto;
+window.editarProducto = editarProducto;
+window.eliminarProducto = eliminarProducto;
 document.addEventListener("DOMContentLoaded", initDashboard);
 </script>
 </body>
