@@ -1,8 +1,9 @@
 ﻿# routes/productos.py
-from flask import Blueprint, render_template, request, jsonify
-from utils import login_required  # ✅ Cambiado de 'main' a 'utils'
+from flask import Blueprint, render_template, request, jsonify, session
+from utils import login_required
 from database import db_query, db_execute, db_tx
 from psycopg2.extras import RealDictCursor
+from datetime import datetime
 
 # ============================================================
 # BLUEPRINT - CON url_prefix
@@ -10,32 +11,68 @@ from psycopg2.extras import RealDictCursor
 productos_bp = Blueprint('productos', __name__, url_prefix='/productos')
 
 # ============================================================
-# RUTAS PARA PÁGINAS HTML - SIN /productos (ya está en el prefijo)
+# RUTAS PARA PÁGINAS HTML
 # ============================================================
 
-@productos_bp.route('/')  # ✅ Esto maneja /productos
+@productos_bp.route('/')
 @login_required
 def productos():
     """Página principal de productos - Redirige a nuevo producto"""
     return render_template('productos.html', active_tab='nuevo')
 
-@productos_bp.route('/nuevo')  # ✅ Esto maneja /productos/nuevo
+@productos_bp.route('/nuevo')
 @login_required
 def productos_nuevo():
-    """Página de nuevo producto"""
-    return render_template('productos.html', active_tab='nuevo')
+    """Página de nuevo producto con código automático"""
+    # Generar código automático
+    codigo_auto = obtener_ultimo_codigo_producto()
+    return render_template('productos.html', active_tab='nuevo', codigo_auto=codigo_auto)
 
-@productos_bp.route('/base-datos')  # ✅ Esto maneja /productos/base-datos
+@productos_bp.route('/base-datos')
 @login_required
 def productos_base_datos():
     """Página de base de datos de productos"""
     return render_template('productos.html', active_tab='base-datos')
 
-@productos_bp.route('/comparativo')  # ✅ Esto maneja /productos/comparativo
+@productos_bp.route('/comparativo')
 @login_required
 def productos_comparativo():
     """Página de comparativo de costos"""
     return render_template('productos.html', active_tab='comparativo')
+
+# ============================================================
+# FUNCIONES DE UTILIDAD
+# ============================================================
+
+def obtener_ultimo_codigo_producto():
+    """Obtiene el último código de producto para generar el siguiente"""
+    try:
+        result = db_query("""
+            SELECT codigo FROM productos 
+            WHERE codigo LIKE 'PRD-%' OR codigo LIKE 'GEN-%' OR codigo LIKE 'SEG-%'
+            ORDER BY id DESC LIMIT 1
+        """)
+        
+        if result:
+            codigo = result[0]['codigo']
+            # Extraer el número del código (ej: PRD-0001 -> 1)
+            partes = codigo.split('-')
+            if len(partes) >= 2:
+                try:
+                    ultimo_num = int(partes[-1])
+                    nuevo_num = str(ultimo_num + 1).zfill(4)
+                    # Mantener el prefijo (ej: PRD, GEN, SEG)
+                    prefijo = partes[0]
+                    return f"{prefijo}-{nuevo_num}"
+                except:
+                    pass
+        
+        # Si no hay productos o hay error, generar uno nuevo
+        return "PRD-0001"
+        
+    except Exception as e:
+        print(f"❌ Error generando código: {e}")
+        return "PRD-0001"
 
 # ============================================================
 # ENDPOINTS API PARA PRODUCTOS
@@ -44,39 +81,74 @@ def productos_comparativo():
 @productos_bp.route('/api/productos', methods=['GET'])
 @login_required
 def get_productos():
-    """Obtener todos los productos"""
+    """Obtener todos los productos con filtros opcionales"""
     try:
-        productos = db_query("""
+        # Obtener parámetros de filtro
+        busqueda = request.args.get('q', '').strip()
+        categoria = request.args.get('categoria', '').strip()
+        marca = request.args.get('marca', '').strip()
+        modelo = request.args.get('modelo', '').strip()
+        
+        # Construir consulta base
+        query = """
             SELECT 
                 id,
                 codigo,
                 descripcion,
+                descripcion_larga,
                 modelo,
                 marca,
                 familia as categoria,
-                subcategoria,
+                categoria_derivada as subcategoria,
+                unidad,
                 peso,
+                volumen,
+                observaciones,
                 transporte,
                 costo_unitario,
                 precio_unitario,
-                observaciones,
+                stock,
+                stock_minimo,
                 estado,
                 presentacion_proveedor,
                 presentacion_venta,
                 venta_minima,
                 codigo_barras,
-                volumen,
                 origen,
                 tiempo_entrega,
                 abastecimiento,
-                stock_minimo,
-                descripcion_larga,
                 activo,
-                fecha_creacion
+                fecha_creacion,
+                updated_at
             FROM productos
             WHERE activo = TRUE
-            ORDER BY codigo
-        """)
+        """
+        params = []
+        condiciones = []
+        
+        # Aplicar filtros
+        if busqueda:
+            condiciones.append("(codigo ILIKE %s OR descripcion ILIKE %s OR modelo ILIKE %s OR marca ILIKE %s)")
+            params.extend([f'%{busqueda}%'] * 4)
+        
+        if categoria:
+            condiciones.append("familia = %s")
+            params.append(categoria)
+        
+        if marca:
+            condiciones.append("marca = %s")
+            params.append(marca)
+        
+        if modelo:
+            condiciones.append("modelo = %s")
+            params.append(modelo)
+        
+        if condiciones:
+            query += " AND " + " AND ".join(condiciones)
+        
+        query += " ORDER BY fecha_creacion DESC"
+        
+        productos = db_query(query, params)
         
         return jsonify({
             'success': True,
@@ -103,7 +175,7 @@ def get_producto(producto_id):
                 modelo,
                 marca,
                 familia as categoria,
-                subcategoria,
+                categoria_derivada as subcategoria,
                 unidad,
                 peso,
                 volumen,
@@ -122,7 +194,8 @@ def get_producto(producto_id):
                 tiempo_entrega,
                 abastecimiento,
                 activo,
-                fecha_creacion
+                fecha_creacion,
+                updated_at
             FROM productos
             WHERE id = %s AND activo = TRUE
         """, (producto_id,))
@@ -145,21 +218,42 @@ def get_producto(producto_id):
 def create_producto():
     """Crear un nuevo producto"""
     try:
-        data = request.get_json()
+        # Obtener datos del formulario o JSON
+        if request.content_type and 'application/json' in request.content_type:
+            data = request.get_json()
+        else:
+            data = request.form.to_dict()
+            
+            # Procesar archivo de foto si existe
+            foto = request.files.get('foto')
+            if foto and foto.filename:
+                # Aquí puedes guardar la foto en un bucket de Supabase
+                data['foto'] = foto.filename
         
         # Validar campos requeridos
-        required = ['codigo', 'descripcion', 'modelo', 'marca', 'familia', 'unidad', 'transporte']
-        for field in required:
+        required_fields = ['codigo', 'descripcion', 'modelo', 'marca', 'familia', 'unidad', 'transporte']
+        for field in required_fields:
             if not data.get(field):
-                return jsonify({'success': False, 'error': f'Campo {field} es requerido'}), 400
+                return jsonify({
+                    'success': False, 
+                    'error': f'El campo "{field}" es requerido'
+                }), 400
         
+        # Procesar operaciones
+        operaciones = data.get('operaciones', [])
+        if isinstance(data.get('operation'), list):
+            operaciones = data.get('operation', [])
+        elif data.get('operation'):
+            operaciones = [data.get('operation')]
+        
+        # Insertar producto
         with db_tx() as conn:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             
             cur.execute("""
                 INSERT INTO productos (
                     codigo, descripcion, descripcion_larga,
-                    modelo, marca, familia, subcategoria,
+                    modelo, marca, familia, categoria_derivada,
                     unidad, peso, volumen,
                     observaciones, transporte,
                     costo_unitario, precio_unitario, stock,
@@ -180,7 +274,7 @@ def create_producto():
                     %s, %s, %s,
                     TRUE
                 )
-                RETURNING id
+                RETURNING id, codigo
             """, (
                 data.get('codigo'),
                 data.get('descripcion'),
@@ -188,32 +282,35 @@ def create_producto():
                 data.get('modelo'),
                 data.get('marca'),
                 data.get('familia'),
-                data.get('subcategoria', ''),
+                data.get('categoria_derivada', '') or data.get('subcategoria', ''),
                 data.get('unidad'),
-                data.get('peso', 0),
-                data.get('volumen', 0),
+                float(data.get('peso', 0)),
+                float(data.get('volumen', 0)),
                 data.get('observaciones', ''),
                 data.get('transporte'),
-                data.get('costo_unitario', 0),
-                data.get('precio_unitario', 0),
-                data.get('stock', 0),
-                data.get('stock_minimo', 0),
+                float(data.get('costo_unitario', 0)),
+                float(data.get('precio_unitario', 0)),
+                int(data.get('stock', 0)),
+                int(data.get('stock_minimo', 0)),
                 data.get('estado', 'activo'),
                 data.get('presentacion_proveedor', ''),
                 data.get('presentacion_venta', ''),
-                data.get('venta_minima', 1),
+                int(data.get('venta_minima', 1)),
                 data.get('codigo_barras', ''),
                 data.get('origen', ''),
                 data.get('tiempo_entrega', ''),
                 data.get('abastecimiento', '')
             ))
             
-            producto_id = cur.fetchone()['id']
+            resultado = cur.fetchone()
             
             return jsonify({
                 'success': True,
-                'data': {'id': producto_id},
-                'message': 'Producto creado exitosamente'
+                'data': {
+                    'id': resultado['id'],
+                    'codigo': resultado['codigo']
+                },
+                'message': f'Producto creado exitosamente con código {resultado["codigo"]}'
             })
             
     except Exception as e:
@@ -228,6 +325,11 @@ def update_producto(producto_id):
     try:
         data = request.get_json()
         
+        # Verificar que el producto existe
+        existente = db_query("SELECT id FROM productos WHERE id = %s AND activo = TRUE", (producto_id,))
+        if not existente:
+            return jsonify({'success': False, 'error': 'Producto no encontrado'}), 404
+        
         db_execute("""
             UPDATE productos SET
                 codigo = %s,
@@ -236,7 +338,7 @@ def update_producto(producto_id):
                 modelo = %s,
                 marca = %s,
                 familia = %s,
-                subcategoria = %s,
+                categoria_derivada = %s,
                 unidad = %s,
                 peso = %s,
                 volumen = %s,
@@ -263,20 +365,20 @@ def update_producto(producto_id):
             data.get('modelo'),
             data.get('marca'),
             data.get('familia'),
-            data.get('subcategoria', ''),
+            data.get('categoria_derivada', '') or data.get('subcategoria', ''),
             data.get('unidad'),
-            data.get('peso', 0),
-            data.get('volumen', 0),
+            float(data.get('peso', 0)),
+            float(data.get('volumen', 0)),
             data.get('observaciones', ''),
             data.get('transporte'),
-            data.get('costo_unitario', 0),
-            data.get('precio_unitario', 0),
-            data.get('stock', 0),
-            data.get('stock_minimo', 0),
+            float(data.get('costo_unitario', 0)),
+            float(data.get('precio_unitario', 0)),
+            int(data.get('stock', 0)),
+            int(data.get('stock_minimo', 0)),
             data.get('estado', 'activo'),
             data.get('presentacion_proveedor', ''),
             data.get('presentacion_venta', ''),
-            data.get('venta_minima', 1),
+            int(data.get('venta_minima', 1)),
             data.get('codigo_barras', ''),
             data.get('origen', ''),
             data.get('tiempo_entrega', ''),
@@ -299,6 +401,11 @@ def update_producto(producto_id):
 def delete_producto(producto_id):
     """Eliminar producto (borrado lógico)"""
     try:
+        # Verificar que el producto existe
+        existente = db_query("SELECT id FROM productos WHERE id = %s AND activo = TRUE", (producto_id,))
+        if not existente:
+            return jsonify({'success': False, 'error': 'Producto no encontrado'}), 404
+        
         db_execute("""
             UPDATE productos SET activo = FALSE, updated_at = NOW()
             WHERE id = %s
@@ -331,13 +438,14 @@ def buscar_productos():
                 modelo,
                 marca,
                 precio_unitario,
-                stock
+                stock,
+                unidad
             FROM productos
             WHERE activo = TRUE
-            AND (codigo ILIKE %s OR descripcion ILIKE %s)
+            AND (codigo ILIKE %s OR descripcion ILIKE %s OR modelo ILIKE %s OR marca ILIKE %s)
             ORDER BY codigo
             LIMIT 20
-        """, (f'%{q}%', f'%{q}%'))
+        """, (f'%{q}%', f'%{q}%', f'%{q}%', f'%{q}%'))
         
         return jsonify({
             'success': True,
@@ -381,12 +489,27 @@ def get_filtros_productos():
         return jsonify({
             'success': True,
             'data': {
-                'categorias': [c['categoria'] for c in categorias],
-                'marcas': [m['marca'] for m in marcas],
-                'modelos': [m['modelo'] for m in modelos]
+                'categorias': [c['categoria'] for c in categorias] if categorias else [],
+                'marcas': [m['marca'] for m in marcas] if marcas else [],
+                'modelos': [m['modelo'] for m in modelos] if modelos else []
             }
         })
         
     except Exception as e:
         print(f"❌ Error en get_filtros_productos: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@productos_bp.route('/api/productos/ultimo-codigo', methods=['GET'])
+@login_required
+def get_ultimo_codigo():
+    """Obtener el último código de producto generado"""
+    try:
+        codigo = obtener_ultimo_codigo_producto()
+        return jsonify({
+            'success': True,
+            'data': {'codigo': codigo}
+        })
+    except Exception as e:
+        print(f"❌ Error en get_ultimo_codigo: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500

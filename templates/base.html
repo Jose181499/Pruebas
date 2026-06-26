@@ -1195,6 +1195,307 @@ document.getElementById("saveModal").addEventListener("click", async function() 
         toast('❌ Error al guardar permisos');
     }
 });
+//////
+// ============================================================
+// FUNCIONES PARA NUEVO PRODUCTO
+// ============================================================
+
+// Generar código automático
+async function generarCodigoProducto() {
+    try {
+        const response = await fetch('/productos/api/productos/ultimo-codigo');
+        const data = await response.json();
+        if (data.success) {
+            const codigoEl = document.getElementById('codigoProducto');
+            const generadoEl = document.getElementById('codigoGenerado');
+            if (codigoEl) codigoEl.textContent = data.data.codigo;
+            if (generadoEl) generadoEl.value = data.data.codigo;
+        }
+    } catch (e) {
+        console.error('Error generando código:', e);
+        // Fallback: generar código local
+        const fecha = new Date();
+        const anio = fecha.getFullYear();
+        const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+        const dia = String(fecha.getDate()).padStart(2, '0');
+        const codigo = `PRD-${anio}${mes}${dia}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
+        const codigoEl = document.getElementById('codigoProducto');
+        const generadoEl = document.getElementById('codigoGenerado');
+        if (codigoEl) codigoEl.textContent = codigo;
+        if (generadoEl) generadoEl.value = codigo;
+    }
+}
+
+// Calcular margen
+window.calcularMargen = function() {
+    const venta = parseFloat(document.getElementById('valorVenta')?.value || 0);
+    const costo = parseFloat(document.getElementById('valorCosto')?.value || 0);
+    const margen = venta - costo;
+    const pct = venta > 0 ? (margen / venta) * 100 : 0;
+    
+    const pctEl = document.getElementById('margenPct');
+    const solEl = document.getElementById('margenSol');
+    
+    if (pctEl) {
+        pctEl.textContent = pct.toFixed(2) + '%';
+        pctEl.className = pct >= 0 ? 'positive' : 'negative';
+    }
+    if (solEl) {
+        solEl.textContent = 'S/ ' + margen.toFixed(2);
+        solEl.className = margen >= 0 ? 'positive' : 'negative';
+    }
+};
+
+// Actualizar chips de estado
+window.actualizarEstadoChips = function() {
+    const val = document.getElementById('estadoProducto')?.value;
+    if (!val) return;
+    
+    const map = {
+        'activo': 'active-state',
+        'inactivo': 'inactive',
+        'bajo_pedido': 'order',
+        'disponible': 'available',
+        'bloqueado': 'blocked'
+    };
+    
+    const cur = map[val] || 'active-state';
+    document.querySelectorAll('.state-chip').forEach(chip => {
+        const isCur = chip.classList.contains(cur);
+        chip.classList.toggle('highlight', isCur);
+        chip.classList.toggle('dim', !isCur);
+    });
+};
+
+// Limpiar formulario
+window.limpiarFormulario = function() {
+    if (!confirm('¿Deseas limpiar el formulario?')) return;
+    
+    document.querySelectorAll('.form-card input:not([type="hidden"]), .form-card textarea, .form-card select').forEach(el => {
+        if (el.type === 'checkbox') {
+            el.checked = el.value === 'venta';
+        } else if (el.tagName === 'SELECT') {
+            el.selectedIndex = 0;
+        } else if (el.type !== 'file') {
+            el.value = '';
+        }
+    });
+    
+    // Resetear valores
+    const valorVenta = document.getElementById('valorVenta');
+    const valorCosto = document.getElementById('valorCosto');
+    const estadoProducto = document.getElementById('estadoProducto');
+    const fotoProducto = document.getElementById('fotoProducto');
+    const previewContainer = document.getElementById('previewContainer');
+    const fileBadge = document.getElementById('fileBadge');
+    const uploadArea = document.getElementById('uploadArea');
+    
+    if (valorVenta) valorVenta.value = '0.00';
+    if (valorCosto) valorCosto.value = '0.00';
+    if (estadoProducto) estadoProducto.value = 'activo';
+    if (fotoProducto) fotoProducto.value = '';
+    if (previewContainer) previewContainer.innerHTML = '';
+    if (fileBadge) fileBadge.innerHTML = '<i class="bi bi-paperclip"></i> Ningún archivo';
+    if (uploadArea) uploadArea.classList.remove('has-image');
+    
+    calcularMargen();
+    actualizarEstadoChips();
+    generarCodigoProducto();
+    
+    mostrarNotificacion('info', 'Formulario limpiado', 'Todos los campos han sido reiniciados.');
+};
+
+// ============================================================
+// GUARDAR PRODUCTO - Event Listener
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    const btnGuardar = document.getElementById('btnGuardar');
+    if (btnGuardar) {
+        btnGuardar.addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            // Validar campos obligatorios
+            const required = ['nombreProducto', 'modeloProducto', 'marcaProducto', 'unidadMedida', 'categoriaProducto', 'transporteReferencial'];
+            let valid = true;
+            let errors = [];
+            
+            required.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el || !el.value || el.value.trim() === '') {
+                    valid = false;
+                    const label = el?.closest('.field')?.querySelector('label')?.textContent || id;
+                    errors.push(label);
+                }
+            });
+            
+            if (!valid) {
+                mostrarNotificacion('error', 'Campos requeridos', 'Faltan completar: ' + errors.join(', '));
+                return;
+            }
+            
+            // Validar operaciones
+            const ops = document.querySelectorAll('input[name="operation"]:checked');
+            if (ops.length === 0) {
+                mostrarNotificacion('error', 'Tipo de operación', 'Seleccione al menos un tipo de operación.');
+                return;
+            }
+            
+            // Construir datos del formulario
+            const form = document.getElementById('formNuevoProducto');
+            const formData = new FormData(form);
+            
+            // Convertir a objeto
+            const data = {};
+            let operaciones = [];
+            formData.forEach((value, key) => {
+                if (key === 'operation') {
+                    operaciones.push(value);
+                } else {
+                    data[key] = value;
+                }
+            });
+            
+            // Agregar operaciones
+            data.operaciones = operaciones;
+            data.venta = operaciones.includes('venta');
+            data.compra = operaciones.includes('compra');
+            data.inventariable = operaciones.includes('inventariable');
+            
+            // Asegurar que el código esté presente
+            data.codigo = document.getElementById('codigoGenerado')?.value || '';
+            
+            // Validar que el código no esté vacío
+            if (!data.codigo) {
+                mostrarNotificacion('error', 'Error', 'No se pudo generar el código del producto.');
+                return;
+            }
+            
+            try {
+                mostrarNotificacion('info', 'Guardando...', 'Por favor espera.');
+                
+                const response = await fetch('/productos/api/productos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    mostrarNotificacion('success', '✅ Producto guardado', `Código: ${result.data.codigo}`);
+                    // Limpiar formulario
+                    if (typeof limpiarFormulario === 'function') limpiarFormulario();
+                    // Generar nuevo código
+                    await generarCodigoProducto();
+                    // Recargar la tabla si estamos en base-datos
+                    if (typeof bdRenderProductos === 'function') {
+                        bdRenderProductos(window.bdProductos);
+                    }
+                } else {
+                    mostrarNotificacion('error', '❌ Error', result.error || 'Error al guardar el producto');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('error', '❌ Error', 'Error al comunicarse con el servidor');
+            }
+        });
+    }
+    
+    // Inicializar código al cargar la página si estamos en nuevo producto
+    if (window.location.pathname.includes('/productos/nuevo')) {
+        generarCodigoProducto();
+    }
+});
+
+// ============================================================
+// FUNCIONES PARA UPLOAD DE FOTO
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fotoProducto');
+    const fileBadge = document.getElementById('fileBadge');
+    const previewContainer = document.getElementById('previewContainer');
+    
+    if (uploadArea && fileInput) {
+        // Click en el área de upload
+        uploadArea.addEventListener('click', function(e) {
+            if (e.target.closest('.file-badge') || e.target.closest('#previewContainer')) return;
+            fileInput.click();
+        });
+        
+        // Cambio de archivo
+        fileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) {
+                resetFileInput();
+                return;
+            }
+            
+            if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+                mostrarNotificacion('error', 'Formato no soportado', 'Usa PNG, JPG o WEBP.');
+                resetFileInput();
+                return;
+            }
+            
+            if (file.size > 5 * 1024 * 1024) {
+                mostrarNotificacion('error', 'Archivo muy grande', 'La imagen no debe superar los 5 MB.');
+                resetFileInput();
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (previewContainer) {
+                    previewContainer.innerHTML = `<img src="${e.target.result}" alt="Foto del producto" style="max-width:100%;max-height:150px;border-radius:8px;margin-top:6px;">`;
+                }
+                if (uploadArea) uploadArea.classList.add('has-image');
+                if (fileBadge) fileBadge.innerHTML = `<i class="bi bi-paperclip"></i> ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+            };
+            reader.readAsDataURL(file);
+        });
+        
+        // Drag & Drop
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'var(--empresa)';
+            uploadArea.style.background = 'var(--empresa-soft)';
+        });
+        
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadArea.style.borderColor = '';
+            uploadArea.style.background = '';
+        });
+        
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadArea.style.borderColor = '';
+            uploadArea.style.background = '';
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                fileInput.dispatchEvent(new Event('change'));
+            }
+        });
+    }
+});
+
+function resetFileInput() {
+    const fileInput = document.getElementById('fotoProducto');
+    const previewContainer = document.getElementById('previewContainer');
+    const fileBadge = document.getElementById('fileBadge');
+    const uploadArea = document.getElementById('uploadArea');
+    
+    if (fileInput) fileInput.value = '';
+    if (previewContainer) previewContainer.innerHTML = '';
+    if (uploadArea) uploadArea.classList.remove('has-image');
+    if (fileBadge) fileBadge.innerHTML = '<i class="bi bi-paperclip"></i> Ningún archivo';
+}
+
+
 
 // ============================================================
 // APLICAR PERMISOS A LA INTERFAZ

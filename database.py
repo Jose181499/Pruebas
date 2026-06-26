@@ -1516,3 +1516,213 @@ def verificar_usuario_supabase(email: str, password: str, empresa_codigo: str = 
     except Exception as e:
         print(f"Error en verificar_usuario_supabase: {e}")
         return {"success": False, "error": str(e)}
+
+# database.py - Funciones para productos con tu estructura
+
+def obtener_productos(filtros=None):
+    """Obtiene todos los productos activos con filtros opcionales"""
+    query = """
+        SELECT 
+            id, codigo, descripcion, descripcion_larga,
+            modelo, marca, familia, categoria_derivada,
+            unidad, peso, volumen, observaciones, transporte,
+            costo_unitario, precio_unitario, stock, stock_minimo,
+            estado, presentacion_proveedor, presentacion_venta,
+            venta_minima, codigo_barras, origen, tiempo_entrega,
+            abastecimiento, activo, fecha_creacion
+        FROM productos
+        WHERE activo = TRUE
+    """
+    params = []
+    condiciones = []
+    
+    if filtros:
+        if filtros.get('busqueda'):
+            condiciones.append("(codigo ILIKE %s OR descripcion ILIKE %s OR modelo ILIKE %s)")
+            params.extend([f'%{filtros["busqueda"]}%'] * 3)
+        
+        if filtros.get('categoria'):
+            condiciones.append("familia = %s")
+            params.append(filtros['categoria'])
+        
+        if filtros.get('marca'):
+            condiciones.append("marca = %s")
+            params.append(filtros['marca'])
+        
+        if filtros.get('modelo'):
+            condiciones.append("modelo = %s")
+            params.append(filtros['modelo'])
+    
+    if condiciones:
+        query += " AND " + " AND ".join(condiciones)
+    
+    query += " ORDER BY codigo"
+    
+    return db_query(query, params)
+
+def obtener_producto_por_id(producto_id):
+    """Obtiene un producto por su ID"""
+    query = """
+        SELECT 
+            id, codigo, descripcion, descripcion_larga,
+            modelo, marca, familia, categoria_derivada,
+            unidad, peso, volumen, observaciones, transporte,
+            costo_unitario, precio_unitario, stock, stock_minimo,
+            estado, presentacion_proveedor, presentacion_venta,
+            venta_minima, codigo_barras, origen, tiempo_entrega,
+            abastecimiento, activo, fecha_creacion
+        FROM productos
+        WHERE id = %s AND activo = TRUE
+    """
+    result = db_query(query, (producto_id,))
+    return result[0] if result else None
+
+def crear_producto(data):
+    """Crea un nuevo producto con tu estructura de tabla"""
+    query = """
+        INSERT INTO productos (
+            codigo, descripcion, descripcion_larga,
+            modelo, marca, familia, categoria_derivada,
+            unidad, peso, volumen,
+            observaciones, transporte,
+            costo_unitario, precio_unitario, stock,
+            stock_minimo, estado,
+            presentacion_proveedor, presentacion_venta,
+            venta_minima, codigo_barras,
+            origen, tiempo_entrega, abastecimiento,
+            activo
+        ) VALUES (
+            %s, %s, %s,
+            %s, %s, %s, %s,
+            %s, %s, %s,
+            %s, %s,
+            %s, %s, %s,
+            %s, %s,
+            %s, %s,
+            %s, %s,
+            %s, %s, %s,
+            TRUE
+        )
+        RETURNING id, codigo
+    """
+    
+    params = (
+        data.get('codigo'),
+        data.get('descripcion'),
+        data.get('descripcion_larga', ''),
+        data.get('modelo'),
+        data.get('marca'),
+        data.get('familia'),
+        data.get('categoria_derivada', '') or data.get('subcategoria', ''),
+        data.get('unidad'),
+        float(data.get('peso', 0)),
+        float(data.get('volumen', 0)),
+        data.get('observaciones', ''),
+        data.get('transporte'),
+        float(data.get('costo_unitario', 0)),
+        float(data.get('precio_unitario', 0)),
+        int(data.get('stock', 0)),
+        int(data.get('stock_minimo', 0)),
+        data.get('estado', 'activo'),
+        data.get('presentacion_proveedor', ''),
+        data.get('presentacion_venta', ''),
+        int(data.get('venta_minima', 1)),
+        data.get('codigo_barras', ''),
+        data.get('origen', ''),
+        data.get('tiempo_entrega', ''),
+        data.get('abastecimiento', '')
+    )
+    
+    result = db_query(query, params)
+    return result[0] if result else None
+
+def actualizar_producto(producto_id, data):
+    """Actualiza un producto existente"""
+    query = """
+        UPDATE productos SET
+            codigo = %s,
+            descripcion = %s,
+            descripcion_larga = %s,
+            modelo = %s,
+            marca = %s,
+            familia = %s,
+            categoria_derivada = %s,
+            unidad = %s,
+            peso = %s,
+            volumen = %s,
+            observaciones = %s,
+            transporte = %s,
+            costo_unitario = %s,
+            precio_unitario = %s,
+            stock = %s,
+            stock_minimo = %s,
+            estado = %s,
+            presentacion_proveedor = %s,
+            presentacion_venta = %s,
+            venta_minima = %s,
+            codigo_barras = %s,
+            origen = %s,
+            tiempo_entrega = %s,
+            abastecimiento = %s,
+            updated_at = NOW()
+        WHERE id = %s
+        RETURNING id, codigo
+    """
+    
+    params = (
+        data.get('codigo'),
+        data.get('descripcion'),
+        data.get('descripcion_larga', ''),
+        data.get('modelo'),
+        data.get('marca'),
+        data.get('familia'),
+        data.get('categoria_derivada', '') or data.get('subcategoria', ''),
+        data.get('unidad'),
+        float(data.get('peso', 0)),
+        float(data.get('volumen', 0)),
+        data.get('observaciones', ''),
+        data.get('transporte'),
+        float(data.get('costo_unitario', 0)),
+        float(data.get('precio_unitario', 0)),
+        int(data.get('stock', 0)),
+        int(data.get('stock_minimo', 0)),
+        data.get('estado', 'activo'),
+        data.get('presentacion_proveedor', ''),
+        data.get('presentacion_venta', ''),
+        int(data.get('venta_minima', 1)),
+        data.get('codigo_barras', ''),
+        data.get('origen', ''),
+        data.get('tiempo_entrega', ''),
+        data.get('abastecimiento', ''),
+        producto_id
+    )
+    
+    result = db_query(query, params)
+    return result[0] if result else None
+
+def obtener_ultimo_codigo_producto():
+    """Obtiene el último código de producto para generar el siguiente"""
+    result = db_query("""
+        SELECT codigo FROM productos 
+        WHERE codigo LIKE 'PRD-%' OR codigo LIKE 'GEN-%' OR codigo LIKE 'SEG-%'
+        ORDER BY id DESC LIMIT 1
+    """)
+    
+    if result:
+        codigo = result[0]['codigo']
+        # Extraer el número del código
+        partes = codigo.split('-')
+        if len(partes) >= 2:
+            try:
+                # Intentar obtener el número de la última parte
+                ultimo_num = int(partes[-1])
+                nuevo_num = str(ultimo_num + 1).zfill(4)
+                # Mantener el prefijo (ej: PRD, GEN, SEG)
+                prefijo = partes[0]
+                return f"{prefijo}-{nuevo_num}"
+            except:
+                pass
+    
+    # Si no hay productos o hay error, generar uno nuevo
+    from datetime import datetime
+    return f"PRD-0001"
