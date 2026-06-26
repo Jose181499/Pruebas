@@ -34,19 +34,20 @@
             </div>
 
             <!-- CONFIGURACIÓN Y SEGURIDAD -->
-            <div class="menu-group open">
-                <a href="#" class="menu-header active" style="text-decoration:none;">
-                    <div class="menu-left"><span>1 ─ Configuración y seguridad</span></div>
-                    <span class="caret">›</span>
-                </a>
-                <div class="menu-children">
-                    <a href="/empresas" class="child-btn {% if active_tab == 'empresas' %}active{% endif %}" style="text-decoration:none;">Empresas</a>
-                    <a href="/usuarios" class="child-btn {% if active_tab == 'usuarios' %}active{% endif %}" style="text-decoration:none;">Usuarios y permisos</a>
-                    <a href="/correlativos" class="child-btn {% if active_tab == 'correlativos' %}active{% endif %}" style="text-decoration:none;">Correlativos</a>
-                    <a href="/parametros" class="child-btn {% if active_tab == 'parametros' %}active{% endif %}" style="text-decoration:none;">Parámetros generales</a>
-                    <a href="/integracion" class="child-btn {% if active_tab == 'integracion' %}active{% endif %}" style="text-decoration:none;">Integración ERP</a>
-                </div>
-            </div>
+            <!-- CONFIGURACIÓN Y SEGURIDAD -->
+<div class="menu-group open">
+    <a href="#" class="menu-header {% if active_tab in ['empresas', 'usuarios', 'correlativos', 'parametros', 'integracion'] %}active{% endif %}" style="text-decoration:none;">
+        <div class="menu-left"><span>1 ─ Configuración y seguridad</span></div>
+        <span class="caret">›</span>
+    </a>
+    <div class="menu-children">
+        <a href="/empresas" class="child-btn {% if active_tab == 'empresas' %}active{% endif %}" style="text-decoration:none;">Empresas</a>
+        <a href="/usuarios" class="child-btn {% if active_tab == 'usuarios' %}active{% endif %}" style="text-decoration:none;">Usuarios y permisos</a>
+        <a href="/correlativos" class="child-btn {% if active_tab == 'correlativos' %}active{% endif %}" style="text-decoration:none;">Correlativos</a>
+        <a href="/parametros" class="child-btn {% if active_tab == 'parametros' %}active{% endif %}" style="text-decoration:none;">Parámetros generales</a>
+        <a href="/integracion" class="child-btn {% if active_tab == 'integracion' %}active{% endif %}" style="text-decoration:none;">Integración ERP</a>
+    </div>
+</div>
 
             <!-- MAESTROS -->
             <div class="menu-group">
@@ -246,15 +247,30 @@
     </div>
 </header>
 
-            <!-- TABS -->
-            <div class="tabs">
-                <a href="/empresas" class="tab-btn {% if active_tab == 'empresas' %}active{% endif %}">Empresas</a>
-                <a href="/usuarios" class="tab-btn {% if active_tab == 'usuarios' %}active{% endif %}">Usuarios y permisos</a>
-                <a href="/correlativos" class="tab-btn {% if active_tab == 'correlativos' %}active{% endif %}">Correlativos</a>
-                <a href="/parametros" class="tab-btn {% if active_tab == 'parametros' %}active{% endif %}">Parámetros</a>
-                <a href="/integracion" class="tab-btn {% if active_tab == 'integracion' %}active{% endif %}">Integración ERP</a>
-            </div>
+           <!-- TABS - SOLO PARA CONFIGURACIÓN -->
+{% if active_tab in ['empresas', 'usuarios', 'correlativos', 'parametros', 'integracion'] %}
+<div class="tabs">
+    <a href="/empresas" class="tab-btn {% if active_tab == 'empresas' %}active{% endif %}">Empresas</a>
+    <a href="/usuarios" class="tab-btn {% if active_tab == 'usuarios' %}active{% endif %}">Usuarios y permisos</a>
+    <a href="/correlativos" class="tab-btn {% if active_tab == 'correlativos' %}active{% endif %}">Correlativos</a>
+    <a href="/parametros" class="tab-btn {% if active_tab == 'parametros' %}active{% endif %}">Parámetros</a>
+    <a href="/integracion" class="tab-btn {% if active_tab == 'integracion' %}active{% endif %}">Integración ERP</a>
+</div>
+{% endif %}
 
+<!-- TABS - SOLO PARA PRODUCTOS -->
+{% if active_tab in ['nuevo', 'base-datos', 'comparativo'] %}
+<div class="tabs">
+    <a href="/productos/nuevo" class="tab-btn {% if active_tab == 'nuevo' %}active{% endif %}">Nuevo producto</a>
+    <a href="/productos/base-datos" class="tab-btn {% if active_tab == 'base-datos' %}active{% endif %}">Base de datos: Producto</a>
+    <a href="/productos/comparativo" class="tab-btn {% if active_tab == 'comparativo' %}active{% endif %}">Comparativo costos</a>
+</div>
+{% endif %}
+
+<!-- TABS - PARA DASHBOARD (sin tabs) -->
+{% if active_tab is none or active_tab == '' %}
+    {# No mostrar tabs en dashboard #}
+{% endif %}
             <!-- CONTENIDO -->
             {% block content %}{% endblock %}
         </div>
