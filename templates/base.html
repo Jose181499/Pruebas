@@ -2754,7 +2754,6 @@ function bdRenderProductos(data) {
     }
     
     tbody.innerHTML = data.map((p, index) => {
-        // Determinar clase de estado
         let estadoClass = 'st-active';
         const estado = (p.estado || 'activo').toLowerCase();
         if (estado === 'inactivo') estadoClass = 'st-inactive';
@@ -2764,8 +2763,6 @@ function bdRenderProductos(data) {
         
         const costo = p.costo_unitario ? parseFloat(p.costo_unitario).toFixed(2) : '0.00';
         const precio = p.precio_unitario ? parseFloat(p.precio_unitario).toFixed(2) : '0.00';
-        
-        // ✅ Usar los nombres correctos de los campos
         const categoria = p.categoria || p.familia || '-';
         const subcategoria = p.subcategoria || p.categoria_derivada || '-';
         
@@ -2786,9 +2783,15 @@ function bdRenderProductos(data) {
             <td class="bd-col-status"><span class="bd-status ${estadoClass}"><span class="bd-dot"></span>${p.estado || 'Activo'}</span></td>
             <td class="bd-col-actions">
                 <div class="row-actions">
-                    <button title="Ver" onclick="verProducto(${p.id})"><i class="bi bi-eye"></i></button>
-                    <button title="Editar" onclick="editarProducto(${p.id})"><i class="bi bi-pencil"></i></button>
-                    <button title="Eliminar" onclick="eliminarProducto(${p.id})"><i class="bi bi-trash"></i></button>
+                    <button class="btn-action" onclick="verProducto(${p.id})" title="Ver detalles">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                    <button class="btn-action" onclick="editarProducto(${p.id})" title="Editar producto">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn-action" onclick="eliminarProducto(${p.id})" title="Eliminar producto">
+                        <i class="bi bi-trash"></i>
+                    </button>
                 </div>
             </td>
             <td class="bd-col-prov-pres">${p.presentacion_proveedor || '-'}</td>
@@ -2808,18 +2811,77 @@ function bdRenderProductos(data) {
     if (countEl) countEl.textContent = `Mostrando ${data.length} producto${data.length !== 1 ? 's' : ''}`;
 }
 
+// ============================================================
+// FUNCIONES DE ACCIONES PARA PRODUCTOS - MEJORADAS
+// ============================================================
 
-// Funciones de acciones para productos
+// Ver producto - Muestra los detalles en una notificación
 function verProducto(id) {
-    mostrarNotificacion('info', 'Ver producto', `Mostrando detalles del producto ID: ${id}`);
+    if (!id) {
+        mostrarNotificacion('error', '❌ Error', 'ID de producto no válido');
+        return;
+    }
+    
+    // Buscar el producto en los datos cargados
+    const producto = window.bdProductos.find(p => p.id == id);
+    if (producto) {
+        const mensaje = `
+            📦 ${producto.codigo || 'Sin código'}<br>
+            📝 ${producto.descripcion || 'Sin descripción'}<br>
+            🏷️ Marca: ${producto.marca || 'N/A'}<br>
+            📐 Modelo: ${producto.modelo || 'N/A'}<br>
+            💰 Precio: S/ ${parseFloat(producto.precio_unitario || 0).toFixed(2)}<br>
+            📊 Stock: ${producto.stock || 0}
+        `;
+        mostrarNotificacion('info', '🔍 Detalle del producto', mensaje);
+    } else {
+        // Si no está en los datos cargados, obtenerlo de la API
+        fetch(`/productos/api/productos/${id}`)
+            .then(r => r.json())
+            .then(result => {
+                if (result.success) {
+                    const p = result.data;
+                    const mensaje = `
+                        📦 ${p.codigo || 'Sin código'}<br>
+                        📝 ${p.descripcion || 'Sin descripción'}<br>
+                        🏷️ Marca: ${p.marca || 'N/A'}<br>
+                        📐 Modelo: ${p.modelo || 'N/A'}<br>
+                        💰 Precio: S/ ${parseFloat(p.precio_unitario || 0).toFixed(2)}<br>
+                        📊 Stock: ${p.stock || 0}
+                    `;
+                    mostrarNotificacion('info', '🔍 Detalle del producto', mensaje);
+                } else {
+                    mostrarNotificacion('error', '❌ Error', 'Producto no encontrado');
+                }
+            })
+            .catch(() => mostrarNotificacion('error', '❌ Error', 'Error al obtener el producto'));
+    }
 }
 
+// Editar producto - Redirige a la página de edición
 function editarProducto(id) {
+    if (!id) {
+        mostrarNotificacion('error', '❌ Error', 'ID de producto no válido');
+        return;
+    }
+    // Redirigir a la página de edición (si existe)
     window.location.href = `/productos/editar/${id}`;
 }
 
+// Eliminar producto - Con confirmación
 async function eliminarProducto(id) {
-    if (!confirm('¿Estás seguro de eliminar este producto?')) return;
+    if (!id) {
+        mostrarNotificacion('error', '❌ Error', 'ID de producto no válido');
+        return;
+    }
+    
+    // Buscar el producto para mostrar su nombre
+    const producto = window.bdProductos.find(p => p.id == id);
+    const nombre = producto ? producto.descripcion || producto.codigo : 'este producto';
+    
+    if (!confirm(`¿Estás seguro de eliminar "${nombre}"? Esta acción no se puede deshacer.`)) {
+        return;
+    }
     
     try {
         const response = await fetch(`/productos/api/productos/${id}`, {
@@ -2828,8 +2890,9 @@ async function eliminarProducto(id) {
         const result = await response.json();
         
         if (result.success) {
-            mostrarNotificacion('success', '✅ Eliminado', 'Producto eliminado exitosamente');
-            cargarProductos(); // Recargar la tabla
+            mostrarNotificacion('success', '✅ Eliminado', `El producto "${nombre}" ha sido eliminado exitosamente.`);
+            // Recargar la tabla
+            cargarProductos();
         } else {
             mostrarNotificacion('error', '❌ Error', result.error || 'Error al eliminar el producto');
         }
@@ -2962,6 +3025,9 @@ window.bdLimpiarFiltros = bdLimpiarFiltros;
 window.bdExportarExcel = bdExportarExcel;
 window.cargarProductos = cargarProductos;
 window.bdRenderProductos = bdRenderProductos;
+window.verProducto = verProducto;
+window.editarProducto = editarProducto;
+window.eliminarProducto = eliminarProducto;
 window.verProducto = verProducto;
 window.editarProducto = editarProducto;
 window.eliminarProducto = eliminarProducto;
