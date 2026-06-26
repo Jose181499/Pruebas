@@ -92,7 +92,14 @@ document.addEventListener('DOMContentLoaded', function() {
     cargarProveedores();
     cargarComparativo();
 
-       setTimeout(cargarPrimerProducto, 1500);
+      setTimeout(function() {
+        if (productosData && productosData.length > 0) {
+            console.log('🔄 Cargando primer producto automáticamente...');
+            cargarPrimerProducto();
+        } else {
+            console.warn('⚠️ No hay productos para cargar automáticamente');
+        }
+    }, 1500);
 });
 
 // ============================================================
@@ -559,30 +566,193 @@ function ccAgregarProveedor() {
     // Aquí puedes abrir un modal para agregar un nuevo proveedor
 }
 
+
+// ============================================================
+// 7. FUNCIONES PARA ACCIONES DE BOTONES (CORREGIDAS)
+// ============================================================
+
+function ccNuevoComparativo() {
+    console.log('🔄 Iniciando nuevo comparativo...');
+    
+    // 1. Limpiar selección
+    productoSeleccionado = null;
+    document.getElementById('ccProductSearch').value = '';
+    
+    // 2. Resetear información del producto a valores por defecto
+    const cells = document.querySelectorAll('.cc-info-value');
+    if (cells.length >= 7) {
+        cells[0].textContent = '---';
+        cells[1].textContent = 'Selecciona un producto';
+        cells[2].textContent = '---';
+        cells[3].textContent = '---';
+        cells[4].textContent = '---';
+        cells[5].textContent = '---';
+        cells[6].textContent = 'S/ 0.00';
+    }
+    
+    // 3. Resetear foto
+    const photoElement = document.querySelector('.cc-product-photo');
+    if (photoElement) {
+        photoElement.textContent = '📦';
+        photoElement.style.fontSize = '';
+        photoElement.style.fontWeight = '';
+        photoElement.style.color = '';
+    }
+    
+    // 4. Recargar TODOS los datos del comparativo (sin filtros)
+    document.getElementById('ccTbody').innerHTML = `
+        <tr>
+            <td colspan="19" class="text-center" style="padding:40px;">
+                <i class="bi bi-hourglass-split"></i> Cargando todos los datos...
+            </td>
+        </tr>
+    `;
+    
+    // 5. Recargar datos completos
+    fetch('/productos/api/comparativo-costos')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                comparativoData = data.data;
+                actualizarTabla(comparativoData);
+                actualizarResumen(comparativoData);
+                console.log('✅ Nuevo comparativo cargado con', comparativoData.length, 'registros');
+                
+                // Mostrar notificación
+                mostrarNotificacion('success', '✅ Nuevo comparativo', 
+                    `Mostrando ${comparativoData.length} productos`);
+            } else {
+                mostrarError('Error cargando datos del comparativo');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Si la API falla, usar datos de ejemplo
+            cargarDatosEjemplo();
+            mostrarNotificacion('warning', '⚠️ Datos de ejemplo', 
+                'Usando datos de ejemplo porque la API no respondió');
+        });
+}
+
 function ccCalcularGanador() {
-    // Encontrar el proveedor con mejor relación costo-beneficio
-    if (!comparativoData || !comparativoData.length) {
-        alert('No hay datos para calcular el ganador');
+    console.log('🏆 Calculando ganador...');
+    
+    // Usar TODOS los datos del comparativo (no solo los filtrados)
+    let dataParaAnalizar = comparativoData;
+    
+    // Si hay un producto seleccionado, mostrar solo ese
+    if (productoSeleccionado) {
+        const filtrados = comparativoData.filter(c => c.producto_id === productoSeleccionado.id);
+        if (filtrados.length > 0) {
+            dataParaAnalizar = filtrados;
+            console.log('📊 Analizando producto seleccionado:', productoSeleccionado.codigo);
+        }
+    }
+    
+    if (!dataParaAnalizar || !dataParaAnalizar.length) {
+        alert('⚠️ No hay datos para calcular el ganador. Carga datos primero.');
         return;
     }
-
-    // Buscar el producto con mejor margen
-    const mejor = comparativoData.reduce((a, b) => 
-        (a.margen_actual_porcentaje || 0) > (b.margen_actual_porcentaje || 0) ? a : b
-    );
-
-    // Mostrar resultado con SweetAlert (opcional)
-    // Por ahora, solo mostramos en consola
-    console.log('🏆 Ganador:', mejor);
     
-    // Mostrar en el resumen
+    console.log('📊 Analizando', dataParaAnalizar.length, 'registros');
+    
+    // 1. Encontrar el producto con mejor margen
+    const mejor = dataParaAnalizar.reduce((a, b) => {
+        const margenA = parseFloat(a.margen_actual_porcentaje) || 0;
+        const margenB = parseFloat(b.margen_actual_porcentaje) || 0;
+        return margenA > margenB ? a : b;
+    });
+    
+    // 2. Encontrar el producto con menor costo
+    const menorCosto = dataParaAnalizar.reduce((a, b) => {
+        const costoA = parseFloat(a.costo_actual) || Infinity;
+        const costoB = parseFloat(b.costo_actual) || Infinity;
+        return costoA < costoB ? a : b;
+    });
+    
+    // 3. Encontrar el producto con mejor relación costo-beneficio
+    const mejorRelacion = dataParaAnalizar.reduce((a, b) => {
+        const ratioA = (parseFloat(a.precio_actual) || 0) / (parseFloat(a.costo_actual) || 1);
+        const ratioB = (parseFloat(b.precio_actual) || 0) / (parseFloat(b.costo_actual) || 1);
+        return ratioA > ratioB ? a : b;
+    });
+    
+    // 4. Mostrar resultados en el resumen
     document.getElementById('ccProveedorGanador').textContent = 
         `${mejor.marca || 'Ganador'} (${mejor.codigo})`;
     document.getElementById('ccMejorCosto').textContent = 
-        `S/ ${(mejor.costo_actual || 0).toFixed(2)}`;
-
-    alert(`🏆 El mejor producto es:\n${mejor.codigo} - ${mejor.nombre_producto}\nMargen: ${(mejor.margen_actual_porcentaje || 0).toFixed(1)}%`);
+        `S/ ${(parseFloat(menorCosto.costo_actual) || 0).toFixed(2)}`;
+    
+    // 5. Mostrar mensaje detallado
+    const mensaje = `
+        🏆 **RESULTADOS DEL COMPARATIVO**
+        
+        📊 Mejor margen:
+        • Producto: ${mejor.codigo} - ${mejor.nombre_producto || mejor.descripcion || ''}
+        • Marca: ${mejor.marca || 'N/A'}
+        • Margen: ${(parseFloat(mejor.margen_actual_porcentaje) || 0).toFixed(1)}%
+        • Precio: S/ ${(parseFloat(mejor.precio_actual) || 0).toFixed(2)}
+        • Costo: S/ ${(parseFloat(mejor.costo_actual) || 0).toFixed(2)}
+        
+        💲 Menor costo:
+        • Producto: ${menorCosto.codigo} - ${menorCosto.nombre_producto || menorCosto.descripcion || ''}
+        • Costo: S/ ${(parseFloat(menorCosto.costo_actual) || 0).toFixed(2)}
+        
+        ⭐ Mejor relación costo/beneficio:
+        • Producto: ${mejorRelacion.codigo} - ${mejorRelacion.nombre_producto || mejorRelacion.descripcion || ''}
+        • Relación: ${((parseFloat(mejorRelacion.precio_actual) || 0) / (parseFloat(mejorRelacion.costo_actual) || 1)).toFixed(2)}x
+    `;
+    
+    // Mostrar en consola
+    console.log('🏆 Ganador:', mejor);
+    console.log('💲 Menor costo:', menorCosto);
+    console.log('⭐ Mejor relación:', mejorRelacion);
+    
+    // Mostrar alerta con los resultados
+    alert(mensaje);
+    
+    // Resaltar el ganador en la tabla
+    resaltarGanador(mejor.producto_id);
 }
+
+// ============================================================
+// FUNCIÓN PARA RESALTAR EL GANADOR EN LA TABLA
+// ============================================================
+function resaltarGanador(productoId) {
+    const rows = document.querySelectorAll('#ccTbody tr');
+    rows.forEach(row => {
+        // Remover resaltado anterior
+        row.style.background = '';
+        row.style.borderLeft = '';
+        
+        // Verificar si esta fila es el ganador
+        const codigoCelda = row.querySelector('.cc-col-code');
+        if (codigoCelda) {
+            const producto = comparativoData.find(p => p.producto_id === productoId);
+            if (producto && codigoCelda.textContent.trim() === producto.codigo) {
+                row.style.background = '#e8f5e9';
+                row.style.borderLeft = '4px solid #4caf50';
+                console.log('✅ Ganador resaltado en la tabla');
+            }
+        }
+    });
+}
+
+// ============================================================
+// FUNCIÓN PARA MOSTRAR NOTIFICACIONES (SI NO EXISTE)
+// ============================================================
+function mostrarNotificacion(tipo, titulo, mensaje) {
+    // Verificar si existe la función global
+    if (typeof window.mostrarNotificacion === 'function') {
+        window.mostrarNotificacion(tipo, titulo, mensaje);
+        return;
+    }
+    
+    // Fallback: usar alert
+    console.log(`[${tipo}] ${titulo}: ${mensaje}`);
+    alert(`${titulo}\n${mensaje}`);
+}
+
 
 function ccExportarCSV() {
     if (!comparativoData || !comparativoData.length) {
@@ -604,24 +774,6 @@ function ccExportarCSV() {
     link.click();
 }
 
-function ccNuevoComparativo() {
-    // Limpiar selección y mostrar todos los productos
-    productoSeleccionado = null;
-    document.getElementById('ccProductSearch').value = '';
-    cargarComparativo();
-    
-    // Resetear información del producto
-    const cells = document.querySelectorAll('.cc-info-value');
-    if (cells.length >= 7) {
-        cells[0].textContent = '---';
-        cells[1].textContent = '---';
-        cells[2].textContent = '---';
-        cells[3].textContent = '---';
-        cells[4].textContent = '---';
-        cells[5].textContent = '---';
-        cells[6].textContent = 'S/ 0.00';
-    }
-}
 
 // ============================================================
 // 8. FUNCIÓN PARA MOSTRAR ERRORES
