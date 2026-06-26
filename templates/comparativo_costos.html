@@ -75,6 +75,28 @@
     <i class="bi bi-info-circle-fill"></i>
     El sistema mantiene el historial de cotizaciones por proveedor, incluyendo costo y fecha/hora, para que puedas recotizar más rápido en el futuro.
 </div>
+
+<!-- ============================================================ -->
+<!-- MODAL DE RESULTADOS DEL GANADOR -->
+<!-- ============================================================ -->
+<div class="modal-ganador" id="modalGanador">
+    <div class="modal-ganador-content">
+        <div class="modal-ganador-header">
+            <div class="modal-ganador-icon">🏆</div>
+            <h2>¡Ganador del Comparativo!</h2>
+            <button class="modal-ganador-close" onclick="cerrarModalGanador()">&times;</button>
+        </div>
+        <div class="modal-ganador-body" id="modalGanadorBody">
+            <!-- Contenido dinámico -->
+        </div>
+        <div class="modal-ganador-footer">
+            <button class="btn primary" onclick="cerrarModalGanador()">
+                <i class="bi bi-check-circle"></i> Entendido
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
 // ============================================================
 // VARIABLES GLOBALES
@@ -287,10 +309,33 @@ function resaltarItem(items, index) {
         item.style.background = i === index ? '#e3f0ff' : '';
     });
 }
-
 function seleccionarProducto(productoId) {
-    const producto = productosData.find(p => p.id === productoId);
-    if (!producto) return;
+    console.log('🔍 Seleccionando producto por ID:', productoId);
+    
+    // Buscar en productosData
+    let producto = productosData.find(p => p.id === productoId);
+    
+    // Si no está en productosData, buscar en comparativoData
+    if (!producto) {
+        const item = comparativoData.find(c => c.producto_id === productoId);
+        if (item) {
+            producto = {
+                id: item.producto_id,
+                codigo: item.codigo,
+                descripcion: item.nombre_producto || item.descripcion,
+                modelo: item.modelo,
+                marca: item.marca,
+                familia: item.categoria,
+                transporte: item.transporte,
+                precio_unitario: item.precio_actual
+            };
+        }
+    }
+    
+    if (!producto) {
+        console.error('❌ Producto no encontrado:', productoId);
+        return;
+    }
     
     productoSeleccionado = producto;
     const input = document.getElementById('ccProductSearch');
@@ -308,13 +353,14 @@ function seleccionarProducto(productoId) {
         // Si no hay datos del producto, mostrar mensaje
         document.getElementById('ccTbody').innerHTML = `
             <tr>
-                <td colspan="11" class="text-center" style="padding:40px;color:#6c757d;">
+                <td colspan="19" class="text-center" style="padding:40px;color:#6c757d;">
                     <i class="bi bi-info-circle"></i> No hay datos de costos para este producto
                 </td>
             </tr>
         `;
     }
 }
+
 function mostrarProductoSeleccionado(producto) {
     console.log('📝 Mostrando producto seleccionado:', producto);
     
@@ -367,8 +413,6 @@ function safeNumber(value, defaultValue = 0) {
     return isNaN(num) ? defaultValue : num;
 }
 // ============================================================
-// 5. ACTUALIZAR TABLA (CORREGIDO)
-// ============================================================
 function actualizarTabla(data) {
     const tbody = document.getElementById('ccTbody');
     if (!tbody) return;
@@ -397,7 +441,9 @@ function actualizarTabla(data) {
                            margen >= 30 ? 'margen-medium' : 'margen-low';
         
         html += `
-            <tr>
+            <tr onclick="seleccionarProductoDesdeTabla('${item.codigo}')" style="cursor:pointer;" 
+                onmouseover="this.style.backgroundColor='#f0f7ff'" 
+                onmouseout="this.style.backgroundColor=''">
                 <td class="cc-col-item">${index + 1}</td>
                 <td class="cc-col-code"><strong>${item.codigo || '---'}</strong></td>
                 <td class="cc-col-desc">${item.nombre_producto || item.descripcion || '---'}</td>
@@ -435,8 +481,6 @@ function actualizarTabla(data) {
         countElement.textContent = `${data.length} registros`;
     }
 }
-
-
 // ============================================================
 // 11. CARGAR PRIMER PRODUCTO AUTOMÁTICAMENTE
 // ============================================================
@@ -650,7 +694,7 @@ function ccCalcularGanador() {
     }
     
     if (!dataParaAnalizar || !dataParaAnalizar.length) {
-        alert('⚠️ No hay datos para calcular el ganador. Carga datos primero.');
+        mostrarNotificacion('warning', '⚠️ Sin datos', 'No hay datos para calcular el ganador. Carga datos primero.');
         return;
     }
     
@@ -683,37 +727,125 @@ function ccCalcularGanador() {
     document.getElementById('ccMejorCosto').textContent = 
         `S/ ${(parseFloat(menorCosto.costo_actual) || 0).toFixed(2)}`;
     
-    // 5. Mostrar mensaje detallado
-    const mensaje = `
-        🏆 **RESULTADOS DEL COMPARATIVO**
-        
-        📊 Mejor margen:
-        • Producto: ${mejor.codigo} - ${mejor.nombre_producto || mejor.descripcion || ''}
-        • Marca: ${mejor.marca || 'N/A'}
-        • Margen: ${(parseFloat(mejor.margen_actual_porcentaje) || 0).toFixed(1)}%
-        • Precio: S/ ${(parseFloat(mejor.precio_actual) || 0).toFixed(2)}
-        • Costo: S/ ${(parseFloat(mejor.costo_actual) || 0).toFixed(2)}
-        
-        💲 Menor costo:
-        • Producto: ${menorCosto.codigo} - ${menorCosto.nombre_producto || menorCosto.descripcion || ''}
-        • Costo: S/ ${(parseFloat(menorCosto.costo_actual) || 0).toFixed(2)}
-        
-        ⭐ Mejor relación costo/beneficio:
-        • Producto: ${mejorRelacion.codigo} - ${mejorRelacion.nombre_producto || mejorRelacion.descripcion || ''}
-        • Relación: ${((parseFloat(mejorRelacion.precio_actual) || 0) / (parseFloat(mejorRelacion.costo_actual) || 1)).toFixed(2)}x
-    `;
-    
-    // Mostrar en consola
-    console.log('🏆 Ganador:', mejor);
-    console.log('💲 Menor costo:', menorCosto);
-    console.log('⭐ Mejor relación:', mejorRelacion);
-    
-    // Mostrar alerta con los resultados
-    alert(mensaje);
+    // 5. Mostrar modal con resultados
+    mostrarModalGanador(mejor, menorCosto, mejorRelacion);
     
     // Resaltar el ganador en la tabla
     resaltarGanador(mejor.producto_id);
 }
+
+// ============================================================
+// FUNCIÓN PARA MOSTRAR MODAL DEL GANADOR
+// ============================================================
+function mostrarModalGanador(mejor, menorCosto, mejorRelacion) {
+    const modal = document.getElementById('modalGanador');
+    const body = document.getElementById('modalGanadorBody');
+    
+    if (!modal || !body) return;
+    
+    const margen = (parseFloat(mejor.margen_actual_porcentaje) || 0).toFixed(1);
+    const precioMejor = (parseFloat(mejor.precio_actual) || 0).toFixed(2);
+    const costoMejor = (parseFloat(mejor.costo_actual) || 0).toFixed(2);
+    const costoMenor = (parseFloat(menorCosto.costo_actual) || 0).toFixed(2);
+    const ratio = ((parseFloat(mejorRelacion.precio_actual) || 0) / (parseFloat(mejorRelacion.costo_actual) || 1)).toFixed(2);
+    
+    body.innerHTML = `
+        <!-- Mejor margen -->
+        <div class="ganador-categoria">
+            <div class="ganador-label">
+                <span>📊 Mejor Margen</span>
+                <span class="badge-cat margen">⭐ TOP</span>
+            </div>
+            <div class="ganador-item" style="border-left-color: #198754;">
+                <div>
+                    <div class="ganador-nombre">
+                        ${mejor.codigo} - ${mejor.nombre_producto || mejor.descripcion || 'Sin nombre'}
+                        <small>${mejor.marca || ''}</small>
+                    </div>
+                    <div class="ganador-detalle">
+                        Precio: S/ ${precioMejor} | Costo: S/ ${costoMejor}
+                    </div>
+                </div>
+                <div class="ganador-valor green">${margen}%</div>
+            </div>
+        </div>
+        
+        <div class="ganador-divider"></div>
+        
+        <!-- Menor costo -->
+        <div class="ganador-categoria">
+            <div class="ganador-label">
+                <span>💲 Menor Costo</span>
+                <span class="badge-cat costo">💰 AHORRO</span>
+            </div>
+            <div class="ganador-item" style="border-left-color: #0d6efd;">
+                <div>
+                    <div class="ganador-nombre">
+                        ${menorCosto.codigo} - ${menorCosto.nombre_producto || menorCosto.descripcion || 'Sin nombre'}
+                        <small>${menorCosto.marca || ''}</small>
+                    </div>
+                    <div class="ganador-detalle">
+                        Precio: S/ ${(parseFloat(menorCosto.precio_actual) || 0).toFixed(2)}
+                    </div>
+                </div>
+                <div class="ganador-valor">S/ ${costoMenor}</div>
+            </div>
+        </div>
+        
+        <div class="ganador-divider"></div>
+        
+        <!-- Mejor relación -->
+        <div class="ganador-categoria">
+            <div class="ganador-label">
+                <span>⭐ Mejor Relación Costo/Beneficio</span>
+                <span class="badge-cat relacion">🏅 ÓPTIMO</span>
+            </div>
+            <div class="ganador-item" style="border-left-color: #f59e0b;">
+                <div>
+                    <div class="ganador-nombre">
+                        ${mejorRelacion.codigo} - ${mejorRelacion.nombre_producto || mejorRelacion.descripcion || 'Sin nombre'}
+                        <small>${mejorRelacion.marca || ''}</small>
+                    </div>
+                    <div class="ganador-detalle">
+                        Precio: S/ ${(parseFloat(mejorRelacion.precio_actual) || 0).toFixed(2)} | Costo: S/ ${(parseFloat(mejorRelacion.costo_actual) || 0).toFixed(2)}
+                    </div>
+                </div>
+                <div class="ganador-valor gold">${ratio}x</div>
+            </div>
+        </div>
+    `;
+    
+    modal.classList.add('active');
+}
+
+// ============================================================
+// FUNCIÓN PARA CERRAR MODAL DEL GANADOR
+// ============================================================
+function cerrarModalGanador() {
+    const modal = document.getElementById('modalGanador');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+// Cerrar modal con tecla ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        cerrarModalGanador();
+    }
+});
+
+// Cerrar modal al hacer clic fuera del contenido
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('modalGanador');
+    if (modal && modal.classList.contains('active')) {
+        const content = modal.querySelector('.modal-ganador-content');
+        if (content && !content.contains(e.target)) {
+            cerrarModalGanador();
+        }
+    }
+});
+
 
 // ============================================================
 // FUNCIÓN PARA RESALTAR EL GANADOR EN LA TABLA
@@ -774,7 +906,40 @@ function ccExportarCSV() {
     link.click();
 }
 
-
+// ============================================================
+// 12. SELECCIONAR PRODUCTO DESDE LA TABLA
+// ============================================================
+function seleccionarProductoDesdeTabla(codigoProducto) {
+    console.log('🔍 Seleccionando producto desde tabla:', codigoProducto);
+    
+    // Buscar el producto en productosData
+    const producto = productosData.find(p => p.codigo === codigoProducto);
+    
+    if (producto) {
+        console.log('✅ Producto encontrado:', producto.codigo, producto.descripcion);
+        seleccionarProducto(producto.id);
+    } else {
+        console.warn('⚠️ Producto no encontrado en productosData:', codigoProducto);
+        // Intentar buscar en comparativoData
+        const item = comparativoData.find(c => c.codigo === codigoProducto);
+        if (item) {
+            console.log('✅ Producto encontrado en comparativoData:', item.codigo);
+            // Crear un objeto producto temporal
+            const productoTemp = {
+                id: item.producto_id,
+                codigo: item.codigo,
+                descripcion: item.nombre_producto || item.descripcion,
+                modelo: item.modelo,
+                marca: item.marca,
+                familia: item.categoria,
+                transporte: item.transporte,
+                precio_unitario: item.precio_actual
+            };
+            productoSeleccionado = productoTemp;
+            mostrarProductoSeleccionado(productoTemp);
+        }
+    }
+}
 // ============================================================
 // 8. FUNCIÓN PARA MOSTRAR ERRORES
 // ============================================================
