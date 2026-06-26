@@ -1392,6 +1392,8 @@ window.limpiarFormulario = function() {
 // ============================================================
 // GUARDAR PRODUCTO - Event Listener
 // ============================================================
+// GUARDAR PRODUCTO - Event Listener (VERSIÓN MEJORADA)
+// ============================================================
 
 document.addEventListener('DOMContentLoaded', function() {
     const btnGuardar = document.getElementById('btnGuardar');
@@ -1399,29 +1401,81 @@ document.addEventListener('DOMContentLoaded', function() {
         btnGuardar.addEventListener('click', async function(e) {
             e.preventDefault();
             
+            // ✅ LIMPIAR NOTIFICACIONES ANTERIORES
+            document.querySelectorAll('.notificacion').forEach(el => el.remove());
+            
             // Validar campos obligatorios
-            const required = ['nombreProducto', 'modeloProducto', 'marcaProducto', 'unidadMedida', 'categoriaProducto', 'transporteReferencial'];
+            const required = [
+                { id: 'nombreProducto', label: 'Nombre del producto' },
+                { id: 'modeloProducto', label: 'Modelo' },
+                { id: 'marcaProducto', label: 'Marca' },
+                { id: 'unidadMedida', label: 'Unidad de medida' },
+                { id: 'categoriaProducto', label: 'Categoría' },
+                { id: 'transporteReferencial', label: 'Transporte referencial' }
+            ];
+            
             let valid = true;
             let errors = [];
+            let firstInvalid = null;
             
-            required.forEach(id => {
+            required.forEach(({id, label}) => {
                 const el = document.getElementById(id);
                 if (!el || !el.value || el.value.trim() === '') {
                     valid = false;
-                    const label = el?.closest('.field')?.querySelector('label')?.textContent || id;
                     errors.push(label);
+                    if (!firstInvalid) {
+                        firstInvalid = el;
+                    }
+                    // ✅ Resaltar el campo en rojo
+                    if (el) {
+                        el.style.borderColor = '#DC2626';
+                        el.style.boxShadow = '0 0 0 3px rgba(220, 38, 38, 0.2)';
+                    }
+                } else {
+                    // ✅ Quitar resaltado si está correcto
+                    if (el) {
+                        el.style.borderColor = '';
+                        el.style.boxShadow = '';
+                    }
                 }
             });
             
             if (!valid) {
-                mostrarNotificacion('error', 'Campos requeridos', 'Faltan completar: ' + errors.join(', '));
+                // ✅ Mostrar notificación más visible
+                const mensaje = '❌ Faltan completar: ' + errors.join(', ');
+                console.log('🔴 Validación fallida:', mensaje);
+                
+                // Usar toast para mayor visibilidad
+                if (typeof toast === 'function') {
+                    toast('❌ ' + mensaje);
+                }
+                
+                // También mostrar notificación
+                if (typeof mostrarNotificacion === 'function') {
+                    mostrarNotificacion('error', '❌ Campos requeridos', 'Faltan completar: ' + errors.join(', '));
+                } else {
+                    alert('❌ Faltan completar: ' + errors.join(', '));
+                }
+                
+                // ✅ Enfocar el primer campo inválido
+                if (firstInvalid) {
+                    firstInvalid.focus();
+                    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
                 return;
             }
             
             // Validar operaciones
             const ops = document.querySelectorAll('input[name="operation"]:checked');
             if (ops.length === 0) {
-                mostrarNotificacion('error', 'Tipo de operación', 'Seleccione al menos un tipo de operación.');
+                if (typeof toast === 'function') {
+                    toast('❌ Seleccione al menos un tipo de operación.');
+                }
+                if (typeof mostrarNotificacion === 'function') {
+                    mostrarNotificacion('error', '❌ Tipo de operación', 'Seleccione al menos un tipo de operación.');
+                } else {
+                    alert('❌ Seleccione al menos un tipo de operación.');
+                }
                 return;
             }
             
@@ -1451,47 +1505,76 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Validar que el código no esté vacío
             if (!data.codigo) {
-                mostrarNotificacion('error', 'Error', 'No se pudo generar el código del producto.');
+                if (typeof toast === 'function') {
+                    toast('❌ No se pudo generar el código del producto.');
+                }
                 return;
             }
             
             try {
-    mostrarNotificacion('info', 'Guardando...', 'Por favor espera.');
-    
-    const response = await fetch('/productos/api/productos', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-    });
-    
-    const result = await response.json();
-    
-    if (result.success) {
-        // ✅ Mostrar modal de éxito en lugar de notificación
-        mostrarModalExito(result.data.codigo);
-        
-        // Recargar la tabla si estamos en base-datos
-        if (typeof bdRenderProductos === 'function') {
-            bdRenderProductos(window.bdProductos);
-        }
-    } else {
-        mostrarNotificacion('error', '❌ Error', result.error || 'Error al guardar el producto');
-    }
-} catch (error) {
-    console.error('Error:', error);
-    mostrarNotificacion('error', '❌ Error', 'Error al comunicarse con el servidor');
-}
+                // Mostrar notificación de guardando
+                if (typeof mostrarNotificacion === 'function') {
+                    mostrarNotificacion('info', '⏳ Guardando...', 'Por favor espera.');
+                }
+                
+                const response = await fetch('/productos/api/productos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // ✅ Mostrar modal de éxito
+                    mostrarModalExito(result.data.codigo);
+                    
+                    // Recargar la tabla si estamos en base-datos
+                    if (typeof bdRenderProductos === 'function') {
+                        bdRenderProductos(window.bdProductos);
+                    }
+                } else {
+                    // ✅ Mostrar error del servidor
+                    const errorMsg = result.error || 'Error al guardar el producto';
+                    if (typeof toast === 'function') {
+                        toast('❌ ' + errorMsg);
+                    }
+                    if (typeof mostrarNotificacion === 'function') {
+                        mostrarNotificacion('error', '❌ Error', errorMsg);
+                    } else {
+                        alert('❌ ' + errorMsg);
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                if (typeof toast === 'function') {
+                    toast('❌ Error al comunicarse con el servidor');
+                }
+                if (typeof mostrarNotificacion === 'function') {
+                    mostrarNotificacion('error', '❌ Error', 'Error al comunicarse con el servidor');
+                } else {
+                    alert('❌ Error al comunicarse con el servidor');
+                }
+            }
         });
     }
     
-    // Inicializar código al cargar la página si estamos en nuevo producto
-    if (window.location.pathname.includes('/productos/nuevo')) {
-        generarCodigoProducto();
-    }
+    // ✅ Limpiar resaltado de campos al hacer clic
+    document.querySelectorAll('.field input, .field select').forEach(el => {
+        el.addEventListener('click', function() {
+            this.style.borderColor = '';
+            this.style.boxShadow = '';
+        });
+        el.addEventListener('change', function() {
+            if (this.value && this.value.trim() !== '') {
+                this.style.borderColor = '';
+                this.style.boxShadow = '';
+            }
+        });
+    });
 });
-
 // ============================================================
 // FUNCIONES PARA UPLOAD DE FOTO
 // ============================================================
@@ -2716,6 +2799,78 @@ function bdLimpiarFiltros() {
 function bdExportarExcel() {
     mostrarNotificacion('success', 'Exportando...', 'El archivo Excel se está generando.');
 }
+
+// ============================================================
+// CARGA AUTOMÁTICA DE PRODUCTOS EN BASE DE DATOS
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Si estamos en la página de base de datos
+    if (window.location.pathname.includes('/productos/base-datos')) {
+        console.log('🔄 Cargando productos automáticamente...');
+        
+        // Esperar a que el DOM esté completamente listo
+        setTimeout(function() {
+            if (typeof cargarProductos === 'function') {
+                cargarProductos();
+            } else {
+                console.warn('⚠️ cargarProductos no está definida, usando fallback...');
+                // Fallback: cargar directamente
+                fetch('/productos/api/productos')
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            const tbody = document.getElementById('bdProductTableBody');
+                            if (tbody) {
+                                let html = '';
+                                data.data.forEach((p, i) => {
+                                    const estadoClass = p.estado === 'inactivo' ? 'st-inactive' : 
+                                                      p.estado === 'bloqueado' ? 'st-blocked' : 'st-active';
+                                    html += `<tr>
+                                        <td class="bd-col-item" style="text-align:center">${i + 1}</td>
+                                        <td class="bd-col-code"><span class="bd-t-code">${p.codigo || '-'}</span></td>
+                                        <td class="bd-col-desc">${p.descripcion || '-'}</td>
+                                        <td class="bd-col-model">${p.modelo || '-'}</td>
+                                        <td class="bd-col-brand">${p.marca || '-'}</td>
+                                        <td class="bd-col-cat">${p.categoria || p.familia || '-'}</td>
+                                        <td class="bd-col-subcat">${p.subcategoria || p.categoria_derivada || '-'}</td>
+                                        <td class="bd-col-weight">${p.peso || '0'}</td>
+                                        <td class="bd-col-transport">${p.transporte || '-'}</td>
+                                        <td class="bd-col-cost" style="font-weight:850">S/ ${parseFloat(p.costo_unitario || 0).toFixed(2)}</td>
+                                        <td class="bd-col-sale" style="color:var(--empresa);font-weight:900">S/ ${parseFloat(p.precio_unitario || 0).toFixed(2)}</td>
+                                        <td class="bd-col-obs" style="color:var(--muted)">${p.observaciones || '-'}</td>
+                                        <td class="bd-col-status"><span class="bd-status ${estadoClass}"><span class="bd-dot"></span>${p.estado || 'Activo'}</span></td>
+                                        <td class="bd-col-actions">
+                                            <div class="row-actions">
+                                                <button title="Ver" onclick="verProducto(${p.id})"><i class="bi bi-eye"></i></button>
+                                                <button title="Editar" onclick="editarProducto(${p.id})"><i class="bi bi-pencil"></i></button>
+                                                <button title="Eliminar" onclick="eliminarProducto(${p.id})"><i class="bi bi-trash"></i></button>
+                                            </div>
+                                        </td>
+                                        <td class="bd-col-prov-pres">${p.presentacion_proveedor || '-'}</td>
+                                        <td class="bd-col-sale-pres">${p.presentacion_venta || '-'}</td>
+                                        <td class="bd-col-min-sale">${p.venta_minima || '1'}</td>
+                                        <td class="bd-col-barras">${p.codigo_barras || '-'}</td>
+                                        <td class="bd-col-volumen">${p.volumen || '0'}</td>
+                                        <td class="bd-col-origen">${p.origen || '-'}</td>
+                                        <td class="bd-col-tiempo">${p.tiempo_entrega || '-'}</td>
+                                        <td class="bd-col-abast">${p.abastecimiento || '-'}</td>
+                                        <td class="bd-col-stock-min">${p.stock_minimo || '0'}</td>
+                                        <td class="bd-col-desc-larga" style="color:var(--muted)">${p.descripcion_larga || '-'}</td>
+                                    </tr>`;
+                                });
+                                tbody.innerHTML = html;
+                                const countEl = document.getElementById('bdCountText');
+                                if (countEl) countEl.textContent = `Mostrando ${data.data.length} productos`;
+                                console.log('✅ Productos cargados con fallback');
+                            }
+                        }
+                    })
+                    .catch(e => console.error('❌ Error en fallback:', e));
+            }
+        }, 300);
+    }
+});
 
 // Asignar funciones a window para que estén disponibles globalmente
 window.bdAplicarFiltros = bdAplicarFiltros;
