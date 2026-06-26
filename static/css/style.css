@@ -3176,3 +3176,234 @@ input[type="file"] { display: none; }
     70% { transform: scale(0.9); }
     100% { transform: scale(1); opacity: 1; }
 }
+
+/* ============================================================
+   NOTIFICACIONES MEJORADAS - ESTILOS
+   ============================================================ */
+
+/* Contenedor de notificaciones */
+.notificaciones-container {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 420px;
+    width: 100%;
+    pointer-events: none;
+}
+
+.notificacion {
+    pointer-events: auto;
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    border-left: 5px solid var(--info);
+    animation: slideInRight 0.4s ease;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: all 0.3s ease;
+}
+
+.notificacion.error {
+    border-left-color: #DC2626;
+    background: #FFF5F5;
+}
+
+.notificacion.success {
+    border-left-color: #16A34A;
+    background: #F0FDF4;
+}
+
+.notificacion.warning {
+    border-left-color: #D97706;
+    background: #FFFBEB;
+}
+
+.notificacion.info {
+    border-left-color: #2563EB;
+    background: #EFF6FF;
+}
+
+.notificacion .noti-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.notificacion .noti-content {
+    flex: 1;
+}
+
+.notificacion .noti-title {
+    font-weight: 800;
+    font-size: 14px;
+    color: #0F172A;
+    margin-bottom: 4px;
+}
+
+.notificacion .noti-msg {
+    font-size: 13px;
+    color: #334155;
+    line-height: 1.4;
+}
+
+.notificacion .noti-msg .campo-faltante {
+    display: inline-block;
+    background: #F1F5F9;
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-weight: 700;
+    color: #DC2626;
+    margin: 2px 0;
+}
+
+.notificacion .noti-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #94A3B8;
+    cursor: pointer;
+    padding: 0 4px;
+    transition: color 0.2s;
+    flex-shrink: 0;
+    margin-top: -4px;
+}
+
+.notificacion .noti-close:hover {
+    color: #0F172A;
+}
+
+/* Animaciones */
+@keyframes slideInRight {
+    from {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+}
+
+.notificacion.removing {
+    animation: slideOutRight 0.3s ease forwards;
+}
+
+/* Notificación flotante fija en el centro para errores importantes */
+.notificacion-flotante {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 999999;
+    background: #fff;
+    border-radius: 16px;
+    padding: 30px 40px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25);
+    max-width: 460px;
+    width: 90%;
+    text-align: center;
+    animation: fadeInScale 0.4s ease;
+}
+
+.notificacion-flotante .flotante-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.notificacion-flotante .flotante-title {
+    font-size: 20px;
+    font-weight: 900;
+    color: #0F172A;
+    margin-bottom: 8px;
+}
+
+.notificacion-flotante .flotante-msg {
+    font-size: 15px;
+    color: #475569;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.notificacion-flotante .flotante-campos {
+    background: #F8FAFC;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.notificacion-flotante .flotante-campos li {
+    list-style: none;
+    padding: 4px 0;
+    font-size: 14px;
+    color: #334155;
+    font-weight: 600;
+}
+
+.notificacion-flotante .flotante-campos li::before {
+    content: "✗ ";
+    color: #DC2626;
+    font-weight: 900;
+}
+
+.notificacion-flotante .btn {
+    padding: 10px 30px;
+    border-radius: 10px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.notificacion-flotante .btn-primary {
+    background: var(--empresa, #EF233C);
+    color: #fff;
+}
+
+.notificacion-flotante .btn-primary:hover {
+    background: var(--empresa-dark, #1F1F1F);
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+/* Overlay para notificación flotante */
+.modal-overlay-flotante {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 999998;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay-flotante.show {
+    display: flex;
+}

@@ -312,6 +312,20 @@
             <button type="button" class="btn btn-primary" id="saveModal">Guardar</button>
         </div>
     </div>
+
+<!-- OVERLAY PARA NOTIFICACIÓN FLOTANTE DE ERROR -->
+<div class="modal-overlay-flotante" id="modalErrorFlotante">
+    <div class="notificacion-flotante">
+        <div class="flotante-icon">❌</div>
+        <h3 class="flotante-title">¡Campos incompletos!</h3>
+        <p class="flotante-msg">Para continuar, completa los siguientes campos obligatorios:</p>
+        <ul class="flotante-campos" id="flotanteCamposFaltantes">
+            <li>Nombre del producto</li>
+            <li>Modelo</li>
+        </ul>
+        <button class="btn btn-primary" onclick="cerrarErrorFlotante()">Entendido, voy a completarlos</button>
+    </div>
+</div>
 </div>
 
 <!-- JAVASCRIPT -->
@@ -771,6 +785,93 @@ function checkEye(tienePermiso, user, module, userId, empresaId) {
 // ============================================================
 // MANEJAR CAMBIO DE PERMISOS
 // ============================================================
+// ============================================================
+// NOTIFICACIONES MEJORADAS
+// ============================================================
+
+// Mostrar notificación flotante de error (más visible)
+function mostrarErrorFlotante(camposFaltantes) {
+    const overlay = document.getElementById('modalErrorFlotante');
+    const lista = document.getElementById('flotanteCamposFaltantes');
+    
+    if (!overlay || !lista) return;
+    
+    // Limpiar y agregar los campos faltantes
+    lista.innerHTML = camposFaltantes.map(campo => 
+        `<li>${campo}</li>`
+    ).join('');
+    
+    overlay.classList.add('show');
+    
+    // Cerrar automáticamente después de 8 segundos
+    setTimeout(() => {
+        cerrarErrorFlotante();
+    }, 8000);
+}
+
+function cerrarErrorFlotante() {
+    const overlay = document.getElementById('modalErrorFlotante');
+    if (overlay) overlay.classList.remove('show');
+}
+
+// Notificación mejorada (reemplaza la anterior)
+function mostrarNotificacionMejorada(tipo, titulo, mensaje, camposFaltantes = null) {
+    // Si hay campos faltantes y es error, mostrar flotante
+    if (tipo === 'error' && camposFaltantes && camposFaltantes.length > 0) {
+        mostrarErrorFlotante(camposFaltantes);
+        return;
+    }
+    
+    // Para otros casos, usar la notificación normal
+    const container = document.getElementById('notificacionesContainer') || crearContainerNotificaciones();
+    
+    const iconos = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
+    
+    const noti = document.createElement('div');
+    noti.className = `notificacion ${tipo}`;
+    noti.innerHTML = `
+        <span class="noti-icon">${iconos[tipo] || 'ℹ️'}</span>
+        <div class="noti-content">
+            <div class="noti-title">${titulo}</div>
+            <div class="noti-msg">${mensaje}</div>
+        </div>
+        <button class="noti-close" onclick="this.closest('.notificacion').remove()">✕</button>
+    `;
+    
+    container.appendChild(noti);
+    
+    // Auto-cerrar después de 5 segundos
+    setTimeout(() => {
+        if (noti.parentNode) {
+            noti.classList.add('removing');
+            setTimeout(() => noti.remove(), 300);
+        }
+    }, 5000);
+}
+
+function crearContainerNotificaciones() {
+    let container = document.getElementById('notificacionesContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'notificacionesContainer';
+        container.className = 'notificaciones-container';
+        document.body.appendChild(container);
+    }
+    return container;
+}
+
+// ✅ Sobrescribir la función mostrarNotificacion existente
+window.mostrarNotificacion = function(tipo, titulo, mensaje, camposFaltantes = null) {
+    mostrarNotificacionMejorada(tipo, titulo, mensaje, camposFaltantes);
+};
+
+
+
 // ============================================================
 // MANEJAR CAMBIO DE PERMISOS - CON ACTUALIZACIÓN INMEDIATA
 // ============================================================
@@ -1405,65 +1506,48 @@ document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.notificacion').forEach(el => el.remove());
             
             // Validar campos obligatorios
-            const required = [
-                { id: 'nombreProducto', label: 'Nombre del producto' },
-                { id: 'modeloProducto', label: 'Modelo' },
-                { id: 'marcaProducto', label: 'Marca' },
-                { id: 'unidadMedida', label: 'Unidad de medida' },
-                { id: 'categoriaProducto', label: 'Categoría' },
-                { id: 'transporteReferencial', label: 'Transporte referencial' }
-            ];
-            
-            let valid = true;
-            let errors = [];
-            let firstInvalid = null;
-            
-            required.forEach(({id, label}) => {
-                const el = document.getElementById(id);
-                if (!el || !el.value || el.value.trim() === '') {
-                    valid = false;
-                    errors.push(label);
-                    if (!firstInvalid) {
-                        firstInvalid = el;
-                    }
-                    // ✅ Resaltar el campo en rojo
-                    if (el) {
-                        el.style.borderColor = '#DC2626';
-                        el.style.boxShadow = '0 0 0 3px rgba(220, 38, 38, 0.2)';
-                    }
-                } else {
-                    // ✅ Quitar resaltado si está correcto
-                    if (el) {
-                        el.style.borderColor = '';
-                        el.style.boxShadow = '';
-                    }
-                }
-            });
-            
-            if (!valid) {
-                // ✅ Mostrar notificación más visible
-                const mensaje = '❌ Faltan completar: ' + errors.join(', ');
-                console.log('🔴 Validación fallida:', mensaje);
-                
-                // Usar toast para mayor visibilidad
-                if (typeof toast === 'function') {
-                    toast('❌ ' + mensaje);
-                }
-                
-                // También mostrar notificación
-                if (typeof mostrarNotificacion === 'function') {
-                    mostrarNotificacion('error', '❌ Campos requeridos', 'Faltan completar: ' + errors.join(', '));
-                } else {
-                    alert('❌ Faltan completar: ' + errors.join(', '));
-                }
-                
-                // ✅ Enfocar el primer campo inválido
-                if (firstInvalid) {
-                    firstInvalid.focus();
-                    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-                return;
-            }
+           // Validar campos obligatorios
+const required = [
+    { id: 'nombreProducto', label: 'Nombre del producto' },
+    { id: 'modeloProducto', label: 'Modelo' },
+    { id: 'marcaProducto', label: 'Marca' },
+    { id: 'unidadMedida', label: 'Unidad de medida' },
+    { id: 'categoriaProducto', label: 'Categoría' },
+    { id: 'transporteReferencial', label: 'Transporte referencial' }
+];
+
+let valid = true;
+let errors = [];
+let firstInvalid = null;
+
+required.forEach(({id, label}) => {
+    const el = document.getElementById(id);
+    if (!el || !el.value || el.value.trim() === '') {
+        valid = false;
+        errors.push(label);
+        if (!firstInvalid) firstInvalid = el;
+        if (el) {
+            el.style.borderColor = '#DC2626';
+            el.style.boxShadow = '0 0 0 3px rgba(220, 38, 38, 0.2)';
+        }
+    } else {
+        if (el) {
+            el.style.borderColor = '';
+            el.style.boxShadow = '';
+        }
+    }
+});
+
+if (!valid) {
+    // ✅ Mostrar error flotante con los campos faltantes
+    mostrarErrorFlotante(errors);
+    
+    if (firstInvalid) {
+        firstInvalid.focus();
+        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    return;
+}
             
             // Validar operaciones
             const ops = document.querySelectorAll('input[name="operation"]:checked');
