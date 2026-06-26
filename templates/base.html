@@ -2715,9 +2715,15 @@ async function initDashboard(){
 // Variable global para almacenar productos
 window.bdProductos = [];
 
-
 async function cargarProductos() {
     console.log('🔄 Cargando productos desde la API...');
+    
+    // ✅ Verificar si estamos en la página correcta
+    if (!window.location.pathname.includes('/productos/base-datos')) {
+        console.log('ℹ️ No estamos en la página de base de datos, omitiendo carga');
+        return [];
+    }
+    
     try {
         const response = await fetch('/productos/api/productos');
         const result = await response.json();
@@ -2726,7 +2732,6 @@ async function cargarProductos() {
         if (result.success) {
             window.bdProductos = result.data || [];
             console.log(`✅ ${window.bdProductos.length} productos cargados`);
-            // ✅ Usar la función actualizada
             bdRenderProductos(window.bdProductos);
             return window.bdProductos;
         } else {
@@ -2741,7 +2746,14 @@ async function cargarProductos() {
     }
 }
 
+
 function bdRenderProductos(data) {
+    // ✅ VERIFICAR SI ESTAMOS EN LA PÁGINA DE BASE DE DATOS
+    if (!window.location.pathname.includes('/productos/base-datos')) {
+        console.log('ℹ️ No estamos en la página de base de datos, omitiendo renderizado');
+        return;
+    }
+    
     console.log('🖥️ Renderizando productos...', data);
     const tbody = document.getElementById('bdProductTableBody');
     if (!tbody) {

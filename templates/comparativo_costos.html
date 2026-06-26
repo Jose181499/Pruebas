@@ -320,7 +320,19 @@ function mostrarProductoSeleccionado(producto) {
         cells[3].textContent = producto.marca || '---';
         cells[4].textContent = producto.familia || '---';
         cells[5].textContent = producto.transporte || '---';
-        cells[6].textContent = `S/ ${producto.precio_unitario || '0.00'}`;
+        cells[6].textContent = `S/ ${(producto.precio_unitario || 0).toFixed(2)}`;
+    }
+    
+    // Actualizar la foto/icono
+    const photoElement = document.querySelector('.cc-product-photo');
+    if (photoElement) {
+        // Usar la primera letra del nombre o un ícono
+        const nombre = producto.descripcion || producto.codigo || 'Producto';
+        photoElement.textContent = nombre.charAt(0).toUpperCase();
+        // Cambiar el emoji por la inicial
+        photoElement.style.fontSize = '48px';
+        photoElement.style.fontWeight = 'bold';
+        photoElement.style.color = '#0d6efd';
     }
 }
 
@@ -387,7 +399,35 @@ function actualizarTabla(data) {
         countElement.textContent = `${data.length} registros`;
     }
 }
+///
 
+
+// ============================================================
+// 11. CARGAR PRIMER PRODUCTO AUTOMÁTICAMENTE
+// ============================================================
+function cargarPrimerProducto() {
+    // Esperar a que los productos estén cargados
+    const intervalo = setInterval(() => {
+        if (productosData && productosData.length > 0) {
+            clearInterval(intervalo);
+            
+            // Buscar el primer producto con datos de costos
+            const primerProducto = productosData[0];
+            if (primerProducto) {
+                console.log('🔄 Cargando primer producto automáticamente:', primerProducto.codigo);
+                seleccionarProducto(primerProducto.id);
+            }
+        }
+    }, 500);
+    
+    // Si después de 5 segundos no hay productos, mostrar mensaje
+    setTimeout(() => {
+        clearInterval(intervalo);
+        if (!productosData || productosData.length === 0) {
+            console.warn('⚠️ No se pudieron cargar productos automáticamente');
+        }
+    }, 5000);
+}
 // ============================================================
 // 6. ACTUALIZAR RESUMEN (KPIs)
 // ============================================================
