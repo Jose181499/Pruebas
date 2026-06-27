@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify, session, current_app
 from utils import login_required
-from database import db_query, db_execute
+from database import db_query
 import traceback
 import psycopg2
 
@@ -60,7 +60,6 @@ def api_clientes_guardar():
         if not numero_documento:
             return jsonify({"success": False, "error": "Número de documento/RUC obligatorio"})
 
-        # 🔥 USAR CONEXIÓN DIRECTA PARA INSERT CON RETURNING
         from database import DATABASE_URL
         
         conn = psycopg2.connect(DATABASE_URL)
@@ -87,18 +86,14 @@ def api_clientes_guardar():
             data.get('telefono_contacto'),
             data.get('nombre_contacto'),
             data.get('email_contacto'),
-            True  # activo siempre TRUE
+            True
         )
-        
-        current_app.logger.info(f"📝 Ejecutando INSERT con params: {params}")
         
         cur.execute(query, params)
         result = cur.fetchone()
         conn.commit()
         cur.close()
         conn.close()
-        
-        current_app.logger.info(f"📝 Resultado del INSERT: {result}")
 
         if result:
             cliente = {
@@ -161,7 +156,6 @@ def api_clientes_actualizar(id):
         if not numero_documento:
             return jsonify({"success": False, "error": "Número de documento/RUC obligatorio"})
 
-        # 🔥 USAR CONEXIÓN DIRECTA PARA UPDATE CON RETURNING
         from database import DATABASE_URL
         
         conn = psycopg2.connect(DATABASE_URL)
@@ -234,7 +228,6 @@ def api_clientes_toggle(id):
 
         nuevo_estado = not current[0].get('activo', True)
 
-        # 🔥 USAR CONEXIÓN DIRECTA
         from database import DATABASE_URL
         
         conn = psycopg2.connect(DATABASE_URL)
@@ -305,6 +298,7 @@ def api_proveedores_guardar():
             return jsonify({"success": False, "error": "RUC obligatorio"})
 
         from database import DATABASE_URL
+        
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
 
@@ -320,13 +314,16 @@ def api_proveedores_guardar():
         else:
             codigo = "PROV-000001"
 
+        # 🔥 SIN created_at y updated_at (no existen en la tabla)
         query = """
             INSERT INTO proveedores (
                 codigo_proveedor, razon_social, ruc,
                 razon_comercial, telefono, contacto, email,
                 direccion, activo, condicion_pago, tiempo_credito,
-                created_at, updated_at
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+                lugar_recojo, banco, numero_cuenta, cci
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            )
             RETURNING id, codigo_proveedor
         """
 
@@ -341,7 +338,11 @@ def api_proveedores_guardar():
             data.get('direccion'),
             data.get('activo', True),
             data.get('condicion_pago', 'Contado'),
-            data.get('tiempo_credito')
+            data.get('tiempo_credito'),
+            data.get('lugar_recojo'),
+            data.get('banco'),
+            data.get('numero_cuenta'),
+            data.get('cci')
         )
 
         cur.execute(query, params)
@@ -399,9 +400,11 @@ def api_proveedores_actualizar(id):
             return jsonify({"success": False, "error": "RUC obligatorio"})
 
         from database import DATABASE_URL
+        
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
 
+        # 🔥 SIN updated_at (no existe en la tabla)
         query = """
             UPDATE proveedores SET
                 razon_social = %s,
@@ -417,8 +420,7 @@ def api_proveedores_actualizar(id):
                 banco = %s,
                 numero_cuenta = %s,
                 cci = %s,
-                activo = %s,
-                updated_at = NOW()
+                activo = %s
             WHERE id = %s
             RETURNING id, codigo_proveedor
         """
@@ -473,12 +475,13 @@ def api_proveedores_toggle(id):
         nuevo_estado = not current[0].get('activo', True)
 
         from database import DATABASE_URL
+        
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
 
         query = """
             UPDATE proveedores
-            SET activo = %s, updated_at = NOW()
+            SET activo = %s
             WHERE id = %s
             RETURNING id, activo
         """
@@ -513,7 +516,7 @@ def api_almacenes_listar():
     try:
         query = """
             SELECT id, codigo, nombre, tipo, responsable, telefono,
-                   direccion, activo, created_at, updated_at
+                   direccion, activo
             FROM almacenes
             WHERE activo = true
             ORDER BY nombre
@@ -545,14 +548,16 @@ def api_almacenes_guardar():
             return jsonify({"success": False, "error": "Ya existe un almacén con este código"})
 
         from database import DATABASE_URL
+        
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
 
+        # 🔥 SIN created_at y updated_at
         query = """
             INSERT INTO almacenes (
                 codigo, nombre, tipo, responsable, telefono,
-                direccion, activo, created_at, updated_at
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+                direccion, activo
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
             RETURNING id, codigo
         """
 
@@ -593,7 +598,7 @@ def api_almacenes_obtener(id):
     try:
         query = """
             SELECT id, codigo, nombre, tipo, responsable, telefono,
-                   direccion, activo, created_at, updated_at
+                   direccion, activo
             FROM almacenes
             WHERE id = %s
         """
@@ -622,6 +627,7 @@ def api_almacenes_actualizar(id):
             return jsonify({"success": False, "error": "Responsable obligatorio"})
 
         from database import DATABASE_URL
+        
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
 
@@ -633,8 +639,7 @@ def api_almacenes_actualizar(id):
                 responsable = %s,
                 telefono = %s,
                 direccion = %s,
-                activo = %s,
-                updated_at = NOW()
+                activo = %s
             WHERE id = %s
             RETURNING id, codigo
         """
@@ -682,12 +687,13 @@ def api_almacenes_toggle(id):
         nuevo_estado = not current[0].get('activo', True)
 
         from database import DATABASE_URL
+        
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
 
         query = """
             UPDATE almacenes
-            SET activo = %s, updated_at = NOW()
+            SET activo = %s
             WHERE id = %s
             RETURNING id, activo
         """
@@ -721,8 +727,7 @@ def api_categorias_listar():
     """Listar categorías"""
     try:
         query = """
-            SELECT id, codigo, nombre, tipo, activo,
-                   created_at, updated_at
+            SELECT id, codigo, nombre, tipo, activo
             FROM categorias
             WHERE activo = true
             ORDER BY tipo, nombre
@@ -752,13 +757,14 @@ def api_categorias_guardar():
             return jsonify({"success": False, "error": "Ya existe una categoría con este código"})
 
         from database import DATABASE_URL
+        
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
 
         query = """
             INSERT INTO categorias (
-                codigo, nombre, tipo, activo, created_at, updated_at
-            ) VALUES (%s, %s, %s, %s, NOW(), NOW())
+                codigo, nombre, tipo, activo
+            ) VALUES (%s, %s, %s, %s)
             RETURNING id, codigo
         """
 
@@ -795,8 +801,7 @@ def api_categorias_obtener(id):
     """Obtener categoría por ID"""
     try:
         query = """
-            SELECT id, codigo, nombre, tipo, activo,
-                   created_at, updated_at
+            SELECT id, codigo, nombre, tipo, activo
             FROM categorias
             WHERE id = %s
         """
@@ -823,6 +828,7 @@ def api_categorias_actualizar(id):
             return jsonify({"success": False, "error": "Nombre obligatorio"})
 
         from database import DATABASE_URL
+        
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
 
@@ -831,8 +837,7 @@ def api_categorias_actualizar(id):
                 codigo = %s,
                 nombre = %s,
                 tipo = %s,
-                activo = %s,
-                updated_at = NOW()
+                activo = %s
             WHERE id = %s
             RETURNING id, codigo
         """
@@ -877,12 +882,13 @@ def api_categorias_toggle(id):
         nuevo_estado = not current[0].get('activo', True)
 
         from database import DATABASE_URL
+        
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
 
         query = """
             UPDATE categorias
-            SET activo = %s, updated_at = NOW()
+            SET activo = %s
             WHERE id = %s
             RETURNING id, activo
         """
@@ -916,8 +922,7 @@ def api_marcas_listar():
     """Listar marcas"""
     try:
         query = """
-            SELECT id, codigo, nombre, tipo, activo,
-                   created_at, updated_at
+            SELECT id, codigo, nombre, tipo, activo
             FROM marcas
             WHERE activo = true
             ORDER BY nombre
@@ -947,13 +952,14 @@ def api_marcas_guardar():
             return jsonify({"success": False, "error": "Ya existe una marca con este código"})
 
         from database import DATABASE_URL
+        
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
 
         query = """
             INSERT INTO marcas (
-                codigo, nombre, tipo, activo, created_at, updated_at
-            ) VALUES (%s, %s, %s, %s, NOW(), NOW())
+                codigo, nombre, tipo, activo
+            ) VALUES (%s, %s, %s, %s)
             RETURNING id, codigo
         """
 
@@ -990,8 +996,7 @@ def api_marcas_obtener(id):
     """Obtener marca por ID"""
     try:
         query = """
-            SELECT id, codigo, nombre, tipo, activo,
-                   created_at, updated_at
+            SELECT id, codigo, nombre, tipo, activo
             FROM marcas
             WHERE id = %s
         """
@@ -1018,6 +1023,7 @@ def api_marcas_actualizar(id):
             return jsonify({"success": False, "error": "Nombre obligatorio"})
 
         from database import DATABASE_URL
+        
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
 
@@ -1026,8 +1032,7 @@ def api_marcas_actualizar(id):
                 codigo = %s,
                 nombre = %s,
                 tipo = %s,
-                activo = %s,
-                updated_at = NOW()
+                activo = %s
             WHERE id = %s
             RETURNING id, codigo
         """
@@ -1072,12 +1077,13 @@ def api_marcas_toggle(id):
         nuevo_estado = not current[0].get('activo', True)
 
         from database import DATABASE_URL
+        
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
 
         query = """
             UPDATE marcas
-            SET activo = %s, updated_at = NOW()
+            SET activo = %s
             WHERE id = %s
             RETURNING id, activo
         """
@@ -1112,8 +1118,7 @@ def api_um_listar():
     try:
         query = """
             SELECT id, codigo, nombre, abreviatura, tipo,
-                   decimales, activo, ambito,
-                   created_at, updated_at
+                   decimales, activo, ambito
             FROM um
             WHERE activo = true
             ORDER BY ambito, codigo
@@ -1145,14 +1150,15 @@ def api_um_guardar():
             return jsonify({"success": False, "error": "Ya existe una unidad con este código"})
 
         from database import DATABASE_URL
+        
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
 
         query = """
             INSERT INTO um (
                 codigo, nombre, abreviatura, tipo,
-                decimales, activo, ambito, created_at, updated_at
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+                decimales, activo, ambito
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
             RETURNING id, codigo
         """
 
@@ -1193,8 +1199,7 @@ def api_um_obtener(id):
     try:
         query = """
             SELECT id, codigo, nombre, abreviatura, tipo,
-                   decimales, activo, ambito,
-                   created_at, updated_at
+                   decimales, activo, ambito
             FROM um
             WHERE id = %s
         """
@@ -1223,6 +1228,7 @@ def api_um_actualizar(id):
             return jsonify({"success": False, "error": "Abreviatura obligatoria"})
 
         from database import DATABASE_URL
+        
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
 
@@ -1234,8 +1240,7 @@ def api_um_actualizar(id):
                 tipo = %s,
                 decimales = %s,
                 ambito = %s,
-                activo = %s,
-                updated_at = NOW()
+                activo = %s
             WHERE id = %s
             RETURNING id, codigo
         """
@@ -1283,12 +1288,13 @@ def api_um_toggle(id):
         nuevo_estado = not current[0].get('activo', True)
 
         from database import DATABASE_URL
+        
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
 
         query = """
             UPDATE um
-            SET activo = %s, updated_at = NOW()
+            SET activo = %s
             WHERE id = %s
             RETURNING id, activo
         """
