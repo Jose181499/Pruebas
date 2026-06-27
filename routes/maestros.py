@@ -53,7 +53,6 @@ def api_clientes_guardar():
         data = request.get_json()
         current_app.logger.info(f"📝 Datos recibidos para guardar cliente: {data}")
 
-        # Validaciones
         if not data.get('razon_social'):
             return jsonify({"success": False, "error": "Razón social obligatoria"})
 
@@ -61,7 +60,6 @@ def api_clientes_guardar():
         if not numero_documento:
             return jsonify({"success": False, "error": "Número de documento/RUC obligatorio"})
 
-        # NO incluir ruc en el INSERT (no existe la columna)
         query = """
             INSERT INTO clientes (
                 tipo_documento, numero_documento, razon_social,
@@ -71,7 +69,7 @@ def api_clientes_guardar():
             ) VALUES (
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW()
             )
-            RETURNING id, codigo_cliente
+            RETURNING id, codigo_cliente, numero_documento
         """
 
         params = (
@@ -90,10 +88,11 @@ def api_clientes_guardar():
 
         if result and len(result) > 0:
             current_app.logger.info(f"✅ Cliente creado: {result[0]}")
-
-            # Agregar alias ruc para compatibilidad
+            
+            # 🔥 IMPORTANTE: Asignar numero_documento a ruc para compatibilidad
             cliente = result[0]
             cliente['ruc'] = cliente.get('numero_documento')
+            
             return jsonify({
                 "success": True,
                 "data": cliente,
@@ -107,7 +106,7 @@ def api_clientes_guardar():
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
-
+        
 @maestros_bp.route('/api/clientes/<int:id>', methods=['GET'])
 @login_required
 def api_clientes_obtener(id):
