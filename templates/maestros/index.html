@@ -480,21 +480,21 @@
 {% block content %}
 <!-- TABS -->
 <div class="tabs" id="tabsRow">
-    <button class="tab-btn active" data-screen="clientes">👤 Clientes</button>
-    <button class="tab-btn" data-screen="proveedores">🏭 Proveedores</button>
-    <button class="tab-btn" data-screen="almacenes">📦 Almacenes</button>
-    <button class="tab-btn" data-screen="categorias">🗂️ Categorías</button>
-    <button class="tab-btn" data-screen="marcas">🏷️ Marcas</button>
-    <button class="tab-btn" data-screen="um">📏 Unidades de medida</button>
+    <button class="tab-btn {% if active_tab == 'clientes' %}active{% endif %}" data-tab="clientes">👤 Clientes</button>
+    <button class="tab-btn {% if active_tab == 'proveedores' %}active{% endif %}" data-tab="proveedores">🏭 Proveedores</button>
+    <button class="tab-btn {% if active_tab == 'almacenes' %}active{% endif %}" data-tab="almacenes">📦 Almacenes</button>
+    <button class="tab-btn {% if active_tab == 'categorias' %}active{% endif %}" data-tab="categorias">🗂️ Categorías</button>
+    <button class="tab-btn {% if active_tab == 'marcas' %}active{% endif %}" data-tab="marcas">🏷️ Marcas</button>
+    <button class="tab-btn {% if active_tab == 'um' %}active{% endif %}" data-tab="um">📏 Unidades de medida</button>
 </div>
 
 <!-- CONTENIDO DE CADA MÓDULO -->
-<div id="clientes" class="section active"></div>
-<div id="proveedores" class="section"></div>
-<div id="almacenes" class="section"></div>
-<div id="categorias" class="section"></div>
-<div id="marcas" class="section"></div>
-<div id="um" class="section"></div>
+<div id="clientes" class="section {% if active_tab == 'clientes' %}active{% endif %}"></div>
+<div id="proveedores" class="section {% if active_tab == 'proveedores' %}active{% endif %}"></div>
+<div id="almacenes" class="section {% if active_tab == 'almacenes' %}active{% endif %}"></div>
+<div id="categorias" class="section {% if active_tab == 'categorias' %}active{% endif %}"></div>
+<div id="marcas" class="section {% if active_tab == 'marcas' %}active{% endif %}"></div>
+<div id="um" class="section {% if active_tab == 'um' %}active{% endif %}"></div>
 
 <!-- MODALES -->
 {% include "modales/cliente_modal.html" %}

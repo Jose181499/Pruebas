@@ -239,6 +239,57 @@ async function loadModuleData(modulo, force = false) {
 }
 
 // ============================================================
+
+// ============================================================
+// NAVEGACIÓN ENTRE TABS DE MAESTROS
+// ============================================================
+
+// Función para cambiar de tab
+async function switchTab(tab) {
+    console.log('🔄 Cambiando a tab:', tab);
+    
+    // Actualizar URL sin recargar
+    const url = new URL(window.location);
+    url.searchParams.set('tab', tab);
+    window.history.pushState({}, '', url);
+    
+    // Actualizar tabs
+    document.querySelectorAll('#tabsRow .tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    
+    // Mostrar sección
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    const section = document.getElementById(tab);
+    if (section) section.classList.add('active');
+    
+    // Renderizar el módulo correspondiente
+    await renderModule(tab);
+}
+
+// Manejar clicks en los tabs
+document.addEventListener('click', function(e) {
+    const tabBtn = e.target.closest('#tabsRow .tab-btn');
+    if (tabBtn) {
+        e.preventDefault();
+        const tab = tabBtn.dataset.tab;
+        if (tab) switchTab(tab);
+    }
+});
+
+// Cargar el módulo inicial al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    const initialTab = '{{ active_tab }}';
+    if (initialTab) {
+        // Forzar la apertura del módulo correcto
+        setTimeout(() => {
+            switchTab(initialTab);
+        }, 100);
+    }
+});
+
+
+
 // UTILIDADES
 // ============================================================
 function esc(v) {
@@ -377,23 +428,24 @@ function renderTable(m, list) {
     const headers = config.headers;
     const displayFields = config.displayFields;
     
-    // Cabeceras
     let headersHtml = `<th style="width:50px;">#</th><th style="width:100px;">Ámbito</th>`;
-    headers.forEach(h => {
-        headersHtml += `<th>${h}</th>`;
-    });
+    headers.forEach(h => { headersHtml += `<th>${h}</th>`; });
     headersHtml += `<th style="width:200px;">Acciones</th>`;
     
-    // Filas
     const rows = list.map((r, i) => {
-        let cells = `<td><b>${i + 1}</b></td><td>${bAmbito('COMPARTIDO')}</td>`;
+        let cells = `<td><b>${i + 1}</b></td><td>${bAmbito(r.ambito || 'COMPARTIDO')}</td>`;
         
         displayFields.forEach(f => {
             if (f === 'activo') {
                 cells += `<td>${bEstado(r[f])}</td>`;
+            } else if (f === 'decimales') {
+                // Mostrar Sí/No para booleanos
+                cells += `<td>${r[f] ? '✅ Sí' : '❌ No'}</td>`;
             } else if (f === 'email' || f === 'email_contacto') {
                 const email = r[f];
                 cells += `<td>${email ? `<a href="mailto:${esc(email)}" style="color:#3B82F6;text-decoration:none;">${esc(email)}</a>` : '-'}</td>`;
+            } else if (f === 'uso') {
+                cells += `<td style="text-align:center;">${r[f] || 0}</td>`;
             } else {
                 cells += `<td class="left">${sd(r[f])}</td>`;
             }
@@ -615,7 +667,120 @@ document.addEventListener('click', function(e) {
         return;
     }
 });
+// ============================================================
+// CONFIGURACIÓN DE MÓDULOS - COMPLETA
+// ============================================================
+const MODULE_CONFIG = {
+    clientes: {
+        title: 'Clientes',
+        subtitle: 'Base comercial de clientes y prospectos',
+        apiBase: '/maestros/api',
+        fields: [
+            { key: 'codigo_cliente', label: 'Código', type: 'text' },
+            { key: 'razon_social', label: 'Razón Social', type: 'text' },
+            { key: 'numero_documento', label: 'RUC/DNI', type: 'text' },
+            { key: 'nombre_comercial', label: 'Nombre Comercial', type: 'text' },
+            { key: 'nombre_contacto', label: 'Contacto', type: 'text' },
+            { key: 'telefono_contacto', label: 'Teléfono', type: 'text' },
+            { key: 'email_contacto', label: 'Email', type: 'text' },
+            { key: 'activo', label: 'Estado', type: 'boolean' }
+        ],
+        displayFields: ['codigo_cliente', 'razon_social', 'numero_documento', 'nombre_comercial', 'nombre_contacto', 'telefono_contacto', 'email_contacto', 'activo'],
+        headers: ['Código', 'Razón Social', 'RUC/DNI', 'Nombre Comercial', 'Contacto', 'Teléfono', 'Email', 'Estado'],
+        idField: 'id',
+        codeField: 'codigo_cliente'
+    },
+    proveedores: {
+        title: 'Proveedores',
+        subtitle: 'Base de proveedores y servicios',
+        apiBase: '/maestros/api',
+        fields: [
+            { key: 'codigo_proveedor', label: 'Código', type: 'text' },
+            { key: 'razon_social', label: 'Razón Social', type: 'text' },
+            { key: 'ruc', label: 'RUC', type: 'text' },
+            { key: 'razon_comercial', label: 'Razón Comercial', type: 'text' },
+            { key: 'contacto', label: 'Contacto', type: 'text' },
+            { key: 'telefono', label: 'Teléfono', type: 'text' },
+            { key: 'email', label: 'Email', type: 'text' },
+            { key: 'activo', label: 'Estado', type: 'boolean' }
+        ],
+        displayFields: ['codigo_proveedor', 'razon_social', 'ruc', 'razon_comercial', 'contacto', 'telefono', 'email', 'activo'],
+        headers: ['Código', 'Razón Social', 'RUC', 'Razón Comercial', 'Contacto', 'Teléfono', 'Email', 'Estado'],
+        idField: 'id',
+        codeField: 'codigo_proveedor'
+    },
+    // 🔥 NUEVOS MÓDULOS
+    almacenes: {
+        title: 'Almacenes',
+        subtitle: 'Gestión de almacenes y ubicaciones',
+        apiBase: '/maestros/api',
+        fields: [
+            { key: 'codigo', label: 'Código', type: 'text' },
+            { key: 'nombre', label: 'Nombre', type: 'text' },
+            { key: 'tipo', label: 'Tipo', type: 'text' },
+            { key: 'responsable', label: 'Responsable', type: 'text' },
+            { key: 'telefono', label: 'Teléfono', type: 'text' },
+            { key: 'direccion', label: 'Dirección', type: 'text' },
+            { key: 'activo', label: 'Estado', type: 'boolean' }
+        ],
+        displayFields: ['codigo', 'nombre', 'tipo', 'responsable', 'telefono', 'activo'],
+        headers: ['Código', 'Nombre', 'Tipo', 'Responsable', 'Teléfono', 'Estado'],
+        idField: 'id',
+        codeField: 'codigo'
+    },
+    categorias: {
+        title: 'Categorías',
+        subtitle: 'Clasificación de productos',
+        apiBase: '/maestros/api',
+        fields: [
+            { key: 'codigo', label: 'Código', type: 'text' },
+            { key: 'nombre', label: 'Nombre', type: 'text' },
+            { key: 'tipo', label: 'Categoría Principal', type: 'text' },
+            { key: 'activo', label: 'Estado', type: 'boolean' }
+        ],
+        displayFields: ['codigo', 'nombre', 'tipo', 'activo'],
+        headers: ['Código', 'Nombre', 'Categoría Principal', 'Estado'],
+        idField: 'id',
+        codeField: 'codigo'
+    },
+    marcas: {
+        title: 'Marcas',
+        subtitle: 'Gestión de marcas y fabricantes',
+        apiBase: '/maestros/api',
+        fields: [
+            { key: 'codigo', label: 'Código', type: 'text' },
+            { key: 'nombre', label: 'Marca', type: 'text' },
+            { key: 'tipo', label: 'Tipo', type: 'text' },
+            { key: 'activo', label: 'Estado', type: 'boolean' }
+        ],
+        displayFields: ['codigo', 'nombre', 'tipo', 'activo'],
+        headers: ['Código', 'Marca', 'Tipo', 'Estado'],
+        idField: 'id',
+        codeField: 'codigo'
+    },
+    um: {
+        title: 'Unidades de Medida',
+        subtitle: 'Define cómo compras, vendes e inventarias los productos',
+        apiBase: '/maestros/api',
+        fields: [
+            { key: 'codigo', label: 'Código', type: 'text' },
+            { key: 'nombre', label: 'Unidad', type: 'text' },
+            { key: 'abreviatura', label: 'Abreviatura', type: 'text' },
+            { key: 'tipo', label: 'Tipo', type: 'text' },
+            { key: 'decimales', label: 'Permite decimales', type: 'boolean' },
+            { key: 'ambito', label: 'Ámbito', type: 'text' },
+            { key: 'uso', label: 'Uso', type: 'number' },
+            { key: 'activo', label: 'Estado', type: 'boolean' }
+        ],
+        displayFields: ['codigo', 'nombre', 'abreviatura', 'tipo', 'decimales', 'ambito', 'uso', 'activo'],
+        headers: ['Código', 'Unidad', 'Abreviatura', 'Tipo', 'Decimales', 'Ámbito', 'Uso', 'Estado'],
+        idField: 'id',
+        codeField: 'codigo'
+    }
+};
 
+// Actualizar MAESTROS
+const MAESTROS = ['clientes', 'proveedores', 'almacenes', 'categorias', 'marcas', 'um'];
 // ============================================================
 // ESTILOS CSS INJECTADOS (SOLO POR SI FALTA ALGUNO)
 // ============================================================
@@ -899,3 +1064,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 console.log('✅ Maestros JS cargado correctamente');
+

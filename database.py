@@ -2374,3 +2374,344 @@ def actualizar_proveedor_simple(proveedor_id, data):
     except Exception as e:
         print(f"❌ Error en actualizar_proveedor_simple: {e}")
         return {'success': False, 'error': str(e)}
+
+
+# ============================================================
+# FUNCIONES PARA ALMACENES
+# ============================================================
+
+def obtener_almacenes_para_maestros():
+    """
+    Obtiene todos los almacenes activos para el módulo maestros
+    """
+    try:
+        query = """
+            SELECT 
+                id,
+                codigo,
+                nombre,
+                tipo,
+                responsable,
+                telefono,
+                direccion,
+                activo,
+                created_at,
+                updated_at
+            FROM almacenes
+            WHERE activo = true
+            ORDER BY nombre
+        """
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_almacenes_para_maestros: {e}")
+        return []
+
+def guardar_almacen(data):
+    """
+    Guarda un nuevo almacén
+    """
+    try:
+        query = """
+            INSERT INTO almacenes (
+                codigo, nombre, tipo, responsable, telefono, direccion, activo
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+            RETURNING id, codigo
+        """
+        params = (
+            data.get('codigo'),
+            data.get('nombre'),
+            data.get('tipo', 'Principal'),
+            data.get('responsable'),
+            data.get('telefono'),
+            data.get('direccion'),
+            data.get('activo', True)
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en guardar_almacen: {e}")
+        raise
+
+def toggle_almacen_activo(almacen_id):
+    """
+    Activa o inactiva un almacén
+    """
+    try:
+        current = db_query("SELECT activo FROM almacenes WHERE id = %s", (almacen_id,))
+        if not current:
+            return {'success': False, 'error': 'Almacén no encontrado'}
+        
+        nuevo_estado = not current[0].get('activo', True)
+        
+        query = """
+            UPDATE almacenes 
+            SET activo = %s, updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, activo
+        """
+        result = db_query(query, (nuevo_estado, almacen_id))
+        
+        if result:
+            return {
+                'success': True,
+                'data': result[0],
+                'message': f"Almacén {'activado' if nuevo_estado else 'inactivado'} correctamente"
+            }
+        
+        return {'success': False, 'error': 'No se pudo actualizar el estado'}
+    except Exception as e:
+        print(f"❌ Error en toggle_almacen_activo: {e}")
+        return {'success': False, 'error': str(e)}
+
+
+# ============================================================
+# FUNCIONES PARA CATEGORÍAS
+# ============================================================
+
+def obtener_categorias_para_maestros():
+    """
+    Obtiene todas las categorías activas para el módulo maestros
+    """
+    try:
+        query = """
+            SELECT 
+                id,
+                codigo,
+                nombre,
+                tipo,
+                activo,
+                created_at,
+                updated_at
+            FROM categorias
+            WHERE activo = true
+            ORDER BY tipo, nombre
+        """
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_categorias_para_maestros: {e}")
+        return []
+
+def guardar_categoria(data):
+    """
+    Guarda una nueva categoría
+    """
+    try:
+        query = """
+            INSERT INTO categorias (
+                codigo, nombre, tipo, activo
+            ) VALUES (%s, %s, %s, %s)
+            RETURNING id, codigo
+        """
+        params = (
+            data.get('codigo'),
+            data.get('nombre'),
+            data.get('tipo', 'General'),
+            data.get('activo', True)
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en guardar_categoria: {e}")
+        raise
+
+def toggle_categoria_activo(categoria_id):
+    """
+    Activa o inactiva una categoría
+    """
+    try:
+        current = db_query("SELECT activo FROM categorias WHERE id = %s", (categoria_id,))
+        if not current:
+            return {'success': False, 'error': 'Categoría no encontrada'}
+        
+        nuevo_estado = not current[0].get('activo', True)
+        
+        query = """
+            UPDATE categorias 
+            SET activo = %s, updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, activo
+        """
+        result = db_query(query, (nuevo_estado, categoria_id))
+        
+        if result:
+            return {
+                'success': True,
+                'data': result[0],
+                'message': f"Categoría {'activada' if nuevo_estado else 'inactivada'} correctamente"
+            }
+        
+        return {'success': False, 'error': 'No se pudo actualizar el estado'}
+    except Exception as e:
+        print(f"❌ Error en toggle_categoria_activo: {e}")
+        return {'success': False, 'error': str(e)}
+
+
+# ============================================================
+# FUNCIONES PARA MARCAS
+# ============================================================
+
+def obtener_marcas_para_maestros():
+    """
+    Obtiene todas las marcas activas para el módulo maestros
+    """
+    try:
+        query = """
+            SELECT 
+                id,
+                codigo,
+                nombre,
+                tipo,
+                activo,
+                created_at,
+                updated_at
+            FROM marcas
+            WHERE activo = true
+            ORDER BY nombre
+        """
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_marcas_para_maestros: {e}")
+        return []
+
+def guardar_marca(data):
+    """
+    Guarda una nueva marca
+    """
+    try:
+        query = """
+            INSERT INTO marcas (
+                codigo, nombre, tipo, activo
+            ) VALUES (%s, %s, %s, %s)
+            RETURNING id, codigo
+        """
+        params = (
+            data.get('codigo'),
+            data.get('nombre'),
+            data.get('tipo', 'General'),
+            data.get('activo', True)
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en guardar_marca: {e}")
+        raise
+
+def toggle_marca_activo(marca_id):
+    """
+    Activa o inactiva una marca
+    """
+    try:
+        current = db_query("SELECT activo FROM marcas WHERE id = %s", (marca_id,))
+        if not current:
+            return {'success': False, 'error': 'Marca no encontrada'}
+        
+        nuevo_estado = not current[0].get('activo', True)
+        
+        query = """
+            UPDATE marcas 
+            SET activo = %s, updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, activo
+        """
+        result = db_query(query, (nuevo_estado, marca_id))
+        
+        if result:
+            return {
+                'success': True,
+                'data': result[0],
+                'message': f"Marca {'activada' if nuevo_estado else 'inactivada'} correctamente"
+            }
+        
+        return {'success': False, 'error': 'No se pudo actualizar el estado'}
+    except Exception as e:
+        print(f"❌ Error en toggle_marca_activo: {e}")
+        return {'success': False, 'error': str(e)}
+
+
+# ============================================================
+# FUNCIONES PARA UNIDADES DE MEDIDA (UM)
+# ============================================================
+
+def obtener_um_para_maestros():
+    """
+    Obtiene todas las unidades de medida activas para el módulo maestros
+    """
+    try:
+        query = """
+            SELECT 
+                id,
+                codigo,
+                nombre,
+                abreviatura,
+                tipo,
+                decimales,
+                activo,
+                ambito,
+                uso,
+                created_at,
+                updated_at
+            FROM um
+            WHERE activo = true
+            ORDER BY ambito, codigo
+        """
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_um_para_maestros: {e}")
+        return []
+
+def guardar_um(data):
+    """
+    Guarda una nueva unidad de medida
+    """
+    try:
+        query = """
+            INSERT INTO um (
+                codigo, nombre, abreviatura, tipo, decimales, activo, ambito
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+            RETURNING id, codigo
+        """
+        params = (
+            data.get('codigo'),
+            data.get('nombre'),
+            data.get('abreviatura'),
+            data.get('tipo', 'General'),
+            data.get('decimales', False),
+            data.get('activo', True),
+            data.get('ambito', 'COMPARTIDO')
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en guardar_um: {e}")
+        raise
+
+def toggle_um_activo(um_id):
+    """
+    Activa o inactiva una unidad de medida
+    """
+    try:
+        current = db_query("SELECT activo FROM um WHERE id = %s", (um_id,))
+        if not current:
+            return {'success': False, 'error': 'Unidad de medida no encontrada'}
+        
+        nuevo_estado = not current[0].get('activo', True)
+        
+        query = """
+            UPDATE um 
+            SET activo = %s, updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, activo
+        """
+        result = db_query(query, (nuevo_estado, um_id))
+        
+        if result:
+            return {
+                'success': True,
+                'data': result[0],
+                'message': f"Unidad de medida {'activada' if nuevo_estado else 'inactivada'} correctamente"
+            }
+        
+        return {'success': False, 'error': 'No se pudo actualizar el estado'}
+    except Exception as e:
+        print(f"❌ Error en toggle_um_activo: {e}")
+        return {'success': False, 'error': str(e)}

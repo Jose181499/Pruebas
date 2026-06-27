@@ -16,7 +16,26 @@ from database import (
     buscar_clientes_completo, insertar_proveedor_completo,
     obtener_todos_proveedores, obtener_proveedor_por_id,
     actualizar_proveedor, eliminar_proveedor_db,
-    obtener_ultimo_codigo_proveedor, db_query
+    obtener_ultimo_codigo_proveedor, db_query,
+    # 🔥 NUEVAS IMPORTACIONES
+    obtener_clientes_para_maestros,
+    obtener_proveedores_para_maestros,
+    toggle_cliente_activo,
+    toggle_proveedor_activo,
+    actualizar_cliente_simple,
+    actualizar_proveedor_simple,
+    obtener_almacenes_para_maestros,
+    guardar_almacen,
+    toggle_almacen_activo,
+    obtener_categorias_para_maestros,
+    guardar_categoria,
+    toggle_categoria_activo,
+    obtener_marcas_para_maestros,
+    guardar_marca,
+    toggle_marca_activo,
+    obtener_um_para_maestros,
+    guardar_um,
+    toggle_um_activo
 )
 
 # Configuración de conexión a BD
