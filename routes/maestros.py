@@ -9,9 +9,8 @@ maestros_bp = Blueprint('maestros', __name__, url_prefix='/maestros')
 @login_required
 def index():
     """Página principal de maestros"""
-    tab = request.args.get('tab', 'clientes')
     return render_template('maestros/index.html', 
-                          active_tab=tab,
+                          active_tab='clientes',
                           nombre=session.get('nombre_completo', 'Usuario'),
                           empresa=session.get('empresa', 'KCF'))
 
@@ -99,6 +98,7 @@ def api_clientes_guardar():
 def api_clientes_toggle(id):
     """Activar/Inactivar cliente"""
     try:
+        # Obtener estado actual
         current = db_query("SELECT activo FROM clientes WHERE id = %s", (id,))
         if not current:
             return jsonify({"success": False, "error": "Cliente no encontrado"})
@@ -161,6 +161,7 @@ def api_proveedores_guardar():
         if not data.get('ruc'):
             return jsonify({"success": False, "error": "RUC obligatorio"})
         
+        # Generar código
         last = db_query("SELECT codigo_proveedor FROM proveedores ORDER BY id DESC LIMIT 1")
         if last and last[0].get('codigo_proveedor'):
             num = int(last[0]['codigo_proveedor'].replace('PROV-', '')) + 1
@@ -236,7 +237,7 @@ def api_proveedores_toggle(id):
     except Exception as e:
         logging.error(f"Error togglando proveedor: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
-
+    
 # ==========================================
 # ENDPOINTS ALMACENES
 # ==========================================
@@ -271,6 +272,7 @@ def api_almacenes_guardar():
         if not data.get('nombre'):
             return jsonify({"success": False, "error": "Nombre obligatorio"})
         
+        # Verificar si ya existe
         existing = db_query("SELECT id FROM almacenes WHERE codigo = %s", (data.get('codigo'),))
         if existing:
             return jsonify({"success": False, "error": "Ya existe un almacén con este código"})
@@ -338,6 +340,7 @@ def api_almacenes_toggle(id):
     except Exception as e:
         logging.error(f"Error togglando almacén: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 # ==========================================
 # ENDPOINTS CATEGORÍAS
@@ -437,6 +440,7 @@ def api_categorias_toggle(id):
         logging.error(f"Error togglando categoría: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
+
 # ==========================================
 # ENDPOINTS MARCAS
 # ==========================================
@@ -534,6 +538,7 @@ def api_marcas_toggle(id):
     except Exception as e:
         logging.error(f"Error togglando marca: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 # ==========================================
 # ENDPOINTS UNIDADES DE MEDIDA (UM)
@@ -636,45 +641,4 @@ def api_um_toggle(id):
         return jsonify({"success": False, "error": "No se pudo actualizar"})
     except Exception as e:
         logging.error(f"Error togglando unidad de medida: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
-    
-@maestros_bp.route('/api/clientes/<int:id>', methods=['GET'])
-@login_required
-def api_clientes_obtener(id):
-    """Obtener un cliente por ID"""
-    try:
-        query = """
-            SELECT id, codigo_cliente, razon_social, numero_documento,
-                   nombre_comercial, telefono_contacto, nombre_contacto,
-                   email_contacto, direccion_fiscal, activo, tipo_documento
-            FROM clientes
-            WHERE id = %s
-        """
-        result = db_query(query, (id,))
-        if result and len(result) > 0:
-            return jsonify({"success": True, "data": result[0]})
-        return jsonify({"success": False, "error": "Cliente no encontrado"}), 404
-    except Exception as e:
-        logging.error(f"Error obteniendo cliente: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
-    
-
-@maestros_bp.route('/api/proveedores/<int:id>', methods=['GET'])
-@login_required
-def api_proveedores_obtener(id):
-    """Obtener un proveedor por ID"""
-    try:
-        query = """
-            SELECT id, codigo_proveedor, razon_social, ruc,
-                   razon_comercial, telefono, contacto, email,
-                   direccion, activo, condicion_pago, tiempo_credito
-            FROM proveedores
-            WHERE id = %s
-        """
-        result = db_query(query, (id,))
-        if result and len(result) > 0:
-            return jsonify({"success": True, "data": result[0]})
-        return jsonify({"success": False, "error": "Proveedor no encontrado"}), 404
-    except Exception as e:
-        logging.error(f"Error obteniendo proveedor: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
