@@ -2158,3 +2158,219 @@ def obtener_costos_por_proveedor(producto_id, proveedor_id=None):
     except Exception as e:
         print(f"❌ Error en obtener_costos_por_proveedor: {e}")
         return []
+# ============================================================
+# FUNCIONES PARA MÓDULO MAESTROS
+# ============================================================
+
+def obtener_clientes_para_maestros():
+    """
+    Obtiene clientes en el formato que espera el módulo maestros
+    """
+    try:
+        query = """
+            SELECT 
+                id,
+                codigo_cliente,
+                razon_social,
+                numero_documento,
+                nombre_comercial,
+                telefono_contacto,
+                nombre_contacto,
+                email_contacto,
+                direccion_fiscal,
+                activo,
+                tipo_documento,
+                fecha_creacion,
+                created_at,
+                updated_at,
+                ruc
+            FROM clientes
+            WHERE activo = true
+            ORDER BY razon_social
+        """
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_clientes_para_maestros: {e}")
+        return []
+
+def obtener_proveedores_para_maestros():
+    """
+    Obtiene proveedores en el formato que espera el módulo maestros
+    """
+    try:
+        query = """
+            SELECT 
+                id,
+                codigo_proveedor,
+                razon_social,
+                ruc,
+                razon_comercial,
+                telefono,
+                contacto,
+                email,
+                direccion,
+                activo,
+                condicion_pago,
+                tiempo_credito,
+                lugar_recojo,
+                banco,
+                numero_cuenta,
+                cci,
+                fecha_creacion
+            FROM proveedores
+            WHERE activo = true
+            ORDER BY razon_social
+        """
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_proveedores_para_maestros: {e}")
+        return []
+
+def toggle_cliente_activo(cliente_id):
+    """
+    Activa o inactiva un cliente
+    """
+    try:
+        current = db_query("SELECT activo FROM clientes WHERE id = %s", (cliente_id,))
+        if not current:
+            return {'success': False, 'error': 'Cliente no encontrado'}
+        
+        nuevo_estado = not current[0].get('activo', True)
+        
+        query = """
+            UPDATE clientes 
+            SET activo = %s, updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, activo
+        """
+        result = db_query(query, (nuevo_estado, cliente_id))
+        
+        if result:
+            return {
+                'success': True,
+                'data': result[0],
+                'message': f"Cliente {'activado' if nuevo_estado else 'inactivado'} correctamente"
+            }
+        
+        return {'success': False, 'error': 'No se pudo actualizar el estado'}
+    except Exception as e:
+        print(f"❌ Error en toggle_cliente_activo: {e}")
+        return {'success': False, 'error': str(e)}
+
+def toggle_proveedor_activo(proveedor_id):
+    """
+    Activa o inactiva un proveedor
+    """
+    try:
+        current = db_query("SELECT activo FROM proveedores WHERE id = %s", (proveedor_id,))
+        if not current:
+            return {'success': False, 'error': 'Proveedor no encontrado'}
+        
+        nuevo_estado = not current[0].get('activo', True)
+        
+        query = """
+            UPDATE proveedores 
+            SET activo = %s
+            WHERE id = %s
+            RETURNING id, activo
+        """
+        result = db_query(query, (nuevo_estado, proveedor_id))
+        
+        if result:
+            return {
+                'success': True,
+                'data': result[0],
+                'message': f"Proveedor {'activado' if nuevo_estado else 'inactivado'} correctamente"
+            }
+        
+        return {'success': False, 'error': 'No se pudo actualizar el estado'}
+    except Exception as e:
+        print(f"❌ Error en toggle_proveedor_activo: {e}")
+        return {'success': False, 'error': str(e)}
+
+def actualizar_cliente_simple(cliente_id, data):
+    """
+    Actualiza un cliente con los datos del módulo maestros
+    """
+    try:
+        query = """
+            UPDATE clientes SET
+                razon_social = %s,
+                numero_documento = %s,
+                nombre_comercial = %s,
+                telefono_contacto = %s,
+                nombre_contacto = %s,
+                email_contacto = %s,
+                direccion_fiscal = %s,
+                tipo_documento = %s,
+                updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, codigo_cliente
+        """
+        params = (
+            data.get('razon_social'),
+            data.get('numero_documento'),
+            data.get('nombre_comercial'),
+            data.get('telefono_contacto'),
+            data.get('nombre_contacto'),
+            data.get('email_contacto'),
+            data.get('direccion_fiscal'),
+            data.get('tipo_documento', 'RUC'),
+            cliente_id
+        )
+        result = db_query(query, params)
+        
+        if result:
+            return {'success': True, 'data': result[0]}
+        return {'success': False, 'error': 'Cliente no encontrado'}
+    except Exception as e:
+        print(f"❌ Error en actualizar_cliente_simple: {e}")
+        return {'success': False, 'error': str(e)}
+
+def actualizar_proveedor_simple(proveedor_id, data):
+    """
+    Actualiza un proveedor con los datos del módulo maestros
+    """
+    try:
+        query = """
+            UPDATE proveedores SET
+                razon_social = %s,
+                ruc = %s,
+                razon_comercial = %s,
+                telefono = %s,
+                contacto = %s,
+                email = %s,
+                direccion = %s,
+                condicion_pago = %s,
+                tiempo_credito = %s,
+                lugar_recojo = %s,
+                banco = %s,
+                numero_cuenta = %s,
+                cci = %s
+            WHERE id = %s AND activo = true
+            RETURNING id, codigo_proveedor
+        """
+        params = (
+            data.get('razon_social'),
+            data.get('ruc'),
+            data.get('razon_comercial'),
+            data.get('telefono'),
+            data.get('contacto'),
+            data.get('email'),
+            data.get('direccion'),
+            data.get('condicion_pago'),
+            data.get('tiempo_credito'),
+            data.get('lugar_recojo'),
+            data.get('banco'),
+            data.get('numero_cuenta'),
+            data.get('cci'),
+            proveedor_id
+        )
+        result = db_query(query, params)
+        
+        if result:
+            return {'success': True, 'data': result[0]}
+        return {'success': False, 'error': 'Proveedor no encontrado'}
+    except Exception as e:
+        print(f"❌ Error en actualizar_proveedor_simple: {e}")
+        return {'success': False, 'error': str(e)}

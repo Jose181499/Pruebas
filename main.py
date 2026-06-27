@@ -2,27 +2,38 @@ import os
 import sys
 import requests
 import base64
-sys.dont_write_bytecode = True
-
-from flask import (
-    Flask, render_template, request, redirect, url_for, session, flash, jsonify
-)
 from functools import wraps
+from flask import (
+    Flask, render_template, request, redirect, url_for, 
+    session, flash, jsonify
+)
 from utils import login_required
+from database import (
+    verificar_usuario, verificar_usuario_supabase,
+    insertar_cliente_completo, obtener_todos_clientes_con_detalles,
+    obtener_cliente_completo_por_id, actualizar_cliente_completo,
+    eliminar_cliente_db, obtener_ultimo_codigo_cliente,
+    buscar_clientes_completo, insertar_proveedor_completo,
+    obtener_todos_proveedores, obtener_proveedor_por_id,
+    actualizar_proveedor, eliminar_proveedor_db,
+    obtener_ultimo_codigo_proveedor, db_query
+)
+
+# Configuración de conexión a BD
+DATABASE_URL = os.environ.get(
+    "DATABASE_URL",
+    "postgresql://postgres.tkfmwvsenvgpyexvdcat:admin3561967kcf@aws-1-us-east-1.pooler.supabase.com:6543/postgres"
+)
 
 # ==========================================
-# IMPORTS DE BLUEPRINTS - SOLO LOS QUE EXISTEN
+# IMPORTS DE BLUEPRINTS
 # ==========================================
-
-# BLUEPRINTS DE CONFIGURACIÓN Y SEGURIDAD
 from routes.empresas import empresas_bp
 from routes.usuarios import usuarios_bp
 from routes.correlativos import correlativos_bp
 from routes.parametros import parametros_bp
 from routes.integracion import integracion_bp
 from routes.configuracion_seguridad import config_seguridad_bp
-
-# OTROS BLUEPRINTS (para páginas HTML)
 from routes.dashboard import dashboard_bp
 from routes.productos import productos_bp
 from routes.ventas import ventas_bp
@@ -32,30 +43,7 @@ from routes.reportes import reportes_bp
 from routes.herramientas import herramientas_bp
 from routes.papelera import papelera_bp
 from routes.configuracion import configuracion_bp
-from routes.maestros import maestros_bp
-
-
-# ==========================================
-# IMPORTS DE DATABASE
-# ==========================================
-from database import (
-    verificar_usuario,
-    verificar_usuario_supabase,
-    insertar_cliente_completo,
-    obtener_todos_clientes_con_detalles,
-    obtener_cliente_completo_por_id,
-    actualizar_cliente_completo,
-    eliminar_cliente_db,
-    obtener_ultimo_codigo_cliente,
-    buscar_clientes_completo,
-    insertar_proveedor_completo,
-    obtener_todos_proveedores,
-    obtener_proveedor_por_id,
-    actualizar_proveedor,
-    eliminar_proveedor_db,
-    obtener_ultimo_codigo_proveedor,
-    db_query
-)
+from routes.maestros import maestros_bp  # ← Este ya tiene sus propios endpoints
 
 # ==========================================
 # APP CONFIGURACIÓN
@@ -66,16 +54,12 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-only-change-me")
 # ==========================================
 # REGISTRO DE BLUEPRINTS
 # ==========================================
-
-# BLUEPRINTS DE CONFIGURACIÓN Y SEGURIDAD
 app.register_blueprint(empresas_bp)
 app.register_blueprint(usuarios_bp)
 app.register_blueprint(correlativos_bp)
 app.register_blueprint(parametros_bp)
 app.register_blueprint(integracion_bp)
 app.register_blueprint(config_seguridad_bp)
-
-# OTROS BLUEPRINTS
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(productos_bp)
 app.register_blueprint(ventas_bp)
@@ -85,12 +69,11 @@ app.register_blueprint(reportes_bp)
 app.register_blueprint(herramientas_bp)
 app.register_blueprint(papelera_bp)
 app.register_blueprint(configuracion_bp)
-app.register_blueprint(maestros_bp)
+app.register_blueprint(maestros_bp)  # ← Este maneja /maestros/*
 
 # ==========================================
 # HELPERS
 # ==========================================
-
 def formato_moneda_soles(valor):
     try:
         if valor is None:
@@ -108,11 +91,9 @@ def formato_moneda_soles(valor):
 
 app.jinja_env.filters["formato_soles"] = formato_moneda_soles
 
-
 # ==========================================
 # RUTAS DE AUTENTICACIÓN
 # ==========================================
-
 @app.route("/")
 def root():
     if 'usuario_id' in session:
@@ -129,17 +110,14 @@ def login():
         password = request.form.get("password", "")
         empresa = request.form.get("empresa", "KCF")
 
-        print(f"🔍 Intentando login - Usuario: '{usuario}', Empresa: '{empresa}'")
-
         if not usuario or not password:
             flash("Por favor, ingresa usuario y contraseña.", "error")
             return render_template("login.html")
 
-        if '@' in usuario:
-            email = usuario
-        else:
+        # Obtener email del usuario
+        email = usuario
+        if '@' not in usuario:
             try:
-                from database import db_query
                 user_result = db_query("""
                     SELECT correo FROM usuarios 
                     WHERE usuario_sistema = %s AND estado = 'activo'
@@ -147,18 +125,10 @@ def login():
                 """, (usuario,))
                 if user_result and user_result[0].get('correo'):
                     email = user_result[0]['correo']
-                    print(f"✅ Email encontrado para usuario '{usuario}': '{email}'")
-                else:
-                    email = usuario
             except Exception as e:
-                print(f"❌ Error buscando email: {e}")
-                email = usuario
-
-        print(f"📧 Email a verificar: '{email}'")
+                app.logger.error(f"Error buscando email: {e}")
 
         resultado = verificar_usuario_supabase(email, password, empresa)
-
-        print(f"📋 Resultado del login: {resultado}")
 
         if resultado and resultado.get('success'):
             session.clear()
@@ -170,7 +140,6 @@ def login():
             session["auth_user_id"] = resultado["auth_user_id"]
             session.modified = True
             
-            print(f"✅ SESIÓN GUARDADA: {dict(session)}")
             flash(f'✅ Bienvenido/a {session["nombre_completo"]}!', "success")
             return redirect(url_for("index"))
 
@@ -188,12 +157,9 @@ def logout():
 # ==========================================
 # RUTA INDEX (DASHBOARD)
 # ==========================================
-
 @app.route("/index")
 @login_required
 def index():
-    """Dashboard principal - Pasar variables de sesión al template"""
-    print(f"📋 INDEX - Sesión actual: {dict(session)}")
     return render_template("index.html",
                           nombre=session.get('nombre_completo', 'Usuario'),
                           usuario=session.get('usuario', ''),
@@ -203,10 +169,8 @@ def index():
 # ==========================================
 # RUTA DE DEPURACIÓN
 # ==========================================
-
 @app.route("/debug/session")
 def debug_session():
-    """Ver el contenido de la sesión actual"""
     return jsonify({
         'session': dict(session),
         'session_keys': list(session.keys()),
@@ -214,30 +178,15 @@ def debug_session():
     })
 
 # ==========================================
-# ENDPOINTS CLIENTES API
+# ENDPOINTS CLIENTES API (SOLO LOS QUE NO ESTÁN EN MAESTROS)
 # ==========================================
 
-@app.route("/api/clientes/guardar", methods=["POST"])
-def api_guardar_cliente():
-    try:
-        data = request.get_json()
-        if not data.get("razon_social"):
-            return jsonify({"success": False, "error": "La razón social es obligatoria"})
-        if not data.get("numero_documento"):
-            return jsonify({"success": False, "error": "El número de documento es obligatorio"})
-        
-        resultado = insertar_cliente_completo(data)
-        return jsonify({
-            "success": True,
-            "data": resultado,
-            "message": f'Cliente creado con código {resultado["codigo_cliente"]}'
-        })
-    except Exception as e:
-        print(f"Error al guardar cliente: {e}")
-        return jsonify({"success": False, "error": str(e)})
+# NOTA: Los endpoints básicos CRUD para clientes/proveedores ahora están en maestros.py
+# Aquí solo mantenemos endpoints específicos que no están en maestros
 
 @app.route("/api/clientes/buscar", methods=["GET"])
 def api_buscar_clientes():
+    """Buscar clientes (autocomplete)"""
     try:
         busqueda = request.args.get('q', request.args.get('busqueda', '')).strip()
         if not busqueda or len(busqueda) < 2:
@@ -246,127 +195,65 @@ def api_buscar_clientes():
         clientes = buscar_clientes_completo(busqueda, limit=50)
         return jsonify({"success": True, "data": clientes})
     except Exception as e:
-        print(f"❌ Error en api_buscar_clientes: {e}")
+        app.logger.error(f"Error en api_buscar_clientes: {e}")
         return jsonify({"success": False, "error": str(e), "data": []}), 500
-
-@app.route("/api/clientes/<int:cliente_id>", methods=["GET"])
-def api_obtener_cliente(cliente_id):
-    try:
-        cliente = obtener_cliente_completo_por_id(cliente_id)
-        if not cliente:
-            return jsonify({"success": False, "error": "Cliente no encontrado"})
-        return jsonify({"success": True, "data": cliente})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)})
 
 @app.route("/api/clientes/<int:cliente_id>/direcciones", methods=["GET"])
 def api_obtener_direcciones_cliente(cliente_id):
+    """Obtener puntos de entrega de un cliente"""
     try:
         query = """
-            SELECT id, direccion, nombre_punto, principal, telefono_contacto
-            FROM clientes_puntos_entrega
-            WHERE cliente_id = %s
+            SELECT id, direccion, nombre_punto, principal, telefono_contacto, 
+                   responsable, condicion_pago, tiempo_credito
+            FROM clientes_punto_entrega
+            WHERE cliente_id = %s AND activo = true
             ORDER BY principal DESC, nombre_punto
         """
         direcciones = db_query(query, (cliente_id,))
         return jsonify({'success': True, 'data': direcciones or []})
     except Exception as e:
+        app.logger.error(f"Error al obtener direcciones: {e}")
         return jsonify({'success': False, 'error': str(e), 'data': []}), 500
 
-@app.route("/api/clientes/<int:cliente_id>", methods=["PUT"])
-def api_actualizar_cliente(cliente_id):
+@app.route("/api/clientes/<int:cliente_id>/contactos", methods=["GET"])
+def api_obtener_contactos_cliente(cliente_id):
+    """Obtener contactos de un cliente"""
     try:
-        data = request.get_json()
-        resultado = actualizar_cliente_completo(cliente_id, data)
-        return jsonify({"success": True, "data": resultado, "message": "Cliente actualizado correctamente"})
+        query = """
+            SELECT id, nombre_contacto, email, telefono, cargo, principal
+            FROM clientes_contactos
+            WHERE cliente_id = %s AND activo = true
+            ORDER BY principal DESC, nombre_contacto
+        """
+        contactos = db_query(query, (cliente_id,))
+        return jsonify({'success': True, 'data': contactos or []})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)})
-
-@app.route("/api/clientes/<int:cliente_id>", methods=["DELETE"])
-def api_eliminar_cliente(cliente_id):
-    try:
-        resultado = eliminar_cliente_db(cliente_id)
-        return jsonify({"success": True, "data": resultado, "message": "Cliente eliminado correctamente"})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)})
+        app.logger.error(f"Error al obtener contactos: {e}")
+        return jsonify({'success': False, 'error': str(e), 'data': []}), 500
 
 @app.route("/api/clientes/ultimo-codigo", methods=["GET"])
 def api_ultimo_codigo():
+    """Obtener último código de cliente"""
     try:
         codigo = obtener_ultimo_codigo_cliente()
         return jsonify({"success": True, "ultimoCodigo": codigo})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)})
-
-# ==========================================
-# ENDPOINTS PROVEEDORES API
-# ==========================================
-
-@app.route("/api/proveedores/guardar", methods=["POST"])
-def api_guardar_proveedor():
-    try:
-        data = request.get_json()
-        if not data.get("razon_social"):
-            return jsonify({"success": False, "error": "La razón social es obligatoria"})
-        if not data.get("ruc"):
-            return jsonify({"success": False, "error": "El RUC es obligatorio"})
-        
-        resultado = insertar_proveedor_completo(data)
-        return jsonify({
-            "success": True,
-            "data": resultado,
-            "message": f'Proveedor creado con código {resultado["codigo_proveedor"]}'
-        })
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)})
-
-@app.route("/api/proveedores/listar", methods=["GET"])
-def api_listar_proveedores():
-    try:
-        proveedores = obtener_todos_proveedores()
-        return jsonify({"success": True, "data": proveedores})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)})
-
-@app.route("/api/proveedores/<int:id>", methods=["GET"])
-def api_obtener_proveedor(id):
-    try:
-        proveedor = obtener_proveedor_por_id(id)
-        if not proveedor:
-            return jsonify({"success": False, "error": "Proveedor no encontrado"})
-        return jsonify({"success": True, "data": proveedor})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)})
-
-@app.route("/api/proveedores/<int:id>", methods=["PUT"])
-def api_actualizar_proveedor(id):
-    try:
-        data = request.get_json()
-        resultado = actualizar_proveedor(id, data)
-        return jsonify({"success": True, "data": resultado, "message": "Proveedor actualizado correctamente"})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)})
-
-@app.route("/api/proveedores/<int:id>", methods=["DELETE"])
-def api_eliminar_proveedor(id):
-    try:
-        resultado = eliminar_proveedor_db(id)
-        return jsonify({"success": True, "data": resultado, "message": "Proveedor eliminado correctamente"})
-    except Exception as e:
+        app.logger.error(f"Error al obtener último código: {e}")
         return jsonify({"success": False, "error": str(e)})
 
 @app.route("/api/proveedores/ultimo-codigo", methods=["GET"])
 def api_ultimo_codigo_proveedor():
+    """Obtener último código de proveedor"""
     try:
         codigo = obtener_ultimo_codigo_proveedor()
         return jsonify({"success": True, "ultimoCodigo": codigo})
     except Exception as e:
+        app.logger.error(f"Error al obtener último código: {e}")
         return jsonify({"success": False, "error": str(e)})
 
 # ==========================================
 # ENDPOINT SUNAT
 # ==========================================
-
 @app.route("/api/sunat/consulta", methods=["GET"])
 def api_consulta_sunat():
     ruc = request.args.get('ruc', '')
@@ -391,43 +278,24 @@ def api_consulta_sunat():
                 })
             return jsonify({'success': False, 'error': 'No se encontraron datos para este RUC'})
         return jsonify({'success': False, 'error': f'Error en la consulta: Código {response.status_code}'})
+    except requests.Timeout:
+        return jsonify({'success': False, 'error': 'Tiempo de espera agotado'})
     except Exception as e:
+        app.logger.error(f"Error en consulta SUNAT: {e}")
         return jsonify({'success': False, 'error': str(e)})
-    
 
-/////
-# Para clientes
-@app.route('/api/clientes/listar', methods=['GET'])
-@app.route('/api/clientes/guardar', methods=['POST'])
-@app.route('/api/clientes/<int:id>', methods=['DELETE'])
-
-# Para proveedores
-@app.route('/api/proveedores/listar', methods=['GET'])
-@app.route('/api/proveedores/guardar', methods=['POST'])
-@app.route('/api/proveedores/<int:id>', methods=['DELETE'])
-
-# Para almacenes
-@app.route('/api/almacenes/listar', methods=['GET'])
-@app.route('/api/almacenes/guardar', methods=['POST'])
-@app.route('/api/almacenes/<int:id>', methods=['DELETE'])
-
-# Para categorías
-@app.route('/api/categorias/listar', methods=['GET'])
-@app.route('/api/categorias/guardar', methods=['POST'])
-@app.route('/api/categorias/<int:id>', methods=['DELETE'])
-
-# Para marcas
-@app.route('/api/marcas/listar', methods=['GET'])
-@app.route('/api/marcas/guardar', methods=['POST'])
-@app.route('/api/marcas/<int:id>', methods=['DELETE'])
-
-# Para unidades de medida
-@app.route('/api/um/listar', methods=['GET'])
-@app.route('/api/um/guardar', methods=['POST'])
-@app.route('/api/um/<int:id>', methods=['DELETE'])
 # ==========================================
 # ENDPOINTS PRODUCTOS API
 # ==========================================
+def get_db_connection():
+    """Obtener conexión a la base de datos usando SQLAlchemy"""
+    try:
+        from sqlalchemy import create_engine, text
+        engine = create_engine(DATABASE_URL)
+        return engine
+    except Exception as e:
+        app.logger.error(f"Error al conectar a BD: {e}")
+        raise
 
 @app.route("/api/productos/buscar", methods=["GET"])
 def api_buscar_productos():
@@ -436,10 +304,7 @@ def api_buscar_productos():
         if not q or len(q) < 1:
             return jsonify({'success': True, 'data': []})
         
-        _a = base64.b64decode('cG9zdGdyZXNxbDovLy9wb3N0Z3Jlcy50a2Ztd3ZzZW52Z3B5ZXh2ZGNhdDphZG1pbjM1NjE5NjdrY2ZAYXdzLTEtdXMtZWFzdC0xLnBvb2xlci5zdXBhYmFzZS5jb206NjU0My9wb3N0Z3Jlcw==').decode('utf-8')
-        from sqlalchemy import create_engine, text
-        engine = create_engine(_a)
-        
+        engine = get_db_connection()
         with engine.connect() as conn:
             result = conn.execute(text("""
                 SELECT id, codigo, descripcion, marca, modelo, stock
@@ -448,19 +313,18 @@ def api_buscar_productos():
             """), {"q": f'%{q}%'})
             
             productos = [{'id': row[0], 'codigo': row[1] or '', 'descripcion': row[2] or '', 
-                         'marca': row[3] or '', 'modelo': row[4] or '', 'stock': row[5] or 0} for row in result]
+                         'marca': row[3] or '', 'modelo': row[4] or '', 'stock': row[5] or 0} 
+                        for row in result]
         
         return jsonify({'success': True, 'data': productos})
     except Exception as e:
+        app.logger.error(f"Error en api_buscar_productos: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route("/api/productos", methods=["GET"])
 def api_listar_productos():
     try:
-        _a = base64.b64decode('cG9zdGdyZXNxbDovLy9wb3N0Z3Jlcy50a2Ztd3ZzZW52Z3B5ZXh2ZGNhdDphZG1pbjM1NjE5NjdrY2ZAYXdzLTEtdXMtZWFzdC0xLnBvb2xlci5zdXBhYmFzZS5jb206NjU0My9wb3N0Z3Jlcw==').decode('utf-8')
-        from sqlalchemy import create_engine, text
-        engine = create_engine(_a)
-        
+        engine = get_db_connection()
         with engine.connect() as conn:
             result = conn.execute(text("""
                 SELECT id, codigo, descripcion, marca, modelo, stock
@@ -468,17 +332,17 @@ def api_listar_productos():
             """))
             
             productos = [{'id': row[0], 'codigo': row[1] or '', 'descripcion': row[2] or '',
-                         'marca': row[3] or '', 'modelo': row[4] or '', 'stock': row[5] or 0} for row in result]
+                         'marca': row[3] or '', 'modelo': row[4] or '', 'stock': row[5] or 0} 
+                        for row in result]
         
         return jsonify({'success': True, 'data': productos})
     except Exception as e:
+        app.logger.error(f"Error en api_listar_productos: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 # ==========================================
 # EJECUTAR
 # ==========================================
-
 if __name__ == "__main__":
     host = "0.0.0.0"
     port = 5000
@@ -492,22 +356,17 @@ if __name__ == "__main__":
     print(f"\n📋 RUTAS PRINCIPALES:")
     print(f"   - Login:      http://localhost:{port}/login")
     print(f"   - Dashboard:  http://localhost:{port}/index")
-    print(f"   - Empresas:   http://localhost:{port}/empresas")
-    print(f"   - Usuarios:   http://localhost:{port}/usuarios")
     print(f"   - Maestros:   http://localhost:{port}/maestros")
-    print(f"   - Productos:  http://localhost:{port}/productos")
-    print(f"   - Ventas:     http://localhost:{port}/ventas")
-    print(f"   - Inventario: http://localhost:{port}/inventario")
-    print(f"   - Finanzas:   http://localhost:{port}/finanzas")
-    print(f"   - Reportes:   http://localhost:{port}/reportes")
-    print(f"\n📋 RUTAS DE CONFIGURACIÓN:")
-    print(f"   - Correlativos:   http://localhost:{port}/correlativos")
-    print(f"   - Parámetros:     http://localhost:{port}/parametros")
-    print(f"   - Integración:    http://localhost:{port}/integracion")
-    print(f"   - Herramientas:   http://localhost:{port}/herramientas")
-    print(f"   - Papelera:       http://localhost:{port}/papelera")
+    print(f"\n📋 RUTAS API MAESTROS:")
+    print(f"   - Clientes:   /maestros/api/clientes/listar")
+    print(f"   - Clientes:   /maestros/api/clientes/guardar")
+    print(f"   - Clientes:   /maestros/api/clientes/<id>/toggle")
+    print(f"   - Proveedores:/maestros/api/proveedores/listar")
+    print(f"   - Proveedores:/maestros/api/proveedores/guardar")
+    print(f"   - Proveedores:/maestros/api/proveedores/<id>/toggle")
     print("=" * 60)
     print("✅ Servidor listo para recibir peticiones")
     print("=" * 60)
 
-    app.run(debug=True, host=host, port=port)
+    app.run(debug=os.environ.get("FLASK_DEBUG", "true").lower() == "true", 
+            host=host, port=port)
