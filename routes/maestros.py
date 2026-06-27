@@ -60,6 +60,8 @@ def api_clientes_guardar():
         if not numero_documento:
             return jsonify({"success": False, "error": "Número de documento/RUC obligatorio"})
 
+        activo = True
+
         query = """
             INSERT INTO clientes (
                 tipo_documento, numero_documento, razon_social,
@@ -81,15 +83,20 @@ def api_clientes_guardar():
             data.get('telefono_contacto'),
             data.get('nombre_contacto'),
             data.get('email_contacto'),
-            data.get('activo', True)
+            activo
         )
 
+        current_app.logger.info(f"📝 Ejecutando INSERT con params: {params}")
+        
+        # 🔥 Usar db_query para INSERT con RETURNING
+        from database import db_query
         result = db_query(query, params)
+        
+        current_app.logger.info(f"📝 Resultado del INSERT: {result}")
 
         if result and len(result) > 0:
             current_app.logger.info(f"✅ Cliente creado: {result[0]}")
             
-            # 🔥 IMPORTANTE: Asignar numero_documento a ruc para compatibilidad
             cliente = result[0]
             cliente['ruc'] = cliente.get('numero_documento')
             
@@ -103,10 +110,10 @@ def api_clientes_guardar():
 
     except Exception as e:
         current_app.logger.error(f"❌ Error guardando cliente: {e}")
+        import traceback
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
-        
 @maestros_bp.route('/api/clientes/<int:id>', methods=['GET'])
 @login_required
 def api_clientes_obtener(id):
