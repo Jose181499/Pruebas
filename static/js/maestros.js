@@ -5,14 +5,13 @@
 console.log('📦 Módulo Maestros cargando...');
 
 // ============================================================
-// CONFIGURACIÓN DE MÓDULOS - UNIFICADA Y CORREGIDA
+// CONFIGURACIÓN DE MÓDULOS - COMPLETA Y CORREGIDA
 // ============================================================
 const MODULE_CONFIG = {
     clientes: {
         title: 'Clientes',
         subtitle: 'Base comercial de clientes y prospectos',
         table: 'clientes',
-        apiBase: '/api/maestros', // ← CORREGIDO: ruta API unificada
         fields: [
             { key: 'codigo_cliente', label: 'Código', type: 'text' },
             { key: 'razon_social', label: 'Razón Social', type: 'text' },
@@ -26,13 +25,13 @@ const MODULE_CONFIG = {
         displayFields: ['codigo_cliente', 'razon_social', 'numero_documento', 'nombre_comercial', 'nombre_contacto', 'telefono_contacto', 'email_contacto', 'activo'],
         headers: ['Código', 'Razón Social', 'RUC/DNI', 'Nombre Comercial', 'Contacto', 'Teléfono', 'Email', 'Estado'],
         idField: 'id',
-        codeField: 'codigo_cliente'
+        codeField: 'codigo_cliente',
+        apiBase: '/api/maestros'
     },
     proveedores: {
         title: 'Proveedores',
         subtitle: 'Base de proveedores y servicios',
         table: 'proveedores',
-        apiBase: '/api/maestros',
         fields: [
             { key: 'codigo_proveedor', label: 'Código', type: 'text' },
             { key: 'razon_social', label: 'Razón Social', type: 'text' },
@@ -46,13 +45,13 @@ const MODULE_CONFIG = {
         displayFields: ['codigo_proveedor', 'razon_social', 'ruc', 'razon_comercial', 'contacto', 'telefono', 'email', 'activo'],
         headers: ['Código', 'Razón Social', 'RUC', 'Razón Comercial', 'Contacto', 'Teléfono', 'Email', 'Estado'],
         idField: 'id',
-        codeField: 'codigo_proveedor'
+        codeField: 'codigo_proveedor',
+        apiBase: '/api/maestros'
     },
     almacenes: {
         title: 'Almacenes',
         subtitle: 'Gestión de almacenes y ubicaciones',
         table: 'almacenes',
-        apiBase: '/api/maestros',
         fields: [
             { key: 'codigo', label: 'Código', type: 'text' },
             { key: 'nombre', label: 'Nombre', type: 'text' },
@@ -65,13 +64,13 @@ const MODULE_CONFIG = {
         displayFields: ['codigo', 'nombre', 'tipo', 'responsable', 'telefono', 'activo'],
         headers: ['Código', 'Nombre', 'Tipo', 'Responsable', 'Teléfono', 'Estado'],
         idField: 'id',
-        codeField: 'codigo'
+        codeField: 'codigo',
+        apiBase: '/api/maestros'
     },
     categorias: {
         title: 'Categorías',
         subtitle: 'Clasificación de productos',
         table: 'categorias',
-        apiBase: '/api/maestros',
         fields: [
             { key: 'codigo', label: 'Código', type: 'text' },
             { key: 'nombre', label: 'Nombre', type: 'text' },
@@ -81,13 +80,13 @@ const MODULE_CONFIG = {
         displayFields: ['codigo', 'nombre', 'tipo', 'activo'],
         headers: ['Código', 'Nombre', 'Categoría Principal', 'Estado'],
         idField: 'id',
-        codeField: 'codigo'
+        codeField: 'codigo',
+        apiBase: '/api/maestros'
     },
     marcas: {
         title: 'Marcas',
         subtitle: 'Gestión de marcas y fabricantes',
         table: 'marcas',
-        apiBase: '/api/maestros',
         fields: [
             { key: 'codigo', label: 'Código', type: 'text' },
             { key: 'nombre', label: 'Marca', type: 'text' },
@@ -97,13 +96,13 @@ const MODULE_CONFIG = {
         displayFields: ['codigo', 'nombre', 'tipo', 'activo'],
         headers: ['Código', 'Marca', 'Tipo', 'Estado'],
         idField: 'id',
-        codeField: 'codigo'
+        codeField: 'codigo',
+        apiBase: '/api/maestros'
     },
     um: {
         title: 'Unidades de Medida',
         subtitle: 'Define cómo compras, vendes e inventarias los productos',
         table: 'um',
-        apiBase: '/api/maestros',
         fields: [
             { key: 'codigo', label: 'Código', type: 'text' },
             { key: 'nombre', label: 'Unidad', type: 'text' },
@@ -117,36 +116,30 @@ const MODULE_CONFIG = {
         displayFields: ['codigo', 'nombre', 'abreviatura', 'tipo', 'decimales', 'ambito', 'uso', 'activo'],
         headers: ['Código', 'Unidad', 'Abreviatura', 'Tipo', 'Decimales', 'Ámbito', 'Uso', 'Estado'],
         idField: 'id',
-        codeField: 'codigo'
+        codeField: 'codigo',
+        apiBase: '/api/maestros'
     }
 };
 
 // ============================================================
 // VARIABLES GLOBALES
 // ============================================================
-const MAESTROS = Object.keys(MODULE_CONFIG); // ← CORREGIDO: se genera automáticamente
+const MAESTROS = Object.keys(MODULE_CONFIG);
 const DS = {};
 const sheetMode = {};
 let currentModule = 'clientes';
 
 // ============================================================
-// FUNCIONES API - CORREGIDAS CON MEJOR MANEJO DE ERRORES
+// FUNCIONES API - CORREGIDAS
 // ============================================================
 
-/**
- * Obtiene la URL base de la API para un módulo
- */
 function getApiBase(modulo) {
     const config = MODULE_CONFIG[modulo];
     return config?.apiBase || '/api/maestros';
 }
 
-/**
- * Realiza una petición API con manejo de errores mejorado
- */
 async function fetchAPI(endpoint, options = {}) {
-    console.log(`🌐 Fetching: ${endpoint}`); // ← LOG para depuración
-    
+    console.log(`🌐 Fetching: ${endpoint}`);
     try {
         const response = await fetch(endpoint, {
             ...options,
@@ -156,13 +149,13 @@ async function fetchAPI(endpoint, options = {}) {
             }
         });
         
-        console.log(`📡 Status: ${response.status}`); // ← LOG del status
+        console.log(`📡 Status: ${response.status}`);
         
         if (!response.ok) {
             let errorMsg = `Error ${response.status}`;
             try {
                 const errorData = await response.json();
-                console.error('❌ Detalle error:', errorData); // ← LOG del error
+                console.error('❌ Detalle error:', errorData);
                 errorMsg = errorData.error || errorData.message || errorMsg;
             } catch (e) {
                 errorMsg = `HTTP ${response.status}: ${response.statusText}`;
@@ -171,7 +164,7 @@ async function fetchAPI(endpoint, options = {}) {
         }
         
         const data = await response.json();
-        console.log(`✅ Datos recibidos:`, data); // ← LOG de datos
+        console.log(`✅ Datos recibidos:`, data);
         return data;
     } catch (error) {
         console.error(`❌ Error en fetchAPI:`, error);
@@ -179,16 +172,11 @@ async function fetchAPI(endpoint, options = {}) {
     }
 }
 
-/**
- * Obtiene datos de un módulo
- */
 async function fetchData(modulo) {
     try {
         const apiBase = getApiBase(modulo);
-        // 🔥 ENDPOINT CORREGIDO: usa un formato REST estándar
         const data = await fetchAPI(`${apiBase}/${modulo}`);
         
-        // Soporte para diferentes formatos de respuesta
         if (data.success) {
             return data.data || [];
         } else if (Array.isArray(data)) {
@@ -206,14 +194,10 @@ async function fetchData(modulo) {
     }
 }
 
-/**
- * Guarda datos de un módulo (CREAR o ACTUALIZAR)
- */
 async function saveData(modulo, data) {
     try {
         const apiBase = getApiBase(modulo);
         const id = data.id;
-        // 🔥 ENDPOINTS CORREGIDOS: API REST estándar
         const endpoint = id ? `${apiBase}/${modulo}/${id}` : `${apiBase}/${modulo}`;
         const method = id ? 'PUT' : 'POST';
         
@@ -226,6 +210,9 @@ async function saveData(modulo, data) {
         
         if (result.success) {
             showToast(result.message || 'Datos guardados correctamente', 'success');
+            // Recargar datos después de guardar
+            await loadModuleData(modulo, true);
+            renderModule(modulo);
         } else {
             showToast(result.error || 'Error al guardar', 'error');
         }
@@ -237,13 +224,9 @@ async function saveData(modulo, data) {
     }
 }
 
-/**
- * Activa/Inactiva un registro (TOGGLE)
- */
 async function toggleRecord(modulo, id) {
     try {
         const apiBase = getApiBase(modulo);
-        // 🔥 ENDPOINT CORREGIDO: usa PATCH para actualización parcial
         const result = await fetchAPI(`${apiBase}/${modulo}/${id}/toggle`, {
             method: 'PATCH'
         });
@@ -312,9 +295,8 @@ function showToast(message, type = 'info') {
 const dataCache = {};
 
 async function loadModuleData(modulo, force = false) {
-    if (!force && dataCache[modulo] && dataCache[modulo].length > 0) {
+    if (!force && dataCache[modulo]) {
         DS[modulo] = dataCache[modulo];
-        console.log(`📦 Usando cache de ${modulo}: ${DS[modulo].length} registros`);
         return DS[modulo];
     }
     
@@ -368,16 +350,6 @@ function bAmbito(v) {
         'COMPARTIDO': '<span class="badge b-shared">Compartido</span>'
     };
     return ambitos[v] || '<span class="badge b-shared">Compartido</span>';
-}
-
-function fecha(v) {
-    if (!v) return '-';
-    const d = new Date(v);
-    if (isNaN(d)) return esc(v);
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = d.getFullYear();
-    return `${day}/${month}/${year}`;
 }
 
 function getCode(r, modulo) {
@@ -577,7 +549,7 @@ function renderModule(m) {
 }
 
 // ============================================================
-// HANDLERS
+// HANDLERS - CORREGIDOS CON FUNCIONALIDAD COMPLETA
 // ============================================================
 
 async function toggleRecordHandler(modulo, id) {
@@ -599,6 +571,8 @@ async function toggleRecordHandler(modulo, id) {
         if (result.success) {
             r.activo = newState;
             showToast(`✅ Registro ${newStateLabel.toLowerCase()} correctamente`, 'success');
+            // Recargar la vista
+            await loadModuleData(modulo, true);
             renderModule(modulo);
         } else {
             showToast(`❌ Error: ${result.error || 'No se pudo actualizar'}`, 'error');
@@ -609,7 +583,7 @@ async function toggleRecordHandler(modulo, id) {
 }
 
 // ============================================================
-// NAVEGACIÓN Y OPEN SCREEN
+// NAVEGACIÓN Y OPEN SCREEN - CORREGIDO
 // ============================================================
 
 async function openScreen(screen) {
@@ -623,11 +597,19 @@ async function openScreen(screen) {
         section.classList.add('active');
     } else {
         console.warn(`⚠️ Sección ${screen} no encontrada`);
+        // Intentar crear la sección si no existe
+        const mainPanel = document.querySelector('.main-inner');
+        if (mainPanel) {
+            const newSection = document.createElement('section');
+            newSection.id = screen;
+            newSection.className = 'section active';
+            mainPanel.appendChild(newSection);
+        }
     }
     
     // Actualizar tabs
     document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll(`.tab-btn[data-screen="${screen}"]`).forEach(t => t.classList.add('active'));
+    document.querySelectorAll(`.tab-btn[data-tab="${screen}"]`).forEach(t => t.classList.add('active'));
     
     // Renderizar módulo
     if (MODULE_CONFIG[screen]) {
@@ -646,14 +628,261 @@ async function openScreen(screen) {
 }
 
 // ============================================================
-// EVENT DELEGATION
+// CREAR NUEVO REGISTRO - CON MODAL
+// ============================================================
+
+function openCreateModal(modulo) {
+    const config = MODULE_CONFIG[modulo];
+    if (!config) return;
+    
+    // Crear modal
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'modalCreate';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 99999;
+        padding: 20px;
+    `;
+    
+    let fieldsHtml = '';
+    config.fields.forEach(f => {
+        if (f.key === 'id' || f.key === 'activo') return;
+        const type = f.type === 'boolean' ? 'checkbox' : 'text';
+        const checked = f.type === 'boolean' ? `checked` : '';
+        fieldsHtml += `
+            <div style="margin-bottom:12px;">
+                <label style="display:block;font-weight:600;font-size:13px;margin-bottom:4px;">${f.label}</label>
+                <input type="${type}" id="field_${f.key}" ${checked} style="width:100%;padding:8px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;">
+            </div>
+        `;
+    });
+    
+    modal.innerHTML = `
+        <div style="background:white;border-radius:12px;max-width:600px;width:100%;max-height:90vh;overflow:auto;padding:24px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <h2 style="margin:0;font-size:20px;">➕ Nuevo ${config.title.slice(0, -1)}</h2>
+                <button onclick="closeCreateModal()" style="background:none;border:none;font-size:24px;cursor:pointer;">✕</button>
+            </div>
+            <form id="formCreate">
+                ${fieldsHtml}
+                <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;">
+                    <button type="button" onclick="closeCreateModal()" style="padding:8px 20px;border:1px solid #e2e8f0;border-radius:6px;background:white;cursor:pointer;">Cancelar</button>
+                    <button type="submit" style="padding:8px 20px;border:none;border-radius:6px;background:#3B82F6;color:white;cursor:pointer;">💾 Guardar</button>
+                </div>
+            </form>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Manejar submit
+    document.getElementById('formCreate').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const data = {};
+        config.fields.forEach(f => {
+            if (f.key === 'id' || f.key === 'activo') return;
+            const value = formData.get(`field_${f.key}`);
+            if (f.type === 'boolean') {
+                data[f.key] = !!value;
+            } else {
+                data[f.key] = value || '';
+            }
+        });
+        data.activo = true;
+        
+        const result = await saveData(modulo, data);
+        if (result.success) {
+            closeCreateModal();
+        }
+    });
+}
+
+function closeCreateModal() {
+    const modal = document.getElementById('modalCreate');
+    if (modal) modal.remove();
+}
+
+// ============================================================
+// VER DETALLE - CON MODAL
+// ============================================================
+
+function openViewModal(modulo, id) {
+    const r = DS[modulo]?.find(x => x.id === id);
+    if (!r) {
+        showToast('Registro no encontrado', 'error');
+        return;
+    }
+    
+    const config = MODULE_CONFIG[modulo];
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'modalView';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 99999;
+        padding: 20px;
+    `;
+    
+    let detailsHtml = '';
+    config.fields.forEach(f => {
+        const value = r[f.key] !== undefined && r[f.key] !== null ? r[f.key] : '-';
+        detailsHtml += `
+            <div style="display:flex;padding:6px 0;border-bottom:1px solid #f1f5f9;">
+                <span style="font-weight:600;width:150px;color:#64748B;">${f.label}</span>
+                <span>${typeof value === 'boolean' ? (value ? '✅ Sí' : '❌ No') : value}</span>
+            </div>
+        `;
+    });
+    
+    modal.innerHTML = `
+        <div style="background:white;border-radius:12px;max-width:600px;width:100%;max-height:90vh;overflow:auto;padding:24px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <h2 style="margin:0;font-size:20px;">👁️ Detalle de ${config.title.slice(0, -1)}</h2>
+                <button onclick="closeViewModal()" style="background:none;border:none;font-size:24px;cursor:pointer;">✕</button>
+            </div>
+            <div style="background:#f8fafc;padding:16px;border-radius:8px;margin-bottom:16px;">
+                <div style="font-size:13px;color:#64748B;">Código</div>
+                <div style="font-size:18px;font-weight:700;">${getCode(r, modulo)}</div>
+            </div>
+            <div>
+                ${detailsHtml}
+            </div>
+            <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;">
+                <button onclick="closeViewModal()" style="padding:8px 20px;border:1px solid #e2e8f0;border-radius:6px;background:white;cursor:pointer;">Cerrar</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function closeViewModal() {
+    const modal = document.getElementById('modalView');
+    if (modal) modal.remove();
+}
+
+// ============================================================
+// EDITAR REGISTRO - CON MODAL
+// ============================================================
+
+function openEditModal(modulo, id) {
+    const r = DS[modulo]?.find(x => x.id === id);
+    if (!r) {
+        showToast('Registro no encontrado', 'error');
+        return;
+    }
+    
+    const config = MODULE_CONFIG[modulo];
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'modalEdit';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 99999;
+        padding: 20px;
+    `;
+    
+    let fieldsHtml = '';
+    config.fields.forEach(f => {
+        if (f.key === 'id') return;
+        const value = r[f.key] !== undefined && r[f.key] !== null ? r[f.key] : '';
+        const type = f.type === 'boolean' ? 'checkbox' : 'text';
+        const checked = f.type === 'boolean' && value ? 'checked' : '';
+        fieldsHtml += `
+            <div style="margin-bottom:12px;">
+                <label style="display:block;font-weight:600;font-size:13px;margin-bottom:4px;">${f.label}</label>
+                <input type="${type}" id="edit_${f.key}" value="${typeof value === 'boolean' ? '' : value}" ${checked} style="width:100%;padding:8px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;">
+            </div>
+        `;
+    });
+    
+    modal.innerHTML = `
+        <div style="background:white;border-radius:12px;max-width:600px;width:100%;max-height:90vh;overflow:auto;padding:24px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <h2 style="margin:0;font-size:20px;">✏️ Editar ${config.title.slice(0, -1)}</h2>
+                <button onclick="closeEditModal()" style="background:none;border:none;font-size:24px;cursor:pointer;">✕</button>
+            </div>
+            <div style="background:#f8fafc;padding:12px 16px;border-radius:8px;margin-bottom:16px;">
+                <span style="font-size:13px;color:#64748B;">Código: </span>
+                <span style="font-weight:700;">${getCode(r, modulo)}</span>
+            </div>
+            <form id="formEdit">
+                ${fieldsHtml}
+                <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;">
+                    <button type="button" onclick="closeEditModal()" style="padding:8px 20px;border:1px solid #e2e8f0;border-radius:6px;background:white;cursor:pointer;">Cancelar</button>
+                    <button type="submit" style="padding:8px 20px;border:none;border-radius:6px;background:#3B82F6;color:white;cursor:pointer;">💾 Actualizar</button>
+                </div>
+            </form>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Manejar submit
+    document.getElementById('formEdit').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const data = { id: r.id };
+        config.fields.forEach(f => {
+            if (f.key === 'id') return;
+            const value = formData.get(`edit_${f.key}`);
+            if (f.type === 'boolean') {
+                data[f.key] = !!value;
+            } else {
+                data[f.key] = value || '';
+            }
+        });
+        
+        const result = await saveData(modulo, data);
+        if (result.success) {
+            closeEditModal();
+        }
+    });
+}
+
+function closeEditModal() {
+    const modal = document.getElementById('modalEdit');
+    if (modal) modal.remove();
+}
+
+// ============================================================
+// EVENT DELEGATION - CORREGIDO
 // ============================================================
 document.addEventListener('click', function(e) {
     // Navegación de tabs
-    const tabBtn = e.target.closest('.tab-btn[data-screen]');
+    const tabBtn = e.target.closest('.tab-btn[data-tab]');
     if (tabBtn) {
         e.preventDefault();
-        openScreen(tabBtn.dataset.screen);
+        const tab = tabBtn.dataset.tab;
+        if (tab) openScreen(tab);
         return;
     }
 
@@ -662,7 +891,7 @@ document.addEventListener('click', function(e) {
     if (newBtn) {
         e.preventDefault();
         const m = newBtn.dataset.new;
-        showToast(`📝 Funcionalidad: Crear nuevo ${m} (próximamente)`, 'info');
+        openCreateModal(m);
         return;
     }
 
@@ -680,16 +909,7 @@ document.addEventListener('click', function(e) {
     if (viewBtn) {
         e.preventDefault();
         const [m, id] = viewBtn.dataset.view.split('|');
-        const r = DS[m]?.find(x => x.id === parseInt(id));
-        if (r) {
-            const details = Object.entries(r)
-                .filter(([key]) => !key.startsWith('_'))
-                .map(([key, value]) => `${key}: ${value}`)
-                .join('\n');
-            alert(`📋 Detalle de ${m}\n\n${details}`);
-        } else {
-            showToast('Registro no encontrado', 'error');
-        }
+        openViewModal(m, parseInt(id));
         return;
     }
 
@@ -698,7 +918,7 @@ document.addEventListener('click', function(e) {
     if (editBtn) {
         e.preventDefault();
         const [m, id] = editBtn.dataset.edit.split('|');
-        showToast(`✏️ Editar ${m} ID: ${id} (próximamente)`, 'info');
+        openEditModal(m, parseInt(id));
         return;
     }
 });
@@ -989,20 +1209,43 @@ document.addEventListener('click', function(e) {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Iniciando Módulo Maestros');
     console.log('📊 Módulos disponibles:', Object.keys(MODULE_CONFIG));
+    console.log('📋 RUTAS API:');
+    console.log('   - /api/maestros/clientes');
+    console.log('   - /api/maestros/proveedores');
+    console.log('   - /api/maestros/almacenes');
+    console.log('   - /api/maestros/categorias');
+    console.log('   - /api/maestros/marcas');
+    console.log('   - /api/maestros/um');
     
-    // Verificar que existen los contenedores en el HTML
+    // Verificar contenedores
     const containers = Object.keys(MODULE_CONFIG);
     containers.forEach(m => {
         if (!document.getElementById(m)) {
-            console.warn(`⚠️ No existe el contenedor #${m} en el HTML`);
+            console.warn(`⚠️ No existe el contenedor #${m} en el HTML, creándolo...`);
+            const mainPanel = document.querySelector('.main-inner');
+            if (mainPanel) {
+                const section = document.createElement('section');
+                section.id = m;
+                section.className = 'section';
+                // Insertar después de la sección dashboard o al final
+                const dashboard = document.getElementById('dashboard');
+                if (dashboard) {
+                    dashboard.parentNode.insertBefore(section, dashboard.nextSibling);
+                } else {
+                    mainPanel.appendChild(section);
+                }
+                console.log(`✅ Contenedor #${m} creado`);
+            }
         }
     });
     
-    // Iniciar con el primer módulo disponible
-    const defaultModule = containers[0] || 'clientes';
+    // Obtener módulo inicial desde la URL o usar clientes
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    const defaultModule = tabParam && MODULE_CONFIG[tabParam] ? tabParam : 'clientes';
+    
     console.log(`🎯 Módulo inicial: ${defaultModule}`);
     
-    // Pequeño delay para asegurar que el DOM esté listo
     setTimeout(() => {
         openScreen(defaultModule);
     }, 100);
