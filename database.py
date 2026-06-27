@@ -2721,28 +2721,19 @@ def toggle_um_activo(um_id):
 # FUNCIONES PARA OBTENER REGISTROS POR ID (MAESTROS)
 # ============================================================
 
+# ============================================================
+# FUNCIONES PARA OBTENER REGISTROS POR ID (MAESTROS)
+# ============================================================
+
 def obtener_cliente_por_id(cliente_id):
-    """
-    Obtiene un cliente por su ID con todos sus campos
-    """
+    """Obtiene un cliente por su ID"""
     try:
         query = """
             SELECT 
-                id,
-                codigo_cliente,
-                razon_social,
-                numero_documento,
-                nombre_comercial,
-                telefono_contacto,
-                nombre_contacto,
-                email_contacto,
-                direccion_fiscal,
-                activo,
-                tipo_documento,
-                fecha_creacion,
-                created_at,
-                updated_at,
-                ruc
+                id, codigo_cliente, razon_social, numero_documento,
+                nombre_comercial, telefono_contacto, nombre_contacto,
+                email_contacto, direccion_fiscal, activo, tipo_documento,
+                fecha_creacion, created_at, updated_at, ruc
             FROM clientes
             WHERE id = %s
         """
@@ -2752,6 +2743,89 @@ def obtener_cliente_por_id(cliente_id):
         print(f"❌ Error en obtener_cliente_por_id: {e}")
         return None
 
+def obtener_proveedor_por_id(proveedor_id):
+    """Obtiene un proveedor por su ID"""
+    try:
+        query = """
+            SELECT 
+                id, codigo_proveedor, razon_social, ruc,
+                razon_comercial, telefono, contacto, email,
+                direccion, activo, condicion_pago, tiempo_credito,
+                lugar_recojo, banco, numero_cuenta, cci, fecha_creacion
+            FROM proveedores
+            WHERE id = %s
+        """
+        result = db_query(query, (proveedor_id,))
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en obtener_proveedor_por_id: {e}")
+        return None
+
+def obtener_almacen_por_id(almacen_id):
+    """Obtiene un almacén por su ID"""
+    try:
+        query = """
+            SELECT 
+                id, codigo, nombre, tipo, responsable, telefono,
+                direccion, activo, created_at, updated_at
+            FROM almacenes
+            WHERE id = %s
+        """
+        result = db_query(query, (almacen_id,))
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en obtener_almacen_por_id: {e}")
+        return None
+
+def obtener_categoria_por_id(categoria_id):
+    """Obtiene una categoría por su ID"""
+    try:
+        query = """
+            SELECT 
+                id, codigo, nombre, tipo, activo,
+                created_at, updated_at
+            FROM categorias
+            WHERE id = %s
+        """
+        result = db_query(query, (categoria_id,))
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en obtener_categoria_por_id: {e}")
+        return None
+
+def obtener_marca_por_id(marca_id):
+    """Obtiene una marca por su ID"""
+    try:
+        query = """
+            SELECT 
+                id, codigo, nombre, tipo, activo,
+                created_at, updated_at
+            FROM marcas
+            WHERE id = %s
+        """
+        result = db_query(query, (marca_id,))
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en obtener_marca_por_id: {e}")
+        return None
+
+def obtener_um_por_id(um_id):
+    """Obtiene una unidad de medida por su ID"""
+    try:
+        query = """
+            SELECT 
+                id, codigo, nombre, abreviatura, tipo,
+                decimales, activo, ambito, uso,
+                created_at, updated_at
+            FROM um
+            WHERE id = %s
+        """
+        result = db_query(query, (um_id,))
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en obtener_um_por_id: {e}")
+        return None
+    
 def obtener_proveedor_por_id(proveedor_id):
     """
     Obtiene un proveedor por su ID con todos sus campos

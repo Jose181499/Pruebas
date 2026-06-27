@@ -746,3 +746,361 @@ def api_um_toggle(id):
 def api_test():
     """Endpoint para probar que la API funciona"""
     return jsonify({"success": True, "message": "API de maestros funcionando correctamente"})
+
+
+# ==========================================
+# ENDPOINTS PROVEEDORES - ACTUALIZAR (PUT)
+# ==========================================
+
+@maestros_bp.route('/api/proveedores/<int:id>', methods=['PUT'])
+@login_required
+def api_proveedores_actualizar(id):
+    """Actualizar proveedor"""
+    try:
+        data = request.get_json()
+        
+        if not data.get('razon_social'):
+            return jsonify({"success": False, "error": "Razón social obligatoria"})
+        if not data.get('ruc'):
+            return jsonify({"success": False, "error": "RUC obligatorio"})
+        
+        query = """
+            UPDATE proveedores SET
+                razon_social = %s,
+                ruc = %s,
+                razon_comercial = %s,
+                telefono = %s,
+                contacto = %s,
+                email = %s,
+                direccion = %s,
+                condicion_pago = %s,
+                tiempo_credito = %s,
+                lugar_recojo = %s,
+                banco = %s,
+                numero_cuenta = %s,
+                cci = %s,
+                activo = %s
+            WHERE id = %s
+            RETURNING id, codigo_proveedor
+        """
+        
+        params = (
+            data.get('razon_social'),
+            data.get('ruc'),
+            data.get('razon_comercial', data.get('razon_social')),
+            data.get('telefono'),
+            data.get('contacto'),
+            data.get('email'),
+            data.get('direccion'),
+            data.get('condicion_pago', 'Contado'),
+            data.get('tiempo_credito'),
+            data.get('lugar_recojo'),
+            data.get('banco'),
+            data.get('numero_cuenta'),
+            data.get('cci'),
+            data.get('activo', True),
+            id
+        )
+        
+        result = db_query(query, params)
+        
+        if result and len(result) > 0:
+            return jsonify({
+                "success": True,
+                "data": result[0],
+                "message": "Proveedor actualizado correctamente"
+            })
+        
+        return jsonify({"success": False, "error": "No se pudo actualizar el proveedor"})
+    except Exception as e:
+        logging.error(f"Error actualizando proveedor: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ==========================================
+# ENDPOINTS ALMACENES - OBTENER (GET) Y ACTUALIZAR (PUT)
+# ==========================================
+
+@maestros_bp.route('/api/almacenes/<int:id>', methods=['GET'])
+@login_required
+def api_almacenes_obtener(id):
+    """Obtener almacén por ID"""
+    try:
+        query = """
+            SELECT id, codigo, nombre, tipo, responsable, telefono,
+                   direccion, activo, created_at, updated_at
+            FROM almacenes
+            WHERE id = %s
+        """
+        result = db_query(query, (id,))
+        if result and len(result) > 0:
+            return jsonify({"success": True, "data": result[0]})
+        return jsonify({"success": False, "error": "Almacén no encontrado"}), 404
+    except Exception as e:
+        logging.error(f"Error obteniendo almacén: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@maestros_bp.route('/api/almacenes/<int:id>', methods=['PUT'])
+@login_required
+def api_almacenes_actualizar(id):
+    """Actualizar almacén"""
+    try:
+        data = request.get_json()
+        
+        if not data.get('codigo'):
+            return jsonify({"success": False, "error": "Código obligatorio"})
+        if not data.get('nombre'):
+            return jsonify({"success": False, "error": "Nombre obligatorio"})
+        
+        query = """
+            UPDATE almacenes SET
+                codigo = %s,
+                nombre = %s,
+                tipo = %s,
+                responsable = %s,
+                telefono = %s,
+                direccion = %s,
+                activo = %s,
+                updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, codigo
+        """
+        
+        params = (
+            data.get('codigo'),
+            data.get('nombre'),
+            data.get('tipo', 'Principal'),
+            data.get('responsable'),
+            data.get('telefono'),
+            data.get('direccion'),
+            data.get('activo', True),
+            id
+        )
+        
+        result = db_query(query, params)
+        
+        if result and len(result) > 0:
+            return jsonify({
+                "success": True,
+                "data": result[0],
+                "message": "Almacén actualizado correctamente"
+            })
+        
+        return jsonify({"success": False, "error": "No se pudo actualizar el almacén"})
+    except Exception as e:
+        logging.error(f"Error actualizando almacén: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ==========================================
+# ENDPOINTS CATEGORÍAS - OBTENER (GET) Y ACTUALIZAR (PUT)
+# ==========================================
+
+@maestros_bp.route('/api/categorias/<int:id>', methods=['GET'])
+@login_required
+def api_categorias_obtener(id):
+    """Obtener categoría por ID"""
+    try:
+        query = """
+            SELECT id, codigo, nombre, tipo, activo,
+                   created_at, updated_at
+            FROM categorias
+            WHERE id = %s
+        """
+        result = db_query(query, (id,))
+        if result and len(result) > 0:
+            return jsonify({"success": True, "data": result[0]})
+        return jsonify({"success": False, "error": "Categoría no encontrada"}), 404
+    except Exception as e:
+        logging.error(f"Error obteniendo categoría: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@maestros_bp.route('/api/categorias/<int:id>', methods=['PUT'])
+@login_required
+def api_categorias_actualizar(id):
+    """Actualizar categoría"""
+    try:
+        data = request.get_json()
+        
+        if not data.get('codigo'):
+            return jsonify({"success": False, "error": "Código obligatorio"})
+        if not data.get('nombre'):
+            return jsonify({"success": False, "error": "Nombre obligatorio"})
+        
+        query = """
+            UPDATE categorias SET
+                codigo = %s,
+                nombre = %s,
+                tipo = %s,
+                activo = %s,
+                updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, codigo
+        """
+        
+        params = (
+            data.get('codigo'),
+            data.get('nombre'),
+            data.get('tipo', 'General'),
+            data.get('activo', True),
+            id
+        )
+        
+        result = db_query(query, params)
+        
+        if result and len(result) > 0:
+            return jsonify({
+                "success": True,
+                "data": result[0],
+                "message": "Categoría actualizada correctamente"
+            })
+        
+        return jsonify({"success": False, "error": "No se pudo actualizar la categoría"})
+    except Exception as e:
+        logging.error(f"Error actualizando categoría: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ==========================================
+# ENDPOINTS MARCAS - OBTENER (GET) Y ACTUALIZAR (PUT)
+# ==========================================
+
+@maestros_bp.route('/api/marcas/<int:id>', methods=['GET'])
+@login_required
+def api_marcas_obtener(id):
+    """Obtener marca por ID"""
+    try:
+        query = """
+            SELECT id, codigo, nombre, tipo, activo,
+                   created_at, updated_at
+            FROM marcas
+            WHERE id = %s
+        """
+        result = db_query(query, (id,))
+        if result and len(result) > 0:
+            return jsonify({"success": True, "data": result[0]})
+        return jsonify({"success": False, "error": "Marca no encontrada"}), 404
+    except Exception as e:
+        logging.error(f"Error obteniendo marca: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@maestros_bp.route('/api/marcas/<int:id>', methods=['PUT'])
+@login_required
+def api_marcas_actualizar(id):
+    """Actualizar marca"""
+    try:
+        data = request.get_json()
+        
+        if not data.get('codigo'):
+            return jsonify({"success": False, "error": "Código obligatorio"})
+        if not data.get('nombre'):
+            return jsonify({"success": False, "error": "Nombre obligatorio"})
+        
+        query = """
+            UPDATE marcas SET
+                codigo = %s,
+                nombre = %s,
+                tipo = %s,
+                activo = %s,
+                updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, codigo
+        """
+        
+        params = (
+            data.get('codigo'),
+            data.get('nombre'),
+            data.get('tipo', 'General'),
+            data.get('activo', True),
+            id
+        )
+        
+        result = db_query(query, params)
+        
+        if result and len(result) > 0:
+            return jsonify({
+                "success": True,
+                "data": result[0],
+                "message": "Marca actualizada correctamente"
+            })
+        
+        return jsonify({"success": False, "error": "No se pudo actualizar la marca"})
+    except Exception as e:
+        logging.error(f"Error actualizando marca: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ==========================================
+# ENDPOINTS UNIDADES DE MEDIDA - OBTENER (GET) Y ACTUALIZAR (PUT)
+# ==========================================
+
+@maestros_bp.route('/api/um/<int:id>', methods=['GET'])
+@login_required
+def api_um_obtener(id):
+    """Obtener unidad de medida por ID"""
+    try:
+        query = """
+            SELECT id, codigo, nombre, abreviatura, tipo,
+                   decimales, activo, ambito, uso,
+                   created_at, updated_at
+            FROM um
+            WHERE id = %s
+        """
+        result = db_query(query, (id,))
+        if result and len(result) > 0:
+            return jsonify({"success": True, "data": result[0]})
+        return jsonify({"success": False, "error": "Unidad no encontrada"}), 404
+    except Exception as e:
+        logging.error(f"Error obteniendo unidad: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@maestros_bp.route('/api/um/<int:id>', methods=['PUT'])
+@login_required
+def api_um_actualizar(id):
+    """Actualizar unidad de medida"""
+    try:
+        data = request.get_json()
+        
+        if not data.get('codigo'):
+            return jsonify({"success": False, "error": "Código obligatorio"})
+        if not data.get('nombre'):
+            return jsonify({"success": False, "error": "Nombre obligatorio"})
+        
+        query = """
+            UPDATE um SET
+                codigo = %s,
+                nombre = %s,
+                abreviatura = %s,
+                tipo = %s,
+                decimales = %s,
+                ambito = %s,
+                activo = %s,
+                updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, codigo
+        """
+        
+        params = (
+            data.get('codigo'),
+            data.get('nombre'),
+            data.get('abreviatura'),
+            data.get('tipo', 'General'),
+            data.get('decimales', False),
+            data.get('ambito', 'COMPARTIDO'),
+            data.get('activo', True),
+            id
+        )
+        
+        result = db_query(query, params)
+        
+        if result and len(result) > 0:
+            return jsonify({
+                "success": True,
+                "data": result[0],
+                "message": "Unidad actualizada correctamente"
+            })
+        
+        return jsonify({"success": False, "error": "No se pudo actualizar la unidad"})
+    except Exception as e:
+        logging.error(f"Error actualizando unidad: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
