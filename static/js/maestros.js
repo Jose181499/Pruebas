@@ -5,13 +5,14 @@
 console.log('📦 Módulo Maestros cargando...');
 
 // ============================================================
-// CONFIGURACIÓN DE MÓDULOS - BASADO EN TABLAS REALES
+// CONFIGURACIÓN DE MÓDULOS - UNIFICADA Y CORREGIDA
 // ============================================================
 const MODULE_CONFIG = {
     clientes: {
         title: 'Clientes',
         subtitle: 'Base comercial de clientes y prospectos',
         table: 'clientes',
+        apiBase: '/api/maestros', // ← CORREGIDO: ruta API unificada
         fields: [
             { key: 'codigo_cliente', label: 'Código', type: 'text' },
             { key: 'razon_social', label: 'Razón Social', type: 'text' },
@@ -25,14 +26,13 @@ const MODULE_CONFIG = {
         displayFields: ['codigo_cliente', 'razon_social', 'numero_documento', 'nombre_comercial', 'nombre_contacto', 'telefono_contacto', 'email_contacto', 'activo'],
         headers: ['Código', 'Razón Social', 'RUC/DNI', 'Nombre Comercial', 'Contacto', 'Teléfono', 'Email', 'Estado'],
         idField: 'id',
-        codeField: 'codigo_cliente',
-        // 🔥 NUEVO: Configuración de rutas API
-        apiBase: '/maestros/api'
+        codeField: 'codigo_cliente'
     },
     proveedores: {
         title: 'Proveedores',
         subtitle: 'Base de proveedores y servicios',
         table: 'proveedores',
+        apiBase: '/api/maestros',
         fields: [
             { key: 'codigo_proveedor', label: 'Código', type: 'text' },
             { key: 'razon_social', label: 'Razón Social', type: 'text' },
@@ -46,22 +46,91 @@ const MODULE_CONFIG = {
         displayFields: ['codigo_proveedor', 'razon_social', 'ruc', 'razon_comercial', 'contacto', 'telefono', 'email', 'activo'],
         headers: ['Código', 'Razón Social', 'RUC', 'Razón Comercial', 'Contacto', 'Teléfono', 'Email', 'Estado'],
         idField: 'id',
-        codeField: 'codigo_proveedor',
-        // 🔥 NUEVO: Configuración de rutas API
-        apiBase: '/maestros/api'
+        codeField: 'codigo_proveedor'
+    },
+    almacenes: {
+        title: 'Almacenes',
+        subtitle: 'Gestión de almacenes y ubicaciones',
+        table: 'almacenes',
+        apiBase: '/api/maestros',
+        fields: [
+            { key: 'codigo', label: 'Código', type: 'text' },
+            { key: 'nombre', label: 'Nombre', type: 'text' },
+            { key: 'tipo', label: 'Tipo', type: 'text' },
+            { key: 'responsable', label: 'Responsable', type: 'text' },
+            { key: 'telefono', label: 'Teléfono', type: 'text' },
+            { key: 'direccion', label: 'Dirección', type: 'text' },
+            { key: 'activo', label: 'Estado', type: 'boolean' }
+        ],
+        displayFields: ['codigo', 'nombre', 'tipo', 'responsable', 'telefono', 'activo'],
+        headers: ['Código', 'Nombre', 'Tipo', 'Responsable', 'Teléfono', 'Estado'],
+        idField: 'id',
+        codeField: 'codigo'
+    },
+    categorias: {
+        title: 'Categorías',
+        subtitle: 'Clasificación de productos',
+        table: 'categorias',
+        apiBase: '/api/maestros',
+        fields: [
+            { key: 'codigo', label: 'Código', type: 'text' },
+            { key: 'nombre', label: 'Nombre', type: 'text' },
+            { key: 'tipo', label: 'Categoría Principal', type: 'text' },
+            { key: 'activo', label: 'Estado', type: 'boolean' }
+        ],
+        displayFields: ['codigo', 'nombre', 'tipo', 'activo'],
+        headers: ['Código', 'Nombre', 'Categoría Principal', 'Estado'],
+        idField: 'id',
+        codeField: 'codigo'
+    },
+    marcas: {
+        title: 'Marcas',
+        subtitle: 'Gestión de marcas y fabricantes',
+        table: 'marcas',
+        apiBase: '/api/maestros',
+        fields: [
+            { key: 'codigo', label: 'Código', type: 'text' },
+            { key: 'nombre', label: 'Marca', type: 'text' },
+            { key: 'tipo', label: 'Tipo', type: 'text' },
+            { key: 'activo', label: 'Estado', type: 'boolean' }
+        ],
+        displayFields: ['codigo', 'nombre', 'tipo', 'activo'],
+        headers: ['Código', 'Marca', 'Tipo', 'Estado'],
+        idField: 'id',
+        codeField: 'codigo'
+    },
+    um: {
+        title: 'Unidades de Medida',
+        subtitle: 'Define cómo compras, vendes e inventarias los productos',
+        table: 'um',
+        apiBase: '/api/maestros',
+        fields: [
+            { key: 'codigo', label: 'Código', type: 'text' },
+            { key: 'nombre', label: 'Unidad', type: 'text' },
+            { key: 'abreviatura', label: 'Abreviatura', type: 'text' },
+            { key: 'tipo', label: 'Tipo', type: 'text' },
+            { key: 'decimales', label: 'Permite decimales', type: 'boolean' },
+            { key: 'ambito', label: 'Ámbito', type: 'text' },
+            { key: 'uso', label: 'Uso', type: 'number' },
+            { key: 'activo', label: 'Estado', type: 'boolean' }
+        ],
+        displayFields: ['codigo', 'nombre', 'abreviatura', 'tipo', 'decimales', 'ambito', 'uso', 'activo'],
+        headers: ['Código', 'Unidad', 'Abreviatura', 'Tipo', 'Decimales', 'Ámbito', 'Uso', 'Estado'],
+        idField: 'id',
+        codeField: 'codigo'
     }
 };
 
 // ============================================================
 // VARIABLES GLOBALES
 // ============================================================
-const MAESTROS = ['clientes', 'proveedores'];
+const MAESTROS = Object.keys(MODULE_CONFIG); // ← CORREGIDO: se genera automáticamente
 const DS = {};
 const sheetMode = {};
 let currentModule = 'clientes';
 
 // ============================================================
-// FUNCIONES API - CORREGIDAS
+// FUNCIONES API - CORREGIDAS CON MEJOR MANEJO DE ERRORES
 // ============================================================
 
 /**
@@ -69,13 +138,15 @@ let currentModule = 'clientes';
  */
 function getApiBase(modulo) {
     const config = MODULE_CONFIG[modulo];
-    return config?.apiBase || '/maestros/api';
+    return config?.apiBase || '/api/maestros';
 }
 
 /**
  * Realiza una petición API con manejo de errores mejorado
  */
 async function fetchAPI(endpoint, options = {}) {
+    console.log(`🌐 Fetching: ${endpoint}`); // ← LOG para depuración
+    
     try {
         const response = await fetch(endpoint, {
             ...options,
@@ -85,17 +156,22 @@ async function fetchAPI(endpoint, options = {}) {
             }
         });
         
+        console.log(`📡 Status: ${response.status}`); // ← LOG del status
+        
         if (!response.ok) {
-            // Intentar obtener mensaje de error del backend
-            let errorMsg = `HTTP ${response.status}`;
+            let errorMsg = `Error ${response.status}`;
             try {
                 const errorData = await response.json();
-                if (errorData.error) errorMsg = errorData.error;
-            } catch (e) {}
+                console.error('❌ Detalle error:', errorData); // ← LOG del error
+                errorMsg = errorData.error || errorData.message || errorMsg;
+            } catch (e) {
+                errorMsg = `HTTP ${response.status}: ${response.statusText}`;
+            }
             throw new Error(errorMsg);
         }
         
         const data = await response.json();
+        console.log(`✅ Datos recibidos:`, data); // ← LOG de datos
         return data;
     } catch (error) {
         console.error(`❌ Error en fetchAPI:`, error);
@@ -109,12 +185,20 @@ async function fetchAPI(endpoint, options = {}) {
 async function fetchData(modulo) {
     try {
         const apiBase = getApiBase(modulo);
-        const data = await fetchAPI(`${apiBase}/${modulo}/listar`);
+        // 🔥 ENDPOINT CORREGIDO: usa un formato REST estándar
+        const data = await fetchAPI(`${apiBase}/${modulo}`);
+        
+        // Soporte para diferentes formatos de respuesta
         if (data.success) {
             return data.data || [];
+        } else if (Array.isArray(data)) {
+            return data;
+        } else if (data.data && Array.isArray(data.data)) {
+            return data.data;
+        } else {
+            console.warn(`⚠️ Formato de respuesta inesperado para ${modulo}:`, data);
+            return [];
         }
-        console.error(`❌ Error cargando ${modulo}:`, data.error);
-        return [];
     } catch (error) {
         console.error(`❌ Error en fetchData (${modulo}):`, error);
         showToast(`Error al cargar ${modulo}: ${error.message}`, 'error');
@@ -128,10 +212,12 @@ async function fetchData(modulo) {
 async function saveData(modulo, data) {
     try {
         const apiBase = getApiBase(modulo);
-        // Determinar si es crear o actualizar
         const id = data.id;
-        const endpoint = id ? `${apiBase}/${modulo}/${id}` : `${apiBase}/${modulo}/guardar`;
+        // 🔥 ENDPOINTS CORREGIDOS: API REST estándar
+        const endpoint = id ? `${apiBase}/${modulo}/${id}` : `${apiBase}/${modulo}`;
         const method = id ? 'PUT' : 'POST';
+        
+        console.log(`💾 Guardando ${modulo}:`, { endpoint, method, data });
         
         const result = await fetchAPI(endpoint, {
             method: method,
@@ -157,8 +243,9 @@ async function saveData(modulo, data) {
 async function toggleRecord(modulo, id) {
     try {
         const apiBase = getApiBase(modulo);
+        // 🔥 ENDPOINT CORREGIDO: usa PATCH para actualización parcial
         const result = await fetchAPI(`${apiBase}/${modulo}/${id}/toggle`, {
-            method: 'PUT'
+            method: 'PATCH'
         });
         return result;
     } catch (error) {
@@ -169,10 +256,9 @@ async function toggleRecord(modulo, id) {
 }
 
 // ============================================================
-// TOAST NOTIFICATIONS - MEJORADAS
+// TOAST NOTIFICATIONS
 // ============================================================
 function showToast(message, type = 'info') {
-    // Eliminar toasts anteriores
     const oldToasts = document.querySelectorAll('.toast-custom');
     oldToasts.forEach(t => t.remove());
     
@@ -226,8 +312,9 @@ function showToast(message, type = 'info') {
 const dataCache = {};
 
 async function loadModuleData(modulo, force = false) {
-    if (!force && dataCache[modulo]) {
+    if (!force && dataCache[modulo] && dataCache[modulo].length > 0) {
         DS[modulo] = dataCache[modulo];
+        console.log(`📦 Usando cache de ${modulo}: ${DS[modulo].length} registros`);
         return DS[modulo];
     }
     
@@ -260,7 +347,6 @@ function getEstado(valor) {
         const v = valor.toLowerCase();
         if (v === 'true' || v === 'activo' || v === '1') return 'Activo';
         if (v === 'false' || v === 'inactivo' || v === '0') return 'Inactivo';
-        // Capitalizar
         return valor.charAt(0).toUpperCase() + valor.slice(1).toLowerCase();
     }
     return 'Inactivo';
@@ -311,10 +397,8 @@ function filtered(m) {
     const st = document.getElementById(`estado_${m}`)?.value || 'TODOS';
     
     return (DS[m] || []).filter(r => {
-        // Búsqueda en todos los campos
         const okQ = !q || JSON.stringify(r).toLowerCase().includes(q);
         
-        // Filtro estado
         let okSt = true;
         if (st !== 'TODOS') {
             const estado = getEstado(r.activo);
@@ -377,23 +461,23 @@ function renderTable(m, list) {
     const headers = config.headers;
     const displayFields = config.displayFields;
     
-    // Cabeceras
     let headersHtml = `<th style="width:50px;">#</th><th style="width:100px;">Ámbito</th>`;
-    headers.forEach(h => {
-        headersHtml += `<th>${h}</th>`;
-    });
+    headers.forEach(h => { headersHtml += `<th>${h}</th>`; });
     headersHtml += `<th style="width:200px;">Acciones</th>`;
     
-    // Filas
     const rows = list.map((r, i) => {
-        let cells = `<td><b>${i + 1}</b></td><td>${bAmbito('COMPARTIDO')}</td>`;
+        let cells = `<td><b>${i + 1}</b></td><td>${bAmbito(r.ambito || 'COMPARTIDO')}</td>`;
         
         displayFields.forEach(f => {
             if (f === 'activo') {
                 cells += `<td>${bEstado(r[f])}</td>`;
+            } else if (f === 'decimales') {
+                cells += `<td>${r[f] ? '✅ Sí' : '❌ No'}</td>`;
             } else if (f === 'email' || f === 'email_contacto') {
                 const email = r[f];
                 cells += `<td>${email ? `<a href="mailto:${esc(email)}" style="color:#3B82F6;text-decoration:none;">${esc(email)}</a>` : '-'}</td>`;
+            } else if (f === 'uso') {
+                cells += `<td style="text-align:center;">${r[f] || 0}</td>`;
             } else {
                 cells += `<td class="left">${sd(r[f])}</td>`;
             }
@@ -422,13 +506,17 @@ function renderTable(m, list) {
 function renderModule(m) {
     const config = MODULE_CONFIG[m];
     if (!config) {
-        document.getElementById(m).innerHTML = '<div class="panel"><p>Módulo no configurado</p></div>';
+        const container = document.getElementById(m);
+        if (container) container.innerHTML = '<div class="panel"><p>Módulo no configurado</p></div>';
         return;
     }
     
     const list = filtered(m);
     const container = document.getElementById(m);
-    if (!container) return;
+    if (!container) {
+        console.warn(`⚠️ Contenedor para ${m} no encontrado`);
+        return;
+    }
     
     container.innerHTML = `
         ${renderStatusBoard(m)}
@@ -476,11 +564,9 @@ function renderModule(m) {
         </div>
     `;
 
-    // Bind de eventos
     const renderFn = () => renderModule(m);
     bindFilters(m, renderFn);
     
-    // Eventos para botones de cambio de vista
     document.querySelectorAll(`[data-sheet^="${m}|"]`).forEach(btn => {
         btn.addEventListener('click', function(e) {
             const [mod, mode] = this.dataset.sheet.split('|');
@@ -505,18 +591,14 @@ async function toggleRecordHandler(modulo, id) {
     const newState = currentState === 'Activo' ? false : true;
     const newStateLabel = newState ? 'Activo' : 'Inactivo';
     
-    // Mostrar loading
     showToast(`⏳ Cambiando estado...`, 'info');
     
     try {
-        // Llamar al API toggle
         const result = await toggleRecord(modulo, id);
         
         if (result.success) {
-            // Actualizar localmente
             r.activo = newState;
             showToast(`✅ Registro ${newStateLabel.toLowerCase()} correctamente`, 'success');
-            // Recargar la vista
             renderModule(modulo);
         } else {
             showToast(`❌ Error: ${result.error || 'No se pudo actualizar'}`, 'error');
@@ -527,17 +609,23 @@ async function toggleRecordHandler(modulo, id) {
 }
 
 // ============================================================
-// OPEN SCREEN
+// NAVEGACIÓN Y OPEN SCREEN
 // ============================================================
+
 async function openScreen(screen) {
     console.log('🔄 Abriendo pantalla:', screen);
     currentModule = screen;
     
-    // Cambiar tabs
+    // Ocultar todas las secciones
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     const section = document.getElementById(screen);
-    if (section) section.classList.add('active');
+    if (section) {
+        section.classList.add('active');
+    } else {
+        console.warn(`⚠️ Sección ${screen} no encontrada`);
+    }
     
+    // Actualizar tabs
     document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
     document.querySelectorAll(`.tab-btn[data-screen="${screen}"]`).forEach(t => t.classList.add('active'));
     
@@ -594,7 +682,6 @@ document.addEventListener('click', function(e) {
         const [m, id] = viewBtn.dataset.view.split('|');
         const r = DS[m]?.find(x => x.id === parseInt(id));
         if (r) {
-            // Mostrar detalle en un modal o alert
             const details = Object.entries(r)
                 .filter(([key]) => !key.startsWith('_'))
                 .map(([key, value]) => `${key}: ${value}`)
@@ -617,10 +704,13 @@ document.addEventListener('click', function(e) {
 });
 
 // ============================================================
-// ESTILOS CSS INJECTADOS (SOLO POR SI FALTA ALGUNO)
+// ESTILOS CSS INJECTADOS
 // ============================================================
 (function injectStyles() {
     const styles = `
+        .section { display: none; }
+        .section.active { display: block; }
+        
         .master-status-board {
             display: flex;
             gap: 15px;
@@ -875,6 +965,17 @@ document.addEventListener('click', function(e) {
             padding: 40px;
             text-align: center;
         }
+        .panel {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
     `;
     
     const styleEl = document.createElement('style');
@@ -883,19 +984,28 @@ document.addEventListener('click', function(e) {
 })();
 
 // ============================================================
-// INIT
+// INIT - CORREGIDO
 // ============================================================
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Iniciando Módulo Maestros');
     console.log('📊 Módulos disponibles:', Object.keys(MODULE_CONFIG));
     
-    // Solo mostrar módulos que existen en la BD
-    const availableModules = Object.keys(MODULE_CONFIG);
-    MAESTROS.length = 0;
-    MAESTROS.push(...availableModules);
+    // Verificar que existen los contenedores en el HTML
+    const containers = Object.keys(MODULE_CONFIG);
+    containers.forEach(m => {
+        if (!document.getElementById(m)) {
+            console.warn(`⚠️ No existe el contenedor #${m} en el HTML`);
+        }
+    });
     
-    // Iniciar con clientes
-    openScreen('clientes');
+    // Iniciar con el primer módulo disponible
+    const defaultModule = containers[0] || 'clientes';
+    console.log(`🎯 Módulo inicial: ${defaultModule}`);
+    
+    // Pequeño delay para asegurar que el DOM esté listo
+    setTimeout(() => {
+        openScreen(defaultModule);
+    }, 100);
 });
 
 console.log('✅ Maestros JS cargado correctamente');
