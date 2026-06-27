@@ -9,16 +9,17 @@ maestros_bp = Blueprint('maestros', __name__, url_prefix='/maestros')
 @login_required
 def index():
     """Página principal de maestros"""
+    tab = request.args.get('tab', 'clientes')
     return render_template('maestros/index.html', 
-                          active_tab='clientes',
+                          active_tab=tab,
                           nombre=session.get('nombre_completo', 'Usuario'),
                           empresa=session.get('empresa', 'KCF'))
 
 # ==========================================
-# ENDPOINTS API PARA MAESTROS
+# ENDPOINTS CLIENTES
 # ==========================================
 
-@maestros_bp.route('/api/clientes/listar')
+@maestros_bp.route('/api/clientes/listar', methods=['GET'])
 @login_required
 def api_clientes_listar():
     """Listar clientes"""
@@ -40,7 +41,7 @@ def api_clientes_listar():
 @maestros_bp.route('/api/clientes/guardar', methods=['POST'])
 @login_required
 def api_clientes_guardar():
-    """Guardar cliente"""
+    """Guardar cliente (CREAR)"""
     try:
         data = request.get_json()
         
@@ -52,7 +53,10 @@ def api_clientes_guardar():
         # Generar código
         last = db_query("SELECT codigo_cliente FROM clientes ORDER BY id DESC LIMIT 1")
         if last and last[0].get('codigo_cliente'):
-            num = int(last[0]['codigo_cliente'].replace('CLI-', '')) + 1
+            try:
+                num = int(last[0]['codigo_cliente'].replace('CLI-', '')) + 1
+            except:
+                num = 1
             codigo = f"CLI-{str(num).zfill(6)}"
         else:
             codigo = "CLI-000001"
@@ -93,12 +97,84 @@ def api_clientes_guardar():
         logging.error(f"Error guardando cliente: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
+@maestros_bp.route('/api/clientes/<int:id>', methods=['GET', 'PUT'])
+@login_required
+def api_clientes_id(id):
+    """Obtener o actualizar un cliente por ID"""
+    if request.method == 'GET':
+        try:
+            query = """
+                SELECT id, codigo_cliente, razon_social, numero_documento,
+                       nombre_comercial, telefono_contacto, nombre_contacto,
+                       email_contacto, direccion_fiscal, activo, tipo_documento
+                FROM clientes
+                WHERE id = %s
+            """
+            result = db_query(query, (id,))
+            if result and len(result) > 0:
+                return jsonify({"success": True, "data": result[0]})
+            return jsonify({"success": False, "error": "Cliente no encontrado"}), 404
+        except Exception as e:
+            logging.error(f"Error obteniendo cliente: {e}")
+            return jsonify({"success": False, "error": str(e)}), 500
+    
+    elif request.method == 'PUT':
+        try:
+            data = request.get_json()
+            
+            if not data.get('razon_social'):
+                return jsonify({"success": False, "error": "Razón social obligatoria"})
+            if not data.get('numero_documento'):
+                return jsonify({"success": False, "error": "Número de documento obligatorio"})
+            
+            query = """
+                UPDATE clientes SET
+                    razon_social = %s,
+                    numero_documento = %s,
+                    nombre_comercial = %s,
+                    telefono_contacto = %s,
+                    nombre_contacto = %s,
+                    email_contacto = %s,
+                    direccion_fiscal = %s,
+                    tipo_documento = %s,
+                    activo = %s,
+                    updated_at = NOW()
+                WHERE id = %s
+                RETURNING id, codigo_cliente
+            """
+            
+            params = (
+                data.get('razon_social'),
+                data.get('numero_documento'),
+                data.get('nombre_comercial', data.get('razon_social')),
+                data.get('telefono_contacto'),
+                data.get('nombre_contacto'),
+                data.get('email_contacto'),
+                data.get('direccion_fiscal'),
+                data.get('tipo_documento', 'RUC'),
+                data.get('activo', True),
+                id
+            )
+            
+            result = db_query(query, params)
+            
+            if result and len(result) > 0:
+                return jsonify({
+                    "success": True,
+                    "data": result[0],
+                    "message": "Cliente actualizado correctamente"
+                })
+            
+            return jsonify({"success": False, "error": "No se pudo actualizar el cliente"})
+        except Exception as e:
+            logging.error(f"Error actualizando cliente: {e}")
+            return jsonify({"success": False, "error": str(e)}), 500
+
 @maestros_bp.route('/api/clientes/<int:id>/toggle', methods=['PUT'])
 @login_required
 def api_clientes_toggle(id):
     """Activar/Inactivar cliente"""
     try:
-        # Obtener estado actual
         current = db_query("SELECT activo FROM clientes WHERE id = %s", (id,))
         if not current:
             return jsonify({"success": False, "error": "Cliente no encontrado"})
@@ -130,7 +206,7 @@ def api_clientes_toggle(id):
 # ENDPOINTS PROVEEDORES
 # ==========================================
 
-@maestros_bp.route('/api/proveedores/listar')
+@maestros_bp.route('/api/proveedores/listar', methods=['GET'])
 @login_required
 def api_proveedores_listar():
     """Listar proveedores"""
@@ -152,7 +228,7 @@ def api_proveedores_listar():
 @maestros_bp.route('/api/proveedores/guardar', methods=['POST'])
 @login_required
 def api_proveedores_guardar():
-    """Guardar proveedor"""
+    """Guardar proveedor (CREAR)"""
     try:
         data = request.get_json()
         
@@ -161,10 +237,12 @@ def api_proveedores_guardar():
         if not data.get('ruc'):
             return jsonify({"success": False, "error": "RUC obligatorio"})
         
-        # Generar código
         last = db_query("SELECT codigo_proveedor FROM proveedores ORDER BY id DESC LIMIT 1")
         if last and last[0].get('codigo_proveedor'):
-            num = int(last[0]['codigo_proveedor'].replace('PROV-', '')) + 1
+            try:
+                num = int(last[0]['codigo_proveedor'].replace('PROV-', '')) + 1
+            except:
+                num = 1
             codigo = f"PROV-{str(num).zfill(6)}"
         else:
             codigo = "PROV-000001"
@@ -206,6 +284,26 @@ def api_proveedores_guardar():
         logging.error(f"Error guardando proveedor: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
+@maestros_bp.route('/api/proveedores/<int:id>', methods=['GET'])
+@login_required
+def api_proveedores_obtener(id):
+    """Obtener un proveedor por ID"""
+    try:
+        query = """
+            SELECT id, codigo_proveedor, razon_social, ruc,
+                   razon_comercial, telefono, contacto, email,
+                   direccion, activo, condicion_pago, tiempo_credito
+            FROM proveedores
+            WHERE id = %s
+        """
+        result = db_query(query, (id,))
+        if result and len(result) > 0:
+            return jsonify({"success": True, "data": result[0]})
+        return jsonify({"success": False, "error": "Proveedor no encontrado"}), 404
+    except Exception as e:
+        logging.error(f"Error obteniendo proveedor: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
 @maestros_bp.route('/api/proveedores/<int:id>/toggle', methods=['PUT'])
 @login_required
 def api_proveedores_toggle(id):
@@ -237,12 +335,12 @@ def api_proveedores_toggle(id):
     except Exception as e:
         logging.error(f"Error togglando proveedor: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
-    
+
 # ==========================================
 # ENDPOINTS ALMACENES
 # ==========================================
 
-@maestros_bp.route('/api/almacenes/listar')
+@maestros_bp.route('/api/almacenes/listar', methods=['GET'])
 @login_required
 def api_almacenes_listar():
     """Listar almacenes"""
@@ -272,7 +370,6 @@ def api_almacenes_guardar():
         if not data.get('nombre'):
             return jsonify({"success": False, "error": "Nombre obligatorio"})
         
-        # Verificar si ya existe
         existing = db_query("SELECT id FROM almacenes WHERE codigo = %s", (data.get('codigo'),))
         if existing:
             return jsonify({"success": False, "error": "Ya existe un almacén con este código"})
@@ -341,12 +438,11 @@ def api_almacenes_toggle(id):
         logging.error(f"Error togglando almacén: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
-
 # ==========================================
 # ENDPOINTS CATEGORÍAS
 # ==========================================
 
-@maestros_bp.route('/api/categorias/listar')
+@maestros_bp.route('/api/categorias/listar', methods=['GET'])
 @login_required
 def api_categorias_listar():
     """Listar categorías"""
@@ -440,12 +536,11 @@ def api_categorias_toggle(id):
         logging.error(f"Error togglando categoría: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
-
 # ==========================================
 # ENDPOINTS MARCAS
 # ==========================================
 
-@maestros_bp.route('/api/marcas/listar')
+@maestros_bp.route('/api/marcas/listar', methods=['GET'])
 @login_required
 def api_marcas_listar():
     """Listar marcas"""
@@ -539,12 +634,11 @@ def api_marcas_toggle(id):
         logging.error(f"Error togglando marca: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
-
 # ==========================================
 # ENDPOINTS UNIDADES DE MEDIDA (UM)
 # ==========================================
 
-@maestros_bp.route('/api/um/listar')
+@maestros_bp.route('/api/um/listar', methods=['GET'])
 @login_required
 def api_um_listar():
     """Listar unidades de medida"""
@@ -642,3 +736,13 @@ def api_um_toggle(id):
     except Exception as e:
         logging.error(f"Error togglando unidad de medida: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
+
+# ==========================================
+# ENDPOINT DE PRUEBA
+# ==========================================
+
+@maestros_bp.route('/api/test', methods=['GET'])
+@login_required
+def api_test():
+    """Endpoint para probar que la API funciona"""
+    return jsonify({"success": True, "message": "API de maestros funcionando correctamente"})
