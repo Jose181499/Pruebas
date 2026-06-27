@@ -1713,13 +1713,17 @@ async function consultarSunatProveedor(ruc) {
             if (data.estado) {
                 const estadoMap = { 'ACTIVO': 'Activo', 'BAJA': 'Inactivo', 'SUSPENDIDO': 'Observado' };
                 const nuevoEstado = estadoMap[data.estado.toUpperCase()] || data.estado;
-                if (nuevoEstado) { document.getElementById('prov_estado').value = nuevoEstado; syncProvState(); }
+                if (nuevoEstado) { 
+                    document.getElementById('prov_estado').value = nuevoEstado; 
+                    syncProvState(); 
+                }
             }
             toast('✅ Datos SUNAT cargados correctamente');
         } else {
             toast('❌ ' + (data.error || 'Error al consultar SUNAT'));
         }
     } catch (error) {
+        console.error('Error consultando SUNAT:', error);
         toast('❌ Error al conectar con el servicio SUNAT');
     } finally {
         btn.textContent = originalText;
