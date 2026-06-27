@@ -1,11 +1,30 @@
-<!-- MODAL MAESTROS (proveedor, almacén, categoría, marca, um) -->
+<!-- MODAL MAESTRO - MISMO ESTILO QUE CLIENTE -->
 <div class="modal-bg" id="masterModal">
-  <div class="master-modal">
-    <div class="mm-head"><span class="mm-title" id="mmTitle">Nuevo registro</span><button class="mm-close" id="mmClose">×</button></div>
-    <div class="mm-body">
+  <div class="master-modal-wrap" style="width:min(1160px,96vw);max-height:92vh;background:#fff;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 26px 70px rgba(15,23,42,.28);">
+    
+    <!-- HEADER -->
+    <div class="mm-head" style="min-height:44px;background:#0F172A;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex:0 0 auto;">
+      <span class="mm-title" style="font-size:15px;font-weight:1000;" id="mmTitle">Nuevo registro</span>
+      <button class="mm-close" style="border:0;background:transparent;color:#fff;font-size:25px;cursor:pointer;" id="mmClose">×</button>
+    </div>
+    
+    <!-- BODY -->
+    <div class="mm-body" style="flex:1 1 auto;overflow:auto;padding:8px 14px 6px;">
       <div class="help-box" id="mmHelp">Completa el registro.</div>
       <div id="mmFields"></div>
     </div>
-    <div class="mm-foot"><span id="mmMode" style="font-size:11px;color:#64748B">Modo: creación</span><div style="display:flex;gap:8px"><button class="btn btn-secondary" id="mmClear">Limpiar</button><button class="btn btn-primary" id="mmSave">Guardar</button></div></div>
+    
+    <!-- FOOTER -->
+    <div class="mm-foot" style="flex:0 0 auto;border-top:1px solid #E5E7EB;background:#fff;padding:7px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:46px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button class="cm-btn cm-btn-light" style="height:29px;border-radius:999px;padding:0 15px;font-size:11px;font-weight:950;border:1px solid #E5E7EB;background:#fff;color:#111827;cursor:pointer;" id="mmClear">Limpiar</button>
+        <span style="font-size:11px;color:#64748B;" id="mmMode">Modo: creación</span>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="cm-btn cm-btn-light" style="height:29px;border-radius:999px;padding:0 15px;font-size:11px;font-weight:950;border:1px solid #E5E7EB;background:#fff;color:#111827;cursor:pointer;" id="mmCancel">Cancelar</button>
+        <button class="cm-btn cm-btn-primary" style="height:29px;border-radius:999px;padding:0 15px;font-size:11px;font-weight:950;border:0;background:#2563EB;color:#fff;min-width:170px;cursor:pointer;" id="mmSave">Guardar</button>
+      </div>
+    </div>
+    
   </div>
 </div>

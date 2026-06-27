@@ -128,9 +128,12 @@ const MAESTROS = Object.keys(MODULE_CONFIG);
 const DS = {};
 const sheetMode = {};
 let currentModule = 'clientes';
+let clientEditId = null;
+let contactCtr = 0;
+let pointCtr = 0;
 
 // ============================================================
-// FUNCIONES API - CORREGIDAS PARA TU BACKEND
+// FUNCIONES API
 // ============================================================
 
 function getApiBase(modulo) {
@@ -175,7 +178,6 @@ async function fetchAPI(endpoint, options = {}) {
 async function fetchData(modulo) {
     try {
         const apiBase = getApiBase(modulo);
-        // 🔥 CORREGIDO: usa el endpoint exacto de tu backend
         const data = await fetchAPI(`${apiBase}/${modulo}/listar`);
         if (data.success) {
             return data.data || [];
@@ -192,7 +194,6 @@ async function fetchData(modulo) {
 async function saveData(modulo, data) {
     try {
         const apiBase = getApiBase(modulo);
-        // 🔥 CORREGIDO: usa el endpoint exacto de tu backend
         const endpoint = `${apiBase}/${modulo}/guardar`;
         const method = 'POST';
         
@@ -221,7 +222,6 @@ async function saveData(modulo, data) {
 async function toggleRecord(modulo, id) {
     try {
         const apiBase = getApiBase(modulo);
-        // 🔥 CORREGIDO: usa el endpoint exacto de tu backend
         const result = await fetchAPI(`${apiBase}/${modulo}/${id}/toggle`, {
             method: 'PUT'
         });
@@ -358,7 +358,7 @@ function empresa() {
 }
 
 // ============================================================
-// FILTRADO MEJORADO
+// FILTRADO
 // ============================================================
 function filtered(m) {
     const q = (document.getElementById(`search_${m}`)?.value || '').toLowerCase().trim();
@@ -545,7 +545,7 @@ function renderModule(m) {
 }
 
 // ============================================================
-// HANDLERS - CON FUNCIONALIDAD COMPLETA
+// HANDLERS
 // ============================================================
 
 async function toggleRecordHandler(modulo, id) {
@@ -578,27 +578,24 @@ async function toggleRecordHandler(modulo, id) {
 }
 
 // ============================================================
-// OPEN SCREEN - CORREGIDO
+// OPEN SCREEN
 // ============================================================
 
 async function openScreen(screen) {
     console.log('🔄 Abriendo pantalla:', screen);
     currentModule = screen;
     
-    // Ocultar todas las secciones
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     const section = document.getElementById(screen);
     if (section) {
         section.classList.add('active');
     } else {
         console.warn(`⚠️ Sección ${screen} no encontrada`);
-        // Crear la sección si no existe
         const mainPanel = document.querySelector('.main-inner');
         if (mainPanel) {
             const newSection = document.createElement('section');
             newSection.id = screen;
             newSection.className = 'section active';
-            // Insertar después de dashboard
             const dashboard = document.getElementById('dashboard');
             if (dashboard && dashboard.parentNode) {
                 dashboard.parentNode.insertBefore(newSection, dashboard.nextSibling);
@@ -609,11 +606,9 @@ async function openScreen(screen) {
         }
     }
     
-    // Actualizar tabs
     document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
     document.querySelectorAll(`.tab-btn[data-tab="${screen}"]`).forEach(t => t.classList.add('active'));
     
-    // Renderizar módulo
     if (MODULE_CONFIG[screen]) {
         await loadModuleData(screen);
         renderModule(screen);
@@ -630,122 +625,405 @@ async function openScreen(screen) {
 }
 
 // ============================================================
-// CREAR NUEVO REGISTRO
+// 🔥 MODAL CLIENTE - FUNCIONES COMPLETAS
 // ============================================================
 
-function openCreateModal(modulo) {
-    const config = MODULE_CONFIG[modulo];
-    if (!config) {
-        showToast('Módulo no configurado', 'error');
+const STATE_CFG = {
+  'Activo':   {cls:'s-green',  dot:'#84CC16',pill:'pill-green',  txt:'Cliente habilitado para cotizar, vender y atender normalmente.'},
+  'Observado':{cls:'s-yellow', dot:'#F59E0B',pill:'pill-yellow', txt:'Revisar condiciones antes de atender o despachar.'},
+  'Bloqueado':{cls:'s-red',    dot:'#FB7185',pill:'pill-red',    txt:'No atender ni vender hasta que Gerencia lo libere.'},
+  'Inactivo': {cls:'s-gray',   dot:'#94A3B8',pill:'pill-gray',   txt:'Registro desactivado. No usar en operaciones nuevas.'}
+};
+
+function contactBox(d = {}) {
+  contactCtr++;
+  return `<div class="cm-box" data-cid="${contactCtr}">
+    <button class="cm-box-del" data-rc="${contactCtr}">🗑</button>
+    <div class="cm-grid cm-grid-contact" style="margin-top:4px">
+      <div class="cm-field"><label>NOMBRE *</label><input data-cf="nombre" value="${esc(d.nombre||'')}"></div>
+      <div class="cm-field"><label>CARGO</label><input data-cf="cargo" value="${esc(d.cargo||'')}"></div>
+      <div class="cm-field"><label>TELÉFONO</label><input data-cf="telefono" value="${esc(d.telefono||'')}"></div>
+      <div class="cm-field"><label>EMAIL</label><input data-cf="email" value="${esc(d.email||'')}"></div>
+      <div class="cm-field"><label>&nbsp;</label><label class="cm-checkbox"><input type="checkbox" data-cf="principal" ${d.principal?'checked':''}><span>Contacto principal</span></label></div>
+    </div>
+  </div>`;
+}
+
+function pointBox(d = {}) {
+  pointCtr++;
+  return `<div class="cm-box" data-pid="${pointCtr}">
+    <button class="cm-box-del" data-rp="${pointCtr}">🗑</button>
+    <div class="cm-grid cm-grid-delivery" style="margin-top:4px">
+      <div class="cm-field"><label>PUNTO DE ENTREGA *</label><input data-pf="punto" value="${esc(d.punto||'')}"></div>
+      <div class="cm-field"><label>DIRECCIÓN DE ENTREGA</label><input data-pf="direccion" value="${esc(d.direccion||'')}"></div>
+      <div class="cm-field"><label>LINK GOOGLE MAPS</label><input data-pf="googleMaps" value="${esc(d.googleMaps||'')}"></div>
+      <div class="cm-field"><label>HORARIO / REFERENCIA</label><input data-pf="horario" value="${esc(d.horario||'')}"></div>
+      <div class="cm-field"><label>CONTACTO ENTREGA</label><input data-pf="contacto" value="${esc(d.contacto||'')}"></div>
+      <div class="cm-field"><label>TELÉFONO PUNTO</label><input data-pf="telefono" value="${esc(d.telefono||'')}"></div>
+      <div class="cm-field"><label>&nbsp;</label><label class="cm-checkbox"><input type="checkbox" data-pf="principal" ${d.principal?'checked':''}><span>Punto principal</span></label></div>
+      <div class="cm-field full-row"><label>INSTRUCCIONES</label><input data-pf="instrucciones" value="${esc(d.instrucciones||'')}"></div>
+    </div>
+  </div>`;
+}
+
+function syncClientState() {
+  const v = document.getElementById('cli_estado')?.value || 'Activo';
+  const cfg = STATE_CFG[v] || STATE_CFG['Activo'];
+  const box = document.getElementById('cliStateBox');
+  if (box) { box.className = 'cm-state-box ' + cfg.cls; }
+  const dot = document.getElementById('cliStateDot');
+  if (dot) { dot.style.background = cfg.dot; }
+  const txt = document.getElementById('cliStateText');
+  if (txt) { txt.textContent = cfg.txt; }
+  const pill = document.getElementById('cliStatePill');
+  if (pill) { pill.className = 'cm-state-pill ' + cfg.pill; pill.textContent = v; }
+}
+
+function clearClientForm() {
+  document.getElementById('cli_ambito').value = 'COMPARTIDO';
+  document.getElementById('cli_tipoDoc').value = 'RUC';
+  document.getElementById('cli_numero').value = '';
+  document.getElementById('cli_nombre').value = '';
+  document.getElementById('cli_nombreComercial').value = '';
+  document.getElementById('cli_direccionFiscal').value = '';
+  document.getElementById('cli_condicion').value = 'Contado';
+  document.getElementById('cli_diasCredito').value = '0';
+  document.getElementById('cli_limiteCredito').value = '';
+  document.getElementById('cli_descuento').value = '';
+  document.getElementById('cli_estado').value = 'Activo';
+  document.getElementById('cli_obs').value = '';
+  document.getElementById('cliContacts').innerHTML = contactBox({ principal: true });
+  document.getElementById('cliPoints').innerHTML = pointBox({ principal: true });
+  syncClientState();
+}
+
+function fillClientForm(data) {
+  const sv = (id, v) => { const el = document.getElementById(id); if (el) el.value = v ?? ''; };
+  sv('cli_ambito', data.ambito || 'COMPARTIDO');
+  sv('cli_tipoDoc', data.tipo_documento || 'RUC');
+  sv('cli_numero', data.numero_documento || '');
+  sv('cli_nombre', data.razon_social || '');
+  sv('cli_nombreComercial', data.nombre_comercial || '');
+  sv('cli_direccionFiscal', data.direccion_fiscal || '');
+  sv('cli_condicion', data.condicion_pago || 'Contado');
+  sv('cli_diasCredito', data.dias_credito || '0');
+  sv('cli_limiteCredito', data.limite_credito || '');
+  sv('cli_descuento', data.descuento || '');
+  sv('cli_estado', data.estado || 'Activo');
+  sv('cli_obs', data.observaciones || '');
+  
+  const cc = document.getElementById('cliContacts');
+  if (data.contactos && data.contactos.length) {
+    cc.innerHTML = data.contactos.map(c => contactBox(c)).join('');
+  } else {
+    cc.innerHTML = contactBox({ principal: true });
+  }
+  
+  const cp = document.getElementById('cliPoints');
+  if (data.puntos_entrega && data.puntos_entrega.length) {
+    cp.innerHTML = data.puntos_entrega.map(p => pointBox(p)).join('');
+  } else {
+    cp.innerHTML = pointBox({ principal: true });
+  }
+  
+  syncClientState();
+}
+
+function openClientModal(editId = null) {
+  clientEditId = editId;
+  contactCtr = 0;
+  pointCtr = 0;
+  
+  if (editId) {
+    // Cargar datos para edición desde la API
+    fetch(`/maestros/api/clientes/${editId}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          fillClientForm(data.data);
+        }
+      })
+      .catch(err => {
+        console.error('Error cargando cliente:', err);
+        toast('Error al cargar datos del cliente');
+      });
+  } else {
+    clearClientForm();
+  }
+  
+  document.getElementById('cmTitle').textContent = editId ? 'Editar cliente' : 'Crear cliente';
+  document.getElementById('cmHint').textContent = editId ? `Editando ID ${editId}` : 'Modo: creación';
+  document.getElementById('clientModal').classList.add('show');
+  document.querySelector('#clientModal .cm-body').scrollTop = 0;
+}
+
+function closeClientModal() {
+  document.getElementById('clientModal').classList.remove('show');
+}
+
+function getContacts() {
+  return Array.from(document.querySelectorAll('[data-cid]')).map(b => ({
+    nombre: b.querySelector('[data-cf="nombre"]')?.value.trim() || '',
+    cargo: b.querySelector('[data-cf="cargo"]')?.value.trim() || '',
+    telefono: b.querySelector('[data-cf="telefono"]')?.value.trim() || '',
+    email: b.querySelector('[data-cf="email"]')?.value.trim() || '',
+    principal: !!b.querySelector('[data-cf="principal"]')?.checked
+  })).filter(c => c.nombre || c.telefono || c.email);
+}
+
+function getPoints() {
+  return Array.from(document.querySelectorAll('[data-pid]')).map(b => ({
+    punto: b.querySelector('[data-pf="punto"]')?.value.trim() || '',
+    direccion: b.querySelector('[data-pf="direccion"]')?.value.trim() || '',
+    googleMaps: b.querySelector('[data-pf="googleMaps"]')?.value.trim() || '',
+    horario: b.querySelector('[data-pf="horario"]')?.value.trim() || '',
+    contacto: b.querySelector('[data-pf="contacto"]')?.value.trim() || '',
+    telefono: b.querySelector('[data-pf="telefono"]')?.value.trim() || '',
+    instrucciones: b.querySelector('[data-pf="instrucciones"]')?.value.trim() || '',
+    principal: !!b.querySelector('[data-pf="principal"]')?.checked
+  })).filter(p => p.punto || p.direccion);
+}
+
+// ============================================================
+// 🔥 CONSULTAR SUNAT - CONECTADO A MAIN.PY
+// ============================================================
+async function consultarSunat() {
+  const rucInput = document.getElementById('cli_numero');
+  const ruc = rucInput?.value.replace(/\D/g, '').trim();
+  
+  if (!ruc) {
+    toast('⚠️ Ingresa un RUC para consultar.');
+    return;
+  }
+  if (ruc.length !== 11) {
+    toast('⚠️ El RUC debe tener 11 dígitos.');
+    return;
+  }
+  
+  const btn = document.getElementById('btnSunat');
+  const originalText = btn.textContent;
+  btn.textContent = '⏳ Consultando...';
+  btn.disabled = true;
+  
+  try {
+    const response = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
+    const data = await response.json();
+    
+    if (data.success) {
+      document.getElementById('cli_nombre').value = data.razon_social || '';
+      document.getElementById('cli_nombreComercial').value = data.nombre_comercial || data.razon_social || '';
+      document.getElementById('cli_direccionFiscal').value = data.direccion || '';
+      
+      if (data.estado) {
+        const estadoMap = {
+          'ACTIVO': 'Activo',
+          'BAJA': 'Inactivo',
+          'SUSPENDIDO': 'Observado',
+          'BAJA DE OFICIO': 'Inactivo'
+        };
+        const nuevoEstado = estadoMap[data.estado.toUpperCase()] || data.estado;
+        if (nuevoEstado) {
+          document.getElementById('cli_estado').value = nuevoEstado;
+          syncClientState();
+        }
+      }
+      
+      toast('✅ Datos SUNAT cargados correctamente');
+    } else {
+      toast('❌ ' + (data.error || 'Error al consultar SUNAT'));
+    }
+  } catch (error) {
+    console.error('Error consultando SUNAT:', error);
+    toast('❌ Error al conectar con el servicio SUNAT');
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
+}
+
+// ============================================================
+// 🔥 GUARDAR CLIENTE
+// ============================================================
+async function saveClient() {
+  const contacts = getContacts();
+  const points = getPoints();
+  const p = contacts.find(c => c.principal) || contacts[0] || {};
+  
+  const data = {
+    tipo_documento: document.getElementById('cli_tipoDoc')?.value || 'RUC',
+    numero_documento: document.getElementById('cli_numero')?.value?.trim() || '',
+    razon_social: document.getElementById('cli_nombre')?.value?.trim() || '',
+    nombre_comercial: document.getElementById('cli_nombreComercial')?.value?.trim() || '',
+    direccion_fiscal: document.getElementById('cli_direccionFiscal')?.value?.trim() || '',
+    contacto: p.nombre || '',
+    telefono: p.telefono || '',
+    email: p.email || '',
+    condicion_pago: document.getElementById('cli_condicion')?.value || 'Contado',
+    dias_credito: document.getElementById('cli_diasCredito')?.value || '0',
+    limite_credito: document.getElementById('cli_limiteCredito')?.value?.trim() || '',
+    descuento: document.getElementById('cli_descuento')?.value?.trim() || '',
+    estado: document.getElementById('cli_estado')?.value || 'Activo',
+    observaciones: document.getElementById('cli_obs')?.value?.trim() || '',
+    contactos: contacts,
+    puntos_entrega: points,
+    ambito: document.getElementById('cli_ambito')?.value || 'COMPARTIDO'
+  };
+  
+  if (!data.razon_social) {
+    toast('⚠️ La razón social es obligatoria');
+    return;
+  }
+  if (!data.numero_documento) {
+    toast('⚠️ El número de documento es obligatorio');
+    return;
+  }
+  
+  try {
+    const url = clientEditId 
+      ? `/maestros/api/clientes/${clientEditId}` 
+      : '/maestros/api/clientes/guardar';
+    const method = clientEditId ? 'PUT' : 'POST';
+    
+    const response = await fetch(url, {
+      method: method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      toast(result.message || '✅ Cliente guardado correctamente');
+      closeClientModal();
+      await loadModuleData('clientes', true);
+      renderModule('clientes');
+    } else {
+      toast('❌ ' + (result.error || 'Error al guardar'));
+    }
+  } catch (error) {
+    console.error('Error guardando cliente:', error);
+    toast('❌ Error al guardar el cliente');
+  }
+}
+
+// ============================================================
+// EVENT DELEGATION
+// ============================================================
+document.addEventListener('click', function(e) {
+    // Navegación de tabs
+    const tabBtn = e.target.closest('.tab-btn[data-tab]');
+    if (tabBtn) {
+        e.preventDefault();
+        const tab = tabBtn.dataset.tab;
+        if (tab) openScreen(tab);
         return;
     }
-    
-    // Limpiar modal existente
-    const existing = document.getElementById('modalCreate');
-    if (existing) existing.remove();
-    
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.id = 'modalCreate';
-    modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 99999;
-        padding: 20px;
-    `;
-    
-    let fieldsHtml = '';
-    config.fields.forEach(f => {
-        if (f.key === 'id' || f.key === 'activo') return;
-        const type = f.type === 'boolean' ? 'checkbox' : 'text';
-        const checked = f.type === 'boolean' ? '' : '';
-        const placeholder = f.key.includes('email') ? 'ejemplo@correo.com' : 
-                           f.key.includes('telefono') ? '999-999-999' : 
-                           f.key.includes('ruc') ? '12345678901' : 
-                           '';
-        fieldsHtml += `
-            <div style="margin-bottom:12px;">
-                <label style="display:block;font-weight:600;font-size:13px;margin-bottom:4px;">${f.label} ${f.key !== 'codigo' ? '<span style="color:#DC2626;">*</span>' : ''}</label>
-                <input type="${type}" id="field_${f.key}" placeholder="${placeholder}" ${checked} style="width:100%;padding:8px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;">
-            </div>
-        `;
-    });
-    
-    modal.innerHTML = `
-        <div style="background:white;border-radius:12px;max-width:600px;width:100%;max-height:90vh;overflow:auto;padding:24px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #e2e8f0;">
-                <h2 style="margin:0;font-size:20px;">➕ Nuevo ${config.title.slice(0, -1)}</h2>
-                <button onclick="closeCreateModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#64748B;">✕</button>
-            </div>
-            <form id="formCreate">
-                ${fieldsHtml}
-                <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;padding-top:12px;border-top:1px solid #e2e8f0;">
-                    <button type="button" onclick="closeCreateModal()" style="padding:8px 20px;border:1px solid #e2e8f0;border-radius:6px;background:white;cursor:pointer;">Cancelar</button>
-                    <button type="submit" style="padding:8px 20px;border:none;border-radius:6px;background:#3B82F6;color:white;cursor:pointer;">💾 Guardar</button>
-                </div>
-            </form>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    document.getElementById('formCreate').addEventListener('submit', async function(e) {
+
+    // Crear nuevo - para clientes usa el modal especial
+    const newBtn = e.target.closest('[data-new]');
+    if (newBtn) {
         e.preventDefault();
-        const formData = new FormData(this);
-        const data = {};
-        config.fields.forEach(f => {
-            if (f.key === 'id' || f.key === 'activo') return;
-            const value = formData.get(`field_${f.key}`);
-            if (f.type === 'boolean') {
-                data[f.key] = !!value;
-            } else {
-                data[f.key] = value || '';
-            }
-        });
-        data.activo = true;
-        
-        // Validar campos obligatorios
-        let valid = true;
-        config.fields.forEach(f => {
-            if (f.key === 'id' || f.key === 'activo' || f.key === 'codigo') return;
-            if (!data[f.key] || data[f.key].trim() === '') {
-                const el = document.getElementById(`field_${f.key}`);
-                if (el) {
-                    el.style.borderColor = '#DC2626';
-                    el.style.boxShadow = '0 0 0 3px rgba(220,38,38,0.2)';
-                }
-                valid = false;
-            }
-        });
-        
-        if (!valid) {
-            showToast('❌ Completa todos los campos obligatorios', 'error');
-            return;
+        const m = newBtn.dataset.new;
+        if (m === 'clientes') {
+            openClientModal();
+        } else {
+            // Para otros módulos usar el modal genérico
+            showToast(`📝 Funcionalidad: Crear nuevo ${m} (próximamente)`, 'info');
         }
-        
-        const result = await saveData(modulo, data);
-        if (result.success) {
-            closeCreateModal();
+        return;
+    }
+
+    // Editar - para clientes usa el modal especial
+    const editBtn = e.target.closest('[data-edit]');
+    if (editBtn) {
+        e.preventDefault();
+        const [m, id] = editBtn.dataset.edit.split('|');
+        if (m === 'clientes') {
+            openClientModal(parseInt(id));
+        } else {
+            showToast(`✏️ Editar ${m} ID: ${id} (próximamente)`, 'info');
+        }
+        return;
+    }
+
+    // Toggle (Activar/Inactivar)
+    const togBtn = e.target.closest('[data-toggle]');
+    if (togBtn) {
+        e.preventDefault();
+        const [m, id] = togBtn.dataset.toggle.split('|');
+        toggleRecordHandler(m, parseInt(id));
+        return;
+    }
+
+    // Ver detalle
+    const viewBtn = e.target.closest('[data-view]');
+    if (viewBtn) {
+        e.preventDefault();
+        const [m, id] = viewBtn.dataset.view.split('|');
+        openViewModal(m, parseInt(id));
+        return;
+    }
+});
+
+// ============================================================
+// EVENTOS DEL MODAL CLIENTE
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+    // Botones del modal cliente
+    const closeBtn = document.getElementById('cmClose');
+    const cancelBtn = document.getElementById('cmCancel');
+    const clearBtn = document.getElementById('cmClear');
+    const saveBtn = document.getElementById('cmSave');
+    const sunatBtn = document.getElementById('btnSunat');
+    const addContactBtn = document.getElementById('btnAddContact');
+    const addPointBtn = document.getElementById('btnAddPoint');
+    const estadoSelect = document.getElementById('cli_estado');
+    
+    if (closeBtn) closeBtn.addEventListener('click', closeClientModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeClientModal);
+    if (clearBtn) clearBtn.addEventListener('click', () => {
+        if (clientEditId) {
+            openClientModal(clientEditId);
+        } else {
+            clearClientForm();
         }
     });
-}
-
-function closeCreateModal() {
-    const modal = document.getElementById('modalCreate');
-    if (modal) modal.remove();
-}
+    if (saveBtn) saveBtn.addEventListener('click', saveClient);
+    if (sunatBtn) sunatBtn.addEventListener('click', consultarSunat);
+    if (addContactBtn) addContactBtn.addEventListener('click', () => {
+        document.getElementById('cliContacts').insertAdjacentHTML('beforeend', contactBox({}));
+    });
+    if (addPointBtn) addPointBtn.addEventListener('click', () => {
+        document.getElementById('cliPoints').insertAdjacentHTML('beforeend', pointBox({}));
+    });
+    if (estadoSelect) estadoSelect.addEventListener('change', syncClientState);
+    
+    // Eliminar contacto/punto (delegación)
+    document.addEventListener('click', function(e) {
+        const rc = e.target.closest('[data-rc]');
+        if (rc) {
+            const b = rc.closest('[data-cid]');
+            if (document.querySelectorAll('[data-cid]').length > 1) {
+                b?.remove();
+            } else {
+                toast('Debe quedar al menos un contacto.');
+            }
+        }
+        const rp = e.target.closest('[data-rp]');
+        if (rp) {
+            const b = rp.closest('[data-pid]');
+            if (document.querySelectorAll('[data-pid]').length > 1) {
+                b?.remove();
+            } else {
+                toast('Debe quedar al menos un punto.');
+            }
+        }
+    });
+});
 
 // ============================================================
-// VER DETALLE
+// VER DETALLE (GENERICO)
 // ============================================================
-
 function openViewModal(modulo, id) {
     const r = DS[modulo]?.find(x => x.id === id);
     if (!r) {
@@ -813,152 +1091,6 @@ function closeViewModal() {
     const modal = document.getElementById('modalView');
     if (modal) modal.remove();
 }
-
-// ============================================================
-// EDITAR REGISTRO
-// ============================================================
-
-function openEditModal(modulo, id) {
-    const r = DS[modulo]?.find(x => x.id === id);
-    if (!r) {
-        showToast('Registro no encontrado', 'error');
-        return;
-    }
-    
-    const config = MODULE_CONFIG[modulo];
-    
-    const existing = document.getElementById('modalEdit');
-    if (existing) existing.remove();
-    
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.id = 'modalEdit';
-    modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 99999;
-        padding: 20px;
-    `;
-    
-    let fieldsHtml = '';
-    config.fields.forEach(f => {
-        if (f.key === 'id') return;
-        const value = r[f.key] !== undefined && r[f.key] !== null ? r[f.key] : '';
-        const type = f.type === 'boolean' ? 'checkbox' : 'text';
-        const checked = f.type === 'boolean' && value ? 'checked' : '';
-        const inputValue = typeof value === 'boolean' ? '' : value;
-        fieldsHtml += `
-            <div style="margin-bottom:12px;">
-                <label style="display:block;font-weight:600;font-size:13px;margin-bottom:4px;">${f.label}</label>
-                <input type="${type}" id="edit_${f.key}" value="${inputValue}" ${checked} style="width:100%;padding:8px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;">
-            </div>
-        `;
-    });
-    
-    modal.innerHTML = `
-        <div style="background:white;border-radius:12px;max-width:600px;width:100%;max-height:90vh;overflow:auto;padding:24px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #e2e8f0;">
-                <h2 style="margin:0;font-size:20px;">✏️ Editar ${config.title.slice(0, -1)}</h2>
-                <button onclick="closeEditModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#64748B;">✕</button>
-            </div>
-            <div style="background:#f8fafc;padding:12px 16px;border-radius:8px;margin-bottom:16px;">
-                <span style="font-size:13px;color:#64748B;">Código: </span>
-                <span style="font-weight:700;">${getCode(r, modulo)}</span>
-            </div>
-            <form id="formEdit">
-                ${fieldsHtml}
-                <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;padding-top:12px;border-top:1px solid #e2e8f0;">
-                    <button type="button" onclick="closeEditModal()" style="padding:8px 20px;border:1px solid #e2e8f0;border-radius:6px;background:white;cursor:pointer;">Cancelar</button>
-                    <button type="submit" style="padding:8px 20px;border:none;border-radius:6px;background:#3B82F6;color:white;cursor:pointer;">💾 Actualizar</button>
-                </div>
-            </form>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    document.getElementById('formEdit').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        const data = { id: r.id };
-        config.fields.forEach(f => {
-            if (f.key === 'id') return;
-            const value = formData.get(`edit_${f.key}`);
-            if (f.type === 'boolean') {
-                data[f.key] = !!value;
-            } else {
-                data[f.key] = value || '';
-            }
-        });
-        
-        const result = await saveData(modulo, data);
-        if (result.success) {
-            closeEditModal();
-        }
-    });
-}
-
-function closeEditModal() {
-    const modal = document.getElementById('modalEdit');
-    if (modal) modal.remove();
-}
-
-// ============================================================
-// EVENT DELEGATION
-// ============================================================
-document.addEventListener('click', function(e) {
-    // Navegación de tabs
-    const tabBtn = e.target.closest('.tab-btn[data-tab]');
-    if (tabBtn) {
-        e.preventDefault();
-        const tab = tabBtn.dataset.tab;
-        if (tab) openScreen(tab);
-        return;
-    }
-
-    // Crear nuevo
-    const newBtn = e.target.closest('[data-new]');
-    if (newBtn) {
-        e.preventDefault();
-        const m = newBtn.dataset.new;
-        openCreateModal(m);
-        return;
-    }
-
-    // Toggle (Activar/Inactivar)
-    const togBtn = e.target.closest('[data-toggle]');
-    if (togBtn) {
-        e.preventDefault();
-        const [m, id] = togBtn.dataset.toggle.split('|');
-        toggleRecordHandler(m, parseInt(id));
-        return;
-    }
-
-    // Ver detalle
-    const viewBtn = e.target.closest('[data-view]');
-    if (viewBtn) {
-        e.preventDefault();
-        const [m, id] = viewBtn.dataset.view.split('|');
-        openViewModal(m, parseInt(id));
-        return;
-    }
-
-    // Editar
-    const editBtn = e.target.closest('[data-edit]');
-    if (editBtn) {
-        e.preventDefault();
-        const [m, id] = editBtn.dataset.edit.split('|');
-        openEditModal(m, parseInt(id));
-        return;
-    }
-});
 
 // ============================================================
 // ESTILOS CSS INJECTADOS
@@ -1229,6 +1361,96 @@ document.addEventListener('click', function(e) {
             overflow: hidden;
         }
         
+        /* ── BOTONES DEL FOOTER ── */
+        .cm-foot {
+          flex: 0 0 auto;
+          border-top: 1px solid #E5E7EB;
+          background: #fff;
+          padding: 7px 16px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          box-shadow: 0 -6px 14px rgba(15,23,42,.05);
+        }
+
+        .cm-foot-left,
+        .cm-foot-right {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .cm-btn {
+          height: 29px;
+          border-radius: 999px;
+          padding: 0 15px;
+          font-size: 11px;
+          font-weight: 950;
+          border: 0;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          white-space: nowrap;
+        }
+
+        .cm-btn-light {
+          background: #fff;
+          border: 1px solid #E5E7EB;
+          color: #111827;
+        }
+
+        .cm-btn-light:hover {
+          background: #F8FAFC;
+          border-color: #D1D5DB;
+        }
+
+        .cm-btn-primary {
+          background: #2563EB;
+          color: #fff;
+          min-width: 170px;
+        }
+
+        .cm-btn-primary:hover {
+          background: #1D4ED8;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .cm-hint {
+          font-size: 10px;
+          color: #64748B;
+          font-weight: 850;
+        }
+
+        /* ── BOTÓN SUNAT ── */
+        .sunat-btn {
+          height: 28px;
+          border: 1px solid #0F172A;
+          border-left: 0;
+          border-radius: 0 8px 8px 0;
+          background: #0F172A;
+          color: #fff;
+          font-size: 10.5px;
+          font-weight: 950;
+          cursor: pointer;
+          padding: 0 12px;
+          transition: all 0.2s ease;
+          white-space: nowrap;
+        }
+
+        .sunat-btn:hover {
+          background: #1F2937;
+        }
+
+        .sunat-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+        
         @keyframes slideIn {
             from { transform: translateY(20px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
@@ -1241,7 +1463,7 @@ document.addEventListener('click', function(e) {
 })();
 
 // ============================================================
-// INIT - CORREGIDO
+// INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Iniciando Módulo Maestros');
@@ -1250,6 +1472,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('   - GET  /maestros/api/clientes/listar');
     console.log('   - POST /maestros/api/clientes/guardar');
     console.log('   - PUT  /maestros/api/clientes/<id>/toggle');
+    console.log('   - GET  /maestros/api/clientes/<id>');
     
     // Verificar contenedores
     const containers = Object.keys(MODULE_CONFIG);
