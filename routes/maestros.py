@@ -8,3 +8,4 @@ maestros_bp = Blueprint('maestros', __name__, url_prefix='/maestros')
 def index():
     """Página principal de maestros"""
     return render_template('maestros/index.html', active_tab='clientes')
+
