@@ -1508,3 +1508,817 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 console.log('✅ Maestros JS cargado correctamente');
+
+// ============================================================
+// MODAL PROVEEDOR
+// ============================================================
+let provEditId = null;
+
+function openProveedorModal(editId = null) {
+    provEditId = editId;
+    if (editId) {
+        fetch(`/maestros/api/proveedores/${editId}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    fillProveedorForm(data.data);
+                }
+            })
+            .catch(err => console.error('Error cargando proveedor:', err));
+    } else {
+        clearProveedorForm();
+    }
+    document.getElementById('provTitle').textContent = editId ? 'Editar proveedor' : 'Crear proveedor';
+    document.getElementById('provHint').textContent = editId ? `Editando ID ${editId}` : 'Modo: creación';
+    document.getElementById('proveedorModal').classList.add('show');
+    syncProvState();
+}
+
+function clearProveedorForm() {
+    document.getElementById('prov_ambito').value = 'COMPARTIDO';
+    document.getElementById('prov_tipo').value = 'Recurrente';
+    document.getElementById('prov_tipoDoc').value = 'RUC';
+    document.getElementById('prov_ruc').value = '';
+    document.getElementById('prov_razonSocial').value = '';
+    document.getElementById('prov_direccionFiscal').value = '';
+    document.getElementById('prov_contacto').value = '';
+    document.getElementById('prov_cargo').value = '';
+    document.getElementById('prov_telefono').value = '';
+    document.getElementById('prov_email').value = '';
+    document.getElementById('prov_banco').value = '';
+    document.getElementById('prov_tipoCuenta').value = 'Cuenta corriente';
+    document.getElementById('prov_cuenta').value = '';
+    document.getElementById('prov_cci').value = '';
+    document.getElementById('prov_condicion').value = 'Contado';
+    document.getElementById('prov_lineaCredito').value = '';
+    document.getElementById('prov_moneda').value = 'Soles';
+    document.getElementById('prov_descuento').value = '';
+    document.getElementById('prov_puntoRecojo').value = '';
+    document.getElementById('prov_direccionRecojo').value = '';
+    document.getElementById('prov_horarioRecojo').value = '';
+    document.getElementById('prov_contactoRecojo').value = '';
+    document.getElementById('prov_telefonoRecojo').value = '';
+    document.getElementById('prov_instruccionesRecojo').value = '';
+    document.getElementById('prov_estado').value = 'Activo';
+    document.getElementById('prov_obs').value = '';
+    syncProvState();
+}
+
+function fillProveedorForm(data) {
+    document.getElementById('prov_ambito').value = data.ambito || 'COMPARTIDO';
+    document.getElementById('prov_tipo').value = data.tipo || 'Recurrente';
+    document.getElementById('prov_tipoDoc').value = data.tipoDoc || 'RUC';
+    document.getElementById('prov_ruc').value = data.ruc || '';
+    document.getElementById('prov_razonSocial').value = data.razon_social || '';
+    document.getElementById('prov_direccionFiscal').value = data.direccion || '';
+    document.getElementById('prov_contacto').value = data.contacto || '';
+    document.getElementById('prov_cargo').value = data.cargo || '';
+    document.getElementById('prov_telefono').value = data.telefono || '';
+    document.getElementById('prov_email').value = data.email || '';
+    document.getElementById('prov_banco').value = data.banco || '';
+    document.getElementById('prov_tipoCuenta').value = data.tipoCuenta || 'Cuenta corriente';
+    document.getElementById('prov_cuenta').value = data.cuenta || '';
+    document.getElementById('prov_cci').value = data.cci || '';
+    document.getElementById('prov_condicion').value = data.condicion_pago || 'Contado';
+    document.getElementById('prov_lineaCredito').value = data.lineaCredito || '';
+    document.getElementById('prov_moneda').value = data.moneda || 'Soles';
+    document.getElementById('prov_descuento').value = data.descuento || '';
+    document.getElementById('prov_puntoRecojo').value = data.puntoRecojo || '';
+    document.getElementById('prov_direccionRecojo').value = data.direccionRecojo || '';
+    document.getElementById('prov_horarioRecojo').value = data.horarioRecojo || '';
+    document.getElementById('prov_contactoRecojo').value = data.contactoRecojo || '';
+    document.getElementById('prov_telefonoRecojo').value = data.telefonoRecojo || '';
+    document.getElementById('prov_instruccionesRecojo').value = data.instruccionesRecojo || '';
+    document.getElementById('prov_estado').value = data.estado || 'Activo';
+    document.getElementById('prov_obs').value = data.obs || '';
+    syncProvState();
+}
+
+const PROV_STATE_CFG = {
+    'Activo': {cls:'s-green', dot:'#84CC16', pill:'pill-green', txt:'Proveedor habilitado para operar normalmente.'},
+    'Observado': {cls:'s-yellow', dot:'#F59E0B', pill:'pill-yellow', txt:'Revisar condiciones antes de operar.'},
+    'Bloqueado': {cls:'s-red', dot:'#FB7185', pill:'pill-red', txt:'No usar hasta liberación de Gerencia.'},
+    'Inactivo': {cls:'s-gray', dot:'#94A3B8', pill:'pill-gray', txt:'Desactivado para nuevos registros.'}
+};
+
+function syncProvState() {
+    const v = document.getElementById('prov_estado')?.value || 'Activo';
+    const cfg = PROV_STATE_CFG[v] || PROV_STATE_CFG['Activo'];
+    const box = document.getElementById('provStateBox');
+    if (box) box.className = 'cm-state-box ' + cfg.cls;
+    const dot = document.getElementById('provStateDot');
+    if (dot) dot.style.background = cfg.dot;
+    const txt = document.getElementById('provStateText');
+    if (txt) txt.textContent = cfg.txt;
+    const pill = document.getElementById('provStatePill');
+    if (pill) { pill.className = 'cm-state-pill ' + cfg.pill; pill.textContent = v; }
+}
+
+function closeProveedorModal() {
+    document.getElementById('proveedorModal').classList.remove('show');
+}
+
+async function saveProveedor() {
+    const data = {
+        ambito: document.getElementById('prov_ambito').value,
+        tipo: document.getElementById('prov_tipo').value,
+        tipoDoc: document.getElementById('prov_tipoDoc').value,
+        ruc: document.getElementById('prov_ruc').value.trim(),
+        razon_social: document.getElementById('prov_razonSocial').value.trim(),
+        direccion: document.getElementById('prov_direccionFiscal').value.trim(),
+        contacto: document.getElementById('prov_contacto').value.trim(),
+        cargo: document.getElementById('prov_cargo').value.trim(),
+        telefono: document.getElementById('prov_telefono').value.trim(),
+        email: document.getElementById('prov_email').value.trim(),
+        banco: document.getElementById('prov_banco').value,
+        tipoCuenta: document.getElementById('prov_tipoCuenta').value,
+        cuenta: document.getElementById('prov_cuenta').value.trim(),
+        cci: document.getElementById('prov_cci').value.trim(),
+        condicion_pago: document.getElementById('prov_condicion').value,
+        lineaCredito: document.getElementById('prov_lineaCredito').value.trim(),
+        moneda: document.getElementById('prov_moneda').value,
+        descuento: document.getElementById('prov_descuento').value.trim(),
+        puntoRecojo: document.getElementById('prov_puntoRecojo').value.trim(),
+        direccionRecojo: document.getElementById('prov_direccionRecojo').value.trim(),
+        horarioRecojo: document.getElementById('prov_horarioRecojo').value.trim(),
+        contactoRecojo: document.getElementById('prov_contactoRecojo').value.trim(),
+        telefonoRecojo: document.getElementById('prov_telefonoRecojo').value.trim(),
+        instruccionesRecojo: document.getElementById('prov_instruccionesRecojo').value.trim(),
+        estado: document.getElementById('prov_estado').value,
+        obs: document.getElementById('prov_obs').value.trim()
+    };
+
+    if (!data.razon_social) { toast('⚠️ La razón social es obligatoria'); return; }
+    if (!data.ruc) { toast('⚠️ El RUC es obligatorio'); return; }
+
+    try {
+        const url = provEditId ? `/maestros/api/proveedores/${provEditId}` : '/maestros/api/proveedores/guardar';
+        const method = provEditId ? 'PUT' : 'POST';
+        const response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (result.success) {
+            toast(result.message || '✅ Proveedor guardado correctamente');
+            closeProveedorModal();
+            await loadModuleData('proveedores', true);
+            renderModule('proveedores');
+        } else {
+            toast('❌ ' + (result.error || 'Error al guardar'));
+        }
+    } catch (error) {
+        console.error('Error guardando proveedor:', error);
+        toast('❌ Error al guardar el proveedor');
+    }
+}
+
+// Eventos del modal proveedor
+document.addEventListener('DOMContentLoaded', function() {
+    const closeBtn = document.getElementById('provClose');
+    const cancelBtn = document.getElementById('provCancel');
+    const clearBtn = document.getElementById('provClear');
+    const saveBtn = document.getElementById('provSave');
+    const sunatBtn = document.getElementById('provSunat');
+    const estadoSelect = document.getElementById('prov_estado');
+    
+    if (closeBtn) closeBtn.addEventListener('click', closeProveedorModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeProveedorModal);
+    if (clearBtn) clearBtn.addEventListener('click', () => {
+        if (provEditId) openProveedorModal(provEditId);
+        else clearProveedorForm();
+    });
+    if (saveBtn) saveBtn.addEventListener('click', saveProveedor);
+    if (sunatBtn) sunatBtn.addEventListener('click', function() {
+        const ruc = document.getElementById('prov_ruc').value.trim();
+        if (!ruc) { toast('⚠️ Ingresa un RUC para consultar.'); return; }
+        if (ruc.length !== 11) { toast('⚠️ El RUC debe tener 11 dígitos.'); return; }
+        consultarSunatProveedor(ruc);
+    });
+    if (estadoSelect) estadoSelect.addEventListener('change', syncProvState);
+});
+
+async function consultarSunatProveedor(ruc) {
+    const btn = document.getElementById('provSunat');
+    const originalText = btn.textContent;
+    btn.textContent = '⏳ Consultando...';
+    btn.disabled = true;
+    try {
+        const response = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
+        const data = await response.json();
+        if (data.success) {
+            document.getElementById('prov_razonSocial').value = data.razon_social || '';
+            document.getElementById('prov_direccionFiscal').value = data.direccion || '';
+            if (data.estado) {
+                const estadoMap = { 'ACTIVO': 'Activo', 'BAJA': 'Inactivo', 'SUSPENDIDO': 'Observado' };
+                const nuevoEstado = estadoMap[data.estado.toUpperCase()] || data.estado;
+                if (nuevoEstado) { document.getElementById('prov_estado').value = nuevoEstado; syncProvState(); }
+            }
+            toast('✅ Datos SUNAT cargados correctamente');
+        } else {
+            toast('❌ ' + (data.error || 'Error al consultar SUNAT'));
+        }
+    } catch (error) {
+        toast('❌ Error al conectar con el servicio SUNAT');
+    } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+    }
+}
+
+document.addEventListener('click', function(e) {
+    // Navegación de tabs
+    const tabBtn = e.target.closest('.tab-btn[data-tab]');
+    if (tabBtn) {
+        e.preventDefault();
+        const tab = tabBtn.dataset.tab;
+        if (tab) openScreen(tab);
+        return;
+    }
+
+    // Crear nuevo
+    const newBtn = e.target.closest('[data-new]');
+    if (newBtn) {
+        e.preventDefault();
+        const m = newBtn.dataset.new;
+        if (m === 'clientes') openClientModal();
+        else if (m === 'proveedores') openProveedorModal();
+        else if (m === 'almacenes') openAlmacenModal();
+        else if (m === 'categorias') openCategoriaModal();
+        else if (m === 'marcas') openMarcaModal();
+        else if (m === 'um') openUmModal();
+        else {
+            showToast(`📝 Funcionalidad: Crear nuevo ${m} (próximamente)`, 'info');
+        }
+        return;
+    }
+
+    // Editar
+    const editBtn = e.target.closest('[data-edit]');
+    if (editBtn) {
+        e.preventDefault();
+        const [m, id] = editBtn.dataset.edit.split('|');
+        if (m === 'clientes') openClientModal(parseInt(id));
+        else if (m === 'proveedores') openProveedorModal(parseInt(id));
+        else if (m === 'almacenes') openAlmacenModal(parseInt(id));
+        else if (m === 'categorias') openCategoriaModal(parseInt(id));
+        else if (m === 'marcas') openMarcaModal(parseInt(id));
+        else if (m === 'um') openUmModal(parseInt(id));
+        else {
+            showToast(`✏️ Editar ${m} ID: ${id} (próximamente)`, 'info');
+        }
+        return;
+    }
+
+    // Toggle (Activar/Inactivar)
+    const togBtn = e.target.closest('[data-toggle]');
+    if (togBtn) {
+        e.preventDefault();
+        const [m, id] = togBtn.dataset.toggle.split('|');
+        toggleRecordHandler(m, parseInt(id));
+        return;
+    }
+
+    // Ver detalle
+    const viewBtn = e.target.closest('[data-view]');
+    if (viewBtn) {
+        e.preventDefault();
+        const [m, id] = viewBtn.dataset.view.split('|');
+        openViewModal(m, parseInt(id));
+        return;
+    }
+});
+
+// ============================================================
+// MODAL ALMACÉN
+// ============================================================
+let almEditId = null;
+
+function openAlmacenModal(editId = null) {
+    almEditId = editId;
+    if (editId) {
+        fetch(`/maestros/api/almacenes/${editId}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    fillAlmacenForm(data.data);
+                }
+            })
+            .catch(err => console.error('Error cargando almacén:', err));
+    } else {
+        clearAlmacenForm();
+    }
+    document.getElementById('almTitle').textContent = editId ? 'Editar almacén' : 'Crear almacén';
+    document.getElementById('almHint').textContent = editId ? `Editando ID ${editId}` : 'Modo: creación';
+    document.getElementById('almacenModal').classList.add('show');
+    syncAlmState();
+}
+
+function clearAlmacenForm() {
+    document.getElementById('alm_empresa').value = 'KCF';
+    document.getElementById('alm_codigo').value = '';
+    document.getElementById('alm_nombre').value = '';
+    document.getElementById('alm_tipo').value = 'Principal';
+    document.getElementById('alm_responsable').value = '';
+    document.getElementById('alm_responsableCargo').value = '';
+    document.getElementById('alm_telefono').value = '';
+    document.getElementById('alm_email').value = '';
+    document.getElementById('alm_direccion').value = '';
+    document.getElementById('alm_googleMaps').value = '';
+    document.getElementById('alm_horario').value = '';
+    document.getElementById('alm_instrucciones').value = '';
+    document.getElementById('alm_estado').value = 'Activo';
+    document.getElementById('alm_obs').value = '';
+    syncAlmState();
+}
+
+function fillAlmacenForm(data) {
+    document.getElementById('alm_empresa').value = data.empresa || 'KCF';
+    document.getElementById('alm_codigo').value = data.codigo || '';
+    document.getElementById('alm_nombre').value = data.nombre || '';
+    document.getElementById('alm_tipo').value = data.tipo || 'Principal';
+    document.getElementById('alm_responsable').value = data.responsable || '';
+    document.getElementById('alm_responsableCargo').value = data.responsableCargo || '';
+    document.getElementById('alm_telefono').value = data.telefono || '';
+    document.getElementById('alm_email').value = data.email || '';
+    document.getElementById('alm_direccion').value = data.direccion || '';
+    document.getElementById('alm_googleMaps').value = data.googleMaps || '';
+    document.getElementById('alm_horario').value = data.horario || '';
+    document.getElementById('alm_instrucciones').value = data.instrucciones || '';
+    document.getElementById('alm_estado').value = data.estado || 'Activo';
+    document.getElementById('alm_obs').value = data.obs || '';
+    syncAlmState();
+}
+
+const ALM_STATE_CFG = {
+    'Activo': {cls:'s-green', dot:'#84CC16', pill:'pill-green', txt:'Almacén habilitado para operar normalmente.'},
+    'Observado': {cls:'s-yellow', dot:'#F59E0B', pill:'pill-yellow', txt:'Revisar condiciones antes de operar.'},
+    'Bloqueado': {cls:'s-red', dot:'#FB7185', pill:'pill-red', txt:'No usar hasta liberación de Gerencia.'},
+    'Inactivo': {cls:'s-gray', dot:'#94A3B8', pill:'pill-gray', txt:'Desactivado para nuevos registros.'}
+};
+
+function syncAlmState() {
+    const v = document.getElementById('alm_estado')?.value || 'Activo';
+    const cfg = ALM_STATE_CFG[v] || ALM_STATE_CFG['Activo'];
+    const box = document.getElementById('almStateBox');
+    if (box) box.className = 'cm-state-box ' + cfg.cls;
+    const dot = document.getElementById('almStateDot');
+    if (dot) dot.style.background = cfg.dot;
+    const txt = document.getElementById('almStateText');
+    if (txt) txt.textContent = cfg.txt;
+    const pill = document.getElementById('almStatePill');
+    if (pill) { pill.className = 'cm-state-pill ' + cfg.pill; pill.textContent = v; }
+}
+
+function closeAlmacenModal() {
+    document.getElementById('almacenModal').classList.remove('show');
+}
+
+async function saveAlmacen() {
+    const data = {
+        empresa: document.getElementById('alm_empresa').value,
+        codigo: document.getElementById('alm_codigo').value.trim(),
+        nombre: document.getElementById('alm_nombre').value.trim(),
+        tipo: document.getElementById('alm_tipo').value,
+        responsable: document.getElementById('alm_responsable').value.trim(),
+        responsableCargo: document.getElementById('alm_responsableCargo').value.trim(),
+        telefono: document.getElementById('alm_telefono').value.trim(),
+        email: document.getElementById('alm_email').value.trim(),
+        direccion: document.getElementById('alm_direccion').value.trim(),
+        googleMaps: document.getElementById('alm_googleMaps').value.trim(),
+        horario: document.getElementById('alm_horario').value.trim(),
+        instrucciones: document.getElementById('alm_instrucciones').value.trim(),
+        estado: document.getElementById('alm_estado').value,
+        obs: document.getElementById('alm_obs').value.trim()
+    };
+
+    if (!data.codigo) { toast('⚠️ El código es obligatorio'); return; }
+    if (!data.nombre) { toast('⚠️ El nombre es obligatorio'); return; }
+    if (!data.responsable) { toast('⚠️ El responsable es obligatorio'); return; }
+
+    try {
+        const url = almEditId ? `/maestros/api/almacenes/${almEditId}` : '/maestros/api/almacenes/guardar';
+        const method = almEditId ? 'PUT' : 'POST';
+        const response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (result.success) {
+            toast(result.message || '✅ Almacén guardado correctamente');
+            closeAlmacenModal();
+            await loadModuleData('almacenes', true);
+            renderModule('almacenes');
+        } else {
+            toast('❌ ' + (result.error || 'Error al guardar'));
+        }
+    } catch (error) {
+        console.error('Error guardando almacén:', error);
+        toast('❌ Error al guardar el almacén');
+    }
+}
+
+// Eventos del modal almacén
+document.addEventListener('DOMContentLoaded', function() {
+    const closeBtn = document.getElementById('almClose');
+    const cancelBtn = document.getElementById('almCancel');
+    const clearBtn = document.getElementById('almClear');
+    const saveBtn = document.getElementById('almSave');
+    const estadoSelect = document.getElementById('alm_estado');
+    
+    if (closeBtn) closeBtn.addEventListener('click', closeAlmacenModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeAlmacenModal);
+    if (clearBtn) clearBtn.addEventListener('click', () => {
+        if (almEditId) openAlmacenModal(almEditId);
+        else clearAlmacenForm();
+    });
+    if (saveBtn) saveBtn.addEventListener('click', saveAlmacen);
+    if (estadoSelect) estadoSelect.addEventListener('change', syncAlmState);
+});
+
+// ============================================================
+// MODAL CATEGORÍA
+// ============================================================
+let catEditId = null;
+
+function openCategoriaModal(editId = null) {
+    catEditId = editId;
+    if (editId) {
+        fetch(`/maestros/api/categorias/${editId}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    fillCategoriaForm(data.data);
+                }
+            })
+            .catch(err => console.error('Error cargando categoría:', err));
+    } else {
+        clearCategoriaForm();
+    }
+    document.getElementById('catTitle').textContent = editId ? 'Editar categoría' : 'Crear categoría';
+    document.getElementById('catHint').textContent = editId ? `Editando ID ${editId}` : 'Modo: creación';
+    document.getElementById('categoriaModal').classList.add('show');
+    syncCatState();
+}
+
+function clearCategoriaForm() {
+    document.getElementById('cat_ambito').value = 'COMPARTIDO';
+    document.getElementById('cat_codigo').value = '';
+    document.getElementById('cat_nombre').value = '';
+    document.getElementById('cat_tipo').value = '';
+    document.getElementById('cat_estado').value = 'Activo';
+    document.getElementById('cat_obs').value = '';
+    syncCatState();
+}
+
+function fillCategoriaForm(data) {
+    document.getElementById('cat_ambito').value = data.ambito || 'COMPARTIDO';
+    document.getElementById('cat_codigo').value = data.codigo || '';
+    document.getElementById('cat_nombre').value = data.nombre || '';
+    document.getElementById('cat_tipo').value = data.tipo || '';
+    document.getElementById('cat_estado').value = data.estado || 'Activo';
+    document.getElementById('cat_obs').value = data.obs || '';
+    syncCatState();
+}
+
+const CAT_STATE_CFG = {
+    'Activo': {cls:'s-green', dot:'#84CC16', pill:'pill-green', txt:'Categoría habilitada para usar en productos.'},
+    'Observado': {cls:'s-yellow', dot:'#F59E0B', pill:'pill-yellow', txt:'Revisar antes de usar en nuevos productos.'},
+    'Bloqueado': {cls:'s-red', dot:'#FB7185', pill:'pill-red', txt:'No usar en nuevos productos.'},
+    'Inactivo': {cls:'s-gray', dot:'#94A3B8', pill:'pill-gray', txt:'Desactivada para nuevos registros.'}
+};
+
+function syncCatState() {
+    const v = document.getElementById('cat_estado')?.value || 'Activo';
+    const cfg = CAT_STATE_CFG[v] || CAT_STATE_CFG['Activo'];
+    const box = document.getElementById('catStateBox');
+    if (box) box.className = 'cm-state-box ' + cfg.cls;
+    const dot = document.getElementById('catStateDot');
+    if (dot) dot.style.background = cfg.dot;
+    const txt = document.getElementById('catStateText');
+    if (txt) txt.textContent = cfg.txt;
+    const pill = document.getElementById('catStatePill');
+    if (pill) { pill.className = 'cm-state-pill ' + cfg.pill; pill.textContent = v; }
+}
+
+function closeCategoriaModal() {
+    document.getElementById('categoriaModal').classList.remove('show');
+}
+
+async function saveCategoria() {
+    const data = {
+        ambito: document.getElementById('cat_ambito').value,
+        codigo: document.getElementById('cat_codigo').value.trim(),
+        nombre: document.getElementById('cat_nombre').value.trim(),
+        tipo: document.getElementById('cat_tipo').value.trim(),
+        estado: document.getElementById('cat_estado').value,
+        obs: document.getElementById('cat_obs').value.trim()
+    };
+
+    if (!data.codigo) { toast('⚠️ El código es obligatorio'); return; }
+    if (!data.nombre) { toast('⚠️ El nombre es obligatorio'); return; }
+
+    try {
+        const url = catEditId ? `/maestros/api/categorias/${catEditId}` : '/maestros/api/categorias/guardar';
+        const method = catEditId ? 'PUT' : 'POST';
+        const response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (result.success) {
+            toast(result.message || '✅ Categoría guardada correctamente');
+            closeCategoriaModal();
+            await loadModuleData('categorias', true);
+            renderModule('categorias');
+        } else {
+            toast('❌ ' + (result.error || 'Error al guardar'));
+        }
+    } catch (error) {
+        console.error('Error guardando categoría:', error);
+        toast('❌ Error al guardar la categoría');
+    }
+}
+
+// Eventos del modal categoría
+document.addEventListener('DOMContentLoaded', function() {
+    const closeBtn = document.getElementById('catClose');
+    const cancelBtn = document.getElementById('catCancel');
+    const clearBtn = document.getElementById('catClear');
+    const saveBtn = document.getElementById('catSave');
+    const estadoSelect = document.getElementById('cat_estado');
+    
+    if (closeBtn) closeBtn.addEventListener('click', closeCategoriaModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeCategoriaModal);
+    if (clearBtn) clearBtn.addEventListener('click', () => {
+        if (catEditId) openCategoriaModal(catEditId);
+        else clearCategoriaForm();
+    });
+    if (saveBtn) saveBtn.addEventListener('click', saveCategoria);
+    if (estadoSelect) estadoSelect.addEventListener('change', syncCatState);
+});
+
+// ============================================================
+// MODAL MARCA
+// ============================================================
+let marcaEditId = null;
+
+function openMarcaModal(editId = null) {
+    marcaEditId = editId;
+    if (editId) {
+        fetch(`/maestros/api/marcas/${editId}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    fillMarcaForm(data.data);
+                }
+            })
+            .catch(err => console.error('Error cargando marca:', err));
+    } else {
+        clearMarcaForm();
+    }
+    document.getElementById('marcaTitle').textContent = editId ? 'Editar marca' : 'Crear marca';
+    document.getElementById('marcaHint').textContent = editId ? `Editando ID ${editId}` : 'Modo: creación';
+    document.getElementById('marcaModal').classList.add('show');
+    syncMarcaState();
+}
+
+function clearMarcaForm() {
+    document.getElementById('marca_ambito').value = 'COMPARTIDO';
+    document.getElementById('marca_codigo').value = '';
+    document.getElementById('marca_nombre').value = '';
+    document.getElementById('marca_tipo').value = 'Original';
+    document.getElementById('marca_paisOrigen').value = '';
+    document.getElementById('marca_proveedorReferencia').value = '';
+    document.getElementById('marca_webMarca').value = '';
+    document.getElementById('marca_estado').value = 'Activo';
+    document.getElementById('marca_obs').value = '';
+    syncMarcaState();
+}
+
+function fillMarcaForm(data) {
+    document.getElementById('marca_ambito').value = data.ambito || 'COMPARTIDO';
+    document.getElementById('marca_codigo').value = data.codigo || '';
+    document.getElementById('marca_nombre').value = data.nombre || '';
+    document.getElementById('marca_tipo').value = data.tipo || 'Original';
+    document.getElementById('marca_paisOrigen').value = data.paisOrigen || '';
+    document.getElementById('marca_proveedorReferencia').value = data.proveedorReferencia || '';
+    document.getElementById('marca_webMarca').value = data.webMarca || '';
+    document.getElementById('marca_estado').value = data.estado || 'Activo';
+    document.getElementById('marca_obs').value = data.obs || '';
+    syncMarcaState();
+}
+
+const MARCA_STATE_CFG = {
+    'Activo': {cls:'s-green', dot:'#84CC16', pill:'pill-green', txt:'Marca habilitada para usar en productos.'},
+    'Observado': {cls:'s-yellow', dot:'#F59E0B', pill:'pill-yellow', txt:'Revisar antes de usar en nuevos productos.'},
+    'Bloqueado': {cls:'s-red', dot:'#FB7185', pill:'pill-red', txt:'No usar en nuevos productos.'},
+    'Inactivo': {cls:'s-gray', dot:'#94A3B8', pill:'pill-gray', txt:'Desactivada para nuevos registros.'}
+};
+
+function syncMarcaState() {
+    const v = document.getElementById('marca_estado')?.value || 'Activo';
+    const cfg = MARCA_STATE_CFG[v] || MARCA_STATE_CFG['Activo'];
+    const box = document.getElementById('marcaStateBox');
+    if (box) box.className = 'cm-state-box ' + cfg.cls;
+    const dot = document.getElementById('marcaStateDot');
+    if (dot) dot.style.background = cfg.dot;
+    const txt = document.getElementById('marcaStateText');
+    if (txt) txt.textContent = cfg.txt;
+    const pill = document.getElementById('marcaStatePill');
+    if (pill) { pill.className = 'cm-state-pill ' + cfg.pill; pill.textContent = v; }
+}
+
+function closeMarcaModal() {
+    document.getElementById('marcaModal').classList.remove('show');
+}
+
+async function saveMarca() {
+    const data = {
+        ambito: document.getElementById('marca_ambito').value,
+        codigo: document.getElementById('marca_codigo').value.trim(),
+        nombre: document.getElementById('marca_nombre').value.trim(),
+        tipo: document.getElementById('marca_tipo').value,
+        paisOrigen: document.getElementById('marca_paisOrigen').value.trim(),
+        proveedorReferencia: document.getElementById('marca_proveedorReferencia').value.trim(),
+        webMarca: document.getElementById('marca_webMarca').value.trim(),
+        estado: document.getElementById('marca_estado').value,
+        obs: document.getElementById('marca_obs').value.trim()
+    };
+
+    if (!data.codigo) { toast('⚠️ El código es obligatorio'); return; }
+    if (!data.nombre) { toast('⚠️ El nombre es obligatorio'); return; }
+
+    try {
+        const url = marcaEditId ? `/maestros/api/marcas/${marcaEditId}` : '/maestros/api/marcas/guardar';
+        const method = marcaEditId ? 'PUT' : 'POST';
+        const response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (result.success) {
+            toast(result.message || '✅ Marca guardada correctamente');
+            closeMarcaModal();
+            await loadModuleData('marcas', true);
+            renderModule('marcas');
+        } else {
+            toast('❌ ' + (result.error || 'Error al guardar'));
+        }
+    } catch (error) {
+        console.error('Error guardando marca:', error);
+        toast('❌ Error al guardar la marca');
+    }
+}
+
+// Eventos del modal marca
+document.addEventListener('DOMContentLoaded', function() {
+    const closeBtn = document.getElementById('marcaClose');
+    const cancelBtn = document.getElementById('marcaCancel');
+    const clearBtn = document.getElementById('marcaClear');
+    const saveBtn = document.getElementById('marcaSave');
+    const estadoSelect = document.getElementById('marca_estado');
+    
+    if (closeBtn) closeBtn.addEventListener('click', closeMarcaModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeMarcaModal);
+    if (clearBtn) clearBtn.addEventListener('click', () => {
+        if (marcaEditId) openMarcaModal(marcaEditId);
+        else clearMarcaForm();
+    });
+    if (saveBtn) saveBtn.addEventListener('click', saveMarca);
+    if (estadoSelect) estadoSelect.addEventListener('change', syncMarcaState);
+});
+
+// ============================================================
+// MODAL UNIDAD DE MEDIDA (UM)
+// ============================================================
+let umEditId = null;
+
+function openUmModal(editId = null) {
+    umEditId = editId;
+    if (editId) {
+        fetch(`/maestros/api/um/${editId}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    fillUmForm(data.data);
+                }
+            })
+            .catch(err => console.error('Error cargando unidad:', err));
+    } else {
+        clearUmForm();
+    }
+    document.getElementById('umTitle').textContent = editId ? 'Editar unidad' : 'Crear unidad';
+    document.getElementById('umHint').textContent = editId ? `Editando ID ${editId}` : 'Modo: creación';
+    document.getElementById('umModal').classList.add('show');
+    syncUmState();
+}
+
+function clearUmForm() {
+    document.getElementById('um_ambito').value = 'COMPARTIDO';
+    document.getElementById('um_codigo').value = '';
+    document.getElementById('um_simbolo').value = '';
+    document.getElementById('um_nombre').value = '';
+    document.getElementById('um_tipo').value = 'Cantidad';
+    document.getElementById('um_decimal').value = 'No';
+    document.getElementById('um_estado').value = 'Activo';
+    document.getElementById('um_obs').value = '';
+    syncUmState();
+}
+
+function fillUmForm(data) {
+    document.getElementById('um_ambito').value = data.ambito || 'COMPARTIDO';
+    document.getElementById('um_codigo').value = data.codigo || '';
+    document.getElementById('um_simbolo').value = data.simbolo || '';
+    document.getElementById('um_nombre').value = data.nombre || '';
+    document.getElementById('um_tipo').value = data.tipo || 'Cantidad';
+    document.getElementById('um_decimal').value = data.decimal || 'No';
+    document.getElementById('um_estado').value = data.estado || 'Activo';
+    document.getElementById('um_obs').value = data.obs || '';
+    syncUmState();
+}
+
+const UM_STATE_CFG = {
+    'Activo': {cls:'s-green', dot:'#84CC16', pill:'pill-green', txt:'Unidad habilitada para usar en productos.'},
+    'Observado': {cls:'s-yellow', dot:'#F59E0B', pill:'pill-yellow', txt:'Revisar antes de usar en nuevos productos.'},
+    'Bloqueado': {cls:'s-red', dot:'#FB7185', pill:'pill-red', txt:'No usar en nuevos productos.'},
+    'Inactivo': {cls:'s-gray', dot:'#94A3B8', pill:'pill-gray', txt:'Desactivada para nuevos registros.'}
+};
+
+function syncUmState() {
+    const v = document.getElementById('um_estado')?.value || 'Activo';
+    const cfg = UM_STATE_CFG[v] || UM_STATE_CFG['Activo'];
+    const box = document.getElementById('umStateBox');
+    if (box) box.className = 'cm-state-box ' + cfg.cls;
+    const dot = document.getElementById('umStateDot');
+    if (dot) dot.style.background = cfg.dot;
+    const txt = document.getElementById('umStateText');
+    if (txt) txt.textContent = cfg.txt;
+    const pill = document.getElementById('umStatePill');
+    if (pill) { pill.className = 'cm-state-pill ' + cfg.pill; pill.textContent = v; }
+}
+
+function closeUmModal() {
+    document.getElementById('umModal').classList.remove('show');
+}
+
+async function saveUm() {
+    const data = {
+        ambito: document.getElementById('um_ambito').value,
+        codigo: document.getElementById('um_codigo').value.trim(),
+        simbolo: document.getElementById('um_simbolo').value.trim(),
+        nombre: document.getElementById('um_nombre').value.trim(),
+        tipo: document.getElementById('um_tipo').value,
+        decimal: document.getElementById('um_decimal').value,
+        estado: document.getElementById('um_estado').value,
+        obs: document.getElementById('um_obs').value.trim()
+    };
+
+    if (!data.codigo) { toast('⚠️ El código es obligatorio'); return; }
+    if (!data.simbolo) { toast('⚠️ La abreviatura es obligatoria'); return; }
+    if (!data.nombre) { toast('⚠️ El nombre es obligatorio'); return; }
+
+    try {
+        const url = umEditId ? `/maestros/api/um/${umEditId}` : '/maestros/api/um/guardar';
+        const method = umEditId ? 'PUT' : 'POST';
+        const response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (result.success) {
+            toast(result.message || '✅ Unidad guardada correctamente');
+            closeUmModal();
+            await loadModuleData('um', true);
+            renderModule('um');
+        } else {
+            toast('❌ ' + (result.error || 'Error al guardar'));
+        }
+    } catch (error) {
+        console.error('Error guardando unidad:', error);
+        toast('❌ Error al guardar la unidad');
+    }
+}
+
+// Eventos del modal unidad
+document.addEventListener('DOMContentLoaded', function() {
+    const closeBtn = document.getElementById('umClose');
+    const cancelBtn = document.getElementById('umCancel');
+    const clearBtn = document.getElementById('umClear');
+    const saveBtn = document.getElementById('umSave');
+    const estadoSelect = document.getElementById('um_estado');
+    
+    if (closeBtn) closeBtn.addEventListener('click', closeUmModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeUmModal);
+    if (clearBtn) clearBtn.addEventListener('click', () => {
+        if (umEditId) openUmModal(umEditId);
+        else clearUmForm();
+    });
+    if (saveBtn) saveBtn.addEventListener('click', saveUm);
+    if (estadoSelect) estadoSelect.addEventListener('change', syncUmState);
+});
