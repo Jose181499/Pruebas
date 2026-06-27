@@ -1,7 +1,8 @@
 from flask import Blueprint, render_template, request, jsonify, session, current_app
 from utils import login_required
-from database import db_query
+from database import db_query, db_execute
 import traceback
+import psycopg2
 
 maestros_bp = Blueprint('maestros', __name__, url_prefix='/maestros')
 
@@ -36,7 +37,6 @@ def api_clientes_listar():
             ORDER BY razon_social
         """
         result = db_query(query)
-        # Agregar alias 'ruc' para compatibilidad con frontend
         for row in result:
             row['ruc'] = row.get('numero_documento')
         return jsonify({"success": True, "data": result or []})
@@ -60,8 +60,12 @@ def api_clientes_guardar():
         if not numero_documento:
             return jsonify({"success": False, "error": "Número de documento/RUC obligatorio"})
 
-        activo = True
-
+        # 🔥 USAR CONEXIÓN DIRECTA PARA INSERT CON RETURNING
+        from database import DATABASE_URL
+        
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+        
         query = """
             INSERT INTO clientes (
                 tipo_documento, numero_documento, razon_social,
@@ -73,7 +77,7 @@ def api_clientes_guardar():
             )
             RETURNING id, codigo_cliente, numero_documento
         """
-
+        
         params = (
             data.get('tipo_documento', 'RUC'),
             numero_documento,
@@ -83,21 +87,25 @@ def api_clientes_guardar():
             data.get('telefono_contacto'),
             data.get('nombre_contacto'),
             data.get('email_contacto'),
-            activo
+            True  # activo siempre TRUE
         )
-
+        
         current_app.logger.info(f"📝 Ejecutando INSERT con params: {params}")
         
-        # 🔥 Usar db_query para INSERT con RETURNING
-        from database import db_query
-        result = db_query(query, params)
+        cur.execute(query, params)
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
         
         current_app.logger.info(f"📝 Resultado del INSERT: {result}")
 
-        if result and len(result) > 0:
-            current_app.logger.info(f"✅ Cliente creado: {result[0]}")
-            
-            cliente = result[0]
+        if result:
+            cliente = {
+                'id': result[0],
+                'codigo_cliente': result[1],
+                'numero_documento': result[2]
+            }
             cliente['ruc'] = cliente.get('numero_documento')
             
             return jsonify({
@@ -110,9 +118,9 @@ def api_clientes_guardar():
 
     except Exception as e:
         current_app.logger.error(f"❌ Error guardando cliente: {e}")
-        import traceback
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 @maestros_bp.route('/api/clientes/<int:id>', methods=['GET'])
 @login_required
@@ -153,6 +161,12 @@ def api_clientes_actualizar(id):
         if not numero_documento:
             return jsonify({"success": False, "error": "Número de documento/RUC obligatorio"})
 
+        # 🔥 USAR CONEXIÓN DIRECTA PARA UPDATE CON RETURNING
+        from database import DATABASE_URL
+        
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+        
         query = """
             UPDATE clientes SET
                 tipo_documento = %s,
@@ -166,7 +180,7 @@ def api_clientes_actualizar(id):
                 activo = %s,
                 updated_at = NOW()
             WHERE id = %s
-            RETURNING id, codigo_cliente
+            RETURNING id, codigo_cliente, numero_documento
         """
 
         params = (
@@ -182,10 +196,18 @@ def api_clientes_actualizar(id):
             id
         )
 
-        result = db_query(query, params)
+        cur.execute(query, params)
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
 
-        if result and len(result) > 0:
-            cliente = result[0]
+        if result:
+            cliente = {
+                'id': result[0],
+                'codigo_cliente': result[1],
+                'numero_documento': result[2]
+            }
             cliente['ruc'] = cliente.get('numero_documento')
             return jsonify({
                 "success": True,
@@ -212,19 +234,29 @@ def api_clientes_toggle(id):
 
         nuevo_estado = not current[0].get('activo', True)
 
+        # 🔥 USAR CONEXIÓN DIRECTA
+        from database import DATABASE_URL
+        
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+        
         query = """
             UPDATE clientes
             SET activo = %s, updated_at = NOW()
             WHERE id = %s
             RETURNING id, activo
         """
-        result = db_query(query, (nuevo_estado, id))
+        cur.execute(query, (nuevo_estado, id))
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
 
-        if result and len(result) > 0:
+        if result:
             estado_texto = "activado" if nuevo_estado else "inactivado"
             return jsonify({
                 "success": True,
-                "data": result[0],
+                "data": {'id': result[0], 'activo': result[1]},
                 "message": f"Cliente {estado_texto} correctamente"
             })
 
@@ -272,11 +304,16 @@ def api_proveedores_guardar():
         if not data.get('ruc'):
             return jsonify({"success": False, "error": "RUC obligatorio"})
 
-        # Generar código automáticamente
-        last = db_query("SELECT codigo_proveedor FROM proveedores ORDER BY id DESC LIMIT 1")
-        if last and last[0].get('codigo_proveedor'):
+        from database import DATABASE_URL
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+
+        # Obtener último código
+        cur.execute("SELECT codigo_proveedor FROM proveedores ORDER BY id DESC LIMIT 1")
+        last = cur.fetchone()
+        if last and last[0]:
             try:
-                num = int(last[0]['codigo_proveedor'].replace('PROV-', '')) + 1
+                num = int(last[0].replace('PROV-', '')) + 1
             except:
                 num = 1
             codigo = f"PROV-{str(num).zfill(6)}"
@@ -307,14 +344,17 @@ def api_proveedores_guardar():
             data.get('tiempo_credito')
         )
 
-        result = db_query(query, params)
+        cur.execute(query, params)
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
 
-        if result and len(result) > 0:
-            current_app.logger.info(f"✅ Proveedor creado: {result[0]}")
+        if result:
             return jsonify({
                 "success": True,
-                "data": result[0],
-                "message": f"Proveedor creado con código {result[0]['codigo_proveedor']}"
+                "data": {'id': result[0], 'codigo_proveedor': result[1]},
+                "message": f"Proveedor creado con código {result[1]}"
             })
 
         return jsonify({"success": False, "error": "No se pudo crear el proveedor"})
@@ -358,6 +398,10 @@ def api_proveedores_actualizar(id):
         if not data.get('ruc'):
             return jsonify({"success": False, "error": "RUC obligatorio"})
 
+        from database import DATABASE_URL
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+
         query = """
             UPDATE proveedores SET
                 razon_social = %s,
@@ -397,12 +441,16 @@ def api_proveedores_actualizar(id):
             id
         )
 
-        result = db_query(query, params)
+        cur.execute(query, params)
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
 
-        if result and len(result) > 0:
+        if result:
             return jsonify({
                 "success": True,
-                "data": result[0],
+                "data": {'id': result[0], 'codigo_proveedor': result[1]},
                 "message": "Proveedor actualizado correctamente"
             })
 
@@ -424,24 +472,31 @@ def api_proveedores_toggle(id):
 
         nuevo_estado = not current[0].get('activo', True)
 
+        from database import DATABASE_URL
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+
         query = """
             UPDATE proveedores
             SET activo = %s, updated_at = NOW()
             WHERE id = %s
             RETURNING id, activo
         """
-        result = db_query(query, (nuevo_estado, id))
+        cur.execute(query, (nuevo_estado, id))
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
 
-        if result and len(result) > 0:
+        if result:
             estado_texto = "activado" if nuevo_estado else "inactivado"
             return jsonify({
                 "success": True,
-                "data": result[0],
+                "data": {'id': result[0], 'activo': result[1]},
                 "message": f"Proveedor {estado_texto} correctamente"
             })
 
         return jsonify({"success": False, "error": "No se pudo actualizar el estado"})
-
     except Exception as e:
         current_app.logger.error(f"Error togglando proveedor: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
@@ -485,10 +540,13 @@ def api_almacenes_guardar():
         if not data.get('responsable'):
             return jsonify({"success": False, "error": "Responsable obligatorio"})
 
-        # Verificar que no exista el código
         existing = db_query("SELECT id FROM almacenes WHERE codigo = %s", (data.get('codigo'),))
         if existing:
             return jsonify({"success": False, "error": "Ya existe un almacén con este código"})
+
+        from database import DATABASE_URL
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
 
         query = """
             INSERT INTO almacenes (
@@ -508,13 +566,17 @@ def api_almacenes_guardar():
             data.get('activo', True)
         )
 
-        result = db_query(query, params)
+        cur.execute(query, params)
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
 
-        if result and len(result) > 0:
+        if result:
             return jsonify({
                 "success": True,
-                "data": result[0],
-                "message": f"Almacén creado con código {result[0]['codigo']}"
+                "data": {'id': result[0], 'codigo': result[1]},
+                "message": f"Almacén creado con código {result[1]}"
             })
 
         return jsonify({"success": False, "error": "No se pudo crear el almacén"})
@@ -559,6 +621,10 @@ def api_almacenes_actualizar(id):
         if not data.get('responsable'):
             return jsonify({"success": False, "error": "Responsable obligatorio"})
 
+        from database import DATABASE_URL
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+
         query = """
             UPDATE almacenes SET
                 codigo = %s,
@@ -584,12 +650,16 @@ def api_almacenes_actualizar(id):
             id
         )
 
-        result = db_query(query, params)
+        cur.execute(query, params)
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
 
-        if result and len(result) > 0:
+        if result:
             return jsonify({
                 "success": True,
-                "data": result[0],
+                "data": {'id': result[0], 'codigo': result[1]},
                 "message": "Almacén actualizado correctamente"
             })
 
@@ -611,24 +681,31 @@ def api_almacenes_toggle(id):
 
         nuevo_estado = not current[0].get('activo', True)
 
+        from database import DATABASE_URL
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+
         query = """
             UPDATE almacenes
             SET activo = %s, updated_at = NOW()
             WHERE id = %s
             RETURNING id, activo
         """
-        result = db_query(query, (nuevo_estado, id))
+        cur.execute(query, (nuevo_estado, id))
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
 
-        if result and len(result) > 0:
+        if result:
             estado_texto = "activado" if nuevo_estado else "inactivado"
             return jsonify({
                 "success": True,
-                "data": result[0],
+                "data": {'id': result[0], 'activo': result[1]},
                 "message": f"Almacén {estado_texto} correctamente"
             })
 
         return jsonify({"success": False, "error": "No se pudo actualizar el estado"})
-
     except Exception as e:
         current_app.logger.error(f"Error togglando almacén: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
@@ -674,6 +751,10 @@ def api_categorias_guardar():
         if existing:
             return jsonify({"success": False, "error": "Ya existe una categoría con este código"})
 
+        from database import DATABASE_URL
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+
         query = """
             INSERT INTO categorias (
                 codigo, nombre, tipo, activo, created_at, updated_at
@@ -688,13 +769,17 @@ def api_categorias_guardar():
             data.get('activo', True)
         )
 
-        result = db_query(query, params)
+        cur.execute(query, params)
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
 
-        if result and len(result) > 0:
+        if result:
             return jsonify({
                 "success": True,
-                "data": result[0],
-                "message": f"Categoría creada con código {result[0]['codigo']}"
+                "data": {'id': result[0], 'codigo': result[1]},
+                "message": f"Categoría creada con código {result[1]}"
             })
 
         return jsonify({"success": False, "error": "No se pudo crear la categoría"})
@@ -737,6 +822,10 @@ def api_categorias_actualizar(id):
         if not data.get('nombre'):
             return jsonify({"success": False, "error": "Nombre obligatorio"})
 
+        from database import DATABASE_URL
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+
         query = """
             UPDATE categorias SET
                 codigo = %s,
@@ -756,12 +845,16 @@ def api_categorias_actualizar(id):
             id
         )
 
-        result = db_query(query, params)
+        cur.execute(query, params)
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
 
-        if result and len(result) > 0:
+        if result:
             return jsonify({
                 "success": True,
-                "data": result[0],
+                "data": {'id': result[0], 'codigo': result[1]},
                 "message": "Categoría actualizada correctamente"
             })
 
@@ -783,24 +876,31 @@ def api_categorias_toggle(id):
 
         nuevo_estado = not current[0].get('activo', True)
 
+        from database import DATABASE_URL
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+
         query = """
             UPDATE categorias
             SET activo = %s, updated_at = NOW()
             WHERE id = %s
             RETURNING id, activo
         """
-        result = db_query(query, (nuevo_estado, id))
+        cur.execute(query, (nuevo_estado, id))
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
 
-        if result and len(result) > 0:
+        if result:
             estado_texto = "activada" if nuevo_estado else "inactivada"
             return jsonify({
                 "success": True,
-                "data": result[0],
+                "data": {'id': result[0], 'activo': result[1]},
                 "message": f"Categoría {estado_texto} correctamente"
             })
 
         return jsonify({"success": False, "error": "No se pudo actualizar el estado"})
-
     except Exception as e:
         current_app.logger.error(f"Error togglando categoría: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
@@ -846,6 +946,10 @@ def api_marcas_guardar():
         if existing:
             return jsonify({"success": False, "error": "Ya existe una marca con este código"})
 
+        from database import DATABASE_URL
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+
         query = """
             INSERT INTO marcas (
                 codigo, nombre, tipo, activo, created_at, updated_at
@@ -860,13 +964,17 @@ def api_marcas_guardar():
             data.get('activo', True)
         )
 
-        result = db_query(query, params)
+        cur.execute(query, params)
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
 
-        if result and len(result) > 0:
+        if result:
             return jsonify({
                 "success": True,
-                "data": result[0],
-                "message": f"Marca creada con código {result[0]['codigo']}"
+                "data": {'id': result[0], 'codigo': result[1]},
+                "message": f"Marca creada con código {result[1]}"
             })
 
         return jsonify({"success": False, "error": "No se pudo crear la marca"})
@@ -909,6 +1017,10 @@ def api_marcas_actualizar(id):
         if not data.get('nombre'):
             return jsonify({"success": False, "error": "Nombre obligatorio"})
 
+        from database import DATABASE_URL
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+
         query = """
             UPDATE marcas SET
                 codigo = %s,
@@ -928,12 +1040,16 @@ def api_marcas_actualizar(id):
             id
         )
 
-        result = db_query(query, params)
+        cur.execute(query, params)
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
 
-        if result and len(result) > 0:
+        if result:
             return jsonify({
                 "success": True,
-                "data": result[0],
+                "data": {'id': result[0], 'codigo': result[1]},
                 "message": "Marca actualizada correctamente"
             })
 
@@ -955,24 +1071,31 @@ def api_marcas_toggle(id):
 
         nuevo_estado = not current[0].get('activo', True)
 
+        from database import DATABASE_URL
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+
         query = """
             UPDATE marcas
             SET activo = %s, updated_at = NOW()
             WHERE id = %s
             RETURNING id, activo
         """
-        result = db_query(query, (nuevo_estado, id))
+        cur.execute(query, (nuevo_estado, id))
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
 
-        if result and len(result) > 0:
+        if result:
             estado_texto = "activada" if nuevo_estado else "inactivada"
             return jsonify({
                 "success": True,
-                "data": result[0],
+                "data": {'id': result[0], 'activo': result[1]},
                 "message": f"Marca {estado_texto} correctamente"
             })
 
         return jsonify({"success": False, "error": "No se pudo actualizar el estado"})
-
     except Exception as e:
         current_app.logger.error(f"Error togglando marca: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
@@ -1021,6 +1144,10 @@ def api_um_guardar():
         if existing:
             return jsonify({"success": False, "error": "Ya existe una unidad con este código"})
 
+        from database import DATABASE_URL
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+
         query = """
             INSERT INTO um (
                 codigo, nombre, abreviatura, tipo,
@@ -1039,13 +1166,17 @@ def api_um_guardar():
             data.get('ambito', 'COMPARTIDO')
         )
 
-        result = db_query(query, params)
+        cur.execute(query, params)
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
 
-        if result and len(result) > 0:
+        if result:
             return jsonify({
                 "success": True,
-                "data": result[0],
-                "message": f"Unidad creada con código {result[0]['codigo']}"
+                "data": {'id': result[0], 'codigo': result[1]},
+                "message": f"Unidad creada con código {result[1]}"
             })
 
         return jsonify({"success": False, "error": "No se pudo crear la unidad"})
@@ -1091,6 +1222,10 @@ def api_um_actualizar(id):
         if not data.get('abreviatura'):
             return jsonify({"success": False, "error": "Abreviatura obligatoria"})
 
+        from database import DATABASE_URL
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+
         query = """
             UPDATE um SET
                 codigo = %s,
@@ -1116,12 +1251,16 @@ def api_um_actualizar(id):
             id
         )
 
-        result = db_query(query, params)
+        cur.execute(query, params)
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
 
-        if result and len(result) > 0:
+        if result:
             return jsonify({
                 "success": True,
-                "data": result[0],
+                "data": {'id': result[0], 'codigo': result[1]},
                 "message": "Unidad actualizada correctamente"
             })
 
@@ -1143,24 +1282,31 @@ def api_um_toggle(id):
 
         nuevo_estado = not current[0].get('activo', True)
 
+        from database import DATABASE_URL
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+
         query = """
             UPDATE um
             SET activo = %s, updated_at = NOW()
             WHERE id = %s
             RETURNING id, activo
         """
-        result = db_query(query, (nuevo_estado, id))
+        cur.execute(query, (nuevo_estado, id))
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
 
-        if result and len(result) > 0:
+        if result:
             estado_texto = "activada" if nuevo_estado else "inactivada"
             return jsonify({
                 "success": True,
-                "data": result[0],
+                "data": {'id': result[0], 'activo': result[1]},
                 "message": f"Unidad {estado_texto} correctamente"
             })
 
         return jsonify({"success": False, "error": "No se pudo actualizar el estado"})
-
     except Exception as e:
         current_app.logger.error(f"Error togglando unidad de medida: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
