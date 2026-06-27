@@ -393,7 +393,38 @@ def api_consulta_sunat():
         return jsonify({'success': False, 'error': f'Error en la consulta: Código {response.status_code}'})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
+    
 
+/////
+# Para clientes
+@app.route('/api/clientes/listar', methods=['GET'])
+@app.route('/api/clientes/guardar', methods=['POST'])
+@app.route('/api/clientes/<int:id>', methods=['DELETE'])
+
+# Para proveedores
+@app.route('/api/proveedores/listar', methods=['GET'])
+@app.route('/api/proveedores/guardar', methods=['POST'])
+@app.route('/api/proveedores/<int:id>', methods=['DELETE'])
+
+# Para almacenes
+@app.route('/api/almacenes/listar', methods=['GET'])
+@app.route('/api/almacenes/guardar', methods=['POST'])
+@app.route('/api/almacenes/<int:id>', methods=['DELETE'])
+
+# Para categorías
+@app.route('/api/categorias/listar', methods=['GET'])
+@app.route('/api/categorias/guardar', methods=['POST'])
+@app.route('/api/categorias/<int:id>', methods=['DELETE'])
+
+# Para marcas
+@app.route('/api/marcas/listar', methods=['GET'])
+@app.route('/api/marcas/guardar', methods=['POST'])
+@app.route('/api/marcas/<int:id>', methods=['DELETE'])
+
+# Para unidades de medida
+@app.route('/api/um/listar', methods=['GET'])
+@app.route('/api/um/guardar', methods=['POST'])
+@app.route('/api/um/<int:id>', methods=['DELETE'])
 # ==========================================
 # ENDPOINTS PRODUCTOS API
 # ==========================================
@@ -442,35 +473,7 @@ def api_listar_productos():
         return jsonify({'success': True, 'data': productos})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
-# Para clientes
-@app.route('/api/clientes/listar', methods=['GET'])
-@app.route('/api/clientes/guardar', methods=['POST'])
-@app.route('/api/clientes/<int:id>', methods=['DELETE'])
 
-# Para proveedores
-@app.route('/api/proveedores/listar', methods=['GET'])
-@app.route('/api/proveedores/guardar', methods=['POST'])
-@app.route('/api/proveedores/<int:id>', methods=['DELETE'])
-
-# Para almacenes
-@app.route('/api/almacenes/listar', methods=['GET'])
-@app.route('/api/almacenes/guardar', methods=['POST'])
-@app.route('/api/almacenes/<int:id>', methods=['DELETE'])
-
-# Para categorías
-@app.route('/api/categorias/listar', methods=['GET'])
-@app.route('/api/categorias/guardar', methods=['POST'])
-@app.route('/api/categorias/<int:id>', methods=['DELETE'])
-
-# Para marcas
-@app.route('/api/marcas/listar', methods=['GET'])
-@app.route('/api/marcas/guardar', methods=['POST'])
-@app.route('/api/marcas/<int:id>', methods=['DELETE'])
-
-# Para unidades de medida
-@app.route('/api/um/listar', methods=['GET'])
-@app.route('/api/um/guardar', methods=['POST'])
-@app.route('/api/um/<int:id>', methods=['DELETE'])
 
 # ==========================================
 # EJECUTAR
