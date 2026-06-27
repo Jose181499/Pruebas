@@ -32,6 +32,8 @@ from routes.reportes import reportes_bp
 from routes.herramientas import herramientas_bp
 from routes.papelera import papelera_bp
 from routes.configuracion import configuracion_bp
+from routes.maestros import maestros_bp
+
 
 # ==========================================
 # IMPORTS DE DATABASE
@@ -83,6 +85,7 @@ app.register_blueprint(reportes_bp)
 app.register_blueprint(herramientas_bp)
 app.register_blueprint(papelera_bp)
 app.register_blueprint(configuracion_bp)
+app.register_blueprint(maestros_bp)
 
 # ==========================================
 # HELPERS

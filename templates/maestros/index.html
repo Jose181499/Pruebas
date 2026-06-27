@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Maestros - ERP Multiempresa{% endblock %}
+
+{% block breadcrumb %}
+<a href="/" class="crumb-btn">Inicio</a>
+<span>/</span>
+<span class="crumb-btn active-crumb">Maestros</span>
+{% endblock %}
+
+{% block page_title %}Maestros{% endblock %}
+
+{% block subtitle %}Módulo maestro del ERP - Gestión de clientes, proveedores, almacenes, categorías, marcas y unidades de medida.{% endblock %}
+
+{% block content %}
+<!-- TABS -->
+<div class="tabs" id="tabsRow">
+    <button class="tab-btn active" data-screen="clientes">👤 Clientes</button>
+    <button class="tab-btn" data-screen="proveedores">🏭 Proveedores</button>
+    <button class="tab-btn" data-screen="almacenes">📦 Almacenes</button>
+    <button class="tab-btn" data-screen="categorias">🗂️ Categorías</button>
+    <button class="tab-btn" data-screen="marcas">🏷️ Marcas</button>
+    <button class="tab-btn" data-screen="um">📏 Unidades de medida</button>
+</div>
+
+<!-- CONTENIDO DE CADA MÓDULO -->
+<div id="clientes" class="section active"></div>
+<div id="proveedores" class="section"></div>
+<div id="almacenes" class="section"></div>
+<div id="categorias" class="section"></div>
+<div id="marcas" class="section"></div>
+<div id="um" class="section"></div>
+
+<!-- MODALES -->
+{% include "modales/cliente_modal.html" %}
+{% include "modales/maestro_modal.html" %}
+{% include "modales/confirmar_modal.html" %}
+{% include "modales/bulk_modal.html" %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/maestros.js') }}"></script>
+{% endblock %}
