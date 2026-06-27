@@ -475,6 +475,8 @@
   }
 }
 </style>
+{% endblock %}
+
 {% block content %}
 <!-- TABS -->
 <div class="tabs" id="tabsRow">
@@ -500,5 +502,7 @@
 {% include "maestros/modales/confirmar_modal.html" %}
 {% include "maestros/modales/bulk_modal.html" %}
 {% endblock %}
+
+{% block extra_js %}
 <script src="{{ url_for('static', filename='js/maestros.js') }}"></script>
 {% endblock %}
