@@ -239,57 +239,6 @@ async function loadModuleData(modulo, force = false) {
 }
 
 // ============================================================
-
-// ============================================================
-// NAVEGACIÓN ENTRE TABS DE MAESTROS
-// ============================================================
-
-// Función para cambiar de tab
-async function switchTab(tab) {
-    console.log('🔄 Cambiando a tab:', tab);
-    
-    // Actualizar URL sin recargar
-    const url = new URL(window.location);
-    url.searchParams.set('tab', tab);
-    window.history.pushState({}, '', url);
-    
-    // Actualizar tabs
-    document.querySelectorAll('#tabsRow .tab-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.tab === tab);
-    });
-    
-    // Mostrar sección
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    const section = document.getElementById(tab);
-    if (section) section.classList.add('active');
-    
-    // Renderizar el módulo correspondiente
-    await renderModule(tab);
-}
-
-// Manejar clicks en los tabs
-document.addEventListener('click', function(e) {
-    const tabBtn = e.target.closest('#tabsRow .tab-btn');
-    if (tabBtn) {
-        e.preventDefault();
-        const tab = tabBtn.dataset.tab;
-        if (tab) switchTab(tab);
-    }
-});
-
-// Cargar el módulo inicial al cargar la página
-document.addEventListener('DOMContentLoaded', function() {
-    const initialTab = '{{ active_tab }}';
-    if (initialTab) {
-        // Forzar la apertura del módulo correcto
-        setTimeout(() => {
-            switchTab(initialTab);
-        }, 100);
-    }
-});
-
-
-
 // UTILIDADES
 // ============================================================
 function esc(v) {
