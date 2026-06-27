@@ -463,7 +463,7 @@ if __name__ == "__main__":
     print(f"   - Dashboard:  http://localhost:{port}/index")
     print(f"   - Empresas:   http://localhost:{port}/empresas")
     print(f"   - Usuarios:   http://localhost:{port}/usuarios")
-    print(f"   - Maestros:   http://localhost:{port}/mantenedor")
+    print(f"   - Maestros:   http://localhost:{port}/maestros")
     print(f"   - Productos:  http://localhost:{port}/productos")
     print(f"   - Ventas:     http://localhost:{port}/ventas")
     print(f"   - Inventario: http://localhost:{port}/inventario")
