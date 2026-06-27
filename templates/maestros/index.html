@@ -475,8 +475,6 @@
   }
 }
 </style>
-{% endblock %}
-
 {% block content %}
 <!-- TABS -->
 <div class="tabs" id="tabsRow">
@@ -497,12 +495,10 @@
 <div id="um" class="section {% if active_tab == 'um' %}active{% endif %}"></div>
 
 <!-- MODALES -->
-{% include "modales/cliente_modal.html" %}
-{% include "modales/maestro_modal.html" %}
-{% include "modales/confirmar_modal.html" %}
-{% include "modales/bulk_modal.html" %}
+{% include "maestros/modales/cliente_modal.html" %}
+{% include "maestros/modales/maestro_modal.html" %}
+{% include "maestros/modales/confirmar_modal.html" %}
+{% include "maestros/modales/bulk_modal.html" %}
 {% endblock %}
-
-{% block extra_js %}
 <script src="{{ url_for('static', filename='js/maestros.js') }}"></script>
 {% endblock %}

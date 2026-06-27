@@ -637,3 +637,99 @@ def api_um_toggle(id):
     except Exception as e:
         logging.error(f"Error togglando unidad de medida: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
+    
+@maestros_bp.route('/api/clientes/<int:id>', methods=['GET'])
+@login_required
+def api_clientes_obtener(id):
+    """Obtener un cliente por ID"""
+    try:
+        query = """
+            SELECT id, codigo_cliente, razon_social, numero_documento,
+                   nombre_comercial, telefono_contacto, nombre_contacto,
+                   email_contacto, direccion_fiscal, activo, tipo_documento
+            FROM clientes
+            WHERE id = %s
+        """
+        result = db_query(query, (id,))
+        if result and len(result) > 0:
+            return jsonify({"success": True, "data": result[0]})
+        return jsonify({"success": False, "error": "Cliente no encontrado"}), 404
+    except Exception as e:
+        logging.error(f"Error obteniendo cliente: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+    
+
+@maestros_bp.route('/api/proveedores/<int:id>', methods=['GET'])
+@login_required
+def api_proveedores_obtener(id):
+    """Obtener un proveedor por ID"""
+    try:
+        query = """
+            SELECT id, codigo_proveedor, razon_social, ruc,
+                   razon_comercial, telefono, contacto, email,
+                   direccion, activo, condicion_pago, tiempo_credito
+            FROM proveedores
+            WHERE id = %s
+        """
+        result = db_query(query, (id,))
+        if result and len(result) > 0:
+            return jsonify({"success": True, "data": result[0]})
+        return jsonify({"success": False, "error": "Proveedor no encontrado"}), 404
+    except Exception as e:
+        logging.error(f"Error obteniendo proveedor: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+    
+
+@maestros_bp.route('/api/clientes/<int:id>', methods=['PUT'])
+@login_required
+def api_clientes_actualizar(id):
+    """Actualizar cliente"""
+    try:
+        data = request.get_json()
+        
+        if not data.get('razon_social'):
+            return jsonify({"success": False, "error": "Razón social obligatoria"})
+        if not data.get('numero_documento'):
+            return jsonify({"success": False, "error": "Número de documento obligatorio"})
+        
+        query = """
+            UPDATE clientes SET
+                razon_social = %s,
+                numero_documento = %s,
+                nombre_comercial = %s,
+                telefono_contacto = %s,
+                nombre_contacto = %s,
+                email_contacto = %s,
+                direccion_fiscal = %s,
+                tipo_documento = %s,
+                activo = %s
+            WHERE id = %s
+            RETURNING id, codigo_cliente
+        """
+        
+        params = (
+            data.get('razon_social'),
+            data.get('numero_documento'),
+            data.get('nombre_comercial', data.get('razon_social')),
+            data.get('telefono_contacto'),
+            data.get('nombre_contacto'),
+            data.get('email_contacto'),
+            data.get('direccion_fiscal'),
+            data.get('tipo_documento', 'RUC'),
+            data.get('activo', True),
+            id
+        )
+        
+        result = db_query(query, params)
+        
+        if result and len(result) > 0:
+            return jsonify({
+                "success": True,
+                "data": result[0],
+                "message": f"Cliente actualizado correctamente"
+            })
+        
+        return jsonify({"success": False, "error": "No se pudo actualizar el cliente"})
+    except Exception as e:
+        logging.error(f"Error actualizando cliente: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
