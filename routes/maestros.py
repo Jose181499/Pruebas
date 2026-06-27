@@ -1,19 +1,21 @@
 from flask import Blueprint, render_template, request, jsonify, session, current_app
 from utils import login_required
 from database import db_query
-import logging
+import traceback
 
 maestros_bp = Blueprint('maestros', __name__, url_prefix='/maestros')
+
 
 @maestros_bp.route('/')
 @login_required
 def index():
     """Página principal de maestros"""
     tab = request.args.get('tab', 'clientes')
-    return render_template('maestros/index.html', 
+    return render_template('maestros/index.html',
                           active_tab=tab,
                           nombre=session.get('nombre_completo', 'Usuario'),
                           empresa=session.get('empresa', 'KCF'))
+
 
 # ==========================================
 # ENDPOINTS CLIENTES
@@ -25,8 +27,8 @@ def api_clientes_listar():
     """Listar clientes"""
     try:
         query = """
-            SELECT id, codigo_cliente, razon_social, 
-                   numero_documento, ruc,
+            SELECT id, codigo_cliente, razon_social,
+                   numero_documento,
                    nombre_comercial, telefono_contacto, nombre_contacto,
                    email_contacto, direccion_fiscal, activo, tipo_documento
             FROM clientes
@@ -34,10 +36,9 @@ def api_clientes_listar():
             ORDER BY razon_social
         """
         result = db_query(query)
-        # Asegurar que ruc tenga valor
+        # Agregar alias 'ruc' para compatibilidad con frontend
         for row in result:
-            if not row.get('ruc'):
-                row['ruc'] = row.get('numero_documento')
+            row['ruc'] = row.get('numero_documento')
         return jsonify({"success": True, "data": result or []})
     except Exception as e:
         current_app.logger.error(f"Error listando clientes: {e}")
@@ -51,33 +52,31 @@ def api_clientes_guardar():
     try:
         data = request.get_json()
         current_app.logger.info(f"📝 Datos recibidos para guardar cliente: {data}")
-        
+
         # Validaciones
         if not data.get('razon_social'):
             return jsonify({"success": False, "error": "Razón social obligatoria"})
-        
-        # Aceptar tanto 'numero_documento' como 'ruc'
+
         numero_documento = data.get('numero_documento') or data.get('ruc')
         if not numero_documento:
             return jsonify({"success": False, "error": "Número de documento/RUC obligatorio"})
-        
-        # NO generar código manualmente - El trigger de BD lo hará automáticamente
+
+        # NO incluir ruc en el INSERT (no existe la columna)
         query = """
             INSERT INTO clientes (
-                tipo_documento, numero_documento, ruc, razon_social, 
-                nombre_comercial, direccion_fiscal, 
+                tipo_documento, numero_documento, razon_social,
+                nombre_comercial, direccion_fiscal,
                 telefono_contacto, nombre_contacto, email_contacto,
                 activo, created_at, updated_at
             ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW()
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW()
             )
             RETURNING id, codigo_cliente
         """
-        
+
         params = (
             data.get('tipo_documento', 'RUC'),
             numero_documento,
-            numero_documento,  # ruc
             data.get('razon_social'),
             data.get('nombre_comercial', data.get('razon_social')),
             data.get('direccion_fiscal'),
@@ -86,22 +85,25 @@ def api_clientes_guardar():
             data.get('email_contacto'),
             data.get('activo', True)
         )
-        
+
         result = db_query(query, params)
-        
+
         if result and len(result) > 0:
             current_app.logger.info(f"✅ Cliente creado: {result[0]}")
+
+            # Agregar alias ruc para compatibilidad
+            cliente = result[0]
+            cliente['ruc'] = cliente.get('numero_documento')
             return jsonify({
                 "success": True,
-                "data": result[0],
-                "message": f"Cliente creado con código {result[0]['codigo_cliente']}"
+                "data": cliente,
+                "message": f"Cliente creado con código {cliente['codigo_cliente']}"
             })
-        
+
         return jsonify({"success": False, "error": "No se pudo crear el cliente"})
-        
+
     except Exception as e:
         current_app.logger.error(f"❌ Error guardando cliente: {e}")
-        import traceback
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -112,8 +114,8 @@ def api_clientes_obtener(id):
     """Obtener cliente por ID"""
     try:
         query = """
-            SELECT id, codigo_cliente, razon_social, 
-                   numero_documento, ruc,
+            SELECT id, codigo_cliente, razon_social,
+                   numero_documento,
                    nombre_comercial, telefono_contacto, nombre_contacto,
                    email_contacto, direccion_fiscal, activo, tipo_documento
             FROM clientes
@@ -122,9 +124,7 @@ def api_clientes_obtener(id):
         result = db_query(query, (id,))
         if result and len(result) > 0:
             cliente = result[0]
-            # Asegurar que ruc tenga valor
-            if not cliente.get('ruc'):
-                cliente['ruc'] = cliente.get('numero_documento')
+            cliente['ruc'] = cliente.get('numero_documento')
             return jsonify({"success": True, "data": cliente})
         return jsonify({"success": False, "error": "Cliente no encontrado"}), 404
     except Exception as e:
@@ -139,19 +139,18 @@ def api_clientes_actualizar(id):
     try:
         data = request.get_json()
         current_app.logger.info(f"📝 Datos recibidos para actualizar cliente {id}: {data}")
-        
+
         if not data.get('razon_social'):
             return jsonify({"success": False, "error": "Razón social obligatoria"})
-        
+
         numero_documento = data.get('numero_documento') or data.get('ruc')
         if not numero_documento:
             return jsonify({"success": False, "error": "Número de documento/RUC obligatorio"})
-        
+
         query = """
             UPDATE clientes SET
                 tipo_documento = %s,
                 numero_documento = %s,
-                ruc = %s,
                 razon_social = %s,
                 nombre_comercial = %s,
                 direccion_fiscal = %s,
@@ -163,11 +162,10 @@ def api_clientes_actualizar(id):
             WHERE id = %s
             RETURNING id, codigo_cliente
         """
-        
+
         params = (
             data.get('tipo_documento', 'RUC'),
             numero_documento,
-            numero_documento,  # ruc
             data.get('razon_social'),
             data.get('nombre_comercial', data.get('razon_social')),
             data.get('direccion_fiscal'),
@@ -177,21 +175,22 @@ def api_clientes_actualizar(id):
             data.get('activo', True),
             id
         )
-        
+
         result = db_query(query, params)
-        
+
         if result and len(result) > 0:
+            cliente = result[0]
+            cliente['ruc'] = cliente.get('numero_documento')
             return jsonify({
                 "success": True,
-                "data": result[0],
+                "data": cliente,
                 "message": "Cliente actualizado correctamente"
             })
-        
+
         return jsonify({"success": False, "error": "No se pudo actualizar el cliente"})
-        
+
     except Exception as e:
         current_app.logger.error(f"❌ Error actualizando cliente: {e}")
-        import traceback
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -204,17 +203,17 @@ def api_clientes_toggle(id):
         current = db_query("SELECT activo FROM clientes WHERE id = %s", (id,))
         if not current:
             return jsonify({"success": False, "error": "Cliente no encontrado"})
-        
+
         nuevo_estado = not current[0].get('activo', True)
-        
+
         query = """
-            UPDATE clientes 
+            UPDATE clientes
             SET activo = %s, updated_at = NOW()
-            WHERE id = %s 
+            WHERE id = %s
             RETURNING id, activo
         """
         result = db_query(query, (nuevo_estado, id))
-        
+
         if result and len(result) > 0:
             estado_texto = "activado" if nuevo_estado else "inactivado"
             return jsonify({
@@ -222,12 +221,13 @@ def api_clientes_toggle(id):
                 "data": result[0],
                 "message": f"Cliente {estado_texto} correctamente"
             })
-        
+
         return jsonify({"success": False, "error": "No se pudo actualizar el estado"})
-        
+
     except Exception as e:
         current_app.logger.error(f"❌ Error togglando cliente: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 # ==========================================
 # ENDPOINTS PROVEEDORES
@@ -260,12 +260,13 @@ def api_proveedores_guardar():
     try:
         data = request.get_json()
         current_app.logger.info(f"📝 Datos recibidos para guardar proveedor: {data}")
-        
+
         if not data.get('razon_social'):
             return jsonify({"success": False, "error": "Razón social obligatoria"})
         if not data.get('ruc'):
             return jsonify({"success": False, "error": "RUC obligatorio"})
-        
+
+        # Generar código automáticamente
         last = db_query("SELECT codigo_proveedor FROM proveedores ORDER BY id DESC LIMIT 1")
         if last and last[0].get('codigo_proveedor'):
             try:
@@ -275,7 +276,7 @@ def api_proveedores_guardar():
             codigo = f"PROV-{str(num).zfill(6)}"
         else:
             codigo = "PROV-000001"
-        
+
         query = """
             INSERT INTO proveedores (
                 codigo_proveedor, razon_social, ruc,
@@ -285,7 +286,7 @@ def api_proveedores_guardar():
             ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
             RETURNING id, codigo_proveedor
         """
-        
+
         params = (
             codigo,
             data.get('razon_social'),
@@ -299,9 +300,9 @@ def api_proveedores_guardar():
             data.get('condicion_pago', 'Contado'),
             data.get('tiempo_credito')
         )
-        
+
         result = db_query(query, params)
-        
+
         if result and len(result) > 0:
             current_app.logger.info(f"✅ Proveedor creado: {result[0]}")
             return jsonify({
@@ -309,10 +310,11 @@ def api_proveedores_guardar():
                 "data": result[0],
                 "message": f"Proveedor creado con código {result[0]['codigo_proveedor']}"
             })
-        
+
         return jsonify({"success": False, "error": "No se pudo crear el proveedor"})
     except Exception as e:
         current_app.logger.error(f"Error guardando proveedor: {e}")
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -344,12 +346,12 @@ def api_proveedores_actualizar(id):
     try:
         data = request.get_json()
         current_app.logger.info(f"📝 Datos recibidos para actualizar proveedor {id}: {data}")
-        
+
         if not data.get('razon_social'):
             return jsonify({"success": False, "error": "Razón social obligatoria"})
         if not data.get('ruc'):
             return jsonify({"success": False, "error": "RUC obligatorio"})
-        
+
         query = """
             UPDATE proveedores SET
                 razon_social = %s,
@@ -370,7 +372,7 @@ def api_proveedores_actualizar(id):
             WHERE id = %s
             RETURNING id, codigo_proveedor
         """
-        
+
         params = (
             data.get('razon_social'),
             data.get('ruc'),
@@ -388,19 +390,20 @@ def api_proveedores_actualizar(id):
             data.get('activo', True),
             id
         )
-        
+
         result = db_query(query, params)
-        
+
         if result and len(result) > 0:
             return jsonify({
                 "success": True,
                 "data": result[0],
                 "message": "Proveedor actualizado correctamente"
             })
-        
+
         return jsonify({"success": False, "error": "No se pudo actualizar el proveedor"})
     except Exception as e:
         current_app.logger.error(f"Error actualizando proveedor: {e}")
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -412,17 +415,17 @@ def api_proveedores_toggle(id):
         current = db_query("SELECT activo FROM proveedores WHERE id = %s", (id,))
         if not current:
             return jsonify({"success": False, "error": "Proveedor no encontrado"})
-        
+
         nuevo_estado = not current[0].get('activo', True)
-        
+
         query = """
-            UPDATE proveedores 
+            UPDATE proveedores
             SET activo = %s, updated_at = NOW()
-            WHERE id = %s 
+            WHERE id = %s
             RETURNING id, activo
         """
         result = db_query(query, (nuevo_estado, id))
-        
+
         if result and len(result) > 0:
             estado_texto = "activado" if nuevo_estado else "inactivado"
             return jsonify({
@@ -430,8 +433,9 @@ def api_proveedores_toggle(id):
                 "data": result[0],
                 "message": f"Proveedor {estado_texto} correctamente"
             })
-        
-        return jsonify({"success": False, "error": "No se pudo actualizar"})
+
+        return jsonify({"success": False, "error": "No se pudo actualizar el estado"})
+
     except Exception as e:
         current_app.logger.error(f"Error togglando proveedor: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
@@ -467,16 +471,19 @@ def api_almacenes_guardar():
     try:
         data = request.get_json()
         current_app.logger.info(f"📝 Datos recibidos para guardar almacén: {data}")
-        
+
         if not data.get('codigo'):
             return jsonify({"success": False, "error": "Código obligatorio"})
         if not data.get('nombre'):
             return jsonify({"success": False, "error": "Nombre obligatorio"})
-        
+        if not data.get('responsable'):
+            return jsonify({"success": False, "error": "Responsable obligatorio"})
+
+        # Verificar que no exista el código
         existing = db_query("SELECT id FROM almacenes WHERE codigo = %s", (data.get('codigo'),))
         if existing:
             return jsonify({"success": False, "error": "Ya existe un almacén con este código"})
-        
+
         query = """
             INSERT INTO almacenes (
                 codigo, nombre, tipo, responsable, telefono,
@@ -484,7 +491,7 @@ def api_almacenes_guardar():
             ) VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
             RETURNING id, codigo
         """
-        
+
         params = (
             data.get('codigo'),
             data.get('nombre'),
@@ -494,19 +501,20 @@ def api_almacenes_guardar():
             data.get('direccion'),
             data.get('activo', True)
         )
-        
+
         result = db_query(query, params)
-        
+
         if result and len(result) > 0:
             return jsonify({
                 "success": True,
                 "data": result[0],
                 "message": f"Almacén creado con código {result[0]['codigo']}"
             })
-        
+
         return jsonify({"success": False, "error": "No se pudo crear el almacén"})
     except Exception as e:
         current_app.logger.error(f"Error guardando almacén: {e}")
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -537,12 +545,14 @@ def api_almacenes_actualizar(id):
     try:
         data = request.get_json()
         current_app.logger.info(f"📝 Datos recibidos para actualizar almacén {id}: {data}")
-        
+
         if not data.get('codigo'):
             return jsonify({"success": False, "error": "Código obligatorio"})
         if not data.get('nombre'):
             return jsonify({"success": False, "error": "Nombre obligatorio"})
-        
+        if not data.get('responsable'):
+            return jsonify({"success": False, "error": "Responsable obligatorio"})
+
         query = """
             UPDATE almacenes SET
                 codigo = %s,
@@ -556,7 +566,7 @@ def api_almacenes_actualizar(id):
             WHERE id = %s
             RETURNING id, codigo
         """
-        
+
         params = (
             data.get('codigo'),
             data.get('nombre'),
@@ -567,19 +577,20 @@ def api_almacenes_actualizar(id):
             data.get('activo', True),
             id
         )
-        
+
         result = db_query(query, params)
-        
+
         if result and len(result) > 0:
             return jsonify({
                 "success": True,
                 "data": result[0],
                 "message": "Almacén actualizado correctamente"
             })
-        
+
         return jsonify({"success": False, "error": "No se pudo actualizar el almacén"})
     except Exception as e:
         current_app.logger.error(f"Error actualizando almacén: {e}")
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -591,17 +602,17 @@ def api_almacenes_toggle(id):
         current = db_query("SELECT activo FROM almacenes WHERE id = %s", (id,))
         if not current:
             return jsonify({"success": False, "error": "Almacén no encontrado"})
-        
+
         nuevo_estado = not current[0].get('activo', True)
-        
+
         query = """
-            UPDATE almacenes 
+            UPDATE almacenes
             SET activo = %s, updated_at = NOW()
-            WHERE id = %s 
+            WHERE id = %s
             RETURNING id, activo
         """
         result = db_query(query, (nuevo_estado, id))
-        
+
         if result and len(result) > 0:
             estado_texto = "activado" if nuevo_estado else "inactivado"
             return jsonify({
@@ -609,8 +620,9 @@ def api_almacenes_toggle(id):
                 "data": result[0],
                 "message": f"Almacén {estado_texto} correctamente"
             })
-        
-        return jsonify({"success": False, "error": "No se pudo actualizar"})
+
+        return jsonify({"success": False, "error": "No se pudo actualizar el estado"})
+
     except Exception as e:
         current_app.logger.error(f"Error togglando almacén: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
@@ -626,7 +638,7 @@ def api_categorias_listar():
     """Listar categorías"""
     try:
         query = """
-            SELECT id, codigo, nombre, tipo, activo, 
+            SELECT id, codigo, nombre, tipo, activo,
                    created_at, updated_at
             FROM categorias
             WHERE activo = true
@@ -646,42 +658,43 @@ def api_categorias_guardar():
     try:
         data = request.get_json()
         current_app.logger.info(f"📝 Datos recibidos para guardar categoría: {data}")
-        
+
         if not data.get('codigo'):
             return jsonify({"success": False, "error": "Código obligatorio"})
         if not data.get('nombre'):
             return jsonify({"success": False, "error": "Nombre obligatorio"})
-        
+
         existing = db_query("SELECT id FROM categorias WHERE codigo = %s", (data.get('codigo'),))
         if existing:
             return jsonify({"success": False, "error": "Ya existe una categoría con este código"})
-        
+
         query = """
             INSERT INTO categorias (
                 codigo, nombre, tipo, activo, created_at, updated_at
             ) VALUES (%s, %s, %s, %s, NOW(), NOW())
             RETURNING id, codigo
         """
-        
+
         params = (
             data.get('codigo'),
             data.get('nombre'),
             data.get('tipo', 'General'),
             data.get('activo', True)
         )
-        
+
         result = db_query(query, params)
-        
+
         if result and len(result) > 0:
             return jsonify({
                 "success": True,
                 "data": result[0],
                 "message": f"Categoría creada con código {result[0]['codigo']}"
             })
-        
+
         return jsonify({"success": False, "error": "No se pudo crear la categoría"})
     except Exception as e:
         current_app.logger.error(f"Error guardando categoría: {e}")
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -712,12 +725,12 @@ def api_categorias_actualizar(id):
     try:
         data = request.get_json()
         current_app.logger.info(f"📝 Datos recibidos para actualizar categoría {id}: {data}")
-        
+
         if not data.get('codigo'):
             return jsonify({"success": False, "error": "Código obligatorio"})
         if not data.get('nombre'):
             return jsonify({"success": False, "error": "Nombre obligatorio"})
-        
+
         query = """
             UPDATE categorias SET
                 codigo = %s,
@@ -728,7 +741,7 @@ def api_categorias_actualizar(id):
             WHERE id = %s
             RETURNING id, codigo
         """
-        
+
         params = (
             data.get('codigo'),
             data.get('nombre'),
@@ -736,19 +749,20 @@ def api_categorias_actualizar(id):
             data.get('activo', True),
             id
         )
-        
+
         result = db_query(query, params)
-        
+
         if result and len(result) > 0:
             return jsonify({
                 "success": True,
                 "data": result[0],
                 "message": "Categoría actualizada correctamente"
             })
-        
+
         return jsonify({"success": False, "error": "No se pudo actualizar la categoría"})
     except Exception as e:
         current_app.logger.error(f"Error actualizando categoría: {e}")
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -760,17 +774,17 @@ def api_categorias_toggle(id):
         current = db_query("SELECT activo FROM categorias WHERE id = %s", (id,))
         if not current:
             return jsonify({"success": False, "error": "Categoría no encontrada"})
-        
+
         nuevo_estado = not current[0].get('activo', True)
-        
+
         query = """
-            UPDATE categorias 
+            UPDATE categorias
             SET activo = %s, updated_at = NOW()
-            WHERE id = %s 
+            WHERE id = %s
             RETURNING id, activo
         """
         result = db_query(query, (nuevo_estado, id))
-        
+
         if result and len(result) > 0:
             estado_texto = "activada" if nuevo_estado else "inactivada"
             return jsonify({
@@ -778,8 +792,9 @@ def api_categorias_toggle(id):
                 "data": result[0],
                 "message": f"Categoría {estado_texto} correctamente"
             })
-        
-        return jsonify({"success": False, "error": "No se pudo actualizar"})
+
+        return jsonify({"success": False, "error": "No se pudo actualizar el estado"})
+
     except Exception as e:
         current_app.logger.error(f"Error togglando categoría: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
@@ -815,42 +830,43 @@ def api_marcas_guardar():
     try:
         data = request.get_json()
         current_app.logger.info(f"📝 Datos recibidos para guardar marca: {data}")
-        
+
         if not data.get('codigo'):
             return jsonify({"success": False, "error": "Código obligatorio"})
         if not data.get('nombre'):
             return jsonify({"success": False, "error": "Nombre obligatorio"})
-        
+
         existing = db_query("SELECT id FROM marcas WHERE codigo = %s", (data.get('codigo'),))
         if existing:
             return jsonify({"success": False, "error": "Ya existe una marca con este código"})
-        
+
         query = """
             INSERT INTO marcas (
                 codigo, nombre, tipo, activo, created_at, updated_at
             ) VALUES (%s, %s, %s, %s, NOW(), NOW())
             RETURNING id, codigo
         """
-        
+
         params = (
             data.get('codigo'),
             data.get('nombre'),
             data.get('tipo', 'General'),
             data.get('activo', True)
         )
-        
+
         result = db_query(query, params)
-        
+
         if result and len(result) > 0:
             return jsonify({
                 "success": True,
                 "data": result[0],
                 "message": f"Marca creada con código {result[0]['codigo']}"
             })
-        
+
         return jsonify({"success": False, "error": "No se pudo crear la marca"})
     except Exception as e:
         current_app.logger.error(f"Error guardando marca: {e}")
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -881,12 +897,12 @@ def api_marcas_actualizar(id):
     try:
         data = request.get_json()
         current_app.logger.info(f"📝 Datos recibidos para actualizar marca {id}: {data}")
-        
+
         if not data.get('codigo'):
             return jsonify({"success": False, "error": "Código obligatorio"})
         if not data.get('nombre'):
             return jsonify({"success": False, "error": "Nombre obligatorio"})
-        
+
         query = """
             UPDATE marcas SET
                 codigo = %s,
@@ -897,7 +913,7 @@ def api_marcas_actualizar(id):
             WHERE id = %s
             RETURNING id, codigo
         """
-        
+
         params = (
             data.get('codigo'),
             data.get('nombre'),
@@ -905,19 +921,20 @@ def api_marcas_actualizar(id):
             data.get('activo', True),
             id
         )
-        
+
         result = db_query(query, params)
-        
+
         if result and len(result) > 0:
             return jsonify({
                 "success": True,
                 "data": result[0],
                 "message": "Marca actualizada correctamente"
             })
-        
+
         return jsonify({"success": False, "error": "No se pudo actualizar la marca"})
     except Exception as e:
         current_app.logger.error(f"Error actualizando marca: {e}")
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -929,17 +946,17 @@ def api_marcas_toggle(id):
         current = db_query("SELECT activo FROM marcas WHERE id = %s", (id,))
         if not current:
             return jsonify({"success": False, "error": "Marca no encontrada"})
-        
+
         nuevo_estado = not current[0].get('activo', True)
-        
+
         query = """
-            UPDATE marcas 
+            UPDATE marcas
             SET activo = %s, updated_at = NOW()
-            WHERE id = %s 
+            WHERE id = %s
             RETURNING id, activo
         """
         result = db_query(query, (nuevo_estado, id))
-        
+
         if result and len(result) > 0:
             estado_texto = "activada" if nuevo_estado else "inactivada"
             return jsonify({
@@ -947,8 +964,9 @@ def api_marcas_toggle(id):
                 "data": result[0],
                 "message": f"Marca {estado_texto} correctamente"
             })
-        
-        return jsonify({"success": False, "error": "No se pudo actualizar"})
+
+        return jsonify({"success": False, "error": "No se pudo actualizar el estado"})
+
     except Exception as e:
         current_app.logger.error(f"Error togglando marca: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
@@ -965,7 +983,7 @@ def api_um_listar():
     try:
         query = """
             SELECT id, codigo, nombre, abreviatura, tipo,
-                   decimales, activo, ambito, uso,
+                   decimales, activo, ambito,
                    created_at, updated_at
             FROM um
             WHERE activo = true
@@ -985,16 +1003,18 @@ def api_um_guardar():
     try:
         data = request.get_json()
         current_app.logger.info(f"📝 Datos recibidos para guardar unidad: {data}")
-        
+
         if not data.get('codigo'):
             return jsonify({"success": False, "error": "Código obligatorio"})
         if not data.get('nombre'):
             return jsonify({"success": False, "error": "Nombre obligatorio"})
-        
+        if not data.get('abreviatura'):
+            return jsonify({"success": False, "error": "Abreviatura obligatoria"})
+
         existing = db_query("SELECT id FROM um WHERE codigo = %s", (data.get('codigo'),))
         if existing:
             return jsonify({"success": False, "error": "Ya existe una unidad con este código"})
-        
+
         query = """
             INSERT INTO um (
                 codigo, nombre, abreviatura, tipo,
@@ -1002,29 +1022,30 @@ def api_um_guardar():
             ) VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
             RETURNING id, codigo
         """
-        
+
         params = (
             data.get('codigo'),
             data.get('nombre'),
             data.get('abreviatura'),
-            data.get('tipo', 'General'),
+            data.get('tipo', 'Cantidad'),
             data.get('decimales', False),
             data.get('activo', True),
             data.get('ambito', 'COMPARTIDO')
         )
-        
+
         result = db_query(query, params)
-        
+
         if result and len(result) > 0:
             return jsonify({
                 "success": True,
                 "data": result[0],
                 "message": f"Unidad creada con código {result[0]['codigo']}"
             })
-        
+
         return jsonify({"success": False, "error": "No se pudo crear la unidad"})
     except Exception as e:
         current_app.logger.error(f"Error guardando unidad de medida: {e}")
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -1035,7 +1056,7 @@ def api_um_obtener(id):
     try:
         query = """
             SELECT id, codigo, nombre, abreviatura, tipo,
-                   decimales, activo, ambito, uso,
+                   decimales, activo, ambito,
                    created_at, updated_at
             FROM um
             WHERE id = %s
@@ -1056,12 +1077,14 @@ def api_um_actualizar(id):
     try:
         data = request.get_json()
         current_app.logger.info(f"📝 Datos recibidos para actualizar unidad {id}: {data}")
-        
+
         if not data.get('codigo'):
             return jsonify({"success": False, "error": "Código obligatorio"})
         if not data.get('nombre'):
             return jsonify({"success": False, "error": "Nombre obligatorio"})
-        
+        if not data.get('abreviatura'):
+            return jsonify({"success": False, "error": "Abreviatura obligatoria"})
+
         query = """
             UPDATE um SET
                 codigo = %s,
@@ -1075,30 +1098,31 @@ def api_um_actualizar(id):
             WHERE id = %s
             RETURNING id, codigo
         """
-        
+
         params = (
             data.get('codigo'),
             data.get('nombre'),
             data.get('abreviatura'),
-            data.get('tipo', 'General'),
+            data.get('tipo', 'Cantidad'),
             data.get('decimales', False),
             data.get('ambito', 'COMPARTIDO'),
             data.get('activo', True),
             id
         )
-        
+
         result = db_query(query, params)
-        
+
         if result and len(result) > 0:
             return jsonify({
                 "success": True,
                 "data": result[0],
                 "message": "Unidad actualizada correctamente"
             })
-        
+
         return jsonify({"success": False, "error": "No se pudo actualizar la unidad"})
     except Exception as e:
         current_app.logger.error(f"Error actualizando unidad: {e}")
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -1110,17 +1134,17 @@ def api_um_toggle(id):
         current = db_query("SELECT activo FROM um WHERE id = %s", (id,))
         if not current:
             return jsonify({"success": False, "error": "Unidad no encontrada"})
-        
+
         nuevo_estado = not current[0].get('activo', True)
-        
+
         query = """
-            UPDATE um 
+            UPDATE um
             SET activo = %s, updated_at = NOW()
-            WHERE id = %s 
+            WHERE id = %s
             RETURNING id, activo
         """
         result = db_query(query, (nuevo_estado, id))
-        
+
         if result and len(result) > 0:
             estado_texto = "activada" if nuevo_estado else "inactivada"
             return jsonify({
@@ -1128,8 +1152,9 @@ def api_um_toggle(id):
                 "data": result[0],
                 "message": f"Unidad {estado_texto} correctamente"
             })
-        
-        return jsonify({"success": False, "error": "No se pudo actualizar"})
+
+        return jsonify({"success": False, "error": "No se pudo actualizar el estado"})
+
     except Exception as e:
         current_app.logger.error(f"Error togglando unidad de medida: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
