@@ -2163,16 +2163,14 @@ def obtener_costos_por_proveedor(producto_id, proveedor_id=None):
 # ============================================================
 
 def obtener_clientes_para_maestros():
-    """
-    Obtiene clientes en el formato que espera el módulo maestros
-    """
+    """Obtiene clientes en el formato que espera el módulo maestros"""
     try:
         query = """
             SELECT 
                 id,
                 codigo_cliente,
                 razon_social,
-                numero_documento,
+                numero_documento as ruc,  -- ← alias para compatibilidad
                 nombre_comercial,
                 telefono_contacto,
                 nombre_contacto,
@@ -2182,8 +2180,7 @@ def obtener_clientes_para_maestros():
                 tipo_documento,
                 fecha_creacion,
                 created_at,
-                updated_at,
-                ruc
+                updated_at
             FROM clientes
             WHERE activo = true
             ORDER BY razon_social
@@ -2192,6 +2189,7 @@ def obtener_clientes_para_maestros():
     except Exception as e:
         print(f"❌ Error en obtener_clientes_para_maestros: {e}")
         return []
+
 
 def obtener_proveedores_para_maestros():
     """
