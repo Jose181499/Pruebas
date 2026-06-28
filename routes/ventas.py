@@ -171,7 +171,7 @@ def guardar_cotizacion_db(data):
         print(f"❌ Error en guardar_cotizacion_db: {e}")
         raise
 
-    
+
 def actualizar_cotizacion_db(cotizacion_id, data):
     """Actualiza una cotización existente"""
     try:
@@ -812,6 +812,7 @@ def api_cotizaciones_guardar():
         print(f"  - usuario_id: {usuario_id}")
         print(f"  - estado: {data.get('estado')}")
         print(f"  - total: {data.get('total')}")
+        print(f"  - productos: {len(data.get('productos', []))}")
         print("=" * 80)
         
         # Obtener cliente_id
@@ -826,14 +827,18 @@ def api_cotizaciones_guardar():
             return jsonify({'success': False, 'error': 'cliente_id es requerido'}), 400
         
         # Verificar que el cliente existe
-        cliente = db_query("SELECT id FROM clientes WHERE id = %s", (cliente_id,))
+        cliente = db_query("SELECT id, razon_social FROM clientes WHERE id = %s", (cliente_id,))
         if not cliente:
             return jsonify({'success': False, 'error': f'Cliente con ID {cliente_id} no encontrado'}), 400
+        
+        print(f"✅ Cliente encontrado: {cliente[0]['razon_social']}")
         
         # Calcular totales
         subtotal = float(data.get('subtotal', 0))
         igv = float(data.get('igv', 0))
         total = float(data.get('total', 0))
+        
+        print(f"📊 Totales: subtotal={subtotal}, igv={igv}, total={total}")
         
         # Generar número de cotización
         count_data = db_query("SELECT COUNT(*) as total FROM cotizaciones")
@@ -841,8 +846,10 @@ def api_cotizaciones_guardar():
         numero = f"COT-{str(count).zfill(6)}"
         codigo = f"COT-{datetime.now().strftime('%Y%m%d')}-{str(count).zfill(4)}"
         
+        print(f"📋 Nuevo número: {numero}")
+        
         # ============================================================
-        # INSERT CON TODOS LOS CAMPOS
+        # INSERT EN COTIZACIONES
         # ============================================================
         
         query = """
@@ -905,69 +912,130 @@ def api_cotizaciones_guardar():
             data.get('email')
         )
         
-        print("📝 Ejecutando INSERT...")
-        print(f"  Query: {query[:100]}...")
-        print(f"  Params: {params}")
+        print("📝 Ejecutando INSERT en cotizaciones...")
+        result = db_query(query, params)
+        print(f"📦 Resultado: {result}")
         
-        # USAR db_execute en lugar de db_query para INSERT
-        try:
-            # Usar db_query que devuelve el resultado
-            result = db_query(query, params)
-            print(f"📦 Resultado: {result}")
-            
-            if result:
-                cotizacion_id = result[0]['id']
+        if not result:
+            print("❌ Resultado vacío - INSERT falló")
+            return jsonify({'success': False, 'error': 'No se pudo crear la cotización'}), 400
+        
+        cotizacion_id = result[0]['id']
+        print(f"✅ Cotización creada con ID: {cotizacion_id}")
+        
+        # ============================================================
+        # GUARDAR PRODUCTOS EN cotizacion_detalle
+        # ============================================================
+        
+        productos = data.get('productos', [])
+        print(f"📦 Guardando {len(productos)} productos en cotizacion_detalle...")
+        
+        productos_guardados = 0
+        productos_fallidos = 0
+        
+        for idx, producto in enumerate(productos):
+            try:
+                # Buscar producto por código
+                prod_result = db_query(
+                    "SELECT id, codigo, descripcion, costo_unitario, precio_unitario FROM productos WHERE codigo = %s",
+                    (producto.get('codigo'),)
+                )
                 
-                # Guardar productos
-                productos = data.get('productos', [])
-                print(f"📦 Guardando {len(productos)} productos...")
+                if not prod_result:
+                    print(f"  ⚠️ Producto {producto.get('codigo')} no encontrado en BD")
+                    productos_fallidos += 1
+                    continue
                 
-                for producto in productos:
-                    try:
-                        # Buscar producto por código
-                        prod_result = db_query(
-                            "SELECT id FROM productos WHERE codigo = %s",
-                            (producto.get('codigo'),)
-                        )
-                        
-                        if prod_result:
-                            producto_id = prod_result[0]['id']
-                            detalle_query = """
-                                INSERT INTO cotizacion_detalle (cotizacion_id, producto_id, cantidad)
-                                VALUES (%s, %s, %s)
-                            """
-                            db_execute(detalle_query, (
-                                cotizacion_id,
-                                producto_id,
-                                float(producto.get('cantidad', 1))
-                            ))
-                            print(f"  ✅ Producto {producto.get('codigo')} guardado")
-                        else:
-                            print(f"  ⚠️ Producto {producto.get('codigo')} no encontrado")
-                    except Exception as e:
-                        print(f"  ❌ Error guardando producto: {e}")
+                producto_id = prod_result[0]['id']
+                cantidad = float(producto.get('cantidad', 1))
+                precio_venta = float(producto.get('valorVenta', 0))
+                costo_unitario = float(prod_result[0].get('costo_unitario', 0))
                 
-                return jsonify({
-                    'success': True,
-                    'message': 'Cotización creada correctamente',
-                    'data': {'id': cotizacion_id, 'numero': numero}
-                })
-            else:
-                print("❌ Resultado vacío - INSERT falló")
-                return jsonify({'success': False, 'error': 'No se pudo crear la cotización (resultado vacío)'}), 400
+                # Calcular valores para cotizacion_detalle
+                subtotal_costo = cantidad * costo_unitario
+                subtotal_venta = cantidad * precio_venta
                 
-        except Exception as e:
-            print(f"❌ Error en INSERT: {e}")
-            import traceback
-            traceback.print_exc()
-            return jsonify({'success': False, 'error': str(e)}), 500
+                # Calcular margen
+                if costo_unitario > 0:
+                    margen_porcentaje = ((precio_venta - costo_unitario) / costo_unitario * 100)
+                else:
+                    margen_porcentaje = 0
+                
+                # Descuentos (por ahora 0)
+                descuento_porcentaje = 0
+                precio_venta_con_descuento = precio_venta
+                subtotal_venta_con_descuento = subtotal_venta
+                descuento_total = 0
+                margen_final = margen_porcentaje
+                
+                # Insertar en cotizacion_detalle con todos los campos
+                detalle_query = """
+                    INSERT INTO cotizacion_detalle (
+                        cotizacion_id,
+                        producto_id,
+                        cantidad,
+                        costo_unitario,
+                        subtotal_costo,
+                        margen_porcentaje,
+                        precio_venta_unitario,
+                        subtotal_venta,
+                        descuento_porcentaje,
+                        precio_venta_con_descuento,
+                        subtotal_venta_con_descuento,
+                        descuento_total,
+                        margen_final
+                    ) VALUES (
+                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                    )
+                """
+                
+                db_execute(detalle_query, (
+                    cotizacion_id,
+                    producto_id,
+                    cantidad,
+                    costo_unitario,
+                    subtotal_costo,
+                    margen_porcentaje,
+                    precio_venta,
+                    subtotal_venta,
+                    descuento_porcentaje,
+                    precio_venta_con_descuento,
+                    subtotal_venta_con_descuento,
+                    descuento_total,
+                    margen_final
+                ))
+                
+                productos_guardados += 1
+                print(f"  ✅ Producto {idx+1}: {producto.get('codigo')} - Cant: {cantidad}, Precio: {precio_venta}, Margen: {margen_porcentaje:.1f}%")
+                
+            except Exception as e:
+                print(f"  ❌ Error guardando producto {producto.get('codigo')}: {e}")
+                productos_fallidos += 1
+                import traceback
+                traceback.print_exc()
+        
+        print(f"📊 Resumen productos: {productos_guardados} guardados, {productos_fallidos} fallidos")
+        
+        # ============================================================
+        # RESPUESTA FINAL
+        # ============================================================
+        
+        return jsonify({
+            'success': True,
+            'message': f'Cotización creada correctamente con {productos_guardados} productos',
+            'data': {
+                'id': cotizacion_id,
+                'numero': numero,
+                'productos_guardados': productos_guardados,
+                'productos_fallidos': productos_fallidos
+            }
+        })
             
     except Exception as e:
-        print(f"❌ Error general: {e}")
+        print(f"❌ Error general en api_cotizaciones_guardar: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 
 @ventas_bp.route('/ventas/api/cotizaciones/<int:id>', methods=['GET'])
