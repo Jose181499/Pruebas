@@ -1801,15 +1801,13 @@ document.addEventListener('click', function(e) {
 // ============================================================
 // ACTUALIZAR SIDEBAR
 // ============================================================
-// ============================================================
-// ACTUALIZAR SIDEBAR - VERSIÓN MEJORADA
+// ACTUALIZAR SIDEBAR - VERSIÓN DEFINITIVA
 // ============================================================
 
 function updateSidebar(module) {
     console.log(`🔄 Actualizando sidebar para módulo: ${module}`);
     
-    // Mapeo de módulos a sus selectores en el sidebar
-    // En caso de que el data-screen no coincida exactamente
+    // Mapeo de módulos a sus textos
     const moduleMap = {
         'clientes': 'Clientes',
         'proveedores': 'Proveedores',
@@ -1829,15 +1827,30 @@ function updateSidebar(module) {
         header.classList.remove('active');
     });
     
-    // Buscar por data-screen primero
+    // 1. Buscar por data-screen
     let sidebarBtn = document.querySelector(`.child-btn[data-screen="${module}"]`);
     
-    // Si no se encuentra, buscar por texto
+    // 2. Si no se encuentra, buscar por href
+    if (!sidebarBtn) {
+        sidebarBtn = document.querySelector(`.child-btn[href*="tab=${module}"]`);
+    }
+    
+    // 3. Si no se encuentra, buscar por texto
     if (!sidebarBtn) {
         const textToFind = moduleMap[module] || module;
         document.querySelectorAll('.child-btn').forEach(btn => {
             const btnText = btn.textContent.trim();
             if (btnText === textToFind || btnText.includes(textToFind)) {
+                sidebarBtn = btn;
+            }
+        });
+    }
+    
+    // 4. Si aún no se encuentra, buscar en todos los child-btn que contengan el módulo
+    if (!sidebarBtn) {
+        document.querySelectorAll('.child-btn').forEach(btn => {
+            const href = btn.getAttribute('href') || '';
+            if (href.includes(module)) {
                 sidebarBtn = btn;
             }
         });
@@ -1858,16 +1871,6 @@ function updateSidebar(module) {
         }
     } else {
         console.warn(`⚠️ No se encontró botón en sidebar para el módulo: ${module}`);
-        // Fallback: buscar por href
-        document.querySelectorAll(`.child-btn[href*="${module}"]`).forEach(btn => {
-            btn.classList.add('active');
-            const parentGroup = btn.closest('.menu-group');
-            if (parentGroup) {
-                parentGroup.classList.add('open');
-                const header = parentGroup.querySelector('.menu-header');
-                if (header) header.classList.add('active');
-            }
-        });
     }
 }
 // MODAL ALMACÉN

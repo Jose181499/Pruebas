@@ -53,19 +53,19 @@
     </div>
 </div>
 
-    <!-- MAESTROS -->
+<!-- MAESTROS -->
 <div class="menu-group">
     <a href="/maestros" class="menu-header" style="text-decoration:none;">
         <div class="menu-left"><span>2 ─ Maestros</span></div>
         <span class="caret">›</span>
     </a>
     <div class="menu-children">
-       <a href="/maestros?tab=clientes" class="child-btn" data-screen="clientes" style="text-decoration:none;">Clientes</a>
-    <a href="/maestros?tab=proveedores" class="child-btn" data-screen="proveedores" style="text-decoration:none;">Proveedores</a>
-<a href="/maestros?tab=almacenes" class="child-btn" data-screen="almacenes" style="text-decoration:none;">Almacenes</a>
-<a href="/maestros?tab=categorias" class="child-btn" data-screen="categorias" style="text-decoration:none;">Categorías</a>
-<a href="/maestros?tab=marcas" class="child-btn" data-screen="marcas" style="text-decoration:none;">Marcas</a>
-<a href="/maestros?tab=um" class="child-btn" data-screen="um" style="text-decoration:none;">Unidades de medida</a>
+        <a href="/maestros?tab=clientes" class="child-btn" data-screen="clientes" style="text-decoration:none;">Clientes</a>
+        <a href="/maestros?tab=proveedores" class="child-btn" data-screen="proveedores" style="text-decoration:none;">Proveedores</a>
+        <a href="/maestros?tab=almacenes" class="child-btn" data-screen="almacenes" style="text-decoration:none;">Almacenes</a>
+        <a href="/maestros?tab=categorias" class="child-btn" data-screen="categorias" style="text-decoration:none;">Categorías</a>
+        <a href="/maestros?tab=marcas" class="child-btn" data-screen="marcas" style="text-decoration:none;">Marcas</a>
+        <a href="/maestros?tab=um" class="child-btn" data-screen="um" style="text-decoration:none;">Unidades de medida</a>
     </div>
 </div>
 
@@ -365,11 +365,32 @@
 
 // ============================================================
 // RESALTAR MÓDULO ACTIVO EN EL SIDEBAR - VERSIÓN COMPLETA
+
+
+
+// Llamar a la función al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    highlightActiveModule();
+});
+
+// También ejecutar después de cargar el contenido dinámico
+setTimeout(highlightActiveModule, 500);
+
+// Ejecutar cuando cambie la URL (para SPA)
+document.addEventListener('click', function(e) {
+    const link = e.target.closest('a[href]');
+    if (link) {
+        setTimeout(highlightActiveModule, 300);
+    }
+});
+// ============================================================
+// RESALTAR MÓDULO ACTIVO EN EL SIDEBAR - VERSIÓN COMPLETA
 // ============================================================
 function highlightActiveModule() {
     // Obtener la URL actual
     const currentPath = window.location.pathname;
-    console.log('📍 Ruta actual:', currentPath);
+    const currentSearch = window.location.search;
+    console.log('📍 Ruta actual:', currentPath + currentSearch);
     
     // Primero, remover todas las clases 'active' de los child-btn
     document.querySelectorAll('.child-btn').forEach(el => {
@@ -386,9 +407,6 @@ function highlightActiveModule() {
         el.classList.remove('active');
     });
     
-    // Determinar qué módulo está activo según la URL
-    let parentGroup = null;
-    
     // =============================================
     // 1. MÓDULO PRODUCTOS
     // =============================================
@@ -398,7 +416,6 @@ function highlightActiveModule() {
         for (const group of groups) {
             const header = group.querySelector('.menu-header');
             if (header && header.textContent.includes('3 ─ Productos')) {
-                parentGroup = group;
                 // Resaltar el header
                 if (header) header.classList.add('active');
                 // Abrir el grupo
@@ -441,15 +458,30 @@ function highlightActiveModule() {
     }
     
     // =============================================
-    // 2. MÓDULO MAESTROS
+    // 2. MÓDULO MAESTROS - CORREGIDO
     // =============================================
     else if (currentPath.includes('/maestros')) {
-        // Módulo Maestros
+        // Obtener el parámetro tab de la URL
+        const urlParams = new URLSearchParams(currentSearch);
+        let tab = urlParams.get('tab') || 'clientes';
+        
+        // Mapeo de módulos para buscar en el sidebar
+        const moduleMap = {
+            'clientes': 'Clientes',
+            'proveedores': 'Proveedores',
+            'almacenes': 'Almacenes',
+            'categorias': 'Categorías',
+            'marcas': 'Marcas',
+            'um': 'Unidades de medida'
+        };
+        
+        console.log(`📋 Módulo Maestros - tab: ${tab}`);
+        
+        // Encontrar el grupo de Maestros y abrirlo
         const groups = document.querySelectorAll('.menu-group');
         for (const group of groups) {
             const header = group.querySelector('.menu-header');
             if (header && header.textContent.includes('2 ─ Maestros')) {
-                parentGroup = group;
                 // Resaltar el header
                 if (header) header.classList.add('active');
                 // Abrir el grupo
@@ -458,35 +490,99 @@ function highlightActiveModule() {
             }
         }
         
-        // Resaltar el child específico de maestros
-        // Todos los childs de maestros apuntan a la misma página, pero resaltamos el primero
-        if (currentPath.includes('/maestros')) {
-            // Buscar el primer child de maestros (Clientes)
-            const groups = document.querySelectorAll('.menu-group');
-            for (const group of groups) {
+        // =============================================
+        // RESALTAR CHILD EN SIDEBAR SEGÚN TAB
+        // =============================================
+        let childResaltado = false;
+        
+        // 1. Buscar por data-screen
+        let child = document.querySelector(`.child-btn[data-screen="${tab}"]`);
+        if (child) {
+            child.classList.add('active');
+            childResaltado = true;
+            console.log(`✅ Child resaltado por data-screen: ${child.textContent.trim()}`);
+        }
+        
+        // 2. Si no se encuentra, buscar por href con tab=
+        if (!childResaltado) {
+            child = document.querySelector(`.child-btn[href*="tab=${tab}"]`);
+            if (child) {
+                child.classList.add('active');
+                childResaltado = true;
+                console.log(`✅ Child resaltado por href: ${child.textContent.trim()}`);
+            }
+        }
+        
+        // 3. Si no se encuentra, buscar por texto
+        if (!childResaltado) {
+            const textToFind = moduleMap[tab] || tab;
+            document.querySelectorAll('.child-btn').forEach(btn => {
+                const btnText = btn.textContent.trim();
+                if (btnText === textToFind || btnText.includes(textToFind)) {
+                    btn.classList.add('active');
+                    childResaltado = true;
+                    console.log(`✅ Child resaltado por texto: ${btn.textContent.trim()}`);
+                }
+            });
+        }
+        
+        // 4. Fallback: si no se encuentra, resaltar el primer child (Clientes)
+        if (!childResaltado) {
+            const groups2 = document.querySelectorAll('.menu-group');
+            for (const group of groups2) {
                 const header = group.querySelector('.menu-header');
                 if (header && header.textContent.includes('2 ─ Maestros')) {
                     const firstChild = group.querySelector('.child-btn');
                     if (firstChild) {
                         firstChild.classList.add('active');
-                        console.log('✅ Child de Maestros resaltado:', firstChild.textContent.trim());
+                        console.log(`✅ Fallback - Child resaltado: ${firstChild.textContent.trim()}`);
                     }
                     break;
                 }
             }
         }
         
-        // Resaltar tabs de maestros
-        document.querySelectorAll('.tab-btn').forEach(tab => {
-            const tabText = tab.textContent.trim();
-            // Verificar si estamos en maestros y resaltar el tab correspondiente
-            if (currentPath.includes('/maestros')) {
-                // Por defecto, resaltar "Clientes" si no hay otro activo
-                if (tabText === 'Clientes') {
-                    tab.classList.add('active');
-                }
+        // =============================================
+        // RESALTAR TABS SEGÚN EL MÓDULO ACTIVO
+        // =============================================
+        document.querySelectorAll('.tab-btn').forEach(tabBtn => {
+            const tabText = tabBtn.textContent.trim();
+            const tabValue = tabBtn.dataset.tab || '';
+            
+            // Si el tab tiene data-tab, comparar directamente
+            if (tabValue && tabValue === tab) {
+                tabBtn.classList.add('active');
+                console.log(`✅ Tab resaltado por data-tab: ${tabText}`);
+                return;
+            }
+            
+            // Si no, comparar por texto
+            const tabMap = {
+                'clientes': 'Clientes',
+                'proveedores': 'Proveedores',
+                'almacenes': 'Almacenes',
+                'categorias': 'Categorías',
+                'marcas': 'Marcas',
+                'um': 'Unidades de medida'
+            };
+            
+            const expectedText = tabMap[tab] || tab;
+            if (tabText === expectedText || tabText.includes(expectedText)) {
+                tabBtn.classList.add('active');
+                console.log(`✅ Tab resaltado por texto: ${tabText}`);
             }
         });
+        
+        // Si ningún tab se resaltó, resaltar "Clientes" por defecto
+        const anyTabActive = document.querySelector('.tab-btn.active');
+        if (!anyTabActive) {
+            document.querySelectorAll('.tab-btn').forEach(tabBtn => {
+                if (tabBtn.textContent.trim() === 'Clientes') {
+                    tabBtn.classList.add('active');
+                    console.log('✅ Tab por defecto: Clientes');
+                }
+            });
+        }
     }
     
     // =============================================
@@ -503,7 +599,6 @@ function highlightActiveModule() {
         for (const group of groups) {
             const header = group.querySelector('.menu-header');
             if (header && header.textContent.includes('1 ─ Configuración y seguridad')) {
-                parentGroup = group;
                 if (header) header.classList.add('active');
                 group.classList.add('open');
                 break;
@@ -527,12 +622,28 @@ function highlightActiveModule() {
             const child = document.querySelector('.child-btn[href="/integracion"]');
             if (child) child.classList.add('active');
         }
+        
+        // Resaltar tabs de configuración
+        document.querySelectorAll('.tab-btn').forEach(tab => {
+            const tabText = tab.textContent.trim();
+            if (currentPath.includes('/empresas') && tabText.includes('Empresas')) {
+                tab.classList.add('active');
+            } else if (currentPath.includes('/usuarios') && tabText.includes('Usuarios')) {
+                tab.classList.add('active');
+            } else if (currentPath.includes('/correlativos') && tabText.includes('Correlativos')) {
+                tab.classList.add('active');
+            } else if (currentPath.includes('/parametros') && tabText.includes('Parámetros')) {
+                tab.classList.add('active');
+            } else if (currentPath.includes('/integracion') && tabText.includes('Integración')) {
+                tab.classList.add('active');
+            }
+        });
     }
     
     // =============================================
     // 4. DASHBOARD (por defecto)
     // =============================================
-    else if (currentPath === '/' || currentPath === '/index') {
+    else if (currentPath === '/' || currentPath === '/index' || currentPath === '') {
         const groups = document.querySelectorAll('.menu-group');
         for (const group of groups) {
             const header = group.querySelector('.menu-header');
@@ -548,16 +659,12 @@ function highlightActiveModule() {
     
     console.log('✅ Módulo activo resaltado en sidebar');
 }
-
-// Llamar a la función al cargar la página
 document.addEventListener('DOMContentLoaded', function() {
     highlightActiveModule();
 });
 
-// También ejecutar después de cargar el contenido dinámico
 setTimeout(highlightActiveModule, 500);
 
-// Ejecutar cuando cambie la URL (para SPA)
 document.addEventListener('click', function(e) {
     const link = e.target.closest('a[href]');
     if (link) {
@@ -565,22 +672,11 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// Si usas navegación con history.pushState
 const originalPushState = history.pushState;
 history.pushState = function() {
     originalPushState.apply(this, arguments);
     setTimeout(highlightActiveModule, 300);
 };
-
-
-// Llamar a la función al cargar la página
-document.addEventListener('DOMContentLoaded', function() {
-    highlightActiveModule();
-});
-
-// También ejecutar después de cargar el contenido dinámico
-setTimeout(highlightActiveModule, 500);
-
 // ============================================================
 // FUNCIÓN MEJORADA DE FETCH CON MANEJO DE ERRORES
 // ============================================================
