@@ -4,7 +4,7 @@ from datetime import datetime
 import json
 
 # Importar desde database.py en lugar de config
-from database import db_query, db_execute, db_tx, get_connection
+from database import db_query, db_execute, db_tx, get_connection, buscar_cliente_por_ruc
 
 ventas_bp = Blueprint('ventas', __name__)
 
