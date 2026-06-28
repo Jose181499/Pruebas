@@ -18,7 +18,7 @@ def login_required(f):
 
 # ============================================================
 # FUNCIONES DE AYUDA PARA COTIZACIONES
-# ============================================================
+
 def obtener_cotizaciones_db():
     """Obtiene todas las cotizaciones desde la base de datos"""
     try:
@@ -50,12 +50,12 @@ def obtener_cotizaciones_db():
                 c.contacto_cliente, 
                 c.telefono_cliente, 
                 c.email_cliente,
-                -- Obtener el RUC y razón social del cliente (si existe la tabla clientes)
-                cl.numero_documento as cliente_ruc,
+                -- Obtener datos del cliente
                 cl.razon_social as cliente_razon_social,
+                cl.numero_documento as cliente_ruc,
                 cl.nombre_comercial as cliente_nombre_comercial
             FROM cotizaciones c
-            LEFT JOIN clientes cl ON c.cliente_id::text = cl.id::text
+            LEFT JOIN clientes cl ON cl.id = c.cliente_id::integer
             ORDER BY c.id DESC
         """
         results = db_query(query)
@@ -80,13 +80,13 @@ def obtener_cotizaciones_db():
                         except:
                             pass
             
-            # Si no hay cliente_ruc, usar cliente_id como RUC (fallback)
-            if not row.get('cliente_ruc'):
-                row['cliente_ruc'] = str(row.get('cliente_id', ''))
-            
             # Si no hay cliente_razon_social, usar un valor por defecto
             if not row.get('cliente_razon_social'):
                 row['cliente_razon_social'] = f"Cliente {row.get('cliente_id', '')}"
+            
+            # Si no hay cliente_ruc, usar cliente_id como RUC (fallback)
+            if not row.get('cliente_ruc'):
+                row['cliente_ruc'] = str(row.get('cliente_id', ''))
         
         return results
     except Exception as e:
@@ -94,6 +94,7 @@ def obtener_cotizaciones_db():
         import traceback
         traceback.print_exc()
         return []
+
 
 def obtener_cotizacion_por_id_db(cotizacion_id):
     """Obtiene una cotización por su ID"""
@@ -763,13 +764,13 @@ def api_cotizaciones_listar():
                 'numero': row.get('numero_cotizacion') or row.get('codigo_cotizacion'),
                 'fecha': row.get('fecha_creacion'),
                 'estado': row.get('estado'),
-                'ruc': str(row.get('cliente_id', '')),
-                'razon': f"Cliente {row.get('cliente_id', '')}",
+                'ruc': row.get('cliente_ruc') or str(row.get('cliente_id', '')),
+                'razon': row.get('cliente_razon_social') or row.get('cliente_nombre_comercial') or f"Cliente {row.get('cliente_id', '')}",
                 'descripcion': row.get('nota_cotizacion') or row.get('notas') or 'Sin descripción',
                 'monto': float(row.get('total', 0)),
                 'subtotal': float(row.get('subtotal', 0)),
                 'igv': float(row.get('igv', 0)),
-                'condicion': row.get('condicion_pago'),
+                'condicion': row.get('condicion_pago') or row.get('forma_pago'),
                 'vendedor': str(row.get('usuario_id', '')),
                 'vencimiento': row.get('validez_oferta'),
                 'cod_cliente': str(row.get('cliente_id', '')),
@@ -792,6 +793,7 @@ def api_cotizaciones_listar():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+      
 @ventas_bp.route('/ventas/api/cotizaciones/guardar', methods=['POST'])
 @login_required
 def api_cotizaciones_guardar():
