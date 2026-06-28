@@ -798,7 +798,6 @@ def api_cotizaciones_listar():
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
       
-
 @ventas_bp.route('/ventas/api/cotizaciones/guardar', methods=['POST'])
 @login_required
 def api_cotizaciones_guardar():
@@ -924,32 +923,79 @@ def api_cotizaciones_guardar():
         print(f"✅ Cotización creada con ID: {cotizacion_id}")
         
         # ============================================================
-        # GUARDAR PRODUCTOS EN cotizacion_detalle
+        # GUARDAR PRODUCTOS EN cotizacion_detalle - VERSIÓN MEJORADA
         # ============================================================
         
         productos = data.get('productos', [])
         print(f"📦 Guardando {len(productos)} productos en cotizacion_detalle...")
+        
+        # Obtener TODOS los productos de la BD para hacer búsqueda rápida
+        todos_productos = db_query("""
+            SELECT id, codigo, descripcion, precio_unitario, costo_unitario 
+            FROM productos 
+            WHERE activo = TRUE 
+            ORDER BY codigo
+        """)
+        print(f"📋 Total productos en BD: {len(todos_productos)}")
+        
+        # Crear mapa de productos por código (para búsqueda rápida)
+        productos_map = {}
+        for p in todos_productos:
+            codigo = p.get('codigo', '').strip()
+            productos_map[codigo] = p
+            productos_map[codigo.lower()] = p
+            # También guardar versión sin espacios
+            productos_map[codigo.replace(' ', '')] = p
+        
+        # Mostrar algunos códigos disponibles para depuración
+        codigos_disponibles = list(productos_map.keys())[:10]
+        print(f"📋 Códigos disponibles (muestra): {codigos_disponibles}")
         
         productos_guardados = 0
         productos_fallidos = 0
         
         for idx, producto in enumerate(productos):
             try:
-                # Buscar producto por código
-                prod_result = db_query(
-                    "SELECT id, codigo, descripcion, costo_unitario, precio_unitario FROM productos WHERE codigo = %s",
-                    (producto.get('codigo'),)
-                )
+                codigo_producto = producto.get('codigo', '').strip()
+                print(f"  🔍 Buscando producto con código: '{codigo_producto}'")
                 
-                if not prod_result:
-                    print(f"  ⚠️ Producto {producto.get('codigo')} no encontrado en BD")
+                # Buscar en el mapa (búsqueda O(1))
+                producto_bd = productos_map.get(codigo_producto)
+                
+                # Si no se encuentra, buscar en minúsculas
+                if not producto_bd:
+                    producto_bd = productos_map.get(codigo_producto.lower())
+                
+                # Si no se encuentra, buscar sin espacios
+                if not producto_bd:
+                    producto_bd = productos_map.get(codigo_producto.replace(' ', ''))
+                
+                # Si no se encuentra, buscar por ILIKE (búsqueda flexible)
+                if not producto_bd:
+                    prod_result = db_query(
+                        "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE codigo ILIKE %s LIMIT 1",
+                        (f"%{codigo_producto}%",)
+                    )
+                    if prod_result:
+                        producto_bd = prod_result[0]
+                        print(f"  📌 Producto encontrado por ILIKE: {producto_bd['codigo']}")
+                
+                if not producto_bd:
+                    print(f"  ⚠️ Producto con código '{codigo_producto}' no encontrado")
+                    # Mostrar códigos similares
+                    similares = [k for k in list(productos_map.keys()) if codigo_producto[:4].upper() in k.upper()]
+                    if similares:
+                        print(f"  📋 Códigos similares: {similares[:5]}")
                     productos_fallidos += 1
                     continue
                 
-                producto_id = prod_result[0]['id']
+                producto_id = producto_bd['id']
                 cantidad = float(producto.get('cantidad', 1))
-                precio_venta = float(producto.get('valorVenta', 0))
-                costo_unitario = float(prod_result[0].get('costo_unitario', 0))
+                precio_venta = float(producto.get('valorVenta', producto_bd.get('precio_unitario', 0)))
+                costo_unitario = float(producto_bd.get('costo_unitario', 0))
+                
+                print(f"  ✅ Producto encontrado: {producto_bd['codigo']} - {producto_bd['descripcion']}")
+                print(f"     ID: {producto_id}, Precio: {precio_venta}, Costo: {costo_unitario}")
                 
                 # Calcular valores para cotizacion_detalle
                 subtotal_costo = cantidad * costo_unitario
@@ -1006,7 +1052,7 @@ def api_cotizaciones_guardar():
                 ))
                 
                 productos_guardados += 1
-                print(f"  ✅ Producto {idx+1}: {producto.get('codigo')} - Cant: {cantidad}, Precio: {precio_venta}, Margen: {margen_porcentaje:.1f}%")
+                print(f"  ✅ Producto {idx+1}: {codigo_producto} - Cant: {cantidad}, Precio: {precio_venta}, Margen: {margen_porcentaje:.1f}%")
                 
             except Exception as e:
                 print(f"  ❌ Error guardando producto {producto.get('codigo')}: {e}")
@@ -1036,6 +1082,7 @@ def api_cotizaciones_guardar():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 
 @ventas_bp.route('/ventas/api/cotizaciones/<int:id>', methods=['GET'])
