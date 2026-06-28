@@ -3690,3 +3690,16 @@ def guardar_devolucion(data):
     except Exception as e:
         print(f"❌ Error en guardar_devolucion: {e}")
         raise
+
+def obtener_cliente_por_id_simple(cliente_id):
+    """Obtiene un cliente por su ID (versión simple)"""
+    try:
+        query = """
+            SELECT id, numero_documento, razon_social, nombre_comercial
+            FROM clientes WHERE id = %s
+        """
+        result = db_query(query, (cliente_id,))
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en obtener_cliente_por_id_simple: {e}")
+        return None
