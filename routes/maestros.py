@@ -1327,3 +1327,43 @@ def api_um_toggle(id):
 def api_test():
     """Endpoint para probar que la API funciona"""
     return jsonify({"success": True, "message": "API de maestros funcionando correctamente"})
+
+
+# ============================================================
+# BUSCAR CLIENTES (para autocomplete)
+# ============================================================
+
+@maestros_bp.route('/api/clientes/buscar', methods=['GET'])
+@login_required
+def api_clientes_buscar():
+    """Buscar clientes por RUC, razón social o nombre comercial"""
+    try:
+        q = request.args.get('q', '').strip()
+        
+        if not q or len(q) < 2:
+            return jsonify({'success': True, 'data': []})
+        
+        query = """
+            SELECT 
+                id, codigo_cliente, razon_social, numero_documento as ruc,
+                nombre_comercial, nombre_contacto, telefono_contacto,
+                email_contacto, direccion_fiscal, activo
+            FROM clientes
+            WHERE activo = TRUE
+            AND (
+                numero_documento ILIKE %s 
+                OR razon_social ILIKE %s 
+                OR nombre_comercial ILIKE %s
+                OR codigo_cliente ILIKE %s
+            )
+            ORDER BY razon_social
+            LIMIT 20
+        """
+        like = f"%{q}%"
+        results = db_query(query, (like, like, like, like))
+        
+        return jsonify({'success': True, 'data': results})
+        
+    except Exception as e:
+        print(f"❌ Error en api_clientes_buscar: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
