@@ -2929,3 +2929,764 @@ def obtener_um_por_id(um_id):
     except Exception as e:
         print(f"❌ Error en obtener_um_por_id: {e}")
         return None
+
+# ============================================================
+# FUNCIONES PARA COTIZACIONES (MÓDULO VENTAS)
+# ============================================================
+
+def obtener_cotizaciones_para_ventas():
+    """
+    Obtiene todas las cotizaciones para el módulo de Ventas
+    """
+    try:
+        query = """
+            SELECT 
+                id,
+                numero_cotizacion,
+                cliente_id,
+                fecha_creacion,
+                estado,
+                subtotal,
+                igv,
+                total,
+                usuario_id,
+                notas,
+                forma_pago,
+                tiempo_entrega,
+                almacen,
+                validez_oferta,
+                codigo_cotizacion,
+                correlativo,
+                condicion_pago,
+                direccion_entrega,
+                requerimiento,
+                nota_cotizacion,
+                descuento_porcentaje,
+                descuento_monto,
+                descuento_tipo,
+                contacto_cliente,
+                telefono_cliente,
+                email_cliente,
+                created_at,
+                updated_at
+            FROM cotizaciones
+            ORDER BY id DESC
+        """
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_cotizaciones_para_ventas: {e}")
+        return []
+
+def obtener_cotizacion_por_id(cotizacion_id):
+    """
+    Obtiene una cotización por su ID
+    """
+    try:
+        query = """
+            SELECT 
+                id,
+                numero_cotizacion,
+                cliente_id,
+                fecha_creacion,
+                estado,
+                subtotal,
+                igv,
+                total,
+                usuario_id,
+                notas,
+                forma_pago,
+                tiempo_entrega,
+                almacen,
+                validez_oferta,
+                codigo_cotizacion,
+                correlativo,
+                condicion_pago,
+                direccion_entrega,
+                requerimiento,
+                nota_cotizacion,
+                descuento_porcentaje,
+                descuento_monto,
+                descuento_tipo,
+                contacto_cliente,
+                telefono_cliente,
+                email_cliente
+            FROM cotizaciones
+            WHERE id = %s
+        """
+        result = db_query(query, (cotizacion_id,))
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en obtener_cotizacion_por_id: {e}")
+        return None
+
+def guardar_cotizacion(data):
+    """
+    Guarda una nueva cotización
+    """
+    try:
+        query = """
+            INSERT INTO cotizaciones (
+                numero_cotizacion, cliente_id, fecha_creacion, estado,
+                subtotal, igv, total, usuario_id, notas,
+                forma_pago, tiempo_entrega, almacen, validez_oferta,
+                codigo_cotizacion, correlativo, condicion_pago,
+                direccion_entrega, requerimiento, nota_cotizacion,
+                descuento_porcentaje, descuento_monto, descuento_tipo,
+                contacto_cliente, telefono_cliente, email_cliente
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            )
+            RETURNING id, numero_cotizacion
+        """
+        params = (
+            data.get('numero_cotizacion'),
+            data.get('cliente_id'),
+            data.get('fecha_creacion') or datetime.now().isoformat(),
+            data.get('estado', 'Borrador'),
+            float(data.get('subtotal', 0)),
+            float(data.get('igv', 0)),
+            float(data.get('total', 0)),
+            data.get('usuario_id'),
+            data.get('notas', ''),
+            data.get('forma_pago'),
+            data.get('tiempo_entrega'),
+            data.get('almacen'),
+            data.get('validez_oferta'),
+            data.get('codigo_cotizacion'),
+            data.get('correlativo'),
+            data.get('condicion_pago'),
+            data.get('direccion_entrega'),
+            data.get('requerimiento'),
+            data.get('nota_cotizacion', ''),
+            float(data.get('descuento_porcentaje', 0)),
+            float(data.get('descuento_monto', 0)),
+            data.get('descuento_tipo', 'porcentaje'),
+            data.get('contacto_cliente'),
+            data.get('telefono_cliente'),
+            data.get('email_cliente')
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en guardar_cotizacion: {e}")
+        raise
+
+def actualizar_cotizacion(cotizacion_id, data):
+    """
+    Actualiza una cotización existente
+    """
+    try:
+        query = """
+            UPDATE cotizaciones SET
+                cliente_id = %s,
+                estado = %s,
+                subtotal = %s,
+                igv = %s,
+                total = %s,
+                usuario_id = %s,
+                notas = %s,
+                forma_pago = %s,
+                tiempo_entrega = %s,
+                almacen = %s,
+                validez_oferta = %s,
+                condicion_pago = %s,
+                direccion_entrega = %s,
+                requerimiento = %s,
+                nota_cotizacion = %s,
+                descuento_porcentaje = %s,
+                descuento_monto = %s,
+                descuento_tipo = %s,
+                contacto_cliente = %s,
+                telefono_cliente = %s,
+                email_cliente = %s,
+                updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, numero_cotizacion
+        """
+        params = (
+            data.get('cliente_id'),
+            data.get('estado', 'Borrador'),
+            float(data.get('subtotal', 0)),
+            float(data.get('igv', 0)),
+            float(data.get('total', 0)),
+            data.get('usuario_id'),
+            data.get('notas', ''),
+            data.get('forma_pago'),
+            data.get('tiempo_entrega'),
+            data.get('almacen'),
+            data.get('validez_oferta'),
+            data.get('condicion_pago'),
+            data.get('direccion_entrega'),
+            data.get('requerimiento'),
+            data.get('nota_cotizacion', ''),
+            float(data.get('descuento_porcentaje', 0)),
+            float(data.get('descuento_monto', 0)),
+            data.get('descuento_tipo', 'porcentaje'),
+            data.get('contacto_cliente'),
+            data.get('telefono_cliente'),
+            data.get('email_cliente'),
+            cotizacion_id
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en actualizar_cotizacion: {e}")
+        raise
+
+def actualizar_estado_cotizacion(cotizacion_id, nuevo_estado):
+    """
+    Actualiza el estado de una cotización
+    """
+    try:
+        query = """
+            UPDATE cotizaciones 
+            SET estado = %s, updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, estado
+        """
+        result = db_query(query, (nuevo_estado, cotizacion_id))
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en actualizar_estado_cotizacion: {e}")
+        raise
+
+# ============================================================
+# FUNCIONES PARA GUÍAS DE REMISIÓN
+# ============================================================
+
+def obtener_guias_para_ventas():
+    """
+    Obtiene todas las guías de remisión para el módulo de Ventas
+    """
+    try:
+        query = """
+            SELECT 
+                id, serie, numero, fecha_emision, fecha_traslado,
+                ruc_remitente, remitente_nombre, remitente_direccion,
+                remitente_ubigeo, ruc_destinatario, destinatario_nombre,
+                destinatario_direccion, destinatario_ubigeo,
+                modalidad_transporte, placa_vehiculo, conductor_dni,
+                conductor_nombre, licencia_conductor, transportista_ruc,
+                transportista_nombre, motivo_traslado, documento_asociado,
+                peso_total, items_json, observaciones, estado_sunat,
+                cdr_response, sunat_response, creado_por, created_at, updated_at
+            FROM guias_remision
+            ORDER BY id DESC
+        """
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_guias_para_ventas: {e}")
+        return []
+
+def obtener_guia_por_id(guia_id):
+    """
+    Obtiene una guía de remisión por su ID
+    """
+    try:
+        query = """
+            SELECT 
+                id, serie, numero, fecha_emision, fecha_traslado,
+                ruc_remitente, remitente_nombre, remitente_direccion,
+                remitente_ubigeo, ruc_destinatario, destinatario_nombre,
+                destinatario_direccion, destinatario_ubigeo,
+                modalidad_transporte, placa_vehiculo, conductor_dni,
+                conductor_nombre, licencia_conductor, transportista_ruc,
+                transportista_nombre, motivo_traslado, documento_asociado,
+                peso_total, items_json, observaciones, estado_sunat,
+                cdr_response, sunat_response, creado_por
+            FROM guias_remision
+            WHERE id = %s
+        """
+        result = db_query(query, (guia_id,))
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en obtener_guia_por_id: {e}")
+        return None
+
+def guardar_guia(data):
+    """
+    Guarda una nueva guía de remisión
+    """
+    try:
+        query = """
+            INSERT INTO guias_remision (
+                serie, numero, fecha_emision, fecha_traslado,
+                ruc_remitente, remitente_nombre, remitente_direccion,
+                remitente_ubigeo, ruc_destinatario, destinatario_nombre,
+                destinatario_direccion, destinatario_ubigeo,
+                modalidad_transporte, placa_vehiculo, conductor_dni,
+                conductor_nombre, licencia_conductor, transportista_ruc,
+                transportista_nombre, motivo_traslado, documento_asociado,
+                peso_total, items_json, observaciones, estado_sunat,
+                creado_por
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            )
+            RETURNING id, numero
+        """
+        params = (
+            data.get('serie', 'T001'),
+            data.get('numero'),
+            data.get('fecha_emision') or datetime.now().date().isoformat(),
+            data.get('fecha_traslado'),
+            data.get('ruc_remitente'),
+            data.get('remitente_nombre'),
+            data.get('remitente_direccion'),
+            data.get('remitente_ubigeo'),
+            data.get('ruc_destinatario'),
+            data.get('destinatario_nombre'),
+            data.get('destinatario_direccion'),
+            data.get('destinatario_ubigeo'),
+            data.get('modalidad_transporte', 'PRIVADO'),
+            data.get('placa_vehiculo'),
+            data.get('conductor_dni'),
+            data.get('conductor_nombre'),
+            data.get('licencia_conductor'),
+            data.get('transportista_ruc'),
+            data.get('transportista_nombre'),
+            data.get('motivo_traslado', 'VENTA'),
+            data.get('documento_asociado'),
+            float(data.get('peso_total', 0)),
+            data.get('items_json'),
+            data.get('observaciones'),
+            data.get('estado_sunat', 'BORRADOR'),
+            data.get('creado_por')
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en guardar_guia: {e}")
+        raise
+
+def actualizar_guia(guia_id, data):
+    """
+    Actualiza una guía de remisión existente
+    """
+    try:
+        query = """
+            UPDATE guias_remision SET
+                fecha_traslado = %s,
+                ruc_destinatario = %s,
+                destinatario_nombre = %s,
+                destinatario_direccion = %s,
+                destinatario_ubigeo = %s,
+                placa_vehiculo = %s,
+                conductor_dni = %s,
+                conductor_nombre = %s,
+                licencia_conductor = %s,
+                transportista_ruc = %s,
+                transportista_nombre = %s,
+                motivo_traslado = %s,
+                documento_asociado = %s,
+                peso_total = %s,
+                items_json = %s,
+                observaciones = %s,
+                estado_sunat = %s,
+                updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, numero
+        """
+        params = (
+            data.get('fecha_traslado'),
+            data.get('ruc_destinatario'),
+            data.get('destinatario_nombre'),
+            data.get('destinatario_direccion'),
+            data.get('destinatario_ubigeo'),
+            data.get('placa_vehiculo'),
+            data.get('conductor_dni'),
+            data.get('conductor_nombre'),
+            data.get('licencia_conductor'),
+            data.get('transportista_ruc'),
+            data.get('transportista_nombre'),
+            data.get('motivo_traslado', 'VENTA'),
+            data.get('documento_asociado'),
+            float(data.get('peso_total', 0)),
+            data.get('items_json'),
+            data.get('observaciones'),
+            data.get('estado_sunat', 'BORRADOR'),
+            guia_id
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en actualizar_guia: {e}")
+        raise
+
+# ============================================================
+# FUNCIONES PARA COMPROBANTES (FACTURAS/BOLETAS)
+# ============================================================
+
+def obtener_comprobantes_para_ventas():
+    """
+    Obtiene todos los comprobantes para el módulo de Ventas
+    """
+    try:
+        query = """
+            SELECT 
+                id, tipo_comprobante, serie, numero, fecha_emision,
+                moneda, cliente_tipo_doc, cliente_numero_doc,
+                cliente_nombre, cliente_direccion, cliente_email,
+                cliente_telefono, subtotal, igv, total,
+                items_json, observaciones, estado_sunat,
+                sunat_response, cdr_response, creado_por,
+                created_at, updated_at
+            FROM comprobantes
+            ORDER BY id DESC
+        """
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_comprobantes_para_ventas: {e}")
+        return []
+
+def obtener_comprobante_por_id(comp_id):
+    """
+    Obtiene un comprobante por su ID
+    """
+    try:
+        query = """
+            SELECT 
+                id, tipo_comprobante, serie, numero, fecha_emision,
+                moneda, cliente_tipo_doc, cliente_numero_doc,
+                cliente_nombre, cliente_direccion, cliente_email,
+                cliente_telefono, subtotal, igv, total,
+                items_json, observaciones, estado_sunat,
+                sunat_response, cdr_response, creado_por
+            FROM comprobantes
+            WHERE id = %s
+        """
+        result = db_query(query, (comp_id,))
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en obtener_comprobante_por_id: {e}")
+        return None
+
+def guardar_comprobante(data):
+    """
+    Guarda un nuevo comprobante
+    """
+    try:
+        query = """
+            INSERT INTO comprobantes (
+                tipo_comprobante, serie, numero, fecha_emision,
+                moneda, cliente_tipo_doc, cliente_numero_doc,
+                cliente_nombre, cliente_direccion, cliente_email,
+                cliente_telefono, subtotal, igv, total,
+                items_json, observaciones, estado_sunat,
+                creado_por
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s, %s
+            )
+            RETURNING id, serie, numero
+        """
+        params = (
+            data.get('tipo_comprobante', 'FACTURA'),
+            data.get('serie', 'F001'),
+            data.get('numero'),
+            data.get('fecha_emision') or datetime.now().date().isoformat(),
+            data.get('moneda', 'PEN'),
+            data.get('cliente_tipo_doc', 'RUC'),
+            data.get('cliente_numero_doc'),
+            data.get('cliente_nombre'),
+            data.get('cliente_direccion'),
+            data.get('cliente_email'),
+            data.get('cliente_telefono'),
+            float(data.get('subtotal', 0)),
+            float(data.get('igv', 0)),
+            float(data.get('total', 0)),
+            data.get('items_json'),
+            data.get('observaciones'),
+            data.get('estado_sunat', 'BORRADOR'),
+            data.get('creado_por')
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en guardar_comprobante: {e}")
+        raise
+
+def actualizar_estado_comprobante(comp_id, nuevo_estado):
+    """
+    Actualiza el estado de un comprobante
+    """
+    try:
+        query = """
+            UPDATE comprobantes 
+            SET estado_sunat = %s, updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, estado_sunat
+        """
+        result = db_query(query, (nuevo_estado, comp_id))
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en actualizar_estado_comprobante: {e}")
+        raise
+
+# ============================================================
+# FUNCIONES PARA NOTAS DE CRÉDITO
+# ============================================================
+
+def obtener_notas_credito_para_ventas():
+    """
+    Obtiene todas las notas de crédito para el módulo de Ventas
+    """
+    try:
+        query = """
+            SELECT 
+                id, serie, numero, fecha_emision, fecha_vencimiento,
+                cliente_tipo_doc, cliente_numero_doc, cliente_nombre,
+                cliente_direccion, cliente_email, cliente_telefono,
+                comprobante_asociado, motivo, monto, observaciones,
+                estado, creado_por, created_at, updated_at
+            FROM notas_credito
+            ORDER BY id DESC
+        """
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_notas_credito_para_ventas: {e}")
+        return []
+
+def guardar_nota_credito(data):
+    """
+    Guarda una nueva nota de crédito
+    """
+    try:
+        query = """
+            INSERT INTO notas_credito (
+                serie, numero, fecha_emision, fecha_vencimiento,
+                cliente_tipo_doc, cliente_numero_doc, cliente_nombre,
+                cliente_direccion, cliente_email, cliente_telefono,
+                comprobante_asociado, motivo, monto, observaciones,
+                estado, creado_por
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s
+            )
+            RETURNING id, serie, numero
+        """
+        params = (
+            data.get('serie', 'FC01'),
+            data.get('numero'),
+            data.get('fecha_emision') or datetime.now().date().isoformat(),
+            data.get('fecha_vencimiento'),
+            data.get('cliente_tipo_doc', 'RUC'),
+            data.get('cliente_numero_doc'),
+            data.get('cliente_nombre'),
+            data.get('cliente_direccion'),
+            data.get('cliente_email'),
+            data.get('cliente_telefono'),
+            data.get('comprobante_asociado'),
+            data.get('motivo'),
+            float(data.get('monto', 0)),
+            data.get('observaciones'),
+            data.get('estado', 'Borrador'),
+            data.get('creado_por')
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en guardar_nota_credito: {e}")
+        raise
+
+# ============================================================
+# FUNCIONES PARA PEDIDO COMPRA (PC)
+# ============================================================
+
+def obtener_pc_para_ventas():
+    """
+    Obtiene todos los pedidos de compra para el módulo de Ventas
+    """
+    try:
+        query = """
+            SELECT 
+                id, numero, fecha, estado, cliente, ruc, monto,
+                cotizacion_id, cotizacion_numero, correo_origen,
+                fecha_recepcion, fecha_despacho, archivo_oc,
+                observaciones, valida_precios, valida_cantidades,
+                valida_stock, valida_entrega, valida_montos,
+                responsable, lugar_entrega, condicion_atencion,
+                created_at, updated_at
+            FROM pedido_compra_pc
+            ORDER BY id DESC
+        """
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_pc_para_ventas: {e}")
+        return []
+
+def guardar_pc(data):
+    """
+    Guarda un nuevo pedido de compra
+    """
+    try:
+        query = """
+            INSERT INTO pedido_compra_pc (
+                numero, fecha, estado, cliente, ruc, monto,
+                cotizacion_id, cotizacion_numero, correo_origen,
+                fecha_recepcion, fecha_despacho, archivo_oc,
+                observaciones, valida_precios, valida_cantidades,
+                valida_stock, valida_entrega, valida_montos,
+                responsable, lugar_entrega, condicion_atencion,
+                creado_por
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            )
+            RETURNING id, numero
+        """
+        params = (
+            data.get('numero'),
+            data.get('fecha') or datetime.now().isoformat(),
+            data.get('estado', 'Pendiente'),
+            data.get('cliente'),
+            data.get('ruc'),
+            float(data.get('monto', 0)),
+            data.get('cotizacion_id'),
+            data.get('cotizacion_numero'),
+            data.get('correo_origen'),
+            data.get('fecha_recepcion'),
+            data.get('fecha_despacho'),
+            data.get('archivo_oc'),
+            data.get('observaciones'),
+            data.get('valida_precios', False),
+            data.get('valida_cantidades', False),
+            data.get('valida_stock', False),
+            data.get('valida_entrega', False),
+            data.get('valida_montos', False),
+            data.get('responsable', 'Hellen'),
+            data.get('lugar_entrega'),
+            data.get('condicion_atencion'),
+            data.get('creado_por')
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en guardar_pc: {e}")
+        raise
+
+# ============================================================
+# FUNCIONES PARA DESPACHOS
+# ============================================================
+
+def obtener_despachos_para_ventas():
+    """
+    Obtiene todos los despachos para el módulo de Ventas
+    """
+    try:
+        query = """
+            SELECT 
+                id, numero, fecha, fecha_despacho, estado,
+                pc_id, pc_numero, cotizacion_id, cotizacion_numero,
+                cliente, ruc, comprobante, guia, origen, destino,
+                transportista, observaciones, responsable,
+                created_at, updated_at
+            FROM despachos
+            ORDER BY id DESC
+        """
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_despachos_para_ventas: {e}")
+        return []
+
+def guardar_despacho(data):
+    """
+    Guarda un nuevo despacho
+    """
+    try:
+        query = """
+            INSERT INTO despachos (
+                numero, fecha, fecha_despacho, estado,
+                pc_id, pc_numero, cotizacion_id, cotizacion_numero,
+                cliente, ruc, comprobante, guia, origen, destino,
+                transportista, observaciones, responsable,
+                creado_por
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s
+            )
+            RETURNING id, numero
+        """
+        params = (
+            data.get('numero'),
+            data.get('fecha') or datetime.now().isoformat(),
+            data.get('fecha_despacho'),
+            data.get('estado', 'Pendiente despacho'),
+            data.get('pc_id'),
+            data.get('pc_numero'),
+            data.get('cotizacion_id'),
+            data.get('cotizacion_numero'),
+            data.get('cliente'),
+            data.get('ruc'),
+            data.get('comprobante'),
+            data.get('guia'),
+            data.get('origen', 'ALM-SMP'),
+            data.get('destino'),
+            data.get('transportista'),
+            data.get('observaciones'),
+            data.get('responsable'),
+            data.get('creado_por')
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en guardar_despacho: {e}")
+        raise
+
+# ============================================================
+# FUNCIONES PARA DEVOLUCIONES
+# ============================================================
+
+def obtener_devoluciones_para_ventas():
+    """
+    Obtiene todas las devoluciones para el módulo de Ventas
+    """
+    try:
+        query = """
+            SELECT 
+                id, numero, fecha, estado, ruc, cliente,
+                comprobante_id, comprobante_numero, guia, motivo,
+                monto, observaciones, creado_por, created_at, updated_at
+            FROM devoluciones
+            ORDER BY id DESC
+        """
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_devoluciones_para_ventas: {e}")
+        return []
+
+def guardar_devolucion(data):
+    """
+    Guarda una nueva devolución
+    """
+    try:
+        query = """
+            INSERT INTO devoluciones (
+                numero, fecha, estado, ruc, cliente,
+                comprobante_id, comprobante_numero, guia, motivo,
+                monto, observaciones, creado_por
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            )
+            RETURNING id, numero
+        """
+        params = (
+            data.get('numero'),
+            data.get('fecha') or datetime.now().isoformat(),
+            data.get('estado', 'Pendiente'),
+            data.get('ruc'),
+            data.get('cliente'),
+            data.get('comprobante_id'),
+            data.get('comprobante_numero'),
+            data.get('guia'),
+            data.get('motivo'),
+            float(data.get('monto', 0)),
+            data.get('observaciones'),
+            data.get('creado_por')
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en guardar_devolucion: {e}")
+        raise
