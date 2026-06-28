@@ -137,7 +137,7 @@ def guardar_cotizacion_db(data):
         """
         params = (
             data.get('numero_cotizacion'),
-            data.get('cliente_id'),
+            data.get('cliente_id'),  # ← AHORA ES UN INTEGER
             data.get('fecha_creacion') or datetime.now().isoformat(),
             data.get('estado', 'Borrador'),
             float(data.get('subtotal', 0)),
@@ -167,6 +167,7 @@ def guardar_cotizacion_db(data):
     except Exception as e:
         print(f"❌ Error en guardar_cotizacion_db: {e}")
         raise
+
 
 def actualizar_cotizacion_db(cotizacion_id, data):
     """Actualiza una cotización existente"""
@@ -794,12 +795,48 @@ def api_cotizaciones_listar():
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
       
+
 @ventas_bp.route('/ventas/api/cotizaciones/guardar', methods=['POST'])
 @login_required
 def api_cotizaciones_guardar():
     try:
         data = request.get_json()
         usuario_id = session.get('usuario_id', 8)
+        
+        # Obtener el cliente_id (puede venir como cliente_id o como ruc)
+        cliente_id = data.get('cliente_id')
+        
+        # Si viene como ruc, buscar el cliente
+        if not cliente_id and data.get('ruc'):
+            ruc = data.get('ruc')
+            # Buscar cliente por RUC
+            cliente = buscar_cliente_por_ruc(ruc)
+            if cliente:
+                cliente_id = cliente.get('id')
+            else:
+                # Si no existe, crear uno nuevo
+                try:
+                    nuevo_cliente_query = """
+                        INSERT INTO clientes (numero_documento, razon_social, nombre_comercial, direccion_fiscal, tipo_documento, activo)
+                        VALUES (%s, %s, %s, %s, %s, TRUE)
+                        RETURNING id
+                    """
+                    result = db_query(nuevo_cliente_query, (
+                        ruc,
+                        data.get('razon', f'Cliente {ruc}'),
+                        data.get('razon_comercial', ''),
+                        data.get('direccion', ''),
+                        'RUC'
+                    ))
+                    if result:
+                        cliente_id = result[0]['id']
+                        print(f"✅ Cliente creado automáticamente con ID: {cliente_id}")
+                except Exception as e:
+                    print(f"❌ Error creando cliente: {e}")
+                    return jsonify({'success': False, 'error': 'No se pudo crear el cliente'}), 400
+        
+        if not cliente_id:
+            return jsonify({'success': False, 'error': 'Cliente no identificado'}), 400
         
         # Calcular totales
         subtotal = float(data.get('subtotal', 0))
@@ -814,7 +851,7 @@ def api_cotizaciones_guardar():
             total = (subtotal * (1 - descuento_porcentaje / 100)) * (1 + igv / 100)
         
         cotizacion_data = {
-            'cliente_id': data.get('ruc'),
+            'cliente_id': cliente_id,  # ← AHORA USAMOS EL ID
             'cliente_nombre': data.get('razon'),
             'fecha_creacion': datetime.now().isoformat(),
             'estado': data.get('estado', 'Borrador'),
@@ -825,7 +862,7 @@ def api_cotizaciones_guardar():
             'notas': data.get('nota', ''),
             'forma_pago': data.get('condicion_pago'),
             'tiempo_entrega': data.get('tiempo_entrega'),
-            'validez_oferta': data.get('vencimiento'),
+            'validez_oferta': data.get('validez'),
             'condicion_pago': data.get('condicion_pago'),
             'direccion_entrega': data.get('direccion_entrega'),
             'requerimiento': data.get('requerimiento'),
@@ -862,7 +899,11 @@ def api_cotizaciones_guardar():
         return jsonify({'success': False, 'error': 'No se pudo crear'}), 400
             
     except Exception as e:
+        print(f"❌ Error: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @ventas_bp.route('/ventas/api/cotizaciones/<int:id>', methods=['GET'])
 @login_required

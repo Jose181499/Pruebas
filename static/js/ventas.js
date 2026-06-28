@@ -666,11 +666,77 @@ function renderDevoluciones() {
 
 async function guardarCotizacion(estado) {
     try {
+        // Obtener el RUC del formulario
+        const ruc = document.getElementById('fRuc')?.value || '';
+        
+        // Buscar el cliente en la lista de clientes maestros para obtener su ID
+        let clienteId = null;
+        if (ruc && CLIENTES_MAESTROS.length > 0) {
+            const cliente = CLIENTES_MAESTROS.find(c => c.ruc === ruc || c.numero_documento === ruc);
+            if (cliente) {
+                clienteId = cliente.id;
+                console.log('✅ Cliente encontrado con ID:', clienteId);
+            } else {
+                console.warn('⚠️ Cliente no encontrado en maestros, intentando buscar...');
+                // Intentar buscar en la base de datos
+                try {
+                    const resp = await fetch(`/maestros/api/clientes/buscar?q=${ruc}`);
+                    const data = await resp.json();
+                    if (data.success && data.data && data.data.length > 0) {
+                        clienteId = data.data[0].id;
+                        console.log('✅ Cliente encontrado en BD con ID:', clienteId);
+                    }
+                } catch (e) {
+                    console.warn('No se pudo buscar cliente:', e);
+                }
+            }
+        }
+        
+        // Si no se encontró el cliente, crear uno nuevo
+        if (!clienteId && ruc) {
+            console.log('🔄 Cliente no encontrado, creando uno nuevo...');
+            try {
+                const nuevoCliente = {
+                    ruc: ruc,
+                    razon_social: document.getElementById('fRazon')?.value || '',
+                    nombre_comercial: document.getElementById('fComercial')?.value || '',
+                    direccion_fiscal: document.getElementById('fDireccion')?.value || '',
+                    nombre_contacto: document.getElementById('fContacto')?.value || '',
+                    telefono_contacto: document.getElementById('fTelefono')?.value || '',
+                    email_contacto: document.getElementById('fCorreo')?.value || '',
+                    condicion_pago: document.getElementById('fCondicion')?.value || 'Contado',
+                    tipo_documento: 'RUC',
+                    estado: 'Activo'
+                };
+                
+                const resp = await apiFetch('/maestros/api/clientes/guardar', {
+                    method: 'POST',
+                    body: JSON.stringify(nuevoCliente)
+                });
+                
+                if (resp.success && resp.data && resp.data.id) {
+                    clienteId = resp.data.id;
+                    console.log('✅ Cliente creado con ID:', clienteId);
+                    // Actualizar la lista de clientes
+                    await cargarClientesMaestros();
+                }
+            } catch (e) {
+                console.warn('No se pudo crear cliente:', e);
+            }
+        }
+        
+        // Si aún no hay clienteId, mostrar error
+        if (!clienteId) {
+            showToast('⚠️ No se pudo identificar el cliente. Guarda primero el cliente en Maestros.', 'warning');
+            return;
+        }
+        
         // Recolectar datos del formulario
         const data = {
             id: editingId,
             estado: estado || 'Borrador',
-            ruc: document.getElementById('fRuc')?.value || '',
+            cliente_id: clienteId,  // ← AHORA USAMOS EL ID DEL CLIENTE
+            ruc: ruc,  // Guardamos el RUC por si acaso
             razon: document.getElementById('fRazon')?.value || '',
             razon_comercial: document.getElementById('fComercial')?.value || '',
             direccion: document.getElementById('fDireccion')?.value || '',
@@ -726,6 +792,8 @@ async function guardarCotizacion(estado) {
         data.igv = igv;
         data.total = total;
         
+        console.log('📦 Enviando cotización:', { cliente_id: data.cliente_id, total: data.total });
+        
         // Enviar a la API
         const response = await apiFetch('/ventas/api/cotizaciones/guardar', {
             method: 'POST',
@@ -744,6 +812,7 @@ async function guardarCotizacion(estado) {
         showToast('Error al guardar la cotización', 'error');
     }
 }
+
 
 function saveCotizacionDraft() {
     guardarCotizacion('Borrador');
