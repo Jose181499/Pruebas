@@ -82,19 +82,23 @@
     </div>
 </div>
 
-            <!-- VENTAS -->
-            <div class="menu-group">
-                <a href="/ventas" class="menu-header" style="text-decoration:none;">
-                    <div class="menu-left"><span>4 ─ Ventas</span></div>
-                    <span class="caret">›</span>
-                </a>
-                <div class="menu-children">
-                    <a href="/ventas" class="child-btn" style="text-decoration:none;">Cotizaciones</a>
-                    <a href="/ventas" class="child-btn" style="text-decoration:none;">Comprobantes cliente</a>
-                    <a href="/ventas" class="child-btn" style="text-decoration:none;">Guías de remisión cliente</a>
-                    <a href="/ventas" class="child-btn" style="text-decoration:none;">Notas de crédito</a>
-                </div>
-            </div>
+        <!-- VENTAS -->
+<div class="menu-group">
+    <a href="/ventas" class="menu-header" style="text-decoration:none;">
+        <div class="menu-left"><span>4 ─ Ventas</span></div>
+        <span class="caret">›</span>
+    </a>
+    <div class="menu-children">
+        <a href="/ventas?tab=cotizaciones" class="child-btn" data-screen="cotizaciones" style="text-decoration:none;">Cotizaciones</a>
+        <a href="/ventas?tab=comprobantes" class="child-btn" data-screen="comprobantes" style="text-decoration:none;">Comprobantes cliente</a>
+        <a href="/ventas?tab=guias" class="child-btn" data-screen="guias" style="text-decoration:none;">Guías de remisión cliente</a>
+        <a href="/ventas?tab=notas_credito" class="child-btn" data-screen="notas_credito" style="text-decoration:none;">Notas de crédito</a>
+        <!-- Nuevos submódulos para el flujo completo -->
+        <a href="/ventas?tab=pedido_compra" class="child-btn" data-screen="pedido_compra" style="text-decoration:none;">PC Pedido Compras</a>
+        <a href="/ventas?tab=despachar" class="child-btn" data-screen="despachar" style="text-decoration:none;">🚚 Despachar</a>
+        <a href="/ventas?tab=devoluciones" class="child-btn" data-screen="devoluciones" style="text-decoration:none;">🔄 Devoluciones</a>
+    </div>
+</div>
 
             <!-- COMPRAS -->
             <div class="menu-group">
@@ -639,7 +643,90 @@ function highlightActiveModule() {
             }
         });
     }
+    // =============================================
+// 5. MÓDULO VENTAS - NUEVO
+// =============================================
+else if (currentPath.includes('/ventas')) {
+    // Obtener el parámetro tab de la URL
+    const urlParams = new URLSearchParams(currentSearch);
+    let tab = urlParams.get('tab') || 'cotizaciones';
     
+    console.log(`📋 Módulo Ventas - tab: ${tab}`);
+    
+    // Encontrar el grupo de Ventas y abrirlo
+    const groups = document.querySelectorAll('.menu-group');
+    for (const group of groups) {
+        const header = group.querySelector('.menu-header');
+        if (header && header.textContent.includes('4 ─ Ventas')) {
+            // Resaltar el header
+            if (header) header.classList.add('active');
+            // Abrir el grupo
+            group.classList.add('open');
+            break;
+        }
+    }
+    
+    // Mapeo de módulos para buscar en el sidebar
+    const moduleMap = {
+        'cotizaciones': 'Cotizaciones',
+        'comprobantes': 'Comprobantes cliente',
+        'guias': 'Guías de remisión cliente',
+        'notas_credito': 'Notas de crédito',
+        'pedido_compra': 'PC Pedido Compras',
+        'despachar': 'Despachar',
+        'devoluciones': 'Devoluciones'
+    };
+    
+    // RESALTAR CHILD EN SIDEBAR SEGÚN TAB
+    let childResaltado = false;
+    
+    // 1. Buscar por data-screen
+    let child = document.querySelector(`.child-btn[data-screen="${tab}"]`);
+    if (child) {
+        child.classList.add('active');
+        childResaltado = true;
+        console.log(`✅ Child de Ventas resaltado por data-screen: ${child.textContent.trim()}`);
+    }
+    
+    // 2. Si no se encuentra, buscar por href con tab=
+    if (!childResaltado) {
+        child = document.querySelector(`.child-btn[href*="tab=${tab}"]`);
+        if (child) {
+            child.classList.add('active');
+            childResaltado = true;
+            console.log(`✅ Child de Ventas resaltado por href: ${child.textContent.trim()}`);
+        }
+    }
+    
+    // 3. Si no se encuentra, buscar por texto
+    if (!childResaltado) {
+        const textToFind = moduleMap[tab] || tab;
+        document.querySelectorAll('.child-btn').forEach(btn => {
+            const btnText = btn.textContent.trim();
+            if (btnText === textToFind || btnText.includes(textToFind)) {
+                btn.classList.add('active');
+                childResaltado = true;
+                console.log(`✅ Child de Ventas resaltado por texto: ${btn.textContent.trim()}`);
+            }
+        });
+    }
+    
+    // 4. Fallback: resaltar el primer child (Cotizaciones)
+    if (!childResaltado) {
+        const groups2 = document.querySelectorAll('.menu-group');
+        for (const group of groups2) {
+            const header = group.querySelector('.menu-header');
+            if (header && header.textContent.includes('4 ─ Ventas')) {
+                const firstChild = group.querySelector('.child-btn');
+                if (firstChild) {
+                    firstChild.classList.add('active');
+                    console.log(`✅ Fallback - Child de Ventas resaltado: ${firstChild.textContent.trim()}`);
+                }
+                break;
+            }
+        }
+    }
+}
     // =============================================
     // 4. DASHBOARD (por defecto)
     // =============================================

@@ -1,0 +1,18 @@
+<!-- MODAL GUÍA -->
+<div class="modal-bg" id="guiaModal">
+    <div class="modal-box" style="width:min(1100px,96vw)">
+        <div class="modal-head">
+            <div class="modal-title" id="guiaModalTitle">📦 Guía de remisión</div>
+            <button class="btn btn-secondary" style="background:transparent;color:#fff;border-color:#fff;padding:6px 14px;min-height:34px;border-radius:14px" onclick="closeModal('guiaModal')">✕ Cerrar</button>
+        </div>
+        <div class="modal-body" id="guiaForm">
+            <!-- Contenido dinámico generado por JavaScript -->
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-secondary" onclick="closeModal('guiaModal')">Cancelar</button>
+            <button class="btn btn-soft" onclick="saveGuia('Borrador')">💾 Guardar borrador</button>
+            <button class="btn btn-blue" onclick="saveGuia('Pendiente despacho')">📤 Pendiente despacho</button>
+            <button class="btn btn-green" onclick="saveGuia('Emitida')">📄 Emitir guía</button>
+        </div>
+    </div>
+</div>

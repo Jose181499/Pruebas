@@ -1,0 +1,18 @@
+<!-- MODAL COTIZACIÓN -->
+<div class="modal-bg" id="cotizacionModal">
+    <div class="modal-box" style="width:min(1540px,98vw)">
+        <div class="modal-head">
+            <div class="modal-title" id="cotizacionModalTitle">Nueva cotización</div>
+            <button class="btn btn-secondary" style="background:transparent;color:#fff;border-color:#fff;padding:6px 14px;min-height:34px;border-radius:14px" onclick="closeModal('cotizacionModal')">✕ Cerrar</button>
+        </div>
+        <div class="modal-body" id="cotizacionForm">
+            <!-- Contenido dinámico generado por JavaScript -->
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-secondary" onclick="closeModal('cotizacionModal')">Cancelar</button>
+            <button class="btn btn-soft" onclick="saveCotizacionDraft()">💾 Guardar borrador</button>
+            <button class="btn btn-blue" onclick="sendCotizacionToReview()">📤 Enviar a revisión</button>
+            <button class="btn btn-green" onclick="generateCotizacionPdfAndSend()">📄 Generar cotización</button>
+        </div>
+    </div>
+</div>

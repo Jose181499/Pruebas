@@ -1,0 +1,52 @@
+{% extends "ventas/index.html" %}
+
+{% block content %}
+<div id="pedidoCompraContent">
+    <div class="panel">
+        <div class="clean-header">
+            <div class="master-title-wrap">
+                <div class="master-title">PC Pedido Compras</div>
+                <div class="master-subtitle">Aceptación formal del cliente recibida por correo</div>
+            </div>
+            <div class="search-box">
+                <input id="pcSearch" placeholder="Buscar por PC / Cliente / RUC / Cotización...">
+            </div>
+            <div class="clean-actions">
+                <select id="pcStatus">
+                    <option value="">Todos los estados</option>
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="Recibido por correo">Recibido por correo</option>
+                    <option value="En revisión interna">En revisión interna</option>
+                    <option value="Validado por Hellen">Validado por Hellen</option>
+                    <option value="Listo para despacho">Listo para despacho</option>
+                    <option value="Anulado">Anulado</option>
+                </select>
+                <button class="btn btn-secondary" onclick="exportData('pedido_compra')">📥 Exportar</button>
+                <button class="btn btn-primary btn-create" onclick="openPedidoCompraModal()">+ Subir PC cliente</button>
+            </div>
+        </div>
+        <div class="security-note">
+            <b>📋 Flujo:</b> Cliente acepta cotización → envía PC/OC por correo → se sube PDF/archivo → se valida precio, cantidad, stock, entrega y monto → Hellen valida → se atiende.
+        </div>
+        <div class="table-scroll">
+            <table class="master-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                        <th>PC / OC</th>
+                        <th>Cliente</th>
+                        <th>Cotización</th>
+                        <th>Monto</th>
+                        <th>Archivo</th>
+                        <th>Entrega</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="pcRows"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

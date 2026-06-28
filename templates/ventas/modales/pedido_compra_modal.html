@@ -1,0 +1,26 @@
+<!-- MODAL PEDIDO COMPRA -->
+<div class="modal-bg" id="pedidoCompraModal">
+    <div class="modal-box" style="width:min(1200px,96vw)">
+        <div class="modal-head">
+            <div class="modal-title" id="pedidoCompraModalTitle">PC Pedido Compras</div>
+            <button class="btn btn-secondary" style="background:transparent;color:#fff;border-color:#fff;padding:6px 14px;min-height:34px;border-radius:14px" onclick="closeModal('pedidoCompraModal')">✕ Cerrar</button>
+        </div>
+        <div class="modal-body" id="pedidoCompraForm">
+            <div class="panel" style="margin-bottom:10px;">
+                <div style="padding:10px 14px;background:#FEFCE8;border:1px solid #FDE68A;border-radius:10px;color:#92400E;font-weight:850;font-size:12px;">
+                    <b>📋 PC Pedido Compras = aceptación formal del cliente.</b> Llega por correo como OC/Pedido. 
+                    Aquí se sube el PDF/archivo y se valida precio, cantidad, stock, lugar de entrega y monto antes de atender.
+                </div>
+            </div>
+            <div id="pcFormContent">
+                <!-- Contenido dinámico generado por JavaScript -->
+            </div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-secondary" onclick="closeModal('pedidoCompraModal')">Cancelar</button>
+            <button class="btn btn-soft" onclick="savePedidoCompra('Pendiente')">💾 Guardar pendiente</button>
+            <button class="btn btn-blue" onclick="savePedidoCompra('En revisión interna')">📤 Enviar a revisión</button>
+            <button class="btn btn-green" onclick="savePedidoCompra('Validado por Hellen')">✅ Validar Hellen</button>
+        </div>
+    </div>
+</div>
