@@ -70,19 +70,21 @@
         font-size: 10px;
         font-weight: 900;
         white-space: nowrap;
+        border: 1px solid transparent;
     }
-    .b-draft { background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; }
-    .b-review { background: #DBEAFE; color: #1D4ED8; border: 1px solid #93C5FD; }
-    .b-valid { background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; }
-    .b-sent { background: #EDE9FE; color: #6D28D9; border: 1px solid #C4B5FD; }
-    .b-accepted { background: #B6FF7A; color: #0B5D1E; border: 1px solid #7CFF3A; }
-    .b-rejected { background: #FFE4E6; color: #BE123C; border: 1px solid #FDA4AF; }
-    .b-ok { background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; }
-    .b-info { background: #DBEAFE; color: #1D4ED8; border: 1px solid #93C5FD; }
+    .b-draft { background: #FEF3C7; color: #B45309; border-color: #FDE68A; }
+    .b-review { background: #DBEAFE; color: #1D4ED8; border-color: #93C5FD; }
+    .b-valid { background: #DCFCE7; color: #166534; border-color: #86EFAC; }
+    .b-sent { background: #EDE9FE; color: #6D28D9; border-color: #C4B5FD; }
+    .b-accepted { background: #B6FF7A; color: #0B5D1E; border-color: #7CFF3A; }
+    .b-rejected { background: #FFE4E6; color: #BE123C; border-color: #FDA4AF; }
+    .b-ok { background: #DCFCE7; color: #166534; border-color: #86EFAC; }
+    .b-info { background: #DBEAFE; color: #1D4ED8; border-color: #93C5FD; }
     .b-gray { background: #F1F5F9; color: #475569; }
-    .b-pending { background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; }
-    .b-generated { background: #EDE9FE; color: #6D28D9; border: 1px solid #C4B5FD; }
-    .b-validated { background: #DBEAFE; color: #1D4ED8; border: 1px solid #93C5FD; }
+    .b-pending { background: #FEF3C7; color: #B45309; border-color: #FDE68A; }
+    .b-generated { background: #EDE9FE; color: #6D28D9; border-color: #C4B5FD; }
+    .b-validated { background: #DBEAFE; color: #1D4ED8; border-color: #93C5FD; }
+    .b-lost { background: #F1F5F9; color: #475569; border-color: #CBD5E1; }
     
     /* Code pill */
     .code-pill {
@@ -136,6 +138,7 @@
         box-shadow: 0 18px 45px rgba(15,23,42,.18);
         padding: 8px;
         min-width: 210px;
+        max-width: 280px;
     }
     .menu-pop button {
         width: 100%;
@@ -312,29 +315,36 @@
         background: #F8FAFC;
     }
     
-    .btn-create {
-        height: 40px;
-        padding: 0 18px;
-        font-size: 13px;
-        border-radius: 12px;
+    .btn-soft {
+        background: #F8FAFC;
+        color: #334155;
+        border: 1px solid #E5E7EB;
     }
-    
-    .btn-green {
-        background: #16A34A;
-        color: #fff;
-    }
-    
-    .btn-green:hover {
-        background: #15803D;
+    .btn-soft:hover {
+        background: #F1F5F9;
     }
     
     .btn-blue {
         background: #2563EB;
         color: #fff;
     }
-    
     .btn-blue:hover {
         background: #1D4ED8;
+    }
+    
+    .btn-green {
+        background: #16A34A;
+        color: #fff;
+    }
+    .btn-green:hover {
+        background: #15803D;
+    }
+    
+    .btn-create {
+        height: 40px;
+        padding: 0 18px;
+        font-size: 13px;
+        border-radius: 12px;
     }
     
     /* KPI Cards */
@@ -435,93 +445,715 @@
         color: #fff;
     }
     
-    /* Modal */
+    /* ============================================================
+       ESTILOS PARA MODALES
+       ============================================================ */
     .modal-bg {
         display: none;
         position: fixed;
         inset: 0;
-        background: rgba(15, 23, 42, 0.5);
-        z-index: 9999;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(4px);
+        z-index: 99999;
         padding: 20px;
         align-items: center;
         justify-content: center;
         overflow: auto;
     }
-    
     .modal-bg.show {
         display: flex;
     }
     
     .modal-box {
         width: min(1100px, 96vw);
-        max-height: 98vh;
-        background: #fff;
-        border-radius: 14px;
+        max-height: 95vh;
+        background: #FFFFFF;
+        border-radius: 16px;
         overflow: hidden;
-        box-shadow: 0 30px 80px rgba(15,23,42,.25);
+        box-shadow: 0 30px 80px rgba(15,23,42,.35);
         display: flex;
         flex-direction: column;
+        animation: modalIn 0.3s ease-out;
+    }
+    
+    @keyframes modalIn {
+        from { opacity: 0; transform: scale(0.96) translateY(20px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
     }
     
     .modal-head {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 6px 12px;
+        padding: 12px 20px;
         border-bottom: 1px solid #E5E7EB;
         background: #0F172A;
         color: #fff;
         flex: 0 0 auto;
-        min-height: 42px;
+        min-height: 52px;
     }
-    
-    .modal-title {
-        font-size: 16px;
-        font-weight: 700;
+    .modal-head .modal-title {
+        font-size: 18px;
+        font-weight: 1000;
+        color: #fff;
+    }
+    .modal-head .btn-close-modal {
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255,255,255,0.2);
+        color: #fff;
+        padding: 6px 16px;
+        border-radius: 10px;
+        font-weight: 900;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 12px;
+    }
+    .modal-head .btn-close-modal:hover {
+        background: rgba(255,255,255,0.2);
     }
     
     .modal-body {
         flex: 1 1 auto;
         overflow: auto;
-        padding: 8px 10px;
+        padding: 16px 20px;
+        background: #F8FAFC;
     }
     
     .modal-foot {
         flex: 0 0 auto;
         display: flex;
         justify-content: flex-end;
-        gap: 8px;
-        padding: 8px 12px;
+        gap: 10px;
+        padding: 12px 20px;
         border-top: 1px solid #E5E7EB;
+        background: #FFFFFF;
+    }
+    .modal-foot .btn {
+        height: 34px;
+        padding: 0 18px;
+        border-radius: 10px;
+        font-weight: 950;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .modal-foot .btn-secondary {
+        background: #F1F5F9;
+        color: #0F172A;
+        border: 1px solid #E5E7EB;
+    }
+    .modal-foot .btn-secondary:hover {
+        background: #E2E8F0;
+    }
+    .modal-foot .btn-soft {
         background: #F8FAFC;
+        color: #334155;
+        border: 1px solid #E5E7EB;
+    }
+    .modal-foot .btn-soft:hover {
+        background: #F1F5F9;
+    }
+    .modal-foot .btn-blue {
+        background: #2563EB;
+        color: #fff;
+    }
+    .modal-foot .btn-blue:hover {
+        background: #1D4ED8;
+    }
+    .modal-foot .btn-green {
+        background: #16A34A;
+        color: #fff;
+    }
+    .modal-foot .btn-green:hover {
+        background: #15803D;
+    }
+    
+    /* ============================================================
+       ESTILOS PARA MODAL DE COTIZACIÓN (MÁS ANCHO)
+       ============================================================ */
+    #cotizacionModal .modal-box {
+        width: min(1540px, 98vw) !important;
+        max-width: 1540px !important;
+    }
+    
+    /* Stepbar dentro del modal */
+    #cotizacionModal .stepbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        background: #FFFFFF;
+        border: 1px solid #E5E7EB;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(15,23,42,.06);
+        margin-bottom: 12px;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+    }
+    #cotizacionModal .stepbar .step-label {
+        font-weight: 1000;
+        color: #334155;
+        margin-right: 8px;
+        font-size: 12px;
+        flex-shrink: 0;
+    }
+    #cotizacionModal .stepbar .step {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+        font-weight: 950;
+        color: #334155;
+        font-size: 11px;
+        flex-shrink: 0;
+    }
+    #cotizacionModal .stepbar .step .num {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: #E2E8F0;
+        color: #475569;
+        font-size: 10px;
+        font-weight: 1000;
+    }
+    #cotizacionModal .stepbar .step.status-draft .num { background: #9CA3AF; color: #111827; }
+    #cotizacionModal .stepbar .step.status-review .num { background: #FACC15; color: #111827; }
+    #cotizacionModal .stepbar .step.status-validated .num { background: #22D3EE; color: #082F49; }
+    #cotizacionModal .stepbar .step.status-generated .num { background: #A855F7; color: #fff; }
+    #cotizacionModal .stepbar .step.status-accepted .num { background: #22C55E; color: #052E16; }
+    #cotizacionModal .stepbar .sep {
+        height: 2px;
+        width: 24px;
+        background: #E5E7EB;
+        border-radius: 99px;
+        flex-shrink: 0;
+    }
+    
+    /* Create Grid */
+    #cotizacionModal .create-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 280px;
+        gap: 10px;
+        align-items: start;
+    }
+    
+    #cotizacionModal .create-panel {
+        background: #FFFFFF;
+        border: 1px solid #E5E7EB;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(15,23,42,.06);
+        overflow: hidden;
+    }
+    #cotizacionModal .create-panel h3 {
+        padding: 10px 14px;
+        border-bottom: 1px solid #E5E7EB;
+        font-size: 13px;
+        font-weight: 1000;
+        color: #0F172A;
+        background: #FAFBFC;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    #cotizacionModal .create-panel h3 .section-number {
+        color: #EF233C;
+        font-weight: 1000;
+    }
+    #cotizacionModal .create-panel h3 .section-title-colored {
+        color: #EF233C;
+        font-weight: 1000;
+    }
+    #cotizacionModal .create-panel .body {
+        padding: 10px 12px;
+    }
+    
+    #cotizacionModal .product-wide {
+        grid-column: 1 / -1;
+    }
+    #cotizacionModal .product-wide .table-scroll {
+        max-height: 260px;
+        padding: 0;
+    }
+    #cotizacionModal .product-wide table {
+        min-width: 1220px;
+    }
+    
+    /* Form fields */
+    #cotizacionModal .form-grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 8px;
+    }
+    #cotizacionModal .form-field {
+        min-width: 0;
+    }
+    #cotizacionModal .form-field label {
+        display: block;
+        font-size: 9.5px;
+        font-weight: 950;
+        color: #334155;
+        margin-bottom: 2px;
+        text-transform: uppercase;
+        letter-spacing: 0.2px;
+    }
+    #cotizacionModal .form-field input,
+    #cotizacionModal .form-field select,
+    #cotizacionModal .form-field textarea {
+        width: 100%;
+        border: 1px solid #E5E7EB;
+        border-radius: 9px;
+        background: #FFFFFF;
+        outline: none;
+        color: #0F172A;
+        font-size: 12px;
+        transition: all 0.2s;
+        font-family: inherit;
+    }
+    #cotizacionModal .form-field input,
+    #cotizacionModal .form-field select {
+        height: 30px;
+        padding: 0 10px;
+    }
+    #cotizacionModal .form-field textarea {
+        padding: 8px 10px;
+        min-height: 60px;
+        resize: vertical;
+    }
+    #cotizacionModal .form-field input:focus,
+    #cotizacionModal .form-field select:focus,
+    #cotizacionModal .form-field textarea:focus {
+        border-color: #EF233C;
+        box-shadow: 0 0 0 3px rgba(239, 35, 60, 0.10);
+    }
+    #cotizacionModal .col-2 { grid-column: span 2; }
+    #cotizacionModal .col-3 { grid-column: span 3; }
+    #cotizacionModal .col-4 { grid-column: span 4; }
+    #cotizacionModal .col-5 { grid-column: span 5; }
+    #cotizacionModal .col-6 { grid-column: span 6; }
+    #cotizacionModal .col-8 { grid-column: span 8; }
+    #cotizacionModal .col-9 { grid-column: span 9; }
+    #cotizacionModal .col-12 { grid-column: span 12; }
+    
+    /* Client card */
+    #cotizacionModal .client-card .body { padding: 10px 12px !important; }
+    #cotizacionModal .client-card .client-search-row {
+        display: grid;
+        grid-template-columns: 1fr 118px;
+        gap: 8px;
+        align-items: end;
+        margin-bottom: 6px;
+    }
+    #cotizacionModal .client-card .btn-search-ruc {
+        width: 100%;
+        height: 30px !important;
+        border-radius: 9px !important;
+        font-size: 12px !important;
+        padding: 0 12px !important;
+        background: #2563EB !important;
+        color: #fff !important;
+        border: 0 !important;
+        font-weight: 950 !important;
+        cursor: pointer !important;
+    }
+    #cotizacionModal .client-card .btn-search-ruc:hover {
+        background: #1D4ED8 !important;
+    }
+    #cotizacionModal .client-card .client-main-grid {
+        display: grid;
+        grid-template-columns: 150px minmax(260px, 1fr) 120px;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+    #cotizacionModal .client-card .client-secondary-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+    #cotizacionModal .client-card .client-contact-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1.45fr;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+    #cotizacionModal .client-card .client-request-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+    #cotizacionModal .client-card .client-save-zone {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        margin-top: 4px;
+    }
+    #cotizacionModal .client-card .btn-save-client {
+        min-width: 200px;
+        height: 32px !important;
+        border-radius: 10px !important;
+        font-size: 12px !important;
+        font-weight: 950 !important;
+        border: 0 !important;
+        background: #16A34A !important;
+        color: #fff !important;
+        cursor: pointer !important;
+    }
+    #cotizacionModal .client-card .btn-save-client:hover {
+        background: #15803D !important;
+    }
+    #cotizacionModal .client-card .save-help {
+        color: #64748B;
+        font-size: 10px;
+        font-weight: 850;
+        line-height: 1.2;
+    }
+    #cotizacionModal .client-card .client-code-input {
+        text-align: center;
+        color: #2563EB !important;
+        font-weight: 1000 !important;
+        background: #FFFFFF !important;
+        border-color: #BFDBFE !important;
+    }
+    #cotizacionModal .client-card input,
+    #cotizacionModal .client-card select {
+        height: 30px !important;
+        font-size: 12px !important;
+    }
+    #cotizacionModal .client-card label {
+        font-size: 9.5px !important;
+    }
+    
+    /* Summary card */
+    #cotizacionModal .summary-card {
+        background: linear-gradient(180deg, #FFFFFF 0%, #FBFCFE 100%);
+    }
+    #cotizacionModal .summary-card .body { padding: 12px 16px !important; }
+    #cotizacionModal .summary-card .side-row {
+        display: grid !important;
+        grid-template-columns: 112px 1fr !important;
+        align-items: center !important;
+        padding: 6px 0 !important;
+    }
+    #cotizacionModal .summary-card .side-row b {
+        font-size: 12px !important;
+        color: #475569 !important;
+        font-weight: 950 !important;
+    }
+    #cotizacionModal .summary-card .side-row span {
+        text-align: right !important;
+        justify-self: end !important;
+        font-size: 13px !important;
+        color: #0F172A !important;
+        font-weight: 1000 !important;
+        min-width: 120px !important;
+    }
+    #cotizacionModal .summary-card .value-sale-row b,
+    #cotizacionModal .summary-card .value-sale-row span {
+        color: #EF233C !important;
+    }
+    #cotizacionModal .summary-card .summary-sep {
+        height: 1px;
+        background: #E2E8F0;
+        margin: 8px 0;
+    }
+    #cotizacionModal .summary-card .total-row {
+        margin-top: 8px !important;
+        padding-top: 12px !important;
+        border-top: 2px solid #EF233C !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+    }
+    #cotizacionModal .summary-card .total-row b {
+        color: #475569 !important;
+        font-size: 13px !important;
+    }
+    #cotizacionModal .summary-total {
+        color: #0F172A !important;
+        font-size: 20px !important;
+        font-weight: 1000 !important;
+        letter-spacing: -.01em !important;
+    }
+    
+    /* Products toolbar */
+    #cotizacionModal .products-toolbar {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin-left: auto !important;
+    }
+    #cotizacionModal .products-toolbar input {
+        width: 340px !important;
+        height: 32px !important;
+        border: 1px solid #CBD5E1 !important;
+        border-radius: 10px !important;
+        padding: 0 12px !important;
+        font-size: 12px !important;
+        font-weight: 850 !important;
+        outline: none !important;
+    }
+    #cotizacionModal .products-toolbar input:focus {
+        border-color: #EF233C !important;
+        box-shadow: 0 0 0 3px rgba(239, 35, 60, 0.10) !important;
+    }
+    #cotizacionModal .products-toolbar .btn-add-product {
+        height: 32px !important;
+        min-width: 150px !important;
+        padding: 0 16px !important;
+        font-size: 12px !important;
+        border-radius: 10px !important;
+        font-weight: 1000 !important;
+        background: #2563EB !important;
+        color: #fff !important;
+        border: 0 !important;
+        cursor: pointer !important;
+    }
+    #cotizacionModal .products-toolbar .btn-add-product:hover {
+        background: #1D4ED8 !important;
+    }
+    
+    /* Product table */
+    #cotizacionModal .product-name {
+        font-weight: 950;
+        color: #0F172A;
+        line-height: 1.15;
+    }
+    #cotizacionModal .product-desc {
+        margin-top: 2px;
+        font-size: 10.5px;
+        color: #64748B;
+        font-weight: 750;
+        line-height: 1.15;
+    }
+    #cotizacionModal .product-wide .master-table input {
+        height: 23px !important;
+        min-height: 23px !important;
+        border: 1px solid #9CA3AF;
+        border-radius: 5px;
+        padding: 0 6px;
+        font-size: 11px;
+        width: 80px;
+    }
+    #cotizacionModal .product-wide .um-select {
+        width: 76px !important;
+        height: 24px !important;
+        border-radius: 6px !important;
+        border: 1px solid #CBD5E1 !important;
+        background: #fff !important;
+        font-size: 11px !important;
+        font-weight: 850 !important;
+    }
+    #cotizacionModal .product-wide .master-table thead th {
+        background: #FFF1F2 !important;
+        color: #7F1D1D !important;
+        border: 1px solid #FCA5A5 !important;
+        font-size: 10px !important;
+        font-weight: 1000 !important;
+        text-align: center !important;
+        padding: 6px 8px !important;
+    }
+    #cotizacionModal .product-wide .master-table td {
+        padding: 6px 8px !important;
+        font-size: 11px !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+        border: 1px solid #E2E8F0 !important;
+    }
+    #cotizacionModal .product-wide .master-table td.left {
+        text-align: left !important;
+    }
+    #cotizacionModal .product-wide .master-table tr:nth-child(even) td {
+        background: #FFF5F6 !important;
+    }
+    
+    /* Compact bottom */
+    #cotizacionModal .compact-bottom .form-grid {
+        display: grid !important;
+        grid-template-columns: 1.1fr 1.1fr 1.3fr 1fr 2.8fr !important;
+        gap: 6px !important;
+        align-items: end !important;
+    }
+    #cotizacionModal .compact-bottom .form-field label {
+        font-size: 8.5px !important;
+        line-height: 1 !important;
+        margin-bottom: 1px !important;
+    }
+    #cotizacionModal .compact-bottom .form-field select,
+    #cotizacionModal .compact-bottom .form-field input {
+        height: 23px !important;
+        min-height: 23px !important;
+        font-size: 10.8px !important;
+        padding: 0 7px !important;
+        border-radius: 7px !important;
+    }
+    #cotizacionModal .compact-bottom .internal-note-box textarea {
+        height: 23px !important;
+        min-height: 23px !important;
+        max-height: 23px !important;
+        overflow: hidden !important;
+        padding: 4px 7px !important;
+        font-size: 10.8px !important;
+        border-radius: 7px !important;
+        resize: none !important;
+    }
+    
+    /* ============================================================
+       ESTILOS PARA OTROS MODALES (PC, Despacho, Guías, etc.)
+       ============================================================ */
+    #pedidoCompraModal .modal-box,
+    #despachoModal .modal-box,
+    #guiaModal .modal-box,
+    #comprobanteModal .modal-box,
+    #notaCreditoModal .modal-box,
+    #devolucionModal .modal-box {
+        width: min(1200px, 96vw) !important;
+        max-width: 1200px !important;
+    }
+    
+    #pedidoCompraModal .ficha-section,
+    #despachoModal .ficha-section,
+    #guiaModal .ficha-section,
+    #comprobanteModal .ficha-section,
+    #notaCreditoModal .ficha-section,
+    #devolucionModal .ficha-section {
+        border: 1px solid #E2E8F0;
+        border-radius: 15px;
+        background: #FFFFFF;
+        margin-bottom: 10px;
+        overflow: hidden;
+    }
+    
+    #pedidoCompraModal .ficha-section-title,
+    #despachoModal .ficha-section-title,
+    #guiaModal .ficha-section-title,
+    #comprobanteModal .ficha-section-title,
+    #notaCreditoModal .ficha-section-title,
+    #devolucionModal .ficha-section-title {
+        padding: 8px 10px;
+        background: #F8FAFC;
+        border-bottom: 1px solid #E2E8F0;
+        color: #EF233C;
+        font-size: 12px;
+        font-weight: 1000;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    #pedidoCompraModal .ficha-section-title small,
+    #despachoModal .ficha-section-title small,
+    #guiaModal .ficha-section-title small,
+    #comprobanteModal .ficha-section-title small,
+    #notaCreditoModal .ficha-section-title small,
+    #devolucionModal .ficha-section-title small {
+        color: #64748B;
+        font-weight: 850;
+    }
+    
+    #pedidoCompraModal .ficha-grid,
+    #despachoModal .ficha-grid,
+    #guiaModal .ficha-grid,
+    #comprobanteModal .ficha-grid,
+    #notaCreditoModal .ficha-grid,
+    #devolucionModal .ficha-grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 8px;
+        padding: 10px;
+    }
+    
+    #pedidoCompraModal .pc-alert {
+        margin: 12px 14px 0;
+        padding: 10px 12px;
+        border: 1px solid #FCD34D;
+        background: #FFFBEB;
+        border-radius: 14px;
+        color: #78350F;
+        font-size: 11.5px;
+        font-weight: 850;
+        line-height: 1.4;
+    }
+    
+    #pedidoCompraModal .pc-check-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+        padding: 10px;
+    }
+    #pedidoCompraModal .pc-check-card {
+        border: 1px solid #E2E8F0;
+        background: #FFFFFF;
+        border-radius: 12px;
+        padding: 8px;
+    }
+    #pedidoCompraModal .pc-check-card label {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        font-size: 11px;
+        font-weight: 950;
+        color: #334155;
+    }
+    #pedidoCompraModal .pc-check-card input {
+        width: 15px !important;
+        height: 15px !important;
+        accent-color: #16A34A;
+    }
+    #pedidoCompraModal .pc-check-card small {
+        display: block;
+        margin-top: 5px;
+        color: #64748B;
+        font-size: 9.8px;
+        font-weight: 780;
+    }
+    
+    #pedidoCompraModal .pc-file-box {
+        border: 1px dashed #CBD5E1;
+        background: #F8FAFC;
+        border-radius: 12px;
+        padding: 10px;
+    }
+    #pedidoCompraModal .pc-file-box input[type="file"] {
+        height: auto !important;
+        width: 100%;
+        padding: 8px !important;
+        background: #FFFFFF;
+    }
+    #pedidoCompraModal .pc-file-note {
+        margin-top: 6px;
+        color: #64748B;
+        font-size: 10px;
+        font-weight: 800;
     }
     
     /* Toast */
-    .toast {
+    .toast-custom {
         position: fixed;
-        right: 20px;
-        bottom: 20px;
+        bottom: 30px;
+        right: 30px;
         background: #0F172A;
         color: #fff;
         border-left: 4px solid #EF233C;
-        padding: 12px 16px;
-        border-radius: 10px;
-        font-weight: 600;
+        padding: 14px 20px;
+        border-radius: 12px;
+        font-weight: 700;
         z-index: 99999;
-        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.25);
+        box-shadow: 0 12px 40px rgba(15, 23, 42, 0.25);
         animation: slideIn 0.3s ease-out;
+        font-size: 13px;
+        max-width: 400px;
     }
-    
-    @keyframes slideIn {
-        from {
-            transform: translateY(20px);
-            opacity: 0;
-        }
-        to {
-            transform: translateY(0);
-            opacity: 1;
-        }
-    }
+    .toast-custom.toast-success { border-left-color: #16A34A; }
+    .toast-custom.toast-error { border-left-color: #DC2626; }
+    .toast-custom.toast-warning { border-left-color: #F59E0B; }
+    .toast-custom.toast-info { border-left-color: #3B82F6; }
     
     /* Responsive */
     @media (max-width: 1380px) {
@@ -530,6 +1162,40 @@
         }
         .status-board {
             grid-template-columns: repeat(3, 1fr);
+        }
+        #cotizacionModal .create-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    @media (max-width: 1024px) {
+        #cotizacionModal .client-card .client-main-grid,
+        #cotizacionModal .client-card .client-secondary-grid,
+        #cotizacionModal .client-card .client-contact-grid,
+        #cotizacionModal .client-card .client-request-grid {
+            grid-template-columns: 1fr;
+        }
+        #cotizacionModal .compact-bottom .form-grid {
+            grid-template-columns: 1fr !important;
+        }
+        #cotizacionModal .products-toolbar {
+            flex-wrap: wrap;
+            width: 100%;
+        }
+        #cotizacionModal .products-toolbar input {
+            width: 100% !important;
+        }
+        #cotizacionModal .stepbar {
+            flex-wrap: wrap;
+        }
+        #pedidoCompraModal .ficha-grid .col-3,
+        #pedidoCompraModal .ficha-grid .col-4,
+        #pedidoCompraModal .ficha-grid .col-6,
+        #pedidoCompraModal .ficha-grid .col-8 {
+            grid-column: span 12;
+        }
+        #pedidoCompraModal .pc-check-grid {
+            grid-template-columns: 1fr 1fr;
         }
     }
     
@@ -573,6 +1239,36 @@
         .master-table td {
             font-size: 9px;
             padding: 4px;
+        }
+        .modal-box {
+            width: 98vw !important;
+            max-height: 98vh !important;
+        }
+        .modal-body {
+            padding: 10px !important;
+        }
+        .modal-foot {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        #cotizacionModal .client-card .client-search-row {
+            grid-template-columns: 1fr;
+        }
+        #cotizacionModal .stepbar .step {
+            font-size: 9px;
+        }
+        #cotizacionModal .stepbar .sep {
+            width: 12px;
+        }
+        #cotizacionModal .summary-card .side-row {
+            grid-template-columns: 1fr !important;
+        }
+        #cotizacionModal .summary-card .side-row span {
+            text-align: left !important;
+            justify-self: start !important;
+        }
+        #pedidoCompraModal .pc-check-grid {
+            grid-template-columns: 1fr;
         }
     }
 </style>
