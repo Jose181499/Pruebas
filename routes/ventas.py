@@ -50,14 +50,12 @@ def obtener_cotizaciones_db():
                 c.contacto_cliente, 
                 c.telefono_cliente, 
                 c.email_cliente,
-                c.created_at, 
-                c.updated_at,
-                -- Obtener el RUC y razón social del cliente
+                -- Obtener el RUC y razón social del cliente (si existe la tabla clientes)
                 cl.numero_documento as cliente_ruc,
                 cl.razon_social as cliente_razon_social,
                 cl.nombre_comercial as cliente_nombre_comercial
             FROM cotizaciones c
-            LEFT JOIN clientes cl ON c.cliente_id = cl.id
+            LEFT JOIN clientes cl ON c.cliente_id::text = cl.id::text
             ORDER BY c.id DESC
         """
         results = db_query(query)
@@ -70,7 +68,6 @@ def obtener_cotizaciones_db():
                     row['fecha_creacion'] = row['fecha_creacion'].strftime('%d/%m/%Y %H:%M')
                 elif isinstance(row['fecha_creacion'], str):
                     try:
-                        # Intentar parsear el string de fecha
                         if 'T' in row['fecha_creacion']:
                             dt = datetime.fromisoformat(row['fecha_creacion'].replace('Z', '+00:00'))
                         else:
@@ -97,8 +94,6 @@ def obtener_cotizaciones_db():
         import traceback
         traceback.print_exc()
         return []
-
-
 
 def obtener_cotizacion_por_id_db(cotizacion_id):
     """Obtiene una cotización por su ID"""
@@ -752,11 +747,12 @@ def ventas():
 # ============================================================
 # COTIZACIONES - API
 # ============================================================
-
 @ventas_bp.route('/ventas/api/cotizaciones/listar', methods=['GET'])
 @login_required
 def api_cotizaciones_listar():
     try:
+        print("🔍 API COTIZACIONES LLAMADA")
+        
         data = obtener_cotizaciones_db()
         print(f"📊 Cotizaciones encontradas: {len(data)}")
         
@@ -767,14 +763,14 @@ def api_cotizaciones_listar():
                 'numero': row.get('numero_cotizacion') or row.get('codigo_cotizacion'),
                 'fecha': row.get('fecha_creacion'),
                 'estado': row.get('estado'),
-                'ruc': row.get('cliente_ruc') or str(row.get('cliente_id', '')),
-                'razon': row.get('cliente_razon_social') or row.get('cliente_nombre_comercial') or f"Cliente {row.get('cliente_id', '')}",
+                'ruc': str(row.get('cliente_id', '')),
+                'razon': f"Cliente {row.get('cliente_id', '')}",
                 'descripcion': row.get('nota_cotizacion') or row.get('notas') or 'Sin descripción',
                 'monto': float(row.get('total', 0)),
                 'subtotal': float(row.get('subtotal', 0)),
                 'igv': float(row.get('igv', 0)),
                 'condicion': row.get('condicion_pago'),
-                'vendedor': row.get('usuario_id'),
+                'vendedor': str(row.get('usuario_id', '')),
                 'vencimiento': row.get('validez_oferta'),
                 'cod_cliente': str(row.get('cliente_id', '')),
                 'direccion': row.get('direccion_entrega'),
@@ -790,14 +786,12 @@ def api_cotizaciones_listar():
         
         print(f"✅ Datos formateados: {len(formatted_data)} cotizaciones")
         return jsonify({'success': True, 'data': formatted_data})
+        
     except Exception as e:
-        print(f"❌ Error en api_cotizaciones_listar: {e}")
+        print(f"❌ Error: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
-
-
 @ventas_bp.route('/ventas/api/cotizaciones/guardar', methods=['POST'])
 @login_required
 def api_cotizaciones_guardar():
