@@ -43,16 +43,28 @@ def db_tx():
 # =========================
 def db_query(sql, params=None):
     """Ejecuta una consulta SELECT y devuelve los resultados"""
-    conn = get_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-    if params:
-        cur.execute(sql, params)
-    else:
-        cur.execute(sql)
-    data = cur.fetchall()
-    cur.close()
-    conn.close()
-    return data
+    conn = None
+    cur = None
+    try:
+        conn = get_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        if params:
+            cur.execute(sql, params)
+        else:
+            cur.execute(sql)
+        data = cur.fetchall()
+        return data
+    except Exception as e:
+        print(f"❌ Error en db_query: {e}")
+        print(f"📝 SQL: {sql}")
+        print(f"📝 Params: {params}")
+        raise  # ← IMPORTANTE: Lanzar la excepción
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
 
 def db_execute(sql, params=()):
     conn = None
