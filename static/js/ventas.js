@@ -1,5 +1,5 @@
 // ============================================================
-// MÓDULO VENTAS - ERP Multiempresa (CONECTADO A BACKEND)
+// MÓDULO VENTAS - ERP Multiempresa
 // ============================================================
 
 console.log('📦 Módulo Ventas cargando...');
@@ -46,6 +46,47 @@ const VENTAS_CONFIG = {
 };
 
 // ============================================================
+// DATOS MAESTROS (para modales)
+// ============================================================
+const MAESTROS_VENTAS = {
+    clientes: [
+        {codigo:'CLI-000099',ruc:'20114915026',razon:'COMPAÑÍA MINERA ANTAPACCAY S.A.',razonComercial:'MINERA ANTAPACCAY',contacto:'Compras',telefono:'999 111 222',correo:'compras@antapaccay.com',condicion:'Crédito 30 días',direccion:'Av. Industrial 123 - Lima',estado:'Activo'},
+        {codigo:'CLI-000082',ruc:'20543722309',razon:'CINDEL S.A.',razonComercial:'CINDEL',contacto:'María López',telefono:'999 222 333',correo:'compras@cindel.com',condicion:'Crédito 45 días',direccion:'Jr. Los Olivos 456 - Lima',estado:'Activo'},
+        {codigo:'CLI-000091',ruc:'45421212121',razon:'PROMOTORES ELECTRICOS S A',razonComercial:'PROMOTORES ELECTRICOS',contacto:'Carlos Ramírez',telefono:'999 333 444',correo:'ventas@promotores.com',condicion:'Crédito 30 días',direccion:'Av. Electricidad 100 - Lima',estado:'Activo'}
+    ],
+    condicionesPago: ['Contado', 'Crédito 7 días', 'Crédito 15 días', 'Crédito 30 días', 'Crédito 45 días', 'Crédito 60 días', 'Crédito 90 días'],
+    tiempoEntrega: ['Inmediato', '1 día hábil', '3 días hábiles', '5 días hábiles', '7 días hábiles', 'Bajo pedido', 'Personalizado'],
+    validez: ['7 días', '15 días', '30 días', '60 días', 'Personalizado'],
+    transporte: ['Seleccione', 'Motorizado', 'Auto', 'Minivan', 'Camioneta', 'Camión', 'Agencia'],
+    parihuela: ['Seleccione', 'No', 'Sí - estándar', 'Sí - a medida', 'Por confirmar'],
+    fuenteRequerimiento: ['Correo', 'WhatsApp', 'Llamada', 'Portal del cliente', 'Licitación pública', 'Manual', 'Otro'],
+    motivoCotizacion: ['Proyecto nuevo', 'Recompra', 'Licitación', 'Reposición / stock', 'Solicitud única del cliente']
+};
+
+const SUNAT_UNIDADES = [
+    {codigo:'NIU',nombre:'Unidad'},
+    {codigo:'MTR',nombre:'Metro'},
+    {codigo:'KGM',nombre:'Kilogramo'},
+    {codigo:'LTR',nombre:'Litro'},
+    {codigo:'CJA',nombre:'Caja'},
+    {codigo:'PK',nombre:'Paquete'},
+    {codigo:'RO',nombre:'Rollo'},
+    {codigo:'SET',nombre:'Juego / Set'},
+    {codigo:'PAR',nombre:'Par'},
+    {codigo:'DZN',nombre:'Docena'}
+];
+
+const CONFIG_VENTAS = {
+    igv: 0.18,
+    monedaDefault: 'Soles (S/.)',
+    asesorDefault: 'Helen Blas Príncipe',
+    emailAsesorDefault: 'ventas@kcfcorporacion.com',
+    telefonoAsesorDefault: '999932051',
+    validezDefault: '15 días',
+    tiempoEntregaDefault: '5 días hábiles'
+};
+
+// ============================================================
 // VARIABLES GLOBALES
 // ============================================================
 let cotizacionesData = [];
@@ -57,12 +98,12 @@ let notasData = [];
 let devolucionesData = [];
 let currentModule = 'cotizaciones';
 let editingId = null;
-let cotizacionProductos = [];
+let quoteProducts = [];
+let PRODUCTOS_MAESTROS = [];
 
 // ============================================================
 // FUNCIONES API
 // ============================================================
-
 async function fetchAPI(endpoint, options = {}) {
     try {
         const response = await fetch(endpoint, {
@@ -165,13 +206,6 @@ function now() {
     return new Date().toLocaleString('es-PE', { hour12: false });
 }
 
-function getEstado(valor) {
-    if (typeof valor === 'boolean') {
-        return valor ? 'Activo' : 'Inactivo';
-    }
-    return String(valor || '');
-}
-
 function badgeStatus(s) {
     const map = {
         'Borrador': 'b-draft',
@@ -197,14 +231,44 @@ function badgeStatus(s) {
     return `<span class="badge ${map[s] || 'b-gray'}">${s}</span>`;
 }
 
+function options(arr, selected = '') {
+    return arr.map(x => `<option ${x === selected ? 'selected' : ''}>${x}</option>`).join('');
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('show');
+}
+
 function empresa() {
     return document.getElementById('empresaActiva')?.value || 'KCF';
 }
 
 // ============================================================
+// CARGA DE PRODUCTOS MAESTROS
+// ============================================================
+async function cargarProductosMaestros() {
+    try {
+        const response = await fetch('/productos/api/productos');
+        const data = await response.json();
+        if (data.success) {
+            PRODUCTOS_MAESTROS = data.data || [];
+            console.log('✅ Productos cargados:', PRODUCTOS_MAESTROS.length);
+        }
+    } catch (error) {
+        console.error('Error cargando productos:', error);
+        PRODUCTOS_MAESTROS = [
+            {codigo:'PRD-001245',producto:'Cable THHN 12 AWG',descripcion:'Cable eléctrico THHN 12 AWG 600V',modelo:'THHN-12',marca:'INDECO',um:'NIU',stock:1200,valorVenta:6.50,entrega:'Inmediata'},
+            {codigo:'PRD-002318',producto:'Interruptor termomagnético 2P 40A',descripcion:'Interruptor termomagnético 2 polos 40A',modelo:'IC60N-2P-40A',marca:'Schneider',um:'NIU',stock:120,valorVenta:85.00,entrega:'Inmediata'},
+            {codigo:'PRD-003567',producto:'Tablero metálico empotrado 24 polos',descripcion:'Tablero metálico empotrado 24 polos',modelo:'TM-24',marca:'Eaton',um:'NIU',stock:15,valorVenta:1250.00,entrega:'5 días'},
+            {codigo:'PRD-004890',producto:'Tubería EMT 3/4',descripcion:'Tubería EMT 3/4" x 3m',modelo:'EMT-3/4',marca:'Conduit',um:'NIU',stock:300,valorVenta:18.00,entrega:'Inmediata'},
+            {codigo:'PRD-005678',producto:'Caja octogonal galvanizada',descripcion:'Caja octogonal galvanizada 4"',modelo:'COG-4',marca:'Conduit',um:'NIU',stock:500,valorVenta:4.80,entrega:'Inmediata'}
+        ];
+    }
+}
+
+// ============================================================
 // FUNCIONES DE CARGA DE DATOS
 // ============================================================
-
 async function loadCotizaciones() {
     try {
         const data = await fetchAPI('/ventas/api/cotizaciones/listar');
@@ -297,15 +361,11 @@ async function loadDevoluciones() {
 }
 
 // ============================================================
-// RENDER FUNCTIONS
+// FUNCIONES DE RENDERIZADO
 // ============================================================
-
 function renderCotizaciones() {
     const container = document.getElementById('cotizacionesContent');
-    if (!container) {
-        // Si estamos en la página principal, el contenido ya está
-        return;
-    }
+    if (!container) return;
     
     const q = document.getElementById('qSearch')?.value?.toLowerCase() || '';
     const st = document.getElementById('qStatus')?.value || '';
@@ -316,7 +376,6 @@ function renderCotizaciones() {
         return matchText && matchStatus;
     });
     
-    // Actualizar KPIs
     const kpiContainer = document.getElementById('cotizacionesKPI');
     if (kpiContainer) {
         kpiContainer.innerHTML = `
@@ -575,25 +634,925 @@ function renderDevoluciones() {
 }
 
 // ============================================================
-// MODALES - COTIZACIONES
+// MODAL COTIZACIÓN - GENERA CONTENIDO DINÁMICO
 // ============================================================
-
 function openCotizacionModal(id = null) {
     editingId = id;
     const isEdit = id !== null;
     const title = isEdit ? 'Editar cotización' : 'Nueva cotización';
     document.getElementById('cotizacionModalTitle').textContent = title;
     
-    // Aquí iría la lógica para cargar datos si es edición
-    // y construir el formulario
+    const formContainer = document.getElementById('cotizacionForm');
+    if (!formContainer) return;
+    
+    const client = MAESTROS_VENTAS.clientes[0] || {ruc:'', razon:'', codigo:''};
+    
+    // Generar HTML del formulario
+    formContainer.innerHTML = `
+        <div class="stepbar" id="quoteStatusBar">
+            <span class="step-label">Estatus:</span>
+            <span class="step status-draft"><span class="num">1</span>Borrador</span>
+            <span class="sep"></span>
+            <span class="step status-review"><span class="num">2</span>En revisión</span>
+            <span class="sep"></span>
+            <span class="step status-validated"><span class="num">3</span>Validada</span>
+            <span class="sep"></span>
+            <span class="step status-generated"><span class="num">4</span>Generada</span>
+            <span class="sep"></span>
+            <span class="step status-accepted"><span class="num">5</span>Aceptada</span>
+        </div>
+        
+        <div class="create-grid">
+            <!-- Punto 1: Datos del cliente -->
+            <div class="create-panel client-card">
+                <h3><span class="section-number">1.</span> <span class="section-title-colored">Datos del cliente</span></h3>
+                <div class="body">
+                    <div class="client-search-row">
+                        <div class="form-field">
+                            <label>Buscar por RUC</label>
+                            <input id="fRucSearch" placeholder="Ingrese o pegue RUC" value="${client.ruc}" oninput="autoLoadClientByRuc(this.value)">
+                        </div>
+                        <div class="form-field">
+                            <label>&nbsp;</label>
+                            <button class="btn btn-blue btn-search-ruc" onclick="loadClient()">🔍 Buscar</button>
+                        </div>
+                    </div>
+                    <div class="client-main-grid">
+                        <div class="form-field"><label>RUC</label><input id="fRuc" value="${client.ruc}" readonly></div>
+                        <div class="form-field"><label>Razón social</label><input id="fRazon" value="${client.razon}" readonly></div>
+                        <div class="form-field"><label>Cód. cliente</label><input class="client-code-input" id="fCodCliente" value="${client.codigo}" readonly></div>
+                    </div>
+                    <div class="client-secondary-grid">
+                        <div class="form-field"><label>Razón comercial</label><input id="fComercial" value="${client.razonComercial || client.razon}"></div>
+                        <div class="form-field"><label>Dirección fiscal</label><input id="fDireccion" value="${client.direccion || ''}"></div>
+                    </div>
+                    <div class="client-contact-grid">
+                        <div class="form-field"><label>Contacto</label><input id="fContacto" value="${client.contacto || ''}"></div>
+                        <div class="form-field"><label>Teléfono</label><input id="fTelefono" value="${client.telefono || ''}"></div>
+                        <div class="form-field"><label>Correo</label><input id="fCorreo" value="${client.correo || ''}"></div>
+                    </div>
+                    <div class="client-request-grid">
+                        <div class="form-field"><label>N° requerimiento</label><input id="fReq" placeholder="Ingrese el requerimiento"></div>
+                        <div class="form-field"><label>Fuente</label><select id="fFuente">${options(MAESTROS_VENTAS.fuenteRequerimiento, 'Correo')}</select></div>
+                    </div>
+                    <div class="client-save-zone">
+                        <button class="btn btn-green btn-save-client" onclick="saveClientFromQuote()">💾 Guardar / Actualizar</button>
+                        <div class="save-help">Se guardará en Maestros para futuras cotizaciones.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Punto 2: Condiciones comerciales -->
+            <div class="create-panel">
+                <h3><span class="section-number">2.</span> <span class="section-title-colored">Condiciones comerciales</span></h3>
+                <div class="body">
+                    <div class="form-grid">
+                        <div class="form-field col-4"><label>Asesor</label><select id="fVendedor">${options([CONFIG_VENTAS.asesorDefault, 'Edith', 'Ana Gómez'], CONFIG_VENTAS.asesorDefault)}</select></div>
+                        <div class="form-field col-5"><label>Email asesor</label><input id="fEmailAsesor" value="${CONFIG_VENTAS.emailAsesorDefault}"></div>
+                        <div class="form-field col-3"><label>Teléfono asesor</label><input id="fTelAsesor" value="${CONFIG_VENTAS.telefonoAsesorDefault}"></div>
+                        <div class="form-field col-4"><label>Moneda</label><select id="fMoneda">${options(['Soles (S/.)', 'Dólares ($)'], CONFIG_VENTAS.monedaDefault)}</select></div>
+                        <div class="form-field col-4"><label>Condición de pago</label><select id="fCondicion">${options(MAESTROS_VENTAS.condicionesPago, client.condicion || 'Contado')}</select></div>
+                        <div class="form-field col-4"><label>Tiempo de entrega</label><select id="fTiempo">${options(MAESTROS_VENTAS.tiempoEntrega, CONFIG_VENTAS.tiempoEntregaDefault)}</select></div>
+                        <div class="form-field col-4"><label>Validez</label><select id="fValidez">${options(MAESTROS_VENTAS.validez, CONFIG_VENTAS.validezDefault)}</select></div>
+                        <div class="form-field col-8"><label>Dirección de entrega</label><select id="fDireccionEntrega"><option>${client.direccion || 'Dirección cliente'}</option><option>Otra dirección</option></select></div>
+                        <div class="form-field col-4"><label>Descuento especial</label><input id="fDiscountValue" type="number" value="0" oninput="calcQuote()"></div>
+                        <div class="form-field col-2"><label>Tipo</label><select id="fDiscountType" onchange="calcQuote()"><option value="%">%</option><option value="S/">S/</option></select></div>
+                        <div class="form-field col-12"><label>Nota comercial</label><textarea placeholder="Ingrese comentarios comerciales..."></textarea></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Punto 3: Resumen -->
+            <div class="create-panel summary-card">
+                <h3><span class="section-number">3.</span> <span class="section-title-colored">Resumen</span></h3>
+                <div class="body">
+                    <div class="side-row"><b>Subtotal</b><span id="sumSubtotal">S/ 0.00</span></div>
+                    <div class="side-row"><b>Descuento</b><span id="sumDiscountPct">0.00%</span></div>
+                    <div class="side-row"><b>Dscto aplicado</b><span id="sumDiscount">S/ 0.00</span></div>
+                    <div class="side-row value-sale-row"><b>Valor venta</b><span id="sumValue">S/ 0.00</span></div>
+                    <div class="side-row"><b>IGV 18%</b><span id="sumIgv">S/ 0.00</span></div>
+                    <div class="summary-sep"></div>
+                    <div class="total-row"><b>TOTAL</b><span class="summary-total" id="sumTotal">S/ 0.00</span></div>
+                </div>
+            </div>
+
+            <!-- Punto 4: Productos -->
+            <div class="create-panel product-wide">
+                <h3><span class="section-number">4.</span> <span class="section-title-colored">Productos cotizados</span>
+                    <div class="products-toolbar">
+                        <input list="productMasterList" id="quickProductSearch" placeholder="Buscar en data maestra: código, producto, marca o modelo..." onkeydown="if(event.key==='Enter'){addQuoteProductFromSearch()}">
+                        <datalist id="productMasterList"></datalist>
+                        <button class="btn btn-blue btn-add-product" onclick="addQuoteProductFromSearch()">+ Agregar producto</button>
+                    </div>
+                </h3>
+                <div class="body">
+                    <div class="table-scroll">
+                        <table class="master-table">
+                            <thead>
+                                <tr>
+                                    <th>Item</th><th>Código</th><th>Producto / Descripción</th><th>Modelo</th><th>Marca</th>
+                                    <th>Unidad</th><th>Cant</th><th>Valor venta<br><small>Unitario S/.</small></th>
+                                    <th>Valor total<br><small>Tabla S/.</small></th><th>Stock</th><th>Entrega</th><th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="quoteProductRows"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Punto 5: Información adicional -->
+            <div class="create-panel product-wide compact-bottom">
+                <h3><span class="section-number">5.</span> <span class="section-title-colored">Información adicional</span></h3>
+                <div class="body">
+                    <div class="form-grid">
+                        <div class="form-field"><label>Seguimiento</label><select id="fSeguimiento"><option>Asesor</option><option>${CONFIG_VENTAS.asesorDefault}</option><option>Edith</option></select></div>
+                        <div class="form-field"><label>Motivo</label><select id="fMotivo">${options(MAESTROS_VENTAS.motivoCotizacion, 'Proyecto nuevo')}</select></div>
+                        <div class="form-field"><label>Transporte</label><select id="fTransporte">${options(MAESTROS_VENTAS.transporte, 'Seleccione')}</select></div>
+                        <div class="form-field"><label>Parihuela</label><select id="fParihuela">${options(MAESTROS_VENTAS.parihuela, 'Seleccione')}</select></div>
+                        <div class="form-field internal-note-box"><label>Nota interna</label><textarea id="fNotaInterna" placeholder="Interno: cliente, productos o coordinación"></textarea></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Cargar datalist de productos
+    cargarDatalistProductos();
+    
+    // Inicializar productos de ejemplo
+    if (PRODUCTOS_MAESTROS.length > 0) {
+        quoteProducts = PRODUCTOS_MAESTROS.slice(0, 2).map(p => ({...p, cantidad: 1}));
+        renderQuoteProducts();
+    }
     
     document.getElementById('cotizacionModal').classList.add('show');
+    setTimeout(() => { calcQuote(); }, 100);
 }
 
-function closeModal(modalId) {
-    document.getElementById(modalId).classList.remove('show');
+function cargarDatalistProductos() {
+    const dl = document.getElementById('productMasterList');
+    if (!dl) return;
+    
+    const list = PRODUCTOS_MAESTROS.length > 0 ? PRODUCTOS_MAESTROS : [
+        {codigo:'PRD-001245',producto:'Cable THHN 12 AWG',marca:'INDECO',modelo:'THHN-12'},
+        {codigo:'PRD-002318',producto:'Interruptor termomagnético',marca:'Schneider',modelo:'IC60N-2P-40A'}
+    ];
+    
+    dl.innerHTML = list.map(p => {
+        const valor = `${p.codigo} | ${p.producto} | ${p.marca || ''} | ${p.modelo || ''}`;
+        return `<option value="${valor}"></option>`;
+    }).join('');
 }
 
+function addQuoteProductFromSearch() {
+    const input = document.getElementById('quickProductSearch');
+    const valor = input ? input.value : '';
+    
+    if (!valor) {
+        const p = PRODUCTOS_MAESTROS[quoteProducts.length % PRODUCTOS_MAESTROS.length];
+        if (p) {
+            quoteProducts.push({...p, cantidad: 1});
+            renderQuoteProducts();
+            calcQuote();
+            showToast('Producto agregado al detalle', 'success');
+        }
+        return;
+    }
+    
+    const q = valor.toLowerCase().trim();
+    const p = PRODUCTOS_MAESTROS.find(x =>
+        String(x.codigo).toLowerCase().includes(q) ||
+        String(x.producto).toLowerCase().includes(q) ||
+        String(x.descripcion || '').toLowerCase().includes(q) ||
+        String(x.marca || '').toLowerCase().includes(q) ||
+        String(x.modelo || '').toLowerCase().includes(q)
+    );
+    
+    if (!p) {
+        showToast('No se encontró el producto. Revise código, marca o modelo.', 'error');
+        return;
+    }
+    
+    quoteProducts.push({...p, cantidad: 1});
+    if (input) input.value = '';
+    renderQuoteProducts();
+    calcQuote();
+    showToast('Producto agregado al detalle', 'success');
+}
+
+function renderQuoteProducts() {
+    const tbody = document.getElementById('quoteProductRows');
+    if (!tbody) return;
+    
+    if (quoteProducts.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:#94A3B8;padding:20px;">📭 Agregue productos a la cotización</td></tr>`;
+        return;
+    }
+    
+    tbody.innerHTML = quoteProducts.map((p, i) => `
+        <tr>
+            <td class="col-item">${i + 1}</td>
+            <td class="col-code">${p.codigo || '-'}</td>
+            <td class="left">
+                <div class="product-name">${p.producto || p.descripcion || 'Sin nombre'}</div>
+                <div class="product-desc">${p.descripcion || ''}</div>
+            </td>
+            <td class="col-model">${p.modelo || '-'}</td>
+            <td class="col-brand">${p.marca || '-'}</td>
+            <td class="col-unit">
+                <select class="um-select" onchange="quoteProducts[${i}].um=this.value">
+                    ${SUNAT_UNIDADES.map(u => `<option value="${u.codigo}" ${p.um === u.codigo || p.um === u.nombre ? 'selected' : ''}>${u.codigo}</option>`).join('')}
+                </select>
+            </td>
+            <td class="col-qty"><input style="width:70px;text-align:right" value="${p.cantidad || 1}" type="number" min="1" onchange="quoteProducts[${i}].cantidad=Number(this.value);calcQuote();"></td>
+            <td class="col-price"><input style="width:90px;text-align:right" value="${p.valorVenta || 0}" type="number" step="0.01" onchange="quoteProducts[${i}].valorVenta=Number(this.value);calcQuote();"></td>
+            <td class="col-total"><b>${money((p.cantidad || 1) * (p.valorVenta || 0))}</b></td>
+            <td class="col-stock">${p.stock || 0}</td>
+            <td class="col-delivery">${p.entrega === 'Inmediata' ? '<span class="badge b-ok">Inmediata</span>' : '<span class="badge b-draft">' + (p.entrega || 'Por confirmar') + '</span>'}</td>
+            <td class="col-actions">
+                <button class="btn btn-sm btn-danger" onclick="quoteProducts.splice(${i},1);renderQuoteProducts();calcQuote();">✕</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function calcQuote() {
+    const subtotal = quoteProducts.reduce((s, p) => s + (Number(p.cantidad || 0) * Number(p.valorVenta || 0)), 0);
+    const dv = Number(document.getElementById('fDiscountValue')?.value || 0);
+    const dt = document.getElementById('fDiscountType')?.value || '%';
+    const discount = dt === '%' ? subtotal * (dv / 100) : Math.min(dv, subtotal);
+    const value = subtotal - discount;
+    const igv = value * (CONFIG_VENTAS.igv || 0.18);
+    const total = value + igv;
+    
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('sumSubtotal', money(subtotal));
+    set('sumDiscountPct', dt === '%' ? dv.toFixed(2) + '%' : money(dv));
+    set('sumDiscount', '-' + money(discount));
+    set('sumValue', money(value));
+    set('sumIgv', money(igv));
+    set('sumTotal', money(total));
+}
+
+function loadClient() {
+    const ruc = document.getElementById('fRucSearch')?.value?.trim() || '';
+    if (!ruc) { showToast('Ingrese RUC para consultar', 'warning'); return; }
+    
+    let client = MAESTROS_VENTAS.clientes.find(x => String(x.ruc) === String(ruc));
+    
+    if (!client) {
+        client = {
+            codigo: 'CLI-' + String(MAESTROS_VENTAS.clientes.length + 1).padStart(6, '0'),
+            ruc: ruc,
+            razon: 'CLIENTE CONSULTADO EN SUNAT',
+            razonComercial: '',
+            contacto: '',
+            telefono: '',
+            correo: '',
+            condicion: 'Contado',
+            direccion: 'Dirección fiscal consultada en SUNAT',
+            estado: 'Nuevo'
+        };
+        showToast('Cliente nuevo: complete los datos', 'info');
+    } else {
+        showToast('Cliente existente detectado', 'success');
+    }
+    
+    document.getElementById('fRuc').value = client.ruc || '';
+    document.getElementById('fRazon').value = client.razon || '';
+    document.getElementById('fComercial').value = client.razonComercial || client.razon || '';
+    document.getElementById('fCodCliente').value = client.codigo || 'PENDIENTE';
+    document.getElementById('fDireccion').value = client.direccion || '';
+    document.getElementById('fContacto').value = client.contacto || '';
+    document.getElementById('fTelefono').value = client.telefono || '';
+    document.getElementById('fCorreo').value = client.correo || '';
+    if (document.getElementById('fCondicion')) {
+        document.getElementById('fCondicion').value = client.condicion || 'Contado';
+    }
+}
+
+function autoLoadClientByRuc(value) {
+    clearTimeout(window.__rucAutoTimer);
+    const ruc = (value || '').trim();
+    if (!ruc) return;
+    if (ruc.length >= 11) {
+        window.__rucAutoTimer = setTimeout(() => loadClient(), 300);
+    }
+}
+
+function saveClientFromQuote() {
+    const ruc = document.getElementById('fRuc')?.value?.trim() || '';
+    if (!ruc) { showToast('Primero busca el RUC', 'warning'); return; }
+    
+    const cliente = {
+        ruc: ruc,
+        razon: document.getElementById('fRazon')?.value || '',
+        razonComercial: document.getElementById('fComercial')?.value || '',
+        direccion: document.getElementById('fDireccion')?.value || '',
+        contacto: document.getElementById('fContacto')?.value || '',
+        telefono: document.getElementById('fTelefono')?.value || '',
+        correo: document.getElementById('fCorreo')?.value || '',
+        condicion: document.getElementById('fCondicion')?.value || 'Contado'
+    };
+    
+    const existing = MAESTROS_VENTAS.clientes.findIndex(x => x.ruc === ruc);
+    if (existing >= 0) {
+        MAESTROS_VENTAS.clientes[existing] = { ...MAESTROS_VENTAS.clientes[existing], ...cliente };
+        showToast('Cliente actualizado en Maestros', 'success');
+    } else {
+        cliente.codigo = 'CLI-' + String(MAESTROS_VENTAS.clientes.length + 1).padStart(6, '0');
+        cliente.estado = 'Activo';
+        MAESTROS_VENTAS.clientes.push(cliente);
+        document.getElementById('fCodCliente').value = cliente.codigo;
+        showToast('Cliente nuevo guardado en Maestros', 'success');
+    }
+}
+
+// ============================================================
+// MODAL PEDIDO COMPRA - GENERA CONTENIDO DINÁMICO
+// ============================================================
+function openPedidoCompraModal(id = null) {
+    editingId = id;
+    const isEdit = id !== null;
+    const title = isEdit ? 'Editar PC Pedido Compras' : 'Nuevo PC Pedido Compras';
+    document.getElementById('pedidoCompraModalTitle').textContent = title;
+    
+    const formContainer = document.getElementById('pedidoCompraForm');
+    if (!formContainer) return;
+    
+    const cotOptions = cotizacionesData.map(q => 
+        `<option value="${q.numero}">${q.numero} - ${q.razon || 'Sin cliente'}</option>`
+    ).join('');
+    
+    formContainer.innerHTML = `
+        <div class="pc-alert">
+            <b>📋 PC Pedido Compras = aceptación formal del cliente.</b> 
+            Llega por correo como OC/Pedido. Aquí se sube el PDF/archivo y se valida precio, cantidad, stock, lugar de entrega y monto antes de atender.
+        </div>
+        
+        <div class="ficha-section">
+            <div class="ficha-section-title">1. Aceptación del cliente <small>correo + PC/OC recibido</small></div>
+            <div class="ficha-grid">
+                <div class="form-field col-4"><label>Cotización vinculada</label>
+                    <select id="pcCotizacion">${cotOptions || '<option value="">Sin cotizaciones</option>'}</select>
+                </div>
+                <div class="form-field col-4"><label>N° PC / OC Cliente</label>
+                    <input id="pcNumero" placeholder="PC-2026-0001" value="${isEdit ? 'PC-2026-0001' : ''}">
+                </div>
+                <div class="form-field col-4"><label>Estado</label>
+                    <select id="pcEstado">
+                        <option>Pendiente</option>
+                        <option>Recibido por correo</option>
+                        <option>En revisión interna</option>
+                        <option>Validado por Hellen</option>
+                        <option>Listo para despacho</option>
+                        <option>Anulado</option>
+                    </select>
+                </div>
+                <div class="form-field col-4"><label>Cliente</label>
+                    <input id="pcCliente" placeholder="Razón social del cliente">
+                </div>
+                <div class="form-field col-4"><label>RUC</label>
+                    <input id="pcRuc" placeholder="12345678901">
+                </div>
+                <div class="form-field col-4"><label>Monto PC / OC</label>
+                    <input id="pcMonto" type="number" value="0">
+                </div>
+                <div class="form-field col-4"><label>Correo origen</label>
+                    <input id="pcCorreo" placeholder="correo@cliente.com">
+                </div>
+                <div class="form-field col-4"><label>Fecha recepción</label>
+                    <input id="pcFechaRecep" type="date" value="${new Date().toISOString().slice(0,10)}">
+                </div>
+                <div class="form-field col-4"><label>Fecha requerida despacho</label>
+                    <input id="pcFechaDesp" type="date">
+                </div>
+            </div>
+        </div>
+        
+        <div class="ficha-section">
+            <div class="ficha-section-title">2. Subir sustento del cliente <small>PDF / correo / archivo OC</small></div>
+            <div class="ficha-grid">
+                <div class="form-field col-6">
+                    <label>Subir PDF / archivo recibido</label>
+                    <div class="pc-file-box">
+                        <input id="pcFile" type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx">
+                        <div class="pc-file-note">Se guarda el nombre del archivo. Luego se conecta a Supabase Storage.</div>
+                    </div>
+                </div>
+                <div class="form-field col-6">
+                    <label>Archivo registrado</label>
+                    <input id="pcArchivo" placeholder="archivo.pdf" readonly>
+                </div>
+                <div class="form-field col-12">
+                    <label>Observación</label>
+                    <textarea id="pcObs" placeholder="Observaciones del PC recibido"></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <div class="ficha-section">
+            <div class="ficha-section-title">3. Validación interna antes de atender <small>obligatorio para Hellen</small></div>
+            <div class="pc-check-grid">
+                <div class="pc-check-card">
+                    <label><input id="pcValPrecios" type="checkbox"> Precios</label>
+                    <small>PC vs cotización.</small>
+                </div>
+                <div class="pc-check-card">
+                    <label><input id="pcValCant" type="checkbox"> Cantidades</label>
+                    <small>Cantidades solicitadas.</small>
+                </div>
+                <div class="pc-check-card">
+                    <label><input id="pcValStock" type="checkbox"> Stock</label>
+                    <small>Disponibilidad real.</small>
+                </div>
+                <div class="pc-check-card">
+                    <label><input id="pcValEntrega" type="checkbox"> Lugar entrega</label>
+                    <small>Dirección y sede.</small>
+                </div>
+                <div class="pc-check-card">
+                    <label><input id="pcValMonto" type="checkbox"> Montos</label>
+                    <small>Total, IGV y moneda.</small>
+                </div>
+            </div>
+            <div class="ficha-grid">
+                <div class="form-field col-4"><label>Valida internamente</label>
+                    <input id="pcResp" value="Hellen">
+                </div>
+                <div class="form-field col-4"><label>Lugar de entrega</label>
+                    <input id="pcLugar" placeholder="Dirección de entrega">
+                </div>
+                <div class="form-field col-4"><label>Condición de atención</label>
+                    <select id="pcCondicion">
+                        <option>Atender completo</option>
+                        <option>Atender parcial</option>
+                        <option>Esperar stock</option>
+                        <option>Revisar diferencia</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="ficha-section">
+            <div class="ficha-section-title">4. Productos vinculados <small>desde cotización</small></div>
+            <div id="pcProductsPreview">
+                <div style="padding:10px;text-align:center;color:#94A3B8;">Seleccione una cotización para ver los productos.</div>
+            </div>
+        </div>
+    `;
+    
+    // Evento para cargar productos al seleccionar cotización
+    document.getElementById('pcCotizacion')?.addEventListener('change', function() {
+        const num = this.value;
+        const q = cotizacionesData.find(x => x.numero === num);
+        if (q && q.productos && q.productos.length > 0) {
+            document.getElementById('pcProductsPreview').innerHTML = productTable(q.productos);
+        } else {
+            document.getElementById('pcProductsPreview').innerHTML = `
+                <div style="padding:10px;text-align:center;color:#94A3B8;">No hay productos en esta cotización.</div>
+            `;
+        }
+    });
+    
+    // Evento para archivo
+    document.getElementById('pcFile')?.addEventListener('change', function() {
+        if (this.files[0]) {
+            document.getElementById('pcArchivo').value = this.files[0].name;
+        }
+    });
+    
+    document.getElementById('pedidoCompraModal').classList.add('show');
+}
+
+function productTable(productos) {
+    if (!productos || productos.length === 0) {
+        return `<div style="padding:10px;text-align:center;color:#94A3B8;">No hay productos</div>`;
+    }
+    
+    return `
+        <div class="table-scroll">
+            <table class="master-table">
+                <thead><tr>
+                    <th>Item</th><th>Código</th><th>Producto</th><th>Marca</th><th>UM SUNAT</th>
+                    <th>Cant.</th><th>Stock</th><th>Almacén</th><th>Validación</th>
+                </tr></thead>
+                <tbody>
+                    ${productos.map((p, i) => `
+                        <tr>
+                            <td>${i+1}</td>
+                            <td>${p.codigo || '-'}</td>
+                            <td class="left">${p.producto || p.descripcion || '-'}</td>
+                            <td>${p.marca || '-'}</td>
+                            <td>${p.um === 'UND' ? 'NIU' : (p.um || 'NIU')}</td>
+                            <td>${p.cantidad || 1}</td>
+                            <td>${p.stock || 0}</td>
+                            <td>${p.almacen || 'ALM-SMP'}</td>
+                            <td>${(p.stock || 0) >= (p.cantidad || 1) ? '✅ OK stock' : '⚠️ Revisar stock'}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+// ============================================================
+// MODAL DESPACHO - GENERA CONTENIDO DINÁMICO
+// ============================================================
+function openDespachoModal(id = null) {
+    editingId = id;
+    const isEdit = id !== null;
+    const title = isEdit ? 'Editar despacho' : 'Nuevo despacho';
+    document.getElementById('despachoModalTitle').textContent = title;
+    
+    const formContainer = document.getElementById('despachoForm');
+    if (!formContainer) return;
+    
+    const pcOptions = pedidosData.map(p => 
+        `<option value="${p.numero}">${p.numero} - ${p.cliente || 'Sin cliente'}</option>`
+    ).join('');
+    
+    formContainer.innerHTML = `
+        <div class="ficha-section">
+            <div class="ficha-grid">
+                <div class="form-field col-4"><label>PC vinculado</label>
+                    <select id="despachoPC">${pcOptions || '<option value="">Sin PC</option>'}</select>
+                </div>
+                <div class="form-field col-4"><label>N° Despacho</label>
+                    <input id="despachoNumero" value="DESP-${String(Date.now()).slice(-8)}">
+                </div>
+                <div class="form-field col-4"><label>Estado</label>
+                    <select id="despachoEstado">
+                        <option>Pendiente despacho</option>
+                        <option>En preparación</option>
+                        <option>Despachado</option>
+                        <option>Entregado</option>
+                    </select>
+                </div>
+                <div class="form-field col-4"><label>Cliente</label>
+                    <input id="despachoCliente" placeholder="Razón social">
+                </div>
+                <div class="form-field col-4"><label>RUC</label>
+                    <input id="despachoRuc" placeholder="12345678901">
+                </div>
+                <div class="form-field col-4"><label>Fecha despacho</label>
+                    <input id="despachoFecha" type="date" value="${new Date().toISOString().slice(0,10)}">
+                </div>
+                <div class="form-field col-4"><label>Origen</label>
+                    <select id="despachoOrigen">
+                        <option>ALM-SMP</option>
+                        <option>OF-BRE</option>
+                        <option>Almacén Central</option>
+                    </select>
+                </div>
+                <div class="form-field col-4"><label>Destino</label>
+                    <input id="despachoDestino" placeholder="Dirección de entrega">
+                </div>
+                <div class="form-field col-4"><label>Transportista</label>
+                    <input id="despachoTransportista" placeholder="Nombre o razón social">
+                </div>
+                <div class="form-field col-12">
+                    <label>Observaciones</label>
+                    <textarea id="despachoObs" placeholder="Observaciones del despacho"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="ficha-section">
+            <div class="ficha-section-title">Productos a despachar</div>
+            <div id="despachoProducts">
+                <div style="padding:10px;text-align:center;color:#94A3B8;">Seleccione un PC para ver los productos.</div>
+            </div>
+        </div>
+    `;
+    
+    // Evento para cargar productos al seleccionar PC
+    document.getElementById('despachoPC')?.addEventListener('change', function() {
+        const num = this.value;
+        const p = pedidosData.find(x => x.numero === num);
+        if (p && p.productos && p.productos.length > 0) {
+            document.getElementById('despachoProducts').innerHTML = productTable(p.productos);
+            document.getElementById('despachoCliente').value = p.cliente || '';
+            document.getElementById('despachoRuc').value = p.ruc || '';
+            document.getElementById('despachoDestino').value = p.lugarEntrega || '';
+        } else {
+            document.getElementById('despachoProducts').innerHTML = `
+                <div style="padding:10px;text-align:center;color:#94A3B8;">No hay productos en este PC.</div>
+            `;
+        }
+    });
+    
+    document.getElementById('despachoModal').classList.add('show');
+}
+
+// ============================================================
+// MODAL GUÍA - GENERA CONTENIDO DINÁMICO
+// ============================================================
+function openGuiaModal(id = null) {
+    editingId = id;
+    const isEdit = id !== null;
+    const title = isEdit ? 'Editar guía' : 'Nueva guía';
+    document.getElementById('guiaModalTitle').textContent = title;
+    
+    const formContainer = document.getElementById('guiaForm');
+    if (!formContainer) return;
+    
+    const cotOptions = cotizacionesData.map(q => 
+        `<option value="${q.numero}">${q.numero} - ${q.razon || 'Sin cliente'}</option>`
+    ).join('');
+    
+    formContainer.innerHTML = `
+        <div class="ficha-grid">
+            <div class="form-field col-4"><label>Cotización vinculada</label>
+                <select id="guiaCotizacion">${cotOptions || '<option value="">Sin cotización</option>'}</select>
+            </div>
+            <div class="form-field col-4"><label>Serie</label>
+                <input id="guiaSerie" value="T001">
+            </div>
+            <div class="form-field col-4"><label>Número</label>
+                <input id="guiaNumero" value="${String(Date.now()).slice(-8)}">
+            </div>
+            <div class="form-field col-4"><label>Estado</label>
+                <select id="guiaEstado">
+                    <option>Borrador</option>
+                    <option>Pendiente despacho</option>
+                    <option>Emitida</option>
+                    <option>Entregada</option>
+                    <option>Anulada</option>
+                </select>
+            </div>
+            <div class="form-field col-4"><label>Cliente</label>
+                <input id="guiaCliente" placeholder="Razón social">
+            </div>
+            <div class="form-field col-4"><label>RUC</label>
+                <input id="guiaRuc" placeholder="12345678901">
+            </div>
+            <div class="form-field col-4"><label>Origen</label>
+                <select id="guiaOrigen">
+                    <option>ALM-SMP</option>
+                    <option>OF-BRE</option>
+                    <option>Almacén Central</option>
+                </select>
+            </div>
+            <div class="form-field col-4"><label>Destino</label>
+                <input id="guiaDestino" placeholder="Dirección de entrega">
+            </div>
+            <div class="form-field col-12">
+                <label>Motivo traslado</label>
+                <select id="guiaMotivo">
+                    <option>Venta</option>
+                    <option>Compra</option>
+                    <option>Traslado interno</option>
+                    <option>Devolución</option>
+                </select>
+            </div>
+            <div class="form-field col-12">
+                <label>Observaciones</label>
+                <textarea id="guiaObs" placeholder="Observaciones de la guía"></textarea>
+            </div>
+        </div>
+        <div class="ficha-section">
+            <div class="ficha-section-title">Productos</div>
+            <div id="guiaProducts">
+                <div style="padding:10px;text-align:center;color:#94A3B8;">Seleccione una cotización para ver los productos.</div>
+            </div>
+        </div>
+    `;
+    
+    // Evento para cargar productos
+    document.getElementById('guiaCotizacion')?.addEventListener('change', function() {
+        const num = this.value;
+        const q = cotizacionesData.find(x => x.numero === num);
+        if (q && q.productos && q.productos.length > 0) {
+            document.getElementById('guiaProducts').innerHTML = productTable(q.productos);
+            document.getElementById('guiaCliente').value = q.razon || '';
+            document.getElementById('guiaRuc').value = q.ruc || '';
+            document.getElementById('guiaDestino').value = q.direccion || '';
+        } else {
+            document.getElementById('guiaProducts').innerHTML = `
+                <div style="padding:10px;text-align:center;color:#94A3B8;">No hay productos en esta cotización.</div>
+            `;
+        }
+    });
+    
+    document.getElementById('guiaModal').classList.add('show');
+}
+
+// ============================================================
+// MODAL FACTURA - GENERA CONTENIDO DINÁMICO
+// ============================================================
+function openComprobanteModal(id = null) {
+    editingId = id;
+    const isEdit = id !== null;
+    const title = isEdit ? 'Editar comprobante' : 'Nuevo comprobante';
+    document.getElementById('comprobanteModalTitle').textContent = title;
+    
+    const formContainer = document.getElementById('comprobanteForm');
+    if (!formContainer) return;
+    
+    const cotOptions = cotizacionesData.map(q => 
+        `<option value="${q.numero}">${q.numero} - ${q.razon || 'Sin cliente'}</option>`
+    ).join('');
+    
+    formContainer.innerHTML = `
+        <div class="ficha-grid">
+            <div class="form-field col-4"><label>Cotización vinculada</label>
+                <select id="compCotizacion">${cotOptions || '<option value="">Sin cotización</option>'}</select>
+            </div>
+            <div class="form-field col-3"><label>Tipo</label>
+                <select id="compTipo">
+                    <option>Factura</option>
+                    <option>Boleta</option>
+                </select>
+            </div>
+            <div class="form-field col-3"><label>Serie</label>
+                <input id="compSerie" value="F001">
+            </div>
+            <div class="form-field col-3"><label>Número</label>
+                <input id="compNumero" value="${String(Date.now()).slice(-8)}">
+            </div>
+            <div class="form-field col-3"><label>Estado</label>
+                <select id="compEstado">
+                    <option>Borrador</option>
+                    <option>Emitido</option>
+                    <option>Enviado</option>
+                    <option>Pagado</option>
+                    <option>Anulado</option>
+                </select>
+            </div>
+            <div class="form-field col-4"><label>Cliente</label>
+                <input id="compCliente" placeholder="Razón social">
+            </div>
+            <div class="form-field col-4"><label>RUC</label>
+                <input id="compRuc" placeholder="12345678901">
+            </div>
+            <div class="form-field col-4"><label>Monto</label>
+                <input id="compMonto" type="number" value="0">
+            </div>
+            <div class="form-field col-4"><label>Condición de pago</label>
+                <select id="compCondicion">
+                    ${options(MAESTROS_VENTAS.condicionesPago, 'Contado')}
+                </select>
+            </div>
+            <div class="form-field col-12">
+                <label>Observaciones</label>
+                <textarea id="compObs" placeholder="Observaciones del comprobante"></textarea>
+            </div>
+        </div>
+        <div class="ficha-section">
+            <div class="ficha-section-title">Productos</div>
+            <div id="compProducts">
+                <div style="padding:10px;text-align:center;color:#94A3B8;">Seleccione una cotización para ver los productos.</div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('compCotizacion')?.addEventListener('change', function() {
+        const num = this.value;
+        const q = cotizacionesData.find(x => x.numero === num);
+        if (q && q.productos && q.productos.length > 0) {
+            document.getElementById('compProducts').innerHTML = productTable(q.productos);
+            document.getElementById('compCliente').value = q.razon || '';
+            document.getElementById('compRuc').value = q.ruc || '';
+            document.getElementById('compMonto').value = q.monto || 0;
+        } else {
+            document.getElementById('compProducts').innerHTML = `
+                <div style="padding:10px;text-align:center;color:#94A3B8;">No hay productos en esta cotización.</div>
+            `;
+        }
+    });
+    
+    document.getElementById('comprobanteModal').classList.add('show');
+}
+
+// ============================================================
+// MODAL NOTA DE CRÉDITO - GENERA CONTENIDO DINÁMICO
+// ============================================================
+function openNotaCreditoModal(id = null) {
+    editingId = id;
+    const isEdit = id !== null;
+    const title = isEdit ? 'Editar nota de crédito' : 'Nueva nota de crédito';
+    document.getElementById('notaCreditoModalTitle').textContent = title;
+    
+    const formContainer = document.getElementById('notaCreditoForm');
+    if (!formContainer) return;
+    
+    const compOptions = comprobantesData.map(c => 
+        `<option value="${c.serie}-${c.numero}">${c.serie}-${c.numero} - ${c.cliente || 'Sin cliente'}</option>`
+    ).join('');
+    
+    formContainer.innerHTML = `
+        <div class="ficha-grid">
+            <div class="form-field col-4"><label>Comprobante afectado</label>
+                <select id="notaComprobante">${compOptions || '<option value="">Sin comprobantes</option>'}</select>
+            </div>
+            <div class="form-field col-3"><label>Serie</label>
+                <input id="notaSerie" value="FC01">
+            </div>
+            <div class="form-field col-3"><label>Número</label>
+                <input id="notaNumero" value="${String(Date.now()).slice(-8)}">
+            </div>
+            <div class="form-field col-3"><label>Estado</label>
+                <select id="notaEstado">
+                    <option>Borrador</option>
+                    <option>Emitida</option>
+                    <option>Enviada</option>
+                    <option>Aplicada</option>
+                    <option>Anulada</option>
+                </select>
+            </div>
+            <div class="form-field col-4"><label>Cliente</label>
+                <input id="notaCliente" placeholder="Razón social">
+            </div>
+            <div class="form-field col-4"><label>RUC</label>
+                <input id="notaRuc" placeholder="12345678901">
+            </div>
+            <div class="form-field col-4"><label>Monto</label>
+                <input id="notaMonto" type="number" value="0">
+            </div>
+            <div class="form-field col-6"><label>Motivo</label>
+                <select id="notaMotivo">
+                    <option>Anulación de operación</option>
+                    <option>Devolución</option>
+                    <option>Descuento posterior</option>
+                    <option>Error en descripción</option>
+                    <option>Ajuste comercial</option>
+                </select>
+            </div>
+            <div class="form-field col-12">
+                <label>Observaciones</label>
+                <textarea id="notaObs" placeholder="Observaciones de la nota de crédito"></textarea>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('notaCreditoModal').classList.add('show');
+}
+
+// ============================================================
+// MODAL DEVOLUCIÓN - GENERA CONTENIDO DINÁMICO
+// ============================================================
+function openDevolucionModal(id = null) {
+    editingId = id;
+    const isEdit = id !== null;
+    const title = isEdit ? 'Editar devolución' : 'Nueva devolución';
+    document.getElementById('devolucionModalTitle').textContent = title;
+    
+    const formContainer = document.getElementById('devolucionForm');
+    if (!formContainer) return;
+    
+    const compOptions = comprobantesData.map(c => 
+        `<option value="${c.serie}-${c.numero}">${c.serie}-${c.numero} - ${c.cliente || 'Sin cliente'}</option>`
+    ).join('');
+    
+    formContainer.innerHTML = `
+        <div class="ficha-grid">
+            <div class="form-field col-4"><label>Comprobante vinculado</label>
+                <select id="devComprobante">${compOptions || '<option value="">Sin comprobantes</option>'}</select>
+            </div>
+            <div class="form-field col-4"><label>N° Devolución</label>
+                <input id="devNumero" value="DEV-${String(Date.now()).slice(-8)}">
+            </div>
+            <div class="form-field col-4"><label>Estado</label>
+                <select id="devEstado">
+                    <option>Pendiente</option>
+                    <option>En revisión</option>
+                    <option>Aprobada</option>
+                    <option>Rechazada</option>
+                    <option>Procesada</option>
+                </select>
+            </div>
+            <div class="form-field col-4"><label>Cliente</label>
+                <input id="devCliente" placeholder="Razón social">
+            </div>
+            <div class="form-field col-4"><label>RUC</label>
+                <input id="devRuc" placeholder="12345678901">
+            </div>
+            <div class="form-field col-4"><label>Monto</label>
+                <input id="devMonto" type="number" value="0">
+            </div>
+            <div class="form-field col-6"><label>Motivo</label>
+                <select id="devMotivo">
+                    <option>Producto defectuoso</option>
+                    <option>Producto incorrecto</option>
+                    <option>Exceso de cantidad</option>
+                    <option>Daño en transporte</option>
+                    <option>Otro</option>
+                </select>
+            </div>
+            <div class="form-field col-12">
+                <label>Observaciones</label>
+                <textarea id="devObs" placeholder="Observaciones de la devolución"></textarea>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('devolucionModal').classList.add('show');
+}
+
+// ============================================================
+// FUNCIONES DE GUARDADO (SIMPLE POR AHORA)
+// ============================================================
 function saveCotizacionDraft() {
     showToast('Borrador guardado correctamente', 'success');
     closeModal('cotizacionModal');
@@ -609,29 +1568,9 @@ function generateCotizacionPdfAndSend() {
     closeModal('cotizacionModal');
 }
 
-// ============================================================
-// MODALES - PEDIDO COMPRA
-// ============================================================
-
-function openPedidoCompraModal(id = null) {
-    editingId = id;
-    document.getElementById('pedidoCompraModalTitle').textContent = id ? 'Editar PC Pedido Compras' : 'Nuevo PC Pedido Compras';
-    document.getElementById('pedidoCompraModal').classList.add('show');
-}
-
 function savePedidoCompra(estado) {
     showToast(`PC guardado como: ${estado}`, 'success');
     closeModal('pedidoCompraModal');
-}
-
-// ============================================================
-// MODALES - DESPACHO
-// ============================================================
-
-function openDespachoModal(id = null) {
-    editingId = id;
-    document.getElementById('despachoModalTitle').textContent = id ? 'Editar despacho' : 'Nuevo despacho';
-    document.getElementById('despachoModal').classList.add('show');
 }
 
 function saveDespacho(estado) {
@@ -639,33 +1578,9 @@ function saveDespacho(estado) {
     closeModal('despachoModal');
 }
 
-function marcarDespachado(id) {
-    showToast('Despacho marcado como completado', 'success');
-}
-
-// ============================================================
-// MODALES - GUÍAS
-// ============================================================
-
-function openGuiaModal(id = null) {
-    editingId = id;
-    document.getElementById('guiaModalTitle').textContent = id ? 'Editar guía' : 'Nueva guía';
-    document.getElementById('guiaModal').classList.add('show');
-}
-
 function saveGuia(estado) {
     showToast(`Guía guardada como: ${estado}`, 'success');
     closeModal('guiaModal');
-}
-
-// ============================================================
-// MODALES - COMPROBANTES
-// ============================================================
-
-function openComprobanteModal(id = null) {
-    editingId = id;
-    document.getElementById('comprobanteModalTitle').textContent = id ? 'Editar comprobante' : 'Nuevo comprobante';
-    document.getElementById('comprobanteModal').classList.add('show');
 }
 
 function saveComprobante(estado) {
@@ -673,29 +1588,9 @@ function saveComprobante(estado) {
     closeModal('comprobanteModal');
 }
 
-// ============================================================
-// MODALES - NOTAS DE CRÉDITO
-// ============================================================
-
-function openNotaCreditoModal(id = null) {
-    editingId = id;
-    document.getElementById('notaCreditoModalTitle').textContent = id ? 'Editar nota de crédito' : 'Nueva nota de crédito';
-    document.getElementById('notaCreditoModal').classList.add('show');
-}
-
 function saveNotaCredito(estado) {
     showToast(`Nota de crédito guardada como: ${estado}`, 'success');
     closeModal('notaCreditoModal');
-}
-
-// ============================================================
-// MODALES - DEVOLUCIONES
-// ============================================================
-
-function openDevolucionModal(id = null) {
-    editingId = id;
-    document.getElementById('devolucionModalTitle').textContent = id ? 'Editar devolución' : 'Nueva devolución';
-    document.getElementById('devolucionModal').classList.add('show');
 }
 
 function saveDevolucion(estado) {
@@ -703,18 +1598,23 @@ function saveDevolucion(estado) {
     closeModal('devolucionModal');
 }
 
+function marcarDespachado(id) {
+    showToast('Despacho marcado como completado', 'success');
+}
+
 // ============================================================
 // MENÚS DE ACCIONES
 // ============================================================
-
 function showCotizacionMenu(event, id) {
     event.stopPropagation();
     document.querySelectorAll('.menu-pop').forEach(el => el.remove());
     
     const pop = document.createElement('div');
     pop.className = 'menu-pop';
-    pop.style.left = Math.max(10, event.clientX - 250) + 'px';
-    pop.style.top = Math.min(window.innerHeight - 420, event.clientY + 8) + 'px';
+    const left = Math.max(10, event.clientX - 250);
+    const top = Math.min(window.innerHeight - 420, event.clientY + 8);
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
     
     pop.innerHTML = `
         <button onclick="openCotizacionModal(${id});this.closest('.menu-pop').remove()">👁 Ver / Editar</button>
@@ -731,7 +1631,6 @@ function showCotizacionMenu(event, id) {
         <button onclick="createDocFromCotizacion(${id},'factura');this.closest('.menu-pop').remove()">🧾 Crear factura</button>
         <button class="danger" onclick="deleteCotizacion(${id});this.closest('.menu-pop').remove()">🗑 Eliminar</button>
     `;
-    
     document.body.appendChild(pop);
 }
 
@@ -741,8 +1640,10 @@ function showPedidoMenu(event, id) {
     
     const pop = document.createElement('div');
     pop.className = 'menu-pop';
-    pop.style.left = Math.max(10, event.clientX - 250) + 'px';
-    pop.style.top = Math.min(window.innerHeight - 420, event.clientY + 8) + 'px';
+    const left = Math.max(10, event.clientX - 250);
+    const top = Math.min(window.innerHeight - 420, event.clientY + 8);
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
     
     pop.innerHTML = `
         <button onclick="openPedidoCompraModal(${id});this.closest('.menu-pop').remove()">👁 Ver / Editar</button>
@@ -752,7 +1653,6 @@ function showPedidoMenu(event, id) {
         <button onclick="createFacturaFromPedido(${id});this.closest('.menu-pop').remove()">🧾 Crear factura</button>
         <button class="danger" onclick="deletePedidoCompra(${id});this.closest('.menu-pop').remove()">🗑 Eliminar</button>
     `;
-    
     document.body.appendChild(pop);
 }
 
@@ -762,8 +1662,10 @@ function showGuiaMenu(event, id) {
     
     const pop = document.createElement('div');
     pop.className = 'menu-pop';
-    pop.style.left = Math.max(10, event.clientX - 250) + 'px';
-    pop.style.top = Math.min(window.innerHeight - 420, event.clientY + 8) + 'px';
+    const left = Math.max(10, event.clientX - 250);
+    const top = Math.min(window.innerHeight - 420, event.clientY + 8);
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
     
     pop.innerHTML = `
         <button onclick="openGuiaModal(${id});this.closest('.menu-pop').remove()">👁 Ver / Editar</button>
@@ -771,7 +1673,6 @@ function showGuiaMenu(event, id) {
         <button onclick="markGuiaEmitida(${id});this.closest('.menu-pop').remove()">📄 Emitir</button>
         <button class="danger" onclick="deleteGuia(${id});this.closest('.menu-pop').remove()">🗑 Eliminar</button>
     `;
-    
     document.body.appendChild(pop);
 }
 
@@ -781,8 +1682,10 @@ function showComprobanteMenu(event, id) {
     
     const pop = document.createElement('div');
     pop.className = 'menu-pop';
-    pop.style.left = Math.max(10, event.clientX - 250) + 'px';
-    pop.style.top = Math.min(window.innerHeight - 420, event.clientY + 8) + 'px';
+    const left = Math.max(10, event.clientX - 250);
+    const top = Math.min(window.innerHeight - 420, event.clientY + 8);
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
     
     pop.innerHTML = `
         <button onclick="openComprobanteModal(${id});this.closest('.menu-pop').remove()">👁 Ver / Editar</button>
@@ -790,7 +1693,6 @@ function showComprobanteMenu(event, id) {
         <button onclick="markComprobanteEmitido(${id});this.closest('.menu-pop').remove()">📄 Emitir</button>
         <button class="danger" onclick="deleteComprobante(${id});this.closest('.menu-pop').remove()">🗑 Eliminar</button>
     `;
-    
     document.body.appendChild(pop);
 }
 
@@ -800,8 +1702,10 @@ function showNotaMenu(event, id) {
     
     const pop = document.createElement('div');
     pop.className = 'menu-pop';
-    pop.style.left = Math.max(10, event.clientX - 250) + 'px';
-    pop.style.top = Math.min(window.innerHeight - 420, event.clientY + 8) + 'px';
+    const left = Math.max(10, event.clientX - 250);
+    const top = Math.min(window.innerHeight - 420, event.clientY + 8);
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
     
     pop.innerHTML = `
         <button onclick="openNotaCreditoModal(${id});this.closest('.menu-pop').remove()">👁 Ver / Editar</button>
@@ -809,7 +1713,6 @@ function showNotaMenu(event, id) {
         <button onclick="markNotaEmitida(${id});this.closest('.menu-pop').remove()">📄 Emitir</button>
         <button class="danger" onclick="deleteNota(${id});this.closest('.menu-pop').remove()">🗑 Eliminar</button>
     `;
-    
     document.body.appendChild(pop);
 }
 
@@ -819,8 +1722,10 @@ function showDevolucionMenu(event, id) {
     
     const pop = document.createElement('div');
     pop.className = 'menu-pop';
-    pop.style.left = Math.max(10, event.clientX - 250) + 'px';
-    pop.style.top = Math.min(window.innerHeight - 420, event.clientY + 8) + 'px';
+    const left = Math.max(10, event.clientX - 250);
+    const top = Math.min(window.innerHeight - 420, event.clientY + 8);
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
     
     pop.innerHTML = `
         <button onclick="openDevolucionModal(${id});this.closest('.menu-pop').remove()">👁 Ver / Editar</button>
@@ -828,21 +1733,12 @@ function showDevolucionMenu(event, id) {
         <button onclick="rejectDevolucion(${id});this.closest('.menu-pop').remove()">❌ Rechazar</button>
         <button class="danger" onclick="deleteDevolucion(${id});this.closest('.menu-pop').remove()">🗑 Eliminar</button>
     `;
-    
     document.body.appendChild(pop);
 }
 
-// Cerrar menús al hacer clic fuera
-document.addEventListener('click', function(e) {
-    if (!e.target.closest('.menu-pop') && !e.target.closest('.kebab')) {
-        document.querySelectorAll('.menu-pop').forEach(el => el.remove());
-    }
-});
-
 // ============================================================
-// ACCIONES DE COTIZACIONES
+// ACCIONES
 // ============================================================
-
 function duplicateCotizacion(id) {
     showToast('Cotización duplicada correctamente', 'success');
 }
@@ -881,10 +1777,6 @@ function deleteCotizacion(id) {
     }
 }
 
-// ============================================================
-// ACCIONES DE PEDIDOS
-// ============================================================
-
 function validatePedidoCompra(id) {
     showToast('PC validado por Hellen', 'success');
 }
@@ -907,10 +1799,6 @@ function deletePedidoCompra(id) {
     }
 }
 
-// ============================================================
-// ACCIONES DE GUÍAS
-// ============================================================
-
 function generateGuiaPdf(id) {
     showToast('PDF de guía generado', 'success');
 }
@@ -924,10 +1812,6 @@ function deleteGuia(id) {
         showToast('Guía eliminada', 'success');
     }
 }
-
-// ============================================================
-// ACCIONES DE COMPROBANTES
-// ============================================================
 
 function generateComprobantePdf(id) {
     showToast('PDF de comprobante generado', 'success');
@@ -943,10 +1827,6 @@ function deleteComprobante(id) {
     }
 }
 
-// ============================================================
-// ACCIONES DE NOTAS
-// ============================================================
-
 function generateNotaPdf(id) {
     showToast('PDF de nota de crédito generado', 'success');
 }
@@ -960,78 +1840,6 @@ function deleteNota(id) {
         showToast('Nota de crédito eliminada', 'success');
     }
 }
-
-
-
-
-//////////////
-// ============================================================
-// FUNCIÓN DE INICIALIZACIÓN - AGREGAR AL FINAL DE ventas.js
-// ============================================================
-
-window.initVentas = function(tab) {
-    console.log(`🚀 Inicializando ventas con tab: ${tab}`);
-    
-    // Cargar datos según el módulo activo
-    switch(tab) {
-        case 'cotizaciones':
-            if (typeof loadCotizaciones === 'function') {
-                loadCotizaciones();
-            }
-            break;
-        case 'pedido_compra':
-            if (typeof loadPedidos === 'function') {
-                loadPedidos();
-            }
-            break;
-        case 'despachar':
-            if (typeof loadDespachos === 'function') {
-                loadDespachos();
-            }
-            break;
-        case 'guias':
-            if (typeof loadGuias === 'function') {
-                loadGuias();
-            }
-            break;
-        case 'comprobantes':
-            if (typeof loadComprobantes === 'function') {
-                loadComprobantes();
-            }
-            break;
-        case 'notas_credito':
-            if (typeof loadNotas === 'function') {
-                loadNotas();
-            }
-            break;
-        case 'devoluciones':
-            if (typeof loadDevoluciones === 'function') {
-                loadDevoluciones();
-            }
-            break;
-        default:
-            if (typeof loadCotizaciones === 'function') {
-                loadCotizaciones();
-            }
-    }
-};
-
-// También mantener el DOMContentLoaded para compatibilidad
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔄 ventas.js: DOMContentLoaded');
-    const urlParams = new URLSearchParams(window.location.search);
-    const tab = urlParams.get('tab') || 'cotizaciones';
-    
-    // Si ya hay una función initVentas, usarla
-    if (typeof initVentas === 'function') {
-        initVentas(tab);
-    }
-});
-
-
-// ============================================================
-// ACCIONES DE DEVOLUCIONES
-// ============================================================
 
 function approveDevolucion(id) {
     showToast('Devolución aprobada', 'success');
@@ -1047,10 +1855,6 @@ function deleteDevolucion(id) {
     }
 }
 
-// ============================================================
-// EXPORTAR DATOS
-// ============================================================
-
 function exportData(module) {
     showToast(`Exportando datos de ${module}...`, 'info');
 }
@@ -1058,43 +1862,54 @@ function exportData(module) {
 // ============================================================
 // INICIALIZACIÓN
 // ============================================================
+window.initVentas = function(tab) {
+    console.log(`🚀 Inicializando ventas con tab: ${tab}`);
+    currentModule = tab;
+    
+    // Cargar productos maestros primero
+    cargarProductosMaestros().then(() => {
+        // Cargar datos según el módulo activo
+        switch(tab) {
+            case 'cotizaciones':
+                loadCotizaciones();
+                break;
+            case 'pedido_compra':
+                loadPedidos();
+                break;
+            case 'despachar':
+                loadDespachos();
+                break;
+            case 'guias':
+                loadGuias();
+                break;
+            case 'comprobantes':
+                loadComprobantes();
+                break;
+            case 'notas_credito':
+                loadNotas();
+                break;
+            case 'devoluciones':
+                loadDevoluciones();
+                break;
+            default:
+                loadCotizaciones();
+        }
+    });
+};
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Iniciando Módulo Ventas');
-    
-    // Determinar qué módulo cargar según la URL
+    console.log('🔄 ventas.js: DOMContentLoaded');
     const urlParams = new URLSearchParams(window.location.search);
     const tab = urlParams.get('tab') || 'cotizaciones';
     
-    // Cargar datos según el módulo activo
-    switch(tab) {
-        case 'cotizaciones':
-            loadCotizaciones();
-            break;
-        case 'pedido_compra':
-            loadPedidos();
-            break;
-        case 'despachar':
-            loadDespachos();
-            break;
-        case 'guias':
-            loadGuias();
-            break;
-        case 'comprobantes':
-            loadComprobantes();
-            break;
-        case 'notas_credito':
-            loadNotas();
-            break;
-        case 'devoluciones':
-            loadDevoluciones();
-            break;
-        default:
-            loadCotizaciones();
+    if (typeof initVentas === 'function') {
+        initVentas(tab);
     }
 });
 
-// Asignar funciones a window para uso global
+// ============================================================
+// ASIGNAR FUNCIONES A WINDOW
+// ============================================================
 window.loadCotizaciones = loadCotizaciones;
 window.loadPedidos = loadPedidos;
 window.loadDespachos = loadDespachos;
@@ -1127,5 +1942,11 @@ window.showDevolucionMenu = showDevolucionMenu;
 window.exportData = exportData;
 window.marcarDespachado = marcarDespachado;
 window.closeModal = closeModal;
+window.addQuoteProductFromSearch = addQuoteProductFromSearch;
+window.calcQuote = calcQuote;
+window.loadClient = loadClient;
+window.autoLoadClientByRuc = autoLoadClientByRuc;
+window.saveClientFromQuote = saveClientFromQuote;
+window.renderQuoteProducts = renderQuoteProducts;
 
 console.log('✅ Módulo Ventas cargado correctamente');
