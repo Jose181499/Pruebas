@@ -1,9 +1,10 @@
 ﻿from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
 from functools import wraps
 from datetime import datetime
-import uuid
 import json
-from config import Config
+
+# Importar desde database.py en lugar de config
+from database import db_query, db_execute, db_tx, get_connection
 
 ventas_bp = Blueprint('ventas', __name__)
 
@@ -15,8 +16,665 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-def get_supabase():
-    return Config.get_supabase()
+# ============================================================
+# FUNCIONES DE AYUDA PARA COTIZACIONES
+# ============================================================
+
+def obtener_cotizaciones_db():
+    """Obtiene todas las cotizaciones desde la base de datos"""
+    try:
+        query = """
+            SELECT 
+                id, numero_cotizacion, cliente_id, fecha_creacion, estado,
+                subtotal, igv, total, usuario_id, notas,
+                forma_pago, tiempo_entrega, almacen, validez_oferta,
+                codigo_cotizacion, correlativo, condicion_pago,
+                direccion_entrega, requerimiento, nota_cotizacion,
+                descuento_porcentaje, descuento_monto, descuento_tipo,
+                contacto_cliente, telefono_cliente, email_cliente,
+                created_at, updated_at
+            FROM cotizaciones
+            ORDER BY id DESC
+        """
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_cotizaciones_db: {e}")
+        return []
+
+def obtener_cotizacion_por_id_db(cotizacion_id):
+    """Obtiene una cotización por su ID"""
+    try:
+        query = """
+            SELECT 
+                id, numero_cotizacion, cliente_id, fecha_creacion, estado,
+                subtotal, igv, total, usuario_id, notas,
+                forma_pago, tiempo_entrega, almacen, validez_oferta,
+                codigo_cotizacion, correlativo, condicion_pago,
+                direccion_entrega, requerimiento, nota_cotizacion,
+                descuento_porcentaje, descuento_monto, descuento_tipo,
+                contacto_cliente, telefono_cliente, email_cliente
+            FROM cotizaciones
+            WHERE id = %s
+        """
+        result = db_query(query, (cotizacion_id,))
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en obtener_cotizacion_por_id_db: {e}")
+        return None
+
+def guardar_cotizacion_db(data):
+    """Guarda una nueva cotización"""
+    try:
+        query = """
+            INSERT INTO cotizaciones (
+                numero_cotizacion, cliente_id, fecha_creacion, estado,
+                subtotal, igv, total, usuario_id, notas,
+                forma_pago, tiempo_entrega, almacen, validez_oferta,
+                codigo_cotizacion, correlativo, condicion_pago,
+                direccion_entrega, requerimiento, nota_cotizacion,
+                descuento_porcentaje, descuento_monto, descuento_tipo,
+                contacto_cliente, telefono_cliente, email_cliente
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            )
+            RETURNING id, numero_cotizacion
+        """
+        params = (
+            data.get('numero_cotizacion'),
+            data.get('cliente_id'),
+            data.get('fecha_creacion') or datetime.now().isoformat(),
+            data.get('estado', 'Borrador'),
+            float(data.get('subtotal', 0)),
+            float(data.get('igv', 0)),
+            float(data.get('total', 0)),
+            data.get('usuario_id'),
+            data.get('notas', ''),
+            data.get('forma_pago'),
+            data.get('tiempo_entrega'),
+            data.get('almacen'),
+            data.get('validez_oferta'),
+            data.get('codigo_cotizacion'),
+            data.get('correlativo'),
+            data.get('condicion_pago'),
+            data.get('direccion_entrega'),
+            data.get('requerimiento'),
+            data.get('nota_cotizacion', ''),
+            float(data.get('descuento_porcentaje', 0)),
+            float(data.get('descuento_monto', 0)),
+            data.get('descuento_tipo', 'porcentaje'),
+            data.get('contacto_cliente'),
+            data.get('telefono_cliente'),
+            data.get('email_cliente')
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en guardar_cotizacion_db: {e}")
+        raise
+
+def actualizar_cotizacion_db(cotizacion_id, data):
+    """Actualiza una cotización existente"""
+    try:
+        query = """
+            UPDATE cotizaciones SET
+                cliente_id = %s,
+                estado = %s,
+                subtotal = %s,
+                igv = %s,
+                total = %s,
+                usuario_id = %s,
+                notas = %s,
+                forma_pago = %s,
+                tiempo_entrega = %s,
+                almacen = %s,
+                validez_oferta = %s,
+                condicion_pago = %s,
+                direccion_entrega = %s,
+                requerimiento = %s,
+                nota_cotizacion = %s,
+                descuento_porcentaje = %s,
+                descuento_monto = %s,
+                descuento_tipo = %s,
+                contacto_cliente = %s,
+                telefono_cliente = %s,
+                email_cliente = %s,
+                updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, numero_cotizacion
+        """
+        params = (
+            data.get('cliente_id'),
+            data.get('estado', 'Borrador'),
+            float(data.get('subtotal', 0)),
+            float(data.get('igv', 0)),
+            float(data.get('total', 0)),
+            data.get('usuario_id'),
+            data.get('notas', ''),
+            data.get('forma_pago'),
+            data.get('tiempo_entrega'),
+            data.get('almacen'),
+            data.get('validez_oferta'),
+            data.get('condicion_pago'),
+            data.get('direccion_entrega'),
+            data.get('requerimiento'),
+            data.get('nota_cotizacion', ''),
+            float(data.get('descuento_porcentaje', 0)),
+            float(data.get('descuento_monto', 0)),
+            data.get('descuento_tipo', 'porcentaje'),
+            data.get('contacto_cliente'),
+            data.get('telefono_cliente'),
+            data.get('email_cliente'),
+            cotizacion_id
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en actualizar_cotizacion_db: {e}")
+        raise
+
+def actualizar_estado_cotizacion_db(cotizacion_id, nuevo_estado):
+    """Actualiza el estado de una cotización"""
+    try:
+        query = """
+            UPDATE cotizaciones 
+            SET estado = %s, updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, estado
+        """
+        result = db_query(query, (nuevo_estado, cotizacion_id))
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en actualizar_estado_cotizacion_db: {e}")
+        raise
+
+# ============================================================
+# FUNCIONES DE AYUDA PARA GUÍAS
+# ============================================================
+
+def obtener_guias_db():
+    """Obtiene todas las guías"""
+    try:
+        query = """
+            SELECT 
+                id, serie, numero, fecha_emision, fecha_traslado,
+                ruc_remitente, remitente_nombre, remitente_direccion,
+                remitente_ubigeo, ruc_destinatario, destinatario_nombre,
+                destinatario_direccion, destinatario_ubigeo,
+                modalidad_transporte, placa_vehiculo, conductor_dni,
+                conductor_nombre, licencia_conductor, transportista_ruc,
+                transportista_nombre, motivo_traslado, documento_asociado,
+                peso_total, items_json, observaciones, estado_sunat,
+                cdr_response, sunat_response, creado_por, created_at, updated_at
+            FROM guias_remision
+            ORDER BY id DESC
+        """
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_guias_db: {e}")
+        return []
+
+def obtener_guia_por_id_db(guia_id):
+    """Obtiene una guía por su ID"""
+    try:
+        query = """
+            SELECT 
+                id, serie, numero, fecha_emision, fecha_traslado,
+                ruc_remitente, remitente_nombre, remitente_direccion,
+                remitente_ubigeo, ruc_destinatario, destinatario_nombre,
+                destinatario_direccion, destinatario_ubigeo,
+                modalidad_transporte, placa_vehiculo, conductor_dni,
+                conductor_nombre, licencia_conductor, transportista_ruc,
+                transportista_nombre, motivo_traslado, documento_asociado,
+                peso_total, items_json, observaciones, estado_sunat,
+                cdr_response, sunat_response, creado_por
+            FROM guias_remision
+            WHERE id = %s
+        """
+        result = db_query(query, (guia_id,))
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en obtener_guia_por_id_db: {e}")
+        return None
+
+def guardar_guia_db(data):
+    """Guarda una nueva guía"""
+    try:
+        query = """
+            INSERT INTO guias_remision (
+                serie, numero, fecha_emision, fecha_traslado,
+                ruc_remitente, remitente_nombre, remitente_direccion,
+                remitente_ubigeo, ruc_destinatario, destinatario_nombre,
+                destinatario_direccion, destinatario_ubigeo,
+                modalidad_transporte, placa_vehiculo, conductor_dni,
+                conductor_nombre, licencia_conductor, transportista_ruc,
+                transportista_nombre, motivo_traslado, documento_asociado,
+                peso_total, items_json, observaciones, estado_sunat,
+                creado_por
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            )
+            RETURNING id, numero
+        """
+        params = (
+            data.get('serie', 'T001'),
+            data.get('numero'),
+            data.get('fecha_emision') or datetime.now().date().isoformat(),
+            data.get('fecha_traslado'),
+            data.get('ruc_remitente'),
+            data.get('remitente_nombre'),
+            data.get('remitente_direccion'),
+            data.get('remitente_ubigeo'),
+            data.get('ruc_destinatario'),
+            data.get('destinatario_nombre'),
+            data.get('destinatario_direccion'),
+            data.get('destinatario_ubigeo'),
+            data.get('modalidad_transporte', 'PRIVADO'),
+            data.get('placa_vehiculo'),
+            data.get('conductor_dni'),
+            data.get('conductor_nombre'),
+            data.get('licencia_conductor'),
+            data.get('transportista_ruc'),
+            data.get('transportista_nombre'),
+            data.get('motivo_traslado', 'VENTA'),
+            data.get('documento_asociado'),
+            float(data.get('peso_total', 0)),
+            data.get('items_json'),
+            data.get('observaciones'),
+            data.get('estado_sunat', 'BORRADOR'),
+            data.get('creado_por')
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en guardar_guia_db: {e}")
+        raise
+
+def actualizar_guia_db(guia_id, data):
+    """Actualiza una guía existente"""
+    try:
+        query = """
+            UPDATE guias_remision SET
+                fecha_traslado = %s,
+                ruc_destinatario = %s,
+                destinatario_nombre = %s,
+                destinatario_direccion = %s,
+                destinatario_ubigeo = %s,
+                placa_vehiculo = %s,
+                conductor_dni = %s,
+                conductor_nombre = %s,
+                licencia_conductor = %s,
+                transportista_ruc = %s,
+                transportista_nombre = %s,
+                motivo_traslado = %s,
+                documento_asociado = %s,
+                peso_total = %s,
+                items_json = %s,
+                observaciones = %s,
+                estado_sunat = %s,
+                updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, numero
+        """
+        params = (
+            data.get('fecha_traslado'),
+            data.get('ruc_destinatario'),
+            data.get('destinatario_nombre'),
+            data.get('destinatario_direccion'),
+            data.get('destinatario_ubigeo'),
+            data.get('placa_vehiculo'),
+            data.get('conductor_dni'),
+            data.get('conductor_nombre'),
+            data.get('licencia_conductor'),
+            data.get('transportista_ruc'),
+            data.get('transportista_nombre'),
+            data.get('motivo_traslado', 'VENTA'),
+            data.get('documento_asociado'),
+            float(data.get('peso_total', 0)),
+            data.get('items_json'),
+            data.get('observaciones'),
+            data.get('estado_sunat', 'BORRADOR'),
+            guia_id
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en actualizar_guia_db: {e}")
+        raise
+
+# ============================================================
+# FUNCIONES DE AYUDA PARA COMPROBANTES
+# ============================================================
+
+def obtener_comprobantes_db():
+    """Obtiene todos los comprobantes"""
+    try:
+        query = """
+            SELECT 
+                id, tipo_comprobante, serie, numero, fecha_emision,
+                moneda, cliente_tipo_doc, cliente_numero_doc,
+                cliente_nombre, cliente_direccion, cliente_email,
+                cliente_telefono, subtotal, igv, total,
+                items_json, observaciones, estado_sunat,
+                sunat_response, cdr_response, creado_por,
+                created_at, updated_at
+            FROM comprobantes
+            ORDER BY id DESC
+        """
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_comprobantes_db: {e}")
+        return []
+
+def guardar_comprobante_db(data):
+    """Guarda un nuevo comprobante"""
+    try:
+        query = """
+            INSERT INTO comprobantes (
+                tipo_comprobante, serie, numero, fecha_emision,
+                moneda, cliente_tipo_doc, cliente_numero_doc,
+                cliente_nombre, cliente_direccion, cliente_email,
+                cliente_telefono, subtotal, igv, total,
+                items_json, observaciones, estado_sunat,
+                creado_por
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s, %s
+            )
+            RETURNING id, serie, numero
+        """
+        params = (
+            data.get('tipo_comprobante', 'FACTURA'),
+            data.get('serie', 'F001'),
+            data.get('numero'),
+            data.get('fecha_emision') or datetime.now().date().isoformat(),
+            data.get('moneda', 'PEN'),
+            data.get('cliente_tipo_doc', 'RUC'),
+            data.get('cliente_numero_doc'),
+            data.get('cliente_nombre'),
+            data.get('cliente_direccion'),
+            data.get('cliente_email'),
+            data.get('cliente_telefono'),
+            float(data.get('subtotal', 0)),
+            float(data.get('igv', 0)),
+            float(data.get('total', 0)),
+            data.get('items_json'),
+            data.get('observaciones'),
+            data.get('estado_sunat', 'BORRADOR'),
+            data.get('creado_por')
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en guardar_comprobante_db: {e}")
+        raise
+
+def actualizar_estado_comprobante_db(comp_id, nuevo_estado):
+    """Actualiza el estado de un comprobante"""
+    try:
+        query = """
+            UPDATE comprobantes 
+            SET estado_sunat = %s, updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, estado_sunat
+        """
+        result = db_query(query, (nuevo_estado, comp_id))
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en actualizar_estado_comprobante_db: {e}")
+        raise
+
+# ============================================================
+# FUNCIONES DE AYUDA PARA NOTAS DE CRÉDITO
+# ============================================================
+
+def obtener_notas_credito_db():
+    """Obtiene todas las notas de crédito"""
+    try:
+        query = """
+            SELECT 
+                id, serie, numero, fecha_emision, fecha_vencimiento,
+                cliente_tipo_doc, cliente_numero_doc, cliente_nombre,
+                cliente_direccion, cliente_email, cliente_telefono,
+                comprobante_asociado, motivo, monto, observaciones,
+                estado, creado_por, created_at, updated_at
+            FROM notas_credito
+            ORDER BY id DESC
+        """
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_notas_credito_db: {e}")
+        return []
+
+def guardar_nota_credito_db(data):
+    """Guarda una nueva nota de crédito"""
+    try:
+        query = """
+            INSERT INTO notas_credito (
+                serie, numero, fecha_emision, fecha_vencimiento,
+                cliente_tipo_doc, cliente_numero_doc, cliente_nombre,
+                cliente_direccion, cliente_email, cliente_telefono,
+                comprobante_asociado, motivo, monto, observaciones,
+                estado, creado_por
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s
+            )
+            RETURNING id, serie, numero
+        """
+        params = (
+            data.get('serie', 'FC01'),
+            data.get('numero'),
+            data.get('fecha_emision') or datetime.now().date().isoformat(),
+            data.get('fecha_vencimiento'),
+            data.get('cliente_tipo_doc', 'RUC'),
+            data.get('cliente_numero_doc'),
+            data.get('cliente_nombre'),
+            data.get('cliente_direccion'),
+            data.get('cliente_email'),
+            data.get('cliente_telefono'),
+            data.get('comprobante_asociado'),
+            data.get('motivo'),
+            float(data.get('monto', 0)),
+            data.get('observaciones'),
+            data.get('estado', 'Borrador'),
+            data.get('creado_por')
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en guardar_nota_credito_db: {e}")
+        raise
+
+# ============================================================
+# FUNCIONES DE AYUDA PARA PEDIDO COMPRA (PC)
+# ============================================================
+
+def obtener_pc_db():
+    """Obtiene todos los pedidos de compra"""
+    try:
+        query = """
+            SELECT 
+                id, numero, fecha, estado, cliente, ruc, monto,
+                cotizacion_id, cotizacion_numero, correo_origen,
+                fecha_recepcion, fecha_despacho, archivo_oc,
+                observaciones, valida_precios, valida_cantidades,
+                valida_stock, valida_entrega, valida_montos,
+                responsable, lugar_entrega, condicion_atencion,
+                created_at, updated_at
+            FROM pedido_compra_pc
+            ORDER BY id DESC
+        """
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_pc_db: {e}")
+        return []
+
+def guardar_pc_db(data):
+    """Guarda un nuevo pedido de compra"""
+    try:
+        query = """
+            INSERT INTO pedido_compra_pc (
+                numero, fecha, estado, cliente, ruc, monto,
+                cotizacion_id, cotizacion_numero, correo_origen,
+                fecha_recepcion, fecha_despacho, archivo_oc,
+                observaciones, valida_precios, valida_cantidades,
+                valida_stock, valida_entrega, valida_montos,
+                responsable, lugar_entrega, condicion_atencion,
+                creado_por
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            )
+            RETURNING id, numero
+        """
+        params = (
+            data.get('numero'),
+            data.get('fecha') or datetime.now().isoformat(),
+            data.get('estado', 'Pendiente'),
+            data.get('cliente'),
+            data.get('ruc'),
+            float(data.get('monto', 0)),
+            data.get('cotizacion_id'),
+            data.get('cotizacion_numero'),
+            data.get('correo_origen'),
+            data.get('fecha_recepcion'),
+            data.get('fecha_despacho'),
+            data.get('archivo_oc'),
+            data.get('observaciones'),
+            data.get('valida_precios', False),
+            data.get('valida_cantidades', False),
+            data.get('valida_stock', False),
+            data.get('valida_entrega', False),
+            data.get('valida_montos', False),
+            data.get('responsable', 'Hellen'),
+            data.get('lugar_entrega'),
+            data.get('condicion_atencion'),
+            data.get('creado_por')
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en guardar_pc_db: {e}")
+        raise
+
+# ============================================================
+# FUNCIONES DE AYUDA PARA DESPACHOS
+# ============================================================
+
+def obtener_despachos_db():
+    """Obtiene todos los despachos"""
+    try:
+        query = """
+            SELECT 
+                id, numero, fecha, fecha_despacho, estado,
+                pc_id, pc_numero, cotizacion_id, cotizacion_numero,
+                cliente, ruc, comprobante, guia, origen, destino,
+                transportista, observaciones, responsable,
+                created_at, updated_at
+            FROM despachos
+            ORDER BY id DESC
+        """
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_despachos_db: {e}")
+        return []
+
+def guardar_despacho_db(data):
+    """Guarda un nuevo despacho"""
+    try:
+        query = """
+            INSERT INTO despachos (
+                numero, fecha, fecha_despacho, estado,
+                pc_id, pc_numero, cotizacion_id, cotizacion_numero,
+                cliente, ruc, comprobante, guia, origen, destino,
+                transportista, observaciones, responsable,
+                creado_por
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s
+            )
+            RETURNING id, numero
+        """
+        params = (
+            data.get('numero'),
+            data.get('fecha') or datetime.now().isoformat(),
+            data.get('fecha_despacho'),
+            data.get('estado', 'Pendiente despacho'),
+            data.get('pc_id'),
+            data.get('pc_numero'),
+            data.get('cotizacion_id'),
+            data.get('cotizacion_numero'),
+            data.get('cliente'),
+            data.get('ruc'),
+            data.get('comprobante'),
+            data.get('guia'),
+            data.get('origen', 'ALM-SMP'),
+            data.get('destino'),
+            data.get('transportista'),
+            data.get('observaciones'),
+            data.get('responsable'),
+            data.get('creado_por')
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en guardar_despacho_db: {e}")
+        raise
+
+# ============================================================
+# FUNCIONES DE AYUDA PARA DEVOLUCIONES
+# ============================================================
+
+def obtener_devoluciones_db():
+    """Obtiene todas las devoluciones"""
+    try:
+        query = """
+            SELECT 
+                id, numero, fecha, estado, ruc, cliente,
+                comprobante_id, comprobante_numero, guia, motivo,
+                monto, observaciones, creado_por, created_at, updated_at
+            FROM devoluciones
+            ORDER BY id DESC
+        """
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_devoluciones_db: {e}")
+        return []
+
+def guardar_devolucion_db(data):
+    """Guarda una nueva devolución"""
+    try:
+        query = """
+            INSERT INTO devoluciones (
+                numero, fecha, estado, ruc, cliente,
+                comprobante_id, comprobante_numero, guia, motivo,
+                monto, observaciones, creado_por
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            )
+            RETURNING id, numero
+        """
+        params = (
+            data.get('numero'),
+            data.get('fecha') or datetime.now().isoformat(),
+            data.get('estado', 'Pendiente'),
+            data.get('ruc'),
+            data.get('cliente'),
+            data.get('comprobante_id'),
+            data.get('comprobante_numero'),
+            data.get('guia'),
+            data.get('motivo'),
+            float(data.get('monto', 0)),
+            data.get('observaciones'),
+            data.get('creado_por')
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en guardar_devolucion_db: {e}")
+        raise
 
 # ============================================================
 # RUTAS PRINCIPALES
@@ -33,31 +691,23 @@ def ventas():
                          empresa=session.get('empresa'))
 
 # ============================================================
-# COTIZACIONES - CRUD COMPLETO
+# COTIZACIONES - API
 # ============================================================
 
 @ventas_bp.route('/ventas/api/cotizaciones/listar', methods=['GET'])
 @login_required
 def api_cotizaciones_listar():
-    """Listar todas las cotizaciones"""
     try:
-        supabase = get_supabase()
-        empresa = session.get('empresa', 'KCF')
-        
-        response = supabase.table('cotizaciones')\
-            .select('*')\
-            .order('id', desc=True)\
-            .execute()
-        
+        data = obtener_cotizaciones_db()
         # Formatear datos para el frontend
-        data = []
-        for row in response.data:
-            data.append({
+        formatted_data = []
+        for row in data:
+            formatted_data.append({
                 'id': row.get('id'),
                 'numero': row.get('numero_cotizacion') or row.get('codigo_cotizacion'),
                 'fecha': row.get('fecha_creacion'),
                 'estado': row.get('estado'),
-                'ruc': row.get('cliente_id'),  # En tu tabla cliente_id es el RUC
+                'ruc': row.get('cliente_id'),
                 'razon': row.get('cliente_nombre') or row.get('cliente_id'),
                 'descripcion': row.get('nota_cotizacion') or row.get('notas'),
                 'monto': float(row.get('total', 0)),
@@ -77,20 +727,16 @@ def api_cotizaciones_listar():
                 'telefono': row.get('telefono_cliente'),
                 'email': row.get('email_cliente')
             })
-        
-        return jsonify({'success': True, 'data': data})
+        return jsonify({'success': True, 'data': formatted_data})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @ventas_bp.route('/ventas/api/cotizaciones/guardar', methods=['POST'])
 @login_required
 def api_cotizaciones_guardar():
-    """Guardar una cotización"""
     try:
         data = request.get_json()
-        supabase = get_supabase()
-        usuario = session.get('usuario', '')
-        usuario_id = session.get('usuario_id', 8)  # Valor por defecto
+        usuario_id = session.get('usuario_id', 8)
         
         # Calcular totales
         subtotal = float(data.get('subtotal', 0))
@@ -129,36 +775,28 @@ def api_cotizaciones_guardar():
             'email_cliente': data.get('email')
         }
         
-        # Si tiene ID, actualizar
         if data.get('id'):
-            cotizacion_id = data['id']
-            response = supabase.table('cotizaciones')\
-                .update(cotizacion_data)\
-                .eq('id', cotizacion_id)\
-                .execute()
-            
-            return jsonify({'success': True, 'message': 'Cotización actualizada', 'data': {'id': cotizacion_id}})
+            result = actualizar_cotizacion_db(data['id'], cotizacion_data)
+            if result:
+                return jsonify({'success': True, 'message': 'Cotización actualizada', 'data': {'id': data['id']}})
+            return jsonify({'success': False, 'error': 'No se pudo actualizar'}), 400
         
-        # Si no tiene ID, crear nuevo
-        else:
-            # Generar número de cotización
-            count_response = supabase.table('cotizaciones')\
-                .select('id', count='exact')\
-                .execute()
-            count = len(count_response.data) + 1
-            numero = f"COT-{str(count).zfill(6)}"
-            cotizacion_data['numero_cotizacion'] = numero
-            cotizacion_data['codigo_cotizacion'] = f"COT-{datetime.now().strftime('%Y%m%d')}-{str(count).zfill(4)}"
-            cotizacion_data['correlativo'] = count
-            
-            response = supabase.table('cotizaciones').insert(cotizacion_data).execute()
-            cotizacion_id = response.data[0]['id']
-            
+        # Generar número de cotización
+        count_data = db_query("SELECT COUNT(*) as total FROM cotizaciones")
+        count = count_data[0]['total'] + 1 if count_data else 1
+        numero = f"COT-{str(count).zfill(6)}"
+        cotizacion_data['numero_cotizacion'] = numero
+        cotizacion_data['codigo_cotizacion'] = f"COT-{datetime.now().strftime('%Y%m%d')}-{str(count).zfill(4)}"
+        cotizacion_data['correlativo'] = count
+        
+        result = guardar_cotizacion_db(cotizacion_data)
+        if result:
             return jsonify({
-                'success': True, 
+                'success': True,
                 'message': 'Cotización creada correctamente',
-                'data': {'id': cotizacion_id, 'numero': numero}
+                'data': {'id': result['id'], 'numero': numero}
             })
+        return jsonify({'success': False, 'error': 'No se pudo crear'}), 400
             
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -166,110 +804,59 @@ def api_cotizaciones_guardar():
 @ventas_bp.route('/ventas/api/cotizaciones/<int:id>', methods=['GET'])
 @login_required
 def api_cotizaciones_obtener(id):
-    """Obtener una cotización por ID"""
     try:
-        supabase = get_supabase()
-        
-        response = supabase.table('cotizaciones')\
-            .select('*')\
-            .eq('id', id)\
-            .execute()
-        
-        if not response.data:
-            return jsonify({'success': False, 'error': 'Cotización no encontrada'}), 404
-        
-        row = response.data[0]
-        data = {
-            'id': row.get('id'),
-            'numero': row.get('numero_cotizacion') or row.get('codigo_cotizacion'),
-            'fecha': row.get('fecha_creacion'),
-            'estado': row.get('estado'),
-            'ruc': row.get('cliente_id'),
-            'razon': row.get('cliente_nombre') or row.get('cliente_id'),
-            'monto': float(row.get('total', 0)),
-            'subtotal': float(row.get('subtotal', 0)),
-            'igv': float(row.get('igv', 0)),
-            'condicion': row.get('condicion_pago'),
-            'vencimiento': row.get('validez_oferta'),
-            'direccion': row.get('direccion_entrega'),
-            'requerimiento': row.get('requerimiento'),
-            'nota': row.get('nota_cotizacion'),
-            'contacto': row.get('contacto_cliente'),
-            'telefono': row.get('telefono_cliente'),
-            'email': row.get('email_cliente'),
-            'descuento_porcentaje': float(row.get('descuento_porcentaje', 0)),
-            'descuento_monto': float(row.get('descuento_monto', 0)),
-            'descuento_tipo': row.get('descuento_tipo')
-        }
-        
-        return jsonify({'success': True, 'data': data})
+        data = obtener_cotizacion_por_id_db(id)
+        if data:
+            return jsonify({'success': True, 'data': data})
+        return jsonify({'success': False, 'error': 'Cotización no encontrada'}), 404
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @ventas_bp.route('/ventas/api/cotizaciones/<int:id>/toggle', methods=['PUT'])
 @login_required
 def api_cotizaciones_toggle(id):
-    """Cambiar estado de una cotización"""
     try:
-        supabase = get_supabase()
         data = request.get_json()
         nuevo_estado = data.get('estado')
-        
         if not nuevo_estado:
             return jsonify({'success': False, 'error': 'Estado requerido'}), 400
         
-        response = supabase.table('cotizaciones')\
-            .update({'estado': nuevo_estado})\
-            .eq('id', id)\
-            .execute()
-        
-        return jsonify({'success': True, 'message': f'Estado actualizado a {nuevo_estado}'})
+        result = actualizar_estado_cotizacion_db(id, nuevo_estado)
+        if result:
+            return jsonify({'success': True, 'message': f'Estado actualizado a {nuevo_estado}'})
+        return jsonify({'success': False, 'error': 'No se pudo actualizar'}), 400
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @ventas_bp.route('/ventas/api/cotizaciones/<int:id>', methods=['DELETE'])
 @login_required
 def api_cotizaciones_eliminar(id):
-    """Eliminar una cotización"""
     try:
-        supabase = get_supabase()
-        
-        response = supabase.table('cotizaciones')\
-            .update({'estado': 'Eliminada'})\
-            .eq('id', id)\
-            .execute()
-        
-        return jsonify({'success': True, 'message': 'Cotización eliminada'})
+        result = actualizar_estado_cotizacion_db(id, 'Eliminada')
+        if result:
+            return jsonify({'success': True, 'message': 'Cotización eliminada'})
+        return jsonify({'success': False, 'error': 'No se pudo eliminar'}), 400
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # ============================================================
-# GUÍAS DE REMISIÓN - CRUD COMPLETO
+# GUÍAS - API
 # ============================================================
 
 @ventas_bp.route('/ventas/api/guias/listar', methods=['GET'])
 @login_required
 def api_guias_listar():
-    """Listar todas las guías"""
     try:
-        supabase = get_supabase()
-        
-        response = supabase.table('guias_remision')\
-            .select('*')\
-            .order('id', desc=True)\
-            .execute()
-        
-        # Formatear datos
-        data = []
-        for row in response.data:
+        data = obtener_guias_db()
+        formatted_data = []
+        for row in data:
             items = []
             try:
                 if row.get('items_json'):
                     items = json.loads(row.get('items_json'))
             except:
-                items = []
-            
-            data.append({
+                pass
+            formatted_data.append({
                 'id': row.get('id'),
                 'serie': row.get('serie'),
                 'numero': row.get('numero'),
@@ -278,7 +865,7 @@ def api_guias_listar():
                 'estado': row.get('estado_sunat') or row.get('estado'),
                 'ruc': row.get('ruc_destinatario'),
                 'cliente': row.get('destinatario_nombre'),
-                'cotizacion': row.get('documento_asociado'),  # Número de cotización
+                'cotizacion': row.get('documento_asociado'),
                 'comprobante': row.get('documento_asociado'),
                 'origen': row.get('remitente_direccion'),
                 'destino': row.get('destinatario_direccion'),
@@ -289,22 +876,17 @@ def api_guias_listar():
                 'conductor': row.get('conductor_nombre'),
                 'transportista': row.get('transportista_nombre')
             })
-        
-        return jsonify({'success': True, 'data': data})
+        return jsonify({'success': True, 'data': formatted_data})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @ventas_bp.route('/ventas/api/guias/guardar', methods=['POST'])
 @login_required
 def api_guias_guardar():
-    """Guardar una guía"""
     try:
         data = request.get_json()
-        supabase = get_supabase()
-        usuario = session.get('usuario', '')
         usuario_id = session.get('usuario_id', 8)
         
-        # Preparar items_json
         items_json = data.get('items', [])
         
         guia_data = {
@@ -333,29 +915,24 @@ def api_guias_guardar():
             'items_json': json.dumps(items_json),
             'observaciones': data.get('observaciones', ''),
             'estado_sunat': data.get('estado', 'BORRADOR'),
-            'creado_por': usuario_id,
-            'updated_at': datetime.now().isoformat()
+            'creado_por': usuario_id
         }
         
-        # Generar número si no tiene
         if not guia_data['numero']:
-            count_response = supabase.table('guias_remision')\
-                .select('id', count='exact')\
-                .execute()
-            count = len(count_response.data) + 1
+            count_data = db_query("SELECT COUNT(*) as total FROM guias_remision")
+            count = count_data[0]['total'] + 1 if count_data else 1
             guia_data['numero'] = str(count)
         
         if data.get('id'):
-            response = supabase.table('guias_remision')\
-                .update(guia_data)\
-                .eq('id', data['id'])\
-                .execute()
-            return jsonify({'success': True, 'message': 'Guía actualizada'})
-        else:
-            response = supabase.table('guias_remision').insert(guia_data).execute()
-            guia_id = response.data[0]['id']
-            
-            return jsonify({'success': True, 'message': 'Guía creada', 'data': {'id': guia_id}})
+            result = actualizar_guia_db(data['id'], guia_data)
+            if result:
+                return jsonify({'success': True, 'message': 'Guía actualizada'})
+            return jsonify({'success': False, 'error': 'No se pudo actualizar'}), 400
+        
+        result = guardar_guia_db(guia_data)
+        if result:
+            return jsonify({'success': True, 'message': 'Guía creada', 'data': {'id': result['id']}})
+        return jsonify({'success': False, 'error': 'No se pudo crear'}), 400
             
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -363,92 +940,43 @@ def api_guias_guardar():
 @ventas_bp.route('/ventas/api/guias/<int:id>', methods=['GET'])
 @login_required
 def api_guias_obtener(id):
-    """Obtener una guía por ID"""
     try:
-        supabase = get_supabase()
-        
-        response = supabase.table('guias_remision')\
-            .select('*')\
-            .eq('id', id)\
-            .execute()
-        
-        if not response.data:
-            return jsonify({'success': False, 'error': 'Guía no encontrada'}), 404
-        
-        row = response.data[0]
-        items = []
-        try:
-            if row.get('items_json'):
-                items = json.loads(row.get('items_json'))
-        except:
-            pass
-        
-        data = {
-            'id': row.get('id'),
-            'serie': row.get('serie'),
-            'numero': row.get('numero'),
-            'fecha': row.get('fecha_emision'),
-            'fecha_traslado': row.get('fecha_traslado'),
-            'estado': row.get('estado_sunat') or row.get('estado'),
-            'ruc': row.get('ruc_destinatario'),
-            'cliente': row.get('destinatario_nombre'),
-            'cotizacion': row.get('documento_asociado'),
-            'destino': row.get('destinatario_direccion'),
-            'origen': row.get('remitente_direccion'),
-            'motivo': row.get('motivo_traslado'),
-            'observaciones': row.get('observaciones'),
-            'items': items,
-            'placa': row.get('placa_vehiculo'),
-            'conductor': row.get('conductor_nombre'),
-            'transportista': row.get('transportista_nombre')
-        }
-        
-        return jsonify({'success': True, 'data': data})
+        data = obtener_guia_por_id_db(id)
+        if data:
+            return jsonify({'success': True, 'data': data})
+        return jsonify({'success': False, 'error': 'Guía no encontrada'}), 404
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @ventas_bp.route('/ventas/api/guias/<int:id>', methods=['DELETE'])
 @login_required
 def api_guias_eliminar(id):
-    """Eliminar una guía"""
     try:
-        supabase = get_supabase()
-        
-        response = supabase.table('guias_remision')\
-            .update({'estado_sunat': 'ANULADA'})\
-            .eq('id', id)\
-            .execute()
-        
-        return jsonify({'success': True, 'message': 'Guía anulada'})
+        result = actualizar_guia_db(id, {'estado_sunat': 'ANULADA'})
+        if result:
+            return jsonify({'success': True, 'message': 'Guía anulada'})
+        return jsonify({'success': False, 'error': 'No se pudo anular'}), 400
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # ============================================================
-# COMPROBANTES (FACTURAS/BOLETAS) - CRUD COMPLETO
+# COMPROBANTES - API
 # ============================================================
 
 @ventas_bp.route('/ventas/api/comprobantes/listar', methods=['GET'])
 @login_required
 def api_comprobantes_listar():
-    """Listar todos los comprobantes"""
     try:
-        supabase = get_supabase()
-        
-        response = supabase.table('comprobantes')\
-            .select('*')\
-            .order('id', desc=True)\
-            .execute()
-        
-        data = []
-        for row in response.data:
+        data = obtener_comprobantes_db()
+        formatted_data = []
+        for row in data:
             items = []
             try:
                 if row.get('items_json'):
                     items = json.loads(row.get('items_json'))
             except:
                 pass
-            
-            data.append({
+            formatted_data.append({
                 'id': row.get('id'),
                 'tipo': row.get('tipo_comprobante'),
                 'serie': row.get('serie'),
@@ -465,18 +993,15 @@ def api_comprobantes_listar():
                 'observaciones': row.get('observaciones'),
                 'items': items
             })
-        
-        return jsonify({'success': True, 'data': data})
+        return jsonify({'success': True, 'data': formatted_data})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @ventas_bp.route('/ventas/api/comprobantes/guardar', methods=['POST'])
 @login_required
 def api_comprobantes_guardar():
-    """Guardar un comprobante"""
     try:
         data = request.get_json()
-        supabase = get_supabase()
         usuario_id = session.get('usuario_id', 8)
         
         items_json = data.get('items', [])
@@ -499,29 +1024,59 @@ def api_comprobantes_guardar():
             'items_json': json.dumps(items_json),
             'observaciones': data.get('observaciones', ''),
             'estado_sunat': data.get('estado', 'BORRADOR'),
-            'creado_por': usuario_id,
-            'updated_at': datetime.now().isoformat()
+            'creado_por': usuario_id
         }
         
         if data.get('id'):
-            response = supabase.table('comprobantes')\
-                .update(comprobante_data)\
-                .eq('id', data['id'])\
-                .execute()
-            return jsonify({'success': True, 'message': 'Comprobante actualizado'})
-        else:
-            # Generar número
-            if not comprobante_data['numero']:
-                count_response = supabase.table('comprobantes')\
-                    .select('id', count='exact')\
-                    .execute()
-                count = len(count_response.data) + 1
-                comprobante_data['numero'] = str(count)
-            
-            response = supabase.table('comprobantes').insert(comprobante_data).execute()
-            comprobante_id = response.data[0]['id']
-            
-            return jsonify({'success': True, 'message': 'Comprobante creado', 'data': {'id': comprobante_id}})
+            # Actualizar
+            query = """
+                UPDATE comprobantes SET
+                    tipo_comprobante = %s, serie = %s, numero = %s,
+                    fecha_emision = %s, moneda = %s,
+                    cliente_tipo_doc = %s, cliente_numero_doc = %s,
+                    cliente_nombre = %s, cliente_direccion = %s,
+                    cliente_email = %s, cliente_telefono = %s,
+                    subtotal = %s, igv = %s, total = %s,
+                    items_json = %s, observaciones = %s,
+                    estado_sunat = %s, updated_at = NOW()
+                WHERE id = %s
+                RETURNING id, serie, numero
+            """
+            params = (
+                comprobante_data['tipo_comprobante'],
+                comprobante_data['serie'],
+                comprobante_data['numero'],
+                comprobante_data['fecha_emision'],
+                comprobante_data['moneda'],
+                comprobante_data['cliente_tipo_doc'],
+                comprobante_data['cliente_numero_doc'],
+                comprobante_data['cliente_nombre'],
+                comprobante_data['cliente_direccion'],
+                comprobante_data['cliente_email'],
+                comprobante_data['cliente_telefono'],
+                comprobante_data['subtotal'],
+                comprobante_data['igv'],
+                comprobante_data['total'],
+                comprobante_data['items_json'],
+                comprobante_data['observaciones'],
+                comprobante_data['estado_sunat'],
+                data['id']
+            )
+            result = db_query(query, params)
+            if result:
+                return jsonify({'success': True, 'message': 'Comprobante actualizado', 'data': result[0]})
+            return jsonify({'success': False, 'error': 'No se pudo actualizar'}), 400
+        
+        # Crear nuevo
+        if not comprobante_data['numero']:
+            count_data = db_query("SELECT COUNT(*) as total FROM comprobantes")
+            count = count_data[0]['total'] + 1 if count_data else 1
+            comprobante_data['numero'] = str(count)
+        
+        result = guardar_comprobante_db(comprobante_data)
+        if result:
+            return jsonify({'success': True, 'message': 'Comprobante creado', 'data': result})
+        return jsonify({'success': False, 'error': 'No se pudo crear'}), 400
             
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -529,38 +1084,26 @@ def api_comprobantes_guardar():
 @ventas_bp.route('/ventas/api/comprobantes/<int:id>', methods=['DELETE'])
 @login_required
 def api_comprobantes_eliminar(id):
-    """Eliminar un comprobante"""
     try:
-        supabase = get_supabase()
-        
-        response = supabase.table('comprobantes')\
-            .update({'estado_sunat': 'ANULADO'})\
-            .eq('id', id)\
-            .execute()
-        
-        return jsonify({'success': True, 'message': 'Comprobante anulado'})
+        result = actualizar_estado_comprobante_db(id, 'ANULADO')
+        if result:
+            return jsonify({'success': True, 'message': 'Comprobante anulado'})
+        return jsonify({'success': False, 'error': 'No se pudo anular'}), 400
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # ============================================================
-# NOTAS DE CRÉDITO - CRUD COMPLETO
+# NOTAS DE CRÉDITO - API
 # ============================================================
 
 @ventas_bp.route('/ventas/api/notas-credito/listar', methods=['GET'])
 @login_required
 def api_notas_credito_listar():
-    """Listar todas las notas de crédito"""
     try:
-        supabase = get_supabase()
-        
-        response = supabase.table('notas_credito')\
-            .select('*')\
-            .order('id', desc=True)\
-            .execute()
-        
-        data = []
-        for row in response.data:
-            data.append({
+        data = obtener_notas_credito_db()
+        formatted_data = []
+        for row in data:
+            formatted_data.append({
                 'id': row.get('id'),
                 'serie': row.get('serie'),
                 'numero': row.get('numero'),
@@ -573,175 +1116,124 @@ def api_notas_credito_listar():
                 'monto': float(row.get('monto', 0)),
                 'observaciones': row.get('observaciones')
             })
+        return jsonify({'success': True, 'data': formatted_data})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@ventas_bp.route('/ventas/api/notas-credito/guardar', methods=['POST'])
+@login_required
+def api_notas_credito_guardar():
+    try:
+        data = request.get_json()
+        usuario_id = session.get('usuario_id', 8)
+        data['creado_por'] = usuario_id
         
-        return jsonify({'success': True, 'data': data})
+        if not data.get('numero'):
+            count_data = db_query("SELECT COUNT(*) as total FROM notas_credito")
+            count = count_data[0]['total'] + 1 if count_data else 1
+            data['numero'] = str(count)
+        
+        result = guardar_nota_credito_db(data)
+        if result:
+            return jsonify({'success': True, 'message': 'Nota de crédito creada', 'data': result})
+        return jsonify({'success': False, 'error': 'No se pudo crear'}), 400
+            
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # ============================================================
-# PEDIDO COMPRA (PC) - CRUD COMPLETO
+# PEDIDO COMPRA (PC) - API
 # ============================================================
 
 @ventas_bp.route('/ventas/api/pedido-compra/listar', methods=['GET'])
 @login_required
 def api_pedido_compra_listar():
-    """Listar todos los PC del cliente"""
     try:
-        supabase = get_supabase()
-        
-        response = supabase.table('pedido_compra_pc')\
-            .select('*')\
-            .order('id', desc=True)\
-            .execute()
-        
-        return jsonify({'success': True, 'data': response.data})
+        data = obtener_pc_db()
+        return jsonify({'success': True, 'data': data})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @ventas_bp.route('/ventas/api/pedido-compra/guardar', methods=['POST'])
 @login_required
 def api_pedido_compra_guardar():
-    """Guardar un PC del cliente"""
     try:
         data = request.get_json()
-        supabase = get_supabase()
         usuario_id = session.get('usuario_id', 8)
+        data['creado_por'] = usuario_id
         
-        pc_data = {
-            'numero': data.get('numero'),
-            'fecha': datetime.now().isoformat(),
-            'estado': data.get('estado', 'Pendiente'),
-            'cotizacion_id': data.get('cotizacion_id'),
-            'cotizacion_numero': data.get('cotizacion_numero'),
-            'cliente': data.get('cliente'),
-            'ruc': data.get('ruc'),
-            'monto': float(data.get('monto', 0)),
-            'correo_origen': data.get('correo_origen'),
-            'fecha_recepcion': data.get('fecha_recepcion'),
-            'fecha_despacho': data.get('fecha_despacho'),
-            'archivo_oc': data.get('archivo_oc'),
-            'observaciones': data.get('observaciones'),
-            'valida_precios': data.get('valida_precios', False),
-            'valida_cantidades': data.get('valida_cantidades', False),
-            'valida_stock': data.get('valida_stock', False),
-            'valida_entrega': data.get('valida_entrega', False),
-            'valida_montos': data.get('valida_montos', False),
-            'responsable': data.get('responsable', 'Hellen'),
-            'lugar_entrega': data.get('lugar_entrega'),
-            'condicion_atencion': data.get('condicion_atencion'),
-            'creado_por': usuario_id
-        }
+        if not data.get('numero'):
+            data['numero'] = f"PC-{datetime.now().strftime('%Y%m%d')}-{str(datetime.now().timestamp()).split('.')[0][-4:]}"
         
-        if data.get('id'):
-            response = supabase.table('pedido_compra_pc')\
-                .update(pc_data)\
-                .eq('id', data['id'])\
-                .execute()
-            return jsonify({'success': True, 'message': 'PC actualizado'})
-        else:
-            # Generar número
-            if not pc_data['numero']:
-                count_response = supabase.table('pedido_compra_pc')\
-                    .select('id', count='exact')\
-                    .execute()
-                count = len(count_response.data) + 1
-                pc_data['numero'] = f"PC-{datetime.now().strftime('%Y%m%d')}-{str(count).zfill(4)}"
-            
-            response = supabase.table('pedido_compra_pc').insert(pc_data).execute()
-            
-            return jsonify({'success': True, 'message': 'PC creado'})
+        result = guardar_pc_db(data)
+        if result:
+            return jsonify({'success': True, 'message': 'PC guardado', 'data': result})
+        return jsonify({'success': False, 'error': 'No se pudo guardar'}), 400
             
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # ============================================================
-# DESPACHOS - CRUD COMPLETO
+# DESPACHOS - API
 # ============================================================
 
 @ventas_bp.route('/ventas/api/despachos/listar', methods=['GET'])
 @login_required
 def api_despachos_listar():
-    """Listar todos los despachos"""
     try:
-        supabase = get_supabase()
-        
-        response = supabase.table('despachos')\
-            .select('*')\
-            .order('id', desc=True)\
-            .execute()
-        
-        return jsonify({'success': True, 'data': response.data})
+        data = obtener_despachos_db()
+        return jsonify({'success': True, 'data': data})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @ventas_bp.route('/ventas/api/despachos/guardar', methods=['POST'])
 @login_required
 def api_despachos_guardar():
-    """Guardar un despacho"""
     try:
         data = request.get_json()
-        supabase = get_supabase()
         usuario_id = session.get('usuario_id', 8)
+        data['creado_por'] = usuario_id
         
-        despacho_data = {
-            'numero': data.get('numero'),
-            'fecha': datetime.now().isoformat(),
-            'fecha_despacho': data.get('fecha_despacho'),
-            'estado': data.get('estado', 'Pendiente despacho'),
-            'pc_id': data.get('pc_id'),
-            'pc_numero': data.get('pc_numero'),
-            'cotizacion_id': data.get('cotizacion_id'),
-            'cotizacion_numero': data.get('cotizacion_numero'),
-            'cliente': data.get('cliente'),
-            'ruc': data.get('ruc'),
-            'comprobante': data.get('comprobante'),
-            'guia': data.get('guia'),
-            'origen': data.get('origen', 'ALM-SMP'),
-            'destino': data.get('destino'),
-            'transportista': data.get('transportista'),
-            'observaciones': data.get('observaciones'),
-            'responsable': data.get('responsable'),
-            'creado_por': usuario_id
-        }
+        if not data.get('numero'):
+            data['numero'] = f"DESP-{datetime.now().strftime('%Y%m%d')}-{str(datetime.now().timestamp()).split('.')[0][-4:]}"
         
-        if data.get('id'):
-            response = supabase.table('despachos')\
-                .update(despacho_data)\
-                .eq('id', data['id'])\
-                .execute()
-            return jsonify({'success': True, 'message': 'Despacho actualizado'})
-        else:
-            if not despacho_data['numero']:
-                count_response = supabase.table('despachos')\
-                    .select('id', count='exact')\
-                    .execute()
-                count = len(count_response.data) + 1
-                despacho_data['numero'] = f"DESP-{datetime.now().strftime('%Y%m%d')}-{str(count).zfill(4)}"
-            
-            response = supabase.table('despachos').insert(despacho_data).execute()
-            
-            return jsonify({'success': True, 'message': 'Despacho creado'})
+        result = guardar_despacho_db(data)
+        if result:
+            return jsonify({'success': True, 'message': 'Despacho guardado', 'data': result})
+        return jsonify({'success': False, 'error': 'No se pudo guardar'}), 400
             
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # ============================================================
-# DEVOLUCIONES - CRUD COMPLETO
+# DEVOLUCIONES - API
 # ============================================================
 
 @ventas_bp.route('/ventas/api/devoluciones/listar', methods=['GET'])
 @login_required
 def api_devoluciones_listar():
-    """Listar todas las devoluciones"""
     try:
-        supabase = get_supabase()
+        data = obtener_devoluciones_db()
+        return jsonify({'success': True, 'data': data})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@ventas_bp.route('/ventas/api/devoluciones/guardar', methods=['POST'])
+@login_required
+def api_devoluciones_guardar():
+    try:
+        data = request.get_json()
+        usuario_id = session.get('usuario_id', 8)
+        data['creado_por'] = usuario_id
         
-        response = supabase.table('devoluciones')\
-            .select('*')\
-            .order('id', desc=True)\
-            .execute()
+        if not data.get('numero'):
+            data['numero'] = f"DEV-{datetime.now().strftime('%Y%m%d')}-{str(datetime.now().timestamp()).split('.')[0][-4:]}"
         
-        return jsonify({'success': True, 'data': response.data})
+        result = guardar_devolucion_db(data)
+        if result:
+            return jsonify({'success': True, 'message': 'Devolución guardada', 'data': result})
+        return jsonify({'success': False, 'error': 'No se pudo guardar'}), 400
+            
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -752,7 +1244,6 @@ def api_devoluciones_listar():
 @ventas_bp.route('/ventas/api/exportar/<tipo>', methods=['GET'])
 @login_required
 def api_exportar(tipo):
-    """Exportar datos de un módulo"""
     try:
         return jsonify({'success': True, 'message': f'Exportación de {tipo} preparada'})
     except Exception as e:
