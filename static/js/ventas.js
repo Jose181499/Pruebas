@@ -1482,76 +1482,123 @@ function calcQuote() {
 // ============================================================
 // FUNCIONES PARA CLIENTES
 // ============================================================
+// ============================================================
+// FUNCIONES PARA CLIENTES - CONSULTA SUNAT MEJORADA
+// ============================================================
 
 async function loadClient() {
     const rucInput = document.getElementById('fRucSearch');
-    const ruc = rucInput?.value?.trim() || '';
+    const ruc = rucInput?.value?.replace(/\D/g, '').trim() || '';
     
-    if (!ruc || ruc.length !== 11) {
-        showToast('⚠️ Ingrese un RUC válido de 11 dígitos', 'warning');
+    if (!ruc) {
+        showToast('⚠️ Ingresa un RUC para consultar.', 'warning');
+        return;
+    }
+    if (ruc.length !== 11) {
+        showToast('⚠️ El RUC debe tener 11 dígitos.', 'warning');
         return;
     }
     
     const btnBuscar = document.querySelector('.btn-search-ruc');
+    const originalText = btnBuscar?.textContent || '🔍 Buscar';
     if (btnBuscar) {
         btnBuscar.textContent = '⏳ Consultando...';
         btnBuscar.disabled = true;
     }
     
     try {
-        const response = await fetch(`/ventas/api/sunat/consulta?ruc=${ruc}`);
-        const result = await response.json();
+        // Usar el mismo endpoint que maestros.js
+        const response = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
+        const data = await response.json();
         
-        if (result.success) {
-            const data = result.data;
+        console.log('📦 Respuesta SUNAT:', data);
+        
+        if (data.success) {
             const confirmBox = document.getElementById('clientConfirmBox');
             
-            if (result.origen === 'base_datos') {
-                showToast('✅ Cliente encontrado en sistema', 'success');
-                if (confirmBox) {
-                    confirmBox.textContent = '✅ Cliente encontrado en sistema';
-                    confirmBox.className = 'show existente';
-                }
-            } else {
-                showToast('🌞 Cliente consultado en SUNAT', 'info');
-                if (confirmBox) {
-                    confirmBox.textContent = '🌞 Cliente consultado en SUNAT - datos cargados';
-                    confirmBox.className = 'show nuevo';
-                }
-            }
-            
-            document.getElementById('fRuc').value = data.ruc || '';
+            // Llenar el formulario con los datos
+            document.getElementById('fRuc').value = data.ruc || ruc;
             document.getElementById('fRazon').value = data.razon_social || '';
             document.getElementById('fComercial').value = data.nombre_comercial || data.razon_social || '';
             document.getElementById('fCodCliente').value = data.codigo_cliente || 'PENDIENTE';
             document.getElementById('fDireccion').value = data.direccion || '';
-            document.getElementById('fContacto').value = data.contacto || '';
-            document.getElementById('fTelefono').value = data.telefono || '';
-            document.getElementById('fCorreo').value = data.email || '';
             
-            if (document.getElementById('fCondicion')) {
-                document.getElementById('fCondicion').value = data.condicion_pago || 'Contado';
+            // Contacto - usar los datos de SUNAT si vienen
+            document.getElementById('fContacto').value = data.contacto || data.nombre_contacto || '';
+            document.getElementById('fTelefono').value = data.telefono || data.telefono_contacto || '';
+            document.getElementById('fCorreo').value = data.email || data.email_contacto || '';
+            
+            // Condición de pago - mantener la que tenía o usar la de SUNAT
+            if (data.condicion_pago && document.getElementById('fCondicion')) {
+                document.getElementById('fCondicion').value = data.condicion_pago;
             }
             
-            window._clienteOrigen = result.origen;
+            // Mostrar mensaje según origen
+            if (data.origen === 'base_datos') {
+                showToast('✅ Cliente encontrado en sistema', 'success');
+                if (confirmBox) {
+                    confirmBox.textContent = '✅ Cliente encontrado en sistema';
+                    confirmBox.className = 'show existente';
+                    setTimeout(() => { confirmBox.className = ''; }, 4000);
+                }
+            } else {
+                showToast('🌞 Datos cargados desde SUNAT', 'info');
+                if (confirmBox) {
+                    confirmBox.textContent = '🌞 Datos consultados en SUNAT';
+                    confirmBox.className = 'show nuevo';
+                    setTimeout(() => { confirmBox.className = ''; }, 4000);
+                }
+            }
             
-            setTimeout(() => {
-                if (confirmBox) confirmBox.className = '';
-            }, 4000);
+            // Si el estado viene de SUNAT, actualizar el badge
+            if (data.estado) {
+                const estadoMap = {
+                    'ACTIVO': 'Activo',
+                    'BAJA': 'Inactivo',
+                    'SUSPENDIDO': 'Observado',
+                    'BAJA DE OFICIO': 'Inactivo'
+                };
+                const nuevoEstado = estadoMap[data.estado.toUpperCase()] || data.estado;
+                if (nuevoEstado) {
+                    // Mostrar en el confirmBox el estado
+                    if (confirmBox) {
+                        confirmBox.textContent += ` | Estado: ${nuevoEstado}`;
+                    }
+                }
+            }
+            
+            // Guardar referencia del cliente para uso posterior
+            window._clienteConsultado = {
+                ruc: data.ruc || ruc,
+                razon_social: data.razon_social || '',
+                nombre_comercial: data.nombre_comercial || data.razon_social || '',
+                direccion: data.direccion || '',
+                contacto: data.contacto || data.nombre_contacto || '',
+                telefono: data.telefono || data.telefono_contacto || '',
+                email: data.email || data.email_contacto || '',
+                origen: data.origen || 'sunat'
+            };
             
         } else {
-            showToast('❌ ' + (result.error || 'Error al consultar'), 'error');
+            showToast('❌ ' + (data.error || 'Error al consultar SUNAT'), 'error');
+            const confirmBox = document.getElementById('clientConfirmBox');
+            if (confirmBox) {
+                confirmBox.textContent = '❌ ' + (data.error || 'Error al consultar');
+                confirmBox.className = 'show error';
+                setTimeout(() => { confirmBox.className = ''; }, 4000);
+            }
         }
     } catch (error) {
-        console.error('❌ Error:', error);
-        showToast('❌ Error al consultar el RUC', 'error');
+        console.error('❌ Error consultando SUNAT:', error);
+        showToast('❌ Error al conectar con el servicio SUNAT', 'error');
     } finally {
         if (btnBuscar) {
-            btnBuscar.textContent = '🔍 Buscar';
+            btnBuscar.textContent = originalText;
             btnBuscar.disabled = false;
         }
     }
 }
+
 
 let __rucAutoTimer = null;
 
@@ -1575,6 +1622,8 @@ async function saveClientFromQuote() {
     
     const cliente = {
         ruc: ruc,
+        tipo_documento: 'RUC',
+        numero_documento: ruc,
         razon_social: document.getElementById('fRazon')?.value || '',
         nombre_comercial: document.getElementById('fComercial')?.value || '',
         direccion_fiscal: document.getElementById('fDireccion')?.value || '',
@@ -1582,8 +1631,14 @@ async function saveClientFromQuote() {
         telefono_contacto: document.getElementById('fTelefono')?.value || '',
         email_contacto: document.getElementById('fCorreo')?.value || '',
         condicion_pago: document.getElementById('fCondicion')?.value || 'Contado',
-        tipo_documento: 'RUC'
+        estado: 'Activo'
     };
+    
+    // Validar datos mínimos
+    if (!cliente.razon_social) {
+        showToast('⚠️ La razón social es obligatoria', 'warning');
+        return;
+    }
     
     try {
         const response = await apiFetch('/maestros/api/clientes/guardar', {
@@ -1597,7 +1652,11 @@ async function saveClientFromQuote() {
             if (confirmBox) {
                 confirmBox.textContent = '💾 Cliente guardado en Maestros correctamente';
                 confirmBox.className = 'show existente';
-                setTimeout(() => confirmBox.className = '', 3000);
+                setTimeout(() => { confirmBox.className = ''; }, 3000);
+            }
+            // Actualizar el código de cliente
+            if (response.data && response.data.codigo_cliente) {
+                document.getElementById('fCodCliente').value = response.data.codigo_cliente;
             }
             await cargarClientesMaestros();
         } else {
@@ -1608,6 +1667,7 @@ async function saveClientFromQuote() {
         showToast('Error al guardar el cliente', 'error');
     }
 }
+
 
 // ============================================================
 // FUNCIONES PARA OTROS MODALES

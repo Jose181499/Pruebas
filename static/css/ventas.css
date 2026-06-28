@@ -2156,3 +2156,34 @@ body.kcf-theme {
     font-size: 10px;
     font-weight: 800;
 }
+
+/* Estilos para badge de confirmación de cliente */
+#clientConfirmBox {
+    display: none;
+    margin-top: 6px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 900;
+    text-align: center;
+    border: 1px solid transparent;
+    transition: all 0.3s ease;
+}
+#clientConfirmBox.show {
+    display: block;
+}
+#clientConfirmBox.existente {
+    background: #DCFCE7;
+    color: #166534;
+    border-color: #86EFAC;
+}
+#clientConfirmBox.nuevo {
+    background: #DBEAFE;
+    color: #1D4ED8;
+    border-color: #93C5FD;
+}
+#clientConfirmBox.error {
+    background: #FEE2E2;
+    color: #991B1B;
+    border-color: #FCA5A5;
+}
