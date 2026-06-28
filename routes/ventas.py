@@ -1374,3 +1374,355 @@ def api_sunat_consulta():
     except Exception as e:
         print(f"❌ Error en api_sunat_consulta: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+# ============================================================
+# DESPACHOS - ENDPOINTS ADICIONALES
+# ============================================================
+
+@ventas_bp.route('/ventas/api/despachos/<int:id>/toggle', methods=['PUT'])
+@login_required
+def api_despachos_toggle(id):
+    """Cambia el estado de un despacho (ej: Pendiente -> Despachado)"""
+    try:
+        data = request.get_json()
+        nuevo_estado = data.get('estado')
+        
+        if not nuevo_estado:
+            return jsonify({'success': False, 'error': 'Estado requerido'}), 400
+        
+        # Validar que el estado sea válido
+        estados_validos = ['Pendiente despacho', 'En preparación', 'Despachado', 'Entregado']
+        if nuevo_estado not in estados_validos:
+            return jsonify({'success': False, 'error': f'Estado inválido. Permitidos: {", ".join(estados_validos)}'}), 400
+        
+        query = """
+            UPDATE despachos 
+            SET estado = %s, updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, estado
+        """
+        result = db_query(query, (nuevo_estado, id))
+        
+        if result:
+            return jsonify({
+                'success': True, 
+                'message': f'Despacho actualizado a {nuevo_estado}',
+                'data': result[0]
+            })
+        
+        return jsonify({'success': False, 'error': 'Despacho no encontrado'}), 404
+        
+    except Exception as e:
+        print(f"❌ Error en api_despachos_toggle: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ventas_bp.route('/ventas/api/despachos/<int:id>', methods=['DELETE'])
+@login_required
+def api_despachos_eliminar(id):
+    """Elimina (anula) un despacho"""
+    try:
+        query = """
+            UPDATE despachos 
+            SET estado = 'Anulado', updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, estado
+        """
+        result = db_query(query, (id,))
+        
+        if result:
+            return jsonify({'success': True, 'message': 'Despacho anulado', 'data': result[0]})
+        
+        return jsonify({'success': False, 'error': 'Despacho no encontrado'}), 404
+        
+    except Exception as e:
+        print(f"❌ Error en api_despachos_eliminar: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ventas_bp.route('/ventas/api/despachos/<int:id>', methods=['GET'])
+@login_required
+def api_despachos_obtener(id):
+    """Obtiene un despacho por su ID"""
+    try:
+        query = """
+            SELECT 
+                id, numero, fecha, fecha_despacho, estado,
+                pc_id, pc_numero, cotizacion_id, cotizacion_numero,
+                cliente, ruc, comprobante, guia, origen, destino,
+                transportista, observaciones, responsable,
+                created_at, updated_at
+            FROM despachos
+            WHERE id = %s
+        """
+        result = db_query(query, (id,))
+        
+        if result:
+            return jsonify({'success': True, 'data': result[0]})
+        
+        return jsonify({'success': False, 'error': 'Despacho no encontrado'}), 404
+        
+    except Exception as e:
+        print(f"❌ Error en api_despachos_obtener: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================================
+# PEDIDO COMPRA - ENDPOINTS ADICIONALES
+# ============================================================
+
+@ventas_bp.route('/ventas/api/pedido-compra/<int:id>/toggle', methods=['PUT'])
+@login_required
+def api_pedido_compra_toggle(id):
+    """Cambia el estado de un pedido de compra"""
+    try:
+        data = request.get_json()
+        nuevo_estado = data.get('estado')
+        
+        if not nuevo_estado:
+            return jsonify({'success': False, 'error': 'Estado requerido'}), 400
+        
+        estados_validos = ['Pendiente', 'Recibido por correo', 'En revisión interna', 'Validado por Hellen', 'Listo para despacho', 'Anulado']
+        if nuevo_estado not in estados_validos:
+            return jsonify({'success': False, 'error': f'Estado inválido'}), 400
+        
+        query = """
+            UPDATE pedido_compra_pc 
+            SET estado = %s, updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, estado
+        """
+        result = db_query(query, (nuevo_estado, id))
+        
+        if result:
+            return jsonify({
+                'success': True, 
+                'message': f'PC actualizado a {nuevo_estado}',
+                'data': result[0]
+            })
+        
+        return jsonify({'success': False, 'error': 'PC no encontrado'}), 404
+        
+    except Exception as e:
+        print(f"❌ Error en api_pedido_compra_toggle: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================================
+# GUÍAS - ENDPOINTS ADICIONALES
+# ============================================================
+
+@ventas_bp.route('/ventas/api/guias/<int:id>/toggle', methods=['PUT'])
+@login_required
+def api_guias_toggle(id):
+    """Cambia el estado de una guía"""
+    try:
+        data = request.get_json()
+        nuevo_estado = data.get('estado')
+        
+        if not nuevo_estado:
+            return jsonify({'success': False, 'error': 'Estado requerido'}), 400
+        
+        estados_validos = ['Borrador', 'Pendiente despacho', 'Emitida', 'Entregada', 'Anulada']
+        if nuevo_estado not in estados_validos:
+            return jsonify({'success': False, 'error': f'Estado inválido'}), 400
+        
+        query = """
+            UPDATE guias_remision 
+            SET estado_sunat = %s, updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, estado_sunat as estado
+        """
+        result = db_query(query, (nuevo_estado, id))
+        
+        if result:
+            return jsonify({
+                'success': True, 
+                'message': f'Guía actualizada a {nuevo_estado}',
+                'data': result[0]
+            })
+        
+        return jsonify({'success': False, 'error': 'Guía no encontrada'}), 404
+        
+    except Exception as e:
+        print(f"❌ Error en api_guias_toggle: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================================
+# COMPROBANTES - ENDPOINTS ADICIONALES
+# ============================================================
+
+@ventas_bp.route('/ventas/api/comprobantes/<int:id>/toggle', methods=['PUT'])
+@login_required
+def api_comprobantes_toggle(id):
+    """Cambia el estado de un comprobante"""
+    try:
+        data = request.get_json()
+        nuevo_estado = data.get('estado')
+        
+        if not nuevo_estado:
+            return jsonify({'success': False, 'error': 'Estado requerido'}), 400
+        
+        estados_validos = ['Borrador', 'Emitido', 'Enviado', 'Pagado', 'Anulado']
+        if nuevo_estado not in estados_validos:
+            return jsonify({'success': False, 'error': f'Estado inválido'}), 400
+        
+        query = """
+            UPDATE comprobantes 
+            SET estado_sunat = %s, updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, estado_sunat as estado
+        """
+        result = db_query(query, (nuevo_estado, id))
+        
+        if result:
+            return jsonify({
+                'success': True, 
+                'message': f'Comprobante actualizado a {nuevo_estado}',
+                'data': result[0]
+            })
+        
+        return jsonify({'success': False, 'error': 'Comprobante no encontrado'}), 404
+        
+    except Exception as e:
+        print(f"❌ Error en api_comprobantes_toggle: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================================
+# NOTAS DE CRÉDITO - ENDPOINTS ADICIONALES
+# ============================================================
+
+@ventas_bp.route('/ventas/api/notas-credito/<int:id>/toggle', methods=['PUT'])
+@login_required
+def api_notas_credito_toggle(id):
+    """Cambia el estado de una nota de crédito"""
+    try:
+        data = request.get_json()
+        nuevo_estado = data.get('estado')
+        
+        if not nuevo_estado:
+            return jsonify({'success': False, 'error': 'Estado requerido'}), 400
+        
+        estados_validos = ['Borrador', 'Emitida', 'Enviada', 'Aplicada', 'Anulada']
+        if nuevo_estado not in estados_validos:
+            return jsonify({'success': False, 'error': f'Estado inválido'}), 400
+        
+        query = """
+            UPDATE notas_credito 
+            SET estado = %s, updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, estado
+        """
+        result = db_query(query, (nuevo_estado, id))
+        
+        if result:
+            return jsonify({
+                'success': True, 
+                'message': f'Nota de crédito actualizada a {nuevo_estado}',
+                'data': result[0]
+            })
+        
+        return jsonify({'success': False, 'error': 'Nota de crédito no encontrada'}), 404
+        
+    except Exception as e:
+        print(f"❌ Error en api_notas_credito_toggle: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================================
+# DEVOLUCIONES - ENDPOINTS ADICIONALES
+# ============================================================
+
+@ventas_bp.route('/ventas/api/devoluciones/<int:id>/toggle', methods=['PUT'])
+@login_required
+def api_devoluciones_toggle(id):
+    """Cambia el estado de una devolución"""
+    try:
+        data = request.get_json()
+        nuevo_estado = data.get('estado')
+        
+        if not nuevo_estado:
+            return jsonify({'success': False, 'error': 'Estado requerido'}), 400
+        
+        estados_validos = ['Pendiente', 'En revisión', 'Aprobada', 'Rechazada', 'Procesada']
+        if nuevo_estado not in estados_validos:
+            return jsonify({'success': False, 'error': f'Estado inválido'}), 400
+        
+        query = """
+            UPDATE devoluciones 
+            SET estado = %s, updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, estado
+        """
+        result = db_query(query, (nuevo_estado, id))
+        
+        if result:
+            return jsonify({
+                'success': True, 
+                'message': f'Devolución actualizada a {nuevo_estado}',
+                'data': result[0]
+            })
+        
+        return jsonify({'success': False, 'error': 'Devolución no encontrada'}), 404
+        
+    except Exception as e:
+        print(f"❌ Error en api_devoluciones_toggle: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================================
+# COTIZACIONES - OBTENER CON PRODUCTOS (PARA EDITAR)
+# ============================================================
+
+@ventas_bp.route('/ventas/api/cotizaciones/<int:id>/completa', methods=['GET'])
+@login_required
+def api_cotizaciones_obtener_completa(id):
+    """Obtiene una cotización con sus productos para edición"""
+    try:
+        # Obtener cabecera
+        query_cabecera = """
+            SELECT 
+                c.id, c.numero_cotizacion, c.cliente_id, c.fecha_creacion, c.estado,
+                c.subtotal, c.igv, c.total, c.usuario_id, c.notas,
+                c.forma_pago, c.tiempo_entrega, c.almacen, c.validez_oferta,
+                c.codigo_cotizacion, c.correlativo, c.condicion_pago,
+                c.direccion_entrega, c.requerimiento, c.nota_cotizacion,
+                c.descuento_porcentaje, c.descuento_monto, c.descuento_tipo,
+                c.contacto_cliente, c.telefono_cliente, c.email_cliente,
+                cl.razon_social as cliente_razon_social,
+                cl.numero_documento as cliente_ruc,
+                cl.nombre_comercial as cliente_nombre_comercial,
+                cl.codigo_cliente as cod_cliente
+            FROM cotizaciones c
+            LEFT JOIN clientes cl ON cl.id = c.cliente_id::integer
+            WHERE c.id = %s
+        """
+        cabecera = db_query(query_cabecera, (id,))
+        
+        if not cabecera:
+            return jsonify({'success': False, 'error': 'Cotización no encontrada'}), 404
+        
+        # Obtener productos
+        query_productos = """
+            SELECT 
+                d.id, d.producto_id, d.cantidad,
+                p.codigo, p.descripcion as producto, p.descripcion_larga,
+                p.modelo, p.marca, p.unidad as um, p.stock,
+                p.precio_unitario as valorVenta
+            FROM cotizacion_detalle d
+            LEFT JOIN productos p ON p.id = d.producto_id
+            WHERE d.cotizacion_id = %s
+        """
+        productos = db_query(query_productos, (id,))
+        
+        # Combinar datos
+        result = dict(cabecera[0])
+        result['productos'] = [dict(p) for p in productos] if productos else []
+        
+        return jsonify({'success': True, 'data': result})
+        
+    except Exception as e:
+        print(f"❌ Error en api_cotizaciones_obtener_completa: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
