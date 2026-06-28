@@ -269,18 +269,32 @@ async function cargarProductosMaestros() {
 // ============================================================
 // FUNCIONES DE CARGA DE DATOS
 // ============================================================
+// ============================================================
+// LOAD COTIZACIONES - CON LOGS
+// ============================================================
 async function loadCotizaciones() {
+    console.log('🔄 Cargando cotizaciones...');
     try {
-        const data = await fetchAPI('/ventas/api/cotizaciones/listar');
+        const response = await fetch('/ventas/api/cotizaciones/listar');
+        const data = await response.json();
+        console.log('📦 Datos recibidos:', data);
+        
         if (data.success) {
             cotizacionesData = data.data || [];
+            console.log(`✅ ${cotizacionesData.length} cotizaciones cargadas`);
+            console.log('📋 Primer elemento:', cotizacionesData[0]);
             renderCotizaciones();
+        } else {
+            console.error('❌ Error:', data.error);
+            showToast('Error al cargar cotizaciones', 'error');
         }
     } catch (error) {
-        console.error('Error cargando cotizaciones:', error);
+        console.error('❌ Error cargando cotizaciones:', error);
         showToast('Error al cargar cotizaciones', 'error');
     }
 }
+
+
 
 async function loadPedidos() {
     try {
@@ -363,56 +377,86 @@ async function loadDevoluciones() {
 // ============================================================
 // FUNCIONES DE RENDERIZADO
 // ============================================================
+// ============================================================
+// RENDER COTIZACIONES - CORREGIDA
+// ============================================================
 function renderCotizaciones() {
-    const container = document.getElementById('cotizacionesContent');
-    if (!container) return;
+    console.log('🔄 Renderizando cotizaciones...');
+    console.log('📊 Datos:', cotizacionesData);
     
+    // Obtener filtros
     const q = document.getElementById('qSearch')?.value?.toLowerCase() || '';
     const st = document.getElementById('qStatus')?.value || '';
     
+    // Filtrar datos
     const list = cotizacionesData.filter(r => {
         const matchText = (!q || JSON.stringify(r).toLowerCase().includes(q));
         const matchStatus = (!st || r.estado === st);
         return matchText && matchStatus;
     });
     
+    console.log(`📋 Mostrando ${list.length} de ${cotizacionesData.length} cotizaciones`);
+    
+    // Actualizar KPIs
     const kpiContainer = document.getElementById('cotizacionesKPI');
     if (kpiContainer) {
+        const total = cotizacionesData.length;
+        const borradores = cotizacionesData.filter(x => x.estado === 'Borrador').length;
+        const revision = cotizacionesData.filter(x => x.estado === 'En revisión').length;
+        const enviadas = cotizacionesData.filter(x => x.estado === 'Generada').length;
+        const aceptadas = cotizacionesData.filter(x => x.estado === 'Aceptada').length;
+        
         kpiContainer.innerHTML = `
-            <div class="status-card"><div class="status-dot dot-total">Σ</div><div><small>Total</small><b>${cotizacionesData.length}</b></div></div>
-            <div class="status-card"><div class="status-dot dot-draft">B</div><div><small>Borradores</small><b>${cotizacionesData.filter(x => x.estado === 'Borrador').length}</b></div></div>
-            <div class="status-card"><div class="status-dot dot-review">R</div><div><small>En revisión</small><b>${cotizacionesData.filter(x => x.estado === 'En revisión').length}</b></div></div>
-            <div class="status-card"><div class="status-dot dot-send">E</div><div><small>Enviadas</small><b>${cotizacionesData.filter(x => x.estado === 'Generada').length}</b></div></div>
-            <div class="status-card"><div class="status-dot dot-ok">A</div><div><small>Aceptadas</small><b>${cotizacionesData.filter(x => x.estado === 'Aceptada').length}</b></div></div>
+            <div class="status-card"><div class="status-dot dot-total">Σ</div><div><small>Total</small><b>${total}</b></div></div>
+            <div class="status-card"><div class="status-dot dot-draft">B</div><div><small>Borradores</small><b>${borradores}</b></div></div>
+            <div class="status-card"><div class="status-dot dot-review">R</div><div><small>En revisión</small><b>${revision}</b></div></div>
+            <div class="status-card"><div class="status-dot dot-send">E</div><div><small>Enviadas</small><b>${enviadas}</b></div></div>
+            <div class="status-card"><div class="status-dot dot-ok">A</div><div><small>Aceptadas</small><b>${aceptadas}</b></div></div>
         `;
+        console.log('✅ KPIs actualizados');
+    } else {
+        console.warn('⚠️ No se encontró #cotizacionesKPI');
     }
     
+    // Actualizar tabla - DIRECTAMENTE en qRows
     const tbody = document.getElementById('qRows');
-    if (!tbody) return;
-    
-    if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay cotizaciones que coincidan con los filtros</td></tr>`;
+    if (!tbody) {
+        console.error('❌ No se encontró el elemento qRows');
         return;
     }
     
-    tbody.innerHTML = list.map((r, i) => `
+    if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay cotizaciones que coincidan con los filtros</td></tr>`;
+        console.log('📭 No hay cotizaciones para mostrar');
+        return;
+    }
+    
+    tbody.innerHTML = list.map((r, i) => {
+        const fecha = r.fecha || '';
+        const fechaDisplay = fecha.replace(' ', '<br>');
+        
+        return `
         <tr>
             <td><b>${i + 1}</b></td>
-            <td class="date-cell">${String(r.fecha || '').replace(' ', '<br>')}</td>
+            <td class="date-cell">${fechaDisplay}</td>
             <td>${badgeStatus(r.estado)}</td>
-            <td class="quote-number-cell"><b>${sd(r.numero)}</b></td>
-            <td>${sd(r.ruc)}</td>
-            <td><span class="code-pill">${sd(r.codCliente)}</span></td>
-            <td class="left"><b>${sd(r.razon)}</b></td>
-            <td class="left">${sd(r.descripcion)}</td>
-            <td><b>${money(r.monto)}</b></td>
-            <td>${sd(r.condicion)}</td>
+            <td class="quote-number-cell"><b>${r.numero || '-'}</b></td>
+            <td>${r.ruc || '-'}</td>
+            <td><span class="code-pill">${r.cod_cliente || '-'}</span></td>
+            <td class="left"><b>${r.razon || '-'}</b></td>
+            <td class="left">${r.descripcion || '-'}</td>
+            <td><b>${money(r.monto || 0)}</b></td>
+            <td>${r.condicion || '-'}</td>
             <td>
                 <button class="kebab" onclick="showCotizacionMenu(event, ${r.id})">⋮</button>
             </td>
-        </tr>
-    `).join('');
+        </tr>`;
+    }).join('');
+    
+    console.log(`✅ ${list.length} cotizaciones renderizadas en la tabla`);
 }
+
+
 
 function renderPedidos() {
     const tbody = document.getElementById('pcRows');
