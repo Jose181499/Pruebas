@@ -579,12 +579,11 @@ async function toggleRecordHandler(modulo, id) {
 
 // ============================================================
 // OPEN SCREEN
-// ============================================================
 
 async function openScreen(screen) {
     console.log('🔄 Abriendo pantalla:', screen);
     currentModule = screen;
-    
+
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     const section = document.getElementById(screen);
     if (section) {
@@ -605,10 +604,13 @@ async function openScreen(screen) {
             console.log(`✅ Sección ${screen} creada`);
         }
     }
-    
+
     document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
     document.querySelectorAll(`.tab-btn[data-tab="${screen}"]`).forEach(t => t.classList.add('active'));
-    
+
+    // 🔥 ACTUALIZAR SIDEBAR - CORREGIDO
+    updateSidebar(screen);
+
     if (MODULE_CONFIG[screen]) {
         await loadModuleData(screen);
         renderModule(screen);
@@ -623,6 +625,7 @@ async function openScreen(screen) {
         }
     }
 }
+
 
 // ============================================================
 // 🔥 MODAL CLIENTE - FUNCIONES COMPLETAS
@@ -1795,6 +1798,78 @@ document.addEventListener('click', function(e) {
 });
 
 // ============================================================
+// ============================================================
+// ACTUALIZAR SIDEBAR
+// ============================================================
+// ============================================================
+// ACTUALIZAR SIDEBAR - VERSIÓN MEJORADA
+// ============================================================
+
+function updateSidebar(module) {
+    console.log(`🔄 Actualizando sidebar para módulo: ${module}`);
+    
+    // Mapeo de módulos a sus selectores en el sidebar
+    // En caso de que el data-screen no coincida exactamente
+    const moduleMap = {
+        'clientes': 'Clientes',
+        'proveedores': 'Proveedores',
+        'almacenes': 'Almacenes',
+        'categorias': 'Categorías',
+        'marcas': 'Marcas',
+        'um': 'Unidades de medida'
+    };
+    
+    // Remover clase active de todos los child-btn
+    document.querySelectorAll('.child-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Remover active de los menu-header
+    document.querySelectorAll('.menu-header').forEach(header => {
+        header.classList.remove('active');
+    });
+    
+    // Buscar por data-screen primero
+    let sidebarBtn = document.querySelector(`.child-btn[data-screen="${module}"]`);
+    
+    // Si no se encuentra, buscar por texto
+    if (!sidebarBtn) {
+        const textToFind = moduleMap[module] || module;
+        document.querySelectorAll('.child-btn').forEach(btn => {
+            const btnText = btn.textContent.trim();
+            if (btnText === textToFind || btnText.includes(textToFind)) {
+                sidebarBtn = btn;
+            }
+        });
+    }
+    
+    if (sidebarBtn) {
+        sidebarBtn.classList.add('active');
+        console.log(`✅ Sidebar activado: ${sidebarBtn.textContent.trim()}`);
+        
+        // Asegurar que el grupo padre esté abierto
+        const parentGroup = sidebarBtn.closest('.menu-group');
+        if (parentGroup) {
+            parentGroup.classList.add('open');
+            const header = parentGroup.querySelector('.menu-header');
+            if (header) {
+                header.classList.add('active');
+            }
+        }
+    } else {
+        console.warn(`⚠️ No se encontró botón en sidebar para el módulo: ${module}`);
+        // Fallback: buscar por href
+        document.querySelectorAll(`.child-btn[href*="${module}"]`).forEach(btn => {
+            btn.classList.add('active');
+            const parentGroup = btn.closest('.menu-group');
+            if (parentGroup) {
+                parentGroup.classList.add('open');
+                const header = parentGroup.querySelector('.menu-header');
+                if (header) header.classList.add('active');
+            }
+        });
+    }
+}
 // MODAL ALMACÉN
 // ============================================================
 let almEditId = null;
