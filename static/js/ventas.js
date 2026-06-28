@@ -663,107 +663,154 @@ function renderDevoluciones() {
 // ============================================================
 // FUNCIONES DE GUARDADO (CON API REAL)
 // ============================================================
-
 async function guardarCotizacion(estado) {
     try {
-        // Obtener el RUC del formulario
-        const ruc = document.getElementById('fRuc')?.value || '';
+        console.log('🔄 Iniciando guardado de cotización...');
         
-        // Buscar el cliente en la lista de clientes maestros para obtener su ID
-        let clienteId = null;
-        if (ruc && CLIENTES_MAESTROS.length > 0) {
-            const cliente = CLIENTES_MAESTROS.find(c => c.ruc === ruc || c.numero_documento === ruc);
-            if (cliente) {
-                clienteId = cliente.id;
-                console.log('✅ Cliente encontrado con ID:', clienteId);
-            } else {
-                console.warn('⚠️ Cliente no encontrado en maestros, intentando buscar...');
-                // Intentar buscar en la base de datos
-                try {
-                    const resp = await fetch(`/maestros/api/clientes/buscar?q=${ruc}`);
-                    const data = await resp.json();
-                    if (data.success && data.data && data.data.length > 0) {
-                        clienteId = data.data[0].id;
-                        console.log('✅ Cliente encontrado en BD con ID:', clienteId);
-                    }
-                } catch (e) {
-                    console.warn('No se pudo buscar cliente:', e);
-                }
-            }
-        }
+        const ruc = document.getElementById('fRuc')?.value?.trim() || '';
+        console.log('📋 RUC:', ruc);
         
-        // Si no se encontró el cliente, crear uno nuevo
-        if (!clienteId && ruc) {
-            console.log('🔄 Cliente no encontrado, creando uno nuevo...');
-            try {
-                const nuevoCliente = {
-                    ruc: ruc,
-                    razon_social: document.getElementById('fRazon')?.value || '',
-                    nombre_comercial: document.getElementById('fComercial')?.value || '',
-                    direccion_fiscal: document.getElementById('fDireccion')?.value || '',
-                    nombre_contacto: document.getElementById('fContacto')?.value || '',
-                    telefono_contacto: document.getElementById('fTelefono')?.value || '',
-                    email_contacto: document.getElementById('fCorreo')?.value || '',
-                    condicion_pago: document.getElementById('fCondicion')?.value || 'Contado',
-                    tipo_documento: 'RUC',
-                    estado: 'Activo'
-                };
-                
-                const resp = await apiFetch('/maestros/api/clientes/guardar', {
-                    method: 'POST',
-                    body: JSON.stringify(nuevoCliente)
-                });
-                
-                if (resp.success && resp.data && resp.data.id) {
-                    clienteId = resp.data.id;
-                    console.log('✅ Cliente creado con ID:', clienteId);
-                    // Actualizar la lista de clientes
-                    await cargarClientesMaestros();
-                }
-            } catch (e) {
-                console.warn('No se pudo crear cliente:', e);
-            }
-        }
-        
-        // Si aún no hay clienteId, mostrar error
-        if (!clienteId) {
-            showToast('⚠️ No se pudo identificar el cliente. Guarda primero el cliente en Maestros.', 'warning');
+        if (!ruc) {
+            showToast('⚠️ Primero busca un cliente por RUC', 'warning');
             return;
         }
         
-        // Recolectar datos del formulario
+        // ============================================================
+        // 1. BUSCAR EL CLIENTE POR RUC
+        // ============================================================
+        let clienteId = null;
+        let clienteData = null;
+        
+        // Buscar en CLIENTES_MAESTROS
+        if (CLIENTES_MAESTROS && CLIENTES_MAESTROS.length > 0) {
+            const cliente = CLIENTES_MAESTROS.find(c => 
+                c.ruc === ruc || 
+                c.numero_documento === ruc
+            );
+            if (cliente) {
+                clienteId = cliente.id;
+                clienteData = cliente;
+                console.log('✅ Cliente encontrado en CLIENTES_MAESTROS con ID:', clienteId);
+            }
+        }
+        
+        // Si no está en memoria, buscar en la base de datos
+        if (!clienteId) {
+            console.log('🔍 Buscando cliente en BD por RUC:', ruc);
+            try {
+                const resp = await fetch(`/maestros/api/clientes/buscar?q=${ruc}`);
+                const data = await resp.json();
+                console.log('📦 Respuesta búsqueda:', data);
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    clienteId = data.data[0].id;
+                    clienteData = data.data[0];
+                    console.log('✅ Cliente encontrado en BD con ID:', clienteId);
+                    
+                    // Actualizar CLIENTES_MAESTROS
+                    if (!CLIENTES_MAESTROS.find(c => c.id === clienteId)) {
+                        CLIENTES_MAESTROS.push(clienteData);
+                    }
+                }
+            } catch (e) {
+                console.warn('⚠️ Error buscando cliente:', e);
+            }
+        }
+        
+        // Si no existe, CREAR el cliente
+        if (!clienteId) {
+            console.log('🆕 Cliente no encontrado, creando nuevo...');
+            
+            const nuevoCliente = {
+                ruc: ruc,
+                tipo_documento: 'RUC',
+                numero_documento: ruc,
+                razon_social: document.getElementById('fRazon')?.value?.trim() || `Cliente ${ruc}`,
+                nombre_comercial: document.getElementById('fComercial')?.value?.trim() || '',
+                direccion_fiscal: document.getElementById('fDireccion')?.value?.trim() || '',
+                nombre_contacto: document.getElementById('fContacto')?.value?.trim() || '',
+                telefono_contacto: document.getElementById('fTelefono')?.value?.trim() || '',
+                email_contacto: document.getElementById('fCorreo')?.value?.trim() || '',
+                condicion_pago: document.getElementById('fCondicion')?.value || 'Contado',
+                estado: 'Activo'
+            };
+            
+            console.log('📦 Datos nuevo cliente:', nuevoCliente);
+            
+            try {
+                const resp = await fetch('/maestros/api/clientes/guardar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(nuevoCliente)
+                });
+                const result = await resp.json();
+                console.log('📦 Respuesta creación cliente:', result);
+                
+                if (result.success && result.data && result.data.id) {
+                    clienteId = result.data.id;
+                    clienteData = result.data;
+                    console.log('✅ Cliente creado con ID:', clienteId);
+                    await cargarClientesMaestros();
+                } else {
+                    console.error('❌ Error creando cliente:', result.error);
+                    showToast('Error al crear el cliente: ' + (result.error || 'Desconocido'), 'error');
+                    return;
+                }
+            } catch (e) {
+                console.error('❌ Error en creación de cliente:', e);
+                showToast('Error al crear el cliente', 'error');
+                return;
+            }
+        }
+        
+        if (!clienteId) {
+            showToast('⚠️ No se pudo identificar o crear el cliente', 'error');
+            return;
+        }
+        
+        console.log('🎯 Cliente ID final:', clienteId);
+        
+        // ============================================================
+        // 2. CALCULAR TOTALES
+        // ============================================================
+        
+        const subtotal = quoteProducts.reduce((s, p) => s + (Number(p.cantidad || 0) * Number(p.valorVenta || 0)), 0);
+        const descuentoValor = parseFloat(document.getElementById('fDiscountValue')?.value || 0);
+        const descuentoTipo = document.getElementById('fDiscountType')?.value || '%';
+        const descuento = descuentoTipo === '%' 
+            ? subtotal * (descuentoValor / 100) 
+            : Math.min(descuentoValor, subtotal);
+        const valorVenta = subtotal - descuento;
+        const igv = valorVenta * 0.18;
+        const total = valorVenta + igv;
+        
+        // ============================================================
+        // 3. PREPARAR DATOS - USAMOS EL ESTADO DIRECTAMENTE
+        // ============================================================
+        // Ahora 'Borrador' es válido en la base de datos
+        
         const data = {
             id: editingId,
-            estado: estado || 'Borrador',
-            cliente_id: clienteId,  // ← AHORA USAMOS EL ID DEL CLIENTE
-            ruc: ruc,  // Guardamos el RUC por si acaso
-            razon: document.getElementById('fRazon')?.value || '',
-            razon_comercial: document.getElementById('fComercial')?.value || '',
-            direccion: document.getElementById('fDireccion')?.value || '',
-            contacto: document.getElementById('fContacto')?.value || '',
-            telefono: document.getElementById('fTelefono')?.value || '',
-            email: document.getElementById('fCorreo')?.value || '',
-            cod_cliente: document.getElementById('fCodCliente')?.value || '',
-            requerimiento: document.getElementById('fReq')?.value || '',
-            fuente: document.getElementById('fFuente')?.value || '',
-            vendedor: document.getElementById('fVendedor')?.value || '',
-            email_asesor: document.getElementById('fEmailAsesor')?.value || '',
-            telefono_asesor: document.getElementById('fTelAsesor')?.value || '',
-            moneda: document.getElementById('fMoneda')?.value || '',
-            condicion_pago: document.getElementById('fCondicion')?.value || '',
-            tiempo_entrega: document.getElementById('fTiempo')?.value || '',
-            validez: document.getElementById('fValidez')?.value || '',
+            estado: estado || 'Borrador',  // ← AHORA 'Borrador' ES VÁLIDO
+            cliente_id: clienteId,
+            ruc: ruc,
+            razon: document.getElementById('fRazon')?.value?.trim() || '',
+            razon_comercial: document.getElementById('fComercial')?.value?.trim() || '',
+            direccion: document.getElementById('fDireccion')?.value?.trim() || '',
+            contacto: document.getElementById('fContacto')?.value?.trim() || '',
+            telefono: document.getElementById('fTelefono')?.value?.trim() || '',
+            email: document.getElementById('fCorreo')?.value?.trim() || '',
+            condicion_pago: document.getElementById('fCondicion')?.value || 'Contado',
+            tiempo_entrega: document.getElementById('fTiempo')?.value || '5 días hábiles',
+            validez: document.getElementById('fValidez')?.value || '15 días',
             direccion_entrega: document.getElementById('fDireccionEntrega')?.value || '',
-            descuento_valor: parseFloat(document.getElementById('fDiscountValue')?.value || 0),
-            descuento_tipo: document.getElementById('fDiscountType')?.value || '%',
-            nota_comercial: document.querySelector('#cotizacionForm textarea')?.value || '',
-            seguimiento: document.getElementById('fSeguimiento')?.value || '',
-            motivo: document.getElementById('fMotivo')?.value || '',
-            transporte: document.getElementById('fTransporte')?.value || '',
-            parihuela: document.getElementById('fParihuela')?.value || '',
-            nota_interna: document.getElementById('fNotaInterna')?.value || '',
+            descuento_valor: descuentoValor,
+            descuento_tipo: descuentoTipo,
+            subtotal: subtotal,
+            descuento_monto: descuento,
+            igv: igv,
+            total: total,
             productos: quoteProducts.map(p => ({
-                id: p.id || p.codigo,
                 codigo: p.codigo,
                 producto: p.producto || p.descripcion,
                 descripcion: p.descripcion || '',
@@ -772,46 +819,42 @@ async function guardarCotizacion(estado) {
                 um: p.um || 'NIU',
                 cantidad: p.cantidad || 1,
                 valorVenta: p.valorVenta || 0,
-                stock: p.stock || 0,
-                entrega: p.entrega || ''
+                stock: p.stock || 0
             }))
         };
         
-        // Calcular totales
-        const subtotal = quoteProducts.reduce((s, p) => s + (Number(p.cantidad || 0) * Number(p.valorVenta || 0)), 0);
-        const descuento = data.descuento_tipo === '%' 
-            ? subtotal * (data.descuento_valor / 100) 
-            : Math.min(data.descuento_valor, subtotal);
-        const valorVenta = subtotal - descuento;
-        const igv = valorVenta * CONFIG.igv;
-        const total = valorVenta + igv;
+        console.log('📦 Enviando cotización:');
+        console.log('  - cliente_id:', data.cliente_id);
+        console.log('  - estado:', data.estado);
+        console.log('  - total:', data.total);
+        console.log('  - productos:', data.productos.length);
         
-        data.subtotal = subtotal;
-        data.descuento_monto = descuento;
-        data.valor_venta = valorVenta;
-        data.igv = igv;
-        data.total = total;
+        // ============================================================
+        // 4. ENVIAR A LA API
+        // ============================================================
         
-        console.log('📦 Enviando cotización:', { cliente_id: data.cliente_id, total: data.total });
-        
-        // Enviar a la API
         const response = await apiFetch('/ventas/api/cotizaciones/guardar', {
             method: 'POST',
             body: JSON.stringify(data)
         });
         
+        console.log('📦 Respuesta API:', response);
+        
         if (response.success) {
-            showToast(`Cotización ${estado === 'Borrador' ? 'guardada como borrador' : 'creada'} correctamente`, 'success');
+            const mensaje = estado === 'Borrador' ? 'guardada como borrador' : 'creada correctamente';
+            showToast(`✅ Cotización ${mensaje}`, 'success');
             closeModal('cotizacionModal');
             await loadCotizaciones();
+            await cargarClientesMaestros();
         } else {
-            showToast('Error: ' + (response.error || 'No se pudo guardar'), 'error');
+            showToast('❌ Error: ' + (response.error || 'No se pudo guardar'), 'error');
         }
     } catch (error) {
         console.error('❌ Error guardando cotización:', error);
-        showToast('Error al guardar la cotización', 'error');
+        showToast('❌ Error al guardar la cotización: ' + error.message, 'error');
     }
 }
+
 
 
 function saveCotizacionDraft() {
