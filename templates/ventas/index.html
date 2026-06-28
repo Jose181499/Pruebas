@@ -14,542 +14,6 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/ventas.css') }}">
-
-<style>
-/* ============================================================
-   VENTAS - ESTILOS COMPLETOS (FALLBACK EN CASO DE QUE NO CARGUE ventas.css)
-   ============================================================ */
-
-/* Tabs */
-.tabs {
-  display: flex;
-  gap: 6px;
-  background: #fff;
-  border: 1px solid #E5E7EB;
-  border-radius: 12px;
-  padding: 4px;
-  box-shadow: 0 6px 18px rgba(15,23,42,.06);
-  overflow: auto;
-  margin-bottom: 8px;
-  flex-wrap: nowrap;
-}
-
-.tab-btn {
-  border: 0;
-  background: transparent;
-  color: #0F172A;
-  padding: 6px 12px;
-  border-radius: 9px;
-  font-weight: 950;
-  white-space: nowrap;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.tab-btn:hover {
-  background: #F1F5F9;
-}
-
-.tab-btn.active {
-  background: #EF233C;
-  color: #fff;
-}
-
-/* Sections */
-.section {
-  display: none;
-}
-
-.section.active {
-  display: block;
-}
-
-/* Panel */
-.panel {
-  background: #fff;
-  border: 1px solid #E5E7EB;
-  border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(15,23,42,.06);
-  overflow: hidden;
-  margin-bottom: 8px;
-}
-
-/* KPI Cards */
-.status-board {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(150px, 1fr));
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.status-card {
-  height: 38px;
-  background: #fff;
-  border: 1px solid #E2E8F0;
-  border-radius: 12px;
-  box-shadow: 0 6px 14px rgba(15,23,42,.05);
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 5px 10px;
-}
-
-.status-dot {
-  width: 22px;
-  height: 22px;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
-  font-size: 10px;
-  font-weight: 1000;
-}
-
-.dot-total { background: #DBEAFE; color: #1D4ED8; border: 1px solid #93C5FD; }
-.dot-draft { background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; }
-.dot-review { background: #DBEAFE; color: #1D4ED8; border: 1px solid #93C5FD; }
-.dot-ok { background: #B6FF7A; color: #0B5D1E; border: 1px solid #7CFF3A; }
-.dot-send { background: #EDE9FE; color: #6D28D9; border: 1px solid #C4B5FD; }
-
-.status-card small {
-  display: block;
-  font-size: 10px;
-  color: #64748B;
-  font-weight: 950;
-  margin-bottom: 1px;
-}
-
-.status-card b {
-  display: block;
-  font-size: 14px;
-  color: #0F172A;
-  line-height: 1.05;
-}
-
-/* Clean Header */
-.clean-header {
-  display: grid;
-  grid-template-columns: 250px minmax(280px, 1fr) auto;
-  gap: 10px;
-  align-items: center;
-  padding: 8px 12px;
-  border-bottom: 1px solid #E5E7EB;
-}
-
-.master-title-wrap {
-  position: relative;
-  padding-left: 14px;
-  min-width: 210px;
-}
-
-.master-title-wrap::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 2px;
-  width: 4px;
-  height: 36px;
-  border-radius: 999px;
-  background: #EF233C;
-}
-
-.master-title {
-  display: inline-block;
-  font-size: 18px;
-  font-weight: 1000;
-  color: #EF233C;
-  letter-spacing: -.02em;
-  padding-bottom: 4px;
-}
-
-.master-subtitle {
-  margin-top: 4px;
-  font-size: 11.5px;
-  color: #475569;
-  font-weight: 750;
-}
-
-.search-box {
-  position: relative;
-}
-
-.search-box::before {
-  content: "🔎";
-  position: absolute;
-  left: 12px;
-  top: 9px;
-  font-size: 13px;
-  opacity: .65;
-}
-
-.search-box input {
-  width: 100%;
-  height: 38px;
-  border-radius: 12px;
-  border: 1px solid #E5E7EB;
-  padding-left: 34px;
-  font-weight: 800;
-  background: #fff;
-  color: #0F172A;
-  outline: none;
-}
-
-.search-box input:focus {
-  border-color: #EF233C;
-  box-shadow: 0 0 0 3px rgba(239,35,60,.10);
-}
-
-.clean-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: nowrap;
-}
-
-.clean-actions select {
-  height: 38px;
-  border: 1px solid #E5E7EB;
-  border-radius: 12px;
-  padding: 0 10px;
-  background: #fff;
-}
-
-/* Buttons */
-.btn {
-  height: 30px;
-  border-radius: 10px;
-  border: 0;
-  padding: 0 10px;
-  font-weight: 950;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn:hover {
-  transform: translateY(-1px);
-}
-
-.btn-primary {
-  background: #EF233C;
-  color: #fff;
-}
-
-.btn-primary:hover {
-  background: #D91A30;
-}
-
-.btn-secondary {
-  background: #fff;
-  color: #0F172A;
-  border: 1px solid #E5E7EB;
-}
-
-.btn-secondary:hover {
-  background: #F8FAFC;
-}
-
-.btn-soft {
-  background: #F8FAFC;
-  color: #334155;
-  border: 1px solid #E5E7EB;
-}
-
-.btn-blue {
-  background: #2563EB;
-  color: #fff;
-}
-
-.btn-blue:hover {
-  background: #1D4ED8;
-}
-
-.btn-green {
-  background: #16A34A;
-  color: #fff;
-}
-
-.btn-green:hover {
-  background: #15803D;
-}
-
-.btn-create {
-  height: 40px;
-  padding: 0 18px;
-  font-size: 13px;
-  border-radius: 12px;
-}
-
-/* Table */
-.table-scroll {
-  overflow: auto;
-  max-height: 52vh;
-  padding: 0 12px 8px;
-}
-
-.master-table {
-  width: 100%;
-  min-width: 900px;
-  border-collapse: collapse;
-}
-
-.master-table thead th {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  padding: 8px 6px;
-  font-size: 10px;
-  font-weight: 1000;
-  white-space: nowrap;
-  border: 1px solid #FCA5A5;
-  box-shadow: 0 2px 4px rgba(15,23,42,.10);
-  background: #FFF1F2 !important;
-  color: #7F1D1D !important;
-  border-color: #FCA5A5 !important;
-  text-align: center;
-}
-
-.master-table td {
-  border: 1px solid #E2E8F0;
-  padding: 6px 6px;
-  font-size: 11px;
-  vertical-align: middle;
-  text-align: center;
-}
-
-.master-table td.left {
-  text-align: left;
-}
-
-.master-table tr:nth-child(even) td {
-  background: #FFF5F6;
-}
-
-.master-table tr:hover td {
-  background: #FFFDFE;
-}
-
-/* Badges */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 3px 8px;
-  border-radius: 8px;
-  font-size: 10px;
-  font-weight: 950;
-  white-space: nowrap;
-}
-
-.b-draft { background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; }
-.b-review { background: #DBEAFE; color: #1D4ED8; border: 1px solid #93C5FD; }
-.b-valid { background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; }
-.b-sent { background: #EDE9FE; color: #6D28D9; border: 1px solid #C4B5FD; }
-.b-accepted { background: #B6FF7A; color: #0B5D1E; border: 1px solid #7CFF3A; }
-.b-rejected { background: #FFE4E6; color: #BE123C; border: 1px solid #FDA4AF; }
-.b-ok { background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; }
-.b-info { background: #DBEAFE; color: #1D4ED8; border: 1px solid #93C5FD; }
-.b-gray { background: #F1F5F9; color: #475569; }
-
-/* Security Note */
-.security-note {
-  padding: 7px 12px;
-  background: #FFF7ED;
-  color: #9A3412;
-  font-size: 10.5px;
-  font-weight: 850;
-  line-height: 1.35;
-  border-top: 1px solid #E5E7EB;
-}
-
-/* Kebab menu */
-.kebab {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  border: 0;
-  background: #F1F5F9;
-  font-size: 18px;
-  font-weight: 1000;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.kebab:hover {
-  background: #E2E8F0;
-  color: #EF233C;
-}
-
-/* Menu pop */
-.menu-pop {
-  position: fixed;
-  z-index: 999;
-  background: #fff;
-  border: 1px solid #E5E7EB;
-  border-radius: 12px;
-  box-shadow: 0 18px 45px rgba(15,23,42,.18);
-  padding: 8px;
-  min-width: 210px;
-}
-
-.menu-pop button {
-  width: 100%;
-  height: 34px;
-  border: 0;
-  background: #fff;
-  border-radius: 8px;
-  text-align: left;
-  padding: 0 10px;
-  font-weight: 850;
-  color: #334155;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.menu-pop button:hover {
-  background: #F8FAFC;
-  color: #EF233C;
-}
-
-.menu-pop .danger {
-  color: #DC2626;
-  border-top: 1px solid #E5E7EB;
-  margin-top: 4px;
-}
-
-.menu-pop .menu-pending { color: #C2410C; }
-.menu-pop .menu-accepted { color: #15803D; }
-.menu-pop .menu-lost { color: #7C3AED; }
-.menu-pop .menu-reactivate { color: #2563EB; }
-.menu-pop .menu-danger { color: #DC2626; }
-
-/* Toast */
-.toast {
-  position: fixed;
-  right: 20px;
-  bottom: 20px;
-  background: #0F172A;
-  color: #fff;
-  border-left: 4px solid #EF233C;
-  padding: 12px 16px;
-  border-radius: 10px;
-  font-weight: 600;
-  z-index: 99999;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.25);
-  animation: slideIn 0.3s ease-out;
-}
-
-/* Modal */
-.modal-bg {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.5);
-  z-index: 9999;
-  padding: 20px;
-  align-items: center;
-  justify-content: center;
-  overflow: auto;
-}
-
-.modal-bg.show {
-  display: flex;
-}
-
-.modal-box {
-  width: min(1100px, 96vw);
-  max-height: 98vh;
-  background: #fff;
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: 0 30px 80px rgba(15,23,42,.25);
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 12px;
-  border-bottom: 1px solid #E5E7EB;
-  background: #0F172A;
-  color: #fff;
-  flex: 0 0 auto;
-  min-height: 42px;
-}
-
-.modal-title {
-  font-size: 16px;
-  font-weight: 700;
-}
-
-.modal-body {
-  flex: 1 1 auto;
-  overflow: auto;
-  padding: 8px 10px;
-}
-
-.modal-foot {
-  flex: 0 0 auto;
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  padding: 8px 12px;
-  border-top: 1px solid #E5E7EB;
-  background: #F8FAFC;
-}
-
-/* Responsive */
-@media (max-width: 1380px) {
-  .clean-header {
-    grid-template-columns: 1fr;
-  }
-  .status-board {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width: 920px) {
-  body {
-    overflow: auto;
-  }
-  .app {
-    grid-template-columns: 1fr;
-    height: auto;
-  }
-  .sidebar {
-    display: none;
-  }
-  .main {
-    height: auto;
-  }
-  .status-board {
-    grid-template-columns: 1fr;
-  }
-  .tabs {
-    flex-wrap: wrap;
-  }
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-</style>
 {% endblock %}
 
 {% block content %}
@@ -564,16 +28,373 @@
     <button class="tab-btn" data-tab="devoluciones">🔄 Devoluciones</button>
 </div>
 
-<!-- CONTENIDO DE CADA MÓDULO -->
-<div id="cotizaciones" class="section active"></div>
-<div id="pedido_compra" class="section"></div>
-<div id="despachar" class="section"></div>
-<div id="guias" class="section"></div>
-<div id="comprobantes" class="section"></div>
-<div id="notas_credito" class="section"></div>
-<div id="devoluciones" class="section"></div>
+<!-- ============================================================ -->
+<!-- COTIZACIONES -->
+<!-- ============================================================ -->
+<div id="cotizaciones" class="section active">
+    <div class="status-board" id="cotizacionesKPI">
+        <!-- KPIs se generan desde JavaScript -->
+    </div>
+    <div class="panel">
+        <div class="clean-header">
+            <div class="master-title-wrap">
+                <div class="master-title">Base datos: Cotizaciones</div>
+                <div class="master-subtitle">Listado comercial con trazabilidad</div>
+            </div>
+            <div class="search-box">
+                <input id="qSearch" placeholder="Buscar por N° cotización / RUC / Cliente / Descripción...">
+            </div>
+            <div class="clean-actions">
+                <select id="qStatus">
+                    <option value="">Todos los estados</option>
+                    <option value="Borrador">Borrador</option>
+                    <option value="En revisión">En revisión</option>
+                    <option value="Validada">Validada</option>
+                    <option value="Generada">Generada</option>
+                    <option value="Aceptada">Aceptada</option>
+                    <option value="No concretada">No concretada</option>
+                </select>
+                <button class="btn btn-secondary" onclick="exportData('cotizaciones')">📥 Exportar</button>
+                <button class="btn btn-primary btn-create" onclick="openCotizacionModal()">+ Nueva cotización</button>
+            </div>
+        </div>
+        <div class="security-note">
+            <b>🔒 Seguridad:</b> la descarga de data queda bloqueada. Solo Gerencia/Administrador podrá autorizar exportaciones.
+        </div>
+        <div class="table-scroll">
+            <table class="master-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Fecha / Hora</th>
+                        <th>Estado</th>
+                        <th>N° Cotización</th>
+                        <th>RUC</th>
+                        <th>Cód. Cliente</th>
+                        <th>Razón social</th>
+                        <th>Descripción principal</th>
+                        <th>Monto total</th>
+                        <th>Cond. pago</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="qRows"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
+<!-- ============================================================ -->
+<!-- PEDIDO COMPRA -->
+<!-- ============================================================ -->
+<div id="pedido_compra" class="section">
+    <div class="panel">
+        <div class="clean-header">
+            <div class="master-title-wrap">
+                <div class="master-title">PC Pedido Compras</div>
+                <div class="master-subtitle">Aceptación formal del cliente recibida por correo</div>
+            </div>
+            <div class="search-box">
+                <input id="pcSearch" placeholder="Buscar por PC / Cliente / RUC / Cotización...">
+            </div>
+            <div class="clean-actions">
+                <select id="pcStatus">
+                    <option value="">Todos los estados</option>
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="Recibido por correo">Recibido por correo</option>
+                    <option value="En revisión interna">En revisión interna</option>
+                    <option value="Validado por Hellen">Validado por Hellen</option>
+                    <option value="Listo para despacho">Listo para despacho</option>
+                    <option value="Anulado">Anulado</option>
+                </select>
+                <button class="btn btn-secondary" onclick="exportData('pedido_compra')">📥 Exportar</button>
+                <button class="btn btn-primary btn-create" onclick="openPedidoCompraModal()">+ Subir PC cliente</button>
+            </div>
+        </div>
+        <div class="security-note">
+            <b>📋 Flujo:</b> Cliente acepta cotización → envía PC/OC por correo → se sube PDF/archivo → se valida precio, cantidad, stock, entrega y monto → Hellen valida → se atiende.
+        </div>
+        <div class="table-scroll">
+            <table class="master-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                        <th>PC / OC</th>
+                        <th>Cliente</th>
+                        <th>Cotización</th>
+                        <th>Monto</th>
+                        <th>Archivo</th>
+                        <th>Entrega</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="pcRows"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- DESPACHAR -->
+<!-- ============================================================ -->
+<div id="despachar" class="section">
+    <div class="panel">
+        <div class="clean-header">
+            <div class="master-title-wrap">
+                <div class="master-title">🚚 Despachar</div>
+                <div class="master-subtitle">Pendientes de despacho e historial</div>
+            </div>
+            <div class="search-box">
+                <input id="despachoSearch" placeholder="Buscar por despacho / cliente / PC...">
+            </div>
+            <div class="clean-actions">
+                <select id="despachoStatus">
+                    <option value="">Todos los estados</option>
+                    <option value="Pendiente despacho">Pendiente despacho</option>
+                    <option value="En preparación">En preparación</option>
+                    <option value="Despachado">Despachado</option>
+                    <option value="Entregado">Entregado</option>
+                </select>
+                <button class="btn btn-secondary" onclick="exportData('despachos')">📥 Exportar</button>
+            </div>
+        </div>
+        <div class="security-note">
+            <b>📦 Despacho:</b> Gestión de preparación y envío de productos a clientes.
+        </div>
+        <div class="table-scroll">
+            <table class="master-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Fecha despacho</th>
+                        <th>Estado</th>
+                        <th>Despacho</th>
+                        <th>PC</th>
+                        <th>Cliente</th>
+                        <th>Factura</th>
+                        <th>Guía</th>
+                        <th>Destino</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="despachoRows"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- GUÍAS -->
+<!-- ============================================================ -->
+<div id="guias" class="section">
+    <div class="panel">
+        <div class="clean-header">
+            <div class="master-title-wrap">
+                <div class="master-title">📦 Guías de Remisión</div>
+                <div class="master-subtitle">Documentos de traslado de mercadería</div>
+            </div>
+            <div class="search-box">
+                <input id="guiaSearch" placeholder="Buscar por guía / cliente / RUC...">
+            </div>
+            <div class="clean-actions">
+                <select id="guiaStatus">
+                    <option value="">Todos los estados</option>
+                    <option value="Borrador">Borrador</option>
+                    <option value="Pendiente despacho">Pendiente despacho</option>
+                    <option value="Emitida">Emitida</option>
+                    <option value="Entregada">Entregada</option>
+                    <option value="Anulada">Anulada</option>
+                </select>
+                <button class="btn btn-secondary" onclick="exportData('guias')">📥 Exportar</button>
+                <button class="btn btn-primary btn-create" onclick="openGuiaModal()">+ Nueva guía</button>
+            </div>
+        </div>
+        <div class="security-note">
+            <b>📋 Buenas prácticas:</b> toda guía debe estar amarrada a cliente, productos, unidades SUNAT, almacén y documento origen.
+        </div>
+        <div class="table-scroll">
+            <table class="master-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                        <th>Guía</th>
+                        <th>RUC</th>
+                        <th>Cliente</th>
+                        <th>Cotización</th>
+                        <th>Comprobante</th>
+                        <th>Origen</th>
+                        <th>Destino</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="guiaRows"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- COMPROBANTES -->
+<!-- ============================================================ -->
+<div id="comprobantes" class="section">
+    <div class="panel">
+        <div class="clean-header">
+            <div class="master-title-wrap">
+                <div class="master-title">🧾 Facturas y Boletas</div>
+                <div class="master-subtitle">Comprobantes emitidos a clientes</div>
+            </div>
+            <div class="search-box">
+                <input id="comprobanteSearch" placeholder="Buscar por documento / cliente / RUC...">
+            </div>
+            <div class="clean-actions">
+                <select id="comprobanteStatus">
+                    <option value="">Todos los estados</option>
+                    <option value="Borrador">Borrador</option>
+                    <option value="Emitido">Emitido</option>
+                    <option value="Enviado">Enviado</option>
+                    <option value="Pagado">Pagado</option>
+                    <option value="Anulado">Anulado</option>
+                </select>
+                <button class="btn btn-secondary" onclick="exportData('comprobantes')">📥 Exportar</button>
+                <button class="btn btn-primary btn-create" onclick="openComprobanteModal()">+ Nueva factura</button>
+            </div>
+        </div>
+        <div class="security-note">
+            <b>🧾 Facturación:</b> comprobantes vinculados a cotizaciones y pedidos de compra.
+        </div>
+        <div class="table-scroll">
+            <table class="master-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                        <th>Tipo</th>
+                        <th>Documento</th>
+                        <th>RUC</th>
+                        <th>Cliente</th>
+                        <th>Cotización</th>
+                        <th>Monto</th>
+                        <th>Cond. Pago</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="comprobanteRows"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- NOTAS DE CRÉDITO -->
+<!-- ============================================================ -->
+<div id="notas_credito" class="section">
+    <div class="panel">
+        <div class="clean-header">
+            <div class="master-title-wrap">
+                <div class="master-title">📝 Notas de Crédito</div>
+                <div class="master-subtitle">Ajustes y anulaciones de comprobantes</div>
+            </div>
+            <div class="search-box">
+                <input id="notaSearch" placeholder="Buscar por nota / cliente / RUC...">
+            </div>
+            <div class="clean-actions">
+                <select id="notaStatus">
+                    <option value="">Todos los estados</option>
+                    <option value="Borrador">Borrador</option>
+                    <option value="Emitida">Emitida</option>
+                    <option value="Enviada">Enviada</option>
+                    <option value="Aplicada">Aplicada</option>
+                    <option value="Anulada">Anulada</option>
+                </select>
+                <button class="btn btn-secondary" onclick="exportData('notas_credito')">📥 Exportar</button>
+                <button class="btn btn-primary btn-create" onclick="openNotaCreditoModal()">+ Nueva nota</button>
+            </div>
+        </div>
+        <div class="security-note">
+            <b>📝 Notas de crédito:</b> para anulaciones, devoluciones, descuentos posteriores o ajustes comerciales.
+        </div>
+        <div class="table-scroll">
+            <table class="master-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                        <th>Tipo</th>
+                        <th>Documento</th>
+                        <th>RUC</th>
+                        <th>Cliente</th>
+                        <th>Comprobante</th>
+                        <th>Motivo</th>
+                        <th>Monto</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="notaRows"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- DEVOLUCIONES -->
+<!-- ============================================================ -->
+<div id="devoluciones" class="section">
+    <div class="panel">
+        <div class="clean-header">
+            <div class="master-title-wrap">
+                <div class="master-title">🔄 Devoluciones</div>
+                <div class="master-subtitle">Gestión de devoluciones de productos</div>
+            </div>
+            <div class="search-box">
+                <input id="devolucionSearch" placeholder="Buscar por devolución / cliente / RUC...">
+            </div>
+            <div class="clean-actions">
+                <select id="devolucionStatus">
+                    <option value="">Todos los estados</option>
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="En revisión">En revisión</option>
+                    <option value="Aprobada">Aprobada</option>
+                    <option value="Rechazada">Rechazada</option>
+                    <option value="Procesada">Procesada</option>
+                </select>
+                <button class="btn btn-secondary" onclick="exportData('devoluciones')">📥 Exportar</button>
+                <button class="btn btn-primary btn-create" onclick="openDevolucionModal()">+ Nueva devolución</button>
+            </div>
+        </div>
+        <div class="security-note">
+            <b>🔄 Devoluciones:</b> gestión de devoluciones de productos por parte de clientes.
+        </div>
+        <div class="table-scroll">
+            <table class="master-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                        <th>Devolución</th>
+                        <th>RUC</th>
+                        <th>Cliente</th>
+                        <th>Factura</th>
+                        <th>Guía</th>
+                        <th>Motivo</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="devolucionRows"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
 <!-- MODALES -->
+<!-- ============================================================ -->
 {% include "ventas/modales/cotizacion_modal.html" %}
 {% include "ventas/modales/pedido_compra_modal.html" %}
 {% include "ventas/modales/despacho_modal.html" %}
@@ -585,4 +406,37 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/ventas.js') }}"></script>
+<script>
+    // Inicialización adicional después de cargar
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🔄 Inicializando módulo Ventas desde index.html');
+        
+        // Obtener el tab de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const tab = urlParams.get('tab') || 'cotizaciones';
+        
+        // Activar el tab correspondiente
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.tab === tab) {
+                btn.classList.add('active');
+            }
+        });
+        
+        // Mostrar la sección correspondiente
+        document.querySelectorAll('.section').forEach(section => {
+            section.classList.remove('active');
+            if (section.id === tab) {
+                section.classList.add('active');
+            }
+        });
+        
+        // Inicializar ventas
+        if (typeof initVentas === 'function') {
+            initVentas(tab);
+        } else {
+            console.warn('⚠️ initVentas no está definida');
+        }
+    });
+</script>
 {% endblock %}

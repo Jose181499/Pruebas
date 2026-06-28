@@ -961,6 +961,74 @@ function deleteNota(id) {
     }
 }
 
+
+
+
+//////////////
+// ============================================================
+// FUNCIÓN DE INICIALIZACIÓN - AGREGAR AL FINAL DE ventas.js
+// ============================================================
+
+window.initVentas = function(tab) {
+    console.log(`🚀 Inicializando ventas con tab: ${tab}`);
+    
+    // Cargar datos según el módulo activo
+    switch(tab) {
+        case 'cotizaciones':
+            if (typeof loadCotizaciones === 'function') {
+                loadCotizaciones();
+            }
+            break;
+        case 'pedido_compra':
+            if (typeof loadPedidos === 'function') {
+                loadPedidos();
+            }
+            break;
+        case 'despachar':
+            if (typeof loadDespachos === 'function') {
+                loadDespachos();
+            }
+            break;
+        case 'guias':
+            if (typeof loadGuias === 'function') {
+                loadGuias();
+            }
+            break;
+        case 'comprobantes':
+            if (typeof loadComprobantes === 'function') {
+                loadComprobantes();
+            }
+            break;
+        case 'notas_credito':
+            if (typeof loadNotas === 'function') {
+                loadNotas();
+            }
+            break;
+        case 'devoluciones':
+            if (typeof loadDevoluciones === 'function') {
+                loadDevoluciones();
+            }
+            break;
+        default:
+            if (typeof loadCotizaciones === 'function') {
+                loadCotizaciones();
+            }
+    }
+};
+
+// También mantener el DOMContentLoaded para compatibilidad
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔄 ventas.js: DOMContentLoaded');
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get('tab') || 'cotizaciones';
+    
+    // Si ya hay una función initVentas, usarla
+    if (typeof initVentas === 'function') {
+        initVentas(tab);
+    }
+});
+
+
 // ============================================================
 // ACCIONES DE DEVOLUCIONES
 // ============================================================
