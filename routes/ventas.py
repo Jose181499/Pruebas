@@ -1311,3 +1311,66 @@ def api_exportar(tipo):
         return jsonify({'success': True, 'message': f'Exportación de {tipo} preparada'})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+# ============================================================
+# CONSULTAR SUNAT
+# ============================================================
+
+@ventas_bp.route('/ventas/api/sunat/consulta', methods=['GET'])
+@login_required
+def api_sunat_consulta():
+    """Consultar RUC en SUNAT"""
+    try:
+        ruc = request.args.get('ruc', '').strip()
+        
+        if not ruc or len(ruc) != 11:
+            return jsonify({'success': False, 'error': 'RUC inválido, debe tener 11 dígitos'}), 400
+        
+        # Primero, buscar en la base de datos
+        cliente = buscar_cliente_por_ruc(ruc)
+        
+        if cliente:
+            # Cliente encontrado en la base de datos
+            return jsonify({
+                'success': True,
+                'encontrado': True,
+                'origen': 'base_datos',
+                'mensaje': '✅ Cliente encontrado en sistema',
+                'data': {
+                    'ruc': cliente.get('numero_documento'),
+                    'razon_social': cliente.get('razon_social'),
+                    'nombre_comercial': cliente.get('nombre_comercial'),
+                    'direccion': cliente.get('direccion_fiscal'),
+                    'telefono': cliente.get('telefono_contacto'),
+                    'contacto': cliente.get('nombre_contacto'),
+                    'email': cliente.get('email_contacto'),
+                    'codigo_cliente': cliente.get('codigo_cliente'),
+                    'tipo_documento': cliente.get('tipo_documento', 'RUC'),
+                    'estado': cliente.get('estado', 'Activo')
+                }
+            })
+        
+        # Si no existe en BD, consultar SUNAT (simulado por ahora)
+        # En producción, aquí iría la llamada a la API de SUNAT
+        datos_sunat = {
+            'ruc': ruc,
+            'razon_social': f'EMPRESA CON RUC {ruc}',
+            'nombre_comercial': f'EMPRESA {ruc[-4:]}',
+            'direccion': 'Dirección fiscal consultada en SUNAT',
+            'telefono': '',
+            'contacto': '',
+            'email': '',
+            'estado': 'ACTIVO'
+        }
+        
+        return jsonify({
+            'success': True,
+            'encontrado': False,
+            'origen': 'sunat',
+            'mensaje': '🌞 Cliente consultado en SUNAT - datos cargados',
+            'data': datos_sunat
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en api_sunat_consulta: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500

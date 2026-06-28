@@ -3703,3 +3703,33 @@ def obtener_cliente_por_id_simple(cliente_id):
     except Exception as e:
         print(f"❌ Error en obtener_cliente_por_id_simple: {e}")
         return None
+
+
+def buscar_cliente_por_ruc(ruc: str):
+    """Busca un cliente por su RUC en la base de datos"""
+    try:
+        if not ruc or len(ruc) < 3:
+            return None
+        
+        query = """
+            SELECT 
+                id, 
+                tipo_documento, 
+                numero_documento, 
+                razon_social, 
+                nombre_comercial, 
+                direccion_fiscal, 
+                codigo_cliente,
+                telefono_contacto,
+                nombre_contacto,
+                email_contacto,
+                estado
+            FROM clientes 
+            WHERE numero_documento = %s AND activo = TRUE
+            LIMIT 1
+        """
+        result = db_query(query, (ruc,))
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en buscar_cliente_por_ruc: {e}")
+        return None

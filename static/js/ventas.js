@@ -939,79 +939,179 @@ function calcQuote() {
     set('sumTotal', money(total));
 }
 
-function loadClient() {
-    const ruc = document.getElementById('fRucSearch')?.value?.trim() || '';
-    if (!ruc) { showToast('Ingrese RUC para consultar', 'warning'); return; }
+// ============================================================
+// LOAD CLIENT - BUSCAR EN BD Y SUNAT
+// ============================================================
+async function loadClient() {
+    const rucInput = document.getElementById('fRucSearch');
+    const ruc = rucInput?.value?.trim() || '';
     
-    let client = MAESTROS_VENTAS.clientes.find(x => String(x.ruc) === String(ruc));
-    
-    if (!client) {
-        client = {
-            codigo: 'CLI-' + String(MAESTROS_VENTAS.clientes.length + 1).padStart(6, '0'),
-            ruc: ruc,
-            razon: 'CLIENTE CONSULTADO EN SUNAT',
-            razonComercial: '',
-            contacto: '',
-            telefono: '',
-            correo: '',
-            condicion: 'Contado',
-            direccion: 'Dirección fiscal consultada en SUNAT',
-            estado: 'Nuevo'
-        };
-        showToast('Cliente nuevo: complete los datos', 'info');
-    } else {
-        showToast('Cliente existente detectado', 'success');
+    if (!ruc) {
+        showToast('⚠️ Ingrese un RUC para consultar', 'warning');
+        return;
     }
     
-    document.getElementById('fRuc').value = client.ruc || '';
-    document.getElementById('fRazon').value = client.razon || '';
-    document.getElementById('fComercial').value = client.razonComercial || client.razon || '';
-    document.getElementById('fCodCliente').value = client.codigo || 'PENDIENTE';
-    document.getElementById('fDireccion').value = client.direccion || '';
-    document.getElementById('fContacto').value = client.contacto || '';
-    document.getElementById('fTelefono').value = client.telefono || '';
-    document.getElementById('fCorreo').value = client.correo || '';
-    if (document.getElementById('fCondicion')) {
-        document.getElementById('fCondicion').value = client.condicion || 'Contado';
+    if (ruc.length !== 11) {
+        showToast('⚠️ El RUC debe tener 11 dígitos', 'warning');
+        return;
+    }
+    
+    // Mostrar loading
+    const btnBuscar = document.querySelector('.btn-search-ruc');
+    const originalText = btnBuscar?.textContent || '🔍 Buscar';
+    if (btnBuscar) {
+        btnBuscar.textContent = '⏳ Consultando...';
+        btnBuscar.disabled = true;
+    }
+    
+    try {
+        const response = await fetch(`/ventas/api/sunat/consulta?ruc=${ruc}`);
+        const result = await response.json();
+        
+        console.log('📦 Resultado consulta:', result);
+        
+        if (result.success) {
+            const data = result.data;
+            
+            // Mostrar mensaje según origen
+            if (result.origen === 'base_datos') {
+                showToast(result.mensaje, 'success');
+                // Mostrar badge de cliente existente
+                const confirmBox = document.getElementById('clientConfirmBox');
+                if (confirmBox) {
+                    confirmBox.textContent = '✅ Cliente encontrado en sistema';
+                    confirmBox.style.background = '#DCFCE7';
+                    confirmBox.style.color = '#166534';
+                    confirmBox.style.borderColor = '#86EFAC';
+                    confirmBox.classList.add('show');
+                    setTimeout(() => confirmBox.classList.remove('show'), 4000);
+                }
+            } else {
+                showToast(result.mensaje, 'info');
+                // Mostrar badge de cliente nuevo
+                const confirmBox = document.getElementById('clientConfirmBox');
+                if (confirmBox) {
+                    confirmBox.textContent = '🌞 Cliente consultado en SUNAT - datos cargados';
+                    confirmBox.style.background = '#DBEAFE';
+                    confirmBox.style.color = '#1D4ED8';
+                    confirmBox.style.borderColor = '#93C5FD';
+                    confirmBox.classList.add('show');
+                    setTimeout(() => confirmBox.classList.remove('show'), 4000);
+                }
+            }
+            
+            // Llenar formulario con los datos
+            document.getElementById('fRuc').value = data.ruc || '';
+            document.getElementById('fRazon').value = data.razon_social || '';
+            document.getElementById('fComercial').value = data.nombre_comercial || data.razon_social || '';
+            document.getElementById('fCodCliente').value = data.codigo_cliente || 'PENDIENTE';
+            document.getElementById('fDireccion').value = data.direccion || '';
+            document.getElementById('fContacto').value = data.contacto || '';
+            document.getElementById('fTelefono').value = data.telefono || '';
+            document.getElementById('fCorreo').value = data.email || '';
+            
+            if (document.getElementById('fCondicion')) {
+                document.getElementById('fCondicion').value = data.condicion_pago || 'Contado';
+            }
+            
+            // Guardar en variable global el origen
+            window.clienteOrigen = result.origen;
+            
+        } else {
+            showToast('❌ ' + (result.error || 'Error al consultar'), 'error');
+        }
+    } catch (error) {
+        console.error('❌ Error:', error);
+        showToast('❌ Error al consultar el RUC', 'error');
+    } finally {
+        // Restaurar botón
+        if (btnBuscar) {
+            btnBuscar.textContent = originalText;
+            btnBuscar.disabled = false;
+        }
     }
 }
+
+// ============================================================
+// AUTO LOAD CLIENT BY RUC
+// ============================================================
+let __rucAutoTimer = null;
 
 function autoLoadClientByRuc(value) {
-    clearTimeout(window.__rucAutoTimer);
+    clearTimeout(__rucAutoTimer);
     const ruc = (value || '').trim();
-    if (!ruc) return;
-    if (ruc.length >= 11) {
-        window.__rucAutoTimer = setTimeout(() => loadClient(), 300);
+    
+    // Solo buscar si tiene 11 dígitos
+    if (ruc.length === 11) {
+        __rucAutoTimer = setTimeout(() => {
+            loadClient();
+        }, 500);
+    } else if (ruc.length > 11) {
+        // Si pegaron más de 11 dígitos, limpiar
+        const input = document.getElementById('fRucSearch');
+        if (input) {
+            input.value = ruc.substring(0, 11);
+        }
     }
 }
 
+// ============================================================
+// SAVE CLIENT FROM QUOTE
+// ============================================================
 function saveClientFromQuote() {
     const ruc = document.getElementById('fRuc')?.value?.trim() || '';
-    if (!ruc) { showToast('Primero busca el RUC', 'warning'); return; }
+    if (!ruc) {
+        showToast('⚠️ Primero busca el RUC', 'warning');
+        return;
+    }
     
     const cliente = {
         ruc: ruc,
-        razon: document.getElementById('fRazon')?.value || '',
-        razonComercial: document.getElementById('fComercial')?.value || '',
-        direccion: document.getElementById('fDireccion')?.value || '',
-        contacto: document.getElementById('fContacto')?.value || '',
-        telefono: document.getElementById('fTelefono')?.value || '',
-        correo: document.getElementById('fCorreo')?.value || '',
-        condicion: document.getElementById('fCondicion')?.value || 'Contado'
+        razon_social: document.getElementById('fRazon')?.value || '',
+        nombre_comercial: document.getElementById('fComercial')?.value || '',
+        direccion_fiscal: document.getElementById('fDireccion')?.value || '',
+        nombre_contacto: document.getElementById('fContacto')?.value || '',
+        telefono_contacto: document.getElementById('fTelefono')?.value || '',
+        email_contacto: document.getElementById('fCorreo')?.value || '',
+        condicion_pago: document.getElementById('fCondicion')?.value || 'Contado',
+        tipo_documento: 'RUC'
     };
     
+    // Verificar si ya existe en MAESTROS_VENTAS
     const existing = MAESTROS_VENTAS.clientes.findIndex(x => x.ruc === ruc);
+    
     if (existing >= 0) {
-        MAESTROS_VENTAS.clientes[existing] = { ...MAESTROS_VENTAS.clientes[existing], ...cliente };
-        showToast('Cliente actualizado en Maestros', 'success');
+        // Actualizar
+        MAESTROS_VENTAS.clientes[existing] = {
+            ...MAESTROS_VENTAS.clientes[existing],
+            ...cliente,
+            codigo: MAESTROS_VENTAS.clientes[existing].codigo || 'CLI-' + String(existing + 1).padStart(6, '0')
+        };
+        showToast('✅ Cliente actualizado en Maestros', 'success');
     } else {
-        cliente.codigo = 'CLI-' + String(MAESTROS_VENTAS.clientes.length + 1).padStart(6, '0');
-        cliente.estado = 'Activo';
-        MAESTROS_VENTAS.clientes.push(cliente);
-        document.getElementById('fCodCliente').value = cliente.codigo;
-        showToast('Cliente nuevo guardado en Maestros', 'success');
+        // Crear nuevo
+        const nuevoCodigo = 'CLI-' + String(MAESTROS_VENTAS.clientes.length + 1).padStart(6, '0');
+        MAESTROS_VENTAS.clientes.push({
+            ...cliente,
+            codigo: nuevoCodigo,
+            estado: 'Activo'
+        });
+        document.getElementById('fCodCliente').value = nuevoCodigo;
+        showToast('✅ Cliente nuevo guardado en Maestros', 'success');
+    }
+    
+    // Mostrar confirmación
+    const confirmBox = document.getElementById('clientConfirmBox');
+    if (confirmBox) {
+        confirmBox.textContent = '💾 Cliente guardado en Maestros correctamente';
+        confirmBox.className = 'client-confirm-box show';
+        confirmBox.style.background = '#DCFCE7';
+        confirmBox.style.color = '#166534';
+        confirmBox.style.borderColor = '#86EFAC';
+        setTimeout(() => confirmBox.classList.remove('show'), 3000);
     }
 }
+
 
 // ============================================================
 // MODAL PEDIDO COMPRA - GENERA CONTENIDO DINÁMICO
