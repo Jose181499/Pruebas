@@ -1124,10 +1124,9 @@ function openPedidoCompraModal(id = null) {
     
     document.getElementById('pedidoCompraModal').classList.add('show');
 }
-
 function productTable(productos) {
     if (!productos || productos.length === 0) {
-        return `<div style="padding:10px;text-align:center;color:#94A3B8;">No hay productos</div>`;
+        return `<div style="padding:20px;text-align:center;color:#94A3B8;">No hay productos</div>`;
     }
     
     return `
@@ -1156,7 +1155,6 @@ function productTable(productos) {
         </div>
     `;
 }
-
 // ============================================================
 // MODAL DESPACHO - GENERA CONTENIDO DINÁMICO
 // ============================================================
@@ -1262,64 +1260,75 @@ function openGuiaModal(id = null) {
     ).join('');
     
     formContainer.innerHTML = `
-        <div class="ficha-grid">
-            <div class="form-field col-4"><label>Cotización vinculada</label>
-                <select id="guiaCotizacion">${cotOptions || '<option value="">Sin cotización</option>'}</select>
-            </div>
-            <div class="form-field col-4"><label>Serie</label>
-                <input id="guiaSerie" value="T001">
-            </div>
-            <div class="form-field col-4"><label>Número</label>
-                <input id="guiaNumero" value="${String(Date.now()).slice(-8)}">
-            </div>
-            <div class="form-field col-4"><label>Estado</label>
-                <select id="guiaEstado">
-                    <option>Borrador</option>
-                    <option>Pendiente despacho</option>
-                    <option>Emitida</option>
-                    <option>Entregada</option>
-                    <option>Anulada</option>
-                </select>
-            </div>
-            <div class="form-field col-4"><label>Cliente</label>
-                <input id="guiaCliente" placeholder="Razón social">
-            </div>
-            <div class="form-field col-4"><label>RUC</label>
-                <input id="guiaRuc" placeholder="12345678901">
-            </div>
-            <div class="form-field col-4"><label>Origen</label>
-                <select id="guiaOrigen">
-                    <option>ALM-SMP</option>
-                    <option>OF-BRE</option>
-                    <option>Almacén Central</option>
-                </select>
-            </div>
-            <div class="form-field col-4"><label>Destino</label>
-                <input id="guiaDestino" placeholder="Dirección de entrega">
-            </div>
-            <div class="form-field col-12">
-                <label>Motivo traslado</label>
-                <select id="guiaMotivo">
-                    <option>Venta</option>
-                    <option>Compra</option>
-                    <option>Traslado interno</option>
-                    <option>Devolución</option>
-                </select>
-            </div>
-            <div class="form-field col-12">
-                <label>Observaciones</label>
-                <textarea id="guiaObs" placeholder="Observaciones de la guía"></textarea>
+        <div class="ficha-section">
+            <div class="ficha-section-title">📦 Datos de la guía</div>
+            <div class="ficha-grid">
+                <div class="form-field col-4">
+                    <label>Cotización vinculada</label>
+                    <select id="guiaCotizacion">${cotOptions || '<option value="">Sin cotización</option>'}</select>
+                </div>
+                <div class="form-field col-4">
+                    <label>Serie</label>
+                    <input id="guiaSerie" value="T001">
+                </div>
+                <div class="form-field col-4">
+                    <label>Número</label>
+                    <input id="guiaNumero" value="${String(Date.now()).slice(-8)}">
+                </div>
+                <div class="form-field col-4">
+                    <label>Estado</label>
+                    <select id="guiaEstado">
+                        <option>Borrador</option>
+                        <option>Pendiente despacho</option>
+                        <option>Emitida</option>
+                        <option>Entregada</option>
+                        <option>Anulada</option>
+                    </select>
+                </div>
+                <div class="form-field col-4">
+                    <label>Cliente</label>
+                    <input id="guiaCliente" placeholder="Razón social">
+                </div>
+                <div class="form-field col-4">
+                    <label>RUC</label>
+                    <input id="guiaRuc" placeholder="12345678901">
+                </div>
+                <div class="form-field col-4">
+                    <label>Origen</label>
+                    <select id="guiaOrigen">
+                        <option>ALM-SMP</option>
+                        <option>OF-BRE</option>
+                        <option>Almacén Central</option>
+                    </select>
+                </div>
+                <div class="form-field col-4">
+                    <label>Destino</label>
+                    <input id="guiaDestino" placeholder="Dirección de entrega">
+                </div>
+                <div class="form-field col-4">
+                    <label>Motivo traslado</label>
+                    <select id="guiaMotivo">
+                        <option>Venta</option>
+                        <option>Compra</option>
+                        <option>Traslado interno</option>
+                        <option>Devolución</option>
+                    </select>
+                </div>
+                <div class="form-field col-12">
+                    <label>Observaciones</label>
+                    <textarea id="guiaObs" placeholder="Observaciones de la guía"></textarea>
+                </div>
             </div>
         </div>
         <div class="ficha-section">
-            <div class="ficha-section-title">Productos</div>
+            <div class="ficha-section-title">📦 Productos</div>
             <div id="guiaProducts">
-                <div style="padding:10px;text-align:center;color:#94A3B8;">Seleccione una cotización para ver los productos.</div>
+                <div style="padding:20px;text-align:center;color:#94A3B8;">Seleccione una cotización para ver los productos.</div>
             </div>
         </div>
     `;
     
-    // Evento para cargar productos
+    // Evento para cargar productos al seleccionar cotización
     document.getElementById('guiaCotizacion')?.addEventListener('change', function() {
         const num = this.value;
         const q = cotizacionesData.find(x => x.numero === num);
@@ -1330,7 +1339,7 @@ function openGuiaModal(id = null) {
             document.getElementById('guiaDestino').value = q.direccion || '';
         } else {
             document.getElementById('guiaProducts').innerHTML = `
-                <div style="padding:10px;text-align:center;color:#94A3B8;">No hay productos en esta cotización.</div>
+                <div style="padding:20px;text-align:center;color:#94A3B8;">No hay productos en esta cotización.</div>
             `;
         }
     });
@@ -1340,7 +1349,6 @@ function openGuiaModal(id = null) {
 
 // ============================================================
 // MODAL FACTURA - GENERA CONTENIDO DINÁMICO
-// ============================================================
 function openComprobanteModal(id = null) {
     editingId = id;
     const isEdit = id !== null;
@@ -1355,54 +1363,66 @@ function openComprobanteModal(id = null) {
     ).join('');
     
     formContainer.innerHTML = `
-        <div class="ficha-grid">
-            <div class="form-field col-4"><label>Cotización vinculada</label>
-                <select id="compCotizacion">${cotOptions || '<option value="">Sin cotización</option>'}</select>
-            </div>
-            <div class="form-field col-3"><label>Tipo</label>
-                <select id="compTipo">
-                    <option>Factura</option>
-                    <option>Boleta</option>
-                </select>
-            </div>
-            <div class="form-field col-3"><label>Serie</label>
-                <input id="compSerie" value="F001">
-            </div>
-            <div class="form-field col-3"><label>Número</label>
-                <input id="compNumero" value="${String(Date.now()).slice(-8)}">
-            </div>
-            <div class="form-field col-3"><label>Estado</label>
-                <select id="compEstado">
-                    <option>Borrador</option>
-                    <option>Emitido</option>
-                    <option>Enviado</option>
-                    <option>Pagado</option>
-                    <option>Anulado</option>
-                </select>
-            </div>
-            <div class="form-field col-4"><label>Cliente</label>
-                <input id="compCliente" placeholder="Razón social">
-            </div>
-            <div class="form-field col-4"><label>RUC</label>
-                <input id="compRuc" placeholder="12345678901">
-            </div>
-            <div class="form-field col-4"><label>Monto</label>
-                <input id="compMonto" type="number" value="0">
-            </div>
-            <div class="form-field col-4"><label>Condición de pago</label>
-                <select id="compCondicion">
-                    ${options(MAESTROS_VENTAS.condicionesPago, 'Contado')}
-                </select>
-            </div>
-            <div class="form-field col-12">
-                <label>Observaciones</label>
-                <textarea id="compObs" placeholder="Observaciones del comprobante"></textarea>
+        <div class="ficha-section">
+            <div class="ficha-section-title">🧾 Datos del comprobante</div>
+            <div class="ficha-grid">
+                <div class="form-field col-4">
+                    <label>Cotización vinculada</label>
+                    <select id="compCotizacion">${cotOptions || '<option value="">Sin cotización</option>'}</select>
+                </div>
+                <div class="form-field col-3">
+                    <label>Tipo</label>
+                    <select id="compTipo">
+                        <option>Factura</option>
+                        <option>Boleta</option>
+                    </select>
+                </div>
+                <div class="form-field col-3">
+                    <label>Serie</label>
+                    <input id="compSerie" value="F001">
+                </div>
+                <div class="form-field col-3">
+                    <label>Número</label>
+                    <input id="compNumero" value="${String(Date.now()).slice(-8)}">
+                </div>
+                <div class="form-field col-3">
+                    <label>Estado</label>
+                    <select id="compEstado">
+                        <option>Borrador</option>
+                        <option>Emitido</option>
+                        <option>Enviado</option>
+                        <option>Pagado</option>
+                        <option>Anulado</option>
+                    </select>
+                </div>
+                <div class="form-field col-4">
+                    <label>Cliente</label>
+                    <input id="compCliente" placeholder="Razón social">
+                </div>
+                <div class="form-field col-4">
+                    <label>RUC</label>
+                    <input id="compRuc" placeholder="12345678901">
+                </div>
+                <div class="form-field col-4">
+                    <label>Monto</label>
+                    <input id="compMonto" type="number" value="0" step="0.01">
+                </div>
+                <div class="form-field col-4">
+                    <label>Condición de pago</label>
+                    <select id="compCondicion">
+                        ${options(MAESTROS_VENTAS.condicionesPago, 'Contado')}
+                    </select>
+                </div>
+                <div class="form-field col-12">
+                    <label>Observaciones</label>
+                    <textarea id="compObs" placeholder="Observaciones del comprobante"></textarea>
+                </div>
             </div>
         </div>
         <div class="ficha-section">
-            <div class="ficha-section-title">Productos</div>
+            <div class="ficha-section-title">🧾 Productos</div>
             <div id="compProducts">
-                <div style="padding:10px;text-align:center;color:#94A3B8;">Seleccione una cotización para ver los productos.</div>
+                <div style="padding:20px;text-align:center;color:#94A3B8;">Seleccione una cotización para ver los productos.</div>
             </div>
         </div>
     `;
@@ -1417,7 +1437,7 @@ function openComprobanteModal(id = null) {
             document.getElementById('compMonto').value = q.monto || 0;
         } else {
             document.getElementById('compProducts').innerHTML = `
-                <div style="padding:10px;text-align:center;color:#94A3B8;">No hay productos en esta cotización.</div>
+                <div style="padding:20px;text-align:center;color:#94A3B8;">No hay productos en esta cotización.</div>
             `;
         }
     });
@@ -1442,53 +1462,63 @@ function openNotaCreditoModal(id = null) {
     ).join('');
     
     formContainer.innerHTML = `
-        <div class="ficha-grid">
-            <div class="form-field col-4"><label>Comprobante afectado</label>
-                <select id="notaComprobante">${compOptions || '<option value="">Sin comprobantes</option>'}</select>
-            </div>
-            <div class="form-field col-3"><label>Serie</label>
-                <input id="notaSerie" value="FC01">
-            </div>
-            <div class="form-field col-3"><label>Número</label>
-                <input id="notaNumero" value="${String(Date.now()).slice(-8)}">
-            </div>
-            <div class="form-field col-3"><label>Estado</label>
-                <select id="notaEstado">
-                    <option>Borrador</option>
-                    <option>Emitida</option>
-                    <option>Enviada</option>
-                    <option>Aplicada</option>
-                    <option>Anulada</option>
-                </select>
-            </div>
-            <div class="form-field col-4"><label>Cliente</label>
-                <input id="notaCliente" placeholder="Razón social">
-            </div>
-            <div class="form-field col-4"><label>RUC</label>
-                <input id="notaRuc" placeholder="12345678901">
-            </div>
-            <div class="form-field col-4"><label>Monto</label>
-                <input id="notaMonto" type="number" value="0">
-            </div>
-            <div class="form-field col-6"><label>Motivo</label>
-                <select id="notaMotivo">
-                    <option>Anulación de operación</option>
-                    <option>Devolución</option>
-                    <option>Descuento posterior</option>
-                    <option>Error en descripción</option>
-                    <option>Ajuste comercial</option>
-                </select>
-            </div>
-            <div class="form-field col-12">
-                <label>Observaciones</label>
-                <textarea id="notaObs" placeholder="Observaciones de la nota de crédito"></textarea>
+        <div class="ficha-section">
+            <div class="ficha-section-title">📝 Datos de la nota de crédito</div>
+            <div class="ficha-grid">
+                <div class="form-field col-4">
+                    <label>Comprobante afectado</label>
+                    <select id="notaComprobante">${compOptions || '<option value="">Sin comprobantes</option>'}</select>
+                </div>
+                <div class="form-field col-3">
+                    <label>Serie</label>
+                    <input id="notaSerie" value="FC01">
+                </div>
+                <div class="form-field col-3">
+                    <label>Número</label>
+                    <input id="notaNumero" value="${String(Date.now()).slice(-8)}">
+                </div>
+                <div class="form-field col-3">
+                    <label>Estado</label>
+                    <select id="notaEstado">
+                        <option>Borrador</option>
+                        <option>Emitida</option>
+                        <option>Enviada</option>
+                        <option>Aplicada</option>
+                        <option>Anulada</option>
+                    </select>
+                </div>
+                <div class="form-field col-4">
+                    <label>Cliente</label>
+                    <input id="notaCliente" placeholder="Razón social">
+                </div>
+                <div class="form-field col-4">
+                    <label>RUC</label>
+                    <input id="notaRuc" placeholder="12345678901">
+                </div>
+                <div class="form-field col-4">
+                    <label>Monto</label>
+                    <input id="notaMonto" type="number" value="0" step="0.01">
+                </div>
+                <div class="form-field col-6">
+                    <label>Motivo</label>
+                    <select id="notaMotivo">
+                        <option>Anulación de operación</option>
+                        <option>Devolución</option>
+                        <option>Descuento posterior</option>
+                        <option>Error en descripción</option>
+                        <option>Ajuste comercial</option>
+                    </select>
+                </div>
+                <div class="form-field col-12">
+                    <label>Observaciones</label>
+                    <textarea id="notaObs" placeholder="Observaciones de la nota de crédito"></textarea>
+                </div>
             </div>
         </div>
     `;
     
     document.getElementById('notaCreditoModal').classList.add('show');
 }
-
 // ============================================================
 // MODAL DEVOLUCIÓN - GENERA CONTENIDO DINÁMICO
 // ============================================================
@@ -1506,43 +1536,53 @@ function openDevolucionModal(id = null) {
     ).join('');
     
     formContainer.innerHTML = `
-        <div class="ficha-grid">
-            <div class="form-field col-4"><label>Comprobante vinculado</label>
-                <select id="devComprobante">${compOptions || '<option value="">Sin comprobantes</option>'}</select>
-            </div>
-            <div class="form-field col-4"><label>N° Devolución</label>
-                <input id="devNumero" value="DEV-${String(Date.now()).slice(-8)}">
-            </div>
-            <div class="form-field col-4"><label>Estado</label>
-                <select id="devEstado">
-                    <option>Pendiente</option>
-                    <option>En revisión</option>
-                    <option>Aprobada</option>
-                    <option>Rechazada</option>
-                    <option>Procesada</option>
-                </select>
-            </div>
-            <div class="form-field col-4"><label>Cliente</label>
-                <input id="devCliente" placeholder="Razón social">
-            </div>
-            <div class="form-field col-4"><label>RUC</label>
-                <input id="devRuc" placeholder="12345678901">
-            </div>
-            <div class="form-field col-4"><label>Monto</label>
-                <input id="devMonto" type="number" value="0">
-            </div>
-            <div class="form-field col-6"><label>Motivo</label>
-                <select id="devMotivo">
-                    <option>Producto defectuoso</option>
-                    <option>Producto incorrecto</option>
-                    <option>Exceso de cantidad</option>
-                    <option>Daño en transporte</option>
-                    <option>Otro</option>
-                </select>
-            </div>
-            <div class="form-field col-12">
-                <label>Observaciones</label>
-                <textarea id="devObs" placeholder="Observaciones de la devolución"></textarea>
+        <div class="ficha-section">
+            <div class="ficha-section-title">🔄 Datos de la devolución</div>
+            <div class="ficha-grid">
+                <div class="form-field col-4">
+                    <label>Comprobante vinculado</label>
+                    <select id="devComprobante">${compOptions || '<option value="">Sin comprobantes</option>'}</select>
+                </div>
+                <div class="form-field col-4">
+                    <label>N° Devolución</label>
+                    <input id="devNumero" value="DEV-${String(Date.now()).slice(-8)}">
+                </div>
+                <div class="form-field col-4">
+                    <label>Estado</label>
+                    <select id="devEstado">
+                        <option>Pendiente</option>
+                        <option>En revisión</option>
+                        <option>Aprobada</option>
+                        <option>Rechazada</option>
+                        <option>Procesada</option>
+                    </select>
+                </div>
+                <div class="form-field col-4">
+                    <label>Cliente</label>
+                    <input id="devCliente" placeholder="Razón social">
+                </div>
+                <div class="form-field col-4">
+                    <label>RUC</label>
+                    <input id="devRuc" placeholder="12345678901">
+                </div>
+                <div class="form-field col-4">
+                    <label>Monto</label>
+                    <input id="devMonto" type="number" value="0" step="0.01">
+                </div>
+                <div class="form-field col-6">
+                    <label>Motivo</label>
+                    <select id="devMotivo">
+                        <option>Producto defectuoso</option>
+                        <option>Producto incorrecto</option>
+                        <option>Exceso de cantidad</option>
+                        <option>Daño en transporte</option>
+                        <option>Otro</option>
+                    </select>
+                </div>
+                <div class="form-field col-12">
+                    <label>Observaciones</label>
+                    <textarea id="devObs" placeholder="Observaciones de la devolución"></textarea>
+                </div>
             </div>
         </div>
     `;
