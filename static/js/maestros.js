@@ -769,37 +769,98 @@ function clearClientForm() {
   syncClientState();
 }
 
+
 function fillClientForm(data) {
-  const sv = (id, v) => { const el = document.getElementById(id); if (el) el.value = v ?? ''; };
-  sv('cli_ambito', data.ambito || 'COMPARTIDO');
-  sv('cli_tipoDoc', data.tipo_documento || 'RUC');
-  sv('cli_numero', data.numero_documento || '');
-  sv('cli_nombre', data.razon_social || '');
-  sv('cli_nombreComercial', data.nombre_comercial || '');
-  sv('cli_direccionFiscal', data.direccion_fiscal || '');
-  sv('cli_condicion', data.condicion_pago || 'Contado');
-  sv('cli_diasCredito', data.dias_credito || '0');
-  sv('cli_limiteCredito', data.limite_credito || '');
-  sv('cli_descuento', data.descuento || '');
-  sv('cli_estado', data.estado || 'Activo');
-  sv('cli_obs', data.observaciones || '');
-  
-  const cc = document.getElementById('cliContacts');
-  if (data.contactos && data.contactos.length) {
-    cc.innerHTML = data.contactos.map(c => contactBox(c)).join('');
-  } else {
-    cc.innerHTML = contactBox({ principal: true });
-  }
-  
-  const cp = document.getElementById('cliPoints');
-  if (data.puntos_entrega && data.puntos_entrega.length) {
-    cp.innerHTML = data.puntos_entrega.map(p => pointBox(p)).join('');
-  } else {
-    cp.innerHTML = pointBox({ principal: true });
-  }
-  
-  syncClientState();
+    console.log('📝 Rellenando formulario con datos:', data);
+    
+    // Función segura para obtener valor
+    const getVal = (field, defaultValue = '') => {
+        return data[field] !== undefined && data[field] !== null ? data[field] : defaultValue;
+    };
+    
+    // Mapeo de campos
+    const campos = {
+        'cli_ambito': getVal('ambito', 'COMPARTIDO'),
+        'cli_tipoDoc': getVal('tipo_documento', 'RUC'),
+        'cli_numero': getVal('numero_documento', ''),
+        'cli_nombre': getVal('razon_social', ''),
+        'cli_nombreComercial': getVal('nombre_comercial', getVal('razon_social', '')),
+        'cli_direccionFiscal': getVal('direccion_fiscal', ''),
+        'cli_condicion': getVal('condicion_pago', 'Contado'),
+        'cli_diasCredito': getVal('dias_credito', '0'),
+        'cli_limiteCredito': getVal('limite_credito', ''),
+        'cli_descuento': getVal('descuento', ''),
+        'cli_estado': getVal('estado', 'Activo'),
+        'cli_obs': getVal('observaciones', getVal('obs', ''))
+    };
+    
+    // Aplicar valores al formulario
+    Object.keys(campos).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.value = campos[id];
+        }
+    });
+    
+    // 🔥 CARGAR CONTACTOS - USANDO DATOS DE LA API
+    const cc = document.getElementById('cliContacts');
+    if (cc) {
+        if (data.contactos && data.contactos.length > 0) {
+            // Si la API devuelve contactos, usarlos
+            cc.innerHTML = data.contactos.map(c => contactBox({
+                nombre: c.nombre || '',
+                cargo: c.cargo || '',
+                telefono: c.telefono || '',
+                email: c.email || '',
+                principal: c.principal || false
+            })).join('');
+        } else {
+            // Si no hay contactos, crear uno por defecto con datos del cliente
+            cc.innerHTML = contactBox({
+                nombre: data.nombre_contacto || 'Contacto Principal',
+                cargo: data.cargo || '',
+                telefono: data.telefono_contacto || '',
+                email: data.email_contacto || '',
+                principal: true
+            });
+        }
+    }
+    
+    // 🔥 CARGAR PUNTOS DE ENTREGA - USANDO DATOS DE LA API
+    const cp = document.getElementById('cliPoints');
+    if (cp) {
+        if (data.puntos_entrega && data.puntos_entrega.length > 0) {
+            // Si la API devuelve puntos, usarlos
+            cp.innerHTML = data.puntos_entrega.map(p => pointBox({
+                punto: p.punto || '',
+                direccion: p.direccion || '',
+                googleMaps: p.googleMaps || '',
+                horario: p.horario || '',
+                contacto: p.contacto || '',
+                telefono: p.telefono || '',
+                instrucciones: p.instrucciones || '',
+                principal: p.principal || false
+            })).join('');
+        } else {
+            // Si no hay puntos, crear uno por defecto con la dirección fiscal
+            cp.innerHTML = pointBox({
+                punto: 'Principal',
+                direccion: data.direccion_fiscal || '',
+                googleMaps: '',
+                horario: '',
+                contacto: data.nombre_contacto || '',
+                telefono: data.telefono_contacto || '',
+                instrucciones: '',
+                principal: true
+            });
+        }
+    }
+    
+    syncClientState();
+    console.log('✅ Formulario rellenado correctamente');
 }
+
+
 
 function openClientModal(editId = null) {
   clientEditId = editId;

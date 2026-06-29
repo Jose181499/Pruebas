@@ -120,22 +120,61 @@ def api_clientes_guardar():
 @maestros_bp.route('/api/clientes/<int:id>', methods=['GET'])
 @login_required
 def api_clientes_obtener(id):
-    """Obtener cliente por ID"""
+    """Obtener cliente por ID con sus contactos y puntos de entrega"""
     try:
-        query = """
+        # 1. Obtener datos del cliente
+        query_cliente = """
             SELECT id, codigo_cliente, razon_social,
-                   numero_documento,
+                   numero_documento, tipo_documento,
                    nombre_comercial, telefono_contacto, nombre_contacto,
-                   email_contacto, direccion_fiscal, activo, tipo_documento
+                   email_contacto, direccion_fiscal, activo,
+                   condicion_pago, dias_credito, limite_credito, descuento,
+                   estado, ambito, observaciones,
+                   created_at, updated_at
             FROM clientes
             WHERE id = %s
         """
-        result = db_query(query, (id,))
-        if result and len(result) > 0:
-            cliente = result[0]
-            cliente['ruc'] = cliente.get('numero_documento')
-            return jsonify({"success": True, "data": cliente})
-        return jsonify({"success": False, "error": "Cliente no encontrado"}), 404
+        cliente_result = db_query(query_cliente, (id,))
+        
+        if not cliente_result or len(cliente_result) == 0:
+            return jsonify({"success": False, "error": "Cliente no encontrado"}), 404
+        
+        cliente = cliente_result[0]
+        
+        # 2. Obtener contactos del cliente
+        query_contactos = """
+            SELECT id, nombre_contacto as nombre, email, telefono, cargo, principal, activo
+            FROM clientes_contactos
+            WHERE cliente_id = %s AND activo = true
+            ORDER BY principal DESC, nombre_contacto
+        """
+        contactos = db_query(query_contactos, (id,))
+        cliente['contactos'] = contactos or []
+        
+        # 3. Obtener puntos de entrega del cliente
+        query_puntos = """
+            SELECT id, nombre_punto as punto, direccion, telefono_contacto as telefono,
+                   responsable as contacto, principal, activo,
+                   condicion_pago, tiempo_credito
+            FROM clientes_punto_entrega
+            WHERE cliente_id = %s AND activo = true
+            ORDER BY principal DESC, nombre_punto
+        """
+        puntos = db_query(query_puntos, (id,))
+        cliente['puntos_entrega'] = puntos or []
+        
+        # 4. Asegurar valores por defecto
+        cliente['condicion_pago'] = cliente.get('condicion_pago') or 'Contado'
+        cliente['dias_credito'] = cliente.get('dias_credito') or 0
+        cliente['limite_credito'] = cliente.get('limite_credito') or ''
+        cliente['descuento'] = cliente.get('descuento') or ''
+        cliente['estado'] = cliente.get('estado') or 'Activo'
+        cliente['ambito'] = cliente.get('ambito') or 'COMPARTIDO'
+        cliente['observaciones'] = cliente.get('observaciones') or ''
+        cliente['ruc'] = cliente.get('numero_documento')
+        
+        return jsonify({"success": True, "data": cliente})
+        
     except Exception as e:
         current_app.logger.error(f"Error obteniendo cliente: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
