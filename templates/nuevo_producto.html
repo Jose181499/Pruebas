@@ -53,11 +53,12 @@
             <div class="form-header">
                 <div class="code-box">
                     <label>Código <span class="req">*</span></label>
-                    <div class="code-value">
-                        <span id="codigoProducto">{{ producto.codigo if producto else codigo_auto or 'PRD-0001' }}</span>
-                        <span class="pill">Auto</span>
+                   <!-- ✅ CÓDIGO CORREGIDO -->
+                <div class="code-value">
+                <span id="codigoProducto">{{ producto.codigo if producto else codigo_auto or 'PRD-0001' }}</span>
+                <span class="pill">{% if editando %}Existente{% else %}Auto{% endif %}</span>
                     </div>
-                    <input type="hidden" id="codigoGenerado" name="codigo" value="{{ producto.codigo if producto else codigo_auto or 'PRD-0001' }}" />
+                        <input type="hidden" id="codigoGenerado" name="codigo" value="{{ producto.codigo if producto else codigo_auto or 'PRD-0001' }}" />
                 </div>
                 <div class="field" style="flex:1">
                     <label>Nombre del producto <span class="req">*</span></label>

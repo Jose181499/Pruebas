@@ -3892,18 +3892,44 @@ function bdRenderProductos(data) {
 }
 
 // ============================================================
-// ✅ NUEVO: FUNCIÓN QUE GENERA EL CÓDIGO CORRECTO
+// ✅ FUNCIÓN QUE GENERA EL CÓDIGO CORRECTO
 // ============================================================
 
 function generarCodigoCorrecto() {
     console.log('🔄 Generando código correcto...');
     
+    // ✅ Verificar si estamos en modo edición
+    const productoId = document.querySelector('input[name="producto_id"]')?.value;
+    if (productoId) {
+        console.log('📝 Modo edición detectado, NO se genera nuevo código');
+        // En modo edición, asegurar que el código sea el del producto
+        const codigoEl = document.getElementById('codigoProducto');
+        const generadoEl = document.getElementById('codigoGenerado');
+        // Si el código está vacío o es PRD-0001, intentar obtenerlo del producto
+        if (codigoEl && (codigoEl.textContent === 'PRD-0001' || codigoEl.textContent === '')) {
+            // Intentar obtener el código del producto desde el backend
+            fetch(`/productos/api/productos/${productoId}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success && data.data) {
+                        const codigo = data.data.codigo;
+                        if (codigoEl) codigoEl.textContent = codigo;
+                        if (generadoEl) generadoEl.value = codigo;
+                        console.log(`✅ Código del producto cargado: ${codigo}`);
+                    }
+                })
+                .catch(err => console.error('Error cargando código:', err));
+        }
+        return;
+    }
+    
+    // ✅ Si NO es edición, generar nuevo código
     fetch('/productos/api/productos/ultimo-codigo')
         .then(response => response.json())
         .then(data => {
             if (data.success && data.data && data.data.codigo) {
                 const codigo = data.data.codigo;
-                console.log(`✅ Código generado: ${codigo}`);
+                console.log(`✅ Nuevo código generado: ${codigo}`);
                 
                 const codigoEl = document.getElementById('codigoProducto');
                 const generadoEl = document.getElementById('codigoGenerado');
@@ -3916,6 +3942,7 @@ function generarCodigoCorrecto() {
             console.error('❌ Error generando código:', error);
         });
 }
+
 
 // ============================================================
 // ✅ MODIFICAR: LIMPIAR FORMULARIO SIN CONFIRMAR
@@ -3968,20 +3995,43 @@ function limpiarFormulario() {
     limpiarFormularioSinConfirmar();
 }
 
+
 // ============================================================
-// ✅ NUEVO: INICIALIZAR CÓDIGO AL CARGAR LA PÁGINA
+// ✅ INICIALIZAR CÓDIGO AL CARGAR LA PÁGINA
 // ============================================================
 
-// Agregar un segundo listener para generar el código en productos
 document.addEventListener('DOMContentLoaded', function() {
     const path = window.location.pathname;
-    if (path.includes('/productos/nuevo') || path.includes('/productos/editar')) {
-        console.log('📝 Página de producto detectada, generando código...');
+    
+    if (path.includes('/productos/editar/')) {
+        // ✅ MODO EDICIÓN - NO generar nuevo código
+        console.log('📝 Página de edición detectada');
+        const productoId = path.split('/').pop();
+        console.log(`📝 Producto ID: ${productoId}`);
+        
+        // Cargar el código del producto
+        fetch(`/productos/api/productos/${productoId}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.success && data.data) {
+                    const codigo = data.data.codigo;
+                    const codigoEl = document.getElementById('codigoProducto');
+                    const generadoEl = document.getElementById('codigoGenerado');
+                    if (codigoEl) codigoEl.textContent = codigo;
+                    if (generadoEl) generadoEl.value = codigo;
+                    console.log(`✅ Código cargado: ${codigo}`);
+                }
+            })
+            .catch(err => console.error('Error cargando producto:', err));
+    } else if (path.includes('/productos/nuevo')) {
+        // ✅ MODO NUEVO - Generar código
+        console.log('📝 Página de nuevo producto');
         setTimeout(function() {
             generarCodigoCorrecto();
         }, 300);
     }
 });
+
 
 
 // ============================================================
