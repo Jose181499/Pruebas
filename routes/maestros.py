@@ -435,18 +435,30 @@ def api_proveedores_obtener(id):
         query = """
             SELECT id, codigo_proveedor, razon_social, ruc,
                    razon_comercial, telefono, contacto, email,
-                   direccion, activo, condicion_pago, tiempo_credito
+                   direccion, activo, condicion_pago, tiempo_credito,
+                   lugar_recojo, banco, numero_cuenta, cci,
+                   estado, ambito, observaciones
             FROM proveedores
             WHERE id = %s
         """
         result = db_query(query, (id,))
         if result and len(result) > 0:
-            return jsonify({"success": True, "data": result[0]})
+            proveedor = result[0]
+            # Asegurar valores por defecto para campos que puedan ser NULL
+            proveedor['condicion_pago'] = proveedor.get('condicion_pago') or 'Contado'
+            proveedor['tiempo_credito'] = proveedor.get('tiempo_credito') or ''
+            proveedor['estado'] = proveedor.get('estado') or 'Activo'
+            proveedor['ambito'] = proveedor.get('ambito') or 'COMPARTIDO'
+            proveedor['observaciones'] = proveedor.get('observaciones') or ''
+            proveedor['lugar_recojo'] = proveedor.get('lugar_recojo') or ''
+            proveedor['banco'] = proveedor.get('banco') or ''
+            proveedor['numero_cuenta'] = proveedor.get('numero_cuenta') or ''
+            proveedor['cci'] = proveedor.get('cci') or ''
+            return jsonify({"success": True, "data": proveedor})
         return jsonify({"success": False, "error": "Proveedor no encontrado"}), 404
     except Exception as e:
         current_app.logger.error(f"Error obteniendo proveedor: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
-
 
 @maestros_bp.route('/api/proveedores/<int:id>', methods=['PUT'])
 @login_required
@@ -466,7 +478,6 @@ def api_proveedores_actualizar(id):
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
 
-        # 🔥 SIN updated_at (no existe en la tabla)
         query = """
             UPDATE proveedores SET
                 razon_social = %s,
@@ -482,6 +493,9 @@ def api_proveedores_actualizar(id):
                 banco = %s,
                 numero_cuenta = %s,
                 cci = %s,
+                estado = %s,
+                ambito = %s,
+                observaciones = %s,
                 activo = %s
             WHERE id = %s
             RETURNING id, codigo_proveedor
@@ -501,6 +515,9 @@ def api_proveedores_actualizar(id):
             data.get('banco'),
             data.get('numero_cuenta'),
             data.get('cci'),
+            data.get('estado', 'Activo'),
+            data.get('ambito', 'COMPARTIDO'),
+            data.get('observaciones', ''),
             data.get('activo', True),
             id
         )
@@ -523,7 +540,6 @@ def api_proveedores_actualizar(id):
         current_app.logger.error(f"Error actualizando proveedor: {e}")
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
-
 
 @maestros_bp.route('/api/proveedores/<int:id>/toggle', methods=['PUT'])
 @login_required
