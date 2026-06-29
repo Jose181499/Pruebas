@@ -1947,3 +1947,20 @@ def api_cotizaciones_obtener_completa(id):
     except Exception as e:
         print(f"❌ Error en api_cotizaciones_obtener_completa: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================================
+# ALIAS PARA COMPATIBILIDAD CON FRONTEND (/api/cotizaciones)
+# ============================================================
+
+@ventas_bp.route('/api/cotizaciones', methods=['GET'])
+@login_required
+def api_cotizaciones_listar_alias():
+    """Alias para /api/cotizaciones -> redirige a /ventas/api/cotizaciones/listar"""
+    return api_cotizaciones_listar()
+
+@ventas_bp.route('/api/cotizaciones', methods=['POST'])
+@login_required
+def api_cotizaciones_guardar_alias():
+    """Alias para /api/cotizaciones -> redirige a /ventas/api/cotizaciones/guardar"""
+    return api_cotizaciones_guardar()
