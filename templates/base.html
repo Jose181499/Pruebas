@@ -3907,6 +3907,100 @@ function bdRenderProductos(data) {
     const countEl = document.getElementById('bdCountText');
     if (countEl) countEl.textContent = `Mostrando ${data.length} producto${data.length !== 1 ? 's' : ''}`;
 }
+
+// ============================================================
+// ✅ NUEVO: FUNCIÓN QUE GENERA EL CÓDIGO CORRECTO
+// ============================================================
+
+function generarCodigoCorrecto() {
+    console.log('🔄 Generando código correcto...');
+    
+    fetch('/productos/api/productos/ultimo-codigo')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data && data.data.codigo) {
+                const codigo = data.data.codigo;
+                console.log(`✅ Código generado: ${codigo}`);
+                
+                const codigoEl = document.getElementById('codigoProducto');
+                const generadoEl = document.getElementById('codigoGenerado');
+                
+                if (codigoEl) codigoEl.textContent = codigo;
+                if (generadoEl) generadoEl.value = codigo;
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error generando código:', error);
+        });
+}
+
+// ============================================================
+// ✅ MODIFICAR: LIMPIAR FORMULARIO SIN CONFIRMAR
+// ============================================================
+
+// Reemplaza la función existente por esta
+function limpiarFormularioSinConfirmar() {
+    console.log('🧹 Limpiando formulario...');
+    
+    document.querySelectorAll('.form-card input:not([type="hidden"]), .form-card textarea, .form-card select').forEach(el => {
+        if (el.type === 'checkbox') {
+            el.checked = el.value === 'venta';
+        } else if (el.tagName === 'SELECT') {
+            el.selectedIndex = 0;
+        } else if (el.type !== 'file') {
+            el.value = '';
+        }
+    });
+    
+    const valorVenta = document.getElementById('valorVenta');
+    const valorCosto = document.getElementById('valorCosto');
+    const estadoProducto = document.getElementById('estadoProducto');
+    const fotoProducto = document.getElementById('fotoProducto');
+    const previewContainer = document.getElementById('previewContainer');
+    const fileBadge = document.getElementById('fileBadge');
+    const uploadArea = document.getElementById('uploadArea');
+    
+    if (valorVenta) valorVenta.value = '0.00';
+    if (valorCosto) valorCosto.value = '0.00';
+    if (estadoProducto) estadoProducto.value = 'activo';
+    if (fotoProducto) fotoProducto.value = '';
+    if (previewContainer) previewContainer.innerHTML = '';
+    if (fileBadge) fileBadge.innerHTML = '<i class="bi bi-paperclip"></i> Ningún archivo';
+    if (uploadArea) uploadArea.classList.remove('has-image');
+    
+    calcularMargen();
+    actualizarEstadoChips();
+    
+    // ✅ GENERAR CÓDIGO CORRECTO DESPUÉS DE LIMPIAR
+    generarCodigoCorrecto();
+}
+
+// ============================================================
+// ✅ MODIFICAR: LIMPIAR FORMULARIO (CON CONFIRMACIÓN)
+// ============================================================
+
+// Reemplaza la función existente por esta
+function limpiarFormulario() {
+    if (!confirm('¿Deseas limpiar el formulario?')) return;
+    limpiarFormularioSinConfirmar();
+}
+
+// ============================================================
+// ✅ NUEVO: INICIALIZAR CÓDIGO AL CARGAR LA PÁGINA
+// ============================================================
+
+// Agregar un segundo listener para generar el código en productos
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    if (path.includes('/productos/nuevo') || path.includes('/productos/editar')) {
+        console.log('📝 Página de producto detectada, generando código...');
+        setTimeout(function() {
+            generarCodigoCorrecto();
+        }, 300);
+    }
+});
+
+
 // ============================================================
 // FUNCIONES DE ACCIONES PARA PRODUCTOS
 // ============================================================
@@ -4105,6 +4199,7 @@ window.verProducto = verProducto;
 window.editarProducto = editarProducto;
 window.eliminarProducto = eliminarProducto;
 document.addEventListener("DOMContentLoaded", initDashboard);
+window.generarCodigoCorrecto = generarCodigoCorrecto;
 </script>
 {% block extra_js %}{% endblock %}
 </body>
