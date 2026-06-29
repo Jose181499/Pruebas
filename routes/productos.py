@@ -1,5 +1,5 @@
 ﻿# routes/productos.py
-from flask import Blueprint, render_template, request, jsonify, session
+from flask import Blueprint, render_template, request, jsonify, session, flash, redirect, url_for
 from utils import login_required
 from database import db_query, db_execute, db_tx
 from psycopg2.extras import RealDictCursor
@@ -32,12 +32,10 @@ def safe_int(value, default=0):
     except (ValueError, TypeError):
         return default
 
-# En routes/productos.py - obtener_ultimo_codigo_producto()
-
 def obtener_ultimo_codigo_producto():
     """Obtiene el último código de producto para generar el siguiente"""
     try:
-        # 🔥 NUEVO: Usar secuencia numérica simple
+        # Usar secuencia numérica simple
         result = db_query("""
             SELECT MAX(CAST(SUBSTRING(codigo FROM 'PRD-([0-9]+)') AS INTEGER)) as max_num
             FROM productos 
@@ -67,17 +65,17 @@ def obtener_ultimo_codigo_producto():
 def productos():
     """Página principal de productos - Redirige a nuevo producto"""
     return render_template('productos.html', active_tab='nuevo')
+
 @productos_bp.route('/nuevo')
 @login_required
 def productos_nuevo():
     """Página de nuevo producto con código automático"""
     codigo_auto = obtener_ultimo_codigo_producto()
-    # ✅ Pasar ambas variables
     return render_template('productos.html', 
                           active_tab='nuevo', 
                           codigo_auto=codigo_auto,
-                          editando=False,     # ← NUEVO
-                          producto=None)      # ← NUEVO
+                          editando=False,
+                          producto=None)
 
 @productos_bp.route('/base-datos')
 @login_required
@@ -90,6 +88,38 @@ def productos_base_datos():
 def productos_comparativo():
     """Página de comparativo de costos"""
     return render_template('productos.html', active_tab='comparativo')
+
+@productos_bp.route('/editar/<int:producto_id>')
+@login_required
+def productos_editar(producto_id):
+    """Página de edición de producto con datos precargados"""
+    try:
+        producto = db_query("""
+            SELECT 
+                id, codigo, descripcion, descripcion_larga,
+                modelo, marca, familia, categoria_derivada,
+                unidad, peso, volumen, observaciones, transporte,
+                costo_unitario, precio_unitario, stock, stock_minimo,
+                estado, presentacion_proveedor, presentacion_venta,
+                venta_minima, codigo_barras, origen, tiempo_entrega,
+                abastecimiento, activo
+            FROM productos
+            WHERE id = %s AND activo = TRUE
+        """, (producto_id,))
+        
+        if not producto:
+            flash('Producto no encontrado', 'error')
+            return redirect(url_for('productos.productos_base_datos'))
+        
+        return render_template('productos.html', 
+                              active_tab='nuevo', 
+                              producto=producto[0],
+                              editando=True)
+        
+    except Exception as e:
+        print(f"❌ Error en productos_editar: {e}")
+        flash('Error al cargar el producto', 'error')
+        return redirect(url_for('productos.productos_base_datos'))
 
 # ============================================================
 # ENDPOINTS API PARA PRODUCTOS
@@ -151,7 +181,6 @@ def get_productos():
         print(f"❌ Error en get_productos: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
 @productos_bp.route('/api/productos/<int:producto_id>', methods=['GET'])
 @login_required
 def get_producto(producto_id):
@@ -182,7 +211,6 @@ def get_producto(producto_id):
     except Exception as e:
         print(f"❌ Error en get_producto: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 @productos_bp.route('/api/productos', methods=['POST'])
 @login_required
@@ -285,7 +313,6 @@ def create_producto():
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
 @productos_bp.route('/api/productos/<int:producto_id>', methods=['PUT'])
 @login_required
 def update_producto(producto_id):
@@ -348,7 +375,6 @@ def update_producto(producto_id):
         print(f"❌ Error en update_producto: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
 @productos_bp.route('/api/productos/<int:producto_id>', methods=['DELETE'])
 @login_required
 def delete_producto(producto_id):
@@ -371,7 +397,6 @@ def delete_producto(producto_id):
     except Exception as e:
         print(f"❌ Error en delete_producto: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 @productos_bp.route('/api/productos/buscar', methods=['GET'])
 @login_required
@@ -399,7 +424,6 @@ def buscar_productos():
     except Exception as e:
         print(f"❌ Error en buscar_productos: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 @productos_bp.route('/api/productos/filtros', methods=['GET'])
 @login_required
@@ -437,13 +461,14 @@ def get_filtros_productos():
         print(f"❌ Error en get_filtros_productos: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
+# ⚠️ UNICA DEFINICION - Eliminada la duplicada
 @productos_bp.route('/api/productos/ultimo-codigo', methods=['GET'])
 @login_required
 def get_ultimo_codigo():
     """Obtener el último código de producto generado"""
     try:
         codigo = obtener_ultimo_codigo_producto()
+        print(f"📝 Código generado por backend: {codigo}")
         return jsonify({
             'success': True,
             'data': {'codigo': codigo}
@@ -451,45 +476,12 @@ def get_ultimo_codigo():
     except Exception as e:
         print(f"❌ Error en get_ultimo_codigo: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-@productos_bp.route('/editar/<int:producto_id>')
-@login_required
-def productos_editar(producto_id):
-    """Página de edición de producto con datos precargados"""
-    try:
-        producto = db_query("""
-            SELECT 
-                id, codigo, descripcion, descripcion_larga,
-                modelo, marca, familia, categoria_derivada,
-                unidad, peso, volumen, observaciones, transporte,
-                costo_unitario, precio_unitario, stock, stock_minimo,
-                estado, presentacion_proveedor, presentacion_venta,
-                venta_minima, codigo_barras, origen, tiempo_entrega,
-                abastecimiento, activo
-            FROM productos
-            WHERE id = %s AND activo = TRUE
-        """, (producto_id,))
-        
-        if not producto:
-            flash('Producto no encontrado', 'error')
-            return redirect(url_for('productos.productos_base_datos'))
-        
-        # ✅ Agregar editando=True y pasar el producto
-        return render_template('productos.html', 
-                              active_tab='nuevo', 
-                              producto=producto[0],
-                              editando=True)  # ← ESTO FALTA
-        
-    except Exception as e:
-        print(f"❌ Error en productos_editar: {e}")
-        flash('Error al cargar el producto', 'error')
-        return redirect(url_for('productos.productos_base_datos'))
 
-    
 # ============================================================
 # ENDPOINTS PARA COMPARATIVO DE COSTOS
 # ============================================================
 
-@productos_bp.route('/api/comparativo-costos')
+@productos_bp.route('/api/comparativo-costos', methods=['GET'])
 @login_required
 def get_comparativo_costos():
     """
@@ -597,8 +589,7 @@ def get_comparativo_costos():
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
-@productos_bp.route('/api/comparativo-costos/resumen')
+@productos_bp.route('/api/comparativo-costos/resumen', methods=['GET'])
 @login_required
 def get_resumen_costos():
     """
@@ -638,8 +629,7 @@ def get_resumen_costos():
         print(f"❌ Error en get_resumen_costos: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
-@productos_bp.route('/api/productos/<int:producto_id>/costos-historicos')
+@productos_bp.route('/api/productos/<int:producto_id>/costos-historicos', methods=['GET'])
 @login_required
 def get_costos_historicos(producto_id):
     """
@@ -685,8 +675,7 @@ def get_costos_historicos(producto_id):
         print(f"❌ Error en get_costos_historicos: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
-@productos_bp.route('/api/comparativo-costos/filtros')
+@productos_bp.route('/api/comparativo-costos/filtros', methods=['GET'])
 @login_required
 def get_filtros_comparativo():
     """
@@ -730,8 +719,7 @@ def get_filtros_comparativo():
         print(f"❌ Error en get_filtros_comparativo: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
-@productos_bp.route('/api/comparativo-costos/exportar')
+@productos_bp.route('/api/comparativo-costos/exportar', methods=['GET'])
 @login_required
 def exportar_comparativo_csv():
     """
@@ -814,8 +802,7 @@ def exportar_comparativo_csv():
         print(f"❌ Error en exportar_comparativo_csv: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
-@productos_bp.route('/api/comparativo-costos/mejor-producto')
+@productos_bp.route('/api/comparativo-costos/mejor-producto', methods=['GET'])
 @login_required
 def get_mejor_producto():
     """
@@ -857,19 +844,4 @@ def get_mejor_producto():
         
     except Exception as e:
         print(f"❌ Error en get_mejor_producto: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-    
-# En productos.py, asegúrate que la ruta devuelva el código en formato PRD-XXXX
-@productos_bp.route('/api/productos/ultimo-codigo', methods=['GET'])
-@login_required
-def get_ultimo_codigo():
-    try:
-        codigo = obtener_ultimo_codigo_producto()  # ← Debe devolver PRD-XXXX
-        print(f"📝 Código generado por backend: {codigo}")  # Debug
-        return jsonify({
-            'success': True,
-            'data': {'codigo': codigo}
-        })
-    except Exception as e:
-        print(f"❌ Error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
