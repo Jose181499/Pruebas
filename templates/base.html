@@ -4038,28 +4038,169 @@ document.addEventListener('DOMContentLoaded', function() {
 // FUNCIONES DE ACCIONES PARA PRODUCTOS
 // ============================================================
 
-// Ver producto
+// ============================================================
+// ✅ VER PRODUCTO - CON MODAL
+// ============================================================
+
 function verProducto(id) {
     if (!id) {
         mostrarNotificacion('error', '❌ Error', 'ID de producto no válido');
         return;
     }
     
-    const producto = window.bdProductos.find(p => p.id == id);
-    if (producto) {
-        const mensaje = `
-            📦 Código: ${producto.codigo || 'N/A'}\n
-            📝 Descripción: ${producto.descripcion || 'N/A'}\n
-            🏷️ Marca: ${producto.marca || 'N/A'}\n
-            📐 Modelo: ${producto.modelo || 'N/A'}\n
-            💰 Precio: S/ ${parseFloat(producto.precio_unitario || 0).toFixed(2)}\n
-            📊 Stock: ${producto.stock || 0}
-        `;
-        mostrarNotificacion('info', '🔍 Detalle del producto', mensaje);
-    } else {
-        mostrarNotificacion('error', '❌ Error', 'Producto no encontrado');
-    }
+    // Mostrar loading
+    mostrarNotificacion('info', '⏳ Cargando...', 'Obteniendo información del producto');
+    
+    fetch(`/productos/api/productos/${id}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.success && data.data) {
+                const p = data.data;
+                console.log('📦 Producto cargado:', p);
+                
+                // Crear modal de detalle
+                const modal = document.createElement('div');
+                modal.id = 'modalDetalleProducto';
+                modal.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100vw;
+                    height: 100vh;
+                    background: rgba(0, 0, 0, 0.7);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 999999;
+                    padding: 20px;
+                `;
+                
+                modal.innerHTML = `
+                    <div style="
+                        background: white;
+                        border-radius: 12px;
+                        max-width: 700px;
+                        width: 100%;
+                        max-height: 90vh;
+                        overflow: hidden;
+                        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                        margin: auto;
+                        display: flex;
+                        flex-direction: column;
+                    ">
+                        <!-- HEADER -->
+                        <div style="
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            padding: 16px 20px;
+                            border-bottom: 1px solid #E5E7EB;
+                            background: #F8FAFC;
+                        ">
+                            <h2 style="margin:0;font-size:18px;font-weight:800;">
+                                <i class="bi bi-box-seam" style="color:var(--empresa);"></i> 
+                                Detalle del producto
+                            </h2>
+                            <button onclick="cerrarModalDetalle()" style="
+                                height: 34px;
+                                border-radius: 8px;
+                                border: 1px solid #E5E7EB;
+                                padding: 0 16px;
+                                font-weight: 700;
+                                cursor: pointer;
+                                background: white;
+                                color: #0F172A;
+                            ">✕ Cerrar</button>
+                        </div>
+                        
+                        <!-- BODY -->
+                        <div style="
+                            padding: 20px;
+                            overflow-y: auto;
+                            flex: 1;
+                        ">
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                                <div><strong>Código:</strong> <span style="color:var(--empresa);font-weight:900;">${p.codigo || '-'}</span></div>
+                                <div><strong>Estado:</strong> <span class="bd-status ${p.estado === 'activo' ? 'st-active' : 'st-inactive'}"><span class="bd-dot"></span>${p.estado || 'Activo'}</span></div>
+                                <div style="grid-column:span 2;"><strong>Nombre:</strong> ${p.descripcion || '-'}</div>
+                                <div><strong>Modelo:</strong> ${p.modelo || '-'}</div>
+                                <div><strong>Marca:</strong> ${p.marca || '-'}</div>
+                                <div><strong>Categoría:</strong> ${p.categoria || p.familia || '-'}</div>
+                                <div><strong>Subcategoría:</strong> ${p.subcategoria || p.categoria_derivada || '-'}</div>
+                                <div><strong>Unidad:</strong> ${p.unidad || '-'}</div>
+                                <div><strong>Transporte:</strong> ${p.transporte || '-'}</div>
+                                <div><strong>Peso:</strong> ${p.peso || '0'} kg</div>
+                                <div><strong>Volumen:</strong> ${p.volumen || '0'} m³</div>
+                                <div><strong>Stock:</strong> ${p.stock || 0}</div>
+                                <div><strong>Stock mínimo:</strong> ${p.stock_minimo || 0}</div>
+                                <div><strong>Precio venta:</strong> <span style="color:var(--empresa);font-weight:900;">S/ ${parseFloat(p.precio_unitario || 0).toFixed(2)}</span></div>
+                                <div><strong>Costo:</strong> S/ ${parseFloat(p.costo_unitario || 0).toFixed(2)}</div>
+                                <div style="grid-column:span 2;"><strong>Descripción larga:</strong> ${p.descripcion_larga || '-'}</div>
+                                <div style="grid-column:span 2;"><strong>Observaciones:</strong> ${p.observaciones || '-'}</div>
+                                <div><strong>Presentación proveedor:</strong> ${p.presentacion_proveedor || '-'}</div>
+                                <div><strong>Presentación venta:</strong> ${p.presentacion_venta || '-'}</div>
+                                <div><strong>Venta mínima:</strong> ${p.venta_minima || 1}</div>
+                                <div><strong>Código barras:</strong> ${p.codigo_barras || '-'}</div>
+                                <div><strong>Origen:</strong> ${p.origen || '-'}</div>
+                                <div><strong>Tiempo entrega:</strong> ${p.tiempo_entrega || '-'}</div>
+                                <div><strong>Abastecimiento:</strong> ${p.abastecimiento || '-'}</div>
+                            </div>
+                        </div>
+                        
+                        <!-- FOOTER -->
+                        <div style="
+                            display: flex;
+                            justify-content: flex-end;
+                            gap: 10px;
+                            padding: 12px 20px;
+                            border-top: 1px solid #E5E7EB;
+                            background: #F8FAFC;
+                        ">
+                            <button onclick="cerrarModalDetalle()" style="
+                                height: 38px;
+                                border-radius: 8px;
+                                border: 1px solid #E5E7EB;
+                                padding: 0 20px;
+                                font-weight: 700;
+                                cursor: pointer;
+                                background: white;
+                                color: #0F172A;
+                            ">Cerrar</button>
+                            <button onclick="editarProducto(${p.id})" style="
+                                height: 38px;
+                                border-radius: 8px;
+                                border: 0;
+                                padding: 0 24px;
+                                font-weight: 700;
+                                cursor: pointer;
+                                background: var(--empresa);
+                                color: white;
+                            ">✏️ Editar producto</button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                
+            } else {
+                mostrarNotificacion('error', '❌ Error', data.error || 'Producto no encontrado');
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            mostrarNotificacion('error', '❌ Error', 'Error al cargar el producto');
+        });
 }
+
+// ============================================================
+// ✅ CERRAR MODAL DE DETALLE
+// ============================================================
+
+function cerrarModalDetalle() {
+    const modal = document.getElementById('modalDetalleProducto');
+    if (modal) modal.remove();
+}
+
 
 // Editar producto
 function editarProducto(id) {
