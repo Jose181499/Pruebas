@@ -2591,59 +2591,51 @@ document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.notificacion').forEach(el => el.remove());
             
             // Validar campos obligatorios
-           // Validar campos obligatorios
-const required = [
-    { id: 'nombreProducto', label: 'Nombre del producto' },
-    { id: 'modeloProducto', label: 'Modelo' },
-    { id: 'marcaProducto', label: 'Marca' },
-    { id: 'unidadMedida', label: 'Unidad de medida' },
-    { id: 'categoriaProducto', label: 'Categoría' },
-    { id: 'transporteReferencial', label: 'Transporte referencial' }
-];
+            const required = [
+                { id: 'nombreProducto', label: 'Nombre del producto' },
+                { id: 'modeloProducto', label: 'Modelo' },
+                { id: 'marcaProducto', label: 'Marca' },
+                { id: 'unidadMedida', label: 'Unidad de medida' },
+                { id: 'categoriaProducto', label: 'Categoría' },
+                { id: 'transporteReferencial', label: 'Transporte referencial' }
+            ];
 
-let valid = true;
-let errors = [];
-let firstInvalid = null;
+            let valid = true;
+            let errors = [];
+            let firstInvalid = null;
 
-required.forEach(({id, label}) => {
-    const el = document.getElementById(id);
-    if (!el || !el.value || el.value.trim() === '') {
-        valid = false;
-        errors.push(label);
-        if (!firstInvalid) firstInvalid = el;
-        if (el) {
-            el.style.borderColor = '#DC2626';
-            el.style.boxShadow = '0 0 0 3px rgba(220, 38, 38, 0.2)';
-        }
-    } else {
-        if (el) {
-            el.style.borderColor = '';
-            el.style.boxShadow = '';
-        }
-    }
-});
+            required.forEach(({id, label}) => {
+                const el = document.getElementById(id);
+                if (!el || !el.value || el.value.trim() === '') {
+                    valid = false;
+                    errors.push(label);
+                    if (!firstInvalid) firstInvalid = el;
+                    if (el) {
+                        el.style.borderColor = '#DC2626';
+                        el.style.boxShadow = '0 0 0 3px rgba(220, 38, 38, 0.2)';
+                    }
+                } else {
+                    if (el) {
+                        el.style.borderColor = '';
+                        el.style.boxShadow = '';
+                    }
+                }
+            });
 
-if (!valid) {
-    // ✅ Mostrar error flotante con los campos faltantes
-    mostrarErrorFlotante(errors);
-    
-    if (firstInvalid) {
-        firstInvalid.focus();
-        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-    return;
-}
+            if (!valid) {
+                mostrarErrorFlotante(errors);
+                if (firstInvalid) {
+                    firstInvalid.focus();
+                    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return;
+            }
             
             // Validar operaciones
             const ops = document.querySelectorAll('input[name="operation"]:checked');
             if (ops.length === 0) {
                 if (typeof toast === 'function') {
                     toast('❌ Seleccione al menos un tipo de operación.');
-                }
-                if (typeof mostrarNotificacion === 'function') {
-                    mostrarNotificacion('error', '❌ Tipo de operación', 'Seleccione al menos un tipo de operación.');
-                } else {
-                    alert('❌ Seleccione al menos un tipo de operación.');
                 }
                 return;
             }
@@ -2672,6 +2664,14 @@ if (!valid) {
             // Asegurar que el código esté presente
             data.codigo = document.getElementById('codigoGenerado')?.value || '';
             
+            // ✅ DETECTAR SI ES EDICIÓN O CREACIÓN
+            const productoId = document.querySelector('input[name="producto_id"]')?.value;
+            const url = productoId ? `/productos/api/productos/${productoId}` : '/productos/api/productos';
+            const method = productoId ? 'PUT' : 'POST';
+            
+            console.log('📝 Modo:', productoId ? 'Edición' : 'Creación');
+            console.log('📦 Datos a enviar:', data);
+            
             // Validar que el código no esté vacío
             if (!data.codigo) {
                 if (typeof toast === 'function') {
@@ -2681,13 +2681,12 @@ if (!valid) {
             }
             
             try {
-                // Mostrar notificación de guardando
                 if (typeof mostrarNotificacion === 'function') {
                     mostrarNotificacion('info', '⏳ Guardando...', 'Por favor espera.');
                 }
                 
-                const response = await fetch('/productos/api/productos', {
-                    method: 'POST',
+                const response = await fetch(url, {
+                    method: method,
                     headers: {
                         'Content-Type': 'application/json'
                     },
@@ -2697,23 +2696,24 @@ if (!valid) {
                 const result = await response.json();
                 
                 if (result.success) {
-                    // ✅ Mostrar modal de éxito
-                    mostrarModalExito(result.data.codigo);
+                    if (productoId) {
+                        toast('✅ Producto actualizado correctamente');
+                        // Redirigir a la base de datos después de actualizar
+                        setTimeout(() => {
+                            window.location.href = '/productos/base-datos';
+                        }, 1000);
+                    } else {
+                        // ✅ Mostrar modal de éxito para nuevo producto
+                        mostrarModalExito(result.data.codigo);
+                    }
                     
-                    // Recargar la tabla si estamos en base-datos
                     if (typeof bdRenderProductos === 'function') {
                         bdRenderProductos(window.bdProductos);
                     }
                 } else {
-                    // ✅ Mostrar error del servidor
                     const errorMsg = result.error || 'Error al guardar el producto';
                     if (typeof toast === 'function') {
                         toast('❌ ' + errorMsg);
-                    }
-                    if (typeof mostrarNotificacion === 'function') {
-                        mostrarNotificacion('error', '❌ Error', errorMsg);
-                    } else {
-                        alert('❌ ' + errorMsg);
                     }
                 }
             } catch (error) {
@@ -2721,30 +2721,13 @@ if (!valid) {
                 if (typeof toast === 'function') {
                     toast('❌ Error al comunicarse con el servidor');
                 }
-                if (typeof mostrarNotificacion === 'function') {
-                    mostrarNotificacion('error', '❌ Error', 'Error al comunicarse con el servidor');
-                } else {
-                    alert('❌ Error al comunicarse con el servidor');
-                }
             }
         });
     }
-    
-    // ✅ Limpiar resaltado de campos al hacer clic
-    document.querySelectorAll('.field input, .field select').forEach(el => {
-        el.addEventListener('click', function() {
-            this.style.borderColor = '';
-            this.style.boxShadow = '';
-        });
-        el.addEventListener('change', function() {
-            if (this.value && this.value.trim() !== '') {
-                this.style.borderColor = '';
-                this.style.boxShadow = '';
-            }
-        });
-    });
 });
-// ============================================================
+
+
+
 // FUNCIONES PARA UPLOAD DE FOTO
 // ============================================================
 

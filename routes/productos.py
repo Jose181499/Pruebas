@@ -107,7 +107,6 @@ def productos_comparativo():
 @productos_bp.route('/editar/<int:producto_id>')
 @login_required
 def productos_editar(producto_id):
-    """Página de edición de producto con datos precargados"""
     try:
         producto = db_query("""
             SELECT 
@@ -126,6 +125,10 @@ def productos_editar(producto_id):
             flash('Producto no encontrado', 'error')
             return redirect(url_for('productos.productos_base_datos'))
         
+        # ✅ DEBUG: Imprimir el producto para verificar
+        print(f"📝 Producto encontrado: {producto[0]}")
+        
+        # ✅ Pasar el producto al template
         return render_template('productos.html', 
                               active_tab='nuevo', 
                               producto=producto[0],
@@ -135,6 +138,7 @@ def productos_editar(producto_id):
         print(f"❌ Error en productos_editar: {e}")
         flash('Error al cargar el producto', 'error')
         return redirect(url_for('productos.productos_base_datos'))
+
 
 # ============================================================
 # ENDPOINTS API PARA PRODUCTOS
