@@ -35,27 +35,42 @@ def safe_int(value, default=0):
 def obtener_ultimo_codigo_producto():
     """Obtiene el último código de producto para generar el siguiente"""
     try:
-        # Usar secuencia numérica simple
+        # Obtener el número más alto
         result = db_query("""
-            SELECT MAX(CAST(SUBSTRING(codigo FROM 'PRD-([0-9]+)') AS INTEGER)) as max_num
+            SELECT MAX(CAST(REPLACE(codigo, 'PRD-', '') AS INTEGER)) as max_num
             FROM productos 
-            WHERE codigo ~ '^PRD-[0-9]+$'
+            WHERE codigo LIKE 'PRD-%' 
+            AND codigo ~ '^PRD-[0-9]+$'
         """)
         
-        if result and result[0].get('max_num'):
-            max_num = int(result[0]['max_num'])
-            nuevo_num = max_num + 1
-        else:
-            nuevo_num = 1
+        print(f"📋 Resultado de MAX: {result}")
         
+        max_num = 0
+        if result and result[0].get('max_num') is not None:
+            max_num = int(result[0]['max_num'])
+            print(f"📊 Máximo número encontrado: {max_num}")
+        else:
+            print("⚠️ No se encontraron códigos PRD-XXXX")
+        
+        nuevo_num = max_num + 1
         nuevo_codigo = f"PRD-{str(nuevo_num).zfill(4)}"
+        
         print(f"✅ Nuevo código generado: {nuevo_codigo}")
         return nuevo_codigo
         
     except Exception as e:
         print(f"❌ Error generando código: {e}")
-        return "PRD-0001"
-
+        import traceback
+        traceback.print_exc()
+        # Fallback: obtener el último ID y sumar 1
+        try:
+            result = db_query("SELECT MAX(id) as max_id FROM productos")
+            if result and result[0].get('max_id'):
+                nuevo_num = int(result[0]['max_id']) + 1
+                return f"PRD-{str(nuevo_num).zfill(4)}"
+        except:
+            pass
+        return "PRD-0011"
 # ============================================================
 # RUTAS PARA PÁGINAS HTML
 # ============================================================
