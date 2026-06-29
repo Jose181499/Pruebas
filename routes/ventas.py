@@ -798,6 +798,7 @@ def api_cotizaciones_listar():
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
       
+
 @ventas_bp.route('/ventas/api/cotizaciones/guardar', methods=['POST'])
 @login_required
 def api_cotizaciones_guardar():
@@ -923,33 +924,11 @@ def api_cotizaciones_guardar():
         print(f"✅ Cotización creada con ID: {cotizacion_id}")
         
         # ============================================================
-        # GUARDAR PRODUCTOS EN cotizacion_detalle - VERSIÓN MEJORADA
+        # GUARDAR PRODUCTOS EN cotizacion_detalle
         # ============================================================
         
         productos = data.get('productos', [])
         print(f"📦 Guardando {len(productos)} productos en cotizacion_detalle...")
-        
-        # Obtener TODOS los productos de la BD para hacer búsqueda rápida
-        todos_productos = db_query("""
-            SELECT id, codigo, descripcion, precio_unitario, costo_unitario 
-            FROM productos 
-            WHERE activo = TRUE 
-            ORDER BY codigo
-        """)
-        print(f"📋 Total productos en BD: {len(todos_productos)}")
-        
-        # Crear mapa de productos por código (para búsqueda rápida)
-        productos_map = {}
-        for p in todos_productos:
-            codigo = p.get('codigo', '').strip()
-            productos_map[codigo] = p
-            productos_map[codigo.lower()] = p
-            # También guardar versión sin espacios
-            productos_map[codigo.replace(' ', '')] = p
-        
-        # Mostrar algunos códigos disponibles para depuración
-        codigos_disponibles = list(productos_map.keys())[:10]
-        print(f"📋 Códigos disponibles (muestra): {codigos_disponibles}")
         
         productos_guardados = 0
         productos_fallidos = 0
@@ -957,45 +936,95 @@ def api_cotizaciones_guardar():
         for idx, producto in enumerate(productos):
             try:
                 codigo_producto = producto.get('codigo', '').strip()
-                print(f"  🔍 Buscando producto con código: '{codigo_producto}'")
+                producto_id = producto.get('producto_id')  # Si viene con ID directamente
                 
-                # Buscar en el mapa (búsqueda O(1))
-                producto_bd = productos_map.get(codigo_producto)
+                print(f"  🔍 Buscando producto: codigo='{codigo_producto}', producto_id={producto_id}")
                 
-                # Si no se encuentra, buscar en minúsculas
-                if not producto_bd:
-                    producto_bd = productos_map.get(codigo_producto.lower())
-                
-                # Si no se encuentra, buscar sin espacios
-                if not producto_bd:
-                    producto_bd = productos_map.get(codigo_producto.replace(' ', ''))
-                
-                # Si no se encuentra, buscar por ILIKE (búsqueda flexible)
-                if not producto_bd:
-                    prod_result = db_query(
-                        "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE codigo ILIKE %s LIMIT 1",
-                        (f"%{codigo_producto}%",)
+                # ✅ Si viene con ID, usarlo directamente
+                if producto_id:
+                    result_prod = db_query(
+                        "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE id = %s AND activo = TRUE",
+                        (producto_id,)
                     )
-                    if prod_result:
-                        producto_bd = prod_result[0]
-                        print(f"  📌 Producto encontrado por ILIKE: {producto_bd['codigo']}")
+                    if result_prod:
+                        producto_bd = result_prod[0]
+                        print(f"  ✅ Producto encontrado por ID: {producto_bd['codigo']}")
+                    else:
+                        print(f"  ⚠️ Producto con ID {producto_id} no encontrado")
+                        productos_fallidos += 1
+                        continue
+                else:
+                    # ✅ BUSCAR POR CÓDIGO - VERSIÓN SIMPLIFICADA Y ROBUSTA
+                    producto_bd = None
+                    
+                    # 1. Buscar por código exacto
+                    result_prod = db_query(
+                        "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE codigo = %s AND activo = TRUE",
+                        (codigo_producto,)
+                    )
+                    if result_prod:
+                        producto_bd = result_prod[0]
+                        print(f"  ✅ Producto encontrado por código exacto: {producto_bd['codigo']}")
+                    
+                    # 2. Si no, buscar por TRIM
+                    if not producto_bd:
+                        result_prod = db_query(
+                            "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE TRIM(codigo) = TRIM(%s) AND activo = TRUE",
+                            (codigo_producto,)
+                        )
+                        if result_prod:
+                            producto_bd = result_prod[0]
+                            print(f"  ✅ Producto encontrado por TRIM: {producto_bd['codigo']}")
+                    
+                    # 3. Si no, buscar por ILIKE
+                    if not producto_bd:
+                        result_prod = db_query(
+                            "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE codigo ILIKE %s AND activo = TRUE LIMIT 1",
+                            (f"%{codigo_producto}%",)
+                        )
+                        if result_prod:
+                            producto_bd = result_prod[0]
+                            print(f"  ✅ Producto encontrado por ILIKE: {producto_bd['codigo']}")
+                    
+                    # 4. Si no, buscar por UPPER
+                    if not producto_bd:
+                        result_prod = db_query(
+                            "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE UPPER(codigo) = UPPER(%s) AND activo = TRUE",
+                            (codigo_producto,)
+                        )
+                        if result_prod:
+                            producto_bd = result_prod[0]
+                            print(f"  ✅ Producto encontrado por UPPER: {producto_bd['codigo']}")
+                    
+                    # 5. Si no, buscar sin espacios
+                    if not producto_bd:
+                        codigo_sin_espacios = codigo_producto.replace(' ', '')
+                        result_prod = db_query(
+                            "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE REPLACE(codigo, ' ', '') = %s AND activo = TRUE",
+                            (codigo_sin_espacios,)
+                        )
+                        if result_prod:
+                            producto_bd = result_prod[0]
+                            print(f"  ✅ Producto encontrado sin espacios: {producto_bd['codigo']}")
                 
+                # Si no se encontró el producto
                 if not producto_bd:
-                    print(f"  ⚠️ Producto con código '{codigo_producto}' no encontrado")
-                    # Mostrar códigos similares
-                    similares = [k for k in list(productos_map.keys()) if codigo_producto[:4].upper() in k.upper()]
-                    if similares:
-                        print(f"  📋 Códigos similares: {similares[:5]}")
+                    print(f"  ❌ Producto con código '{codigo_producto}' NO ENCONTRADO en la BD")
+                    # Mostrar algunos códigos disponibles para debug
+                    todos = db_query("SELECT codigo FROM productos WHERE activo = TRUE LIMIT 10")
+                    codigos = [p['codigo'] for p in todos]
+                    print(f"  📋 Códigos disponibles (primeros 10): {codigos}")
                     productos_fallidos += 1
                     continue
                 
-                producto_id = producto_bd['id']
+                # Extraer datos del producto encontrado
+                producto_id_bd = producto_bd['id']
                 cantidad = float(producto.get('cantidad', 1))
                 precio_venta = float(producto.get('valorVenta', producto_bd.get('precio_unitario', 0)))
                 costo_unitario = float(producto_bd.get('costo_unitario', 0))
                 
                 print(f"  ✅ Producto encontrado: {producto_bd['codigo']} - {producto_bd['descripcion']}")
-                print(f"     ID: {producto_id}, Precio: {precio_venta}, Costo: {costo_unitario}")
+                print(f"     ID: {producto_id_bd}, Precio: {precio_venta}, Costo: {costo_unitario}")
                 
                 # Calcular valores para cotizacion_detalle
                 subtotal_costo = cantidad * costo_unitario
@@ -1007,14 +1036,7 @@ def api_cotizaciones_guardar():
                 else:
                     margen_porcentaje = 0
                 
-                # Descuentos (por ahora 0)
-                descuento_porcentaje = 0
-                precio_venta_con_descuento = precio_venta
-                subtotal_venta_con_descuento = subtotal_venta
-                descuento_total = 0
-                margen_final = margen_porcentaje
-                
-                # Insertar en cotizacion_detalle con todos los campos
+                # Insertar en cotizacion_detalle
                 detalle_query = """
                     INSERT INTO cotizacion_detalle (
                         cotizacion_id,
@@ -1037,28 +1059,28 @@ def api_cotizaciones_guardar():
                 
                 db_execute(detalle_query, (
                     cotizacion_id,
-                    producto_id,
+                    producto_id_bd,
                     cantidad,
                     costo_unitario,
                     subtotal_costo,
                     margen_porcentaje,
                     precio_venta,
                     subtotal_venta,
-                    descuento_porcentaje,
-                    precio_venta_con_descuento,
-                    subtotal_venta_con_descuento,
-                    descuento_total,
-                    margen_final
+                    0,  # descuento_porcentaje
+                    precio_venta,  # precio_venta_con_descuento
+                    subtotal_venta,  # subtotal_venta_con_descuento
+                    0,  # descuento_total
+                    margen_porcentaje  # margen_final
                 ))
                 
                 productos_guardados += 1
-                print(f"  ✅ Producto {idx+1}: {codigo_producto} - Cant: {cantidad}, Precio: {precio_venta}, Margen: {margen_porcentaje:.1f}%")
+                print(f"  ✅ Producto {idx+1}: {producto_bd['codigo']} - Cant: {cantidad}, Precio: {precio_venta}, Margen: {margen_porcentaje:.1f}%")
                 
             except Exception as e:
-                print(f"  ❌ Error guardando producto {producto.get('codigo')}: {e}")
-                productos_fallidos += 1
+                print(f"  ❌ Error guardando producto: {e}")
                 import traceback
                 traceback.print_exc()
+                productos_fallidos += 1
         
         print(f"📊 Resumen productos: {productos_guardados} guardados, {productos_fallidos} fallidos")
         
@@ -1082,6 +1104,19 @@ def api_cotizaciones_guardar():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
