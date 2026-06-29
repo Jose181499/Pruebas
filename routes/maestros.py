@@ -116,13 +116,12 @@ def api_clientes_guardar():
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
-
 @maestros_bp.route('/api/clientes/<int:id>', methods=['GET'])
 @login_required
 def api_clientes_obtener(id):
     """Obtener cliente por ID con sus contactos y puntos de entrega"""
     try:
-        # 1. Obtener datos del cliente
+        # 1. Obtener datos del cliente - AHORA CON TODAS LAS COLUMNAS
         query_cliente = """
             SELECT id, codigo_cliente, razon_social,
                    numero_documento, tipo_documento,
@@ -142,26 +141,34 @@ def api_clientes_obtener(id):
         cliente = cliente_result[0]
         
         # 2. Obtener contactos del cliente
-        query_contactos = """
-            SELECT id, nombre_contacto as nombre, email, telefono, cargo, principal, activo
-            FROM clientes_contactos
-            WHERE cliente_id = %s AND activo = true
-            ORDER BY principal DESC, nombre_contacto
-        """
-        contactos = db_query(query_contactos, (id,))
-        cliente['contactos'] = contactos or []
+        try:
+            query_contactos = """
+                SELECT id, nombre_contacto as nombre, email, telefono, cargo, principal, activo
+                FROM clientes_contactos
+                WHERE cliente_id = %s AND activo = true
+                ORDER BY principal DESC, nombre_contacto
+            """
+            contactos = db_query(query_contactos, (id,))
+            cliente['contactos'] = contactos if contactos else []
+        except Exception as e:
+            current_app.logger.warning(f"Error obteniendo contactos: {e}")
+            cliente['contactos'] = []
         
         # 3. Obtener puntos de entrega del cliente
-        query_puntos = """
-            SELECT id, nombre_punto as punto, direccion, telefono_contacto as telefono,
-                   responsable as contacto, principal, activo,
-                   condicion_pago, tiempo_credito
-            FROM clientes_punto_entrega
-            WHERE cliente_id = %s AND activo = true
-            ORDER BY principal DESC, nombre_punto
-        """
-        puntos = db_query(query_puntos, (id,))
-        cliente['puntos_entrega'] = puntos or []
+        try:
+            query_puntos = """
+                SELECT id, nombre_punto as punto, direccion, telefono_contacto as telefono,
+                       responsable as contacto, principal, activo,
+                       condicion_pago, tiempo_credito
+                FROM clientes_punto_entrega
+                WHERE cliente_id = %s AND activo = true
+                ORDER BY principal DESC, nombre_punto
+            """
+            puntos = db_query(query_puntos, (id,))
+            cliente['puntos_entrega'] = puntos if puntos else []
+        except Exception as e:
+            current_app.logger.warning(f"Error obteniendo puntos de entrega: {e}")
+            cliente['puntos_entrega'] = []
         
         # 4. Asegurar valores por defecto
         cliente['condicion_pago'] = cliente.get('condicion_pago') or 'Contado'
@@ -176,8 +183,11 @@ def api_clientes_obtener(id):
         return jsonify({"success": True, "data": cliente})
         
     except Exception as e:
-        current_app.logger.error(f"Error obteniendo cliente: {e}")
+        current_app.logger.error(f"Error obteniendo cliente {id}: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 
 @maestros_bp.route('/api/clientes/<int:id>', methods=['PUT'])
@@ -210,6 +220,13 @@ def api_clientes_actualizar(id):
                 telefono_contacto = %s,
                 nombre_contacto = %s,
                 email_contacto = %s,
+                condicion_pago = %s,
+                dias_credito = %s,
+                limite_credito = %s,
+                descuento = %s,
+                estado = %s,
+                ambito = %s,
+                observaciones = %s,
                 activo = %s,
                 updated_at = NOW()
             WHERE id = %s
@@ -222,9 +239,16 @@ def api_clientes_actualizar(id):
             data.get('razon_social'),
             data.get('nombre_comercial', data.get('razon_social')),
             data.get('direccion_fiscal'),
-            data.get('telefono_contacto'),
-            data.get('nombre_contacto'),
-            data.get('email_contacto'),
+            data.get('telefono_contacto') or data.get('telefono'),
+            data.get('nombre_contacto') or data.get('contacto'),
+            data.get('email_contacto') or data.get('email'),
+            data.get('condicion_pago', 'Contado'),
+            int(data.get('dias_credito', 0)),
+            data.get('limite_credito', ''),
+            data.get('descuento', ''),
+            data.get('estado', 'Activo'),
+            data.get('ambito', 'COMPARTIDO'),
+            data.get('observaciones', ''),
             data.get('activo', True),
             id
         )
@@ -254,7 +278,6 @@ def api_clientes_actualizar(id):
         current_app.logger.error(f"❌ Error actualizando cliente: {e}")
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
-
 
 @maestros_bp.route('/api/clientes/<int:id>/toggle', methods=['PUT'])
 @login_required
