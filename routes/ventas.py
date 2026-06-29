@@ -798,8 +798,6 @@ def api_cotizaciones_listar():
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
       
-
-
 @ventas_bp.route('/ventas/api/cotizaciones/guardar', methods=['POST'])
 @login_required
 def api_cotizaciones_guardar():
@@ -850,42 +848,10 @@ def api_cotizaciones_guardar():
         print(f"📋 Nuevo número: {numero}")
         
         # ============================================================
-        # INSERT EN COTIZACIONES
+        # INSERT EN COTIZACIONES Y DETALLE - CON TRANSACCIÓN
         # ============================================================
         
-        query = """
-            INSERT INTO cotizaciones (
-                numero_cotizacion,
-                cliente_id,
-                fecha_creacion,
-                estado,
-                subtotal,
-                igv,
-                total,
-                usuario_id,
-                notas,
-                forma_pago,
-                tiempo_entrega,
-                validez_oferta,
-                codigo_cotizacion,
-                correlativo,
-                condicion_pago,
-                direccion_entrega,
-                requerimiento,
-                nota_cotizacion,
-                descuento_porcentaje,
-                descuento_monto,
-                descuento_tipo,
-                contacto_cliente,
-                telefono_cliente,
-                email_cliente
-            ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-            )
-            RETURNING id, numero_cotizacion
-        """
-        
+        # Preparar parámetros para la cotización
         params = (
             numero,
             cliente_id,
@@ -913,173 +879,143 @@ def api_cotizaciones_guardar():
             data.get('email')
         )
         
-        print("📝 Ejecutando INSERT en cotizaciones...")
-        result = db_query(query, params)
-        print(f"📦 Resultado: {result}")
-        
-        if not result:
-            print("❌ Resultado vacío - INSERT falló")
-            return jsonify({'success': False, 'error': 'No se pudo crear la cotización'}), 400
-        
-        cotizacion_id = result[0]['id']
-        print(f"✅ Cotización creada con ID: {cotizacion_id}")
-        
-        # ============================================================
-        # GUARDAR PRODUCTOS - VERSIÓN DEFINITIVA
-        # ============================================================
-        
-        productos = data.get('productos', [])
-        print(f"📦 Guardando {len(productos)} productos...")
-        
-        productos_guardados = 0
-        productos_fallidos = 0
-        
-        for idx, producto in enumerate(productos):
-            try:
-                codigo_producto = producto.get('codigo', '').strip()
-                producto_id = producto.get('producto_id')
+        try:
+            with db_tx() as conn:
+                from psycopg2.extras import RealDictCursor
+                cur = conn.cursor(cursor_factory=RealDictCursor)
                 
-                print(f"  🔍 Buscando: codigo='{codigo_producto}', id={producto_id}")
-                
-                # ✅ CASO 1: Buscar por ID
-                if producto_id:
-                    result_prod = db_query(
-                        "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE id = %s",
-                        (producto_id,)
-                    )
-                    if result_prod:
-                        producto_bd = result_prod[0]
-                        print(f"  ✅ Encontrado por ID: {producto_bd['codigo']}")
-                    else:
-                        print(f"  ❌ No encontrado por ID: {producto_id}")
-                        productos_fallidos += 1
-                        continue
-                else:
-                    # ✅ CASO 2: Buscar por código - USANDO db_query DIRECTAMENTE
-                    query_prod = "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE codigo = %s"
-                    result_prod = db_query(query_prod, (codigo_producto,))
-                    
-                    if not result_prod:
-                        # Intentar con TRIM
-                        query_prod = "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE TRIM(codigo) = TRIM(%s)"
-                        result_prod = db_query(query_prod, (codigo_producto,))
-                    
-                    if not result_prod:
-                        # Intentar con ILIKE
-                        query_prod = "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE codigo ILIKE %s LIMIT 1"
-                        result_prod = db_query(query_prod, (f"%{codigo_producto}%",))
-                    
-                    if not result_prod:
-                        # Intentar con UPPER
-                        query_prod = "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE UPPER(codigo) = UPPER(%s)"
-                        result_prod = db_query(query_prod, (codigo_producto,))
-                    
-                    if not result_prod:
-                        # Intentar sin espacios
-                        codigo_sin_espacios = codigo_producto.replace(' ', '').replace('-', '').upper()
-                        query_prod = "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE REPLACE(REPLACE(UPPER(codigo), ' ', ''), '-', '') = %s"
-                        result_prod = db_query(query_prod, (codigo_sin_espacios,))
-                    
-                    if not result_prod:
-                        # ULTIMO INTENTO: Obtener TODOS los códigos y mostrar
-                        todos = db_query("SELECT codigo FROM productos ORDER BY codigo")
-                        print(f"  ❌ Producto '{codigo_producto}' NO ENCONTRADO")
-                        print(f"  📋 Códigos disponibles ({len(todos)}): {[p['codigo'] for p in todos]}")
-                        productos_fallidos += 1
-                        continue
-                    
-                    producto_bd = result_prod[0]
-                    print(f"  ✅ Producto ENCONTRADO: {producto_bd['codigo']} - {producto_bd['descripcion']}")
-                
-                # Extraer datos del producto encontrado
-                producto_id_bd = producto_bd['id']
-                cantidad = float(producto.get('cantidad', 1))
-                precio_venta = float(producto.get('valorVenta', producto_bd.get('precio_unitario', 0)))
-                costo_unitario = float(producto_bd.get('costo_unitario', 0))
-                
-                print(f"     ID: {producto_id_bd}, Precio: {precio_venta}, Costo: {costo_unitario}")
-                
-                # Calcular valores para cotizacion_detalle
-                subtotal_costo = cantidad * costo_unitario
-                subtotal_venta = cantidad * precio_venta
-                
-                # Calcular margen
-                if costo_unitario > 0:
-                    margen_porcentaje = ((precio_venta - costo_unitario) / costo_unitario * 100)
-                else:
-                    margen_porcentaje = 0
-                
-                # Insertar en cotizacion_detalle
-                detalle_query = """
-                    INSERT INTO cotizacion_detalle (
-                        cotizacion_id,
-                        producto_id,
-                        cantidad,
-                        costo_unitario,
-                        subtotal_costo,
-                        margen_porcentaje,
-                        precio_venta_unitario,
-                        subtotal_venta,
-                        descuento_porcentaje,
-                        precio_venta_con_descuento,
-                        subtotal_venta_con_descuento,
-                        descuento_total,
-                        margen_final
+                # 1. Insertar cotización
+                cur.execute("""
+                    INSERT INTO cotizaciones (
+                        numero_cotizacion, cliente_id, fecha_creacion, estado,
+                        subtotal, igv, total, usuario_id, notas,
+                        forma_pago, tiempo_entrega, validez_oferta,
+                        codigo_cotizacion, correlativo, condicion_pago,
+                        direccion_entrega, requerimiento, nota_cotizacion,
+                        descuento_porcentaje, descuento_monto, descuento_tipo,
+                        contacto_cliente, telefono_cliente, email_cliente
                     ) VALUES (
-                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                     )
-                """
+                    RETURNING id, numero_cotizacion
+                """, params)
                 
-                db_execute(detalle_query, (
-                    cotizacion_id,
-                    producto_id_bd,
-                    cantidad,
-                    costo_unitario,
-                    subtotal_costo,
-                    margen_porcentaje,
-                    precio_venta,
-                    subtotal_venta,
-                    0,
-                    precio_venta,
-                    subtotal_venta,
-                    0,
-                    margen_porcentaje
-                ))
+                result = cur.fetchone()
+                cotizacion_id = result['id']
+                numero = result['numero_cotizacion']
+                print(f"✅ Cotización creada con ID: {cotizacion_id}")
                 
-                productos_guardados += 1
-                print(f"  ✅ Producto {idx+1}: {producto_bd['codigo']} - Cant: {cantidad}, Precio: {precio_venta}, Margen: {margen_porcentaje:.1f}%")
+                # 2. Insertar productos en cotizacion_detalle
+                productos = data.get('productos', [])
+                print(f"📦 Guardando {len(productos)} productos...")
                 
-            except Exception as e:
-                print(f"  ❌ Error guardando producto: {e}")
-                import traceback
-                traceback.print_exc()
-                productos_fallidos += 1
-        
-        print(f"📊 Resumen productos: {productos_guardados} guardados, {productos_fallidos} fallidos")
-        
-        # ============================================================
-        # RESPUESTA FINAL
-        # ============================================================
-        
-        return jsonify({
-            'success': True,
-            'message': f'Cotización creada correctamente con {productos_guardados} productos',
-            'data': {
-                'id': cotizacion_id,
-                'numero': numero,
-                'productos_guardados': productos_guardados,
-                'productos_fallidos': productos_fallidos
-            }
-        })
+                productos_guardados = 0
+                productos_fallidos = 0
+                
+                for idx, producto in enumerate(productos):
+                    try:
+                        codigo_producto = producto.get('codigo', '').strip()
+                        producto_id = producto.get('producto_id')
+                        
+                        print(f"  🔍 Buscando: codigo='{codigo_producto}', id={producto_id}")
+                        
+                        # Buscar producto
+                        if producto_id:
+                            cur.execute(
+                                "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE id = %s",
+                                (producto_id,)
+                            )
+                            producto_bd = cur.fetchone()
+                        else:
+                            cur.execute(
+                                "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE codigo = %s",
+                                (codigo_producto,)
+                            )
+                            producto_bd = cur.fetchone()
+                            
+                            if not producto_bd:
+                                cur.execute(
+                                    "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE TRIM(codigo) = TRIM(%s)",
+                                    (codigo_producto,)
+                                )
+                                producto_bd = cur.fetchone()
+                        
+                        if not producto_bd:
+                            print(f"  ❌ Producto '{codigo_producto}' NO ENCONTRADO")
+                            productos_fallidos += 1
+                            continue
+                        
+                        producto_id_bd = producto_bd['id']
+                        cantidad = float(producto.get('cantidad', 1))
+                        precio_venta = float(producto.get('valorVenta', producto_bd.get('precio_unitario', 0)))
+                        costo_unitario = float(producto_bd.get('costo_unitario', 0))
+                        
+                        print(f"  ✅ Producto ENCONTRADO: {producto_bd['codigo']}")
+                        print(f"     ID: {producto_id_bd}, Precio: {precio_venta}, Costo: {costo_unitario}")
+                        
+                        # Calcular valores
+                        subtotal_costo = cantidad * costo_unitario
+                        subtotal_venta = cantidad * precio_venta
+                        
+                        if costo_unitario > 0:
+                            margen_porcentaje = ((precio_venta - costo_unitario) / costo_unitario * 100)
+                        else:
+                            margen_porcentaje = 0
+                        
+                        # Insertar en cotizacion_detalle
+                        cur.execute("""
+                            INSERT INTO cotizacion_detalle (
+                                cotizacion_id, producto_id, cantidad,
+                                costo_unitario, subtotal_costo, margen_porcentaje,
+                                precio_venta_unitario, subtotal_venta,
+                                descuento_porcentaje, precio_venta_con_descuento,
+                                subtotal_venta_con_descuento, descuento_total, margen_final
+                            ) VALUES (
+                                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                            )
+                        """, (
+                            cotizacion_id, producto_id_bd, cantidad,
+                            costo_unitario, subtotal_costo, margen_porcentaje,
+                            precio_venta, subtotal_venta,
+                            0, precio_venta, subtotal_venta, 0, margen_porcentaje
+                        ))
+                        
+                        productos_guardados += 1
+                        print(f"  ✅ Producto {idx+1}: {producto_bd['codigo']} - Cant: {cantidad}")
+                        
+                    except Exception as e:
+                        print(f"  ❌ Error guardando producto: {e}")
+                        productos_fallidos += 1
+                        raise  # Re-lanzar para hacer rollback
+                
+                # Si llegamos aquí, todo está bien - el commit se hace automáticamente al salir del with
+                print(f"📊 Resumen: {productos_guardados} guardados, {productos_fallidos} fallidos")
+                
+                return jsonify({
+                    'success': True,
+                    'message': f'Cotización creada correctamente con {productos_guardados} productos',
+                    'data': {
+                        'id': cotizacion_id,
+                        'numero': numero,
+                        'productos_guardados': productos_guardados,
+                        'productos_fallidos': productos_fallidos
+                    }
+                })
+                
+        except Exception as e:
+            print(f"❌ Error en transacción: {e}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({'success': False, 'error': str(e)}), 500
             
     except Exception as e:
         print(f"❌ Error general en api_cotizaciones_guardar: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
-
-
+    
+    
 @ventas_bp.route('/ventas/api/cotizaciones/<int:id>', methods=['GET'])
 @login_required
 def api_cotizaciones_obtener(id):
