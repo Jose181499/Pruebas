@@ -131,6 +131,11 @@ let currentModule = 'clientes';
 let clientEditId = null;
 let contactCtr = 0;
 let pointCtr = 0;
+let provEditId = null;
+let almEditId = null;
+let catEditId = null;
+let marcaEditId = null;
+let umEditId = null;
 
 // ============================================================
 // FUNCIONES API
@@ -579,6 +584,7 @@ async function toggleRecordHandler(modulo, id) {
 
 // ============================================================
 // OPEN SCREEN
+// ============================================================
 
 async function openScreen(screen) {
     console.log('🔄 Abriendo pantalla:', screen);
@@ -608,7 +614,6 @@ async function openScreen(screen) {
     document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
     document.querySelectorAll(`.tab-btn[data-tab="${screen}"]`).forEach(t => t.classList.add('active'));
 
-    // 🔥 ACTUALIZAR SIDEBAR - CORREGIDO
     updateSidebar(screen);
 
     if (MODULE_CONFIG[screen]) {
@@ -626,6 +631,70 @@ async function openScreen(screen) {
     }
 }
 
+// ============================================================
+// ACTUALIZAR SIDEBAR
+// ============================================================
+function updateSidebar(module) {
+    console.log(`🔄 Actualizando sidebar para módulo: ${module}`);
+    
+    const moduleMap = {
+        'clientes': 'Clientes',
+        'proveedores': 'Proveedores',
+        'almacenes': 'Almacenes',
+        'categorias': 'Categorías',
+        'marcas': 'Marcas',
+        'um': 'Unidades de medida'
+    };
+    
+    document.querySelectorAll('.child-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    document.querySelectorAll('.menu-header').forEach(header => {
+        header.classList.remove('active');
+    });
+    
+    let sidebarBtn = document.querySelector(`.child-btn[data-screen="${module}"]`);
+    
+    if (!sidebarBtn) {
+        sidebarBtn = document.querySelector(`.child-btn[href*="tab=${module}"]`);
+    }
+    
+    if (!sidebarBtn) {
+        const textToFind = moduleMap[module] || module;
+        document.querySelectorAll('.child-btn').forEach(btn => {
+            const btnText = btn.textContent.trim();
+            if (btnText === textToFind || btnText.includes(textToFind)) {
+                sidebarBtn = btn;
+            }
+        });
+    }
+    
+    if (!sidebarBtn) {
+        document.querySelectorAll('.child-btn').forEach(btn => {
+            const href = btn.getAttribute('href') || '';
+            if (href.includes(module)) {
+                sidebarBtn = btn;
+            }
+        });
+    }
+    
+    if (sidebarBtn) {
+        sidebarBtn.classList.add('active');
+        console.log(`✅ Sidebar activado: ${sidebarBtn.textContent.trim()}`);
+        
+        const parentGroup = sidebarBtn.closest('.menu-group');
+        if (parentGroup) {
+            parentGroup.classList.add('open');
+            const header = parentGroup.querySelector('.menu-header');
+            if (header) {
+                header.classList.add('active');
+            }
+        }
+    } else {
+        console.warn(`⚠️ No se encontró botón en sidebar para el módulo: ${module}`);
+    }
+}
 
 // ============================================================
 // 🔥 MODAL CLIENTE - FUNCIONES COMPLETAS
@@ -738,7 +807,6 @@ function openClientModal(editId = null) {
   pointCtr = 0;
   
   if (editId) {
-    // Cargar datos para edición desde la API
     fetch(`/maestros/api/clientes/${editId}`)
       .then(r => r.json())
       .then(data => {
@@ -748,7 +816,7 @@ function openClientModal(editId = null) {
       })
       .catch(err => {
         console.error('Error cargando cliente:', err);
-        toast('Error al cargar datos del cliente');
+        showToast('Error al cargar datos del cliente', 'error');
       });
   } else {
     clearClientForm();
@@ -788,18 +856,18 @@ function getPoints() {
 }
 
 // ============================================================
-// 🔥 CONSULTAR SUNAT - CONECTADO A MAIN.PY
+// CONSULTAR SUNAT
 // ============================================================
 async function consultarSunat() {
   const rucInput = document.getElementById('cli_numero');
   const ruc = rucInput?.value.replace(/\D/g, '').trim();
   
   if (!ruc) {
-    toast('⚠️ Ingresa un RUC para consultar.');
+    showToast('⚠️ Ingresa un RUC para consultar.', 'warning');
     return;
   }
   if (ruc.length !== 11) {
-    toast('⚠️ El RUC debe tener 11 dígitos.');
+    showToast('⚠️ El RUC debe tener 11 dígitos.', 'warning');
     return;
   }
   
@@ -831,13 +899,13 @@ async function consultarSunat() {
         }
       }
       
-      toast('✅ Datos SUNAT cargados correctamente');
+      showToast('✅ Datos SUNAT cargados correctamente', 'success');
     } else {
-      toast('❌ ' + (data.error || 'Error al consultar SUNAT'));
+      showToast('❌ ' + (data.error || 'Error al consultar SUNAT'), 'error');
     }
   } catch (error) {
     console.error('Error consultando SUNAT:', error);
-    toast('❌ Error al conectar con el servicio SUNAT');
+    showToast('❌ Error al conectar con el servicio SUNAT', 'error');
   } finally {
     btn.textContent = originalText;
     btn.disabled = false;
@@ -845,7 +913,7 @@ async function consultarSunat() {
 }
 
 // ============================================================
-// 🔥 GUARDAR CLIENTE
+// GUARDAR CLIENTE
 // ============================================================
 async function saveClient() {
   const contacts = getContacts();
@@ -873,11 +941,11 @@ async function saveClient() {
   };
   
   if (!data.razon_social) {
-    toast('⚠️ La razón social es obligatoria');
+    showToast('⚠️ La razón social es obligatoria', 'warning');
     return;
   }
   if (!data.numero_documento) {
-    toast('⚠️ El número de documento es obligatorio');
+    showToast('⚠️ El número de documento es obligatorio', 'warning');
     return;
   }
   
@@ -896,133 +964,780 @@ async function saveClient() {
     const result = await response.json();
     
     if (result.success) {
-      toast(result.message || '✅ Cliente guardado correctamente');
+      showToast(result.message || '✅ Cliente guardado correctamente', 'success');
       closeClientModal();
       await loadModuleData('clientes', true);
       renderModule('clientes');
     } else {
-      toast('❌ ' + (result.error || 'Error al guardar'));
+      showToast('❌ ' + (result.error || 'Error al guardar'), 'error');
     }
   } catch (error) {
     console.error('Error guardando cliente:', error);
-    toast('❌ Error al guardar el cliente');
+    showToast('❌ Error al guardar el cliente', 'error');
   }
 }
 
 // ============================================================
-// EVENT DELEGATION
+// MODAL PROVEEDOR
 // ============================================================
-document.addEventListener('click', function(e) {
-    // Navegación de tabs
-    const tabBtn = e.target.closest('.tab-btn[data-tab]');
-    if (tabBtn) {
-        e.preventDefault();
-        const tab = tabBtn.dataset.tab;
-        if (tab) openScreen(tab);
-        return;
+function openProveedorModal(editId = null) {
+    provEditId = editId;
+    if (editId) {
+        fetch(`/maestros/api/proveedores/${editId}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    fillProveedorForm(data.data);
+                }
+            })
+            .catch(err => console.error('Error cargando proveedor:', err));
+    } else {
+        clearProveedorForm();
     }
+    document.getElementById('provTitle').textContent = editId ? 'Editar proveedor' : 'Crear proveedor';
+    document.getElementById('provHint').textContent = editId ? `Editando ID ${editId}` : 'Modo: creación';
+    document.getElementById('proveedorModal').classList.add('show');
+    syncProvState();
+}
 
-    // Crear nuevo - para clientes usa el modal especial
-    const newBtn = e.target.closest('[data-new]');
-    if (newBtn) {
-        e.preventDefault();
-        const m = newBtn.dataset.new;
-        if (m === 'clientes') {
-            openClientModal();
+function clearProveedorForm() {
+    document.getElementById('prov_ambito').value = 'COMPARTIDO';
+    document.getElementById('prov_tipo').value = 'Recurrente';
+    document.getElementById('prov_tipoDoc').value = 'RUC';
+    document.getElementById('prov_ruc').value = '';
+    document.getElementById('prov_razonSocial').value = '';
+    document.getElementById('prov_direccionFiscal').value = '';
+    document.getElementById('prov_contacto').value = '';
+    document.getElementById('prov_cargo').value = '';
+    document.getElementById('prov_telefono').value = '';
+    document.getElementById('prov_email').value = '';
+    document.getElementById('prov_banco').value = '';
+    document.getElementById('prov_tipoCuenta').value = 'Cuenta corriente';
+    document.getElementById('prov_cuenta').value = '';
+    document.getElementById('prov_cci').value = '';
+    document.getElementById('prov_condicion').value = 'Contado';
+    document.getElementById('prov_lineaCredito').value = '';
+    document.getElementById('prov_moneda').value = 'Soles';
+    document.getElementById('prov_descuento').value = '';
+    document.getElementById('prov_puntoRecojo').value = '';
+    document.getElementById('prov_direccionRecojo').value = '';
+    document.getElementById('prov_horarioRecojo').value = '';
+    document.getElementById('prov_contactoRecojo').value = '';
+    document.getElementById('prov_telefonoRecojo').value = '';
+    document.getElementById('prov_instruccionesRecojo').value = '';
+    document.getElementById('prov_estado').value = 'Activo';
+    document.getElementById('prov_obs').value = '';
+    syncProvState();
+}
+
+function fillProveedorForm(data) {
+    document.getElementById('prov_ambito').value = data.ambito || 'COMPARTIDO';
+    document.getElementById('prov_tipo').value = data.tipo || 'Recurrente';
+    document.getElementById('prov_tipoDoc').value = data.tipoDoc || 'RUC';
+    document.getElementById('prov_ruc').value = data.ruc || '';
+    document.getElementById('prov_razonSocial').value = data.razon_social || '';
+    document.getElementById('prov_direccionFiscal').value = data.direccion || '';
+    document.getElementById('prov_contacto').value = data.contacto || '';
+    document.getElementById('prov_cargo').value = data.cargo || '';
+    document.getElementById('prov_telefono').value = data.telefono || '';
+    document.getElementById('prov_email').value = data.email || '';
+    document.getElementById('prov_banco').value = data.banco || '';
+    document.getElementById('prov_tipoCuenta').value = data.tipoCuenta || 'Cuenta corriente';
+    document.getElementById('prov_cuenta').value = data.cuenta || '';
+    document.getElementById('prov_cci').value = data.cci || '';
+    document.getElementById('prov_condicion').value = data.condicion_pago || 'Contado';
+    document.getElementById('prov_lineaCredito').value = data.lineaCredito || '';
+    document.getElementById('prov_moneda').value = data.moneda || 'Soles';
+    document.getElementById('prov_descuento').value = data.descuento || '';
+    document.getElementById('prov_puntoRecojo').value = data.puntoRecojo || '';
+    document.getElementById('prov_direccionRecojo').value = data.direccionRecojo || '';
+    document.getElementById('prov_horarioRecojo').value = data.horarioRecojo || '';
+    document.getElementById('prov_contactoRecojo').value = data.contactoRecojo || '';
+    document.getElementById('prov_telefonoRecojo').value = data.telefonoRecojo || '';
+    document.getElementById('prov_instruccionesRecojo').value = data.instruccionesRecojo || '';
+    document.getElementById('prov_estado').value = data.estado || 'Activo';
+    document.getElementById('prov_obs').value = data.obs || '';
+    syncProvState();
+}
+
+const PROV_STATE_CFG = {
+    'Activo': {cls:'s-green', dot:'#84CC16', pill:'pill-green', txt:'Proveedor habilitado para operar normalmente.'},
+    'Observado': {cls:'s-yellow', dot:'#F59E0B', pill:'pill-yellow', txt:'Revisar condiciones antes de operar.'},
+    'Bloqueado': {cls:'s-red', dot:'#FB7185', pill:'pill-red', txt:'No usar hasta liberación de Gerencia.'},
+    'Inactivo': {cls:'s-gray', dot:'#94A3B8', pill:'pill-gray', txt:'Desactivado para nuevos registros.'}
+};
+
+function syncProvState() {
+    const v = document.getElementById('prov_estado')?.value || 'Activo';
+    const cfg = PROV_STATE_CFG[v] || PROV_STATE_CFG['Activo'];
+    const box = document.getElementById('provStateBox');
+    if (box) box.className = 'cm-state-box ' + cfg.cls;
+    const dot = document.getElementById('provStateDot');
+    if (dot) dot.style.background = cfg.dot;
+    const txt = document.getElementById('provStateText');
+    if (txt) txt.textContent = cfg.txt;
+    const pill = document.getElementById('provStatePill');
+    if (pill) { pill.className = 'cm-state-pill ' + cfg.pill; pill.textContent = v; }
+}
+
+function closeProveedorModal() {
+    document.getElementById('proveedorModal').classList.remove('show');
+}
+
+async function saveProveedor() {
+    const data = {
+        ambito: document.getElementById('prov_ambito').value,
+        tipo: document.getElementById('prov_tipo').value,
+        tipoDoc: document.getElementById('prov_tipoDoc').value,
+        ruc: document.getElementById('prov_ruc').value.trim(),
+        razon_social: document.getElementById('prov_razonSocial').value.trim(),
+        direccion: document.getElementById('prov_direccionFiscal').value.trim(),
+        contacto: document.getElementById('prov_contacto').value.trim(),
+        cargo: document.getElementById('prov_cargo').value.trim(),
+        telefono: document.getElementById('prov_telefono').value.trim(),
+        email: document.getElementById('prov_email').value.trim(),
+        banco: document.getElementById('prov_banco').value,
+        tipoCuenta: document.getElementById('prov_tipoCuenta').value,
+        cuenta: document.getElementById('prov_cuenta').value.trim(),
+        cci: document.getElementById('prov_cci').value.trim(),
+        condicion_pago: document.getElementById('prov_condicion').value,
+        lineaCredito: document.getElementById('prov_lineaCredito').value.trim(),
+        moneda: document.getElementById('prov_moneda').value,
+        descuento: document.getElementById('prov_descuento').value.trim(),
+        puntoRecojo: document.getElementById('prov_puntoRecojo').value.trim(),
+        direccionRecojo: document.getElementById('prov_direccionRecojo').value.trim(),
+        horarioRecojo: document.getElementById('prov_horarioRecojo').value.trim(),
+        contactoRecojo: document.getElementById('prov_contactoRecojo').value.trim(),
+        telefonoRecojo: document.getElementById('prov_telefonoRecojo').value.trim(),
+        instruccionesRecojo: document.getElementById('prov_instruccionesRecojo').value.trim(),
+        estado: document.getElementById('prov_estado').value,
+        obs: document.getElementById('prov_obs').value.trim()
+    };
+
+    if (!data.razon_social) { showToast('⚠️ La razón social es obligatoria', 'warning'); return; }
+    if (!data.ruc) { showToast('⚠️ El RUC es obligatorio', 'warning'); return; }
+
+    try {
+        const url = provEditId ? `/maestros/api/proveedores/${provEditId}` : '/maestros/api/proveedores/guardar';
+        const method = provEditId ? 'PUT' : 'POST';
+        const response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (result.success) {
+            showToast(result.message || '✅ Proveedor guardado correctamente', 'success');
+            closeProveedorModal();
+            await loadModuleData('proveedores', true);
+            renderModule('proveedores');
         } else {
-            // Para otros módulos usar el modal genérico
-            showToast(`📝 Funcionalidad: Crear nuevo ${m} (próximamente)`, 'info');
+            showToast('❌ ' + (result.error || 'Error al guardar'), 'error');
         }
-        return;
+    } catch (error) {
+        console.error('Error guardando proveedor:', error);
+        showToast('❌ Error al guardar el proveedor', 'error');
     }
+}
 
-    // Editar - para clientes usa el modal especial
-    const editBtn = e.target.closest('[data-edit]');
-    if (editBtn) {
-        e.preventDefault();
-        const [m, id] = editBtn.dataset.edit.split('|');
-        if (m === 'clientes') {
-            openClientModal(parseInt(id));
-        } else {
-            showToast(`✏️ Editar ${m} ID: ${id} (próximamente)`, 'info');
-        }
-        return;
-    }
-
-    // Toggle (Activar/Inactivar)
-    const togBtn = e.target.closest('[data-toggle]');
-    if (togBtn) {
-        e.preventDefault();
-        const [m, id] = togBtn.dataset.toggle.split('|');
-        toggleRecordHandler(m, parseInt(id));
-        return;
-    }
-
-    // Ver detalle
-    const viewBtn = e.target.closest('[data-view]');
-    if (viewBtn) {
-        e.preventDefault();
-        const [m, id] = viewBtn.dataset.view.split('|');
-        openViewModal(m, parseInt(id));
-        return;
-    }
-});
-
-// ============================================================
-// EVENTOS DEL MODAL CLIENTE
-// ============================================================
-document.addEventListener('DOMContentLoaded', function() {
-    // Botones del modal cliente
-    const closeBtn = document.getElementById('cmClose');
-    const cancelBtn = document.getElementById('cmCancel');
-    const clearBtn = document.getElementById('cmClear');
-    const saveBtn = document.getElementById('cmSave');
-    const sunatBtn = document.getElementById('btnSunat');
-    const addContactBtn = document.getElementById('btnAddContact');
-    const addPointBtn = document.getElementById('btnAddPoint');
-    const estadoSelect = document.getElementById('cli_estado');
-    
-    if (closeBtn) closeBtn.addEventListener('click', closeClientModal);
-    if (cancelBtn) cancelBtn.addEventListener('click', closeClientModal);
-    if (clearBtn) clearBtn.addEventListener('click', () => {
-        if (clientEditId) {
-            openClientModal(clientEditId);
-        } else {
-            clearClientForm();
-        }
-    });
-    if (saveBtn) saveBtn.addEventListener('click', saveClient);
-    if (sunatBtn) sunatBtn.addEventListener('click', consultarSunat);
-    if (addContactBtn) addContactBtn.addEventListener('click', () => {
-        document.getElementById('cliContacts').insertAdjacentHTML('beforeend', contactBox({}));
-    });
-    if (addPointBtn) addPointBtn.addEventListener('click', () => {
-        document.getElementById('cliPoints').insertAdjacentHTML('beforeend', pointBox({}));
-    });
-    if (estadoSelect) estadoSelect.addEventListener('change', syncClientState);
-    
-    // Eliminar contacto/punto (delegación)
-    document.addEventListener('click', function(e) {
-        const rc = e.target.closest('[data-rc]');
-        if (rc) {
-            const b = rc.closest('[data-cid]');
-            if (document.querySelectorAll('[data-cid]').length > 1) {
-                b?.remove();
-            } else {
-                toast('Debe quedar al menos un contacto.');
+async function consultarSunatProveedor(ruc) {
+    const btn = document.getElementById('provSunat');
+    const originalText = btn.textContent;
+    btn.textContent = '⏳ Consultando...';
+    btn.disabled = true;
+    try {
+        const response = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
+        const data = await response.json();
+        if (data.success) {
+            document.getElementById('prov_razonSocial').value = data.razon_social || '';
+            document.getElementById('prov_direccionFiscal').value = data.direccion || '';
+            if (data.estado) {
+                const estadoMap = { 'ACTIVO': 'Activo', 'BAJA': 'Inactivo', 'SUSPENDIDO': 'Observado' };
+                const nuevoEstado = estadoMap[data.estado.toUpperCase()] || data.estado;
+                if (nuevoEstado) { 
+                    document.getElementById('prov_estado').value = nuevoEstado; 
+                    syncProvState(); 
+                }
             }
+            showToast('✅ Datos SUNAT cargados correctamente', 'success');
+        } else {
+            showToast('❌ ' + (data.error || 'Error al consultar SUNAT'), 'error');
         }
-        const rp = e.target.closest('[data-rp]');
-        if (rp) {
-            const b = rp.closest('[data-pid]');
-            if (document.querySelectorAll('[data-pid]').length > 1) {
-                b?.remove();
-            } else {
-                toast('Debe quedar al menos un punto.');
-            }
+    } catch (error) {
+        console.error('Error consultando SUNAT:', error);
+        showToast('❌ Error al conectar con el servicio SUNAT', 'error');
+    } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+    }
+}
+
+// ============================================================
+// MODAL ALMACÉN
+// ============================================================
+function openAlmacenModal(editId = null) {
+    almEditId = editId;
+    if (editId) {
+        fetch(`/maestros/api/almacenes/${editId}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    fillAlmacenForm(data.data);
+                }
+            })
+            .catch(err => console.error('Error cargando almacén:', err));
+    } else {
+        clearAlmacenForm();
+    }
+    document.getElementById('almTitle').textContent = editId ? 'Editar almacén' : 'Crear almacén';
+    document.getElementById('almHint').textContent = editId ? `Editando ID ${editId}` : 'Modo: creación';
+    document.getElementById('almacenModal').classList.add('show');
+    syncAlmState();
+}
+
+function clearAlmacenForm() {
+    document.getElementById('alm_empresa').value = 'KCF';
+    document.getElementById('alm_codigo').value = '';
+    document.getElementById('alm_nombre').value = '';
+    document.getElementById('alm_tipo').value = 'Principal';
+    document.getElementById('alm_responsable').value = '';
+    document.getElementById('alm_responsableCargo').value = '';
+    document.getElementById('alm_telefono').value = '';
+    document.getElementById('alm_email').value = '';
+    document.getElementById('alm_direccion').value = '';
+    document.getElementById('alm_googleMaps').value = '';
+    document.getElementById('alm_horario').value = '';
+    document.getElementById('alm_instrucciones').value = '';
+    document.getElementById('alm_estado').value = 'Activo';
+    document.getElementById('alm_obs').value = '';
+    syncAlmState();
+}
+
+function fillAlmacenForm(data) {
+    document.getElementById('alm_empresa').value = data.empresa || 'KCF';
+    document.getElementById('alm_codigo').value = data.codigo || '';
+    document.getElementById('alm_nombre').value = data.nombre || '';
+    document.getElementById('alm_tipo').value = data.tipo || 'Principal';
+    document.getElementById('alm_responsable').value = data.responsable || '';
+    document.getElementById('alm_responsableCargo').value = data.responsableCargo || '';
+    document.getElementById('alm_telefono').value = data.telefono || '';
+    document.getElementById('alm_email').value = data.email || '';
+    document.getElementById('alm_direccion').value = data.direccion || '';
+    document.getElementById('alm_googleMaps').value = data.googleMaps || '';
+    document.getElementById('alm_horario').value = data.horario || '';
+    document.getElementById('alm_instrucciones').value = data.instrucciones || '';
+    document.getElementById('alm_estado').value = data.estado || 'Activo';
+    document.getElementById('alm_obs').value = data.obs || '';
+    syncAlmState();
+}
+
+const ALM_STATE_CFG = {
+    'Activo': {cls:'s-green', dot:'#84CC16', pill:'pill-green', txt:'Almacén habilitado para operar normalmente.'},
+    'Observado': {cls:'s-yellow', dot:'#F59E0B', pill:'pill-yellow', txt:'Revisar condiciones antes de operar.'},
+    'Bloqueado': {cls:'s-red', dot:'#FB7185', pill:'pill-red', txt:'No usar hasta liberación de Gerencia.'},
+    'Inactivo': {cls:'s-gray', dot:'#94A3B8', pill:'pill-gray', txt:'Desactivado para nuevos registros.'}
+};
+
+function syncAlmState() {
+    const v = document.getElementById('alm_estado')?.value || 'Activo';
+    const cfg = ALM_STATE_CFG[v] || ALM_STATE_CFG['Activo'];
+    const box = document.getElementById('almStateBox');
+    if (box) box.className = 'cm-state-box ' + cfg.cls;
+    const dot = document.getElementById('almStateDot');
+    if (dot) dot.style.background = cfg.dot;
+    const txt = document.getElementById('almStateText');
+    if (txt) txt.textContent = cfg.txt;
+    const pill = document.getElementById('almStatePill');
+    if (pill) { pill.className = 'cm-state-pill ' + cfg.pill; pill.textContent = v; }
+}
+
+function closeAlmacenModal() {
+    document.getElementById('almacenModal').classList.remove('show');
+}
+
+async function saveAlmacen() {
+    const data = {
+        empresa: document.getElementById('alm_empresa').value,
+        codigo: document.getElementById('alm_codigo').value.trim(),
+        nombre: document.getElementById('alm_nombre').value.trim(),
+        tipo: document.getElementById('alm_tipo').value,
+        responsable: document.getElementById('alm_responsable').value.trim(),
+        responsableCargo: document.getElementById('alm_responsableCargo').value.trim(),
+        telefono: document.getElementById('alm_telefono').value.trim(),
+        email: document.getElementById('alm_email').value.trim(),
+        direccion: document.getElementById('alm_direccion').value.trim(),
+        googleMaps: document.getElementById('alm_googleMaps').value.trim(),
+        horario: document.getElementById('alm_horario').value.trim(),
+        instrucciones: document.getElementById('alm_instrucciones').value.trim(),
+        estado: document.getElementById('alm_estado').value,
+        obs: document.getElementById('alm_obs').value.trim()
+    };
+
+    if (!data.codigo) { showToast('⚠️ El código es obligatorio', 'warning'); return; }
+    if (!data.nombre) { showToast('⚠️ El nombre es obligatorio', 'warning'); return; }
+    if (!data.responsable) { showToast('⚠️ El responsable es obligatorio', 'warning'); return; }
+
+    try {
+        const url = almEditId ? `/maestros/api/almacenes/${almEditId}` : '/maestros/api/almacenes/guardar';
+        const method = almEditId ? 'PUT' : 'POST';
+        const response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (result.success) {
+            showToast(result.message || '✅ Almacén guardado correctamente', 'success');
+            closeAlmacenModal();
+            await loadModuleData('almacenes', true);
+            renderModule('almacenes');
+        } else {
+            showToast('❌ ' + (result.error || 'Error al guardar'), 'error');
         }
-    });
-});
+    } catch (error) {
+        console.error('Error guardando almacén:', error);
+        showToast('❌ Error al guardar el almacén', 'error');
+    }
+}
+
+// ============================================================
+// MODAL CATEGORÍA - USANDO MODAL GENÉRICO
+// ============================================================
+function openCategoriaModal(editId = null) {
+    catEditId = editId;
+    
+    const modal = document.getElementById('masterModal');
+    const title = document.getElementById('mmTitle');
+    const hint = document.getElementById('mmMode');
+    const fields = document.getElementById('mmFields');
+    
+    if (!modal) {
+        console.error('❌ Modal genérico no encontrado');
+        showToast('Error: Modal no configurado', 'error');
+        return;
+    }
+    
+    title.textContent = editId ? 'Editar categoría' : 'Crear categoría';
+    hint.textContent = editId ? `Editando ID ${editId}` : 'Modo: creación';
+    
+    fields.innerHTML = `
+        <div class="cm-section">
+            <div class="cm-section-title">
+                <span class="cm-bullet"></span>Información de categoría
+            </div>
+            <div class="cm-grid cm-grid-main">
+                <div class="cm-field">
+                    <label>ÁMBITO *</label>
+                    <select id="cat_ambito">
+                        <option value="COMPARTIDO">Compartido KCF + AGD</option>
+                        <option value="KCF">Solo KCF</option>
+                        <option value="AGD">Solo AGD</option>
+                    </select>
+                </div>
+                <div class="cm-field">
+                    <label>CÓDIGO *</label>
+                    <input id="cat_codigo" type="text">
+                </div>
+                <div class="cm-field">
+                    <label>NOMBRE *</label>
+                    <input id="cat_nombre" type="text">
+                </div>
+                <div class="cm-field">
+                    <label>CATEGORÍA PRINCIPAL</label>
+                    <input id="cat_tipo" type="text" placeholder="Ej: Seguridad Industrial">
+                </div>
+            </div>
+            <div class="cm-field full-row" style="margin-top:10px;">
+                <label>OBSERVACIONES</label>
+                <textarea id="cat_obs" style="height:60px;"></textarea>
+            </div>
+        </div>
+    `;
+    
+    if (editId) {
+        fetch(`/maestros/api/categorias/${editId}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('cat_ambito').value = data.data.ambito || 'COMPARTIDO';
+                    document.getElementById('cat_codigo').value = data.data.codigo || '';
+                    document.getElementById('cat_nombre').value = data.data.nombre || '';
+                    document.getElementById('cat_tipo').value = data.data.tipo || '';
+                    document.getElementById('cat_obs').value = data.data.obs || '';
+                    document.getElementById('mm_estado').value = data.data.estado || 'Activo';
+                }
+            })
+            .catch(err => console.error('Error cargando categoría:', err));
+    } else {
+        document.getElementById('cat_ambito').value = 'COMPARTIDO';
+        document.getElementById('cat_codigo').value = '';
+        document.getElementById('cat_nombre').value = '';
+        document.getElementById('cat_tipo').value = '';
+        document.getElementById('cat_obs').value = '';
+        document.getElementById('mm_estado').value = 'Activo';
+    }
+    
+    modal.classList.add('show');
+    syncMasterState();
+}
+
+function closeCategoriaModal() {
+    document.getElementById('masterModal').classList.remove('show');
+}
+
+async function saveCategoria() {
+    const data = {
+        ambito: document.getElementById('cat_ambito').value,
+        codigo: document.getElementById('cat_codigo').value.trim(),
+        nombre: document.getElementById('cat_nombre').value.trim(),
+        tipo: document.getElementById('cat_tipo').value.trim(),
+        estado: document.getElementById('mm_estado').value,
+        obs: document.getElementById('cat_obs').value.trim()
+    };
+
+    if (!data.codigo) { showToast('⚠️ El código es obligatorio', 'warning'); return; }
+    if (!data.nombre) { showToast('⚠️ El nombre es obligatorio', 'warning'); return; }
+
+    try {
+        const url = catEditId ? `/maestros/api/categorias/${catEditId}` : '/maestros/api/categorias/guardar';
+        const method = catEditId ? 'PUT' : 'POST';
+        const response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (result.success) {
+            showToast(result.message || '✅ Categoría guardada correctamente', 'success');
+            closeCategoriaModal();
+            await loadModuleData('categorias', true);
+            renderModule('categorias');
+        } else {
+            showToast('❌ ' + (result.error || 'Error al guardar'), 'error');
+        }
+    } catch (error) {
+        console.error('Error guardando categoría:', error);
+        showToast('❌ Error al guardar la categoría', 'error');
+    }
+}
+
+// ============================================================
+// MODAL MARCA - USANDO MODAL GENÉRICO
+// ============================================================
+function openMarcaModal(editId = null) {
+    marcaEditId = editId;
+    
+    const modal = document.getElementById('masterModal');
+    const title = document.getElementById('mmTitle');
+    const hint = document.getElementById('mmMode');
+    const fields = document.getElementById('mmFields');
+    
+    if (!modal) {
+        console.error('❌ Modal genérico no encontrado');
+        showToast('Error: Modal no configurado', 'error');
+        return;
+    }
+    
+    title.textContent = editId ? 'Editar marca' : 'Crear marca';
+    hint.textContent = editId ? `Editando ID ${editId}` : 'Modo: creación';
+    
+    fields.innerHTML = `
+        <div class="cm-section">
+            <div class="cm-section-title">
+                <span class="cm-bullet"></span>Información de marca
+            </div>
+            <div class="cm-grid cm-grid-main">
+                <div class="cm-field">
+                    <label>ÁMBITO *</label>
+                    <select id="marca_ambito">
+                        <option value="COMPARTIDO">Compartido KCF + AGD</option>
+                        <option value="KCF">Solo KCF</option>
+                        <option value="AGD">Solo AGD</option>
+                    </select>
+                </div>
+                <div class="cm-field">
+                    <label>CÓDIGO *</label>
+                    <input id="marca_codigo" type="text">
+                </div>
+                <div class="cm-field">
+                    <label>NOMBRE *</label>
+                    <input id="marca_nombre" type="text">
+                </div>
+                <div class="cm-field">
+                    <label>TIPO</label>
+                    <select id="marca_tipo">
+                        <option value="Original">Original</option>
+                        <option value="Genérica">Genérica</option>
+                        <option value="Licencia">Licencia</option>
+                        <option value="Distribuidor">Distribuidor</option>
+                    </select>
+                </div>
+            </div>
+            <div class="cm-grid" style="grid-template-columns:1fr 1fr;margin-top:6px;">
+                <div class="cm-field">
+                    <label>PAÍS DE ORIGEN</label>
+                    <input id="marca_paisOrigen" type="text" placeholder="Ej: Perú">
+                </div>
+                <div class="cm-field">
+                    <label>PROVEEDOR REFERENCIA</label>
+                    <input id="marca_proveedorReferencia" type="text" placeholder="Ej: Proveedor A">
+                </div>
+            </div>
+            <div class="cm-field" style="margin-top:6px;">
+                <label>SITIO WEB DE MARCA</label>
+                <input id="marca_webMarca" type="text" placeholder="https://...">
+            </div>
+            <div class="cm-field full-row" style="margin-top:10px;">
+                <label>OBSERVACIONES</label>
+                <textarea id="marca_obs" style="height:60px;"></textarea>
+            </div>
+        </div>
+    `;
+    
+    if (editId) {
+        fetch(`/maestros/api/marcas/${editId}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('marca_ambito').value = data.data.ambito || 'COMPARTIDO';
+                    document.getElementById('marca_codigo').value = data.data.codigo || '';
+                    document.getElementById('marca_nombre').value = data.data.nombre || '';
+                    document.getElementById('marca_tipo').value = data.data.tipo || 'Original';
+                    document.getElementById('marca_paisOrigen').value = data.data.paisOrigen || '';
+                    document.getElementById('marca_proveedorReferencia').value = data.data.proveedorReferencia || '';
+                    document.getElementById('marca_webMarca').value = data.data.webMarca || '';
+                    document.getElementById('marca_obs').value = data.data.obs || '';
+                    document.getElementById('mm_estado').value = data.data.estado || 'Activo';
+                }
+            })
+            .catch(err => console.error('Error cargando marca:', err));
+    } else {
+        document.getElementById('marca_ambito').value = 'COMPARTIDO';
+        document.getElementById('marca_codigo').value = '';
+        document.getElementById('marca_nombre').value = '';
+        document.getElementById('marca_tipo').value = 'Original';
+        document.getElementById('marca_paisOrigen').value = '';
+        document.getElementById('marca_proveedorReferencia').value = '';
+        document.getElementById('marca_webMarca').value = '';
+        document.getElementById('marca_obs').value = '';
+        document.getElementById('mm_estado').value = 'Activo';
+    }
+    
+    modal.classList.add('show');
+    syncMasterState();
+}
+
+function closeMarcaModal() {
+    document.getElementById('masterModal').classList.remove('show');
+}
+
+async function saveMarca() {
+    const data = {
+        ambito: document.getElementById('marca_ambito').value,
+        codigo: document.getElementById('marca_codigo').value.trim(),
+        nombre: document.getElementById('marca_nombre').value.trim(),
+        tipo: document.getElementById('marca_tipo').value,
+        paisOrigen: document.getElementById('marca_paisOrigen').value.trim(),
+        proveedorReferencia: document.getElementById('marca_proveedorReferencia').value.trim(),
+        webMarca: document.getElementById('marca_webMarca').value.trim(),
+        estado: document.getElementById('mm_estado').value,
+        obs: document.getElementById('marca_obs').value.trim()
+    };
+
+    if (!data.codigo) { showToast('⚠️ El código es obligatorio', 'warning'); return; }
+    if (!data.nombre) { showToast('⚠️ El nombre es obligatorio', 'warning'); return; }
+
+    try {
+        const url = marcaEditId ? `/maestros/api/marcas/${marcaEditId}` : '/maestros/api/marcas/guardar';
+        const method = marcaEditId ? 'PUT' : 'POST';
+        const response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (result.success) {
+            showToast(result.message || '✅ Marca guardada correctamente', 'success');
+            closeMarcaModal();
+            await loadModuleData('marcas', true);
+            renderModule('marcas');
+        } else {
+            showToast('❌ ' + (result.error || 'Error al guardar'), 'error');
+        }
+    } catch (error) {
+        console.error('Error guardando marca:', error);
+        showToast('❌ Error al guardar la marca', 'error');
+    }
+}
+
+// ============================================================
+// MODAL UNIDAD DE MEDIDA (UM) - USANDO MODAL GENÉRICO
+// ============================================================
+function openUmModal(editId = null) {
+    umEditId = editId;
+    
+    const modal = document.getElementById('masterModal');
+    const title = document.getElementById('mmTitle');
+    const hint = document.getElementById('mmMode');
+    const fields = document.getElementById('mmFields');
+    
+    if (!modal) {
+        console.error('❌ Modal genérico no encontrado');
+        showToast('Error: Modal no configurado', 'error');
+        return;
+    }
+    
+    title.textContent = editId ? 'Editar unidad de medida' : 'Crear unidad de medida';
+    hint.textContent = editId ? `Editando ID ${editId}` : 'Modo: creación';
+    
+    fields.innerHTML = `
+        <div class="cm-section">
+            <div class="cm-section-title">
+                <span class="cm-bullet"></span>Información de unidad de medida
+            </div>
+            <div class="cm-grid cm-grid-main">
+                <div class="cm-field">
+                    <label>ÁMBITO *</label>
+                    <select id="um_ambito">
+                        <option value="COMPARTIDO">Compartido KCF + AGD</option>
+                        <option value="KCF">Solo KCF</option>
+                        <option value="AGD">Solo AGD</option>
+                    </select>
+                </div>
+                <div class="cm-field">
+                    <label>CÓDIGO *</label>
+                    <input id="um_codigo" type="text" placeholder="Ej: KGM">
+                </div>
+                <div class="cm-field">
+                    <label>UNIDAD *</label>
+                    <input id="um_nombre" type="text" placeholder="Ej: Kilogramo">
+                </div>
+                <div class="cm-field">
+                    <label>ABREVIATURA *</label>
+                    <input id="um_simbolo" type="text" placeholder="Ej: kg">
+                </div>
+            </div>
+            <div class="cm-grid" style="grid-template-columns:1fr 1fr;margin-top:6px;">
+                <div class="cm-field">
+                    <label>TIPO</label>
+                    <select id="um_tipo">
+                        <option value="Cantidad">Cantidad</option>
+                        <option value="Peso">Peso</option>
+                        <option value="Volumen">Volumen</option>
+                        <option value="Longitud">Longitud</option>
+                        <option value="Área">Área</option>
+                        <option value="Tiempo">Tiempo</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </div>
+                <div class="cm-field">
+                    <label>PERMITE DECIMALES</label>
+                    <select id="um_decimal">
+                        <option value="No">No</option>
+                        <option value="Sí">Sí</option>
+                    </select>
+                </div>
+            </div>
+            <div class="cm-field" style="margin-top:6px;">
+                <label>OBSERVACIONES</label>
+                <textarea id="um_obs" style="height:60px;"></textarea>
+            </div>
+        </div>
+    `;
+    
+    if (editId) {
+        fetch(`/maestros/api/um/${editId}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('um_ambito').value = data.data.ambito || 'COMPARTIDO';
+                    document.getElementById('um_codigo').value = data.data.codigo || '';
+                    document.getElementById('um_nombre').value = data.data.nombre || '';
+                    document.getElementById('um_simbolo').value = data.data.abreviatura || '';
+                    document.getElementById('um_tipo').value = data.data.tipo || 'Cantidad';
+                    document.getElementById('um_decimal').value = data.data.decimales ? 'Sí' : 'No';
+                    document.getElementById('um_obs').value = data.data.obs || '';
+                    document.getElementById('mm_estado').value = data.data.estado || 'Activo';
+                }
+            })
+            .catch(err => console.error('Error cargando unidad:', err));
+    } else {
+        document.getElementById('um_ambito').value = 'COMPARTIDO';
+        document.getElementById('um_codigo').value = '';
+        document.getElementById('um_nombre').value = '';
+        document.getElementById('um_simbolo').value = '';
+        document.getElementById('um_tipo').value = 'Cantidad';
+        document.getElementById('um_decimal').value = 'No';
+        document.getElementById('um_obs').value = '';
+        document.getElementById('mm_estado').value = 'Activo';
+    }
+    
+    modal.classList.add('show');
+    syncMasterState();
+}
+
+function closeUmModal() {
+    document.getElementById('masterModal').classList.remove('show');
+}
+
+async function saveUm() {
+    const data = {
+        ambito: document.getElementById('um_ambito').value,
+        codigo: document.getElementById('um_codigo').value.trim(),
+        nombre: document.getElementById('um_nombre').value.trim(),
+        abreviatura: document.getElementById('um_simbolo').value.trim(),
+        tipo: document.getElementById('um_tipo').value,
+        decimales: document.getElementById('um_decimal').value === 'Sí',
+        estado: document.getElementById('mm_estado').value,
+        obs: document.getElementById('um_obs').value.trim()
+    };
+
+    if (!data.codigo) { showToast('⚠️ El código es obligatorio', 'warning'); return; }
+    if (!data.abreviatura) { showToast('⚠️ La abreviatura es obligatoria', 'warning'); return; }
+    if (!data.nombre) { showToast('⚠️ El nombre es obligatorio', 'warning'); return; }
+
+    try {
+        const url = umEditId ? `/maestros/api/um/${umEditId}` : '/maestros/api/um/guardar';
+        const method = umEditId ? 'PUT' : 'POST';
+        const response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (result.success) {
+            showToast(result.message || '✅ Unidad guardada correctamente', 'success');
+            closeUmModal();
+            await loadModuleData('um', true);
+            renderModule('um');
+        } else {
+            showToast('❌ ' + (result.error || 'Error al guardar'), 'error');
+        }
+    } catch (error) {
+        console.error('Error guardando unidad:', error);
+        showToast('❌ Error al guardar la unidad', 'error');
+    }
+}
+
+// ============================================================
+// SINCORNIZAR ESTADO DEL MODAL GENÉRICO
+// ============================================================
+function syncMasterState() {
+    const v = document.getElementById('mm_estado')?.value || 'Activo';
+    const cfg = STATE_CFG[v] || STATE_CFG['Activo'];
+    
+    const box = document.getElementById('mmStateBox');
+    if (box) box.className = 'cm-state-box ' + cfg.cls;
+    
+    const dot = document.getElementById('mmStateDot');
+    if (dot) dot.style.background = cfg.dot;
+    
+    const txt = document.getElementById('mmStateText');
+    if (txt) txt.textContent = cfg.txt;
+    
+    const pill = document.getElementById('mmStatePill');
+    if (pill) { pill.className = 'cm-state-pill ' + cfg.pill; pill.textContent = v; }
+}
 
 // ============================================================
 // VER DETALLE (GENERICO)
@@ -1094,6 +1809,73 @@ function closeViewModal() {
     const modal = document.getElementById('modalView');
     if (modal) modal.remove();
 }
+
+// ============================================================
+// EVENT DELEGATION - TABS, CREAR, EDITAR, TOGGLE, VIEW
+// ============================================================
+document.addEventListener('click', function(e) {
+    // Navegación de tabs
+    const tabBtn = e.target.closest('.tab-btn[data-tab]');
+    if (tabBtn) {
+        e.preventDefault();
+        const tab = tabBtn.dataset.tab;
+        if (tab) openScreen(tab);
+        return;
+    }
+
+    // Crear nuevo
+    const newBtn = e.target.closest('[data-new]');
+    if (newBtn) {
+        e.preventDefault();
+        const m = newBtn.dataset.new;
+        if (m === 'clientes') openClientModal();
+        else if (m === 'proveedores') openProveedorModal();
+        else if (m === 'almacenes') openAlmacenModal();
+        else if (m === 'categorias') openCategoriaModal();
+        else if (m === 'marcas') openMarcaModal();
+        else if (m === 'um') openUmModal();
+        else {
+            showToast(`📝 Funcionalidad: Crear nuevo ${m} (próximamente)`, 'info');
+        }
+        return;
+    }
+
+    // Editar
+    const editBtn = e.target.closest('[data-edit]');
+    if (editBtn) {
+        e.preventDefault();
+        const [m, id] = editBtn.dataset.edit.split('|');
+        const idNum = parseInt(id);
+        if (m === 'clientes') openClientModal(idNum);
+        else if (m === 'proveedores') openProveedorModal(idNum);
+        else if (m === 'almacenes') openAlmacenModal(idNum);
+        else if (m === 'categorias') openCategoriaModal(idNum);
+        else if (m === 'marcas') openMarcaModal(idNum);
+        else if (m === 'um') openUmModal(idNum);
+        else {
+            showToast(`✏️ Editar ${m} ID: ${id} (próximamente)`, 'info');
+        }
+        return;
+    }
+
+    // Toggle (Activar/Inactivar)
+    const togBtn = e.target.closest('[data-toggle]');
+    if (togBtn) {
+        e.preventDefault();
+        const [m, id] = togBtn.dataset.toggle.split('|');
+        toggleRecordHandler(m, parseInt(id));
+        return;
+    }
+
+    // Ver detalle
+    const viewBtn = e.target.closest('[data-view]');
+    if (viewBtn) {
+        e.preventDefault();
+        const [m, id] = viewBtn.dataset.view.split('|');
+        openViewModal(m, parseInt(id));
+        return;
+    }
+});
 
 // ============================================================
 // ESTILOS CSS INJECTADOS
@@ -1364,94 +2146,81 @@ function closeViewModal() {
             overflow: hidden;
         }
         
-        /* ── BOTONES DEL FOOTER ── */
         .cm-foot {
-          flex: 0 0 auto;
-          border-top: 1px solid #E5E7EB;
-          background: #fff;
-          padding: 7px 16px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 10px;
-          box-shadow: 0 -6px 14px rgba(15,23,42,.05);
+            flex: 0 0 auto;
+            border-top: 1px solid #E5E7EB;
+            background: #fff;
+            padding: 7px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            box-shadow: 0 -6px 14px rgba(15,23,42,.05);
         }
-
-        .cm-foot-left,
-        .cm-foot-right {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          flex-wrap: wrap;
+        .cm-foot-left, .cm-foot-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
         }
-
         .cm-btn {
-          height: 29px;
-          border-radius: 999px;
-          padding: 0 15px;
-          font-size: 11px;
-          font-weight: 950;
-          border: 0;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          white-space: nowrap;
+            height: 29px;
+            border-radius: 999px;
+            padding: 0 15px;
+            font-size: 11px;
+            font-weight: 950;
+            border: 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
         }
-
         .cm-btn-light {
-          background: #fff;
-          border: 1px solid #E5E7EB;
-          color: #111827;
+            background: #fff;
+            border: 1px solid #E5E7EB;
+            color: #111827;
         }
-
         .cm-btn-light:hover {
-          background: #F8FAFC;
-          border-color: #D1D5DB;
+            background: #F8FAFC;
+            border-color: #D1D5DB;
         }
-
         .cm-btn-primary {
-          background: #2563EB;
-          color: #fff;
-          min-width: 170px;
+            background: #2563EB;
+            color: #fff;
+            min-width: 170px;
         }
-
         .cm-btn-primary:hover {
-          background: #1D4ED8;
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            background: #1D4ED8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
         }
-
         .cm-hint {
-          font-size: 10px;
-          color: #64748B;
-          font-weight: 850;
+            font-size: 10px;
+            color: #64748B;
+            font-weight: 850;
         }
-
-        /* ── BOTÓN SUNAT ── */
         .sunat-btn {
-          height: 28px;
-          border: 1px solid #0F172A;
-          border-left: 0;
-          border-radius: 0 8px 8px 0;
-          background: #0F172A;
-          color: #fff;
-          font-size: 10.5px;
-          font-weight: 950;
-          cursor: pointer;
-          padding: 0 12px;
-          transition: all 0.2s ease;
-          white-space: nowrap;
+            height: 28px;
+            border: 1px solid #0F172A;
+            border-left: 0;
+            border-radius: 0 8px 8px 0;
+            background: #0F172A;
+            color: #fff;
+            font-size: 10.5px;
+            font-weight: 950;
+            cursor: pointer;
+            padding: 0 12px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
         }
-
         .sunat-btn:hover {
-          background: #1F2937;
+            background: #1F2937;
         }
-
         .sunat-btn:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
+            opacity: 0.6;
+            cursor: not-allowed;
         }
         
         @keyframes slideIn {
@@ -1466,7 +2235,7 @@ function closeViewModal() {
 })();
 
 // ============================================================
-// INIT
+// DOMContentLoaded - UNIFICADO Y COMPLETO
 // ============================================================
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Iniciando Módulo Maestros');
@@ -1477,7 +2246,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('   - PUT  /maestros/api/clientes/<id>/toggle');
     console.log('   - GET  /maestros/api/clientes/<id>');
     
-    // Verificar contenedores
+    // VERIFICAR CONTENEDORES
     const containers = Object.keys(MODULE_CONFIG);
     containers.forEach(m => {
         if (!document.getElementById(m)) {
@@ -1498,7 +2267,228 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Obtener módulo inicial
+    // 1. EVENTOS DEL MODAL CLIENTE
+    const closeBtn = document.getElementById('cmClose');
+    const cancelBtn = document.getElementById('cmCancel');
+    const clearBtn = document.getElementById('cmClear');
+    const saveBtn = document.getElementById('cmSave');
+    const sunatBtn = document.getElementById('btnSunat');
+    const addContactBtn = document.getElementById('btnAddContact');
+    const addPointBtn = document.getElementById('btnAddPoint');
+    const estadoSelect = document.getElementById('cli_estado');
+    
+    if (closeBtn) closeBtn.addEventListener('click', closeClientModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeClientModal);
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            if (clientEditId) {
+                openClientModal(clientEditId);
+            } else {
+                clearClientForm();
+            }
+        });
+    }
+    if (saveBtn) saveBtn.addEventListener('click', saveClient);
+    if (sunatBtn) sunatBtn.addEventListener('click', consultarSunat);
+    if (addContactBtn) {
+        addContactBtn.addEventListener('click', () => {
+            document.getElementById('cliContacts').insertAdjacentHTML('beforeend', contactBox({}));
+        });
+    }
+    if (addPointBtn) {
+        addPointBtn.addEventListener('click', () => {
+            document.getElementById('cliPoints').insertAdjacentHTML('beforeend', pointBox({}));
+        });
+    }
+    if (estadoSelect) estadoSelect.addEventListener('change', syncClientState);
+    
+    // 2. EVENTOS DEL MODAL PROVEEDOR
+    const provClose = document.getElementById('provClose');
+    const provCancel = document.getElementById('provCancel');
+    const provClear = document.getElementById('provClear');
+    const provSave = document.getElementById('provSave');
+    const provSunat = document.getElementById('provSunat');
+    const provEstado = document.getElementById('prov_estado');
+    
+    if (provClose) provClose.addEventListener('click', closeProveedorModal);
+    if (provCancel) provCancel.addEventListener('click', closeProveedorModal);
+    if (provClear) {
+        provClear.addEventListener('click', () => {
+            if (provEditId) {
+                openProveedorModal(provEditId);
+            } else {
+                clearProveedorForm();
+            }
+        });
+    }
+    if (provSave) provSave.addEventListener('click', saveProveedor);
+    if (provSunat) {
+        provSunat.addEventListener('click', function() {
+            const ruc = document.getElementById('prov_ruc').value.trim();
+            if (!ruc) {
+                showToast('⚠️ Ingresa un RUC para consultar.', 'warning');
+                return;
+            }
+            if (ruc.length !== 11) {
+                showToast('⚠️ El RUC debe tener 11 dígitos.', 'warning');
+                return;
+            }
+            consultarSunatProveedor(ruc);
+        });
+    }
+    if (provEstado) provEstado.addEventListener('change', syncProvState);
+
+    // 3. EVENTOS DEL MODAL ALMACÉN
+    const almClose = document.getElementById('almClose');
+    const almCancel = document.getElementById('almCancel');
+    const almClear = document.getElementById('almClear');
+    const almSave = document.getElementById('almSave');
+    const almEstado = document.getElementById('alm_estado');
+    
+    if (almClose) almClose.addEventListener('click', closeAlmacenModal);
+    if (almCancel) almCancel.addEventListener('click', closeAlmacenModal);
+    if (almClear) {
+        almClear.addEventListener('click', () => {
+            if (almEditId) {
+                openAlmacenModal(almEditId);
+            } else {
+                clearAlmacenForm();
+            }
+        });
+    }
+    if (almSave) almSave.addEventListener('click', saveAlmacen);
+    if (almEstado) almEstado.addEventListener('change', syncAlmState);
+
+    // 4. EVENTOS DEL MODAL GENÉRICO (masterModal)
+    const mmClose = document.getElementById('mmClose');
+    const mmCancel = document.getElementById('mmCancel');
+    const mmClear = document.getElementById('mmClear');
+    const mmSave = document.getElementById('mmSave');
+    const mmEstado = document.getElementById('mm_estado');
+    const mmModal = document.getElementById('masterModal');
+
+    if (mmClose) {
+        mmClose.addEventListener('click', function() {
+            if (mmModal) mmModal.classList.remove('show');
+        });
+    }
+    if (mmCancel) {
+        mmCancel.addEventListener('click', function() {
+            if (mmModal) mmModal.classList.remove('show');
+        });
+    }
+    if (mmClear) {
+        mmClear.addEventListener('click', function() {
+            const title = document.getElementById('mmTitle')?.textContent || '';
+            if (title.includes('categoría')) {
+                document.getElementById('cat_codigo').value = '';
+                document.getElementById('cat_nombre').value = '';
+                document.getElementById('cat_tipo').value = '';
+                document.getElementById('cat_obs').value = '';
+                if (document.getElementById('mm_estado')) {
+                    document.getElementById('mm_estado').value = 'Activo';
+                }
+                syncMasterState();
+                showToast('🧹 Formulario de categoría limpiado', 'info');
+            } else if (title.includes('marca')) {
+                document.getElementById('marca_codigo').value = '';
+                document.getElementById('marca_nombre').value = '';
+                document.getElementById('marca_tipo').value = 'Original';
+                document.getElementById('marca_paisOrigen').value = '';
+                document.getElementById('marca_proveedorReferencia').value = '';
+                document.getElementById('marca_webMarca').value = '';
+                document.getElementById('marca_obs').value = '';
+                if (document.getElementById('mm_estado')) {
+                    document.getElementById('mm_estado').value = 'Activo';
+                }
+                syncMasterState();
+                showToast('🧹 Formulario de marca limpiado', 'info');
+            } else if (title.includes('unidad')) {
+                document.getElementById('um_codigo').value = '';
+                document.getElementById('um_nombre').value = '';
+                document.getElementById('um_simbolo').value = '';
+                document.getElementById('um_tipo').value = 'Cantidad';
+                document.getElementById('um_decimal').value = 'No';
+                document.getElementById('um_obs').value = '';
+                if (document.getElementById('mm_estado')) {
+                    document.getElementById('mm_estado').value = 'Activo';
+                }
+                syncMasterState();
+                showToast('🧹 Formulario de unidad limpiado', 'info');
+            } else {
+                showToast('⚠️ No se pudo determinar qué limpiar', 'warning');
+            }
+        });
+    }
+    if (mmSave) {
+        mmSave.addEventListener('click', function() {
+            const title = document.getElementById('mmTitle')?.textContent || '';
+            if (title.includes('categoría')) {
+                saveCategoria();
+            } else if (title.includes('marca')) {
+                saveMarca();
+            } else if (title.includes('unidad')) {
+                saveUm();
+            } else {
+                showToast('⚠️ No se pudo determinar el tipo de registro', 'warning');
+            }
+        });
+    }
+    if (mmEstado) {
+        mmEstado.addEventListener('change', syncMasterState);
+    }
+    if (mmModal) {
+        mmModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('show');
+            }
+        });
+    }
+
+    // 5. ELIMINAR CONTACTO/PUNTO (delegación global)
+    document.addEventListener('click', function(e) {
+        const rc = e.target.closest('[data-rc]');
+        if (rc) {
+            const b = rc.closest('[data-cid]');
+            if (document.querySelectorAll('[data-cid]').length > 1) {
+                b?.remove();
+            } else {
+                showToast('Debe quedar al menos un contacto.', 'warning');
+            }
+        }
+        const rp = e.target.closest('[data-rp]');
+        if (rp) {
+            const b = rp.closest('[data-pid]');
+            if (document.querySelectorAll('[data-pid]').length > 1) {
+                b?.remove();
+            } else {
+                showToast('Debe quedar al menos un punto.', 'warning');
+            }
+        }
+    });
+
+    // 6. CERRAR CON TECLA ESCAPE (global)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            if (mmModal && mmModal.classList.contains('show')) {
+                mmModal.classList.remove('show');
+            }
+            const clientModal = document.getElementById('clientModal');
+            if (clientModal && clientModal.classList.contains('show')) {
+                clientModal.classList.remove('show');
+            }
+            const provModal = document.getElementById('proveedorModal');
+            if (provModal && provModal.classList.contains('show')) {
+                provModal.classList.remove('show');
+            }
+            const almModal = document.getElementById('almacenModal');
+            if (almModal && almModal.classList.contains('show')) {
+                almModal.classList.remove('show');
+            }
+        }
+    });
+
+    // 7. MODULO INICIAL
     const urlParams = new URLSearchParams(window.location.search);
     const tabParam = urlParams.get('tab');
     const defaultModule = tabParam && MODULE_CONFIG[tabParam] ? tabParam : 'clientes';
@@ -1508,899 +2498,8 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         openScreen(defaultModule);
     }, 200);
+
+    console.log('✅ Todos los event listeners configurados correctamente');
 });
 
 console.log('✅ Maestros JS cargado correctamente');
-
-// ============================================================
-// MODAL PROVEEDOR
-// ============================================================
-let provEditId = null;
-
-function openProveedorModal(editId = null) {
-    provEditId = editId;
-    if (editId) {
-        fetch(`/maestros/api/proveedores/${editId}`)
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    fillProveedorForm(data.data);
-                }
-            })
-            .catch(err => console.error('Error cargando proveedor:', err));
-    } else {
-        clearProveedorForm();
-    }
-    document.getElementById('provTitle').textContent = editId ? 'Editar proveedor' : 'Crear proveedor';
-    document.getElementById('provHint').textContent = editId ? `Editando ID ${editId}` : 'Modo: creación';
-    document.getElementById('proveedorModal').classList.add('show');
-    syncProvState();
-}
-
-function clearProveedorForm() {
-    document.getElementById('prov_ambito').value = 'COMPARTIDO';
-    document.getElementById('prov_tipo').value = 'Recurrente';
-    document.getElementById('prov_tipoDoc').value = 'RUC';
-    document.getElementById('prov_ruc').value = '';
-    document.getElementById('prov_razonSocial').value = '';
-    document.getElementById('prov_direccionFiscal').value = '';
-    document.getElementById('prov_contacto').value = '';
-    document.getElementById('prov_cargo').value = '';
-    document.getElementById('prov_telefono').value = '';
-    document.getElementById('prov_email').value = '';
-    document.getElementById('prov_banco').value = '';
-    document.getElementById('prov_tipoCuenta').value = 'Cuenta corriente';
-    document.getElementById('prov_cuenta').value = '';
-    document.getElementById('prov_cci').value = '';
-    document.getElementById('prov_condicion').value = 'Contado';
-    document.getElementById('prov_lineaCredito').value = '';
-    document.getElementById('prov_moneda').value = 'Soles';
-    document.getElementById('prov_descuento').value = '';
-    document.getElementById('prov_puntoRecojo').value = '';
-    document.getElementById('prov_direccionRecojo').value = '';
-    document.getElementById('prov_horarioRecojo').value = '';
-    document.getElementById('prov_contactoRecojo').value = '';
-    document.getElementById('prov_telefonoRecojo').value = '';
-    document.getElementById('prov_instruccionesRecojo').value = '';
-    document.getElementById('prov_estado').value = 'Activo';
-    document.getElementById('prov_obs').value = '';
-    syncProvState();
-}
-
-function fillProveedorForm(data) {
-    document.getElementById('prov_ambito').value = data.ambito || 'COMPARTIDO';
-    document.getElementById('prov_tipo').value = data.tipo || 'Recurrente';
-    document.getElementById('prov_tipoDoc').value = data.tipoDoc || 'RUC';
-    document.getElementById('prov_ruc').value = data.ruc || '';
-    document.getElementById('prov_razonSocial').value = data.razon_social || '';
-    document.getElementById('prov_direccionFiscal').value = data.direccion || '';
-    document.getElementById('prov_contacto').value = data.contacto || '';
-    document.getElementById('prov_cargo').value = data.cargo || '';
-    document.getElementById('prov_telefono').value = data.telefono || '';
-    document.getElementById('prov_email').value = data.email || '';
-    document.getElementById('prov_banco').value = data.banco || '';
-    document.getElementById('prov_tipoCuenta').value = data.tipoCuenta || 'Cuenta corriente';
-    document.getElementById('prov_cuenta').value = data.cuenta || '';
-    document.getElementById('prov_cci').value = data.cci || '';
-    document.getElementById('prov_condicion').value = data.condicion_pago || 'Contado';
-    document.getElementById('prov_lineaCredito').value = data.lineaCredito || '';
-    document.getElementById('prov_moneda').value = data.moneda || 'Soles';
-    document.getElementById('prov_descuento').value = data.descuento || '';
-    document.getElementById('prov_puntoRecojo').value = data.puntoRecojo || '';
-    document.getElementById('prov_direccionRecojo').value = data.direccionRecojo || '';
-    document.getElementById('prov_horarioRecojo').value = data.horarioRecojo || '';
-    document.getElementById('prov_contactoRecojo').value = data.contactoRecojo || '';
-    document.getElementById('prov_telefonoRecojo').value = data.telefonoRecojo || '';
-    document.getElementById('prov_instruccionesRecojo').value = data.instruccionesRecojo || '';
-    document.getElementById('prov_estado').value = data.estado || 'Activo';
-    document.getElementById('prov_obs').value = data.obs || '';
-    syncProvState();
-}
-
-const PROV_STATE_CFG = {
-    'Activo': {cls:'s-green', dot:'#84CC16', pill:'pill-green', txt:'Proveedor habilitado para operar normalmente.'},
-    'Observado': {cls:'s-yellow', dot:'#F59E0B', pill:'pill-yellow', txt:'Revisar condiciones antes de operar.'},
-    'Bloqueado': {cls:'s-red', dot:'#FB7185', pill:'pill-red', txt:'No usar hasta liberación de Gerencia.'},
-    'Inactivo': {cls:'s-gray', dot:'#94A3B8', pill:'pill-gray', txt:'Desactivado para nuevos registros.'}
-};
-
-function syncProvState() {
-    const v = document.getElementById('prov_estado')?.value || 'Activo';
-    const cfg = PROV_STATE_CFG[v] || PROV_STATE_CFG['Activo'];
-    const box = document.getElementById('provStateBox');
-    if (box) box.className = 'cm-state-box ' + cfg.cls;
-    const dot = document.getElementById('provStateDot');
-    if (dot) dot.style.background = cfg.dot;
-    const txt = document.getElementById('provStateText');
-    if (txt) txt.textContent = cfg.txt;
-    const pill = document.getElementById('provStatePill');
-    if (pill) { pill.className = 'cm-state-pill ' + cfg.pill; pill.textContent = v; }
-}
-
-function closeProveedorModal() {
-    document.getElementById('proveedorModal').classList.remove('show');
-}
-
-async function saveProveedor() {
-    const data = {
-        ambito: document.getElementById('prov_ambito').value,
-        tipo: document.getElementById('prov_tipo').value,
-        tipoDoc: document.getElementById('prov_tipoDoc').value,
-        ruc: document.getElementById('prov_ruc').value.trim(),
-        razon_social: document.getElementById('prov_razonSocial').value.trim(),
-        direccion: document.getElementById('prov_direccionFiscal').value.trim(),
-        contacto: document.getElementById('prov_contacto').value.trim(),
-        cargo: document.getElementById('prov_cargo').value.trim(),
-        telefono: document.getElementById('prov_telefono').value.trim(),
-        email: document.getElementById('prov_email').value.trim(),
-        banco: document.getElementById('prov_banco').value,
-        tipoCuenta: document.getElementById('prov_tipoCuenta').value,
-        cuenta: document.getElementById('prov_cuenta').value.trim(),
-        cci: document.getElementById('prov_cci').value.trim(),
-        condicion_pago: document.getElementById('prov_condicion').value,
-        lineaCredito: document.getElementById('prov_lineaCredito').value.trim(),
-        moneda: document.getElementById('prov_moneda').value,
-        descuento: document.getElementById('prov_descuento').value.trim(),
-        puntoRecojo: document.getElementById('prov_puntoRecojo').value.trim(),
-        direccionRecojo: document.getElementById('prov_direccionRecojo').value.trim(),
-        horarioRecojo: document.getElementById('prov_horarioRecojo').value.trim(),
-        contactoRecojo: document.getElementById('prov_contactoRecojo').value.trim(),
-        telefonoRecojo: document.getElementById('prov_telefonoRecojo').value.trim(),
-        instruccionesRecojo: document.getElementById('prov_instruccionesRecojo').value.trim(),
-        estado: document.getElementById('prov_estado').value,
-        obs: document.getElementById('prov_obs').value.trim()
-    };
-
-    if (!data.razon_social) { toast('⚠️ La razón social es obligatoria'); return; }
-    if (!data.ruc) { toast('⚠️ El RUC es obligatorio'); return; }
-
-    try {
-        const url = provEditId ? `/maestros/api/proveedores/${provEditId}` : '/maestros/api/proveedores/guardar';
-        const method = provEditId ? 'PUT' : 'POST';
-        const response = await fetch(url, {
-            method: method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        const result = await response.json();
-        if (result.success) {
-            toast(result.message || '✅ Proveedor guardado correctamente');
-            closeProveedorModal();
-            await loadModuleData('proveedores', true);
-            renderModule('proveedores');
-        } else {
-            toast('❌ ' + (result.error || 'Error al guardar'));
-        }
-    } catch (error) {
-        console.error('Error guardando proveedor:', error);
-        toast('❌ Error al guardar el proveedor');
-    }
-}
-
-// Eventos del modal proveedor
-document.addEventListener('DOMContentLoaded', function() {
-    const closeBtn = document.getElementById('provClose');
-    const cancelBtn = document.getElementById('provCancel');
-    const clearBtn = document.getElementById('provClear');
-    const saveBtn = document.getElementById('provSave');
-    const sunatBtn = document.getElementById('provSunat');
-    const estadoSelect = document.getElementById('prov_estado');
-    
-    if (closeBtn) closeBtn.addEventListener('click', closeProveedorModal);
-    if (cancelBtn) cancelBtn.addEventListener('click', closeProveedorModal);
-    if (clearBtn) clearBtn.addEventListener('click', () => {
-        if (provEditId) openProveedorModal(provEditId);
-        else clearProveedorForm();
-    });
-    if (saveBtn) saveBtn.addEventListener('click', saveProveedor);
-    if (sunatBtn) sunatBtn.addEventListener('click', function() {
-        const ruc = document.getElementById('prov_ruc').value.trim();
-        if (!ruc) { toast('⚠️ Ingresa un RUC para consultar.'); return; }
-        if (ruc.length !== 11) { toast('⚠️ El RUC debe tener 11 dígitos.'); return; }
-        consultarSunatProveedor(ruc);
-    });
-    if (estadoSelect) estadoSelect.addEventListener('change', syncProvState);
-});
-
-async function consultarSunatProveedor(ruc) {
-    const btn = document.getElementById('provSunat');
-    const originalText = btn.textContent;
-    btn.textContent = '⏳ Consultando...';
-    btn.disabled = true;
-    try {
-        const response = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
-        const data = await response.json();
-        if (data.success) {
-            document.getElementById('prov_razonSocial').value = data.razon_social || '';
-            document.getElementById('prov_direccionFiscal').value = data.direccion || '';
-            if (data.estado) {
-                const estadoMap = { 'ACTIVO': 'Activo', 'BAJA': 'Inactivo', 'SUSPENDIDO': 'Observado' };
-                const nuevoEstado = estadoMap[data.estado.toUpperCase()] || data.estado;
-                if (nuevoEstado) { 
-                    document.getElementById('prov_estado').value = nuevoEstado; 
-                    syncProvState(); 
-                }
-            }
-            toast('✅ Datos SUNAT cargados correctamente');
-        } else {
-            toast('❌ ' + (data.error || 'Error al consultar SUNAT'));
-        }
-    } catch (error) {
-        console.error('Error consultando SUNAT:', error);
-        toast('❌ Error al conectar con el servicio SUNAT');
-    } finally {
-        btn.textContent = originalText;
-        btn.disabled = false;
-    }
-}
-
-document.addEventListener('click', function(e) {
-    // Navegación de tabs
-    const tabBtn = e.target.closest('.tab-btn[data-tab]');
-    if (tabBtn) {
-        e.preventDefault();
-        const tab = tabBtn.dataset.tab;
-        if (tab) openScreen(tab);
-        return;
-    }
-
-    // Crear nuevo
-    const newBtn = e.target.closest('[data-new]');
-    if (newBtn) {
-        e.preventDefault();
-        const m = newBtn.dataset.new;
-        if (m === 'clientes') openClientModal();
-        else if (m === 'proveedores') openProveedorModal();
-        else if (m === 'almacenes') openAlmacenModal();
-        else if (m === 'categorias') openCategoriaModal();
-        else if (m === 'marcas') openMarcaModal();
-        else if (m === 'um') openUmModal();
-        else {
-            showToast(`📝 Funcionalidad: Crear nuevo ${m} (próximamente)`, 'info');
-        }
-        return;
-    }
-
-    // Editar
-    const editBtn = e.target.closest('[data-edit]');
-    if (editBtn) {
-        e.preventDefault();
-        const [m, id] = editBtn.dataset.edit.split('|');
-        if (m === 'clientes') openClientModal(parseInt(id));
-        else if (m === 'proveedores') openProveedorModal(parseInt(id));
-        else if (m === 'almacenes') openAlmacenModal(parseInt(id));
-        else if (m === 'categorias') openCategoriaModal(parseInt(id));
-        else if (m === 'marcas') openMarcaModal(parseInt(id));
-        else if (m === 'um') openUmModal(parseInt(id));
-        else {
-            showToast(`✏️ Editar ${m} ID: ${id} (próximamente)`, 'info');
-        }
-        return;
-    }
-
-    // Toggle (Activar/Inactivar)
-    const togBtn = e.target.closest('[data-toggle]');
-    if (togBtn) {
-        e.preventDefault();
-        const [m, id] = togBtn.dataset.toggle.split('|');
-        toggleRecordHandler(m, parseInt(id));
-        return;
-    }
-
-    // Ver detalle
-    const viewBtn = e.target.closest('[data-view]');
-    if (viewBtn) {
-        e.preventDefault();
-        const [m, id] = viewBtn.dataset.view.split('|');
-        openViewModal(m, parseInt(id));
-        return;
-    }
-});
-
-// ============================================================
-// ============================================================
-// ACTUALIZAR SIDEBAR
-// ============================================================
-// ACTUALIZAR SIDEBAR - VERSIÓN DEFINITIVA
-// ============================================================
-
-function updateSidebar(module) {
-    console.log(`🔄 Actualizando sidebar para módulo: ${module}`);
-    
-    // Mapeo de módulos a sus textos
-    const moduleMap = {
-        'clientes': 'Clientes',
-        'proveedores': 'Proveedores',
-        'almacenes': 'Almacenes',
-        'categorias': 'Categorías',
-        'marcas': 'Marcas',
-        'um': 'Unidades de medida'
-    };
-    
-    // Remover clase active de todos los child-btn
-    document.querySelectorAll('.child-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    // Remover active de los menu-header
-    document.querySelectorAll('.menu-header').forEach(header => {
-        header.classList.remove('active');
-    });
-    
-    // 1. Buscar por data-screen
-    let sidebarBtn = document.querySelector(`.child-btn[data-screen="${module}"]`);
-    
-    // 2. Si no se encuentra, buscar por href
-    if (!sidebarBtn) {
-        sidebarBtn = document.querySelector(`.child-btn[href*="tab=${module}"]`);
-    }
-    
-    // 3. Si no se encuentra, buscar por texto
-    if (!sidebarBtn) {
-        const textToFind = moduleMap[module] || module;
-        document.querySelectorAll('.child-btn').forEach(btn => {
-            const btnText = btn.textContent.trim();
-            if (btnText === textToFind || btnText.includes(textToFind)) {
-                sidebarBtn = btn;
-            }
-        });
-    }
-    
-    // 4. Si aún no se encuentra, buscar en todos los child-btn que contengan el módulo
-    if (!sidebarBtn) {
-        document.querySelectorAll('.child-btn').forEach(btn => {
-            const href = btn.getAttribute('href') || '';
-            if (href.includes(module)) {
-                sidebarBtn = btn;
-            }
-        });
-    }
-    
-    if (sidebarBtn) {
-        sidebarBtn.classList.add('active');
-        console.log(`✅ Sidebar activado: ${sidebarBtn.textContent.trim()}`);
-        
-        // Asegurar que el grupo padre esté abierto
-        const parentGroup = sidebarBtn.closest('.menu-group');
-        if (parentGroup) {
-            parentGroup.classList.add('open');
-            const header = parentGroup.querySelector('.menu-header');
-            if (header) {
-                header.classList.add('active');
-            }
-        }
-    } else {
-        console.warn(`⚠️ No se encontró botón en sidebar para el módulo: ${module}`);
-    }
-}
-// MODAL ALMACÉN
-// ============================================================
-let almEditId = null;
-
-function openAlmacenModal(editId = null) {
-    almEditId = editId;
-    if (editId) {
-        fetch(`/maestros/api/almacenes/${editId}`)
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    fillAlmacenForm(data.data);
-                }
-            })
-            .catch(err => console.error('Error cargando almacén:', err));
-    } else {
-        clearAlmacenForm();
-    }
-    document.getElementById('almTitle').textContent = editId ? 'Editar almacén' : 'Crear almacén';
-    document.getElementById('almHint').textContent = editId ? `Editando ID ${editId}` : 'Modo: creación';
-    document.getElementById('almacenModal').classList.add('show');
-    syncAlmState();
-}
-
-function clearAlmacenForm() {
-    document.getElementById('alm_empresa').value = 'KCF';
-    document.getElementById('alm_codigo').value = '';
-    document.getElementById('alm_nombre').value = '';
-    document.getElementById('alm_tipo').value = 'Principal';
-    document.getElementById('alm_responsable').value = '';
-    document.getElementById('alm_responsableCargo').value = '';
-    document.getElementById('alm_telefono').value = '';
-    document.getElementById('alm_email').value = '';
-    document.getElementById('alm_direccion').value = '';
-    document.getElementById('alm_googleMaps').value = '';
-    document.getElementById('alm_horario').value = '';
-    document.getElementById('alm_instrucciones').value = '';
-    document.getElementById('alm_estado').value = 'Activo';
-    document.getElementById('alm_obs').value = '';
-    syncAlmState();
-}
-
-function fillAlmacenForm(data) {
-    document.getElementById('alm_empresa').value = data.empresa || 'KCF';
-    document.getElementById('alm_codigo').value = data.codigo || '';
-    document.getElementById('alm_nombre').value = data.nombre || '';
-    document.getElementById('alm_tipo').value = data.tipo || 'Principal';
-    document.getElementById('alm_responsable').value = data.responsable || '';
-    document.getElementById('alm_responsableCargo').value = data.responsableCargo || '';
-    document.getElementById('alm_telefono').value = data.telefono || '';
-    document.getElementById('alm_email').value = data.email || '';
-    document.getElementById('alm_direccion').value = data.direccion || '';
-    document.getElementById('alm_googleMaps').value = data.googleMaps || '';
-    document.getElementById('alm_horario').value = data.horario || '';
-    document.getElementById('alm_instrucciones').value = data.instrucciones || '';
-    document.getElementById('alm_estado').value = data.estado || 'Activo';
-    document.getElementById('alm_obs').value = data.obs || '';
-    syncAlmState();
-}
-
-const ALM_STATE_CFG = {
-    'Activo': {cls:'s-green', dot:'#84CC16', pill:'pill-green', txt:'Almacén habilitado para operar normalmente.'},
-    'Observado': {cls:'s-yellow', dot:'#F59E0B', pill:'pill-yellow', txt:'Revisar condiciones antes de operar.'},
-    'Bloqueado': {cls:'s-red', dot:'#FB7185', pill:'pill-red', txt:'No usar hasta liberación de Gerencia.'},
-    'Inactivo': {cls:'s-gray', dot:'#94A3B8', pill:'pill-gray', txt:'Desactivado para nuevos registros.'}
-};
-
-function syncAlmState() {
-    const v = document.getElementById('alm_estado')?.value || 'Activo';
-    const cfg = ALM_STATE_CFG[v] || ALM_STATE_CFG['Activo'];
-    const box = document.getElementById('almStateBox');
-    if (box) box.className = 'cm-state-box ' + cfg.cls;
-    const dot = document.getElementById('almStateDot');
-    if (dot) dot.style.background = cfg.dot;
-    const txt = document.getElementById('almStateText');
-    if (txt) txt.textContent = cfg.txt;
-    const pill = document.getElementById('almStatePill');
-    if (pill) { pill.className = 'cm-state-pill ' + cfg.pill; pill.textContent = v; }
-}
-
-function closeAlmacenModal() {
-    document.getElementById('almacenModal').classList.remove('show');
-}
-
-async function saveAlmacen() {
-    const data = {
-        empresa: document.getElementById('alm_empresa').value,
-        codigo: document.getElementById('alm_codigo').value.trim(),
-        nombre: document.getElementById('alm_nombre').value.trim(),
-        tipo: document.getElementById('alm_tipo').value,
-        responsable: document.getElementById('alm_responsable').value.trim(),
-        responsableCargo: document.getElementById('alm_responsableCargo').value.trim(),
-        telefono: document.getElementById('alm_telefono').value.trim(),
-        email: document.getElementById('alm_email').value.trim(),
-        direccion: document.getElementById('alm_direccion').value.trim(),
-        googleMaps: document.getElementById('alm_googleMaps').value.trim(),
-        horario: document.getElementById('alm_horario').value.trim(),
-        instrucciones: document.getElementById('alm_instrucciones').value.trim(),
-        estado: document.getElementById('alm_estado').value,
-        obs: document.getElementById('alm_obs').value.trim()
-    };
-
-    if (!data.codigo) { toast('⚠️ El código es obligatorio'); return; }
-    if (!data.nombre) { toast('⚠️ El nombre es obligatorio'); return; }
-    if (!data.responsable) { toast('⚠️ El responsable es obligatorio'); return; }
-
-    try {
-        const url = almEditId ? `/maestros/api/almacenes/${almEditId}` : '/maestros/api/almacenes/guardar';
-        const method = almEditId ? 'PUT' : 'POST';
-        const response = await fetch(url, {
-            method: method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        const result = await response.json();
-        if (result.success) {
-            toast(result.message || '✅ Almacén guardado correctamente');
-            closeAlmacenModal();
-            await loadModuleData('almacenes', true);
-            renderModule('almacenes');
-        } else {
-            toast('❌ ' + (result.error || 'Error al guardar'));
-        }
-    } catch (error) {
-        console.error('Error guardando almacén:', error);
-        toast('❌ Error al guardar el almacén');
-    }
-}
-
-// Eventos del modal almacén
-document.addEventListener('DOMContentLoaded', function() {
-    const closeBtn = document.getElementById('almClose');
-    const cancelBtn = document.getElementById('almCancel');
-    const clearBtn = document.getElementById('almClear');
-    const saveBtn = document.getElementById('almSave');
-    const estadoSelect = document.getElementById('alm_estado');
-    
-    if (closeBtn) closeBtn.addEventListener('click', closeAlmacenModal);
-    if (cancelBtn) cancelBtn.addEventListener('click', closeAlmacenModal);
-    if (clearBtn) clearBtn.addEventListener('click', () => {
-        if (almEditId) openAlmacenModal(almEditId);
-        else clearAlmacenForm();
-    });
-    if (saveBtn) saveBtn.addEventListener('click', saveAlmacen);
-    if (estadoSelect) estadoSelect.addEventListener('change', syncAlmState);
-});
-
-// ============================================================
-// MODAL CATEGORÍA
-// ============================================================
-let catEditId = null;
-
-function openCategoriaModal(editId = null) {
-    catEditId = editId;
-    if (editId) {
-        fetch(`/maestros/api/categorias/${editId}`)
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    fillCategoriaForm(data.data);
-                }
-            })
-            .catch(err => console.error('Error cargando categoría:', err));
-    } else {
-        clearCategoriaForm();
-    }
-    document.getElementById('catTitle').textContent = editId ? 'Editar categoría' : 'Crear categoría';
-    document.getElementById('catHint').textContent = editId ? `Editando ID ${editId}` : 'Modo: creación';
-    document.getElementById('categoriaModal').classList.add('show');
-    syncCatState();
-}
-
-function clearCategoriaForm() {
-    document.getElementById('cat_ambito').value = 'COMPARTIDO';
-    document.getElementById('cat_codigo').value = '';
-    document.getElementById('cat_nombre').value = '';
-    document.getElementById('cat_tipo').value = '';
-    document.getElementById('cat_estado').value = 'Activo';
-    document.getElementById('cat_obs').value = '';
-    syncCatState();
-}
-
-function fillCategoriaForm(data) {
-    document.getElementById('cat_ambito').value = data.ambito || 'COMPARTIDO';
-    document.getElementById('cat_codigo').value = data.codigo || '';
-    document.getElementById('cat_nombre').value = data.nombre || '';
-    document.getElementById('cat_tipo').value = data.tipo || '';
-    document.getElementById('cat_estado').value = data.estado || 'Activo';
-    document.getElementById('cat_obs').value = data.obs || '';
-    syncCatState();
-}
-
-const CAT_STATE_CFG = {
-    'Activo': {cls:'s-green', dot:'#84CC16', pill:'pill-green', txt:'Categoría habilitada para usar en productos.'},
-    'Observado': {cls:'s-yellow', dot:'#F59E0B', pill:'pill-yellow', txt:'Revisar antes de usar en nuevos productos.'},
-    'Bloqueado': {cls:'s-red', dot:'#FB7185', pill:'pill-red', txt:'No usar en nuevos productos.'},
-    'Inactivo': {cls:'s-gray', dot:'#94A3B8', pill:'pill-gray', txt:'Desactivada para nuevos registros.'}
-};
-
-function syncCatState() {
-    const v = document.getElementById('cat_estado')?.value || 'Activo';
-    const cfg = CAT_STATE_CFG[v] || CAT_STATE_CFG['Activo'];
-    const box = document.getElementById('catStateBox');
-    if (box) box.className = 'cm-state-box ' + cfg.cls;
-    const dot = document.getElementById('catStateDot');
-    if (dot) dot.style.background = cfg.dot;
-    const txt = document.getElementById('catStateText');
-    if (txt) txt.textContent = cfg.txt;
-    const pill = document.getElementById('catStatePill');
-    if (pill) { pill.className = 'cm-state-pill ' + cfg.pill; pill.textContent = v; }
-}
-
-function closeCategoriaModal() {
-    document.getElementById('categoriaModal').classList.remove('show');
-}
-
-async function saveCategoria() {
-    const data = {
-        ambito: document.getElementById('cat_ambito').value,
-        codigo: document.getElementById('cat_codigo').value.trim(),
-        nombre: document.getElementById('cat_nombre').value.trim(),
-        tipo: document.getElementById('cat_tipo').value.trim(),
-        estado: document.getElementById('cat_estado').value,
-        obs: document.getElementById('cat_obs').value.trim()
-    };
-
-    if (!data.codigo) { toast('⚠️ El código es obligatorio'); return; }
-    if (!data.nombre) { toast('⚠️ El nombre es obligatorio'); return; }
-
-    try {
-        const url = catEditId ? `/maestros/api/categorias/${catEditId}` : '/maestros/api/categorias/guardar';
-        const method = catEditId ? 'PUT' : 'POST';
-        const response = await fetch(url, {
-            method: method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        const result = await response.json();
-        if (result.success) {
-            toast(result.message || '✅ Categoría guardada correctamente');
-            closeCategoriaModal();
-            await loadModuleData('categorias', true);
-            renderModule('categorias');
-        } else {
-            toast('❌ ' + (result.error || 'Error al guardar'));
-        }
-    } catch (error) {
-        console.error('Error guardando categoría:', error);
-        toast('❌ Error al guardar la categoría');
-    }
-}
-
-// Eventos del modal categoría
-document.addEventListener('DOMContentLoaded', function() {
-    const closeBtn = document.getElementById('catClose');
-    const cancelBtn = document.getElementById('catCancel');
-    const clearBtn = document.getElementById('catClear');
-    const saveBtn = document.getElementById('catSave');
-    const estadoSelect = document.getElementById('cat_estado');
-    
-    if (closeBtn) closeBtn.addEventListener('click', closeCategoriaModal);
-    if (cancelBtn) cancelBtn.addEventListener('click', closeCategoriaModal);
-    if (clearBtn) clearBtn.addEventListener('click', () => {
-        if (catEditId) openCategoriaModal(catEditId);
-        else clearCategoriaForm();
-    });
-    if (saveBtn) saveBtn.addEventListener('click', saveCategoria);
-    if (estadoSelect) estadoSelect.addEventListener('change', syncCatState);
-});
-
-// ============================================================
-// MODAL MARCA
-// ============================================================
-let marcaEditId = null;
-
-function openMarcaModal(editId = null) {
-    marcaEditId = editId;
-    if (editId) {
-        fetch(`/maestros/api/marcas/${editId}`)
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    fillMarcaForm(data.data);
-                }
-            })
-            .catch(err => console.error('Error cargando marca:', err));
-    } else {
-        clearMarcaForm();
-    }
-    document.getElementById('marcaTitle').textContent = editId ? 'Editar marca' : 'Crear marca';
-    document.getElementById('marcaHint').textContent = editId ? `Editando ID ${editId}` : 'Modo: creación';
-    document.getElementById('marcaModal').classList.add('show');
-    syncMarcaState();
-}
-
-function clearMarcaForm() {
-    document.getElementById('marca_ambito').value = 'COMPARTIDO';
-    document.getElementById('marca_codigo').value = '';
-    document.getElementById('marca_nombre').value = '';
-    document.getElementById('marca_tipo').value = 'Original';
-    document.getElementById('marca_paisOrigen').value = '';
-    document.getElementById('marca_proveedorReferencia').value = '';
-    document.getElementById('marca_webMarca').value = '';
-    document.getElementById('marca_estado').value = 'Activo';
-    document.getElementById('marca_obs').value = '';
-    syncMarcaState();
-}
-
-function fillMarcaForm(data) {
-    document.getElementById('marca_ambito').value = data.ambito || 'COMPARTIDO';
-    document.getElementById('marca_codigo').value = data.codigo || '';
-    document.getElementById('marca_nombre').value = data.nombre || '';
-    document.getElementById('marca_tipo').value = data.tipo || 'Original';
-    document.getElementById('marca_paisOrigen').value = data.paisOrigen || '';
-    document.getElementById('marca_proveedorReferencia').value = data.proveedorReferencia || '';
-    document.getElementById('marca_webMarca').value = data.webMarca || '';
-    document.getElementById('marca_estado').value = data.estado || 'Activo';
-    document.getElementById('marca_obs').value = data.obs || '';
-    syncMarcaState();
-}
-
-const MARCA_STATE_CFG = {
-    'Activo': {cls:'s-green', dot:'#84CC16', pill:'pill-green', txt:'Marca habilitada para usar en productos.'},
-    'Observado': {cls:'s-yellow', dot:'#F59E0B', pill:'pill-yellow', txt:'Revisar antes de usar en nuevos productos.'},
-    'Bloqueado': {cls:'s-red', dot:'#FB7185', pill:'pill-red', txt:'No usar en nuevos productos.'},
-    'Inactivo': {cls:'s-gray', dot:'#94A3B8', pill:'pill-gray', txt:'Desactivada para nuevos registros.'}
-};
-
-function syncMarcaState() {
-    const v = document.getElementById('marca_estado')?.value || 'Activo';
-    const cfg = MARCA_STATE_CFG[v] || MARCA_STATE_CFG['Activo'];
-    const box = document.getElementById('marcaStateBox');
-    if (box) box.className = 'cm-state-box ' + cfg.cls;
-    const dot = document.getElementById('marcaStateDot');
-    if (dot) dot.style.background = cfg.dot;
-    const txt = document.getElementById('marcaStateText');
-    if (txt) txt.textContent = cfg.txt;
-    const pill = document.getElementById('marcaStatePill');
-    if (pill) { pill.className = 'cm-state-pill ' + cfg.pill; pill.textContent = v; }
-}
-
-function closeMarcaModal() {
-    document.getElementById('marcaModal').classList.remove('show');
-}
-
-async function saveMarca() {
-    const data = {
-        ambito: document.getElementById('marca_ambito').value,
-        codigo: document.getElementById('marca_codigo').value.trim(),
-        nombre: document.getElementById('marca_nombre').value.trim(),
-        tipo: document.getElementById('marca_tipo').value,
-        paisOrigen: document.getElementById('marca_paisOrigen').value.trim(),
-        proveedorReferencia: document.getElementById('marca_proveedorReferencia').value.trim(),
-        webMarca: document.getElementById('marca_webMarca').value.trim(),
-        estado: document.getElementById('marca_estado').value,
-        obs: document.getElementById('marca_obs').value.trim()
-    };
-
-    if (!data.codigo) { toast('⚠️ El código es obligatorio'); return; }
-    if (!data.nombre) { toast('⚠️ El nombre es obligatorio'); return; }
-
-    try {
-        const url = marcaEditId ? `/maestros/api/marcas/${marcaEditId}` : '/maestros/api/marcas/guardar';
-        const method = marcaEditId ? 'PUT' : 'POST';
-        const response = await fetch(url, {
-            method: method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        const result = await response.json();
-        if (result.success) {
-            toast(result.message || '✅ Marca guardada correctamente');
-            closeMarcaModal();
-            await loadModuleData('marcas', true);
-            renderModule('marcas');
-        } else {
-            toast('❌ ' + (result.error || 'Error al guardar'));
-        }
-    } catch (error) {
-        console.error('Error guardando marca:', error);
-        toast('❌ Error al guardar la marca');
-    }
-}
-
-// Eventos del modal marca
-document.addEventListener('DOMContentLoaded', function() {
-    const closeBtn = document.getElementById('marcaClose');
-    const cancelBtn = document.getElementById('marcaCancel');
-    const clearBtn = document.getElementById('marcaClear');
-    const saveBtn = document.getElementById('marcaSave');
-    const estadoSelect = document.getElementById('marca_estado');
-    
-    if (closeBtn) closeBtn.addEventListener('click', closeMarcaModal);
-    if (cancelBtn) cancelBtn.addEventListener('click', closeMarcaModal);
-    if (clearBtn) clearBtn.addEventListener('click', () => {
-        if (marcaEditId) openMarcaModal(marcaEditId);
-        else clearMarcaForm();
-    });
-    if (saveBtn) saveBtn.addEventListener('click', saveMarca);
-    if (estadoSelect) estadoSelect.addEventListener('change', syncMarcaState);
-});
-
-// ============================================================
-// MODAL UNIDAD DE MEDIDA (UM)
-// ============================================================
-let umEditId = null;
-
-function openUmModal(editId = null) {
-    umEditId = editId;
-    if (editId) {
-        fetch(`/maestros/api/um/${editId}`)
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    fillUmForm(data.data);
-                }
-            })
-            .catch(err => console.error('Error cargando unidad:', err));
-    } else {
-        clearUmForm();
-    }
-    document.getElementById('umTitle').textContent = editId ? 'Editar unidad' : 'Crear unidad';
-    document.getElementById('umHint').textContent = editId ? `Editando ID ${editId}` : 'Modo: creación';
-    document.getElementById('umModal').classList.add('show');
-    syncUmState();
-}
-
-function clearUmForm() {
-    document.getElementById('um_ambito').value = 'COMPARTIDO';
-    document.getElementById('um_codigo').value = '';
-    document.getElementById('um_simbolo').value = '';
-    document.getElementById('um_nombre').value = '';
-    document.getElementById('um_tipo').value = 'Cantidad';
-    document.getElementById('um_decimal').value = 'No';
-    document.getElementById('um_estado').value = 'Activo';
-    document.getElementById('um_obs').value = '';
-    syncUmState();
-}
-
-function fillUmForm(data) {
-    document.getElementById('um_ambito').value = data.ambito || 'COMPARTIDO';
-    document.getElementById('um_codigo').value = data.codigo || '';
-    document.getElementById('um_simbolo').value = data.simbolo || '';
-    document.getElementById('um_nombre').value = data.nombre || '';
-    document.getElementById('um_tipo').value = data.tipo || 'Cantidad';
-    document.getElementById('um_decimal').value = data.decimal || 'No';
-    document.getElementById('um_estado').value = data.estado || 'Activo';
-    document.getElementById('um_obs').value = data.obs || '';
-    syncUmState();
-}
-
-const UM_STATE_CFG = {
-    'Activo': {cls:'s-green', dot:'#84CC16', pill:'pill-green', txt:'Unidad habilitada para usar en productos.'},
-    'Observado': {cls:'s-yellow', dot:'#F59E0B', pill:'pill-yellow', txt:'Revisar antes de usar en nuevos productos.'},
-    'Bloqueado': {cls:'s-red', dot:'#FB7185', pill:'pill-red', txt:'No usar en nuevos productos.'},
-    'Inactivo': {cls:'s-gray', dot:'#94A3B8', pill:'pill-gray', txt:'Desactivada para nuevos registros.'}
-};
-
-function syncUmState() {
-    const v = document.getElementById('um_estado')?.value || 'Activo';
-    const cfg = UM_STATE_CFG[v] || UM_STATE_CFG['Activo'];
-    const box = document.getElementById('umStateBox');
-    if (box) box.className = 'cm-state-box ' + cfg.cls;
-    const dot = document.getElementById('umStateDot');
-    if (dot) dot.style.background = cfg.dot;
-    const txt = document.getElementById('umStateText');
-    if (txt) txt.textContent = cfg.txt;
-    const pill = document.getElementById('umStatePill');
-    if (pill) { pill.className = 'cm-state-pill ' + cfg.pill; pill.textContent = v; }
-}
-
-function closeUmModal() {
-    document.getElementById('umModal').classList.remove('show');
-}
-
-async function saveUm() {
-    const data = {
-        ambito: document.getElementById('um_ambito').value,
-        codigo: document.getElementById('um_codigo').value.trim(),
-        simbolo: document.getElementById('um_simbolo').value.trim(),
-        nombre: document.getElementById('um_nombre').value.trim(),
-        tipo: document.getElementById('um_tipo').value,
-        decimal: document.getElementById('um_decimal').value,
-        estado: document.getElementById('um_estado').value,
-        obs: document.getElementById('um_obs').value.trim()
-    };
-
-    if (!data.codigo) { toast('⚠️ El código es obligatorio'); return; }
-    if (!data.simbolo) { toast('⚠️ La abreviatura es obligatoria'); return; }
-    if (!data.nombre) { toast('⚠️ El nombre es obligatorio'); return; }
-
-    try {
-        const url = umEditId ? `/maestros/api/um/${umEditId}` : '/maestros/api/um/guardar';
-        const method = umEditId ? 'PUT' : 'POST';
-        const response = await fetch(url, {
-            method: method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        const result = await response.json();
-        if (result.success) {
-            toast(result.message || '✅ Unidad guardada correctamente');
-            closeUmModal();
-            await loadModuleData('um', true);
-            renderModule('um');
-        } else {
-            toast('❌ ' + (result.error || 'Error al guardar'));
-        }
-    } catch (error) {
-        console.error('Error guardando unidad:', error);
-        toast('❌ Error al guardar la unidad');
-    }
-}
-
-// Eventos del modal unidad
-document.addEventListener('DOMContentLoaded', function() {
-    const closeBtn = document.getElementById('umClose');
-    const cancelBtn = document.getElementById('umCancel');
-    const clearBtn = document.getElementById('umClear');
-    const saveBtn = document.getElementById('umSave');
-    const estadoSelect = document.getElementById('um_estado');
-    
-    if (closeBtn) closeBtn.addEventListener('click', closeUmModal);
-    if (cancelBtn) cancelBtn.addEventListener('click', closeUmModal);
-    if (clearBtn) clearBtn.addEventListener('click', () => {
-        if (umEditId) openUmModal(umEditId);
-        else clearUmForm();
-    });
-    if (saveBtn) saveBtn.addEventListener('click', saveUm);
-    if (estadoSelect) estadoSelect.addEventListener('change', syncUmState);
-});
