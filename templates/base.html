@@ -1779,7 +1779,7 @@ function limpiarFormularioSinConfirmar() {
 // FUNCIONES PARA NUEVO PRODUCTO
 // ============================================================
 
-// Generar código automático
+// En base.html, reemplaza la función generarCodigoProducto():
 async function generarCodigoProducto() {
     try {
         const response = await fetch('/productos/api/productos/ultimo-codigo');
@@ -1789,24 +1789,29 @@ async function generarCodigoProducto() {
             const generadoEl = document.getElementById('codigoGenerado');
             if (codigoEl) codigoEl.textContent = data.data.codigo;
             if (generadoEl) generadoEl.value = data.data.codigo;
-            console.log('✅ Código generado:', data.data.codigo);
         }
     } catch (e) {
         console.error('❌ Error generando código:', e);
-        // Fallback: generar código local con fecha
-        const fecha = new Date();
-        const anio = fecha.getFullYear();
-        const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-        const dia = String(fecha.getDate()).padStart(2, '0');
-        const random = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
-        const codigo = `PRD-${anio}${mes}${dia}-${random}`;
-        const codigoEl = document.getElementById('codigoProducto');
-        const generadoEl = document.getElementById('codigoGenerado');
-        if (codigoEl) codigoEl.textContent = codigo;
-        if (generadoEl) generadoEl.value = codigo;
+        // ✅ FALLBACK CORREGIDO - usar número secuencial
+        fetch('/productos/api/productos/ultimo-codigo')
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const codigoEl = document.getElementById('codigoProducto');
+                    const generadoEl = document.getElementById('codigoGenerado');
+                    if (codigoEl) codigoEl.textContent = data.data.codigo;
+                    if (generadoEl) generadoEl.value = data.data.codigo;
+                }
+            })
+            .catch(() => {
+                // Último recurso: PRD-0001
+                const codigoEl = document.getElementById('codigoProducto');
+                const generadoEl = document.getElementById('codigoGenerado');
+                if (codigoEl) codigoEl.textContent = 'PRD-0001';
+                if (generadoEl) generadoEl.value = 'PRD-0001';
+            });
     }
 }
-
 
 // Calcular margen
 window.calcularMargen = function() {

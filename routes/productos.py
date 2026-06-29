@@ -32,68 +32,30 @@ def safe_int(value, default=0):
     except (ValueError, TypeError):
         return default
 
+# En routes/productos.py - obtener_ultimo_codigo_producto()
 
 def obtener_ultimo_codigo_producto():
     """Obtiene el último código de producto para generar el siguiente"""
     try:
-        # Buscar el último código que comience con PRD-
+        # 🔥 NUEVO: Usar secuencia numérica simple
         result = db_query("""
-            SELECT codigo FROM productos 
-            WHERE codigo LIKE 'PRD-%'
-            ORDER BY id DESC LIMIT 1
+            SELECT MAX(CAST(SUBSTRING(codigo FROM 'PRD-([0-9]+)') AS INTEGER)) as max_num
+            FROM productos 
+            WHERE codigo ~ '^PRD-[0-9]+$'
         """)
         
-        if result and len(result) > 0 and result[0].get('codigo'):
-            codigo = result[0]['codigo']
-            print(f"📝 Último código encontrado: {codigo}")
-            # Extraer el número del código (ej: PRD-0001 -> 1, PRD-0024 -> 24)
-            partes = codigo.split('-')
-            if len(partes) >= 2:
-                try:
-                    # Tomar la última parte y convertir a número
-                    num_str = partes[-1]
-                    # Si tiene ceros a la izquierda, convertirlos a número
-                    ultimo_num = int(num_str)
-                    nuevo_num = ultimo_num + 1
-                    # Formatear con ceros a la izquierda (4 dígitos)
-                    nuevo_codigo = f"PRD-{str(nuevo_num).zfill(4)}"
-                    print(f"✅ Nuevo código generado: {nuevo_codigo}")
-                    return nuevo_codigo
-                except ValueError as e:
-                    print(f"⚠️ Error parseando número del código {codigo}: {e}")
-                    pass
+        if result and result[0].get('max_num'):
+            max_num = int(result[0]['max_num'])
+            nuevo_num = max_num + 1
+        else:
+            nuevo_num = 1
         
-        # Si no hay productos con PRD-, usar el mayor ID numérico
-        print("📝 No se encontraron códigos PRD-, buscando por ID...")
-        result = db_query("""
-            SELECT codigo FROM productos 
-            ORDER BY id DESC LIMIT 1
-        """)
-        
-        if result and len(result) > 0 and result[0].get('codigo'):
-            codigo = result[0]['codigo']
-            print(f"📝 Último código por ID: {codigo}")
-            # Intentar extraer un número del código
-            import re
-            numeros = re.findall(r'\d+', codigo)
-            if numeros:
-                try:
-                    ultimo_num = int(numeros[-1])
-                    nuevo_num = ultimo_num + 1
-                    nuevo_codigo = f"PRD-{str(nuevo_num).zfill(4)}"
-                    print(f"✅ Nuevo código generado desde números: {nuevo_codigo}")
-                    return nuevo_codigo
-                except:
-                    pass
-        
-        # Si todo falla, PRD-0001
-        print("⚠️ Usando PRD-0001 como fallback")
-        return "PRD-0001"
+        nuevo_codigo = f"PRD-{str(nuevo_num).zfill(4)}"
+        print(f"✅ Nuevo código generado: {nuevo_codigo}")
+        return nuevo_codigo
         
     except Exception as e:
         print(f"❌ Error generando código: {e}")
-        import traceback
-        traceback.print_exc()
         return "PRD-0001"
 
 # ============================================================
@@ -895,4 +857,19 @@ def get_mejor_producto():
         
     except Exception as e:
         print(f"❌ Error en get_mejor_producto: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+    
+# En productos.py, asegúrate que la ruta devuelva el código en formato PRD-XXXX
+@productos_bp.route('/api/productos/ultimo-codigo', methods=['GET'])
+@login_required
+def get_ultimo_codigo():
+    try:
+        codigo = obtener_ultimo_codigo_producto()  # ← Debe devolver PRD-XXXX
+        print(f"📝 Código generado por backend: {codigo}")  # Debug
+        return jsonify({
+            'success': True,
+            'data': {'codigo': codigo}
+        })
+    except Exception as e:
+        print(f"❌ Error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
