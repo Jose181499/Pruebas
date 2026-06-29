@@ -799,6 +799,7 @@ def api_cotizaciones_listar():
         return jsonify({'success': False, 'error': str(e)}), 500
       
 
+
 @ventas_bp.route('/ventas/api/cotizaciones/guardar', methods=['POST'])
 @login_required
 def api_cotizaciones_guardar():
@@ -924,11 +925,11 @@ def api_cotizaciones_guardar():
         print(f"✅ Cotización creada con ID: {cotizacion_id}")
         
         # ============================================================
-        # GUARDAR PRODUCTOS EN cotizacion_detalle
+        # GUARDAR PRODUCTOS - VERSIÓN DEFINITIVA
         # ============================================================
         
         productos = data.get('productos', [])
-        print(f"📦 Guardando {len(productos)} productos en cotizacion_detalle...")
+        print(f"📦 Guardando {len(productos)} productos...")
         
         productos_guardados = 0
         productos_fallidos = 0
@@ -936,86 +937,59 @@ def api_cotizaciones_guardar():
         for idx, producto in enumerate(productos):
             try:
                 codigo_producto = producto.get('codigo', '').strip()
-                producto_id = producto.get('producto_id')  # Si viene con ID directamente
+                producto_id = producto.get('producto_id')
                 
-                print(f"  🔍 Buscando producto: codigo='{codigo_producto}', producto_id={producto_id}")
+                print(f"  🔍 Buscando: codigo='{codigo_producto}', id={producto_id}")
                 
-                # ✅ Si viene con ID, usarlo directamente
+                # ✅ CASO 1: Buscar por ID
                 if producto_id:
                     result_prod = db_query(
-                        "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE id = %s AND activo = TRUE",
+                        "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE id = %s",
                         (producto_id,)
                     )
                     if result_prod:
                         producto_bd = result_prod[0]
-                        print(f"  ✅ Producto encontrado por ID: {producto_bd['codigo']}")
+                        print(f"  ✅ Encontrado por ID: {producto_bd['codigo']}")
                     else:
-                        print(f"  ⚠️ Producto con ID {producto_id} no encontrado")
+                        print(f"  ❌ No encontrado por ID: {producto_id}")
                         productos_fallidos += 1
                         continue
                 else:
-                    # ✅ BUSCAR POR CÓDIGO - VERSIÓN SIMPLIFICADA Y ROBUSTA
-                    producto_bd = None
+                    # ✅ CASO 2: Buscar por código - USANDO db_query DIRECTAMENTE
+                    query_prod = "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE codigo = %s"
+                    result_prod = db_query(query_prod, (codigo_producto,))
                     
-                    # 1. Buscar por código exacto
-                    result_prod = db_query(
-                        "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE codigo = %s AND activo = TRUE",
-                        (codigo_producto,)
-                    )
-                    if result_prod:
-                        producto_bd = result_prod[0]
-                        print(f"  ✅ Producto encontrado por código exacto: {producto_bd['codigo']}")
+                    if not result_prod:
+                        # Intentar con TRIM
+                        query_prod = "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE TRIM(codigo) = TRIM(%s)"
+                        result_prod = db_query(query_prod, (codigo_producto,))
                     
-                    # 2. Si no, buscar por TRIM
-                    if not producto_bd:
-                        result_prod = db_query(
-                            "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE TRIM(codigo) = TRIM(%s) AND activo = TRUE",
-                            (codigo_producto,)
-                        )
-                        if result_prod:
-                            producto_bd = result_prod[0]
-                            print(f"  ✅ Producto encontrado por TRIM: {producto_bd['codigo']}")
+                    if not result_prod:
+                        # Intentar con ILIKE
+                        query_prod = "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE codigo ILIKE %s LIMIT 1"
+                        result_prod = db_query(query_prod, (f"%{codigo_producto}%",))
                     
-                    # 3. Si no, buscar por ILIKE
-                    if not producto_bd:
-                        result_prod = db_query(
-                            "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE codigo ILIKE %s AND activo = TRUE LIMIT 1",
-                            (f"%{codigo_producto}%",)
-                        )
-                        if result_prod:
-                            producto_bd = result_prod[0]
-                            print(f"  ✅ Producto encontrado por ILIKE: {producto_bd['codigo']}")
+                    if not result_prod:
+                        # Intentar con UPPER
+                        query_prod = "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE UPPER(codigo) = UPPER(%s)"
+                        result_prod = db_query(query_prod, (codigo_producto,))
                     
-                    # 4. Si no, buscar por UPPER
-                    if not producto_bd:
-                        result_prod = db_query(
-                            "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE UPPER(codigo) = UPPER(%s) AND activo = TRUE",
-                            (codigo_producto,)
-                        )
-                        if result_prod:
-                            producto_bd = result_prod[0]
-                            print(f"  ✅ Producto encontrado por UPPER: {producto_bd['codigo']}")
+                    if not result_prod:
+                        # Intentar sin espacios
+                        codigo_sin_espacios = codigo_producto.replace(' ', '').replace('-', '').upper()
+                        query_prod = "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE REPLACE(REPLACE(UPPER(codigo), ' ', ''), '-', '') = %s"
+                        result_prod = db_query(query_prod, (codigo_sin_espacios,))
                     
-                    # 5. Si no, buscar sin espacios
-                    if not producto_bd:
-                        codigo_sin_espacios = codigo_producto.replace(' ', '')
-                        result_prod = db_query(
-                            "SELECT id, codigo, descripcion, precio_unitario, costo_unitario FROM productos WHERE REPLACE(codigo, ' ', '') = %s AND activo = TRUE",
-                            (codigo_sin_espacios,)
-                        )
-                        if result_prod:
-                            producto_bd = result_prod[0]
-                            print(f"  ✅ Producto encontrado sin espacios: {producto_bd['codigo']}")
-                
-                # Si no se encontró el producto
-                if not producto_bd:
-                    print(f"  ❌ Producto con código '{codigo_producto}' NO ENCONTRADO en la BD")
-                    # Mostrar algunos códigos disponibles para debug
-                    todos = db_query("SELECT codigo FROM productos WHERE activo = TRUE LIMIT 10")
-                    codigos = [p['codigo'] for p in todos]
-                    print(f"  📋 Códigos disponibles (primeros 10): {codigos}")
-                    productos_fallidos += 1
-                    continue
+                    if not result_prod:
+                        # ULTIMO INTENTO: Obtener TODOS los códigos y mostrar
+                        todos = db_query("SELECT codigo FROM productos ORDER BY codigo")
+                        print(f"  ❌ Producto '{codigo_producto}' NO ENCONTRADO")
+                        print(f"  📋 Códigos disponibles ({len(todos)}): {[p['codigo'] for p in todos]}")
+                        productos_fallidos += 1
+                        continue
+                    
+                    producto_bd = result_prod[0]
+                    print(f"  ✅ Producto ENCONTRADO: {producto_bd['codigo']} - {producto_bd['descripcion']}")
                 
                 # Extraer datos del producto encontrado
                 producto_id_bd = producto_bd['id']
@@ -1023,7 +997,6 @@ def api_cotizaciones_guardar():
                 precio_venta = float(producto.get('valorVenta', producto_bd.get('precio_unitario', 0)))
                 costo_unitario = float(producto_bd.get('costo_unitario', 0))
                 
-                print(f"  ✅ Producto encontrado: {producto_bd['codigo']} - {producto_bd['descripcion']}")
                 print(f"     ID: {producto_id_bd}, Precio: {precio_venta}, Costo: {costo_unitario}")
                 
                 # Calcular valores para cotizacion_detalle
@@ -1066,11 +1039,11 @@ def api_cotizaciones_guardar():
                     margen_porcentaje,
                     precio_venta,
                     subtotal_venta,
-                    0,  # descuento_porcentaje
-                    precio_venta,  # precio_venta_con_descuento
-                    subtotal_venta,  # subtotal_venta_con_descuento
-                    0,  # descuento_total
-                    margen_porcentaje  # margen_final
+                    0,
+                    precio_venta,
+                    subtotal_venta,
+                    0,
+                    margen_porcentaje
                 ))
                 
                 productos_guardados += 1
@@ -1104,19 +1077,6 @@ def api_cotizaciones_guardar():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
