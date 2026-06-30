@@ -16,174 +16,193 @@
 
 
 <div class="app">
-    <!-- ======================================== -->
-    <!-- SIDEBAR                                  -->
-    <!-- ======================================== -->
-    <aside class="sidebar">
-        <div class="logo" id="logoEmpresa">KCF</div>
-        <div class="brand-sub">ERP Multiempresa</div>
-        <div class="divider"></div>
-        <div class="side-title">Estructura ERP</div>
+  <!-- ======================================== -->
+<!-- SIDEBAR                                  -->
+<!-- ======================================== -->
+<aside class="sidebar">
+    <div class="logo" id="logoEmpresa">KCF</div>
+    <div class="brand-sub">ERP Multiempresa</div>
+    <div class="divider"></div>
+    <div class="side-title">Estructura ERP</div>
 
-        <div class="menu-tree">
-            <!-- DASHBOARD -->
-            <div class="menu-group open">
-                <a href="/" class="menu-header" style="text-decoration:none;">
+    <div class="menu-tree">
+        <!-- DASHBOARD -->
+        <div class="menu-group" data-modulo="dashboard">
+            <div class="menu-header-wrapper">
+                <a href="/" class="menu-header" style="text-decoration:none;flex:1;">
                     <div class="menu-left"><span>0 ─ Dashboard</span></div>
-                    <span class="caret">›</span>
                 </a>
-                <div class="menu-children">
-                    <a href="/" class="child-btn" style="text-decoration:none;">Resumen general</a>
-                </div>
+                <span class="caret-toggle">›</span>
             </div>
-
-            <!-- CONFIGURACIÓN Y SEGURIDAD -->
-            <!-- CONFIGURACIÓN Y SEGURIDAD -->
-<div class="menu-group open">
-    <a href="#" class="menu-header {% if active_tab in ['empresas', 'usuarios', 'correlativos', 'parametros', 'integracion'] %}active{% endif %}" style="text-decoration:none;">
-        <div class="menu-left"><span>1 ─ Configuración y seguridad</span></div>
-        <span class="caret">›</span>
-    </a>
-    <div class="menu-children">
-        <a href="/empresas" class="child-btn {% if active_tab == 'empresas' %}active{% endif %}" style="text-decoration:none;">Empresas</a>
-        <a href="/usuarios" class="child-btn {% if active_tab == 'usuarios' %}active{% endif %}" style="text-decoration:none;">Usuarios y permisos</a>
-        <a href="/correlativos" class="child-btn {% if active_tab == 'correlativos' %}active{% endif %}" style="text-decoration:none;">Correlativos</a>
-        <a href="/parametros" class="child-btn {% if active_tab == 'parametros' %}active{% endif %}" style="text-decoration:none;">Parámetros generales</a>
-        <a href="/integracion" class="child-btn {% if active_tab == 'integracion' %}active{% endif %}" style="text-decoration:none;">Integración ERP</a>
-    </div>
-</div>
-
-<!-- MAESTROS -->
-<div class="menu-group">
-    <a href="/maestros" class="menu-header" style="text-decoration:none;">
-        <div class="menu-left"><span>2 ─ Maestros</span></div>
-        <span class="caret">›</span>
-    </a>
-    <div class="menu-children">
-        <a href="/maestros?tab=clientes" class="child-btn" data-screen="clientes" style="text-decoration:none;">Clientes</a>
-        <a href="/maestros?tab=proveedores" class="child-btn" data-screen="proveedores" style="text-decoration:none;">Proveedores</a>
-        <a href="/maestros?tab=almacenes" class="child-btn" data-screen="almacenes" style="text-decoration:none;">Almacenes</a>
-        <a href="/maestros?tab=categorias" class="child-btn" data-screen="categorias" style="text-decoration:none;">Categorías</a>
-        <a href="/maestros?tab=marcas" class="child-btn" data-screen="marcas" style="text-decoration:none;">Marcas</a>
-        <a href="/maestros?tab=um" class="child-btn" data-screen="um" style="text-decoration:none;">Unidades de medida</a>
-    </div>
-</div>
-
-       <!-- PRODUCTOS -->
-<div class="menu-group">
-    <a href="/productos" class="menu-header" style="text-decoration:none;">
-        <div class="menu-left"><span>3 ─ Productos</span></div>
-        <span class="caret">›</span>
-    </a>
-    <div class="menu-children">
-        <a href="/productos/nuevo" class="child-btn {% if active_tab == 'nuevo' %}active{% endif %}" style="text-decoration:none;">Nuevo producto</a>
-        <a href="/productos/base-datos" class="child-btn {% if active_tab == 'base-datos' %}active{% endif %}" style="text-decoration:none;">Base de datos: Producto</a>
-        <a href="/productos/comparativo" class="child-btn {% if active_tab == 'comparativo' %}active{% endif %}" style="text-decoration:none;">Comparativo costos</a>
-    </div>
-</div>
-
-        <!-- VENTAS -->
-<div class="menu-group">
-    <a href="/ventas" class="menu-header" style="text-decoration:none;">
-        <div class="menu-left"><span>4 ─ Ventas</span></div>
-        <span class="caret">›</span>
-    </a>
-    <div class="menu-children">
-        <a href="/ventas?tab=cotizaciones" class="child-btn" data-screen="cotizaciones" style="text-decoration:none;">Cotizaciones</a>
-        <a href="/ventas?tab=comprobantes" class="child-btn" data-screen="comprobantes" style="text-decoration:none;">Comprobantes cliente</a>
-        <a href="/ventas?tab=guias" class="child-btn" data-screen="guias" style="text-decoration:none;">Guías de remisión cliente</a>
-        <a href="/ventas?tab=notas_credito" class="child-btn" data-screen="notas_credito" style="text-decoration:none;">Notas de crédito</a>
-        <!-- Nuevos submódulos para el flujo completo -->
-        <a href="/ventas?tab=pedido_compra" class="child-btn" data-screen="pedido_compra" style="text-decoration:none;">PC Pedido Compras</a>
-        <a href="/ventas?tab=despachar" class="child-btn" data-screen="despachar" style="text-decoration:none;">🚚 Despachar</a>
-        <a href="/ventas?tab=devoluciones" class="child-btn" data-screen="devoluciones" style="text-decoration:none;">🔄 Devoluciones</a>
-    </div>
-</div>
-
-            <!-- COMPRAS -->
-            <div class="menu-group">
-                <a href="/compras" class="menu-header" style="text-decoration:none;">
-                    <div class="menu-left"><span>5 ─ Compras</span></div>
-                    <span class="caret">›</span>
-                </a>
-                <div class="menu-children">
-                    <a href="/compras" class="child-btn" style="text-decoration:none;">Solicitud de compra</a>
-                    <a href="/compras" class="child-btn" style="text-decoration:none;">Comparativo de proveedores</a>
-                    <a href="/compras" class="child-btn" style="text-decoration:none;">Orden de compra</a>
-                    <a href="/compras" class="child-btn" style="text-decoration:none;">Comprobantes proveedor</a>
-                    <a href="/compras" class="child-btn" style="text-decoration:none;">Recepción de mercadería</a>
-                </div>
-            </div>
-
-            <!-- INVENTARIO -->
-            <div class="menu-group">
-                <a href="/inventario" class="menu-header" style="text-decoration:none;">
-                    <div class="menu-left"><span>6 ─ Inventario</span></div>
-                    <span class="caret">›</span>
-                </a>
-                <div class="menu-children">
-                    <a href="/inventario" class="child-btn" style="text-decoration:none;">Estado de stock</a>
-                    <a href="/inventario" class="child-btn" style="text-decoration:none;">Kardex</a>
-                    <a href="/inventario" class="child-btn" style="text-decoration:none;">Entradas y salidas</a>
-                    <a href="/inventario" class="child-btn" style="text-decoration:none;">Transferencias</a>
-                </div>
-            </div>
-
-            <!-- FINANZAS -->
-            <div class="menu-group">
-                <a href="/finanzas" class="menu-header" style="text-decoration:none;">
-                    <div class="menu-left"><span>7 ─ Finanzas / Tesorería</span></div>
-                    <span class="caret">›</span>
-                </a>
-                <div class="menu-children">
-                    <a href="/finanzas" class="child-btn" style="text-decoration:none;">Cuentas por cobrar</a>
-                    <a href="/finanzas" class="child-btn" style="text-decoration:none;">Cuentas por pagar</a>
-                    <a href="/finanzas" class="child-btn" style="text-decoration:none;">Caja y bancos</a>
-                    <a href="/finanzas" class="child-btn" style="text-decoration:none;">Flujo de caja</a>
-                </div>
-            </div>
-
-            <!-- REPORTES -->
-            <div class="menu-group">
-                <a href="/reportes" class="menu-header" style="text-decoration:none;">
-                    <div class="menu-left"><span>8 ─ Reportes</span></div>
-                    <span class="caret">›</span>
-                </a>
-                <div class="menu-children">
-                    <a href="/reportes" class="child-btn" style="text-decoration:none;">Reporte de ventas</a>
-                    <a href="/reportes" class="child-btn" style="text-decoration:none;">Reporte de compras</a>
-                    <a href="/reportes" class="child-btn" style="text-decoration:none;">Reporte de inventario</a>
-                    <a href="/reportes" class="child-btn" style="text-decoration:none;">Reporte de finanzas</a>
-                    <a href="/reportes" class="child-btn" style="text-decoration:none;">SUNAT</a>
-                </div>
-            </div>
-
-            <!-- HERRAMIENTAS -->
-            <div class="menu-group">
-                <a href="/herramientas" class="menu-header" style="text-decoration:none;">
-                    <div class="menu-left"><span>9 ─ Herramientas</span></div>
-                    <span class="caret">›</span>
-                </a>
-                <div class="menu-children">
-                    <a href="/herramientas" class="child-btn" style="text-decoration:none;">Carga masiva</a>
-                </div>
-            </div>
-
-            <!-- PAPELERA -->
-            <div class="menu-group">
-                <a href="/papelera" class="menu-header" style="text-decoration:none;">
-                    <div class="menu-left"><span>10 ─ Papelera / Auditoría</span></div>
-                    <span class="caret">›</span>
-                </a>
-                <div class="menu-children">
-                    <a href="/papelera" class="child-btn" style="text-decoration:none;">Documentos anulados</a>
-                    <a href="/papelera" class="child-btn" style="text-decoration:none;">Registros eliminados</a>
-                    <a href="/papelera" class="child-btn" style="text-decoration:none;">Historial de cambios</a>
-                </div>
+            <div class="menu-children">
+                <a href="/" class="child-btn" style="text-decoration:none;">Resumen general</a>
             </div>
         </div>
-    </aside>
 
+        <!-- CONFIGURACIÓN Y SEGURIDAD -->
+        <div class="menu-group" data-modulo="configuracion">
+            <div class="menu-header-wrapper">
+                <a href="/empresas" class="menu-header" style="text-decoration:none;flex:1;">
+                    <div class="menu-left"><span>1 ─ Configuración y seguridad</span></div>
+                </a>
+                <span class="caret-toggle">›</span>
+            </div>
+            <div class="menu-children">
+                <a href="/empresas" class="child-btn" style="text-decoration:none;">Empresas</a>
+                <a href="/usuarios" class="child-btn" style="text-decoration:none;">Usuarios y permisos</a>
+                <a href="/correlativos" class="child-btn" style="text-decoration:none;">Correlativos</a>
+                <a href="/parametros" class="child-btn" style="text-decoration:none;">Parámetros generales</a>
+                <a href="/integracion" class="child-btn" style="text-decoration:none;">Integración ERP</a>
+            </div>
+        </div>
+
+        <!-- MAESTROS -->
+        <div class="menu-group" data-modulo="maestros">
+            <div class="menu-header-wrapper">
+                <a href="/maestros" class="menu-header" style="text-decoration:none;flex:1;">
+                    <div class="menu-left"><span>2 ─ Maestros</span></div>
+                </a>
+                <span class="caret-toggle">›</span>
+            </div>
+            <div class="menu-children">
+                <a href="/maestros?tab=clientes" class="child-btn" data-screen="clientes" style="text-decoration:none;">Clientes</a>
+                <a href="/maestros?tab=proveedores" class="child-btn" data-screen="proveedores" style="text-decoration:none;">Proveedores</a>
+                <a href="/maestros?tab=almacenes" class="child-btn" data-screen="almacenes" style="text-decoration:none;">Almacenes</a>
+                <a href="/maestros?tab=categorias" class="child-btn" data-screen="categorias" style="text-decoration:none;">Categorías</a>
+                <a href="/maestros?tab=marcas" class="child-btn" data-screen="marcas" style="text-decoration:none;">Marcas</a>
+                <a href="/maestros?tab=um" class="child-btn" data-screen="um" style="text-decoration:none;">Unidades de medida</a>
+            </div>
+        </div>
+
+        <!-- PRODUCTOS -->
+        <div class="menu-group" data-modulo="productos">
+            <div class="menu-header-wrapper">
+                <a href="/productos" class="menu-header" style="text-decoration:none;flex:1;">
+                    <div class="menu-left"><span>3 ─ Productos</span></div>
+                </a>
+                <span class="caret-toggle">›</span>
+            </div>
+            <div class="menu-children">
+                <a href="/productos/nuevo" class="child-btn" style="text-decoration:none;">Nuevo producto</a>
+                <a href="/productos/base-datos" class="child-btn" style="text-decoration:none;">Base de datos: Producto</a>
+                <a href="/productos/comparativo" class="child-btn" style="text-decoration:none;">Comparativo costos</a>
+            </div>
+        </div>
+
+        <!-- VENTAS -->
+        <div class="menu-group" data-modulo="ventas">
+            <div class="menu-header-wrapper">
+                <a href="/ventas" class="menu-header" style="text-decoration:none;flex:1;">
+                    <div class="menu-left"><span>4 ─ Ventas</span></div>
+                </a>
+                <span class="caret-toggle">›</span>
+            </div>
+            <div class="menu-children">
+                <a href="/ventas?tab=cotizaciones" class="child-btn" data-screen="cotizaciones" style="text-decoration:none;">Cotizaciones</a>
+                <a href="/ventas?tab=comprobantes" class="child-btn" data-screen="comprobantes" style="text-decoration:none;">Comprobantes cliente</a>
+                <a href="/ventas?tab=guias" class="child-btn" data-screen="guias" style="text-decoration:none;">Guías de remisión cliente</a>
+                <a href="/ventas?tab=notas_credito" class="child-btn" data-screen="notas_credito" style="text-decoration:none;">Notas de crédito</a>
+                <a href="/ventas?tab=pedido_compra" class="child-btn" data-screen="pedido_compra" style="text-decoration:none;">PC Pedido Compras</a>
+                <a href="/ventas?tab=despachar" class="child-btn" data-screen="despachar" style="text-decoration:none;">🚚 Despachar</a>
+                <a href="/ventas?tab=devoluciones" class="child-btn" data-screen="devoluciones" style="text-decoration:none;">🔄 Devoluciones</a>
+            </div>
+        </div>
+
+        <!-- COMPRAS -->
+        <div class="menu-group" data-modulo="compras">
+            <div class="menu-header-wrapper">
+                <a href="/compras" class="menu-header" style="text-decoration:none;flex:1;">
+                    <div class="menu-left"><span>5 ─ Compras</span></div>
+                </a>
+                <span class="caret-toggle">›</span>
+            </div>
+            <div class="menu-children">
+                <a href="/compras" class="child-btn" style="text-decoration:none;">Solicitud de compra</a>
+                <a href="/compras" class="child-btn" style="text-decoration:none;">Comparativo de proveedores</a>
+                <a href="/compras" class="child-btn" style="text-decoration:none;">Orden de compra</a>
+                <a href="/compras" class="child-btn" style="text-decoration:none;">Comprobantes proveedor</a>
+                <a href="/compras" class="child-btn" style="text-decoration:none;">Recepción de mercadería</a>
+            </div>
+        </div>
+
+        <!-- INVENTARIO -->
+        <div class="menu-group" data-modulo="inventario">
+            <div class="menu-header-wrapper">
+                <a href="/inventario" class="menu-header" style="text-decoration:none;flex:1;">
+                    <div class="menu-left"><span>6 ─ Inventario</span></div>
+                </a>
+                <span class="caret-toggle">›</span>
+            </div>
+            <div class="menu-children">
+                <a href="/inventario" class="child-btn" style="text-decoration:none;">Estado de stock</a>
+                <a href="/inventario" class="child-btn" style="text-decoration:none;">Kardex</a>
+                <a href="/inventario" class="child-btn" style="text-decoration:none;">Entradas y salidas</a>
+                <a href="/inventario" class="child-btn" style="text-decoration:none;">Transferencias</a>
+            </div>
+        </div>
+
+        <!-- FINANZAS -->
+        <div class="menu-group" data-modulo="finanzas">
+            <div class="menu-header-wrapper">
+                <a href="/finanzas" class="menu-header" style="text-decoration:none;flex:1;">
+                    <div class="menu-left"><span>7 ─ Finanzas / Tesorería</span></div>
+                </a>
+                <span class="caret-toggle">›</span>
+            </div>
+            <div class="menu-children">
+                <a href="/finanzas" class="child-btn" style="text-decoration:none;">Cuentas por cobrar</a>
+                <a href="/finanzas" class="child-btn" style="text-decoration:none;">Cuentas por pagar</a>
+                <a href="/finanzas" class="child-btn" style="text-decoration:none;">Caja y bancos</a>
+                <a href="/finanzas" class="child-btn" style="text-decoration:none;">Flujo de caja</a>
+            </div>
+        </div>
+
+        <!-- REPORTES -->
+        <div class="menu-group" data-modulo="reportes">
+            <div class="menu-header-wrapper">
+                <a href="/reportes" class="menu-header" style="text-decoration:none;flex:1;">
+                    <div class="menu-left"><span>8 ─ Reportes</span></div>
+                </a>
+                <span class="caret-toggle">›</span>
+            </div>
+            <div class="menu-children">
+                <a href="/reportes" class="child-btn" style="text-decoration:none;">Reporte de ventas</a>
+                <a href="/reportes" class="child-btn" style="text-decoration:none;">Reporte de compras</a>
+                <a href="/reportes" class="child-btn" style="text-decoration:none;">Reporte de inventario</a>
+                <a href="/reportes" class="child-btn" style="text-decoration:none;">Reporte de finanzas</a>
+                <a href="/reportes" class="child-btn" style="text-decoration:none;">SUNAT</a>
+            </div>
+        </div>
+
+        <!-- HERRAMIENTAS -->
+        <div class="menu-group" data-modulo="herramientas">
+            <div class="menu-header-wrapper">
+                <a href="/herramientas" class="menu-header" style="text-decoration:none;flex:1;">
+                    <div class="menu-left"><span>9 ─ Herramientas</span></div>
+                </a>
+                <span class="caret-toggle">›</span>
+            </div>
+            <div class="menu-children">
+                <a href="/herramientas" class="child-btn" style="text-decoration:none;">Carga masiva</a>
+            </div>
+        </div>
+
+        <!-- PAPELERA -->
+        <div class="menu-group" data-modulo="papelera">
+            <div class="menu-header-wrapper">
+                <a href="/papelera" class="menu-header" style="text-decoration:none;flex:1;">
+                    <div class="menu-left"><span>10 ─ Papelera / Auditoría</span></div>
+                </a>
+                <span class="caret-toggle">›</span>
+            </div>
+            <div class="menu-children">
+                <a href="/papelera" class="child-btn" style="text-decoration:none;">Documentos anulados</a>
+                <a href="/papelera" class="child-btn" style="text-decoration:none;">Registros eliminados</a>
+                <a href="/papelera" class="child-btn" style="text-decoration:none;">Historial de cambios</a>
+            </div>
+        </div>
+    </div>
+</aside>
     <!-- ======================================== -->
     <!-- MAIN                                     -->
     <!-- ======================================== -->
@@ -387,6 +406,158 @@ document.addEventListener('click', function(e) {
         setTimeout(highlightActiveModule, 300);
     }
 });
+
+// ============================================================
+// SIDEBAR - TOGGLE PARA TODOS LOS MÓDULOS
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    initSidebarToggles();
+    highlightActiveModule();
+});
+
+function initSidebarToggles() {
+    document.querySelectorAll('.menu-group').forEach(group => {
+        const toggle = group.querySelector('.caret-toggle');
+        if (!toggle) return;
+        
+        // Remover eventos antiguos (evitar duplicados)
+        const newToggle = toggle.cloneNode(true);
+        toggle.parentNode.replaceChild(newToggle, toggle);
+        
+        newToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const isOpen = group.classList.contains('open');
+            
+            if (isOpen) {
+                // Si está abierto, cerrarlo
+                group.classList.remove('open');
+            } else {
+                // Cerrar todos los demás grupos
+                document.querySelectorAll('.menu-group').forEach(g => {
+                    if (g !== group) {
+                        g.classList.remove('open');
+                    }
+                });
+                // Abrir el grupo actual
+                group.classList.add('open');
+            }
+        });
+    });
+}
+
+// ============================================================
+// RESALTAR MÓDULO ACTIVO EN EL SIDEBAR
+// ============================================================
+
+function highlightActiveModule() {
+    const currentPath = window.location.pathname;
+    
+    // Remover todas las clases activas
+    document.querySelectorAll('.menu-group .menu-header, .child-btn').forEach(el => {
+        el.classList.remove('active');
+    });
+    
+    // Cerrar todos los grupos primero
+    document.querySelectorAll('.menu-group').forEach(g => {
+        g.classList.remove('open');
+    });
+    
+    let moduloEncontrado = false;
+    
+    // Mapeo de rutas a módulos
+    const moduloMap = {
+        'dashboard': ['/', '/index'],
+        'configuracion': ['/empresas', '/usuarios', '/correlativos', '/parametros', '/integracion', '/config'],
+        'maestros': ['/maestros'],
+        'productos': ['/productos'],
+        'ventas': ['/ventas'],
+        'compras': ['/compras'],
+        'inventario': ['/inventario'],
+        'finanzas': ['/finanzas'],
+        'reportes': ['/reportes'],
+        'herramientas': ['/herramientas'],
+        'papelera': ['/papelera']
+    };
+    
+    // Encontrar el módulo activo
+    let moduloActivo = null;
+    for (const [modulo, rutas] of Object.entries(moduloMap)) {
+        if (rutas.some(ruta => currentPath.startsWith(ruta) || currentPath === ruta)) {
+            moduloActivo = modulo;
+            break;
+        }
+    }
+    
+    // Si no se encuentra, usar dashboard por defecto
+    if (!moduloActivo) {
+        moduloActivo = 'dashboard';
+    }
+    
+    console.log('📍 Módulo activo:', moduloActivo);
+    
+    // Resaltar el grupo correspondiente
+    document.querySelectorAll('.menu-group').forEach(group => {
+        const modulo = group.dataset.modulo;
+        if (modulo === moduloActivo) {
+            group.classList.add('open');
+            const header = group.querySelector('.menu-header');
+            if (header) header.classList.add('active');
+            moduloEncontrado = true;
+        }
+    });
+    
+    // Si no se encontró, abrir dashboard por defecto
+    if (!moduloEncontrado) {
+        const dashboardGroup = document.querySelector('.menu-group[data-modulo="dashboard"]');
+        if (dashboardGroup) {
+            dashboardGroup.classList.add('open');
+            const header = dashboardGroup.querySelector('.menu-header');
+            if (header) header.classList.add('active');
+        }
+    }
+    
+    // Resaltar child específico
+    document.querySelectorAll('.child-btn').forEach(child => {
+        const href = child.getAttribute('href');
+        if (href && (currentPath === href || currentPath.startsWith(href.split('?')[0]))) {
+            child.classList.add('active');
+            // Asegurar que el grupo padre esté abierto
+            const group = child.closest('.menu-group');
+            if (group) group.classList.add('open');
+        }
+    });
+}
+
+// ============================================================
+// RE-ACTUALIZAR AL CAMBIAR DE PÁGINA (SPA)
+// ============================================================
+
+// Escuchar cambios de URL
+let lastUrl = location.href;
+new MutationObserver(() => {
+    const url = location.href;
+    if (url !== lastUrl) {
+        lastUrl = url;
+        setTimeout(highlightActiveModule, 100);
+    }
+}).observe(document, { subtree: true, childList: true });
+
+// También escuchar clics en enlaces
+document.addEventListener('click', function(e) {
+    const link = e.target.closest('a[href]');
+    if (link && link.href && !link.href.startsWith('#')) {
+        setTimeout(highlightActiveModule, 300);
+    }
+});
+
+console.log('✅ Sidebar con toggle estándar inicializado correctamente');
+
+
+
+
 // ============================================================
 // RESALTAR MÓDULO ACTIVO EN EL SIDEBAR - VERSIÓN COMPLETA
 // ============================================================

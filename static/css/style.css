@@ -3669,3 +3669,82 @@ input[type="file"] { display: none; }
         justify-content: center;
     }
 }
+
+
+/* ============================================================
+   SIDEBAR - MENÚ CON TOGGLE
+   ============================================================ */
+
+.menu-header-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    padding: 4px 0;
+}
+
+.menu-header-wrapper .menu-header {
+    flex: 1;
+    padding: 8px 12px;
+    text-decoration: none;
+    color: inherit;
+}
+
+.menu-header-wrapper .caret-toggle {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 18px;
+    user-select: none;
+    transition: transform 0.3s ease;
+    color: #94A3B8;
+    display: inline-block;
+    min-width: 30px;
+    text-align: center;
+}
+
+.menu-header-wrapper .caret-toggle:hover {
+    color: #0F172A;
+}
+
+.menu-group.open .caret-toggle {
+    transform: rotate(90deg);
+}
+
+.menu-group .menu-children {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+    opacity: 0;
+}
+
+.menu-group.open .menu-children {
+    max-height: 800px;
+    opacity: 1;
+}
+
+/* Ajuste para los childs */
+.menu-group .child-btn {
+    display: block;
+    padding: 6px 12px 6px 32px;
+    font-size: 13px;
+    color: #475569;
+    text-decoration: none;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.menu-group .child-btn:hover {
+    background: #F1F5F9;
+    color: #0F172A;
+}
+
+.menu-group .child-btn.active {
+    background: #E2E8F0;
+    color: var(--empresa, #EF233C);
+    font-weight: 700;
+}
+
+/* Resaltar header activo */
+.menu-group .menu-header.active {
+    color: var(--empresa, #EF233C);
+    font-weight: 700;
+}
