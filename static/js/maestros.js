@@ -583,8 +583,8 @@ function renderModule(m) {
         </div>
     `;
 
-    const renderFn = () => renderModule(m);
-    bindFilters(m, renderFn);
+   
+setupFilters(m);
     
     document.querySelectorAll(`[data-sheet^="${m}|"]`).forEach(btn => {
         btn.addEventListener('click', function(e) {
@@ -2605,3 +2605,46 @@ document.addEventListener('DOMContentLoaded', function() {
 
 console.log('✅ Maestros JS cargado correctamente');
 
+// ============================================================
+// ✅ ACTIVAR BÚSQUEDA EN TIEMPO REAL - EVENTO GLOBAL
+// ============================================================
+
+// Escuchar cambios en todos los inputs de búsqueda
+document.addEventListener('input', function(e) {
+    const input = e.target;
+    if (input.classList.contains('search-input') || input.id.startsWith('search_')) {
+        const modulo = input.id.replace('search_', '');
+        if (MODULE_CONFIG[modulo]) {
+            const searchTerm = input.value.toLowerCase().trim();
+            
+            const container = document.getElementById(modulo);
+            if (!container) return;
+            
+            const table = container.querySelector('.master-table');
+            if (!table) return;
+            
+            const rows = table.querySelectorAll('tbody tr');
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                if (searchTerm === '' || text.includes(searchTerm)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // Actualizar contador
+            const subtitle = container.querySelector('.master-subtitle');
+            if (subtitle) {
+                const total = DS[modulo]?.length || 0;
+                const config = MODULE_CONFIG[modulo];
+                subtitle.textContent = `${config?.subtitle || ''} (${visibleCount} registros)`;
+            }
+        }
+    }
+});
+
+console.log('✅ Buscador en tiempo real activado');
