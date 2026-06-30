@@ -274,20 +274,24 @@
     </div>
 </header>
 
-<!-- ============================================================
-     PANEL DE SEGUIMIENTO - CONFIGURACIÓN Y SEGURIDAD
-     ============================================================ -->
 
-<!-- ✅ TABS - SOLO PARA CONFIGURACIÓN (ahora visibles) -->
-{% if '/empresas' in path or '/usuarios' in path or '/correlativos' in path or '/parametros' in path or '/integracion' in path %}
+<!-- ✅ TABS - SOLO PARA CONFIGURACIÓN -->
+{% if active_tab in ['empresas', 'usuarios', 'correlativos', 'parametros', 'integracion'] %}
 <div class="tabs">
-    <a href="/empresas" class="tab-btn {% if '/empresas' in path %}active{% endif %}">Empresas</a>
-    <a href="/usuarios" class="tab-btn {% if '/usuarios' in path %}active{% endif %}">Usuarios y permisos</a>
-    <a href="/correlativos" class="tab-btn {% if '/correlativos' in path %}active{% endif %}">Correlativos</a>
-    <a href="/parametros" class="tab-btn {% if '/parametros' in path %}active{% endif %}">Parámetros</a>
-    <a href="/integracion" class="tab-btn {% if '/integracion' in path %}active{% endif %}">Integración ERP</a>
+    <a href="/empresas" class="tab-btn {% if active_tab == 'empresas' %}active{% endif %}">Empresas</a>
+    <a href="/usuarios" class="tab-btn {% if active_tab == 'usuarios' %}active{% endif %}">Usuarios y permisos</a>
+    <a href="/correlativos" class="tab-btn {% if active_tab == 'correlativos' %}active{% endif %}">Correlativos</a>
+    <a href="/parametros" class="tab-btn {% if active_tab == 'parametros' %}active{% endif %}">Parámetros</a>
+    <a href="/integracion" class="tab-btn {% if active_tab == 'integracion' %}active{% endif %}">Integración ERP</a>
 </div>
 {% endif %}
+
+<!-- DEBUG: Ver valores -->
+<div style="background:#f0f0f0;padding:10px;margin:10px 0;border:1px solid #ccc;font-size:12px;">
+    <b>DEBUG:</b> 
+    active_tab = "{{ active_tab }}" | 
+    request.path = "{{ request.path }}"
+</div>
 
 <!-- TABS - SOLO PARA CONFIGURACIÓN (ocultos, ya no se usan) -->
 {% if active_tab in ['empresas', 'usuarios', 'correlativos', 'parametros', 'integracion'] %}
