@@ -171,17 +171,6 @@
     .menu-pop .menu-reactivate { color: #2563EB; }
     .menu-pop .menu-danger { color: #DC2626; }
     
-    /* Security note */
-    .security-note {
-        padding: 7px 12px;
-        background: #FFF7ED;
-        color: #9A3412;
-        font-size: 10.5px;
-        font-weight: 850;
-        line-height: 1.35;
-        border-top: 1px solid #E5E7EB;
-    }
-    
     /* Scroll de tabla */
     .table-scroll {
         overflow: auto;
@@ -1434,10 +1423,6 @@
                 </select>
                 <button class="btn btn-secondary" onclick="exportData('cotizaciones')">📥 Exportar</button>
                 <button class="btn btn-primary btn-create" onclick="openCotizacionModal()">+ Nueva cotización</button>
-            </div>
-        </div>
-        <div class="security-note">
-            <b>🔒 Seguridad:</b> la descarga de data queda bloqueada. Solo Gerencia/Administrador podrá autorizar exportaciones.
         </div>
         <div class="table-scroll">
             <table class="master-table">
@@ -1488,8 +1473,6 @@
                 <button class="btn btn-secondary" onclick="exportData('pedido_compra')">📥 Exportar</button>
                 <button class="btn btn-primary btn-create" onclick="openPedidoCompraModal()">+ Subir PC cliente</button>
             </div>
-        </div>
-        <div class="security-note">
             <b>📋 Flujo:</b> Cliente acepta cotización → envía PC/OC por correo → se sube PDF/archivo → se valida precio, cantidad, stock, entrega y monto → Hellen valida → se atiende.
         </div>
         <div class="table-scroll">
@@ -1538,7 +1521,7 @@
                 <button class="btn btn-secondary" onclick="exportData('despachos')">📥 Exportar</button>
             </div>
         </div>
-        <div class="security-note">
+      
             <b>📦 Despacho:</b> Gestión de preparación y envío de productos a clientes.
         </div>
         <div class="table-scroll">
@@ -1589,7 +1572,7 @@
                 <button class="btn btn-primary btn-create" onclick="openGuiaModal()">+ Nueva guía</button>
             </div>
         </div>
-        <div class="security-note">
+        
             <b>📋 Buenas prácticas:</b> toda guía debe estar amarrada a cliente, productos, unidades SUNAT, almacén y documento origen.
         </div>
         <div class="table-scroll">
@@ -1641,7 +1624,6 @@
                 <button class="btn btn-primary btn-create" onclick="openComprobanteModal()">+ Nueva factura</button>
             </div>
         </div>
-        <div class="security-note">
             <b>🧾 Facturación:</b> comprobantes vinculados a cotizaciones y pedidos de compra.
         </div>
         <div class="table-scroll">
@@ -1693,7 +1675,7 @@
                 <button class="btn btn-primary btn-create" onclick="openNotaCreditoModal()">+ Nueva nota</button>
             </div>
         </div>
-        <div class="security-note">
+        
             <b>📝 Notas de crédito:</b> para anulaciones, devoluciones, descuentos posteriores o ajustes comerciales.
         </div>
         <div class="table-scroll">
@@ -1745,7 +1727,7 @@
                 <button class="btn btn-primary btn-create" onclick="openDevolucionModal()">+ Nueva devolución</button>
             </div>
         </div>
-        <div class="security-note">
+        
             <b>🔄 Devoluciones:</b> gestión de devoluciones de productos por parte de clientes.
         </div>
         <div class="table-scroll">

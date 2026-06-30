@@ -512,9 +512,6 @@ function renderModule(m) {
                     <button class="btn btn-primary btn-create" data-new="${m}">+ Crear ${config.title.slice(0, -1)}</button>
                 </div>
             </div>
-            <div class="security-note">
-                <b>🔒 Seguridad:</b> la descarga de data queda bloqueada. Solo Gerencia/Administrador podrá autorizar exportaciones.
-            </div>
             <div class="table-scroll">
                 ${renderTable(m, list)}
             </div>
@@ -2061,13 +2058,7 @@ document.addEventListener('click', function(e) {
             background: #E2E8F0;
         }
         
-        .security-note {
-            padding: 10px 20px;
-            background: #FEFCE8;
-            border-bottom: 1px solid #FDE68A;
-            font-size: 12px;
-            color: #713F12;
-        }
+       
         .table-scroll {
             overflow-x: auto;
             padding: 10px;
