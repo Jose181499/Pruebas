@@ -219,125 +219,130 @@
 
 <header class="topbar">
   <div class="breadcrumb" id="breadcrumb">
-    {% block breadcrumb %}
-        {% set path = request.path %}
-        
-        <!-- CONFIGURACIÓN Y SEGURIDAD -->
-        {% if '/empresas' in path or '/usuarios' in path or '/correlativos' in path or '/parametros' in path or '/integracion' in path %}
-            <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
-            <span>/</span>
-            <a href="/empresas" class="crumb-btn" style="text-decoration:none;">Configuración y seguridad</a>
-            <span>/</span>
-            <span class="crumb-btn active-crumb">
-                {% if '/empresas' in path %}Empresas
-                {% elif '/usuarios' in path %}Usuarios y permisos
-                {% elif '/correlativos' in path %}Correlativos
-                {% elif '/parametros' in path %}Parámetros generales
-                {% elif '/integracion' in path %}Integración ERP
-                {% endif %}
-            </span>
-        
-        <!-- MAESTROS -->
-        {% elif '/maestros' in path %}
-            <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
-            <span>/</span>
-            <a href="/maestros" class="crumb-btn" style="text-decoration:none;">Maestros</a>
-            <span>/</span>
-            <span class="crumb-btn active-crumb">
-                {% set tab = request.args.get('tab', 'clientes') %}
-                {% if tab == 'clientes' %}Clientes
-                {% elif tab == 'proveedores' %}Proveedores
-                {% elif tab == 'almacenes' %}Almacenes
-                {% elif tab == 'categorias' %}Categorías
-                {% elif tab == 'marcas' %}Marcas
-                {% elif tab == 'um' %}Unidades de medida
-                {% else %}Maestros
-                {% endif %}
-            </span>
-        
-        <!-- PRODUCTOS -->
-        {% elif '/productos' in path %}
-            <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
-            <span>/</span>
-            <a href="/productos" class="crumb-btn" style="text-decoration:none;">Productos</a>
-            <span>/</span>
-            <span class="crumb-btn active-crumb">
-                {% if '/nuevo' in path or path == '/productos' %}Nuevo producto
-                {% elif '/base-datos' in path %}Base de datos
-                {% elif '/comparativo' in path %}Comparativo costos
-                {% else %}Productos
-                {% endif %}
-            </span>
-        
-        <!-- VENTAS -->
-        {% elif '/ventas' in path %}
-            <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
-            <span>/</span>
-            <a href="/ventas" class="crumb-btn" style="text-decoration:none;">Ventas</a>
-            <span>/</span>
-            <span class="crumb-btn active-crumb">
-                {% set tab = request.args.get('tab', 'cotizaciones') %}
-                {% if tab == 'cotizaciones' %}Cotizaciones
-                {% elif tab == 'comprobantes' %}Comprobantes cliente
-                {% elif tab == 'guias' %}Guías de remisión
-                {% elif tab == 'notas_credito' %}Notas de crédito
-                {% elif tab == 'pedido_compra' %}Pedido Compras
-                {% elif tab == 'despachar' %}Despachar
-                {% elif tab == 'devoluciones' %}Devoluciones
-                {% else %}Ventas
-                {% endif %}
-            </span>
-        
-        <!-- OTROS MÓDULOS -->
-        {% elif '/compras' in path %}
-            <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
-            <span>/</span>
-            <a href="/compras" class="crumb-btn" style="text-decoration:none;">Compras</a>
-            <span>/</span>
-            <span class="crumb-btn active-crumb">Compras</span>
-        
-        {% elif '/inventario' in path %}
-            <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
-            <span>/</span>
-            <a href="/inventario" class="crumb-btn" style="text-decoration:none;">Inventario</a>
-            <span>/</span>
-            <span class="crumb-btn active-crumb">Inventario</span>
-        
-        {% elif '/finanzas' in path %}
-            <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
-            <span>/</span>
-            <a href="/finanzas" class="crumb-btn" style="text-decoration:none;">Finanzas</a>
-            <span>/</span>
-            <span class="crumb-btn active-crumb">Finanzas</span>
-        
-        {% elif '/reportes' in path %}
-            <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
-            <span>/</span>
-            <a href="/reportes" class="crumb-btn" style="text-decoration:none;">Reportes</a>
-            <span>/</span>
-            <span class="crumb-btn active-crumb">Reportes</span>
-        
-        {% elif '/herramientas' in path %}
-            <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
-            <span>/</span>
-            <a href="/herramientas" class="crumb-btn" style="text-decoration:none;">Herramientas</a>
-            <span>/</span>
-            <span class="crumb-btn active-crumb">Herramientas</span>
-        
-        {% elif '/papelera' in path %}
-            <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
-            <span>/</span>
-            <a href="/papelera" class="crumb-btn" style="text-decoration:none;">Papelera / Auditoría</a>
-            <span>/</span>
-            <span class="crumb-btn active-crumb">Papelera</span>
-        
-        <!-- DASHBOARD -->
-        {% else %}
-            <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
-            <span>/</span>
-            <span class="crumb-btn active-crumb">Dashboard</span>
-        {% endif %}
-    {% endblock %}
+  {% block breadcrumb %}
+    {% set path = request.path %}
+    
+    <!-- CONFIGURACIÓN Y SEGURIDAD -->
+    {% if '/empresas' in path or '/usuarios' in path or '/correlativos' in path or '/parametros' in path or '/integracion' in path %}
+        <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
+        <span>/</span>
+        <a href="/empresas" class="crumb-btn" style="text-decoration:none;">Configuración y seguridad</a>
+        <span>/</span>
+        <span class="crumb-btn active-crumb">
+            {% if '/empresas' in path %}Empresas
+            {% elif '/usuarios' in path %}Usuarios y permisos
+            {% elif '/correlativos' in path %}Correlativos
+            {% elif '/parametros' in path %}Parámetros generales
+            {% elif '/integracion' in path %}Integración ERP
+            {% endif %}
+        </span>
+    
+    <!-- MAESTROS -->
+    {% elif '/maestros' in path %}
+        <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
+        <span>/</span>
+        <a href="/maestros" class="crumb-btn" style="text-decoration:none;">Maestros</a>
+        <span>/</span>
+        <span class="crumb-btn active-crumb">
+            {% set tab = request.args.get('tab', 'clientes') %}
+            {% if tab == 'clientes' %}Clientes
+            {% elif tab == 'proveedores' %}Proveedores
+            {% elif tab == 'almacenes' %}Almacenes
+            {% elif tab == 'categorias' %}Categorías
+            {% elif tab == 'marcas' %}Marcas
+            {% elif tab == 'um' %}Unidades de medida
+            {% else %}Maestros
+            {% endif %}
+        </span>
+    
+    <!-- PRODUCTOS -->
+    {% elif '/productos' in path %}
+        <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
+        <span>/</span>
+        <a href="/productos" class="crumb-btn" style="text-decoration:none;">Productos</a>
+        <span>/</span>
+        <span class="crumb-btn active-crumb">
+            {% if '/nuevo' in path or path == '/productos' %}Nuevo producto
+            {% elif '/base-datos' in path %}Base de datos
+            {% elif '/comparativo' in path %}Comparativo costos
+            {% else %}Productos
+            {% endif %}
+        </span>
+    
+    <!-- VENTAS -->
+    {% elif '/ventas' in path %}
+        <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
+        <span>/</span>
+        <a href="/ventas" class="crumb-btn" style="text-decoration:none;">Ventas</a>
+        <span>/</span>
+        <span class="crumb-btn active-crumb">
+            {% set tab = request.args.get('tab', 'cotizaciones') %}
+            {% if tab == 'cotizaciones' %}Cotizaciones
+            {% elif tab == 'comprobantes' %}Comprobantes cliente
+            {% elif tab == 'guias' %}Guías de remisión
+            {% elif tab == 'notas_credito' %}Notas de crédito
+            {% elif tab == 'pedido_compra' %}Pedido Compras
+            {% elif tab == 'despachar' %}Despachar
+            {% elif tab == 'devoluciones' %}Devoluciones
+            {% else %}Ventas
+            {% endif %}
+        </span>
+    
+    <!-- COMPRAS -->
+    {% elif '/compras' in path %}
+        <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
+        <span>/</span>
+        <a href="/compras" class="crumb-btn" style="text-decoration:none;">Compras</a>
+        <span>/</span>
+        <span class="crumb-btn active-crumb">Compras</span>
+    
+    <!-- INVENTARIO -->
+    {% elif '/inventario' in path %}
+        <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
+        <span>/</span>
+        <a href="/inventario" class="crumb-btn" style="text-decoration:none;">Inventario</a>
+        <span>/</span>
+        <span class="crumb-btn active-crumb">Inventario</span>
+    
+    <!-- FINANZAS -->
+    {% elif '/finanzas' in path %}
+        <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
+        <span>/</span>
+        <a href="/finanzas" class="crumb-btn" style="text-decoration:none;">Finanzas</a>
+        <span>/</span>
+        <span class="crumb-btn active-crumb">Finanzas</span>
+    
+    <!-- REPORTES -->
+    {% elif '/reportes' in path %}
+        <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
+        <span>/</span>
+        <a href="/reportes" class="crumb-btn" style="text-decoration:none;">Reportes</a>
+        <span>/</span>
+        <span class="crumb-btn active-crumb">Reportes</span>
+    
+    <!-- HERRAMIENTAS -->
+    {% elif '/herramientas' in path %}
+        <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
+        <span>/</span>
+        <a href="/herramientas" class="crumb-btn" style="text-decoration:none;">Herramientas</a>
+        <span>/</span>
+        <span class="crumb-btn active-crumb">Herramientas</span>
+    
+    <!-- PAPELERA -->
+    {% elif '/papelera' in path %}
+        <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
+        <span>/</span>
+        <a href="/papelera" class="crumb-btn" style="text-decoration:none;">Papelera / Auditoría</a>
+        <span>/</span>
+        <span class="crumb-btn active-crumb">Papelera</span>
+    
+    <!-- DASHBOARD (por defecto) -->
+    {% else %}
+        <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
+        <span>/</span>
+        <span class="crumb-btn active-crumb">Dashboard</span>
+    {% endif %}
+{% endblock %}
 </div>
     <div class="top-actions">
         <!-- ... -->
