@@ -965,7 +965,7 @@ function renderClientes(){
           <button class="btn btn-primary btn-create" data-new="clientes">+ Crear cliente</button>
         </div>
       </div>
-      <div class="security-note"><b>Seguridad:</b> la descarga de data queda bloqueada. Solo Gerencia/Administrador podrá autorizar exportaciones.</div>
+      
       <div class="table-scroll">${renderClientTable(list)}</div>
       <div class="bottom-sheet">
         <div class="bottom-left">
@@ -1056,7 +1056,7 @@ function renderMaestro(m){
           <button class="btn btn-primary btn-create" data-new="${m}">+ Crear ${esc(cfg.singular)}</button>
         </div>
       </div>
-      <div class="security-note"><b>Seguridad:</b> descarga bloqueada. Solo Gerencia/Administrador puede autorizar exportaciones.</div>
+      
       <div class="table-scroll">${renderMasterTable(m,list)}</div>
       <div class="bottom-sheet">
         <div class="bottom-left">
@@ -1787,3 +1787,6 @@ openScreen('clientes');
 </script>
 </body>
 </html>
+
+
+
