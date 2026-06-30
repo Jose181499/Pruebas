@@ -70,6 +70,16 @@ from routes.maestros import maestros_bp  # ← Este ya tiene sus propios endpoin
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-only-change-me")
 
+
+# ==========================================
+# 🔥 CONTEXTO GLOBAL - REQUEST DISPONIBLE EN TODOS LOS TEMPLATES
+# ==========================================
+@app.context_processor
+def inject_request():
+    """Inyecta la variable 'request' en todos los templates"""
+    from flask import request
+    return dict(request=request)
+
 # ==========================================
 # REGISTRO DE BLUEPRINTS
 # ==========================================
