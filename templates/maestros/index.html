@@ -224,37 +224,172 @@
   background: #fff;
 }
 
-/* Buttons */
+/* ============================================================
+   BOTONES - VERSIÓN GRANDE Y AZUL ELÉCTRICO
+   ============================================================ */
+
 .btn {
-  height: 32px;
-  border-radius: 10px;
+  height: 38px;
+  border-radius: 12px;
   border: 0;
-  padding: 0 11px;
-  font-weight: 950;
+  padding: 0 16px;
+  font-weight: 900;
+  font-size: 13px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   white-space: nowrap;
   cursor: pointer;
+  transition: all 0.25s ease;
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
 }
 
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.btn:active {
+  transform: translateY(0px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+}
+
+/* ── BOTÓN PRIMARIO (AZUL ELÉCTRICO) ──────────────────────── */
 .btn-primary {
-  background: #EF233C;
-  color: #fff;
+  background: #0066FF;
+  color: #FFFFFF;
+  border: none;
+  box-shadow: 0 4px 14px rgba(0, 102, 255, 0.40);
 }
 
-.btn-secondary {
-  background: #fff;
-  color: #0F172A;
-  border: 1px solid #E5E7EB;
+.btn-primary:hover {
+  background: #0052CC;
+  box-shadow: 0 6px 24px rgba(0, 102, 255, 0.55);
+  transform: translateY(-2px);
 }
 
+.btn-primary:active {
+  background: #003D99;
+  transform: translateY(0px);
+}
+
+/* ── BOTÓN CREAR (MÁS GRANDE Y LLAMATIVO) ────────────────── */
 .btn-create {
-  height: 40px;
-  padding: 0 18px;
-  font-size: 13px;
-  border-radius: 12px;
+  height: 46px;
+  padding: 0 28px;
+  font-size: 15px;
+  font-weight: 900;
+  border-radius: 14px;
+  background: #0066FF;
+  color: #FFFFFF;
+  border: none;
+  box-shadow: 0 4px 18px rgba(0, 102, 255, 0.45);
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+}
+
+.btn-create:hover {
+  background: #0052CC;
+  box-shadow: 0 8px 30px rgba(0, 102, 255, 0.60);
+  transform: translateY(-3px) scale(1.02);
+}
+
+.btn-create:active {
+  background: #003D99;
+  transform: translateY(0px) scale(0.98);
+  box-shadow: 0 2px 12px rgba(0, 102, 255, 0.30);
+}
+
+/* ── BOTÓN SECUNDARIO ──────────────────────────────────────── */
+.btn-secondary {
+  background: #FFFFFF;
+  color: #0F172A;
+  border: 2px solid #E2E8F0;
+}
+
+.btn-secondary:hover {
+  background: #F8FAFC;
+  border-color: #94A3B8;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* ── VARIANTE AZUL PARA BOTONES ESPECÍFICOS ──────────────── */
+.btn-blue {
+  background: #0066FF;
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(0, 102, 255, 0.35);
+}
+
+.btn-blue:hover {
+  background: #0052CC;
+  box-shadow: 0 6px 24px rgba(0, 102, 255, 0.50);
+  transform: translateY(-2px);
+}
+
+/* ── VARIANTE VERDE ────────────────────────────────────────── */
+.btn-green {
+  background: #00B884;
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(0, 184, 132, 0.35);
+}
+
+.btn-green:hover {
+  background: #009A6E;
+  box-shadow: 0 6px 24px rgba(0, 184, 132, 0.50);
+  transform: translateY(-2px);
+}
+
+/* ── EFECTO PULSACIÓN PARA LLAMAR LA ATENCIÓN ────────────── */
+.btn-pulse {
+  animation: pulseBlue 2s infinite;
+}
+
+@keyframes pulseBlue {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 102, 255, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(0, 102, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 102, 255, 0);
+  }
+}
+
+/* ── BOTÓN ELÉCTRICO (EFECTO BRILLO) ──────────────────────── */
+.btn-electric {
+  position: relative;
+  overflow: hidden;
+  background: #0066FF;
+  color: #FFFFFF;
+  border: none;
+  box-shadow: 0 4px 18px rgba(0, 102, 255, 0.45);
+  transition: all 0.3s ease;
+}
+
+.btn-electric::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.btn-electric:hover::after {
+  opacity: 1;
+}
+
+.btn-electric:hover {
+  background: #0052CC;
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 8px 35px rgba(0, 102, 255, 0.65);
 }
 
 /* Table */
@@ -1122,6 +1257,3 @@
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/maestros.js') }}"></script>
 {% endblock %}
-
-
-
