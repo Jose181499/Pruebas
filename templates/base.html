@@ -216,116 +216,133 @@
     <main class="main" id="mainPanel">
         <div class="main-inner">
             <!-- TOPBAR -->
+
 <header class="topbar">
     <div>
-      {% block breadcrumb %}
-    {% set path = request.path %}
-    
-    <!-- CONFIGURACIÓN Y SEGURIDAD -->
-    {% if '/empresas' in path or '/usuarios' in path or '/correlativos' in path or '/parametros' in path or '/integracion' in path %}
-        <a href="/empresas" class="crumb-btn" style="text-decoration:none;">Configuración y seguridad</a>
-        <span>/</span>
-        <span class="crumb-btn active-crumb">
-            {% if '/empresas' in path %}Empresas
-            {% elif '/usuarios' in path %}Usuarios y permisos
-            {% elif '/correlativos' in path %}Correlativos
-            {% elif '/parametros' in path %}Parámetros generales
-            {% elif '/integracion' in path %}Integración ERP
-            {% endif %}
-        </span>
-    
-    <!-- MAESTROS -->
-    {% elif '/maestros' in path %}
-        <a href="/maestros" class="crumb-btn" style="text-decoration:none;">Maestros</a>
-        <span>/</span>
-        <span class="crumb-btn active-crumb">
-            {% set tab = request.args.get('tab', 'clientes') %}
-            {% if tab == 'clientes' %}Clientes
-            {% elif tab == 'proveedores' %}Proveedores
-            {% elif tab == 'almacenes' %}Almacenes
-            {% elif tab == 'categorias' %}Categorías
-            {% elif tab == 'marcas' %}Marcas
-            {% elif tab == 'um' %}Unidades de medida
-            {% else %}Maestros
-            {% endif %}
-        </span>
-    
-    <!-- PRODUCTOS -->
-    {% elif '/productos' in path %}
-        <a href="/productos" class="crumb-btn" style="text-decoration:none;">Productos</a>
-        <span>/</span>
-        <span class="crumb-btn active-crumb">
-            {% if '/nuevo' in path or path == '/productos' %}Nuevo producto
-            {% elif '/base-datos' in path %}Base de datos
-            {% elif '/comparativo' in path %}Comparativo costos
-            {% else %}Productos
-            {% endif %}
-        </span>
-    
-    <!-- VENTAS -->
-    {% elif '/ventas' in path %}
-        <a href="/ventas" class="crumb-btn" style="text-decoration:none;">Ventas</a>
-        <span>/</span>
-        <span class="crumb-btn active-crumb">
-            {% set tab = request.args.get('tab', 'cotizaciones') %}
-            {% if tab == 'cotizaciones' %}Cotizaciones
-            {% elif tab == 'comprobantes' %}Comprobantes cliente
-            {% elif tab == 'guias' %}Guías de remisión
-            {% elif tab == 'notas_credito' %}Notas de crédito
-            {% elif tab == 'pedido_compra' %}Pedido Compras
-            {% elif tab == 'despachar' %}Despachar
-            {% elif tab == 'devoluciones' %}Devoluciones
-            {% else %}Ventas
-            {% endif %}
-        </span>
-    
-    <!-- COMPRAS -->
-    {% elif '/compras' in path %}
-        <a href="/compras" class="crumb-btn" style="text-decoration:none;">Compras</a>
-        <span>/</span>
-        <span class="crumb-btn active-crumb">Compras</span>
-    
-    <!-- INVENTARIO -->
-    {% elif '/inventario' in path %}
-        <a href="/inventario" class="crumb-btn" style="text-decoration:none;">Inventario</a>
-        <span>/</span>
-        <span class="crumb-btn active-crumb">Inventario</span>
-    
-    <!-- FINANZAS -->
-    {% elif '/finanzas' in path %}
-        <a href="/finanzas" class="crumb-btn" style="text-decoration:none;">Finanzas</a>
-        <span>/</span>
-        <span class="crumb-btn active-crumb">Finanzas</span>
-    
-    <!-- REPORTES -->
-    {% elif '/reportes' in path %}
-        <a href="/reportes" class="crumb-btn" style="text-decoration:none;">Reportes</a>
-        <span>/</span>
-        <span class="crumb-btn active-crumb">Reportes</span>
-    
-    <!-- HERRAMIENTAS -->
-    {% elif '/herramientas' in path %}
-        <a href="/herramientas" class="crumb-btn" style="text-decoration:none;">Herramientas</a>
-        <span>/</span>
-        <span class="crumb-btn active-crumb">Herramientas</span>
-    
-    <!-- PAPELERA -->
-    {% elif '/papelera' in path %}
-        <a href="/papelera" class="crumb-btn" style="text-decoration:none;">Papelera / Auditoría</a>
-        <span>/</span>
-        <span class="crumb-btn active-crumb">Papelera</span>
-    
-    <!-- DASHBOARD (por defecto) -->
-    {% else %}
-        <span class="crumb-btn active-crumb">Dashboard</span>
-    {% endif %}
-{% endblock %}
+        <div class="breadcrumb" id="breadcrumb">
+            <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
+            <span>/</span>
+            {% block breadcrumb %}
+                {% set path = request.path %}
+                
+                <!-- CONFIGURACIÓN Y SEGURIDAD -->
+                {% if '/empresas' in path or '/usuarios' in path or '/correlativos' in path or '/parametros' in path or '/integracion' in path %}
+                    <a href="/empresas" class="crumb-btn" style="text-decoration:none;">Configuración y seguridad</a>
+                    <span>/</span>
+                    <span class="crumb-btn active-crumb">
+                        {% if '/empresas' in path %}Empresas
+                        {% elif '/usuarios' in path %}Usuarios y permisos
+                        {% elif '/correlativos' in path %}Correlativos
+                        {% elif '/parametros' in path %}Parámetros generales
+                        {% elif '/integracion' in path %}Integración ERP
+                        {% endif %}
+                    </span>
+                
+                <!-- MAESTROS -->
+                {% elif '/maestros' in path %}
+                    <a href="/maestros" class="crumb-btn" style="text-decoration:none;">Maestros</a>
+                    <span>/</span>
+                    <span class="crumb-btn active-crumb">
+                        {% set tab = request.args.get('tab', 'clientes') %}
+                        {% if tab == 'clientes' %}Clientes
+                        {% elif tab == 'proveedores' %}Proveedores
+                        {% elif tab == 'almacenes' %}Almacenes
+                        {% elif tab == 'categorias' %}Categorías
+                        {% elif tab == 'marcas' %}Marcas
+                        {% elif tab == 'um' %}Unidades de medida
+                        {% else %}Maestros
+                        {% endif %}
+                    </span>
+                
+                <!-- PRODUCTOS -->
+                {% elif '/productos' in path %}
+                    <a href="/productos" class="crumb-btn" style="text-decoration:none;">Productos</a>
+                    <span>/</span>
+                    <span class="crumb-btn active-crumb">
+                        {% if '/nuevo' in path or path == '/productos' %}Nuevo producto
+                        {% elif '/base-datos' in path %}Base de datos
+                        {% elif '/comparativo' in path %}Comparativo costos
+                        {% else %}Productos
+                        {% endif %}
+                    </span>
+                
+                <!-- VENTAS -->
+                {% elif '/ventas' in path %}
+                    <a href="/ventas" class="crumb-btn" style="text-decoration:none;">Ventas</a>
+                    <span>/</span>
+                    <span class="crumb-btn active-crumb">
+                        {% set tab = request.args.get('tab', 'cotizaciones') %}
+                        {% if tab == 'cotizaciones' %}Cotizaciones
+                        {% elif tab == 'comprobantes' %}Comprobantes cliente
+                        {% elif tab == 'guias' %}Guías de remisión
+                        {% elif tab == 'notas_credito' %}Notas de crédito
+                        {% elif tab == 'pedido_compra' %}Pedido Compras
+                        {% elif tab == 'despachar' %}Despachar
+                        {% elif tab == 'devoluciones' %}Devoluciones
+                        {% else %}Ventas
+                        {% endif %}
+                    </span>
+                
+                <!-- OTROS MÓDULOS -->
+                {% elif '/compras' in path %}
+                    <a href="/compras" class="crumb-btn" style="text-decoration:none;">Compras</a>
+                    <span>/</span>
+                    <span class="crumb-btn active-crumb">Compras</span>
+                
+                {% elif '/inventario' in path %}
+                    <a href="/inventario" class="crumb-btn" style="text-decoration:none;">Inventario</a>
+                    <span>/</span>
+                    <span class="crumb-btn active-crumb">Inventario</span>
+                
+                {% elif '/finanzas' in path %}
+                    <a href="/finanzas" class="crumb-btn" style="text-decoration:none;">Finanzas</a>
+                    <span>/</span>
+                    <span class="crumb-btn active-crumb">Finanzas</span>
+                
+                {% elif '/reportes' in path %}
+                    <a href="/reportes" class="crumb-btn" style="text-decoration:none;">Reportes</a>
+                    <span>/</span>
+                    <span class="crumb-btn active-crumb">Reportes</span>
+                
+                {% elif '/herramientas' in path %}
+                    <a href="/herramientas" class="crumb-btn" style="text-decoration:none;">Herramientas</a>
+                    <span>/</span>
+                    <span class="crumb-btn active-crumb">Herramientas</span>
+                
+                {% elif '/papelera' in path %}
+                    <a href="/papelera" class="crumb-btn" style="text-decoration:none;">Papelera / Auditoría</a>
+                    <span>/</span>
+                    <span class="crumb-btn active-crumb">Papelera</span>
+                
+                <!-- DASHBOARD -->
+                {% else %}
+                    <span class="crumb-btn active-crumb">Dashboard</span>
+                {% endif %}
+            {% endblock %}
+        </div>
         <h1 id="pageTitle">
             {% block page_title %}
-                {% if active_tab in ['nuevo', 'base-datos', 'comparativo'] %}
-                    Productos
-                {% elif active_tab in ['empresas', 'usuarios', 'correlativos', 'parametros', 'integracion'] %}
+                {% set path = request.path %}
+                {% if '/empresas' in path or '/usuarios' in path or '/correlativos' in path or '/parametros' in path or '/integracion' in path %}
                     Configuración y seguridad
+                {% elif '/maestros' in path %}
+                    Maestros
+                {% elif '/productos' in path %}
+                    Productos
+                {% elif '/ventas' in path %}
+                    Ventas
+                {% elif '/compras' in path %}
+                    Compras
+                {% elif '/inventario' in path %}
+                    Inventario
+                {% elif '/finanzas' in path %}
+                    Finanzas
+                {% elif '/reportes' in path %}
+                    Reportes
+                {% elif '/herramientas' in path %}
+                    Herramientas
+                {% elif '/papelera' in path %}
+                    Papelera / Auditoría
                 {% else %}
                     Dashboard
                 {% endif %}
@@ -333,14 +350,31 @@
         </h1>
         <p class="subtitle">
             {% block subtitle %}
-                {% if active_tab == 'nuevo' %}
-                    Crea o edita la información principal del producto.
-                {% elif active_tab == 'base-datos' %}
-                    Consulta, filtra y gestiona todos los productos del sistema.
-                {% elif active_tab == 'comparativo' %}
-                    Evalúa y compara ofertas de proveedores para seleccionar el mejor costo.
-                {% elif active_tab in ['empresas', 'usuarios', 'correlativos', 'parametros', 'integracion'] %}
+                {% set path = request.path %}
+                {% if '/empresas' in path or '/usuarios' in path or '/correlativos' in path or '/parametros' in path or '/integracion' in path %}
                     Empresas, usuarios, permisos, correlativos y parámetros generales del ERP multiempresa.
+                {% elif '/maestros' in path %}
+                    Módulo maestro del ERP - Gestión de clientes, proveedores, almacenes, categorías, marcas y unidades de medida.
+                {% elif '/productos' in path %}
+                    {% if '/nuevo' in path %}Crea o edita la información principal del producto.
+                    {% elif '/base-datos' in path %}Consulta, filtra y gestiona todos los productos del sistema.
+                    {% elif '/comparativo' in path %}Evalúa y compara ofertas de proveedores para seleccionar el mejor costo.
+                    {% else %}Gestión completa de productos del ERP.
+                    {% endif %}
+                {% elif '/ventas' in path %}
+                    Gestión de cotizaciones, pedidos, despachos, guías, facturas, notas de crédito y devoluciones.
+                {% elif '/compras' in path %}
+                    Gestión de solicitudes, órdenes de compra, comprobantes y recepción de mercadería.
+                {% elif '/inventario' in path %}
+                    Control de stock, kardex, entradas, salidas y transferencias.
+                {% elif '/finanzas' in path %}
+                    Cuentas por cobrar, cuentas por pagar, caja y bancos, flujo de caja.
+                {% elif '/reportes' in path %}
+                    Reportes de ventas, compras, inventario, finanzas y SUNAT.
+                {% elif '/herramientas' in path %}
+                    Herramientas administrativas y de configuración avanzada.
+                {% elif '/papelera' in path %}
+                    Documentos anulados, registros eliminados e historial de cambios.
                 {% else %}
                     Vista principal del ERP con indicadores y acceso rápido.
                 {% endif %}
@@ -348,17 +382,8 @@
         </p>
     </div>
     <div class="top-actions">
-        <div class="select-box">
-            <label>Empresa activa</label>
-            <select id="empresaActiva">
-                <option value="KCF">KCF</option>
-                <option value="AGD">AGD Group S.A.C.</option>
-            </select>
-        </div>
-        <div class="user-box" id="userBox">
-            <div class="avatar" id="userAvatar">E</div>
-            <span id="userName">{{ nombre or 'Usuario' }}</span>
-        </div>
+        <!-- ... -->
+    </div>
 </header>
 
 <!-- ✅ TABS - SOLO PARA CONFIGURACIÓN (usando request.path) -->
