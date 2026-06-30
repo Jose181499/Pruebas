@@ -186,7 +186,6 @@
                 <a href="/herramientas" class="child-btn" style="text-decoration:none;">Carga masiva</a>
             </div>
         </div>
-
         <!-- PAPELERA -->
         <div class="menu-group" data-modulo="papelera">
             <div class="menu-header-wrapper">
@@ -200,6 +199,14 @@
                 <a href="/papelera" class="child-btn" style="text-decoration:none;">Registros eliminados</a>
                 <a href="/papelera" class="child-btn" style="text-decoration:none;">Historial de cambios</a>
             </div>
+        </div>
+
+        <!-- ✅ CERRAR SESIÓN -->
+        <div class="menu-group logout-group" style="margin-top:16px;border-top:1px solid #E2E8F0;padding-top:12px;">
+            <a href="/logout" class="menu-header" style="text-decoration:none;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;color:#DC2626;font-weight:600;transition:all 0.2s ease;">
+                <span style="font-size:18px;">🚪</span>
+                <span>Cerrar sesión</span>
+            </a>
         </div>
     </div>
 </aside>
@@ -270,8 +277,6 @@
             <div class="avatar" id="userAvatar">E</div>
             <span id="userName">{{ nombre or 'Usuario' }}</span>
         </div>
-        <a href="/logout" class="btn btn-secondary" style="text-decoration:none;padding:6px 14px;border-radius:8px;border:1px solid #E5E7EB;color:#0F172A;font-weight:900;font-size:12px;background:white;display:flex;align-items:center;gap:6px;">Salir</a>
-    </div>
 </header>
 
 <!-- ✅ TABS - SOLO PARA CONFIGURACIÓN (usando request.path) -->
