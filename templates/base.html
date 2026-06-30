@@ -274,16 +274,70 @@
     </div>
 </header>
 
-           <!-- TABS - SOLO PARA CONFIGURACIÓN -->
+<!-- ============================================================
+     PANEL DE SEGUIMIENTO - CONFIGURACIÓN Y SEGURIDAD
+     ============================================================ -->
 {% if active_tab in ['empresas', 'usuarios', 'correlativos', 'parametros', 'integracion'] %}
-<div class="tabs">
+<div class="module-tracker">
+    <div class="tracker-header">
+        <div class="tracker-title">
+            <span class="tracker-icon">⚙️</span>
+            <span>Configuración y seguridad</span>
+        </div>
+        <span class="tracker-badge">{{ active_tab|capitalize }}</span>
+    </div>
+    <div class="tracker-steps">
+        <a href="/empresas" class="tracker-step {% if active_tab == 'empresas' %}active{% endif %}">
+            <span class="step-number">1</span>
+            <span class="step-label">Empresas</span>
+            {% if active_tab == 'empresas' %}
+            <span class="step-indicator">●</span>
+            {% endif %}
+        </a>
+        <a href="/usuarios" class="tracker-step {% if active_tab == 'usuarios' %}active{% endif %}">
+            <span class="step-number">2</span>
+            <span class="step-label">Usuarios y permisos</span>
+            {% if active_tab == 'usuarios' %}
+            <span class="step-indicator">●</span>
+            {% endif %}
+        </a>
+        <a href="/correlativos" class="tracker-step {% if active_tab == 'correlativos' %}active{% endif %}">
+            <span class="step-number">3</span>
+            <span class="step-label">Correlativos</span>
+            {% if active_tab == 'correlativos' %}
+            <span class="step-indicator">●</span>
+            {% endif %}
+        </a>
+        <a href="/parametros" class="tracker-step {% if active_tab == 'parametros' %}active{% endif %}">
+            <span class="step-number">4</span>
+            <span class="step-label">Parámetros generales</span>
+            {% if active_tab == 'parametros' %}
+            <span class="step-indicator">●</span>
+            {% endif %}
+        </a>
+        <a href="/integracion" class="tracker-step {% if active_tab == 'integracion' %}active{% endif %}">
+            <span class="step-number">5</span>
+            <span class="step-label">Integración ERP</span>
+            {% if active_tab == 'integracion' %}
+            <span class="step-indicator">●</span>
+            {% endif %}
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<!-- TABS - SOLO PARA CONFIGURACIÓN (ocultos, ya no se usan) -->
+{% if active_tab in ['empresas', 'usuarios', 'correlativos', 'parametros', 'integracion'] %}
+<div class="tabs" style="display:none;">
     <a href="/empresas" class="tab-btn {% if active_tab == 'empresas' %}active{% endif %}">Empresas</a>
     <a href="/usuarios" class="tab-btn {% if active_tab == 'usuarios' %}active{% endif %}">Usuarios y permisos</a>
     <a href="/correlativos" class="tab-btn {% if active_tab == 'correlativos' %}active{% endif %}">Correlativos</a>
     <a href="/parametros" class="tab-btn {% if active_tab == 'parametros' %}active{% endif %}">Parámetros</a>
     <a href="/integracion" class="tab-btn {% if active_tab == 'integracion' %}active{% endif %}">Integración ERP</a>
 </div>
-{% endif %}
+{% endif %} 
+
+
 
 <!-- TABS - SOLO PARA PRODUCTOS -->
 {% if active_tab in ['nuevo', 'base-datos', 'comparativo'] %}

@@ -3748,3 +3748,140 @@ input[type="file"] { display: none; }
     color: var(--empresa, #EF233C);
     font-weight: 700;
 }
+
+
+/* ============================================================
+   MODULE TRACKER - PANEL DE SEGUIMIENTO
+   ============================================================ */
+
+.module-tracker {
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tracker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tracker-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    color: #0F172A;
+}
+
+.tracker-icon {
+    font-size: 18px;
+}
+
+.tracker-badge {
+    background: #E2E8F0;
+    padding: 2px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #475569;
+    text-transform: capitalize;
+}
+
+.tracker-steps {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.tracker-step {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    text-decoration: none;
+    color: #64748B;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    background: transparent;
+    border: 1px solid transparent;
+}
+
+.tracker-step:hover {
+    background: #F1F5F9;
+    color: #0F172A;
+    text-decoration: none;
+}
+
+.tracker-step .step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #E2E8F0;
+    color: #64748B;
+    font-size: 10px;
+    font-weight: 700;
+    transition: all 0.2s ease;
+}
+
+.tracker-step.active {
+    background: var(--empresa, #EF233C);
+    color: white;
+    border-color: var(--empresa, #EF233C);
+}
+
+.tracker-step.active .step-number {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+}
+
+.tracker-step.active .step-indicator {
+    display: none;
+}
+
+.tracker-step .step-indicator {
+    font-size: 8px;
+    color: var(--empresa, #EF233C);
+}
+
+.tracker-step:not(.active) .step-indicator {
+    display: none;
+}
+
+/* Separador entre steps */
+.tracker-step:not(:last-child)::after {
+    content: "›";
+    color: #CBD5E1;
+    font-size: 16px;
+    margin-left: 4px;
+    font-weight: 300;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .tracker-steps {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 4px;
+    }
+    
+    .tracker-step:not(:last-child)::after {
+        display: none;
+    }
+    
+    .tracker-step {
+        padding: 8px 12px;
+    }
+}
