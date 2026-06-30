@@ -277,52 +277,65 @@
 <!-- ============================================================
      PANEL DE SEGUIMIENTO - CONFIGURACIÓN Y SEGURIDAD
      ============================================================ -->
-{% if active_tab in ['empresas', 'usuarios', 'correlativos', 'parametros', 'integracion'] %}
+
+<!-- ✅ Detectar si estamos en configuración por la URL -->
+{% set path = request.path %}
+
+{% if '/empresas' in path or '/usuarios' in path or '/correlativos' in path or '/parametros' in path or '/integracion' in path or '/config' in path %}
 <div class="module-tracker">
     <div class="tracker-header">
         <div class="tracker-title">
             <span class="tracker-icon">⚙️</span>
             <span>Configuración y seguridad</span>
         </div>
-        <span class="tracker-badge">{{ active_tab|capitalize }}</span>
+        <span class="tracker-badge">
+            {% if '/empresas' in path %}Empresas
+            {% elif '/usuarios' in path %}Usuarios y permisos
+            {% elif '/correlativos' in path %}Correlativos
+            {% elif '/parametros' in path %}Parámetros generales
+            {% elif '/integracion' in path %}Integración ERP
+            {% else %}Configuración
+            {% endif %}
+        </span>
     </div>
     <div class="tracker-steps">
-        <a href="/empresas" class="tracker-step {% if active_tab == 'empresas' %}active{% endif %}">
+        <a href="/empresas" class="tracker-step {% if '/empresas' in path %}active{% endif %}">
             <span class="step-number">1</span>
             <span class="step-label">Empresas</span>
-            {% if active_tab == 'empresas' %}
-            <span class="step-indicator">●</span>
-            {% endif %}
+            {% if '/empresas' in path %}<span class="step-indicator">●</span>{% endif %}
         </a>
-        <a href="/usuarios" class="tracker-step {% if active_tab == 'usuarios' %}active{% endif %}">
+        <a href="/usuarios" class="tracker-step {% if '/usuarios' in path %}active{% endif %}">
             <span class="step-number">2</span>
             <span class="step-label">Usuarios y permisos</span>
-            {% if active_tab == 'usuarios' %}
-            <span class="step-indicator">●</span>
-            {% endif %}
+            {% if '/usuarios' in path %}<span class="step-indicator">●</span>{% endif %}
         </a>
-        <a href="/correlativos" class="tracker-step {% if active_tab == 'correlativos' %}active{% endif %}">
+        <a href="/correlativos" class="tracker-step {% if '/correlativos' in path %}active{% endif %}">
             <span class="step-number">3</span>
             <span class="step-label">Correlativos</span>
-            {% if active_tab == 'correlativos' %}
-            <span class="step-indicator">●</span>
-            {% endif %}
+            {% if '/correlativos' in path %}<span class="step-indicator">●</span>{% endif %}
         </a>
-        <a href="/parametros" class="tracker-step {% if active_tab == 'parametros' %}active{% endif %}">
+        <a href="/parametros" class="tracker-step {% if '/parametros' in path %}active{% endif %}">
             <span class="step-number">4</span>
             <span class="step-label">Parámetros generales</span>
-            {% if active_tab == 'parametros' %}
-            <span class="step-indicator">●</span>
-            {% endif %}
+            {% if '/parametros' in path %}<span class="step-indicator">●</span>{% endif %}
         </a>
-        <a href="/integracion" class="tracker-step {% if active_tab == 'integracion' %}active{% endif %}">
+        <a href="/integracion" class="tracker-step {% if '/integracion' in path %}active{% endif %}">
             <span class="step-number">5</span>
             <span class="step-label">Integración ERP</span>
-            {% if active_tab == 'integracion' %}
-            <span class="step-indicator">●</span>
-            {% endif %}
+            {% if '/integracion' in path %}<span class="step-indicator">●</span>{% endif %}
         </a>
     </div>
+</div>
+{% endif %}
+
+<!-- ✅ TABS - SOLO PARA CONFIGURACIÓN (ahora visibles) -->
+{% if '/empresas' in path or '/usuarios' in path or '/correlativos' in path or '/parametros' in path or '/integracion' in path %}
+<div class="tabs">
+    <a href="/empresas" class="tab-btn {% if '/empresas' in path %}active{% endif %}">Empresas</a>
+    <a href="/usuarios" class="tab-btn {% if '/usuarios' in path %}active{% endif %}">Usuarios y permisos</a>
+    <a href="/correlativos" class="tab-btn {% if '/correlativos' in path %}active{% endif %}">Correlativos</a>
+    <a href="/parametros" class="tab-btn {% if '/parametros' in path %}active{% endif %}">Parámetros</a>
+    <a href="/integracion" class="tab-btn {% if '/integracion' in path %}active{% endif %}">Integración ERP</a>
 </div>
 {% endif %}
 
