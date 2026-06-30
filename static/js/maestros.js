@@ -383,16 +383,65 @@ function filtered(m) {
     });
 }
 
-function bindFilters(m, cb) {
-    ['search_', 'estado_'].forEach(prefix => {
-        const el = document.getElementById(prefix + m);
-        if (el) {
-            const event = prefix === 'search_' ? 'input' : 'change';
-            el.removeEventListener(event, cb);
-            el.addEventListener(event, cb);
+// ============================================================
+// FILTRADO MEJORADO - SIN RECONSTRUIR TODO
+// ============================================================
+
+function setupFilters(m) {
+    // Filtro de estado (recarga la tabla)
+    const estadoFilter = document.getElementById(`estado_${m}`);
+    if (estadoFilter) {
+        estadoFilter.removeEventListener('change', function() { renderModule(m); });
+        estadoFilter.addEventListener('change', function() {
+            renderModule(m);
+        });
+    }
+    
+    // Filtro de búsqueda (SOLO FILTRA, NO RECARGA)
+    const searchInput = document.getElementById(`search_${m}`);
+    if (searchInput) {
+        const newInput = searchInput.cloneNode(true);
+        searchInput.parentNode.replaceChild(newInput, searchInput);
+        
+        newInput.addEventListener('input', function() {
+            filterTable(m);
+        });
+    }
+}
+
+function filterTable(m) {
+    const input = document.getElementById(`search_${m}`);
+    if (!input) return;
+    
+    const searchTerm = input.value.toLowerCase().trim();
+    const container = document.getElementById(m);
+    if (!container) return;
+    
+    const table = container.querySelector('.master-table');
+    if (!table) return;
+    
+    const rows = table.querySelectorAll('tbody tr');
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        if (searchTerm === '' || text.includes(searchTerm)) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
         }
     });
+    
+    // Actualizar contador
+    const subtitle = container.querySelector('.master-subtitle');
+    if (subtitle) {
+        const total = DS[m]?.length || 0;
+        const config = MODULE_CONFIG[m];
+        subtitle.textContent = `${config?.subtitle || ''} (${visibleCount} registros)`;
+    }
 }
+
 
 // ============================================================
 // RENDER FUNCTIONS
