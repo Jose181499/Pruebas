@@ -71,6 +71,7 @@ def obtener_ultimo_codigo_producto():
         except:
             pass
         return "PRD-0011"
+
 # ============================================================
 # RUTAS PARA PÁGINAS HTML
 # ============================================================
@@ -79,7 +80,12 @@ def obtener_ultimo_codigo_producto():
 @login_required
 def productos():
     """Página principal de productos - Redirige a nuevo producto"""
-    return render_template('productos.html', active_tab='nuevo')
+    codigo_auto = obtener_ultimo_codigo_producto()
+    return render_template('productos.html', 
+                          active_tab='nuevo',
+                          codigo_auto=codigo_auto,
+                          editando=False,
+                          producto=None)
 
 @productos_bp.route('/nuevo')
 @login_required
@@ -96,13 +102,19 @@ def productos_nuevo():
 @login_required
 def productos_base_datos():
     """Página de base de datos de productos"""
-    return render_template('productos.html', active_tab='base-datos')
+    return render_template('productos.html', 
+                          active_tab='base-datos',
+                          producto=None,
+                          editando=False)
 
 @productos_bp.route('/comparativo')
 @login_required
 def productos_comparativo():
     """Página de comparativo de costos"""
-    return render_template('productos.html', active_tab='comparativo')
+    return render_template('productos.html', 
+                          active_tab='comparativo',
+                          producto=None,
+                          editando=False)
 
 @productos_bp.route('/editar/<int:producto_id>')
 @login_required
@@ -125,17 +137,24 @@ def productos_editar(producto_id):
             flash('Producto no encontrado', 'error')
             return redirect(url_for('productos.productos_base_datos'))
         
-        # ✅ DEBUG: Imprimir el producto para verificar
-        print(f"📝 Producto encontrado: {producto[0]}")
+        # ✅ Convertir a diccionario para mejor manejo
+        producto_dict = dict(producto[0])
+        print(f"📝 Producto encontrado: {producto_dict}")
         
-        # ✅ Pasar el producto al template
+        # ✅ Obtener código automático (aunque no se use en edición)
+        codigo_auto = obtener_ultimo_codigo_producto()
+        
+        # ✅ Pasar el producto como diccionario
         return render_template('productos.html', 
-                              active_tab='nuevo', 
-                              producto=producto[0],
+                              active_tab='nuevo',
+                              codigo_auto=codigo_auto,
+                              producto=producto_dict,
                               editando=True)
         
     except Exception as e:
         print(f"❌ Error en productos_editar: {e}")
+        import traceback
+        traceback.print_exc()
         flash('Error al cargar el producto', 'error')
         return redirect(url_for('productos.productos_base_datos'))
 
