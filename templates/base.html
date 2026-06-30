@@ -218,26 +218,105 @@
             <!-- TOPBAR -->
 <header class="topbar">
     <div>
-        <div class="breadcrumb" id="breadcrumb">
-            <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
+      <div class="breadcrumb" id="breadcrumb">
+    <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
+    <span>/</span>
+    {% block breadcrumb %}
+        <!-- CONFIGURACIÓN Y SEGURIDAD -->
+        {% if active_tab in ['empresas', 'usuarios', 'correlativos', 'parametros', 'integracion'] %}
+            <a href="/empresas" class="crumb-btn" style="text-decoration:none;">Configuración y seguridad</a>
             <span>/</span>
-            {% block breadcrumb %}
-                {% if active_tab in ['nuevo', 'base-datos', 'comparativo'] %}
-                    <a href="/productos" class="crumb-btn" style="text-decoration:none;">Productos</a>
-                    <span>/</span>
-                    <span class="crumb-btn active-crumb">
-                        {% if active_tab == 'nuevo' %}Nuevo producto
-                        {% elif active_tab == 'base-datos' %}Base de datos
-                        {% elif active_tab == 'comparativo' %}Comparativo costos
-                        {% endif %}
-                    </span>
-                {% elif active_tab in ['empresas', 'usuarios', 'correlativos', 'parametros', 'integracion'] %}
-                    <span class="crumb-btn active-crumb">Configuración y seguridad</span>
-                {% else %}
-                    <span class="crumb-btn active-crumb">Dashboard</span>
+            <span class="crumb-btn active-crumb">
+                {% if active_tab == 'empresas' %}Empresas
+                {% elif active_tab == 'usuarios' %}Usuarios y permisos
+                {% elif active_tab == 'correlativos' %}Correlativos
+                {% elif active_tab == 'parametros' %}Parámetros generales
+                {% elif active_tab == 'integracion' %}Integración ERP
                 {% endif %}
-            {% endblock %}
-        </div>
+            </span>
+        
+        <!-- MAESTROS -->
+        {% elif active_tab in ['clientes', 'proveedores', 'almacenes', 'categorias', 'marcas', 'um'] %}
+            <a href="/maestros" class="crumb-btn" style="text-decoration:none;">Maestros</a>
+            <span>/</span>
+            <span class="crumb-btn active-crumb">
+                {% if active_tab == 'clientes' %}Clientes
+                {% elif active_tab == 'proveedores' %}Proveedores
+                {% elif active_tab == 'almacenes' %}Almacenes
+                {% elif active_tab == 'categorias' %}Categorías
+                {% elif active_tab == 'marcas' %}Marcas
+                {% elif active_tab == 'um' %}Unidades de medida
+                {% endif %}
+            </span>
+        
+        <!-- PRODUCTOS -->
+        {% elif active_tab in ['nuevo', 'base-datos', 'comparativo'] %}
+            <a href="/productos" class="crumb-btn" style="text-decoration:none;">Productos</a>
+            <span>/</span>
+            <span class="crumb-btn active-crumb">
+                {% if active_tab == 'nuevo' %}Nuevo producto
+                {% elif active_tab == 'base-datos' %}Base de datos
+                {% elif active_tab == 'comparativo' %}Comparativo costos
+                {% endif %}
+            </span>
+        
+        <!-- VENTAS -->
+        {% elif active_tab in ['cotizaciones', 'comprobantes', 'guias', 'notas_credito', 'pedido_compra', 'despachar', 'devoluciones'] %}
+            <a href="/ventas" class="crumb-btn" style="text-decoration:none;">Ventas</a>
+            <span>/</span>
+            <span class="crumb-btn active-crumb">
+                {% if active_tab == 'cotizaciones' %}Cotizaciones
+                {% elif active_tab == 'comprobantes' %}Comprobantes cliente
+                {% elif active_tab == 'guias' %}Guías de remisión
+                {% elif active_tab == 'notas_credito' %}Notas de crédito
+                {% elif active_tab == 'pedido_compra' %}Pedido Compras
+                {% elif active_tab == 'despachar' %}Despachar
+                {% elif active_tab == 'devoluciones' %}Devoluciones
+                {% endif %}
+            </span>
+        
+        <!-- COMPRAS -->
+        {% elif active_tab == 'compras' %}
+            <a href="/compras" class="crumb-btn" style="text-decoration:none;">Compras</a>
+            <span>/</span>
+            <span class="crumb-btn active-crumb">Compras</span>
+        
+        <!-- INVENTARIO -->
+        {% elif active_tab == 'inventario' %}
+            <a href="/inventario" class="crumb-btn" style="text-decoration:none;">Inventario</a>
+            <span>/</span>
+            <span class="crumb-btn active-crumb">Inventario</span>
+        
+        <!-- FINANZAS -->
+        {% elif active_tab == 'finanzas' %}
+            <a href="/finanzas" class="crumb-btn" style="text-decoration:none;">Finanzas</a>
+            <span>/</span>
+            <span class="crumb-btn active-crumb">Finanzas</span>
+        
+        <!-- REPORTES -->
+        {% elif active_tab == 'reportes' %}
+            <a href="/reportes" class="crumb-btn" style="text-decoration:none;">Reportes</a>
+            <span>/</span>
+            <span class="crumb-btn active-crumb">Reportes</span>
+        
+        <!-- HERRAMIENTAS -->
+        {% elif active_tab == 'herramientas' %}
+            <a href="/herramientas" class="crumb-btn" style="text-decoration:none;">Herramientas</a>
+            <span>/</span>
+            <span class="crumb-btn active-crumb">Herramientas</span>
+        
+        <!-- PAPELERA -->
+        {% elif active_tab == 'papelera' %}
+            <a href="/papelera" class="crumb-btn" style="text-decoration:none;">Papelera / Auditoría</a>
+            <span>/</span>
+            <span class="crumb-btn active-crumb">Papelera</span>
+        
+        <!-- DASHBOARD (por defecto) -->
+        {% else %}
+            <span class="crumb-btn active-crumb">Dashboard</span>
+        {% endif %}
+    {% endblock %}
+</div>
         <h1 id="pageTitle">
             {% block page_title %}
                 {% if active_tab in ['nuevo', 'base-datos', 'comparativo'] %}
