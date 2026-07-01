@@ -548,9 +548,13 @@ function renderTable(m, list) {
         return `<tr>${cells}</tr>`;
     }).join('');
     
-    
-    
-     
+    // ✅ IMPORTANTE: SIEMPRE devolver la tabla dentro de un div.table-scroll
+    return `<div class="table-scroll">
+        <table class="master-table">
+            <thead><tr>${headersHtml}</tr></thead>
+            <tbody>${rows}</tbody>
+        </table>
+    </div>`;
 }
 
 
