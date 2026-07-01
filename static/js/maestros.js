@@ -548,8 +548,11 @@ function renderTable(m, list) {
         return `<tr>${cells}</tr>`;
     }).join('');
     
-    return `<table class="master-table"><thead><tr>${headersHtml}</tr></thead><tbody>${rows}</tbody></table>`;
+    
+    
+     
 }
+
 
 function renderModule(m) {
     const config = MODULE_CONFIG[m];
