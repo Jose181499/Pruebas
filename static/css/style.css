@@ -3955,3 +3955,47 @@ input[type="file"] { display: none; }
     background: var(--topbar-accent);
     color: white;
 }
+
+
+/* ============================================================
+   TABLA DE EMPRESAS - ENCABEZADO CON COLOR DINÁMICO
+   ============================================================ */
+
+/* Encabezado de la tabla de empresas */
+#empresas table thead th {
+    background: var(--topbar-bg, #FEF2F2) !important;
+    color: var(--topbar-text, #991B1B) !important;
+    border-bottom: 2px solid var(--topbar-border, #FCA5A5) !important;
+    padding: 12px 16px;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+/* Hover suave en el encabezado */
+#empresas table thead th:hover {
+    background: var(--topbar-border, #FCA5A5) !important;
+    opacity: 0.6;
+    cursor: pointer;
+}
+
+/* Alternativa: si la tabla tiene clase .table-wrap */
+.table-wrap table thead th {
+    background: var(--topbar-bg, #FEF2F2) !important;
+    color: var(--topbar-text, #991B1B) !important;
+    border-bottom: 2px solid var(--topbar-border, #FCA5A5) !important;
+}
+
+/* Filas alternas (opcional) */
+#empresas table tbody tr:nth-child(even) {
+    background: var(--topbar-bg, #FEF2F2);
+    opacity: 0.5;
+}
+
+#empresas table tbody tr:hover {
+    background: var(--topbar-border, #FCA5A5);
+    opacity: 0.3;
+}
