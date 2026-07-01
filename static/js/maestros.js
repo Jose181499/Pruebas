@@ -563,42 +563,15 @@ function renderModule(m) {
                         <option value="Inactivos">⛔ Inactivos</option>
                     </select>
                     <button class="btn btn-secondary" data-bulk="${m}">📥 Importar</button>
-                    <button class="btn btn-primary btn-create" data-new="${m}">+ Crear ${config.title.slice(0, -1)}</button>
+                    <button class="btn btn-primary btn-create" data-new="${m}">+ Crear Nuevo ${config.title.slice(0, -1)}</button>  
                 </div>
             </div>
-            <div class="table-scroll">
-                ${renderTable(m, list)}
-            </div>
-            <div class="bottom-sheet">
-                <div class="bottom-left">
-                    <span class="bottom-label">📊 Vista de datos</span>
-                    <div class="page-group">
-                        <button class="page-btn ${sheetMode[m] === 'principal' ? 'active' : ''}" data-sheet="${m}|principal">
-                            <span class="page-num">1</span>Principal
-                        </button>
-                        <button class="page-btn ${sheetMode[m] === 'completa' ? 'active' : ''}" data-sheet="${m}|completa">
-                            <span class="page-num">2</span>Completa
-                        </button>
-                    </div>
-                </div>
-                <div class="bottom-help">
-                    ${sheetMode[m] === 'principal' ? '💡 Datos clave para trabajar rápido.' : '📋 Todos los campos registrados.'}
-                </div>
-            </div>
+            // ... resto del código
         </div>
     `;
-
-   
-setupFilters(m);
-    
-    document.querySelectorAll(`[data-sheet^="${m}|"]`).forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            const [mod, mode] = this.dataset.sheet.split('|');
-            sheetMode[mod] = mode;
-            renderModule(mod);
-        });
-    });
+    // ...
 }
+
 
 // ============================================================
 // HANDLERS
