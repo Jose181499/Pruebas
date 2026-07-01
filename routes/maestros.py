@@ -25,26 +25,79 @@ def index():
 @maestros_bp.route('/api/clientes/listar', methods=['GET'])
 @login_required
 def api_clientes_listar():
-    """Listar clientes"""
+    """Listar clientes con sus contactos y puntos de entrega"""
     try:
-        query = """
+        # 1. Obtener todos los clientes activos
+        query_clientes = """
             SELECT id, codigo_cliente, razon_social,
-                   numero_documento,
+                   numero_documento, tipo_documento,
                    nombre_comercial, telefono_contacto, nombre_contacto,
-                   email_contacto, direccion_fiscal, activo, tipo_documento
+                   email_contacto, direccion_fiscal, activo,
+                   condicion_pago, dias_credito, limite_credito, descuento,
+                   estado, ambito, observaciones,
+                   created_at, updated_at
             FROM clientes
             WHERE activo = true
             ORDER BY razon_social
         """
-        result = db_query(query)
-        for row in result:
-            row['ruc'] = row.get('numero_documento')
-        return jsonify({"success": True, "data": result or []})
+        clientes = db_query(query_clientes)
+        
+        if not clientes:
+            return jsonify({"success": True, "data": []})
+        
+        # 2. Para cada cliente, obtener sus contactos y puntos de entrega
+        for cliente in clientes:
+            cliente_id = cliente.get('id')
+            
+            # Obtener contactos
+            try:
+                query_contactos = """
+                    SELECT id, nombre_contacto as nombre, email, telefono, 
+                           cargo, principal, activo
+                    FROM clientes_contactos
+                    WHERE cliente_id = %s AND activo = true
+                    ORDER BY principal DESC, nombre_contacto
+                """
+                contactos = db_query(query_contactos, (cliente_id,))
+                cliente['contactos'] = contactos if contactos else []
+            except Exception as e:
+                current_app.logger.warning(f"Error obteniendo contactos para cliente {cliente_id}: {e}")
+                cliente['contactos'] = []
+            
+            # Obtener puntos de entrega
+            try:
+                query_puntos = """
+                    SELECT id, nombre_punto as punto, direccion, 
+                           telefono_contacto as telefono,
+                           responsable as contacto, principal, activo,
+                           condicion_pago, tiempo_credito
+                    FROM clientes_punto_entrega
+                    WHERE cliente_id = %s AND activo = true
+                    ORDER BY principal DESC, nombre_punto
+                """
+                puntos = db_query(query_puntos, (cliente_id,))
+                cliente['puntos_entrega'] = puntos if puntos else []
+            except Exception as e:
+                current_app.logger.warning(f"Error obteniendo puntos para cliente {cliente_id}: {e}")
+                cliente['puntos_entrega'] = []
+            
+            # Asegurar valores por defecto
+            cliente['ruc'] = cliente.get('numero_documento')
+            cliente['condicion_pago'] = cliente.get('condicion_pago') or 'Contado'
+            cliente['dias_credito'] = cliente.get('dias_credito') or 0
+            cliente['limite_credito'] = cliente.get('limite_credito') or ''
+            cliente['descuento'] = cliente.get('descuento') or ''
+            cliente['estado'] = cliente.get('estado') or 'Activo'
+            cliente['ambito'] = cliente.get('ambito') or 'COMPARTIDO'
+            cliente['observaciones'] = cliente.get('observaciones') or ''
+        
+        return jsonify({"success": True, "data": clientes})
+        
     except Exception as e:
-        current_app.logger.error(f"Error listando clientes: {e}")
+        current_app.logger.error(f"❌ Error listando clientes: {e}")
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
-
-
+    
 @maestros_bp.route('/api/clientes/guardar', methods=['POST'])
 @login_required
 def api_clientes_guardar():

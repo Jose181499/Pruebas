@@ -2331,3 +2331,285 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+// ============================================================
+// VISTA COMPLETA - TODOS LOS CAMPOS DEL CLIENTE
+// ============================================================
+
+function renderClientesCompleta(list) {
+    if (!list || !list.length) {
+        return `<div class="empty-state">
+            <div style="font-size: 48px; margin-bottom: 10px;">📭</div>
+            <p style="color: #64748B; font-weight: 500;">No se encontraron registros</p>
+        </div>`;
+    }
+    
+    // TODOS LOS CAMPOS de la tabla clientes
+    const allFields = [
+        // Datos principales
+        { key: 'id', label: 'ID', width: '50px' },
+        { key: 'codigo_cliente', label: 'Código', width: '100px' },
+        { key: 'ambito', label: 'Ámbito', width: '90px' },
+        { key: 'tipo_documento', label: 'Tipo Doc.', width: '80px' },
+        { key: 'numero_documento', label: 'N° Documento', width: '120px' },
+        { key: 'razon_social', label: 'Razón Social', width: '180px' },
+        { key: 'nombre_comercial', label: 'Nombre Comercial', width: '150px' },
+        { key: 'direccion_fiscal', label: 'Dirección Fiscal', width: '200px' },
+        // Condición comercial
+        { key: 'condicion_pago', label: 'Condición Pago', width: '100px' },
+        { key: 'dias_credito', label: 'Días Crédito', width: '80px' },
+        { key: 'limite_credito', label: 'Límite Crédito', width: '100px' },
+        { key: 'descuento', label: 'Descuento', width: '80px' },
+        // Contacto principal
+        { key: 'nombre_contacto', label: 'Contacto', width: '130px' },
+        { key: 'telefono_contacto', label: 'Teléfono', width: '110px' },
+        { key: 'email_contacto', label: 'Email', width: '160px' },
+        // Contactos (se mostrarán como lista)
+        { key: 'contactos', label: 'Contactos', width: '200px' },
+        // Puntos de entrega
+        { key: 'puntos_entrega', label: 'Puntos de Entrega', width: '220px' },
+        // Estado
+        { key: 'estado', label: 'Estado', width: '90px' },
+        { key: 'activo', label: 'Activo', width: '70px' },
+        // Auditoría
+        { key: 'observaciones', label: 'Observaciones', width: '150px' },
+        { key: 'created_at', label: 'Creado', width: '110px' },
+        { key: 'updated_at', label: 'Actualizado', width: '110px' }
+    ];
+    
+    // Construir headers
+    let headersHtml = '<th style="width:40px;">#</th>';
+    allFields.forEach(f => {
+        headersHtml += `<th style="width:${f.width || 'auto'};">${f.label}</th>`;
+    });
+    headersHtml += '<th style="width:100px;">Acciones</th>';
+    
+    // Construir filas
+    const rows = list.map((r, i) => {
+        let cells = `<td><b>${i + 1}</b></td>`;
+        allFields.forEach(f => {
+            let value = r[f.key];
+            
+            if (value === undefined || value === null || value === '') {
+                value = '-';
+            } else if (f.key === 'estado') {
+                const isActive = value === 'Activo' || value === 'activo';
+                value = isActive 
+                    ? '<span class="badge b-ok">● Activo</span>' 
+                    : '<span class="badge b-gray">● Inactivo</span>';
+            } else if (f.key === 'activo') {
+                value = value === true || value === 'true' 
+                    ? '<span class="badge b-ok">✅ Sí</span>' 
+                    : '<span class="badge b-gray">❌ No</span>';
+            } else if (f.key === 'ambito') {
+                value = bAmbito(value);
+            } else if (f.key === 'contactos') {
+                // Mostrar contactos como lista
+                if (r.contactos && r.contactos.length > 0) {
+                    value = r.contactos.map(c => 
+                        `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;">
+                            <strong>${c.nombre_contacto || c.nombre || '-'}</strong>
+                            ${c.cargo ? `<span style="color:#64748B;"> (${c.cargo})</span>` : ''}
+                            ${c.principal ? ' ⭐' : ''}
+                            <br><small>${c.telefono || ''} ${c.email ? '| ' + c.email : ''}</small>
+                        </div>`
+                    ).join('');
+                } else {
+                    value = '-';
+                }
+            } else if (f.key === 'puntos_entrega') {
+                // Mostrar puntos de entrega como lista
+                if (r.puntos_entrega && r.puntos_entrega.length > 0) {
+                    value = r.puntos_entrega.map(p => 
+                        `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;">
+                            <strong>${p.nombre_punto || p.punto || '-'}</strong>
+                            ${p.principal ? ' ⭐' : ''}
+                            <br><small>${p.direccion || ''} ${p.telefono_contacto ? '| Tel: ' + p.telefono_contacto : ''}</small>
+                        </div>`
+                    ).join('');
+                } else {
+                    value = '-';
+                }
+            } else if (f.key === 'limite_credito' || f.key === 'descuento') {
+                if (value && !isNaN(value)) {
+                    value = `S/ ${parseFloat(value).toFixed(2)}`;
+                }
+            } else if (f.key === 'created_at' || f.key === 'updated_at') {
+                value = value ? new Date(value).toLocaleDateString('es-PE') : '-';
+            } else if (f.key === 'dias_credito') {
+                value = value ? `${value} días` : '-';
+            } else if (f.key === 'tipo_documento') {
+                const tipos = { 'RUC': 'RUC', 'DNI': 'DNI', 'CE': 'C.E.' };
+                value = tipos[value] || value || '-';
+            }
+            
+            cells += `<td>${value}</td>`;
+        });
+        
+        // Acciones
+        const isActive = r.estado === 'Activo' || r.estado === 'activo' || r.activo === true;
+        const estadoDisplay = isActive ? 'Inactivar' : 'Activar';
+        const estadoClass = isActive ? 'action-delete' : 'action-activate';
+        
+        cells += `
+            <td>
+                <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">
+                    <button class="action-btn action-view" data-view="clientes|${r.id}" title="Ver">👁️</button>
+                    <button class="action-btn action-edit" data-edit="clientes|${r.id}" title="Editar">✏️</button>
+                    <button class="action-btn ${estadoClass}" data-toggle="clientes|${r.id}" title="${estadoDisplay}">${estadoDisplay}</button>
+                </div>
+            </td>
+        `;
+        
+        return `<tr>${cells}</tr>`;
+    }).join('');
+    
+    return `<div class="table-scroll" style="max-height:60vh;">
+        <div style="padding:8px 12px;background:#FFF8F0;border-bottom:1px solid #E5E7EB;font-size:11px;color:#64748B;">
+            📋 Vista completa - Todos los campos del cliente (incluye contactos y puntos de entrega)
+        </div>
+        <table class="master-table" style="min-width:2500px;">
+            <thead><tr>${headersHtml}</tr></thead>
+            <tbody>${rows}</tbody>
+        </table>
+    </div>`;
+}
+
+// Modificar renderTable para soportar ambos modos
+const originalRenderTable = renderTable;
+renderTable = function(m, list) {
+    if (!list || !list.length) {
+        return `<div class="empty-state">
+            <div style="font-size: 48px; margin-bottom: 10px;">📭</div>
+            <p style="color: #64748B; font-weight: 500;">No se encontraron registros</p>
+            <p style="color: #94A3B8; font-size: 14px;">Prueba con otros filtros o crea un nuevo registro</p>
+        </div>`;
+    }
+    
+    const config = MODULE_CONFIG[m];
+    const mode = sheetMode[m] || 'principal';
+    
+    // Si es modo completa y es clientes, mostrar todos los campos
+    if (mode === 'completa' && m === 'clientes') {
+        return renderClientesCompleta(list);
+    }
+    
+    // Modo principal (vista normal)
+    const headers = config.headers;
+    const displayFields = config.displayFields;
+    
+    let headersHtml = `<th style="width:50px;">Item</th><th style="width:100px;">Ámbito</th>`;
+    headers.forEach(h => { headersHtml += `<th>${h}</th>`; });
+    headersHtml += `<th style="width:200px;">Acciones</th>`;
+    
+    const rows = list.map((r, i) => {
+        let cells = `<td><b>${i + 1}</b></td><td>${bAmbito(r.ambito || 'COMPARTIDO')}</td>`;
+        
+        displayFields.forEach(f => {
+            if (f === 'activo') {
+                cells += `<td>${bEstado(r[f])}</td>`;
+            } else if (f === 'decimales') {
+                cells += `<td>${r[f] ? '✅ Sí' : '❌ No'}</td>`;
+            } else if (f === 'email' || f === 'email_contacto') {
+                const email = r[f];
+                cells += `<td>${email ? `<a href="mailto:${esc(email)}" style="color:#3B82F6;text-decoration:none;">${esc(email)}</a>` : '-'}</td>`;
+            } else if (f === 'uso') {
+                cells += `<td style="text-align:center;">${r[f] || 0}</td>`;
+            } else {
+                cells += `<td class="left">${sd(r[f])}</td>`;
+            }
+        });
+        
+        const isActive = getEstado(r.activo) === 'Activo';
+        const estadoDisplay = isActive ? 'Inactivar' : 'Activar';
+        const estadoClass = isActive ? 'action-delete' : 'action-activate';
+        
+        cells += `
+            <td>
+                <div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;">
+                    <button class="action-btn action-view" data-view="${m}|${r.id}" title="Ver detalle">👁️</button>
+                    <button class="action-btn action-edit" data-edit="${m}|${r.id}" title="Editar">✏️</button>
+                    <button class="action-btn ${estadoClass}" data-toggle="${m}|${r.id}" title="${estadoDisplay}">${estadoDisplay}</button>
+                </div>
+            </td>
+        `;
+        
+        return `<tr>${cells}</tr>`;
+    }).join('');
+    
+    return `<table class="master-table"><thead><tr>${headersHtml}</tr></thead><tbody>${rows}</tbody></table>`;
+};
+
+// Modificar renderModule para mostrar el modo seleccionado
+const originalRenderModule = renderModule;
+renderModule = function(m) {
+    const config = MODULE_CONFIG[m];
+    if (!config) {
+        const container = document.getElementById(m);
+        if (container) container.innerHTML = '<div class="panel"><p>Módulo no configurado</p></div>';
+        return;
+    }
+    
+    const list = filtered(m);
+    const container = document.getElementById(m);
+    if (!container) {
+        console.warn(`⚠️ Contenedor para ${m} no encontrado`);
+        return;
+    }
+    
+    // Obtener modo actual
+    const mode = sheetMode[m] || 'principal';
+    const modeLabel = mode === 'principal' ? 'Principal' : 'Completa';
+    
+    container.innerHTML = `
+        ${renderStatusBoard(m)}
+        <div class="panel">
+            <div class="clean-header">
+                <div class="master-title-wrap">
+                    <div class="master-title">${config.title}</div>
+                    <div class="master-subtitle">${config.subtitle} (${list.length} registros) - Vista: <span style="color:var(--empresa);font-weight:900;">${modeLabel}</span></div>
+                </div>
+                <div class="search-box">
+                    <input type="text" id="search_${m}" placeholder="Buscar..." class="search-input">
+                </div>
+                <div class="clean-actions">
+                    <select id="estado_${m}" class="status-filter">
+                        <option value="TODOS">Todos los estados</option>
+                        <option value="Activos">✅ Activos</option>
+                        <option value="Inactivos">⛔ Inactivos</option>
+                    </select>
+                    <button class="btn btn-secondary" data-bulk="${m}">📥 Importar</button>
+                    <button class="btn btn-primary btn-create" data-new="${m}">+ Crear Nuevo ${config.title.slice(0, -1)}</button>
+                </div>
+            </div>
+            ${renderTable(m, list)}
+            <div class="bottom-sheet">
+                <div class="bottom-left">
+                    <span class="bottom-label">📊 Vista de datos</span>
+                    <div class="page-group">
+                        <button class="page-btn ${mode === 'principal' ? 'active' : ''}" data-sheet="${m}|principal">
+                            <span class="page-num">1</span>Principal
+                        </button>
+                        <button class="page-btn ${mode === 'completa' ? 'active' : ''}" data-sheet="${m}|completa">
+                            <span class="page-num">2</span>Completa
+                        </button>
+                    </div>
+                </div>
+                <div class="bottom-help">
+                    ${mode === 'principal' 
+                        ? '💡 Datos clave para trabajar rápido.' 
+                        : '📋 Todos los campos registrados (contactos y puntos de entrega).'}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    setupFilters(m);
+    
+    document.querySelectorAll(`[data-sheet^="${m}|"]`).forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            const [mod, mode] = this.dataset.sheet.split('|');
+            sheetMode[mod] = mode;
+            renderModule(mod);
+        });
+    });
+};
