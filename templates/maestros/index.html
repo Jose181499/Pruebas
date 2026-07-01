@@ -1692,6 +1692,203 @@
     box-shadow: 0 4px 16px rgba(15, 23, 42, 0.20) !important;
 }
 
+
+/* ============================================================
+   MODALES ULTRA COMPACTOS - MÁXIMO AHORRO DE ESPACIO
+   ============================================================ */
+
+/* Todas las clases de modal */
+.client-modal-wrap,
+.proveedor-modal-wrap,
+.almacen-modal-wrap,
+.master-modal-wrap {
+    width: min(850px, 96vw) !important;
+    max-height: 85vh !important;
+    max-width: 850px !important;
+}
+
+/* Body con overflow hidden */
+.client-modal-wrap .cm-body,
+.proveedor-modal-wrap .mm-body,
+.almacen-modal-wrap .mm-body,
+.master-modal-wrap .mm-body {
+    padding: 4px 10px 4px !important;
+    max-height: calc(85vh - 90px) !important;
+    overflow: hidden !important;
+}
+
+/* Secciones más compactas */
+.client-modal-wrap .cm-section,
+.proveedor-modal-wrap .cm-section,
+.almacen-modal-wrap .cm-section,
+.master-modal-wrap .cm-section {
+    margin-bottom: 4px !important;
+}
+
+.client-modal-wrap .cm-section-title {
+    font-size: 10px !important;
+    margin-bottom: 2px !important;
+}
+
+.client-modal-wrap .cm-bullet {
+    height: 12px !important;
+}
+
+/* Grids compactos */
+.client-modal-wrap .cm-grid,
+.proveedor-modal-wrap .cm-grid,
+.almacen-modal-wrap .cm-grid,
+.master-modal-wrap .cm-grid {
+    gap: 2px 6px !important;
+}
+
+.client-modal-wrap .cm-grid-main,
+.proveedor-modal-wrap .cm-grid-main,
+.almacen-modal-wrap .cm-grid-main,
+.master-modal-wrap .cm-grid-main {
+    grid-template-columns: 1fr 1fr 1fr 140px !important;
+}
+
+/* Labels e inputs más pequeños */
+.client-modal-wrap .cm-field label,
+.proveedor-modal-wrap .cm-field label,
+.almacen-modal-wrap .cm-field label,
+.master-modal-wrap .cm-field label {
+    font-size: 7px !important;
+    margin-bottom: 0px !important;
+    letter-spacing: 0.2px !important;
+}
+
+.client-modal-wrap .cm-field input,
+.client-modal-wrap .cm-field select,
+.proveedor-modal-wrap .cm-field input,
+.proveedor-modal-wrap .cm-field select,
+.almacen-modal-wrap .cm-field input,
+.almacen-modal-wrap .cm-field select,
+.master-modal-wrap .cm-field input,
+.master-modal-wrap .cm-field select {
+    height: 22px !important;
+    font-size: 10px !important;
+    padding: 0 4px !important;
+    border-radius: 4px !important;
+}
+
+.client-modal-wrap .cm-field textarea,
+.proveedor-modal-wrap .cm-field textarea,
+.almacen-modal-wrap .cm-field textarea,
+.master-modal-wrap .cm-field textarea {
+    height: 24px !important;
+    min-height: 24px !important;
+    font-size: 10px !important;
+    padding: 2px 4px !important;
+}
+
+/* State box compacto */
+.client-modal-wrap .cm-state-box,
+.proveedor-modal-wrap .cm-state-box,
+.almacen-modal-wrap .cm-state-box,
+.master-modal-wrap .cm-state-box {
+    min-height: 30px !important;
+    padding: 2px 4px !important;
+}
+
+.client-modal-wrap .cm-state-box select,
+.proveedor-modal-wrap .cm-state-box select,
+.almacen-modal-wrap .cm-state-box select,
+.master-modal-wrap .cm-state-box select {
+    height: 18px !important;
+    font-size: 10px !important;
+    padding: 0 4px !important;
+}
+
+.client-modal-wrap .cm-state-indicator {
+    padding: 1px 4px !important;
+    margin-top: 1px !important;
+}
+
+.client-modal-wrap .cm-state-helper-text {
+    font-size: 8px !important;
+}
+
+.client-modal-wrap .cm-state-pill {
+    font-size: 8px !important;
+    padding: 0px 4px !important;
+}
+
+/* Boxes compactos */
+.client-modal-wrap .cm-box {
+    padding: 2px 6px !important;
+    margin-bottom: 2px !important;
+}
+
+.client-modal-wrap .cm-box-del {
+    width: 14px !important;
+    height: 14px !important;
+    font-size: 7px !important;
+    right: 2px !important;
+    top: 2px !important;
+}
+
+.client-modal-wrap .cm-add-btn {
+    height: 18px !important;
+    padding: 0 6px !important;
+    font-size: 8px !important;
+}
+
+/* Headers y footers compactos */
+.client-modal-wrap .cm-head,
+.proveedor-modal-wrap .mm-head,
+.almacen-modal-wrap .mm-head,
+.master-modal-wrap .mm-head {
+    min-height: 30px !important;
+    padding: 0 10px !important;
+}
+
+.client-modal-wrap .cm-head-title,
+.proveedor-modal-wrap .mm-title,
+.almacen-modal-wrap .mm-title,
+.master-modal-wrap .mm-title {
+    font-size: 13px !important;
+}
+
+.client-modal-wrap .cm-foot,
+.proveedor-modal-wrap .mm-foot,
+.almacen-modal-wrap .mm-foot,
+.master-modal-wrap .mm-foot {
+    padding: 4px 10px !important;
+    min-height: 28px !important;
+}
+
+.client-modal-wrap .cm-btn,
+.proveedor-modal-wrap .cm-btn,
+.almacen-modal-wrap .cm-btn,
+.master-modal-wrap .cm-btn {
+    height: 24px !important;
+    padding: 0 10px !important;
+    font-size: 10px !important;
+    border-radius: 6px !important;
+}
+
+.client-modal-wrap .cm-hint {
+    font-size: 8px !important;
+}
+
+/* SUNAT button */
+.client-modal-wrap .sunat-group {
+    grid-template-columns: 1fr 50px !important;
+}
+
+.client-modal-wrap .sunat-btn {
+    height: 22px !important;
+    font-size: 8px !important;
+    padding: 0 6px !important;
+}
+
+
+
+
+
+
 /* ============================================================
    🔥 FORZAR HEADER STICKY - MÁXIMA PRIORIDAD
    ============================================================ */
