@@ -3958,7 +3958,7 @@ input[type="file"] { display: none; }
 
 
 /* ============================================================
-   TABLA DE EMPRESAS - ENCABEZADO CON COLOR DINÁMICO
+   TABLA DE EMPRESAS - ENCABEZADO CON COLOR DINÁMICO (SIN HOVER)
    ============================================================ */
 
 /* Encabezado de la tabla de empresas */
@@ -3971,15 +3971,14 @@ input[type="file"] { display: none; }
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    transition: all 0.3s ease;
-    white-space: nowrap;
+    transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
-/* Hover suave en el encabezado */
+/* ✅ SIN HOVER - El color se mantiene fijo */
 #empresas table thead th:hover {
-    background: var(--topbar-border, #FCA5A5) !important;
-    opacity: 0.6;
-    cursor: pointer;
+    background: var(--topbar-bg, #FEF2F2) !important;
+    color: var(--topbar-text, #991B1B) !important;
+    border-bottom: 2px solid var(--topbar-border, #FCA5A5) !important;
 }
 
 /* Alternativa: si la tabla tiene clase .table-wrap */
@@ -3987,15 +3986,12 @@ input[type="file"] { display: none; }
     background: var(--topbar-bg, #FEF2F2) !important;
     color: var(--topbar-text, #991B1B) !important;
     border-bottom: 2px solid var(--topbar-border, #FCA5A5) !important;
+    transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
-/* Filas alternas (opcional) */
-#empresas table tbody tr:nth-child(even) {
-    background: var(--topbar-bg, #FEF2F2);
-    opacity: 0.5;
-}
-
-#empresas table tbody tr:hover {
-    background: var(--topbar-border, #FCA5A5);
-    opacity: 0.3;
+/* ✅ SIN HOVER para .table-wrap también */
+.table-wrap table thead th:hover {
+    background: var(--topbar-bg, #FEF2F2) !important;
+    color: var(--topbar-text, #991B1B) !important;
+    border-bottom: 2px solid var(--topbar-border, #FCA5A5) !important;
 }
