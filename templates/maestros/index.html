@@ -1885,7 +1885,68 @@
 }
 
 
+/* ============================================================
+   TABLA MAESTROS - TODAS LAS CELDAS CENTRADAS
+   ============================================================ */
 
+/* Todas las celdas de la tabla centradas */
+.master-table td,
+.master-table th {
+    text-align: center !important;
+    vertical-align: middle !important;
+}
+
+/* Excepción: si quieres que algún campo específico siga alineado a la izquierda */
+/* .master-table td.left {
+    text-align: left !important;
+} */
+
+/* Asegurar que los botones de acción también estén centrados */
+.master-table td .actions-group,
+.master-table td .row-actions {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+/* Badges centrados */
+.master-table td .badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Enlaces de email centrados */
+.master-table td a {
+    display: inline-block !important;
+}
+
+/* Código centrado */
+.master-table td .bd-t-code,
+.master-table td .code-pill {
+    display: inline-block !important;
+}
+
+/* Índice/Item centrado */
+.master-table td:first-child,
+.master-table th:first-child {
+    text-align: center !important;
+    font-weight: 700 !important;
+}
+
+/* Columna de acciones centrada */
+.master-table td:last-child,
+.master-table th:last-child {
+    text-align: center !important;
+}
+
+/* Botones de acción alineados */
+.master-table .action-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 2px !important;
+}
 
 
 
