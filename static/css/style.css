@@ -3996,3 +3996,64 @@ input[type="file"] { display: none; }
     border-bottom: 2px solid var(--topbar-border, #FCA5A5) !important;
 }
 
+/* ============================================================
+   TARJETAS DE ESTADÍSTICAS - MÁS COMPACTAS
+   ============================================================ */
+
+/* Contenedor de las cards */
+.cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+/* Cada card más pequeña */
+.cards .card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: white;
+    border-radius: 10px;
+    border: 1px solid #E5E7EB;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    transition: all 0.2s ease;
+    min-height: 50px;
+}
+
+.cards .card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
+}
+
+/* Icono más pequeño */
+.cards .card .card-icon {
+    font-size: 20px;
+    line-height: 1;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--topbar-bg, #FEF2F2);
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+/* Contenido de la card */
+.cards .card .card-title {
+    font-size: 10px;
+    font-weight: 600;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 1px;
+}
+
+.cards .card .card-value {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--topbar-text, #991B1B);
+    line-height: 1.2;
+}
