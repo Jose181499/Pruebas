@@ -66,35 +66,35 @@
   overflow: hidden;
   margin-bottom: 8px;
 }
-
-/* KPI Cards */
+/* KPI Cards - MÁS COMPACTAS */
 .client-status-board {
   display: grid;
-  grid-template-columns: repeat(3, minmax(180px, 1fr));
-  gap: 10px;
-  margin-bottom: 10px;
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  gap: 6px;
+  margin-bottom: 6px;
 }
 
 .client-status-card {
-  height: 58px;
+  height: 40px;
   background: #fff;
   border: 1px solid #E2E8F0;
-  border-radius: 16px;
-  box-shadow: 0 8px 20px rgba(15,23,42,.06);
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(15,23,42,.05);
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
+  gap: 8px;
+  padding: 6px 10px;
 }
 
 .client-status-dot {
-  width: 32px;
-  height: 32px;
-  border-radius: 12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
   display: grid;
   place-items: center;
-  font-size: 13px;
+  font-size: 10px;
   font-weight: 1000;
+  flex-shrink: 0;
 }
 
 .status-active .client-status-dot {
@@ -117,17 +117,18 @@
 
 .client-status-card small {
   display: block;
-  font-size: 11px;
+  font-size: 9px;
   color: #64748B;
-  font-weight: 950;
-  margin-bottom: 3px;
+  font-weight: 700;
+  margin-bottom: 1px;
+  line-height: 1.1;
 }
 
 .client-status-card b {
   display: block;
-  font-size: 18px;
+  font-size: 14px;
   color: #0F172A;
-  line-height: 1.05;
+  line-height: 1.1;
 }
 
 /* Clean Header - ULTRA COMPACTO */
