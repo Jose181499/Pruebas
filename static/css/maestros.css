@@ -181,12 +181,13 @@
   color: #0F172A;
 }
 
+/* Search box más angosto */
 .search-box {
-  position: relative;
-  z-index: 5;
-  max-width: 220px;
-  width: 100%;
-  justify-self: center;
+    position: relative;
+    z-index: 5;
+    max-width: 180px !important;
+    width: 100%;
+    justify-self: center;
 }
 
 .search-box::before {
