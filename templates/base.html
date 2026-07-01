@@ -218,125 +218,169 @@
             <!-- TOPBAR -->
 
 <header class="topbar">
-  <div class="breadcrumb" id="breadcrumb">
- {% block breadcrumb %}
-    <!-- CONFIGURACIÓN Y SEGURIDAD -->
-    {% if active_tab in ['empresas', 'usuarios', 'correlativos', 'parametros', 'integracion'] %}
-        <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
-        <span>/</span>
-        <a href="/empresas" class="crumb-btn" style="text-decoration:none;">Configuración y seguridad</a>
-        <span>/</span>
-        <span class="crumb-btn active-crumb">
-            {% if active_tab == 'empresas' %}Empresas
-            {% elif active_tab == 'usuarios' %}Usuarios y permisos
-            {% elif active_tab == 'correlativos' %}Correlativos
-            {% elif active_tab == 'parametros' %}Parámetros generales
-            {% elif active_tab == 'integracion' %}Integración ERP
-            {% endif %}
-        </span>
-    
-    <!-- MAESTROS -->
-    {% elif active_tab in ['clientes', 'proveedores', 'almacenes', 'categorias', 'marcas', 'um'] %}
-        <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
-        <span>/</span>
-        <a href="/maestros" class="crumb-btn" style="text-decoration:none;">Maestros</a>
-        <span>/</span>
-        <span class="crumb-btn active-crumb">
-            {% if active_tab == 'clientes' %}Clientes
-            {% elif active_tab == 'proveedores' %}Proveedores
-            {% elif active_tab == 'almacenes' %}Almacenes
-            {% elif active_tab == 'categorias' %}Categorías
-            {% elif active_tab == 'marcas' %}Marcas
-            {% elif active_tab == 'um' %}Unidades de medida
-            {% else %}Maestros
-            {% endif %}
-        </span>
-    
-    <!-- PRODUCTOS -->
-    {% elif active_tab in ['nuevo', 'base-datos', 'comparativo'] %}
-        <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
-        <span>/</span>
-        <a href="/productos" class="crumb-btn" style="text-decoration:none;">Productos</a>
-        <span>/</span>
-        <span class="crumb-btn active-crumb">
-            {% if active_tab == 'nuevo' %}Nuevo producto
-            {% elif active_tab == 'base-datos' %}Base de datos
-            {% elif active_tab == 'comparativo' %}Comparativo costos
-            {% endif %}
-        </span>
-    
-    <!-- VENTAS -->
-    {% elif active_tab in ['cotizaciones', 'comprobantes', 'guias', 'notas_credito', 'pedido_compra', 'despachar', 'devoluciones'] %}
-        <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
-        <span>/</span>
-        <a href="/ventas" class="crumb-btn" style="text-decoration:none;">Ventas</a>
-        <span>/</span>
-        <span class="crumb-btn active-crumb">
-            {% if active_tab == 'cotizaciones' %}Cotizaciones
-            {% elif active_tab == 'comprobantes' %}Comprobantes cliente
-            {% elif active_tab == 'guias' %}Guías de remisión
-            {% elif active_tab == 'notas_credito' %}Notas de crédito
-            {% elif active_tab == 'pedido_compra' %}Pedido Compras
-            {% elif active_tab == 'despachar' %}Despachar
-            {% elif active_tab == 'devoluciones' %}Devoluciones
-            {% else %}Ventas
-            {% endif %}
-        </span>
-    
-    <!-- OTROS MÓDULOS -->
-    {% elif active_tab == 'compras' %}
-        <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
-        <span>/</span>
-        <a href="/compras" class="crumb-btn" style="text-decoration:none;">Compras</a>
-        <span>/</span>
-        <span class="crumb-btn active-crumb">Compras</span>
-    
-    {% elif active_tab == 'inventario' %}
-        <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
-        <span>/</span>
-        <a href="/inventario" class="crumb-btn" style="text-decoration:none;">Inventario</a>
-        <span>/</span>
-        <span class="crumb-btn active-crumb">Inventario</span>
-    
-    {% elif active_tab == 'finanzas' %}
-        <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
-        <span>/</span>
-        <a href="/finanzas" class="crumb-btn" style="text-decoration:none;">Finanzas</a>
-        <span>/</span>
-        <span class="crumb-btn active-crumb">Finanzas</span>
-    
-    {% elif active_tab == 'reportes' %}
-        <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
-        <span>/</span>
-        <a href="/reportes" class="crumb-btn" style="text-decoration:none;">Reportes</a>
-        <span>/</span>
-        <span class="crumb-btn active-crumb">Reportes</span>
-    
-    {% elif active_tab == 'herramientas' %}
-        <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
-        <span>/</span>
-        <a href="/herramientas" class="crumb-btn" style="text-decoration:none;">Herramientas</a>
-        <span>/</span>
-        <span class="crumb-btn active-crumb">Herramientas</span>
-    
-    {% elif active_tab == 'papelera' %}
-        <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
-        <span>/</span>
-        <a href="/papelera" class="crumb-btn" style="text-decoration:none;">Papelera / Auditoría</a>
-        <span>/</span>
-        <span class="crumb-btn active-crumb">Papelera</span>
-    
-    <!-- DASHBOARD -->
-    {% else %}
-        <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
-        <span>/</span>
-        <span class="crumb-btn active-crumb">Dashboard</span>
-    {% endif %}
-{% endblock %}
-</div>
-    <div class="top-actions">
-        <!-- ... -->
+  <div>
+    <div class="breadcrumb" id="breadcrumb">
+      {% block breadcrumb %}
+        <!-- CONFIGURACIÓN Y SEGURIDAD -->
+        {% if active_tab in ['empresas', 'usuarios', 'correlativos', 'parametros', 'integracion'] %}
+            <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
+            <span>/</span>
+            <a href="/empresas" class="crumb-btn" style="text-decoration:none;">Configuración y seguridad</a>
+            <span>/</span>
+            <span class="crumb-btn active-crumb">
+                {% if active_tab == 'empresas' %}Empresas
+                {% elif active_tab == 'usuarios' %}Usuarios y permisos
+                {% elif active_tab == 'correlativos' %}Correlativos
+                {% elif active_tab == 'parametros' %}Parámetros generales
+                {% elif active_tab == 'integracion' %}Integración ERP
+                {% endif %}
+            </span>
+        
+        <!-- MAESTROS -->
+        {% elif active_tab in ['clientes', 'proveedores', 'almacenes', 'categorias', 'marcas', 'um'] %}
+            <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
+            <span>/</span>
+            <a href="/maestros" class="crumb-btn" style="text-decoration:none;">Maestros</a>
+            <span>/</span>
+            <span class="crumb-btn active-crumb">
+                {% if active_tab == 'clientes' %}Clientes
+                {% elif active_tab == 'proveedores' %}Proveedores
+                {% elif active_tab == 'almacenes' %}Almacenes
+                {% elif active_tab == 'categorias' %}Categorías
+                {% elif active_tab == 'marcas' %}Marcas
+                {% elif active_tab == 'um' %}Unidades de medida
+                {% else %}Maestros
+                {% endif %}
+            </span>
+        
+        <!-- PRODUCTOS -->
+        {% elif active_tab in ['nuevo', 'base-datos', 'comparativo'] %}
+            <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
+            <span>/</span>
+            <a href="/productos" class="crumb-btn" style="text-decoration:none;">Productos</a>
+            <span>/</span>
+            <span class="crumb-btn active-crumb">
+                {% if active_tab == 'nuevo' %}Nuevo producto
+                {% elif active_tab == 'base-datos' %}Base de datos
+                {% elif active_tab == 'comparativo' %}Comparativo costos
+                {% endif %}
+            </span>
+        
+        <!-- VENTAS -->
+        {% elif active_tab in ['cotizaciones', 'comprobantes', 'guias', 'notas_credito', 'pedido_compra', 'despachar', 'devoluciones'] %}
+            <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
+            <span>/</span>
+            <a href="/ventas" class="crumb-btn" style="text-decoration:none;">Ventas</a>
+            <span>/</span>
+            <span class="crumb-btn active-crumb">
+                {% if active_tab == 'cotizaciones' %}Cotizaciones
+                {% elif active_tab == 'comprobantes' %}Comprobantes cliente
+                {% elif active_tab == 'guias' %}Guías de remisión
+                {% elif active_tab == 'notas_credito' %}Notas de crédito
+                {% elif active_tab == 'pedido_compra' %}Pedido Compras
+                {% elif active_tab == 'despachar' %}Despachar
+                {% elif active_tab == 'devoluciones' %}Devoluciones
+                {% else %}Ventas
+                {% endif %}
+            </span>
+        
+        <!-- OTROS MÓDULOS -->
+        {% elif active_tab == 'compras' %}
+            <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
+            <span>/</span>
+            <a href="/compras" class="crumb-btn" style="text-decoration:none;">Compras</a>
+            <span>/</span>
+            <span class="crumb-btn active-crumb">Compras</span>
+        
+        {% elif active_tab == 'inventario' %}
+            <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
+            <span>/</span>
+            <a href="/inventario" class="crumb-btn" style="text-decoration:none;">Inventario</a>
+            <span>/</span>
+            <span class="crumb-btn active-crumb">Inventario</span>
+        
+        {% elif active_tab == 'finanzas' %}
+            <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
+            <span>/</span>
+            <a href="/finanzas" class="crumb-btn" style="text-decoration:none;">Finanzas</a>
+            <span>/</span>
+            <span class="crumb-btn active-crumb">Finanzas</span>
+        
+        {% elif active_tab == 'reportes' %}
+            <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
+            <span>/</span>
+            <a href="/reportes" class="crumb-btn" style="text-decoration:none;">Reportes</a>
+            <span>/</span>
+            <span class="crumb-btn active-crumb">Reportes</span>
+        
+        {% elif active_tab == 'herramientas' %}
+            <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
+            <span>/</span>
+            <a href="/herramientas" class="crumb-btn" style="text-decoration:none;">Herramientas</a>
+            <span>/</span>
+            <span class="crumb-btn active-crumb">Herramientas</span>
+        
+        {% elif active_tab == 'papelera' %}
+            <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
+            <span>/</span>
+            <a href="/papelera" class="crumb-btn" style="text-decoration:none;">Papelera / Auditoría</a>
+            <span>/</span>
+            <span class="crumb-btn active-crumb">Papelera</span>
+        
+        <!-- DASHBOARD -->
+        {% else %}
+            <a href="/" class="crumb-btn" style="text-decoration:none;">Inicio</a>
+            <span>/</span>
+            <span class="crumb-btn active-crumb">Dashboard</span>
+        {% endif %}
+      {% endblock %}
     </div>
+    
+    <h1 id="pageTitle">
+      {% block page_title %}
+        {% if active_tab in ['nuevo', 'base-datos', 'comparativo'] %}
+            Productos
+        {% elif active_tab in ['empresas', 'usuarios', 'correlativos', 'parametros', 'integracion'] %}
+            Configuración y seguridad
+        {% else %}
+            Dashboard
+        {% endif %}
+      {% endblock %}
+    </h1>
+    
+    <p class="subtitle">
+      {% block subtitle %}
+        {% if active_tab == 'nuevo' %}
+            Crea o edita la información principal del producto.
+        {% elif active_tab == 'base-datos' %}
+            Consulta, filtra y gestiona todos los productos del sistema.
+        {% elif active_tab == 'comparativo' %}
+            Evalúa y compara ofertas de proveedores para seleccionar el mejor costo.
+        {% elif active_tab in ['empresas', 'usuarios', 'correlativos', 'parametros', 'integracion'] %}
+            Empresas, usuarios, permisos, correlativos y parámetros generales del ERP multiempresa.
+        {% else %}
+            Vista principal del ERP con indicadores y acceso rápido.
+        {% endif %}
+      {% endblock %}
+    </p>
+  </div>
+
+  <!-- ✅ TOP ACTIONS - COMPLETO Y FUNCIONAL -->
+  <div class="top-actions">
+    <div class="select-box">
+      <label>Empresa activa</label>
+      <select id="empresaActiva">
+        <option value="KCF" {% if session.get('empresa') == 'KCF' %}selected{% endif %}>KCF</option>
+        <option value="AGD" {% if session.get('empresa') == 'AGD' %}selected{% endif %}>AGD Group S.A.C.</option>
+      </select>
+    </div>
+    <div class="user-box" id="userBox">
+      <div class="avatar" id="userAvatar">
+        {{ (session.get('nombre_completo') or session.get('nombre') or 'U')[0]|upper }}
+      </div>
+      <span id="userName">{{ session.get('nombre_completo') or session.get('nombre') or 'Usuario' }}</span>
+    </div>
+  </div>
 </header>
 
 <!-- ✅ TABS - SOLO PARA CONFIGURACIÓN (usando request.path) -->

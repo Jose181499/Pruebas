@@ -368,34 +368,7 @@ def api_listar_productos():
     except Exception as e:
         app.logger.error(f"Error en api_listar_productos: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-# ==========================================
-# RUTAS HTML PARA CONFIGURACIÓN Y SEGURIDAD
-# ==========================================
 
-@app.route("/empresas")
-@login_required
-def empresas_page():
-    return render_template("empresas.html", active_tab='empresas')
-
-@app.route("/usuarios")
-@login_required
-def usuarios_page():
-    return render_template("usuarios.html", active_tab='usuarios')
-
-@app.route("/correlativos")
-@login_required
-def correlativos_page():
-    return render_template("correlativos.html", active_tab='correlativos')
-
-@app.route("/parametros")
-@login_required
-def parametros_page():
-    return render_template("parametros.html", active_tab='parametros')
-
-@app.route("/integracion")
-@login_required
-def integracion_page():
-    return render_template("integracion.html", active_tab='integracion')
 
 
 
