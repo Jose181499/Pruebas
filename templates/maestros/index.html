@@ -1660,6 +1660,90 @@
   transform: scale(0.98);
 }
 
+/* ============================================================
+   HEADER STICKY - SOBRESCRIBIR CON !important
+   ============================================================ */
+
+/* ✅ FORZAR EL HEADER STICKY */
+.master-table thead th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 9999 !important;
+    background: #FFF1F2 !important;
+    color: #7F1D1D !important;
+    border-color: #FCA5A5 !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.10) !important;
+    padding: 8px 10px !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    white-space: nowrap !important;
+    border-bottom: 2px solid #FCA5A5 !important;
+}
+
+/* Asegurar que el contenedor de la tabla permita sticky */
+.table-scroll {
+    overflow: auto !important;
+    max-height: 55vh !important;
+    position: relative !important;
+}
+
+/* Sombra cuando se scrollea */
+.table-scroll.sticky-shadow .master-table thead th {
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.20) !important;
+}
+
+/* ============================================================
+   🔥 FORZAR HEADER STICKY - MÁXIMA PRIORIDAD
+   ============================================================ */
+
+/* Sobrescribir estilos inyectados por JS */
+.table-scroll {
+    overflow: auto !important;
+    max-height: 55vh !important;
+    position: relative !important;
+}
+
+.master-table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+}
+
+/* FORZAR STICKY EN EL HEADER */
+.master-table thead {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 9999 !important;
+}
+
+.master-table thead th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 9999 !important;
+    background: #FFF1F2 !important;
+    color: #7F1D1D !important;
+    border-color: #FCA5A5 !important;
+    border-bottom: 2px solid #FCA5A5 !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.10) !important;
+    padding: 8px 10px !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    white-space: nowrap !important;
+}
+
+/* Sombra al hacer scroll */
+.table-scroll.sticky-shadow .master-table thead th {
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.25) !important;
+}
+
+/* Asegurar que las celdas tengan fondo blanco */
+.master-table tbody td {
+    background: #FFFFFF !important;
+}
+
+.master-table tbody tr:hover td {
+    background: #F8FAFC !important;
+}
+
 /* ── MODAL MAESTRO ──────────────────────────────────────────── */
 .master-modal-wrap {
   width: min(1160px, 96vw);
