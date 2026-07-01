@@ -3906,36 +3906,37 @@ input[type="file"] { display: none; }
     --topbar-accent: #EA580C;
 }
 
-/* Estilos del topbar */
+
+/* Estilos del topbar - MÁS ANGOSTO */
 .topbar {
     background: var(--topbar-bg);
     border-bottom: 2px solid var(--topbar-border);
-    padding: 16px 24px;
+    padding: 8px 20px; /* ← REDUCIDO de 16px a 8px */
     border-radius: 0 0 12px 12px;
     transition: all 0.3s ease;
 }
 
+/* También puedes reducir el padding del contenido interno */
 .topbar h1 {
     color: var(--topbar-text);
+    font-size: 20px; /* ← REDUCIDO si quieres */
+    margin: 4px 0; /* ← AÑADIDO para menos espacio */
 }
 
 .topbar .subtitle {
     color: var(--topbar-text);
     opacity: 0.7;
+    font-size: 13px; /* ← REDUCIDO */
+    margin: 2px 0; /* ← AÑADIDO para menos espacio */
+}
+
+.topbar .breadcrumb {
+    margin-bottom: 2px; /* ← AÑADIDO para menos espacio */
 }
 
 .topbar .breadcrumb .crumb-btn {
     color: var(--topbar-text);
-}
-
-.topbar .breadcrumb .active-crumb {
-    color: var(--topbar-accent);
-    font-weight: 700;
-}
-
-.topbar .breadcrumb span:not(.crumb-btn) {
-    color: var(--topbar-text);
-    opacity: 0.4;
+    font-size: 12px; /* ← REDUCIDO */
 }
 
 /* Selector de empresa */
