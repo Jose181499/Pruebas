@@ -2653,3 +2653,31 @@ document.addEventListener('input', function(e) {
 });
 
 console.log('✅ Buscador en tiempo real activado');
+
+// ============================================================
+// DETECTAR SCROLL EN TABLA - AGREGAR SOMBRA AL HEADER
+// ============================================================
+
+document.addEventListener('scroll', function(e) {
+    const scrollContainers = document.querySelectorAll('.table-scroll');
+    scrollContainers.forEach(container => {
+        if (container.scrollTop > 5) {
+            container.classList.add('sticky-shadow');
+        } else {
+            container.classList.remove('sticky-shadow');
+        }
+    });
+}, { passive: true });
+
+// También detectar scroll dentro del contenedor
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.table-scroll').forEach(container => {
+        container.addEventListener('scroll', function() {
+            if (this.scrollTop > 5) {
+                this.classList.add('sticky-shadow');
+            } else {
+                this.classList.remove('sticky-shadow');
+            }
+        });
+    });
+});
