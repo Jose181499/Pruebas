@@ -475,7 +475,8 @@ function renderStatusBoard(m) {
 
 
 
-function renderTable(m, list) {
+// Modificar renderTable para soportar ambos modos
+renderTable = function(m, list) {
     if (!list || !list.length) {
         return `<div class="empty-state">
             <div style="font-size: 48px; margin-bottom: 10px;">📭</div>
@@ -485,6 +486,19 @@ function renderTable(m, list) {
     }
     
     const config = MODULE_CONFIG[m];
+    const mode = sheetMode[m] || 'principal';
+    
+    // ✅ Vista completa para clientes
+    if (mode === 'completa' && m === 'clientes') {
+        return renderClientesCompleta(list);
+    }
+    
+    // ✅ Vista completa para proveedores
+    if (mode === 'completa' && m === 'proveedores') {
+        return renderProveedoresCompleta(list);
+    }
+    
+    // Vista principal (modo normal) - resto del código
     const headers = config.headers;
     const displayFields = config.displayFields;
     
@@ -528,7 +542,7 @@ function renderTable(m, list) {
     }).join('');
     
     return `<table class="master-table"><thead><tr>${headersHtml}</tr></thead><tbody>${rows}</tbody></table>`;
-}
+};
 
 function renderModule(m) {
     const config = MODULE_CONFIG[m];
@@ -2377,7 +2391,7 @@ function renderClientesCompleta(list) {
     ];
     
     // Construir headers
-    let headersHtml = '<th style="width:40px;">#</th>';
+    let headersHtml = '<th style="width:40px;">Item</th>';
     allFields.forEach(f => {
         headersHtml += `<th style="width:${f.width || 'auto'};">${f.label}</th>`;
     });
@@ -2613,3 +2627,124 @@ renderModule = function(m) {
         });
     });
 };
+
+// ============================================================
+// VISTA COMPLETA - TODOS LOS CAMPOS DEL PROVEEDOR
+// ============================================================
+
+function renderProveedoresCompleta(list) {
+    if (!list || !list.length) {
+        return `<div class="empty-state">
+            <div style="font-size: 48px; margin-bottom: 10px;">📭</div>
+            <p style="color: #64748B; font-weight: 500;">No se encontraron registros</p>
+        </div>`;
+    }
+    
+    const allFields = [
+        { key: 'id', label: 'ID', width: '50px' },
+        { key: 'codigo_proveedor', label: 'Código', width: '100px' },
+        { key: 'ambito', label: 'Ámbito', width: '90px' },
+        { key: 'ruc', label: 'RUC', width: '120px' },
+        { key: 'razon_social', label: 'Razón Social', width: '180px' },
+        { key: 'razon_comercial', label: 'Razón Comercial', width: '150px' },
+        { key: 'direccion', label: 'Dirección', width: '200px' },
+        { key: 'contacto', label: 'Contacto', width: '130px' },
+        { key: 'telefono', label: 'Teléfono', width: '110px' },
+        { key: 'email', label: 'Email', width: '160px' },
+        { key: 'contactos', label: 'Contactos', width: '200px' },
+        { key: 'puntos_entrega', label: 'Puntos de Entrega', width: '220px' },
+        { key: 'condicion_pago', label: 'Condición Pago', width: '100px' },
+        { key: 'tiempo_credito', label: 'Tiempo Crédito', width: '80px' },
+        { key: 'banco', label: 'Banco', width: '100px' },
+        { key: 'numero_cuenta', label: 'N° Cuenta', width: '120px' },
+        { key: 'cci', label: 'CCI', width: '130px' },
+        { key: 'lugar_recojo', label: 'Lugar Recojo', width: '150px' },
+        { key: 'estado', label: 'Estado', width: '90px' },
+        { key: 'activo', label: 'Activo', width: '70px' },
+        { key: 'observaciones', label: 'Observaciones', width: '150px' },
+        { key: 'fecha_creacion', label: 'Creado', width: '110px' }
+    ];
+    
+    let headersHtml = '<th style="width:40px;">Item</th>';
+    allFields.forEach(f => {
+        headersHtml += `<th style="width:${f.width || 'auto'};">${f.label}</th>`;
+    });
+    headersHtml += '<th style="width:100px;">Acciones</th>';
+    
+    const rows = list.map((r, i) => {
+        let cells = `<td><b>${i + 1}</b></td>`;
+        allFields.forEach(f => {
+            let value = r[f.key];
+            
+            if (value === undefined || value === null || value === '') {
+                value = '-';
+            } else if (f.key === 'estado') {
+                const isActive = value === 'Activo' || value === 'activo';
+                value = isActive 
+                    ? '<span class="badge b-ok">● Activo</span>' 
+                    : '<span class="badge b-gray">● Inactivo</span>';
+            } else if (f.key === 'activo') {
+                value = value === true || value === 'true' 
+                    ? '<span class="badge b-ok">✅ Sí</span>' 
+                    : '<span class="badge b-gray">❌ No</span>';
+            } else if (f.key === 'ambito') {
+                value = bAmbito(value);
+            } else if (f.key === 'contactos') {
+                if (r.contactos && r.contactos.length > 0) {
+                    value = r.contactos.map(c => 
+                        `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;">
+                            <strong>${c.nombre_contacto || '-'}</strong>
+                            ${c.cargo ? `<span style="color:#64748B;"> (${c.cargo})</span>` : ''}
+                            ${c.principal ? ' ⭐' : ''}
+                            <br><small>${c.telefono || ''} ${c.email ? '| ' + c.email : ''}</small>
+                        </div>`
+                    ).join('');
+                } else {
+                    value = '-';
+                }
+            } else if (f.key === 'puntos_entrega') {
+                if (r.puntos_entrega && r.puntos_entrega.length > 0) {
+                    value = r.puntos_entrega.map(p => 
+                        `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;">
+                            <strong>${p.nombre_punto || '-'}</strong>
+                            ${p.principal ? ' ⭐' : ''}
+                            <br><small>${p.direccion || ''} ${p.telefono_contacto ? '| Tel: ' + p.telefono_contacto : ''}</small>
+                        </div>`
+                    ).join('');
+                } else {
+                    value = '-';
+                }
+            } else if (f.key === 'fecha_creacion') {
+                value = value ? new Date(value).toLocaleDateString('es-PE') : '-';
+            }
+            
+            cells += `<td>${value}</td>`;
+        });
+        
+        const isActive = r.estado === 'Activo' || r.estado === 'activo' || r.activo === true;
+        const estadoDisplay = isActive ? 'Inactivar' : 'Activar';
+        const estadoClass = isActive ? 'action-delete' : 'action-activate';
+        
+        cells += `
+            <td>
+                <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">
+                    <button class="action-btn action-view" data-view="proveedores|${r.id}" title="Ver">👁️</button>
+                    <button class="action-btn action-edit" data-edit="proveedores|${r.id}" title="Editar">✏️</button>
+                    <button class="action-btn ${estadoClass}" data-toggle="proveedores|${r.id}" title="${estadoDisplay}">${estadoDisplay}</button>
+                </div>
+            </td>
+        `;
+        
+        return `<tr>${cells}</tr>`;
+    }).join('');
+    
+    return `<div class="table-scroll" style="max-height:60vh;">
+        <div style="padding:8px 12px;background:#FFF8F0;border-bottom:1px solid #E5E7EB;font-size:11px;color:#64748B;">
+            📋 Vista completa - Todos los campos del proveedor (incluye contactos y puntos de entrega)
+        </div>
+        <table class="master-table" style="min-width:2600px;">
+            <thead><tr>${headersHtml}</tr></thead>
+            <tbody>${rows}</tbody>
+        </table>
+    </div>`;
+}

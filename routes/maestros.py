@@ -382,22 +382,67 @@ def api_clientes_toggle(id):
 @maestros_bp.route('/api/proveedores/listar', methods=['GET'])
 @login_required
 def api_proveedores_listar():
-    """Listar proveedores"""
+    """Listar proveedores con sus contactos y puntos de entrega"""
     try:
         query = """
-            SELECT id, codigo_proveedor, razon_social, ruc,
-                   razon_comercial, telefono, contacto, email,
-                   direccion, activo, condicion_pago, tiempo_credito
-            FROM proveedores
-            WHERE activo = true
-            ORDER BY razon_social
+            SELECT 
+                p.*,
+                COALESCE(
+                    (SELECT json_agg(
+                        json_build_object(
+                            'id', pc.id,
+                            'nombre_contacto', pc.nombre_contacto,
+                            'email', pc.email,
+                            'telefono', pc.telefono,
+                            'cargo', pc.cargo,
+                            'principal', pc.principal,
+                            'activo', pc.activo
+                        )
+                    ) FROM proveedores_contactos pc 
+                      WHERE pc.proveedor_id = p.id AND pc.activo = true),
+                    '[]'::json
+                ) as contactos,
+                COALESCE(
+                    (SELECT json_agg(
+                        json_build_object(
+                            'id', pe.id,
+                            'nombre_punto', pe.nombre_punto,
+                            'direccion', pe.direccion,
+                            'telefono_contacto', pe.telefono_contacto,
+                            'responsable', pe.responsable,
+                            'horario_atencion', pe.horario_atencion,
+                            'instrucciones', pe.instrucciones,
+                            'principal', pe.principal,
+                            'activo', pe.activo
+                        )
+                    ) FROM proveedores_puntos_entrega pe 
+                      WHERE pe.proveedor_id = p.id AND pe.activo = true),
+                    '[]'::json
+                ) as puntos_entrega
+            FROM proveedores p
+            WHERE p.activo = true
+            ORDER BY p.razon_social
         """
-        result = db_query(query)
-        return jsonify({"success": True, "data": result or []})
+        proveedores = db_query(query)
+        
+        # Asegurar valores por defecto
+        for prov in proveedores:
+            prov['condicion_pago'] = prov.get('condicion_pago') or 'Contado'
+            prov['tiempo_credito'] = prov.get('tiempo_credito') or ''
+            prov['estado'] = prov.get('estado') or 'Activo'
+            prov['ambito'] = prov.get('ambito') or 'COMPARTIDO'
+            prov['observaciones'] = prov.get('observaciones') or ''
+            prov['lugar_recojo'] = prov.get('lugar_recojo') or ''
+            prov['banco'] = prov.get('banco') or ''
+            prov['numero_cuenta'] = prov.get('numero_cuenta') or ''
+            prov['cci'] = prov.get('cci') or ''
+        
+        return jsonify({"success": True, "data": proveedores})
+        
     except Exception as e:
-        current_app.logger.error(f"Error listando proveedores: {e}")
+        current_app.logger.error(f"❌ Error listando proveedores: {e}")
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
-
 
 @maestros_bp.route('/api/proveedores/guardar', methods=['POST'])
 @login_required
@@ -479,25 +524,53 @@ def api_proveedores_guardar():
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
-
 @maestros_bp.route('/api/proveedores/<int:id>', methods=['GET'])
 @login_required
 def api_proveedores_obtener(id):
-    """Obtener un proveedor por ID"""
+    """Obtener un proveedor por ID con contactos y puntos de entrega"""
     try:
         query = """
-            SELECT id, codigo_proveedor, razon_social, ruc,
-                   razon_comercial, telefono, contacto, email,
-                   direccion, activo, condicion_pago, tiempo_credito,
-                   lugar_recojo, banco, numero_cuenta, cci,
-                   estado, ambito, observaciones
-            FROM proveedores
-            WHERE id = %s
+            SELECT 
+                p.*,
+                COALESCE(
+                    (SELECT json_agg(
+                        json_build_object(
+                            'id', pc.id,
+                            'nombre_contacto', pc.nombre_contacto,
+                            'email', pc.email,
+                            'telefono', pc.telefono,
+                            'cargo', pc.cargo,
+                            'principal', pc.principal,
+                            'activo', pc.activo
+                        )
+                    ) FROM proveedores_contactos pc 
+                      WHERE pc.proveedor_id = p.id AND pc.activo = true),
+                    '[]'::json
+                ) as contactos,
+                COALESCE(
+                    (SELECT json_agg(
+                        json_build_object(
+                            'id', pe.id,
+                            'nombre_punto', pe.nombre_punto,
+                            'direccion', pe.direccion,
+                            'telefono_contacto', pe.telefono_contacto,
+                            'responsable', pe.responsable,
+                            'horario_atencion', pe.horario_atencion,
+                            'instrucciones', pe.instrucciones,
+                            'principal', pe.principal,
+                            'activo', pe.activo
+                        )
+                    ) FROM proveedores_puntos_entrega pe 
+                      WHERE pe.proveedor_id = p.id AND pe.activo = true),
+                    '[]'::json
+                ) as puntos_entrega
+            FROM proveedores p
+            WHERE p.id = %s
         """
         result = db_query(query, (id,))
         if result and len(result) > 0:
             proveedor = result[0]
-            # Asegurar valores por defecto para campos que puedan ser NULL
+            # Asegurar valores por defecto
             proveedor['condicion_pago'] = proveedor.get('condicion_pago') or 'Contado'
             proveedor['tiempo_credito'] = proveedor.get('tiempo_credito') or ''
             proveedor['estado'] = proveedor.get('estado') or 'Activo'
@@ -512,6 +585,8 @@ def api_proveedores_obtener(id):
     except Exception as e:
         current_app.logger.error(f"Error obteniendo proveedor: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
+ 
+
 
 @maestros_bp.route('/api/proveedores/<int:id>', methods=['PUT'])
 @login_required
