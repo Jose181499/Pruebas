@@ -56,29 +56,60 @@
   margin-bottom: 8px;
 }
 
+/* ── KPI CARDS - ULTRA MEGA COMPACTAS ──────────────────────── */
+.client-status-board,
+.master-status-board {
+  display: flex !important;
+  gap: 3px !important;
+  margin-bottom: 2px !important;
+}
+
 .client-status-card,
 .master-status-card {
-  height: 24px !important;
-  padding: 0px 8px !important;
+  height: 20px !important;
+  background: #fff !important;
+  border: 1px solid #E2E8F0 !important;
   border-radius: 4px !important;
+  box-shadow: none !important;
+  display: flex !important;
+  align-items: center !important;
   gap: 3px !important;
+  padding: 0px 6px !important;
+  width: auto !important;
+  min-width: 60px !important;
 }
 
 .client-status-dot,
 .master-status-dot {
-  width: 12px !important;
-  height: 12px !important;
-  font-size: 6px !important;
+  width: 10px !important;
+  height: 10px !important;
+  border-radius: 3px !important;
+  font-size: 5px !important;
+  flex-shrink: 0 !important;
 }
 
 .client-status-card small,
 .master-status-card small {
-  font-size: 6px !important;
+  font-size: 5px !important;
+  color: #94A3B8 !important;
+  margin: 0 !important;
+  line-height: 1 !important;
 }
 
 .client-status-card b,
 .master-status-card b {
-  font-size: 10px !important;
+  font-size: 9px !important;
+  color: #0F172A !important;
+  line-height: 1 !important;
+}
+
+/* Eliminar espacio extra en los textos */
+.client-status-card div,
+.master-status-card div {
+  display: flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+  line-height: 1 !important;
 }
 
 
@@ -1223,38 +1254,4 @@
   }
 }
 
-/* TARJETAS ULTRA COMPACTAS */
-.client-status-board {
-  display: flex !important; /* En lugar de grid */
-  gap: 6px !important;
-  margin-bottom: 4px !important;
-}
-
-.client-status-card {
-  height: 30px !important;
-  background: #fff !important;
-  border: 1px solid #E2E8F0 !important;
-  border-radius: 6px !important;
-  padding: 2px 10px !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 5px !important;
-  width: auto !important;
-}
-
-.client-status-dot {
-  width: 16px !important;
-  height: 16px !important;
-  border-radius: 4px !important;
-  font-size: 8px !important;
-}
-
-.client-status-card small {
-  font-size: 7px !important;
-  color: #64748B !important;
-}
-
-.client-status-card b {
-  font-size: 12px !important;
-  color: #0F172A !important;
-}
+g
