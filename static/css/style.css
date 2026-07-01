@@ -3995,3 +3995,90 @@ input[type="file"] { display: none; }
     color: var(--topbar-text, #991B1B) !important;
     border-bottom: 2px solid var(--topbar-border, #FCA5A5) !important;
 }
+
+/* ============================================================
+   TABLA DE EMPRESAS - BOTONES ORDENADOS
+   ============================================================ */
+
+/* Contenedor de los botones en la tabla */
+#empresas table tbody td:last-child {
+    text-align: center;
+    min-width: 100px;
+}
+
+/* Botones de acción (Editar y Eliminar) */
+#empresas table .btn-mini {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid #E5E7EB;
+    background: white;
+    color: #0F172A;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin: 0 2px;
+}
+
+/* Botón Editar */
+#empresas table .btn-mini[title="Editar"] {
+    border-color: #D1D5DB;
+    color: #2563EB;
+}
+
+#empresas table .btn-mini[title="Editar"]:hover {
+    background: #EFF6FF;
+    border-color: #2563EB;
+    transform: scale(1.05);
+}
+
+/* Botón Eliminar */
+#empresas table .btn-mini[title="Eliminar"] {
+    border-color: #D1D5DB;
+    color: #DC2626;
+}
+
+#empresas table .btn-mini[title="Eliminar"]:hover {
+    background: #FEE2E2;
+    border-color: #DC2626;
+    transform: scale(1.05);
+}
+
+/* Contenedor de los botones en fila */
+#empresas table .btn-group {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Badge de estado (Activo/Inactivo) */
+#empresas table .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+#empresas table .badge-ok {
+    background: #DCFCE7;
+    color: #166534;
+}
+
+#empresas table .badge-gray {
+    background: #F3F4F6;
+    color: #6B7280;
+}
+
+/* Separación vertical entre estado y botones */
+#empresas table .estado-botones {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
