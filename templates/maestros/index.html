@@ -1880,13 +1880,32 @@
     padding: 0 6px !important;
 }
 
+/* ============================================================
+   CENTRAR TODOS LOS ENCABEZADOS DE LA TABLA
+   ============================================================ */
+
+/* FORZAR CENTRADO EN TODOS LOS HEADERS */
+.master-table thead th,
+.master-table thead th[class*="sticky"],
+.master-table thead th[style*="sticky"] {
+    text-align: center !important;
+    vertical-align: middle !important;
+}
+
+/* Asegurar que los headers de todas las columnas estén centrados */
+.master-table th {
+    text-align: center !important;
+    vertical-align: middle !important;
+}
+
+/* Si hay algún header con clase específica, también centrarlo */
+.master-table th.center,
+.master-table th:first-child,
+.master-table th:last-child {
+    text-align: center !important;
+}
 
 
-
-/* Excepción: si quieres que algún campo específico siga alineado a la izquierda */
-/* .master-table td.left {
-    text-align: left !important;
-} */
 
 /* Asegurar que los botones de acción también estén centrados */
 .master-table td .actions-group,
