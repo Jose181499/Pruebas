@@ -3885,3 +3885,73 @@ input[type="file"] { display: none; }
         padding: 8px 12px;
     }
 }
+
+/* ============================================================
+   TOPBAR - COLORES DINÁMICOS POR EMPRESA
+   ============================================================ */
+
+/* KCF - Rojo suave (por defecto) */
+:root {
+    --topbar-bg: #FEF2F2;
+    --topbar-border: #FCA5A5;
+    --topbar-text: #991B1B;
+    --topbar-accent: #DC2626;
+}
+
+/* AGD - Naranja suave */
+:root.empresa-agd {
+    --topbar-bg: #FFF7ED;
+    --topbar-border: #FDBA74;
+    --topbar-text: #9A3412;
+    --topbar-accent: #EA580C;
+}
+
+/* Estilos del topbar */
+.topbar {
+    background: var(--topbar-bg);
+    border-bottom: 2px solid var(--topbar-border);
+    padding: 16px 24px;
+    border-radius: 0 0 12px 12px;
+    transition: all 0.3s ease;
+}
+
+.topbar h1 {
+    color: var(--topbar-text);
+}
+
+.topbar .subtitle {
+    color: var(--topbar-text);
+    opacity: 0.7;
+}
+
+.topbar .breadcrumb .crumb-btn {
+    color: var(--topbar-text);
+}
+
+.topbar .breadcrumb .active-crumb {
+    color: var(--topbar-accent);
+    font-weight: 700;
+}
+
+.topbar .breadcrumb span:not(.crumb-btn) {
+    color: var(--topbar-text);
+    opacity: 0.4;
+}
+
+/* Selector de empresa */
+.select-box select {
+    border-color: var(--topbar-border);
+    background-color: white;
+    color: var(--topbar-text);
+}
+
+.select-box label {
+    color: var(--topbar-text);
+    opacity: 0.7;
+}
+
+/* Avatar usuario */
+.user-box .avatar {
+    background: var(--topbar-accent);
+    color: white;
+}

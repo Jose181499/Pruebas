@@ -3822,24 +3822,50 @@ function setupBreadcrumb() {
 }
 
 // ============================================================
-// APLICAR TEMA
+// APLICAR TEMA - CON COLORES PARA TOPBAR
 // ============================================================
 function applyTheme(code){
     const root = document.documentElement;
+    
     if(code === "AGD"){
+        // Colores generales
         root.style.setProperty("--empresa","#FC6200");
         root.style.setProperty("--empresa-soft","#FFE7D1");
         root.style.setProperty("--empresa-sidebar","#FFEEDC");
         root.style.setProperty("--empresa-dark","#0F172A");
+        
+        // ✅ Colores para el topbar (naranja suave)
+        root.style.setProperty("--topbar-bg", "#FFF7ED");
+        root.style.setProperty("--topbar-border", "#FDBA74");
+        root.style.setProperty("--topbar-text", "#9A3412");
+        root.style.setProperty("--topbar-accent", "#EA580C");
+        
         document.getElementById("logoEmpresa").textContent = "AGD";
-    }else{
+        
+        // Agregar clase para estilos adicionales
+        root.classList.add('empresa-agd');
+        root.classList.remove('empresa-kcf');
+        
+    } else {
+        // KCF - Rojo suave (por defecto)
         root.style.setProperty("--empresa","#EF233C");
         root.style.setProperty("--empresa-soft","#FFE4E8");
         root.style.setProperty("--empresa-sidebar","#FFECEF");
         root.style.setProperty("--empresa-dark","#1F1F1F");
+        
+        // ✅ Colores para el topbar (rojo suave)
+        root.style.setProperty("--topbar-bg", "#FEF2F2");
+        root.style.setProperty("--topbar-border", "#FCA5A5");
+        root.style.setProperty("--topbar-text", "#991B1B");
+        root.style.setProperty("--topbar-accent", "#DC2626");
+        
         document.getElementById("logoEmpresa").textContent = "KCF";
+        
+        root.classList.add('empresa-kcf');
+        root.classList.remove('empresa-agd');
     }
 }
+
 
 // ============================================================
 // INICIALIZACIÓN - CORREGIDA
