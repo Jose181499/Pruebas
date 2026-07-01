@@ -1881,6 +1881,73 @@
 }
 
 /* ============================================================
+   HEADER STICKY PARA VISTA PRINCIPAL Y COMPLETA
+   ============================================================ */
+
+/* Asegurar que el contenedor tenga scroll */
+.table-scroll {
+    overflow: auto !important;
+    max-height: 55vh !important;
+    position: relative !important;
+}
+
+/* FORZAR STICKY EN EL HEADER DE LA TABLA - PARA AMBAS VISTAS */
+.master-table thead {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 9999 !important;
+}
+
+.master-table thead th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 9999 !important;
+    background: #FFF1F2 !important;
+    color: #7F1D1D !important;
+    border-color: #FCA5A5 !important;
+    border-bottom: 2px solid #FCA5A5 !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.10) !important;
+    padding: 8px 10px !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+}
+
+/* Para la vista completa también */
+.table-scroll .master-table thead th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 9999 !important;
+    background: #FFF1F2 !important;
+    color: #7F1D1D !important;
+    border-color: #FCA5A5 !important;
+    border-bottom: 2px solid #FCA5A5 !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.10) !important;
+}
+
+/* Sombra al hacer scroll */
+.table-scroll.sticky-shadow .master-table thead th {
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.25) !important;
+}
+
+/* Asegurar que las celdas tengan fondo blanco */
+.master-table tbody td {
+    background: #FFFFFF !important;
+}
+
+.master-table tbody tr:hover td {
+    background: #F8FAFC !important;
+}
+
+/* Para la tabla de la vista completa que tiene width grande */
+.master-table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+}
+
+
+/* ============================================================
    CENTRAR TODOS LOS ENCABEZADOS DE LA TABLA
    ============================================================ */
 
