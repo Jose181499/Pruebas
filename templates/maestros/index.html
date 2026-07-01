@@ -66,69 +66,51 @@
   overflow: hidden;
   margin-bottom: 8px;
 }
-/* KPI Cards - MÁS COMPACTAS */
+/* KPI Cards - MÁS COMPACTAS (con !important para sobrescribir) */
 .client-status-board {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(120px, 1fr));
-  gap: 6px;
-  margin-bottom: 6px;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(120px, 1fr)) !important;
+  gap: 6px !important;
+  margin-bottom: 6px !important;
 }
 
 .client-status-card {
-  height: 40px;
-  background: #fff;
-  border: 1px solid #E2E8F0;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(15,23,42,.05);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
+  height: 40px !important;
+  background: #fff !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 12px rgba(15,23,42,.05) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 6px 10px !important;
 }
 
 .client-status-dot {
-  width: 24px;
-  height: 24px;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
-  font-size: 10px;
-  font-weight: 1000;
-  flex-shrink: 0;
-}
-
-.status-active .client-status-dot {
-  background: #B6FF7A;
-  color: #0B5D1E;
-  border: 1px solid #7CFF3A;
-}
-
-.status-observed .client-status-dot {
-  background: #FFF3C4;
-  color: #B45309;
-  border: 1px solid #FDE68A;
-}
-
-.status-blocked .client-status-dot {
-  background: #FFE4E8;
-  color: #BE123C;
-  border: 1px solid #FDA4AF;
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 8px !important;
+  display: grid !important;
+  place-items: center !important;
+  font-size: 10px !important;
+  font-weight: 1000 !important;
+  flex-shrink: 0 !important;
 }
 
 .client-status-card small {
-  display: block;
-  font-size: 9px;
-  color: #64748B;
-  font-weight: 700;
-  margin-bottom: 1px;
-  line-height: 1.1;
+  display: block !important;
+  font-size: 9px !important;
+  color: #64748B !important;
+  font-weight: 700 !important;
+  margin-bottom: 1px !important;
+  line-height: 1.1 !important;
 }
 
 .client-status-card b {
-  display: block;
-  font-size: 14px;
-  color: #0F172A;
-  line-height: 1.1;
+  display: block !important;
+  font-size: 14px !important;
+  color: #0F172A !important;
+  line-height: 1.1 !important;
 }
 
 /* Clean Header - ULTRA COMPACTO */
