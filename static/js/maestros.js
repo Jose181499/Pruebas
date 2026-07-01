@@ -475,8 +475,11 @@ function renderStatusBoard(m) {
 
 
 
-// Modificar renderTable para soportar ambos modos
-renderTable = function(m, list) {
+// ============================================================
+// RENDER TABLE - SOPORTE PARA CLIENTES Y PROVEEDORES
+// ============================================================
+
+function renderTable(m, list) {
     if (!list || !list.length) {
         return `<div class="empty-state">
             <div style="font-size: 48px; margin-bottom: 10px;">📭</div>
@@ -490,15 +493,19 @@ renderTable = function(m, list) {
     
     // ✅ Vista completa para clientes
     if (mode === 'completa' && m === 'clientes') {
-        return renderClientesCompleta(list);
+        if (typeof renderClientesCompleta === 'function') {
+            return renderClientesCompleta(list);
+        }
     }
     
     // ✅ Vista completa para proveedores
     if (mode === 'completa' && m === 'proveedores') {
-        return renderProveedoresCompleta(list);
+        if (typeof renderProveedoresCompleta === 'function') {
+            return renderProveedoresCompleta(list);
+        }
     }
     
-    // Vista principal (modo normal) - resto del código
+    // Modo principal (vista normal)
     const headers = config.headers;
     const displayFields = config.displayFields;
     
@@ -542,7 +549,7 @@ renderTable = function(m, list) {
     }).join('');
     
     return `<table class="master-table"><thead><tr>${headersHtml}</tr></thead><tbody>${rows}</tbody></table>`;
-};
+}
 
 function renderModule(m) {
     const config = MODULE_CONFIG[m];
@@ -559,13 +566,17 @@ function renderModule(m) {
         return;
     }
     
+    // Obtener modo actual
+    const mode = sheetMode[m] || 'principal';
+    const modeLabel = mode === 'principal' ? 'Principal' : 'Completa';
+    
     container.innerHTML = `
         ${renderStatusBoard(m)}
         <div class="panel">
             <div class="clean-header">
                 <div class="master-title-wrap">
                     <div class="master-title">${config.title}</div>
-                    <div class="master-subtitle">${config.subtitle} (${list.length} registros)</div>
+                    <div class="master-subtitle">${config.subtitle} (${list.length} registros) - Vista: <span style="color:var(--empresa);font-weight:900;">${modeLabel}</span></div>
                 </div>
                 <div class="search-box">
                     <input type="text" id="search_${m}" placeholder="Buscar..." class="search-input">
@@ -580,28 +591,28 @@ function renderModule(m) {
                     <button class="btn btn-primary btn-create" data-new="${m}">+ Crear Nuevo ${config.title.slice(0, -1)}</button>
                 </div>
             </div>
-            <div class="table-scroll">
-                ${renderTable(m, list)}
-            </div>
+            ${renderTable(m, list)}
             <div class="bottom-sheet">
                 <div class="bottom-left">
                     <span class="bottom-label">📊 Vista de datos</span>
                     <div class="page-group">
-                        <button class="page-btn ${sheetMode[m] === 'principal' ? 'active' : ''}" data-sheet="${m}|principal">
+                        <button class="page-btn ${mode === 'principal' ? 'active' : ''}" data-sheet="${m}|principal">
                             <span class="page-num">1</span>Principal
                         </button>
-                        <button class="page-btn ${sheetMode[m] === 'completa' ? 'active' : ''}" data-sheet="${m}|completa">
+                        <button class="page-btn ${mode === 'completa' ? 'active' : ''}" data-sheet="${m}|completa">
                             <span class="page-num">2</span>Completa
                         </button>
                     </div>
                 </div>
                 <div class="bottom-help">
-                    ${sheetMode[m] === 'principal' ? '💡 Datos clave para trabajar rápido.' : '📋 Todos los campos registrados.'}
+                    ${mode === 'principal' 
+                        ? '💡 Datos clave para trabajar rápido.' 
+                        : '📋 Todos los campos registrados (contactos y puntos de entrega).'}
                 </div>
             </div>
         </div>
     `;
-
+    
     setupFilters(m);
     
     document.querySelectorAll(`[data-sheet^="${m}|"]`).forEach(btn => {
@@ -612,6 +623,8 @@ function renderModule(m) {
         });
     });
 }
+
+
 
 
 // ============================================================
@@ -2488,145 +2501,8 @@ function renderClientesCompleta(list) {
     </div>`;
 }
 
-// Modificar renderTable para soportar ambos modos
-const originalRenderTable = renderTable;
-renderTable = function(m, list) {
-    if (!list || !list.length) {
-        return `<div class="empty-state">
-            <div style="font-size: 48px; margin-bottom: 10px;">📭</div>
-            <p style="color: #64748B; font-weight: 500;">No se encontraron registros</p>
-            <p style="color: #94A3B8; font-size: 14px;">Prueba con otros filtros o crea un nuevo registro</p>
-        </div>`;
-    }
-    
-    const config = MODULE_CONFIG[m];
-    const mode = sheetMode[m] || 'principal';
-    
-    // Si es modo completa y es clientes, mostrar todos los campos
-    if (mode === 'completa' && m === 'clientes') {
-        return renderClientesCompleta(list);
-    }
-    
-    // Modo principal (vista normal)
-    const headers = config.headers;
-    const displayFields = config.displayFields;
-    
-    let headersHtml = `<th style="width:50px;">Item</th><th style="width:100px;">Ámbito</th>`;
-    headers.forEach(h => { headersHtml += `<th>${h}</th>`; });
-    headersHtml += `<th style="width:200px;">Acciones</th>`;
-    
-    const rows = list.map((r, i) => {
-        let cells = `<td><b>${i + 1}</b></td><td>${bAmbito(r.ambito || 'COMPARTIDO')}</td>`;
-        
-        displayFields.forEach(f => {
-            if (f === 'activo') {
-                cells += `<td>${bEstado(r[f])}</td>`;
-            } else if (f === 'decimales') {
-                cells += `<td>${r[f] ? '✅ Sí' : '❌ No'}</td>`;
-            } else if (f === 'email' || f === 'email_contacto') {
-                const email = r[f];
-                cells += `<td>${email ? `<a href="mailto:${esc(email)}" style="color:#3B82F6;text-decoration:none;">${esc(email)}</a>` : '-'}</td>`;
-            } else if (f === 'uso') {
-                cells += `<td style="text-align:center;">${r[f] || 0}</td>`;
-            } else {
-                cells += `<td class="left">${sd(r[f])}</td>`;
-            }
-        });
-        
-        const isActive = getEstado(r.activo) === 'Activo';
-        const estadoDisplay = isActive ? 'Inactivar' : 'Activar';
-        const estadoClass = isActive ? 'action-delete' : 'action-activate';
-        
-        cells += `
-            <td>
-                <div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;">
-                    <button class="action-btn action-view" data-view="${m}|${r.id}" title="Ver detalle">👁️</button>
-                    <button class="action-btn action-edit" data-edit="${m}|${r.id}" title="Editar">✏️</button>
-                    <button class="action-btn ${estadoClass}" data-toggle="${m}|${r.id}" title="${estadoDisplay}">${estadoDisplay}</button>
-                </div>
-            </td>
-        `;
-        
-        return `<tr>${cells}</tr>`;
-    }).join('');
-    
-    return `<table class="master-table"><thead><tr>${headersHtml}</tr></thead><tbody>${rows}</tbody></table>`;
-};
 
-// Modificar renderModule para mostrar el modo seleccionado
-const originalRenderModule = renderModule;
-renderModule = function(m) {
-    const config = MODULE_CONFIG[m];
-    if (!config) {
-        const container = document.getElementById(m);
-        if (container) container.innerHTML = '<div class="panel"><p>Módulo no configurado</p></div>';
-        return;
-    }
-    
-    const list = filtered(m);
-    const container = document.getElementById(m);
-    if (!container) {
-        console.warn(`⚠️ Contenedor para ${m} no encontrado`);
-        return;
-    }
-    
-    // Obtener modo actual
-    const mode = sheetMode[m] || 'principal';
-    const modeLabel = mode === 'principal' ? 'Principal' : 'Completa';
-    
-    container.innerHTML = `
-        ${renderStatusBoard(m)}
-        <div class="panel">
-            <div class="clean-header">
-                <div class="master-title-wrap">
-                    <div class="master-title">${config.title}</div>
-                    <div class="master-subtitle">${config.subtitle} (${list.length} registros) - Vista: <span style="color:var(--empresa);font-weight:900;">${modeLabel}</span></div>
-                </div>
-                <div class="search-box">
-                    <input type="text" id="search_${m}" placeholder="Buscar..." class="search-input">
-                </div>
-                <div class="clean-actions">
-                    <select id="estado_${m}" class="status-filter">
-                        <option value="TODOS">Todos los estados</option>
-                        <option value="Activos">✅ Activos</option>
-                        <option value="Inactivos">⛔ Inactivos</option>
-                    </select>
-                    <button class="btn btn-secondary" data-bulk="${m}">📥 Importar</button>
-                    <button class="btn btn-primary btn-create" data-new="${m}">+ Crear Nuevo ${config.title.slice(0, -1)}</button>
-                </div>
-            </div>
-            ${renderTable(m, list)}
-            <div class="bottom-sheet">
-                <div class="bottom-left">
-                    <span class="bottom-label">📊 Vista de datos</span>
-                    <div class="page-group">
-                        <button class="page-btn ${mode === 'principal' ? 'active' : ''}" data-sheet="${m}|principal">
-                            <span class="page-num">1</span>Principal
-                        </button>
-                        <button class="page-btn ${mode === 'completa' ? 'active' : ''}" data-sheet="${m}|completa">
-                            <span class="page-num">2</span>Completa
-                        </button>
-                    </div>
-                </div>
-                <div class="bottom-help">
-                    ${mode === 'principal' 
-                        ? '💡 Datos clave para trabajar rápido.' 
-                        : '📋 Todos los campos registrados (contactos y puntos de entrega).'}
-                </div>
-            </div>
-        </div>
-    `;
-    
-    setupFilters(m);
-    
-    document.querySelectorAll(`[data-sheet^="${m}|"]`).forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            const [mod, mode] = this.dataset.sheet.split('|');
-            sheetMode[mod] = mode;
-            renderModule(mod);
-        });
-    });
-};
+
 
 // ============================================================
 // VISTA COMPLETA - TODOS LOS CAMPOS DEL PROVEEDOR
