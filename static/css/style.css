@@ -4060,3 +4060,73 @@ input[type="file"] { display: none; }
     color: var(--topbar-text, #991B1B);
     line-height: 1.2;
 }
+
+/* ============================================================
+   INDICADORES COMPACTOS PARA MAESTROS
+   ============================================================ */
+.maestros-stats {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.stat-compact {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #F8FAFC;
+    padding: 4px 12px 4px 8px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid #E5E7EB;
+}
+
+.stat-compact .stat-icon {
+    font-size: 14px;
+    line-height: 1;
+}
+
+.stat-compact .stat-number {
+    font-size: 15px;
+    font-weight: 800;
+    color: #0F172A;
+}
+
+.stat-compact .stat-label {
+    color: #64748B;
+    font-weight: 500;
+    font-size: 11px;
+}
+
+.stat-compact.active {
+    background: #ECFDF5;
+    border-color: #34D399;
+}
+
+.stat-compact.inactive {
+    background: #FEF2F2;
+    border-color: #FCA5A5;
+}
+
+.stat-compact.total {
+    background: #EFF6FF;
+    border-color: #93C5FD;
+}
+
+/* Para tabla de maestros más compacta */
+.maestros-table-compact .table-container {
+    font-size: 13px;
+}
+
+.maestros-table-compact th,
+.maestros-table-compact td {
+    padding: 6px 10px !important;
+}
+
+.maestros-table-compact .btn-sm {
+    padding: 2px 8px !important;
+    font-size: 11px !important;
+    height: 26px !important;
+}
