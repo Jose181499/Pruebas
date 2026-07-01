@@ -56,39 +56,49 @@
   margin-bottom: 8px;
 }
 
-/* ── KPI CARDS - COMPACTAS ────────────────────────────────── */
+/* ── KPI CARDS - ULTRA COMPACTAS ───────────────────────────── */
 .client-status-board,
 .master-status-board {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(120px, 1fr));
-  gap: 6px;
-  margin-bottom: 6px;
+  display: flex !important;
+  gap: 6px !important;
+  margin-bottom: 4px !important;
 }
 
 .client-status-card,
 .master-status-card {
-  height: 40px;
-  background: #fff;
-  border: 1px solid #E2E8F0;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(15,23,42,.05);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
+  height: 30px !important;
+  background: #fff !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 8px rgba(15,23,42,.05) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  padding: 2px 10px !important;
+  width: auto !important;
 }
 
 .client-status-dot,
 .master-status-dot {
-  width: 24px;
-  height: 24px;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
-  font-size: 10px;
-  font-weight: 1000;
-  flex-shrink: 0;
+  width: 16px !important;
+  height: 16px !important;
+  border-radius: 4px !important;
+  font-size: 8px !important;
 }
+
+.client-status-card small,
+.master-status-card small {
+  font-size: 7px !important;
+  color: #64748B !important;
+}
+
+.client-status-card b,
+.master-status-card b {
+  font-size: 12px !important;
+  color: #0F172A !important;
+}
+
+
 
 /* Clean Header - ULTRA COMPACTO */
 .clean-header {
