@@ -454,21 +454,26 @@ function renderStatusBoard(m) {
     
     return `
         <div class="master-status-board">
-            <div class="master-status-card">
-                <div class="master-status-dot msd-active">●</div>
-                <div><small>Activos</small><b>${activos}</b></div>
+            <div class="master-status-card active">
+                <span class="master-status-dot msd-active">●</span>
+                <b>${activos}</b>
+                <small>Act</small>
             </div>
-            <div class="master-status-card">
-                <div class="master-status-dot msd-inactive">●</div>
-                <div><small>Inactivos</small><b>${inactivos}</b></div>
+            <div class="master-status-card inactive">
+                <span class="master-status-dot msd-inactive">●</span>
+                <b>${inactivos}</b>
+                <small>Inact</small>
             </div>
-            <div class="master-status-card">
-                <div class="master-status-dot msd-total">●</div>
-                <div><small>Total</small><b>${data.length}</b></div>
+            <div class="master-status-card total">
+                <span class="master-status-dot msd-total">●</span>
+                <b>${data.length}</b>
+                <small>Tot</small>
             </div>
         </div>
     `;
 }
+
+
 
 function renderTable(m, list) {
     if (!list || !list.length) {
