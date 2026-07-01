@@ -1340,7 +1340,6 @@ async function loadEmpresas(){
     }
 }
 
-
 function renderEmpresas(filter=""){
     const tbody = document.getElementById("tbodyEmpresas");
     if (!tbody) {
@@ -1362,19 +1361,53 @@ function renderEmpresas(filter=""){
             <td>${cuenta.banco || '-'}</td>
             <td>${cuenta.tipo_cuenta || '-'}</td>
             <td>${cuenta.numero_cuenta || '-'}</td>
-            <td>${cuenta.cci || '<span class="badge badge-danger">Completar CCI</span>'}</td>
+            <td>${cuenta.cci || '<span class="badge badge-danger" style="font-size:10px;padding:2px 6px;border-radius:4px;background:#FEE2E2;color:#DC2626;">Completar CCI</span>'}</td>
             <td class="left">${e.direccion_fiscal || '-'}</td>
-            <td>
-                <span class="badge ${e.estado === 'activo' ? 'badge-ok' : 'badge-gray'}">${e.estado}</span>
-                <br>
-                <div style="display:flex;gap:4px;margin-top:4px;justify-content:center;">
-                    <button class="btn-mini" onclick="editarEmpresa(${e.id})" title="Editar">✏️</button>
-                    <button class="btn-mini" onclick="eliminarEmpresa(${e.id})" title="Eliminar" style="color:#DC2626;">🗑️</button>
+            <td style="text-align:center;padding:4px 6px;">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+                    <span class="badge ${e.estado === 'activo' ? 'badge-ok' : 'badge-gray'}" style="font-size:9px;padding:1px 6px;border-radius:10px;font-weight:600;">
+                        ${e.estado}
+                    </span>
+                    <div style="display:flex;gap:2px;justify-content:center;">
+                        <button onclick="editarEmpresa(${e.id})" title="Editar" style="
+                            width:22px;
+                            height:22px;
+                            border-radius:4px;
+                            border:1px solid #E5E7EB;
+                            background:white;
+                            color:#2563EB;
+                            font-size:10px;
+                            cursor:pointer;
+                            display:flex;
+                            align-items:center;
+                            justify-content:center;
+                            transition:all 0.2s;
+                            padding:0;
+                            line-height:1;
+                        ">✏️</button>
+                        <button onclick="eliminarEmpresa(${e.id})" title="Eliminar" style="
+                            width:22px;
+                            height:22px;
+                            border-radius:4px;
+                            border:1px solid #E5E7EB;
+                            background:white;
+                            color:#DC2626;
+                            font-size:10px;
+                            cursor:pointer;
+                            display:flex;
+                            align-items:center;
+                            justify-content:center;
+                            transition:all 0.2s;
+                            padding:0;
+                            line-height:1;
+                        ">🗑️</button>
+                    </div>
                 </div>
             </td>
         </tr>`;
     }).join("");
 }
+
 
 // Editar empresa
 function editarEmpresa(id) {
