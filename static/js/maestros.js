@@ -488,7 +488,7 @@ function renderTable(m, list) {
     const headers = config.headers;
     const displayFields = config.displayFields;
     
-    let headersHtml = `<th style="width:50px;">#</th><th style="width:100px;">Ámbito</th>`;
+    let headersHtml = `<th style="width:50px;">Item</th><th style="width:100px;">Ámbito</th>`;
     headers.forEach(h => { headersHtml += `<th>${h}</th>`; });
     headersHtml += `<th style="width:200px;">Acciones</th>`;
     
