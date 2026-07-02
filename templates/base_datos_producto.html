@@ -1,4 +1,11 @@
-<!-- templates/base_datos_producto.html -->
+<!-- ============================================================ -->
+<!-- BLOQUE CONTENT PARA BASE DE DATOS: PRODUCTO                   -->
+<!-- ============================================================ -->
+{% block content %}
+
+<!-- ============================================================ -->
+<!-- ENCABEZADO                                                    -->
+<!-- ============================================================ -->
 <div class="page-head">
     <div>
         <h1>Base de datos: Producto</h1>
@@ -6,10 +13,13 @@
     </div>
 </div>
 
+<!-- ============================================================ -->
+<!-- TOOLBAR Y FILTROS                                             -->
+<!-- ============================================================ -->
 <div class="bd-toolbar">
     <div class="bd-search-wrap">
         <i class="bi bi-search"></i>
-        <input id="bdSearchInput" type="text" placeholder="Buscar por nombre, código, modelo, marca, categoría..." />
+        <input id="bdSearchInput" type="text" placeholder="Buscar por nombre, código, modelo, marca, categoría..." oninput="bdAplicarFiltros()" />
     </div>
     <button class="btn" type="button" onclick="bdExportarExcel()"><i class="bi bi-file-earmark-excel" style="color:var(--ok)"></i> Exportar Excel</button>
     <button class="btn" type="button" onclick="bdLimpiarFiltros()"><i class="bi bi-funnel"></i> Limpiar filtros</button>
@@ -19,7 +29,7 @@
 <div class="bd-filters">
     <div class="bd-filter-field">
         <label for="bdCategoriaFilter">Categoría principal</label>
-        <select id="bdCategoriaFilter">
+        <select id="bdCategoriaFilter" onchange="bdAplicarFiltros()">
             <option value="">Todas</option>
             <option>Seguridad Industrial</option>
             <option>Indumentaria de Oficina</option>
@@ -32,7 +42,7 @@
     </div>
     <div class="bd-filter-field">
         <label for="bdSubcategoriaFilter">Subcategoría</label>
-        <select id="bdSubcategoriaFilter">
+        <select id="bdSubcategoriaFilter" onchange="bdAplicarFiltros()">
             <option value="">Todas</option>
             <option>Señalización y tráfico</option>
             <option>Chalecos</option>
@@ -47,7 +57,7 @@
     </div>
     <div class="bd-filter-field">
         <label for="bdMarcaFilter">Marca</label>
-        <select id="bdMarcaFilter">
+        <select id="bdMarcaFilter" onchange="bdAplicarFiltros()">
             <option value="">Todas</option>
             <option>KCF Safety</option>
             <option>EasyWon</option>
@@ -63,7 +73,7 @@
     </div>
     <div class="bd-filter-field">
         <label for="bdModeloFilter">Modelo</label>
-        <select id="bdModeloFilter">
+        <select id="bdModeloFilter" onchange="bdAplicarFiltros()">
             <option value="">Todos</option>
             <option>CS-75</option>
             <option>SR-8891</option>
@@ -79,7 +89,7 @@
     </div>
     <div class="bd-filter-field">
         <label for="bdEstadoFilter">Estado</label>
-        <select id="bdEstadoFilter">
+        <select id="bdEstadoFilter" onchange="bdAplicarFiltros()">
             <option value="">Todos</option>
             <option value="activo">🟢 Activo</option>
             <option value="inactivo">⚪ Inactivo</option>
@@ -90,9 +100,9 @@
     </div>
 </div>
 
-<!-- ============================================ -->
-<!-- BOTONES DE VISTA: PRINCIPAL / COMPLETA      -->
-<!-- ============================================ -->
+<!-- ============================================================ -->
+<!-- BOTONES DE VISTA: PRINCIPAL / COMPLETA                       -->
+<!-- ============================================================ -->
 <div class="bd-view-toggle">
     <button class="view-btn active" id="viewPrincipal" onclick="cambiarVista('principal')">
         <i class="bi bi-table"></i> Principal
@@ -103,12 +113,12 @@
     <span class="bd-count" id="bdCountText" style="margin-left:auto;">Mostrando 0 productos</span>
 </div>
 
-<!-- ============================================ -->
-<!-- TABLA DE PRODUCTOS                          -->
-<!-- ============================================ -->
+<!-- ============================================================ -->
+<!-- TABLA DE PRODUCTOS                                           -->
+<!-- ============================================================ -->
 <div class="bd-table-card" id="tablaContainer">
     <div class="bd-table-scroll">
-        <table class="bd-table">
+        <table class="bd-table" id="tablaProductos">
             <thead>
                 <tr>
                     <!-- COLUMNAS SIEMPRE VISIBLES (PRINCIPAL) -->
@@ -167,12 +177,15 @@
 </div>
 <div class="scroll-note"><i class="bi bi-arrows-expand"></i> Las columnas complementarias se visualizan desplazando la barra horizontal de la tabla.</div>
 
-<!-- ============================================ -->
-<!-- SCRIPTS                                      -->
-<!-- ============================================ -->
+{% endblock %}
+
+<!-- ============================================================ -->
+<!-- EXTRA JS PARA SOBRESCRIBIR FUNCIONES                         -->
+<!-- ============================================================ -->
+{% block extra_js %}
 <script>
 // ============================================================
-// VARIABLES GLOBALES
+// VARIABLES GLOBALES PARA LA TABLA DE PRODUCTOS
 // ============================================================
 
 var bdProductos = [];
@@ -182,7 +195,7 @@ var bdPaginaActual = 1;
 var bdPorPagina = 20;
 
 // ============================================================
-// CAMBIAR VISTA
+// CAMBIAR VISTA (PRINCIPAL / COMPLETA)
 // ============================================================
 
 function cambiarVista(vista) {
@@ -201,7 +214,7 @@ function cambiarVista(vista) {
 }
 
 // ============================================================
-// CARGAR PRODUCTOS
+// CARGAR PRODUCTOS DESDE LA API
 // ============================================================
 
 function cargarProductos() {
@@ -229,7 +242,7 @@ function cargarProductos() {
 }
 
 // ============================================================
-// RENDERIZAR PRODUCTOS
+// RENDERIZAR PRODUCTOS EN LA TABLA
 // ============================================================
 
 function bdRenderProductos(data) {
@@ -389,6 +402,16 @@ function bdCambiarPorPagina() {
 }
 
 // ============================================================
+// EXPORTAR EXCEL
+// ============================================================
+
+function bdExportarExcel() {
+    if (typeof mostrarNotificacion === 'function') {
+        mostrarNotificacion('info', '📊 Exportando...', 'El archivo Excel se está generando.');
+    }
+}
+
+// ============================================================
 // ACCIONES DE PRODUCTOS
 // ============================================================
 
@@ -433,14 +456,8 @@ function eliminarProducto(id) {
         });
 }
 
-function bdExportarExcel() {
-    if (typeof mostrarNotificacion === 'function') {
-        mostrarNotificacion('info', '📊 Exportando...', 'El archivo Excel se está generando.');
-    }
-}
-
 // ============================================================
-// INICIALIZAR - EVENTOS
+// INICIALIZAR
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -472,14 +489,10 @@ window.eliminarProducto = eliminarProducto;
 window.bdExportarExcel = bdExportarExcel;
 </script>
 
-<!-- ============================================ -->
-<!-- ESTILOS ADICIONALES                          -->
-<!-- ============================================ -->
+<!-- ============================================================ -->
+<!-- ESTILOS ADICIONALES PARA VISTAS PRINCIPAL / COMPLETA         -->
+<!-- ============================================================ -->
 <style>
-/* ============================================
-   ESTILOS PARA VISTAS PRINCIPAL / COMPLETA
-   ============================================ */
-
 /* View Toggle */
 .bd-view-toggle {
     display: flex;
@@ -613,17 +626,6 @@ window.bdExportarExcel = bdExportarExcel;
     color: #16a34a;
 }
 
-/* Ajustar la tabla para que las columnas ocultas no ocupen espacio */
-.bd-table th.col-oculta,
-.bd-table td.col-oculta {
-    display: none !important;
-}
-
-.vista-completa .bd-table th.col-oculta,
-.vista-completa .bd-table td.col-oculta {
-    display: table-cell !important;
-}
-
 /* Responsive */
 @media (max-width: 768px) {
     .bd-view-toggle {
@@ -636,3 +638,4 @@ window.bdExportarExcel = bdExportarExcel;
     }
 }
 </style>
+{% endblock %}
