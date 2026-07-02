@@ -131,7 +131,7 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            z-index: 9999;
+            z-index: 99999;
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -146,9 +146,9 @@
             border-left: 5px solid #FF4444;
             border-radius: 10px;
             padding: 16px 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
             pointer-events: auto;
-            animation: slideInRight 0.4s ease forwards;
+            animation: slideInRight 0.5s ease forwards;
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
@@ -158,7 +158,7 @@
         @keyframes slideInRight {
             from {
                 opacity: 0;
-                transform: translateX(100px);
+                transform: translateX(120px);
             }
             to {
                 opacity: 1;
@@ -174,7 +174,7 @@
             }
             to {
                 opacity: 0;
-                transform: translateX(100px);
+                transform: translateX(120px);
             }
         }
         
@@ -186,7 +186,7 @@
         .notification .notif-title {
             font-weight: 700;
             color: #CC0000;
-            font-size: 14px;
+            font-size: 15px;
             margin-bottom: 8px;
             display: flex;
             align-items: center;
@@ -194,7 +194,7 @@
         }
         
         .notification .notif-title i {
-            font-size: 20px;
+            font-size: 22px;
             color: #FF4444;
         }
         
@@ -231,11 +231,11 @@
             background: none;
             border: none;
             color: #999;
-            font-size: 20px;
+            font-size: 22px;
             cursor: pointer;
             padding: 0;
-            width: 28px;
-            height: 28px;
+            width: 30px;
+            height: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -255,7 +255,7 @@
             position: absolute;
             bottom: 0;
             left: 0;
-            height: 3px;
+            height: 4px;
             background: linear-gradient(90deg, #FF4444, #FF6B6B);
             border-radius: 0 0 0 5px;
             animation: progressBar 5s linear forwards;
@@ -274,7 +274,7 @@
         .field.error textarea {
             border-color: #FF4444 !important;
             background-color: #FFF8F8 !important;
-            box-shadow: 0 0 0 3px rgba(255, 68, 68, 0.1) !important;
+            box-shadow: 0 0 0 3px rgba(255, 68, 68, 0.15) !important;
         }
         
         .field.error label {
@@ -707,7 +707,7 @@
         <button class="btn outline" type="button" onclick="limpiarFormulario()">
             <i class="bi bi-x-circle"></i> Cancelar
         </button>
-        <button class="btn primary" id="btnGuardar" type="button" onclick="validarYGuardar()">
+        <button class="btn primary" id="btnGuardar" type="button" onclick="validarYGuardar(event)">
             <i class="bi bi-save"></i> {% if editando %}Actualizar{% else %}Guardar Nuevo{% endif %}
         </button>
     </div>
@@ -717,7 +717,9 @@
 <!-- FORMULARIO                                   -->
 <!-- ============================================ -->
 
-<form id="formNuevoProducto" action="/api/productos" method="POST" enctype="multipart/form-data" onsubmit="return false;">
+<!-- IMPORTANTE: Quitamos el onsubmit="return false;" -->
+<form id="formNuevoProducto" action="/api/productos" method="POST" enctype="multipart/form-data">
+
     <!-- ✅ ID del producto para actualizar -->
     {% if editando and producto %}
     <input type="hidden" name="producto_id" value="{{ producto.id }}" />
@@ -1009,7 +1011,14 @@
 <!-- SCRIPT DE VALIDACIÓN                        -->
 <!-- ============================================ -->
 <script>
-function validarYGuardar() {
+function validarYGuardar(event) {
+    // Prevenir el comportamiento por defecto del botón
+    if (event) {
+        event.preventDefault();
+    }
+    
+    console.log("🟢 Función validarYGuardar ejecutada");
+    
     // Limpiar errores anteriores
     limpiarErrores();
     
@@ -1040,6 +1049,8 @@ function validarYGuardar() {
         }
     });
     
+    console.log("📋 Errores encontrados:", errores);
+    
     // Si hay errores, mostrar notificación flotante
     if (errores.length > 0) {
         mostrarNotificacion(errores);
@@ -1059,11 +1070,14 @@ function validarYGuardar() {
     }
     
     // Si no hay errores, enviar el formulario
+    console.log("✅ Todos los campos están completos, enviando formulario...");
     document.getElementById('formNuevoProducto').submit();
     return true;
 }
 
 function mostrarNotificacion(errores) {
+    console.log("🔔 Mostrando notificación con errores:", errores);
+    
     const container = document.getElementById('notificationContainer');
     
     // Crear la notificación
@@ -1096,7 +1110,10 @@ function mostrarNotificacion(errores) {
     
     // Auto-cerrar después de 5 segundos
     setTimeout(() => {
-        cerrarNotificacion(notif.querySelector('.close-btn'));
+        const btn = notif.querySelector('.close-btn');
+        if (btn) {
+            cerrarNotificacion(btn);
+        }
     }, 5000);
 }
 
@@ -1119,6 +1136,8 @@ function limpiarErrores() {
 
 // Limpiar errores cuando el usuario empiece a escribir
 document.addEventListener('DOMContentLoaded', function() {
+    console.log("🟢 DOM cargado correctamente");
+    
     // Escuchar cambios en todos los inputs y selects
     document.querySelectorAll('input, select').forEach(element => {
         element.addEventListener('input', function() {
@@ -1154,6 +1173,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Probar la notificación al cargar la página (para debug)
+    // setTimeout(() => {
+    //     mostrarNotificacion(['Nombre del producto', 'Modelo', 'Marca']);
+    // }, 1000);
 });
 
 // Función para personalizar (si existe)
