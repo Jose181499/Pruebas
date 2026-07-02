@@ -2,131 +2,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <!-- ============================================ -->
-    <!-- BOOTSTRAP ICONS PARA LOS ICONOS              -->
-    <!-- ============================================ -->
+    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
     <style>
         /* ============================================
-           ESTILOS PARA BOTONES DE ACCIÓN (Guardar/Cancelar)
+           NOTIFICACIÓN FLOTANTE
            ============================================ */
-        
-        /* Contenedor principal de la cabecera */
-        .page-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 16px;
-            padding: 0 4px;
-        }
-        
-        /* Contenedor de los botones - alineados a la derecha */
-        .page-head .actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        
-        /* Estilos base para ambos botones */
-        .page-head .actions .btn {
-            padding: 10px 24px;
-            font-size: 14px;
-            font-weight: 600;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            min-width: 110px;
-            letter-spacing: 0.3px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            border: none;
-            outline: none;
-        }
-        
-        /* ============================================
-           BOTÓN GUARDAR - AZUL ELÉCTRICO ⚡
-           ============================================ */
-        .page-head .actions .btn.primary {
-            background: linear-gradient(135deg, #0066FF, #0044CC);
-            color: white;
-            border: 2px solid #0066FF;
-            box-shadow: 0 4px 15px rgba(0, 102, 255, 0.4);
-            position: relative;
-            z-index: 1;
-            overflow: hidden;
-        }
-        
-        .page-head .actions .btn.primary:hover {
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 8px 25px rgba(0, 102, 255, 0.6);
-            background: linear-gradient(135deg, #1A75FF, #0055DD);
-            border-color: #1A75FF;
-        }
-        
-        .page-head .actions .btn.primary:active {
-            transform: translateY(0px) scale(0.98);
-            box-shadow: 0 2px 10px rgba(0, 102, 255, 0.3);
-        }
-        
-        /* Efecto de brillo en el botón azul */
-        .page-head .actions .btn.primary::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(45deg, #0066FF, #00CCFF, #0066FF);
-            background-size: 300% 300%;
-            border-radius: 12px;
-            z-index: -1;
-            animation: electricGlow 3s ease-in-out infinite;
-            opacity: 0.7;
-        }
-        
-        @keyframes electricGlow {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        
-        /* Estilo del botón Cancelar (outline) */
-        .page-head .actions .btn.outline {
-            background: white;
-            color: #555;
-            border: 2px solid #ddd;
-        }
-        
-        .page-head .actions .btn.outline:hover {
-            border-color: #ff4444;
-            color: #ff4444;
-            background: rgba(255, 68, 68, 0.05);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 68, 68, 0.15);
-        }
-        
-        .page-head .actions .btn.outline:active {
-            transform: translateY(0px);
-        }
-        
-        /* Iconos dentro de los botones */
-        .page-head .actions .btn i {
-            font-size: 18px;
-            line-height: 1;
-        }
-        
-        /* ============================================
-           NOTIFICACIÓN FLOTANTE - LADO DERECHO
-           ============================================ */
-        
-        /* Contenedor de notificaciones flotantes */
         #notificationContainer {
             position: fixed;
             top: 20px;
@@ -140,7 +22,6 @@
             pointer-events: none;
         }
         
-        /* Cada notificación */
         .notification {
             background: #FFF3F3;
             border-left: 5px solid #FF4444;
@@ -149,12 +30,10 @@
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
             pointer-events: auto;
             animation: slideInRight 0.5s ease forwards;
-            transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
         }
         
-        /* Animación de entrada desde la derecha */
         @keyframes slideInRight {
             from {
                 opacity: 0;
@@ -166,7 +45,6 @@
             }
         }
         
-        /* Animación de salida */
         @keyframes slideOutRight {
             from {
                 opacity: 1;
@@ -182,7 +60,6 @@
             animation: slideOutRight 0.3s ease forwards;
         }
         
-        /* Título de la notificación */
         .notification .notif-title {
             font-weight: 700;
             color: #CC0000;
@@ -198,7 +75,6 @@
             color: #FF4444;
         }
         
-        /* Lista de errores */
         .notification .notif-list {
             list-style: none;
             padding: 0;
@@ -212,7 +88,6 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            font-weight: 500;
         }
         
         .notification .notif-list li::before {
@@ -220,10 +95,8 @@
             color: #FF4444;
             font-weight: bold;
             font-size: 20px;
-            line-height: 1;
         }
         
-        /* Botón de cerrar */
         .notification .close-btn {
             position: absolute;
             top: 8px;
@@ -233,16 +106,13 @@
             color: #999;
             font-size: 22px;
             cursor: pointer;
-            padding: 0;
             width: 30px;
             height: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 50%;
-            transition: all 0.2s ease;
             font-weight: bold;
-            line-height: 1;
         }
         
         .notification .close-btn:hover {
@@ -250,7 +120,6 @@
             color: #FF4444;
         }
         
-        /* Barra de progreso para auto-cierre */
         .notification .progress-bar {
             position: absolute;
             bottom: 0;
@@ -270,8 +139,7 @@
            RESALTAR CAMPOS CON ERROR
            ============================================ */
         .field.error input,
-        .field.error select,
-        .field.error textarea {
+        .field.error select {
             border-color: #FF4444 !important;
             background-color: #FFF8F8 !important;
             box-shadow: 0 0 0 3px rgba(255, 68, 68, 0.15) !important;
@@ -281,404 +149,146 @@
             color: #CC0000 !important;
         }
         
-        .field.error label .req {
-            color: #CC0000 !important;
-        }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20% { transform: translateX(-6px); }
-            40% { transform: translateX(6px); }
-            60% { transform: translateX(-4px); }
-            80% { transform: translateX(4px); }
-        }
-        
-        .field.error input,
-        .field.error select {
-            animation: shake 0.4s ease;
-        }
-        
         /* ============================================
-           AJUSTES PARA REDUCIR TAMAÑO DE CAMPOS
+           BOTONES Y OTROS ESTILOS
            ============================================ */
-        
-        .np-layout {
-            gap: 12px !important;
+        .page-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 16px;
         }
         
-        .card {
-            padding: 14px !important;
-            margin-bottom: 10px !important;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        .page-head .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            flex-wrap: wrap;
         }
         
-        .card-title {
-            font-size: 14px !important;
-            margin-bottom: 10px !important;
+        .page-head .actions .btn {
+            padding: 10px 24px;
+            font-size: 14px;
             font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-width: 110px;
+            border: none;
+            outline: none;
+            transition: all 0.3s ease;
         }
         
+        .page-head .actions .btn.primary {
+            background: linear-gradient(135deg, #0066FF, #0044CC);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 102, 255, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .page-head .actions .btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 102, 255, 0.6);
+            background: linear-gradient(135deg, #1A75FF, #0055DD);
+        }
+        
+        .page-head .actions .btn.outline {
+            background: white;
+            color: #555;
+            border: 2px solid #ddd;
+        }
+        
+        .page-head .actions .btn.outline:hover {
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+        
+        .page-head .actions .btn i {
+            font-size: 18px;
+        }
+        
+        /* Campos del formulario */
         .field {
-            margin-bottom: 6px !important;
+            margin-bottom: 6px;
         }
         
         .field label {
-            font-size: 12px !important;
-            margin-bottom: 2px !important;
+            font-size: 12px;
+            margin-bottom: 2px;
             display: block;
         }
         
         .field input,
-        .field select,
-        .field textarea {
-            padding: 5px 8px !important;
-            font-size: 12px !important;
-            min-height: 28px !important;
+        .field select {
+            padding: 5px 8px;
+            font-size: 12px;
+            min-height: 28px;
             width: 100%;
             border: 1px solid #ddd;
             border-radius: 4px;
             box-sizing: border-box;
         }
         
-        .field textarea {
-            min-height: 50px !important;
-            max-height: 80px !important;
-        }
-        
-        .grid {
-            display: grid;
-            gap: 6px 10px !important;
-            margin-bottom: 4px !important;
-        }
-        
-        .grid.two {
-            grid-template-columns: 1fr 1fr !important;
-        }
-        
-        .grid.full {
-            grid-template-columns: 1fr !important;
-        }
-        
-        .input-unit {
-            display: flex;
-            height: 28px !important;
-        }
-        
-        .input-unit input {
-            padding: 4px 6px !important;
-            font-size: 12px !important;
-            height: 28px !important;
-            border-radius: 4px 0 0 4px !important;
-        }
-        
-        .input-unit span {
-            font-size: 11px !important;
-            padding: 0 6px !important;
-            height: 28px !important;
-            line-height: 28px !important;
-            background: #f5f5f5;
-            border: 1px solid #ddd;
-            border-left: none;
-            border-radius: 0 4px 4px 0;
-        }
-        
-        .upload {
-            padding: 12px !important;
-            min-height: 100px !important;
-            border: 2px dashed #ddd;
-            border-radius: 8px;
-            text-align: center;
-            cursor: pointer;
-        }
-        
-        .upload .cloud i {
-            font-size: 30px !important;
-            color: #999;
-        }
-        
-        .upload strong {
-            font-size: 13px !important;
-            display: block;
-        }
-        
-        .upload .drag-hint {
-            font-size: 11px !important;
-            color: #999;
-        }
-        
-        .upload .file-badge {
-            font-size: 11px !important;
-            padding: 3px 10px !important;
-            background: #f5f5f5;
-            border-radius: 4px;
-            display: inline-block;
-            margin-top: 4px;
-        }
-        
-        .operation {
-            padding: 10px !important;
-            margin-top: 8px !important;
-            background: #f9f9f9;
-            border-radius: 8px;
-        }
-        
-        .operation .op-item {
-            display: flex;
-            padding: 4px 0 !important;
-            gap: 6px !important;
-            align-items: flex-start;
-            cursor: pointer;
-        }
-        
-        .operation .op-item input[type="checkbox"] {
-            margin-top: 2px;
-        }
-        
-        .operation .op-title {
-            font-size: 13px !important;
-            font-weight: 600;
-        }
-        
-        .operation .op-desc {
-            font-size: 11px !important;
-            color: #666;
-        }
-        
-        .price-box {
-            padding: 8px 0 !important;
-        }
-        
-        .price-label {
-            font-size: 13px !important;
-            font-weight: 600;
-        }
-        
-        .price-label i {
-            margin-right: 4px;
-        }
-        
-        .tax {
-            font-size: 10px !important;
-            color: #999;
-        }
-        
-        .money {
-            font-size: 18px !important;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        
-        .money span {
-            font-weight: 600;
-        }
-        
-        .money input {
-            font-size: 16px !important;
-            padding: 2px 6px !important;
-            height: 30px !important;
-            width: 100%;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        
-        .margin-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px !important;
-            margin-top: 6px !important;
-        }
-        
-        .margin-box {
-            padding: 6px 10px !important;
-            font-size: 12px !important;
-            background: #f5f5f5;
-            border-radius: 4px;
-            text-align: center;
-        }
-        
-        .margin-box b {
-            font-size: 14px !important;
-            display: block;
-        }
-        
-        .state-select {
-            padding: 4px 8px !important;
-            font-size: 12px !important;
-            height: 30px !important;
-            width: 100%;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        
-        .state-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px !important;
-            margin-top: 6px !important;
-        }
-        
-        .state-chip {
-            padding: 2px 8px !important;
-            font-size: 10px !important;
-            border-radius: 12px;
-            background: #f5f5f5;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        
-        .state-chip .dot {
-            width: 6px !important;
-            height: 6px !important;
-            border-radius: 50%;
-            display: inline-block;
-        }
-        
-        .state-chip.active-state .dot { background: #4CAF50; }
-        .state-chip.inactive .dot { background: #999; }
-        .state-chip.order .dot { background: #FF9800; }
-        .state-chip.available .dot { background: #2196F3; }
-        .state-chip.blocked .dot { background: #f44336; }
-        
-        .code-box {
-            padding: 4px 8px !important;
-            background: #f5f5f5;
-            border-radius: 4px;
-        }
-        
-        .code-value {
-            font-size: 14px !important;
-            padding: 2px 6px !important;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-weight: 600;
-        }
-        
-        .code-value .pill {
-            font-size: 9px !important;
-            padding: 1px 6px !important;
-            background: #ddd;
-            border-radius: 10px;
-            font-weight: 400;
-        }
-        
-        .form-header {
-            display: flex;
-            gap: 8px !important;
-            margin-bottom: 8px !important;
-            align-items: flex-end;
-        }
-        
         .req {
             color: #ff4444;
         }
         
-        .optional {
-            color: #999;
-            font-weight: 400;
+        .grid {
+            display: grid;
+            gap: 6px 10px;
+            margin-bottom: 4px;
         }
         
-        /* ============================================
-           RESPONSIVE
-           ============================================ */
+        .grid.two {
+            grid-template-columns: 1fr 1fr;
+        }
+        
+        .card {
+            padding: 14px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .card-title {
+            font-size: 14px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .np-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr 260px;
+            gap: 12px;
+            align-items: start;
+        }
+        
         @media (max-width: 768px) {
+            .np-layout {
+                grid-template-columns: 1fr;
+            }
+            .grid.two {
+                grid-template-columns: 1fr;
+            }
             .page-head {
                 flex-direction: column;
-                align-items: stretch;
-                gap: 10px;
             }
-            
             .page-head .actions {
+                width: 100%;
                 justify-content: center;
-                gap: 8px;
             }
-            
-            .page-head .actions .btn {
-                flex: 1;
-                min-width: 90px;
-                padding: 8px 16px;
-                font-size: 13px;
-            }
-            
-            .page-head .actions .btn i {
-                font-size: 16px;
-            }
-            
-            .np-layout {
-                flex-direction: column !important;
-                display: block !important;
-            }
-            
             #notificationContainer {
                 top: 10px;
                 right: 10px;
                 left: 10px;
                 max-width: none;
-            }
-            
-            .grid.two {
-                grid-template-columns: 1fr !important;
-            }
-            
-            .form-header {
-                flex-direction: column;
-                align-items: stretch;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .page-head .actions {
-                flex-direction: column;
-                width: 100%;
-            }
-            
-            .page-head .actions .btn {
-                width: 100%;
-                padding: 10px;
-                font-size: 14px;
-            }
-        }
-        
-        .page-head .actions .btn.primary.loading {
-            pointer-events: none;
-            opacity: 0.8;
-        }
-        
-        .page-head .actions .btn.primary.loading::after {
-            content: '';
-            width: 16px;
-            height: 16px;
-            border: 3px solid rgba(255,255,255,0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            display: inline-block;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .np-layout {
-            display: grid !important;
-            grid-template-columns: 280px 1fr 260px !important;
-            gap: 12px !important;
-            align-items: start !important;
-        }
-        
-        @media (max-width: 1200px) {
-            .np-layout {
-                grid-template-columns: 1fr 1fr !important;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .np-layout {
-                grid-template-columns: 1fr !important;
             }
         }
     </style>
@@ -686,344 +296,191 @@
 <body>
 
 <!-- ============================================ -->
-<!-- CONTENEDOR DE NOTIFICACIONES FLOTANTES      -->
+<!-- CONTENEDOR DE NOTIFICACIONES                -->
 <!-- ============================================ -->
 <div id="notificationContainer"></div>
 
 <!-- ============================================ -->
-<!-- CONTENIDO PRINCIPAL                          -->
+<!-- ENCABEZADO                                  -->
 <!-- ============================================ -->
-
 <div class="page-head">
     <div>
         <h1 style="font-size: 22px; margin: 0;">{% if editando %}Editar producto{% else %}Nuevo producto{% endif %}</h1>
-        <p class="subtitle" style="font-size: 13px; margin: 2px 0 0 0; color: #666;">{% if editando %}Modifica la información del producto seleccionado.{% else %}Crea o edita la información principal del producto.{% endif %}</p>
+        <p style="font-size: 13px; margin: 2px 0 0 0; color: #666;">{% if editando %}Modifica la información del producto seleccionado.{% else %}Crea o edita la información principal del producto.{% endif %}</p>
     </div>
     
-    <!-- ========================================== -->
-    <!-- BOTONES DE ACCIÓN - AZUL ELÉCTRICO ⚡     -->
-    <!-- ========================================== -->
     <div class="actions">
         <button class="btn outline" type="button" onclick="limpiarFormulario()">
             <i class="bi bi-x-circle"></i> Cancelar
         </button>
-        <button class="btn primary" id="btnGuardar" type="button" onclick="validarYGuardar(event)">
+        <button class="btn primary" id="btnGuardar" type="button" onclick="validarYGuardar()">
             <i class="bi bi-save"></i> {% if editando %}Actualizar{% else %}Guardar Nuevo{% endif %}
         </button>
     </div>
 </div>
 
 <!-- ============================================ -->
-<!-- FORMULARIO                                   -->
+<!-- FORMULARIO                                  -->
 <!-- ============================================ -->
-
-<!-- IMPORTANTE: Quitamos el onsubmit="return false;" -->
 <form id="formNuevoProducto" action="/api/productos" method="POST" enctype="multipart/form-data">
 
-    <!-- ✅ ID del producto para actualizar -->
     {% if editando and producto %}
     <input type="hidden" name="producto_id" value="{{ producto.id }}" />
     {% endif %}
     
     <div class="np-layout">
-        <!-- Columna 1: Foto + Operación -->
+        <!-- Columna 1 -->
         <div>
-            <div class="card panel">
+            <div class="card">
                 <h3 class="card-title"><i class="bi bi-image"></i> Foto del producto</h3>
-                <div class="upload" id="uploadArea">
-                    <div class="cloud"><i class="bi bi-cloud-upload"></i></div>
-                    <strong>Arrastra o selecciona</strong>
-                    <span class="drag-hint">PNG, JPG o WEBP • Máx. 5MB</span>
-                    <div class="file-badge" id="fileBadge"><i class="bi bi-paperclip"></i> Ningún archivo</div>
-                    <div id="previewContainer"></div>
-                    <input id="fotoProducto" name="foto" type="file" accept="image/png,image/jpeg,image/webp" style="display:none;" />
+                <div style="border:2px dashed #ddd;border-radius:8px;padding:12px;text-align:center;">
+                    <i class="bi bi-cloud-upload" style="font-size:30px;color:#999;"></i>
+                    <strong style="display:block;font-size:13px;">Arrastra o selecciona</strong>
+                    <span style="font-size:11px;color:#999;">PNG, JPG o WEBP • Máx. 5MB</span>
+                    <div style="font-size:11px;padding:3px 10px;background:#f5f5f5;border-radius:4px;display:inline-block;margin-top:4px;">
+                        <i class="bi bi-paperclip"></i> Ningún archivo
+                    </div>
                 </div>
             </div>
-            <div class="operation">
-                <div style="font-weight:700;font-size:9px;color:#666;margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;">Tipo de operación</div>
-                <label class="op-item">
-                    <input type="checkbox" name="operation" value="venta" {% if not editando or (producto and producto.venta) %}checked{% endif %} />
-                    <div><div class="op-title">Venta</div><div class="op-desc">El producto estará disponible para ventas.</div></div>
+            
+            <div class="card">
+                <div style="font-weight:700;font-size:9px;color:#666;margin-bottom:4px;text-transform:uppercase;">Tipo de operación</div>
+                <label style="display:flex;padding:4px 0;gap:6px;cursor:pointer;">
+                    <input type="checkbox" name="operation" value="venta" checked />
+                    <div><div style="font-weight:600;font-size:13px;">Venta</div><div style="font-size:11px;color:#666;">El producto estará disponible para ventas.</div></div>
                 </label>
-                <label class="op-item">
-                    <input type="checkbox" name="operation" value="compra" {% if editando and producto and producto.compra %}checked{% endif %} />
-                    <div><div class="op-title">Compra</div><div class="op-desc">El producto se podrá adquirir a proveedores.</div></div>
+                <label style="display:flex;padding:4px 0;gap:6px;cursor:pointer;">
+                    <input type="checkbox" name="operation" value="compra" />
+                    <div><div style="font-weight:600;font-size:13px;">Compra</div><div style="font-size:11px;color:#666;">El producto se podrá adquirir a proveedores.</div></div>
                 </label>
-                <label class="op-item">
-                    <input type="checkbox" name="operation" value="inventariable" {% if editando and producto and producto.inventariable %}checked{% endif %} />
-                    <div><div class="op-title">Inventariable</div><div class="op-desc">El inventario será controlado en almacén.</div></div>
+                <label style="display:flex;padding:4px 0;gap:6px;cursor:pointer;">
+                    <input type="checkbox" name="operation" value="inventariable" />
+                    <div><div style="font-weight:600;font-size:13px;">Inventariable</div><div style="font-size:11px;color:#666;">El inventario será controlado en almacén.</div></div>
                 </label>
             </div>
         </div>
 
         <!-- Columna 2: Información del producto -->
-        <div class="card form-card">
+        <div class="card">
             <h3 class="card-title"><i class="bi bi-info-circle"></i> Información del producto</h3>
-            <div class="form-header">
-                <div class="code-box">
+            
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+                <div style="padding:4px 8px;background:#f5f5f5;border-radius:4px;flex:0 0 auto;">
                     <label style="font-size:12px;">Código <span class="req">*</span></label>
-                    <div class="code-value">
-                        <span id="codigoProducto">{{ producto.codigo if producto else codigo_auto or 'PRD-0001' }}</span>
-                        <span class="pill">{% if editando %}Existente{% else %}Auto{% endif %}</span>
+                    <div style="font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px;">
+                        <span>{{ producto.codigo if producto else codigo_auto or 'PRD-0001' }}</span>
+                        <span style="font-size:9px;padding:1px 6px;background:#ddd;border-radius:10px;font-weight:400;">Auto</span>
                     </div>
-                    <input type="hidden" id="codigoGenerado" name="codigo" value="{{ producto.codigo if producto else codigo_auto or 'PRD-0001' }}" />
                 </div>
                 <div class="field" id="field-nombre" style="flex:1;">
                     <label>Nombre del producto <span class="req">*</span></label>
-                    <input id="nombreProducto" name="descripcion" placeholder="Ingrese el nombre" required 
-                           value="{{ producto.descripcion if producto else '' }}" />
+                    <input id="nombreProducto" name="descripcion" placeholder="Ingrese el nombre" value="{{ producto.descripcion if producto else '' }}" />
                 </div>
             </div>
+            
             <div class="grid two">
                 <div class="field" id="field-modelo">
                     <label>Modelo <span class="req">*</span></label>
-                    <input id="modeloProducto" name="modelo" placeholder="Ej. M100" required 
-                           value="{{ producto.modelo if producto else '' }}" />
+                    <input id="modeloProducto" name="modelo" placeholder="Ej. M100" value="{{ producto.modelo if producto else '' }}" />
                 </div>
                 <div class="field" id="field-marca">
                     <label>Marca <span class="req">*</span></label>
-                    <div style="display:flex;gap:4px;">
-                        <select id="marcaProducto" name="marca" required style="flex:1;">
-                            <option value="">Seleccione</option>
-                            <option value="Nike" {% if producto and producto.marca == 'Nike' %}selected{% endif %}>Nike</option>
-                            <option value="Adidas" {% if producto and producto.marca == 'Adidas' %}selected{% endif %}>Adidas</option>
-                            <option value="Puma" {% if producto and producto.marca == 'Puma' %}selected{% endif %}>Puma</option>
-                            <option value="Reebok" {% if producto and producto.marca == 'Reebok' %}selected{% endif %}>Reebok</option>
-                            <option value="New Balance" {% if producto and producto.marca == 'New Balance' %}selected{% endif %}>New Balance</option>
-                            <option value="Under Armour" {% if producto and producto.marca == 'Under Armour' %}selected{% endif %}>Under Armour</option>
-                            <option value="Columbia" {% if producto and producto.marca == 'Columbia' %}selected{% endif %}>Columbia</option>
-                            <option value="The North Face" {% if producto and producto.marca == 'The North Face' %}selected{% endif %}>The North Face</option>
-                            <option value="Patagonia" {% if producto and producto.marca == 'Patagonia' %}selected{% endif %}>Patagonia</option>
-                            <option value="Dickies" {% if producto and producto.marca == 'Dickies' %}selected{% endif %}>Dickies</option>
-                            <option value="Carhartt" {% if producto and producto.marca == 'Carhartt' %}selected{% endif %}>Carhartt</option>
-                            <option value="3M" {% if producto and producto.marca == '3M' %}selected{% endif %}>3M</option>
-                            <option value="Honeywell" {% if producto and producto.marca == 'Honeywell' %}selected{% endif %}>Honeywell</option>
-                            <option value="DuPont" {% if producto and producto.marca == 'DuPont' %}selected{% endif %}>DuPont</option>
-                            <option value="Samsung" {% if producto and producto.marca == 'Samsung' %}selected{% endif %}>Samsung</option>
-                            <option value="LG" {% if producto and producto.marca == 'LG' %}selected{% endif %}>LG</option>
-                            <option value="Sony" {% if producto and producto.marca == 'Sony' %}selected{% endif %}>Sony</option>
-                            <option value="Panasonic" {% if producto and producto.marca == 'Panasonic' %}selected{% endif %}>Panasonic</option>
-                            <option value="HP" {% if producto and producto.marca == 'HP' %}selected{% endif %}>HP</option>
-                            <option value="Dell" {% if producto and producto.marca == 'Dell' %}selected{% endif %}>Dell</option>
-                            <option value="Lenovo" {% if producto and producto.marca == 'Lenovo' %}selected{% endif %}>Lenovo</option>
-                            <option value="Apple" {% if producto and producto.marca == 'Apple' %}selected{% endif %}>Apple</option>
-                            <option value="Xiaomi" {% if producto and producto.marca == 'Xiaomi' %}selected{% endif %}>Xiaomi</option>
-                            <option value="Huawei" {% if producto and producto.marca == 'Huawei' %}selected{% endif %}>Huawei</option>
-                            <option value="Caterpillar" {% if producto and producto.marca == 'Caterpillar' %}selected{% endif %}>Caterpillar</option>
-                            <option value="Bosch" {% if producto and producto.marca == 'Bosch' %}selected{% endif %}>Bosch</option>
-                            <option value="Makita" {% if producto and producto.marca == 'Makita' %}selected{% endif %}>Makita</option>
-                            <option value="DeWalt" {% if producto and producto.marca == 'DeWalt' %}selected{% endif %}>DeWalt</option>
-                            <option value="Stanley" {% if producto and producto.marca == 'Stanley' %}selected{% endif %}>Stanley</option>
-                            <option value="Ferretería Industrial" {% if producto and producto.marca == 'Ferretería Industrial' %}selected{% endif %}>Ferretería Industrial</option>
-                            <option value="Casa de Herramientas" {% if producto and producto.marca == 'Casa de Herramientas' %}selected{% endif %}>Casa de Herramientas</option>
-                            <option value="Otros" {% if producto and producto.marca == 'Otros' %}selected{% endif %}>Otros</option>
-                        </select>
-                        <button type="button" class="btn btn-sm primary" onclick="personalizar('marcaProducto','Marca personalizada')" style="padding:2px 8px;font-size:12px;height:28px;background:#0066FF;color:white;border:none;border-radius:4px;cursor:pointer;"><i class="bi bi-pencil"></i></button>
-                    </div>
+                    <select id="marcaProducto" name="marca">
+                        <option value="">Seleccione</option>
+                        <option value="Nike">Nike</option>
+                        <option value="Adidas">Adidas</option>
+                        <option value="Puma">Puma</option>
+                    </select>
                 </div>
             </div>
-            <div class="grid">
+            
+            <div class="grid two">
                 <div class="field" id="field-unidad">
                     <label>Unidad de medida <span class="req">*</span></label>
-                    <select id="unidadMedida" name="unidad" required>
+                    <select id="unidadMedida" name="unidad">
                         <option value="">Seleccione</option>
-                        <option value="KGM" {% if producto and producto.unidad == 'KGM' %}selected{% endif %}>KGM - Kilogramo</option>
-                        <option value="TNE" {% if producto and producto.unidad == 'TNE' %}selected{% endif %}>TNE - Tonelada</option>
-                        <option value="LBR" {% if producto and producto.unidad == 'LBR' %}selected{% endif %}>LBR - Libra</option>
-                        <option value="GRM" {% if producto and producto.unidad == 'GRM' %}selected{% endif %}>GRM - Gramo</option>
-                        <option value="ONZ" {% if producto and producto.unidad == 'ONZ' %}selected{% endif %}>ONZ - Onza</option>
-                        <option value="ZZ" {% if producto and producto.unidad == 'ZZ' %}selected{% endif %}>ZZ - Unidad</option>
-                        <option value="NIU" {% if producto and producto.unidad == 'NIU' %}selected{% endif %}>NIU - Unidad</option>
+                        <option value="KGM">KGM - Kilogramo</option>
+                        <option value="TNE">TNE - Tonelada</option>
+                        <option value="NIU">NIU - Unidad</option>
                     </select>
                 </div>
                 <div class="field" id="field-categoria">
                     <label>Categoría <span class="req">*</span></label>
-                    <div style="display:flex;gap:4px;">
-                        <select id="categoriaProducto" name="familia" required style="flex:1;">
-                            <option value="">Seleccione</option>
-                            <option value="Seguridad Industrial" {% if producto and producto.familia == 'Seguridad Industrial' %}selected{% endif %}>Seguridad Industrial</option>
-                            <option value="Mobiliario de Oficina" {% if producto and producto.familia == 'Mobiliario de Oficina' %}selected{% endif %}>Mobiliario de Oficina</option>
-                            <option value="Tecnología" {% if producto and producto.familia == 'Tecnología' %}selected{% endif %}>Tecnología</option>
-                            <option value="Ferretería" {% if producto and producto.familia == 'Ferretería' %}selected{% endif %}>Ferretería</option>
-                            <option value="Limpieza" {% if producto and producto.familia == 'Limpieza' %}selected{% endif %}>Limpieza</option>
-                            <option value="Cuidado Personal" {% if producto and producto.familia == 'Cuidado Personal' %}selected{% endif %}>Cuidado Personal</option>
-                            <option value="Iluminación" {% if producto and producto.familia == 'Iluminación' %}selected{% endif %}>Iluminación</option>
-                            <option value="Herramientas Eléctricas" {% if producto and producto.familia == 'Herramientas Eléctricas' %}selected{% endif %}>Herramientas Eléctricas</option>
-                            <option value="Herramientas Manuales" {% if producto and producto.familia == 'Herramientas Manuales' %}selected{% endif %}>Herramientas Manuales</option>
-                            <option value="Equipos de Protección" {% if producto and producto.familia == 'Equipos de Protección' %}selected{% endif %}>Equipos de Protección</option>
-                            <option value="Señalización" {% if producto and producto.familia == 'Señalización' %}selected{% endif %}>Señalización</option>
-                            <option value="Materiales de Construcción" {% if producto and producto.familia == 'Materiales de Construcción' %}selected{% endif %}>Materiales de Construcción</option>
-                            <option value="Pinturas y Acabados" {% if producto and producto.familia == 'Pinturas y Acabados' %}selected{% endif %}>Pinturas y Acabados</option>
-                            <option value="Fijaciones y Anclajes" {% if producto and producto.familia == 'Fijaciones y Anclajes' %}selected{% endif %}>Fijaciones y Anclajes</option>
-                            <option value="Jardinería" {% if producto and producto.familia == 'Jardinería' %}selected{% endif %}>Jardinería</option>
-                            <option value="Automotriz" {% if producto and producto.familia == 'Automotriz' %}selected{% endif %}>Automotriz</option>
-                            <option value="Electrónica" {% if producto and producto.familia == 'Electrónica' %}selected{% endif %}>Electrónica</option>
-                            <option value="Papelería" {% if producto and producto.familia == 'Papelería' %}selected{% endif %}>Papelería</option>
-                        </select>
-                        <button type="button" class="btn btn-sm primary" onclick="personalizar('categoriaProducto','Categoría personalizada')" style="padding:2px 8px;font-size:12px;height:28px;background:#0066FF;color:white;border:none;border-radius:4px;cursor:pointer;"><i class="bi bi-pencil"></i></button>
-                    </div>
-                </div>
-                <div class="field">
-                    <label>Subcategoría <span class="optional">(opcional)</span></label>
-                    <input id="subcategoriaProducto" name="subcategoria" placeholder="Ej. Señalización" 
-                           value="{{ producto.subcategoria or producto.categoria_derivada or '' }}" />
-                </div>
-            </div>
-            <div class="grid">
-                <div class="field"><label>Presentación proveedor <span class="optional">(opcional)</span></label>
-                    <input name="presentacion_proveedor" placeholder="Ej. Caja x 12" 
-                           value="{{ producto.presentacion_proveedor if producto else '' }}" />
-                </div>
-                <div class="field"><label>Presentación venta <span class="optional">(opcional)</span></label>
-                    <input name="presentacion_venta" placeholder="Ej. 1 unidad" 
-                           value="{{ producto.presentacion_venta if producto else '' }}" />
-                </div>
-                <div class="field"><label>Venta mínima <span class="optional">(opcional)</span></label>
-                    <div class="input-unit">
-                        <input name="venta_minima" type="number" value="{{ producto.venta_minima if producto else 1 }}" min="1" />
-                        <span>Und.</span>
-                    </div>
-                </div>
-            </div>
-            <div class="grid">
-                <div class="field"><label>Código de barras <span class="optional">(opcional)</span></label>
-                    <input name="codigo_barras" placeholder="Ej. 7701234567890" 
-                           value="{{ producto.codigo_barras if producto else '' }}" />
-                </div>
-                <div class="field"><label>Peso (kg) <span class="optional">(opcional)</span></label>
-                    <input name="peso" type="number" step="0.01" placeholder="0.50" 
-                           value="{{ producto.peso if producto else '' }}" />
-                </div>
-                <div class="field"><label>Volumen (m³) <span class="optional">(opcional)</span></label>
-                    <input name="volumen" type="number" step="0.001" placeholder="0.001" 
-                           value="{{ producto.volumen if producto else '' }}" />
-                </div>
-            </div>
-            <div class="grid">
-                <div class="field">
-                    <label>Origen <span class="optional">(opcional)</span></label>
-                    <select name="origen">
+                    <select id="categoriaProducto" name="familia">
                         <option value="">Seleccione</option>
-                        <option value="nacional" {% if producto and producto.origen == 'nacional' %}selected{% endif %}>Nacional</option>
-                        <option value="importado" {% if producto and producto.origen == 'importado' %}selected{% endif %}>Importado</option>
-                        <option value="mixto" {% if producto and producto.origen == 'mixto' %}selected{% endif %}>Mixto</option>
-                    </select>
-                </div>
-                <div class="field">
-                    <label>Tiempo entrega <span class="optional">(opcional)</span></label>
-                    <select name="tiempo_entrega">
-                        <option value="">Seleccione</option>
-                        <option value="1-2d" {% if producto and producto.tiempo_entrega == '1-2d' %}selected{% endif %}>1 a 2 días</option>
-                        <option value="3-5d" {% if producto and producto.tiempo_entrega == '3-5d' %}selected{% endif %}>3 a 5 días</option>
-                        <option value="7-10d" {% if producto and producto.tiempo_entrega == '7-10d' %}selected{% endif %}>7 a 10 días</option>
-                        <option value="30-90d" {% if producto and producto.tiempo_entrega == '30-90d' %}selected{% endif %}>30 a 90 días</option>
-                    </select>
-                </div>
-                <div class="field">
-                    <label>Abastecimiento <span class="optional">(opcional)</span></label>
-                    <select name="abastecimiento">
-                        <option value="">Seleccione</option>
-                        <option value="stock" {% if producto and producto.abastecimiento == 'stock' %}selected{% endif %}>Stock</option>
-                        <option value="bajo-pedido" {% if producto and producto.abastecimiento == 'bajo-pedido' %}selected{% endif %}>Bajo pedido</option>
-                        <option value="según-disponibilidad" {% if producto and producto.abastecimiento == 'según-disponibilidad' %}selected{% endif %}>Según disponibilidad</option>
+                        <option value="Seguridad Industrial">Seguridad Industrial</option>
+                        <option value="Tecnología">Tecnología</option>
+                        <option value="Ferretería">Ferretería</option>
                     </select>
                 </div>
             </div>
-            <div class="grid">
-                <div class="field"><label>Stock mínimo <span class="optional">(opcional)</span></label>
-                    <div class="input-unit">
-                        <input name="stock_minimo" type="number" placeholder="0" 
-                               value="{{ producto.stock_minimo if producto else 0 }}" />
-                        <span>Und.</span>
-                    </div>
-                </div>
+            
+            <div class="grid two">
                 <div class="field" id="field-transporte">
                     <label>Transporte <span class="req">*</span></label>
-                    <select id="transporteReferencial" name="transporte" required>
+                    <select id="transporteReferencial" name="transporte">
                         <option value="">Seleccione</option>
-                        <option value="motorizado" {% if producto and producto.transporte == 'motorizado' %}selected{% endif %}>Motorizado</option>
-                        <option value="auto" {% if producto and producto.transporte == 'auto' %}selected{% endif %}>Auto</option>
-                        <option value="minivan" {% if producto and producto.transporte == 'minivan' %}selected{% endif %}>Minivan</option>
-                        <option value="camioneta" {% if producto and producto.transporte == 'camioneta' %}selected{% endif %}>Camioneta</option>
-                        <option value="camion" {% if producto and producto.transporte == 'camion' %}selected{% endif %}>Camión</option>
+                        <option value="motorizado">Motorizado</option>
+                        <option value="auto">Auto</option>
+                        <option value="camioneta">Camioneta</option>
                     </select>
                 </div>
-            </div>
-            <div class="grid full">
-                <div class="field"><label>Descripción detallada <span class="optional">(opcional)</span></label>
-                    <textarea name="descripcion_larga" placeholder="Descripción del producto" style="min-height:40px !important;max-height:60px !important;">{{ producto.descripcion_larga if producto else '' }}</textarea>
-                </div>
-                <div class="field"><label>Observaciones <span class="optional">(opcional)</span></label>
-                    <textarea name="observaciones" placeholder="Observaciones adicionales" style="min-height:40px !important;max-height:60px !important;">{{ producto.observaciones if producto else '' }}</textarea>
+                <div class="field">
+                    <label>Stock mínimo <span class="optional">(opcional)</span></label>
+                    <input name="stock_minimo" type="number" placeholder="0" value="0" />
                 </div>
             </div>
         </div>
 
-        <!-- Columna 3: Precios + Estado -->
+        <!-- Columna 3: Precios -->
         <div>
-            <div class="card prices">
+            <div class="card">
                 <h3 class="card-title"><i class="bi bi-coin"></i> Precios</h3>
-                <div class="price-box">
-                    <div class="price-label sale"><i class="bi bi-tag"></i> Valor venta (S/)</div>
-                    <div class="tax">No incluye IGV</div>
-                    <div class="money sale">
-                        <span>S/</span>
-                        <input id="valorVenta" name="precio_unitario" type="number" step="0.01" 
-                               value="{{ producto.precio_unitario if producto else 0.00 }}" oninput="calcularMargen()" />
+                <div style="padding:8px 0;">
+                    <div style="font-weight:600;font-size:13px;"><i class="bi bi-tag"></i> Valor venta (S/)</div>
+                    <div style="font-size:10px;color:#999;">No incluye IGV</div>
+                    <div style="font-size:18px;display:flex;align-items:center;gap:4px;">
+                        <span style="font-weight:600;">S/</span>
+                        <input id="valorVenta" name="precio_unitario" type="number" step="0.01" value="0.00" style="font-size:16px;padding:2px 6px;height:30px;width:100%;border:1px solid #ddd;border-radius:4px;" />
                     </div>
                 </div>
-                <div class="price-box">
-                    <div class="price-label cost"><i class="bi bi-cash-stack"></i> Valor costo (S/)</div>
-                    <div class="tax">No incluye IGV</div>
-                    <div class="money cost">
-                        <span>S/</span>
-                        <input id="valorCosto" name="costo_unitario" type="number" step="0.01" 
-                               value="{{ producto.costo_unitario if producto else 0.00 }}" oninput="calcularMargen()" />
+                <div style="padding:8px 0;">
+                    <div style="font-weight:600;font-size:13px;"><i class="bi bi-cash-stack"></i> Valor costo (S/)</div>
+                    <div style="font-size:10px;color:#999;">No incluye IGV</div>
+                    <div style="font-size:18px;display:flex;align-items:center;gap:4px;">
+                        <span style="font-weight:600;">S/</span>
+                        <input id="valorCosto" name="costo_unitario" type="number" step="0.01" value="0.00" style="font-size:16px;padding:2px 6px;height:30px;width:100%;border:1px solid #ddd;border-radius:4px;" />
                     </div>
-                </div>
-                <div class="margin-grid">
-                    <div class="margin-box">Margen (%)<b id="margenPct">0.00%</b></div>
-                    <div class="margin-box">Margen (S/)<b id="margenSol">S/ 0.00</b></div>
                 </div>
             </div>
-            <div class="card state-card">
+            
+            <div class="card">
                 <h3 class="card-title"><i class="bi bi-toggle-on"></i> Estado disponible</h3>
-                <select class="state-select" id="estadoProducto" name="estado" onchange="actualizarEstadoChips()">
-                    <option value="activo" {% if not producto or producto.estado == 'activo' %}selected{% endif %}>🟢 Activo</option>
-                    <option value="inactivo" {% if producto and producto.estado == 'inactivo' %}selected{% endif %}>⚪ Inactivo</option>
-                    <option value="bajo_pedido" {% if producto and producto.estado == 'bajo_pedido' %}selected{% endif %}>🟠 Bajo pedido</option>
-                    <option value="disponible" {% if producto and producto.estado == 'disponible' %}selected{% endif %}>🔵 Disponible</option>
-                    <option value="bloqueado" {% if producto and producto.estado == 'bloqueado' %}selected{% endif %}>🔴 Bloqueado</option>
+                <select style="padding:4px 8px;font-size:12px;height:30px;width:100%;border:1px solid #ddd;border-radius:4px;">
+                    <option value="activo">🟢 Activo</option>
+                    <option value="inactivo">⚪ Inactivo</option>
+                    <option value="bajo_pedido">🟠 Bajo pedido</option>
                 </select>
-                <div class="state-list" id="stateChips">
-                    <div class="state-chip active-state"><span class="dot"></span>Activo</div>
-                    <div class="state-chip inactive"><span class="dot"></span>Inactivo</div>
-                    <div class="state-chip order"><span class="dot"></span>Bajo pedido</div>
-                    <div class="state-chip available"><span class="dot"></span>Disponible</div>
-                    <div class="state-chip blocked"><span class="dot"></span>Bloqueado</div>
-                </div>
             </div>
         </div>
     </div>
 </form>
 
 <!-- ============================================ -->
-<!-- SCRIPT DE VALIDACIÓN                        -->
+<!-- SCRIPT - VERSIÓN SIMPLIFICADA               -->
 <!-- ============================================ -->
 <script>
-function validarYGuardar(event) {
-    // Prevenir el comportamiento por defecto del botón
-    if (event) {
-        event.preventDefault();
-    }
-    
-    console.log("🟢 Función validarYGuardar ejecutada");
+// ============================================
+// FUNCIÓN PRINCIPAL DE VALIDACIÓN
+// ============================================
+function validarYGuardar() {
+    console.log("✅ Botón Guardar clickeado");
     
     // Limpiar errores anteriores
     limpiarErrores();
     
-    // Obtener valores de campos obligatorios
-    const campos = [
+    // Definir campos obligatorios
+    var campos = [
         { id: 'nombreProducto', nombre: 'Nombre del producto', fieldId: 'field-nombre' },
         { id: 'modeloProducto', nombre: 'Modelo', fieldId: 'field-modelo' },
         { id: 'marcaProducto', nombre: 'Marca', fieldId: 'field-marca' },
@@ -1032,76 +489,72 @@ function validarYGuardar(event) {
         { id: 'transporteReferencial', nombre: 'Transporte', fieldId: 'field-transporte' }
     ];
     
-    const errores = [];
+    var errores = [];
     
     // Verificar cada campo
-    campos.forEach(campo => {
-        const elemento = document.getElementById(campo.id);
-        const valor = elemento ? elemento.value.trim() : '';
+    for (var i = 0; i < campos.length; i++) {
+        var campo = campos[i];
+        var elemento = document.getElementById(campo.id);
+        var valor = elemento ? elemento.value.trim() : '';
         
         if (!valor || valor === '') {
             errores.push(campo.nombre);
-            // Marcar el campo con error
-            const fieldContainer = document.getElementById(campo.fieldId);
+            var fieldContainer = document.getElementById(campo.fieldId);
             if (fieldContainer) {
                 fieldContainer.classList.add('error');
             }
         }
-    });
+    }
     
     console.log("📋 Errores encontrados:", errores);
     
-    // Si hay errores, mostrar notificación flotante
+    // Si hay errores, mostrar notificación
     if (errores.length > 0) {
         mostrarNotificacion(errores);
         
         // Enfocar el primer campo con error
-        const primerCampo = campos.find(c => {
-            const el = document.getElementById(c.id);
-            return el && el.value.trim() === '';
-        });
-        if (primerCampo) {
-            const elemento = document.getElementById(primerCampo.id);
-            if (elemento) {
-                setTimeout(() => elemento.focus(), 300);
+        for (var j = 0; j < campos.length; j++) {
+            var el = document.getElementById(campos[j].id);
+            if (el && el.value.trim() === '') {
+                setTimeout(function() { el.focus(); }, 300);
+                break;
             }
         }
         return false;
     }
     
     // Si no hay errores, enviar el formulario
-    console.log("✅ Todos los campos están completos, enviando formulario...");
+    console.log("✅ Enviando formulario...");
     document.getElementById('formNuevoProducto').submit();
     return true;
 }
 
+// ============================================
+// MOSTRAR NOTIFICACIÓN FLOTANTE
+// ============================================
 function mostrarNotificacion(errores) {
-    console.log("🔔 Mostrando notificación con errores:", errores);
+    console.log("🔔 Mostrando notificación...");
     
-    const container = document.getElementById('notificationContainer');
+    var container = document.getElementById('notificationContainer');
     
     // Crear la notificación
-    const notif = document.createElement('div');
+    var notif = document.createElement('div');
     notif.className = 'notification';
     
-    // Construir HTML
-    let html = `
-        <button class="close-btn" onclick="cerrarNotificacion(this)">×</button>
-        <div class="notif-title">
-            <i class="bi bi-exclamation-triangle-fill"></i>
-            ¡Campos obligatorios!
-        </div>
-        <ul class="notif-list">
-    `;
+    var html = '';
+    html += '<button class="close-btn" onclick="cerrarNotificacion(this)">×</button>';
+    html += '<div class="notif-title">';
+    html += '  <i class="bi bi-exclamation-triangle-fill"></i>';
+    html += '  ¡Campos obligatorios!';
+    html += '</div>';
+    html += '<ul class="notif-list">';
     
-    errores.forEach(error => {
-        html += `<li>Te falta: <strong>${error}</strong></li>`;
-    });
+    for (var i = 0; i < errores.length; i++) {
+        html += '<li>Te falta: <strong>' + errores[i] + '</strong></li>';
+    }
     
-    html += `
-        </ul>
-        <div class="progress-bar"></div>
-    `;
+    html += '</ul>';
+    html += '<div class="progress-bar"></div>';
     
     notif.innerHTML = html;
     
@@ -1109,132 +562,68 @@ function mostrarNotificacion(errores) {
     container.appendChild(notif);
     
     // Auto-cerrar después de 5 segundos
-    setTimeout(() => {
-        const btn = notif.querySelector('.close-btn');
+    setTimeout(function() {
+        var btn = notif.querySelector('.close-btn');
         if (btn) {
             cerrarNotificacion(btn);
         }
     }, 5000);
 }
 
+// ============================================
+// CERRAR NOTIFICACIÓN
+// ============================================
 function cerrarNotificacion(btn) {
-    const notif = btn.closest('.notification');
+    var notif = btn.closest('.notification');
     if (notif) {
         notif.classList.add('hide');
-        setTimeout(() => {
+        setTimeout(function() {
             notif.remove();
         }, 300);
     }
 }
 
+// ============================================
+// LIMPIAR ERRORES
+// ============================================
 function limpiarErrores() {
-    // Limpiar clases de error de todos los campos
-    document.querySelectorAll('.field.error').forEach(field => {
-        field.classList.remove('error');
-    });
-}
-
-// Limpiar errores cuando el usuario empiece a escribir
-document.addEventListener('DOMContentLoaded', function() {
-    console.log("🟢 DOM cargado correctamente");
-    
-    // Escuchar cambios en todos los inputs y selects
-    document.querySelectorAll('input, select').forEach(element => {
-        element.addEventListener('input', function() {
-            const fieldContainer = this.closest('.field');
-            if (fieldContainer) {
-                fieldContainer.classList.remove('error');
-            }
-        });
-        
-        element.addEventListener('change', function() {
-            const fieldContainer = this.closest('.field');
-            if (fieldContainer) {
-                fieldContainer.classList.remove('error');
-            }
-        });
-    });
-    
-    // Hacer clic en el área de upload para abrir el selector de archivos
-    const uploadArea = document.getElementById('uploadArea');
-    if (uploadArea) {
-        uploadArea.addEventListener('click', function() {
-            document.getElementById('fotoProducto').click();
-        });
-    }
-    
-    // Mostrar nombre del archivo seleccionado
-    const fileInput = document.getElementById('fotoProducto');
-    if (fileInput) {
-        fileInput.addEventListener('change', function() {
-            const badge = document.getElementById('fileBadge');
-            if (this.files && this.files[0]) {
-                badge.innerHTML = `<i class="bi bi-paperclip"></i> ${this.files[0].name}`;
-            }
-        });
-    }
-    
-    // Probar la notificación al cargar la página (para debug)
-    // setTimeout(() => {
-    //     mostrarNotificacion(['Nombre del producto', 'Modelo', 'Marca']);
-    // }, 1000);
-});
-
-// Función para personalizar (si existe)
-function personalizar(id, placeholder) {
-    const select = document.getElementById(id);
-    if (!select) return;
-    
-    const valor = prompt('Ingrese el nuevo valor:', '');
-    if (valor && valor.trim() !== '') {
-        let existe = false;
-        for (let option of select.options) {
-            if (option.value === valor.trim()) {
-                existe = true;
-                break;
-            }
-        }
-        if (!existe) {
-            const option = document.createElement('option');
-            option.value = valor.trim();
-            option.textContent = valor.trim();
-            select.appendChild(option);
-            select.value = valor.trim();
-        } else {
-            select.value = valor.trim();
-        }
+    var camposConError = document.querySelectorAll('.field.error');
+    for (var i = 0; i < camposConError.length; i++) {
+        camposConError[i].classList.remove('error');
     }
 }
 
-// Función para limpiar formulario (si existe)
+// ============================================
+// LIMPIAR FORMULARIO (CANCELAR)
+// ============================================
 function limpiarFormulario() {
     if (confirm('¿Estás seguro de que deseas cancelar? Los cambios no guardados se perderán.')) {
         window.location.href = '/productos';
     }
 }
 
-// Función para calcular margen (si existe)
-function calcularMargen() {
-    const venta = parseFloat(document.getElementById('valorVenta').value) || 0;
-    const costo = parseFloat(document.getElementById('valorCosto').value) || 0;
+// ============================================
+// INICIALIZAR - Eliminar errores al escribir
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("✅ Página cargada correctamente");
     
-    const margenPct = document.getElementById('margenPct');
-    const margenSol = document.getElementById('margenSol');
-    
-    if (venta > 0) {
-        const margen = ((venta - costo) / venta) * 100;
-        margenPct.textContent = margen.toFixed(2) + '%';
-        margenSol.textContent = 'S/ ' + (venta - costo).toFixed(2);
-    } else {
-        margenPct.textContent = '0.00%';
-        margenSol.textContent = 'S/ 0.00';
+    var inputs = document.querySelectorAll('input, select');
+    for (var i = 0; i < inputs.length; i++) {
+        inputs[i].addEventListener('input', function() {
+            var container = this.closest('.field');
+            if (container) {
+                container.classList.remove('error');
+            }
+        });
+        inputs[i].addEventListener('change', function() {
+            var container = this.closest('.field');
+            if (container) {
+                container.classList.remove('error');
+            }
+        });
     }
-}
-
-// Función para actualizar estado (si existe)
-function actualizarEstadoChips() {
-    // Implementar según necesidad
-}
+});
 </script>
 
 </body>
