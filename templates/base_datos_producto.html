@@ -1,133 +1,629 @@
-<!-- templates/base_datos_producto.html -->
+<!-- templates/base-datos-productos.html -->
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    /* ============================================
+       ESTILOS PARA BASE DE DATOS DE PRODUCTOS
+       ============================================ */
+    
+    /* Contenedor de botones de vista */
+    .view-toggle {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+        background: #f1f5f9;
+        padding: 4px;
+        border-radius: 10px;
+        width: fit-content;
+    }
+    
+    .view-toggle .view-btn {
+        padding: 8px 20px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: transparent;
+        color: #64748b;
+    }
+    
+    .view-toggle .view-btn:hover {
+        background: rgba(255,255,255,0.5);
+    }
+    
+    .view-toggle .view-btn.active {
+        background: white;
+        color: #0f172a;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .view-toggle .view-btn i {
+        margin-right: 6px;
+    }
+    
+    /* Contenedor de la tabla */
+    .table-container {
+        overflow-x: auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        border: 1px solid #e2e8f0;
+    }
+    
+    .table-container table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        min-width: 800px;
+    }
+    
+    .table-container table th {
+        background: #f8fafc;
+        color: #475569;
+        font-weight: 700;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 10px 12px;
+        text-align: left;
+        border-bottom: 2px solid #e2e8f0;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        white-space: nowrap;
+    }
+    
+    .table-container table td {
+        padding: 8px 12px;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .table-container table tr:hover td {
+        background: #f8fafc;
+    }
+    
+    /* Columnas ocultas en vista principal */
+    .col-oculta {
+        display: none;
+    }
+    
+    /* Mostrar columnas en vista completa */
+    .vista-completa .col-oculta {
+        display: table-cell;
+    }
+    
+    /* Estilos de estado */
+    .bd-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+    
+    .bd-status .bd-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+    
+    .bd-status.st-active { background: #dcfce7; color: #166534; }
+    .bd-status.st-active .bd-dot { background: #22c55e; }
+    
+    .bd-status.st-inactive { background: #f1f5f9; color: #475569; }
+    .bd-status.st-inactive .bd-dot { background: #94a3b8; }
+    
+    .bd-status.st-pending { background: #fef3c7; color: #92400e; }
+    .bd-status.st-pending .bd-dot { background: #f59e0b; }
+    
+    .bd-status.st-blocked { background: #fee2e2; color: #991b1b; }
+    .bd-status.st-blocked .bd-dot { background: #ef4444; }
+    
+    .bd-status.st-available { background: #dbeafe; color: #1e40af; }
+    .bd-status.st-available .bd-dot { background: #3b82f6; }
+    
+    /* Código del producto */
+    .bd-t-code {
+        font-family: 'Courier New', monospace;
+        font-weight: 700;
+        color: #0f172a;
+        background: #f1f5f9;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+    }
+    
+    /* Acciones */
+    .row-actions {
+        display: flex;
+        gap: 4px;
+    }
+    
+    .row-actions .btn-action {
+        width: 30px;
+        height: 30px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        background: transparent;
+        color: #64748b;
+        font-size: 14px;
+    }
+    
+    .row-actions .btn-action:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+    
+    .row-actions .btn-action.btn-edit:hover {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+    
+    .row-actions .btn-action.btn-delete:hover {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+    
+    .row-actions .btn-action.btn-view:hover {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+    
+    /* Contador */
+    .bd-count {
+        font-size: 13px;
+        color: #64748b;
+        margin-bottom: 12px;
+    }
+    
+    .bd-count strong {
+        color: #0f172a;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .table-container table {
+            font-size: 12px;
+            min-width: 600px;
+        }
+        
+        .table-container table th,
+        .table-container table td {
+            padding: 6px 8px;
+        }
+        
+        .view-toggle .view-btn {
+            padding: 6px 14px;
+            font-size: 12px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ============================================ -->
+<!-- ENCABEZADO                                   -->
+<!-- ============================================ -->
 <div class="page-head">
     <div>
-        <h1>Base de datos: Producto</h1>
-        <p class="subtitle">Consulta, filtra y gestiona todos los productos del sistema.</p>
+        <h1 style="font-size: 22px; margin: 0;">Base de datos: Productos</h1>
+        <p class="subtitle" style="font-size: 13px; margin: 2px 0 0 0; color: #666;">
+            Consulta, filtra y gestiona todos los productos del sistema.
+        </p>
+    </div>
+    <div class="actions" style="display:flex;gap:8px;">
+        <button class="btn outline" onclick="bdLimpiarFiltros()">
+            <i class="bi bi-arrow-counterclockwise"></i> Limpiar filtros
+        </button>
+        <button class="btn primary" onclick="window.location.href='/productos/nuevo'">
+            <i class="bi bi-plus-lg"></i> Nuevo producto
+        </button>
     </div>
 </div>
 
-<div class="bd-toolbar">
-    <div class="bd-search-wrap">
-        <i class="bi bi-search"></i>
-        <input id="bdSearchInput" type="text" placeholder="Buscar por nombre, código, modelo, marca, categoría..." />
+<!-- ============================================ -->
+<!-- FILTROS                                      -->
+<!-- ============================================ -->
+<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;background:#f8fafc;padding:12px 16px;border-radius:10px;border:1px solid #e2e8f0;">
+    <div style="flex:1;min-width:150px;">
+        <input id="bdSearchInput" placeholder="🔍 Buscar producto..." style="width:100%;padding:8px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;" oninput="bdAplicarFiltros()">
     </div>
-    <button class="btn" type="button" onclick="bdExportarExcel()"><i class="bi bi-file-earmark-excel" style="color:var(--ok)"></i> Exportar Excel</button>
-    <button class="btn" type="button" onclick="bdLimpiarFiltros()"><i class="bi bi-funnel"></i> Limpiar filtros</button>
-    <button class="btn primary" type="button" onclick="window.location.href='/productos/nuevo'"><i class="bi bi-plus-lg"></i> Crear nuevo producto</button>
-</div>
-
-<div class="bd-filters">
-    <div class="bd-filter-field">
-        <label for="bdCategoriaFilter">Categoría principal</label>
-        <select id="bdCategoriaFilter">
-            <option value="">Todas</option>
-            <option>Seguridad Industrial</option>
-            <option>Indumentaria de Oficina</option>
-            <option>Tecnología</option>
-            <option>Limpieza</option>
-            <option>Cuidado Personal</option>
-            <option>Ferretería</option>
-            <option>Iluminación</option>
+    <div style="min-width:130px;">
+        <select id="bdCategoriaFilter" style="width:100%;padding:8px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;" onchange="bdAplicarFiltros()">
+            <option value="">Todas las categorías</option>
+            {% for cat in categorias %}
+            <option value="{{ cat }}">{{ cat }}</option>
+            {% endfor %}
         </select>
     </div>
-    <div class="bd-filter-field">
-        <label for="bdSubcategoriaFilter">Subcategoría</label>
-        <select id="bdSubcategoriaFilter">
-            <option value="">Todas</option>
-            <option>Señalización y tráfico</option>
-            <option>Chalecos</option>
-            <option>Taladros</option>
-            <option>Extintores</option>
-            <option>Protección personal</option>
-            <option>Cintas</option>
-            <option>Primeros Auxilios</option>
-            <option>Lámparas</option>
-            <option>Calzado</option>
+    <div style="min-width:130px;">
+        <select id="bdMarcaFilter" style="width:100%;padding:8px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;" onchange="bdAplicarFiltros()">
+            <option value="">Todas las marcas</option>
+            {% for marca in marcas %}
+            <option value="{{ marca }}">{{ marca }}</option>
+            {% endfor %}
         </select>
     </div>
-    <div class="bd-filter-field">
-        <label for="bdMarcaFilter">Marca</label>
-        <select id="bdMarcaFilter">
-            <option value="">Todas</option>
-            <option>KCF Safety</option>
-            <option>EasyWon</option>
-            <option>Borweg</option>
-            <option>Kidde</option>
-            <option>3M</option>
-            <option>Protex</option>
-            <option>Nova Safe</option>
-            <option>Philips</option>
-            <option>Tuk</option>
-            <option>Descartame</option>
-        </select>
-    </div>
-    <div class="bd-filter-field">
-        <label for="bdModeloFilter">Modelo</label>
-        <select id="bdModeloFilter">
-            <option value="">Todos</option>
-            <option>CS-75</option>
-            <option>SR-8891</option>
-            <option>TAL-850M</option>
-            <option>PQS-6</option>
-            <option>CS-100R</option>
-            <option>ZP-100</option>
-            <option>BOT-VIP36</option>
-            <option>LED-20W</option>
-            <option>MT-48</option>
-            <option>NIT-010</option>
+    <div style="min-width:120px;">
+        <select id="bdEstadoFilter" style="width:100%;padding:8px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;" onchange="bdAplicarFiltros()">
+            <option value="">Todos los estados</option>
+            <option value="activo">🟢 Activo</option>
+            <option value="inactivo">⚪ Inactivo</option>
+            <option value="bajo_pedido">🟠 Bajo pedido</option>
+            <option value="disponible">🔵 Disponible</option>
+            <option value="bloqueado">🔴 Bloqueado</option>
         </select>
     </div>
 </div>
 
-<div class="bd-table-card">
-    <div class="bd-table-scroll">
-        <table class="bd-table">
-            <thead>
-                <tr>
-                    <th class="bd-col-item">Ítem</th>
-                    <th class="bd-col-code">Código<br>producto</th>
-                    <th class="bd-col-desc">Descripción<br>producto</th>
-                    <th class="bd-col-model">Modelo</th>
-                    <th class="bd-col-brand">Marca</th>
-                    <th class="bd-col-cat">Categoría<br>principal</th>
-                    <th class="bd-col-subcat">Categoría<br>derivada</th>
-                    <th class="bd-col-weight">Peso (kg)</th>
-                    <th class="bd-col-transport">Transporte<br>referencial</th>
-                    <th class="bd-col-cost">Valor costo</th>
-                    <th class="bd-col-sale">Valor venta</th>
-                    <th class="bd-col-obs">Observación</th>
-                    <th class="bd-col-status">Estado</th>
-                    <th class="bd-col-actions">Acciones</th>
-                    <th class="bd-col-prov-pres">Presentación<br>proveedor</th>
-                    <th class="bd-col-sale-pres">Presentación<br>venta</th>
-                    <th class="bd-col-min-sale">Venta<br>mínima</th>
-                    <th class="bd-col-barras">Código barras</th>
-                    <th class="bd-col-volumen">Volumen (m³)</th>
-                    <th class="bd-col-origen">Origen<br>producto</th>
-                    <th class="bd-col-tiempo">Tiempo est.<br>entrega</th>
-                    <th class="bd-col-abast">Abastecimiento</th>
-                    <th class="bd-col-stock-min">Stock<br>mínimo</th>
-                    <th class="bd-col-desc-larga">Descripción larga</th>
-                </tr>
-            </thead>
-            <tbody id="bdProductTableBody"></tbody>
-        </table>
+<!-- ============================================ -->
+<!-- VISTAS: PRINCIPAL / COMPLETA                -->
+<!-- ============================================ -->
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
+    <div class="view-toggle">
+        <button class="view-btn active" id="viewPrincipal" onclick="cambiarVista('principal')">
+            <i class="bi bi-table"></i> Principal
+        </button>
+        <button class="view-btn" id="viewCompleta" onclick="cambiarVista('completa')">
+            <i class="bi bi-layout-three-columns"></i> Completa
+        </button>
     </div>
-    <div class="bd-footer">
-        <span class="bd-count" id="bdCountText">Mostrando 1 a 10 de 245 productos</span>
-        <div class="pagination">
-            <button class="page-btn">‹</button>
-            <button class="page-btn page-active">1</button>
-            <button class="page-btn">2</button>
-            <button class="page-btn">3</button>
-            <button class="page-btn">…</button>
-            <button class="page-btn">25</button>
-            <button class="page-btn">›</button>
-            <select class="page-select"><option>20 por página</option><option>50 por página</option><option>100 por página</option></select>
-        </div>
+    <div class="bd-count">
+        Mostrando <strong id="bdCountText">0 productos</strong>
     </div>
 </div>
-<div class="scroll-note"><i class="bi bi-arrows-expand"></i> Las columnas complementarias se visualizan desplazando la barra horizontal de la tabla.</div>
 
+<!-- ============================================ -->
+<!-- TABLA DE PRODUCTOS                           -->
+<!-- ============================================ -->
+<div class="table-container" id="tablaContainer">
+    <table>
+        <thead>
+            <tr>
+                <!-- Siempre visibles -->
+                <th style="width:40px;">#</th>
+                <th style="min-width:100px;">Código</th>
+                <th style="min-width:150px;">Nombre</th>
+                <th style="min-width:100px;">Modelo</th>
+                <th style="min-width:100px;">Marca</th>
+                <th style="min-width:120px;">Categoría</th>
+                <th style="min-width:100px;">Estado</th>
+                <th style="min-width:120px;">Acciones</th>
+                
+                <!-- Ocultos en vista principal -->
+                <th class="col-oculta">Subcategoría</th>
+                <th class="col-oculta">Peso</th>
+                <th class="col-oculta">Transporte</th>
+                <th class="col-oculta">Costo</th>
+                <th class="col-oculta">Precio Venta</th>
+                <th class="col-oculta">Stock Mínimo</th>
+                <th class="col-oculta">Código Barras</th>
+                <th class="col-oculta">Volumen</th>
+                <th class="col-oculta">Origen</th>
+                <th class="col-oculta">Tiempo Entrega</th>
+                <th class="col-oculta">Abastecimiento</th>
+                <th class="col-oculta">Presentación Proveedor</th>
+                <th class="col-oculta">Presentación Venta</th>
+                <th class="col-oculta">Venta Mínima</th>
+                <th class="col-oculta">Descripción Larga</th>
+                <th class="col-oculta">Observaciones</th>
+            </tr>
+        </thead>
+        <tbody id="bdProductTableBody">
+            <tr>
+                <td colspan="24" style="text-align:center;color:#94A3B8;padding:40px;">
+                    <i class="bi bi-inbox" style="font-size:40px;display:block;margin-bottom:10px;"></i>
+                    Cargando productos...
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
 
+<!-- ============================================ -->
+<!-- PAGINACIÓN (opcional)                       -->
+<!-- ============================================ -->
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;flex-wrap:wrap;gap:10px;">
+    <div style="color:#64748b;font-size:13px;">
+        <span id="bdTotalRegistros">0</span> registros encontrados
+    </div>
+    <div style="display:flex;gap:6px;">
+        <button class="btn outline" style="padding:6px 14px;font-size:12px;" onclick="bdPaginaAnterior()">
+            <i class="bi bi-chevron-left"></i> Anterior
+        </button>
+        <span style="padding:6px 14px;font-size:12px;background:#f1f5f9;border-radius:6px;" id="bdPaginaInfo">Página 1</span>
+        <button class="btn outline" style="padding:6px 14px;font-size:12px;" onclick="bdPaginaSiguiente()">
+            Siguiente <i class="bi bi-chevron-right"></i>
+        </button>
+    </div>
+</div>
 
+<!-- ============================================ -->
+<!-- SCRIPTS                                      -->
+<!-- ============================================ -->
+<script>
+// ============================================================
+// VARIABLES GLOBALES
+// ============================================================
+
+var bdProductos = [];
+var bdProductosFiltrados = [];
+var bdVistaActual = 'principal';
+var bdPaginaActual = 1;
+var bdPorPagina = 20;
+
+// ============================================================
+// CAMBIAR VISTA
+// ============================================================
+
+function cambiarVista(vista) {
+    bdVistaActual = vista;
+    
+    // Actualizar botones
+    document.getElementById('viewPrincipal').classList.toggle('active', vista === 'principal');
+    document.getElementById('viewCompleta').classList.toggle('active', vista === 'completa');
+    
+    // Mostrar/ocultar columnas
+    var container = document.getElementById('tablaContainer');
+    container.classList.toggle('vista-completa', vista === 'completa');
+    
+    // Re-renderizar productos
+    bdRenderProductos(bdProductosFiltrados);
+}
+
+// ============================================================
+// CARGAR PRODUCTOS
+// ============================================================
+
+function cargarProductos() {
+    console.log('🔄 Cargando productos...');
+    
+    fetch('/productos/api/productos')
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                bdProductos = data.data || [];
+                bdProductosFiltrados = bdProductos;
+                bdRenderProductos(bdProductosFiltrados);
+                console.log('✅ ' + bdProductos.length + ' productos cargados');
+            } else {
+                console.error('❌ Error:', data.error);
+                document.getElementById('bdProductTableBody').innerHTML = 
+                    '<tr><td colspan="24" style="text-align:center;color:#94A3B8;padding:40px;">❌ Error al cargar productos</td></tr>';
+            }
+        })
+        .catch(function(error) {
+            console.error('❌ Error:', error);
+            document.getElementById('bdProductTableBody').innerHTML = 
+                '<tr><td colspan="24" style="text-align:center;color:#94A3B8;padding:40px;">❌ Error de conexión</td></tr>';
+        });
+}
+
+// ============================================================
+// RENDERIZAR PRODUCTOS
+// ============================================================
+
+function bdRenderProductos(data) {
+    if (!data || data.length === 0) {
+        document.getElementById('bdProductTableBody').innerHTML = 
+            '<tr><td colspan="24" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay productos que coincidan con los filtros</td></tr>';
+        document.getElementById('bdCountText').textContent = '0 productos';
+        document.getElementById('bdTotalRegistros').textContent = '0';
+        return;
+    }
+    
+    // Paginación
+    var total = data.length;
+    var totalPaginas = Math.ceil(total / bdPorPagina);
+    if (bdPaginaActual > totalPaginas) bdPaginaActual = totalPaginas;
+    if (bdPaginaActual < 1) bdPaginaActual = 1;
+    
+    var inicio = (bdPaginaActual - 1) * bdPorPagina;
+    var fin = Math.min(inicio + bdPorPagina, total);
+    var paginaData = data.slice(inicio, fin);
+    
+    var tbody = document.getElementById('bdProductTableBody');
+    var html = '';
+    
+    for (var i = 0; i < paginaData.length; i++) {
+        var p = paginaData[i];
+        var index = inicio + i + 1;
+        
+        // Estado
+        var estadoClass = 'st-active';
+        var estado = (p.estado || 'activo').toLowerCase();
+        if (estado === 'inactivo') estadoClass = 'st-inactive';
+        else if (estado === 'bajo_pedido') estadoClass = 'st-pending';
+        else if (estado === 'bloqueado') estadoClass = 'st-blocked';
+        else if (estado === 'disponible') estadoClass = 'st-available';
+        
+        // Precios
+        var costo = p.costo_unitario ? parseFloat(p.costo_unitario).toFixed(2) : '0.00';
+        var precio = p.precio_unitario ? parseFloat(p.precio_unitario).toFixed(2) : '0.00';
+        
+        // Categoría
+        var categoria = p.categoria || p.familia || '-';
+        var subcategoria = p.subcategoria || p.categoria_derivada || '-';
+        
+        html += '<tr>';
+        html += '<td style="text-align:center;color:#94a3b8;font-weight:600;">' + index + '</td>';
+        html += '<td><span class="bd-t-code">' + (p.codigo || '-') + '</span></td>';
+        html += '<td><strong>' + (p.descripcion || '-') + '</strong></td>';
+        html += '<td>' + (p.modelo || '-') + '</td>';
+        html += '<td>' + (p.marca || '-') + '</td>';
+        html += '<td>' + categoria + '</td>';
+        html += '<td><span class="bd-status ' + estadoClass + '"><span class="bd-dot"></span>' + (p.estado || 'Activo') + '</span></td>';
+        html += '<td><div class="row-actions">';
+        html += '<button class="btn-action btn-view" onclick="verProducto(' + p.id + ')" title="Ver detalles"><i class="bi bi-eye"></i></button>';
+        html += '<button class="btn-action btn-edit" onclick="editarProducto(' + p.id + ')" title="Editar"><i class="bi bi-pencil"></i></button>';
+        html += '<button class="btn-action btn-delete" onclick="eliminarProducto(' + p.id + ')" title="Eliminar"><i class="bi bi-trash"></i></button>';
+        html += '</div></td>';
+        
+        // Columnas ocultas (vista completa)
+        html += '<td class="col-oculta">' + subcategoria + '</td>';
+        html += '<td class="col-oculta">' + (p.peso || '0') + ' kg</td>';
+        html += '<td class="col-oculta">' + (p.transporte || '-') + '</td>';
+        html += '<td class="col-oculta" style="font-weight:600;">S/ ' + costo + '</td>';
+        html += '<td class="col-oculta" style="font-weight:700;color:#0066FF;">S/ ' + precio + '</td>';
+        html += '<td class="col-oculta">' + (p.stock_minimo || '0') + '</td>';
+        html += '<td class="col-oculta">' + (p.codigo_barras || '-') + '</td>';
+        html += '<td class="col-oculta">' + (p.volumen || '0') + ' m³</td>';
+        html += '<td class="col-oculta">' + (p.origen || '-') + '</td>';
+        html += '<td class="col-oculta">' + (p.tiempo_entrega || '-') + '</td>';
+        html += '<td class="col-oculta">' + (p.abastecimiento || '-') + '</td>';
+        html += '<td class="col-oculta">' + (p.presentacion_proveedor || '-') + '</td>';
+        html += '<td class="col-oculta">' + (p.presentacion_venta || '-') + '</td>';
+        html += '<td class="col-oculta">' + (p.venta_minima || '1') + '</td>';
+        html += '<td class="col-oculta" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (p.descripcion_larga || '-') + '</td>';
+        html += '<td class="col-oculta" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (p.observaciones || '-') + '</td>';
+        
+        html += '</tr>';
+    }
+    
+    tbody.innerHTML = html;
+    
+    // Actualizar contadores
+    document.getElementById('bdCountText').textContent = data.length + ' producto' + (data.length !== 1 ? 's' : '');
+    document.getElementById('bdTotalRegistros').textContent = data.length;
+    document.getElementById('bdPaginaInfo').textContent = 'Página ' + bdPaginaActual + ' de ' + totalPaginas;
+}
+
+// ============================================================
+// FILTRAR PRODUCTOS
+// ============================================================
+
+function bdAplicarFiltros() {
+    var q = document.getElementById('bdSearchInput').value.trim().toLowerCase();
+    var categoria = document.getElementById('bdCategoriaFilter').value;
+    var marca = document.getElementById('bdMarcaFilter').value;
+    var estado = document.getElementById('bdEstadoFilter').value;
+    
+    bdProductosFiltrados = bdProductos.filter(function(p) {
+        var texto = (p.codigo || '') + ' ' + (p.descripcion || '') + ' ' + (p.modelo || '') + ' ' + (p.marca || '');
+        var coincideTexto = !q || texto.toLowerCase().includes(q);
+        var coincideCategoria = !categoria || (p.familia === categoria || p.categoria === categoria);
+        var coincideMarca = !marca || p.marca === marca;
+        var coincideEstado = !estado || (p.estado || 'activo') === estado;
+        return coincideTexto && coincideCategoria && coincideMarca && coincideEstado;
+    });
+    
+    bdPaginaActual = 1;
+    bdRenderProductos(bdProductosFiltrados);
+}
+
+// ============================================================
+// LIMPIAR FILTROS
+// ============================================================
+
+function bdLimpiarFiltros() {
+    document.getElementById('bdSearchInput').value = '';
+    document.getElementById('bdCategoriaFilter').value = '';
+    document.getElementById('bdMarcaFilter').value = '';
+    document.getElementById('bdEstadoFilter').value = '';
+    bdProductosFiltrados = bdProductos;
+    bdPaginaActual = 1;
+    bdRenderProductos(bdProductosFiltrados);
+}
+
+// ============================================================
+// PAGINACIÓN
+// ============================================================
+
+function bdPaginaAnterior() {
+    if (bdPaginaActual > 1) {
+        bdPaginaActual--;
+        bdRenderProductos(bdProductosFiltrados);
+    }
+}
+
+function bdPaginaSiguiente() {
+    var total = bdProductosFiltrados.length;
+    var totalPaginas = Math.ceil(total / bdPorPagina);
+    if (bdPaginaActual < totalPaginas) {
+        bdPaginaActual++;
+        bdRenderProductos(bdProductosFiltrados);
+    }
+}
+
+// ============================================================
+// ACCIONES DE PRODUCTOS
+// ============================================================
+
+function verProducto(id) {
+    if (!id) return;
+    window.location.href = '/productos/ver/' + id;
+}
+
+function editarProducto(id) {
+    if (!id) return;
+    window.location.href = '/productos/editar/' + id;
+}
+
+function eliminarProducto(id) {
+    if (!id) return;
+    var producto = bdProductos.find(function(p) { return p.id == id; });
+    var nombre = producto ? (producto.descripcion || producto.codigo) : 'este producto';
+    
+    if (!confirm('¿Estás seguro de eliminar "' + nombre + '"? Esta acción no se puede deshacer.')) {
+        return;
+    }
+    
+    fetch('/productos/api/productos/' + id, { method: 'DELETE' })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                if (typeof mostrarNotificacion === 'function') {
+                    mostrarNotificacion('success', '✅ Eliminado', '"' + nombre + '" eliminado correctamente');
+                }
+                cargarProductos();
+            } else {
+                if (typeof mostrarNotificacion === 'function') {
+                    mostrarNotificacion('error', '❌ Error', data.error || 'Error al eliminar');
+                }
+            }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            if (typeof mostrarNotificacion === 'function') {
+                mostrarNotificacion('error', '❌ Error', 'Error al comunicarse con el servidor');
+            }
+        });
+}
+
+// ============================================================
+// INICIALIZAR
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ Página de base de datos de productos cargada');
+    cargarProductos();
+});
+
+// Exponer funciones globalmente
+window.bdRenderProductos = bdRenderProductos;
+window.bdAplicarFiltros = bdAplicarFiltros;
+window.bdLimpiarFiltros = bdLimpiarFiltros;
+window.cambiarVista = cambiarVista;
+window.bdPaginaAnterior = bdPaginaAnterior;
+window.bdPaginaSiguiente = bdPaginaSiguiente;
+window.verProducto = verProducto;
+window.editarProducto = editarProducto;
+window.eliminarProducto = eliminarProducto;
+</script>
+{% endblock %}
