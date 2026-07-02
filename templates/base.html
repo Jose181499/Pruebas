@@ -4452,7 +4452,7 @@ function bdCambiarPorPagina() {
 }
 
 // ============================================================
-// VER PRODUCTO - CON MODAL (CORREGIDO)
+// VER PRODUCTO - CON MODAL (SIN COSTO Y PRECIO)
 // ============================================================
 function verProducto(id) {
     if (!id) {
@@ -4614,20 +4614,8 @@ function verProducto(id) {
                                 </div>
                             </div>
                             
-                            <!-- Precios -->
-                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;padding:12px;background:#f8fafc;border-radius:8px;">
-                                <div>
-                                    <div style="font-size:11px;color:#64748B;font-weight:600;">Precio venta</div>
-                                    <div style="font-size:18px;font-weight:900;color:var(--empresa, #EF233C);">S/ ${precio}</div>
-                                </div>
-                                <div>
-                                    <div style="font-size:11px;color:#64748B;font-weight:600;">Costo</div>
-                                    <div style="font-size:18px;font-weight:900;color:#DC2626;">S/ ${costo}</div>
-                                </div>
-                            </div>
-                            
                             <!-- Presentaciones -->
-                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;">
                                 <div>
                                     <div style="font-size:11px;color:#64748B;font-weight:600;">Presentación proveedor</div>
                                     <div>${p.presentacion_proveedor || '-'}</div>
