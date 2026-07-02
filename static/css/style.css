@@ -2919,6 +2919,44 @@ input[type="file"] { display: none; }
 }
 
 /* ============================================================
+   STICKY HEADER PARA TABLA DE PRODUCTOS
+   ============================================================ */
+
+/* El contenedor de la tabla debe tener una altura máxima y scroll */
+.bd-table-scroll {
+    overflow-y: auto;
+    max-height: 600px; /* Ajusta según necesites */
+    position: relative;
+}
+
+/* El header se vuelve sticky */
+.bd-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #f8fafc;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Para que el header no se superponga mal */
+.bd-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+/* Asegurar que el header tenga fondo sólido */
+.bd-table thead th {
+    background: #f8fafc !important;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+/* Sombra al hacer scroll (opcional, da efecto de profundidad) */
+.bd-table-scroll.sticky-shadow .bd-table thead th {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* ============================================================
    CSS PANTALLA 3 — COMPARATIVO COSTOS
    ============================================================ */
 .cc-actions-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; align-items: center; }
