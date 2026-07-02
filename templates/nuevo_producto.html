@@ -738,6 +738,10 @@
  * ============================================================
  */
 
+// ============================================================
+// VALIDAR Y GUARDAR - VERSIÓN CORREGIDA
+// ============================================================
+
 function validarYGuardar(event) {
     // Prevenir comportamiento por defecto
     if (event) {
@@ -768,7 +772,7 @@ function validarYGuardar(event) {
         var elemento = document.getElementById(campo.id);
         var valor = elemento ? elemento.value.trim() : '';
         
-        if (!valor || valor === '') {
+        if (!valor || valor === '' || valor === 'Seleccione') {
             errores.push(campo.nombre);
             var fieldContainer = document.getElementById(campo.fieldId);
             if (fieldContainer) {
@@ -780,15 +784,22 @@ function validarYGuardar(event) {
         }
     }
     
-    // Si hay errores, mostrar notificación usando el sistema de base.html
+    console.log('📋 Errores encontrados:', errores);
+    
+    // Si hay errores, mostrar notificación usando mostrarErrorFlotante
     if (errores.length > 0) {
-        // Usar el sistema de notificaciones de base.html
-        if (typeof mostrarNotificacion === 'function') {
-            var mensaje = 'Te falta: ' + errores.join(', ');
-            mostrarNotificacion('error', '❌ ¡Campos obligatorios!', mensaje);
+        // ✅ USAR mostrarErrorFlotante (la que funciona en base.html)
+        if (typeof mostrarErrorFlotante === 'function') {
+            console.log('🔔 Llamando a mostrarErrorFlotante con:', errores);
+            mostrarErrorFlotante(errores);
         } else {
-            // Fallback: usar alert
-            alert('❌ Campos obligatorios:\n\nTe falta: ' + errores.join('\n- '));
+            // Fallback: usar forzarNotificacion
+            console.log('⚠️ mostrarErrorFlotante no disponible, usando fallback');
+            if (typeof forzarNotificacion === 'function') {
+                forzarNotificacion(errores);
+            } else {
+                alert('❌ Campos obligatorios:\n\nTe falta: ' + errores.join('\n- '));
+            }
         }
         
         // Enfocar el primer campo con error
@@ -807,6 +818,7 @@ function validarYGuardar(event) {
     document.getElementById('formNuevoProducto').submit();
     return true;
 }
+
 
 /**
  * ============================================================
