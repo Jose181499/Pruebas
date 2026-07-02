@@ -2,6 +2,11 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <!-- ============================================ -->
+    <!-- BOOTSTRAP ICONS PARA LOS ICONOS              -->
+    <!-- ============================================ -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
     <style>
         /* ============================================
            ESTILOS PARA BOTONES DE ACCIÓN (Guardar/Cancelar)
@@ -53,6 +58,9 @@
             color: white;
             border: 2px solid #0066FF;
             box-shadow: 0 4px 15px rgba(0, 102, 255, 0.4);
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
         }
         
         .page-head .actions .btn.primary:hover {
@@ -81,12 +89,6 @@
             z-index: -1;
             animation: electricGlow 3s ease-in-out infinite;
             opacity: 0.7;
-        }
-        
-        .page-head .actions .btn.primary {
-            position: relative;
-            z-index: 1;
-            overflow: hidden;
         }
         
         @keyframes electricGlow {
@@ -144,7 +146,7 @@
             border-left: 5px solid #FF4444;
             border-radius: 10px;
             padding: 16px 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
             pointer-events: auto;
             animation: slideInRight 0.4s ease forwards;
             transition: all 0.3s ease;
@@ -229,16 +231,18 @@
             background: none;
             border: none;
             color: #999;
-            font-size: 18px;
+            font-size: 20px;
             cursor: pointer;
             padding: 0;
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 50%;
             transition: all 0.2s ease;
+            font-weight: bold;
+            line-height: 1;
         }
         
         .notification .close-btn:hover {
@@ -253,8 +257,8 @@
             left: 0;
             height: 3px;
             background: linear-gradient(90deg, #FF4444, #FF6B6B);
-            animation: progressBar 5s linear forwards;
             border-radius: 0 0 0 5px;
+            animation: progressBar 5s linear forwards;
         }
         
         @keyframes progressBar {
@@ -305,11 +309,15 @@
         .card {
             padding: 14px !important;
             margin-bottom: 10px !important;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
         
         .card-title {
             font-size: 14px !important;
             margin-bottom: 10px !important;
+            font-weight: 600;
         }
         
         .field {
@@ -319,6 +327,7 @@
         .field label {
             font-size: 12px !important;
             margin-bottom: 2px !important;
+            display: block;
         }
         
         .field input,
@@ -327,6 +336,10 @@
             padding: 5px 8px !important;
             font-size: 12px !important;
             min-height: 28px !important;
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
         }
         
         .field textarea {
@@ -335,19 +348,21 @@
         }
         
         .grid {
+            display: grid;
             gap: 6px 10px !important;
             margin-bottom: 4px !important;
         }
         
         .grid.two {
-            gap: 6px 10px !important;
+            grid-template-columns: 1fr 1fr !important;
         }
         
         .grid.full {
-            gap: 6px 10px !important;
+            grid-template-columns: 1fr !important;
         }
         
         .input-unit {
+            display: flex;
             height: 28px !important;
         }
         
@@ -355,6 +370,7 @@
             padding: 4px 6px !important;
             font-size: 12px !important;
             height: 28px !important;
+            border-radius: 4px 0 0 4px !important;
         }
         
         .input-unit span {
@@ -362,46 +378,72 @@
             padding: 0 6px !important;
             height: 28px !important;
             line-height: 28px !important;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-left: none;
+            border-radius: 0 4px 4px 0;
         }
         
         .upload {
             padding: 12px !important;
             min-height: 100px !important;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
         }
         
         .upload .cloud i {
             font-size: 30px !important;
+            color: #999;
         }
         
         .upload strong {
             font-size: 13px !important;
+            display: block;
         }
         
         .upload .drag-hint {
             font-size: 11px !important;
+            color: #999;
         }
         
         .upload .file-badge {
             font-size: 11px !important;
             padding: 3px 10px !important;
+            background: #f5f5f5;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 4px;
         }
         
         .operation {
             padding: 10px !important;
             margin-top: 8px !important;
+            background: #f9f9f9;
+            border-radius: 8px;
         }
         
         .operation .op-item {
+            display: flex;
             padding: 4px 0 !important;
             gap: 6px !important;
+            align-items: flex-start;
+            cursor: pointer;
+        }
+        
+        .operation .op-item input[type="checkbox"] {
+            margin-top: 2px;
         }
         
         .operation .op-title {
             font-size: 13px !important;
+            font-weight: 600;
         }
         
         .operation .op-desc {
             font-size: 11px !important;
+            color: #666;
         }
         
         .price-box {
@@ -410,23 +452,41 @@
         
         .price-label {
             font-size: 13px !important;
+            font-weight: 600;
+        }
+        
+        .price-label i {
+            margin-right: 4px;
         }
         
         .tax {
             font-size: 10px !important;
+            color: #999;
         }
         
         .money {
             font-size: 18px !important;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .money span {
+            font-weight: 600;
         }
         
         .money input {
             font-size: 16px !important;
             padding: 2px 6px !important;
             height: 30px !important;
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
         
         .margin-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 6px !important;
             margin-top: 6px !important;
         }
@@ -434,19 +494,28 @@
         .margin-box {
             padding: 6px 10px !important;
             font-size: 12px !important;
+            background: #f5f5f5;
+            border-radius: 4px;
+            text-align: center;
         }
         
         .margin-box b {
             font-size: 14px !important;
+            display: block;
         }
         
         .state-select {
             padding: 4px 8px !important;
             font-size: 12px !important;
             height: 30px !important;
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
         
         .state-list {
+            display: flex;
+            flex-wrap: wrap;
             gap: 4px !important;
             margin-top: 6px !important;
         }
@@ -454,30 +523,63 @@
         .state-chip {
             padding: 2px 8px !important;
             font-size: 10px !important;
+            border-radius: 12px;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
         
         .state-chip .dot {
             width: 6px !important;
             height: 6px !important;
+            border-radius: 50%;
+            display: inline-block;
         }
+        
+        .state-chip.active-state .dot { background: #4CAF50; }
+        .state-chip.inactive .dot { background: #999; }
+        .state-chip.order .dot { background: #FF9800; }
+        .state-chip.available .dot { background: #2196F3; }
+        .state-chip.blocked .dot { background: #f44336; }
         
         .code-box {
             padding: 4px 8px !important;
+            background: #f5f5f5;
+            border-radius: 4px;
         }
         
         .code-value {
             font-size: 14px !important;
             padding: 2px 6px !important;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
         }
         
         .code-value .pill {
             font-size: 9px !important;
             padding: 1px 6px !important;
+            background: #ddd;
+            border-radius: 10px;
+            font-weight: 400;
         }
         
         .form-header {
+            display: flex;
             gap: 8px !important;
             margin-bottom: 8px !important;
+            align-items: flex-end;
+        }
+        
+        .req {
+            color: #ff4444;
+        }
+        
+        .optional {
+            color: #999;
+            font-weight: 400;
         }
         
         /* ============================================
@@ -508,6 +610,7 @@
             
             .np-layout {
                 flex-direction: column !important;
+                display: block !important;
             }
             
             #notificationContainer {
@@ -515,6 +618,15 @@
                 right: 10px;
                 left: 10px;
                 max-width: none;
+            }
+            
+            .grid.two {
+                grid-template-columns: 1fr !important;
+            }
+            
+            .form-header {
+                flex-direction: column;
+                align-items: stretch;
             }
         }
         
@@ -585,7 +697,7 @@
 <div class="page-head">
     <div>
         <h1 style="font-size: 22px; margin: 0;">{% if editando %}Editar producto{% else %}Nuevo producto{% endif %}</h1>
-        <p class="subtitle" style="font-size: 13px; margin: 2px 0 0 0;">{% if editando %}Modifica la información del producto seleccionado.{% else %}Crea o edita la información principal del producto.{% endif %}</p>
+        <p class="subtitle" style="font-size: 13px; margin: 2px 0 0 0; color: #666;">{% if editando %}Modifica la información del producto seleccionado.{% else %}Crea o edita la información principal del producto.{% endif %}</p>
     </div>
     
     <!-- ========================================== -->
@@ -622,11 +734,11 @@
                     <span class="drag-hint">PNG, JPG o WEBP • Máx. 5MB</span>
                     <div class="file-badge" id="fileBadge"><i class="bi bi-paperclip"></i> Ningún archivo</div>
                     <div id="previewContainer"></div>
-                    <input id="fotoProducto" name="foto" type="file" accept="image/png,image/jpeg,image/webp" />
+                    <input id="fotoProducto" name="foto" type="file" accept="image/png,image/jpeg,image/webp" style="display:none;" />
                 </div>
             </div>
             <div class="operation">
-                <div style="font-weight:700;font-size:9px;color:var(--text);margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;">Tipo de operación</div>
+                <div style="font-weight:700;font-size:9px;color:#666;margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;">Tipo de operación</div>
                 <label class="op-item">
                     <input type="checkbox" name="operation" value="venta" {% if not editando or (producto and producto.venta) %}checked{% endif %} />
                     <div><div class="op-title">Venta</div><div class="op-desc">El producto estará disponible para ventas.</div></div>
@@ -647,14 +759,14 @@
             <h3 class="card-title"><i class="bi bi-info-circle"></i> Información del producto</h3>
             <div class="form-header">
                 <div class="code-box">
-                    <label>Código <span class="req">*</span></label>
+                    <label style="font-size:12px;">Código <span class="req">*</span></label>
                     <div class="code-value">
                         <span id="codigoProducto">{{ producto.codigo if producto else codigo_auto or 'PRD-0001' }}</span>
                         <span class="pill">{% if editando %}Existente{% else %}Auto{% endif %}</span>
                     </div>
                     <input type="hidden" id="codigoGenerado" name="codigo" value="{{ producto.codigo if producto else codigo_auto or 'PRD-0001' }}" />
                 </div>
-                <div class="field" id="field-nombre">
+                <div class="field" id="field-nombre" style="flex:1;">
                     <label>Nombre del producto <span class="req">*</span></label>
                     <input id="nombreProducto" name="descripcion" placeholder="Ingrese el nombre" required 
                            value="{{ producto.descripcion if producto else '' }}" />
@@ -704,7 +816,7 @@
                             <option value="Casa de Herramientas" {% if producto and producto.marca == 'Casa de Herramientas' %}selected{% endif %}>Casa de Herramientas</option>
                             <option value="Otros" {% if producto and producto.marca == 'Otros' %}selected{% endif %}>Otros</option>
                         </select>
-                        <button type="button" class="btn btn-sm primary" onclick="personalizar('marcaProducto','Marca personalizada')" style="padding:2px 8px;font-size:12px;height:28px;"><i class="bi bi-pencil"></i></button>
+                        <button type="button" class="btn btn-sm primary" onclick="personalizar('marcaProducto','Marca personalizada')" style="padding:2px 8px;font-size:12px;height:28px;background:#0066FF;color:white;border:none;border-radius:4px;cursor:pointer;"><i class="bi bi-pencil"></i></button>
                     </div>
                 </div>
             </div>
@@ -746,7 +858,7 @@
                             <option value="Electrónica" {% if producto and producto.familia == 'Electrónica' %}selected{% endif %}>Electrónica</option>
                             <option value="Papelería" {% if producto and producto.familia == 'Papelería' %}selected{% endif %}>Papelería</option>
                         </select>
-                        <button type="button" class="btn btn-sm primary" onclick="personalizar('categoriaProducto','Categoría personalizada')" style="padding:2px 8px;font-size:12px;height:28px;"><i class="bi bi-pencil"></i></button>
+                        <button type="button" class="btn btn-sm primary" onclick="personalizar('categoriaProducto','Categoría personalizada')" style="padding:2px 8px;font-size:12px;height:28px;background:#0066FF;color:white;border:none;border-radius:4px;cursor:pointer;"><i class="bi bi-pencil"></i></button>
                     </div>
                 </div>
                 <div class="field">
@@ -1023,6 +1135,25 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+    
+    // Hacer clic en el área de upload para abrir el selector de archivos
+    const uploadArea = document.getElementById('uploadArea');
+    if (uploadArea) {
+        uploadArea.addEventListener('click', function() {
+            document.getElementById('fotoProducto').click();
+        });
+    }
+    
+    // Mostrar nombre del archivo seleccionado
+    const fileInput = document.getElementById('fotoProducto');
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            const badge = document.getElementById('fileBadge');
+            if (this.files && this.files[0]) {
+                badge.innerHTML = `<i class="bi bi-paperclip"></i> ${this.files[0].name}`;
+            }
+        });
+    }
 });
 
 // Función para personalizar (si existe)
