@@ -4214,28 +4214,39 @@ async function cargarProductos() {
     }
 }
 
-// ============================================================
-// CAMBIAR VISTA (PRINCIPAL / COMPLETA) - NUEVO
-// ============================================================
+
 function cambiarVista(vista) {
     console.log('🔄 Cambiando a vista:', vista);
     window.bdVistaActual = vista;
     
     // Actualizar botones
-    const viewPrincipal = document.getElementById('viewPrincipal');
-    const viewCompleta = document.getElementById('viewCompleta');
-    if (viewPrincipal) viewPrincipal.classList.toggle('active', vista === 'principal');
-    if (viewCompleta) viewCompleta.classList.toggle('active', vista === 'completa');
+    var viewPrincipal = document.getElementById('viewPrincipal');
+    var viewCompleta = document.getElementById('viewCompleta');
     
-    // Mostrar/ocultar columnas
-    const container = document.getElementById('tablaContainer');
+    if (viewPrincipal) {
+        viewPrincipal.className = 'view-btn' + (vista === 'principal' ? ' active' : '');
+    }
+    if (viewCompleta) {
+        viewCompleta.className = 'view-btn' + (vista === 'completa' ? ' active' : '');
+    }
+    
+    // ✅ FORZAR LA CLASE EN EL CONTENEDOR
+    var container = document.getElementById('tablaContainer');
     if (container) {
-        container.classList.toggle('vista-completa', vista === 'completa');
+        if (vista === 'completa') {
+            container.classList.add('vista-completa');
+            console.log('✅ Clase vista-completa AGREGADA');
+        } else {
+            container.classList.remove('vista-completa');
+            console.log('✅ Clase vista-completa ELIMINADA');
+        }
+        console.log('📌 Clases del container:', container.className);
     }
     
     // Re-renderizar productos
     bdRenderProductos(window.bdProductosFiltrados);
 }
+
 
 // ============================================================
 // RENDERIZAR PRODUCTOS - MODIFICADO PARA SOPORTAR VISTAS
