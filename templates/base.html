@@ -4452,7 +4452,7 @@ function bdCambiarPorPagina() {
 }
 
 // ============================================================
-// ACCIONES DE PRODUCTOS
+// VER PRODUCTO - CON MODAL (CORREGIDO)
 // ============================================================
 function verProducto(id) {
     if (!id) {
@@ -4461,8 +4461,284 @@ function verProducto(id) {
         }
         return;
     }
-    window.location.href = '/productos/ver/' + id;
+    
+    // Mostrar loading
+    if (typeof mostrarNotificacion === 'function') {
+        mostrarNotificacion('info', '⏳ Cargando...', 'Obteniendo información del producto');
+    }
+    
+    fetch('/productos/api/productos/' + id)
+        .then(function(response) { 
+            if (!response.ok) {
+                throw new Error('Error al cargar el producto');
+            }
+            return response.json(); 
+        })
+        .then(function(data) {
+            if (data.success && data.data) {
+                var p = data.data;
+                console.log('📦 Producto cargado:', p);
+                
+                // ✅ Crear modal de detalle
+                var modal = document.createElement('div');
+                modal.id = 'modalDetalleProducto';
+                modal.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100vw;
+                    height: 100vh;
+                    background: rgba(0, 0, 0, 0.7);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 999999;
+                    padding: 20px;
+                    backdrop-filter: blur(4px);
+                    animation: fadeIn 0.3s ease;
+                `;
+                
+                var estadoClass = 'st-active';
+                var estado = (p.estado || 'activo').toLowerCase();
+                if (estado === 'inactivo') estadoClass = 'st-inactive';
+                else if (estado === 'bajo_pedido') estadoClass = 'st-pending';
+                else if (estado === 'bloqueado') estadoClass = 'st-blocked';
+                else if (estado === 'disponible') estadoClass = 'st-available';
+                
+                var costo = p.costo_unitario ? parseFloat(p.costo_unitario).toFixed(2) : '0.00';
+                var precio = p.precio_unitario ? parseFloat(p.precio_unitario).toFixed(2) : '0.00';
+                var categoria = p.categoria || p.familia || '-';
+                var subcategoria = p.subcategoria || p.categoria_derivada || '-';
+                
+                modal.innerHTML = `
+                    <div style="
+                        background: white;
+                        border-radius: 16px;
+                        max-width: 700px;
+                        width: 100%;
+                        max-height: 90vh;
+                        overflow: hidden;
+                        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                        margin: auto;
+                        display: flex;
+                        flex-direction: column;
+                        animation: slideUp 0.4s ease;
+                    ">
+                        <!-- HEADER -->
+                        <div style="
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            padding: 16px 20px;
+                            border-bottom: 2px solid var(--empresa, #EF233C);
+                            background: var(--empresa-soft, #FFE4E8);
+                        ">
+                            <h2 style="margin:0;font-size:18px;font-weight:800;color:var(--empresa, #EF233C);">
+                                <i class="bi bi-box-seam"></i> 
+                                Detalle del producto
+                            </h2>
+                            <button onclick="cerrarModalDetalle()" style="
+                                height: 36px;
+                                border-radius: 8px;
+                                border: none;
+                                padding: 0 16px;
+                                font-weight: 700;
+                                cursor: pointer;
+                                background: white;
+                                color: #0F172A;
+                                font-size: 18px;
+                            ">✕</button>
+                        </div>
+                        
+                        <!-- BODY -->
+                        <div style="
+                            padding: 20px;
+                            overflow-y: auto;
+                            flex: 1;
+                        ">
+                            <!-- Código y Estado -->
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;background:#f8fafc;padding:12px;border-radius:8px;">
+                                <div>
+                                    <div style="font-size:11px;color:#64748B;font-weight:600;">Código</div>
+                                    <div style="font-size:20px;font-weight:900;color:var(--empresa, #EF233C);">${p.codigo || '-'}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:11px;color:#64748B;font-weight:600;">Estado</div>
+                                    <div><span class="bd-status ${estadoClass}"><span class="bd-dot"></span>${p.estado || 'Activo'}</span></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Datos principales -->
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                                <div style="grid-column:span 2;">
+                                    <div style="font-size:11px;color:#64748B;font-weight:600;">Nombre</div>
+                                    <div style="font-size:16px;font-weight:700;">${p.descripcion || '-'}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:11px;color:#64748B;font-weight:600;">Modelo</div>
+                                    <div>${p.modelo || '-'}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:11px;color:#64748B;font-weight:600;">Marca</div>
+                                    <div>${p.marca || '-'}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:11px;color:#64748B;font-weight:600;">Categoría</div>
+                                    <div>${categoria}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:11px;color:#64748B;font-weight:600;">Subcategoría</div>
+                                    <div>${subcategoria}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:11px;color:#64748B;font-weight:600;">Unidad</div>
+                                    <div>${p.unidad || '-'}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:11px;color:#64748B;font-weight:600;">Transporte</div>
+                                    <div>${p.transporte || '-'}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:11px;color:#64748B;font-weight:600;">Peso</div>
+                                    <div>${p.peso || '0'} kg</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:11px;color:#64748B;font-weight:600;">Volumen</div>
+                                    <div>${p.volumen || '0'} m³</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:11px;color:#64748B;font-weight:600;">Stock</div>
+                                    <div>${p.stock || 0}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:11px;color:#64748B;font-weight:600;">Stock mínimo</div>
+                                    <div>${p.stock_minimo || 0}</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Precios -->
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;padding:12px;background:#f8fafc;border-radius:8px;">
+                                <div>
+                                    <div style="font-size:11px;color:#64748B;font-weight:600;">Precio venta</div>
+                                    <div style="font-size:18px;font-weight:900;color:var(--empresa, #EF233C);">S/ ${precio}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:11px;color:#64748B;font-weight:600;">Costo</div>
+                                    <div style="font-size:18px;font-weight:900;color:#DC2626;">S/ ${costo}</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Presentaciones -->
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+                                <div>
+                                    <div style="font-size:11px;color:#64748B;font-weight:600;">Presentación proveedor</div>
+                                    <div>${p.presentacion_proveedor || '-'}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:11px;color:#64748B;font-weight:600;">Presentación venta</div>
+                                    <div>${p.presentacion_venta || '-'}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:11px;color:#64748B;font-weight:600;">Venta mínima</div>
+                                    <div>${p.venta_minima || 1}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:11px;color:#64748B;font-weight:600;">Código barras</div>
+                                    <div>${p.codigo_barras || '-'}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:11px;color:#64748B;font-weight:600;">Origen</div>
+                                    <div>${p.origen || '-'}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:11px;color:#64748B;font-weight:600;">Tiempo entrega</div>
+                                    <div>${p.tiempo_entrega || '-'}</div>
+                                </div>
+                                <div style="grid-column:span 2;">
+                                    <div style="font-size:11px;color:#64748B;font-weight:600;">Abastecimiento</div>
+                                    <div>${p.abastecimiento || '-'}</div>
+                                </div>
+                                <div style="grid-column:span 2;">
+                                    <div style="font-size:11px;color:#64748B;font-weight:600;">Descripción larga</div>
+                                    <div>${p.descripcion_larga || '-'}</div>
+                                </div>
+                                <div style="grid-column:span 2;">
+                                    <div style="font-size:11px;color:#64748B;font-weight:600;">Observaciones</div>
+                                    <div>${p.observaciones || '-'}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- FOOTER -->
+                        <div style="
+                            display: flex;
+                            justify-content: flex-end;
+                            gap: 10px;
+                            padding: 12px 20px;
+                            border-top: 1px solid #E5E7EB;
+                            background: #F8FAFC;
+                        ">
+                            <button onclick="cerrarModalDetalle()" style="
+                                height: 38px;
+                                border-radius: 8px;
+                                border: 1px solid #E5E7EB;
+                                padding: 0 20px;
+                                font-weight: 700;
+                                cursor: pointer;
+                                background: white;
+                                color: #0F172A;
+                            ">Cerrar</button>
+                            <button onclick="editarProducto(${p.id}); cerrarModalDetalle();" style="
+                                height: 38px;
+                                border-radius: 8px;
+                                border: 0;
+                                padding: 0 24px;
+                                font-weight: 700;
+                                cursor: pointer;
+                                background: var(--empresa, #EF233C);
+                                color: white;
+                            ">✏️ Editar producto</button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                
+                // Eliminar notificación de loading
+                var notificaciones = document.querySelectorAll('.notificacion');
+                notificaciones.forEach(function(n) {
+                    if (n.textContent.includes('Cargando')) {
+                        n.remove();
+                    }
+                });
+                
+            } else {
+                if (typeof mostrarNotificacion === 'function') {
+                    mostrarNotificacion('error', '❌ Error', data.error || 'Producto no encontrado');
+                }
+            }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            if (typeof mostrarNotificacion === 'function') {
+                mostrarNotificacion('error', '❌ Error', 'Error al cargar el producto');
+            }
+        });
 }
+
+// ============================================================
+// CERRAR MODAL DE DETALLE
+// ============================================================
+function cerrarModalDetalle() {
+    var modal = document.getElementById('modalDetalleProducto');
+    if (modal) {
+        modal.style.animation = 'fadeOut 0.3s ease forwards';
+        setTimeout(function() {
+            modal.remove();
+        }, 300);
+    }
+}
+
 
 function editarProducto(id) {
     if (!id) {
