@@ -53,6 +53,9 @@
             color: white;
             border: 2px solid #0066FF;
             box-shadow: 0 4px 15px rgba(0, 102, 255, 0.4);
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
         }
         
         .page-head .actions .btn.primary:hover {
@@ -81,12 +84,6 @@
             z-index: -1;
             animation: electricGlow 3s ease-in-out infinite;
             opacity: 0.7;
-        }
-        
-        .page-head .actions .btn.primary {
-            position: relative;
-            z-index: 1;
-            overflow: hidden;
         }
         
         @keyframes electricGlow {
@@ -121,15 +118,45 @@
         }
         
         /* ============================================
+           RESALTAR CAMPOS CON ERROR
+           ============================================ */
+        .field.error input,
+        .field.error select,
+        .field.error textarea {
+            border-color: #DC2626 !important;
+            background-color: #FFF8F8 !important;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15) !important;
+        }
+        
+        .field.error label {
+            color: #DC2626 !important;
+        }
+        
+        .field.error label .req {
+            color: #DC2626 !important;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-4px); }
+            40% { transform: translateX(4px); }
+            60% { transform: translateX(-3px); }
+            80% { transform: translateX(3px); }
+        }
+        
+        .field.error input,
+        .field.error select {
+            animation: shake 0.3s ease;
+        }
+        
+        /* ============================================
            AJUSTES PARA REDUCIR TAMAÑO DE CAMPOS
            ============================================ */
         
-        /* Reducir espaciado general */
         .np-layout {
             gap: 12px !important;
         }
         
-        /* Tarjetas más compactas */
         .card {
             padding: 14px !important;
             margin-bottom: 10px !important;
@@ -140,7 +167,6 @@
             margin-bottom: 10px !important;
         }
         
-        /* Campos de formulario más pequeños */
         .field {
             margin-bottom: 6px !important;
         }
@@ -163,7 +189,6 @@
             max-height: 80px !important;
         }
         
-        /* Grid más compacto */
         .grid {
             gap: 6px 10px !important;
             margin-bottom: 4px !important;
@@ -177,7 +202,6 @@
             gap: 6px 10px !important;
         }
         
-        /* Input con unidad más pequeño */
         .input-unit {
             height: 28px !important;
         }
@@ -195,7 +219,6 @@
             line-height: 28px !important;
         }
         
-        /* Upload más compacto */
         .upload {
             padding: 12px !important;
             min-height: 100px !important;
@@ -218,7 +241,6 @@
             padding: 3px 10px !important;
         }
         
-        /* Operaciones más compactas */
         .operation {
             padding: 10px !important;
             margin-top: 8px !important;
@@ -237,7 +259,6 @@
             font-size: 11px !important;
         }
         
-        /* Precios más compactos */
         .price-box {
             padding: 8px 0 !important;
         }
@@ -274,7 +295,6 @@
             font-size: 14px !important;
         }
         
-        /* Estado más compacto */
         .state-select {
             padding: 4px 8px !important;
             font-size: 12px !important;
@@ -296,7 +316,6 @@
             height: 6px !important;
         }
         
-        /* Código más compacto */
         .code-box {
             padding: 4px 8px !important;
         }
@@ -311,15 +330,24 @@
             padding: 1px 6px !important;
         }
         
-        /* Form header más compacto */
         .form-header {
             gap: 8px !important;
             margin-bottom: 8px !important;
         }
         
-        /* ============================================
-           RESPONSIVE PARA MÓVILES
-           ============================================ */
+        .np-layout {
+            display: grid !important;
+            grid-template-columns: 280px 1fr 260px !important;
+            gap: 12px !important;
+            align-items: start !important;
+        }
+        
+        @media (max-width: 1200px) {
+            .np-layout {
+                grid-template-columns: 1fr 1fr !important;
+            }
+        }
+        
         @media (max-width: 768px) {
             .page-head {
                 flex-direction: column;
@@ -345,10 +373,10 @@
             
             .np-layout {
                 flex-direction: column !important;
+                grid-template-columns: 1fr !important;
             }
         }
         
-        /* Para pantallas muy pequeñas */
         @media (max-width: 480px) {
             .page-head .actions {
                 flex-direction: column;
@@ -362,9 +390,6 @@
             }
         }
         
-        /* ============================================
-           ANIMACIÓN DE CARGA (opcional)
-           ============================================ */
         .page-head .actions .btn.primary.loading {
             pointer-events: none;
             opacity: 0.8;
@@ -383,26 +408,6 @@
         
         @keyframes spin {
             to { transform: rotate(360deg); }
-        }
-        
-        /* Para que el layout de 3 columnas se vea bien */
-        .np-layout {
-            display: grid !important;
-            grid-template-columns: 280px 1fr 260px !important;
-            gap: 12px !important;
-            align-items: start !important;
-        }
-        
-        @media (max-width: 1200px) {
-            .np-layout {
-                grid-template-columns: 1fr 1fr !important;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .np-layout {
-                grid-template-columns: 1fr !important;
-            }
         }
     </style>
 </head>
@@ -425,17 +430,17 @@
         <button class="btn outline" type="button" onclick="limpiarFormulario()">
             <i class="bi bi-x-circle"></i> Cancelar
         </button>
-        <button class="btn primary" id="btnGuardar" type="button">
-            <i class="bi bi-save"></i> {% if editando %}Actualizar{% else %}Guardar Nuevo{% endif %}
+        <button class="btn primary" id="btnGuardar" type="button" onclick="validarYGuardar(event)">
+            <i class="bi bi-save"></i> {% if editando %}Actualizar Producto{% else %}Guardar Nuevo Producto{% endif %}
         </button>
     </div>
 </div>
 
 <!-- ============================================ -->
-<!-- RESTO DEL FORMULARIO                         -->
+<!-- FORMULARIO                                   -->
 <!-- ============================================ -->
 
-<form id="formNuevoProducto" action="/api/productos" method="POST" enctype="multipart/form-data">
+<form id="formNuevoProducto" action="/api/productos" method="POST" enctype="multipart/form-data" onsubmit="return false;">
     <!-- ✅ ID del producto para actualizar -->
     {% if editando and producto %}
     <input type="hidden" name="producto_id" value="{{ producto.id }}" />
@@ -484,19 +489,19 @@
                     </div>
                     <input type="hidden" id="codigoGenerado" name="codigo" value="{{ producto.codigo if producto else codigo_auto or 'PRD-0001' }}" />
                 </div>
-                <div class="field" style="flex:1">
+                <div class="field" id="field-nombre" style="flex:1;">
                     <label>Nombre del producto <span class="req">*</span></label>
                     <input id="nombreProducto" name="descripcion" placeholder="Ingrese el nombre" required 
                            value="{{ producto.descripcion if producto else '' }}" />
                 </div>
             </div>
             <div class="grid two">
-                <div class="field">
+                <div class="field" id="field-modelo">
                     <label>Modelo <span class="req">*</span></label>
                     <input id="modeloProducto" name="modelo" placeholder="Ej. M100" required 
                            value="{{ producto.modelo if producto else '' }}" />
                 </div>
-                <div class="field">
+                <div class="field" id="field-marca">
                     <label>Marca <span class="req">*</span></label>
                     <div style="display:flex;gap:4px;">
                         <select id="marcaProducto" name="marca" style="flex:1;">
@@ -539,7 +544,7 @@
                 </div>
             </div>
             <div class="grid">
-                <div class="field">
+                <div class="field" id="field-unidad">
                     <label>Unidad de medida <span class="req">*</span></label>
                     <select id="unidadMedida" name="unidad" required>
                         <option value="">Seleccione</option>
@@ -552,7 +557,7 @@
                         <option value="NIU" {% if producto and producto.unidad == 'NIU' %}selected{% endif %}>NIU - Unidad</option>
                     </select>
                 </div>
-                <div class="field">
+                <div class="field" id="field-categoria">
                     <label>Categoría <span class="req">*</span></label>
                     <div style="display:flex;gap:4px;">
                         <select id="categoriaProducto" name="familia" style="flex:1;" required>
@@ -653,7 +658,7 @@
                         <span>Und.</span>
                     </div>
                 </div>
-                <div class="field">
+                <div class="field" id="field-transporte">
                     <label>Transporte <span class="req">*</span></label>
                     <select id="transporteReferencial" name="transporte" required>
                         <option value="">Seleccione</option>
@@ -722,6 +727,358 @@
         </div>
     </div>
 </form>
+
+<!-- ============================================ -->
+<!-- SCRIPT DE VALIDACIÓN                        -->
+<!-- ============================================ -->
+<script>
+/**
+ * ============================================================
+ * VALIDAR Y GUARDAR - Usa el sistema de notificaciones de base.html
+ * ============================================================
+ */
+
+function validarYGuardar(event) {
+    // Prevenir comportamiento por defecto
+    if (event) {
+        event.preventDefault();
+    }
+    
+    console.log('🟢 Validando formulario...');
+    
+    // Limpiar errores anteriores
+    limpiarErrores();
+    
+    // Definir campos obligatorios
+    var campos = [
+        { id: 'nombreProducto', nombre: 'Nombre del producto', fieldId: 'field-nombre' },
+        { id: 'modeloProducto', nombre: 'Modelo', fieldId: 'field-modelo' },
+        { id: 'marcaProducto', nombre: 'Marca', fieldId: 'field-marca' },
+        { id: 'unidadMedida', nombre: 'Unidad de medida', fieldId: 'field-unidad' },
+        { id: 'categoriaProducto', nombre: 'Categoría', fieldId: 'field-categoria' },
+        { id: 'transporteReferencial', nombre: 'Transporte', fieldId: 'field-transporte' }
+    ];
+    
+    var errores = [];
+    var primerCampoError = null;
+    
+    // Verificar cada campo
+    for (var i = 0; i < campos.length; i++) {
+        var campo = campos[i];
+        var elemento = document.getElementById(campo.id);
+        var valor = elemento ? elemento.value.trim() : '';
+        
+        if (!valor || valor === '') {
+            errores.push(campo.nombre);
+            var fieldContainer = document.getElementById(campo.fieldId);
+            if (fieldContainer) {
+                fieldContainer.classList.add('error');
+            }
+            if (!primerCampoError) {
+                primerCampoError = elemento;
+            }
+        }
+    }
+    
+    // Si hay errores, mostrar notificación usando el sistema de base.html
+    if (errores.length > 0) {
+        // Usar el sistema de notificaciones de base.html
+        if (typeof mostrarNotificacion === 'function') {
+            var mensaje = 'Te falta: ' + errores.join(', ');
+            mostrarNotificacion('error', '❌ ¡Campos obligatorios!', mensaje);
+        } else {
+            // Fallback: usar alert
+            alert('❌ Campos obligatorios:\n\nTe falta: ' + errores.join('\n- '));
+        }
+        
+        // Enfocar el primer campo con error
+        if (primerCampoError) {
+            setTimeout(function() {
+                primerCampoError.focus();
+                primerCampoError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+        }
+        
+        return false;
+    }
+    
+    // Si no hay errores, enviar el formulario
+    console.log('✅ Todos los campos completos, enviando...');
+    document.getElementById('formNuevoProducto').submit();
+    return true;
+}
+
+/**
+ * ============================================================
+ * LIMPIAR ERRORES VISUALES
+ * ============================================================
+ */
+
+function limpiarErrores() {
+    var camposConError = document.querySelectorAll('.field.error');
+    for (var i = 0; i < camposConError.length; i++) {
+        camposConError[i].classList.remove('error');
+    }
+}
+
+/**
+ * ============================================================
+ * CALCULAR MARGEN
+ * ============================================================
+ */
+
+function calcularMargen() {
+    var venta = parseFloat(document.getElementById('valorVenta').value) || 0;
+    var costo = parseFloat(document.getElementById('valorCosto').value) || 0;
+    
+    var margenPct = document.getElementById('margenPct');
+    var margenSol = document.getElementById('margenSol');
+    
+    if (venta > 0) {
+        var margen = ((venta - costo) / venta) * 100;
+        if (margenPct) margenPct.textContent = margen.toFixed(2) + '%';
+        if (margenSol) margenSol.textContent = 'S/ ' + (venta - costo).toFixed(2);
+    } else {
+        if (margenPct) margenPct.textContent = '0.00%';
+        if (margenSol) margenSol.textContent = 'S/ 0.00';
+    }
+}
+
+/**
+ * ============================================================
+ * ACTUALIZAR CHIPS DE ESTADO
+ * ============================================================
+ */
+
+function actualizarEstadoChips() {
+    var estado = document.getElementById('estadoProducto').value;
+    var chips = document.querySelectorAll('.state-chip');
+    
+    var clases = {
+        'activo': 'active-state',
+        'inactivo': 'inactive',
+        'bajo_pedido': 'order',
+        'disponible': 'available',
+        'bloqueado': 'blocked'
+    };
+    
+    var claseActiva = clases[estado] || 'active-state';
+    
+    for (var i = 0; i < chips.length; i++) {
+        var chip = chips[i];
+        if (chip.classList.contains(claseActiva)) {
+            chip.classList.add('highlight');
+            chip.classList.remove('dim');
+        } else {
+            chip.classList.remove('highlight');
+            chip.classList.add('dim');
+        }
+    }
+}
+
+/**
+ * ============================================================
+ * PERSONALIZAR SELECT
+ * ============================================================
+ */
+
+function personalizar(id, placeholder) {
+    var select = document.getElementById(id);
+    if (!select) return;
+    
+    var valor = prompt('Ingrese el nuevo valor:', '');
+    if (valor && valor.trim() !== '') {
+        // Verificar si ya existe
+        var existe = false;
+        for (var i = 0; i < select.options.length; i++) {
+            if (select.options[i].value === valor.trim()) {
+                existe = true;
+                break;
+            }
+        }
+        if (!existe) {
+            var option = document.createElement('option');
+            option.value = valor.trim();
+            option.textContent = valor.trim();
+            select.appendChild(option);
+        }
+        select.value = valor.trim();
+    }
+}
+
+/**
+ * ============================================================
+ * LIMPIAR FORMULARIO
+ * ============================================================
+ */
+
+function limpiarFormulario() {
+    if (!confirm('¿Estás seguro de que deseas limpiar el formulario? Los cambios no guardados se perderán.')) {
+        return;
+    }
+    
+    // Limpiar todos los inputs, selects y textareas
+    var elementos = document.querySelectorAll('.form-card input:not([type="hidden"]), .form-card textarea, .form-card select');
+    for (var i = 0; i < elementos.length; i++) {
+        var el = elementos[i];
+        if (el.type === 'checkbox') {
+            el.checked = el.value === 'venta';
+        } else if (el.tagName === 'SELECT') {
+            el.selectedIndex = 0;
+        } else if (el.type !== 'file') {
+            el.value = '';
+        }
+    }
+    
+    // Resetear valores específicos
+    var valorVenta = document.getElementById('valorVenta');
+    var valorCosto = document.getElementById('valorCosto');
+    var estadoProducto = document.getElementById('estadoProducto');
+    var fotoProducto = document.getElementById('fotoProducto');
+    var previewContainer = document.getElementById('previewContainer');
+    var fileBadge = document.getElementById('fileBadge');
+    var uploadArea = document.getElementById('uploadArea');
+    
+    if (valorVenta) valorVenta.value = '0.00';
+    if (valorCosto) valorCosto.value = '0.00';
+    if (estadoProducto) estadoProducto.value = 'activo';
+    if (fotoProducto) fotoProducto.value = '';
+    if (previewContainer) previewContainer.innerHTML = '';
+    if (fileBadge) fileBadge.innerHTML = '<i class="bi bi-paperclip"></i> Ningún archivo';
+    if (uploadArea) uploadArea.classList.remove('has-image');
+    
+    calcularMargen();
+    actualizarEstadoChips();
+    
+    // Mostrar notificación de éxito
+    if (typeof mostrarNotificacion === 'function') {
+        mostrarNotificacion('info', '🧹 Formulario limpiado', 'Todos los campos han sido reiniciados.');
+    }
+}
+
+/**
+ * ============================================================
+ * INICIALIZAR EVENTOS
+ * ============================================================
+ */
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ Página de nuevo producto cargada');
+    
+    // Inicializar margen
+    calcularMargen();
+    
+    // Inicializar chips de estado
+    actualizarEstadoChips();
+    
+    // Configurar upload de foto
+    var uploadArea = document.getElementById('uploadArea');
+    var fileInput = document.getElementById('fotoProducto');
+    var fileBadge = document.getElementById('fileBadge');
+    var previewContainer = document.getElementById('previewContainer');
+    
+    if (uploadArea && fileInput) {
+        // Click en el área de upload
+        uploadArea.addEventListener('click', function(e) {
+            if (e.target.closest('.file-badge') || e.target.closest('#previewContainer')) return;
+            fileInput.click();
+        });
+        
+        // Cambio de archivo
+        fileInput.addEventListener('change', function() {
+            var file = this.files[0];
+            if (!file) {
+                if (fileBadge) fileBadge.innerHTML = '<i class="bi bi-paperclip"></i> Ningún archivo';
+                if (previewContainer) previewContainer.innerHTML = '';
+                if (uploadArea) uploadArea.classList.remove('has-image');
+                return;
+            }
+            
+            // Validar tipo
+            if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+                if (typeof mostrarNotificacion === 'function') {
+                    mostrarNotificacion('error', '❌ Formato no soportado', 'Usa PNG, JPG o WEBP.');
+                }
+                fileInput.value = '';
+                if (fileBadge) fileBadge.innerHTML = '<i class="bi bi-paperclip"></i> Ningún archivo';
+                if (previewContainer) previewContainer.innerHTML = '';
+                if (uploadArea) uploadArea.classList.remove('has-image');
+                return;
+            }
+            
+            // Validar tamaño
+            if (file.size > 5 * 1024 * 1024) {
+                if (typeof mostrarNotificacion === 'function') {
+                    mostrarNotificacion('error', '❌ Archivo muy grande', 'La imagen no debe superar los 5 MB.');
+                }
+                fileInput.value = '';
+                if (fileBadge) fileBadge.innerHTML = '<i class="bi bi-paperclip"></i> Ningún archivo';
+                if (previewContainer) previewContainer.innerHTML = '';
+                if (uploadArea) uploadArea.classList.remove('has-image');
+                return;
+            }
+            
+            // Mostrar preview
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                if (previewContainer) {
+                    previewContainer.innerHTML = '<img src="' + e.target.result + '" alt="Foto del producto" style="max-width:100%;max-height:150px;border-radius:8px;margin-top:6px;">';
+                }
+                if (uploadArea) uploadArea.classList.add('has-image');
+                if (fileBadge) fileBadge.innerHTML = '<i class="bi bi-paperclip"></i> ' + file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+            };
+            reader.readAsDataURL(file);
+        });
+        
+        // Drag & Drop
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#0066FF';
+            this.style.background = '#f0f7ff';
+        });
+        
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '';
+            this.style.background = '';
+        });
+        
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '';
+            this.style.background = '';
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                fileInput.dispatchEvent(new Event('change'));
+            }
+        });
+    }
+    
+    // Limpiar errores cuando el usuario escribe
+    var inputs = document.querySelectorAll('input, select, textarea');
+    for (var i = 0; i < inputs.length; i++) {
+        inputs[i].addEventListener('input', function() {
+            var container = this.closest('.field');
+            if (container) {
+                container.classList.remove('error');
+            }
+        });
+        inputs[i].addEventListener('change', function() {
+            var container = this.closest('.field');
+            if (container) {
+                container.classList.remove('error');
+            }
+        });
+    }
+});
+
+// Exponer funciones globalmente
+window.validarYGuardar = validarYGuardar;
+window.limpiarFormulario = limpiarFormulario;
+window.calcularMargen = calcularMargen;
+window.actualizarEstadoChips = actualizarEstadoChips;
+window.personalizar = personalizar;
+</script>
 
 </body>
 </html>
