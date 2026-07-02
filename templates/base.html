@@ -1353,7 +1353,7 @@
             }
         }
 
-        function renderEmpresas(filter=""){
+         function renderEmpresas(filter=""){
     const tbody = document.getElementById("tbodyEmpresas");
     if (!tbody) {
         console.warn('⚠️ tbodyEmpresas no encontrado - omitiendo renderizado');
@@ -1363,8 +1363,14 @@
     const q = filter.toLowerCase();
     const list = empresasData.filter(e => JSON.stringify(e).toLowerCase().includes(q));
     
-    tbody.innerHTML = list.map(e => {
-        const cuenta = e.cuentas_bancarias?.[0] || {};
+    if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:#94A3B8;padding:20px;">📭 No hay empresas registradas</td></tr>`;
+        return;
+    }
+    
+    tbody.innerHTML = list.map(function(e) {
+        // ✅ FIX: Usar forma segura sin optional chaining
+        var cuenta = (e.cuentas_bancarias && e.cuentas_bancarias.length > 0) ? e.cuentas_bancarias[0] : {};
         return `
         <tr>
             <td>${badge(e.codigo)}</td>
@@ -1379,7 +1385,7 @@
             <td style="text-align:center;padding:4px 6px;">
                 <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
                     <span class="badge ${e.estado === 'activo' ? 'badge-ok' : 'badge-gray'}" style="font-size:9px;padding:1px 6px;border-radius:10px;font-weight:600;">
-                        ${e.estado}
+                        ${e.estado || 'inactivo'}
                     </span>
                     <div style="display:flex;gap:2px;justify-content:center;">
                         <button onclick="editarEmpresa(${e.id})" title="Editar" style="
@@ -1419,8 +1425,7 @@
             </td>
         </tr>`;
     }).join("");
-}
-
+}   
 
 
         // Editar empresa
@@ -3424,38 +3429,34 @@
             // Aplicar permisos a la interfaz
             aplicarPermisosInterfaz(esAdmin, permisosMap);
         }
-        // ============================================================
-        // CORRELATIVOS - VERSIÓN CORREGIDA
-        // ============================================================
+       
         async function loadCorrelativos(){
-            try {
-                // ✅ VERIFICAR QUE LOS ELEMENTOS EXISTEN
-                if (!document.getElementById('totalCorrelativos')) {
-                    console.warn('⚠️ Elementos de correlativos no encontrados en la página actual');
-                    return;
-                }
-                
-                // ✅ CARGAR EMPRESAS PRIMERO (si no están cargadas)
-                if (empresasData.length === 0) {
-                    const empresasResponse = await fetchAPI('/api/config/empresas');
-                    if (empresasResponse.success) {
-                        empresasData = empresasResponse.data || [];
-                    }
-                }
-                
-                const data = await fetchAPI('/api/config/correlativos');
-                
-                if (data.success) {
-                    correlativosData = data.data || [];
-                    renderCorrelativos();
-                } else {
-                    toast('Error al cargar correlativos: ' + (data.error || 'Error desconocido'));
-                }
-            } catch(e) {
-                console.error('Error cargando correlativos:', e);
-                toast('Error al cargar correlativos');
-            }
+    console.log('📋 Cargando correlativos...');
+    
+    if (!document.getElementById('totalCorrelativos')) {
+        console.warn('⚠️ Elementos de correlativos no encontrados');
+        return;
+    }
+    
+    try {
+        const data = await fetchAPI('/api/config/correlativos');
+        console.log('📦 Datos correlativos:', data);
+        
+        if (data.success) {
+            correlativosData = data.data || [];
+            console.log('✅ Correlativos cargados:', correlativosData.length);
+            renderCorrelativos();
+        } else {
+            toast('Error al cargar correlativos: ' + (data.error || 'Error desconocido'));
         }
+    } catch(e) {
+        console.error('Error cargando correlativos:', e);
+        toast('Error al cargar correlativos');
+    }
+}
+
+
+
 
         function makeCode(prefijo, anio, ultimo){
             return `${prefijo}-${anio}-${String(Number(ultimo || 0) + 1).padStart(4, '0')}`;
@@ -3868,50 +3869,43 @@
             });
         }
 
-        // ===a=========================================================
-        // APLICAR TEMA - CON COLORES PARA TOPBAR
-        // ============================================================
+     
         function applyTheme(code){
-            const root = document.documentElement;
-             root.setAttribute('data-empresa', code);
-            if(code === "AGD"){
-                // Colores generales
-                root.style.setProperty("--empresa","#FC6200");
-                root.style.setProperty("--empresa-soft","#FFE7D1");
-                root.style.setProperty("--empresa-sidebar","#FFEEDC");
-                root.style.setProperty("--empresa-dark","#0F172A");
-                
-                // ✅ Colores para el topbar (naranja suave)
-                root.style.setProperty("--topbar-bg", "#FFF7ED");
-                root.style.setProperty("--topbar-border", "#FDBA74");
-                root.style.setProperty("--topbar-text", "#9A3412");
-                root.style.setProperty("--topbar-accent", "#EA580C");
-                
-                document.getElementById("logoEmpresa").textContent = "AGD";
-                
-                // Agregar clase para estilos adicionales
-                root.classList.add('empresa-agd');
-                root.classList.remove('empresa-kcf');
-                
-            } else {
-                // KCF - Rojo suave (por defecto)
-                root.style.setProperty("--empresa","#EF233C");
-                root.style.setProperty("--empresa-soft","#FFE4E8");
-                root.style.setProperty("--empresa-sidebar","#FFECEF");
-                root.style.setProperty("--empresa-dark","#1F1F1F");
-                
-                // ✅ Colores para el topbar (rojo suave)
-                root.style.setProperty("--topbar-bg", "#FEF2F2");
-                root.style.setProperty("--topbar-border", "#FCA5A5");
-                root.style.setProperty("--topbar-text", "#991B1B");
-                root.style.setProperty("--topbar-accent", "#DC2626");
-                
-                document.getElementById("logoEmpresa").textContent = "KCF";
-                
-                root.classList.add('empresa-kcf');
-                root.classList.remove('empresa-agd');
-            }
-        }
+    var root = document.documentElement;
+    root.setAttribute('data-empresa', code);
+    
+    if(code === "AGD"){
+        root.style.setProperty("--empresa", "#FC6200");
+        root.style.setProperty("--empresa-soft", "#FFE7D1");
+        root.style.setProperty("--empresa-sidebar", "#FFEEDC");
+        root.style.setProperty("--empresa-dark", "#0F172A");
+        root.style.setProperty("--topbar-bg", "#FFF7ED");
+        root.style.setProperty("--topbar-border", "#FDBA74");
+        root.style.setProperty("--topbar-text", "#9A3412");
+        root.style.setProperty("--topbar-accent", "#EA580C");
+        
+        var logoEl = document.getElementById("logoEmpresa");
+        if (logoEl) logoEl.textContent = "AGD";
+        
+        root.classList.add('empresa-agd');
+        root.classList.remove('empresa-kcf');
+    } else {
+        root.style.setProperty("--empresa", "#EF233C");
+        root.style.setProperty("--empresa-soft", "#FFE4E8");
+        root.style.setProperty("--empresa-sidebar", "#FFECEF");
+        root.style.setProperty("--empresa-dark", "#1F1F1F");
+        root.style.setProperty("--topbar-bg", "#FEF2F2");
+        root.style.setProperty("--topbar-border", "#FCA5A5");
+        root.style.setProperty("--topbar-text", "#991B1B");
+        root.style.setProperty("--topbar-accent", "#DC2626");
+        
+        var logoEl = document.getElementById("logoEmpresa");
+        if (logoEl) logoEl.textContent = "KCF";
+        
+        root.classList.add('empresa-kcf');
+        root.classList.remove('empresa-agd');
+    }
+}
 
 
         // ============================================================
