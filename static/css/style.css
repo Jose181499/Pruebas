@@ -2955,6 +2955,45 @@ input[type="file"] { display: none; }
 .bd-table-scroll.sticky-shadow .bd-table thead th {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
+/* ============================================================
+   CABECERA DE TABLA CON COLOR ROJO SUAVE (KCF)
+   ============================================================ */
+
+/* Estilo base para la cabecera de la tabla de productos */
+.bd-table thead th {
+    background: var(--empresa-soft, #FFE4E8) !important;
+    color: var(--empresa, #EF233C) !important;
+    font-weight: 800 !important;
+    font-size: 11px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    padding: 10px 12px !important;
+    text-align: left !important;
+    border-bottom: 2px solid var(--empresa, #EF233C) !important;
+    white-space: nowrap !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+}
+
+/* Para que el header se mantenga fijo */
+.bd-table thead {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+}
+
+/* Sombra sutil al hacer scroll */
+.bd-table-scroll.sticky-shadow .bd-table thead th {
+    box-shadow: 0 4px 12px rgba(239, 35, 60, 0.15) !important;
+}
+
+/* Alternativa: si quieres que el color se aplique a TODAS las tablas con clase .bd-table */
+.bd-table thead th {
+    background: #FFE4E8 !important;
+    color: #EF233C !important;
+    border-bottom: 2px solid #EF233C !important;
+}
 
 /* ============================================================
    CSS PANTALLA 3 — COMPARATIVO COSTOS
