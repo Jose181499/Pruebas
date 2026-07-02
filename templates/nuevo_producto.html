@@ -28,9 +28,9 @@
         
         /* Estilos base para ambos botones */
         .page-head .actions .btn {
-            padding: 10px 24px;
-            font-size: 14px;
-            font-weight: 600;
+            padding: 12px 28px;
+            font-size: 15px;
+            font-weight: 700;
             border-radius: 8px;
             transition: all 0.3s ease;
             cursor: pointer;
@@ -38,7 +38,7 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            min-width: 110px;
+            min-width: 130px;
             letter-spacing: 0.3px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             border: none;
@@ -115,6 +115,22 @@
         .page-head .actions .btn i {
             font-size: 18px;
             line-height: 1;
+        }
+        
+        /* ============================================
+           NOTIFICACIÓN FLOTANTE INDEPENDIENTE
+           ============================================ */
+        
+        /* Animación de entrada */
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
         
         /* ============================================
@@ -729,31 +745,172 @@
 </form>
 
 <!-- ============================================ -->
-<!-- SCRIPT DE VALIDACIÓN                        -->
+<!-- SCRIPT DE VALIDACIÓN Y NOTIFICACIÓN         -->
 <!-- ============================================ -->
 <script>
 /**
  * ============================================================
- * VALIDAR Y GUARDAR - Usa el sistema de notificaciones de base.html
+ * 🚨 SISTEMA DE NOTIFICACIÓN INDEPENDIENTE
  * ============================================================
  */
 
-// ============================================================
-// VALIDAR Y GUARDAR - VERSIÓN CORREGIDA
-// ============================================================
+(function() {
+    console.log('🚨 Inicializando sistema de notificación...');
+    
+    // 1. ELIMINAR CUALQUIER OVERLAY EXISTENTE
+    try {
+        var oldOverlay = document.getElementById('modalErrorFlotante');
+        if (oldOverlay && oldOverlay.parentNode) {
+            oldOverlay.parentNode.removeChild(oldOverlay);
+            console.log('✅ Overlay antiguo eliminado');
+        }
+    } catch(e) {
+        console.log('⚠️ No se pudo eliminar overlay antiguo:', e.message);
+    }
+    
+    // 2. CREAR NUEVO OVERLAY
+    var overlay = document.createElement('div');
+    overlay.id = 'modalErrorFlotanteNuevo';
+    overlay.style.cssText = `
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: rgba(0, 0, 0, 0.8) !important;
+        display: none !important;
+        align-items: center !important;
+        justify-content: center !important;
+        z-index: 99999999 !important;
+        padding: 20px !important;
+        backdrop-filter: blur(5px) !important;
+        -webkit-backdrop-filter: blur(5px) !important;
+    `;
+    
+    // 3. CONTENIDO DEL OVERLAY
+    overlay.innerHTML = `
+        <div style="
+            background: white !important;
+            border-radius: 16px !important;
+            max-width: 500px !important;
+            width: 100% !important;
+            padding: 35px !important;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.5) !important;
+            text-align: center !important;
+            position: relative !important;
+            animation: slideInDown 0.5s ease !important;
+            border-left: 6px solid #DC2626 !important;
+        ">
+            <div style="font-size: 56px; margin-bottom: 10px;">❌</div>
+            <h3 style="margin: 0 0 6px 0; color: #DC2626; font-size: 22px; font-weight: 800;">¡Campos obligatorios!</h3>
+            <p style="color: #666; font-size: 14px; margin-bottom: 16px;">Completa los siguientes campos para continuar:</p>
+            <ul id="listaCamposFaltantes" style="
+                list-style: none;
+                padding: 0;
+                margin: 0 0 20px 0;
+                text-align: left;
+                max-height: 250px;
+                overflow-y: auto;
+            "></ul>
+            <button onclick="cerrarNotificacionIndependiente()" style="
+                background: #DC2626 !important;
+                color: white !important;
+                border: none !important;
+                padding: 12px 40px !important;
+                border-radius: 10px !important;
+                font-weight: 700 !important;
+                font-size: 15px !important;
+                cursor: pointer !important;
+                transition: all 0.3s !important;
+                box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3) !important;
+            ">✅ Entendido, voy a completarlos</button>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    console.log('✅ Nuevo overlay creado e insertado en el DOM');
+    
+    // 4. FUNCIÓN PARA MOSTRAR NOTIFICACIÓN
+    window.mostrarNotificacionIndependiente = function(camposFaltantes) {
+        console.log('🔔 Mostrando notificación independiente con:', camposFaltantes);
+        
+        var lista = document.getElementById('listaCamposFaltantes');
+        if (!lista) {
+            console.error('❌ Lista no encontrada');
+            return;
+        }
+        
+        // Limpiar y agregar campos
+        lista.innerHTML = '';
+        for (var i = 0; i < camposFaltantes.length; i++) {
+            var li = document.createElement('li');
+            li.textContent = '• ' + camposFaltantes[i];
+            li.style.cssText = `
+                padding: 8px 12px;
+                color: #DC2626;
+                font-weight: 600;
+                border-bottom: 1px solid #fee2e2;
+                font-size: 14px;
+                background: #fef2f2;
+                margin: 3px 0;
+                border-radius: 6px;
+            `;
+            lista.appendChild(li);
+        }
+        
+        // Mostrar overlay con animación
+        overlay.style.display = 'flex';
+        overlay.style.opacity = '1';
+        overlay.style.visibility = 'visible';
+        
+        // Scroll al overlay
+        overlay.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        console.log('✅ Notificación INDEPENDIENTE mostrada');
+        
+        // Auto-cerrar después de 7 segundos
+        if (window._timeoutIndependiente) clearTimeout(window._timeoutIndependiente);
+        window._timeoutIndependiente = setTimeout(function() {
+            cerrarNotificacionIndependiente();
+        }, 7000);
+    };
+    
+    // 5. FUNCIÓN PARA CERRAR
+    window.cerrarNotificacionIndependiente = function() {
+        console.log('🔴 Cerrando notificación independiente...');
+        overlay.style.display = 'none';
+        overlay.style.opacity = '0';
+        overlay.style.visibility = 'hidden';
+        if (window._timeoutIndependiente) {
+            clearTimeout(window._timeoutIndependiente);
+            window._timeoutIndependiente = null;
+        }
+    };
+    
+    // 6. REEMPLAZAR LA FUNCIÓN ORIGINAL
+    window.mostrarErrorFlotante = function(campos) {
+        console.log('🔔 Redirigiendo a mostrarNotificacionIndependiente');
+        window.mostrarNotificacionIndependiente(campos);
+    };
+    
+    console.log('✅ SISTEMA DE NOTIFICACIÓN INDEPENDIENTE INICIALIZADO');
+    
+})();
+
+/**
+ * ============================================================
+ * VALIDAR Y GUARDAR
+ * ============================================================
+ */
 
 function validarYGuardar(event) {
-    // Prevenir comportamiento por defecto
-    if (event) {
-        event.preventDefault();
-    }
+    if (event) event.preventDefault();
     
     console.log('🟢 Validando formulario...');
     
     // Limpiar errores anteriores
     limpiarErrores();
     
-    // Definir campos obligatorios
     var campos = [
         { id: 'nombreProducto', nombre: 'Nombre del producto', fieldId: 'field-nombre' },
         { id: 'modeloProducto', nombre: 'Modelo', fieldId: 'field-modelo' },
@@ -766,7 +923,6 @@ function validarYGuardar(event) {
     var errores = [];
     var primerCampoError = null;
     
-    // Verificar cada campo
     for (var i = 0; i < campos.length; i++) {
         var campo = campos[i];
         var elemento = document.getElementById(campo.id);
@@ -786,39 +942,23 @@ function validarYGuardar(event) {
     
     console.log('📋 Errores encontrados:', errores);
     
-    // Si hay errores, mostrar notificación usando mostrarErrorFlotante
     if (errores.length > 0) {
-        // ✅ USAR mostrarErrorFlotante (la que funciona en base.html)
-        if (typeof mostrarErrorFlotante === 'function') {
-            console.log('🔔 Llamando a mostrarErrorFlotante con:', errores);
-            mostrarErrorFlotante(errores);
-        } else {
-            // Fallback: usar forzarNotificacion
-            console.log('⚠️ mostrarErrorFlotante no disponible, usando fallback');
-            if (typeof forzarNotificacion === 'function') {
-                forzarNotificacion(errores);
-            } else {
-                alert('❌ Campos obligatorios:\n\nTe falta: ' + errores.join('\n- '));
-            }
-        }
+        // ✅ USAR LA NUEVA NOTIFICACIÓN INDEPENDIENTE
+        window.mostrarNotificacionIndependiente(errores);
         
-        // Enfocar el primer campo con error
         if (primerCampoError) {
             setTimeout(function() {
                 primerCampoError.focus();
                 primerCampoError.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 300);
         }
-        
         return false;
     }
     
-    // Si no hay errores, enviar el formulario
     console.log('✅ Todos los campos completos, enviando...');
     document.getElementById('formNuevoProducto').submit();
     return true;
 }
-
 
 /**
  * ============================================================
@@ -900,7 +1040,6 @@ function personalizar(id, placeholder) {
     
     var valor = prompt('Ingrese el nuevo valor:', '');
     if (valor && valor.trim() !== '') {
-        // Verificar si ya existe
         var existe = false;
         for (var i = 0; i < select.options.length; i++) {
             if (select.options[i].value === valor.trim()) {
@@ -929,7 +1068,6 @@ function limpiarFormulario() {
         return;
     }
     
-    // Limpiar todos los inputs, selects y textareas
     var elementos = document.querySelectorAll('.form-card input:not([type="hidden"]), .form-card textarea, .form-card select');
     for (var i = 0; i < elementos.length; i++) {
         var el = elementos[i];
@@ -942,7 +1080,6 @@ function limpiarFormulario() {
         }
     }
     
-    // Resetear valores específicos
     var valorVenta = document.getElementById('valorVenta');
     var valorCosto = document.getElementById('valorCosto');
     var estadoProducto = document.getElementById('estadoProducto');
@@ -961,11 +1098,6 @@ function limpiarFormulario() {
     
     calcularMargen();
     actualizarEstadoChips();
-    
-    // Mostrar notificación de éxito
-    if (typeof mostrarNotificacion === 'function') {
-        mostrarNotificacion('info', '🧹 Formulario limpiado', 'Todos los campos han sido reiniciados.');
-    }
 }
 
 /**
@@ -990,13 +1122,11 @@ document.addEventListener('DOMContentLoaded', function() {
     var previewContainer = document.getElementById('previewContainer');
     
     if (uploadArea && fileInput) {
-        // Click en el área de upload
         uploadArea.addEventListener('click', function(e) {
             if (e.target.closest('.file-badge') || e.target.closest('#previewContainer')) return;
             fileInput.click();
         });
         
-        // Cambio de archivo
         fileInput.addEventListener('change', function() {
             var file = this.files[0];
             if (!file) {
@@ -1006,11 +1136,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Validar tipo
             if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
-                if (typeof mostrarNotificacion === 'function') {
-                    mostrarNotificacion('error', '❌ Formato no soportado', 'Usa PNG, JPG o WEBP.');
-                }
+                alert('❌ Formato no soportado. Usa PNG, JPG o WEBP.');
                 fileInput.value = '';
                 if (fileBadge) fileBadge.innerHTML = '<i class="bi bi-paperclip"></i> Ningún archivo';
                 if (previewContainer) previewContainer.innerHTML = '';
@@ -1018,11 +1145,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Validar tamaño
             if (file.size > 5 * 1024 * 1024) {
-                if (typeof mostrarNotificacion === 'function') {
-                    mostrarNotificacion('error', '❌ Archivo muy grande', 'La imagen no debe superar los 5 MB.');
-                }
+                alert('❌ Archivo muy grande. La imagen no debe superar los 5 MB.');
                 fileInput.value = '';
                 if (fileBadge) fileBadge.innerHTML = '<i class="bi bi-paperclip"></i> Ningún archivo';
                 if (previewContainer) previewContainer.innerHTML = '';
@@ -1030,7 +1154,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Mostrar preview
             var reader = new FileReader();
             reader.onload = function(e) {
                 if (previewContainer) {
@@ -1042,7 +1165,6 @@ document.addEventListener('DOMContentLoaded', function() {
             reader.readAsDataURL(file);
         });
         
-        // Drag & Drop
         uploadArea.addEventListener('dragover', function(e) {
             e.preventDefault();
             this.style.borderColor = '#0066FF';
@@ -1090,6 +1212,7 @@ window.limpiarFormulario = limpiarFormulario;
 window.calcularMargen = calcularMargen;
 window.actualizarEstadoChips = actualizarEstadoChips;
 window.personalizar = personalizar;
+window.limpiarErrores = limpiarErrores;
 </script>
 
 </body>
