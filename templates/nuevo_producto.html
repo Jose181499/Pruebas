@@ -121,6 +121,104 @@
         }
         
         /* ============================================
+           ESTILOS PARA MENSAJES DE VALIDACIÓN
+           ============================================ */
+        
+        /* Contenedor de mensajes de error */
+        #validationMessages {
+            display: none;
+            background: #FFF3F3;
+            border-left: 4px solid #FF4444;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(255, 68, 68, 0.15);
+        }
+        
+        #validationMessages.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        #validationMessages .error-title {
+            font-weight: 600;
+            color: #CC0000;
+            font-size: 14px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        #validationMessages .error-title i {
+            font-size: 18px;
+        }
+        
+        #validationMessages .error-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        #validationMessages .error-list li {
+            padding: 4px 0;
+            color: #CC0000;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        #validationMessages .error-list li::before {
+            content: "•";
+            color: #FF4444;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        /* Resaltar campos con error */
+        .field.error input,
+        .field.error select,
+        .field.error textarea {
+            border-color: #FF4444 !important;
+            background-color: #FFF8F8 !important;
+            box-shadow: 0 0 0 3px rgba(255, 68, 68, 0.1) !important;
+        }
+        
+        .field.error label {
+            color: #CC0000 !important;
+        }
+        
+        .field.error label .req {
+            color: #CC0000 !important;
+        }
+        
+        /* Animación de shake para campos con error */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-6px); }
+            40% { transform: translateX(6px); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(4px); }
+        }
+        
+        .field.error input,
+        .field.error select {
+            animation: shake 0.4s ease;
+        }
+        
+        /* ============================================
            AJUSTES PARA REDUCIR TAMAÑO DE CAMPOS
            ============================================ */
         
@@ -425,17 +523,28 @@
         <button class="btn outline" type="button" onclick="limpiarFormulario()">
             <i class="bi bi-x-circle"></i> Cancelar
         </button>
-        <button class="btn primary" id="btnGuardar" type="button">
+        <button class="btn primary" id="btnGuardar" type="button" onclick="validarYGuardar()">
             <i class="bi bi-save"></i> {% if editando %}Actualizar{% else %}Guardar Nuevo{% endif %}
         </button>
     </div>
 </div>
 
 <!-- ============================================ -->
-<!-- RESTO DEL FORMULARIO                         -->
+<!-- CONTENEDOR DE MENSAJES DE VALIDACIÓN        -->
+<!-- ============================================ -->
+<div id="validationMessages">
+    <div class="error-title">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        Por favor, completa los siguientes campos obligatorios:
+    </div>
+    <ul class="error-list" id="errorList"></ul>
+</div>
+
+<!-- ============================================ -->
+<!-- FORMULARIO                                   -->
 <!-- ============================================ -->
 
-<form id="formNuevoProducto" action="/api/productos" method="POST" enctype="multipart/form-data">
+<form id="formNuevoProducto" action="/api/productos" method="POST" enctype="multipart/form-data" onsubmit="return false;">
     <!-- ✅ ID del producto para actualizar -->
     {% if editando and producto %}
     <input type="hidden" name="producto_id" value="{{ producto.id }}" />
@@ -484,22 +593,22 @@
                     </div>
                     <input type="hidden" id="codigoGenerado" name="codigo" value="{{ producto.codigo if producto else codigo_auto or 'PRD-0001' }}" />
                 </div>
-                <div class="field" style="flex:1">
+                <div class="field" id="field-nombre">
                     <label>Nombre del producto <span class="req">*</span></label>
                     <input id="nombreProducto" name="descripcion" placeholder="Ingrese el nombre" required 
                            value="{{ producto.descripcion if producto else '' }}" />
                 </div>
             </div>
             <div class="grid two">
-                <div class="field">
+                <div class="field" id="field-modelo">
                     <label>Modelo <span class="req">*</span></label>
                     <input id="modeloProducto" name="modelo" placeholder="Ej. M100" required 
                            value="{{ producto.modelo if producto else '' }}" />
                 </div>
-                <div class="field">
+                <div class="field" id="field-marca">
                     <label>Marca <span class="req">*</span></label>
                     <div style="display:flex;gap:4px;">
-                        <select id="marcaProducto" name="marca" style="flex:1;">
+                        <select id="marcaProducto" name="marca" required style="flex:1;">
                             <option value="">Seleccione</option>
                             <option value="Nike" {% if producto and producto.marca == 'Nike' %}selected{% endif %}>Nike</option>
                             <option value="Adidas" {% if producto and producto.marca == 'Adidas' %}selected{% endif %}>Adidas</option>
@@ -539,7 +648,7 @@
                 </div>
             </div>
             <div class="grid">
-                <div class="field">
+                <div class="field" id="field-unidad">
                     <label>Unidad de medida <span class="req">*</span></label>
                     <select id="unidadMedida" name="unidad" required>
                         <option value="">Seleccione</option>
@@ -552,10 +661,10 @@
                         <option value="NIU" {% if producto and producto.unidad == 'NIU' %}selected{% endif %}>NIU - Unidad</option>
                     </select>
                 </div>
-                <div class="field">
+                <div class="field" id="field-categoria">
                     <label>Categoría <span class="req">*</span></label>
                     <div style="display:flex;gap:4px;">
-                        <select id="categoriaProducto" name="familia" style="flex:1;" required>
+                        <select id="categoriaProducto" name="familia" required style="flex:1;">
                             <option value="">Seleccione</option>
                             <option value="Seguridad Industrial" {% if producto and producto.familia == 'Seguridad Industrial' %}selected{% endif %}>Seguridad Industrial</option>
                             <option value="Mobiliario de Oficina" {% if producto and producto.familia == 'Mobiliario de Oficina' %}selected{% endif %}>Mobiliario de Oficina</option>
@@ -653,7 +762,7 @@
                         <span>Und.</span>
                     </div>
                 </div>
-                <div class="field">
+                <div class="field" id="field-transporte">
                     <label>Transporte <span class="req">*</span></label>
                     <select id="transporteReferencial" name="transporte" required>
                         <option value="">Seleccione</option>
@@ -722,6 +831,179 @@
         </div>
     </div>
 </form>
+
+<!-- ============================================ -->
+<!-- SCRIPT DE VALIDACIÓN                        -->
+<!-- ============================================ -->
+<script>
+function validarYGuardar() {
+    // Limpiar errores anteriores
+    limpiarErrores();
+    
+    // Obtener valores de campos obligatorios
+    const campos = [
+        { id: 'nombreProducto', nombre: 'Nombre del producto', fieldId: 'field-nombre' },
+        { id: 'modeloProducto', nombre: 'Modelo', fieldId: 'field-modelo' },
+        { id: 'marcaProducto', nombre: 'Marca', fieldId: 'field-marca' },
+        { id: 'unidadMedida', nombre: 'Unidad de medida', fieldId: 'field-unidad' },
+        { id: 'categoriaProducto', nombre: 'Categoría', fieldId: 'field-categoria' },
+        { id: 'transporteReferencial', nombre: 'Transporte', fieldId: 'field-transporte' }
+    ];
+    
+    const errores = [];
+    
+    // Verificar cada campo
+    campos.forEach(campo => {
+        const elemento = document.getElementById(campo.id);
+        const valor = elemento ? elemento.value.trim() : '';
+        
+        if (!valor || valor === '') {
+            errores.push(campo.nombre);
+            // Marcar el campo con error
+            const fieldContainer = document.getElementById(campo.fieldId);
+            if (fieldContainer) {
+                fieldContainer.classList.add('error');
+            }
+            // Enfocar el primer campo con error
+            if (errores.length === 1) {
+                elemento.focus();
+            }
+        }
+    });
+    
+    // Si hay errores, mostrarlos
+    if (errores.length > 0) {
+        mostrarErrores(errores);
+        // Scroll al mensaje de error
+        document.getElementById('validationMessages').scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+        });
+        return false;
+    }
+    
+    // Si no hay errores, enviar el formulario
+    document.getElementById('formNuevoProducto').submit();
+    return true;
+}
+
+function mostrarErrores(errores) {
+    const messagesDiv = document.getElementById('validationMessages');
+    const errorList = document.getElementById('errorList');
+    
+    // Limpiar lista anterior
+    errorList.innerHTML = '';
+    
+    // Agregar cada error como un item de lista
+    errores.forEach(error => {
+        const li = document.createElement('li');
+        li.textContent = error;
+        errorList.appendChild(li);
+    });
+    
+    // Mostrar el contenedor de mensajes
+    messagesDiv.classList.add('show');
+}
+
+function limpiarErrores() {
+    // Ocultar mensajes
+    document.getElementById('validationMessages').classList.remove('show');
+    
+    // Limpiar clases de error de todos los campos
+    document.querySelectorAll('.field.error').forEach(field => {
+        field.classList.remove('error');
+    });
+}
+
+// Limpiar errores cuando el usuario empiece a escribir
+document.addEventListener('DOMContentLoaded', function() {
+    // Escuchar cambios en todos los inputs y selects
+    document.querySelectorAll('input, select').forEach(element => {
+        element.addEventListener('input', function() {
+            // Buscar el contenedor del campo
+            const fieldContainer = this.closest('.field');
+            if (fieldContainer) {
+                fieldContainer.classList.remove('error');
+            }
+            // Si todos los errores se han corregido, ocultar mensajes
+            const camposConError = document.querySelectorAll('.field.error');
+            if (camposConError.length === 0) {
+                document.getElementById('validationMessages').classList.remove('show');
+            }
+        });
+        
+        element.addEventListener('change', function() {
+            const fieldContainer = this.closest('.field');
+            if (fieldContainer) {
+                fieldContainer.classList.remove('error');
+            }
+            const camposConError = document.querySelectorAll('.field.error');
+            if (camposConError.length === 0) {
+                document.getElementById('validationMessages').classList.remove('show');
+            }
+        });
+    });
+});
+
+// Función para personalizar (si existe)
+function personalizar(id, placeholder) {
+    const select = document.getElementById(id);
+    if (!select) return;
+    
+    const valor = prompt('Ingrese el nuevo valor:', '');
+    if (valor && valor.trim() !== '') {
+        // Verificar si ya existe la opción
+        let existe = false;
+        for (let option of select.options) {
+            if (option.value === valor.trim()) {
+                existe = true;
+                break;
+            }
+        }
+        if (!existe) {
+            const option = document.createElement('option');
+            option.value = valor.trim();
+            option.textContent = valor.trim();
+            select.appendChild(option);
+            select.value = valor.trim();
+        } else {
+            select.value = valor.trim();
+        }
+    }
+}
+
+// Función para limpiar formulario (si existe)
+function limpiarFormulario() {
+    // Implementar según necesidad
+    if (confirm('¿Estás seguro de que deseas cancelar? Los cambios no guardados se perderán.')) {
+        window.location.href = '/productos'; // o donde corresponda
+    }
+}
+
+// Función para calcular margen (si existe)
+function calcularMargen() {
+    // Implementar según necesidad
+    const venta = parseFloat(document.getElementById('valorVenta').value) || 0;
+    const costo = parseFloat(document.getElementById('valorCosto').value) || 0;
+    
+    const margenPct = document.getElementById('margenPct');
+    const margenSol = document.getElementById('margenSol');
+    
+    if (venta > 0) {
+        const margen = ((venta - costo) / venta) * 100;
+        margenPct.textContent = margen.toFixed(2) + '%';
+        margenSol.textContent = 'S/ ' + (venta - costo).toFixed(2);
+    } else {
+        margenPct.textContent = '0.00%';
+        margenSol.textContent = 'S/ 0.00';
+    }
+}
+
+// Función para actualizar estado (si existe)
+function actualizarEstadoChips() {
+    // Implementar según necesidad
+}
+</script>
 
 </body>
 </html>
