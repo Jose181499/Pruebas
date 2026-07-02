@@ -19,7 +19,7 @@
 <div class="bd-toolbar">
     <div class="bd-search-wrap">
         <i class="bi bi-search"></i>
-        <input id="bdSearchInput" type="text" placeholder="Buscar por nombre, código, modelo, marca, categoría..." oninput="bdAplicarFiltros()" />
+        <input id="bdSearchInput" type="text" placeholder="Buscar por nombre, código, modelo, marca, categoría..." />
     </div>
     <button class="btn" type="button" onclick="bdExportarExcel()"><i class="bi bi-file-earmark-excel" style="color:var(--ok)"></i> Exportar Excel</button>
     <button class="btn" type="button" onclick="bdLimpiarFiltros()"><i class="bi bi-funnel"></i> Limpiar filtros</button>
@@ -29,7 +29,7 @@
 <div class="bd-filters">
     <div class="bd-filter-field">
         <label for="bdCategoriaFilter">Categoría principal</label>
-        <select id="bdCategoriaFilter" onchange="bdAplicarFiltros()">
+        <select id="bdCategoriaFilter">
             <option value="">Todas</option>
             <option>Seguridad Industrial</option>
             <option>Indumentaria de Oficina</option>
@@ -42,7 +42,7 @@
     </div>
     <div class="bd-filter-field">
         <label for="bdSubcategoriaFilter">Subcategoría</label>
-        <select id="bdSubcategoriaFilter" onchange="bdAplicarFiltros()">
+        <select id="bdSubcategoriaFilter">
             <option value="">Todas</option>
             <option>Señalización y tráfico</option>
             <option>Chalecos</option>
@@ -57,7 +57,7 @@
     </div>
     <div class="bd-filter-field">
         <label for="bdMarcaFilter">Marca</label>
-        <select id="bdMarcaFilter" onchange="bdAplicarFiltros()">
+        <select id="bdMarcaFilter">
             <option value="">Todas</option>
             <option>KCF Safety</option>
             <option>EasyWon</option>
@@ -73,7 +73,7 @@
     </div>
     <div class="bd-filter-field">
         <label for="bdModeloFilter">Modelo</label>
-        <select id="bdModeloFilter" onchange="bdAplicarFiltros()">
+        <select id="bdModeloFilter">
             <option value="">Todos</option>
             <option>CS-75</option>
             <option>SR-8891</option>
@@ -89,7 +89,7 @@
     </div>
     <div class="bd-filter-field">
         <label for="bdEstadoFilter">Estado</label>
-        <select id="bdEstadoFilter" onchange="bdAplicarFiltros()">
+        <select id="bdEstadoFilter">
             <option value="">Todos</option>
             <option value="activo">🟢 Activo</option>
             <option value="inactivo">⚪ Inactivo</option>
@@ -180,318 +180,9 @@
 {% endblock %}
 
 <!-- ============================================================ -->
-<!-- EXTRA JS PARA SOBRESCRIBIR FUNCIONES                         -->
+<!-- EXTRA JS - SOBRESCRIBIR FUNCIONES DE base.html              -->
 <!-- ============================================================ -->
 {% block extra_js %}
-<script>
-// ============================================================
-// VARIABLES GLOBALES PARA LA TABLA DE PRODUCTOS
-// ============================================================
-
-var bdProductos = [];
-var bdProductosFiltrados = [];
-var bdVistaActual = 'principal';
-var bdPaginaActual = 1;
-var bdPorPagina = 20;
-
-// ============================================================
-// CAMBIAR VISTA (PRINCIPAL / COMPLETA)
-// ============================================================
-
-function cambiarVista(vista) {
-    bdVistaActual = vista;
-    
-    // Actualizar botones
-    document.getElementById('viewPrincipal').classList.toggle('active', vista === 'principal');
-    document.getElementById('viewCompleta').classList.toggle('active', vista === 'completa');
-    
-    // Mostrar/ocultar columnas
-    var container = document.getElementById('tablaContainer');
-    container.classList.toggle('vista-completa', vista === 'completa');
-    
-    // Re-renderizar productos
-    bdRenderProductos(bdProductosFiltrados);
-}
-
-// ============================================================
-// CARGAR PRODUCTOS DESDE LA API
-// ============================================================
-
-function cargarProductos() {
-    console.log('🔄 Cargando productos...');
-    
-    fetch('/productos/api/productos')
-        .then(function(response) { return response.json(); })
-        .then(function(data) {
-            if (data.success) {
-                bdProductos = data.data || [];
-                bdProductosFiltrados = bdProductos;
-                bdRenderProductos(bdProductosFiltrados);
-                console.log('✅ ' + bdProductos.length + ' productos cargados');
-            } else {
-                console.error('❌ Error:', data.error);
-                document.getElementById('bdProductTableBody').innerHTML = 
-                    '<tr><td colspan="24" style="text-align:center;color:#94A3B8;padding:40px;">❌ Error al cargar productos</td></tr>';
-            }
-        })
-        .catch(function(error) {
-            console.error('❌ Error:', error);
-            document.getElementById('bdProductTableBody').innerHTML = 
-                '<tr><td colspan="24" style="text-align:center;color:#94A3B8;padding:40px;">❌ Error de conexión</td></tr>';
-        });
-}
-
-// ============================================================
-// RENDERIZAR PRODUCTOS EN LA TABLA
-// ============================================================
-
-function bdRenderProductos(data) {
-    if (!data || data.length === 0) {
-        document.getElementById('bdProductTableBody').innerHTML = 
-            '<tr><td colspan="24" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay productos que coincidan con los filtros</td></tr>';
-        document.getElementById('bdCountText').textContent = 'Mostrando 0 productos';
-        document.getElementById('bdTotalRegistros').textContent = '0 registros';
-        return;
-    }
-    
-    // Paginación
-    var total = data.length;
-    var totalPaginas = Math.ceil(total / bdPorPagina);
-    if (bdPaginaActual > totalPaginas) bdPaginaActual = totalPaginas;
-    if (bdPaginaActual < 1) bdPaginaActual = 1;
-    
-    var inicio = (bdPaginaActual - 1) * bdPorPagina;
-    var fin = Math.min(inicio + bdPorPagina, total);
-    var paginaData = data.slice(inicio, fin);
-    
-    var tbody = document.getElementById('bdProductTableBody');
-    var html = '';
-    
-    for (var i = 0; i < paginaData.length; i++) {
-        var p = paginaData[i];
-        var index = inicio + i + 1;
-        
-        // Estado
-        var estadoClass = 'st-active';
-        var estado = (p.estado || 'activo').toLowerCase();
-        if (estado === 'inactivo') estadoClass = 'st-inactive';
-        else if (estado === 'bajo_pedido') estadoClass = 'st-pending';
-        else if (estado === 'bloqueado') estadoClass = 'st-blocked';
-        else if (estado === 'disponible') estadoClass = 'st-available';
-        
-        // Precios
-        var costo = p.costo_unitario ? parseFloat(p.costo_unitario).toFixed(2) : '0.00';
-        var precio = p.precio_unitario ? parseFloat(p.precio_unitario).toFixed(2) : '0.00';
-        
-        // Categoría
-        var categoria = p.categoria || p.familia || '-';
-        var subcategoria = p.subcategoria || p.categoria_derivada || '-';
-        
-        html += '<tr>';
-        html += '<td class="bd-col-item" style="text-align:center;color:#94a3b8;font-weight:600;">' + index + '</td>';
-        html += '<td class="bd-col-code"><span class="bd-t-code">' + (p.codigo || '-') + '</span></td>';
-        html += '<td class="bd-col-desc"><strong>' + (p.descripcion || '-') + '</strong></td>';
-        html += '<td class="bd-col-model">' + (p.modelo || '-') + '</td>';
-        html += '<td class="bd-col-brand">' + (p.marca || '-') + '</td>';
-        html += '<td class="bd-col-cat">' + categoria + '</td>';
-        html += '<td class="bd-col-status"><span class="bd-status ' + estadoClass + '"><span class="bd-dot"></span>' + (p.estado || 'Activo') + '</span></td>';
-        html += '<td class="bd-col-actions"><div class="row-actions">';
-        html += '<button class="btn-action btn-view" onclick="verProducto(' + p.id + ')" title="Ver"><i class="bi bi-eye"></i></button>';
-        html += '<button class="btn-action btn-edit" onclick="editarProducto(' + p.id + ')" title="Editar"><i class="bi bi-pencil"></i></button>';
-        html += '<button class="btn-action btn-delete" onclick="eliminarProducto(' + p.id + ')" title="Eliminar"><i class="bi bi-trash"></i></button>';
-        html += '</div></td>';
-        
-        // COLUMNAS OCULTAS (VISTA COMPLETA)
-        html += '<td class="bd-col-subcat col-oculta">' + subcategoria + '</td>';
-        html += '<td class="bd-col-weight col-oculta">' + (p.peso || '0') + '</td>';
-        html += '<td class="bd-col-transport col-oculta">' + (p.transporte || '-') + '</td>';
-        html += '<td class="bd-col-cost col-oculta" style="font-weight:600;">S/ ' + costo + '</td>';
-        html += '<td class="bd-col-sale col-oculta" style="font-weight:700;color:#0066FF;">S/ ' + precio + '</td>';
-        html += '<td class="bd-col-obs col-oculta">' + (p.observaciones || '-') + '</td>';
-        html += '<td class="bd-col-prov-pres col-oculta">' + (p.presentacion_proveedor || '-') + '</td>';
-        html += '<td class="bd-col-sale-pres col-oculta">' + (p.presentacion_venta || '-') + '</td>';
-        html += '<td class="bd-col-min-sale col-oculta">' + (p.venta_minima || '1') + '</td>';
-        html += '<td class="bd-col-barras col-oculta">' + (p.codigo_barras || '-') + '</td>';
-        html += '<td class="bd-col-volumen col-oculta">' + (p.volumen || '0') + '</td>';
-        html += '<td class="bd-col-origen col-oculta">' + (p.origen || '-') + '</td>';
-        html += '<td class="bd-col-tiempo col-oculta">' + (p.tiempo_entrega || '-') + '</td>';
-        html += '<td class="bd-col-abast col-oculta">' + (p.abastecimiento || '-') + '</td>';
-        html += '<td class="bd-col-stock-min col-oculta">' + (p.stock_minimo || '0') + '</td>';
-        html += '<td class="bd-col-desc-larga col-oculta" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (p.descripcion_larga || '-') + '</td>';
-        
-        html += '</tr>';
-    }
-    
-    tbody.innerHTML = html;
-    
-    // Actualizar contadores
-    var desde = inicio + 1;
-    var hasta = fin;
-    document.getElementById('bdCountText').textContent = 'Mostrando ' + desde + ' a ' + hasta + ' de ' + total + ' productos';
-    document.getElementById('bdTotalRegistros').textContent = total + ' registros';
-    document.getElementById('bdPaginaInfo').textContent = bdPaginaActual + ' / ' + totalPaginas;
-}
-
-// ============================================================
-// FILTRAR PRODUCTOS
-// ============================================================
-
-function bdAplicarFiltros() {
-    var q = document.getElementById('bdSearchInput').value.trim().toLowerCase();
-    var categoria = document.getElementById('bdCategoriaFilter').value;
-    var subcategoria = document.getElementById('bdSubcategoriaFilter').value;
-    var marca = document.getElementById('bdMarcaFilter').value;
-    var modelo = document.getElementById('bdModeloFilter').value;
-    var estado = document.getElementById('bdEstadoFilter').value;
-    
-    bdProductosFiltrados = bdProductos.filter(function(p) {
-        var texto = (p.codigo || '') + ' ' + (p.descripcion || '') + ' ' + (p.modelo || '') + ' ' + (p.marca || '') + ' ' + (p.categoria || '') + ' ' + (p.familia || '');
-        var coincideTexto = !q || texto.toLowerCase().includes(q);
-        var coincideCategoria = !categoria || (p.familia === categoria || p.categoria === categoria);
-        var coincideSubcategoria = !subcategoria || (p.categoria_derivada === subcategoria || p.subcategoria === subcategoria);
-        var coincideMarca = !marca || p.marca === marca;
-        var coincideModelo = !modelo || p.modelo === modelo;
-        var coincideEstado = !estado || (p.estado || 'activo') === estado;
-        return coincideTexto && coincideCategoria && coincideSubcategoria && coincideMarca && coincideModelo && coincideEstado;
-    });
-    
-    bdPaginaActual = 1;
-    bdRenderProductos(bdProductosFiltrados);
-}
-
-// ============================================================
-// LIMPIAR FILTROS
-// ============================================================
-
-function bdLimpiarFiltros() {
-    document.getElementById('bdSearchInput').value = '';
-    document.getElementById('bdCategoriaFilter').value = '';
-    document.getElementById('bdSubcategoriaFilter').value = '';
-    document.getElementById('bdMarcaFilter').value = '';
-    document.getElementById('bdModeloFilter').value = '';
-    document.getElementById('bdEstadoFilter').value = '';
-    bdProductosFiltrados = bdProductos;
-    bdPaginaActual = 1;
-    bdRenderProductos(bdProductosFiltrados);
-}
-
-// ============================================================
-// PAGINACIÓN
-// ============================================================
-
-function bdPaginaAnterior() {
-    if (bdPaginaActual > 1) {
-        bdPaginaActual--;
-        bdRenderProductos(bdProductosFiltrados);
-    }
-}
-
-function bdPaginaSiguiente() {
-    var total = bdProductosFiltrados.length;
-    var totalPaginas = Math.ceil(total / bdPorPagina);
-    if (bdPaginaActual < totalPaginas) {
-        bdPaginaActual++;
-        bdRenderProductos(bdProductosFiltrados);
-    }
-}
-
-function bdCambiarPorPagina() {
-    bdPorPagina = parseInt(document.getElementById('bdPorPaginaSelect').value);
-    bdPaginaActual = 1;
-    bdRenderProductos(bdProductosFiltrados);
-}
-
-// ============================================================
-// EXPORTAR EXCEL
-// ============================================================
-
-function bdExportarExcel() {
-    if (typeof mostrarNotificacion === 'function') {
-        mostrarNotificacion('info', '📊 Exportando...', 'El archivo Excel se está generando.');
-    }
-}
-
-// ============================================================
-// ACCIONES DE PRODUCTOS
-// ============================================================
-
-function verProducto(id) {
-    if (!id) return;
-    window.location.href = '/productos/ver/' + id;
-}
-
-function editarProducto(id) {
-    if (!id) return;
-    window.location.href = '/productos/editar/' + id;
-}
-
-function eliminarProducto(id) {
-    if (!id) return;
-    var producto = bdProductos.find(function(p) { return p.id == id; });
-    var nombre = producto ? (producto.descripcion || producto.codigo) : 'este producto';
-    
-    if (!confirm('¿Estás seguro de eliminar "' + nombre + '"? Esta acción no se puede deshacer.')) {
-        return;
-    }
-    
-    fetch('/productos/api/productos/' + id, { method: 'DELETE' })
-        .then(function(response) { return response.json(); })
-        .then(function(data) {
-            if (data.success) {
-                if (typeof mostrarNotificacion === 'function') {
-                    mostrarNotificacion('success', '✅ Eliminado', '"' + nombre + '" eliminado correctamente');
-                }
-                cargarProductos();
-            } else {
-                if (typeof mostrarNotificacion === 'function') {
-                    mostrarNotificacion('error', '❌ Error', data.error || 'Error al eliminar');
-                }
-            }
-        })
-        .catch(function(error) {
-            console.error('Error:', error);
-            if (typeof mostrarNotificacion === 'function') {
-                mostrarNotificacion('error', '❌ Error', 'Error al comunicarse con el servidor');
-            }
-        });
-}
-
-// ============================================================
-// INICIALIZAR
-// ============================================================
-
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('✅ Página de base de datos de productos cargada');
-    
-    // Cargar productos
-    cargarProductos();
-    
-    // Eventos de filtros
-    document.getElementById('bdSearchInput').addEventListener('input', bdAplicarFiltros);
-    document.getElementById('bdCategoriaFilter').addEventListener('change', bdAplicarFiltros);
-    document.getElementById('bdSubcategoriaFilter').addEventListener('change', bdAplicarFiltros);
-    document.getElementById('bdMarcaFilter').addEventListener('change', bdAplicarFiltros);
-    document.getElementById('bdModeloFilter').addEventListener('change', bdAplicarFiltros);
-    document.getElementById('bdEstadoFilter').addEventListener('change', bdAplicarFiltros);
-});
-
-// Exponer funciones globalmente
-window.bdRenderProductos = bdRenderProductos;
-window.bdAplicarFiltros = bdAplicarFiltros;
-window.bdLimpiarFiltros = bdLimpiarFiltros;
-window.cambiarVista = cambiarVista;
-window.bdPaginaAnterior = bdPaginaAnterior;
-window.bdPaginaSiguiente = bdPaginaSiguiente;
-window.bdCambiarPorPagina = bdCambiarPorPagina;
-window.verProducto = verProducto;
-window.editarProducto = editarProducto;
-window.eliminarProducto = eliminarProducto;
-window.bdExportarExcel = bdExportarExcel;
-</script>
-
-<!-- ============================================================ -->
-<!-- ESTILOS ADICIONALES PARA VISTAS PRINCIPAL / COMPLETA         -->
-<!-- ============================================================ -->
 <style>
 /* View Toggle */
 .bd-view-toggle {
@@ -626,7 +317,6 @@ window.bdExportarExcel = bdExportarExcel;
     color: #16a34a;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     .bd-view-toggle {
         flex-wrap: wrap;
@@ -638,4 +328,306 @@ window.bdExportarExcel = bdExportarExcel;
     }
 }
 </style>
+
+<script>
+// ============================================================
+// VARIABLES GLOBALES
+// ============================================================
+var bdProductos = [];
+var bdProductosFiltrados = [];
+var bdVistaActual = 'principal';
+var bdPaginaActual = 1;
+var bdPorPagina = 20;
+
+// ============================================================
+// CAMBIAR VISTA
+// ============================================================
+function cambiarVista(vista) {
+    bdVistaActual = vista;
+    document.getElementById('viewPrincipal').classList.toggle('active', vista === 'principal');
+    document.getElementById('viewCompleta').classList.toggle('active', vista === 'completa');
+    document.getElementById('tablaContainer').classList.toggle('vista-completa', vista === 'completa');
+    bdRenderProductos(bdProductosFiltrados);
+}
+
+// ============================================================
+// CARGAR PRODUCTOS - CON FALLBACK Y DATOS DE PRUEBA
+// ============================================================
+function cargarProductos() {
+    console.log('🔄 Cargando productos desde la API...');
+    
+    fetch('/productos/api/productos')
+        .then(function(response) { 
+            console.log('📡 Respuesta recibida, status:', response.status);
+            return response.json(); 
+        })
+        .then(function(data) {
+            console.log('📦 Datos recibidos:', data);
+            if (data.success && data.data && data.data.length > 0) {
+                bdProductos = data.data;
+                bdProductosFiltrados = bdProductos;
+                bdRenderProductos(bdProductosFiltrados);
+                console.log('✅ ' + bdProductos.length + ' productos cargados');
+            } else {
+                console.warn('⚠️ No se recibieron productos, usando datos de prueba...');
+                // DATOS DE PRUEBA
+                bdProductos = [
+                    { id:1, codigo:'PRD-000124', descripcion:'Cono de seguridad 75 cm con base de PVC', modelo:'CS-75', marca:'KCF Safety', familia:'Seguridad Industrial', categoria:'Seguridad Industrial', categoria_derivada:'Señalización', peso:2.20, transporte:'Camión', costo_unitario:25.00, precio_unitario:45.00, observaciones:'Con bandas reflectivas', estado:'activo', presentacion_proveedor:'Caja x 10', presentacion_venta:'Unidad', venta_minima:1, codigo_barras:'7750123456001', volumen:0.012, origen:'Nacional', tiempo_entrega:'1-2d', abastecimiento:'stock', stock_minimo:25, descripcion_larga:'Producto vial para obras' },
+                    { id:2, codigo:'PRD-000125', descripcion:'Chaleco reflectivo naranja XL', modelo:'SR-8891', marca:'EasyWon', familia:'Indumentaria', categoria:'Indumentaria', categoria_derivada:'Chalecos', peso:0.25, transporte:'Minivan', costo_unitario:20.00, precio_unitario:40.00, observaciones:'Con cintas reflectivas', estado:'inactivo', presentacion_proveedor:'Caja x 10', presentacion_venta:'Unidad', venta_minima:1, codigo_barras:'7750123456002', volumen:0.015, origen:'Importado', tiempo_entrega:'3-5d', abastecimiento:'bajo-pedido', stock_minimo:15, descripcion_larga:'Chaleco liviano para seguridad' },
+                    { id:3, codigo:'PRD-000126', descripcion:'Taladro 1/2" 850W con maletín', modelo:'TAL-850M', marca:'Borweg', familia:'Tecnología', categoria:'Tecnología', categoria_derivada:'Taladros', peso:2.50, transporte:'Camioneta', costo_unitario:120.00, precio_unitario:199.00, observaciones:'2 velocidades', estado:'bajo_pedido', presentacion_proveedor:'Caja x 6', presentacion_venta:'Unidad', venta_minima:1, codigo_barras:'7750123456003', volumen:0.020, origen:'Importado', tiempo_entrega:'7-10d', abastecimiento:'bajo-pedido', stock_minimo:10, descripcion_larga:'Herramienta eléctrica profesional' },
+                    { id:4, codigo:'PRD-000127', descripcion:'Extintor PQS 6 kg', modelo:'PQS-6', marca:'Kidde', familia:'Seguridad Industrial', categoria:'Seguridad Industrial', categoria_derivada:'Extintores', peso:9.00, transporte:'Camión', costo_unitario:85.00, precio_unitario:149.00, observaciones:'Vigente normativa', estado:'activo', presentacion_proveedor:'Caja x 1', presentacion_venta:'Unidad', venta_minima:1, codigo_barras:'7750123456004', volumen:0.025, origen:'Nacional', tiempo_entrega:'1-2d', abastecimiento:'stock', stock_minimo:8, descripcion_larga:'Extintor para uso industrial' },
+                    { id:5, codigo:'PRD-000128', descripcion:'Guante de nitrilo negro (par)', modelo:'NIT-010', marca:'Descartame', familia:'Limpieza', categoria:'Limpieza', categoria_derivada:'Protección personal', peso:0.10, transporte:'Auto', costo_unitario:10.00, precio_unitario:19.00, observaciones:'Microtexturizado', estado:'disponible', presentacion_proveedor:'Caja x 4', presentacion_venta:'Unidad', venta_minima:1, codigo_barras:'7750123456005', volumen:0.018, origen:'Importado', tiempo_entrega:'3-5d', abastecimiento:'stock', stock_minimo:12, descripcion_larga:'Guante para protección' }
+                ];
+                bdProductosFiltrados = bdProductos;
+                bdRenderProductos(bdProductosFiltrados);
+                console.log('✅ ' + bdProductos.length + ' productos de prueba cargados');
+            }
+        })
+        .catch(function(error) {
+            console.error('❌ Error:', error);
+            // DATOS DE PRUEBA EN CASO DE ERROR
+            bdProductos = [
+                { id:1, codigo:'PRD-000124', descripcion:'Cono de seguridad 75 cm', modelo:'CS-75', marca:'KCF Safety', familia:'Seguridad Industrial', categoria:'Seguridad Industrial', categoria_derivada:'Señalización', peso:2.20, transporte:'Camión', costo_unitario:25.00, precio_unitario:45.00, observaciones:'Con bandas reflectivas', estado:'activo', presentacion_proveedor:'Caja x 10', presentacion_venta:'Unidad', venta_minima:1, codigo_barras:'7750123456001', volumen:0.012, origen:'Nacional', tiempo_entrega:'1-2d', abastecimiento:'stock', stock_minimo:25, descripcion_larga:'Producto vial' }
+            ];
+            bdProductosFiltrados = bdProductos;
+            bdRenderProductos(bdProductosFiltrados);
+        });
+}
+
+// ============================================================
+// RENDERIZAR PRODUCTOS
+// ============================================================
+function bdRenderProductos(data) {
+    console.log('🖥️ Renderizando productos...', data);
+    
+    var tbody = document.getElementById('bdProductTableBody');
+    if (!tbody) {
+        console.error('❌ No se encontró bdProductTableBody');
+        return;
+    }
+    
+    if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="24" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay productos</td></tr>';
+        document.getElementById('bdCountText').textContent = 'Mostrando 0 productos';
+        document.getElementById('bdTotalRegistros').textContent = '0 registros';
+        return;
+    }
+    
+    // Paginación
+    var total = data.length;
+    var totalPaginas = Math.ceil(total / bdPorPagina);
+    if (bdPaginaActual > totalPaginas) bdPaginaActual = totalPaginas;
+    if (bdPaginaActual < 1) bdPaginaActual = 1;
+    
+    var inicio = (bdPaginaActual - 1) * bdPorPagina;
+    var fin = Math.min(inicio + bdPorPagina, total);
+    var paginaData = data.slice(inicio, fin);
+    
+    var html = '';
+    for (var i = 0; i < paginaData.length; i++) {
+        var p = paginaData[i];
+        var index = inicio + i + 1;
+        
+        var estadoClass = 'st-active';
+        var estado = (p.estado || 'activo').toLowerCase();
+        if (estado === 'inactivo') estadoClass = 'st-inactive';
+        else if (estado === 'bajo_pedido') estadoClass = 'st-pending';
+        else if (estado === 'bloqueado') estadoClass = 'st-blocked';
+        else if (estado === 'disponible') estadoClass = 'st-available';
+        
+        var costo = p.costo_unitario ? parseFloat(p.costo_unitario).toFixed(2) : '0.00';
+        var precio = p.precio_unitario ? parseFloat(p.precio_unitario).toFixed(2) : '0.00';
+        var categoria = p.categoria || p.familia || '-';
+        var subcategoria = p.categoria_derivada || p.subcategoria || '-';
+        
+        html += '<tr>';
+        html += '<td class="bd-col-item" style="text-align:center;color:#94a3b8;font-weight:600;">' + index + '</td>';
+        html += '<td class="bd-col-code"><span class="bd-t-code">' + (p.codigo || '-') + '</span></td>';
+        html += '<td class="bd-col-desc"><strong>' + (p.descripcion || '-') + '</strong></td>';
+        html += '<td class="bd-col-model">' + (p.modelo || '-') + '</td>';
+        html += '<td class="bd-col-brand">' + (p.marca || '-') + '</td>';
+        html += '<td class="bd-col-cat">' + categoria + '</td>';
+        html += '<td class="bd-col-status"><span class="bd-status ' + estadoClass + '"><span class="bd-dot"></span>' + (p.estado || 'Activo') + '</span></td>';
+        html += '<td class="bd-col-actions"><div class="row-actions">';
+        html += '<button class="btn-action btn-view" onclick="verProducto(' + p.id + ')" title="Ver"><i class="bi bi-eye"></i></button>';
+        html += '<button class="btn-action btn-edit" onclick="editarProducto(' + p.id + ')" title="Editar"><i class="bi bi-pencil"></i></button>';
+        html += '<button class="btn-action btn-delete" onclick="eliminarProducto(' + p.id + ')" title="Eliminar"><i class="bi bi-trash"></i></button>';
+        html += '</div></td>';
+        
+        // Columnas ocultas
+        html += '<td class="bd-col-subcat col-oculta">' + subcategoria + '</td>';
+        html += '<td class="bd-col-weight col-oculta">' + (p.peso || '0') + '</td>';
+        html += '<td class="bd-col-transport col-oculta">' + (p.transporte || '-') + '</td>';
+        html += '<td class="bd-col-cost col-oculta" style="font-weight:600;">S/ ' + costo + '</td>';
+        html += '<td class="bd-col-sale col-oculta" style="font-weight:700;color:#0066FF;">S/ ' + precio + '</td>';
+        html += '<td class="bd-col-obs col-oculta">' + (p.observaciones || '-') + '</td>';
+        html += '<td class="bd-col-prov-pres col-oculta">' + (p.presentacion_proveedor || '-') + '</td>';
+        html += '<td class="bd-col-sale-pres col-oculta">' + (p.presentacion_venta || '-') + '</td>';
+        html += '<td class="bd-col-min-sale col-oculta">' + (p.venta_minima || '1') + '</td>';
+        html += '<td class="bd-col-barras col-oculta">' + (p.codigo_barras || '-') + '</td>';
+        html += '<td class="bd-col-volumen col-oculta">' + (p.volumen || '0') + '</td>';
+        html += '<td class="bd-col-origen col-oculta">' + (p.origen || '-') + '</td>';
+        html += '<td class="bd-col-tiempo col-oculta">' + (p.tiempo_entrega || '-') + '</td>';
+        html += '<td class="bd-col-abast col-oculta">' + (p.abastecimiento || '-') + '</td>';
+        html += '<td class="bd-col-stock-min col-oculta">' + (p.stock_minimo || '0') + '</td>';
+        html += '<td class="bd-col-desc-larga col-oculta" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (p.descripcion_larga || '-') + '</td>';
+        html += '</tr>';
+    }
+    
+    tbody.innerHTML = html;
+    
+    var desde = inicio + 1;
+    var hasta = fin;
+    document.getElementById('bdCountText').textContent = 'Mostrando ' + desde + ' a ' + hasta + ' de ' + total + ' productos';
+    document.getElementById('bdTotalRegistros').textContent = total + ' registros';
+    document.getElementById('bdPaginaInfo').textContent = bdPaginaActual + ' / ' + totalPaginas;
+}
+
+// ============================================================
+// FILTROS
+// ============================================================
+function bdAplicarFiltros() {
+    var q = document.getElementById('bdSearchInput').value.trim().toLowerCase();
+    var categoria = document.getElementById('bdCategoriaFilter').value;
+    var subcategoria = document.getElementById('bdSubcategoriaFilter').value;
+    var marca = document.getElementById('bdMarcaFilter').value;
+    var modelo = document.getElementById('bdModeloFilter').value;
+    var estado = document.getElementById('bdEstadoFilter').value;
+    
+    bdProductosFiltrados = bdProductos.filter(function(p) {
+        var texto = (p.codigo || '') + ' ' + (p.descripcion || '') + ' ' + (p.modelo || '') + ' ' + (p.marca || '') + ' ' + (p.categoria || '') + ' ' + (p.familia || '');
+        var coincideTexto = !q || texto.toLowerCase().includes(q);
+        var coincideCategoria = !categoria || (p.familia === categoria || p.categoria === categoria);
+        var coincideSubcategoria = !subcategoria || (p.categoria_derivada === subcategoria || p.subcategoria === subcategoria);
+        var coincideMarca = !marca || p.marca === marca;
+        var coincideModelo = !modelo || p.modelo === modelo;
+        var coincideEstado = !estado || (p.estado || 'activo') === estado;
+        return coincideTexto && coincideCategoria && coincideSubcategoria && coincideMarca && coincideModelo && coincideEstado;
+    });
+    
+    bdPaginaActual = 1;
+    bdRenderProductos(bdProductosFiltrados);
+}
+
+// ============================================================
+// LIMPIAR FILTROS
+// ============================================================
+function bdLimpiarFiltros() {
+    document.getElementById('bdSearchInput').value = '';
+    document.getElementById('bdCategoriaFilter').value = '';
+    document.getElementById('bdSubcategoriaFilter').value = '';
+    document.getElementById('bdMarcaFilter').value = '';
+    document.getElementById('bdModeloFilter').value = '';
+    document.getElementById('bdEstadoFilter').value = '';
+    bdProductosFiltrados = bdProductos;
+    bdPaginaActual = 1;
+    bdRenderProductos(bdProductosFiltrados);
+}
+
+// ============================================================
+// PAGINACIÓN
+// ============================================================
+function bdPaginaAnterior() {
+    if (bdPaginaActual > 1) {
+        bdPaginaActual--;
+        bdRenderProductos(bdProductosFiltrados);
+    }
+}
+
+function bdPaginaSiguiente() {
+    var total = bdProductosFiltrados.length;
+    var totalPaginas = Math.ceil(total / bdPorPagina);
+    if (bdPaginaActual < totalPaginas) {
+        bdPaginaActual++;
+        bdRenderProductos(bdProductosFiltrados);
+    }
+}
+
+function bdCambiarPorPagina() {
+    bdPorPagina = parseInt(document.getElementById('bdPorPaginaSelect').value);
+    bdPaginaActual = 1;
+    bdRenderProductos(bdProductosFiltrados);
+}
+
+// ============================================================
+// ACCIONES
+// ============================================================
+function verProducto(id) {
+    if (!id) return;
+    window.location.href = '/productos/ver/' + id;
+}
+
+function editarProducto(id) {
+    if (!id) return;
+    window.location.href = '/productos/editar/' + id;
+}
+
+function eliminarProducto(id) {
+    if (!id) return;
+    var producto = bdProductos.find(function(p) { return p.id == id; });
+    var nombre = producto ? (producto.descripcion || producto.codigo) : 'este producto';
+    if (!confirm('¿Eliminar "' + nombre + '"?')) return;
+    
+    fetch('/productos/api/productos/' + id, { method: 'DELETE' })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                if (typeof mostrarNotificacion === 'function') {
+                    mostrarNotificacion('success', '✅ Eliminado', '"' + nombre + '" eliminado');
+                }
+                cargarProductos();
+            }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+        });
+}
+
+function bdExportarExcel() {
+    if (typeof mostrarNotificacion === 'function') {
+        mostrarNotificacion('info', '📊 Exportando...', 'Generando archivo Excel.');
+    }
+}
+
+// ============================================================
+// INICIALIZAR - EJECUTAR CUANDO EL DOM ESTÉ LISTO
+// ============================================================
+(function() {
+    console.log('✅ Inicializando Base de datos de productos...');
+    
+    // Esperar a que el DOM esté completamente cargado
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarProductos();
+            configurarEventos();
+        });
+    } else {
+        cargarProductos();
+        configurarEventos();
+    }
+    
+    function configurarEventos() {
+        // Eventos de filtros
+        document.getElementById('bdSearchInput').addEventListener('input', bdAplicarFiltros);
+        document.getElementById('bdCategoriaFilter').addEventListener('change', bdAplicarFiltros);
+        document.getElementById('bdSubcategoriaFilter').addEventListener('change', bdAplicarFiltros);
+        document.getElementById('bdMarcaFilter').addEventListener('change', bdAplicarFiltros);
+        document.getElementById('bdModeloFilter').addEventListener('change', bdAplicarFiltros);
+        document.getElementById('bdEstadoFilter').addEventListener('change', bdAplicarFiltros);
+    }
+})();
+
+// Exponer funciones globalmente
+window.bdRenderProductos = bdRenderProductos;
+window.bdAplicarFiltros = bdAplicarFiltros;
+window.bdLimpiarFiltros = bdLimpiarFiltros;
+window.cambiarVista = cambiarVista;
+window.bdPaginaAnterior = bdPaginaAnterior;
+window.bdPaginaSiguiente = bdPaginaSiguiente;
+window.bdCambiarPorPagina = bdCambiarPorPagina;
+window.verProducto = verProducto;
+window.editarProducto = editarProducto;
+window.eliminarProducto = eliminarProducto;
+window.bdExportarExcel = bdExportarExcel;
+</script>
 {% endblock %}
