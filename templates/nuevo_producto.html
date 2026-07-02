@@ -1,14 +1,184 @@
 <!-- templates/nuevo_producto.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* ============================================
+           ESTILOS PARA BOTONES DE ACCIÓN (Guardar/Cancelar)
+           ============================================ */
+        
+        /* Contenedor principal de la cabecera */
+        .page-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding: 0 4px;
+        }
+        
+        /* Contenedor de los botones - alineados a la derecha */
+        .page-head .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        
+        /* Estilos base para ambos botones */
+        .page-head .actions .btn {
+            padding: 14px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-width: 130px;
+            letter-spacing: 0.3px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: none;
+            outline: none;
+        }
+        
+        /* Estilo del botón Guardar (primario) */
+        .page-head .actions .btn.primary {
+            background: linear-gradient(135deg, #4CAF50, #43A047);
+            color: white;
+            border: 2px solid #4CAF50;
+        }
+        
+        .page-head .actions .btn.primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+            background: linear-gradient(135deg, #43A047, #388E3C);
+        }
+        
+        .page-head .actions .btn.primary:active {
+            transform: translateY(0px);
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+        }
+        
+        /* Estilo del botón Cancelar (outline) */
+        .page-head .actions .btn.outline {
+            background: white;
+            color: #555;
+            border: 2px solid #ddd;
+        }
+        
+        .page-head .actions .btn.outline:hover {
+            border-color: #ff4444;
+            color: #ff4444;
+            background: rgba(255, 68, 68, 0.05);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 68, 68, 0.15);
+        }
+        
+        .page-head .actions .btn.outline:active {
+            transform: translateY(0px);
+        }
+        
+        /* Iconos dentro de los botones */
+        .page-head .actions .btn i {
+            font-size: 20px;
+            line-height: 1;
+        }
+        
+        /* ============================================
+           RESPONSIVE PARA MÓVILES
+           ============================================ */
+        @media (max-width: 768px) {
+            .page-head {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+            
+            .page-head .actions {
+                justify-content: center;
+                gap: 10px;
+            }
+            
+            .page-head .actions .btn {
+                flex: 1;
+                min-width: 100px;
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+            
+            .page-head .actions .btn i {
+                font-size: 18px;
+            }
+        }
+        
+        /* Para pantallas muy pequeñas */
+        @media (max-width: 480px) {
+            .page-head .actions {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .page-head .actions .btn {
+                width: 100%;
+                padding: 14px;
+                font-size: 16px;
+            }
+        }
+        
+        /* ============================================
+           ANIMACIÓN DE CARGA (opcional)
+           ============================================ */
+        .page-head .actions .btn.primary.loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        
+        .page-head .actions .btn.primary.loading::after {
+            content: '';
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ============================================ -->
+<!-- CONTENIDO PRINCIPAL                          -->
+<!-- ============================================ -->
+
 <div class="page-head">
     <div>
         <h1>{% if editando %}Editar producto{% else %}Nuevo producto{% endif %}</h1>
         <p class="subtitle">{% if editando %}Modifica la información del producto seleccionado.{% else %}Crea o edita la información principal del producto.{% endif %}</p>
     </div>
+    
+    <!-- BOTONES DE ACCIÓN - AHORA MÁS GRANDES Y A LA DERECHA -->
     <div class="actions">
-        <button class="btn outline" type="button" onclick="limpiarFormulario()"><i class="bi bi-x-circle"></i> Cancelar</button>
-        <button class="btn primary" id="btnGuardar" type="button"><i class="bi bi-save"></i> {% if editando %}Actualizar{% else %}Guardar{% endif %}</button>
+        <button class="btn outline" type="button" onclick="limpiarFormulario()">
+            <i class="bi bi-x-circle"></i> Cancelar
+        </button>
+        <button class="btn primary" id="btnGuardar" type="button">
+            <i class="bi bi-save"></i> {% if editando %}Actualizar{% else %}Guardar{% endif %}
+        </button>
     </div>
 </div>
+
+<!-- ============================================ -->
+<!-- RESTO DEL FORMULARIO (sin cambios)          -->
+<!-- ============================================ -->
 
 <form id="formNuevoProducto" action="/api/productos" method="POST" enctype="multipart/form-data">
     <!-- ✅ ID del producto para actualizar -->
@@ -53,12 +223,11 @@
             <div class="form-header">
                 <div class="code-box">
                     <label>Código <span class="req">*</span></label>
-                   <!-- ✅ CÓDIGO CORREGIDO -->
-                <div class="code-value">
-                <span id="codigoProducto">{{ producto.codigo if producto else codigo_auto or 'PRD-0001' }}</span>
-                <span class="pill">{% if editando %}Existente{% else %}Auto{% endif %}</span>
+                    <div class="code-value">
+                        <span id="codigoProducto">{{ producto.codigo if producto else codigo_auto or 'PRD-0001' }}</span>
+                        <span class="pill">{% if editando %}Existente{% else %}Auto{% endif %}</span>
                     </div>
-                        <input type="hidden" id="codigoGenerado" name="codigo" value="{{ producto.codigo if producto else codigo_auto or 'PRD-0001' }}" />
+                    <input type="hidden" id="codigoGenerado" name="codigo" value="{{ producto.codigo if producto else codigo_auto or 'PRD-0001' }}" />
                 </div>
                 <div class="field" style="flex:1">
                     <label>Nombre del producto <span class="req">*</span></label>
@@ -297,8 +466,7 @@
             </div>
         </div>
     </div>
-    
 </form>
 
-
-
+</body>
+</html>
