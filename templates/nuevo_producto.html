@@ -121,73 +121,150 @@
         }
         
         /* ============================================
-           ESTILOS PARA MENSAJES DE VALIDACIÓN
+           NOTIFICACIÓN FLOTANTE - LADO DERECHO
            ============================================ */
         
-        /* Contenedor de mensajes de error */
-        #validationMessages {
-            display: none;
+        /* Contenedor de notificaciones flotantes */
+        #notificationContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 380px;
+            width: 100%;
+            pointer-events: none;
+        }
+        
+        /* Cada notificación */
+        .notification {
             background: #FFF3F3;
-            border-left: 4px solid #FF4444;
-            padding: 12px 16px;
-            margin-bottom: 16px;
-            border-radius: 6px;
-            box-shadow: 0 2px 8px rgba(255, 68, 68, 0.15);
+            border-left: 5px solid #FF4444;
+            border-radius: 10px;
+            padding: 16px 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            pointer-events: auto;
+            animation: slideInRight 0.4s ease forwards;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
         
-        #validationMessages.show {
-            display: block;
-            animation: slideDown 0.3s ease;
-        }
-        
-        @keyframes slideDown {
+        /* Animación de entrada desde la derecha */
+        @keyframes slideInRight {
             from {
                 opacity: 0;
-                transform: translateY(-10px);
+                transform: translateX(100px);
             }
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateX(0);
             }
         }
         
-        #validationMessages .error-title {
-            font-weight: 600;
+        /* Animación de salida */
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+        }
+        
+        .notification.hide {
+            animation: slideOutRight 0.3s ease forwards;
+        }
+        
+        /* Título de la notificación */
+        .notification .notif-title {
+            font-weight: 700;
             color: #CC0000;
             font-size: 14px;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
         
-        #validationMessages .error-title i {
-            font-size: 18px;
+        .notification .notif-title i {
+            font-size: 20px;
+            color: #FF4444;
         }
         
-        #validationMessages .error-list {
+        /* Lista de errores */
+        .notification .notif-list {
             list-style: none;
             padding: 0;
             margin: 0;
         }
         
-        #validationMessages .error-list li {
+        .notification .notif-list li {
             padding: 4px 0;
             color: #CC0000;
             font-size: 13px;
             display: flex;
             align-items: center;
             gap: 8px;
+            font-weight: 500;
         }
         
-        #validationMessages .error-list li::before {
+        .notification .notif-list li::before {
             content: "•";
             color: #FF4444;
             font-weight: bold;
-            font-size: 18px;
+            font-size: 20px;
+            line-height: 1;
         }
         
-        /* Resaltar campos con error */
+        /* Botón de cerrar */
+        .notification .close-btn {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+        
+        .notification .close-btn:hover {
+            background: rgba(255, 68, 68, 0.1);
+            color: #FF4444;
+        }
+        
+        /* Barra de progreso para auto-cierre */
+        .notification .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #FF4444, #FF6B6B);
+            animation: progressBar 5s linear forwards;
+            border-radius: 0 0 0 5px;
+        }
+        
+        @keyframes progressBar {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+        
+        /* ============================================
+           RESALTAR CAMPOS CON ERROR
+           ============================================ */
         .field.error input,
         .field.error select,
         .field.error textarea {
@@ -204,7 +281,6 @@
             color: #CC0000 !important;
         }
         
-        /* Animación de shake para campos con error */
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             20% { transform: translateX(-6px); }
@@ -222,12 +298,10 @@
            AJUSTES PARA REDUCIR TAMAÑO DE CAMPOS
            ============================================ */
         
-        /* Reducir espaciado general */
         .np-layout {
             gap: 12px !important;
         }
         
-        /* Tarjetas más compactas */
         .card {
             padding: 14px !important;
             margin-bottom: 10px !important;
@@ -238,7 +312,6 @@
             margin-bottom: 10px !important;
         }
         
-        /* Campos de formulario más pequeños */
         .field {
             margin-bottom: 6px !important;
         }
@@ -261,7 +334,6 @@
             max-height: 80px !important;
         }
         
-        /* Grid más compacto */
         .grid {
             gap: 6px 10px !important;
             margin-bottom: 4px !important;
@@ -275,7 +347,6 @@
             gap: 6px 10px !important;
         }
         
-        /* Input con unidad más pequeño */
         .input-unit {
             height: 28px !important;
         }
@@ -293,7 +364,6 @@
             line-height: 28px !important;
         }
         
-        /* Upload más compacto */
         .upload {
             padding: 12px !important;
             min-height: 100px !important;
@@ -316,7 +386,6 @@
             padding: 3px 10px !important;
         }
         
-        /* Operaciones más compactas */
         .operation {
             padding: 10px !important;
             margin-top: 8px !important;
@@ -335,7 +404,6 @@
             font-size: 11px !important;
         }
         
-        /* Precios más compactos */
         .price-box {
             padding: 8px 0 !important;
         }
@@ -372,7 +440,6 @@
             font-size: 14px !important;
         }
         
-        /* Estado más compacto */
         .state-select {
             padding: 4px 8px !important;
             font-size: 12px !important;
@@ -394,7 +461,6 @@
             height: 6px !important;
         }
         
-        /* Código más compacto */
         .code-box {
             padding: 4px 8px !important;
         }
@@ -409,14 +475,13 @@
             padding: 1px 6px !important;
         }
         
-        /* Form header más compacto */
         .form-header {
             gap: 8px !important;
             margin-bottom: 8px !important;
         }
         
         /* ============================================
-           RESPONSIVE PARA MÓVILES
+           RESPONSIVE
            ============================================ */
         @media (max-width: 768px) {
             .page-head {
@@ -444,9 +509,15 @@
             .np-layout {
                 flex-direction: column !important;
             }
+            
+            #notificationContainer {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                max-width: none;
+            }
         }
         
-        /* Para pantallas muy pequeñas */
         @media (max-width: 480px) {
             .page-head .actions {
                 flex-direction: column;
@@ -460,9 +531,6 @@
             }
         }
         
-        /* ============================================
-           ANIMACIÓN DE CARGA (opcional)
-           ============================================ */
         .page-head .actions .btn.primary.loading {
             pointer-events: none;
             opacity: 0.8;
@@ -483,7 +551,6 @@
             to { transform: rotate(360deg); }
         }
         
-        /* Para que el layout de 3 columnas se vea bien */
         .np-layout {
             display: grid !important;
             grid-template-columns: 280px 1fr 260px !important;
@@ -507,6 +574,11 @@
 <body>
 
 <!-- ============================================ -->
+<!-- CONTENEDOR DE NOTIFICACIONES FLOTANTES      -->
+<!-- ============================================ -->
+<div id="notificationContainer"></div>
+
+<!-- ============================================ -->
 <!-- CONTENIDO PRINCIPAL                          -->
 <!-- ============================================ -->
 
@@ -527,17 +599,6 @@
             <i class="bi bi-save"></i> {% if editando %}Actualizar{% else %}Guardar Nuevo{% endif %}
         </button>
     </div>
-</div>
-
-<!-- ============================================ -->
-<!-- CONTENEDOR DE MENSAJES DE VALIDACIÓN        -->
-<!-- ============================================ -->
-<div id="validationMessages">
-    <div class="error-title">
-        <i class="bi bi-exclamation-triangle-fill"></i>
-        Por favor, completa los siguientes campos obligatorios:
-    </div>
-    <ul class="error-list" id="errorList"></ul>
 </div>
 
 <!-- ============================================ -->
@@ -864,21 +925,24 @@ function validarYGuardar() {
             if (fieldContainer) {
                 fieldContainer.classList.add('error');
             }
-            // Enfocar el primer campo con error
-            if (errores.length === 1) {
-                elemento.focus();
-            }
         }
     });
     
-    // Si hay errores, mostrarlos
+    // Si hay errores, mostrar notificación flotante
     if (errores.length > 0) {
-        mostrarErrores(errores);
-        // Scroll al mensaje de error
-        document.getElementById('validationMessages').scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'center' 
+        mostrarNotificacion(errores);
+        
+        // Enfocar el primer campo con error
+        const primerCampo = campos.find(c => {
+            const el = document.getElementById(c.id);
+            return el && el.value.trim() === '';
         });
+        if (primerCampo) {
+            const elemento = document.getElementById(primerCampo.id);
+            if (elemento) {
+                setTimeout(() => elemento.focus(), 300);
+            }
+        }
         return false;
     }
     
@@ -887,28 +951,54 @@ function validarYGuardar() {
     return true;
 }
 
-function mostrarErrores(errores) {
-    const messagesDiv = document.getElementById('validationMessages');
-    const errorList = document.getElementById('errorList');
+function mostrarNotificacion(errores) {
+    const container = document.getElementById('notificationContainer');
     
-    // Limpiar lista anterior
-    errorList.innerHTML = '';
+    // Crear la notificación
+    const notif = document.createElement('div');
+    notif.className = 'notification';
     
-    // Agregar cada error como un item de lista
+    // Construir HTML
+    let html = `
+        <button class="close-btn" onclick="cerrarNotificacion(this)">×</button>
+        <div class="notif-title">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            ¡Campos obligatorios!
+        </div>
+        <ul class="notif-list">
+    `;
+    
     errores.forEach(error => {
-        const li = document.createElement('li');
-        li.textContent = error;
-        errorList.appendChild(li);
+        html += `<li>Te falta: <strong>${error}</strong></li>`;
     });
     
-    // Mostrar el contenedor de mensajes
-    messagesDiv.classList.add('show');
+    html += `
+        </ul>
+        <div class="progress-bar"></div>
+    `;
+    
+    notif.innerHTML = html;
+    
+    // Agregar al contenedor
+    container.appendChild(notif);
+    
+    // Auto-cerrar después de 5 segundos
+    setTimeout(() => {
+        cerrarNotificacion(notif.querySelector('.close-btn'));
+    }, 5000);
+}
+
+function cerrarNotificacion(btn) {
+    const notif = btn.closest('.notification');
+    if (notif) {
+        notif.classList.add('hide');
+        setTimeout(() => {
+            notif.remove();
+        }, 300);
+    }
 }
 
 function limpiarErrores() {
-    // Ocultar mensajes
-    document.getElementById('validationMessages').classList.remove('show');
-    
     // Limpiar clases de error de todos los campos
     document.querySelectorAll('.field.error').forEach(field => {
         field.classList.remove('error');
@@ -920,15 +1010,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Escuchar cambios en todos los inputs y selects
     document.querySelectorAll('input, select').forEach(element => {
         element.addEventListener('input', function() {
-            // Buscar el contenedor del campo
             const fieldContainer = this.closest('.field');
             if (fieldContainer) {
                 fieldContainer.classList.remove('error');
-            }
-            // Si todos los errores se han corregido, ocultar mensajes
-            const camposConError = document.querySelectorAll('.field.error');
-            if (camposConError.length === 0) {
-                document.getElementById('validationMessages').classList.remove('show');
             }
         });
         
@@ -936,10 +1020,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const fieldContainer = this.closest('.field');
             if (fieldContainer) {
                 fieldContainer.classList.remove('error');
-            }
-            const camposConError = document.querySelectorAll('.field.error');
-            if (camposConError.length === 0) {
-                document.getElementById('validationMessages').classList.remove('show');
             }
         });
     });
@@ -952,7 +1032,6 @@ function personalizar(id, placeholder) {
     
     const valor = prompt('Ingrese el nuevo valor:', '');
     if (valor && valor.trim() !== '') {
-        // Verificar si ya existe la opción
         let existe = false;
         for (let option of select.options) {
             if (option.value === valor.trim()) {
@@ -974,15 +1053,13 @@ function personalizar(id, placeholder) {
 
 // Función para limpiar formulario (si existe)
 function limpiarFormulario() {
-    // Implementar según necesidad
     if (confirm('¿Estás seguro de que deseas cancelar? Los cambios no guardados se perderán.')) {
-        window.location.href = '/productos'; // o donde corresponda
+        window.location.href = '/productos';
     }
 }
 
 // Función para calcular margen (si existe)
 function calcularMargen() {
-    // Implementar según necesidad
     const venta = parseFloat(document.getElementById('valorVenta').value) || 0;
     const costo = parseFloat(document.getElementById('valorCosto').value) || 0;
     
