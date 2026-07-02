@@ -4505,8 +4505,6 @@ function verProducto(id) {
                 else if (estado === 'bloqueado') estadoClass = 'st-blocked';
                 else if (estado === 'disponible') estadoClass = 'st-available';
                 
-                var costo = p.costo_unitario ? parseFloat(p.costo_unitario).toFixed(2) : '0.00';
-                var precio = p.precio_unitario ? parseFloat(p.precio_unitario).toFixed(2) : '0.00';
                 var categoria = p.categoria || p.familia || '-';
                 var subcategoria = p.subcategoria || p.categoria_derivada || '-';
                 
