@@ -3429,17 +3429,32 @@
             // Aplicar permisos a la interfaz
             aplicarPermisosInterfaz(esAdmin, permisosMap);
         }
-       
-        async function loadCorrelativos(){
+
+        // ============================================================
+// CORRELATIVOS - VERSIÓN SEGURA (CON VERIFICACIÓN DE ELEMENTOS)
+// ============================================================
+
+async function loadCorrelativos() {
     console.log('📋 Cargando correlativos...');
     
-    if (!document.getElementById('totalCorrelativos')) {
-        console.warn('⚠️ Elementos de correlativos no encontrados');
+    // ✅ Verificar si estamos en la página de correlativos
+    const isCorrelativosPage = document.getElementById('totalCorrelativos') !== null;
+    
+    if (!isCorrelativosPage) {
+        console.log('ℹ️ No estamos en la página de correlativos, omitiendo carga');
         return;
     }
     
     try {
-        const data = await fetchAPI('/api/config/correlativos');
+        const response = await fetch('/api/config/correlativos', {
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
         console.log('📦 Datos correlativos:', data);
         
         if (data.success) {
@@ -3447,11 +3462,87 @@
             console.log('✅ Correlativos cargados:', correlativosData.length);
             renderCorrelativos();
         } else {
-            toast('Error al cargar correlativos: ' + (data.error || 'Error desconocido'));
+            console.error('❌ Error en respuesta:', data.error);
         }
     } catch(e) {
-        console.error('Error cargando correlativos:', e);
-        toast('Error al cargar correlativos');
+        console.error('❌ Error cargando correlativos:', e);
+    }
+}
+
+function renderCorrelativos(filter) {
+    console.log('🖥️ Renderizando correlativos...');
+    
+    // ✅ VERIFICAR QUE LOS ELEMENTOS EXISTEN
+    const tbodyKCF = document.getElementById("tbodyCorrelativosKCF");
+    const tbodyAGD = document.getElementById("tbodyCorrelativosAGD");
+    
+    if (!tbodyKCF && !tbodyAGD) {
+        console.warn('⚠️ Elementos de correlativos no encontrados en la página actual');
+        return;
+    }
+    
+    const q = (filter || document.getElementById("searchCorrelativos")?.value || "").toLowerCase();
+    const list = correlativosData.filter(function(c) {
+        return JSON.stringify(c).toLowerCase().includes(q);
+    });
+    
+    const listKCF = list.filter(function(c) { return c.empresa_codigo === 'KCF'; });
+    const listAGD = list.filter(function(c) { return c.empresa_codigo === 'AGD'; });
+    
+    console.log('📊 KCF:', listKCF.length, 'AGD:', listAGD.length);
+    
+    if (tbodyKCF) {
+        if (listKCF.length === 0) {
+            tbodyKCF.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#94A3B8;padding:20px;">📭 Sin registros KCF</td></tr>`;
+        } else {
+            tbodyKCF.innerHTML = listKCF.map(function(c) {
+                return `
+                <tr>
+                    <td class="left">${c.documento || '-'}</td>
+                    <td><b>${c.prefijo || '-'}</b></td>
+                    <td>${c.anio || '-'}</td>
+                    <td>${c.ultimo_numero || 0}</td>
+                    <td><b>${makeCode(c.prefijo, c.anio, c.ultimo_numero)}</b></td>
+                    <td><span class="badge ${c.estado === 'Activo' ? 'badge-ok' : 'badge-gray'}">${c.estado || 'Inactivo'}</span></td>
+                    <td><button type="button" class="btn-edit" data-id="${c.id}">✏️ Editar</button></td>
+                    <td><button type="button" class="btn-delete" data-id="${c.id}">🗑️ Eliminar</button></td>
+                </tr>`;
+            }).join('');
+        }
+    }
+    
+    if (tbodyAGD) {
+        if (listAGD.length === 0) {
+            tbodyAGD.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#94A3B8;padding:20px;">📭 Sin registros AGD</td></tr>`;
+        } else {
+            tbodyAGD.innerHTML = listAGD.map(function(c) {
+                return `
+                <tr>
+                    <td class="left">${c.documento || '-'}</td>
+                    <td><b>${c.prefijo || '-'}</b></td>
+                    <td>${c.anio || '-'}</td>
+                    <td>${c.ultimo_numero || 0}</td>
+                    <td><b>${makeCode(c.prefijo, c.anio, c.ultimo_numero)}</b></td>
+                    <td><span class="badge ${c.estado === 'Activo' ? 'badge-ok' : 'badge-gray'}">${c.estado || 'Inactivo'}</span></td>
+                    <td><button type="button" class="btn-edit" data-id="${c.id}">✏️ Editar</button></td>
+                    <td><button type="button" class="btn-delete" data-id="${c.id}">🗑️ Eliminar</button></td>
+                </tr>`;
+            }).join('');
+        }
+    }
+
+    // ✅ SOLO ACTUALIZAR SI LOS ELEMENTOS EXISTEN
+    const countKCF = document.getElementById("countKCF");
+    const countAGD = document.getElementById("countAGD");
+    const totalCorrelativos = document.getElementById("totalCorrelativos");
+    const totalDocumentos = document.getElementById("totalDocumentos");
+    
+    if (countKCF) countKCF.textContent = listKCF.length + ' registro' + (listKCF.length !== 1 ? 's' : '');
+    if (countAGD) countAGD.textContent = listAGD.length + ' registro' + (listAGD.length !== 1 ? 's' : '');
+    if (totalCorrelativos) totalCorrelativos.textContent = list.length;
+    if (totalDocumentos) {
+        const docs = new Set(list.map(function(c) { return c.documento; }));
+        totalDocumentos.textContent = docs.size;
     }
 }
 
@@ -3462,75 +3553,8 @@
             return `${prefijo}-${anio}-${String(Number(ultimo || 0) + 1).padStart(4, '0')}`;
         }
 
-        function renderCorrelativos(filter=""){
-            const q = String(filter || document.getElementById("searchCorrelativos")?.value || "").toLowerCase();
-            const list = correlativosData.filter(c => JSON.stringify(c).toLowerCase().includes(q));
-            
-            const listKCF = list.filter(c => c.empresa_codigo === 'KCF');
-            const listAGD = list.filter(c => c.empresa_codigo === 'AGD');
 
-            const tbodyKCF = document.getElementById("tbodyCorrelativosKCF");
-            const tbodyAGD = document.getElementById("tbodyCorrelativosAGD");
-            
-            if(tbodyKCF){
-                tbodyKCF.innerHTML = listKCF.map(c => `
-                    <tr>
-                        <td class="left">${c.documento}</td>
-                        <td><b>${c.prefijo}</b></td>
-                        <td>${c.anio}</td>
-                        <td>${c.ultimo_numero}</td>
-                        <td><b>${makeCode(c.prefijo, c.anio, c.ultimo_numero)}</b></td>
-                        <td><span class="badge ${c.estado === 'Activo' ? 'badge-ok' : 'badge-gray'}">${c.estado}</span></td>
-                        <td><button type="button" class="btn-edit" data-id="${c.id}">✏️ Editar</button></td>
-                        <td><button type="button" class="btn-delete" data-id="${c.id}">🗑️ Eliminar</button></td>
-                    </tr>
-                `).join("") || `<tr><td colspan="8" style="text-align:center;color:#94A3B8;padding:20px;">📭 Sin registros KCF</td></tr>`;
-                
-                tbodyKCF.querySelectorAll('.btn-edit').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        cargarCorrelativoParaEditar(this.dataset.id);
-                    });
-                });
-                
-                tbodyKCF.querySelectorAll('.btn-delete').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        eliminarCorrelativo(this.dataset.id);
-                    });
-                });
-            }
-            
-            if(tbodyAGD){
-                tbodyAGD.innerHTML = listAGD.map(c => `
-                    <tr>
-                        <td class="left">${c.documento}</td>
-                        <td><b>${c.prefijo}</b></td>
-                        <td>${c.anio}</td>
-                        <td>${c.ultimo_numero}</td>
-                        <td><b>${makeCode(c.prefijo, c.anio, c.ultimo_numero)}</b></td>
-                        <td><span class="badge ${c.estado === 'Activo' ? 'badge-ok' : 'badge-gray'}">${c.estado}</span></td>
-                        <td><button type="button" class="btn-edit" data-id="${c.id}">✏️ Editar</button></td>
-                        <td><button type="button" class="btn-delete" data-id="${c.id}">🗑️ Eliminar</button></td>
-                    </tr>
-                `).join("") || `<tr><td colspan="8" style="text-align:center;color:#94A3B8;padding:20px;">📭 Sin registros AGD</td></tr>`;
-                
-                tbodyAGD.querySelectorAll('.btn-edit').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        cargarCorrelativoParaEditar(this.dataset.id);
-                    });
-                });
-                
-                tbodyAGD.querySelectorAll('.btn-delete').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        eliminarCorrelativo(this.dataset.id);
-                    });
-                });
-            }
 
-            document.getElementById("countKCF").textContent = `${listKCF.length} registro${listKCF.length===1?'':'s'}`;
-            document.getElementById("countAGD").textContent = `${listAGD.length} registro${listAGD.length===1?'':'s'}`;
-            document.getElementById("totalCorrelativos").textContent = list.length;
-            document.getElementById("totalDocumentos").textContent = new Set(list.map(c => c.documento)).size;
-        }
 
         function updateCorrPreview() {
             const prefijo = document.getElementById("corrPrefijo").value || "PRE";
@@ -4365,6 +4389,9 @@ function bdRenderProductos(data) {
     if (pageInfo) pageInfo.textContent = window.bdPaginaActual + ' / ' + totalPaginas;
 }
 
+
+
+
 // ============================================================
 // FILTROS - MODIFICADO PARA USAR bdProductosFiltrados
 // ============================================================
@@ -4775,6 +4802,9 @@ function bdExportarExcel() {
         mostrarNotificacion('success', '📊 Exportando...', 'El archivo Excel se está generando.');
     }
 }
+
+
+
 
 // ============================================================
 // INICIALIZAR - MODIFICADO PARA CONFIGURAR EVENTOS
