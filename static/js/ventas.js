@@ -2987,7 +2987,38 @@ function showSuccessModal() {
 
 
 
+// ============================================================
+// FUNCIÓN AUXILIAR PARA MENÚS CON CIERRE AUTOMÁTICO
+// ============================================================
 
+function createMenuWithClose(event, htmlContent) {
+    // Remover menús existentes
+    document.querySelectorAll('.menu-pop').forEach(el => el.remove());
+    
+    const pop = document.createElement('div');
+    pop.className = 'menu-pop';
+    const left = Math.max(10, event.clientX - 250);
+    const top = Math.min(window.innerHeight - 420, event.clientY + 8);
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
+    pop.innerHTML = htmlContent;
+    document.body.appendChild(pop);
+    
+    // Cerrar al hacer clic fuera (con delay para evitar cierre inmediato)
+    setTimeout(() => {
+        const closeMenu = function(e) {
+            if (!pop.contains(e.target)) {
+                pop.remove();
+                document.removeEventListener('click', closeMenu);
+                document.removeEventListener('contextmenu', closeMenu);
+            }
+        };
+        document.addEventListener('click', closeMenu);
+        document.addEventListener('contextmenu', closeMenu);
+    }, 10);
+    
+    return pop;
+}
 // ============================================================
 // MENÚS DE ACCIONES
 // ============================================================
