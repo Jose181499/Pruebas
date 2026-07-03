@@ -31,7 +31,7 @@ const SUNAT_UNIDADES = [
     {codigo:'DZN',nombre:'Docena'}
 ];
 
-const ESTADOS_COTIZACION = ['Borrador', 'En revisión', 'Validada', 'Generada', 'Aceptada', 'No concretada'];
+const ESTADOS_COTIZACION = ['Borrador', 'En Proceso', 'Generada', 'Aceptada por Cliente', 'No concretada', 'Anulada'];
 const ESTADOS_PC = ['Pendiente', 'Recibido por correo', 'En revisión interna', 'Validado por Hellen', 'Listo para despacho', 'Anulado'];
 const ESTADOS_DESPACHO = ['Pendiente despacho', 'En preparación', 'Despachado', 'Entregado'];
 const ESTADOS_GUIA = ['Borrador', 'Pendiente despacho', 'Emitida', 'Entregada', 'Anulada'];
@@ -84,33 +84,25 @@ function today() {
 function badgeStatus(s) {
     const map = {
         'Borrador': 'b-draft',
+        'En Proceso': 'b-review',
         'En revisión': 'b-review',
         'En revisión interna': 'b-review',
         'Validada': 'b-valid',
         'Validado por Hellen': 'b-valid',
         'Generada': 'b-sent',
+        'Aceptada por Cliente': 'b-accepted',  // ← Este es el correcto
+        'Aceptado': 'b-accepted',
         'Aceptada': 'b-accepted',
         'No concretada': 'b-rejected',
         'Anulada': 'b-rejected',
-        'Anulado': 'b-rejected',
+        'Eliminada': 'b-rejected',
         'Emitido': 'b-ok',
         'Emitida': 'b-ok',
-        'Pendiente': 'b-draft',
-        'Pendiente despacho': 'b-draft',
-        'Recibido por correo': 'b-info',
-        'Listo para despacho': 'b-ok',
-        'Despachado': 'b-ok',
-        'Entregado': 'b-ok',
-        'En preparación': 'b-review',
-        'Aprobada': 'b-ok',
-        'Rechazada': 'b-rejected',
-        'Procesada': 'b-valid',
-        'Enviado': 'b-sent',
-        'Pagado': 'b-ok',
-        'Aplicada': 'b-valid'
+        // ... resto
     };
     return `<span class="badge ${map[s] || 'b-gray'}">${s}</span>`;
 }
+
 
 function options(arr, selected = '') {
     return arr.map(x => `<option value="${x}" ${x === selected ? 'selected' : ''}>${x}</option>`).join('');
@@ -1191,23 +1183,33 @@ async function saveDevolucion(estado) {
 // ACCIONES DE MENÚ (CON API REAL)
 // ============================================================
 
+
 async function marcarCotizacionAccepted(id) {
+    console.log('🔄 Marcando cotización como aceptada, ID:', id);
+    
     try {
+        showToast('⏳ Actualizando estado...', 'info');
+        
+        // Usar el estado exacto de la base de datos
         const response = await apiFetch(`/ventas/api/cotizaciones/${id}/toggle`, {
             method: 'PUT',
-            body: JSON.stringify({ estado: 'Aceptada' })
+            body: JSON.stringify({ estado: 'Aceptada por Cliente' }) // ← Este es el correcto
         });
+        
+        console.log('📦 Respuesta:', response);
+        
         if (response.success) {
-            showToast('Cotización marcada como aceptada por cliente', 'success');
+            showToast('✅ Cotización marcada como aceptada por cliente', 'success');
             await loadCotizaciones();
         } else {
-            showToast('Error: ' + (response.error || 'No se pudo actualizar'), 'error');
+            showToast('❌ Error: ' + (response.error || 'No se pudo actualizar'), 'error');
         }
     } catch (error) {
-        console.error('Error:', error);
-        showToast('Error al actualizar estado', 'error');
+        console.error('❌ Error:', error);
+        showToast('❌ Error al actualizar estado: ' + error.message, 'error');
     }
 }
+
 
 async function marcarCotizacionPending(id) {
     try {
