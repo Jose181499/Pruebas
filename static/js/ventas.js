@@ -2992,20 +2992,9 @@ function showSuccessModal() {
 // MENÚS DE ACCIONES
 // ============================================================
 
-
 function showCotizacionMenu(event, id) {
     event.stopPropagation();
-    // Remover menús existentes
-    document.querySelectorAll('.menu-pop').forEach(el => el.remove());
-    
-    const pop = document.createElement('div');
-    pop.className = 'menu-pop';
-    const left = Math.max(10, event.clientX - 250);
-    const top = Math.min(window.innerHeight - 420, event.clientY + 8);
-    pop.style.left = left + 'px';
-    pop.style.top = top + 'px';
-    
-    pop.innerHTML = `
+    createMenuWithClose(event, `
         <button onclick="openCotizacionModal(${id});this.closest('.menu-pop').remove()">👁 Ver / Editar</button>
         <button onclick="duplicateCotizacion(${id});this.closest('.menu-pop').remove()">⧉ Duplicar</button>
         <button onclick="sendCotizacionEmail(${id});this.closest('.menu-pop').remove()">✉ Email</button>
@@ -3019,10 +3008,8 @@ function showCotizacionMenu(event, id) {
         <button onclick="createDocFromCotizacion(${id},'guia');this.closest('.menu-pop').remove()">🚚 Crear guía</button>
         <button onclick="createDocFromCotizacion(${id},'factura');this.closest('.menu-pop').remove()">🧾 Crear factura</button>
         <button class="danger" onclick="deleteCotizacion(${id});this.closest('.menu-pop').remove()">🗑 Eliminar</button>
-    `;
-    document.body.appendChild(pop);
+    `);
 }
-
 
 
 function showPedidoMenu(event, id) {
