@@ -239,7 +239,7 @@ def actualizar_estado_cotizacion_db(cotizacion_id, nuevo_estado):
     try:
         query = """
             UPDATE cotizaciones 
-            SET estado = %s, updated_at = NOW()
+            SET estado = %s
             WHERE id = %s
             RETURNING id, estado
         """
@@ -248,6 +248,7 @@ def actualizar_estado_cotizacion_db(cotizacion_id, nuevo_estado):
     except Exception as e:
         print(f"❌ Error en actualizar_estado_cotizacion_db: {e}")
         raise
+
 
 # ============================================================
 # FUNCIONES DE AYUDA PARA GUÍAS
