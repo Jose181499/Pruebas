@@ -1808,7 +1808,6 @@ function updateQuoteStatusBar(estado) {
     });
 }
 
-
 function cargarDatalistProductos() {
     const dl = document.getElementById('productMasterList');
     if (!dl) return;
@@ -1816,15 +1815,15 @@ function cargarDatalistProductos() {
     // Verificar si hay productos
     if (!PRODUCTOS_MAESTROS || PRODUCTOS_MAESTROS.length === 0) {
         dl.innerHTML = `<option value="Cargando productos...">`;
-        // Intentar cargar productos
         cargarProductosMaestros();
         return;
     }
     
-    // Crear opciones para el datalist - formato para mostrar en el input
+    // Crear opciones para el datalist
+    // Usar solo el código como valor para que sea más fácil la búsqueda
     dl.innerHTML = PRODUCTOS_MAESTROS.map(p => {
-        // Mostrar código + nombre + marca para facilitar la búsqueda
-        const display = `${p.codigo} | ${p.producto} | ${p.marca || ''}`;
+        // Mostrar: Código - Nombre (Marca)
+        const display = `${p.codigo} - ${p.producto}${p.marca ? ' (' + p.marca + ')' : ''}`;
         return `<option value="${display}">`;
     }).join('');
     
@@ -1832,40 +1831,124 @@ function cargarDatalistProductos() {
 }
 
 
+
+
 function addQuoteProductFromSearch() {
     const input = document.getElementById('quickProductSearch');
-    const valor = input ? input.value : '';
+    const valor = input ? input.value.trim() : '';
     
+    console.log('🔍 Buscando producto:', valor);
+    console.log('📊 Productos disponibles:', PRODUCTOS_MAESTROS.length);
+    
+    // Si no hay productos maestros, intentar recargarlos
+    if (PRODUCTOS_MAESTROS.length === 0) {
+        showToast('⏳ Cargando productos...', 'info');
+        cargarProductosMaestros().then(() => {
+            // Reintentar después de cargar
+            setTimeout(() => addQuoteProductFromSearch(), 500);
+        });
+        return;
+    }
+    
+    // Si no hay valor, agregar el primer producto disponible
     if (!valor) {
-        const p = PRODUCTOS_MAESTROS[quoteProducts.length % PRODUCTOS_MAESTROS.length];
+        const p = PRODUCTOS_MAESTROS[0];
         if (p) {
-            quoteProducts.push({...p, cantidad: 1});
+            const nuevoProducto = {
+                ...p,
+                cantidad: 1,
+                valorVenta: p.valorVenta || p.precio_unitario || 0
+            };
+            quoteProducts.push(nuevoProducto);
             renderQuoteProducts();
             calcQuote();
-            showToast('Producto agregado al detalle', 'success');
+            showToast(`✅ Producto "${p.producto}" agregado`, 'success');
+        } else {
+            showToast('⚠️ No hay productos disponibles en el catálogo', 'warning');
+        }
+        if (input) input.value = '';
+        return;
+    }
+    
+    // Buscar el producto en PRODUCTOS_MAESTROS
+    // El valor puede ser:
+    // 1. Código completo: "PRD-001"
+    // 2. Texto del datalist: "PRD-001 | Cable THHN | INDECO"
+    // 3. Parte del código o nombre
+    
+    const q = valor.toLowerCase().trim();
+    let productoEncontrado = null;
+    
+    // Buscar por coincidencia exacta en el texto completo del datalist
+    // Primero intentar encontrar el código (lo que está antes del |)
+    let codigoBuscado = q;
+    if (q.includes('|')) {
+        // Es el formato del datalist: "PRD-001 | Cable THHN | INDECO"
+        const partes = q.split('|');
+        codigoBuscado = partes[0].trim();
+        console.log('🔍 Extrayendo código:', codigoBuscado);
+    }
+    
+    // Buscar por código exacto
+    productoEncontrado = PRODUCTOS_MAESTROS.find(p => 
+        p.codigo && p.codigo.toLowerCase() === codigoBuscado.toLowerCase()
+    );
+    
+    // Si no se encuentra por código exacto, buscar por código parcial o nombre
+    if (!productoEncontrado) {
+        productoEncontrado = PRODUCTOS_MAESTROS.find(p => 
+            (p.codigo && p.codigo.toLowerCase().includes(q)) ||
+            (p.producto && p.producto.toLowerCase().includes(q)) ||
+            (p.marca && p.marca.toLowerCase().includes(q)) ||
+            (p.modelo && p.modelo.toLowerCase().includes(q))
+        );
+    }
+    
+    // Si no se encuentra, buscar por coincidencia exacta en el texto del datalist
+    if (!productoEncontrado) {
+        productoEncontrado = PRODUCTOS_MAESTROS.find(p => {
+            const display = `${p.codigo} | ${p.producto} | ${p.marca || ''}`.toLowerCase();
+            return display === q || display.includes(q);
+        });
+    }
+    
+    if (!productoEncontrado) {
+        // Si no se encuentra, mostrar sugerencias
+        const sugerencias = PRODUCTOS_MAESTROS
+            .filter(p => {
+                const text = `${p.codigo} ${p.producto} ${p.marca} ${p.modelo}`.toLowerCase();
+                const palabras = q.split(' ').filter(w => w.length > 2);
+                return palabras.some(palabra => text.includes(palabra));
+            })
+            .slice(0, 5);
+        
+        if (sugerencias.length > 0) {
+            let msg = 'Productos similares:\n';
+            sugerencias.forEach((s, i) => {
+                msg += `${i+1}. ${s.codigo} - ${s.producto}\n`;
+            });
+            msg += '\nEscribe el código exacto para agregarlo.';
+            showToast(msg, 'warning');
+        } else {
+            showToast('❌ Producto no encontrado. Verifica el código, nombre o marca.', 'error');
         }
         return;
     }
     
-    const q = valor.toLowerCase().trim();
-    const p = PRODUCTOS_MAESTROS.find(x =>
-        String(x.codigo).toLowerCase().includes(q) ||
-        String(x.producto || x.descripcion || '').toLowerCase().includes(q) ||
-        String(x.marca || '').toLowerCase().includes(q) ||
-        String(x.modelo || '').toLowerCase().includes(q)
-    );
+    // Agregar el producto encontrado
+    const nuevoProducto = {
+        ...productoEncontrado,
+        cantidad: 1,
+        valorVenta: productoEncontrado.valorVenta || productoEncontrado.precio_unitario || 0
+    };
     
-    if (!p) {
-        showToast('No se encontró el producto. Revise código, marca o modelo.', 'error');
-        return;
-    }
-    
-    quoteProducts.push({...p, cantidad: 1});
+    quoteProducts.push(nuevoProducto);
     if (input) input.value = '';
     renderQuoteProducts();
     calcQuote();
-    showToast('Producto agregado al detalle', 'success');
+    showToast(`✅ Producto "${productoEncontrado.producto}" agregado al detalle`, 'success');
 }
+
 
 function renderQuoteProducts() {
     const tbody = document.getElementById('quoteProductRows');
