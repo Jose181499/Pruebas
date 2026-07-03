@@ -1046,6 +1046,7 @@ def api_cotizaciones_toggle(id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+
 @ventas_bp.route('/ventas/api/cotizaciones/<int:id>', methods=['DELETE'])
 @login_required
 def api_cotizaciones_eliminar(id):
@@ -1053,28 +1054,52 @@ def api_cotizaciones_eliminar(id):
     try:
         print(f"🗑️ Eliminando cotización ID: {id}")
         
-        # Primero verificar si existe
+        # Primero verificar si existe y mostrar estado actual
         query_check = "SELECT id, estado FROM cotizaciones WHERE id = %s"
-        result = db_query(query_check, (id,))
+        result_check = db_query(query_check, (id,))
+        print(f"📊 Estado actual: {result_check}")
         
-        if not result:
+        if not result_check:
             return jsonify({'success': False, 'error': 'Cotización no encontrada'}), 404
         
-        # Cambiar estado a 'Anulada' - SIN updated_at
+        estado_actual = result_check[0].get('estado')
+        print(f"📊 Estado actual de la cotización: {estado_actual}")
+        
+        # Si ya está anulada, no hacer nada
+        if estado_actual == 'Anulada':
+            return jsonify({
+                'success': True, 
+                'message': 'La cotización ya estaba anulada',
+                'data': {'id': id, 'estado': 'Anulada'}
+            })
+        
+        # Cambiar estado a 'Anulada'
         query_update = """
             UPDATE cotizaciones 
             SET estado = 'Anulada'
             WHERE id = %s
             RETURNING id, estado
         """
-        result = db_query(query_update, (id,))
+        result_update = db_query(query_update, (id,))
+        print(f"📊 Resultado UPDATE: {result_update}")
         
-        if result:
-            return jsonify({
-                'success': True, 
-                'message': 'Cotización anulada correctamente',
-                'data': result[0]
-            })
+        if result_update:
+            # Verificar que realmente se actualizó
+            query_verify = "SELECT id, estado FROM cotizaciones WHERE id = %s"
+            result_verify = db_query(query_verify, (id,))
+            print(f"📊 Verificación después de UPDATE: {result_verify}")
+            
+            if result_verify and result_verify[0].get('estado') == 'Anulada':
+                return jsonify({
+                    'success': True, 
+                    'message': 'Cotización anulada correctamente',
+                    'data': result_verify[0]
+                })
+            else:
+                return jsonify({
+                    'success': False, 
+                    'error': 'La cotización no se pudo anular correctamente'
+                }), 400
         
         return jsonify({'success': False, 'error': 'No se pudo anular la cotización'}), 400
         
@@ -1083,7 +1108,6 @@ def api_cotizaciones_eliminar(id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 # ============================================================
 # GUÍAS - API

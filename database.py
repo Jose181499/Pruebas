@@ -38,27 +38,37 @@ def db_tx():
     finally:
         conn.close()
 
-# =========================
-# QUERY
-# =========================
 def db_query(sql, params=None):
-    """Ejecuta una consulta SELECT y devuelve los resultados"""
+    """Ejecuta una consulta SELECT o UPDATE y devuelve los resultados"""
     conn = None
     cur = None
     try:
         conn = get_connection()
         cur = conn.cursor(cursor_factory=RealDictCursor)
-        if params:
-            cur.execute(sql, params)
-        else:
-            cur.execute(sql)
-        data = cur.fetchall()
-        return data
+        cur.execute(sql, params or ())
+        
+        # Si es SELECT, fetchall
+        if sql.strip().upper().startswith('SELECT'):
+            data = cur.fetchall()
+            return data
+        
+        # Si es UPDATE/DELETE/INSERT, commit y fetch si hay RETURNING
+        conn.commit()
+        
+        # Si hay RETURNING, obtener resultados
+        if 'RETURNING' in sql.upper():
+            data = cur.fetchall()
+            return data
+        
+        return []
+        
     except Exception as e:
+        if conn:
+            conn.rollback()
         print(f"❌ Error en db_query: {e}")
         print(f"📝 SQL: {sql}")
         print(f"📝 Params: {params}")
-        raise  # ← IMPORTANTE: Lanzar la excepción
+        raise
     finally:
         if cur:
             cur.close()
