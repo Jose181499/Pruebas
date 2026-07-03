@@ -20,7 +20,7 @@ def login_required(f):
 # FUNCIONES DE AYUDA PARA COTIZACIONES
 
 def obtener_cotizaciones_db():
-    """Obtiene todas las cotizaciones desde la base de datos"""
+    """Obtiene todas las cotizaciones desde la base de datos (excluyendo anuladas)"""
     try:
         query = """
             SELECT 
@@ -56,6 +56,7 @@ def obtener_cotizaciones_db():
                 cl.nombre_comercial as cliente_nombre_comercial
             FROM cotizaciones c
             LEFT JOIN clientes cl ON cl.id = c.cliente_id::integer
+            WHERE c.estado != 'Anulada'
             ORDER BY c.id DESC
         """
         results = db_query(query)
@@ -94,6 +95,7 @@ def obtener_cotizaciones_db():
         import traceback
         traceback.print_exc()
         return []
+
 
 
 def obtener_cotizacion_por_id_db(cotizacion_id):
@@ -1047,7 +1049,7 @@ def api_cotizaciones_toggle(id):
 @ventas_bp.route('/ventas/api/cotizaciones/<int:id>', methods=['DELETE'])
 @login_required
 def api_cotizaciones_eliminar(id):
-    """Elimina (anula) una cotización - Cambia estado a Anulada o Eliminada"""
+    """Elimina (anula) una cotización - Cambia estado a Anulada"""
     try:
         print(f"🗑️ Eliminando cotización ID: {id}")
         
@@ -1058,11 +1060,10 @@ def api_cotizaciones_eliminar(id):
         if not result:
             return jsonify({'success': False, 'error': 'Cotización no encontrada'}), 404
         
-        # Cambiar estado a 'Anulada' o 'Eliminada'
-        # Usamos 'Anulada' que es un estado válido en el frontend
+        # Cambiar estado a 'Anulada' - SIN updated_at
         query_update = """
             UPDATE cotizaciones 
-            SET estado = 'Anulada', updated_at = NOW()
+            SET estado = 'Anulada'
             WHERE id = %s
             RETURNING id, estado
         """
@@ -1082,6 +1083,7 @@ def api_cotizaciones_eliminar(id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 # ============================================================
 # GUÍAS - API
