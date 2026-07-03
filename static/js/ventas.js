@@ -199,35 +199,94 @@ async function apiFetch(url, options = {}) {
 }
 
 
-
-// ============================================================
-// CARGA DE DATOS MAESTROS
-// ============================================================
 async function cargarProductosMaestros() {
     try {
+        console.log('🔄 Cargando productos maestros desde base de datos...');
+        
+        // Usar la ruta correcta del blueprint productos
         const response = await fetch('/productos/api/productos');
         const data = await response.json();
-        if (data.success) {
-            PRODUCTOS_MAESTROS = data.data || [];
+        
+        console.log('📦 Respuesta de productos:', data);
+        
+        if (data.success && data.data && data.data.length > 0) {
+            PRODUCTOS_MAESTROS = data.data.map(p => ({
+                id: p.id,
+                codigo: p.codigo || '',
+                producto: p.descripcion || p.nombre || 'Sin nombre',
+                descripcion: p.descripcion_larga || p.descripcion || '',
+                modelo: p.modelo || '',
+                marca: p.marca || '',
+                um: p.unidad || 'NIU',
+                stock: p.stock || 0,
+                valorVenta: p.precio_unitario || p.precio_venta || 0,
+                entrega: p.tiempo_entrega || 'Inmediata',
+                // Guardar también para referencia
+                precio_unitario: p.precio_unitario,
+                costo_unitario: p.costo_unitario
+            }));
+            console.log(`✅ ${PRODUCTOS_MAESTROS.length} productos cargados desde base de datos`);
+            console.log('📋 Primer producto:', PRODUCTOS_MAESTROS[0]);
         } else {
-            // Fallback: datos de ejemplo
+            console.warn('⚠️ No se encontraron productos en la base de datos');
+            // Usar datos de ejemplo
             PRODUCTOS_MAESTROS = [
                 {id:1, codigo:'PRD-001245', producto:'Cable THHN 12 AWG', descripcion:'Cable eléctrico THHN 12 AWG 600V', modelo:'THHN-12', marca:'INDECO', um:'NIU', stock:1200, valorVenta:6.50, entrega:'Inmediata'},
-                {id:2, codigo:'PRD-002318', producto:'Interruptor termomagnético 2P 40A', descripcion:'Interruptor termomagnético 2 polos 40A', modelo:'IC60N-2P-40A', marca:'Schneider', um:'NIU', stock:120, valorVenta:85.00, entrega:'Inmediata'},
-                {id:3, codigo:'PRD-003567', producto:'Tablero metálico empotrado 24 polos', descripcion:'Tablero metálico empotrado 24 polos', modelo:'TM-24', marca:'Eaton', um:'NIU', stock:15, valorVenta:1250.00, entrega:'5 días'},
-                {id:4, codigo:'PRD-004890', producto:'Tubería EMT 3/4', descripcion:'Tubería EMT 3/4" x 3m', modelo:'EMT-3/4', marca:'Conduit', um:'NIU', stock:300, valorVenta:18.00, entrega:'Inmediata'},
-                {id:5, codigo:'PRD-005678', producto:'Caja octogonal galvanizada', descripcion:'Caja octogonal galvanizada 4"', modelo:'COG-4', marca:'Conduit', um:'NIU', stock:500, valorVenta:4.80, entrega:'Inmediata'}
+                {id:2, codigo:'PRD-002318', producto:'Interruptor termomagnético 2P 40A', descripcion:'Interruptor termomagnético 2 polos 40A', modelo:'IC60N-2P-40A', marca:'Schneider', um:'NIU', stock:120, valorVenta:85.00, entrega:'Inmediata'}
             ];
         }
-        console.log('✅ Productos cargados:', PRODUCTOS_MAESTROS.length);
+        
+        // Actualizar el datalist
+        cargarDatalistProductos();
+        
     } catch (error) {
-        console.error('Error cargando productos:', error);
+        console.error('❌ Error cargando productos:', error);
+        // Datos de ejemplo en caso de error
         PRODUCTOS_MAESTROS = [
             {id:1, codigo:'PRD-001245', producto:'Cable THHN 12 AWG', descripcion:'Cable eléctrico THHN 12 AWG 600V', modelo:'THHN-12', marca:'INDECO', um:'NIU', stock:1200, valorVenta:6.50, entrega:'Inmediata'},
             {id:2, codigo:'PRD-002318', producto:'Interruptor termomagnético 2P 40A', descripcion:'Interruptor termomagnético 2 polos 40A', modelo:'IC60N-2P-40A', marca:'Schneider', um:'NIU', stock:120, valorVenta:85.00, entrega:'Inmediata'}
         ];
+        cargarDatalistProductos();
     }
 }
+
+
+
+// Función alternativa para cargar productos desde el módulo de productos
+async function cargarProductosDesdeModulo() {
+    try {
+        console.log('🔄 Intentando cargar productos desde módulo productos...');
+        const response = await fetch('/productos/api/listar');
+        const data = await response.json();
+        
+        if (data.success && data.data) {
+            PRODUCTOS_MAESTROS = data.data.map(p => ({
+                id: p.id,
+                codigo: p.codigo,
+                producto: p.descripcion || p.nombre || 'Sin nombre',
+                descripcion: p.descripcion_larga || p.descripcion || '',
+                modelo: p.modelo || '',
+                marca: p.marca || '',
+                um: p.unidad || 'NIU',
+                stock: p.stock || 0,
+                valorVenta: p.precio_unitario || p.precio_venta || 0,
+                entrega: p.tiempo_entrega || 'Inmediata'
+            }));
+            console.log(`✅ ${PRODUCTOS_MAESTROS.length} productos cargados desde módulo productos`);
+            cargarDatalistProductos();
+        }
+    } catch (error) {
+        console.error('❌ Error cargando desde módulo productos:', error);
+        // Si todo falla, usar datos de ejemplo
+        PRODUCTOS_MAESTROS = [
+            {id:1, codigo:'PRD-001245', producto:'Cable THHN 12 AWG', descripcion:'Cable eléctrico THHN 12 AWG 600V', modelo:'THHN-12', marca:'INDECO', um:'NIU', stock:1200, valorVenta:6.50, entrega:'Inmediata'},
+            {id:2, codigo:'PRD-002318', producto:'Interruptor termomagnético 2P 40A', descripcion:'Interruptor termomagnético 2 polos 40A', modelo:'IC60N-2P-40A', marca:'Schneider', um:'NIU', stock:120, valorVenta:85.00, entrega:'Inmediata'}
+        ];
+        console.warn('⚠️ Usando productos de ejemplo (fallback)');
+        cargarDatalistProductos();
+    }
+}
+
 
 async function cargarClientesMaestros() {
     try {
@@ -1750,17 +1809,28 @@ function updateQuoteStatusBar(estado) {
 }
 
 
-
 function cargarDatalistProductos() {
     const dl = document.getElementById('productMasterList');
     if (!dl) return;
     
-    const list = PRODUCTOS_MAESTROS.length > 0 ? PRODUCTOS_MAESTROS : [];
-    dl.innerHTML = list.map(p => {
-        const valor = `${p.codigo} | ${p.producto || p.descripcion} | ${p.marca || ''} | ${p.modelo || ''}`;
-        return `<option value="${valor}"></option>`;
+    // Verificar si hay productos
+    if (!PRODUCTOS_MAESTROS || PRODUCTOS_MAESTROS.length === 0) {
+        dl.innerHTML = `<option value="Cargando productos...">`;
+        // Intentar cargar productos
+        cargarProductosMaestros();
+        return;
+    }
+    
+    // Crear opciones para el datalist - formato para mostrar en el input
+    dl.innerHTML = PRODUCTOS_MAESTROS.map(p => {
+        // Mostrar código + nombre + marca para facilitar la búsqueda
+        const display = `${p.codigo} | ${p.producto} | ${p.marca || ''}`;
+        return `<option value="${display}">`;
     }).join('');
+    
+    console.log(`📋 Datalist actualizado con ${PRODUCTOS_MAESTROS.length} productos`);
 }
+
 
 function addQuoteProductFromSearch() {
     const input = document.getElementById('quickProductSearch');
