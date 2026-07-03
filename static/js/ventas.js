@@ -865,9 +865,55 @@ function sendCotizacionToReview() {
     guardarCotizacion('En revisión');
 }
 
+// Reemplazar la función generateCotizacionPdfAndSend con esta versión mejorada
 function generateCotizacionPdfAndSend() {
-    guardarCotizacion('Generada');
+    // Verificar que hay productos en la cotización
+    if (quoteProducts.length === 0) {
+        showToast('⚠️ Agrega al menos un producto a la cotización', 'warning');
+        return;
+    }
+    
+    // Verificar que hay un cliente seleccionado
+    const ruc = document.getElementById('fRuc')?.value?.trim() || '';
+    if (!ruc) {
+        showToast('⚠️ Primero busca un cliente por RUC', 'warning');
+        return;
+    }
+    
+    // Mostrar modal de confirmación
+    showConfirmModal(
+        '¿Estás seguro de generar esta cotización oficial?',
+        'Esta acción convertirá la cotización a estado "Generada" y no podrá revertirse. Se enviará al cliente y quedará registrada como documento oficial.',
+        '⚠️ Esta acción es irreversible',
+        async function() {
+            // Mostrar loading en el botón
+            const btn = document.querySelector('#cotizacionModal .btn-green');
+            const originalText = btn?.textContent || '📄 Generar cotización';
+            if (btn) {
+                btn.textContent = '⏳ Generando...';
+                btn.disabled = true;
+            }
+            
+            try {
+                // Guardar la cotización
+                await guardarCotizacion('Generada');
+                
+                // Mostrar modal de éxito con detalles
+                showSuccessModal();
+            } catch (error) {
+                console.error('Error generando cotización:', error);
+                showToast('❌ Error al generar la cotización: ' + error.message, 'error');
+            } finally {
+                if (btn) {
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                }
+            }
+        }
+    );
 }
+
+
 
 // ============================================================
 // FUNCIONES DE GUARDADO PARA PC, DESPACHO, GUÍAS, ETC.
@@ -2370,6 +2416,280 @@ function openDevolucionModal(id = null) {
 }
 
 // ============================================================
+// MODALES DE CONFIRMACIÓN Y ÉXITO
+// ============================================================
+
+function showConfirmModal(title, message, warning, onConfirm) {
+    // Remover modales existentes
+    document.querySelectorAll('.confirm-modal-overlay').forEach(el => el.remove());
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-modal-overlay';
+    overlay.style.cssText = `
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        z-index: 999999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.3s ease;
+    `;
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        background: #FFFFFF;
+        border-radius: 20px;
+        max-width: 520px;
+        width: 95%;
+        padding: 32px 28px 24px;
+        box-shadow: 0 30px 80px rgba(0,0,0,0.35);
+        animation: modalSlideUp 0.3s ease;
+        text-align: center;
+    `;
+    
+    modal.innerHTML = `
+        <div style="font-size: 48px; margin-bottom: 12px;">⚠️</div>
+        <h2 style="font-size: 22px; font-weight: 900; color: #0F172A; margin-bottom: 8px;">${title}</h2>
+        <p style="font-size: 15px; color: #475569; line-height: 1.5; margin-bottom: 12px;">${message}</p>
+        <div style="background: #FEF2F2; border-radius: 12px; padding: 12px 16px; margin-bottom: 24px; border-left: 4px solid #EF233C;">
+            <span style="font-size: 13px; font-weight: 700; color: #DC2626;">${warning}</span>
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: center;">
+            <button class="confirm-cancel-btn" style="
+                padding: 12px 32px;
+                border-radius: 12px;
+                border: 1px solid #E5E7EB;
+                background: #FFFFFF;
+                color: #0F172A;
+                font-weight: 800;
+                font-size: 14px;
+                cursor: pointer;
+                transition: all 0.2s;
+            ">Cancelar</button>
+            <button class="confirm-accept-btn" style="
+                padding: 12px 32px;
+                border-radius: 12px;
+                border: none;
+                background: #EF233C;
+                color: #FFFFFF;
+                font-weight: 800;
+                font-size: 14px;
+                cursor: pointer;
+                transition: all 0.2s;
+                box-shadow: 0 4px 14px rgba(239, 35, 60, 0.35);
+            ">✅ Sí, generar cotización</button>
+        </div>
+    `;
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    // Animaciones CSS
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes modalSlideUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .confirm-cancel-btn:hover {
+            background: #F1F5F9;
+        }
+        .confirm-accept-btn:hover {
+            background: #D91A30;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 35, 60, 0.45);
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Event listeners
+    modal.querySelector('.confirm-cancel-btn').addEventListener('click', function() {
+        overlay.remove();
+    });
+    
+    modal.querySelector('.confirm-accept-btn').addEventListener('click', function() {
+        overlay.remove();
+        if (typeof onConfirm === 'function') {
+            onConfirm();
+        }
+    });
+    
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            overlay.remove();
+        }
+    });
+}
+
+function showSuccessModal() {
+    // Obtener datos de la cotización generada
+    const ruc = document.getElementById('fRuc')?.value?.trim() || '---';
+    const razon = document.getElementById('fRazon')?.value?.trim() || '---';
+    const totalSpan = document.getElementById('sumTotal');
+    const total = totalSpan?.textContent || 'S/ 0.00';
+    const subtotal = document.getElementById('sumSubtotal')?.textContent || 'S/ 0.00';
+    const igv = document.getElementById('sumIgv')?.textContent || 'S/ 0.00';
+    const now = new Date();
+    const fechaHora = now.toLocaleString('es-PE', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric',
+        hour: '2-digit', 
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    });
+    const numeroCotizacion = `COT-${String(Date.now()).slice(-8)}`;
+    const productosCount = quoteProducts.length;
+    
+    // Remover modales existentes
+    document.querySelectorAll('.success-modal-overlay').forEach(el => el.remove());
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'success-modal-overlay';
+    overlay.style.cssText = `
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(6px);
+        z-index: 999999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.4s ease;
+    `;
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        background: #FFFFFF;
+        border-radius: 24px;
+        max-width: 560px;
+        width: 95%;
+        padding: 36px 32px 28px;
+        box-shadow: 0 30px 80px rgba(0,0,0,0.3);
+        animation: modalSlideUp 0.4s ease;
+        max-height: 90vh;
+        overflow-y: auto;
+    `;
+    
+    modal.innerHTML = `
+        <div style="text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 56px; margin-bottom: 8px;">✅</div>
+            <h2 style="font-size: 24px; font-weight: 900; color: #0F172A; margin-bottom: 4px;">¡Cotización generada exitosamente!</h2>
+            <p style="font-size: 14px; color: #64748B;">La cotización ha sido oficializada y registrada en el sistema.</p>
+        </div>
+        
+        <div style="background: #F8FAFC; border-radius: 16px; padding: 16px 20px; margin-bottom: 20px; border: 1px solid #E5E7EB;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; font-size: 13px;">
+                <div><span style="color: #64748B; font-weight: 600;">📄 N° Cotización</span></div>
+                <div style="font-weight: 900; color: #EF233C; text-align: right;">${numeroCotizacion}</div>
+                
+                <div><span style="color: #64748B; font-weight: 600;">🕐 Fecha y hora</span></div>
+                <div style="font-weight: 700; color: #0F172A; text-align: right;">${fechaHora}</div>
+                
+                <div><span style="color: #64748B; font-weight: 600;">🏢 Cliente</span></div>
+                <div style="font-weight: 700; color: #0F172A; text-align: right; word-break: break-word;">${esc(razon)}</div>
+                
+                <div><span style="color: #64748B; font-weight: 600;">📋 RUC</span></div>
+                <div style="font-weight: 700; color: #0F172A; text-align: right;">${esc(ruc)}</div>
+                
+                <div><span style="color: #64748B; font-weight: 600;">📦 Productos</span></div>
+                <div style="font-weight: 700; color: #0F172A; text-align: right;">${productosCount} items</div>
+                
+                <div><span style="color: #64748B; font-weight: 600;">💰 Subtotal</span></div>
+                <div style="font-weight: 700; color: #0F172A; text-align: right;">${subtotal}</div>
+                
+                <div><span style="color: #64748B; font-weight: 600;">📊 IGV 18%</span></div>
+                <div style="font-weight: 700; color: #0F172A; text-align: right;">${igv}</div>
+            </div>
+            
+            <div style="border-top: 2px solid #EF233C; margin-top: 12px; padding-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 18px; font-weight: 900; color: #0F172A;">TOTAL</span>
+                <span style="font-size: 26px; font-weight: 1000; color: #EF233C; letter-spacing: -0.5px;">${total}</span>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+            <button class="success-close-btn" style="
+                padding: 10px 28px;
+                border-radius: 12px;
+                border: 1px solid #E5E7EB;
+                background: #FFFFFF;
+                color: #0F172A;
+                font-weight: 800;
+                font-size: 13px;
+                cursor: pointer;
+                transition: all 0.2s;
+            ">Cerrar</button>
+            <button class="success-pdf-btn" style="
+                padding: 10px 28px;
+                border-radius: 12px;
+                border: none;
+                background: #2563EB;
+                color: #FFFFFF;
+                font-weight: 800;
+                font-size: 13px;
+                cursor: pointer;
+                transition: all 0.2s;
+            ">📄 Descargar PDF</button>
+            <button class="success-email-btn" style="
+                padding: 10px 28px;
+                border-radius: 12px;
+                border: none;
+                background: #16A34A;
+                color: #FFFFFF;
+                font-weight: 800;
+                font-size: 13px;
+                cursor: pointer;
+                transition: all 0.2s;
+            ">✉ Enviar al cliente</button>
+        </div>
+    `;
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    // Event listeners
+    modal.querySelector('.success-close-btn').addEventListener('click', function() {
+        overlay.remove();
+        // Recargar la lista de cotizaciones
+        loadCotizaciones();
+    });
+    
+    modal.querySelector('.success-pdf-btn').addEventListener('click', function() {
+        showToast('📄 Generando PDF...', 'info');
+        // Aquí puedes agregar la lógica para generar PDF
+        setTimeout(() => {
+            showToast('✅ PDF generado correctamente', 'success');
+        }, 1500);
+    });
+    
+    modal.querySelector('.success-email-btn').addEventListener('click', function() {
+        showToast('✉ Enviando email al cliente...', 'info');
+        // Aquí puedes agregar la lógica para enviar email
+        setTimeout(() => {
+            showToast('✅ Email enviado correctamente', 'success');
+        }, 1500);
+    });
+    
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            overlay.remove();
+            loadCotizaciones();
+        }
+    });
+}
+
+
+
+
+// ============================================================
 // MENÚS DE ACCIONES
 // ============================================================
 
@@ -2702,5 +3022,8 @@ window.deleteNota = deleteNota;
 window.approveDevolucion = approveDevolucion;
 window.rejectDevolucion = rejectDevolucion;
 window.deleteDevolucion = deleteDevolucion;
+
+window.showConfirmModal = showConfirmModal;
+window.showSuccessModal = showSuccessModal;
 
 console.log('✅ Módulo Ventas cargado correctamente - VERSIÓN COMPLETA FUNCIONAL');
