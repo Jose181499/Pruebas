@@ -176,9 +176,6 @@ function showToast(message, type = 'info') {
     }, 3500);
 }
 
-// ============================================================
-// API HELPER
-// ============================================================
 async function apiFetch(url, options = {}) {
     try {
         const response = await fetch(url, {
@@ -200,6 +197,8 @@ async function apiFetch(url, options = {}) {
         throw error;
     }
 }
+
+
 
 // ============================================================
 // CARGA DE DATOS MAESTROS
@@ -1206,22 +1205,35 @@ async function reactivarCotizacion(id) {
 }
 
 async function deleteCotizacion(id) {
-    if (!confirm('¿Estás seguro de eliminar esta cotización?')) return;
+    // Mostrar un modal de confirmación personalizado
+    if (!confirm('⚠️ ¿Estás seguro de eliminar esta cotización?\n\nEsta acción cambiará el estado a "Anulada" y no podrá recuperarse.')) {
+        return;
+    }
+    
     try {
+        console.log(`🗑️ Eliminando cotización ID: ${id}`);
+        
+        // Mostrar loading
+        showToast('⏳ Anulando cotización...', 'info');
+        
         const response = await apiFetch(`/ventas/api/cotizaciones/${id}`, {
             method: 'DELETE'
         });
+        
         if (response.success) {
-            showToast('Cotización eliminada', 'success');
+            showToast('✅ Cotización anulada correctamente', 'success');
+            // Recargar la lista
             await loadCotizaciones();
         } else {
-            showToast('Error: ' + (response.error || 'No se pudo eliminar'), 'error');
+            showToast('❌ Error: ' + (response.error || 'No se pudo eliminar'), 'error');
         }
     } catch (error) {
-        console.error('Error:', error);
-        showToast('Error al eliminar cotización', 'error');
+        console.error('❌ Error eliminando cotización:', error);
+        showToast('❌ Error al eliminar la cotización: ' + error.message, 'error');
     }
 }
+
+
 
 async function marcarDespachado(id) {
     try {
@@ -2895,8 +2907,10 @@ function showSuccessModal() {
 // MENÚS DE ACCIONES
 // ============================================================
 
+
 function showCotizacionMenu(event, id) {
     event.stopPropagation();
+    // Remover menús existentes
     document.querySelectorAll('.menu-pop').forEach(el => el.remove());
     
     const pop = document.createElement('div');
@@ -2923,7 +2937,6 @@ function showCotizacionMenu(event, id) {
     `;
     document.body.appendChild(pop);
 }
-
 
 
 
@@ -3231,5 +3244,6 @@ window.deleteDevolucion = deleteDevolucion;
 window.showConfirmModal = showConfirmModal;
 window.showSuccessModal = showSuccessModal;
 window.updateQuoteStatusBar = updateQuoteStatusBar;
+window.deleteCotizacion = deleteCotizacion;
 
 console.log('✅ Módulo Ventas cargado correctamente - VERSIÓN COMPLETA FUNCIONAL');

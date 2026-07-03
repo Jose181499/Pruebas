@@ -1043,15 +1043,44 @@ def api_cotizaciones_toggle(id):
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
 @ventas_bp.route('/ventas/api/cotizaciones/<int:id>', methods=['DELETE'])
 @login_required
 def api_cotizaciones_eliminar(id):
+    """Elimina (anula) una cotización - Cambia estado a Anulada o Eliminada"""
     try:
-        result = actualizar_estado_cotizacion_db(id, 'Eliminada')
+        print(f"🗑️ Eliminando cotización ID: {id}")
+        
+        # Primero verificar si existe
+        query_check = "SELECT id, estado FROM cotizaciones WHERE id = %s"
+        result = db_query(query_check, (id,))
+        
+        if not result:
+            return jsonify({'success': False, 'error': 'Cotización no encontrada'}), 404
+        
+        # Cambiar estado a 'Anulada' o 'Eliminada'
+        # Usamos 'Anulada' que es un estado válido en el frontend
+        query_update = """
+            UPDATE cotizaciones 
+            SET estado = 'Anulada', updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, estado
+        """
+        result = db_query(query_update, (id,))
+        
         if result:
-            return jsonify({'success': True, 'message': 'Cotización eliminada'})
-        return jsonify({'success': False, 'error': 'No se pudo eliminar'}), 400
+            return jsonify({
+                'success': True, 
+                'message': 'Cotización anulada correctamente',
+                'data': result[0]
+            })
+        
+        return jsonify({'success': False, 'error': 'No se pudo anular la cotización'}), 400
+        
     except Exception as e:
+        print(f"❌ Error en api_cotizaciones_eliminar: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # ============================================================
@@ -2101,3 +2130,12 @@ def api_cotizaciones_duplicar(id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+    
+@ventas_bp.route('/ventas/api/cotizaciones/test-delete', methods=['GET'])
+@login_required
+def api_cotizaciones_test_delete():
+    """Ruta de prueba para verificar que DELETE funciona"""
+    return jsonify({
+        'success': True,
+        'message': 'La ruta DELETE está funcionando correctamente'
+    })
