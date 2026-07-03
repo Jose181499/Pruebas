@@ -1923,3 +1923,181 @@ def api_cotizaciones_listar_alias():
 def api_cotizaciones_guardar_alias():
     """Alias para /api/cotizaciones -> redirige a /ventas/api/cotizaciones/guardar"""
     return api_cotizaciones_guardar()
+
+@ventas_bp.route('/ventas/api/cotizaciones/<int:id>/duplicar', methods=['POST'])
+@login_required
+def api_cotizaciones_duplicar(id):
+    """Duplica una cotización existente con nuevo número"""
+    try:
+        print(f"📋 Duplicando cotización ID: {id}")
+        
+        # 1. Obtener la cotización original con sus productos
+        query_cabecera = """
+            SELECT 
+                c.cliente_id, c.estado, c.subtotal, c.igv, c.total,
+                c.notas, c.forma_pago, c.tiempo_entrega, c.almacen, 
+                c.validez_oferta, c.condicion_pago, c.direccion_entrega,
+                c.requerimiento, c.nota_cotizacion, c.descuento_porcentaje,
+                c.descuento_monto, c.descuento_tipo, c.contacto_cliente,
+                c.telefono_cliente, c.email_cliente,
+                cl.razon_social as cliente_razon_social,
+                cl.numero_documento as cliente_ruc
+            FROM cotizaciones c
+            LEFT JOIN clientes cl ON cl.id = c.cliente_id::integer
+            WHERE c.id = %s
+        """
+        cabecera = db_query(query_cabecera, (id,))
+        
+        if not cabecera:
+            return jsonify({'success': False, 'error': 'Cotización original no encontrada'}), 404
+        
+        # 2. Obtener los productos de la cotización original
+        query_productos = """
+            SELECT 
+                d.producto_id, d.cantidad, d.costo_unitario,
+                d.subtotal_costo, d.margen_porcentaje,
+                d.precio_venta_unitario, d.subtotal_venta,
+                d.descuento_porcentaje, d.precio_venta_con_descuento,
+                d.subtotal_venta_con_descuento, d.descuento_total, d.margen_final,
+                p.codigo, p.descripcion, p.marca, p.modelo, p.unidad,
+                p.precio_unitario as valorVenta, p.stock
+            FROM cotizacion_detalle d
+            LEFT JOIN productos p ON p.id = d.producto_id
+            WHERE d.cotizacion_id = %s
+        """
+        productos = db_query(query_productos, (id,))
+        
+        if not productos:
+            return jsonify({'success': False, 'error': 'La cotización original no tiene productos'}), 400
+        
+        print(f"📦 Productos a duplicar: {len(productos)}")
+        
+        # 3. Generar nuevo número de cotización
+        from datetime import datetime
+        count_data = db_query("SELECT COUNT(*) as total FROM cotizaciones")
+        count = count_data[0]['total'] + 1 if count_data else 1
+        nuevo_numero = f"COT-{str(count).zfill(6)}"
+        codigo = f"COT-{datetime.now().strftime('%Y%m%d')}-{str(count).zfill(4)}"
+        
+        usuario_id = session.get('usuario_id', 8)
+        cliente_id = cabecera[0].get('cliente_id')
+        
+        print(f"📋 Nuevo número: {nuevo_numero}")
+        print(f"👤 Usuario: {usuario_id}")
+        print(f"🏢 Cliente ID: {cliente_id}")
+        
+        # 4. Insertar nueva cotización
+        with db_tx() as conn:
+            from psycopg2.extras import RealDictCursor
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            
+            # Insertar cabecera
+            cur.execute("""
+                INSERT INTO cotizaciones (
+                    numero_cotizacion, cliente_id, fecha_creacion, estado,
+                    subtotal, igv, total, usuario_id, notas,
+                    forma_pago, tiempo_entrega, almacen, validez_oferta,
+                    codigo_cotizacion, correlativo, condicion_pago,
+                    direccion_entrega, requerimiento, nota_cotizacion,
+                    descuento_porcentaje, descuento_monto, descuento_tipo,
+                    contacto_cliente, telefono_cliente, email_cliente
+                ) VALUES (
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                )
+                RETURNING id, numero_cotizacion
+            """, (
+                nuevo_numero,
+                cliente_id,
+                datetime.now().isoformat(),
+                'Borrador',  # Siempre empieza como borrador
+                float(cabecera[0].get('subtotal', 0)),
+                float(cabecera[0].get('igv', 0)),
+                float(cabecera[0].get('total', 0)),
+                usuario_id,
+                cabecera[0].get('notas', '') + ' (Duplicado)',
+                cabecera[0].get('forma_pago'),
+                cabecera[0].get('tiempo_entrega'),
+                cabecera[0].get('almacen'),
+                cabecera[0].get('validez_oferta'),
+                codigo,
+                count,
+                cabecera[0].get('condicion_pago'),
+                cabecera[0].get('direccion_entrega'),
+                cabecera[0].get('requerimiento'),
+                cabecera[0].get('nota_cotizacion', '') + ' (Duplicado)',
+                float(cabecera[0].get('descuento_porcentaje', 0)),
+                float(cabecera[0].get('descuento_monto', 0)),
+                cabecera[0].get('descuento_tipo', 'porcentaje'),
+                cabecera[0].get('contacto_cliente'),
+                cabecera[0].get('telefono_cliente'),
+                cabecera[0].get('email_cliente')
+            ))
+            
+            result = cur.fetchone()
+            nueva_cotizacion_id = result['id']
+            nuevo_numero = result['numero_cotizacion']
+            
+            print(f"✅ Nueva cotización creada con ID: {nueva_cotizacion_id}")
+            
+            # 5. Insertar productos duplicados
+            productos_guardados = 0
+            for producto in productos:
+                try:
+                    producto_id = producto.get('producto_id')
+                    if not producto_id:
+                        continue
+                    
+                    cantidad = float(producto.get('cantidad', 1))
+                    precio_venta = float(producto.get('precio_venta_unitario') or producto.get('valorVenta', 0))
+                    costo_unitario = float(producto.get('costo_unitario', 0))
+                    
+                    cur.execute("""
+                        INSERT INTO cotizacion_detalle (
+                            cotizacion_id, producto_id, cantidad,
+                            costo_unitario, subtotal_costo, margen_porcentaje,
+                            precio_venta_unitario, subtotal_venta,
+                            descuento_porcentaje, precio_venta_con_descuento,
+                            subtotal_venta_con_descuento, descuento_total, margen_final
+                        ) VALUES (
+                            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                        )
+                    """, (
+                        nueva_cotizacion_id,
+                        producto_id,
+                        cantidad,
+                        costo_unitario,
+                        cantidad * costo_unitario,
+                        float(producto.get('margen_porcentaje', 0)),
+                        precio_venta,
+                        cantidad * precio_venta,
+                        float(producto.get('descuento_porcentaje', 0)),
+                        precio_venta,
+                        cantidad * precio_venta,
+                        0,
+                        float(producto.get('margen_final', 0))
+                    ))
+                    productos_guardados += 1
+                    
+                except Exception as e:
+                    print(f"⚠️ Error guardando producto {producto.get('codigo')}: {e}")
+                    continue
+            
+            print(f"📊 Productos duplicados: {productos_guardados}")
+            
+            return jsonify({
+                'success': True,
+                'message': f'Cotización duplicada correctamente con {productos_guardados} productos',
+                'data': {
+                    'id': nueva_cotizacion_id,
+                    'numero': nuevo_numero,
+                    'productos_guardados': productos_guardados,
+                    'estado': 'Borrador'
+                }
+            })
+            
+    except Exception as e:
+        print(f"❌ Error en api_cotizaciones_duplicar: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500

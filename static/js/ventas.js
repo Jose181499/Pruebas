@@ -1241,9 +1241,37 @@ async function marcarDespachado(id) {
     }
 }
 
-// Funciones placeholder para acciones que requieren más implementación
-function duplicateCotizacion(id) {
-    showToast('Cotización duplicada correctamente', 'success');
+async function duplicateCotizacion(id) {
+    try {
+        console.log(`📋 Duplicando cotización ID: ${id}`);
+        
+        // Mostrar loading
+        showToast('⏳ Duplicando cotización...', 'info');
+        
+        const response = await apiFetch(`/ventas/api/cotizaciones/${id}/duplicar`, {
+            method: 'POST'
+        });
+        
+        if (response.success) {
+            showToast(`✅ Cotización duplicada correctamente: ${response.data.numero}`, 'success');
+            
+            // Recargar la lista de cotizaciones
+            await loadCotizaciones();
+            
+            // Opcional: Abrir la cotización duplicada para editar
+            setTimeout(() => {
+                if (response.data.id) {
+                    openCotizacionModal(response.data.id);
+                }
+            }, 1000);
+            
+        } else {
+            showToast('❌ Error al duplicar: ' + (response.error || 'Desconocido'), 'error');
+        }
+    } catch (error) {
+        console.error('❌ Error duplicando cotización:', error);
+        showToast('❌ Error al duplicar la cotización: ' + error.message, 'error');
+    }
 }
 
 function sendCotizacionEmail(id) {
@@ -2895,6 +2923,9 @@ function showCotizacionMenu(event, id) {
     `;
     document.body.appendChild(pop);
 }
+
+
+
 
 function showPedidoMenu(event, id) {
     event.stopPropagation();
