@@ -1827,7 +1827,6 @@ def api_devoluciones_toggle(id):
 # ============================================================
 # COTIZACIONES - OBTENER CON PRODUCTOS (PARA EDITAR)
 # ============================================================
-
 @ventas_bp.route('/ventas/api/cotizaciones/<int:id>/completa', methods=['GET'])
 @login_required
 def api_cotizaciones_obtener_completa(id):
@@ -1843,10 +1842,15 @@ def api_cotizaciones_obtener_completa(id):
                 c.direccion_entrega, c.requerimiento, c.nota_cotizacion,
                 c.descuento_porcentaje, c.descuento_monto, c.descuento_tipo,
                 c.contacto_cliente, c.telefono_cliente, c.email_cliente,
+                cl.id as cliente_id,
                 cl.razon_social as cliente_razon_social,
                 cl.numero_documento as cliente_ruc,
                 cl.nombre_comercial as cliente_nombre_comercial,
-                cl.codigo_cliente as cod_cliente
+                cl.codigo_cliente as cod_cliente,
+                cl.direccion_fiscal as cliente_direccion,
+                cl.telefono_contacto as cliente_telefono,
+                cl.nombre_contacto as cliente_contacto,
+                cl.email_contacto as cliente_email
             FROM cotizaciones c
             LEFT JOIN clientes cl ON cl.id = c.cliente_id::integer
             WHERE c.id = %s
@@ -1862,7 +1866,8 @@ def api_cotizaciones_obtener_completa(id):
                 d.id, d.producto_id, d.cantidad,
                 p.codigo, p.descripcion as producto, p.descripcion_larga,
                 p.modelo, p.marca, p.unidad as um, p.stock,
-                p.precio_unitario as valorVenta
+                p.precio_unitario as valorVenta,
+                p.costo_unitario
             FROM cotizacion_detalle d
             LEFT JOIN productos p ON p.id = d.producto_id
             WHERE d.cotizacion_id = %s
@@ -1871,12 +1876,35 @@ def api_cotizaciones_obtener_completa(id):
         
         # Combinar datos
         result = dict(cabecera[0])
-        result['productos'] = [dict(p) for p in productos] if productos else []
+        # Asegurar que los campos de cliente tengan nombres consistentes
+        result['cliente_razon_social'] = result.get('cliente_razon_social') or result.get('cliente_nombre_comercial') or f"Cliente {result.get('cliente_id', '')}"
+        result['cliente_ruc'] = result.get('cliente_ruc') or str(result.get('cliente_id', ''))
+        result['cod_cliente'] = result.get('cod_cliente') or f"CLI-{str(result.get('cliente_id', '')).zfill(6)}"
+        result['cliente_direccion'] = result.get('cliente_direccion') or result.get('direccion_entrega', '')
+        
+        # Productos
+        result['productos'] = []
+        for p in productos or []:
+            result['productos'].append({
+                'id': p.get('producto_id'),
+                'codigo': p.get('codigo'),
+                'producto': p.get('producto') or p.get('descripcion_larga') or 'Producto sin nombre',
+                'descripcion': p.get('descripcion_larga') or p.get('producto') or '',
+                'modelo': p.get('modelo') or '',
+                'marca': p.get('marca') or '',
+                'um': p.get('um') or 'NIU',
+                'cantidad': float(p.get('cantidad') or 1),
+                'valorVenta': float(p.get('valorVenta') or 0),
+                'stock': int(p.get('stock') or 0),
+                'costo_unitario': float(p.get('costo_unitario') or 0)
+            })
         
         return jsonify({'success': True, 'data': result})
         
     except Exception as e:
         print(f"❌ Error en api_cotizaciones_obtener_completa: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 

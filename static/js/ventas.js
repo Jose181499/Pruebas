@@ -1504,38 +1504,212 @@ function openCotizacionModal(id = null) {
 
 async function cargarCotizacionParaEditar(id) {
     try {
-        const data = await apiFetch(`/ventas/api/cotizaciones/${id}`);
-        if (data.success) {
-            const c = data.data;
-            // Llenar campos
-            document.getElementById('fRuc').value = c.cliente_ruc || '';
-            document.getElementById('fRazon').value = c.cliente_razon_social || '';
-            document.getElementById('fCodCliente').value = c.cod_cliente || '';
-            document.getElementById('fComercial').value = c.cliente_nombre_comercial || '';
-            document.getElementById('fDireccion').value = c.direccion_entrega || '';
-            document.getElementById('fContacto').value = c.contacto_cliente || '';
-            document.getElementById('fTelefono').value = c.telefono_cliente || '';
-            document.getElementById('fCorreo').value = c.email_cliente || '';
-            document.getElementById('fCondicion').value = c.condicion_pago || '';
-            document.getElementById('fTiempo').value = c.tiempo_entrega || '';
-            document.getElementById('fValidez').value = c.validez_oferta || '';
-            document.getElementById('fDiscountValue').value = c.descuento_porcentaje || 0;
-            
-            // Productos
-            if (c.productos && c.productos.length > 0) {
-                quoteProducts = c.productos.map(p => ({
-                    ...p,
-                    cantidad: p.cantidad || 1,
-                    valorVenta: p.valorVenta || p.precio_unitario || 0
-                }));
-                renderQuoteProducts();
-                calcQuote();
+        console.log('📥 Cargando cotización para editar ID:', id);
+        
+        // Usar la ruta completa que devuelve todos los datos
+        const response = await apiFetch(`/ventas/api/cotizaciones/${id}/completa`);
+        
+        if (!response.success) {
+            showToast('Error al cargar cotización: ' + (response.error || 'Desconocido'), 'error');
+            return;
+        }
+        
+        const c = response.data;
+        console.log('📦 Datos cargados:', c);
+        
+        // ============================================================
+        // LLENAR DATOS DEL CLIENTE
+        // ============================================================
+        document.getElementById('fRuc').value = c.cliente_ruc || '';
+        document.getElementById('fRazon').value = c.cliente_razon_social || '';
+        document.getElementById('fCodCliente').value = c.cod_cliente || 'PENDIENTE';
+        document.getElementById('fComercial').value = c.cliente_nombre_comercial || '';
+        document.getElementById('fDireccion').value = c.cliente_direccion || c.direccion_entrega || '';
+        document.getElementById('fContacto').value = c.cliente_contacto || c.contacto_cliente || '';
+        document.getElementById('fTelefono').value = c.cliente_telefono || c.telefono_cliente || '';
+        document.getElementById('fCorreo').value = c.cliente_email || c.email_cliente || '';
+        
+        // ============================================================
+        // LLENAR CONDICIONES COMERCIALES
+        // ============================================================
+        if (c.condicion_pago) {
+            const condSelect = document.getElementById('fCondicion');
+            if (condSelect) {
+                // Buscar la opción que coincida
+                let found = false;
+                for (let opt of condSelect.options) {
+                    if (opt.value === c.condicion_pago) {
+                        opt.selected = true;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    // Crear una nueva opción
+                    const newOpt = document.createElement('option');
+                    newOpt.value = c.condicion_pago;
+                    newOpt.textContent = c.condicion_pago;
+                    condSelect.appendChild(newOpt);
+                    condSelect.value = c.condicion_pago;
+                }
             }
         }
+        
+        // Tiempo de entrega
+        if (c.tiempo_entrega) {
+            const tiempoSelect = document.getElementById('fTiempo');
+            if (tiempoSelect) {
+                let found = false;
+                for (let opt of tiempoSelect.options) {
+                    if (opt.value === c.tiempo_entrega) {
+                        opt.selected = true;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    const newOpt = document.createElement('option');
+                    newOpt.value = c.tiempo_entrega;
+                    newOpt.textContent = c.tiempo_entrega;
+                    tiempoSelect.appendChild(newOpt);
+                    tiempoSelect.value = c.tiempo_entrega;
+                }
+            }
+        }
+        
+        // Validez
+        if (c.validez_oferta) {
+            const validezSelect = document.getElementById('fValidez');
+            if (validezSelect) {
+                let found = false;
+                for (let opt of validezSelect.options) {
+                    if (opt.value === c.validez_oferta) {
+                        opt.selected = true;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    const newOpt = document.createElement('option');
+                    newOpt.value = c.validez_oferta;
+                    newOpt.textContent = c.validez_oferta;
+                    validezSelect.appendChild(newOpt);
+                    validezSelect.value = c.validez_oferta;
+                }
+            }
+        }
+        
+        // Descuento
+        document.getElementById('fDiscountValue').value = c.descuento_porcentaje || 0;
+        document.getElementById('fDiscountType').value = c.descuento_tipo || '%';
+        
+        // Dirección de entrega
+        if (c.direccion_entrega) {
+            const dirSelect = document.getElementById('fDireccionEntrega');
+            if (dirSelect) {
+                // Agregar la dirección como opción si no existe
+                let found = false;
+                for (let opt of dirSelect.options) {
+                    if (opt.value === c.direccion_entrega) {
+                        opt.selected = true;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    const newOpt = document.createElement('option');
+                    newOpt.value = c.direccion_entrega;
+                    newOpt.textContent = c.direccion_entrega;
+                    dirSelect.appendChild(newOpt);
+                    dirSelect.value = c.direccion_entrega;
+                }
+            }
+        }
+        
+        // Nota interna
+        if (c.nota_cotizacion) {
+            document.getElementById('fNotaInterna').value = c.nota_cotizacion;
+        }
+        
+        // Requerimiento
+        if (c.requerimiento) {
+            document.getElementById('fReq').value = c.requerimiento;
+        }
+        
+        // ============================================================
+        // CARGAR PRODUCTOS
+        // ============================================================
+        if (c.productos && c.productos.length > 0) {
+            quoteProducts = c.productos.map(p => ({
+                ...p,
+                cantidad: p.cantidad || 1,
+                valorVenta: p.valorVenta || 0
+            }));
+            renderQuoteProducts();
+            
+            // Actualizar la barra de pasos según el estado
+            updateQuoteStatusBar(c.estado);
+            
+            // Calcular totales
+            setTimeout(() => { calcQuote(); }, 100);
+            
+            console.log(`✅ ${quoteProducts.length} productos cargados`);
+        } else {
+            console.log('📭 No hay productos en esta cotización');
+        }
+        
+        // Mostrar el estado en el título
+        const title = document.getElementById('cotizacionModalTitle');
+        if (title && c.estado) {
+            const estadoEmoji = {
+                'Borrador': '📝',
+                'En revisión': '🔍',
+                'Validada': '✅',
+                'Generada': '📄',
+                'Aceptada': '🎯',
+                'No concretada': '❌'
+            };
+            title.textContent = `Editar cotización ${c.numero_cotizacion || ''} ${estadoEmoji[c.estado] || ''} (${c.estado})`;
+        }
+        
+        showToast('✅ Cotización cargada correctamente', 'success');
+        
     } catch (error) {
-        console.error('Error cargando cotización para editar:', error);
+        console.error('❌ Error cargando cotización para editar:', error);
+        showToast('Error al cargar la cotización: ' + error.message, 'error');
     }
 }
+
+function updateQuoteStatusBar(estado) {
+    const steps = document.querySelectorAll('#quoteStatusBar .step');
+    const estados = ['Borrador', 'En revisión', 'Validada', 'Generada', 'Aceptada'];
+    const index = estados.indexOf(estado);
+    
+    steps.forEach((step, i) => {
+        step.classList.remove('status-draft', 'status-review', 'status-validated', 'status-generated', 'status-accepted');
+        if (i <= index) {
+            if (estado === 'Borrador') step.classList.add('status-draft');
+            else if (estado === 'En revisión') step.classList.add('status-review');
+            else if (estado === 'Validada') step.classList.add('status-validated');
+            else if (estado === 'Generada') step.classList.add('status-generated');
+            else if (estado === 'Aceptada') step.classList.add('status-accepted');
+            // Cambiar color del número
+            const num = step.querySelector('.num');
+            if (num) {
+                num.style.background = '#22C55E';
+                num.style.color = '#052E16';
+            }
+        } else {
+            const num = step.querySelector('.num');
+            if (num) {
+                num.style.background = '#E2E8F0';
+                num.style.color = '#475569';
+            }
+        }
+    });
+}
+
+
 
 function cargarDatalistProductos() {
     const dl = document.getElementById('productMasterList');
@@ -3025,5 +3199,6 @@ window.deleteDevolucion = deleteDevolucion;
 
 window.showConfirmModal = showConfirmModal;
 window.showSuccessModal = showSuccessModal;
+window.updateQuoteStatusBar = updateQuoteStatusBar;
 
 console.log('✅ Módulo Ventas cargado correctamente - VERSIÓN COMPLETA FUNCIONAL');
