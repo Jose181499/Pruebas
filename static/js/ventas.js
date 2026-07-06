@@ -1392,9 +1392,60 @@ function sendCotizacionEmail(id) {
     showToast('Email enviado al cliente', 'success');
 }
 
-function generateCotizacionPdf(id) {
-    showToast('PDF generado correctamente', 'success');
-}
+// ============================================================
+// FUNCIÓN PARA GENERAR PDF DE COTIZACIÓN
+// ============================================================
+window.generateCotizacionPdf = async function(id) {
+    console.log(`📄 Generando PDF para cotización ID: ${id}`);
+    
+    try {
+        // Mostrar loading
+        showToast('⏳ Generando PDF...', 'info');
+        
+        // Hacer la solicitud al endpoint que genera el PDF
+        const response = await fetch(`/ventas/api/cotizaciones/${id}/pdf`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/pdf'
+            }
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `HTTP ${response.status}`);
+        }
+        
+        // Obtener el blob del PDF
+        const blob = await response.blob();
+        
+        // Crear URL para descarga
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        
+        // Obtener nombre del archivo desde el header Content-Disposition
+        let filename = `cotizacion_${id}.pdf`;
+        const contentDisposition = response.headers.get('Content-Disposition');
+        if (contentDisposition) {
+            const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+            if (match && match[1]) {
+                filename = match[1].replace(/['"]/g, '');
+            }
+        }
+        
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        showToast('✅ PDF generado correctamente', 'success');
+        
+    } catch (error) {
+        console.error('❌ Error generando PDF:', error);
+        showToast('❌ Error al generar el PDF: ' + error.message, 'error');
+    }
+};
 
 // ============================================================
 // FUNCIÓN PRINCIPAL - CREAR DOCUMENTO DESDE COTIZACIÓN
