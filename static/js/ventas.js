@@ -1046,21 +1046,49 @@ async function saveDespacho(estado) {
     }
 }
 
+// Reemplazar la función saveGuia en ventas.js
 async function saveGuia(estado) {
     try {
+        console.log('🔄 Guardando guía...', { estado });
+        
+        // Obtener productos del DOM
+        let productos = window._guiaProductos || [];
+        
+        // Si no hay productos guardados, intentar obtener de la tabla
+        if (productos.length === 0) {
+            const productRows = document.querySelectorAll('#guiaProducts .master-table tbody tr');
+            productRows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length >= 6) {
+                    productos.push({
+                        codigo: cells[1]?.textContent?.trim() || '',
+                        producto: cells[2]?.textContent?.trim() || '',
+                        marca: cells[3]?.textContent?.trim() || '',
+                        um: cells[4]?.textContent?.trim() || 'NIU',
+                        cantidad: parseInt(cells[5]?.textContent?.trim()) || 1,
+                        stock: parseInt(cells[6]?.textContent?.trim()) || 0
+                    });
+                }
+            });
+        }
+        
         const data = {
             id: editingId,
             estado: estado || 'Borrador',
             serie: document.getElementById('guiaSerie')?.value || 'T001',
-            numero: document.getElementById('guiaNumero')?.value || '',
-            cotizacion: document.getElementById('guiaCotizacion')?.value || '',
+            numero: document.getElementById('guiaNumero')?.value || String(Date.now()).slice(-8),
+            cotizacion_numero: document.getElementById('guiaCotizacion')?.value || '',
             cliente: document.getElementById('guiaCliente')?.value || '',
             ruc: document.getElementById('guiaRuc')?.value || '',
-            origen: document.getElementById('guiaOrigen')?.value || '',
+            origen: document.getElementById('guiaOrigen')?.value || 'ALM-SMP',
             destino: document.getElementById('guiaDestino')?.value || '',
             motivo: document.getElementById('guiaMotivo')?.value || 'VENTA',
-            observaciones: document.getElementById('guiaObs')?.value || ''
+            observaciones: document.getElementById('guiaObs')?.value || '',
+            items: productos,
+            peso_total: productos.reduce((sum, p) => sum + (parseFloat(p.cantidad || 0) * 0.5), 0) // Estimación
         };
+        
+        console.log('📦 Datos a guardar:', data);
         
         const response = await apiFetch('/ventas/api/guias/guardar', {
             method: 'POST',
@@ -1068,33 +1096,44 @@ async function saveGuia(estado) {
         });
         
         if (response.success) {
-            showToast(`Guía guardada como: ${estado}`, 'success');
+            showToast(`✅ Guía guardada como: ${estado}`, 'success');
             closeModal('guiaModal');
             await loadGuias();
+            // Limpiar datos temporales
+            window._guiaProductos = null;
         } else {
-            showToast('Error: ' + (response.error || 'No se pudo guardar'), 'error');
+            showToast('❌ Error: ' + (response.error || 'No se pudo guardar'), 'error');
         }
     } catch (error) {
         console.error('❌ Error guardando guía:', error);
-        showToast('Error al guardar la guía', 'error');
+        showToast('❌ Error al guardar la guía: ' + error.message, 'error');
     }
 }
 
+
+// Reemplazar la función saveComprobante en ventas.js
 async function saveComprobante(estado) {
     try {
+        console.log('🔄 Guardando comprobante...', { estado });
+        
+        let productos = window._compProductos || [];
+        
         const data = {
             id: editingId,
             estado: estado || 'Borrador',
             tipo: document.getElementById('compTipo')?.value || 'Factura',
             serie: document.getElementById('compSerie')?.value || 'F001',
-            numero: document.getElementById('compNumero')?.value || '',
+            numero: document.getElementById('compNumero')?.value || String(Date.now()).slice(-8),
             cotizacion: document.getElementById('compCotizacion')?.value || '',
             cliente: document.getElementById('compCliente')?.value || '',
             ruc: document.getElementById('compRuc')?.value || '',
             monto: parseFloat(document.getElementById('compMonto')?.value || 0),
-            condicion: document.getElementById('compCondicion')?.value || '',
-            observaciones: document.getElementById('compObs')?.value || ''
+            condicion: document.getElementById('compCondicion')?.value || 'Contado',
+            observaciones: document.getElementById('compObs')?.value || '',
+            items: productos
         };
+        
+        console.log('📦 Datos a guardar:', data);
         
         const response = await apiFetch('/ventas/api/comprobantes/guardar', {
             method: 'POST',
@@ -1102,17 +1141,19 @@ async function saveComprobante(estado) {
         });
         
         if (response.success) {
-            showToast(`Comprobante guardado como: ${estado}`, 'success');
+            showToast(`✅ Comprobante guardado como: ${estado}`, 'success');
             closeModal('comprobanteModal');
             await loadComprobantes();
+            window._compProductos = null;
         } else {
-            showToast('Error: ' + (response.error || 'No se pudo guardar'), 'error');
+            showToast('❌ Error: ' + (response.error || 'No se pudo guardar'), 'error');
         }
     } catch (error) {
         console.error('❌ Error guardando comprobante:', error);
-        showToast('Error al guardar el comprobante', 'error');
+        showToast('❌ Error al guardar el comprobante', 'error');
     }
 }
+
 
 async function saveNotaCredito(estado) {
     try {
@@ -1355,9 +1396,575 @@ function generateCotizacionPdf(id) {
     showToast('PDF generado correctamente', 'success');
 }
 
-function createDocFromCotizacion(id, tipo) {
-    showToast(`Documento "${tipo}" creado desde cotización`, 'success');
+// ============================================================
+// FUNCIÓN PRINCIPAL - CREAR DOCUMENTO DESDE COTIZACIÓN
+// ============================================================
+window.createDocFromCotizacion = async function(id, tipo) {
+    console.log(`📋 Creando ${tipo} desde cotización ID: ${id}`);
+    
+    try {
+        // Mostrar loading
+        showToast('⏳ Cargando datos de la cotización...', 'info');
+        
+        // Obtener los datos completos de la cotización
+        const response = await apiFetch(`/ventas/api/cotizaciones/${id}/completa`);
+        
+        if (!response.success) {
+            showToast('❌ Error al cargar cotización: ' + (response.error || 'Desconocido'), 'error');
+            return;
+        }
+        
+        const cotizacion = response.data;
+        console.log('📦 Datos de cotización:', cotizacion);
+        
+        // Verificar que la cotización esté aceptada para crear guía
+        if (tipo === 'guia' && cotizacion.estado !== 'Aceptada por Cliente' && cotizacion.estado !== 'Aceptada') {
+            showToast('⚠️ La cotización debe estar "Aceptada por Cliente" para crear una guía', 'warning');
+            return;
+        }
+        
+        // Cerrar el menú si está abierto
+        document.querySelectorAll('.menu-pop').forEach(el => el.remove());
+        
+        switch(tipo) {
+            case 'guia':
+                // Cambiar al tab de guías
+                switchTab('guias');
+                
+                // Esperar un momento para que el DOM se actualice
+                setTimeout(() => {
+                    // Abrir el modal de guía con los datos precargados
+                    openGuiaModalWithData(null, cotizacion);
+                }, 300);
+                break;
+                
+            case 'factura':
+                // Cambiar al tab de comprobantes
+                switchTab('comprobantes');
+                
+                setTimeout(() => {
+                    openComprobanteModalWithData(null, cotizacion);
+                }, 300);
+                break;
+                
+            case 'despacho':
+                switchTab('despachar');
+                setTimeout(() => {
+                    openDespachoModalWithData(null, cotizacion);
+                }, 300);
+                break;
+                
+            default:
+                showToast(`Tipo "${tipo}" no soportado`, 'error');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error creando documento:', error);
+        showToast('❌ Error al crear el documento: ' + error.message, 'error');
+    }
+};
+
+// ============================================================
+// FUNCIÓN PARA CAMBIAR DE TAB PROGRAMÁTICAMENTE
+// ============================================================
+function switchTab(tabId) {
+    const tabs = document.querySelectorAll('.tab-btn');
+    const sections = document.querySelectorAll('.section');
+    
+    // Actualizar tabs
+    tabs.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.tab === tabId) {
+            btn.classList.add('active');
+        }
+    });
+    
+    // Actualizar secciones
+    sections.forEach(section => {
+        section.classList.remove('active');
+        if (section.id === tabId) {
+            section.classList.add('active');
+        }
+    });
+    
+    // Actualizar URL
+    const url = new URL(window.location);
+    url.searchParams.set('tab', tabId);
+    window.history.pushState({}, '', url);
+    
+    // Cargar datos del módulo
+    currentModule = tabId;
+    switch(tabId) {
+        case 'cotizaciones': loadCotizaciones(); break;
+        case 'pedido_compra': loadPedidos(); break;
+        case 'despachar': loadDespachos(); break;
+        case 'guias': loadGuias(); break;
+        case 'comprobantes': loadComprobantes(); break;
+        case 'notas_credito': loadNotas(); break;
+        case 'devoluciones': loadDevoluciones(); break;
+    }
 }
+
+// ============================================================
+// FUNCIÓN PARA ABRIR MODAL DE GUÍA CON DATOS PRECARGADOS
+// ============================================================
+function openGuiaModalWithData(id, cotizacion) {
+    editingId = id;
+    const isEdit = id !== null;
+    const title = isEdit ? 'Editar guía' : 'Nueva guía - desde cotización';
+    document.getElementById('guiaModalTitle').textContent = title;
+    
+    const formContainer = document.getElementById('guiaForm');
+    if (!formContainer) return;
+    
+    // Construir opciones de cotizaciones
+    const cotOptions = cotizacionesData.map(q => 
+        `<option value="${q.numero}" ${q.numero === cotizacion.numero_cotizacion ? 'selected' : ''}>${q.numero} - ${q.razon || 'Sin cliente'}</option>`
+    ).join('');
+    
+    // Extraer productos de la cotización
+    const productos = cotizacion.productos || [];
+    const productosHtml = productos.length > 0 ? productTableHtml(productos) : 
+        '<div style="padding:20px;text-align:center;color:#94A3B8;">No hay productos en esta cotización.</div>';
+    
+    formContainer.innerHTML = `
+        <div class="ficha-section">
+            <div class="ficha-section-title">📦 Datos de la guía <small>Precargado desde cotización ${cotizacion.numero_cotizacion}</small></div>
+            <div class="ficha-grid">
+                <div class="form-field col-4">
+                    <label>Cotización vinculada</label>
+                    <select id="guiaCotizacion" onchange="loadGuiaFromCotizacion(this.value)">
+                        ${cotOptions}
+                    </select>
+                </div>
+                <div class="form-field col-4">
+                    <label>Serie</label>
+                    <input id="guiaSerie" value="T001">
+                </div>
+                <div class="form-field col-4">
+                    <label>Número</label>
+                    <input id="guiaNumero" value="${String(Date.now()).slice(-8)}">
+                </div>
+                <div class="form-field col-4">
+                    <label>Estado</label>
+                    <select id="guiaEstado">
+                        ${options(ESTADOS_GUIA, 'Borrador')}
+                    </select>
+                </div>
+                <div class="form-field col-4">
+                    <label>Cliente</label>
+                    <input id="guiaCliente" value="${esc(cotizacion.cliente_razon_social || '')}">
+                </div>
+                <div class="form-field col-4">
+                    <label>RUC</label>
+                    <input id="guiaRuc" value="${esc(cotizacion.cliente_ruc || '')}">
+                </div>
+                <div class="form-field col-4">
+                    <label>Origen</label>
+                    <select id="guiaOrigen">
+                        <option>ALM-SMP</option>
+                        <option>OF-BRE</option>
+                        <option>Almacén Central</option>
+                    </select>
+                </div>
+                <div class="form-field col-4">
+                    <label>Destino</label>
+                    <input id="guiaDestino" value="${esc(cotizacion.direccion_entrega || cotizacion.cliente_direccion || '')}">
+                </div>
+                <div class="form-field col-4">
+                    <label>Motivo traslado</label>
+                    <select id="guiaMotivo">
+                        <option>Venta</option>
+                        <option>Compra</option>
+                        <option>Traslado interno</option>
+                        <option>Devolución</option>
+                    </select>
+                </div>
+                <div class="form-field col-12">
+                    <label>Observaciones</label>
+                    <textarea id="guiaObs" placeholder="Observaciones de la guía">Generado desde cotización ${cotizacion.numero_cotizacion}</textarea>
+                </div>
+            </div>
+        </div>
+        <div class="ficha-section">
+            <div class="ficha-section-title">📦 Productos a trasladar</div>
+            <div id="guiaProducts">
+                ${productosHtml}
+            </div>
+        </div>
+    `;
+    
+    // Guardar referencia de los productos para el guardado
+    window._guiaProductos = productos;
+    
+    // Mostrar el modal
+    document.getElementById('guiaModal').classList.add('show');
+}
+
+// ============================================================
+// FUNCIÓN PARA ABRIR MODAL DE COMPROBANTE CON DATOS PRECARGADOS
+// ============================================================
+function openComprobanteModalWithData(id, cotizacion) {
+    editingId = id;
+    const isEdit = id !== null;
+    const title = isEdit ? 'Editar comprobante' : 'Nuevo comprobante - desde cotización';
+    document.getElementById('comprobanteModalTitle').textContent = title;
+    
+    const formContainer = document.getElementById('comprobanteForm');
+    if (!formContainer) return;
+    
+    const cotOptions = cotizacionesData.map(q => 
+        `<option value="${q.numero}" ${q.numero === cotizacion.numero_cotizacion ? 'selected' : ''}>${q.numero} - ${q.razon || 'Sin cliente'}</option>`
+    ).join('');
+    
+    const productos = cotizacion.productos || [];
+    const productosHtml = productos.length > 0 ? productTableHtml(productos) : 
+        '<div style="padding:20px;text-align:center;color:#94A3B8;">No hay productos en esta cotización.</div>';
+    
+    formContainer.innerHTML = `
+        <div class="ficha-section">
+            <div class="ficha-section-title">🧾 Datos del comprobante <small>Precargado desde cotización ${cotizacion.numero_cotizacion}</small></div>
+            <div class="ficha-grid">
+                <div class="form-field col-4">
+                    <label>Cotización vinculada</label>
+                    <select id="compCotizacion">
+                        ${cotOptions}
+                    </select>
+                </div>
+                <div class="form-field col-3">
+                    <label>Tipo</label>
+                    <select id="compTipo">
+                        <option>Factura</option>
+                        <option>Boleta</option>
+                    </select>
+                </div>
+                <div class="form-field col-3">
+                    <label>Serie</label>
+                    <input id="compSerie" value="F001">
+                </div>
+                <div class="form-field col-3">
+                    <label>Número</label>
+                    <input id="compNumero" value="${String(Date.now()).slice(-8)}">
+                </div>
+                <div class="form-field col-3">
+                    <label>Estado</label>
+                    <select id="compEstado">
+                        ${options(ESTADOS_COMPROBANTE, 'Borrador')}
+                    </select>
+                </div>
+                <div class="form-field col-4">
+                    <label>Cliente</label>
+                    <input id="compCliente" value="${esc(cotizacion.cliente_razon_social || '')}">
+                </div>
+                <div class="form-field col-4">
+                    <label>RUC</label>
+                    <input id="compRuc" value="${esc(cotizacion.cliente_ruc || '')}">
+                </div>
+                <div class="form-field col-4">
+                    <label>Monto</label>
+                    <input id="compMonto" type="number" value="${cotizacion.total || 0}" step="0.01">
+                </div>
+                <div class="form-field col-4">
+                    <label>Condición de pago</label>
+                    <select id="compCondicion">
+                        <option ${cotizacion.condicion_pago === 'Contado' ? 'selected' : ''}>Contado</option>
+                        <option ${cotizacion.condicion_pago === 'Crédito 7 días' ? 'selected' : ''}>Crédito 7 días</option>
+                        <option ${cotizacion.condicion_pago === 'Crédito 15 días' ? 'selected' : ''}>Crédito 15 días</option>
+                        <option ${cotizacion.condicion_pago === 'Crédito 30 días' ? 'selected' : ''}>Crédito 30 días</option>
+                        <option ${cotizacion.condicion_pago === 'Crédito 45 días' ? 'selected' : ''}>Crédito 45 días</option>
+                        <option ${cotizacion.condicion_pago === 'Crédito 60 días' ? 'selected' : ''}>Crédito 60 días</option>
+                        <option ${cotizacion.condicion_pago === 'Crédito 90 días' ? 'selected' : ''}>Crédito 90 días</option>
+                    </select>
+                </div>
+                <div class="form-field col-12">
+                    <label>Observaciones</label>
+                    <textarea id="compObs" placeholder="Observaciones del comprobante">Generado desde cotización ${cotizacion.numero_cotizacion}</textarea>
+                </div>
+            </div>
+        </div>
+        <div class="ficha-section">
+            <div class="ficha-section-title">🧾 Productos</div>
+            <div id="compProducts">
+                ${productosHtml}
+            </div>
+        </div>
+    `;
+    
+    window._compProductos = productos;
+    document.getElementById('comprobanteModal').classList.add('show');
+}
+
+// ============================================================
+// FUNCIÓN PARA ABRIR MODAL DE DESPACHO CON DATOS PRECARGADOS
+// ============================================================
+function openDespachoModalWithData(id, cotizacion) {
+    editingId = id;
+    const isEdit = id !== null;
+    const title = isEdit ? 'Editar despacho' : 'Nuevo despacho - desde cotización';
+    document.getElementById('despachoModalTitle').textContent = title;
+    
+    const formContainer = document.getElementById('despachoForm');
+    if (!formContainer) return;
+    
+    const productos = cotizacion.productos || [];
+    const productosHtml = productos.length > 0 ? productTableHtml(productos) : 
+        '<div style="padding:20px;text-align:center;color:#94A3B8;">No hay productos en esta cotización.</div>';
+    
+    formContainer.innerHTML = `
+        <div class="ficha-section">
+            <div class="ficha-section-title">🚚 Despacho <small>Precargado desde cotización ${cotizacion.numero_cotizacion}</small></div>
+            <div class="ficha-grid">
+                <div class="form-field col-4">
+                    <label>Cotización vinculada</label>
+                    <input id="despachoCotizacion" value="${cotizacion.numero_cotizacion}" readonly style="background:#F1F5F9;">
+                </div>
+                <div class="form-field col-4">
+                    <label>N° Despacho</label>
+                    <input id="despachoNumero" value="DESP-${String(Date.now()).slice(-8)}">
+                </div>
+                <div class="form-field col-4">
+                    <label>Estado</label>
+                    <select id="despachoEstado">
+                        ${options(ESTADOS_DESPACHO, 'Pendiente despacho')}
+                    </select>
+                </div>
+                <div class="form-field col-4">
+                    <label>Cliente</label>
+                    <input id="despachoCliente" value="${esc(cotizacion.cliente_razon_social || '')}">
+                </div>
+                <div class="form-field col-4">
+                    <label>RUC</label>
+                    <input id="despachoRuc" value="${esc(cotizacion.cliente_ruc || '')}">
+                </div>
+                <div class="form-field col-4">
+                    <label>Fecha despacho</label>
+                    <input id="despachoFecha" type="date" value="${today()}">
+                </div>
+                <div class="form-field col-4">
+                    <label>Origen</label>
+                    <select id="despachoOrigen">
+                        <option>ALM-SMP</option>
+                        <option>OF-BRE</option>
+                        <option>Almacén Central</option>
+                    </select>
+                </div>
+                <div class="form-field col-4">
+                    <label>Destino</label>
+                    <input id="despachoDestino" value="${esc(cotizacion.direccion_entrega || cotizacion.cliente_direccion || '')}">
+                </div>
+                <div class="form-field col-4">
+                    <label>Transportista</label>
+                    <input id="despachoTransportista" placeholder="Nombre o razón social">
+                </div>
+                <div class="form-field col-12">
+                    <label>Observaciones</label>
+                    <textarea id="despachoObs" placeholder="Observaciones del despacho">Generado desde cotización ${cotizacion.numero_cotizacion}</textarea>
+                </div>
+            </div>
+        </div>
+        <div class="ficha-section">
+            <div class="ficha-section-title">Productos a despachar</div>
+            <div id="despachoProducts">
+                ${productosHtml}
+            </div>
+        </div>
+    `;
+    
+    window._despachoProductos = productos;
+    document.getElementById('despachoModal').classList.add('show');
+}
+
+// ============================================================
+// FUNCIÓN PARA GUARDAR GUÍA (MEJORADA)
+// ============================================================
+async function saveGuia(estado) {
+    try {
+        console.log('🔄 Guardando guía...', { estado });
+        
+        // Obtener productos del DOM o de la variable global
+        let productos = window._guiaProductos || [];
+        
+        // Si no hay productos guardados, intentar obtener de la tabla
+        if (productos.length === 0) {
+            const productRows = document.querySelectorAll('#guiaProducts .master-table tbody tr');
+            productRows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length >= 6) {
+                    productos.push({
+                        codigo: cells[1]?.textContent?.trim() || '',
+                        producto: cells[2]?.textContent?.trim() || '',
+                        marca: cells[3]?.textContent?.trim() || '',
+                        um: cells[4]?.textContent?.trim() || 'NIU',
+                        cantidad: parseInt(cells[5]?.textContent?.trim()) || 1,
+                        stock: parseInt(cells[6]?.textContent?.trim()) || 0
+                    });
+                }
+            });
+        }
+        
+        const data = {
+            id: editingId,
+            estado: estado || 'Borrador',
+            serie: document.getElementById('guiaSerie')?.value || 'T001',
+            numero: document.getElementById('guiaNumero')?.value || String(Date.now()).slice(-8),
+            cotizacion_numero: document.getElementById('guiaCotizacion')?.value || '',
+            cliente: document.getElementById('guiaCliente')?.value || '',
+            ruc: document.getElementById('guiaRuc')?.value || '',
+            origen: document.getElementById('guiaOrigen')?.value || 'ALM-SMP',
+            destino: document.getElementById('guiaDestino')?.value || '',
+            motivo: document.getElementById('guiaMotivo')?.value || 'VENTA',
+            observaciones: document.getElementById('guiaObs')?.value || '',
+            items: productos,
+            peso_total: productos.reduce((sum, p) => sum + (parseFloat(p.cantidad || 0) * 0.5), 0)
+        };
+        
+        console.log('📦 Datos a guardar:', data);
+        
+        const response = await apiFetch('/ventas/api/guias/guardar', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+        
+        if (response.success) {
+            showToast(`✅ Guía guardada como: ${estado}`, 'success');
+            closeModal('guiaModal');
+            await loadGuias();
+            window._guiaProductos = null;
+        } else {
+            showToast('❌ Error: ' + (response.error || 'No se pudo guardar'), 'error');
+        }
+    } catch (error) {
+        console.error('❌ Error guardando guía:', error);
+        showToast('❌ Error al guardar la guía: ' + error.message, 'error');
+    }
+}
+
+// ============================================================
+// FUNCIÓN PARA GUARDAR COMPROBANTE (MEJORADA)
+// ============================================================
+async function saveComprobante(estado) {
+    try {
+        console.log('🔄 Guardando comprobante...', { estado });
+        
+        let productos = window._compProductos || [];
+        
+        const data = {
+            id: editingId,
+            estado: estado || 'Borrador',
+            tipo: document.getElementById('compTipo')?.value || 'Factura',
+            serie: document.getElementById('compSerie')?.value || 'F001',
+            numero: document.getElementById('compNumero')?.value || String(Date.now()).slice(-8),
+            cotizacion: document.getElementById('compCotizacion')?.value || '',
+            cliente: document.getElementById('compCliente')?.value || '',
+            ruc: document.getElementById('compRuc')?.value || '',
+            monto: parseFloat(document.getElementById('compMonto')?.value || 0),
+            condicion: document.getElementById('compCondicion')?.value || 'Contado',
+            observaciones: document.getElementById('compObs')?.value || '',
+            items: productos
+        };
+        
+        console.log('📦 Datos a guardar:', data);
+        
+        const response = await apiFetch('/ventas/api/comprobantes/guardar', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+        
+        if (response.success) {
+            showToast(`✅ Comprobante guardado como: ${estado}`, 'success');
+            closeModal('comprobanteModal');
+            await loadComprobantes();
+            window._compProductos = null;
+        } else {
+            showToast('❌ Error: ' + (response.error || 'No se pudo guardar'), 'error');
+        }
+    } catch (error) {
+        console.error('❌ Error guardando comprobante:', error);
+        showToast('❌ Error al guardar el comprobante', 'error');
+    }
+}
+
+// ============================================================
+// MENÚ DE COTIZACIONES (MEJORADO)
+// ============================================================
+function showCotizacionMenu(event, id) {
+    event.stopPropagation();
+    
+    // Buscar la cotización para ver su estado
+    const cotizacion = cotizacionesData.find(c => c.id === id);
+    const estado = cotizacion?.estado || '';
+    const isAccepted = estado === 'Aceptada por Cliente' || estado === 'Aceptada';
+    
+    let menuHtml = `
+        <button onclick="openCotizacionModal(${id});this.closest('.menu-pop').remove()">👁 Ver / Editar</button>
+        <button onclick="duplicateCotizacion(${id});this.closest('.menu-pop').remove()">⧉ Duplicar</button>
+        <button onclick="sendCotizacionEmail(${id});this.closest('.menu-pop').remove()">✉ Email</button>
+        <button onclick="generateCotizacionPdf(${id});this.closest('.menu-pop').remove()">▣ PDF</button>
+        <div style="height:1px;background:#E5E7EB;margin:4px 0;"></div>
+    `;
+    
+    // Mostrar "Crear guía" solo si está aceptada
+    if (isAccepted) {
+        menuHtml += `
+            <button class="menu-accepted" onclick="createDocFromCotizacion(${id},'guia');this.closest('.menu-pop').remove()">🚚 Crear guía</button>
+            <button class="menu-accepted" onclick="createDocFromCotizacion(${id},'factura');this.closest('.menu-pop').remove()">🧾 Crear factura</button>
+        `;
+    }
+    
+    menuHtml += `
+        <button class="menu-pending" onclick="marcarCotizacionPending(${id});this.closest('.menu-pop').remove()">🟠 Seguimiento cliente</button>
+        <button class="menu-lost" onclick="marcarCotizacionNotClosed(${id});this.closest('.menu-pop').remove()">⚪ No concretada</button>
+        <button class="menu-reactivate" onclick="reactivarCotizacion(${id});this.closest('.menu-pop').remove()">🔄 Reactivar</button>
+        <div style="height:1px;background:#E5E7EB;margin:4px 0;"></div>
+        <button onclick="createDocFromCotizacion(${id},'despacho');this.closest('.menu-pop').remove()">🚚 Crear despacho</button>
+        <button class="danger" onclick="deleteCotizacion(${id});this.closest('.menu-pop').remove()">🗑 Eliminar</button>
+    `;
+    
+    createMenuWithClose(event, menuHtml);
+}
+
+// ============================================================
+// FUNCIÓN PARA CARGAR GUÍA DESDE COTIZACIÓN SELECCIONADA
+// ============================================================
+window.loadGuiaFromCotizacion = function(numeroCotizacion) {
+    if (!numeroCotizacion) return;
+    
+    const cotizacion = cotizacionesData.find(c => c.numero === numeroCotizacion);
+    if (!cotizacion) {
+        showToast('⚠️ Cotización no encontrada', 'warning');
+        return;
+    }
+    
+    showToast('⏳ Cargando datos de cotización...', 'info');
+    
+    // Cargar los datos de la cotización completa
+    apiFetch(`/ventas/api/cotizaciones/${cotizacion.id}/completa`)
+        .then(response => {
+            if (response.success) {
+                const data = response.data;
+                document.getElementById('guiaCliente').value = data.cliente_razon_social || '';
+                document.getElementById('guiaRuc').value = data.cliente_ruc || '';
+                document.getElementById('guiaDestino').value = data.direccion_entrega || data.cliente_direccion || '';
+                document.getElementById('guiaObs').value = `Generado desde cotización ${numeroCotizacion}`;
+                
+                // Actualizar productos
+                const productos = data.productos || [];
+                window._guiaProductos = productos;
+                document.getElementById('guiaProducts').innerHTML = 
+                    productos.length > 0 ? productTableHtml(productos) : 
+                    '<div style="padding:20px;text-align:center;color:#94A3B8;">No hay productos en esta cotización.</div>';
+                
+                showToast('✅ Datos cargados desde cotización', 'success');
+            } else {
+                showToast('❌ Error al cargar datos: ' + (response.error || 'Desconocido'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error cargando cotización:', error);
+            showToast('❌ Error al cargar datos de la cotización', 'error');
+        });
+};
+
 
 function validatePedidoCompra(id) {
     showToast('PC validado por Hellen', 'success');
@@ -3023,23 +3630,41 @@ function createMenuWithClose(event, htmlContent) {
 // MENÚS DE ACCIONES
 // ============================================================
 
+// Reemplazar la función showCotizacionMenu en ventas.js
 function showCotizacionMenu(event, id) {
     event.stopPropagation();
-    createMenuWithClose(event, `
+    
+    // Buscar la cotización para ver su estado
+    const cotizacion = cotizacionesData.find(c => c.id === id);
+    const estado = cotizacion?.estado || '';
+    const isAccepted = estado === 'Aceptada por Cliente' || estado === 'Aceptada';
+    
+    let menuHtml = `
         <button onclick="openCotizacionModal(${id});this.closest('.menu-pop').remove()">👁 Ver / Editar</button>
         <button onclick="duplicateCotizacion(${id});this.closest('.menu-pop').remove()">⧉ Duplicar</button>
         <button onclick="sendCotizacionEmail(${id});this.closest('.menu-pop').remove()">✉ Email</button>
         <button onclick="generateCotizacionPdf(${id});this.closest('.menu-pop').remove()">▣ PDF</button>
         <div style="height:1px;background:#E5E7EB;margin:4px 0;"></div>
-        <button class="menu-accepted" onclick="marcarCotizacionAccepted(${id});this.closest('.menu-pop').remove()">🟢 Aceptada por cliente</button>
+    `;
+    
+    // Mostrar "Crear guía" solo si está aceptada
+    if (isAccepted) {
+        menuHtml += `
+            <button class="menu-accepted" onclick="createDocFromCotizacion(${id},'guia');this.closest('.menu-pop').remove()">🚚 Crear guía</button>
+            <button class="menu-accepted" onclick="createDocFromCotizacion(${id},'factura');this.closest('.menu-pop').remove()">🧾 Crear factura</button>
+        `;
+    }
+    
+    menuHtml += `
         <button class="menu-pending" onclick="marcarCotizacionPending(${id});this.closest('.menu-pop').remove()">🟠 Seguimiento cliente</button>
         <button class="menu-lost" onclick="marcarCotizacionNotClosed(${id});this.closest('.menu-pop').remove()">⚪ No concretada</button>
         <button class="menu-reactivate" onclick="reactivarCotizacion(${id});this.closest('.menu-pop').remove()">🔄 Reactivar</button>
         <div style="height:1px;background:#E5E7EB;margin:4px 0;"></div>
-        <button onclick="createDocFromCotizacion(${id},'guia');this.closest('.menu-pop').remove()">🚚 Crear guía</button>
-        <button onclick="createDocFromCotizacion(${id},'factura');this.closest('.menu-pop').remove()">🧾 Crear factura</button>
+        <button onclick="createDocFromCotizacion(${id},'despacho');this.closest('.menu-pop').remove()">🚚 Crear despacho</button>
         <button class="danger" onclick="deleteCotizacion(${id});this.closest('.menu-pop').remove()">🗑 Eliminar</button>
-    `);
+    `;
+    
+    createMenuWithClose(event, menuHtml);
 }
 
 
