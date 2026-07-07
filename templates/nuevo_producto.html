@@ -455,8 +455,8 @@
 <!-- ============================================ -->
 <!-- FORMULARIO                                   -->
 <!-- ============================================ -->
+<form id="formNuevoProducto" action="/productos/api/productos" method="POST" enctype="multipart/form-data" onsubmit="return false;">
 
-<form id="formNuevoProducto" action="/api/productos" method="POST" enctype="multipart/form-data" onsubmit="return false;">
     <!-- ✅ ID del producto para actualizar -->
     {% if editando and producto %}
     <input type="hidden" name="producto_id" value="{{ producto.id }}" />
