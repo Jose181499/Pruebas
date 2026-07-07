@@ -89,19 +89,6 @@
 </div>
 
 <!-- ============================================================ -->
-<!-- BOTONES DE VISTA: PRINCIPAL / COMPLETA                       -->
-<!-- ============================================================ -->
-<div class="bd-view-toggle">
-    <button class="view-btn active" id="viewPrincipal" onclick="cambiarVista('principal')">
-        <i class="bi bi-table"></i> Principal
-    </button>
-    <button class="view-btn" id="viewCompleta" onclick="cambiarVista('completa')">
-        <i class="bi bi-layout-three-columns"></i> Completa
-    </button>
-    <span class="bd-count" id="bdCountText" style="margin-left:auto;">Mostrando 0 productos</span>
-</div>
-
-<!-- ============================================================ -->
 <!-- TABLA DE PRODUCTOS                                           -->
 <!-- ============================================================ -->
 <div class="bd-table-card" id="tablaContainer">
@@ -148,18 +135,40 @@
             </tbody>
         </table>
     </div>
+    
+    <!-- ============================================================ -->
+    <!-- FOOTER CON BOTONES DE VISTA, CONTADOR Y PAGINACIÓN           -->
+    <!-- ============================================================ -->
     <div class="bd-footer">
-        <span class="bd-count" id="bdTotalRegistros">0 registros</span>
-        <div class="pagination">
-            <button class="page-btn" onclick="bdPaginaAnterior()">‹</button>
-            <span class="page-btn page-active" id="bdPaginaInfo">1</span>
-            <button class="page-btn" onclick="bdPaginaSiguiente()">›</button>
-            <select class="page-select" id="bdPorPaginaSelect" onchange="bdCambiarPorPagina()">
-                <option value="10">10 por página</option>
-                <option value="20" selected>20 por página</option>
-                <option value="50">50 por página</option>
-                <option value="100">100 por página</option>
-            </select>
+        <div class="bd-footer-left">
+            <!-- BOTONES DE VISTA: PRINCIPAL / COMPLETA -->
+            <div class="bd-view-toggle-footer">
+                <button class="view-btn-footer active" id="viewPrincipal" onclick="cambiarVista('principal')">
+                    <i class="bi bi-table"></i> Principal
+                </button>
+                <button class="view-btn-footer" id="viewCompleta" onclick="cambiarVista('completa')">
+                    <i class="bi bi-layout-three-columns"></i> Completa
+                </button>
+            </div>
+        </div>
+        
+        <div class="bd-footer-center">
+            <span class="bd-count" id="bdTotalRegistros">35 registros</span>
+        </div>
+        
+        <div class="bd-footer-right">
+            <div class="pagination">
+                <span class="page-info">1/2</span>
+                <button class="page-btn" onclick="bdPaginaAnterior()">‹</button>
+                <span class="page-btn page-active" id="bdPaginaInfo">1</span>
+                <button class="page-btn" onclick="bdPaginaSiguiente()">›</button>
+                <select class="page-select" id="bdPorPaginaSelect" onchange="bdCambiarPorPagina()">
+                    <option value="10">10 por página</option>
+                    <option value="20" selected>20 por página</option>
+                    <option value="50">50 por página</option>
+                    <option value="100">100 por página</option>
+                </select>
+            </div>
         </div>
     </div>
 </div>
@@ -295,50 +304,71 @@
 }
 
 /* ============================================================
-   VISTA TOGGLE
+   FOOTER CON BOTONES DE VISTA
    ============================================================ */
-.bd-view-toggle {
+.bd-footer {
     display: flex;
     align-items: center;
-    gap: 6px;
-    margin-bottom: 12px;
-    padding: 4px 8px;
+    justify-content: space-between;
+    padding: 8px 14px;
+    border-top: 1px solid #e2e8f0;
+    background: #fafbfc;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.bd-footer-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.bd-footer-center {
+    display: flex;
+    align-items: center;
+}
+
+.bd-footer-right {
+    display: flex;
+    align-items: center;
+}
+
+/* Botones de vista en el footer */
+.bd-view-toggle-footer {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 6px;
     background: #f1f5f9;
-    border-radius: 8px;
+    border-radius: 6px;
     border: 1px solid #e2e8f0;
 }
 
-.bd-view-toggle .view-btn {
-    padding: 5px 14px;
+.bd-view-toggle-footer .view-btn-footer {
+    padding: 4px 12px;
     border: none;
-    border-radius: 6px;
+    border-radius: 5px;
     font-weight: 700;
-    font-size: 12px;
+    font-size: 11px;
     cursor: pointer;
     transition: all 0.3s ease;
     background: transparent;
     color: #64748b;
 }
 
-.bd-view-toggle .view-btn:hover {
+.bd-view-toggle-footer .view-btn-footer:hover {
     background: rgba(255,255,255,0.6);
 }
 
-.bd-view-toggle .view-btn.active {
+.bd-view-toggle-footer .view-btn-footer.active {
     background: white;
     color: #0f172a;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
-.bd-view-toggle .view-btn i {
-    margin-right: 5px;
-}
-
-.bd-view-toggle .bd-count {
-    margin-left: auto;
-    font-weight: 600;
+.bd-view-toggle-footer .view-btn-footer i {
+    margin-right: 4px;
     font-size: 12px;
-    color: #64748b;
 }
 
 /* ============================================================
@@ -523,23 +553,19 @@
 }
 
 /* ============================================================
-   FOOTER
+   PAGINACIÓN
    ============================================================ */
-.bd-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 14px;
-    border-top: 1px solid #e2e8f0;
-    background: #fafbfc;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.bd-footer .bd-count {
+.bd-count {
     font-weight: 600;
     font-size: 12px;
     color: #64748b;
+}
+
+.page-info {
+    font-weight: 600;
+    font-size: 12px;
+    color: #64748b;
+    padding: 0 6px;
 }
 
 .pagination {
@@ -632,22 +658,24 @@
         height: 28px;
     }
     
-    .bd-view-toggle {
-        flex-wrap: wrap;
-    }
-    .bd-view-toggle .bd-count {
-        margin-left: 0 !important;
-        width: 100%;
+    .bd-footer {
+        flex-direction: column;
+        align-items: center;
         text-align: center;
+        gap: 6px;
     }
+    
+    .bd-footer-left,
+    .bd-footer-center,
+    .bd-footer-right {
+        width: 100%;
+        justify-content: center;
+    }
+    
     .bd-table-scroll {
         overflow-x: auto;
     }
-    .bd-footer {
-        flex-direction: column;
-        align-items: stretch;
-        text-align: center;
-    }
+    
     .pagination {
         justify-content: center;
         flex-wrap: wrap;
