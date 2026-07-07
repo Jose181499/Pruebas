@@ -134,6 +134,31 @@
         }
         
         /* ============================================
+           ANIMACIONES PARA NOTIFICACIONES BONITAS
+           ============================================ */
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100px) scale(0.9);
+            }
+        }
+        
+        /* ============================================
            RESALTAR CAMPOS CON ERROR
            ============================================ */
         .field.error input,
@@ -899,13 +924,136 @@
 
 /**
  * ============================================================
- * VALIDAR Y GUARDAR
+ * NOTIFICACIÓN DE ÉXITO - BONITA
  * ============================================================
  */
+function mostrarNotificacionExito(esEdicion, codigo) {
+    // Eliminar notificaciones anteriores
+    var notificacionesAnteriores = document.querySelectorAll('.notificacion-exito, .notificacion-error');
+    for (var i = 0; i < notificacionesAnteriores.length; i++) {
+        notificacionesAnteriores[i].remove();
+    }
+    
+    var mensaje = esEdicion ? 'Producto actualizado' : 'Producto creado';
+    var icono = esEdicion ? '✏️' : '✅';
+    
+    var notificacion = document.createElement('div');
+    notificacion.className = 'notificacion-exito';
+    notificacion.style.cssText = `
+        position: fixed !important;
+        top: 30px !important;
+        right: 30px !important;
+        background: white !important;
+        border-radius: 16px !important;
+        padding: 24px 30px !important;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2) !important;
+        z-index: 99999999 !important;
+        max-width: 420px !important;
+        border-left: 6px solid #22c55e !important;
+        animation: slideInRight 0.5s ease !important;
+        display: flex !important;
+        align-items: flex-start !important;
+        gap: 16px !important;
+    `;
+    
+    notificacion.innerHTML = `
+        <div style="font-size: 40px; line-height: 1;">${icono}</div>
+        <div style="flex: 1;">
+            <div style="font-weight: 800; font-size: 18px; color: #0f172a; margin-bottom: 4px;">${mensaje}</div>
+            <div style="color: #64748b; font-size: 14px; margin-bottom: 6px;">El producto se ha guardado exitosamente.</div>
+            <div style="background: #f1f5f9; padding: 6px 14px; border-radius: 6px; display: inline-block; font-family: monospace; font-weight: 700; font-size: 14px; color: #0f172a;">
+                Código: ${codigo}
+            </div>
+        </div>
+        <button onclick="this.parentElement.remove()" style="
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #94a3b8;
+            padding: 0;
+            line-height: 1;
+        ">✕</button>
+    `;
+    
+    document.body.appendChild(notificacion);
+    
+    // Auto-cerrar después de 4 segundos y redirigir
+    setTimeout(function() {
+        if (notificacion.parentNode) {
+            notificacion.style.animation = 'slideOutRight 0.3s ease forwards';
+            setTimeout(function() {
+                notificacion.remove();
+                window.location.href = '/productos/base-datos';
+            }, 300);
+        }
+    }, 4000);
+}
 
 /**
  * ============================================================
- * VALIDAR Y GUARDAR - VERSIÓN CORREGIDA
+ * NOTIFICACIÓN DE ERROR - BONITA
+ * ============================================================
+ */
+function mostrarNotificacionError(mensaje) {
+    // Eliminar notificaciones anteriores
+    var notificacionesAnteriores = document.querySelectorAll('.notificacion-exito, .notificacion-error');
+    for (var i = 0; i < notificacionesAnteriores.length; i++) {
+        notificacionesAnteriores[i].remove();
+    }
+    
+    var notificacion = document.createElement('div');
+    notificacion.className = 'notificacion-error';
+    notificacion.style.cssText = `
+        position: fixed !important;
+        top: 30px !important;
+        right: 30px !important;
+        background: white !important;
+        border-radius: 16px !important;
+        padding: 24px 30px !important;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2) !important;
+        z-index: 99999999 !important;
+        max-width: 420px !important;
+        border-left: 6px solid #dc2626 !important;
+        animation: slideInRight 0.5s ease !important;
+        display: flex !important;
+        align-items: flex-start !important;
+        gap: 16px !important;
+    `;
+    
+    notificacion.innerHTML = `
+        <div style="font-size: 40px; line-height: 1;">❌</div>
+        <div style="flex: 1;">
+            <div style="font-weight: 800; font-size: 18px; color: #dc2626; margin-bottom: 4px;">Error al guardar</div>
+            <div style="color: #64748b; font-size: 14px; margin-bottom: 6px;">${mensaje}</div>
+        </div>
+        <button onclick="this.parentElement.remove()" style="
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #94a3b8;
+            padding: 0;
+            line-height: 1;
+        ">✕</button>
+    `;
+    
+    document.body.appendChild(notificacion);
+    
+    // Auto-cerrar después de 5 segundos
+    setTimeout(function() {
+        if (notificacion.parentNode) {
+            notificacion.style.animation = 'slideOutRight 0.3s ease forwards';
+            setTimeout(function() {
+                notificacion.remove();
+            }, 300);
+        }
+    }, 5000);
+}
+
+/**
+ * ============================================================
+ * VALIDAR Y GUARDAR - VERSIÓN CORREGIDA CON NOTIFICACIONES BONITAS
  * ============================================================
  */
 
@@ -976,7 +1124,6 @@ function validarYGuardar(event) {
     for (var [key, value] of formData.entries()) {
         // ✅ SI ES EDICIÓN, NO ENVIAR EL CÓDIGO (se mantiene el existente)
         if (key === 'codigo' && productoId) {
-            // En edición, no enviamos el código para que el backend lo mantenga
             continue;
         }
         data[key] = value;
@@ -1019,24 +1166,24 @@ function validarYGuardar(event) {
         btnGuardar.innerHTML = textoOriginal;
         
         if (result.success) {
-            var mensaje = productoId ? '✅ Producto actualizado correctamente' : '✅ Producto creado correctamente';
-            alert(mensaje + '\nCódigo: ' + (result.data?.codigo || 'N/A'));
-            window.location.href = '/productos/base-datos';
+            // ✅ NOTIFICACIÓN BONITA EN VEZ DE ALERT
+            var codigo = result.data?.codigo || 'N/A';
+            mostrarNotificacionExito(!!productoId, codigo);
         } else {
-            alert('❌ Error: ' + (result.error || 'Error desconocido'));
+            // ✅ NOTIFICACIÓN DE ERROR BONITA
+            mostrarNotificacionError(result.error || 'Error desconocido');
         }
     })
     .catch(function(error) {
         console.error('❌ Error:', error);
         btnGuardar.classList.remove('loading');
         btnGuardar.innerHTML = textoOriginal;
-        alert('❌ Error al guardar: ' + error.message);
+        mostrarNotificacionError(error.message || 'Error al comunicarse con el servidor');
     });
     
     return true;
 }
 
- 
 /**
  * ============================================================
  * LIMPIAR ERRORES VISUALES
@@ -1290,6 +1437,8 @@ window.calcularMargen = calcularMargen;
 window.actualizarEstadoChips = actualizarEstadoChips;
 window.personalizar = personalizar;
 window.limpiarErrores = limpiarErrores;
+window.mostrarNotificacionExito = mostrarNotificacionExito;
+window.mostrarNotificacionError = mostrarNotificacionError;
 </script>
 
 </body>
