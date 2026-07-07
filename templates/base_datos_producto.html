@@ -6,21 +6,23 @@
     </div>
 </div>
 
-<div class="bd-toolbar">
-    <div class="bd-search-wrap">
+<!-- BARRA DE HERRAMIENTAS COMPACTA -->
+<div class="bd-toolbar-compact">
+    <div class="bd-search-wrap-compact">
         <i class="bi bi-search"></i>
-        <input id="bdSearchInput" type="text" placeholder="Buscar por nombre, código, modelo, marca, categoría..." />
+        <input id="bdSearchInput" type="text" placeholder="Buscar..." />
     </div>
-    <button class="btn" type="button" onclick="bdExportarExcel()"><i class="bi bi-file-earmark-excel" style="color:var(--ok)"></i> Exportar Excel</button>
-    <button class="btn" type="button" onclick="bdLimpiarFiltros()"><i class="bi bi-funnel"></i> Limpiar filtros</button>
-    <button class="btn primary" type="button" onclick="window.location.href='/productos/nuevo'"><i class="bi bi-plus-lg"></i> Crear nuevo producto</button>
+    <div class="bd-actions-compact">
+        <button class="btn-compact" type="button" onclick="bdExportarExcel()"><i class="bi bi-file-earmark-excel" style="color:var(--ok)"></i></button>
+        <button class="btn-compact" type="button" onclick="bdLimpiarFiltros()"><i class="bi bi-funnel"></i></button>
+    </div>
 </div>
 
-<div class="bd-filters">
-    <div class="bd-filter-field">
-        <label for="bdCategoriaFilter">Categoría principal</label>
+<!-- FILTROS COMPACTOS EN UNA SOLA FILA -->
+<div class="bd-filters-compact">
+    <div class="bd-filter-group">
         <select id="bdCategoriaFilter">
-            <option value="">Todas</option>
+            <option value="">Categoría</option>
             <option>Seguridad Industrial</option>
             <option>Indumentaria de Oficina</option>
             <option>Tecnología</option>
@@ -30,10 +32,9 @@
             <option>Iluminación</option>
         </select>
     </div>
-    <div class="bd-filter-field">
-        <label for="bdSubcategoriaFilter">Subcategoría</label>
+    <div class="bd-filter-group">
         <select id="bdSubcategoriaFilter">
-            <option value="">Todas</option>
+            <option value="">Subcategoría</option>
             <option>Señalización y tráfico</option>
             <option>Chalecos</option>
             <option>Taladros</option>
@@ -45,10 +46,9 @@
             <option>Calzado</option>
         </select>
     </div>
-    <div class="bd-filter-field">
-        <label for="bdMarcaFilter">Marca</label>
+    <div class="bd-filter-group">
         <select id="bdMarcaFilter">
-            <option value="">Todas</option>
+            <option value="">Marca</option>
             <option>KCF Safety</option>
             <option>EasyWon</option>
             <option>Borweg</option>
@@ -61,10 +61,9 @@
             <option>Descartame</option>
         </select>
     </div>
-    <div class="bd-filter-field">
-        <label for="bdModeloFilter">Modelo</label>
+    <div class="bd-filter-group">
         <select id="bdModeloFilter">
-            <option value="">Todos</option>
+            <option value="">Modelo</option>
             <option>CS-75</option>
             <option>SR-8891</option>
             <option>TAL-850M</option>
@@ -77,10 +76,9 @@
             <option>NIT-010</option>
         </select>
     </div>
-    <div class="bd-filter-field">
-        <label for="bdEstadoFilter">Estado</label>
+    <div class="bd-filter-group">
         <select id="bdEstadoFilter">
-            <option value="">Todos</option>
+            <option value="">Estado</option>
             <option value="activo">🟢 Activo</option>
             <option value="inactivo">⚪ Inactivo</option>
             <option value="bajo_pedido">🟠 Bajo pedido</option>
@@ -169,25 +167,151 @@
 
 <style>
 /* ============================================================
-   ESTILOS PARA BASE DE DATOS DE PRODUCTOS
+   ESTILOS COMPACTOS PARA BASE DE DATOS DE PRODUCTOS
    ============================================================ */
 
-/* Contenedor de vista */
+/* ============================================================
+   TOOLBAR COMPACTA
+   ============================================================ */
+.bd-toolbar-compact {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+
+.bd-search-wrap-compact {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 4px 10px;
+    transition: all 0.2s ease;
+    min-width: 150px;
+}
+
+.bd-search-wrap-compact:focus-within {
+    border-color: #0f172a;
+    box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
+}
+
+.bd-search-wrap-compact i {
+    color: #94a3b8;
+    font-size: 14px;
+    margin-right: 8px;
+}
+
+.bd-search-wrap-compact input {
+    border: none;
+    padding: 6px 0;
+    font-size: 13px;
+    width: 100%;
+    outline: none;
+    background: transparent;
+    color: #0f172a;
+}
+
+.bd-search-wrap-compact input::placeholder {
+    color: #94a3b8;
+}
+
+.bd-actions-compact {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.btn-compact {
+    padding: 6px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: white;
+    color: #475569;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.btn-compact:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+}
+
+/* ============================================================
+   FILTROS COMPACTOS - UNA SOLA FILA
+   ============================================================ */
+.bd-filters-compact {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 6px 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+}
+
+.bd-filter-group {
+    flex: 1;
+    min-width: 100px;
+}
+
+.bd-filter-group select {
+    width: 100%;
+    padding: 5px 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: white;
+    font-size: 12px;
+    font-weight: 500;
+    color: #0f172a;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    height: 32px;
+}
+
+.bd-filter-group select:focus {
+    border-color: #0f172a;
+    box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.06);
+}
+
+.bd-filter-group select option {
+    padding: 4px;
+}
+
+/* ============================================================
+   VISTA TOGGLE
+   ============================================================ */
 .bd-view-toggle {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 14px;
-    padding: 6px;
+    gap: 6px;
+    margin-bottom: 12px;
+    padding: 4px 8px;
     background: #f1f5f9;
-    border-radius: 10px;
+    border-radius: 8px;
     border: 1px solid #e2e8f0;
 }
 
 .bd-view-toggle .view-btn {
-    padding: 6px 18px;
+    padding: 5px 14px;
     border: none;
-    border-radius: 7px;
+    border-radius: 6px;
     font-weight: 700;
     font-size: 12px;
     cursor: pointer;
@@ -213,20 +337,17 @@
 .bd-view-toggle .bd-count {
     margin-left: auto;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 12px;
     color: #64748b;
 }
 
 /* ============================================================
    COLUMNAS - PRINCIPAL VS COMPLETA
    ============================================================ */
-
-/* Ocultar columnas en vista principal */
 .col-oculta {
     display: none !important;
 }
 
-/* Mostrar columnas en vista completa */
 .vista-completa .col-oculta {
     display: table-cell !important;
 }
@@ -234,11 +355,10 @@
 /* ============================================================
    TABLA
    ============================================================ */
-
 .bd-table-card {
     background: white;
     border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border-radius: 10px;
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
@@ -262,17 +382,18 @@
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    padding: 10px 12px;
+    padding: 8px 10px;
     text-align: left;
     border-bottom: 2px solid #e2e8f0;
     white-space: nowrap;
 }
 
 .bd-table tbody td {
-    padding: 8px 12px;
+    padding: 6px 10px;
     border-bottom: 1px solid #f1f5f9;
     vertical-align: middle;
     color: #0f172a;
+    font-size: 12px;
 }
 
 .bd-table tbody tr:hover td {
@@ -282,32 +403,32 @@
 /* ============================================================
    ANCHOS DE COLUMNAS (PRINCIPAL)
    ============================================================ */
-.bd-col-item { width: 50px; text-align: center; }
-.bd-col-code { width: 120px; }
-.bd-col-desc { width: 180px; }
-.bd-col-model { width: 120px; }
-.bd-col-brand { width: 140px; }
-.bd-col-cat { width: 160px; }
-.bd-col-status { width: 110px; }
-.bd-col-actions { width: 130px; text-align: center; }
+.bd-col-item { width: 40px; text-align: center; }
+.bd-col-code { width: 100px; }
+.bd-col-desc { width: 150px; }
+.bd-col-model { width: 100px; }
+.bd-col-brand { width: 120px; }
+.bd-col-cat { width: 130px; }
+.bd-col-status { width: 100px; }
+.bd-col-actions { width: 110px; text-align: center; }
 
 /* Anchos para columnas ocultas (completa) */
-.bd-col-subcat { width: 150px; }
-.bd-col-weight { width: 80px; }
-.bd-col-transport { width: 120px; }
-.bd-col-cost { width: 110px; }
-.bd-col-sale { width: 110px; }
-.bd-col-obs { width: 180px; }
-.bd-col-prov-pres { width: 150px; }
-.bd-col-sale-pres { width: 130px; }
-.bd-col-min-sale { width: 90px; }
-.bd-col-barras { width: 140px; }
-.bd-col-volumen { width: 90px; }
-.bd-col-origen { width: 110px; }
-.bd-col-tiempo { width: 120px; }
-.bd-col-abast { width: 140px; }
-.bd-col-stock-min { width: 90px; }
-.bd-col-desc-larga { width: 200px; }
+.bd-col-subcat { width: 130px; }
+.bd-col-weight { width: 70px; }
+.bd-col-transport { width: 100px; }
+.bd-col-cost { width: 90px; }
+.bd-col-sale { width: 90px; }
+.bd-col-obs { width: 160px; }
+.bd-col-prov-pres { width: 130px; }
+.bd-col-sale-pres { width: 110px; }
+.bd-col-min-sale { width: 80px; }
+.bd-col-barras { width: 120px; }
+.bd-col-volumen { width: 80px; }
+.bd-col-origen { width: 100px; }
+.bd-col-tiempo { width: 100px; }
+.bd-col-abast { width: 120px; }
+.bd-col-stock-min { width: 80px; }
+.bd-col-desc-larga { width: 180px; }
 
 /* ============================================================
    ESTADOS
@@ -315,16 +436,16 @@
 .bd-status {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 3px 12px;
+    gap: 5px;
+    padding: 2px 10px;
     border-radius: 20px;
     font-size: 11px;
     font-weight: 700;
 }
 
 .bd-status .bd-dot {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
     border-radius: 50%;
     display: inline-block;
 }
@@ -352,9 +473,9 @@
     font-weight: 800;
     color: #0f172a;
     background: #f1f5f9;
-    padding: 2px 10px;
+    padding: 2px 8px;
     border-radius: 4px;
-    font-size: 12px;
+    font-size: 11px;
 }
 
 /* ============================================================
@@ -362,15 +483,15 @@
    ============================================================ */
 .row-actions {
     display: flex;
-    gap: 4px;
+    gap: 3px;
     justify-content: center;
 }
 
 .row-actions .btn-action {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
     border: none;
-    border-radius: 6px;
+    border-radius: 5px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -378,7 +499,7 @@
     transition: all 0.2s ease;
     background: transparent;
     color: #64748b;
-    font-size: 14px;
+    font-size: 13px;
 }
 
 .row-actions .btn-action:hover {
@@ -408,38 +529,38 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 16px;
+    padding: 10px 14px;
     border-top: 1px solid #e2e8f0;
     background: #fafbfc;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
 }
 
 .bd-footer .bd-count {
     font-weight: 600;
-    font-size: 13px;
+    font-size: 12px;
     color: #64748b;
 }
 
 .pagination {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
 }
 
 .page-btn {
-    min-width: 34px;
-    height: 34px;
+    min-width: 30px;
+    height: 30px;
     border: 1px solid #e2e8f0;
     background: white;
-    border-radius: 6px;
+    border-radius: 5px;
     color: #0f172a;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 10px;
+    padding: 0 8px;
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -456,14 +577,14 @@
 }
 
 .page-select {
-    height: 34px;
-    min-width: 120px;
+    height: 30px;
+    min-width: 100px;
     border: 1px solid #e2e8f0;
-    border-radius: 6px;
+    border-radius: 5px;
     background: white;
-    padding: 0 8px;
+    padding: 0 6px;
     font-weight: 600;
-    font-size: 12px;
+    font-size: 11px;
     color: #0f172a;
     outline: none;
     cursor: pointer;
@@ -473,19 +594,44 @@
    SCROLL NOTE
    ============================================================ */
 .scroll-note {
-    margin-top: 10px;
-    font-size: 12px;
+    margin-top: 8px;
+    font-size: 11px;
     font-weight: 500;
     color: #94a3b8;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
 }
 
 /* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 768px) {
+    .bd-toolbar-compact {
+        flex-wrap: wrap;
+    }
+    
+    .bd-actions-compact {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    
+    .bd-filters-compact {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding: 4px 8px;
+    }
+    
+    .bd-filter-group {
+        min-width: 80px;
+    }
+    
+    .bd-filter-group select {
+        font-size: 11px;
+        padding: 4px 6px;
+        height: 28px;
+    }
+    
     .bd-view-toggle {
         flex-wrap: wrap;
     }
