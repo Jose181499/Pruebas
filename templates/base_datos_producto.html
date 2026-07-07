@@ -188,33 +188,38 @@ window.bdPaginaActual = 1;
 window.bdPorPagina = 20;
 
 // ============================================================
-// CAMBIAR VISTA - VERSIÓN CORREGIDA
+// CAMBIAR VISTA - VERSIÓN CORREGIDA DEFINITIVA
 // ============================================================
 function cambiarVista(vista) {
     console.log('🔄 Cambiando a vista:', vista);
     window.bdVistaActual = vista;
     
-    // Actualizar botones del footer
+    // ✅ ACTUALIZAR BOTONES DEL FOOTER - ELIMINAR TODAS LAS CLASES ACTIVE PRIMERO
     var viewPrincipal = document.getElementById('viewPrincipalFooter');
     var viewCompleta = document.getElementById('viewCompletaFooter');
     
+    // Eliminar clase active de ambos
     if (viewPrincipal) {
-        if (vista === 'principal') {
-            viewPrincipal.classList.add('active');
-        } else {
-            viewPrincipal.classList.remove('active');
-        }
+        viewPrincipal.classList.remove('active');
     }
-    
     if (viewCompleta) {
-        if (vista === 'completa') {
+        viewCompleta.classList.remove('active');
+    }
+    
+    // Agregar clase active al botón correspondiente
+    if (vista === 'principal') {
+        if (viewPrincipal) {
+            viewPrincipal.classList.add('active');
+            console.log('✅ Botón Principal activado');
+        }
+    } else {
+        if (viewCompleta) {
             viewCompleta.classList.add('active');
-        } else {
-            viewCompleta.classList.remove('active');
+            console.log('✅ Botón Completa activado');
         }
     }
     
-    // FORZAR LA CLASE EN EL CONTENEDOR
+    // FORZAR LA CLASE EN EL CONTENEDOR DE LA TABLA
     var container = document.getElementById('tablaContainer');
     if (container) {
         if (vista === 'completa') {
@@ -508,7 +513,6 @@ function verProducto(id) {
         .then(function(data) {
             if (data.success && data.data) {
                 var p = data.data;
-                // Mostrar modal con los datos del producto
                 alert('Producto: ' + (p.descripcion || p.codigo) + '\nCódigo: ' + p.codigo + '\nModelo: ' + p.modelo + '\nMarca: ' + p.marca);
             } else {
                 if (typeof mostrarNotificacion === 'function') {
@@ -883,10 +887,6 @@ window.bdExportarExcel = bdExportarExcel;
 .bd-view-toggle-footer .view-btn-footer.active .view-number {
     background: var(--empresa, #EF233C);
     color: white;
-}
-
-.bd-view-toggle-footer .view-btn-footer i {
-    font-size: 13px;
 }
 
 /* ============================================================
