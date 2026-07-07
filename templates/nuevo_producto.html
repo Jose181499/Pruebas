@@ -903,6 +903,12 @@
  * ============================================================
  */
 
+/**
+ * ============================================================
+ * VALIDAR Y GUARDAR - VERSIÓN CORREGIDA
+ * ============================================================
+ */
+
 function validarYGuardar(event) {
     if (event) event.preventDefault();
     
@@ -943,7 +949,6 @@ function validarYGuardar(event) {
     console.log('📋 Errores encontrados:', errores);
     
     if (errores.length > 0) {
-        // ✅ USAR LA NUEVA NOTIFICACIÓN INDEPENDIENTE
         window.mostrarNotificacionIndependiente(errores);
         
         if (primerCampoError) {
@@ -956,10 +961,82 @@ function validarYGuardar(event) {
     }
     
     console.log('✅ Todos los campos completos, enviando...');
-    document.getElementById('formNuevoProducto').submit();
+    
+    // ✅ OBTENER DATOS DEL FORMULARIO
+    var form = document.getElementById('formNuevoProducto');
+    var formData = new FormData(form);
+    
+    // ✅ DETECTAR SI ES EDICIÓN O CREACIÓN
+    var productoId = document.querySelector('input[name="producto_id"]')?.value;
+    var url = productoId ? '/productos/api/productos/' + productoId : '/productos/api/productos';
+    var method = productoId ? 'PUT' : 'POST';
+    
+    // ✅ CONVERTIR FORM A JSON
+    var data = {};
+    for (var [key, value] of formData.entries()) {
+        // ✅ SI ES EDICIÓN, NO ENVIAR EL CÓDIGO (se mantiene el existente)
+        if (key === 'codigo' && productoId) {
+            // En edición, no enviamos el código para que el backend lo mantenga
+            continue;
+        }
+        data[key] = value;
+    }
+    
+    // ✅ SI ES EDICIÓN, AGREGAR EL ID EN EL BODY
+    if (productoId) {
+        data.id = productoId;
+    }
+    
+    console.log('📦 URL:', url);
+    console.log('📦 Método:', method);
+    console.log('📦 Datos:', data);
+    console.log('📦 ¿Es edición?', !!productoId);
+    
+    // Botón de carga
+    var btnGuardar = document.getElementById('btnGuardar');
+    var textoOriginal = btnGuardar.innerHTML;
+    btnGuardar.classList.add('loading');
+    btnGuardar.innerHTML = '⏳ Guardando...';
+    
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(function(response) {
+        if (!response.ok) {
+            return response.json().then(function(err) {
+                throw new Error(err.error || 'Error al guardar');
+            });
+        }
+        return response.json();
+    })
+    .then(function(result) {
+        console.log('📦 Resultado:', result);
+        btnGuardar.classList.remove('loading');
+        btnGuardar.innerHTML = textoOriginal;
+        
+        if (result.success) {
+            var mensaje = productoId ? '✅ Producto actualizado correctamente' : '✅ Producto creado correctamente';
+            alert(mensaje + '\nCódigo: ' + (result.data?.codigo || 'N/A'));
+            window.location.href = '/productos/base-datos';
+        } else {
+            alert('❌ Error: ' + (result.error || 'Error desconocido'));
+        }
+    })
+    .catch(function(error) {
+        console.error('❌ Error:', error);
+        btnGuardar.classList.remove('loading');
+        btnGuardar.innerHTML = textoOriginal;
+        alert('❌ Error al guardar: ' + error.message);
+    });
+    
     return true;
 }
 
+ 
 /**
  * ============================================================
  * LIMPIAR ERRORES VISUALES

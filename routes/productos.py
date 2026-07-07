@@ -358,13 +358,17 @@ def update_producto(producto_id):
     try:
         data = request.get_json()
         
-        existente = db_query("SELECT id FROM productos WHERE id = %s AND activo = TRUE", (producto_id,))
+        # ✅ VERIFICAR QUE EL PRODUCTO EXISTE
+        existente = db_query("SELECT id, codigo FROM productos WHERE id = %s AND activo = TRUE", (producto_id,))
         if not existente:
             return jsonify({'success': False, 'error': 'Producto no encontrado'}), 404
         
+        # ✅ MANTENER EL CÓDIGO EXISTENTE (no actualizar)
+        codigo_existente = existente[0]['codigo']
+        
         db_execute("""
             UPDATE productos SET
-                codigo = %s, descripcion = %s, descripcion_larga = %s,
+                descripcion = %s, descripcion_larga = %s,
                 modelo = %s, marca = %s, familia = %s, categoria_derivada = %s,
                 unidad = %s, peso = %s, volumen = %s,
                 observaciones = %s, transporte = %s,
@@ -377,7 +381,6 @@ def update_producto(producto_id):
                 updated_at = NOW()
             WHERE id = %s
         """, (
-            data.get('codigo'),
             data.get('descripcion'),
             data.get('descripcion_larga', ''),
             data.get('modelo'),
@@ -406,12 +409,15 @@ def update_producto(producto_id):
         
         return jsonify({
             'success': True,
-            'message': 'Producto actualizado exitosamente'
+            'message': 'Producto actualizado exitosamente',
+            'data': {'codigo': codigo_existente}
         })
         
     except Exception as e:
         print(f"❌ Error en update_producto: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
 
 @productos_bp.route('/api/productos/<int:producto_id>', methods=['DELETE'])
 @login_required
