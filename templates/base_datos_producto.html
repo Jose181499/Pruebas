@@ -93,7 +93,7 @@
 <!-- ============================================================ -->
 <div class="bd-table-card" id="tablaContainer">
     <div class="bd-table-scroll">
-        <table class="bd-table">
+        <table class="bd-table" id="bdTable">
             <thead>
                 <tr>
                     <!-- COLUMNAS SIEMPRE VISIBLES (PRINCIPAL) -->
@@ -173,6 +173,61 @@
     </div>
 </div>
 <div class="scroll-note"><i class="bi bi-arrows-expand"></i> Las columnas complementarias se visualizan desplazando la barra horizontal de la tabla.</div>
+
+<script>
+// ============================================================
+// FUNCIÓN PARA CAMBIAR VISTA
+// ============================================================
+function cambiarVista(vista) {
+    // Obtener la tabla
+    const tabla = document.getElementById('bdTable');
+    const tablaContainer = document.getElementById('tablaContainer');
+    
+    // Obtener los botones
+    const btnPrincipal = document.getElementById('viewPrincipal');
+    const btnCompleta = document.getElementById('viewCompleta');
+    
+    // Remover clase active de ambos botones
+    btnPrincipal.classList.remove('active');
+    btnCompleta.classList.remove('active');
+    
+    // Remover clase vista-completa del contenedor
+    tablaContainer.classList.remove('vista-completa');
+    
+    if (vista === 'principal') {
+        // Activar vista principal
+        btnPrincipal.classList.add('active');
+        tablaContainer.classList.remove('vista-completa');
+    } else {
+        // Activar vista completa
+        btnCompleta.classList.add('active');
+        tablaContainer.classList.add('vista-completa');
+    }
+}
+
+// ============================================================
+// FUNCIONES DE EJEMPLO PARA PAGINACIÓN Y FILTROS
+// ============================================================
+function bdExportarExcel() {
+    console.log('Exportar Excel');
+}
+
+function bdLimpiarFiltros() {
+    console.log('Limpiar filtros');
+}
+
+function bdPaginaAnterior() {
+    console.log('Página anterior');
+}
+
+function bdPaginaSiguiente() {
+    console.log('Página siguiente');
+}
+
+function bdCambiarPorPagina() {
+    console.log('Cambiar por página');
+}
+</script>
 
 <style>
 /* ============================================================
@@ -378,7 +433,7 @@
     display: none !important;
 }
 
-.vista-completa .col-oculta {
+#tablaContainer.vista-completa .col-oculta {
     display: table-cell !important;
 }
 
