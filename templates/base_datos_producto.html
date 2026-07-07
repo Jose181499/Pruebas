@@ -6,9 +6,9 @@
     </div>
 </div>
 
-<!-- BARRA DE HERRAMIENTAS COMPACTA -->
+<!-- BARRA DE HERRAMIENTAS COMPACTA - CON BÚSQUEDA MÁS ANGOSTA -->
 <div class="bd-toolbar-compact">
-    <div class="bd-search-wrap-compact">
+    <div class="bd-search-wrap-compact" style="max-width: 280px;">
         <i class="bi bi-search"></i>
         <input id="bdSearchInput" type="text" placeholder="Buscar..." />
     </div>
@@ -663,7 +663,7 @@ window.bdExportarExcel = bdExportarExcel;
    ============================================================ */
 
 /* ============================================================
-   TOOLBAR COMPACTA
+   TOOLBAR COMPACTA - CON BÚSQUEDA MÁS ANGOSTA
    ============================================================ */
 .bd-toolbar-compact {
     display: flex;
@@ -677,7 +677,7 @@ window.bdExportarExcel = bdExportarExcel;
 }
 
 .bd-search-wrap-compact {
-    flex: 1;
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
     background: white;
@@ -685,7 +685,8 @@ window.bdExportarExcel = bdExportarExcel;
     border-radius: 8px;
     padding: 4px 10px;
     transition: all 0.2s ease;
-    min-width: 150px;
+    max-width: 240px;
+    min-width: 160px;
 }
 
 .bd-search-wrap-compact:focus-within {
@@ -711,6 +712,7 @@ window.bdExportarExcel = bdExportarExcel;
 
 .bd-search-wrap-compact input::placeholder {
     color: #94a3b8;
+    font-size: 12px;
 }
 
 .bd-actions-compact {
@@ -1153,6 +1155,12 @@ window.bdExportarExcel = bdExportarExcel;
 @media (max-width: 768px) {
     .bd-toolbar-compact {
         flex-wrap: wrap;
+    }
+    
+    .bd-search-wrap-compact {
+        flex: 1;
+        max-width: none;
+        min-width: 120px;
     }
     
     .bd-actions-compact {
