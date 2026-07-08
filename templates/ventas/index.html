@@ -1391,6 +1391,25 @@
     border-color: #FCA5A5;
 }
 
+/* Botón azul eléctrico para crear cotización */
+.btn-electric-blue {
+    background: #0EA5E9 !important;  /* Azul eléctrico */
+    color: #fff !important;
+    border: none !important;
+    box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35) !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-electric-blue:hover {
+    background: #0284C7 !important;  /* Azul más oscuro al hover */
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.5) !important;
+}
+
+.btn-electric-blue:active {
+    transform: translateY(0px) !important;
+    box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3) !important;
+}
 </style>
 {% endblock %}
 
@@ -1433,7 +1452,7 @@
                     <option value="No concretada">No concretada</option>
                 </select>
                 <button class="btn btn-secondary" onclick="exportData('cotizaciones')">📥 Exportar</button>
-                <button class="btn btn-primary btn-create" onclick="openCotizacionModal()">+ Nueva cotización</button>
+                <button class="btn btn-electric-blue btn-create" onclick="openCotizacionModal()">Crear Nueva cotización</button>
             </div>
         </div>
         <div class="table-scroll">
