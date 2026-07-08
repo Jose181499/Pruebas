@@ -480,9 +480,6 @@ function renderPedidos() {
     `).join('');
 }
 
-// ============================================================
-// VISTAS DE COTIZACIONES - PRINCIPAL / COMPLETA
-// ============================================================
 
 let cotizacionViewMode = 'principal'; // 'principal' o 'completa'
 
@@ -526,13 +523,15 @@ function renderCotizaciones() {
     const st = document.getElementById('qStatus')?.value || '';
     
     const list = cotizacionesData.filter(r => {
-        const searchStr = `${r.numero || ''} ${r.ruc || ''} ${r.razon || ''} ${r.descripcion || ''}`.toLowerCase();
+        const searchStr = `${r.numero || ''} ${r.ruc || ''} ${r.razon || ''} ${r.descripcion || ''} ${r.nota_cotizacion || ''}`.toLowerCase();
         const matchText = !q || searchStr.includes(q);
         const matchStatus = !st || r.estado === st;
         return matchText && matchStatus;
     });
     
+    // ============================================================
     // KPIs
+    // ============================================================
     const kpiContainer = document.getElementById('cotizacionesKPI');
     if (kpiContainer) {
         const total = cotizacionesData.length;
@@ -552,7 +551,7 @@ function renderCotizaciones() {
     
     const tbody = document.getElementById('qRows');
     const thead = document.getElementById('cotizacionesTableHead');
-    if (!tbody) return;
+    if (!tbody || !thead) return;
     
     // ============================================================
     // VISTA PRINCIPAL - Columnas resumidas
@@ -591,9 +590,9 @@ function renderCotizaciones() {
                 <td>${sd(r.ruc)}</td>
                 <td><span class="code-pill">${sd(r.cod_cliente)}</span></td>
                 <td class="left"><b>${sd(r.razon)}</b></td>
-                <td class="left">${sd(r.descripcion)}</td>
-                <td><b>${money(r.monto || 0)}</b></td>
-                <td>${sd(r.condicion)}</td>
+                <td class="left">${sd(r.descripcion || r.nota_cotizacion || 'Sin descripción')}</td>
+                <td><b>${money(r.monto || r.total || 0)}</b></td>
+                <td>${sd(r.condicion || r.condicion_pago || r.forma_pago)}</td>
                 <td>
                     <button class="kebab" onclick="showCotizacionMenu(event, ${r.id})">⋮</button>
                 </td>
@@ -603,7 +602,7 @@ function renderCotizaciones() {
     }
     
     // ============================================================
-    // VISTA COMPLETA - Todas las columnas
+    // VISTA COMPLETA - Todas las columnas (incluyendo Información Adicional)
     // ============================================================
     thead.innerHTML = `
         <tr>
@@ -627,20 +626,24 @@ function renderCotizaciones() {
             <th>Dirección Entrega</th>
             <th>Requerimiento</th>
             <th>Nota Comercial</th>
+            <th>Seguimiento</th>
+            <th>Motivo</th>
+            <th>Transporte</th>
+            <th>Parihuela</th>
+            <th>Nota Interna</th>
             <th># Productos</th>
             <th>Acciones</th>
         </tr>
     `;
     
     if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="22" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay cotizaciones que coincidan con los filtros</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="28" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay cotizaciones que coincidan con los filtros</td></tr>`;
         return;
     }
     
     tbody.innerHTML = list.map((r, i) => {
         const fecha = r.fecha || '';
         const fechaDisplay = fecha.replace(' ', '<br>');
-        // Contar productos (si está disponible)
         const numProductos = r.productos?.length || r.items?.length || 0;
         return `
         <tr>
@@ -651,19 +654,24 @@ function renderCotizaciones() {
             <td>${sd(r.ruc)}</td>
             <td><span class="code-pill">${sd(r.cod_cliente)}</span></td>
             <td class="left"><b>${sd(r.razon)}</b></td>
-            <td>${sd(r.contacto || r.cliente_contacto)}</td>
-            <td>${sd(r.telefono || r.cliente_telefono)}</td>
-            <td>${sd(r.email || r.cliente_email)}</td>
-            <td class="left">${sd(r.descripcion || r.nota_cotizacion)}</td>
+            <td>${sd(r.contacto || r.cliente_contacto || r.contacto_cliente)}</td>
+            <td>${sd(r.telefono || r.cliente_telefono || r.telefono_cliente)}</td>
+            <td>${sd(r.email || r.cliente_email || r.email_cliente)}</td>
+            <td class="left">${sd(r.descripcion || r.nota_cotizacion || r.notas || 'Sin descripción')}</td>
             <td><b>${money(r.subtotal || 0)}</b></td>
             <td><b>${money(r.igv || 0)}</b></td>
             <td><b>${money(r.monto || r.total || 0)}</b></td>
-            <td>${sd(r.condicion || r.condicion_pago)}</td>
+            <td>${sd(r.condicion || r.condicion_pago || r.forma_pago)}</td>
             <td>${sd(r.tiempo_entrega)}</td>
             <td>${sd(r.validez || r.validez_oferta)}</td>
             <td class="left">${sd(r.direccion_entrega)}</td>
             <td>${sd(r.requerimiento)}</td>
             <td class="left">${sd(r.nota_comercial || r.nota_cotizacion)}</td>
+            <td>${sd(r.seguimiento || 'Asesor')}</td>
+            <td>${sd(r.motivo || 'Proyecto nuevo')}</td>
+            <td>${sd(r.transporte || 'Seleccione')}</td>
+            <td>${sd(r.parihuela || 'Seleccione')}</td>
+            <td class="left">${sd(r.nota_interna)}</td>
             <td style="text-align:center; font-weight:900;">${numProductos}</td>
             <td>
                 <button class="kebab" onclick="showCotizacionMenu(event, ${r.id})">⋮</button>
