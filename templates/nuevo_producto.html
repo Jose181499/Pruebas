@@ -118,6 +118,130 @@
         }
         
         /* ============================================
+           MODAL DE CONFIRMACIÓN
+           ============================================ */
+        
+        /* Overlay del modal */
+        .modal-confirm-overlay {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: rgba(0, 0, 0, 0.7) !important;
+            display: none !important;
+            align-items: center !important;
+            justify-content: center !important;
+            z-index: 99999999 !important;
+            padding: 20px !important;
+            backdrop-filter: blur(8px) !important;
+            -webkit-backdrop-filter: blur(8px) !important;
+        }
+        
+        /* Contenido del modal */
+        .modal-confirm-content {
+            background: white !important;
+            border-radius: 20px !important;
+            max-width: 480px !important;
+            width: 100% !important;
+            padding: 40px !important;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.4) !important;
+            text-align: center !important;
+            position: relative !important;
+            animation: modalSlideIn 0.4s ease !important;
+            border-top: 6px solid #f59e0b !important;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-40px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        /* Icono de advertencia */
+        .modal-confirm-icon {
+            font-size: 64px !important;
+            margin-bottom: 12px !important;
+            display: block !important;
+        }
+        
+        /* Título del modal */
+        .modal-confirm-title {
+            margin: 0 0 8px 0 !important;
+            color: #1e293b !important;
+            font-size: 24px !important;
+            font-weight: 800 !important;
+        }
+        
+        /* Subtítulo del modal */
+        .modal-confirm-subtitle {
+            color: #64748b !important;
+            font-size: 15px !important;
+            margin-bottom: 24px !important;
+            line-height: 1.6 !important;
+        }
+        
+        /* Contenedor de botones del modal */
+        .modal-confirm-buttons {
+            display: flex !important;
+            gap: 12px !important;
+            justify-content: center !important;
+            flex-wrap: wrap !important;
+        }
+        
+        /* Botón "Sí, guardar" */
+        .modal-btn-confirm {
+            background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+            color: white !important;
+            border: none !important;
+            padding: 14px 36px !important;
+            border-radius: 12px !important;
+            font-weight: 700 !important;
+            font-size: 16px !important;
+            cursor: pointer !important;
+            transition: all 0.3s !important;
+            box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4) !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            min-width: 140px !important;
+            justify-content: center !important;
+        }
+        
+        .modal-btn-confirm:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 30px rgba(245, 158, 11, 0.6) !important;
+        }
+        
+        /* Botón "No, cancelar" */
+        .modal-btn-cancel {
+            background: #e2e8f0 !important;
+            color: #475569 !important;
+            border: none !important;
+            padding: 14px 36px !important;
+            border-radius: 12px !important;
+            font-weight: 700 !important;
+            font-size: 16px !important;
+            cursor: pointer !important;
+            transition: all 0.3s !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            min-width: 140px !important;
+            justify-content: center !important;
+        }
+        
+        .modal-btn-cancel:hover {
+            background: #cbd5e1 !important;
+            transform: translateY(-2px) !important;
+        }
+        
+        /* ============================================
            NOTIFICACIÓN FLOTANTE INDEPENDIENTE
            ============================================ */
         
@@ -471,9 +595,36 @@
         <button class="btn outline" type="button" onclick="limpiarFormulario()">
             <i class="bi bi-x-circle"></i> Cancelar
         </button>
-        <button class="btn primary" id="btnGuardar" type="button" onclick="validarYGuardar(event)">
+        <button class="btn primary" id="btnGuardar" type="button" onclick="mostrarModalConfirmacion(event)">
             <i class="bi bi-save"></i> {% if editando %}Actualizar Producto{% else %}Guardar Nuevo Producto{% endif %}
         </button>
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- MODAL DE CONFIRMACIÓN                        -->
+<!-- ============================================ -->
+<div class="modal-confirm-overlay" id="modalConfirmacion">
+    <div class="modal-confirm-content">
+        <span class="modal-confirm-icon">⚠️</span>
+        <h3 class="modal-confirm-title">¿Estás seguro?</h3>
+        <p class="modal-confirm-subtitle">
+            {% if editando %}
+                ¿Estás seguro de que deseas actualizar este producto?<br>
+                <small style="color:#94a3b8;">Los cambios se aplicarán inmediatamente.</small>
+            {% else %}
+                ¿Estás seguro de que deseas guardar este nuevo producto?<br>
+                <small style="color:#94a3b8;">El producto será registrado en la base de datos.</small>
+            {% endif %}
+        </p>
+        <div class="modal-confirm-buttons">
+            <button class="modal-btn-cancel" onclick="cerrarModalConfirmacion()">
+                ✕ No, cancelar
+            </button>
+            <button class="modal-btn-confirm" id="btnConfirmarGuardar" onclick="confirmarGuardar()">
+                ✅ Sí, {% if editando %}actualizar{% else %}guardar{% endif %}
+            </button>
+        </div>
     </div>
 </div>
 
@@ -773,11 +924,187 @@
 <!-- SCRIPT DE VALIDACIÓN Y NOTIFICACIÓN         -->
 <!-- ============================================ -->
 <script>
-/**
- * ============================================================
- * 🚨 SISTEMA DE NOTIFICACIÓN INDEPENDIENTE
- * ============================================================
- */
+// ============================================================
+// 🟡 MODAL DE CONFIRMACIÓN
+// ============================================================
+
+let pendingSave = false;
+let modalAbierto = false;
+
+function mostrarModalConfirmacion(event) {
+    if (event) event.preventDefault();
+    
+    console.log('🟡 Mostrando modal de confirmación...');
+    
+    // Primero validar que los campos estén completos
+    var esValido = validarCampos();
+    if (!esValido) {
+        return false;
+    }
+    
+    // Mostrar modal
+    var modal = document.getElementById('modalConfirmacion');
+    if (modal) {
+        modal.style.display = 'flex';
+        modalAbierto = true;
+        
+        // Actualizar texto del botón según sea edición o creación
+        var btnConfirmar = document.getElementById('btnConfirmarGuardar');
+        var esEdicion = document.querySelector('input[name="producto_id"]') !== null;
+        if (btnConfirmar) {
+            btnConfirmar.innerHTML = esEdicion ? '✅ Sí, actualizar' : '✅ Sí, guardar';
+        }
+        
+        console.log('✅ Modal mostrado');
+    }
+}
+
+function cerrarModalConfirmacion() {
+    var modal = document.getElementById('modalConfirmacion');
+    if (modal) {
+        modal.style.display = 'none';
+        modalAbierto = false;
+        console.log('🔴 Modal cerrado');
+    }
+}
+
+function confirmarGuardar() {
+    console.log('✅ Confirmado: guardando producto...');
+    cerrarModalConfirmacion();
+    
+    // Ejecutar el guardado real
+    ejecutarGuardado();
+}
+
+// ============================================================
+// 🟢 VALIDACIÓN DE CAMPOS
+// ============================================================
+
+function validarCampos() {
+    console.log('🟢 Validando formulario...');
+    
+    // Limpiar errores anteriores
+    limpiarErrores();
+    
+    var campos = [
+        { id: 'nombreProducto', nombre: 'Nombre del producto', fieldId: 'field-nombre' },
+        { id: 'modeloProducto', nombre: 'Modelo', fieldId: 'field-modelo' },
+        { id: 'marcaProducto', nombre: 'Marca', fieldId: 'field-marca' },
+        { id: 'unidadMedida', nombre: 'Unidad de medida', fieldId: 'field-unidad' },
+        { id: 'categoriaProducto', nombre: 'Categoría', fieldId: 'field-categoria' },
+        { id: 'transporteReferencial', nombre: 'Transporte', fieldId: 'field-transporte' }
+    ];
+    
+    var errores = [];
+    var primerCampoError = null;
+    
+    for (var i = 0; i < campos.length; i++) {
+        var campo = campos[i];
+        var elemento = document.getElementById(campo.id);
+        var valor = elemento ? elemento.value.trim() : '';
+        
+        if (!valor || valor === '' || valor === 'Seleccione') {
+            errores.push(campo.nombre);
+            var fieldContainer = document.getElementById(campo.fieldId);
+            if (fieldContainer) {
+                fieldContainer.classList.add('error');
+            }
+            if (!primerCampoError) {
+                primerCampoError = elemento;
+            }
+        }
+    }
+    
+    console.log('📋 Errores encontrados:', errores);
+    
+    if (errores.length > 0) {
+        window.mostrarNotificacionIndependiente(errores);
+        
+        if (primerCampoError) {
+            setTimeout(function() {
+                primerCampoError.focus();
+                primerCampoError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+        }
+        return false;
+    }
+    
+    return true;
+}
+
+// ============================================================
+// 💾 EJECUTAR GUARDADO
+// ============================================================
+
+function ejecutarGuardado() {
+    console.log('💾 Ejecutando guardado...');
+    
+    var form = document.getElementById('formNuevoProducto');
+    var formData = new FormData(form);
+    
+    var productoId = document.querySelector('input[name="producto_id"]')?.value;
+    var url = productoId ? '/productos/api/productos/' + productoId : '/productos/api/productos';
+    var method = productoId ? 'PUT' : 'POST';
+    
+    var data = {};
+    for (var [key, value] of formData.entries()) {
+        if (key === 'codigo' && productoId) {
+            continue;
+        }
+        data[key] = value;
+    }
+    
+    if (productoId) {
+        data.id = productoId;
+    }
+    
+    console.log('📦 URL:', url);
+    console.log('📦 Método:', method);
+    console.log('📦 Datos:', data);
+    
+    var btnGuardar = document.getElementById('btnGuardar');
+    var textoOriginal = btnGuardar.innerHTML;
+    btnGuardar.classList.add('loading');
+    btnGuardar.innerHTML = '⏳ Guardando...';
+    
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(function(response) {
+        if (!response.ok) {
+            return response.json().then(function(err) {
+                throw new Error(err.error || 'Error al guardar');
+            });
+        }
+        return response.json();
+    })
+    .then(function(result) {
+        console.log('📦 Resultado:', result);
+        btnGuardar.classList.remove('loading');
+        btnGuardar.innerHTML = textoOriginal;
+        
+        if (result.success) {
+            var codigo = result.data?.codigo || 'N/A';
+            mostrarNotificacionExito(!!productoId, codigo);
+        } else {
+            mostrarNotificacionError(result.error || 'Error desconocido');
+        }
+    })
+    .catch(function(error) {
+        console.error('❌ Error:', error);
+        btnGuardar.classList.remove('loading');
+        btnGuardar.innerHTML = textoOriginal;
+        mostrarNotificacionError(error.message || 'Error al comunicarse con el servidor');
+    });
+}
+
+// ============================================================
+// 🚨 SISTEMA DE NOTIFICACIÓN INDEPENDIENTE
+// ============================================================
 
 (function() {
     console.log('🚨 Inicializando sistema de notificación...');
@@ -1053,139 +1380,6 @@ function mostrarNotificacionError(mensaje) {
 
 /**
  * ============================================================
- * VALIDAR Y GUARDAR - VERSIÓN CORREGIDA CON NOTIFICACIONES BONITAS
- * ============================================================
- */
-
-function validarYGuardar(event) {
-    if (event) event.preventDefault();
-    
-    console.log('🟢 Validando formulario...');
-    
-    // Limpiar errores anteriores
-    limpiarErrores();
-    
-    var campos = [
-        { id: 'nombreProducto', nombre: 'Nombre del producto', fieldId: 'field-nombre' },
-        { id: 'modeloProducto', nombre: 'Modelo', fieldId: 'field-modelo' },
-        { id: 'marcaProducto', nombre: 'Marca', fieldId: 'field-marca' },
-        { id: 'unidadMedida', nombre: 'Unidad de medida', fieldId: 'field-unidad' },
-        { id: 'categoriaProducto', nombre: 'Categoría', fieldId: 'field-categoria' },
-        { id: 'transporteReferencial', nombre: 'Transporte', fieldId: 'field-transporte' }
-    ];
-    
-    var errores = [];
-    var primerCampoError = null;
-    
-    for (var i = 0; i < campos.length; i++) {
-        var campo = campos[i];
-        var elemento = document.getElementById(campo.id);
-        var valor = elemento ? elemento.value.trim() : '';
-        
-        if (!valor || valor === '' || valor === 'Seleccione') {
-            errores.push(campo.nombre);
-            var fieldContainer = document.getElementById(campo.fieldId);
-            if (fieldContainer) {
-                fieldContainer.classList.add('error');
-            }
-            if (!primerCampoError) {
-                primerCampoError = elemento;
-            }
-        }
-    }
-    
-    console.log('📋 Errores encontrados:', errores);
-    
-    if (errores.length > 0) {
-        window.mostrarNotificacionIndependiente(errores);
-        
-        if (primerCampoError) {
-            setTimeout(function() {
-                primerCampoError.focus();
-                primerCampoError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 300);
-        }
-        return false;
-    }
-    
-    console.log('✅ Todos los campos completos, enviando...');
-    
-    // ✅ OBTENER DATOS DEL FORMULARIO
-    var form = document.getElementById('formNuevoProducto');
-    var formData = new FormData(form);
-    
-    // ✅ DETECTAR SI ES EDICIÓN O CREACIÓN
-    var productoId = document.querySelector('input[name="producto_id"]')?.value;
-    var url = productoId ? '/productos/api/productos/' + productoId : '/productos/api/productos';
-    var method = productoId ? 'PUT' : 'POST';
-    
-    // ✅ CONVERTIR FORM A JSON
-    var data = {};
-    for (var [key, value] of formData.entries()) {
-        // ✅ SI ES EDICIÓN, NO ENVIAR EL CÓDIGO (se mantiene el existente)
-        if (key === 'codigo' && productoId) {
-            continue;
-        }
-        data[key] = value;
-    }
-    
-    // ✅ SI ES EDICIÓN, AGREGAR EL ID EN EL BODY
-    if (productoId) {
-        data.id = productoId;
-    }
-    
-    console.log('📦 URL:', url);
-    console.log('📦 Método:', method);
-    console.log('📦 Datos:', data);
-    console.log('📦 ¿Es edición?', !!productoId);
-    
-    // Botón de carga
-    var btnGuardar = document.getElementById('btnGuardar');
-    var textoOriginal = btnGuardar.innerHTML;
-    btnGuardar.classList.add('loading');
-    btnGuardar.innerHTML = '⏳ Guardando...';
-    
-    fetch(url, {
-        method: method,
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-    })
-    .then(function(response) {
-        if (!response.ok) {
-            return response.json().then(function(err) {
-                throw new Error(err.error || 'Error al guardar');
-            });
-        }
-        return response.json();
-    })
-    .then(function(result) {
-        console.log('📦 Resultado:', result);
-        btnGuardar.classList.remove('loading');
-        btnGuardar.innerHTML = textoOriginal;
-        
-        if (result.success) {
-            // ✅ NOTIFICACIÓN BONITA EN VEZ DE ALERT
-            var codigo = result.data?.codigo || 'N/A';
-            mostrarNotificacionExito(!!productoId, codigo);
-        } else {
-            // ✅ NOTIFICACIÓN DE ERROR BONITA
-            mostrarNotificacionError(result.error || 'Error desconocido');
-        }
-    })
-    .catch(function(error) {
-        console.error('❌ Error:', error);
-        btnGuardar.classList.remove('loading');
-        btnGuardar.innerHTML = textoOriginal;
-        mostrarNotificacionError(error.message || 'Error al comunicarse con el servidor');
-    });
-    
-    return true;
-}
-
-/**
- * ============================================================
  * LIMPIAR ERRORES VISUALES
  * ============================================================
  */
@@ -1428,10 +1622,24 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Cerrar modal al hacer clic fuera
+    var modal = document.getElementById('modalConfirmacion');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                cerrarModalConfirmacion();
+            }
+        });
+    }
 });
 
 // Exponer funciones globalmente
-window.validarYGuardar = validarYGuardar;
+window.mostrarModalConfirmacion = mostrarModalConfirmacion;
+window.cerrarModalConfirmacion = cerrarModalConfirmacion;
+window.confirmarGuardar = confirmarGuardar;
+window.validarCampos = validarCampos;
+window.ejecutarGuardado = ejecutarGuardado;
 window.limpiarFormulario = limpiarFormulario;
 window.calcularMargen = calcularMargen;
 window.actualizarEstadoChips = actualizarEstadoChips;
