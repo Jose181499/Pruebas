@@ -575,7 +575,8 @@
                 /* ============================================
            PRECIOS - VALOR VENTA (AZUL) Y COSTO (GRIS)
            ============================================ */
-        /* ============================================
+
+             /* ============================================
            PRECIOS - INPUTS DE DINERO
            ============================================ */
 
@@ -635,26 +636,35 @@
             color: #0066FF !important;
         }
 
+        /* Input de valor venta */
+        #valorVenta {
+            color: #0044CC !important;
+        }
+
         /* ============================================
-           VALOR COSTO - BORDE GRIS
+           VALOR COSTO - BORDE ROJO
            ============================================ */
 
         /* Contenedor del valor costo */
-        .price-box:not(.sale) .money {
-            border-color: #d1d5db !important;
-            background: #ffffff !important;
+        .price-box .money.cost {
+            border-color: #DC2626 !important;
+            background: #fef2f2 !important;
         }
 
-        .price-box:not(.sale) .money:focus-within {
-            border-color: #6b7280 !important;
-            box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.1) !important;
+        .price-box .money.cost:focus-within {
+            border-color: #B91C1C !important;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15) !important;
         }
 
-        /* Símbolo S/ en gris para COSTO */
-        .price-box:not(.sale) .money span {
-            color: #6b7280 !important;
+        /* Símbolo S/ en rojo para COSTO */
+        .price-box .money.cost span {
+            color: #DC2626 !important;
         }
-     
+
+        /* Input de valor costo */
+        #valorCosto {
+            color: #B91C1C !important;
+        }
 
         /* VALOR VENTA - Borde AZUL ELÉCTRICO */
         #valorVenta {
