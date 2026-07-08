@@ -1964,9 +1964,6 @@ function showCotizacionMenu(event, id) {
     }
     
     menuHtml += `
-        <button class="menu-pending" onclick="marcarCotizacionPending(${id});this.closest('.menu-pop').remove()">🟠 Seguimiento cliente</button>
-        <button class="menu-lost" onclick="marcarCotizacionNotClosed(${id});this.closest('.menu-pop').remove()">⚪ No concretada</button>
-        <button class="menu-reactivate" onclick="reactivarCotizacion(${id});this.closest('.menu-pop').remove()">🔄 Reactivar</button>
         <div style="height:1px;background:#E5E7EB;margin:4px 0;"></div>
         <button onclick="createDocFromCotizacion(${id},'despacho');this.closest('.menu-pop').remove()">🚚 Crear despacho</button>
         <button class="danger" onclick="deleteCotizacion(${id});this.closest('.menu-pop').remove()">🗑 Eliminar</button>
@@ -3810,7 +3807,9 @@ function createMenuWithClose(event, htmlContent) {
 // MENÚS DE ACCIONES
 // ============================================================
 
-// Reemplazar la función showCotizacionMenu en ventas.js
+// ============================================================
+// MENÚ DE COTIZACIONES (MEJORADO)
+// ============================================================
 function showCotizacionMenu(event, id) {
     event.stopPropagation();
     
@@ -3818,6 +3817,8 @@ function showCotizacionMenu(event, id) {
     const cotizacion = cotizacionesData.find(c => c.id === id);
     const estado = cotizacion?.estado || '';
     const isAccepted = estado === 'Aceptada por Cliente' || estado === 'Aceptada';
+    const isGenerated = estado === 'Generada';
+    const isDraft = estado === 'Borrador' || estado === 'En revisión';
     
     let menuHtml = `
         <button onclick="openCotizacionModal(${id});this.closest('.menu-pop').remove()">👁 Ver / Editar</button>
@@ -3827,6 +3828,13 @@ function showCotizacionMenu(event, id) {
         <div style="height:1px;background:#E5E7EB;margin:4px 0;"></div>
     `;
     
+    // Botón "Aceptada por Cliente" - solo si NO está aceptada
+    if (!isAccepted) {
+        menuHtml += `
+            <button class="menu-accepted" onclick="marcarCotizacionAccepted(${id});this.closest('.menu-pop').remove()">✅ Aceptada por Cliente</button>
+        `;
+    }
+    
     // Mostrar "Crear guía" solo si está aceptada
     if (isAccepted) {
         menuHtml += `
@@ -3835,18 +3843,19 @@ function showCotizacionMenu(event, id) {
         `;
     }
     
+    // Siempre mostrar "Crear despacho"
     menuHtml += `
-        <button class="menu-pending" onclick="marcarCotizacionPending(${id});this.closest('.menu-pop').remove()">🟠 Seguimiento cliente</button>
-        <button class="menu-lost" onclick="marcarCotizacionNotClosed(${id});this.closest('.menu-pop').remove()">⚪ No concretada</button>
-        <button class="menu-reactivate" onclick="reactivarCotizacion(${id});this.closest('.menu-pop').remove()">🔄 Reactivar</button>
-        <div style="height:1px;background:#E5E7EB;margin:4px 0;"></div>
         <button onclick="createDocFromCotizacion(${id},'despacho');this.closest('.menu-pop').remove()">🚚 Crear despacho</button>
+    `;
+    
+    // Botón de eliminar (siempre visible)
+    menuHtml += `
+        <div style="height:1px;background:#E5E7EB;margin:4px 0;"></div>
         <button class="danger" onclick="deleteCotizacion(${id});this.closest('.menu-pop').remove()">🗑 Eliminar</button>
     `;
     
     createMenuWithClose(event, menuHtml);
 }
-
 
 function showPedidoMenu(event, id) {
     event.stopPropagation();
