@@ -441,49 +441,174 @@ async function loadDevoluciones() {
 // FUNCIONES DE RENDERIZADO
 // ============================================================
 
+// ============================================================
+// VISTAS DE COTIZACIONES - PRINCIPAL / COMPLETA
+// ============================================================
+
+let cotizacionViewMode = 'principal'; // 'principal' o 'completa'
+
+function setCotizacionView(mode) {
+    cotizacionViewMode = mode;
+    
+    // Actualizar clases de los botones
+    const principalBtn = document.getElementById('viewPrincipalBtn');
+    const completaBtn = document.getElementById('viewCompletaBtn');
+    
+    if (principalBtn && completaBtn) {
+        if (mode === 'principal') {
+            principalBtn.className = 'btn btn-view btn-primary-view active';
+            principalBtn.style.background = '#EF233C';
+            principalBtn.style.color = '#fff';
+            principalBtn.style.border = 'none';
+            
+            completaBtn.className = 'btn btn-view btn-secondary-view';
+            completaBtn.style.background = '#F1F5F9';
+            completaBtn.style.color = '#475569';
+            completaBtn.style.border = '1px solid #E5E7EB';
+        } else {
+            principalBtn.className = 'btn btn-view btn-secondary-view';
+            principalBtn.style.background = '#F1F5F9';
+            principalBtn.style.color = '#475569';
+            principalBtn.style.border = '1px solid #E5E7EB';
+            
+            completaBtn.className = 'btn btn-view btn-secondary-view active';
+            completaBtn.style.background = '#EF233C';
+            completaBtn.style.color = '#fff';
+            completaBtn.style.border = 'none';
+        }
+    }
+    
+    // Renderizar la tabla con la vista seleccionada
+    renderCotizaciones();
+}
+
 function renderCotizaciones() {
     const q = document.getElementById('qSearch')?.value?.toLowerCase() || '';
     const st = document.getElementById('qStatus')?.value || '';
     
     const list = cotizacionesData.filter(r => {
-        const searchStr = `${r.numero || ''} ${r.ruc || ''} ${r.razon || ''} ${r.descripcion || ''}`.toLowerCase();
+        const searchStr = `${r.numero || ''} ${r.ruc || ''} ${r.razon || ''} ${r.descripcion || ''} ${r.nota_cotizacion || ''}`.toLowerCase();
         const matchText = !q || searchStr.includes(q);
         const matchStatus = !st || r.estado === st;
         return matchText && matchStatus;
     });
     
+    // ============================================================
     // KPIs
-   // KPIs - Versión corregida
-const kpiContainer = document.getElementById('cotizacionesKPI');
-if (kpiContainer) {
-    const total = cotizacionesData.length;
-    
-    // IMPORTANTE: Usar los mismos nombres de estado que vienen de la BD
-    const borradores = cotizacionesData.filter(x => x.estado === 'Borrador').length;
-    const revision = cotizacionesData.filter(x => x.estado === 'En revisión' || x.estado === 'En Proceso').length;
-    const generadas = cotizacionesData.filter(x => x.estado === 'Generada').length;
-    const aceptadas = cotizacionesData.filter(x => x.estado === 'Aceptada por Cliente' || x.estado === 'Aceptada' || x.estado === 'Aceptado').length;
-    
-    kpiContainer.innerHTML = `
-        <div class="status-card"><div class="status-dot dot-total">Σ</div><div><small>Total</small><b>${total}</b></div></div>
-        <div class="status-card"><div class="status-dot dot-draft">B</div><div><small>Borradores</small><b>${borradores}</b></div></div>
-        <div class="status-card"><div class="status-dot dot-review">R</div><div><small>En revisión</small><b>${revision}</b></div></div>
-        <div class="status-card"><div class="status-dot dot-send">E</div><div><small>Generadas</small><b>${generadas}</b></div></div>
-        <div class="status-card"><div class="status-dot dot-ok">A</div><div><small>Aceptadas</small><b>${aceptadas}</b></div></div>
-    `;
-}
+    // ============================================================
+    const kpiContainer = document.getElementById('cotizacionesKPI');
+    if (kpiContainer) {
+        const total = cotizacionesData.length;
+        const borradores = cotizacionesData.filter(x => x.estado === 'Borrador').length;
+        const revision = cotizacionesData.filter(x => x.estado === 'En revisión' || x.estado === 'En Proceso').length;
+        const generadas = cotizacionesData.filter(x => x.estado === 'Generada').length;
+        const aceptadas = cotizacionesData.filter(x => x.estado === 'Aceptada por Cliente' || x.estado === 'Aceptada' || x.estado === 'Aceptado').length;
+        
+        kpiContainer.innerHTML = `
+            <div class="status-card"><div class="status-dot dot-total">Σ</div><div><small>Total</small><b>${total}</b></div></div>
+            <div class="status-card"><div class="status-dot dot-draft">B</div><div><small>Borradores</small><b>${borradores}</b></div></div>
+            <div class="status-card"><div class="status-dot dot-review">R</div><div><small>En revisión</small><b>${revision}</b></div></div>
+            <div class="status-card"><div class="status-dot dot-send">E</div><div><small>Generadas</small><b>${generadas}</b></div></div>
+            <div class="status-card"><div class="status-dot dot-ok">A</div><div><small>Aceptadas</small><b>${aceptadas}</b></div></div>
+        `;
+    }
     
     const tbody = document.getElementById('qRows');
-    if (!tbody) return;
+    const thead = document.getElementById('cotizacionesTableHead');
+    if (!tbody || !thead) return;
+    
+    // ============================================================
+    // VISTA PRINCIPAL - Columnas resumidas
+    // ============================================================
+    if (cotizacionViewMode === 'principal') {
+        thead.innerHTML = `
+            <tr>
+                <th>Item</th>
+                <th>Fecha / Hora</th>
+                <th>Estado</th>
+                <th>N° Cotización</th>
+                <th>RUC</th>
+                <th>Cód. Cliente</th>
+                <th>Razón social</th>
+                <th>Descripción principal</th>
+                <th>Monto total</th>
+                <th>Cond. pago</th>
+                <th>Acciones</th>
+            </tr>
+        `;
+        
+        if (list.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay cotizaciones que coincidan con los filtros</td></tr>`;
+            return;
+        }
+        
+        tbody.innerHTML = list.map((r, i) => {
+            const fecha = r.fecha || '';
+            const fechaDisplay = fecha.replace(' ', '<br>');
+            return `
+            <tr>
+                <td><b>${i + 1}</b></td>
+                <td class="date-cell">${fechaDisplay}</td>
+                <td>${badgeStatus(r.estado)}</td>
+                <td class="quote-number-cell"><b>${sd(r.numero)}</b></td>
+                <td>${sd(r.ruc)}</td>
+                <td><span class="code-pill">${sd(r.cod_cliente)}</span></td>
+                <td class="left"><b>${sd(r.razon)}</b></td>
+                <td class="left">${sd(r.descripcion || r.nota_cotizacion || 'Sin descripción')}</td>
+                <td><b>${money(r.monto || r.total || 0)}</b></td>
+                <td>${sd(r.condicion || r.condicion_pago || r.forma_pago)}</td>
+                <td>
+                    <button class="kebab" onclick="showCotizacionMenu(event, ${r.id})">⋮</button>
+                </td>
+            </tr>`;
+        }).join('');
+        return;
+    }
+    
+    // ============================================================
+    // VISTA COMPLETA - Todas las columnas (incluyendo Información Adicional)
+    // ============================================================
+    thead.innerHTML = `
+        <tr>
+            <th>Item</th>
+            <th>Fecha / Hora</th>
+            <th>Estado</th>
+            <th>N° Cotización</th>
+            <th>RUC</th>
+            <th>Cód. Cliente</th>
+            <th>Razón social</th>
+            <th>Contacto</th>
+            <th>Teléfono</th>
+            <th>Email</th>
+            <th>Descripción</th>
+            <th>Subtotal</th>
+            <th>IGV</th>
+            <th>Total</th>
+            <th>Cond. Pago</th>
+            <th>Tiempo Entrega</th>
+            <th>Validez</th>
+            <th>Dirección Entrega</th>
+            <th>Requerimiento</th>
+            <th>Nota Comercial</th>
+            <th>Seguimiento</th>
+            <th>Motivo</th>
+            <th>Transporte</th>
+            <th>Parihuela</th>
+            <th>Nota Interna</th>
+            <th># Productos</th>
+            <th>Acciones</th>
+        </tr>
+    `;
     
     if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay cotizaciones que coincidan con los filtros</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="28" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay cotizaciones que coincidan con los filtros</td></tr>`;
         return;
     }
     
     tbody.innerHTML = list.map((r, i) => {
         const fecha = r.fecha || '';
         const fechaDisplay = fecha.replace(' ', '<br>');
+        const numProductos = r.productos?.length || r.items?.length || 0;
         return `
         <tr>
             <td><b>${i + 1}</b></td>
@@ -493,9 +618,25 @@ if (kpiContainer) {
             <td>${sd(r.ruc)}</td>
             <td><span class="code-pill">${sd(r.cod_cliente)}</span></td>
             <td class="left"><b>${sd(r.razon)}</b></td>
-            <td class="left">${sd(r.descripcion)}</td>
-            <td><b>${money(r.monto || 0)}</b></td>
-            <td>${sd(r.condicion)}</td>
+            <td>${sd(r.contacto || r.cliente_contacto || r.contacto_cliente)}</td>
+            <td>${sd(r.telefono || r.cliente_telefono || r.telefono_cliente)}</td>
+            <td>${sd(r.email || r.cliente_email || r.email_cliente)}</td>
+            <td class="left">${sd(r.descripcion || r.nota_cotizacion || r.notas || 'Sin descripción')}</td>
+            <td><b>${money(r.subtotal || 0)}</b></td>
+            <td><b>${money(r.igv || 0)}</b></td>
+            <td><b>${money(r.monto || r.total || 0)}</b></td>
+            <td>${sd(r.condicion || r.condicion_pago || r.forma_pago)}</td>
+            <td>${sd(r.tiempo_entrega)}</td>
+            <td>${sd(r.validez || r.validez_oferta)}</td>
+            <td class="left">${sd(r.direccion_entrega)}</td>
+            <td>${sd(r.requerimiento)}</td>
+            <td class="left">${sd(r.nota_comercial || r.nota_cotizacion)}</td>
+            <td>${sd(r.seguimiento || 'Asesor')}</td>
+            <td>${sd(r.motivo || 'Proyecto nuevo')}</td>
+            <td>${sd(r.transporte || 'Seleccione')}</td>
+            <td>${sd(r.parihuela || 'Seleccione')}</td>
+            <td class="left">${sd(r.nota_interna)}</td>
+            <td style="text-align:center; font-weight:900;">${numProductos}</td>
             <td>
                 <button class="kebab" onclick="showCotizacionMenu(event, ${r.id})">⋮</button>
             </td>
@@ -2108,21 +2249,51 @@ async function saveComprobante(estado) {
         
         let productos = window._compProductos || [];
         
-        const data = {
-            id: editingId,
-            estado: estado || 'Borrador',
-            tipo: document.getElementById('compTipo')?.value || 'Factura',
-            serie: document.getElementById('compSerie')?.value || 'F001',
-            numero: document.getElementById('compNumero')?.value || String(Date.now()).slice(-8),
-            cotizacion: document.getElementById('compCotizacion')?.value || '',
-            cliente: document.getElementById('compCliente')?.value || '',
-            ruc: document.getElementById('compRuc')?.value || '',
-            monto: parseFloat(document.getElementById('compMonto')?.value || 0),
-            condicion: document.getElementById('compCondicion')?.value || 'Contado',
-            observaciones: document.getElementById('compObs')?.value || '',
-            items: productos
-        };
-        
+       const data = {
+    id: editingId,
+    estado: estado || 'Borrador',
+    cliente_id: clienteId,
+    ruc: ruc,
+    razon: document.getElementById('fRazon')?.value?.trim() || '',
+    razon_comercial: document.getElementById('fComercial')?.value?.trim() || '',
+    direccion: document.getElementById('fDireccion')?.value?.trim() || '',
+    contacto: document.getElementById('fContacto')?.value?.trim() || '',
+    telefono: document.getElementById('fTelefono')?.value?.trim() || '',
+    email: document.getElementById('fCorreo')?.value?.trim() || '',
+    vendedor: document.getElementById('fVendedor')?.value || 'Helen Blas Príncipe',
+    condicion_pago: getFieldValue('fCondicion', 'fCondicionCustom') || 'Contado',
+    tiempo_entrega: getFieldValue('fTiempo', 'fTiempoCustom') || '5 días hábiles',
+    validez: getFieldValue('fValidez', 'fValidezCustom') || '15 días',
+    direccion_entrega: getFieldValue('fDireccionEntrega', 'fDireccionEntregaCustom') || '',
+    descuento_valor: descuentoValor,
+    descuento_tipo: descuentoTipo,
+    subtotal: subtotal,
+    descuento_monto: descuento,
+    igv: igv,
+    total: total,
+    // ============================================================
+    // 🔽 INFORMACIÓN ADICIONAL - Campos agregados
+    // ============================================================
+    seguimiento: document.getElementById('fSeguimiento')?.value || 'Asesor',
+    motivo: document.getElementById('fMotivo')?.value || 'Proyecto nuevo',
+    transporte: document.getElementById('fTransporte')?.value || 'Seleccione',
+    parihuela: document.getElementById('fParihuela')?.value || 'Seleccione',
+    nota_interna: document.getElementById('fNotaInterna')?.value?.trim() || '',
+    requerimiento: document.getElementById('fReq')?.value?.trim() || '',
+    fuente: document.getElementById('fFuente')?.value || 'Correo',
+    // ============================================================
+    productos: quoteProducts.map(p => ({
+        codigo: p.codigo,
+        producto: p.producto || p.descripcion,
+        descripcion: p.descripcion || '',
+        modelo: p.modelo || '',
+        marca: p.marca || '',
+        um: p.um || 'NIU',
+        cantidad: p.cantidad || 1,
+        valorVenta: p.valorVenta || 0,
+        stock: p.stock || 0
+    }))
+};
         console.log('📦 Datos a guardar:', data);
         
         const response = await apiFetch('/ventas/api/comprobantes/guardar', {

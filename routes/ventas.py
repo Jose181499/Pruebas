@@ -50,6 +50,13 @@ def obtener_cotizaciones_db():
                 c.contacto_cliente, 
                 c.telefono_cliente, 
                 c.email_cliente,
+                -- 🔽 NUEVOS CAMPOS DE INFORMACIÓN ADICIONAL
+                c.seguimiento,
+                c.motivo,
+                c.transporte,
+                c.parihuela,
+                c.nota_interna,
+                c.vendedor,
                 -- Obtener datos del cliente
                 cl.razon_social as cliente_razon_social,
                 cl.numero_documento as cliente_ruc,
@@ -97,7 +104,6 @@ def obtener_cotizaciones_db():
         return []
 
 
-
 def obtener_cotizacion_por_id_db(cotizacion_id):
     """Obtiene una cotización por su ID"""
     try:
@@ -130,10 +136,14 @@ def guardar_cotizacion_db(data):
                 codigo_cotizacion, correlativo, condicion_pago,
                 direccion_entrega, requerimiento, nota_cotizacion,
                 descuento_porcentaje, descuento_monto, descuento_tipo,
-                contacto_cliente, telefono_cliente, email_cliente
+                contacto_cliente, telefono_cliente, email_cliente,
+                -- 🔽 NUEVOS CAMPOS DE INFORMACIÓN ADICIONAL
+                seguimiento, motivo, transporte, parihuela, nota_interna,
+                vendedor
             ) VALUES (
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s
             )
             RETURNING id, numero_cotizacion
         """
@@ -162,7 +172,14 @@ def guardar_cotizacion_db(data):
             data.get('descuento_tipo', 'porcentaje'),
             data.get('contacto_cliente'),
             data.get('telefono_cliente'),
-            data.get('email_cliente')
+            data.get('email_cliente'),
+            # 🔽 NUEVOS CAMPOS
+            data.get('seguimiento', 'Asesor'),
+            data.get('motivo', 'Proyecto nuevo'),
+            data.get('transporte', 'Seleccione'),
+            data.get('parihuela', 'Seleccione'),
+            data.get('nota_interna', ''),
+            data.get('vendedor', 'Helen Blas Príncipe')
         )
         
         print(f"📝 INSERT params: {params}")
@@ -172,7 +189,6 @@ def guardar_cotizacion_db(data):
     except Exception as e:
         print(f"❌ Error en guardar_cotizacion_db: {e}")
         raise
-
 
 def actualizar_cotizacion_db(cotizacion_id, data):
     """Actualiza una cotización existente"""
@@ -200,6 +216,13 @@ def actualizar_cotizacion_db(cotizacion_id, data):
                 contacto_cliente = %s,
                 telefono_cliente = %s,
                 email_cliente = %s,
+                -- 🔽 NUEVOS CAMPOS
+                seguimiento = %s,
+                motivo = %s,
+                transporte = %s,
+                parihuela = %s,
+                nota_interna = %s,
+                vendedor = %s,
                 updated_at = NOW()
             WHERE id = %s
             RETURNING id, numero_cotizacion
@@ -226,6 +249,13 @@ def actualizar_cotizacion_db(cotizacion_id, data):
             data.get('contacto_cliente'),
             data.get('telefono_cliente'),
             data.get('email_cliente'),
+            # 🔽 NUEVOS CAMPOS
+            data.get('seguimiento', 'Asesor'),
+            data.get('motivo', 'Proyecto nuevo'),
+            data.get('transporte', 'Seleccione'),
+            data.get('parihuela', 'Seleccione'),
+            data.get('nota_interna', ''),
+            data.get('vendedor', 'Helen Blas Príncipe'),
             cotizacion_id
         )
         result = db_query(query, params)
@@ -233,6 +263,7 @@ def actualizar_cotizacion_db(cotizacion_id, data):
     except Exception as e:
         print(f"❌ Error en actualizar_cotizacion_db: {e}")
         raise
+
 
 def actualizar_estado_cotizacion_db(cotizacion_id, nuevo_estado):
     """Actualiza el estado de una cotización"""
@@ -778,7 +809,7 @@ def api_cotizaciones_listar():
                 'subtotal': float(row.get('subtotal', 0)),
                 'igv': float(row.get('igv', 0)),
                 'condicion': row.get('condicion_pago') or row.get('forma_pago'),
-                'vendedor': str(row.get('usuario_id', '')),
+                'vendedor': row.get('vendedor') or str(row.get('usuario_id', '')),
                 'vencimiento': row.get('validez_oferta'),
                 'cod_cliente': str(row.get('cliente_id', '')),
                 'direccion': row.get('direccion_entrega'),
@@ -789,7 +820,16 @@ def api_cotizaciones_listar():
                 'descuento_tipo': row.get('descuento_tipo'),
                 'contacto': row.get('contacto_cliente'),
                 'telefono': row.get('telefono_cliente'),
-                'email': row.get('email_cliente')
+                'email': row.get('email_cliente'),
+                'tiempo_entrega': row.get('tiempo_entrega'),
+                'validez_oferta': row.get('validez_oferta'),
+                'nota_comercial': row.get('nota_cotizacion'),
+                # 🔽 NUEVOS CAMPOS DE INFORMACIÓN ADICIONAL
+                'seguimiento': row.get('seguimiento', 'Asesor'),
+                'motivo': row.get('motivo', 'Proyecto nuevo'),
+                'transporte': row.get('transporte', 'Seleccione'),
+                'parihuela': row.get('parihuela', 'Seleccione'),
+                'nota_interna': row.get('nota_interna', '')
             })
         
         print(f"✅ Datos formateados: {len(formatted_data)} cotizaciones")
@@ -800,7 +840,8 @@ def api_cotizaciones_listar():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-      
+
+
 @ventas_bp.route('/ventas/api/cotizaciones/guardar', methods=['POST'])
 @login_required
 def api_cotizaciones_guardar():
