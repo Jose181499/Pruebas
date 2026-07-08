@@ -1535,10 +1535,6 @@ def api_test():
     return jsonify({"success": True, "message": "API de maestros funcionando correctamente"})
 
 
-# ============================================================
-# BUSCAR CLIENTES (para autocomplete)
-# ============================================================
-
 @maestros_bp.route('/api/clientes/buscar', methods=['GET'])
 @login_required
 def api_clientes_buscar():
@@ -1551,18 +1547,44 @@ def api_clientes_buscar():
         
         query = """
             SELECT 
-                id, codigo_cliente, razon_social, numero_documento as ruc,
-                nombre_comercial, nombre_contacto, telefono_contacto,
-                email_contacto, direccion_fiscal, activo
-            FROM clientes
-            WHERE activo = TRUE
+                c.id, 
+                c.codigo_cliente, 
+                c.razon_social, 
+                c.numero_documento as ruc,
+                c.nombre_comercial, 
+                c.nombre_contacto, 
+                c.telefono_contacto,
+                c.email_contacto, 
+                c.direccion_fiscal, 
+                c.condicion_pago,
+                c.tiempo_entrega,
+                c.activo,
+                COALESCE(
+                    (SELECT json_agg(
+                        json_build_object(
+                            'id', pe.id,
+                            'nombre_punto', pe.nombre_punto,
+                            'direccion', pe.direccion,
+                            'telefono_contacto', pe.telefono_contacto,
+                            'responsable', pe.responsable,
+                            'condicion_pago', pe.condicion_pago,
+                            'tiempo_credito', pe.tiempo_credito,
+                            'principal', pe.principal,
+                            'activo', pe.activo
+                        )
+                    ) FROM clientes_punto_entrega pe 
+                      WHERE pe.cliente_id = c.id AND pe.activo = true),
+                    '[]'::json
+                ) as puntos_entrega
+            FROM clientes c
+            WHERE c.activo = TRUE
             AND (
-                numero_documento ILIKE %s 
-                OR razon_social ILIKE %s 
-                OR nombre_comercial ILIKE %s
-                OR codigo_cliente ILIKE %s
+                c.numero_documento ILIKE %s 
+                OR c.razon_social ILIKE %s 
+                OR c.nombre_comercial ILIKE %s
+                OR c.codigo_cliente ILIKE %s
             )
-            ORDER BY razon_social
+            ORDER BY c.razon_social
             LIMIT 20
         """
         like = f"%{q}%"
@@ -1573,3 +1595,4 @@ def api_clientes_buscar():
     except Exception as e:
         print(f"❌ Error en api_clientes_buscar: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+   

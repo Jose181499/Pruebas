@@ -2600,10 +2600,6 @@ function calcQuote() {
 }
 
 
-// ============================================================
-// FUNCIONES PARA CLIENTES - CONSULTA PRIMERO EN BASE DE DATOS
-// ============================================================
-
 async function loadClient() {
     const rucInput = document.getElementById('fRucSearch');
     const ruc = rucInput?.value?.replace(/\D/g, '').trim() || '';
@@ -2651,14 +2647,64 @@ async function loadClient() {
             document.getElementById('fTelefono').value = cliente.telefono_contacto || '';
             document.getElementById('fCorreo').value = cliente.email_contacto || '';
             
-            // Condición de pago
+            // ============================================================
+            // 🔽 NUEVO: CARGAR CONDICIÓN DE PAGO, TIEMPO DE ENTREGA Y DIRECCIÓN
+            // ============================================================
+            
+            // 1. Condición de pago - desde el cliente o desde puntos de entrega
             if (cliente.condicion_pago && document.getElementById('fCondicion')) {
-                document.getElementById('fCondicion').value = cliente.condicion_pago;
+                setFieldValue('fCondicion', 'fCondicionCustom', cliente.condicion_pago);
+            }
+            
+            // 2. Tiempo de entrega - si existe en el cliente
+            if (cliente.tiempo_entrega && document.getElementById('fTiempo')) {
+                setFieldValue('fTiempo', 'fTiempoCustom', cliente.tiempo_entrega);
+            }
+            
+            // 3. Dirección de entrega - desde puntos de entrega o desde dirección fiscal
+            // Primero intentar obtener el punto de entrega principal
+            let direccionEntrega = '';
+            let tiempoEntrega = '';
+            
+            if (cliente.puntos_entrega && cliente.puntos_entrega.length > 0) {
+                // Buscar el punto de entrega principal
+                const principal = cliente.puntos_entrega.find(p => p.principal === true);
+                if (principal) {
+                    direccionEntrega = principal.direccion || '';
+                    // Si el punto de entrega tiene condicion_pago, usarlo
+                    if (principal.condicion_pago && document.getElementById('fCondicion')) {
+                        setFieldValue('fCondicion', 'fCondicionCustom', principal.condicion_pago);
+                    }
+                    // Si el punto de entrega tiene tiempo_credito, usarlo como tiempo de entrega
+                    if (principal.tiempo_credito && document.getElementById('fTiempo')) {
+                        setFieldValue('fTiempo', 'fTiempoCustom', principal.tiempo_credito);
+                    }
+                } else {
+                    // Si no hay principal, usar el primero
+                    const primero = cliente.puntos_entrega[0];
+                    direccionEntrega = primero.direccion || '';
+                    if (primero.condicion_pago && document.getElementById('fCondicion')) {
+                        setFieldValue('fCondicion', 'fCondicionCustom', primero.condicion_pago);
+                    }
+                    if (primero.tiempo_credito && document.getElementById('fTiempo')) {
+                        setFieldValue('fTiempo', 'fTiempoCustom', primero.tiempo_credito);
+                    }
+                }
+            }
+            
+            // Si no hay dirección de entrega desde puntos, usar dirección fiscal
+            if (!direccionEntrega && cliente.direccion_fiscal) {
+                direccionEntrega = cliente.direccion_fiscal;
+            }
+            
+            // Establecer la dirección de entrega
+            if (direccionEntrega && document.getElementById('fDireccionEntrega')) {
+                setFieldValue('fDireccionEntrega', 'fDireccionEntregaCustom', direccionEntrega);
             }
             
             // Guardar referencia del cliente CON ID para futuras operaciones
             window._clienteConsultado = {
-                id: cliente.id,  // ← IMPORTANTE: guardar el ID
+                id: cliente.id,
                 ruc: cliente.ruc || ruc,
                 razon_social: cliente.razon_social || '',
                 nombre_comercial: cliente.nombre_comercial || cliente.razon_social || '',
@@ -2667,15 +2713,25 @@ async function loadClient() {
                 telefono: cliente.telefono_contacto || '',
                 email: cliente.email_contacto || '',
                 codigo_cliente: cliente.codigo_cliente || 'PENDIENTE',
+                condicion_pago: cliente.condicion_pago || '',
+                tiempo_entrega: cliente.tiempo_entrega || '',
+                direccion_entrega: direccionEntrega || '',
                 origen: 'base_datos'
             };
             
-            // Mostrar mensaje de éxito
+            // Mostrar mensaje de éxito con información adicional
             const confirmBox = document.getElementById('clientConfirmBox');
             if (confirmBox) {
-                confirmBox.textContent = `✅ Cliente encontrado en sistema | Código: ${cliente.codigo_cliente || 'PENDIENTE'}`;
+                let mensaje = `✅ Cliente encontrado en sistema | Código: ${cliente.codigo_cliente || 'PENDIENTE'}`;
+                if (cliente.condicion_pago) {
+                    mensaje += ` | Pago: ${cliente.condicion_pago}`;
+                }
+                if (direccionEntrega) {
+                    mensaje += ` | Entrega: ${direccionEntrega.substring(0, 30)}${direccionEntrega.length > 30 ? '...' : ''}`;
+                }
+                confirmBox.textContent = mensaje;
                 confirmBox.className = 'show existente';
-                setTimeout(() => { confirmBox.className = ''; }, 5000);
+                setTimeout(() => { confirmBox.className = ''; }, 6000);
             }
             
             showToast(`✅ Cliente encontrado en sistema: ${cliente.razon_social}`, 'success');
