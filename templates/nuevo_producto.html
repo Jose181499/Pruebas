@@ -118,7 +118,7 @@
         }
         
         /* ============================================
-           MODAL DE CONFIRMACIÓN
+           MODAL DE CONFIRMACIÓN - VERSIÓN MEJORADA
            ============================================ */
         
         /* Overlay del modal */
@@ -136,6 +136,13 @@
             padding: 20px !important;
             backdrop-filter: blur(8px) !important;
             -webkit-backdrop-filter: blur(8px) !important;
+            opacity: 0 !important;
+            transition: opacity 0.3s ease !important;
+        }
+        
+        .modal-confirm-overlay.active {
+            display: flex !important;
+            opacity: 1 !important;
         }
         
         /* Contenido del modal */
@@ -150,24 +157,36 @@
             position: relative !important;
             animation: modalSlideIn 0.4s ease !important;
             border-top: 6px solid #f59e0b !important;
+            transform: scale(0.9) !important;
+            transition: transform 0.3s ease !important;
+        }
+        
+        .modal-confirm-overlay.active .modal-confirm-content {
+            transform: scale(1) !important;
         }
         
         @keyframes modalSlideIn {
             from {
                 opacity: 0;
-                transform: translateY(-40px) scale(0.95);
+                transform: translateY(-30px);
             }
             to {
                 opacity: 1;
-                transform: translateY(0) scale(1);
+                transform: translateY(0);
             }
         }
         
         /* Icono de advertencia */
         .modal-confirm-icon {
-            font-size: 64px !important;
+            font-size: 72px !important;
             margin-bottom: 12px !important;
             display: block !important;
+            animation: pulse 1.5s ease-in-out infinite !important;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
         }
         
         /* Título del modal */
@@ -218,6 +237,10 @@
             box-shadow: 0 8px 30px rgba(245, 158, 11, 0.6) !important;
         }
         
+        .modal-btn-confirm:active {
+            transform: scale(0.96) !important;
+        }
+        
         /* Botón "No, cancelar" */
         .modal-btn-cancel {
             background: #e2e8f0 !important;
@@ -239,6 +262,10 @@
         .modal-btn-cancel:hover {
             background: #cbd5e1 !important;
             transform: translateY(-2px) !important;
+        }
+        
+        .modal-btn-cancel:active {
+            transform: scale(0.96) !important;
         }
         
         /* ============================================
@@ -602,18 +629,18 @@
 </div>
 
 <!-- ============================================ -->
-<!-- MODAL DE CONFIRMACIÓN                        -->
+<!-- MODAL DE CONFIRMACIÓN - VERSIÓN MEJORADA    -->
 <!-- ============================================ -->
 <div class="modal-confirm-overlay" id="modalConfirmacion">
     <div class="modal-confirm-content">
         <span class="modal-confirm-icon">⚠️</span>
-        <h3 class="modal-confirm-title">¿Estás seguro?</h3>
-        <p class="modal-confirm-subtitle">
+        <h3 class="modal-confirm-title">¡Atención!</h3>
+        <p class="modal-confirm-subtitle" id="modalMensaje">
             {% if editando %}
-                ¿Estás seguro de que deseas actualizar este producto?<br>
+                ¿Estás seguro de que deseas <strong>actualizar</strong> este producto?<br>
                 <small style="color:#94a3b8;">Los cambios se aplicarán inmediatamente.</small>
             {% else %}
-                ¿Estás seguro de que deseas guardar este nuevo producto?<br>
+                ¿Estás seguro de que deseas <strong>guardar</strong> este nuevo producto?<br>
                 <small style="color:#94a3b8;">El producto será registrado en la base de datos.</small>
             {% endif %}
         </p>
@@ -921,49 +948,74 @@
 </form>
 
 <!-- ============================================ -->
-<!-- SCRIPT DE VALIDACIÓN Y NOTIFICACIÓN         -->
+<!-- SCRIPT - VERSIÓN CORREGIDA                   -->
 <!-- ============================================ -->
 <script>
 // ============================================================
-// 🟡 MODAL DE CONFIRMACIÓN
+// 🟡 MODAL DE CONFIRMACIÓN - VERSIÓN CORREGIDA
 // ============================================================
-
-let pendingSave = false;
-let modalAbierto = false;
 
 function mostrarModalConfirmacion(event) {
     if (event) event.preventDefault();
     
-    console.log('🟡 Mostrando modal de confirmación...');
+    console.log('🟡 Intentando mostrar modal de confirmación...');
     
-    // Primero validar que los campos estén completos
-    var esValido = validarCampos();
-    if (!esValido) {
-        return false;
+    // 1. PRIMERO VALIDAR CAMPOS
+    var camposValidos = validarCampos();
+    console.log('📋 Validación de campos:', camposValidos ? '✅ Válido' : '❌ Inválido');
+    
+    if (!camposValidos) {
+        console.log('❌ Campos inválidos, no se muestra el modal');
+        return;
     }
     
-    // Mostrar modal
+    // 2. MOSTRAR MODAL
     var modal = document.getElementById('modalConfirmacion');
-    if (modal) {
-        modal.style.display = 'flex';
-        modalAbierto = true;
-        
-        // Actualizar texto del botón según sea edición o creación
-        var btnConfirmar = document.getElementById('btnConfirmarGuardar');
-        var esEdicion = document.querySelector('input[name="producto_id"]') !== null;
-        if (btnConfirmar) {
-            btnConfirmar.innerHTML = esEdicion ? '✅ Sí, actualizar' : '✅ Sí, guardar';
-        }
-        
-        console.log('✅ Modal mostrado');
+    if (!modal) {
+        console.error('❌ Modal no encontrado en el DOM');
+        alert('Error: No se encontró el modal de confirmación');
+        return;
     }
+    
+    // Actualizar mensaje según sea edición o creación
+    var esEdicion = document.querySelector('input[name="producto_id"]') !== null;
+    var mensajeModal = document.getElementById('modalMensaje');
+    var btnConfirmar = document.getElementById('btnConfirmarGuardar');
+    
+    if (esEdicion) {
+        mensajeModal.innerHTML = `
+            ¿Estás seguro de que deseas <strong>actualizar</strong> este producto?<br>
+            <small style="color:#94a3b8;">Los cambios se aplicarán inmediatamente.</small>
+        `;
+        btnConfirmar.innerHTML = '✅ Sí, actualizar';
+    } else {
+        mensajeModal.innerHTML = `
+            ¿Estás seguro de que deseas <strong>guardar</strong> este nuevo producto?<br>
+            <small style="color:#94a3b8;">El producto será registrado en la base de datos.</small>
+        `;
+        btnConfirmar.innerHTML = '✅ Sí, guardar';
+    }
+    
+    // Mostrar modal con animación
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+    
+    // Asegurar que el overlay sea visible
+    setTimeout(function() {
+        modal.style.opacity = '1';
+    }, 10);
+    
+    console.log('✅ Modal mostrado correctamente');
 }
 
 function cerrarModalConfirmacion() {
     var modal = document.getElementById('modalConfirmacion');
     if (modal) {
-        modal.style.display = 'none';
-        modalAbierto = false;
+        modal.classList.remove('active');
+        modal.style.opacity = '0';
+        setTimeout(function() {
+            modal.style.display = 'none';
+        }, 300);
         console.log('🔴 Modal cerrado');
     }
 }
@@ -972,12 +1024,14 @@ function confirmarGuardar() {
     console.log('✅ Confirmado: guardando producto...');
     cerrarModalConfirmacion();
     
-    // Ejecutar el guardado real
-    ejecutarGuardado();
+    // Ejecutar el guardado real después de un pequeño delay
+    setTimeout(function() {
+        ejecutarGuardado();
+    }, 200);
 }
 
 // ============================================================
-// 🟢 VALIDACIÓN DE CAMPOS
+// 🟢 VALIDACIÓN DE CAMPOS - MEJORADA
 // ============================================================
 
 function validarCampos() {
@@ -1001,7 +1055,14 @@ function validarCampos() {
     for (var i = 0; i < campos.length; i++) {
         var campo = campos[i];
         var elemento = document.getElementById(campo.id);
-        var valor = elemento ? elemento.value.trim() : '';
+        
+        // Verificar que el elemento exista
+        if (!elemento) {
+            console.warn('⚠️ Elemento no encontrado:', campo.id);
+            continue;
+        }
+        
+        var valor = elemento.value ? elemento.value.trim() : '';
         
         if (!valor || valor === '' || valor === 'Seleccione') {
             errores.push(campo.nombre);
@@ -1015,10 +1076,15 @@ function validarCampos() {
         }
     }
     
-    console.log('📋 Errores encontrados:', errores);
+    console.log('📋 Errores encontrados:', errores.length > 0 ? errores : '✅ Ninguno');
     
     if (errores.length > 0) {
-        window.mostrarNotificacionIndependiente(errores);
+        // Mostrar notificación de error
+        if (typeof window.mostrarNotificacionIndependiente === 'function') {
+            window.mostrarNotificacionIndependiente(errores);
+        } else {
+            alert('❌ Campos obligatorios faltantes:\n\n• ' + errores.join('\n• '));
+        }
         
         if (primerCampoError) {
             setTimeout(function() {
@@ -1237,12 +1303,6 @@ function ejecutarGuardado() {
             clearTimeout(window._timeoutIndependiente);
             window._timeoutIndependiente = null;
         }
-    };
-    
-    // 6. REEMPLAZAR LA FUNCIÓN ORIGINAL
-    window.mostrarErrorFlotante = function(campos) {
-        console.log('🔔 Redirigiendo a mostrarNotificacionIndependiente');
-        window.mostrarNotificacionIndependiente(campos);
     };
     
     console.log('✅ SISTEMA DE NOTIFICACIÓN INDEPENDIENTE INICIALIZADO');
