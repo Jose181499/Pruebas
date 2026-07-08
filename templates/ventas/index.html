@@ -1858,6 +1858,28 @@
     background: #15803D !important;
     transform: translateY(-1px) !important;
 }
+/* ============================================================
+   MODAL DE SELECCIÓN MÚLTIPLE - z-index más alto
+   ============================================================ */
+#productSelectorModal {
+    z-index: 999999 !important;  /* Más alto que el modal de cotización */
+}
+
+#productSelectorModal .modal-box {
+    z-index: 999999 !important;
+    position: relative !important;
+}
+
+/* Asegurar que el modal de cotización tenga un z-index menor */
+#cotizacionModal {
+    z-index: 99999 !important;
+}
+
+/* Fondo del modal de selección - más oscuro para destacar */
+#productSelectorModal .modal-bg {
+    background: rgba(15, 23, 42, 0.8) !important;
+    backdrop-filter: blur(6px) !important;
+}
 
 </style>
 {% endblock %}
