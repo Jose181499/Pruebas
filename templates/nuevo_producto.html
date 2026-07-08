@@ -578,82 +578,59 @@
             display: inline-block;
         }
 
-        /* ============================================
-   BORDE AZUL ELÉCTRICO PARA VALOR VENTA
-   ============================================ */
-
-/* Eliminar el borde por defecto y poner el azul */
-.money input#valorVenta {
-    border: 2px solid #0066FF !important;
-    border-radius: 6px !important;
-    background: white !important;
-    color: #1a1a2e !important;
-    outline: none !important;
-    box-shadow: none !important;
-    -webkit-appearance: none !important;
-    appearance: none !important;
-}
-
-/* Cuando está en foco */
-.money input#valorVenta:focus {
-    border: 2px solid #0044CC !important;
-    outline: none !important;
-    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.15) !important;
-}
-
-/* El S/ en azul */
-.price-box.sale .money span {
-    color: #0066FF !important;
-    font-weight: 700 !important;
-}
-
-/* Asegurar que el input de costo NO tenga borde azul */
-.money input#valorCosto {
-    border: 1px solid #d1d5db !important;  /* Borde gris claro por defecto */
-    outline: none !important;
-}
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
                 /* ============================================
-           BORDE AZUL ELÉCTRICO PARA VALOR VENTA
+           PRECIOS - VALOR VENTA (AZUL) Y COSTO (GRIS)
            ============================================ */
 
-        /* Reset completo para el input de valor venta */
-        #valorVenta {
-            border: 2px solid #0066FF !important;
-            border-radius: 6px !important;
-            background: white !important;
-            color: #1a1a2e !important;
-            outline: none !important;
-            box-shadow: none !important;
-            -webkit-appearance: none !important;
-            appearance: none !important;
-            height: 30px !important;
+        /* Estilo base para ambos inputs de dinero */
+        .money input {
             font-size: 16px !important;
             padding: 2px 6px !important;
+            height: 30px !important;
+            border-radius: 6px !important;
+            background: #ffffff !important;
+            outline: none !important;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+            font-weight: 600 !important;
+            color: #1a1a2e !important;
         }
 
-        /* Cuando está en foco (click) */
+        /* VALOR VENTA - Borde AZUL ELÉCTRICO */
+        #valorVenta {
+            border: 2px solid #0066FF !important;
+            box-shadow: none !important;
+        }
+
         #valorVenta:focus {
-            border: 2px solid #0044CC !important;
-            outline: none !important;
+            border-color: #0044CC !important;
             box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.15) !important;
         }
 
-        /* El símbolo S/ en azul */
+        /* VALOR COSTO - Borde GRIS (igual que antes) */
+        #valorCosto {
+            border: 1px solid #d1d5db !important;
+            box-shadow: none !important;
+        }
+
+        #valorCosto:focus {
+            border-color: #6b7280 !important;
+            box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.1) !important;
+        }
+
+        /* El S/ en azul solo para valor venta */
         .price-box.sale .money span {
             color: #0066FF !important;
             font-weight: 700 !important;
         }
 
-        /* Asegurar que el input de costo NO tenga borde azul */
-        #valorCosto {
-            border: 1px solid #d1d5db !important;
-            outline: none !important;
-            border-radius: 6px !important;
+        /* El S/ en gris para valor costo */
+        .price-box .money.cost span {
+            color: #6b7280 !important;
+            font-weight: 700 !important;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
