@@ -2127,19 +2127,6 @@ function openCotizacionModal(id = null) {
     
     // Generar HTML del formulario
     formContainer.innerHTML = `
-        <div class="stepbar" id="quoteStatusBar">
-            <span class="step-label">Estatus:</span>
-            <span class="step status-draft"><span class="num">1</span>Borrador</span>
-            <span class="sep"></span>
-            <span class="step status-review"><span class="num">2</span>En revisión</span>
-            <span class="sep"></span>
-            <span class="step status-validated"><span class="num">3</span>Validada</span>
-            <span class="sep"></span>
-            <span class="step status-generated"><span class="num">4</span>Generada</span>
-            <span class="sep"></span>
-            <span class="step status-accepted"><span class="num">5</span>Aceptada</span>
-        </div>
-        
         <div class="create-grid">
             <!-- Punto 1: Datos del cliente -->
             <div class="create-panel client-card">
@@ -2187,9 +2174,9 @@ function openCotizacionModal(id = null) {
                 <div class="body">
                     <div class="form-grid">
                         <div class="form-field col-4">
-    <label>Asesor</label>
-    <input id="fVendedor" value="Helen Blas Príncipe" readonly style="background:#F1F5F9; cursor:default;">
-</div>
+                            <label>Asesor</label>
+                            <input id="fVendedor" value="Helen Blas Príncipe" readonly style="background:#F1F5F9; cursor:default;">
+                        </div>
                         <div class="form-field col-5">
                             <label>Email asesor</label>
                             <input id="fEmailAsesor" value="ventas@kcfcorporacion.com">
@@ -2324,6 +2311,20 @@ function openCotizacionModal(id = null) {
                 </div>
             </div>
         </div>
+
+        <!-- ⬇️ BARRA DE ESTADO (STEPBAR) - AHORA AL FINAL ⬇️ -->
+        <div class="stepbar-bottom" id="quoteStatusBar">
+            <span class="step-label">Estatus:</span>
+            <span class="step status-draft"><span class="num">1</span>Borrador</span>
+            <span class="sep"></span>
+            <span class="step status-review"><span class="num">2</span>En revisión</span>
+            <span class="sep"></span>
+            <span class="step status-validated"><span class="num">3</span>Validada</span>
+            <span class="sep"></span>
+            <span class="step status-generated"><span class="num">4</span>Generada</span>
+            <span class="sep"></span>
+            <span class="step status-accepted"><span class="num">5</span>Aceptada</span>
+        </div>
     `;
     
     // Cargar datalist de productos
@@ -2451,29 +2452,24 @@ function updateQuoteStatusBar(estado) {
     const index = estados.indexOf(estado);
     
     steps.forEach((step, i) => {
-        step.classList.remove('status-draft', 'status-review', 'status-validated', 'status-generated', 'status-accepted');
+        // Remover todas las clases de estado
+        step.classList.remove('status-draft', 'status-review', 'status-validated', 'status-generated', 'status-accepted', 'inactive');
+        
         if (i <= index) {
+            // Activo
             if (estado === 'Borrador') step.classList.add('status-draft');
             else if (estado === 'En revisión') step.classList.add('status-review');
             else if (estado === 'Validada') step.classList.add('status-validated');
             else if (estado === 'Generada') step.classList.add('status-generated');
             else if (estado === 'Aceptada') step.classList.add('status-accepted');
-            // Cambiar color del número
-            const num = step.querySelector('.num');
-            if (num) {
-                num.style.background = '#22C55E';
-                num.style.color = '#052E16';
-            }
+            // Para otros estados, usar el color correspondiente
+            else if (estado === 'Aceptada por Cliente') step.classList.add('status-accepted');
         } else {
-            const num = step.querySelector('.num');
-            if (num) {
-                num.style.background = '#E2E8F0';
-                num.style.color = '#475569';
-            }
+            // Inactivo
+            step.classList.add('inactive');
         }
     });
 }
-
 
 
 function cargarDatalistProductos() {

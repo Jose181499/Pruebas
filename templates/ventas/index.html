@@ -1680,6 +1680,127 @@
     border-color: #9CA3AF !important;
 }
 
+/* ============================================================
+   STEPBAR - Versión delgada y al final del modal
+   ============================================================ */
+.stepbar-bottom {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(15,23,42,.04);
+    margin-top: 10px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    min-height: 32px;
+}
+
+.stepbar-bottom .step-label {
+    font-weight: 900;
+    color: #64748B;
+    margin-right: 6px;
+    font-size: 10px;
+    flex-shrink: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.stepbar-bottom .step {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    font-weight: 800;
+    color: #94A3B8;
+    font-size: 9px;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.stepbar-bottom .step .num {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: #E2E8F0;
+    color: #64748B;
+    font-size: 8px;
+    font-weight: 1000;
+    transition: all 0.3s ease;
+}
+
+.stepbar-bottom .step.status-draft .num { 
+    background: #FF0000; 
+    color: #FFFFFF;
+    box-shadow: 0 0 12px rgba(255, 0, 0, 0.4);
+}
+.stepbar-bottom .step.status-draft { 
+    color: #FF0000; 
+    font-weight: 900;
+}
+
+.stepbar-bottom .step.status-review .num { 
+    background: #FFDD00; 
+    color: #000000;
+    box-shadow: 0 0 12px rgba(255, 221, 0, 0.4);
+}
+.stepbar-bottom .step.status-review { 
+    color: #D97706; 
+    font-weight: 900;
+}
+
+.stepbar-bottom .step.status-validated .num { 
+    background: #00CC44; 
+    color: #FFFFFF;
+    box-shadow: 0 0 12px rgba(0, 204, 68, 0.4);
+}
+.stepbar-bottom .step.status-validated { 
+    color: #059669; 
+    font-weight: 900;
+}
+
+.stepbar-bottom .step.status-generated .num { 
+    background: #00FF41; 
+    color: #000000;
+    box-shadow: 0 0 16px rgba(0, 255, 65, 0.5);
+}
+.stepbar-bottom .step.status-generated { 
+    color: #059669; 
+    font-weight: 900;
+}
+
+.stepbar-bottom .step.status-accepted .num { 
+    background: #0066FF; 
+    color: #FFFFFF;
+    box-shadow: 0 0 18px rgba(0, 102, 255, 0.6);
+}
+.stepbar-bottom .step.status-accepted { 
+    color: #2563EB; 
+    font-weight: 900;
+}
+
+.stepbar-bottom .step.inactive .num { 
+    background: #E2E8F0; 
+    color: #94A3B8;
+    box-shadow: none;
+}
+.stepbar-bottom .step.inactive { 
+    color: #94A3B8; 
+    font-weight: 700;
+}
+
+.stepbar-bottom .sep {
+    height: 1px;
+    width: 14px;
+    background: #E5E7EB;
+    border-radius: 99px;
+    flex-shrink: 0;
+}
+
 
 </style>
 {% endblock %}
