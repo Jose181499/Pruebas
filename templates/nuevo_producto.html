@@ -579,50 +579,28 @@
         }
 
         /* ============================================
-   ESTILO PARA VALOR VENTA EN AZUL
+   SOLO BORDE AZUL PARA VALOR VENTA
    ============================================ */
 
-/* Contenedor del precio de venta */
-.price-box.sale {
-    border-left: 4px solid #0066FF !important;
-    padding-left: 12px !important;
-    background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%) !important;
-    border-radius: 8px !important;
-    padding: 10px 12px !important;
-}
-
-/* Etiqueta "Valor venta" en azul */
-.price-box.sale .price-label {
-    color: #0066FF !important;
-    font-weight: 700 !important;
-}
-
-/* Input del valor venta en azul */
-.price-box.sale .money input {
+/* Solo el input del valor venta con borde azul */
+#valorVenta {
     border: 2px solid #0066FF !important;
-    background: #f8fbff !important;
-    color: #0044CC !important;
-    font-weight: 700 !important;
     border-radius: 6px !important;
-    padding: 4px 8px !important;
+    background: white !important;
+    color: #1a1a2e !important;
     transition: all 0.3s ease !important;
 }
 
-.price-box.sale .money input:focus {
-    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.25) !important;
+#valorVenta:focus {
     border-color: #0044CC !important;
-    background: white !important;
+    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.15) !important;
+    outline: none !important;
 }
 
-/* Símbolo S/ en azul */
-.price-box.sale .money span {
+/* Si quieres que también el símbolo S/ sea azul */
+.price-box .money span {
     color: #0066FF !important;
-    font-weight: 700 !important;
-}
-
-/* Etiqueta "No incluye IGV" en azul claro */
-.price-box.sale .tax {
-    color: #4a90d9 !important;
+    font-weight: 600 !important;
 }
         
         @keyframes spin {
