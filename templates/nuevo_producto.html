@@ -579,31 +579,38 @@
         }
 
         /* ============================================
-   SOLO BORDE AZUL PARA VALOR VENTA
+   BORDE AZUL ELÉCTRICO PARA VALOR VENTA
    ============================================ */
 
-/* Input del valor venta - Borde AZUL ELÉCTRICO */
-#valorVenta {
-    border: 2px solid #0066FF !important;  /* Borde azul eléctrico */
+/* Eliminar el borde por defecto y poner el azul */
+.money input#valorVenta {
+    border: 2px solid #0066FF !important;
     border-radius: 6px !important;
     background: white !important;
     color: #1a1a2e !important;
-    transition: all 0.3s ease !important;
-    outline: none !important;  /* Elimina el borde negro del navegador */
-    box-shadow: none !important;  /* Elimina sombras */
-}
-
-/* Cuando el input está en foco (click) */
-#valorVenta:focus {
-    border-color: #0044CC !important;  /* Azul más oscuro */
-    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.15) !important;
     outline: none !important;
+    box-shadow: none !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
 }
 
-/* Símbolo S/ en azul */
-.price-box .money span {
+/* Cuando está en foco */
+.money input#valorVenta:focus {
+    border: 2px solid #0044CC !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.15) !important;
+}
+
+/* El S/ en azul */
+.price-box.sale .money span {
     color: #0066FF !important;
-    font-weight: 600 !important;
+    font-weight: 700 !important;
+}
+
+/* Asegurar que el input de costo NO tenga borde azul */
+.money input#valorCosto {
+    border: 1px solid #d1d5db !important;  /* Borde gris claro por defecto */
+    outline: none !important;
 }
         
         @keyframes spin {
