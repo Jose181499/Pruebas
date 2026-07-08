@@ -118,10 +118,9 @@
         }
         
         /* ============================================
-           MODAL DE CONFIRMACIÓN - VERSIÓN MEJORADA
+           MODAL DE CONFIRMACIÓN
            ============================================ */
         
-        /* Overlay del modal */
         .modal-confirm-overlay {
             position: fixed !important;
             top: 0 !important;
@@ -145,7 +144,6 @@
             opacity: 1 !important;
         }
         
-        /* Contenido del modal */
         .modal-confirm-content {
             background: white !important;
             border-radius: 20px !important;
@@ -176,7 +174,6 @@
             }
         }
         
-        /* Icono de advertencia */
         .modal-confirm-icon {
             font-size: 72px !important;
             margin-bottom: 12px !important;
@@ -189,7 +186,6 @@
             50% { transform: scale(1.1); }
         }
         
-        /* Título del modal */
         .modal-confirm-title {
             margin: 0 0 8px 0 !important;
             color: #1e293b !important;
@@ -197,7 +193,6 @@
             font-weight: 800 !important;
         }
         
-        /* Subtítulo del modal */
         .modal-confirm-subtitle {
             color: #64748b !important;
             font-size: 15px !important;
@@ -205,7 +200,6 @@
             line-height: 1.6 !important;
         }
         
-        /* Contenedor de botones del modal */
         .modal-confirm-buttons {
             display: flex !important;
             gap: 12px !important;
@@ -213,7 +207,6 @@
             flex-wrap: wrap !important;
         }
         
-        /* Botón "Sí, guardar" */
         .modal-btn-confirm {
             background: linear-gradient(135deg, #f59e0b, #d97706) !important;
             color: white !important;
@@ -237,11 +230,6 @@
             box-shadow: 0 8px 30px rgba(245, 158, 11, 0.6) !important;
         }
         
-        .modal-btn-confirm:active {
-            transform: scale(0.96) !important;
-        }
-        
-        /* Botón "No, cancelar" */
         .modal-btn-cancel {
             background: #e2e8f0 !important;
             color: #475569 !important;
@@ -264,15 +252,10 @@
             transform: translateY(-2px) !important;
         }
         
-        .modal-btn-cancel:active {
-            transform: scale(0.96) !important;
-        }
-        
         /* ============================================
-           NOTIFICACIÓN FLOTANTE INDEPENDIENTE
+           NOTIFICACIONES FLOTANTES
            ============================================ */
         
-        /* Animación de entrada */
         @keyframes slideInDown {
             from {
                 opacity: 0;
@@ -284,9 +267,6 @@
             }
         }
         
-        /* ============================================
-           ANIMACIONES PARA NOTIFICACIONES BONITAS
-           ============================================ */
         @keyframes slideInRight {
             from {
                 opacity: 0;
@@ -615,9 +595,6 @@
         <p class="subtitle" style="font-size: 13px; margin: 2px 0 0 0;">{% if editando %}Modifica la información del producto seleccionado.{% else %}Crea o edita la información principal del producto.{% endif %}</p>
     </div>
     
-    <!-- ========================================== -->
-    <!-- BOTONES DE ACCIÓN - AZUL ELÉCTRICO ⚡     -->
-    <!-- ========================================== -->
     <div class="actions">
         <button class="btn outline" type="button" onclick="limpiarFormulario()">
             <i class="bi bi-x-circle"></i> Cancelar
@@ -629,7 +606,7 @@
 </div>
 
 <!-- ============================================ -->
-<!-- MODAL DE CONFIRMACIÓN - VERSIÓN MEJORADA    -->
+<!-- MODAL DE CONFIRMACIÓN                        -->
 <!-- ============================================ -->
 <div class="modal-confirm-overlay" id="modalConfirmacion">
     <div class="modal-confirm-content">
@@ -660,7 +637,6 @@
 <!-- ============================================ -->
 <form id="formNuevoProducto" action="/productos/api/productos" method="POST" enctype="multipart/form-data" onsubmit="return false;">
 
-    <!-- ✅ ID del producto para actualizar -->
     {% if editando and producto %}
     <input type="hidden" name="producto_id" value="{{ producto.id }}" />
     {% endif %}
@@ -948,11 +924,11 @@
 </form>
 
 <!-- ============================================ -->
-<!-- SCRIPT - VERSIÓN CORREGIDA                   -->
+<!-- SCRIPT CORREGIDO                             -->
 <!-- ============================================ -->
 <script>
 // ============================================================
-// 🟡 MODAL DE CONFIRMACIÓN - VERSIÓN CORREGIDA
+// 🟡 MODAL DE CONFIRMACIÓN
 // ============================================================
 
 function mostrarModalConfirmacion(event) {
@@ -960,7 +936,7 @@ function mostrarModalConfirmacion(event) {
     
     console.log('🟡 Intentando mostrar modal de confirmación...');
     
-    // 1. PRIMERO VALIDAR CAMPOS
+    // Validar campos
     var camposValidos = validarCampos();
     console.log('📋 Validación de campos:', camposValidos ? '✅ Válido' : '❌ Inválido');
     
@@ -969,15 +945,14 @@ function mostrarModalConfirmacion(event) {
         return;
     }
     
-    // 2. MOSTRAR MODAL
+    // Mostrar modal
     var modal = document.getElementById('modalConfirmacion');
     if (!modal) {
-        console.error('❌ Modal no encontrado en el DOM');
+        console.error('❌ Modal no encontrado');
         alert('Error: No se encontró el modal de confirmación');
         return;
     }
     
-    // Actualizar mensaje según sea edición o creación
     var esEdicion = document.querySelector('input[name="producto_id"]') !== null;
     var mensajeModal = document.getElementById('modalMensaje');
     var btnConfirmar = document.getElementById('btnConfirmarGuardar');
@@ -996,11 +971,9 @@ function mostrarModalConfirmacion(event) {
         btnConfirmar.innerHTML = '✅ Sí, guardar';
     }
     
-    // Mostrar modal con animación
     modal.classList.add('active');
     modal.style.display = 'flex';
     
-    // Asegurar que el overlay sea visible
     setTimeout(function() {
         modal.style.opacity = '1';
     }, 10);
@@ -1024,20 +997,18 @@ function confirmarGuardar() {
     console.log('✅ Confirmado: guardando producto...');
     cerrarModalConfirmacion();
     
-    // Ejecutar el guardado real después de un pequeño delay
     setTimeout(function() {
         ejecutarGuardado();
     }, 200);
 }
 
 // ============================================================
-// 🟢 VALIDACIÓN DE CAMPOS - MEJORADA
+// 🟢 VALIDACIÓN DE CAMPOS
 // ============================================================
 
 function validarCampos() {
     console.log('🟢 Validando formulario...');
     
-    // Limpiar errores anteriores
     limpiarErrores();
     
     var campos = [
@@ -1056,7 +1027,6 @@ function validarCampos() {
         var campo = campos[i];
         var elemento = document.getElementById(campo.id);
         
-        // Verificar que el elemento exista
         if (!elemento) {
             console.warn('⚠️ Elemento no encontrado:', campo.id);
             continue;
@@ -1079,7 +1049,6 @@ function validarCampos() {
     console.log('📋 Errores encontrados:', errores.length > 0 ? errores : '✅ Ninguno');
     
     if (errores.length > 0) {
-        // Mostrar notificación de error
         if (typeof window.mostrarNotificacionIndependiente === 'function') {
             window.mostrarNotificacionIndependiente(errores);
         } else {
@@ -1099,7 +1068,7 @@ function validarCampos() {
 }
 
 // ============================================================
-// 💾 EJECUTAR GUARDADO
+// 💾 EJECUTAR GUARDADO - CORREGIDO
 // ============================================================
 
 function ejecutarGuardado() {
@@ -1141,6 +1110,7 @@ function ejecutarGuardado() {
         body: JSON.stringify(data)
     })
     .then(function(response) {
+        console.log('📦 Response status:', response.status);
         if (!response.ok) {
             return response.json().then(function(err) {
                 throw new Error(err.error || 'Error al guardar');
@@ -1149,12 +1119,16 @@ function ejecutarGuardado() {
         return response.json();
     })
     .then(function(result) {
-        console.log('📦 Resultado:', result);
+        console.log('📦 Resultado completo:', result);
         btnGuardar.classList.remove('loading');
         btnGuardar.innerHTML = textoOriginal;
         
         if (result.success) {
-            var codigo = result.data?.codigo || 'N/A';
+            // Obtener el código de diferentes formas posibles
+            var codigo = result.data?.codigo || result.codigo || 'N/A';
+            console.log('📦 Código del producto:', codigo);
+            
+            // Mostrar notificación de éxito con el código
             mostrarNotificacionExito(!!productoId, codigo);
         } else {
             mostrarNotificacionError(result.error || 'Error desconocido');
@@ -1169,13 +1143,144 @@ function ejecutarGuardado() {
 }
 
 // ============================================================
-// 🚨 SISTEMA DE NOTIFICACIÓN INDEPENDIENTE
+// 🎉 NOTIFICACIÓN DE ÉXITO - CORREGIDA
+// ============================================================
+
+function mostrarNotificacionExito(esEdicion, codigo) {
+    console.log('🎉 Mostrando notificación de éxito con código:', codigo);
+    
+    // Eliminar notificaciones anteriores
+    var notificacionesAnteriores = document.querySelectorAll('.notificacion-exito, .notificacion-error');
+    for (var i = 0; i < notificacionesAnteriores.length; i++) {
+        notificacionesAnteriores[i].remove();
+    }
+    
+    var mensaje = esEdicion ? 'Producto actualizado' : 'Producto creado';
+    var icono = esEdicion ? '✏️' : '✅';
+    
+    var notificacion = document.createElement('div');
+    notificacion.className = 'notificacion-exito';
+    notificacion.style.cssText = `
+        position: fixed !important;
+        top: 30px !important;
+        right: 30px !important;
+        background: white !important;
+        border-radius: 16px !important;
+        padding: 24px 30px !important;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2) !important;
+        z-index: 99999999 !important;
+        max-width: 420px !important;
+        border-left: 6px solid #22c55e !important;
+        animation: slideInRight 0.5s ease !important;
+        display: flex !important;
+        align-items: flex-start !important;
+        gap: 16px !important;
+    `;
+    
+    notificacion.innerHTML = `
+        <div style="font-size: 40px; line-height: 1;">${icono}</div>
+        <div style="flex: 1;">
+            <div style="font-weight: 800; font-size: 18px; color: #0f172a; margin-bottom: 4px;">${mensaje}</div>
+            <div style="color: #64748b; font-size: 14px; margin-bottom: 6px;">El producto se ha guardado exitosamente.</div>
+            <div style="background: #f1f5f9; padding: 8px 16px; border-radius: 8px; display: inline-block; font-family: monospace; font-weight: 700; font-size: 15px; color: #0f172a; border: 1px solid #e2e8f0;">
+                📦 Código: ${codigo}
+            </div>
+        </div>
+        <button onclick="this.parentElement.remove()" style="
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #94a3b8;
+            padding: 0;
+            line-height: 1;
+            transition: color 0.2s;
+        " onmouseover="this.style.color='#475569'" onmouseout="this.style.color='#94a3b8'">✕</button>
+    `;
+    
+    document.body.appendChild(notificacion);
+    console.log('✅ Notificación de éxito agregada al DOM');
+    
+    // Auto-cerrar después de 5 segundos y redirigir
+    setTimeout(function() {
+        if (notificacion.parentNode) {
+            notificacion.style.animation = 'slideOutRight 0.3s ease forwards';
+            setTimeout(function() {
+                notificacion.remove();
+                window.location.href = '/productos/base-datos';
+            }, 300);
+        }
+    }, 5000);
+}
+
+// ============================================================
+// ❌ NOTIFICACIÓN DE ERROR
+// ============================================================
+
+function mostrarNotificacionError(mensaje) {
+    console.log('❌ Mostrando notificación de error:', mensaje);
+    
+    var notificacionesAnteriores = document.querySelectorAll('.notificacion-exito, .notificacion-error');
+    for (var i = 0; i < notificacionesAnteriores.length; i++) {
+        notificacionesAnteriores[i].remove();
+    }
+    
+    var notificacion = document.createElement('div');
+    notificacion.className = 'notificacion-error';
+    notificacion.style.cssText = `
+        position: fixed !important;
+        top: 30px !important;
+        right: 30px !important;
+        background: white !important;
+        border-radius: 16px !important;
+        padding: 24px 30px !important;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2) !important;
+        z-index: 99999999 !important;
+        max-width: 420px !important;
+        border-left: 6px solid #dc2626 !important;
+        animation: slideInRight 0.5s ease !important;
+        display: flex !important;
+        align-items: flex-start !important;
+        gap: 16px !important;
+    `;
+    
+    notificacion.innerHTML = `
+        <div style="font-size: 40px; line-height: 1;">❌</div>
+        <div style="flex: 1;">
+            <div style="font-weight: 800; font-size: 18px; color: #dc2626; margin-bottom: 4px;">Error al guardar</div>
+            <div style="color: #64748b; font-size: 14px; margin-bottom: 6px;">${mensaje}</div>
+        </div>
+        <button onclick="this.parentElement.remove()" style="
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #94a3b8;
+            padding: 0;
+            line-height: 1;
+            transition: color 0.2s;
+        " onmouseover="this.style.color='#475569'" onmouseout="this.style.color='#94a3b8'">✕</button>
+    `;
+    
+    document.body.appendChild(notificacion);
+    
+    setTimeout(function() {
+        if (notificacion.parentNode) {
+            notificacion.style.animation = 'slideOutRight 0.3s ease forwards';
+            setTimeout(function() {
+                notificacion.remove();
+            }, 300);
+        }
+    }, 5000);
+}
+
+// ============================================================
+// 🚨 SISTEMA DE NOTIFICACIÓN DE ERRORES DE VALIDACIÓN
 // ============================================================
 
 (function() {
-    console.log('🚨 Inicializando sistema de notificación...');
+    console.log('🚨 Inicializando sistema de notificación de validación...');
     
-    // 1. ELIMINAR CUALQUIER OVERLAY EXISTENTE
     try {
         var oldOverlay = document.getElementById('modalErrorFlotante');
         if (oldOverlay && oldOverlay.parentNode) {
@@ -1186,7 +1291,6 @@ function ejecutarGuardado() {
         console.log('⚠️ No se pudo eliminar overlay antiguo:', e.message);
     }
     
-    // 2. CREAR NUEVO OVERLAY
     var overlay = document.createElement('div');
     overlay.id = 'modalErrorFlotanteNuevo';
     overlay.style.cssText = `
@@ -1205,7 +1309,6 @@ function ejecutarGuardado() {
         -webkit-backdrop-filter: blur(5px) !important;
     `;
     
-    // 3. CONTENIDO DEL OVERLAY
     overlay.innerHTML = `
         <div style="
             background: white !important;
@@ -1246,11 +1349,10 @@ function ejecutarGuardado() {
     `;
     
     document.body.appendChild(overlay);
-    console.log('✅ Nuevo overlay creado e insertado en el DOM');
+    console.log('✅ Nuevo overlay de validación creado');
     
-    // 4. FUNCIÓN PARA MOSTRAR NOTIFICACIÓN
     window.mostrarNotificacionIndependiente = function(camposFaltantes) {
-        console.log('🔔 Mostrando notificación independiente con:', camposFaltantes);
+        console.log('🔔 Mostrando notificación de validación con:', camposFaltantes);
         
         var lista = document.getElementById('listaCamposFaltantes');
         if (!lista) {
@@ -1258,7 +1360,6 @@ function ejecutarGuardado() {
             return;
         }
         
-        // Limpiar y agregar campos
         lista.innerHTML = '';
         for (var i = 0; i < camposFaltantes.length; i++) {
             var li = document.createElement('li');
@@ -1276,26 +1377,22 @@ function ejecutarGuardado() {
             lista.appendChild(li);
         }
         
-        // Mostrar overlay con animación
         overlay.style.display = 'flex';
         overlay.style.opacity = '1';
         overlay.style.visibility = 'visible';
         
-        // Scroll al overlay
         overlay.scrollIntoView({ behavior: 'smooth', block: 'center' });
         
-        console.log('✅ Notificación INDEPENDIENTE mostrada');
+        console.log('✅ Notificación de validación mostrada');
         
-        // Auto-cerrar después de 7 segundos
         if (window._timeoutIndependiente) clearTimeout(window._timeoutIndependiente);
         window._timeoutIndependiente = setTimeout(function() {
             cerrarNotificacionIndependiente();
         }, 7000);
     };
     
-    // 5. FUNCIÓN PARA CERRAR
     window.cerrarNotificacionIndependiente = function() {
-        console.log('🔴 Cerrando notificación independiente...');
+        console.log('🔴 Cerrando notificación de validación...');
         overlay.style.display = 'none';
         overlay.style.opacity = '0';
         overlay.style.visibility = 'hidden';
@@ -1305,144 +1402,17 @@ function ejecutarGuardado() {
         }
     };
     
-    console.log('✅ SISTEMA DE NOTIFICACIÓN INDEPENDIENTE INICIALIZADO');
+    window.mostrarErrorFlotante = function(campos) {
+        console.log('🔔 Redirigiendo a mostrarNotificacionIndependiente');
+        window.mostrarNotificacionIndependiente(campos);
+    };
     
+    console.log('✅ SISTEMA DE VALIDACIÓN INICIALIZADO');
 })();
 
-/**
- * ============================================================
- * NOTIFICACIÓN DE ÉXITO - BONITA
- * ============================================================
- */
-function mostrarNotificacionExito(esEdicion, codigo) {
-    // Eliminar notificaciones anteriores
-    var notificacionesAnteriores = document.querySelectorAll('.notificacion-exito, .notificacion-error');
-    for (var i = 0; i < notificacionesAnteriores.length; i++) {
-        notificacionesAnteriores[i].remove();
-    }
-    
-    var mensaje = esEdicion ? 'Producto actualizado' : 'Producto creado';
-    var icono = esEdicion ? '✏️' : '✅';
-    
-    var notificacion = document.createElement('div');
-    notificacion.className = 'notificacion-exito';
-    notificacion.style.cssText = `
-        position: fixed !important;
-        top: 30px !important;
-        right: 30px !important;
-        background: white !important;
-        border-radius: 16px !important;
-        padding: 24px 30px !important;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.2) !important;
-        z-index: 99999999 !important;
-        max-width: 420px !important;
-        border-left: 6px solid #22c55e !important;
-        animation: slideInRight 0.5s ease !important;
-        display: flex !important;
-        align-items: flex-start !important;
-        gap: 16px !important;
-    `;
-    
-    notificacion.innerHTML = `
-        <div style="font-size: 40px; line-height: 1;">${icono}</div>
-        <div style="flex: 1;">
-            <div style="font-weight: 800; font-size: 18px; color: #0f172a; margin-bottom: 4px;">${mensaje}</div>
-            <div style="color: #64748b; font-size: 14px; margin-bottom: 6px;">El producto se ha guardado exitosamente.</div>
-            <div style="background: #f1f5f9; padding: 6px 14px; border-radius: 6px; display: inline-block; font-family: monospace; font-weight: 700; font-size: 14px; color: #0f172a;">
-                Código: ${codigo}
-            </div>
-        </div>
-        <button onclick="this.parentElement.remove()" style="
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            color: #94a3b8;
-            padding: 0;
-            line-height: 1;
-        ">✕</button>
-    `;
-    
-    document.body.appendChild(notificacion);
-    
-    // Auto-cerrar después de 4 segundos y redirigir
-    setTimeout(function() {
-        if (notificacion.parentNode) {
-            notificacion.style.animation = 'slideOutRight 0.3s ease forwards';
-            setTimeout(function() {
-                notificacion.remove();
-                window.location.href = '/productos/base-datos';
-            }, 300);
-        }
-    }, 4000);
-}
-
-/**
- * ============================================================
- * NOTIFICACIÓN DE ERROR - BONITA
- * ============================================================
- */
-function mostrarNotificacionError(mensaje) {
-    // Eliminar notificaciones anteriores
-    var notificacionesAnteriores = document.querySelectorAll('.notificacion-exito, .notificacion-error');
-    for (var i = 0; i < notificacionesAnteriores.length; i++) {
-        notificacionesAnteriores[i].remove();
-    }
-    
-    var notificacion = document.createElement('div');
-    notificacion.className = 'notificacion-error';
-    notificacion.style.cssText = `
-        position: fixed !important;
-        top: 30px !important;
-        right: 30px !important;
-        background: white !important;
-        border-radius: 16px !important;
-        padding: 24px 30px !important;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.2) !important;
-        z-index: 99999999 !important;
-        max-width: 420px !important;
-        border-left: 6px solid #dc2626 !important;
-        animation: slideInRight 0.5s ease !important;
-        display: flex !important;
-        align-items: flex-start !important;
-        gap: 16px !important;
-    `;
-    
-    notificacion.innerHTML = `
-        <div style="font-size: 40px; line-height: 1;">❌</div>
-        <div style="flex: 1;">
-            <div style="font-weight: 800; font-size: 18px; color: #dc2626; margin-bottom: 4px;">Error al guardar</div>
-            <div style="color: #64748b; font-size: 14px; margin-bottom: 6px;">${mensaje}</div>
-        </div>
-        <button onclick="this.parentElement.remove()" style="
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            color: #94a3b8;
-            padding: 0;
-            line-height: 1;
-        ">✕</button>
-    `;
-    
-    document.body.appendChild(notificacion);
-    
-    // Auto-cerrar después de 5 segundos
-    setTimeout(function() {
-        if (notificacion.parentNode) {
-            notificacion.style.animation = 'slideOutRight 0.3s ease forwards';
-            setTimeout(function() {
-                notificacion.remove();
-            }, 300);
-        }
-    }, 5000);
-}
-
-/**
- * ============================================================
- * LIMPIAR ERRORES VISUALES
- * ============================================================
- */
+// ============================================================
+// OTRAS FUNCIONES AUXILIARES
+// ============================================================
 
 function limpiarErrores() {
     var camposConError = document.querySelectorAll('.field.error');
@@ -1450,12 +1420,6 @@ function limpiarErrores() {
         camposConError[i].classList.remove('error');
     }
 }
-
-/**
- * ============================================================
- * CALCULAR MARGEN
- * ============================================================
- */
 
 function calcularMargen() {
     var venta = parseFloat(document.getElementById('valorVenta').value) || 0;
@@ -1473,12 +1437,6 @@ function calcularMargen() {
         if (margenSol) margenSol.textContent = 'S/ 0.00';
     }
 }
-
-/**
- * ============================================================
- * ACTUALIZAR CHIPS DE ESTADO
- * ============================================================
- */
 
 function actualizarEstadoChips() {
     var estado = document.getElementById('estadoProducto').value;
@@ -1506,12 +1464,6 @@ function actualizarEstadoChips() {
     }
 }
 
-/**
- * ============================================================
- * PERSONALIZAR SELECT
- * ============================================================
- */
-
 function personalizar(id, placeholder) {
     var select = document.getElementById(id);
     if (!select) return;
@@ -1534,12 +1486,6 @@ function personalizar(id, placeholder) {
         select.value = valor.trim();
     }
 }
-
-/**
- * ============================================================
- * LIMPIAR FORMULARIO
- * ============================================================
- */
 
 function limpiarFormulario() {
     if (!confirm('¿Estás seguro de que deseas limpiar el formulario? Los cambios no guardados se perderán.')) {
@@ -1578,22 +1524,16 @@ function limpiarFormulario() {
     actualizarEstadoChips();
 }
 
-/**
- * ============================================================
- * INICIALIZAR EVENTOS
- * ============================================================
- */
+// ============================================================
+// INICIALIZAR
+// ============================================================
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('✅ Página de nuevo producto cargada');
     
-    // Inicializar margen
     calcularMargen();
-    
-    // Inicializar chips de estado
     actualizarEstadoChips();
     
-    // Configurar upload de foto
     var uploadArea = document.getElementById('uploadArea');
     var fileInput = document.getElementById('fotoProducto');
     var fileBadge = document.getElementById('fileBadge');
@@ -1666,7 +1606,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Limpiar errores cuando el usuario escribe
     var inputs = document.querySelectorAll('input, select, textarea');
     for (var i = 0; i < inputs.length; i++) {
         inputs[i].addEventListener('input', function() {
@@ -1683,7 +1622,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Cerrar modal al hacer clic fuera
     var modal = document.getElementById('modalConfirmacion');
     if (modal) {
         modal.addEventListener('click', function(e) {
@@ -1700,13 +1638,14 @@ window.cerrarModalConfirmacion = cerrarModalConfirmacion;
 window.confirmarGuardar = confirmarGuardar;
 window.validarCampos = validarCampos;
 window.ejecutarGuardado = ejecutarGuardado;
+window.mostrarNotificacionExito = mostrarNotificacionExito;
+window.mostrarNotificacionError = mostrarNotificacionError;
 window.limpiarFormulario = limpiarFormulario;
 window.calcularMargen = calcularMargen;
 window.actualizarEstadoChips = actualizarEstadoChips;
 window.personalizar = personalizar;
 window.limpiarErrores = limpiarErrores;
-window.mostrarNotificacionExito = mostrarNotificacionExito;
-window.mostrarNotificacionError = mostrarNotificacionError;
+window.cerrarNotificacionIndependiente = cerrarNotificacionIndependiente;
 </script>
 
 </body>
