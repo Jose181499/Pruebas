@@ -578,7 +578,33 @@
             display: inline-block;
         }
 
-        
+        /* ============================================
+   SOLO BORDE AZUL PARA VALOR VENTA
+   ============================================ */
+
+/* Input del valor venta - Borde AZUL ELÉCTRICO */
+#valorVenta {
+    border: 2px solid #0066FF !important;  /* Borde azul eléctrico */
+    border-radius: 6px !important;
+    background: white !important;
+    color: #1a1a2e !important;
+    transition: all 0.3s ease !important;
+    outline: none !important;  /* Elimina el borde negro del navegador */
+    box-shadow: none !important;  /* Elimina sombras */
+}
+
+/* Cuando el input está en foco (click) */
+#valorVenta:focus {
+    border-color: #0044CC !important;  /* Azul más oscuro */
+    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.15) !important;
+    outline: none !important;
+}
+
+/* Símbolo S/ en azul */
+.price-box .money span {
+    color: #0066FF !important;
+    font-weight: 600 !important;
+}
         
         @keyframes spin {
             to { transform: rotate(360deg); }
