@@ -175,7 +175,28 @@
     </div>
 </div>
 <div class="scroll-note"><i class="bi bi-arrows-expand"></i> Las columnas complementarias se visualizan desplazando la barra horizontal de la tabla.</div>
+<!-- ============================================================ -->
 
+
+<!-- MODAL VER PRODUCTO - COMPACTO                                -->
+<!-- ============================================================ -->
+<div class="modal-ver-producto" id="modalVerProducto" style="display:none;">
+    <div class="modal-overlay-ver" onclick="cerrarModalVer()"></div>
+    <div class="modal-contenido-ver">
+        <div class="modal-header-ver">
+            <span class="modal-icon-ver">📦</span>
+            <span class="modal-title-ver" id="modalVerTitulo">Producto</span>
+            <button class="modal-close-ver" onclick="cerrarModalVer()">✕</button>
+        </div>
+        <div class="modal-body-ver" id="modalVerBody">
+            <div style="text-align:center;padding:20px;color:#94a3b8;">Cargando...</div>
+        </div>
+        <div class="modal-footer-ver">
+            <button class="btn-modal-ver btn-secondary" onclick="cerrarModalVer()">Cerrar</button>
+            <button class="btn-modal-ver btn-primary" id="btnEditarDesdeModal" onclick="editarDesdeModal()">✏️ Editar</button>
+        </div>
+    </div>
+</div>
 <script>
 // ============================================================
 // FUNCIONES PARA BASE DE DATOS DE PRODUCTOS
@@ -497,8 +518,10 @@ function bdExportarExcel() {
 }
 
 // ============================================================
-// VER PRODUCTO
+// VER PRODUCTO - MODAL COMPACTO
 // ============================================================
+var productoIdActual = null;
+
 function verProducto(id) {
     if (!id) {
         if (typeof mostrarNotificacion === 'function') {
@@ -507,47 +530,163 @@ function verProducto(id) {
         return;
     }
     
-    if (typeof mostrarNotificacion === 'function') {
-        mostrarNotificacion('info', '⏳ Cargando...', 'Obteniendo información del producto');
-    }
+    productoIdActual = id;
+    
+    // Mostrar modal con carga
+    var modal = document.getElementById('modalVerProducto');
+    var body = document.getElementById('modalVerBody');
+    var titulo = document.getElementById('modalVerTitulo');
+    
+    if (!modal || !body) return;
+    
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+    titulo.textContent = 'Cargando...';
+    body.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;"><i class="bi bi-hourglass-split" style="font-size:24px;display:block;margin-bottom:8px;"></i>Cargando producto...</div>';
     
     fetch('/productos/api/productos/' + id)
         .then(function(response) { 
-            if (!response.ok) {
-                throw new Error('Error al cargar el producto');
-            }
+            if (!response.ok) throw new Error('Error al cargar el producto');
             return response.json(); 
         })
         .then(function(data) {
             if (data.success && data.data) {
                 var p = data.data;
-                alert('Producto: ' + (p.descripcion || p.codigo) + '\nCódigo: ' + p.codigo + '\nModelo: ' + p.modelo + '\nMarca: ' + p.marca);
+                renderModalProducto(p);
             } else {
-                if (typeof mostrarNotificacion === 'function') {
-                    mostrarNotificacion('error', '❌ Error', data.error || 'Producto no encontrado');
-                }
+                body.innerHTML = '<div style="text-align:center;padding:20px;color:#dc2626;">❌ ' + (data.error || 'Producto no encontrado') + '</div>';
+                titulo.textContent = 'Error';
             }
         })
         .catch(function(error) {
             console.error('Error:', error);
-            if (typeof mostrarNotificacion === 'function') {
-                mostrarNotificacion('error', '❌ Error', 'Error al cargar el producto');
-            }
+            body.innerHTML = '<div style="text-align:center;padding:20px;color:#dc2626;">❌ Error al cargar el producto</div>';
+            titulo.textContent = 'Error';
         });
 }
 
-// ============================================================
-// EDITAR PRODUCTO
-// ============================================================
-function editarProducto(id) {
-    if (!id) {
-        if (typeof mostrarNotificacion === 'function') {
-            mostrarNotificacion('error', '❌ Error', 'ID de producto no válido');
-        }
-        return;
+function renderModalProducto(p) {
+    var titulo = document.getElementById('modalVerTitulo');
+    var body = document.getElementById('modalVerBody');
+    
+    titulo.textContent = p.descripcion || p.codigo || 'Producto';
+    
+    var estado = (p.estado || 'activo').toLowerCase();
+    var estadoLabel = estado.charAt(0).toUpperCase() + estado.slice(1).replace('_', ' ');
+    
+    var costo = p.costo_unitario ? parseFloat(p.costo_unitario).toFixed(2) : '0.00';
+    var precio = p.precio_unitario ? parseFloat(p.precio_unitario).toFixed(2) : '0.00';
+    var categoria = p.categoria || p.familia || '-';
+    var subcategoria = p.subcategoria || p.categoria_derivada || '-';
+    
+    // Fecha
+    var fecha = p.created_at || p.updated_at || p.fecha_creacion || null;
+    var fechaStr = fecha ? formatearFecha(fecha) : '-';
+    
+    body.innerHTML = `
+        <div class="grid-info-ver">
+            <div class="info-item">
+                <span class="info-label">Código</span>
+                <span class="info-value"><span class="bd-t-code">${p.codigo || '-'}</span></span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Estado</span>
+                <span class="info-value"><span class="badge-estado ${estado}">${estadoLabel}</span></span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Modelo</span>
+                <span class="info-value">${p.modelo || '-'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Marca</span>
+                <span class="info-value">${p.marca || '-'}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Categoría</span>
+                <span class="info-value">${categoria}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Subcategoría</span>
+                <span class="info-value">${subcategoria}</span>
+            </div>
+            
+            <div class="divider-ver"></div>
+            
+            <div class="info-item">
+                <span class="info-label">Valor Venta</span>
+                <span class="info-value precio-venta">S/ ${precio}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Valor Costo</span>
+                <span class="info-value precio-costo">S/ ${costo}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Unidad</span>
+                <span class="info-value">${p.unidad || '-'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Transporte</span>
+                <span class="info-value">${p.transporte || '-'}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Stock mínimo</span>
+                <span class="info-value">${p.stock_minimo || '0'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Fecha registro</span>
+                <span class="info-value">${fechaStr}</span>
+            </div>
+            
+            <div class="info-item full">
+                <span class="info-label">Descripción</span>
+                <span class="info-value">${p.descripcion_larga || p.descripcion || '-'}</span>
+            </div>
+            
+            ${p.observaciones ? `
+            <div class="info-item full">
+                <span class="info-label">Observaciones</span>
+                <span class="info-value" style="font-weight:400;color:#475569;">${p.observaciones}</span>
+            </div>` : ''}
+        </div>
+    `;
+    
+    // Actualizar botón editar
+    var btnEditar = document.getElementById('btnEditarDesdeModal');
+    if (btnEditar) {
+        btnEditar.onclick = function() {
+            cerrarModalVer();
+            editarProducto(p.id);
+        };
     }
-    window.location.href = '/productos/editar/' + id;
 }
+
+function cerrarModalVer() {
+    var modal = document.getElementById('modalVerProducto');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+    }
+    productoIdActual = null;
+}
+
+function editarDesdeModal() {
+    if (productoIdActual) {
+        cerrarModalVer();
+        editarProducto(productoIdActual);
+    }
+}
+
+// Cerrar modal con ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        cerrarModalVer();
+    }
+});
+
 
 // ============================================================
 // ELIMINAR PRODUCTO
@@ -1264,6 +1403,271 @@ window.formatearFecha = formatearFecha;
     
     .bd-col-date {
         min-width: 120px;
+    }
+}
+/* ============================================================
+   MODAL VER PRODUCTO - COMPACTO
+   ============================================================ */
+
+.modal-ver-producto {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 999999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-ver-producto.active {
+    display: flex;
+}
+
+.modal-overlay-ver {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 999998;
+}
+
+.modal-contenido-ver {
+    position: relative;
+    z-index: 999999;
+    background: white;
+    border-radius: 16px;
+    max-width: 520px;
+    width: 100%;
+    max-height: 85vh;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    animation: modalSlideUp 0.25s ease;
+}
+
+@keyframes modalSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-header-ver {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.modal-icon-ver {
+    font-size: 28px;
+    line-height: 1;
+}
+
+.modal-title-ver {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.modal-close-ver {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #94a3b8;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    line-height: 1;
+}
+
+.modal-close-ver:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+.modal-body-ver {
+    padding: 16px 20px 12px;
+    max-height: 55vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Scroll elegante */
+.modal-body-ver::-webkit-scrollbar {
+    width: 4px;
+}
+
+.modal-body-ver::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.modal-body-ver::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* Grid de información */
+.grid-info-ver {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
+}
+
+.grid-info-ver .info-item {
+    display: flex;
+    flex-direction: column;
+    padding: 4px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.grid-info-ver .info-item.full {
+    grid-column: span 2;
+}
+
+.grid-info-ver .info-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+    margin-bottom: 1px;
+}
+
+.grid-info-ver .info-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: #0f172a;
+    word-break: break-word;
+}
+
+.grid-info-ver .info-value .badge-estado {
+    display: inline-block;
+    padding: 2px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.badge-estado.activo { background: #dcfce7; color: #166534; }
+.badge-estado.inactivo { background: #f1f5f9; color: #475569; }
+.badge-estado.bajo_pedido { background: #fef3c7; color: #92400e; }
+.badge-estado.bloqueado { background: #fee2e2; color: #991b1b; }
+.badge-estado.disponible { background: #dbeafe; color: #1e40af; }
+
+.grid-info-ver .info-value .precio-venta {
+    color: #0066FF;
+    font-weight: 800;
+}
+
+.grid-info-ver .info-value .precio-costo {
+    color: #DC2626;
+    font-weight: 800;
+}
+
+/* Separador */
+.divider-ver {
+    grid-column: span 2;
+    height: 1px;
+    background: #e2e8f0;
+    margin: 4px 0;
+}
+
+.modal-footer-ver {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 12px 20px 16px;
+    border-top: 1px solid #e2e8f0;
+    background: #fafbfc;
+}
+
+.btn-modal-ver {
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-modal-ver.btn-secondary {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.btn-modal-ver.btn-secondary:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+.btn-modal-ver.btn-primary {
+    background: #0066FF;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 102, 255, 0.25);
+}
+
+.btn-modal-ver.btn-primary:hover {
+    background: #0044CC;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0, 102, 255, 0.35);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .modal-contenido-ver {
+        max-width: 95%;
+        max-height: 90vh;
+    }
+    
+    .grid-info-ver {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+    
+    .grid-info-ver .info-item.full {
+        grid-column: span 1;
+    }
+    
+    .divider-ver {
+        grid-column: span 1;
+    }
+    
+    .modal-header-ver {
+        padding: 12px 16px;
+    }
+    
+    .modal-body-ver {
+        padding: 12px 16px 8px;
+    }
+    
+    .modal-footer-ver {
+        padding: 10px 16px 14px;
+        flex-wrap: wrap;
+    }
+    
+    .btn-modal-ver {
+        flex: 1;
+        justify-content: center;
+        padding: 8px 12px;
+        font-size: 12px;
     }
 }
 </style>
