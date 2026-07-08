@@ -1068,7 +1068,7 @@ function validarCampos() {
 }
 
 // ============================================================
-// 💾 EJECUTAR GUARDADO - CORREGIDO
+// 💾 EJECUTAR GUARDADO - CORREGIDO PARA EVITAR DUPLICADOS
 // ============================================================
 
 function ejecutarGuardado() {
@@ -1078,24 +1078,33 @@ function ejecutarGuardado() {
     var formData = new FormData(form);
     
     var productoId = document.querySelector('input[name="producto_id"]')?.value;
-    var url = productoId ? '/productos/api/productos/' + productoId : '/productos/api/productos';
-    var method = productoId ? 'PUT' : 'POST';
+    var esEdicion = !!productoId;
+    
+    var url = esEdicion ? '/productos/api/productos/' + productoId : '/productos/api/productos';
+    var method = esEdicion ? 'PUT' : 'POST';
     
     var data = {};
+    
+    // ⚠️ IMPORTANTE: Si es edición, NO enviar el código en el body
     for (var [key, value] of formData.entries()) {
-        if (key === 'codigo' && productoId) {
+        // Si es edición, saltamos el campo 'codigo' y 'producto_id'
+        if (esEdicion && (key === 'codigo' || key === 'producto_id')) {
+            console.log('⏭️ Saltando campo en edición:', key);
             continue;
         }
         data[key] = value;
     }
     
-    if (productoId) {
+    // Si es edición, aseguramos que el ID esté en la URL (ya está)
+    // pero también lo podemos enviar en el body para seguridad
+    if (esEdicion) {
         data.id = productoId;
     }
     
     console.log('📦 URL:', url);
     console.log('📦 Método:', method);
-    console.log('📦 Datos:', data);
+    console.log('📦 ¿Es edición?', esEdicion);
+    console.log('📦 Datos a enviar:', data);
     
     var btnGuardar = document.getElementById('btnGuardar');
     var textoOriginal = btnGuardar.innerHTML;
@@ -1124,12 +1133,9 @@ function ejecutarGuardado() {
         btnGuardar.innerHTML = textoOriginal;
         
         if (result.success) {
-            // Obtener el código de diferentes formas posibles
             var codigo = result.data?.codigo || result.codigo || 'N/A';
             console.log('📦 Código del producto:', codigo);
-            
-            // Mostrar notificación de éxito con el código
-            mostrarNotificacionExito(!!productoId, codigo);
+            mostrarNotificacionExito(esEdicion, codigo);
         } else {
             mostrarNotificacionError(result.error || 'Error desconocido');
         }
@@ -1141,6 +1147,7 @@ function ejecutarGuardado() {
         mostrarNotificacionError(error.message || 'Error al comunicarse con el servidor');
     });
 }
+
 
 // ============================================================
 // 🎉 NOTIFICACIÓN DE ÉXITO - CORREGIDA

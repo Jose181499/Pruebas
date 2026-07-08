@@ -906,7 +906,7 @@ window.bdExportarExcel = bdExportarExcel;
 }
 
 /* ============================================================
-   TABLA
+   TABLA - ENCABEZADOS CENTRADOS
    ============================================================ */
 .bd-table-card {
     background: white;
@@ -928,25 +928,74 @@ window.bdExportarExcel = bdExportarExcel;
     min-width: 800px;
 }
 
+/* 🟢 ENCABEZADOS CENTRADOS */
 .bd-table thead th {
     background: #f8fafc;
-    color: #475569;
+    color: #1e293b;
     font-weight: 700;
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    padding: 8px 10px;
-    text-align: left;
+    padding: 10px 8px;
+    text-align: center !important;  /* CENTRADO */
     border-bottom: 2px solid #e2e8f0;
     white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
+/* 🟢 ENCABEZADO DE LA PRIMERA COLUMNA (Ítem) - CENTRADO */
+.bd-table thead th.bd-col-item {
+    text-align: center !important;
+}
+
+/* 🟢 ENCABEZADO DE CÓDIGO - CENTRADO */
+.bd-table thead th.bd-col-code {
+    text-align: center !important;
+}
+
+/* 🟢 ENCABEZADO DE ACCIONES - CENTRADO */
+.bd-table thead th.bd-col-actions {
+    text-align: center !important;
+}
+
+/* 🟢 ENCABEZADOS DE COLUMNAS OCULTAS - CENTRADOS */
+.bd-table thead th.col-oculta {
+    text-align: center !important;
+}
+
+/* 🟢 DATOS DE LA TABLA - CENTRADOS ALINEADOS CON ENCABEZADOS */
 .bd-table tbody td {
-    padding: 6px 10px;
+    padding: 6px 8px;
     border-bottom: 1px solid #f1f5f9;
     vertical-align: middle;
     color: #0f172a;
     font-size: 12px;
+    text-align: center !important;  /* CENTRADO */
+}
+
+/* 🟢 EXCEPCIONES: Texto largo que necesita alineación a la izquierda */
+.bd-table tbody td.bd-col-desc {
+    text-align: left !important;
+}
+
+.bd-table tbody td.bd-col-obs {
+    text-align: left !important;
+}
+
+.bd-table tbody td.bd-col-desc-larga {
+    text-align: left !important;
+}
+
+/* 🟢 EXCEPCIÓN: Estado con su badge */
+.bd-table tbody td.bd-col-status {
+    text-align: center !important;
+}
+
+/* 🟢 EXCEPCIÓN: Acciones con sus botones */
+.bd-table tbody td.bd-col-actions {
+    text-align: center !important;
 }
 
 .bd-table tbody tr:hover td {
@@ -957,12 +1006,12 @@ window.bdExportarExcel = bdExportarExcel;
    ANCHOS DE COLUMNAS (PRINCIPAL)
    ============================================================ */
 .bd-col-item { width: 40px; text-align: center; }
-.bd-col-code { width: 100px; }
+.bd-col-code { width: 100px; text-align: center; }
 .bd-col-desc { width: 150px; }
 .bd-col-model { width: 100px; }
 .bd-col-brand { width: 120px; }
 .bd-col-cat { width: 130px; }
-.bd-col-status { width: 100px; }
+.bd-col-status { width: 100px; text-align: center; }
 .bd-col-actions { width: 110px; text-align: center; }
 
 /* Anchos para columnas ocultas (completa) */
@@ -971,7 +1020,7 @@ window.bdExportarExcel = bdExportarExcel;
 .bd-col-transport { width: 100px; }
 .bd-col-cost { width: 90px; }
 .bd-col-sale { width: 90px; }
-.bd-col-obs { width: 160px; }
+.bd-col-obs { width: 160px; text-align: left; }
 .bd-col-prov-pres { width: 130px; }
 .bd-col-sale-pres { width: 110px; }
 .bd-col-min-sale { width: 80px; }
@@ -981,7 +1030,7 @@ window.bdExportarExcel = bdExportarExcel;
 .bd-col-tiempo { width: 100px; }
 .bd-col-abast { width: 120px; }
 .bd-col-stock-min { width: 80px; }
-.bd-col-desc-larga { width: 180px; }
+.bd-col-desc-larga { width: 180px; text-align: left; }
 
 /* ============================================================
    ESTADOS
@@ -989,6 +1038,7 @@ window.bdExportarExcel = bdExportarExcel;
 .bd-status {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 5px;
     padding: 2px 10px;
     border-radius: 20px;
@@ -1029,6 +1079,8 @@ window.bdExportarExcel = bdExportarExcel;
     padding: 2px 8px;
     border-radius: 4px;
     font-size: 11px;
+    display: inline-block;
+    text-align: center;
 }
 
 /* ============================================================
