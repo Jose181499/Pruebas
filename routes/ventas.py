@@ -747,44 +747,58 @@ def ventas():
                          usuario=session.get('usuario'),
                          nombre=session.get('nombre'),
                          empresa=session.get('empresa'))
-
 @ventas_bp.route('/ventas/api/cotizaciones/listar', methods=['GET'])
 @login_required
 def api_cotizaciones_listar():
     try:
+        print("🔍 API COTIZACIONES LLAMADA")
+        
         data = obtener_cotizaciones_db()
+        print(f"📊 Cotizaciones encontradas: {len(data)}")
+        
         formatted_data = []
         for row in data:
             formatted_data.append({
                 'id': row.get('id'),
-                'numero': row.get('numero_cotizacion'),
+                'numero': row.get('numero_cotizacion') or row.get('codigo_cotizacion'),
                 'fecha': row.get('fecha_creacion'),
                 'estado': row.get('estado'),
-                'ruc': row.get('cliente_ruc'),
-                'razon': row.get('cliente_razon_social'),
-                'descripcion': row.get('nota_cotizacion') or 'Sin descripción',
+                'ruc': row.get('cliente_ruc') or str(row.get('cliente_id', '')),
+                'razon': row.get('cliente_razon_social') or row.get('cliente_nombre_comercial') or f"Cliente {row.get('cliente_id', '')}",
+                'descripcion': row.get('nota_cotizacion') or row.get('notas') or 'Sin descripción',
                 'monto': float(row.get('total', 0)),
                 'subtotal': float(row.get('subtotal', 0)),
                 'igv': float(row.get('igv', 0)),
-                'condicion': row.get('condicion_pago'),
+                'condicion': row.get('condicion_pago') or row.get('forma_pago'),
+                'vendedor': row.get('vendedor') or str(row.get('usuario_id', '')),
+                'vencimiento': row.get('validez_oferta'),
                 'cod_cliente': str(row.get('cliente_id', '')),
-                'direccion_entrega': row.get('direccion_entrega'),  # ← ESTO DEBE ESTAR
+                'direccion_entrega': row.get('direccion_entrega'),  # ✅ ESTO DEBE ESTAR
                 'requerimiento': row.get('requerimiento'),
-                'nota_comercial': row.get('nota_cotizacion'),
-                'tiempo_entrega': row.get('tiempo_entrega'),
-                'validez_oferta': row.get('validez_oferta'),
+                'nota': row.get('nota_cotizacion'),
+                'descuento_porcentaje': float(row.get('descuento_porcentaje', 0)),
+                'descuento_monto': float(row.get('descuento_monto', 0)),
+                'descuento_tipo': row.get('descuento_tipo'),
                 'contacto': row.get('contacto_cliente'),
                 'telefono': row.get('telefono_cliente'),
                 'email': row.get('email_cliente'),
+                'tiempo_entrega': row.get('tiempo_entrega'),
+                'validez_oferta': row.get('validez_oferta'),
+                'nota_comercial': row.get('nota_cotizacion'),
                 'seguimiento': row.get('seguimiento', 'Helen Blas Príncipe'),
                 'motivo': row.get('motivo', 'Proyecto nuevo'),
                 'transporte': row.get('transporte', 'Seleccione'),
                 'parihuela': row.get('parihuela', 'Seleccione'),
-                'nota_interna': row.get('nota_interna', ''),
-                'vendedor': row.get('vendedor', 'Helen Blas Príncipe')
+                'nota_interna': row.get('nota_interna', '')
             })
+        
+        print(f"✅ Datos formateados: {len(formatted_data)} cotizaciones")
         return jsonify({'success': True, 'data': formatted_data})
+        
     except Exception as e:
+        print(f"❌ Error: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @ventas_bp.route('/ventas/api/cotizaciones/guardar', methods=['POST'])

@@ -480,6 +480,9 @@ function renderPedidos() {
     `).join('');
 }
 
+// ============================================================
+// VISTAS DE COTIZACIONES - PRINCIPAL / COMPLETA
+// ============================================================
 
 let cotizacionViewMode = 'principal'; // 'principal' o 'completa'
 
