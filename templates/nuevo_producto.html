@@ -616,6 +616,45 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+                /* ============================================
+           BORDE AZUL ELÉCTRICO PARA VALOR VENTA
+           ============================================ */
+
+        /* Reset completo para el input de valor venta */
+        #valorVenta {
+            border: 2px solid #0066FF !important;
+            border-radius: 6px !important;
+            background: white !important;
+            color: #1a1a2e !important;
+            outline: none !important;
+            box-shadow: none !important;
+            -webkit-appearance: none !important;
+            appearance: none !important;
+            height: 30px !important;
+            font-size: 16px !important;
+            padding: 2px 6px !important;
+        }
+
+        /* Cuando está en foco (click) */
+        #valorVenta:focus {
+            border: 2px solid #0044CC !important;
+            outline: none !important;
+            box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.15) !important;
+        }
+
+        /* El símbolo S/ en azul */
+        .price-box.sale .money span {
+            color: #0066FF !important;
+            font-weight: 700 !important;
+        }
+
+        /* Asegurar que el input de costo NO tenga borde azul */
+        #valorCosto {
+            border: 1px solid #d1d5db !important;
+            outline: none !important;
+            border-radius: 6px !important;
+        }
     </style>
 </head>
 <body>
