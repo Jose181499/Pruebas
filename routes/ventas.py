@@ -20,7 +20,6 @@ def login_required(f):
 # FUNCIONES DE AYUDA PARA COTIZACIONES
 
 def obtener_cotizaciones_db():
-    """Obtiene todas las cotizaciones desde la base de datos (excluyendo anuladas)"""
     try:
         query = """
             SELECT 
@@ -41,7 +40,7 @@ def obtener_cotizaciones_db():
                 c.codigo_cotizacion, 
                 c.correlativo, 
                 c.condicion_pago,
-                c.direccion_entrega, 
+                c.direccion_entrega,  # ← ESTO DEBE ESTAR
                 c.requerimiento, 
                 c.nota_cotizacion,
                 c.descuento_porcentaje, 
@@ -50,14 +49,12 @@ def obtener_cotizaciones_db():
                 c.contacto_cliente, 
                 c.telefono_cliente, 
                 c.email_cliente,
-                -- 🔽 NUEVOS CAMPOS DE INFORMACIÓN ADICIONAL
                 c.seguimiento,
                 c.motivo,
                 c.transporte,
                 c.parihuela,
                 c.nota_interna,
                 c.vendedor,
-                -- Obtener datos del cliente
                 cl.razon_social as cliente_razon_social,
                 cl.numero_documento as cliente_ruc,
                 cl.nombre_comercial as cliente_nombre_comercial
@@ -67,42 +64,10 @@ def obtener_cotizaciones_db():
             ORDER BY c.id DESC
         """
         results = db_query(query)
-        
-        # Formatear fechas y datos
-        for row in results:
-            # Formatear fecha_creacion
-            if row.get('fecha_creacion'):
-                if hasattr(row['fecha_creacion'], 'strftime'):
-                    row['fecha_creacion'] = row['fecha_creacion'].strftime('%d/%m/%Y %H:%M')
-                elif isinstance(row['fecha_creacion'], str):
-                    try:
-                        if 'T' in row['fecha_creacion']:
-                            dt = datetime.fromisoformat(row['fecha_creacion'].replace('Z', '+00:00'))
-                        else:
-                            dt = datetime.strptime(row['fecha_creacion'], '%Y-%m-%d %H:%M:%S.%f')
-                        row['fecha_creacion'] = dt.strftime('%d/%m/%Y %H:%M')
-                    except:
-                        try:
-                            dt = datetime.strptime(row['fecha_creacion'], '%Y-%m-%d %H:%M:%S')
-                            row['fecha_creacion'] = dt.strftime('%d/%m/%Y %H:%M')
-                        except:
-                            pass
-            
-            # Si no hay cliente_razon_social, usar un valor por defecto
-            if not row.get('cliente_razon_social'):
-                row['cliente_razon_social'] = f"Cliente {row.get('cliente_id', '')}"
-            
-            # Si no hay cliente_ruc, usar cliente_id como RUC (fallback)
-            if not row.get('cliente_ruc'):
-                row['cliente_ruc'] = str(row.get('cliente_id', ''))
-        
         return results
     except Exception as e:
         print(f"❌ Error en obtener_cotizaciones_db: {e}")
-        import traceback
-        traceback.print_exc()
         return []
-
 
 def obtener_cotizacion_por_id_db(cotizacion_id):
     """Obtiene una cotización por su ID"""
@@ -782,10 +747,6 @@ def ventas():
                          usuario=session.get('usuario'),
                          nombre=session.get('nombre'),
                          empresa=session.get('empresa'))
-
-# ============================================================
-# COTIZACIONES - API
-# ============================================================
 @ventas_bp.route('/ventas/api/cotizaciones/listar', methods=['GET'])
 @login_required
 def api_cotizaciones_listar():
@@ -812,7 +773,7 @@ def api_cotizaciones_listar():
                 'vendedor': row.get('vendedor') or str(row.get('usuario_id', '')),
                 'vencimiento': row.get('validez_oferta'),
                 'cod_cliente': str(row.get('cliente_id', '')),
-                'direccion': row.get('direccion_entrega'),
+                'direccion_entrega': row.get('direccion_entrega'),  # ✅ ESTO DEBE ESTAR
                 'requerimiento': row.get('requerimiento'),
                 'nota': row.get('nota_cotizacion'),
                 'descuento_porcentaje': float(row.get('descuento_porcentaje', 0)),
@@ -824,8 +785,7 @@ def api_cotizaciones_listar():
                 'tiempo_entrega': row.get('tiempo_entrega'),
                 'validez_oferta': row.get('validez_oferta'),
                 'nota_comercial': row.get('nota_cotizacion'),
-                # 🔽 NUEVOS CAMPOS DE INFORMACIÓN ADICIONAL
-                'seguimiento': row.get('seguimiento', 'Asesor'),
+                'seguimiento': row.get('seguimiento', 'Helen Blas Príncipe'),
                 'motivo': row.get('motivo', 'Proyecto nuevo'),
                 'transporte': row.get('transporte', 'Seleccione'),
                 'parihuela': row.get('parihuela', 'Seleccione'),
@@ -840,7 +800,6 @@ def api_cotizaciones_listar():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 @ventas_bp.route('/ventas/api/cotizaciones/guardar', methods=['POST'])
 @login_required
