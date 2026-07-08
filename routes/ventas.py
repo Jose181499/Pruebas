@@ -2534,3 +2534,65 @@ def api_cotizaciones_generar_pdf(id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
+# ============================================================
+# CLIENTES - BUSCAR POR RUC (para ventas)
+# ============================================================
+
+@ventas_bp.route('/ventas/api/clientes/buscar', methods=['GET'])
+@login_required
+def api_clientes_buscar_por_ruc():
+    """Busca un cliente por su RUC en la base de datos"""
+    try:
+        ruc = request.args.get('ruc', '').strip()
+        
+        if not ruc or len(ruc) != 11:
+            return jsonify({'success': False, 'error': 'RUC inválido, debe tener 11 dígitos'}), 400
+        
+        # Usar la función de database.py
+        from database import buscar_cliente_por_ruc
+        
+        cliente = buscar_cliente_por_ruc(ruc)
+        
+        if cliente:
+            # Obtener contactos adicionales si es necesario
+            contactos = db_query("""
+                SELECT nombre_contacto, email, telefono, cargo, principal
+                FROM clientes_contactos 
+                WHERE cliente_id = %s
+                ORDER BY principal DESC
+            """, (cliente['id'],))
+            
+            # Obtener puntos de entrega
+            puntos = db_query("""
+                SELECT nombre_punto, direccion, condicion_pago, responsable, telefono_contacto, principal
+                FROM clientes_puntos_entrega 
+                WHERE cliente_id = %s
+            """, (cliente['id'],))
+            
+            return jsonify({
+                'success': True,
+                'data': {
+                    'id': cliente['id'],
+                    'tipo_documento': cliente.get('tipo_documento', 'RUC'),
+                    'numero_documento': cliente.get('numero_documento'),
+                    'razon_social': cliente.get('razon_social'),
+                    'nombre_comercial': cliente.get('nombre_comercial'),
+                    'direccion_fiscal': cliente.get('direccion_fiscal'),
+                    'codigo_cliente': cliente.get('codigo_cliente'),
+                    'nombre_contacto': cliente.get('nombre_contacto'),
+                    'telefono_contacto': cliente.get('telefono_contacto'),
+                    'email_contacto': cliente.get('email_contacto'),
+                    'estado': cliente.get('estado', 'Activo'),
+                    'contactos': contactos,
+                    'puntos_entrega': puntos
+                }
+            })
+        
+        return jsonify({'success': False, 'error': 'Cliente no encontrado'}), 404
+        
+    except Exception as e:
+        print(f"❌ Error en api_clientes_buscar_por_ruc: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500

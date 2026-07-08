@@ -2594,11 +2594,9 @@ function calcQuote() {
     set('sumTotal', money(total));
 }
 
+
 // ============================================================
-// FUNCIONES PARA CLIENTES
-// ============================================================
-// ============================================================
-// FUNCIONES PARA CLIENTES - CONSULTA SUNAT MEJORADA
+// FUNCIONES PARA CLIENTES - CONSULTA PRIMERO EN BASE DE DATOS
 // ============================================================
 
 async function loadClient() {
@@ -2622,90 +2620,136 @@ async function loadClient() {
     }
     
     try {
-        // Usar el mismo endpoint que maestros.js
-        const response = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
-        const data = await response.json();
+        // ============================================================
+        // PASO 1: BUSCAR PRIMERO EN LA BASE DE DATOS
+        // ============================================================
+        console.log('🔍 Buscando cliente en base de datos por RUC:', ruc);
         
-        console.log('📦 Respuesta SUNAT:', data);
+        const bdResponse = await fetch(`/ventas/api/clientes/buscar?ruc=${ruc}`);
+        const bdData = await bdResponse.json();
         
-        if (data.success) {
-            const confirmBox = document.getElementById('clientConfirmBox');
+        console.log('📦 Respuesta BD:', bdData);
+        
+        if (bdData.success && bdData.data) {
+            // ✅ Cliente encontrado en la base de datos
+            const cliente = bdData.data;
+            console.log('✅ Cliente encontrado en BD:', cliente);
             
-            // Llenar el formulario con los datos
-            document.getElementById('fRuc').value = data.ruc || ruc;
-            document.getElementById('fRazon').value = data.razon_social || '';
-            document.getElementById('fComercial').value = data.nombre_comercial || data.razon_social || '';
-            document.getElementById('fCodCliente').value = data.codigo_cliente || 'PENDIENTE';
-            document.getElementById('fDireccion').value = data.direccion || '';
+            // Llenar el formulario con los datos de la BD
+            document.getElementById('fRuc').value = cliente.numero_documento || ruc;
+            document.getElementById('fRazon').value = cliente.razon_social || '';
+            document.getElementById('fComercial').value = cliente.nombre_comercial || cliente.razon_social || '';
+            document.getElementById('fCodCliente').value = cliente.codigo_cliente || 'PENDIENTE';
+            document.getElementById('fDireccion').value = cliente.direccion_fiscal || '';
+            document.getElementById('fContacto').value = cliente.nombre_contacto || '';
+            document.getElementById('fTelefono').value = cliente.telefono_contacto || '';
+            document.getElementById('fCorreo').value = cliente.email_contacto || '';
             
-            // Contacto - usar los datos de SUNAT si vienen
-            document.getElementById('fContacto').value = data.contacto || data.nombre_contacto || '';
-            document.getElementById('fTelefono').value = data.telefono || data.telefono_contacto || '';
-            document.getElementById('fCorreo').value = data.email || data.email_contacto || '';
-            
-            // Condición de pago - mantener la que tenía o usar la de SUNAT
-            if (data.condicion_pago && document.getElementById('fCondicion')) {
-                document.getElementById('fCondicion').value = data.condicion_pago;
+            // Condición de pago
+            if (cliente.condicion_pago && document.getElementById('fCondicion')) {
+                document.getElementById('fCondicion').value = cliente.condicion_pago;
             }
             
-            // Mostrar mensaje según origen
-            if (data.origen === 'base_datos') {
-                showToast('✅ Cliente encontrado en sistema', 'success');
+            // Guardar referencia del cliente
+            window._clienteConsultado = {
+                id: cliente.id,
+                ruc: cliente.numero_documento || ruc,
+                razon_social: cliente.razon_social || '',
+                nombre_comercial: cliente.nombre_comercial || cliente.razon_social || '',
+                direccion: cliente.direccion_fiscal || '',
+                contacto: cliente.nombre_contacto || '',
+                telefono: cliente.telefono_contacto || '',
+                email: cliente.email_contacto || '',
+                codigo_cliente: cliente.codigo_cliente || 'PENDIENTE',
+                origen: 'base_datos'
+            };
+            
+            // Mostrar mensaje de éxito
+            const confirmBox = document.getElementById('clientConfirmBox');
+            if (confirmBox) {
+                confirmBox.textContent = `✅ Cliente encontrado en sistema | Código: ${cliente.codigo_cliente || 'PENDIENTE'}`;
+                confirmBox.className = 'show existente';
+                setTimeout(() => { confirmBox.className = ''; }, 5000);
+            }
+            
+            showToast(`✅ Cliente encontrado en sistema: ${cliente.razon_social}`, 'success');
+            return;
+        }
+        
+        // ============================================================
+        // PASO 2: SI NO ESTÁ EN BD, CONSULTAR SUNAT
+        // ============================================================
+        console.log('🌞 Cliente no encontrado en BD, consultando SUNAT...');
+        
+        const sunatResponse = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
+        const sunatData = await sunatResponse.json();
+        
+        console.log('📦 Respuesta SUNAT:', sunatData);
+        
+        if (sunatData.success) {
+            const confirmBox = document.getElementById('clientConfirmBox');
+            
+            // Llenar el formulario con los datos de SUNAT
+            document.getElementById('fRuc').value = sunatData.ruc || ruc;
+            document.getElementById('fRazon').value = sunatData.razon_social || '';
+            document.getElementById('fComercial').value = sunatData.nombre_comercial || sunatData.razon_social || '';
+            document.getElementById('fCodCliente').value = 'PENDIENTE'; // Se generará al guardar
+            document.getElementById('fDireccion').value = sunatData.direccion || '';
+            document.getElementById('fContacto').value = sunatData.contacto || '';
+            document.getElementById('fTelefono').value = sunatData.telefono || '';
+            document.getElementById('fCorreo').value = sunatData.email || '';
+            
+            // Guardar referencia del cliente de SUNAT
+            window._clienteConsultado = {
+                ruc: sunatData.ruc || ruc,
+                razon_social: sunatData.razon_social || '',
+                nombre_comercial: sunatData.nombre_comercial || sunatData.razon_social || '',
+                direccion: sunatData.direccion || '',
+                contacto: sunatData.contacto || '',
+                telefono: sunatData.telefono || '',
+                email: sunatData.email || '',
+                codigo_cliente: 'PENDIENTE',
+                origen: 'sunat'
+            };
+            
+            // Mostrar mensaje según estado
+            if (sunatData.estado) {
+                const estadoMap = {
+                    'ACTIVO': '✅ Activo',
+                    'BAJA': '❌ Inactivo',
+                    'SUSPENDIDO': '⚠️ Observado',
+                    'BAJA DE OFICIO': '❌ Inactivo'
+                };
+                const estadoDisplay = estadoMap[sunatData.estado.toUpperCase()] || sunatData.estado;
+                
                 if (confirmBox) {
-                    confirmBox.textContent = '✅ Cliente encontrado en sistema';
-                    confirmBox.className = 'show existente';
-                    setTimeout(() => { confirmBox.className = ''; }, 4000);
+                    confirmBox.textContent = `🌞 Datos consultados en SUNAT | Estado: ${estadoDisplay}`;
+                    confirmBox.className = 'show nuevo';
+                    setTimeout(() => { confirmBox.className = ''; }, 5000);
                 }
             } else {
-                showToast('🌞 Datos cargados desde SUNAT', 'info');
                 if (confirmBox) {
                     confirmBox.textContent = '🌞 Datos consultados en SUNAT';
                     confirmBox.className = 'show nuevo';
-                    setTimeout(() => { confirmBox.className = ''; }, 4000);
+                    setTimeout(() => { confirmBox.className = ''; }, 5000);
                 }
             }
             
-            // Si el estado viene de SUNAT, actualizar el badge
-            if (data.estado) {
-                const estadoMap = {
-                    'ACTIVO': 'Activo',
-                    'BAJA': 'Inactivo',
-                    'SUSPENDIDO': 'Observado',
-                    'BAJA DE OFICIO': 'Inactivo'
-                };
-                const nuevoEstado = estadoMap[data.estado.toUpperCase()] || data.estado;
-                if (nuevoEstado) {
-                    // Mostrar en el confirmBox el estado
-                    if (confirmBox) {
-                        confirmBox.textContent += ` | Estado: ${nuevoEstado}`;
-                    }
-                }
-            }
-            
-            // Guardar referencia del cliente para uso posterior
-            window._clienteConsultado = {
-                ruc: data.ruc || ruc,
-                razon_social: data.razon_social || '',
-                nombre_comercial: data.nombre_comercial || data.razon_social || '',
-                direccion: data.direccion || '',
-                contacto: data.contacto || data.nombre_contacto || '',
-                telefono: data.telefono || data.telefono_contacto || '',
-                email: data.email || data.email_contacto || '',
-                origen: data.origen || 'sunat'
-            };
+            showToast('🌞 Datos cargados desde SUNAT', 'info');
             
         } else {
-            showToast('❌ ' + (data.error || 'Error al consultar SUNAT'), 'error');
+            showToast('❌ ' + (sunatData.error || 'Error al consultar SUNAT'), 'error');
             const confirmBox = document.getElementById('clientConfirmBox');
             if (confirmBox) {
-                confirmBox.textContent = '❌ ' + (data.error || 'Error al consultar');
+                confirmBox.textContent = '❌ ' + (sunatData.error || 'Error al consultar SUNAT');
                 confirmBox.className = 'show error';
-                setTimeout(() => { confirmBox.className = ''; }, 4000);
+                setTimeout(() => { confirmBox.className = ''; }, 5000);
             }
         }
+        
     } catch (error) {
-        console.error('❌ Error consultando SUNAT:', error);
-        showToast('❌ Error al conectar con el servicio SUNAT', 'error');
+        console.error('❌ Error en loadClient:', error);
+        showToast('❌ Error al conectar con el servicio', 'error');
     } finally {
         if (btnBuscar) {
             btnBuscar.textContent = originalText;
@@ -2713,7 +2757,6 @@ async function loadClient() {
         }
     }
 }
-
 
 let __rucAutoTimer = null;
 
