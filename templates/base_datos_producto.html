@@ -99,6 +99,7 @@
                     <!-- COLUMNAS SIEMPRE VISIBLES (PRINCIPAL) -->
                     <th class="bd-col-item">Ítem</th>
                     <th class="bd-col-code">Código</th>
+                    <th class="bd-col-date">Fecha / Hora</th>  <!-- NUEVA COLUMNA -->
                     <th class="bd-col-desc">Descripción</th>
                     <th class="bd-col-model">Modelo</th>
                     <th class="bd-col-brand">Marca</th>
@@ -127,7 +128,7 @@
             </thead>
             <tbody id="bdProductTableBody">
                 <tr>
-                    <td colspan="24" style="text-align:center;color:#94A3B8;padding:40px;">
+                    <td colspan="25" style="text-align:center;color:#94A3B8;padding:40px;">
                         <i class="bi bi-inbox" style="font-size:32px;display:block;margin-bottom:10px;"></i>
                         Cargando productos...
                     </td>
@@ -188,51 +189,55 @@ window.bdPaginaActual = 1;
 window.bdPorPagina = 20;
 
 // ============================================================
-// CAMBIAR VISTA - VERSIÓN CORREGIDA DEFINITIVA
+// FUNCIÓN PARA FORMATEAR FECHA
+// ============================================================
+function formatearFecha(fecha) {
+    if (!fecha) return '-';
+    
+    try {
+        var d = new Date(fecha);
+        if (isNaN(d.getTime())) return '-';
+        
+        var dia = String(d.getDate()).padStart(2, '0');
+        var mes = String(d.getMonth() + 1).padStart(2, '0');
+        var anio = d.getFullYear();
+        var horas = String(d.getHours()).padStart(2, '0');
+        var minutos = String(d.getMinutes()).padStart(2, '0');
+        
+        return dia + '/' + mes + '/' + anio + ' ' + horas + ':' + minutos;
+    } catch (e) {
+        return '-';
+    }
+}
+
+// ============================================================
+// CAMBIAR VISTA
 // ============================================================
 function cambiarVista(vista) {
     console.log('🔄 Cambiando a vista:', vista);
     window.bdVistaActual = vista;
     
-    // ✅ ACTUALIZAR BOTONES DEL FOOTER - ELIMINAR TODAS LAS CLASES ACTIVE PRIMERO
     var viewPrincipal = document.getElementById('viewPrincipalFooter');
     var viewCompleta = document.getElementById('viewCompletaFooter');
     
-    // Eliminar clase active de ambos
-    if (viewPrincipal) {
-        viewPrincipal.classList.remove('active');
-    }
-    if (viewCompleta) {
-        viewCompleta.classList.remove('active');
-    }
+    if (viewPrincipal) viewPrincipal.classList.remove('active');
+    if (viewCompleta) viewCompleta.classList.remove('active');
     
-    // Agregar clase active al botón correspondiente
     if (vista === 'principal') {
-        if (viewPrincipal) {
-            viewPrincipal.classList.add('active');
-            console.log('✅ Botón Principal activado');
-        }
+        if (viewPrincipal) viewPrincipal.classList.add('active');
     } else {
-        if (viewCompleta) {
-            viewCompleta.classList.add('active');
-            console.log('✅ Botón Completa activado');
-        }
+        if (viewCompleta) viewCompleta.classList.add('active');
     }
     
-    // FORZAR LA CLASE EN EL CONTENEDOR DE LA TABLA
     var container = document.getElementById('tablaContainer');
     if (container) {
         if (vista === 'completa') {
             container.classList.add('vista-completa');
-            console.log('✅ Clase vista-completa AGREGADA');
         } else {
             container.classList.remove('vista-completa');
-            console.log('✅ Clase vista-completa ELIMINADA');
         }
-        console.log('📌 Clases del container:', container.className);
     }
     
-    // Re-renderizar productos
     if (typeof bdRenderProductos === 'function') {
         bdRenderProductos(window.bdProductosFiltrados || window.bdProductos || []);
     }
@@ -293,7 +298,7 @@ function bdRenderProductos(data) {
     }
     
     if (!data || data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="24" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay productos registrados</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="25" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay productos registrados</td></tr>`;
         const countEl = document.getElementById('bdTotalRegistros');
         if (countEl) countEl.textContent = '0 registros';
         const pageInfo = document.getElementById('bdPaginaInfo');
@@ -330,9 +335,14 @@ function bdRenderProductos(data) {
         var categoria = p.categoria || p.familia || '-';
         var subcategoria = p.subcategoria || p.categoria_derivada || '-';
         
+        // Obtener fecha de creación o actualización
+        var fecha = p.created_at || p.updated_at || p.fecha_creacion || p.fecha_registro || null;
+        var fechaFormateada = formatearFecha(fecha);
+        
         html += '<tr>';
         html += '<td class="bd-col-item" style="text-align:center;color:#94a3b8;font-weight:600;">' + index + '</td>';
         html += '<td class="bd-col-code"><span class="bd-t-code">' + (p.codigo || '-') + '</span></td>';
+        html += '<td class="bd-col-date"><span class="bd-date-badge">' + fechaFormateada + '</span></td>';  // NUEVA COLUMNA
         html += '<td class="bd-col-desc"><strong>' + (p.descripcion || '-') + '</strong></td>';
         html += '<td class="bd-col-model">' + (p.modelo || '-') + '</td>';
         html += '<td class="bd-col-brand">' + (p.marca || '-') + '</td>';
@@ -387,8 +397,6 @@ function bdRenderProductos(data) {
     tbody.innerHTML = html;
     
     // Actualizar contadores
-    var desde = inicio + 1;
-    var hasta = fin;
     var totalEl = document.getElementById('bdTotalRegistros');
     if (totalEl) totalEl.textContent = total + ' registros';
     
@@ -585,11 +593,9 @@ function eliminarProducto(id) {
 // INICIALIZAR
 // ============================================================
 document.addEventListener('DOMContentLoaded', function() {
-    // Si estamos en la página de base de datos
     if (window.location.pathname.includes('/productos/base-datos')) {
         console.log('🔄 Inicializando Base de datos de productos...');
         
-        // Configurar eventos de filtros
         var searchInput = document.getElementById('bdSearchInput');
         var categoriaFilter = document.getElementById('bdCategoriaFilter');
         var subcategoriaFilter = document.getElementById('bdSubcategoriaFilter');
@@ -633,7 +639,6 @@ document.addEventListener('DOMContentLoaded', function() {
             newEstado.addEventListener('change', bdAplicarFiltros);
         }
         
-        // Cargar productos
         setTimeout(function() {
             cargarProductos();
         }, 200);
@@ -655,6 +660,7 @@ window.verProducto = verProducto;
 window.editarProducto = editarProducto;
 window.eliminarProducto = eliminarProducto;
 window.bdExportarExcel = bdExportarExcel;
+window.formatearFecha = formatearFecha;
 </script>
 
 <style>
@@ -792,7 +798,7 @@ window.bdExportarExcel = bdExportarExcel;
 }
 
 /* ============================================================
-   FOOTER CON BOTONES DE VISTA - DISEÑO COMO EN LA FOTO
+   FOOTER CON BOTONES DE VISTA
    ============================================================ */
 .bd-footer {
     display: flex;
@@ -821,7 +827,6 @@ window.bdExportarExcel = bdExportarExcel;
     align-items: center;
 }
 
-/* Botones de vista en el footer - ESTILO TIPO PESTAÑA */
 .bd-view-toggle-footer {
     display: flex;
     align-items: center;
@@ -925,10 +930,10 @@ window.bdExportarExcel = bdExportarExcel;
     width: 100%;
     border-collapse: collapse;
     font-size: 13px;
-    min-width: 800px;
+    min-width: 900px;
 }
 
-/* 🟢 ENCABEZADOS CENTRADOS */
+/* ENCABEZADOS CENTRADOS */
 .bd-table thead th {
     background: #f8fafc;
     color: #1e293b;
@@ -937,7 +942,7 @@ window.bdExportarExcel = bdExportarExcel;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     padding: 10px 8px;
-    text-align: center !important;  /* CENTRADO */
+    text-align: center !important;
     border-bottom: 2px solid #e2e8f0;
     white-space: nowrap;
     position: sticky;
@@ -945,57 +950,21 @@ window.bdExportarExcel = bdExportarExcel;
     z-index: 10;
 }
 
-/* 🟢 ENCABEZADO DE LA PRIMERA COLUMNA (Ítem) - CENTRADO */
-.bd-table thead th.bd-col-item {
-    text-align: center !important;
-}
-
-/* 🟢 ENCABEZADO DE CÓDIGO - CENTRADO */
-.bd-table thead th.bd-col-code {
-    text-align: center !important;
-}
-
-/* 🟢 ENCABEZADO DE ACCIONES - CENTRADO */
-.bd-table thead th.bd-col-actions {
-    text-align: center !important;
-}
-
-/* 🟢 ENCABEZADOS DE COLUMNAS OCULTAS - CENTRADOS */
-.bd-table thead th.col-oculta {
-    text-align: center !important;
-}
-
-/* 🟢 DATOS DE LA TABLA - CENTRADOS ALINEADOS CON ENCABEZADOS */
+/* DATOS CENTRADOS POR DEFECTO */
 .bd-table tbody td {
     padding: 6px 8px;
     border-bottom: 1px solid #f1f5f9;
     vertical-align: middle;
     color: #0f172a;
     font-size: 12px;
-    text-align: center !important;  /* CENTRADO */
+    text-align: center !important;
 }
 
-/* 🟢 EXCEPCIONES: Texto largo que necesita alineación a la izquierda */
-.bd-table tbody td.bd-col-desc {
-    text-align: left !important;
-}
-
-.bd-table tbody td.bd-col-obs {
-    text-align: left !important;
-}
-
+/* EXCEPCIONES: Texto largo a la izquierda */
+.bd-table tbody td.bd-col-desc,
+.bd-table tbody td.bd-col-obs,
 .bd-table tbody td.bd-col-desc-larga {
     text-align: left !important;
-}
-
-/* 🟢 EXCEPCIÓN: Estado con su badge */
-.bd-table tbody td.bd-col-status {
-    text-align: center !important;
-}
-
-/* 🟢 EXCEPCIÓN: Acciones con sus botones */
-.bd-table tbody td.bd-col-actions {
-    text-align: center !important;
 }
 
 .bd-table tbody tr:hover td {
@@ -1007,6 +976,7 @@ window.bdExportarExcel = bdExportarExcel;
    ============================================================ */
 .bd-col-item { width: 40px; text-align: center; }
 .bd-col-code { width: 100px; text-align: center; }
+.bd-col-date { width: 150px; text-align: center; }  /* NUEVA COLUMNA */
 .bd-col-desc { width: 150px; }
 .bd-col-model { width: 100px; }
 .bd-col-brand { width: 120px; }
@@ -1031,6 +1001,22 @@ window.bdExportarExcel = bdExportarExcel;
 .bd-col-abast { width: 120px; }
 .bd-col-stock-min { width: 80px; }
 .bd-col-desc-larga { width: 180px; text-align: left; }
+
+/* ============================================================
+   FECHA / HORA - BADGE
+   ============================================================ */
+.bd-date-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    background: #f1f5f9;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #475569;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.3px;
+    border: 1px solid #e2e8f0;
+}
 
 /* ============================================================
    ESTADOS
@@ -1274,6 +1260,10 @@ window.bdExportarExcel = bdExportarExcel;
         border-right: none;
         border-bottom: 1px solid #e2e8f0;
         padding: 4px 8px;
+    }
+    
+    .bd-col-date {
+        min-width: 120px;
     }
 }
 </style>
