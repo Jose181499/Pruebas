@@ -2272,31 +2272,34 @@ function openCotizacionModal(id = null) {
                 </div>
             </div>
 
-            <!-- Punto 4: Productos -->
-            <div class="create-panel product-wide">
-                <h3><span class="section-number">4.</span> <span class="section-title-colored">Productos cotizados</span>
-                    <div class="products-toolbar">
-                        <input list="productMasterList" id="quickProductSearch" placeholder="Buscar en data maestra..." onkeydown="if(event.key==='Enter'){addQuoteProductFromSearch()}">
-                        <datalist id="productMasterList"></datalist>
-                        <button class="btn btn-blue btn-add-product" onclick="addQuoteProductFromSearch()">+ Agregar producto</button>
-                    </div>
-                </h3>
-                <div class="body">
-                    <div class="table-scroll">
-                        <table class="master-table">
-                            <thead>
-                                <tr>
-                                    <th>Item</th><th>Código</th><th>Producto / Descripción</th><th>Modelo</th><th>Marca</th>
-                                    <th>Unidad</th><th>Cant</th><th>Valor venta<br><small>Unitario S/.</small></th>
-                                    <th>Valor total<br><small>Tabla S/.</small></th><th>Stock</th><th>Entrega</th><th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="quoteProductRows"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+           // En openCotizacionModal - Punto 4: Productos
+// Reemplaza esta sección completa
 
+<!-- Punto 4: Productos -->
+<div class="create-panel product-wide">
+    <h3><span class="section-number">4.</span> <span class="section-title-colored">Productos cotizados</span>
+        <div class="products-toolbar">
+            <input list="productMasterList" id="quickProductSearch" placeholder="Buscar en data maestra..." onkeydown="if(event.key==='Enter'){addQuoteProductFromSearch()}">
+            <datalist id="productMasterList"></datalist>
+            <button class="btn btn-blue btn-add-product" onclick="addQuoteProductFromSearch()">+ Agregar producto</button>
+            <button class="btn btn-green btn-add-multiple" onclick="openProductSelector()" style="background:#16A34A !important; color:#fff !important;">📋 Seleccionar varios</button>
+        </div>
+    </h3>
+    <div class="body">
+        <div class="table-scroll">
+            <table class="master-table">
+                <thead>
+                    <tr>
+                        <th>Item</th><th>Código</th><th>Producto / Descripción</th><th>Modelo</th><th>Marca</th>
+                        <th>Unidad</th><th>Cant</th><th>Valor venta<br><small>Unitario S/.</small></th>
+                        <th>Valor total<br><small>Tabla S/.</small></th><th>Stock</th><th>Entrega</th><th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="quoteProductRows"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
             <!-- Punto 5: Información adicional -->
             <div class="create-panel product-wide compact-bottom">
                 <h3><span class="section-number">5.</span> <span class="section-title-colored">Información adicional</span></h3>
@@ -3620,6 +3623,255 @@ function showConfirmModal(title, message, warning, onConfirm) {
         }
     });
 }
+
+
+// ============================================================
+// SELECCIÓN MÚLTIPLE DE PRODUCTOS
+// ============================================================
+
+let productSelectorData = [];
+let selectedProductIds = new Set();
+
+function openProductSelector() {
+    // Si no hay productos maestros, cargarlos primero
+    if (PRODUCTOS_MAESTROS.length === 0) {
+        showToast('⏳ Cargando productos...', 'info');
+        cargarProductosMaestros().then(() => {
+            setTimeout(() => openProductSelector(), 300);
+        });
+        return;
+    }
+    
+    // Resetear selecciones
+    selectedProductIds = new Set();
+    productSelectorData = [...PRODUCTOS_MAESTROS];
+    
+    // Renderizar tabla
+    renderProductSelector();
+    
+    // Mostrar modal
+    document.getElementById('productSelectorModal').classList.add('show');
+    
+    // Enfocar buscador
+    setTimeout(() => {
+        document.getElementById('productSelectorSearch')?.focus();
+    }, 300);
+}
+
+function renderProductSelector() {
+    const tbody = document.getElementById('productSelectorRows');
+    const search = document.getElementById('productSelectorSearch')?.value?.toLowerCase() || '';
+    
+    // Filtrar productos
+    let filtered = productSelectorData;
+    if (search) {
+        filtered = productSelectorData.filter(p => 
+            (p.codigo && p.codigo.toLowerCase().includes(search)) ||
+            (p.producto && p.producto.toLowerCase().includes(search)) ||
+            (p.descripcion && p.descripcion.toLowerCase().includes(search)) ||
+            (p.marca && p.marca.toLowerCase().includes(search))
+        );
+    }
+    
+    if (!tbody) return;
+    
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#94A3B8;padding:30px;">📭 No se encontraron productos</td></tr>`;
+        document.getElementById('selectedCount').textContent = selectedProductIds.size;
+        return;
+    }
+    
+    tbody.innerHTML = filtered.map((p, index) => {
+        const isChecked = selectedProductIds.has(p.id) || selectedProductIds.has(p.codigo);
+        // Usar id o codigo como identificador
+        const idKey = p.id || p.codigo;
+        return `
+        <tr>
+            <td style="text-align:center;">
+                <input type="checkbox" class="product-select-checkbox" 
+                       data-id="${idKey}" 
+                       ${isChecked ? 'checked' : ''}
+                       onchange="toggleProductSelection('${idKey}', this.checked)">
+            </td>
+            <td style="font-weight:900; color:#0F172A;">${p.codigo || '-'}</td>
+            <td style="text-align:left; font-weight:800;">${p.producto || p.descripcion || 'Sin nombre'}</td>
+            <td>${p.marca || '-'}</td>
+            <td>${p.um || 'NIU'}</td>
+            <td>${p.stock || 0}</td>
+            <td style="font-weight:900; color:#059669;">S/ ${(p.valorVenta || 0).toFixed(2)}</td>
+            <td>
+                <input type="number" class="product-select-qty" 
+                       data-id="${idKey}"
+                       value="1" 
+                       min="1" 
+                       style="width:60px; height:28px; border:1px solid #E5E7EB; border-radius:6px; text-align:center; font-size:12px;"
+                       onchange="updateProductQty('${idKey}', this.value)">
+            </td>
+        </tr>
+    `}).join('');
+    
+    document.getElementById('selectedCount').textContent = selectedProductIds.size;
+    
+    // Actualizar el checkbox "Seleccionar todos"
+    const totalCheckboxes = document.querySelectorAll('.product-select-checkbox').length;
+    const checkedCheckboxes = document.querySelectorAll('.product-select-checkbox:checked').length;
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    if (selectAllCheckbox) {
+        if (totalCheckboxes > 0 && checkedCheckboxes === totalCheckboxes) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedCheckboxes > 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        }
+    }
+}
+
+function toggleProductSelection(idKey, checked) {
+    if (checked) {
+        selectedProductIds.add(idKey);
+    } else {
+        selectedProductIds.delete(idKey);
+    }
+    document.getElementById('selectedCount').textContent = selectedProductIds.size;
+    
+    // Actualizar el checkbox "Seleccionar todos"
+    const totalCheckboxes = document.querySelectorAll('.product-select-checkbox').length;
+    const checkedCheckboxes = document.querySelectorAll('.product-select-checkbox:checked').length;
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    if (selectAllCheckbox) {
+        if (totalCheckboxes > 0 && checkedCheckboxes === totalCheckboxes) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedCheckboxes > 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        }
+    }
+}
+
+function toggleAllProductCheckboxes(checked) {
+    document.querySelectorAll('.product-select-checkbox').forEach(cb => {
+        cb.checked = checked;
+        const idKey = cb.dataset.id;
+        if (checked) {
+            selectedProductIds.add(idKey);
+        } else {
+            selectedProductIds.delete(idKey);
+        }
+    });
+    document.getElementById('selectedCount').textContent = selectedProductIds.size;
+}
+
+function selectAllProducts() {
+    document.querySelectorAll('.product-select-checkbox').forEach(cb => {
+        cb.checked = true;
+        const idKey = cb.dataset.id;
+        selectedProductIds.add(idKey);
+    });
+    document.getElementById('selectedCount').textContent = selectedProductIds.size;
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    if (selectAllCheckbox) selectAllCheckbox.checked = true;
+}
+
+function deselectAllProducts() {
+    document.querySelectorAll('.product-select-checkbox').forEach(cb => {
+        cb.checked = false;
+        const idKey = cb.dataset.id;
+        selectedProductIds.delete(idKey);
+    });
+    document.getElementById('selectedCount').textContent = selectedProductIds.size;
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    if (selectAllCheckbox) selectAllCheckbox.checked = false;
+}
+
+function filterProductSelector() {
+    renderProductSelector();
+}
+
+function updateProductQty(idKey, value) {
+    // La cantidad se guarda en el atributo data-qty del checkbox o se obtiene cuando se agrega
+    // No es necesario hacer nada aquí, se usará al agregar
+}
+
+function addSelectedProducts() {
+    if (selectedProductIds.size === 0) {
+        showToast('⚠️ Selecciona al menos un producto', 'warning');
+        return;
+    }
+    
+    let addedCount = 0;
+    let notFoundCount = 0;
+    
+    selectedProductIds.forEach(idKey => {
+        // Buscar el producto por id o codigo
+        let product = PRODUCTOS_MAESTROS.find(p => p.id == idKey || p.codigo == idKey);
+        
+        if (!product) {
+            notFoundCount++;
+            return;
+        }
+        
+        // Obtener la cantidad del input correspondiente
+        const qtyInput = document.querySelector(`.product-select-qty[data-id="${idKey}"]`);
+        const cantidad = parseInt(qtyInput?.value || 1);
+        
+        // Verificar si ya está agregado (por código)
+        const existingIndex = quoteProducts.findIndex(p => p.codigo === product.codigo);
+        if (existingIndex !== -1) {
+            // Si ya existe, sumar cantidad
+            quoteProducts[existingIndex].cantidad = (quoteProducts[existingIndex].cantidad || 1) + cantidad;
+        } else {
+            // Agregar nuevo producto
+            const nuevoProducto = {
+                ...product,
+                cantidad: cantidad,
+                valorVenta: parseFloat(product.valorVenta) || 0,
+                stock: parseInt(product.stock) || 0
+            };
+            quoteProducts.push(nuevoProducto);
+        }
+        addedCount++;
+    });
+    
+    // Cerrar modal
+    closeModal('productSelectorModal');
+    
+    // Renderizar tabla de productos
+    renderQuoteProducts();
+    calcQuote();
+    
+    // Mostrar mensaje
+    if (addedCount > 0) {
+        showToast(`✅ ${addedCount} productos agregados correctamente`, 'success');
+    }
+    if (notFoundCount > 0) {
+        showToast(`⚠️ ${notFoundCount} productos no encontrados`, 'warning');
+    }
+}
+
+// Event listener para el buscador del selector
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('productSelectorSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            renderProductSelector();
+        });
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                renderProductSelector();
+            }
+        });
+    }
+});
+
 
 function showSuccessModal() {
     // Obtener datos de la cotización generada

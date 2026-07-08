@@ -1801,6 +1801,63 @@
     flex-shrink: 0;
 }
 
+/* Modal de selección múltiple de productos */
+#productSelectorModal .modal-box {
+    width: min(900px, 96vw) !important;
+    max-height: 85vh !important;
+}
+
+#productSelectorModal .master-table td {
+    padding: 6px 8px !important;
+    font-size: 11px !important;
+}
+
+#productSelectorModal .master-table th {
+    font-size: 10px !important;
+    padding: 6px 8px !important;
+}
+
+#productSelectorModal .product-select-checkbox {
+    width: 16px;
+    height: 16px;
+    accent-color: #2563EB;
+    cursor: pointer;
+}
+
+#productSelectorModal .product-select-qty {
+    width: 60px !important;
+    height: 28px !important;
+    border: 1px solid #E5E7EB !important;
+    border-radius: 6px !important;
+    text-align: center !important;
+    font-size: 12px !important;
+    font-weight: 900 !important;
+    outline: none !important;
+}
+
+#productSelectorModal .product-select-qty:focus {
+    border-color: #2563EB !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+}
+
+.btn-add-multiple {
+    background: #16A34A !important;
+    color: #fff !important;
+    border: none !important;
+    padding: 0 16px !important;
+    height: 32px !important;
+    border-radius: 10px !important;
+    font-weight: 1000 !important;
+    font-size: 12px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
+}
+
+.btn-add-multiple:hover {
+    background: #15803D !important;
+    transform: translateY(-1px) !important;
+}
 
 </style>
 {% endblock %}
@@ -2159,7 +2216,51 @@
         </div>
     </div>
 </div>
-
+<!-- MODAL SELECCIÓN MÚLTIPLE DE PRODUCTOS -->
+<div class="modal-bg" id="productSelectorModal">
+    <div class="modal-box" style="width:min(900px,96vw); max-height:85vh;">
+        <div class="modal-head">
+            <div class="modal-title">📋 Seleccionar productos</div>
+            <button class="btn btn-secondary" style="background:transparent;color:#fff;border-color:#fff;padding:6px 14px;min-height:34px;border-radius:14px" onclick="closeModal('productSelectorModal')">✕ Cerrar</button>
+        </div>
+        <div class="modal-body" style="padding:12px 16px;">
+            <!-- Buscador -->
+            <div style="display:flex; gap:10px; margin-bottom:12px; align-items:center;">
+                <input id="productSelectorSearch" placeholder="Buscar producto por código o descripción..." style="flex:1; height:36px; border:1px solid #E5E7EB; border-radius:8px; padding:0 12px; font-size:13px; outline:none;">
+                <button class="btn btn-blue" onclick="filterProductSelector()" style="height:36px; padding:0 20px;">🔍 Buscar</button>
+                <button class="btn btn-green" onclick="selectAllProducts()" style="height:36px; padding:0 16px; background:#16A34A; color:#fff; border:none; border-radius:8px; font-weight:800; cursor:pointer;">✅ Seleccionar todos</button>
+                <button class="btn btn-secondary" onclick="deselectAllProducts()" style="height:36px; padding:0 16px; background:#F1F5F9; color:#0F172A; border:1px solid #E5E7EB; border-radius:8px; font-weight:800; cursor:pointer;">⬜ Deseleccionar todos</button>
+            </div>
+            
+            <!-- Tabla de productos -->
+            <div style="border:1px solid #E5E7EB; border-radius:10px; overflow:auto; max-height:50vh;">
+                <table class="master-table" style="font-size:11px;">
+                    <thead>
+                        <tr>
+                            <th style="width:40px;"><input type="checkbox" id="selectAllCheckbox" onchange="toggleAllProductCheckboxes(this.checked)"></th>
+                            <th style="width:70px;">Código</th>
+                            <th>Producto</th>
+                            <th style="width:80px;">Marca</th>
+                            <th style="width:70px;">Unidad</th>
+                            <th style="width:70px;">Stock</th>
+                            <th style="width:90px;">Precio</th>
+                            <th style="width:80px;">Cantidad</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productSelectorRows"></tbody>
+                </table>
+            </div>
+            
+            <!-- Resumen selección -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding:10px 14px; background:#F8FAFC; border-radius:8px; border:1px solid #E5E7EB;">
+                <span style="font-weight:850; color:#0F172A;">Seleccionados: <span id="selectedCount">0</span> productos</span>
+                <button class="btn btn-green" onclick="addSelectedProducts()" style="height:38px; padding:0 28px; background:#16A34A; color:#fff; border:none; border-radius:10px; font-weight:900; font-size:13px; cursor:pointer;">
+                    ✅ Agregar seleccionados
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- ============================================================ -->
 <!-- MODALES -->
 <!-- ============================================================ -->
