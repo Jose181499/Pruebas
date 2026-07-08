@@ -83,16 +83,16 @@ function today() {
 
 function badgeStatus(s) {
     const map = {
-        // 🔴 Rojo chillón
+        // 🔴 Rojo fluorescente NEON
         'Borrador': 'b-draft',
         'Eliminada': 'b-draft',
         
-        // 🟡 Amarillo chillón
+        // 🟡 Amarillo fluorescente NEON
         'En revisión': 'b-review',
         'En revisión interna': 'b-review',
         'En Proceso': 'b-review',
         
-        // 🟢 Verde chillón
+        // 🟢 Verde fluorescente NEON
         'Generada': 'b-generated',
         'Validada': 'b-valid',
         'Validado por Hellen': 'b-validated',
@@ -104,7 +104,7 @@ function badgeStatus(s) {
         'Aprobada': 'b-ok',
         'Procesada': 'b-ok',
         
-        // 🔵 Azul fluorescente
+        // 🔵 Azul fluorescente NEON
         'Aceptada por Cliente': 'b-accepted',
         'Aceptada': 'b-accepted',
         'Aceptado': 'b-accepted',
@@ -118,7 +118,6 @@ function badgeStatus(s) {
     };
     return `<span class="badge ${map[s] || 'b-gray'}">${s}</span>`;
 }
-
 
 function options(arr, selected = '') {
     return arr.map(x => `<option value="${x}" ${x === selected ? 'selected' : ''}>${x}</option>`).join('');
@@ -3817,9 +3816,7 @@ function createMenuWithClose(event, htmlContent) {
     return pop;
 }
 
-// ============================================================
-// MENÚ DE COTIZACIONES (MEJORADO)
-// ============================================================
+
 function showCotizacionMenu(event, id) {
     event.stopPropagation();
     
@@ -3833,7 +3830,7 @@ function showCotizacionMenu(event, id) {
         <button class="menu-duplicate" onclick="duplicateCotizacion(${id});this.closest('.menu-pop').remove()">⧉ Duplicar</button>
         <button class="menu-email" onclick="sendCotizacionEmail(${id});this.closest('.menu-pop').remove()">✉ Email</button>
         <button class="menu-pdf" onclick="generateCotizacionPdf(${id});this.closest('.menu-pop').remove()">▣ PDF</button>
-        <div style="height:1px;background:#E5E7EB;margin:4px 0;"></div>
+        <div class="menu-divider"></div>
     `;
     
     // ✅ Aceptada por Cliente - SOLO cuando está GENERADA
@@ -3854,18 +3851,12 @@ function showCotizacionMenu(event, id) {
     // 🚚 Crear despacho - siempre visible
     menuHtml += `
         <button class="menu-despacho" onclick="createDocFromCotizacion(${id},'despacho');this.closest('.menu-pop').remove()">🚚 Crear despacho</button>
-    `;
-    
-    // 🗑 Eliminar
-    menuHtml += `
-        <div style="height:1px;background:#E5E7EB;margin:4px 0;"></div>
+        <div class="menu-divider"></div>
         <button class="danger" onclick="deleteCotizacion(${id});this.closest('.menu-pop').remove()">🗑 Eliminar</button>
     `;
     
     createMenuWithClose(event, menuHtml);
 }
-
-
 
 function showPedidoMenu(event, id) {
     event.stopPropagation();
