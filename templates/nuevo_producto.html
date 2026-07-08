@@ -577,6 +577,53 @@
             animation: spin 0.8s linear infinite;
             display: inline-block;
         }
+
+        /* ============================================
+   ESTILO PARA VALOR VENTA EN AZUL
+   ============================================ */
+
+/* Contenedor del precio de venta */
+.price-box.sale {
+    border-left: 4px solid #0066FF !important;
+    padding-left: 12px !important;
+    background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%) !important;
+    border-radius: 8px !important;
+    padding: 10px 12px !important;
+}
+
+/* Etiqueta "Valor venta" en azul */
+.price-box.sale .price-label {
+    color: #0066FF !important;
+    font-weight: 700 !important;
+}
+
+/* Input del valor venta en azul */
+.price-box.sale .money input {
+    border: 2px solid #0066FF !important;
+    background: #f8fbff !important;
+    color: #0044CC !important;
+    font-weight: 700 !important;
+    border-radius: 6px !important;
+    padding: 4px 8px !important;
+    transition: all 0.3s ease !important;
+}
+
+.price-box.sale .money input:focus {
+    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.25) !important;
+    border-color: #0044CC !important;
+    background: white !important;
+}
+
+/* Símbolo S/ en azul */
+.price-box.sale .money span {
+    color: #0066FF !important;
+    font-weight: 700 !important;
+}
+
+/* Etiqueta "No incluye IGV" en azul claro */
+.price-box.sale .tax {
+    color: #4a90d9 !important;
+}
         
         @keyframes spin {
             to { transform: rotate(360deg); }
@@ -879,13 +926,14 @@
         <div>
             <div class="card prices">
                 <h3 class="card-title"><i class="bi bi-coin"></i> Precios</h3>
-                <div class="price-box">
-                    <div class="price-label sale"><i class="bi bi-tag"></i> Valor venta (S/)</div>
-                    <div class="tax">No incluye IGV</div>
-                    <div class="money sale">
-                        <span>S/</span>
-                        <input id="valorVenta" name="precio_unitario" type="number" step="0.01" 
-                               value="{{ producto.precio_unitario if producto else 0.00 }}" oninput="calcularMargen()" />
+                <!-- Por esto -->
+<div class="price-box sale">
+    <div class="price-label"><i class="bi bi-tag"></i> Valor venta (S/)</div>
+    <div class="tax">No incluye IGV</div>
+    <div class="money">
+        <span>S/</span>
+        <input id="valorVenta" name="precio_unitario" type="number" step="0.01" 
+               value="{{ producto.precio_unitario if producto else 0.00 }}" oninput="calcularMargen()" />
                     </div>
                 </div>
                 <div class="price-box">
