@@ -2625,18 +2625,19 @@ async function loadClient() {
         // ============================================================
         console.log('🔍 Buscando cliente en base de datos por RUC:', ruc);
         
-        const bdResponse = await fetch(`/ventas/api/clientes/buscar?ruc=${ruc}`);
+        // Usar el endpoint de maestros que ya existe
+        const bdResponse = await fetch(`/maestros/api/clientes/buscar?q=${ruc}`);
         const bdData = await bdResponse.json();
         
         console.log('📦 Respuesta BD:', bdData);
         
-        if (bdData.success && bdData.data) {
+        if (bdData.success && bdData.data && bdData.data.length > 0) {
             // ✅ Cliente encontrado en la base de datos
-            const cliente = bdData.data;
+            const cliente = bdData.data[0];  // Tomar el primero
             console.log('✅ Cliente encontrado en BD:', cliente);
             
             // Llenar el formulario con los datos de la BD
-            document.getElementById('fRuc').value = cliente.numero_documento || ruc;
+            document.getElementById('fRuc').value = cliente.ruc || ruc;
             document.getElementById('fRazon').value = cliente.razon_social || '';
             document.getElementById('fComercial').value = cliente.nombre_comercial || cliente.razon_social || '';
             document.getElementById('fCodCliente').value = cliente.codigo_cliente || 'PENDIENTE';
@@ -2650,10 +2651,10 @@ async function loadClient() {
                 document.getElementById('fCondicion').value = cliente.condicion_pago;
             }
             
-            // Guardar referencia del cliente
+            // Guardar referencia del cliente CON ID para futuras operaciones
             window._clienteConsultado = {
-                id: cliente.id,
-                ruc: cliente.numero_documento || ruc,
+                id: cliente.id,  // ← IMPORTANTE: guardar el ID
+                ruc: cliente.ruc || ruc,
                 razon_social: cliente.razon_social || '',
                 nombre_comercial: cliente.nombre_comercial || cliente.razon_social || '',
                 direccion: cliente.direccion_fiscal || '',
@@ -2673,7 +2674,7 @@ async function loadClient() {
             }
             
             showToast(`✅ Cliente encontrado en sistema: ${cliente.razon_social}`, 'success');
-            return;
+            return;  // Salir de la función, no consultar SUNAT
         }
         
         // ============================================================
@@ -2699,8 +2700,9 @@ async function loadClient() {
             document.getElementById('fTelefono').value = sunatData.telefono || '';
             document.getElementById('fCorreo').value = sunatData.email || '';
             
-            // Guardar referencia del cliente de SUNAT
+            // Guardar referencia del cliente de SUNAT (sin ID porque es nuevo)
             window._clienteConsultado = {
+                id: null,  // No tiene ID porque es nuevo
                 ruc: sunatData.ruc || ruc,
                 razon_social: sunatData.razon_social || '',
                 nombre_comercial: sunatData.nombre_comercial || sunatData.razon_social || '',
@@ -2771,6 +2773,11 @@ function autoLoadClientByRuc(value) {
     }
 }
 
+
+// ============================================================
+// FUNCIÓN PARA GUARDAR CLIENTE DESDE COTIZACIÓN
+// ============================================================
+
 async function saveClientFromQuote() {
     const ruc = document.getElementById('fRuc')?.value?.trim() || '';
     if (!ruc) {
@@ -2778,53 +2785,138 @@ async function saveClientFromQuote() {
         return;
     }
     
-    const cliente = {
-        ruc: ruc,
-        tipo_documento: 'RUC',
-        numero_documento: ruc,
-        razon_social: document.getElementById('fRazon')?.value || '',
-        nombre_comercial: document.getElementById('fComercial')?.value || '',
-        direccion_fiscal: document.getElementById('fDireccion')?.value || '',
-        nombre_contacto: document.getElementById('fContacto')?.value || '',
-        telefono_contacto: document.getElementById('fTelefono')?.value || '',
-        email_contacto: document.getElementById('fCorreo')?.value || '',
-        condicion_pago: document.getElementById('fCondicion')?.value || 'Contado',
-        estado: 'Activo'
-    };
-    
-    // Validar datos mínimos
-    if (!cliente.razon_social) {
+    // Validar que tenga razón social
+    const razonSocial = document.getElementById('fRazon')?.value?.trim() || '';
+    if (!razonSocial) {
         showToast('⚠️ La razón social es obligatoria', 'warning');
         return;
     }
     
+    // Mostrar loading en el botón
+    const btn = document.querySelector('.btn-save-client');
+    const originalText = btn?.textContent || '💾 Guardar / Actualizar';
+    if (btn) {
+        btn.textContent = '⏳ Guardando...';
+        btn.disabled = true;
+    }
+    
     try {
-        const response = await apiFetch('/maestros/api/clientes/guardar', {
-            method: 'POST',
-            body: JSON.stringify(cliente)
+        // ============================================================
+        // PASO 1: VERIFICAR SI EL CLIENTE YA EXISTE EN LA BD
+        // ============================================================
+        console.log('🔍 Verificando si cliente existe en BD por RUC:', ruc);
+        
+        const buscarResponse = await fetch(`/maestros/api/clientes/buscar?q=${ruc}`);
+        const buscarData = await buscarResponse.json();
+        
+        const clienteExistente = buscarData.success && buscarData.data && buscarData.data.length > 0;
+        
+        // ============================================================
+        // PREPARAR DATOS DEL CLIENTE
+        // ============================================================
+        const clienteData = {
+            tipo_documento: 'RUC',
+            numero_documento: ruc,
+            ruc: ruc,
+            razon_social: document.getElementById('fRazon')?.value?.trim() || '',
+            nombre_comercial: document.getElementById('fComercial')?.value?.trim() || '',
+            direccion_fiscal: document.getElementById('fDireccion')?.value?.trim() || '',
+            nombre_contacto: document.getElementById('fContacto')?.value?.trim() || '',
+            telefono_contacto: document.getElementById('fTelefono')?.value?.trim() || '',
+            email_contacto: document.getElementById('fCorreo')?.value?.trim() || '',
+            condicion_pago: document.getElementById('fCondicion')?.value || 'Contado',
+            activo: true,
+            estado: 'Activo'
+        };
+        
+        console.log('📦 Datos a guardar:', clienteData);
+        
+        // ============================================================
+        // PASO 2: GUARDAR O ACTUALIZAR
+        // ============================================================
+        let endpoint = '/maestros/api/clientes/guardar';
+        let method = 'POST';
+        let mensaje = '';
+        
+        if (clienteExistente) {
+            // Actualizar cliente existente
+            const clienteId = buscarData.data[0].id;
+            endpoint = `/maestros/api/clientes/${clienteId}`;
+            method = 'PUT';
+            mensaje = 'actualizado';
+            console.log('🔄 Cliente existente, actualizando ID:', clienteId);
+        } else {
+            // Crear nuevo cliente
+            mensaje = 'creado';
+            console.log('🆕 Cliente nuevo, creando...');
+        }
+        
+        const response = await fetch(endpoint, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(clienteData)
         });
         
-        if (response.success) {
-            showToast('✅ Cliente guardado en Maestros', 'success');
+        const result = await response.json();
+        console.log('📦 Respuesta del servidor:', result);
+        
+        if (result.success) {
+            // ============================================================
+            // MOSTRAR MENSAJE DE ÉXITO
+            // ============================================================
+            const codigoCliente = result.data?.codigo_cliente || 
+                                 buscarData.data?.[0]?.codigo_cliente || 
+                                 'PENDIENTE';
+            
+            // Actualizar el código de cliente en el formulario
+            document.getElementById('fCodCliente').value = codigoCliente;
+            
+            // Mostrar mensaje en el confirm box
             const confirmBox = document.getElementById('clientConfirmBox');
             if (confirmBox) {
-                confirmBox.textContent = '💾 Cliente guardado en Maestros correctamente';
+                const emoji = mensaje === 'creado' ? '✅' : '🔄';
+                const texto = mensaje === 'creado' ? 'creado' : 'actualizado';
+                confirmBox.textContent = `${emoji} Cliente ${texto} correctamente | Código: ${codigoCliente}`;
                 confirmBox.className = 'show existente';
-                setTimeout(() => { confirmBox.className = ''; }, 3000);
+                setTimeout(() => { confirmBox.className = ''; }, 5000);
             }
-            // Actualizar el código de cliente
-            if (response.data && response.data.codigo_cliente) {
-                document.getElementById('fCodCliente').value = response.data.codigo_cliente;
-            }
+            
+            // Mostrar toast
+            showToast(`✅ Cliente ${mensaje} correctamente: ${clienteData.razon_social}`, 'success');
+            
+            // Actualizar la lista de clientes maestros
             await cargarClientesMaestros();
+            
+            // Guardar referencia del cliente para uso en la cotización
+            window._clienteConsultado = {
+                id: result.data?.id || buscarData.data?.[0]?.id,
+                ruc: ruc,
+                razon_social: clienteData.razon_social,
+                nombre_comercial: clienteData.nombre_comercial,
+                direccion: clienteData.direccion_fiscal,
+                contacto: clienteData.nombre_contacto,
+                telefono: clienteData.telefono_contacto,
+                email: clienteData.email_contacto,
+                codigo_cliente: codigoCliente,
+                origen: 'base_datos'
+            };
+            
         } else {
-            showToast('Error: ' + (response.error || 'No se pudo guardar'), 'error');
+            showToast('❌ Error: ' + (result.error || 'No se pudo guardar el cliente'), 'error');
         }
+        
     } catch (error) {
-        console.error('Error guardando cliente:', error);
-        showToast('Error al guardar el cliente', 'error');
+        console.error('❌ Error guardando cliente:', error);
+        showToast('❌ Error al guardar el cliente: ' + error.message, 'error');
+    } finally {
+        // Restaurar botón
+        if (btn) {
+            btn.textContent = originalText;
+            btn.disabled = false;
+        }
     }
 }
+
 
 
 // ============================================================
