@@ -461,22 +461,64 @@
         padding: 5px 10px;
     }
     
-    .status-dot {
-        width: 22px;
-        height: 22px;
-        border-radius: 8px;
-        display: grid;
-        place-items: center;
-        font-size: 10px;
-        font-weight: 1000;
-    }
-    
-    .dot-total { background: #DBEAFE; color: #1D4ED8; border: 1px solid #93C5FD; }
-    .dot-draft { background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; }
-    .dot-review { background: #DBEAFE; color: #1D4ED8; border: 1px solid #93C5FD; }
-    .dot-ok { background: #B6FF7A; color: #0B5D1E; border: 1px solid #7CFF3A; }
-    .dot-send { background: #EDE9FE; color: #6D28D9; border: 1px solid #C4B5FD; }
-    
+   
+/* KPI Cards - Dots con colores fluorescentes */
+.status-dot {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: 1000;
+    border: 2px solid transparent;
+}
+
+/* 🔵 Total - Azul fluorescente NEON */
+.dot-total { 
+    background: #0066FF !important; 
+    color: #FFFFFF !important; 
+    border-color: #4488FF !important;
+    box-shadow: 0 0 20px rgba(0, 102, 255, 0.5);
+    text-shadow: 0 0 10px rgba(255,255,255,0.3);
+}
+
+/* 🔴 Borrador - Rojo fluorescente NEON */
+.dot-draft { 
+    background: #FF0000 !important; 
+    color: #FFFFFF !important; 
+    border-color: #FF4444 !important;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+    text-shadow: 0 0 10px rgba(255,255,255,0.3);
+}
+
+/* 🟡 En revisión - Amarillo fluorescente NEON */
+.dot-review { 
+    background: #FFDD00 !important; 
+    color: #000000 !important; 
+    border-color: #FFEE44 !important;
+    box-shadow: 0 0 25px rgba(255, 221, 0, 0.6);
+    text-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+
+/* 🟢 Generadas - Verde fluorescente NEON */
+.dot-send { 
+    background: #00FF41 !important; 
+    color: #000000 !important; 
+    border-color: #44FF77 !important;
+    box-shadow: 0 0 25px rgba(0, 255, 65, 0.5);
+    text-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+
+/* 🔵 Aceptadas - Azul fluorescente NEON (más brillante) */
+.dot-ok { 
+    background: #0066FF !important; 
+    color: #FFFFFF !important; 
+    border-color: #4488FF !important;
+    box-shadow: 0 0 30px rgba(0, 102, 255, 0.7);
+    text-shadow: 0 0 15px rgba(255,255,255,0.5);
+}
+
     .status-card small {
         display: block;
         font-size: 10px;
