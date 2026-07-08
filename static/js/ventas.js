@@ -3685,6 +3685,10 @@ function renderProductSelector() {
         const isChecked = selectedProductIds.has(p.id) || selectedProductIds.has(p.codigo);
         // Usar id o codigo como identificador
         const idKey = p.id || p.codigo;
+        
+        // 🔽 FIX: Asegurar que valorVenta sea un número
+        const valorVenta = parseFloat(p.valorVenta) || 0;
+        
         return `
         <tr>
             <td style="text-align:center;">
@@ -3698,7 +3702,7 @@ function renderProductSelector() {
             <td>${p.marca || '-'}</td>
             <td>${p.um || 'NIU'}</td>
             <td>${p.stock || 0}</td>
-            <td style="font-weight:900; color:#059669;">S/ ${(p.valorVenta || 0).toFixed(2)}</td>
+            <td style="font-weight:900; color:#059669;">S/ ${valorVenta.toFixed(2)}</td>
             <td>
                 <input type="number" class="product-select-qty" 
                        data-id="${idKey}"
@@ -3800,6 +3804,7 @@ function updateProductQty(idKey, value) {
     // No es necesario hacer nada aquí, se usará al agregar
 }
 
+
 function addSelectedProducts() {
     if (selectedProductIds.size === 0) {
         showToast('⚠️ Selecciona al menos un producto', 'warning');
@@ -3822,6 +3827,9 @@ function addSelectedProducts() {
         const qtyInput = document.querySelector(`.product-select-qty[data-id="${idKey}"]`);
         const cantidad = parseInt(qtyInput?.value || 1);
         
+        // 🔽 Asegurar que valorVenta sea un número
+        const valorVenta = parseFloat(product.valorVenta) || 0;
+        
         // Verificar si ya está agregado (por código)
         const existingIndex = quoteProducts.findIndex(p => p.codigo === product.codigo);
         if (existingIndex !== -1) {
@@ -3832,7 +3840,7 @@ function addSelectedProducts() {
             const nuevoProducto = {
                 ...product,
                 cantidad: cantidad,
-                valorVenta: parseFloat(product.valorVenta) || 0,
+                valorVenta: valorVenta,
                 stock: parseInt(product.stock) || 0
             };
             quoteProducts.push(nuevoProducto);
@@ -3855,6 +3863,7 @@ function addSelectedProducts() {
         showToast(`⚠️ ${notFoundCount} productos no encontrados`, 'warning');
     }
 }
+
 
 // Event listener para el buscador del selector
 document.addEventListener('DOMContentLoaded', function() {
