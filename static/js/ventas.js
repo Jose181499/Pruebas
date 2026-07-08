@@ -83,22 +83,38 @@ function today() {
 
 function badgeStatus(s) {
     const map = {
+        // 🔴 Rojo chillón
         'Borrador': 'b-draft',
-        'En Proceso': 'b-review',
+        'Eliminada': 'b-draft',
+        
+        // 🟡 Amarillo chillón
         'En revisión': 'b-review',
         'En revisión interna': 'b-review',
+        'En Proceso': 'b-review',
+        
+        // 🟢 Verde chillón
+        'Generada': 'b-generated',
         'Validada': 'b-valid',
-        'Validado por Hellen': 'b-valid',
-        'Generada': 'b-sent',
-        'Aceptada por Cliente': 'b-accepted',  // ← Este es el correcto
-        'Aceptado': 'b-accepted',
-        'Aceptada': 'b-accepted',
-        'No concretada': 'b-rejected',
-        'Anulada': 'b-rejected',
-        'Eliminada': 'b-rejected',
+        'Validado por Hellen': 'b-validated',
         'Emitido': 'b-ok',
         'Emitida': 'b-ok',
-        // ... resto
+        'Despachado': 'b-ok',
+        'Entregado': 'b-ok',
+        'Pagado': 'b-ok',
+        'Aprobada': 'b-ok',
+        'Procesada': 'b-ok',
+        
+        // 🔵 Azul fluorescente
+        'Aceptada por Cliente': 'b-accepted',
+        'Aceptada': 'b-accepted',
+        'Aceptado': 'b-accepted',
+        
+        // ⚪ Plomo
+        'Anulada': 'b-canceled',
+        'No concretada': 'b-canceled',
+        'Rechazada': 'b-canceled',
+        'Cancelado': 'b-canceled',
+        'No concretada': 'b-lost',
     };
     return `<span class="badge ${map[s] || 'b-gray'}">${s}</span>`;
 }
@@ -3807,42 +3823,40 @@ function createMenuWithClose(event, htmlContent) {
 function showCotizacionMenu(event, id) {
     event.stopPropagation();
     
-    // Buscar la cotización para ver su estado
     const cotizacion = cotizacionesData.find(c => c.id === id);
     const estado = cotizacion?.estado || '';
     const isAccepted = estado === 'Aceptada por Cliente' || estado === 'Aceptada';
-    const isGenerated = estado === 'Generada';  // ← Solo para "Generada"
-    const isDraft = estado === 'Borrador' || estado === 'En revisión';
+    const isGenerated = estado === 'Generada';
     
     let menuHtml = `
-        <button onclick="openCotizacionModal(${id});this.closest('.menu-pop').remove()">👁 Ver / Editar</button>
-        <button onclick="duplicateCotizacion(${id});this.closest('.menu-pop').remove()">⧉ Duplicar</button>
-        <button onclick="sendCotizacionEmail(${id});this.closest('.menu-pop').remove()">✉ Email</button>
-        <button onclick="generateCotizacionPdf(${id});this.closest('.menu-pop').remove()">▣ PDF</button>
+        <button class="menu-edit" onclick="openCotizacionModal(${id});this.closest('.menu-pop').remove()">👁 Ver / Editar</button>
+        <button class="menu-duplicate" onclick="duplicateCotizacion(${id});this.closest('.menu-pop').remove()">⧉ Duplicar</button>
+        <button class="menu-email" onclick="sendCotizacionEmail(${id});this.closest('.menu-pop').remove()">✉ Email</button>
+        <button class="menu-pdf" onclick="generateCotizacionPdf(${id});this.closest('.menu-pop').remove()">▣ PDF</button>
         <div style="height:1px;background:#E5E7EB;margin:4px 0;"></div>
     `;
     
-    // ✅ Botón "Aceptada por Cliente" - SOLO cuando está GENERADA
+    // ✅ Aceptada por Cliente - SOLO cuando está GENERADA
     if (isGenerated && !isAccepted) {
         menuHtml += `
             <button class="menu-accepted" onclick="marcarCotizacionAccepted(${id});this.closest('.menu-pop').remove()">✅ Aceptada por Cliente</button>
         `;
     }
     
-    // Mostrar "Crear guía" solo si está aceptada
+    // 🚚 Crear guía - solo si está aceptada
     if (isAccepted) {
         menuHtml += `
-            <button class="menu-accepted" onclick="createDocFromCotizacion(${id},'guia');this.closest('.menu-pop').remove()">🚚 Crear guía</button>
-            <button class="menu-accepted" onclick="createDocFromCotizacion(${id},'factura');this.closest('.menu-pop').remove()">🧾 Crear factura</button>
+            <button class="menu-guia" onclick="createDocFromCotizacion(${id},'guia');this.closest('.menu-pop').remove()">🚚 Crear guía</button>
+            <button class="menu-factura" onclick="createDocFromCotizacion(${id},'factura');this.closest('.menu-pop').remove()">🧾 Crear factura</button>
         `;
     }
     
-    // Siempre mostrar "Crear despacho"
+    // 🚚 Crear despacho - siempre visible
     menuHtml += `
-        <button onclick="createDocFromCotizacion(${id},'despacho');this.closest('.menu-pop').remove()">🚚 Crear despacho</button>
+        <button class="menu-despacho" onclick="createDocFromCotizacion(${id},'despacho');this.closest('.menu-pop').remove()">🚚 Crear despacho</button>
     `;
     
-    // Botón de eliminar (siempre visible)
+    // 🗑 Eliminar
     menuHtml += `
         <div style="height:1px;background:#E5E7EB;margin:4px 0;"></div>
         <button class="danger" onclick="deleteCotizacion(${id});this.closest('.menu-pop').remove()">🗑 Eliminar</button>
@@ -3850,6 +3864,8 @@ function showCotizacionMenu(event, id) {
     
     createMenuWithClose(event, menuHtml);
 }
+
+
 
 function showPedidoMenu(event, id) {
     event.stopPropagation();
