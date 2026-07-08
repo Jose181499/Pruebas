@@ -1225,17 +1225,15 @@ async function saveDevolucion(estado) {
 // ACCIONES DE MENÚ (CON API REAL)
 // ============================================================
 
-
 async function marcarCotizacionAccepted(id) {
     console.log('🔄 Marcando cotización como aceptada, ID:', id);
     
     try {
         showToast('⏳ Actualizando estado...', 'info');
         
-        // Usar el estado exacto de la base de datos
         const response = await apiFetch(`/ventas/api/cotizaciones/${id}/toggle`, {
             method: 'PUT',
-            body: JSON.stringify({ estado: 'Aceptada por Cliente' }) // ← Este es el correcto
+            body: JSON.stringify({ estado: 'Aceptada por Cliente' })
         });
         
         console.log('📦 Respuesta:', response);
@@ -1251,7 +1249,6 @@ async function marcarCotizacionAccepted(id) {
         showToast('❌ Error al actualizar estado: ' + error.message, 'error');
     }
 }
-
 
 async function marcarCotizacionPending(id) {
     try {
@@ -3803,9 +3800,6 @@ function createMenuWithClose(event, htmlContent) {
     
     return pop;
 }
-// ============================================================
-// MENÚS DE ACCIONES
-// ============================================================
 
 // ============================================================
 // MENÚ DE COTIZACIONES (MEJORADO)
@@ -3817,7 +3811,7 @@ function showCotizacionMenu(event, id) {
     const cotizacion = cotizacionesData.find(c => c.id === id);
     const estado = cotizacion?.estado || '';
     const isAccepted = estado === 'Aceptada por Cliente' || estado === 'Aceptada';
-    const isGenerated = estado === 'Generada';
+    const isGenerated = estado === 'Generada';  // ← Solo para "Generada"
     const isDraft = estado === 'Borrador' || estado === 'En revisión';
     
     let menuHtml = `
@@ -3828,8 +3822,8 @@ function showCotizacionMenu(event, id) {
         <div style="height:1px;background:#E5E7EB;margin:4px 0;"></div>
     `;
     
-    // Botón "Aceptada por Cliente" - solo si NO está aceptada
-    if (!isAccepted) {
+    // ✅ Botón "Aceptada por Cliente" - SOLO cuando está GENERADA
+    if (isGenerated && !isAccepted) {
         menuHtml += `
             <button class="menu-accepted" onclick="marcarCotizacionAccepted(${id});this.closest('.menu-pop').remove()">✅ Aceptada por Cliente</button>
         `;
