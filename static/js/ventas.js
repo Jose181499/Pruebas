@@ -840,38 +840,38 @@ async function guardarCotizacion(estado) {
         // Ahora 'Borrador' es válido en la base de datos
         
         const data = {
-            id: editingId,
-            estado: estado || 'Borrador',  // ← AHORA 'Borrador' ES VÁLIDO
-            cliente_id: clienteId,
-            ruc: ruc,
-            razon: document.getElementById('fRazon')?.value?.trim() || '',
-            razon_comercial: document.getElementById('fComercial')?.value?.trim() || '',
-            direccion: document.getElementById('fDireccion')?.value?.trim() || '',
-            contacto: document.getElementById('fContacto')?.value?.trim() || '',
-            telefono: document.getElementById('fTelefono')?.value?.trim() || '',
-            email: document.getElementById('fCorreo')?.value?.trim() || '',
-            condicion_pago: document.getElementById('fCondicion')?.value || 'Contado',
-            tiempo_entrega: document.getElementById('fTiempo')?.value || '5 días hábiles',
-            validez: document.getElementById('fValidez')?.value || '15 días',
-            direccion_entrega: document.getElementById('fDireccionEntrega')?.value || '',
-            descuento_valor: descuentoValor,
-            descuento_tipo: descuentoTipo,
-            subtotal: subtotal,
-            descuento_monto: descuento,
-            igv: igv,
-            total: total,
-            productos: quoteProducts.map(p => ({
-                codigo: p.codigo,
-                producto: p.producto || p.descripcion,
-                descripcion: p.descripcion || '',
-                modelo: p.modelo || '',
-                marca: p.marca || '',
-                um: p.um || 'NIU',
-                cantidad: p.cantidad || 1,
-                valorVenta: p.valorVenta || 0,
-                stock: p.stock || 0
-            }))
-        };
+    id: editingId,
+    estado: estado || 'Borrador',
+    cliente_id: clienteId,
+    ruc: ruc,
+    razon: document.getElementById('fRazon')?.value?.trim() || '',
+    razon_comercial: document.getElementById('fComercial')?.value?.trim() || '',
+    direccion: document.getElementById('fDireccion')?.value?.trim() || '',
+    contacto: document.getElementById('fContacto')?.value?.trim() || '',
+    telefono: document.getElementById('fTelefono')?.value?.trim() || '',
+    email: document.getElementById('fCorreo')?.value?.trim() || '',
+    condicion_pago: getFieldValue('fCondicion', 'fCondicionCustom') || 'Contado',
+    tiempo_entrega: getFieldValue('fTiempo', 'fTiempoCustom') || '5 días hábiles',
+    validez: getFieldValue('fValidez', 'fValidezCustom') || '15 días',
+    direccion_entrega: getFieldValue('fDireccionEntrega', 'fDireccionEntregaCustom') || '',
+    descuento_valor: descuentoValor,
+    descuento_tipo: descuentoTipo,
+    subtotal: subtotal,
+    descuento_monto: descuento,
+    igv: igv,
+    total: total,
+    productos: quoteProducts.map(p => ({
+        codigo: p.codigo,
+        producto: p.producto || p.descripcion,
+        descripcion: p.descripcion || '',
+        modelo: p.modelo || '',
+        marca: p.marca || '',
+        um: p.um || 'NIU',
+        cantidad: p.cantidad || 1,
+        valorVenta: p.valorVenta || 0,
+        stock: p.stock || 0
+    }))
+};
         
         console.log('📦 Enviando cotización:');
         console.log('  - cliente_id:', data.cliente_id);
@@ -2168,22 +2168,96 @@ function openCotizacionModal(id = null) {
                 </div>
             </div>
 
-            <!-- Punto 2: Condiciones comerciales -->
+            <!-- Punto 2: Condiciones comerciales CON CAMPOS PERSONALIZADOS -->
             <div class="create-panel">
                 <h3><span class="section-number">2.</span> <span class="section-title-colored">Condiciones comerciales</span></h3>
                 <div class="body">
                     <div class="form-grid">
-                        <div class="form-field col-4"><label>Asesor</label><select id="fVendedor"><option>Helen Blas Príncipe</option><option>Edith</option><option>Ana Gómez</option></select></div>
-                        <div class="form-field col-5"><label>Email asesor</label><input id="fEmailAsesor" value="ventas@kcfcorporacion.com"></div>
-                        <div class="form-field col-3"><label>Teléfono asesor</label><input id="fTelAsesor" value="999932051"></div>
-                        <div class="form-field col-4"><label>Moneda</label><select id="fMoneda"><option>Soles (S/.)</option><option>Dólares ($)</option></select></div>
-                        <div class="form-field col-4"><label>Condición de pago</label><select id="fCondicion"><option>Contado</option><option>Crédito 7 días</option><option>Crédito 15 días</option><option>Crédito 30 días</option><option>Crédito 45 días</option><option>Crédito 60 días</option><option>Crédito 90 días</option></select></div>
-                        <div class="form-field col-4"><label>Tiempo de entrega</label><select id="fTiempo"><option>Inmediato</option><option>1 día hábil</option><option>3 días hábiles</option><option>5 días hábiles</option><option>7 días hábiles</option><option>Bajo pedido</option><option>Personalizado</option></select></div>
-                        <div class="form-field col-4"><label>Validez</label><select id="fValidez"><option>7 días</option><option>15 días</option><option>30 días</option><option>60 días</option><option>Personalizado</option></select></div>
-                        <div class="form-field col-8"><label>Dirección de entrega</label><select id="fDireccionEntrega"><option>Dirección cliente</option><option>Otra dirección</option></select></div>
-                        <div class="form-field col-4"><label>Descuento especial</label><input id="fDiscountValue" type="number" value="0" oninput="calcQuote()"></div>
-                        <div class="form-field col-2"><label>Tipo</label><select id="fDiscountType" onchange="calcQuote()"><option value="%">%</option><option value="S/">S/</option></select></div>
-                        <div class="form-field col-12"><label>Nota comercial</label><textarea placeholder="Ingrese comentarios comerciales..."></textarea></div>
+                        <div class="form-field col-4">
+                            <label>Asesor</label>
+                            <select id="fVendedor">
+                                <option value="Helen Blas Príncipe" selected>Helen Blas Príncipe</option>
+                                <option value="Edith">Edith</option>
+                                <option value="Ana Gómez">Ana Gómez</option>
+                            </select>
+                        </div>
+                        <div class="form-field col-5">
+                            <label>Email asesor</label>
+                            <input id="fEmailAsesor" value="ventas@kcfcorporacion.com">
+                        </div>
+                        <div class="form-field col-3">
+                            <label>Teléfono asesor</label>
+                            <input id="fTelAsesor" value="999932051">
+                        </div>
+                        <div class="form-field col-4">
+                            <label>Moneda</label>
+                            <select id="fMoneda">
+                                <option value="Soles (S/.)">Soles (S/.)</option>
+                                <option value="Dólares ($)">Dólares ($)</option>
+                            </select>
+                        </div>
+                        <div class="form-field col-4">
+                            <label>Condición de pago</label>
+                            <select id="fCondicion" onchange="toggleCustomField('fCondicion', 'fCondicionCustom')">
+                                <option value="Contado">Contado</option>
+                                <option value="Crédito 7 días">Crédito 7 días</option>
+                                <option value="Crédito 15 días">Crédito 15 días</option>
+                                <option value="Crédito 30 días">Crédito 30 días</option>
+                                <option value="Crédito 45 días">Crédito 45 días</option>
+                                <option value="Crédito 60 días">Crédito 60 días</option>
+                                <option value="Crédito 90 días">Crédito 90 días</option>
+                                <option value="Personalizado">✏️ Personalizado</option>
+                            </select>
+                            <input id="fCondicionCustom" placeholder="Ej: Crédito 120 días" style="display:none; margin-top:4px; height:28px; width:100%; border:1px solid #E5E7EB; border-radius:6px; padding:0 8px; font-size:11px;">
+                        </div>
+                        <div class="form-field col-4">
+                            <label>Tiempo de entrega</label>
+                            <select id="fTiempo" onchange="toggleCustomField('fTiempo', 'fTiempoCustom')">
+                                <option value="Inmediato">Inmediato</option>
+                                <option value="1 día hábil">1 día hábil</option>
+                                <option value="3 días hábiles">3 días hábiles</option>
+                                <option value="5 días hábiles">5 días hábiles</option>
+                                <option value="7 días hábiles">7 días hábiles</option>
+                                <option value="Bajo pedido">Bajo pedido</option>
+                                <option value="Personalizado">✏️ Personalizado</option>
+                            </select>
+                            <input id="fTiempoCustom" placeholder="Ej: 10 días hábiles" style="display:none; margin-top:4px; height:28px; width:100%; border:1px solid #E5E7EB; border-radius:6px; padding:0 8px; font-size:11px;">
+                        </div>
+                        <div class="form-field col-4">
+                            <label>Validez</label>
+                            <select id="fValidez" onchange="toggleCustomField('fValidez', 'fValidezCustom')">
+                                <option value="7 días">7 días</option>
+                                <option value="15 días">15 días</option>
+                                <option value="30 días">30 días</option>
+                                <option value="60 días">60 días</option>
+                                <option value="Personalizado">✏️ Personalizado</option>
+                            </select>
+                            <input id="fValidezCustom" placeholder="Ej: 45 días" style="display:none; margin-top:4px; height:28px; width:100%; border:1px solid #E5E7EB; border-radius:6px; padding:0 8px; font-size:11px;">
+                        </div>
+                        <div class="form-field col-8">
+                            <label>Dirección de entrega</label>
+                            <select id="fDireccionEntrega" onchange="toggleCustomField('fDireccionEntrega', 'fDireccionEntregaCustom')">
+                                <option value="Dirección cliente">Dirección cliente</option>
+                                <option value="Otra dirección">Otra dirección</option>
+                                <option value="Personalizado">✏️ Personalizado</option>
+                            </select>
+                            <input id="fDireccionEntregaCustom" placeholder="Ingrese dirección personalizada" style="display:none; margin-top:4px; height:28px; width:100%; border:1px solid #E5E7EB; border-radius:6px; padding:0 8px; font-size:11px;">
+                        </div>
+                        <div class="form-field col-4">
+                            <label>Descuento especial</label>
+                            <input id="fDiscountValue" type="number" value="0" oninput="calcQuote()">
+                        </div>
+                        <div class="form-field col-2">
+                            <label>Tipo</label>
+                            <select id="fDiscountType" onchange="calcQuote()">
+                                <option value="%">%</option>
+                                <option value="S/">S/</option>
+                            </select>
+                        </div>
+                        <div class="form-field col-12">
+                            <label>Nota comercial</label>
+                            <textarea id="fNotaComercial" placeholder="Ingrese comentarios comerciales..."></textarea>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2261,6 +2335,7 @@ function openCotizacionModal(id = null) {
     setTimeout(() => { calcQuote(); }, 100);
 }
 
+
 async function cargarCotizacionParaEditar(id) {
     try {
         console.log('📥 Cargando cotización para editar ID:', id);
@@ -2289,101 +2364,23 @@ async function cargarCotizacionParaEditar(id) {
         document.getElementById('fCorreo').value = c.cliente_email || c.email_cliente || '';
         
         // ============================================================
-        // LLENAR CONDICIONES COMERCIALES
-        // ============================================================
-        if (c.condicion_pago) {
-            const condSelect = document.getElementById('fCondicion');
-            if (condSelect) {
-                // Buscar la opción que coincida
-                let found = false;
-                for (let opt of condSelect.options) {
-                    if (opt.value === c.condicion_pago) {
-                        opt.selected = true;
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    // Crear una nueva opción
-                    const newOpt = document.createElement('option');
-                    newOpt.value = c.condicion_pago;
-                    newOpt.textContent = c.condicion_pago;
-                    condSelect.appendChild(newOpt);
-                    condSelect.value = c.condicion_pago;
-                }
-            }
-        }
-        
-        // Tiempo de entrega
-        if (c.tiempo_entrega) {
-            const tiempoSelect = document.getElementById('fTiempo');
-            if (tiempoSelect) {
-                let found = false;
-                for (let opt of tiempoSelect.options) {
-                    if (opt.value === c.tiempo_entrega) {
-                        opt.selected = true;
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    const newOpt = document.createElement('option');
-                    newOpt.value = c.tiempo_entrega;
-                    newOpt.textContent = c.tiempo_entrega;
-                    tiempoSelect.appendChild(newOpt);
-                    tiempoSelect.value = c.tiempo_entrega;
-                }
-            }
-        }
-        
-        // Validez
-        if (c.validez_oferta) {
-            const validezSelect = document.getElementById('fValidez');
-            if (validezSelect) {
-                let found = false;
-                for (let opt of validezSelect.options) {
-                    if (opt.value === c.validez_oferta) {
-                        opt.selected = true;
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    const newOpt = document.createElement('option');
-                    newOpt.value = c.validez_oferta;
-                    newOpt.textContent = c.validez_oferta;
-                    validezSelect.appendChild(newOpt);
-                    validezSelect.value = c.validez_oferta;
-                }
-            }
-        }
-        
-        // Descuento
-        document.getElementById('fDiscountValue').value = c.descuento_porcentaje || 0;
-        document.getElementById('fDiscountType').value = c.descuento_tipo || '%';
-        
-        // Dirección de entrega
-        if (c.direccion_entrega) {
-            const dirSelect = document.getElementById('fDireccionEntrega');
-            if (dirSelect) {
-                // Agregar la dirección como opción si no existe
-                let found = false;
-                for (let opt of dirSelect.options) {
-                    if (opt.value === c.direccion_entrega) {
-                        opt.selected = true;
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    const newOpt = document.createElement('option');
-                    newOpt.value = c.direccion_entrega;
-                    newOpt.textContent = c.direccion_entrega;
-                    dirSelect.appendChild(newOpt);
-                    dirSelect.value = c.direccion_entrega;
-                }
-            }
-        }
+// LLENAR CONDICIONES COMERCIALES - con soporte para personalizado
+// ============================================================
+if (c.condicion_pago) {
+    setFieldValue('fCondicion', 'fCondicionCustom', c.condicion_pago);
+}
+
+if (c.tiempo_entrega) {
+    setFieldValue('fTiempo', 'fTiempoCustom', c.tiempo_entrega);
+}
+
+if (c.validez_oferta) {
+    setFieldValue('fValidez', 'fValidezCustom', c.validez_oferta);
+}
+
+if (c.direccion_entrega) {
+    setFieldValue('fDireccionEntrega', 'fDireccionEntregaCustom', c.direccion_entrega);
+}
         
         // Nota interna
         if (c.nota_cotizacion) {
@@ -3954,6 +3951,87 @@ function showDevolucionMenu(event, id) {
         <button class="danger" onclick="deleteDevolucion(${id});this.closest('.menu-pop').remove()">🗑 Eliminar</button>
     `;
     document.body.appendChild(pop);
+}
+
+
+// ============================================================
+// FUNCIONES PARA CAMPOS PERSONALIZADOS
+// ============================================================
+
+/**
+ * Muestra/oculta el campo de entrada personalizado cuando se selecciona "Personalizado"
+ * @param {string} selectId - ID del select
+ * @param {string} inputId - ID del input personalizado
+ */
+function toggleCustomField(selectId, inputId) {
+    const select = document.getElementById(selectId);
+    const input = document.getElementById(inputId);
+    
+    if (!select || !input) return;
+    
+    if (select.value === 'Personalizado') {
+        input.style.display = 'block';
+        input.focus();
+    } else {
+        input.style.display = 'none';
+        input.value = '';
+    }
+}
+
+/**
+ * Obtiene el valor de un campo (incluyendo el valor personalizado si está seleccionado)
+ * @param {string} selectId - ID del select
+ * @param {string} inputId - ID del input personalizado
+ * @returns {string} - Valor seleccionado o personalizado
+ */
+function getFieldValue(selectId, inputId) {
+    const select = document.getElementById(selectId);
+    const input = document.getElementById(inputId);
+    
+    if (!select) return '';
+    
+    if (select.value === 'Personalizado' && input) {
+        return input.value.trim() || select.value;
+    }
+    
+    return select.value;
+}
+
+/**
+ * Establece el valor de un campo, soportando valores personalizados
+ * @param {string} selectId - ID del select
+ * @param {string} inputId - ID del input personalizado
+ * @param {string} value - Valor a establecer
+ */
+function setFieldValue(selectId, inputId, value) {
+    const select = document.getElementById(selectId);
+    const input = document.getElementById(inputId);
+    
+    if (!select) return;
+    
+    // Si el valor es null o undefined, no hacer nada
+    if (value === null || value === undefined) return;
+    
+    // Verificar si el valor está en las opciones del select
+    let found = false;
+    for (let opt of select.options) {
+        if (opt.value === value) {
+            opt.selected = true;
+            found = true;
+            break;
+        }
+    }
+    
+    if (!found && input) {
+        // Si no está en las opciones, seleccionar "Personalizado" y poner el valor en el input
+        select.value = 'Personalizado';
+        input.value = value;
+        input.style.display = 'block';
+    } else if (input) {
+        // Si está en las opciones, ocultar el input personalizado
+        input.style.display = 'none';
+        input.value = '';
+    }
 }
 
 // ============================================================
