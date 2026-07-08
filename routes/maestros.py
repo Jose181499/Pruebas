@@ -1534,7 +1534,6 @@ def api_test():
     """Endpoint para probar que la API funciona"""
     return jsonify({"success": True, "message": "API de maestros funcionando correctamente"})
 
-
 @maestros_bp.route('/api/clientes/buscar', methods=['GET'])
 @login_required
 def api_clientes_buscar():
@@ -1571,7 +1570,7 @@ def api_clientes_buscar():
                             'principal', pe.principal,
                             'activo', pe.activo
                         )
-                    ) FROM clientes_punto_entrega pe 
+                    ) FROM clientes_puntos_entrega pe 
                       WHERE pe.cliente_id = c.id AND pe.activo = true),
                     '[]'::json
                 ) as puntos_entrega
@@ -1594,4 +1593,3 @@ def api_clientes_buscar():
     except Exception as e:
         print(f"❌ Error en api_clientes_buscar: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-   
