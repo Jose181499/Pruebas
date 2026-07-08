@@ -4265,9 +4265,30 @@ function cambiarVista(vista) {
     bdRenderProductos(window.bdProductosFiltrados);
 }
 
+// ============================================================
+// FUNCIÓN PARA FORMATEAR FECHA
+// ============================================================
+function formatearFecha(fecha) {
+    if (!fecha) return '-';
+    
+    try {
+        var d = new Date(fecha);
+        if (isNaN(d.getTime())) return '-';
+        
+        var dia = String(d.getDate()).padStart(2, '0');
+        var mes = String(d.getMonth() + 1).padStart(2, '0');
+        var anio = d.getFullYear();
+        var horas = String(d.getHours()).padStart(2, '0');
+        var minutos = String(d.getMinutes()).padStart(2, '0');
+        
+        return dia + '/' + mes + '/' + anio + ' ' + horas + ':' + minutos;
+    } catch (e) {
+        return '-';
+    }
+}
 
 // ============================================================
-// RENDERIZAR PRODUCTOS - MODIFICADO PARA SOPORTAR VISTAS
+// RENDERIZAR PRODUCTOS - CON FECHA / HORA
 // ============================================================
 function bdRenderProductos(data) {
     if (!window.location.pathname.includes('/productos/base-datos')) {
@@ -4283,9 +4304,11 @@ function bdRenderProductos(data) {
     }
     
     if (!data || data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="24" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay productos registrados</td></tr>`;
-        const countEl = document.getElementById('bdCountText');
-        if (countEl) countEl.textContent = '0 productos';
+        tbody.innerHTML = `<tr><td colspan="25" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay productos registrados</td></tr>`;
+        const countEl = document.getElementById('bdTotalRegistros');
+        if (countEl) countEl.textContent = '0 registros';
+        const pageInfo = document.getElementById('bdPaginaInfo');
+        if (pageInfo) pageInfo.textContent = '0/0';
         return;
     }
     
@@ -4318,9 +4341,14 @@ function bdRenderProductos(data) {
         var categoria = p.categoria || p.familia || '-';
         var subcategoria = p.subcategoria || p.categoria_derivada || '-';
         
+        // ✅ OBTENER FECHA FORMATEADA
+        var fecha = p.created_at || p.updated_at || p.fecha_creacion || p.fecha_registro || null;
+        var fechaFormateada = formatearFecha(fecha);
+        
         html += '<tr>';
         html += '<td class="bd-col-item" style="text-align:center;color:#94a3b8;font-weight:600;">' + index + '</td>';
         html += '<td class="bd-col-code"><span class="bd-t-code">' + (p.codigo || '-') + '</span></td>';
+        html += '<td class="bd-col-date"><span class="bd-date-badge">' + fechaFormateada + '</span></td>';  // ✅ NUEVA COLUMNA
         html += '<td class="bd-col-desc"><strong>' + (p.descripcion || '-') + '</strong></td>';
         html += '<td class="bd-col-model">' + (p.modelo || '-') + '</td>';
         html += '<td class="bd-col-brand">' + (p.marca || '-') + '</td>';
@@ -4334,7 +4362,6 @@ function bdRenderProductos(data) {
         
         // COLUMNAS - SEPARADAS POR VISTA
         if (esVistaCompleta) {
-            // VISTA COMPLETA: mostrar todo
             html += '<td class="bd-col-subcat">' + subcategoria + '</td>';
             html += '<td class="bd-col-weight">' + (p.peso || '0') + '</td>';
             html += '<td class="bd-col-transport">' + (p.transporte || '-') + '</td>';
@@ -4352,7 +4379,6 @@ function bdRenderProductos(data) {
             html += '<td class="bd-col-stock-min">' + (p.stock_minimo || '0') + '</td>';
             html += '<td class="bd-col-desc-larga" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (p.descripcion_larga || '-') + '</td>';
         } else {
-            // VISTA PRINCIPAL: ocultar columnas con clase col-oculta
             html += '<td class="bd-col-subcat col-oculta">' + subcategoria + '</td>';
             html += '<td class="bd-col-weight col-oculta">' + (p.peso || '0') + '</td>';
             html += '<td class="bd-col-transport col-oculta">' + (p.transporte || '-') + '</td>';
@@ -4377,20 +4403,15 @@ function bdRenderProductos(data) {
     tbody.innerHTML = html;
     
     // Actualizar contadores
-    var desde = inicio + 1;
-    var hasta = fin;
-    var countEl = document.getElementById('bdCountText');
-    if (countEl) countEl.textContent = 'Mostrando ' + desde + ' a ' + hasta + ' de ' + total + ' productos';
-    
     var totalEl = document.getElementById('bdTotalRegistros');
     if (totalEl) totalEl.textContent = total + ' registros';
     
     var pageInfo = document.getElementById('bdPaginaInfo');
-    if (pageInfo) pageInfo.textContent = window.bdPaginaActual + ' / ' + totalPaginas;
+    if (pageInfo) pageInfo.textContent = window.bdPaginaActual + '/' + totalPaginas;
+    
+    var pageActual = document.getElementById('bdPaginaActual');
+    if (pageActual) pageActual.textContent = window.bdPaginaActual;
 }
-
-
-
 
 // ============================================================
 // FILTROS - MODIFICADO PARA USAR bdProductosFiltrados
