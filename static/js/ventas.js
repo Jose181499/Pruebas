@@ -453,22 +453,25 @@ function renderCotizaciones() {
     });
     
     // KPIs
-    const kpiContainer = document.getElementById('cotizacionesKPI');
-    if (kpiContainer) {
-        const total = cotizacionesData.length;
-        const borradores = cotizacionesData.filter(x => x.estado === 'Borrador').length;
-        const revision = cotizacionesData.filter(x => x.estado === 'En revisión').length;
-        const enviadas = cotizacionesData.filter(x => x.estado === 'Generada').length;
-        const aceptadas = cotizacionesData.filter(x => x.estado === 'Aceptada').length;
-        
-        kpiContainer.innerHTML = `
-            <div class="status-card"><div class="status-dot dot-total">Σ</div><div><small>Total</small><b>${total}</b></div></div>
-            <div class="status-card"><div class="status-dot dot-draft">B</div><div><small>Borradores</small><b>${borradores}</b></div></div>
-            <div class="status-card"><div class="status-dot dot-review">R</div><div><small>En revisión</small><b>${revision}</b></div></div>
-            <div class="status-card"><div class="status-dot dot-send">E</div><div><small>Generadas</small><b>${enviadas}</b></div></div>
-            <div class="status-card"><div class="status-dot dot-ok">A</div><div><small>Aceptadas</small><b>${aceptadas}</b></div></div>
-        `;
-    }
+   // KPIs - Versión corregida
+const kpiContainer = document.getElementById('cotizacionesKPI');
+if (kpiContainer) {
+    const total = cotizacionesData.length;
+    
+    // IMPORTANTE: Usar los mismos nombres de estado que vienen de la BD
+    const borradores = cotizacionesData.filter(x => x.estado === 'Borrador').length;
+    const revision = cotizacionesData.filter(x => x.estado === 'En revisión' || x.estado === 'En Proceso').length;
+    const generadas = cotizacionesData.filter(x => x.estado === 'Generada').length;
+    const aceptadas = cotizacionesData.filter(x => x.estado === 'Aceptada por Cliente' || x.estado === 'Aceptada' || x.estado === 'Aceptado').length;
+    
+    kpiContainer.innerHTML = `
+        <div class="status-card"><div class="status-dot dot-total">Σ</div><div><small>Total</small><b>${total}</b></div></div>
+        <div class="status-card"><div class="status-dot dot-draft">B</div><div><small>Borradores</small><b>${borradores}</b></div></div>
+        <div class="status-card"><div class="status-dot dot-review">R</div><div><small>En revisión</small><b>${revision}</b></div></div>
+        <div class="status-card"><div class="status-dot dot-send">E</div><div><small>Generadas</small><b>${generadas}</b></div></div>
+        <div class="status-card"><div class="status-dot dot-ok">A</div><div><small>Aceptadas</small><b>${aceptadas}</b></div></div>
+    `;
+}
     
     const tbody = document.getElementById('qRows');
     if (!tbody) return;
