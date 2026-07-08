@@ -378,22 +378,28 @@
             </p>
         </div>
 
-        <!-- ✅ TOP ACTIONS - COMPLETO Y FUNCIONAL -->
-        <div class="top-actions">
-            <div class="select-box">
-            <label>Empresa activa</label>
-            <select id="empresaActiva">
-                <option value="KCF" {% if session.get('empresa') == 'KCF' %}selected{% endif %}>KC</option>
-                <option value="AGD" {% if session.get('empresa') == 'AGD' %}selected{% endif %}>AGD Group S.A.C.</option>
-            </select>
-            </div>
-            <div class="user-box" id="userBox">
-            <div class="avatar" id="userAvatar">
-                {{ (session.get('nombre_completo') or session.get('nombre') or 'U')[0]|upper }}
-            </div>
-            <span id="userName">{{ session.get('nombre_completo') or session.get('nombre') or 'Usuario' }}</span>
-            </div>
+      <!-- ✅ TOP ACTIONS - COMPLETO Y FUNCIONAL -->
+<div class="top-actions">
+    <div class="select-box">
+        <label>Empresa activa</label>
+        <select id="empresaActiva">
+            <option value="KCF" {% if session.get('empresa') == 'KCF' %}selected{% endif %}>KC</option>
+            <option value="AGD" {% if session.get('empresa') == 'AGD' %}selected{% endif %}>AGD Group S.A.C.</option>
+        </select>
+    </div>
+    <div class="user-box" id="userBox">
+        <div class="avatar" id="userAvatar">
+            {# Extraer solo la primera letra del primer nombre #}
+            {% set nombre_completo = session.get('nombre_completo') or session.get('nombre') or 'Usuario' %}
+            {{ nombre_completo.split()[0][0]|upper if nombre_completo.split() else 'U' }}
         </div>
+        <span id="userName">
+            {# Mostrar solo el nombre de pila (primera palabra) #}
+            {% set nombre_completo = session.get('nombre_completo') or session.get('nombre') or 'Usuario' %}
+            {{ nombre_completo.split()[0] if nombre_completo.split() else 'Usuario' }}
+        </span>
+    </div>
+</div>
         </header>
 
         <!-- ✅ TABS - SOLO PARA CONFIGURACIÓN (usando request.path) -->
