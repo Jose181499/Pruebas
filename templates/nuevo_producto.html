@@ -443,15 +443,9 @@
             font-size: 10px !important;
         }
         
-        .money {
-            font-size: 18px !important;
-        }
+       
         
-        .money input {
-            font-size: 16px !important;
-            padding: 2px 6px !important;
-            height: 30px !important;
-        }
+      
         
         .margin-grid {
             gap: 6px !important;
@@ -581,19 +575,86 @@
                 /* ============================================
            PRECIOS - VALOR VENTA (AZUL) Y COSTO (GRIS)
            ============================================ */
+        /* ============================================
+           PRECIOS - INPUTS DE DINERO
+           ============================================ */
 
-        /* Estilo base para ambos inputs de dinero */
-        .money input {
-            font-size: 16px !important;
-            padding: 2px 6px !important;
-            height: 30px !important;
-            border-radius: 6px !important;
+        /* Contenedor del input de dinero */
+        .money {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            padding: 0 12px !important;
+            height: 42px !important;
+            border-radius: 8px !important;
             background: #ffffff !important;
-            outline: none !important;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
-            font-weight: 600 !important;
-            color: #1a1a2e !important;
+            border: 2px solid #e5e7eb !important;
+            transition: all 0.2s ease !important;
         }
+
+        /* Input dentro de .money */
+        .money input {
+            flex: 1 !important;
+            border: none !important;
+            outline: none !important;
+            background: transparent !important;
+            font-size: 16px !important;
+            font-weight: 700 !important;
+            color: #1a1a2e !important;
+            padding: 4px 0 !important;
+            height: 30px !important;
+            text-align: right !important;
+            min-width: 0 !important;
+        }
+
+        /* Símbolo S/ dentro de .money */
+        .money span {
+            font-size: 16px !important;
+            font-weight: 700 !important;
+            color: #6b7280 !important;
+            flex-shrink: 0 !important;
+        }
+
+        /* ============================================
+           VALOR VENTA - BORDE AZUL
+           ============================================ */
+
+        /* Contenedor del valor venta */
+        .price-box.sale .money {
+            border-color: #0066FF !important;
+            background: #f8fbff !important;
+        }
+
+        .price-box.sale .money:focus-within {
+            border-color: #0044CC !important;
+            box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.15) !important;
+        }
+
+        /* Símbolo S/ en azul para VENTA */
+        .price-box.sale .money span {
+            color: #0066FF !important;
+        }
+
+        /* ============================================
+           VALOR COSTO - BORDE GRIS
+           ============================================ */
+
+        /* Contenedor del valor costo */
+        .price-box:not(.sale) .money {
+            border-color: #d1d5db !important;
+            background: #ffffff !important;
+        }
+
+        .price-box:not(.sale) .money:focus-within {
+            border-color: #6b7280 !important;
+            box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.1) !important;
+        }
+
+        /* Símbolo S/ en gris para COSTO */
+        .price-box:not(.sale) .money span {
+            color: #6b7280 !important;
+        }
+     
 
         /* VALOR VENTA - Borde AZUL ELÉCTRICO */
         #valorVenta {
@@ -617,18 +678,7 @@
             box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.1) !important;
         }
 
-        /* El S/ en azul solo para valor venta */
-        .price-box.sale .money span {
-            color: #0066FF !important;
-            font-weight: 700 !important;
-        }
-
-        /* El S/ en gris para valor costo */
-        .price-box .money.cost span {
-            color: #6b7280 !important;
-            font-weight: 700 !important;
-        }
-        
+      
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
