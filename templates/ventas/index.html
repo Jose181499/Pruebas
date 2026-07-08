@@ -127,149 +127,143 @@
         background: #E2E8F0;
         color: #EF233C;
     }
-    
-  /* ============================================================
-   MENÚ POP - BOTONES FLUORESCENTES
+  
+/* ============================================================
+   MENÚ POP - FONDO BLANCO CON BOTONES DE COLOR
    ============================================================ */
 .menu-pop {
     position: fixed;
     z-index: 999;
-    background: #1a1a2e;
-    border: 2px solid #2d2d44;
-    border-radius: 16px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+    background: #ffffff;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
     padding: 8px;
-    min-width: 220px;
+    min-width: 210px;
     max-width: 280px;
 }
 
 .menu-pop button {
     width: 100%;
-    height: 38px;
+    height: 34px;
     border: 0;
-    background: transparent;
-    border-radius: 10px;
+    background: #fff;
+    border-radius: 8px;
     text-align: left;
-    padding: 0 12px;
-    font-weight: 900;
-    color: #c8c8d4;
+    padding: 0 10px;
+    font-weight: 850;
+    color: #334155;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     cursor: pointer;
-    transition: all 0.25s ease;
-    font-size: 13px;
-    letter-spacing: 0.3px;
+    transition: all 0.2s;
 }
 .menu-pop button:hover {
-    transform: translateX(4px);
+    background: #F8FAFC;
 }
 
 /* 🔵 Aceptada - Azul fluorescente NEON */
 .menu-pop .menu-accepted {
-    color: #00CCFF;
-    text-shadow: 0 0 15px rgba(0, 204, 255, 0.4);
+    color: #0066FF;
+    font-weight: 900;
 }
 .menu-pop .menu-accepted:hover {
-    background: rgba(0, 204, 255, 0.15);
-    color: #66DDFF;
-    text-shadow: 0 0 25px rgba(0, 204, 255, 0.6);
+    background: #DBEAFE;
+    color: #0044CC;
 }
 
 /* 🚚 Crear guía - Verde fluorescente NEON */
 .menu-pop .menu-guia {
-    color: #00FF88;
-    text-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
+    color: #00CC44;
+    font-weight: 900;
 }
 .menu-pop .menu-guia:hover {
-    background: rgba(0, 255, 136, 0.15);
-    color: #66FFAA;
-    text-shadow: 0 0 25px rgba(0, 255, 136, 0.6);
+    background: #D1FAE5;
+    color: #009933;
 }
 
 /* 🧾 Crear factura - Azul fluorescente NEON */
 .menu-pop .menu-factura {
-    color: #4488FF;
-    text-shadow: 0 0 15px rgba(68, 136, 255, 0.4);
+    color: #0066FF;
+    font-weight: 900;
 }
 .menu-pop .menu-factura:hover {
-    background: rgba(68, 136, 255, 0.15);
-    color: #88BBFF;
-    text-shadow: 0 0 25px rgba(68, 136, 255, 0.6);
+    background: #DBEAFE;
+    color: #0044CC;
 }
 
 /* 🚚 Crear despacho - Naranja fluorescente NEON */
 .menu-pop .menu-despacho {
-    color: #FF8800;
-    text-shadow: 0 0 15px rgba(255, 136, 0, 0.4);
+    color: #FF6600;
+    font-weight: 900;
 }
 .menu-pop .menu-despacho:hover {
-    background: rgba(255, 136, 0, 0.15);
-    color: #FFAA44;
-    text-shadow: 0 0 25px rgba(255, 136, 0, 0.6);
+    background: #FFEDD5;
+    color: #CC5500;
 }
 
-/* 🗑 Eliminar - Rojo fluorescente NEON */
+/* 🗑 Eliminar - Rojo */
 .menu-pop .danger {
-    color: #FF0044;
-    border-top: 1px solid #2d2d44;
+    color: #DC2626;
+    border-top: 1px solid #E5E7EB;
     margin-top: 4px;
-    text-shadow: 0 0 15px rgba(255, 0, 68, 0.4);
+    font-weight: 900;
 }
 .menu-pop .danger:hover {
-    background: rgba(255, 0, 68, 0.15);
-    color: #FF4488;
-    text-shadow: 0 0 25px rgba(255, 0, 68, 0.6);
+    background: #FEE2E2;
+    color: #B91C1C;
 }
 
-/* 📄 PDF - Morado fluorescente NEON */
+/* 📄 PDF - Morado */
 .menu-pop .menu-pdf {
-    color: #BB44FF;
-    text-shadow: 0 0 15px rgba(187, 68, 255, 0.4);
+    color: #7C3AED;
+    font-weight: 900;
 }
 .menu-pop .menu-pdf:hover {
-    background: rgba(187, 68, 255, 0.15);
-    color: #DD88FF;
-    text-shadow: 0 0 25px rgba(187, 68, 255, 0.6);
+    background: #EDE9FE;
+    color: #6D28D9;
 }
 
-/* ✉ Email - Cian fluorescente NEON */
+/* ✉ Email - Azul */
 .menu-pop .menu-email {
-    color: #00FFCC;
-    text-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
+    color: #2563EB;
+    font-weight: 900;
 }
 .menu-pop .menu-email:hover {
-    background: rgba(0, 255, 204, 0.15);
-    color: #66FFDD;
-    text-shadow: 0 0 25px rgba(0, 255, 204, 0.6);
+    background: #DBEAFE;
+    color: #1D4ED8;
 }
 
-/* ⧉ Duplicar - Turquesa fluorescente NEON */
+/* ⧉ Duplicar - Turquesa */
 .menu-pop .menu-duplicate {
-    color: #00FFAA;
-    text-shadow: 0 0 15px rgba(0, 255, 170, 0.4);
+    color: #0D9488;
+    font-weight: 900;
 }
 .menu-pop .menu-duplicate:hover {
-    background: rgba(0, 255, 170, 0.15);
-    color: #66FFCC;
-    text-shadow: 0 0 25px rgba(0, 255, 170, 0.6);
+    background: #CCFBF1;
+    color: #0F766E;
 }
 
-/* 👁 Ver/Editar - Blanco */
+/* 👁 Ver/Editar - Gris oscuro */
 .menu-pop .menu-edit {
-    color: #FFFFFF;
+    color: #374151;
+    font-weight: 900;
 }
 .menu-pop .menu-edit:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: #FFFFFF;
+    background: #F3F4F6;
+    color: #1F2937;
 }
 
 /* Divisor del menú */
 .menu-pop .menu-divider {
     height: 1px;
-    background: #2d2d44;
+    background: #E5E7EB;
     margin: 4px 0;
 }
+
+
+
     
     /* Security note */
     .security-note {
