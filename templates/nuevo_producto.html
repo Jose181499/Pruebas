@@ -584,17 +584,19 @@
 
 /* Solo el input del valor venta con borde azul */
 #valorVenta {
-    border: 2px solid #0066FF !important;
+    border: 2px solid #0066FF !important;  /* Este es el borde azul */
     border-radius: 6px !important;
     background: white !important;
     color: #1a1a2e !important;
     transition: all 0.3s ease !important;
+    outline: none !important;  /* ⚠️ IMPORTANTE: elimina el borde de enfoque del navegador */
+    box-shadow: none !important;  /* Elimina cualquier sombra predeterminada */
 }
 
 #valorVenta:focus {
     border-color: #0044CC !important;
     box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.15) !important;
-    outline: none !important;
+    outline: none !important;  /* ⚠️ IMPORTANTE: también al hacer foco */
 }
 
 /* Si quieres que también el símbolo S/ sea azul */
