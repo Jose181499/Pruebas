@@ -850,6 +850,7 @@ async function guardarCotizacion(estado) {
     contacto: document.getElementById('fContacto')?.value?.trim() || '',
     telefono: document.getElementById('fTelefono')?.value?.trim() || '',
     email: document.getElementById('fCorreo')?.value?.trim() || '',
+     vendedor: document.getElementById('fVendedor')?.value || 'Helen Blas Príncipe',
     condicion_pago: getFieldValue('fCondicion', 'fCondicionCustom') || 'Contado',
     tiempo_entrega: getFieldValue('fTiempo', 'fTiempoCustom') || '5 días hábiles',
     validez: getFieldValue('fValidez', 'fValidezCustom') || '15 días',
@@ -2174,13 +2175,9 @@ function openCotizacionModal(id = null) {
                 <div class="body">
                     <div class="form-grid">
                         <div class="form-field col-4">
-                            <label>Asesor</label>
-                            <select id="fVendedor">
-                                <option value="Helen Blas Príncipe" selected>Helen Blas Príncipe</option>
-                                <option value="Edith">Edith</option>
-                                <option value="Ana Gómez">Ana Gómez</option>
-                            </select>
-                        </div>
+    <label>Asesor</label>
+    <input id="fVendedor" value="Helen Blas Príncipe" readonly style="background:#F1F5F9; cursor:default;">
+</div>
                         <div class="form-field col-5">
                             <label>Email asesor</label>
                             <input id="fEmailAsesor" value="ventas@kcfcorporacion.com">
