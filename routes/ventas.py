@@ -2034,22 +2034,6 @@ def api_cotizaciones_obtener_completa(id):
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
-# ============================================================
-# ALIAS PARA COMPATIBILIDAD CON FRONTEND (/api/cotizaciones)
-# ============================================================
-
-@ventas_bp.route('/api/cotizaciones', methods=['GET'])
-@login_required
-def api_cotizaciones_alias_get():
-    """Alias para /api/cotizaciones -> redirige a /ventas/api/cotizaciones/listar"""
-    return api_cotizaciones_listar()
-
-@ventas_bp.route('/api/cotizaciones', methods=['POST'])
-@login_required
-def api_cotizaciones_alias_post():
-    """Alias para /api/cotizaciones -> redirige a /ventas/api/cotizaciones/guardar"""
-    return api_cotizaciones_guardar()
-
 
 
 @ventas_bp.route('/ventas/api/cotizaciones/<int:id>/duplicar', methods=['POST'])
@@ -2230,14 +2214,7 @@ def api_cotizaciones_duplicar(id):
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
     
-@ventas_bp.route('/ventas/api/cotizaciones/test-delete', methods=['GET'])
-@login_required
-def api_cotizaciones_test_delete():
-    """Ruta de prueba para verificar que DELETE funciona"""
-    return jsonify({
-        'success': True,
-        'message': 'La ruta DELETE está funcionando correctamente'
-    })
+
 
 # ============================================================
 # GENERAR PDF DE COTIZACIÓN
