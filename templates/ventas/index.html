@@ -1881,6 +1881,51 @@
     backdrop-filter: blur(6px) !important;
 }
 
+
+/* Botones de vista - Principal / Completa */
+.btn-view {
+    transition: all 0.2s ease !important;
+    font-size: 11px !important;
+    padding: 6px 16px !important;
+    border-radius: 8px !important;
+    font-weight: 900 !important;
+    cursor: pointer !important;
+}
+
+.btn-primary-view {
+    background: #EF233C !important;
+    color: #fff !important;
+    border: none !important;
+    box-shadow: 0 2px 8px rgba(239, 35, 60, 0.3) !important;
+}
+
+.btn-primary-view:hover {
+    background: #D91A30 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(239, 35, 60, 0.4) !important;
+}
+
+.btn-secondary-view {
+    background: #F1F5F9 !important;
+    color: #475569 !important;
+    border: 1px solid #E5E7EB !important;
+}
+
+.btn-secondary-view:hover {
+    background: #E2E8F0 !important;
+    color: #0F172A !important;
+}
+
+.btn-secondary-view.active {
+    background: #EF233C !important;
+    color: #fff !important;
+    border: none !important;
+    box-shadow: 0 2px 8px rgba(239, 35, 60, 0.3) !important;
+}
+
+.btn-secondary-view.active:hover {
+    background: #D91A30 !important;
+}
 </style>
 {% endblock %}
 
@@ -1910,7 +1955,7 @@
                 <div class="master-subtitle">Listado comercial con trazabilidad</div>
             </div>
             <div class="search-box">
-                <input id="qSearch" placeholder="Buscar por Nx° cotización / RUC / Cliente / Descripción...">
+                <input id="qSearch" placeholder="Buscar por N° cotización / RUC / Cliente / Descripción...">
             </div>
             <div class="clean-actions">
                 <select id="qStatus">
@@ -1923,28 +1968,25 @@
                     <option value="No concretada">No concretada</option>
                 </select>
                 <button class="btn btn-secondary" onclick="exportData('cotizaciones')">📥 Exportar</button>
-                <button class="btn btn-electric-blue btn-create" onclick="openCotizacionModal()">+Crear Nueva cotización</button>
+                <button class="btn btn-electric-blue btn-create" onclick="openCotizacionModal()">+ Nueva cotización</button>
             </div>
         </div>
         <div class="table-scroll">
-            <table class="master-table">
-                <thead>
-                    <tr>
-                        <th>Item</th>
-                        <th>Fecha / Hora</th>
-                        <th>Estado</th>
-                        <th>N° Cotización</th>
-                        <th>RUC</th>
-                        <th>Cód. Cliente</th>
-                        <th>Razón social</th>
-                        <th>Descripción principal</th>
-                        <th>Monto total</th>
-                        <th>Cond. pago</th>
-                        <th>Acciones</th>
-                    </tr>
+            <table class="master-table" id="cotizacionesTable">
+                <thead id="cotizacionesTableHead">
+                    <!-- El encabezado se renderiza desde JavaScript -->
                 </thead>
                 <tbody id="qRows"></tbody>
             </table>
+        </div>
+        <!-- 🔽 BOTONES DE VISTA - PARTE INFERIOR DERECHA 🔽 -->
+        <div style="display: flex; justify-content: flex-end; gap: 8px; padding: 8px 12px; border-top: 1px solid #E5E7EB; background: #FAFBFC; border-radius: 0 0 12px 12px;">
+            <button class="btn btn-view btn-primary-view active" onclick="setCotizacionView('principal')" id="viewPrincipalBtn" style="background: #EF233C; color: #fff; border: none; padding: 6px 16px; border-radius: 8px; font-weight: 900; font-size: 11px; cursor: pointer; transition: all 0.2s;">
+                📋 Principal
+            </button>
+            <button class="btn btn-view btn-secondary-view" onclick="setCotizacionView('completa')" id="viewCompletaBtn" style="background: #F1F5F9; color: #475569; border: 1px solid #E5E7EB; padding: 6px 16px; border-radius: 8px; font-weight: 900; font-size: 11px; cursor: pointer; transition: all 0.2s;">
+                📄 Completa
+            </button>
         </div>
     </div>
 </div>
