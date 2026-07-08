@@ -1557,7 +1557,6 @@ def api_clientes_buscar():
                 c.email_contacto, 
                 c.direccion_fiscal, 
                 c.condicion_pago,
-                c.tiempo_entrega,
                 c.activo,
                 COALESCE(
                     (SELECT json_agg(

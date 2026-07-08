@@ -2632,75 +2632,49 @@ async function loadClient() {
         
         console.log('📦 Respuesta BD:', bdData);
         
-        if (bdData.success && bdData.data && bdData.data.length > 0) {
-            // ✅ Cliente encontrado en la base de datos
-            const cliente = bdData.data[0];  // Tomar el primero
-            console.log('✅ Cliente encontrado en BD:', cliente);
-            
-            // Llenar el formulario con los datos de la BD
-            document.getElementById('fRuc').value = cliente.ruc || ruc;
-            document.getElementById('fRazon').value = cliente.razon_social || '';
-            document.getElementById('fComercial').value = cliente.nombre_comercial || cliente.razon_social || '';
-            document.getElementById('fCodCliente').value = cliente.codigo_cliente || 'PENDIENTE';
-            document.getElementById('fDireccion').value = cliente.direccion_fiscal || '';
-            document.getElementById('fContacto').value = cliente.nombre_contacto || '';
-            document.getElementById('fTelefono').value = cliente.telefono_contacto || '';
-            document.getElementById('fCorreo').value = cliente.email_contacto || '';
-            
-            // ============================================================
-            // 🔽 NUEVO: CARGAR CONDICIÓN DE PAGO, TIEMPO DE ENTREGA Y DIRECCIÓN
-            // ============================================================
-            
-            // 1. Condición de pago - desde el cliente o desde puntos de entrega
-            if (cliente.condicion_pago && document.getElementById('fCondicion')) {
-                setFieldValue('fCondicion', 'fCondicionCustom', cliente.condicion_pago);
+       if (bdData.success && bdData.data && bdData.data.length > 0) {
+    const cliente = bdData.data[0];
+    
+    // Llenar el formulario con los datos de la BD
+    document.getElementById('fRuc').value = cliente.ruc || ruc;
+    document.getElementById('fRazon').value = cliente.razon_social || '';
+    document.getElementById('fComercial').value = cliente.nombre_comercial || cliente.razon_social || '';
+    document.getElementById('fCodCliente').value = cliente.codigo_cliente || 'PENDIENTE';
+    document.getElementById('fDireccion').value = cliente.direccion_fiscal || '';
+    document.getElementById('fContacto').value = cliente.nombre_contacto || '';
+    document.getElementById('fTelefono').value = cliente.telefono_contacto || '';
+    document.getElementById('fCorreo').value = cliente.email_contacto || '';
+    
+    // 🔽 Condición de pago
+    if (cliente.condicion_pago && document.getElementById('fCondicion')) {
+        setFieldValue('fCondicion', 'fCondicionCustom', cliente.condicion_pago);
+    }
+    
+    // 🔽 Dirección de entrega desde puntos de entrega
+    let direccionEntrega = '';
+    if (cliente.puntos_entrega && cliente.puntos_entrega.length > 0) {
+        const principal = cliente.puntos_entrega.find(p => p.principal === true);
+        if (principal) {
+            direccionEntrega = principal.direccion || '';
+            if (principal.condicion_pago && document.getElementById('fCondicion')) {
+                setFieldValue('fCondicion', 'fCondicionCustom', principal.condicion_pago);
             }
-            
-            // 2. Tiempo de entrega - si existe en el cliente
-            if (cliente.tiempo_entrega && document.getElementById('fTiempo')) {
-                setFieldValue('fTiempo', 'fTiempoCustom', cliente.tiempo_entrega);
+        } else {
+            const primero = cliente.puntos_entrega[0];
+            direccionEntrega = primero.direccion || '';
+            if (primero.condicion_pago && document.getElementById('fCondicion')) {
+                setFieldValue('fCondicion', 'fCondicionCustom', primero.condicion_pago);
             }
-            
-            // 3. Dirección de entrega - desde puntos de entrega o desde dirección fiscal
-            // Primero intentar obtener el punto de entrega principal
-            let direccionEntrega = '';
-            let tiempoEntrega = '';
-            
-            if (cliente.puntos_entrega && cliente.puntos_entrega.length > 0) {
-                // Buscar el punto de entrega principal
-                const principal = cliente.puntos_entrega.find(p => p.principal === true);
-                if (principal) {
-                    direccionEntrega = principal.direccion || '';
-                    // Si el punto de entrega tiene condicion_pago, usarlo
-                    if (principal.condicion_pago && document.getElementById('fCondicion')) {
-                        setFieldValue('fCondicion', 'fCondicionCustom', principal.condicion_pago);
-                    }
-                    // Si el punto de entrega tiene tiempo_credito, usarlo como tiempo de entrega
-                    if (principal.tiempo_credito && document.getElementById('fTiempo')) {
-                        setFieldValue('fTiempo', 'fTiempoCustom', principal.tiempo_credito);
-                    }
-                } else {
-                    // Si no hay principal, usar el primero
-                    const primero = cliente.puntos_entrega[0];
-                    direccionEntrega = primero.direccion || '';
-                    if (primero.condicion_pago && document.getElementById('fCondicion')) {
-                        setFieldValue('fCondicion', 'fCondicionCustom', primero.condicion_pago);
-                    }
-                    if (primero.tiempo_credito && document.getElementById('fTiempo')) {
-                        setFieldValue('fTiempo', 'fTiempoCustom', primero.tiempo_credito);
-                    }
-                }
-            }
-            
-            // Si no hay dirección de entrega desde puntos, usar dirección fiscal
-            if (!direccionEntrega && cliente.direccion_fiscal) {
-                direccionEntrega = cliente.direccion_fiscal;
-            }
-            
-            // Establecer la dirección de entrega
-            if (direccionEntrega && document.getElementById('fDireccionEntrega')) {
-                setFieldValue('fDireccionEntrega', 'fDireccionEntregaCustom', direccionEntrega);
-            }
+        }
+    }
+    
+    if (!direccionEntrega && cliente.direccion_fiscal) {
+        direccionEntrega = cliente.direccion_fiscal;
+    }
+    
+    if (direccionEntrega && document.getElementById('fDireccionEntrega')) {
+        setFieldValue('fDireccionEntrega', 'fDireccionEntregaCustom', direccionEntrega);
+    }
             
             // Guardar referencia del cliente CON ID para futuras operaciones
             window._clienteConsultado = {
