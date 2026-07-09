@@ -332,6 +332,75 @@ def api_clientes_actualizar(id):
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
+@maestros_bp.route('/api/clientes/<int:id>', methods=['DELETE'])
+@login_required
+def api_clientes_eliminar(id):
+    """Eliminar cliente"""
+    try:
+        from database import DATABASE_URL
+
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+
+        # Verificar que exista
+        cur.execute("""
+            SELECT id
+            FROM clientes
+            WHERE id = %s
+        """, (id,))
+
+        if not cur.fetchone():
+            cur.close()
+            conn.close()
+            return jsonify({
+                "success": False,
+                "error": "Cliente no encontrado"
+            }), 404
+
+        # Eliminar contactos
+        cur.execute("""
+            DELETE FROM clientes_contactos
+            WHERE cliente_id = %s
+        """, (id,))
+
+        # Eliminar puntos de entrega
+        cur.execute("""
+            DELETE FROM clientes_puntos_entrega
+            WHERE cliente_id = %s
+        """, (id,))
+
+        # Eliminar cliente
+        cur.execute("""
+            DELETE FROM clientes
+            WHERE id = %s
+            RETURNING id
+        """, (id,))
+
+        result = cur.fetchone()
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        if result:
+            return jsonify({
+                "success": True,
+                "message": "Cliente eliminado correctamente"
+            })
+
+        return jsonify({
+            "success": False,
+            "error": "No se pudo eliminar el cliente"
+        })
+
+    except Exception as e:
+        current_app.logger.error(f"❌ Error eliminando cliente: {e}")
+        traceback.print_exc()
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
 @maestros_bp.route('/api/clientes/<int:id>/toggle', methods=['PUT'])
 @login_required
 def api_clientes_toggle(id):
