@@ -1,52 +1,20 @@
-{% extends "ventas/index.html" %}
-
-{% block content %}
-<div id="pedidoCompraContent">
-    <div class="panel">
-        <div class="clean-header">
-            <div class="master-title-wrap">
-                <div class="master-title">PC Pedido Compras</div>
-                <div class="master-subtitle">Aceptación formal del cliente recibida por correo</div>
+<!-- MODAL PEDIDO COMPRA - Estilo SAP -->
+<div class="modal-bg" id="pedidoCompraModal">
+    <div class="modal-box" style="width:min(1200px,96vw); max-height:92vh;">
+        <div class="modal-head">
+            <div>
+                <div class="modal-title" id="pedidoCompraModalTitle">Crear PC Cliente</div>
+                <p style="color:#94A3B8; font-size:12px; font-weight:800;" id="modalSub">Primero se valida. No comprar ni despachar si existe observación.</p>
             </div>
-            <div class="search-box">
-                <input id="pcSearch" placeholder="Buscar por PC / Cliente / RUC / Cotización...">
-            </div>
-            <div class="clean-actions">
-                <select id="pcStatus">
-                    <option value="">Todos los estados</option>
-                    <option value="Pendiente">Pendiente</option>
-                    <option value="Recibido por correo">Recibido por correo</option>
-                    <option value="En revisión interna">En revisión interna</option>
-                    <option value="Validado por Hellen">Validado por Hellen</option>
-                    <option value="Listo para despacho">Listo para despacho</option>
-                    <option value="Anulado">Anulado</option>
-                </select>
-                <button class="btn btn-secondary" onclick="exportData('pedido_compra')">📥 Exportar</button>
-                <button class="btn btn-primary btn-create" onclick="openPedidoCompraModal()">+ Subir PC cliente</button>
-            </div>
+            <button class="btn btn-secondary" style="background:transparent;color:#fff;border-color:#fff;padding:6px 14px;min-height:34px;border-radius:14px" onclick="closeModal('pedidoCompraModal')">✕ Cerrar</button>
         </div>
-        <div class="table-scroll">
-            <table class="master-table">
-                <thead>
-                    <tr>
-                        <th>Item</th>
-                        <th>Fecha</th>
-                        <th>Estado</th>
-                        <th>PC / OC</th>
-                        <th>Cliente</th>
-                        <th>Cotización</th>
-                        <th>Monto</th>
-                        <th>Archivo</th>
-                        <th>Entrega</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="pcRows"></tbody>
-            </table>
+        <div class="modal-body" id="pedidoCompraForm">
+            <!-- Contenido dinámico generado por JavaScript -->
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-secondary" onclick="closeModal('pedidoCompraModal')">Cancelar</button>
+            <button class="btn btn-danger" onclick="savePedidoCompra('PC observado')">⚠️ Guardar observado</button>
+            <button class="btn btn-primary" onclick="savePedidoCompra('PC conforme')">✅ Guardar PC Cliente</button>
         </div>
     </div>
 </div>
-{% endblock %}
-
-
-

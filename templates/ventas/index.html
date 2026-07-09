@@ -1965,6 +1965,255 @@
     text-shadow: 0 0 10px rgba(255,255,255,0.2);
 }
 
+/* ============================================================
+   ESTILOS SAP - PC PEDIDO COMPRAS
+   ============================================================ */
+
+/* Barra de flujo tipo SAP */
+.sap-flow {
+    background: #fff;
+    border: 1px solid var(--ventas-line);
+    border-radius: 15px;
+    padding: 10px 12px;
+    margin: 0 12px 12px 12px;
+    box-shadow: 0 4px 14px rgba(15,23,42,.04);
+}
+
+.sap-flow-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.sap-flow-title b {
+    color: #0F172A;
+    font-size: 13px;
+}
+
+.sap-flow-title span {
+    color: #64748B;
+    font-size: 11px;
+    font-weight: 850;
+}
+
+.sap-steps {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 7px;
+}
+
+.sap-step {
+    border: 1px solid #E2E8F0;
+    background: #F8FAFC;
+    border-radius: 12px;
+    padding: 8px 8px;
+    min-height: 54px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+}
+
+.sap-step::after {
+    content: "";
+    position: absolute;
+    right: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 2px;
+    background: #CBD5E1;
+}
+
+.sap-step:last-child::after { display: none; }
+
+.sap-step .circle {
+    width: 27px;
+    height: 27px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-weight: 1000;
+    font-size: 12px;
+    flex: 0 0 auto;
+}
+
+.sap-step small {
+    display: block;
+    color: #64748B;
+    font-size: 9.5px;
+    font-weight: 1000;
+    text-transform: uppercase;
+}
+
+.sap-step b {
+    display: block;
+    color: #0F172A;
+    font-size: 11px;
+    line-height: 1.05;
+}
+
+.sap-step.done { background: #ECFDF5; border-color: #86EFAC; }
+.sap-step.done .circle { background: #16A34A; color: white; }
+
+.sap-step.active { background: #FFF1F2; border-color: #FDA4AF; }
+.sap-step.active .circle { background: var(--ventas-primary); color: white; }
+
+.sap-step.lock { background: #FEF2F2; border-color: #FCA5A5; }
+.sap-step.lock .circle { background: #DC2626; color: white; }
+
+.sap-step.wait .circle { background: #F59E0B; color: white; }
+.sap-step.wait { background: #FFFBEB; border-color: #FCD34D; }
+
+/* Semáforo de control */
+.sap-control-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--ventas-line);
+    background: #FBFCFE;
+}
+
+.sap-control-card {
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    background: #fff;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sap-control-dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-weight: 1000;
+    color: white;
+    font-size: 11px;
+}
+
+.sap-control-card small {
+    display: block;
+    color: #64748B;
+    font-size: 9.5px;
+    font-weight: 1000;
+    text-transform: uppercase;
+}
+
+.sap-control-card b {
+    display: block;
+    color: #0F172A;
+    font-size: 12px;
+    line-height: 1.1;
+}
+
+.dot-ok { background: #16A34A; }
+.dot-warn { background: #F59E0B; }
+.dot-danger { background: #DC2626; }
+.dot-info { background: #2563EB; }
+
+/* Bloque de documento en modal */
+.sap-doc-summary {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+}
+
+.sap-doc-box {
+    border: 1px solid #E2E8F0;
+    background: #F8FAFC;
+    border-radius: 11px;
+    padding: 8px;
+}
+
+.sap-doc-box small {
+    display: block;
+    color: #64748B;
+    font-size: 9px;
+    font-weight: 1000;
+    text-transform: uppercase;
+}
+
+.sap-doc-box b {
+    display: block;
+    color: #0F172A;
+    font-size: 12px;
+    margin-top: 3px;
+}
+
+/* Footer de tabla */
+.footer-table {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    color: #64748B;
+    font-weight: 850;
+    border-top: 1px solid var(--ventas-line);
+    background: #FAFBFC;
+}
+
+/* Cabecera SAP */
+.sap-head {
+    grid-template-columns: 250px minmax(260px, 1fr) auto !important;
+    padding: 10px 12px !important;
+    gap: 10px !important;
+}
+
+/* Alerta de regla */
+.alert-rule {
+    margin: 10px 14px 0;
+    background: #FFF7ED;
+    border: 1px solid #FDBA74;
+    color: #9A3412;
+    border-radius: 12px;
+    padding: 9px 12px;
+    font-weight: 900;
+    font-size: 12px;
+}
+
+/* Mini note */
+.mini-note {
+    background: #EFF6FF;
+    border: 1px solid #BFDBFE;
+    color: #1E3A8A;
+    border-radius: 12px;
+    padding: 9px 12px;
+    font-weight: 900;
+    font-size: 12px;
+}
+
+/* Select de validación en modal */
+.pc-val-select {
+    width: 100%;
+    height: 32px;
+    border: 1px solid #CBD5E1;
+    border-radius: 9px;
+    font-weight: 900;
+    padding: 0 8px;
+    background: #fff;
+}
+
+/* Responsive */
+@media (max-width: 1280px) {
+    .sap-steps { grid-template-columns: repeat(3, 1fr); }
+    .sap-step::after { display: none; }
+    .sap-control-strip { grid-template-columns: repeat(2, 1fr); }
+    .sap-head { grid-template-columns: 1fr !important; }
+    .sap-doc-summary { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 768px) {
+    .sap-steps, .sap-control-strip, .sap-doc-summary { grid-template-columns: 1fr; }
+}
+
+
 </style>
 {% endblock %}
 
@@ -2034,54 +2283,82 @@
 </div>
 
 <!-- ============================================================ -->
-<!-- PEDIDO COMPRA -->
+<!-- PC PEDIDO COMPRAS - Estilo SAP -->
 <!-- ============================================================ -->
 <div id="pedido_compra" class="section">
     <div class="panel">
-        <div class="clean-header">
+        <div class="clean-header sap-head">
             <div class="master-title-wrap">
-                <div class="master-title">PC Pedido Compras</div>
-                <div class="master-subtitle">Aceptación formal del cliente recibida por correo</div>
+                <div class="master-title">📋 PC Pedido Compras</div>
+                <div class="master-subtitle">Aceptación formal del cliente recibida por correo / WhatsApp / plataforma</div>
             </div>
             <div class="search-box">
-                <input id="pcSearch" placeholder="Buscar por PC / Cliente / RUC / Cotización...">
+                <input id="pcSearch" placeholder="Buscar por PC / Cliente / RUC / Cotización / Producto..." oninput="renderPedidos()">
             </div>
             <div class="clean-actions">
-                <select id="pcStatus">
-                    <option value="">Todos los estados</option>
-                    <option value="Pendiente">Pendiente</option>
-                    <option value="Recibido por correo">Recibido por correo</option>
-                    <option value="En revisión interna">En revisión interna</option>
-                    <option value="Validado por Hellen">Validado por Hellen</option>
-                    <option value="Listo para despacho">Listo para despacho</option>
-                    <option value="Anulado">Anulado</option>
-                </select>
                 <button class="btn btn-secondary" onclick="exportData('pedido_compra')">📥 Exportar</button>
-                <button class="btn btn-primary btn-create" onclick="openPedidoCompraModal()">+ Subir PC cliente</button>
+                <button class="btn btn-primary btn-create" onclick="openPedidoCompraModal('cot')">+ PC desde cotización</button>
+                <button class="btn btn-soft btn-create" onclick="openPedidoCompraModal('directo')">+ PC directo</button>
             </div>
         </div>
+        
+        <!-- Barra de flujo tipo SAP -->
+        <div class="sap-flow" id="sapDocFlow">
+            <div class="sap-flow-title">
+                <b>Flujo documental de Ventas</b>
+                <span>Control obligatorio antes de comprar, despachar o facturar</span>
+            </div>
+            <div class="sap-steps">
+                <div class="sap-step done"><div class="circle">1</div><div><small>Inicio</small><b>Cotización</b></div></div>
+                <div class="sap-step active"><div class="circle">2</div><div><small>Cliente</small><b>PC / OC recibido</b></div></div>
+                <div class="sap-step wait"><div class="circle">3</div><div><small>Control</small><b>Validación comercial</b></div></div>
+                <div class="sap-step wait"><div class="circle">4</div><div><small>Stock</small><b>Compra / reserva</b></div></div>
+                <div class="sap-step wait"><div class="circle">5</div><div><small>Operación</small><b>Despacho</b></div></div>
+                <div class="sap-step wait"><div class="circle">6</div><div><small>SUNAT</small><b>Guía / factura</b></div></div>
+                <div class="sap-step lock"><div class="circle">!</div><div><small>Bloqueo</small><b>PC observado</b></div></div>
+            </div>
+        </div>
+
+        <!-- Semáforo de control -->
+        <div class="sap-control-strip">
+            <div class="sap-control-card"><div class="sap-control-dot dot-ok">✓</div><div><small>Puede avanzar</small><b>Solo PC conforme</b></div></div>
+            <div class="sap-control-card"><div class="sap-control-dot dot-warn">S</div><div><small>Stock</small><b>Validar antes de despacho</b></div></div>
+            <div class="sap-control-card"><div class="sap-control-dot dot-danger">!</div><div><small>Bloqueo</small><b>Observado no se compra</b></div></div>
+            <div class="sap-control-card"><div class="sap-control-dot dot-info">90</div><div><small>Pago cliente</small><b>Condición frecuente 90 días</b></div></div>
+        </div>
+
+        <div class="alert-rule">
+            <b>⚠️ Control:</b> Si el PC no está conforme, el sistema debe bloquear compra, despacho, guía y factura.
+        </div>
+
         <div class="table-scroll">
-            <table class="master-table">
+            <table class="master-table" id="pedidosTable">
                 <thead>
                     <tr>
                         <th>Item</th>
                         <th>Fecha</th>
+                        <th>Medio</th>
                         <th>Estado</th>
                         <th>PC / OC</th>
                         <th>Cliente</th>
                         <th>Cotización</th>
                         <th>Monto</th>
-                        <th>Archivo</th>
                         <th>Entrega</th>
+                        <th>Req. compra</th>
+                        <th>Guía</th>
+                        <th>Factura</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="pcRows"></tbody>
             </table>
         </div>
+        <div class="footer-table">
+            <span id="pcCount">Mostrando 0 de 0 pedidos</span>
+            <span><b>Regla:</b> primero validar, luego comprar o despachar.</span>
+        </div>
     </div>
 </div>
-
 <!-- ============================================================ -->
 <!-- DESPACHAR -->
 <!-- ============================================================ -->

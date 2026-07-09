@@ -1224,28 +1224,65 @@ function generateCotizacionPdfAndSend() {
 
 async function savePedidoCompra(estado) {
     try {
+        console.log('🔄 Guardando PC Pedido Compras...', { estado });
+        
+        // Obtener validaciones
+        const validaciones = {
+            precio: document.getElementById('vPrecio')?.value || 'Sí',
+            cantidad: document.getElementById('vCantidad')?.value || 'Sí',
+            producto: document.getElementById('vProducto')?.value || 'Sí',
+            entrega: document.getElementById('vEntrega')?.value || 'Sí',
+            moneda: document.getElementById('vMoneda')?.value || 'Sí',
+            transporte: document.getElementById('vTransporte')?.value || 'Sí',
+            vigencia: document.getElementById('vVigencia')?.value || 'Sí',
+            margen: document.getElementById('vMargen')?.value || 'Sí'
+        };
+        
+        // Verificar si hay observaciones
+        const hasObservations = Object.values(validaciones).some(v => v === 'No');
+        const estadoFinal = hasObservations ? 'PC observado' : (estado || 'PC conforme');
+        
+        // Obtener items
+        const items = [];
+        const rows = document.querySelectorAll('#pcItemsBody tr');
+        rows.forEach(row => {
+            const inputs = row.querySelectorAll('input');
+            if (inputs.length >= 8) {
+                items.push({
+                    codigo: inputs[0].value || '',
+                    descripcion: inputs[1].value || '',
+                    cantidad_cotizada: parseFloat(inputs[2].value) || 0,
+                    cantidad_pc: parseFloat(inputs[3].value) || 0,
+                    precio_cotizado: parseFloat(inputs[4].value) || 0,
+                    precio_pc: parseFloat(inputs[5].value) || 0,
+                    stock: parseFloat(inputs[6].value) || 0,
+                    faltante: Math.max((parseFloat(inputs[3].value) || 0) - (parseFloat(inputs[6].value) || 0), 0)
+                });
+            }
+        });
+        
         const data = {
             id: editingId,
-            estado: estado || 'Pendiente',
+            estado: estadoFinal,
             numero: document.getElementById('pcNumero')?.value || '',
-            cotizacion_numero: document.getElementById('pcCotizacion')?.value || '',
+            cotizacion_numero: document.getElementById('pcCotNumero')?.value || '',
             cliente: document.getElementById('pcCliente')?.value || '',
             ruc: document.getElementById('pcRuc')?.value || '',
             monto: parseFloat(document.getElementById('pcMonto')?.value || 0),
-            correo_origen: document.getElementById('pcCorreo')?.value || '',
-            fecha_recepcion: document.getElementById('pcFechaRecep')?.value || '',
-            fecha_despacho: document.getElementById('pcFechaDesp')?.value || '',
-            archivo_oc: document.getElementById('pcArchivo')?.value || '',
+            medio: document.getElementById('pcMedio')?.value || 'Correo',
+            fecha: document.getElementById('pcFecha')?.value || '',
+            contacto: document.getElementById('pcContacto')?.value || '',
+            moneda: document.getElementById('pcMoneda')?.value || 'Soles (S/)',
+            condicion_pago: document.getElementById('pcCondicion')?.value || 'Contado',
+            lugar_entrega: document.getElementById('pcEntrega')?.value || '',
             observaciones: document.getElementById('pcObs')?.value || '',
-            valida_precios: document.getElementById('pcValPrecios')?.checked || false,
-            valida_cantidades: document.getElementById('pcValCant')?.checked || false,
-            valida_stock: document.getElementById('pcValStock')?.checked || false,
-            valida_entrega: document.getElementById('pcValEntrega')?.checked || false,
-            valida_montos: document.getElementById('pcValMonto')?.checked || false,
-            responsable: document.getElementById('pcResp')?.value || 'Hellen',
-            lugar_entrega: document.getElementById('pcLugar')?.value || '',
-            condicion_atencion: document.getElementById('pcCondicion')?.value || ''
+            validaciones: validaciones,
+            items: items,
+            has_observations: hasObservations,
+            req_compra: hasObservations ? 'Bloqueado' : 'Sí'
         };
+        
+        console.log('📦 Datos a guardar:', data);
         
         const response = await apiFetch('/ventas/api/pedido-compra/guardar', {
             method: 'POST',
@@ -1253,15 +1290,16 @@ async function savePedidoCompra(estado) {
         });
         
         if (response.success) {
-            showToast(`PC guardado como: ${estado}`, 'success');
+            const mensaje = hasObservations ? 'guardado con observaciones' : 'guardado correctamente';
+            showToast(`✅ PC ${mensaje}`, 'success');
             closeModal('pedidoCompraModal');
             await loadPedidos();
         } else {
-            showToast('Error: ' + (response.error || 'No se pudo guardar'), 'error');
+            showToast('❌ Error: ' + (response.error || 'No se pudo guardar'), 'error');
         }
     } catch (error) {
         console.error('❌ Error guardando PC:', error);
-        showToast('Error al guardar el PC', 'error');
+        showToast('❌ Error al guardar el PC: ' + error.message, 'error');
     }
 }
 
@@ -2863,6 +2901,304 @@ function updateQuoteStatusBar(estado) {
         }
     });
 }
+
+// ============================================================
+// FUNCIONES PARA PC PEDIDO COMPRAS - ESTILO SAP
+// ============================================================
+
+let pcModalMode = 'cot';
+
+function openPedidoCompraModal(mode = 'cot') {
+    pcModalMode = mode;
+    editingId = null;
+    
+    const isEdit = mode !== 'cot' && mode !== 'directo';
+    const title = isEdit ? 'Editar PC Cliente' : (mode === 'cot' ? 'Crear PC desde cotización' : 'PC directo / sin cotización');
+    document.getElementById('pedidoCompraModalTitle').textContent = title;
+    
+    const formContainer = document.getElementById('pedidoCompraForm');
+    if (!formContainer) return;
+    
+    const modeNote = mode === 'cot' 
+        ? '✅ Recomendado: jalar la cotización, crear PC espejo y validar contra el documento real del cliente.' 
+        : '⚠️ PC directo: requiere validación comercial. No comprar bajo pedido hasta quedar conforme.';
+    
+    const showCotBlock = mode === 'cot' ? '' : 'style="display:none;"';
+    
+    // Generar opciones de cotizaciones
+    const cotOptions = cotizacionesData.map(q => 
+        `<option value="${q.id}">${q.numero} · ${q.razon || 'Sin cliente'}</option>`
+    ).join('');
+    
+    formContainer.innerHTML = `
+        <div class="form-section">
+            <div class="section-title">Resumen de control del documento</div>
+            <div class="sap-doc-summary">
+                <div class="sap-doc-box"><small>Documento</small><b>PC Cliente</b></div>
+                <div class="sap-doc-box"><small>Origen</small><b>${mode === 'cot' ? 'Cotización' : 'Directo'}</b></div>
+                <div class="sap-doc-box"><small>Control</small><b>Validación obligatoria</b></div>
+                <div class="sap-doc-box"><small>Stock</small><b>Reserva / Compra</b></div>
+                <div class="sap-doc-box"><small>Salida</small><b>Guía / Factura</b></div>
+            </div>
+        </div>
+        
+        <div class="form-section" ${showCotBlock}>
+            <div class="section-title">1. Cotización relacionada</div>
+            <div class="ficha-grid">
+                <div class="form-field col-8">
+                    <label>Buscar cotización</label>
+                    <select id="pcCotSelect" onchange="loadPedidoCotizacion()">
+                        ${cotOptions || '<option value="">Sin cotizaciones disponibles</option>'}
+                    </select>
+                </div>
+                <div class="form-field col-2">
+                    <label>N° cotización</label>
+                    <input id="pcCotNumero" readonly>
+                </div>
+                <div class="form-field col-2">
+                    <label>Fecha cotización</label>
+                    <input id="pcCotFecha" readonly>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <div class="section-title">2. Datos del Pedido de Compra Cliente</div>
+            <div class="ficha-grid">
+                <div class="form-field col-3">
+                    <label>Fecha llegada</label>
+                    <input id="pcFecha" type="datetime-local">
+                </div>
+                <div class="form-field col-2">
+                    <label>Medio recepción</label>
+                    <select id="pcMedio">
+                        <option>Correo</option>
+                        <option>WhatsApp</option>
+                        <option>Plataforma</option>
+                        <option>Llamada</option>
+                    </select>
+                </div>
+                <div class="form-field col-3">
+                    <label>N° PC / OC cliente</label>
+                    <input id="pcNumero" placeholder="PC-20260709-0001">
+                </div>
+                <div class="form-field col-2">
+                    <label>Condición pago</label>
+                    <select id="pcCondicion">
+                        <option>Contado</option>
+                        <option>30 días</option>
+                        <option>45 días</option>
+                        <option>60 días</option>
+                        <option>90 días</option>
+                        <option>50% / 50%</option>
+                    </select>
+                </div>
+                <div class="form-field col-2">
+                    <label>RUC</label>
+                    <input id="pcRuc">
+                </div>
+                <div class="form-field col-4">
+                    <label>Cliente</label>
+                    <input id="pcCliente">
+                </div>
+                <div class="form-field col-2">
+                    <label>Moneda</label>
+                    <select id="pcMoneda">
+                        <option>Soles (S/)</option>
+                        <option>Dólares ($)</option>
+                    </select>
+                </div>
+                <div class="form-field col-2">
+                    <label>Contacto</label>
+                    <input id="pcContacto">
+                </div>
+                <div class="form-field col-2">
+                    <label>Monto PC</label>
+                    <input id="pcMonto" type="number" step="0.01" value="0">
+                </div>
+                <div class="form-field col-4">
+                    <label>Lugar entrega PC</label>
+                    <input id="pcEntrega">
+                </div>
+                <div class="form-field col-12">
+                    <label>Sustento / observación</label>
+                    <textarea id="pcObs" placeholder="Pegar comentario, link de correo, WhatsApp, observación del cliente..."></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <div class="section-title">3. Ítems del PC cliente</div>
+            <div class="table-scroll">
+                <table class="master-table">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Código</th>
+                            <th>Descripción</th>
+                            <th>Cant. cotizada</th>
+                            <th>Cant. PC</th>
+                            <th>Precio cotizado</th>
+                            <th>Precio PC</th>
+                            <th>Stock</th>
+                            <th>Faltante</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pcItemsBody"></tbody>
+                </table>
+            </div>
+            <div style="margin-top:8px;">
+                <button class="btn btn-soft" onclick="addPedidoItem()">+ Agregar ítem</button>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <div class="section-title">4. Validación comercial obligatoria</div>
+            <div class="pc-check-grid">
+                <div class="pc-check-card">
+                    <label>Precio coincide</label>
+                    <select id="vPrecio" class="pc-val-select">
+                        <option value="Sí">✅ Sí</option>
+                        <option value="No">❌ No</option>
+                    </select>
+                </div>
+                <div class="pc-check-card">
+                    <label>Cantidad coincide</label>
+                    <select id="vCantidad" class="pc-val-select">
+                        <option value="Sí">✅ Sí</option>
+                        <option value="No">❌ No</option>
+                    </select>
+                </div>
+                <div class="pc-check-card">
+                    <label>Producto/modelo coincide</label>
+                    <select id="vProducto" class="pc-val-select">
+                        <option value="Sí">✅ Sí</option>
+                        <option value="No">❌ No</option>
+                    </select>
+                </div>
+                <div class="pc-check-card">
+                    <label>Lugar entrega coincide</label>
+                    <select id="vEntrega" class="pc-val-select">
+                        <option value="Sí">✅ Sí</option>
+                        <option value="No">❌ No</option>
+                    </select>
+                </div>
+                <div class="pc-check-card">
+                    <label>Moneda coincide</label>
+                    <select id="vMoneda" class="pc-val-select">
+                        <option value="Sí">✅ Sí</option>
+                        <option value="No">❌ No</option>
+                    </select>
+                </div>
+                <div class="pc-check-card">
+                    <label>Transporte considerado</label>
+                    <select id="vTransporte" class="pc-val-select">
+                        <option value="Sí">✅ Sí</option>
+                        <option value="No">❌ No</option>
+                    </select>
+                </div>
+                <div class="pc-check-card">
+                    <label>Cotización vigente</label>
+                    <select id="vVigencia" class="pc-val-select">
+                        <option value="Sí">✅ Sí</option>
+                        <option value="No">❌ No</option>
+                    </select>
+                </div>
+                <div class="pc-check-card">
+                    <label>Margen conforme</label>
+                    <select id="vMargen" class="pc-val-select">
+                        <option value="Sí">✅ Sí</option>
+                        <option value="No">❌ No</option>
+                    </select>
+                </div>
+            </div>
+            <div id="validationResult" class="mini-note" style="margin-top:10px;">
+                ℹ️ Si algún punto es <b>"No"</b>, el PC quedará <b>observado y bloqueado</b>.
+            </div>
+        </div>
+    `;
+    
+    // Inicializar valores por defecto
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('pcFecha').value = now.toISOString().slice(0, 16);
+    document.getElementById('pcNumero').value = 'PC-' + new Date().toISOString().slice(0, 10).replaceAll('-', '') + '-' + String(Date.now()).slice(-4);
+    
+    // Agregar un ítem por defecto
+    addPedidoItem();
+    
+    // Si es modo cotización, cargar la primera cotización
+    if (mode === 'cot') {
+        setTimeout(loadPedidoCotizacion, 100);
+    }
+    
+    document.getElementById('pedidoCompraModal').classList.add('show');
+}
+
+function loadPedidoCotizacion() {
+    const select = document.getElementById('pcCotSelect');
+    if (!select || !select.value) return;
+    
+    const cotId = parseInt(select.value);
+    const cotizacion = cotizacionesData.find(c => c.id === cotId);
+    if (!cotizacion) return;
+    
+    document.getElementById('pcCotNumero').value = cotizacion.numero || '';
+    document.getElementById('pcCotFecha').value = cotizacion.fecha || '';
+    document.getElementById('pcRuc').value = cotizacion.ruc || '';
+    document.getElementById('pcCliente').value = cotizacion.razon || '';
+    document.getElementById('pcContacto').value = cotizacion.contacto || '';
+    document.getElementById('pcMoneda').value = cotizacion.moneda || 'Soles (S/)';
+    document.getElementById('pcEntrega').value = cotizacion.direccion_entrega || '';
+    document.getElementById('pcMonto').value = cotizacion.total || cotizacion.monto || 0;
+    
+    // Cargar productos de la cotización
+    const productos = cotizacion.productos || [];
+    const tbody = document.getElementById('pcItemsBody');
+    if (tbody) {
+        tbody.innerHTML = '';
+        productos.forEach((p, i) => {
+            const faltante = Math.max((p.cantidad || 0) - (p.stock || 0), 0);
+            tbody.insertAdjacentHTML('beforeend', `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td><input value="${p.codigo || ''}" style="width:90px;"></td>
+                    <td><input value="${p.producto || p.descripcion || ''}" style="width:160px;"></td>
+                    <td><input type="number" value="${p.cantidad || 0}" style="width:60px;"></td>
+                    <td><input type="number" value="${p.cantidad || 1}" style="width:60px;"></td>
+                    <td><input type="number" step="0.01" value="${p.valorVenta || 0}" style="width:80px;"></td>
+                    <td><input type="number" step="0.01" value="${p.valorVenta || 0}" style="width:80px;"></td>
+                    <td><input type="number" value="${p.stock || 0}" style="width:60px;"></td>
+                    <td>${faltante}</td>
+                </tr>
+            `);
+        });
+        
+        if (productos.length === 0) {
+            addPedidoItem();
+        }
+    }
+}
+
+function addPedidoItem() {
+    const tbody = document.getElementById('pcItemsBody');
+    if (!tbody) return;
+    const idx = tbody.children.length + 1;
+    tbody.insertAdjacentHTML('beforeend', `
+        <tr>
+            <td>${idx}</td>
+            <td><input value="" style="width:90px;"></td>
+            <td><input value="" style="width:160px;"></td>
+            <td><input type="number" value="0" style="width:60px;"></td>
+            <td><input type="number" value="1" style="width:60px;"></td>
+            <td><input type="number" step="0.01" value="0" style="width:80px;"></td>
+            <td><input type="number" step="0.01" value="0" style="width:80px;"></td>
+            <td><input type="number" value="0" style="width:60px;"></td>
+            <td>0</td>
+        </tr>
+    `);
+}
+
 
 function cargarDatalistProductos() {
     const dl = document.getElementById('productMasterList');
