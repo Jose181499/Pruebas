@@ -23,7 +23,7 @@ const MODULE_CONFIG = {
             { key: 'activo', label: 'Estado', type: 'boolean' }
         ],
         displayFields: ['codigo_cliente', 'razon_social', 'numero_documento', 'nombre_comercial', 'nombre_contacto', 'telefono_contacto', 'email_contacto', 'activo'],
-        headers: ['Código', 'Razón Social', 'RUC/DNI', 'Nombre Comercial', 'Contacto', 'Teléfono', 'Email', 'Estado'],
+        headers: ['Código / Clientes ', 'Razón Social', 'RUC/DNI', 'Nombre Comercial', 'Contacto', 'Teléfono', 'Email', 'Estado'],
         idField: 'id',
         codeField: 'codigo_cliente',
         apiBase: '/maestros/api'
@@ -43,7 +43,7 @@ const MODULE_CONFIG = {
             { key: 'activo', label: 'Estado', type: 'boolean' }
         ],
         displayFields: ['codigo_proveedor', 'razon_social', 'ruc', 'razon_comercial', 'contacto', 'telefono', 'email', 'activo'],
-        headers: ['Código', 'Razón Social', 'RUC', 'Razón Comercial', 'Contacto', 'Teléfono', 'Email', 'Estado'],
+        headers: ['Código / Proveedores ', 'Razón Social', 'RUC', 'Razón Comercial', 'Contacto', 'Teléfono', 'Email', 'Estado'],
         idField: 'id',
         codeField: 'codigo_proveedor',
         apiBase: '/maestros/api'
