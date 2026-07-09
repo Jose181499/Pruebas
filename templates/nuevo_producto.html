@@ -580,18 +580,20 @@
            PRECIOS - INPUTS DE DINERO
            ============================================ */
 
-        /* Contenedor del input de dinero */
-        .money {
-            display: flex !important;
-            align-items: center !important;
-            gap: 8px !important;
-            padding: 0 12px !important;
-            height: 42px !important;
-            border-radius: 8px !important;
-            background: #ffffff !important;
-            border: 2px solid #e5e7eb !important;
-            transition: all 0.2s ease !important;
-        }
+      
+
+           /* Contenedor del input de dinero - SIN BORDE */
+    .money {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 0 12px !important;
+    height: 42px !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    border: none !important;  /* ← BORDE ELIMINADO */
+    transition: all 0.2s ease !important;
+}
 
         /* Input dentro de .money */
         .money input {
