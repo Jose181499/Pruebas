@@ -1927,302 +1927,33 @@
     background: #D91A30 !important;
 }
 
-
 /* ============================================================
-   MODAL DE COTIZACIÓN - COMPACTO
+   MODAL DE COTIZACIÓN - FOOTER ULTRA COMPACTO
    ============================================================ */
 
-/* Modal más grande */
-#cotizacionModal .modal-box {
-    width: min(98vw, 98vw) !important;
-    max-width: 98vw !important;
-    height: 95vh !important;
-    max-height: 95vh !important;
-    border-radius: 12px !important;
-}
-
-/* HEADER COMPACTO */
-#cotizacionModal .modal-head {
-    padding: 6px 16px !important;
-    min-height: 36px !important;
-    background: #0F172A !important;
-    flex-shrink: 0 !important;
-}
-
-#cotizacionModal .modal-head .modal-title {
-    font-size: 15px !important;
-    font-weight: 900 !important;
-}
-
-#cotizacionModal .modal-head .btn-close-modal {
-    padding: 4px 12px !important;
-    min-height: 28px !important;
-    font-size: 11px !important;
-    border-radius: 8px !important;
-}
-
-/* BODY - ocupa todo el espacio disponible */
-#cotizacionModal .modal-body {
-    flex: 1 1 auto !important;
-    overflow: auto !important;
-    padding: 8px 14px !important;
-    background: #F8FAFC !important;
-}
-
-/* FOOTER COMPACTO */
-#cotizacionModal .modal-foot {
-    padding: 6px 16px !important;
-    min-height: 44px !important;
-    flex-shrink: 0 !important;
-    background: #FFFFFF !important;
-    border-top: 1px solid #E5E7EB !important;
-}
-
-#cotizacionModal .modal-foot .btn {
-    height: 30px !important;
-    padding: 0 14px !important;
-    font-size: 11px !important;
-    border-radius: 8px !important;
-}
-
-/* Grid principal - 2 columnas para aprovechar espacio */
-#cotizacionModal .create-grid {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 8px !important;
-    align-items: start !important;
-}
-
-/* En pantallas grandes, 3 columnas */
-@media (min-width: 1600px) {
-    #cotizacionModal .create-grid {
-        grid-template-columns: 1fr 1fr 280px !important;
-    }
-}
-
-/* En pantallas medianas, 1 columna */
-@media (max-width: 1200px) {
-    #cotizacionModal .create-grid {
-        grid-template-columns: 1fr !important;
-    }
-}
-
-/* Paneles más compactos */
-#cotizacionModal .create-panel {
-    border-radius: 8px !important;
-}
-
-#cotizacionModal .create-panel h3 {
-    padding: 4px 10px !important;
-    font-size: 11px !important;
-    min-height: 28px !important;
-}
-
-#cotizacionModal .create-panel .body {
-    padding: 4px 8px !important;
-}
-
-/* Formularios más compactos */
-#cotizacionModal .form-field input,
-#cotizacionModal .form-field select {
-    height: 24px !important;
-    font-size: 10.5px !important;
-    padding: 0 6px !important;
-    border-radius: 6px !important;
-}
-
-#cotizacionModal .form-field label {
-    font-size: 8px !important;
-    margin-bottom: 1px !important;
-}
-
-#cotizacionModal .form-field textarea {
-    font-size: 10.5px !important;
-    padding: 4px 6px !important;
-    min-height: 32px !important;
-    border-radius: 6px !important;
-}
-
-#cotizacionModal .form-grid {
-    gap: 4px !important;
-}
-
-/* Tabla de productos más compacta */
-#cotizacionModal .product-wide .table-scroll {
-    max-height: 180px !important;
-}
-
-#cotizacionModal .master-table td {
-    padding: 3px 4px !important;
-    font-size: 9.5px !important;
-}
-
-#cotizacionModal .master-table th {
-    padding: 3px 4px !important;
-    font-size: 8.5px !important;
-}
-
-#cotizacionModal .master-table input {
-    height: 20px !important;
-    font-size: 9.5px !important;
-    padding: 0 4px !important;
-}
-
-#cotizacionModal .um-select {
-    height: 20px !important;
-    font-size: 9.5px !important;
-}
-
-/* Client card más compacto */
-#cotizacionModal .client-card .client-main-grid {
-    grid-template-columns: 100px 1fr 90px !important;
-    gap: 3px !important;
-}
-
-#cotizacionModal .client-card .client-secondary-grid,
-#cotizacionModal .client-card .client-contact-grid,
-#cotizacionModal .client-card .client-request-grid {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 3px !important;
-}
-
-#cotizacionModal .client-card .client-search-row {
-    grid-template-columns: 1fr 80px !important;
-    gap: 4px !important;
-}
-
-#cotizacionModal .client-card .btn-search-ruc {
-    height: 24px !important;
-    font-size: 10px !important;
-    padding: 0 8px !important;
-}
-
-#cotizacionModal .client-card .btn-save-client {
-    height: 26px !important;
-    font-size: 10px !important;
-    padding: 0 12px !important;
-}
-
-#cotizacionModal .client-card .save-help {
-    font-size: 8px !important;
-}
-
-/* Summary card más compacto */
-#cotizacionModal .summary-card .side-row {
-    padding: 2px 0 !important;
-}
-
-#cotizacionModal .summary-card .side-row b {
-    font-size: 10px !important;
-}
-
-#cotizacionModal .summary-card .side-row span {
-    font-size: 11px !important;
-}
-
-#cotizacionModal .summary-total {
-    font-size: 16px !important;
-}
-
-/* Stepbar más compacto */
-#cotizacionModal .stepbar-bottom {
-    padding: 3px 10px !important;
-    min-height: 24px !important;
-    margin-top: 4px !important;
-    border-radius: 6px !important;
-}
-
-#cotizacionModal .stepbar-bottom .step-label {
-    font-size: 8px !important;
-}
-
-#cotizacionModal .stepbar-bottom .step {
-    font-size: 7.5px !important;
-}
-
-#cotizacionModal .stepbar-bottom .step .num {
-    width: 14px !important;
-    height: 14px !important;
-    font-size: 6.5px !important;
-}
-
-#cotizacionModal .stepbar-bottom .sep {
-    width: 10px !important;
-}
-
-/* Products toolbar más compacto */
-#cotizacionModal .products-toolbar input {
-    height: 24px !important;
-    font-size: 10px !important;
-    padding: 0 8px !important;
-}
-
-#cotizacionModal .products-toolbar .btn-add-product,
-#cotizacionModal .products-toolbar .btn-add-multiple {
-    height: 24px !important;
-    font-size: 10px !important;
-    padding: 0 10px !important;
-}
-
-/* Compact bottom más compacto */
-#cotizacionModal .compact-bottom .form-grid {
-    grid-template-columns: 1fr 1fr 1fr 1fr 2fr !important;
-    gap: 4px !important;
-}
-
-#cotizacionModal .compact-bottom .form-field select,
-#cotizacionModal .compact-bottom .form-field input {
-    height: 22px !important;
-    font-size: 10px !important;
-}
-
-#cotizacionModal .compact-bottom .internal-note-box textarea {
-    height: 22px !important;
-    min-height: 22px !important;
-    font-size: 10px !important;
-}
-
-/* Botón de cerrar del header más pequeño */
-#cotizacionModal .modal-head .btn-secondary {
-    padding: 2px 10px !important;
-    min-height: 24px !important;
-    font-size: 10px !important;
-    border-radius: 6px !important;
-}
-
-/* Kebab buttons más pequeños */
-#cotizacionModal .kebab {
-    width: 26px !important;
-    height: 26px !important;
-    font-size: 14px !important;
-    border-radius: 6px !important;
-}
-
-
-
-/* ============================================================
-   FOOTER DEL MODAL - MÁS COMPACTO
-   ============================================================ */
+/* Elimina todas las definiciones anteriores de #cotizacionModal .modal-foot */
+/* Y deja solo esta: */
 
 #cotizacionModal .modal-foot {
-    padding: 4px 12px !important;
-    min-height: 32px !important;
-    max-height: 38px !important;
+    padding: 2px 12px !important;
+    min-height: 26px !important;
+    max-height: 30px !important;
     flex-shrink: 0 !important;
     background: #FFFFFF !important;
     border-top: 1px solid #E5E7EB !important;
     display: flex !important;
     align-items: center !important;
     justify-content: flex-end !important;
-    gap: 6px !important;
+    gap: 4px !important;
 }
 
 #cotizacionModal .modal-foot .btn {
-    height: 26px !important;
-    padding: 0 12px !important;
-    font-size: 10px !important;
-    border-radius: 6px !important;
+    height: 20px !important;
+    padding: 0 8px !important;
+    font-size: 9px !important;
+    border-radius: 4px !important;
     line-height: 1 !important;
+    min-height: 20px !important;
 }
 
 #cotizacionModal .modal-foot .btn-secondary {
@@ -2252,6 +1983,7 @@
 #cotizacionModal .modal-foot .btn:hover {
     transform: translateY(-1px) !important;
 }
+
 </style>
 {% endblock %}
 
