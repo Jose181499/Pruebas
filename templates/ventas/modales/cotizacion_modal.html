@@ -1,28 +1,21 @@
-<!-- MODAL COTIZACIÓN - STEPBAR PEGADO AL FOOTER -->
+<!-- MODAL COTIZACIÓN -->
 <div class="modal-bg" id="cotizacionModal">
-    <div class="modal-box" style="width:min(98vw, 98vw); max-width:98vw; height:90vh; max-height:90vh; display:flex; flex-direction:column; margin:0;">
-        <!-- HEADER -->
-        <div class="modal-head" style="padding:2px 14px; min-height:24px; max-height:28px; flex-shrink:0; background:#0F172A; display:flex; align-items:center; justify-content:space-between;">
-            <div class="modal-title" id="cotizacionModalTitle" style="font-size:12px; font-weight:900; color:#fff;">Nueva cotización</div>
-            <button class="btn btn-secondary" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); color:#fff; padding:0px 8px; min-height:18px; border-radius:4px; font-weight:700; font-size:8px; cursor:pointer;" onclick="closeModal('cotizacionModal')">✕ Cerrar</button>
+    <div class="modal-box" style="width:min(1540px,98vw)">
+        <div class="modal-head">
+            <div class="modal-title" id="cotizacionModalTitle">Nueva cotización</div>
+            <button class="btn btn-secondary" style="background:transparent;color:#fff;border-color:#fff;padding:6px 14px;min-height:34px;border-radius:14px" onclick="closeModal('cotizacionModal')">✕ Cerrar</button>
         </div>
-        
-        <!-- BODY - Contenido scrolleable -->
-        <div class="modal-body" id="cotizacionForm" style="flex:1 1 auto; overflow:auto; padding:4px 10px 0px 10px; background:#F8FAFC; margin:0;">
+        <div class="modal-body" id="cotizacionForm">
             <!-- Contenido dinámico generado por JavaScript -->
         </div>
-        
-        <!-- STEPBAR - Pegado al footer (fuera del body) -->
-        <div id="quoteStatusBarContainer" style="flex-shrink:0; background:#FAFBFC; border-top:1px solid #E5E7EB; padding:2px 10px; min-height:22px; max-height:26px; height:26px; display:flex; align-items:center;">
-            <!-- El stepbar se renderiza aquí desde JavaScript -->
-        </div>
-        
-        <!-- FOOTER - Botones pegados abajo -->
-        <div class="modal-foot" style="padding:2px 10px; min-height:26px; max-height:30px; height:30px; flex-shrink:0; background:#FFFFFF; border-top:1px solid #E5E7EB; display:flex; align-items:center; justify-content:flex-end; gap:4px; margin:0;">
-            <button class="btn btn-secondary" style="height:20px; min-height:20px; max-height:20px; padding:0 10px; font-size:8.5px; border-radius:4px; border:1px solid #E5E7EB; background:#F1F5F9; color:#0F172A; cursor:pointer; display:inline-flex; align-items:center; gap:2px;" onclick="closeModal('cotizacionModal')">Cancelar</button>
-            <button class="btn btn-soft" style="height:20px; min-height:20px; max-height:20px; padding:0 10px; font-size:8.5px; border-radius:4px; border:1px solid #E5E7EB; background:#F8FAFC; color:#334155; cursor:pointer; display:inline-flex; align-items:center; gap:2px;" onclick="saveCotizacionDraft()">💾 Guardar</button>
-            <button class="btn btn-blue" style="height:20px; min-height:20px; max-height:20px; padding:0 10px; font-size:8.5px; border-radius:4px; border:none; background:#2563EB; color:#fff; cursor:pointer; display:inline-flex; align-items:center; gap:2px;" onclick="sendCotizacionToReview()">📤 Revisión</button>
-            <button class="btn btn-green" style="height:20px; min-height:20px; max-height:20px; padding:0 10px; font-size:8.5px; border-radius:4px; border:none; background:#16A34A; color:#fff; cursor:pointer; display:inline-flex; align-items:center; gap:2px;" onclick="generateCotizacionPdfAndSend()">📄 Generar</button>
+        <div class="modal-foot">
+            <button class="btn btn-secondary" onclick="closeModal('cotizacionModal')">Cancelar</button>
+            <button class="btn btn-soft" onclick="saveCotizacionDraft()">💾 Guardar borrador</button>
+            <button class="btn btn-blue" onclick="sendCotizacionToReview()">📤 Enviar a revisión</button>
+            <button class="btn btn-green" onclick="generateCotizacionPdfAndSend()">📄 Generar cotización</button>
         </div>
     </div>
 </div>
+
+
+
