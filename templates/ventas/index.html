@@ -1980,9 +1980,7 @@
     <button class="tab-btn" data-tab="devoluciones">🔄 Devoluciones</button>
 </div>
 
-<!-- ============================================================ -->
 <!-- COTIZACIONES -->
-<!-- ============================================================ -->
 <div id="cotizaciones" class="section active">
     <div class="status-board" id="cotizacionesKPI">
         <!-- KPIs se generan desde JavaScript -->
@@ -1993,18 +1991,24 @@
                 <div class="master-title">Base datos: Cotizaciones</div>
                 <div class="master-subtitle">Listado comercial con trazabilidad</div>
             </div>
-            <div class="search-box">
-                <input id="qSearch" placeholder="Buscar por N° cotización / RUC / Cliente / Descripción...">
+            <div class="search-box" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <input id="qSearch" placeholder="Buscar por N° cotización / RUC / Cliente / Descripción..." style="flex:1; min-width:150px;">
+                <!-- Filtro de fechas -->
+                <div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
+                    <input type="date" id="qFechaInicio" style="height:38px; border-radius:12px; border:1px solid #E5E7EB; padding:0 10px; font-weight:800; background:#fff; color:#0F172A; outline:none; font-size:11px; width:140px;" title="Fecha inicio">
+                    <span style="font-weight:900; color:#64748B; font-size:12px;">→</span>
+                    <input type="date" id="qFechaFin" style="height:38px; border-radius:12px; border:1px solid #E5E7EB; padding:0 10px; font-weight:800; background:#fff; color:#0F172A; outline:none; font-size:11px; width:140px;" title="Fecha fin">
+                    <button class="btn btn-secondary" onclick="clearDateFilter()" style="height:38px; padding:0 12px; font-size:11px;" title="Limpiar filtros">✕</button>
+                </div>
             </div>
             <div class="clean-actions">
                 <select id="qStatus">
-            <option value="">Todos los estados</option>
-             <option value="En revisión">En revisión</option>
-            <option value="Validado por Hellen">Validado por Hellen</option>
-              <option value="Generada">Generada</option>
-             <option value="Aceptada por Cliente">Aceptada por Cliente</option>
-             
-            </select>
+                    <option value="">Todos los estados</option>
+                    <option value="En revisión">En revisión</option>
+                    <option value="Validado por Hellen">Validado por Hellen</option>
+                    <option value="Generada">Generada</option>
+                    <option value="Aceptada por Cliente">Aceptada por Cliente</option>
+                </select>
                 <button class="btn btn-secondary" onclick="exportData('cotizaciones')">📥 Exportar</button>
                 <button class="btn btn-electric-blue btn-create" onclick="openCotizacionModal()">+ Crear Nueva cotización</button>
             </div>
@@ -2017,15 +2021,14 @@
                 <tbody id="qRows"></tbody>
             </table>
         </div>
-       <!-- 🔽 BOTONES DE VISTA - PARTE INFERIOR IZQUIERDA 🔽 -->
-<div style="display: flex; justify-content: flex-start; gap: 8px; padding: 8px 12px; border-top: 1px solid #E5E7EB; background: #FAFBFC; border-radius: 0 0 12px 12px;">
-    <button class="btn btn-view btn-primary-view active" onclick="setCotizacionView('principal')" id="viewPrincipalBtn" style="background: #EF233C; color: #fff; border: none; padding: 6px 16px; border-radius: 8px; font-weight: 900; font-size: 11px; cursor: pointer; transition: all 0.2s;">
-        📋 Principal
-    </button>
-    <button class="btn btn-view btn-secondary-view" onclick="setCotizacionView('completa')" id="viewCompletaBtn" style="background: #F1F5F9; color: #475569; border: 1px solid #E5E7EB; padding: 6px 16px; border-radius: 8px; font-weight: 900; font-size: 11px; cursor: pointer; transition: all 0.2s;">
-        📄 Completa
-    </button>
-</div>
+        <!-- BOTONES DE VISTA -->
+        <div style="display: flex; justify-content: flex-start; gap: 8px; padding: 8px 12px; border-top: 1px solid #E5E7EB; background: #FAFBFC; border-radius: 0 0 12px 12px;">
+            <button class="btn btn-view btn-primary-view active" onclick="setCotizacionView('principal')" id="viewPrincipalBtn" style="background: #EF233C; color: #fff; border: none; padding: 6px 16px; border-radius: 8px; font-weight: 900; font-size: 11px; cursor: pointer; transition: all 0.2s;">
+                📋 Principal
+            </button>
+            <button class="btn btn-view btn-secondary-view" onclick="setCotizacionView('completa')" id="viewCompletaBtn" style="background: #F1F5F9; color: #475569; border: 1px solid #E5E7EB; padding: 6px 16px; border-radius: 8px; font-weight: 900; font-size: 11px; cursor: pointer; transition: all 0.2s;">
+                📄 Completa
+            </button>
         </div>
     </div>
 </div>

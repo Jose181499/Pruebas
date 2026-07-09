@@ -547,9 +547,16 @@ function setCotizacionView(mode) {
     renderCotizaciones();
 }
 
+
 function renderCotizaciones() {
     const q = document.getElementById('qSearch')?.value?.toLowerCase() || '';
     const st = document.getElementById('qStatus')?.value || '';
+    
+    // ============================================================
+    // 🔽 FILTRO POR FECHAS
+    // ============================================================
+    const fechaInicio = document.getElementById('qFechaInicio')?.value || '';
+    const fechaFin = document.getElementById('qFechaFin')?.value || '';
     
     // ============================================================
     // FILTRO DE ESTADO MEJORADO - Con mapeo flexible
@@ -558,13 +565,45 @@ function renderCotizaciones() {
         const searchStr = `${r.numero || ''} ${r.ruc || ''} ${r.razon || ''} ${r.descripcion || ''} ${r.nota_cotizacion || ''}`.toLowerCase();
         const matchText = !q || searchStr.includes(q);
         
-        // 🔽 FILTRO DE ESTADO MEJORADO - Coincidencia flexible
+        // 🔽 FILTRO POR FECHAS
+        let matchFecha = true;
+        if (fechaInicio || fechaFin) {
+            let fechaCotizacion = r.fecha || r.created_at || '';
+            let fechaObj = null;
+            try {
+                if (typeof fechaCotizacion === 'string') {
+                    fechaObj = new Date(fechaCotizacion);
+                    if (fechaCotizacion.includes('/')) {
+                        const partes = fechaCotizacion.split(/[\/\s:]/);
+                        if (partes.length >= 3) {
+                            fechaObj = new Date(partes[2], partes[1] - 1, partes[0]);
+                        }
+                    }
+                } else if (fechaCotizacion instanceof Date) {
+                    fechaObj = fechaCotizacion;
+                }
+            } catch (e) {
+                fechaObj = null;
+            }
+            
+            if (fechaObj && !isNaN(fechaObj.getTime())) {
+                const fechaStr = fechaObj.toISOString().split('T')[0];
+                if (fechaInicio && fechaFin) {
+                    matchFecha = fechaStr >= fechaInicio && fechaStr <= fechaFin;
+                } else if (fechaInicio) {
+                    matchFecha = fechaStr >= fechaInicio;
+                } else if (fechaFin) {
+                    matchFecha = fechaStr <= fechaFin;
+                }
+            }
+        }
+        
+        // 🔽 FILTRO DE ESTADO
         let matchStatus = true;
         if (st) {
             const estadoActual = (r.estado || '').toLowerCase().trim();
             const estadoFiltro = st.toLowerCase().trim();
             
-            // Mapeo de estados para coincidencias flexibles
             const estadoMap = {
                 'borrador': ['borrador'],
                 'en revisión': ['en revisión', 'en revision', 'en proceso', 'proceso'],
@@ -577,10 +616,7 @@ function renderCotizaciones() {
                 'anulada': ['anulada', 'anulado', 'cancelada', 'cancelado']
             };
             
-            // Obtener las variaciones permitidas para este estado
             const variaciones = estadoMap[estadoFiltro] || [estadoFiltro];
-            
-            // Verificar si el estado actual coincide con alguna variación
             matchStatus = variaciones.some(v => 
                 estadoActual === v || 
                 estadoActual.includes(v) || 
@@ -588,31 +624,28 @@ function renderCotizaciones() {
             );
         }
         
-        return matchText && matchStatus;
+        return matchText && matchStatus && matchFecha;
     });
     
     // ============================================================
     // KPIs
     // ============================================================
-   // ============================================================
-// KPIs
-// ============================================================
-const kpiContainer = document.getElementById('cotizacionesKPI');
-if (kpiContainer) {
-    const total = cotizacionesData.length;
-    const borradores = cotizacionesData.filter(x => x.estado === 'Borrador').length;
-    const revision = cotizacionesData.filter(x => x.estado === 'En revisión' || x.estado === 'En Proceso').length;
-    const generadas = cotizacionesData.filter(x => x.estado === 'Generada').length;
-    const aceptadas = cotizacionesData.filter(x => x.estado === 'Aceptada por Cliente' || x.estado === 'Aceptada' || x.estado === 'Aceptado').length;
-    
-    kpiContainer.innerHTML = `
-        <div class="status-card"><div class="status-dot dot-total-plomo">T</div><div><small>Total</small><b>${total}</b></div></div>
-        <div class="status-card"><div class="status-dot dot-draft">B</div><div><small>Borradores</small><b>${borradores}</b></div></div>
-        <div class="status-card"><div class="status-dot dot-review">R</div><div><small>En revisión</small><b>${revision}</b></div></div>
-        <div class="status-card"><div class="status-dot dot-send">E</div><div><small>Generadas</small><b>${generadas}</b></div></div>
-        <div class="status-card"><div class="status-dot dot-ok">A</div><div><small>Aceptadas</small><b>${aceptadas}</b></div></div>
-    `;
-}
+    const kpiContainer = document.getElementById('cotizacionesKPI');
+    if (kpiContainer) {
+        const total = cotizacionesData.length;
+        const borradores = cotizacionesData.filter(x => x.estado === 'Borrador').length;
+        const revision = cotizacionesData.filter(x => x.estado === 'En revisión' || x.estado === 'En Proceso').length;
+        const generadas = cotizacionesData.filter(x => x.estado === 'Generada').length;
+        const aceptadas = cotizacionesData.filter(x => x.estado === 'Aceptada por Cliente' || x.estado === 'Aceptada' || x.estado === 'Aceptado').length;
+        
+        kpiContainer.innerHTML = `
+            <div class="status-card"><div class="status-dot dot-total-plomo">T</div><div><small>Total</small><b>${total}</b></div></div>
+            <div class="status-card"><div class="status-dot dot-draft">B</div><div><small>Borradores</small><b>${borradores}</b></div></div>
+            <div class="status-card"><div class="status-dot dot-review">R</div><div><small>En revisión</small><b>${revision}</b></div></div>
+            <div class="status-card"><div class="status-dot dot-send">E</div><div><small>Generadas</small><b>${generadas}</b></div></div>
+            <div class="status-card"><div class="status-dot dot-ok">A</div><div><small>Aceptadas</small><b>${aceptadas}</b></div></div>
+        `;
+    }
     
     const tbody = document.getElementById('qRows');
     const thead = document.getElementById('cotizacionesTableHead');
@@ -665,7 +698,7 @@ if (kpiContainer) {
     }
     
     // ============================================================
-    // VISTA COMPLETA - Todas las columnas (incluyendo Información Adicional)
+    // VISTA COMPLETA - Todas las columnas
     // ============================================================
     thead.innerHTML = `
         <tr>
@@ -740,7 +773,6 @@ if (kpiContainer) {
         </tr>`;
     }).join('');
 }
-
 
 function renderDespachos() {
     const q = document.getElementById('despachoSearch')?.value?.toLowerCase() || '';
@@ -4449,6 +4481,24 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+
+// ============================================================
+// EVENT LISTENERS PARA FILTROS DE FECHA
+// ============================================================
+const fechaInicio = document.getElementById('qFechaInicio');
+const fechaFin = document.getElementById('qFechaFin');
+
+if (fechaInicio) {
+    fechaInicio.addEventListener('change', function() {
+        renderCotizaciones();
+    });
+}
+
+if (fechaFin) {
+    fechaFin.addEventListener('change', function() {
+        renderCotizaciones();
+    });
+}
 
 function showSuccessModal() {
     // Obtener datos de la cotización generada
