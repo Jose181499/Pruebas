@@ -13,7 +13,7 @@ const MODULE_CONFIG = {
         subtitle: 'Base comercial de clientes y prospectos',
         table: 'clientes',
         fields: [
-            { key: 'codigo_cliente', label: 'Código', type: 'text' },
+            { key: 'codigo_cliente', label: 'Código / Cliente ', type: 'text' },
             { key: 'razon_social', label: 'Razón Social', type: 'text' },
             { key: 'numero_documento', label: 'RUC/DNI', type: 'text' },
             { key: 'nombre_comercial', label: 'Nombre Comercial', type: 'text' },
@@ -33,7 +33,7 @@ const MODULE_CONFIG = {
         subtitle: 'Base de proveedores y servicios',
         table: 'proveedores',
         fields: [
-            { key: 'codigo_proveedor', label: 'Código', type: 'text' },
+            { key: 'codigo_proveedor', label: 'Código / Proveedores ', type: 'text' },
             { key: 'razon_social', label: 'Razón Social', type: 'text' },
             { key: 'ruc', label: 'RUC', type: 'text' },
             { key: 'razon_comercial', label: 'Razón Comercial', type: 'text' },
