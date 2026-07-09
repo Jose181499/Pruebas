@@ -1387,30 +1387,42 @@ async function saveDevolucion(estado) {
 // ACCIONES DE MENÚ (CON API REAL)
 // ============================================================
 
+// En ventas.js - Reemplaza la función marcarCotizacionAccepted
 async function marcarCotizacionAccepted(id) {
-    console.log('🔄 Marcando cotización como aceptada, ID:', id);
+    // Buscar la cotización para mostrar info
+    const cotizacion = cotizacionesData.find(c => c.id === id);
+    const numero = cotizacion?.numero || 'COT-XXXXXX';
+    const cliente = cotizacion?.razon || 'Cliente';
     
-    try {
-        showToast('⏳ Actualizando estado...', 'info');
-        
-        const response = await apiFetch(`/ventas/api/cotizaciones/${id}/toggle`, {
-            method: 'PUT',
-            body: JSON.stringify({ estado: 'Aceptada por Cliente' })
-        });
-        
-        console.log('📦 Respuesta:', response);
-        
-        if (response.success) {
-            showToast('✅ Cotización marcada como aceptada por cliente', 'success');
-            await loadCotizaciones();
-        } else {
-            showToast('❌ Error: ' + (response.error || 'No se pudo actualizar'), 'error');
-        }
-    } catch (error) {
-        console.error('❌ Error:', error);
-        showToast('❌ Error al actualizar estado: ' + error.message, 'error');
-    }
+    showConfirmModal(
+        '✅ ¿Aceptar cotización?',
+        `Estás a punto de marcar como <b>"Aceptada por Cliente"</b> la cotización <b>${numero}</b> del cliente <b>${cliente}</b>.`,
+        '⚠️ Esta acción es irreversible. Una vez aceptada, no se podrá modificar el estado.',
+        async function() {
+            try {
+                console.log(`🔄 Marcando cotización como aceptada, ID: ${id}`);
+                showToast('⏳ Actualizando estado...', 'info');
+                
+                const response = await apiFetch(`/ventas/api/cotizaciones/${id}/toggle`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ estado: 'Aceptada por Cliente' })
+                });
+                
+                if (response.success) {
+                    showToast('✅ Cotización marcada como aceptada por cliente', 'success');
+                    await loadCotizaciones();
+                } else {
+                    showToast('❌ Error: ' + (response.error || 'No se pudo actualizar'), 'error');
+                }
+            } catch (error) {
+                console.error('❌ Error:', error);
+                showToast('❌ Error al actualizar estado: ' + error.message, 'error');
+            }
+        },
+        '✅ Sí, aceptar'
+    );
 }
+
 
 async function marcarCotizacionPending(id) {
     try {
@@ -1466,86 +1478,113 @@ async function reactivarCotizacion(id) {
     }
 }
 
+// En ventas.js - Reemplaza la función deleteCotizacion
 async function deleteCotizacion(id) {
-    // Mostrar un modal de confirmación personalizado
-    if (!confirm('⚠️ ¿Estás seguro de eliminar esta cotización?\n\nEsta acción cambiará el estado a "Anulada" y no podrá recuperarse.')) {
-        return;
-    }
+    // Buscar la cotización para mostrar info
+    const cotizacion = cotizacionesData.find(c => c.id === id);
+    const numero = cotizacion?.numero || 'COT-XXXXXX';
+    const cliente = cotizacion?.razon || 'Cliente';
+    const estado = cotizacion?.estado || 'Desconocido';
     
-    try {
-        console.log(`🗑️ Eliminando cotización ID: ${id}`);
-        
-        // Mostrar loading
-        showToast('⏳ Anulando cotización...', 'info');
-        
-        const response = await apiFetch(`/ventas/api/cotizaciones/${id}`, {
-            method: 'DELETE'
-        });
-        
-        if (response.success) {
-            showToast('✅ Cotización anulada correctamente', 'success');
-            // Recargar la lista
-            await loadCotizaciones();
-        } else {
-            showToast('❌ Error: ' + (response.error || 'No se pudo eliminar'), 'error');
-        }
-    } catch (error) {
-        console.error('❌ Error eliminando cotización:', error);
-        showToast('❌ Error al eliminar la cotización: ' + error.message, 'error');
-    }
-}
-
-
-
-async function marcarDespachado(id) {
-    try {
-        const response = await apiFetch(`/ventas/api/despachos/${id}/toggle`, {
-            method: 'PUT',
-            body: JSON.stringify({ estado: 'Despachado' })
-        });
-        if (response.success) {
-            showToast('Despacho marcado como completado', 'success');
-            await loadDespachos();
-        } else {
-            showToast('Error: ' + (response.error || 'No se pudo actualizar'), 'error');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showToast('Error al marcar despacho', 'error');
-    }
-}
-
-async function duplicateCotizacion(id) {
-    try {
-        console.log(`📋 Duplicando cotización ID: ${id}`);
-        
-        // Mostrar loading
-        showToast('⏳ Duplicando cotización...', 'info');
-        
-        const response = await apiFetch(`/ventas/api/cotizaciones/${id}/duplicar`, {
-            method: 'POST'
-        });
-        
-        if (response.success) {
-            showToast(`✅ Cotización duplicada correctamente: ${response.data.numero}`, 'success');
-            
-            // Recargar la lista de cotizaciones
-            await loadCotizaciones();
-            
-            // Opcional: Abrir la cotización duplicada para editar
-            setTimeout(() => {
-                if (response.data.id) {
-                    openCotizacionModal(response.data.id);
+    showConfirmModal(
+        '🗑️ ¿Eliminar cotización?',
+        `Estás a punto de eliminar la cotización <b>${numero}</b> del cliente <b>${cliente}</b>.<br>Estado actual: <b>${estado}</b>`,
+        '⚠️ Esta acción cambiará el estado a "Anulada" y no podrá recuperarse.',
+        async function() {
+            try {
+                console.log(`🗑️ Eliminando cotización ID: ${id}`);
+                showToast('⏳ Anulando cotización...', 'info');
+                
+                const response = await apiFetch(`/ventas/api/cotizaciones/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.success) {
+                    showToast('✅ Cotización anulada correctamente', 'success');
+                    await loadCotizaciones();
+                } else {
+                    showToast('❌ Error: ' + (response.error || 'No se pudo eliminar'), 'error');
                 }
-            }, 1000);
-            
-        } else {
-            showToast('❌ Error al duplicar: ' + (response.error || 'Desconocido'), 'error');
-        }
-    } catch (error) {
-        console.error('❌ Error duplicando cotización:', error);
-        showToast('❌ Error al duplicar la cotización: ' + error.message, 'error');
-    }
+            } catch (error) {
+                console.error('❌ Error eliminando cotización:', error);
+                showToast('❌ Error al eliminar la cotización: ' + error.message, 'error');
+            }
+        },
+        '🗑️ Sí, eliminar'
+    );
+}
+
+// En ventas.js - Reemplaza la función marcarDespachado
+async function marcarDespachado(id) {
+    const despacho = despachosData.find(d => d.id === id);
+    const numero = despacho?.numero || 'DESP-XXXXXX';
+    const cliente = despacho?.cliente || 'Cliente';
+    
+    showConfirmModal(
+        '🚚 ¿Marcar como despachado?',
+        `Estás a punto de marcar como <b>"Despachado"</b> el despacho <b>${numero}</b> del cliente <b>${cliente}</b>.`,
+        '⚠️ Esta acción es irreversible. Una vez despachado, no se podrá revertir.',
+        async function() {
+            try {
+                const response = await apiFetch(`/ventas/api/despachos/${id}/toggle`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ estado: 'Despachado' })
+                });
+                if (response.success) {
+                    showToast('✅ Despacho marcado como completado', 'success');
+                    await loadDespachos();
+                } else {
+                    showToast('❌ Error: ' + (response.error || 'No se pudo actualizar'), 'error');
+                }
+            } catch (error) {
+                console.error('❌ Error:', error);
+                showToast('❌ Error al marcar despacho', 'error');
+            }
+        },
+        '🚚 Sí, despachar'
+    );
+}
+
+// En ventas.js - Reemplaza la función duplicateCotizacion
+async function duplicateCotizacion(id) {
+    // Buscar la cotización para mostrar info
+    const cotizacion = cotizacionesData.find(c => c.id === id);
+    const numero = cotizacion?.numero || 'COT-XXXXXX';
+    const cliente = cotizacion?.razon || 'Cliente';
+    
+    showConfirmModal(
+        '📋 ¿Duplicar cotización?',
+        `Estás a punto de duplicar la cotización <b>${numero}</b> del cliente <b>${cliente}</b>.`,
+        '⚠️ Esta acción creará una nueva cotización con el mismo contenido.',
+        async function() {
+            try {
+                console.log(`📋 Duplicando cotización ID: ${id}`);
+                showToast('⏳ Duplicando cotización...', 'info');
+                
+                const response = await apiFetch(`/ventas/api/cotizaciones/${id}/duplicar`, {
+                    method: 'POST'
+                });
+                
+                if (response.success) {
+                    showToast(`✅ Cotización duplicada correctamente: ${response.data.numero}`, 'success');
+                    await loadCotizaciones();
+                    
+                    // Opcional: Abrir la cotización duplicada para editar
+                    setTimeout(() => {
+                        if (response.data.id) {
+                            openCotizacionModal(response.data.id);
+                        }
+                    }, 1000);
+                } else {
+                    showToast('❌ Error al duplicar: ' + (response.error || 'Desconocido'), 'error');
+                }
+            } catch (error) {
+                console.error('❌ Error duplicando cotización:', error);
+                showToast('❌ Error al duplicar la cotización: ' + error.message, 'error');
+            }
+        },
+        '📋 Sí, duplicar'
+    );
 }
 
 function sendCotizacionEmail(id) {
@@ -1607,72 +1646,92 @@ window.generateCotizacionPdf = async function(id) {
     }
 };
 
-// ============================================================
-// FUNCIÓN PRINCIPAL - CREAR DOCUMENTO DESDE COTIZACIÓN
-// ============================================================
+
+
+// En ventas.js - Reemplaza la función createDocFromCotizacion
 window.createDocFromCotizacion = async function(id, tipo) {
     console.log(`📋 Creando ${tipo} desde cotización ID: ${id}`);
     
-    try {
-        // Mostrar loading
-        showToast('⏳ Cargando datos de la cotización...', 'info');
-        
-        // Obtener los datos completos de la cotización
-        const response = await apiFetch(`/ventas/api/cotizaciones/${id}/completa`);
-        
-        if (!response.success) {
-            showToast('❌ Error al cargar cotización: ' + (response.error || 'Desconocido'), 'error');
-            return;
-        }
-        
-        const cotizacion = response.data;
-        console.log('📦 Datos de cotización:', cotizacion);
-        
-        // Verificar que la cotización esté aceptada para crear guía
-        if (tipo === 'guia' && cotizacion.estado !== 'Aceptada por Cliente' && cotizacion.estado !== 'Aceptada') {
-            showToast('⚠️ La cotización debe estar "Aceptada por Cliente" para crear una guía', 'warning');
-            return;
-        }
-        
-        // Cerrar el menú si está abierto
-        document.querySelectorAll('.menu-pop').forEach(el => el.remove());
-        
-        switch(tipo) {
-            case 'guia':
-                // Cambiar al tab de guías
-                switchTab('guias');
-                
-                // Esperar un momento para que el DOM se actualice
-                setTimeout(() => {
-                    // Abrir el modal de guía con los datos precargados
-                    openGuiaModalWithData(null, cotizacion);
-                }, 300);
-                break;
-                
-            case 'factura':
-                // Cambiar al tab de comprobantes
-                switchTab('comprobantes');
-                
-                setTimeout(() => {
-                    openComprobanteModalWithData(null, cotizacion);
-                }, 300);
-                break;
-                
-            case 'despacho':
-                switchTab('despachar');
-                setTimeout(() => {
-                    openDespachoModalWithData(null, cotizacion);
-                }, 300);
-                break;
-                
-            default:
-                showToast(`Tipo "${tipo}" no soportado`, 'error');
-        }
-        
-    } catch (error) {
-        console.error('❌ Error creando documento:', error);
-        showToast('❌ Error al crear el documento: ' + error.message, 'error');
+    // Buscar la cotización para mostrar info
+    const cotizacion = cotizacionesData.find(c => c.id === id);
+    const numero = cotizacion?.numero || 'COT-XXXXXX';
+    const cliente = cotizacion?.razon || 'Cliente';
+    
+    const tipos = {
+        'guia': { emoji: '📦', nombre: 'Guía de Remisión', color: '#16A34A' },
+        'factura': { emoji: '🧾', nombre: 'Factura / Boleta', color: '#2563EB' },
+        'despacho': { emoji: '🚚', nombre: 'Despacho', color: '#FF6600' }
+    };
+    
+    const info = tipos[tipo] || { emoji: '📄', nombre: 'Documento', color: '#0F172A' };
+    
+    let mensajeExtra = '';
+    if (tipo === 'guia') {
+        mensajeExtra = 'La cotización debe estar <b>"Aceptada por Cliente"</b> para crear una guía.';
     }
+    
+    showConfirmModal(
+        `${info.emoji} ¿Crear ${info.nombre}?`,
+        `Estás a punto de crear un(a) <b>${info.nombre}</b> desde la cotización <b>${numero}</b> del cliente <b>${cliente}</b>.${mensajeExtra ? '<br><br>' + mensajeExtra : ''}`,
+        `⚠️ Esta acción creará un nuevo registro de ${info.nombre.toLowerCase()} en el sistema.`,
+        async function() {
+            try {
+                // Mostrar loading
+                showToast('⏳ Cargando datos de la cotización...', 'info');
+                
+                // Obtener los datos completos de la cotización
+                const response = await apiFetch(`/ventas/api/cotizaciones/${id}/completa`);
+                
+                if (!response.success) {
+                    showToast('❌ Error al cargar cotización: ' + (response.error || 'Desconocido'), 'error');
+                    return;
+                }
+                
+                const cotizacion = response.data;
+                console.log('📦 Datos de cotización:', cotizacion);
+                
+                // Verificar que la cotización esté aceptada para crear guía
+                if (tipo === 'guia' && cotizacion.estado !== 'Aceptada por Cliente' && cotizacion.estado !== 'Aceptada') {
+                    showToast('⚠️ La cotización debe estar "Aceptada por Cliente" para crear una guía', 'warning');
+                    return;
+                }
+                
+                // Cerrar el menú si está abierto
+                document.querySelectorAll('.menu-pop').forEach(el => el.remove());
+                
+                switch(tipo) {
+                    case 'guia':
+                        switchTab('guias');
+                        setTimeout(() => {
+                            openGuiaModalWithData(null, cotizacion);
+                        }, 300);
+                        break;
+                        
+                    case 'factura':
+                        switchTab('comprobantes');
+                        setTimeout(() => {
+                            openComprobanteModalWithData(null, cotizacion);
+                        }, 300);
+                        break;
+                        
+                    case 'despacho':
+                        switchTab('despachar');
+                        setTimeout(() => {
+                            openDespachoModalWithData(null, cotizacion);
+                        }, 300);
+                        break;
+                        
+                    default:
+                        showToast(`Tipo "${tipo}" no soportado`, 'error');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error creando documento:', error);
+                showToast('❌ Error al crear el documento: ' + error.message, 'error');
+            }
+        },
+        `${info.emoji} Sí, crear ${info.nombre}`
+    );
 };
 
 // ============================================================
@@ -2244,8 +2303,35 @@ function generateComprobantePdf(id) {
     showToast('PDF de comprobante generado', 'success');
 }
 
+// En ventas.js - Reemplaza la función markComprobanteEmitido
 function markComprobanteEmitido(id) {
-    showToast('Comprobante emitido correctamente', 'success');
+    const comprobante = comprobantesData.find(c => c.id === id);
+    const numero = comprobante?.numero || 'C-XXXXXX';
+    const cliente = comprobante?.cliente || 'Cliente';
+    
+    showConfirmModal(
+        '🧾 ¿Emitir comprobante?',
+        `Estás a punto de emitir el comprobante <b>${numero}</b> del cliente <b>${cliente}</b>.`,
+        '⚠️ Esta acción es irreversible. El comprobante quedará emitido oficialmente.',
+        async function() {
+            try {
+                const response = await apiFetch(`/ventas/api/comprobantes/${id}/toggle`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ estado: 'Emitido' })
+                });
+                if (response.success) {
+                    showToast('✅ Comprobante emitido correctamente', 'success');
+                    await loadComprobantes();
+                } else {
+                    showToast('❌ Error: ' + (response.error || 'No se pudo emitir'), 'error');
+                }
+            } catch (error) {
+                console.error('❌ Error:', error);
+                showToast('❌ Error al emitir comprobante', 'error');
+            }
+        },
+        '🧾 Sí, emitir'
+    );
 }
 
 function deleteComprobante(id) {
@@ -2982,6 +3068,37 @@ function autoLoadClientByRuc(value) {
     }
 }
 
+
+// En ventas.js - Reemplaza la función markGuiaEmitida
+function markGuiaEmitida(id) {
+    const guia = guiasData.find(g => g.id === id);
+    const numero = guia?.numero || 'G-XXXXXX';
+    const cliente = guia?.cliente || 'Cliente';
+    
+    showConfirmModal(
+        '📄 ¿Emitir guía?',
+        `Estás a punto de emitir la guía <b>${numero}</b> del cliente <b>${cliente}</b>.`,
+        '⚠️ Esta acción es irreversible. La guía quedará emitida oficialmente.',
+        async function() {
+            try {
+                const response = await apiFetch(`/ventas/api/guias/${id}/toggle`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ estado: 'Emitida' })
+                });
+                if (response.success) {
+                    showToast('✅ Guía emitida correctamente', 'success');
+                    await loadGuias();
+                } else {
+                    showToast('❌ Error: ' + (response.error || 'No se pudo emitir'), 'error');
+                }
+            } catch (error) {
+                console.error('❌ Error:', error);
+                showToast('❌ Error al emitir guía', 'error');
+            }
+        },
+        '📄 Sí, emitir'
+    );
+}
 
 // ============================================================
 // FUNCIÓN PARA GUARDAR CLIENTE DESDE COTIZACIÓN
@@ -3962,6 +4079,138 @@ function toggleProductSelection(idKey, checked) {
             selectAllCheckbox.indeterminate = false;
         }
     }
+}
+
+
+// ============================================================
+// MODAL DE CONFIRMACIÓN UNIVERSAL (MEJORADO)
+// ============================================================
+
+function showConfirmModal(title, message, warning, onConfirm, confirmText = '✅ Sí, confirmar') {
+    // Remover modales existentes
+    document.querySelectorAll('.confirm-modal-overlay').forEach(el => el.remove());
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-modal-overlay';
+    overlay.style.cssText = `
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        z-index: 999999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.3s ease;
+    `;
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        background: #FFFFFF;
+        border-radius: 20px;
+        max-width: 520px;
+        width: 95%;
+        padding: 32px 28px 24px;
+        box-shadow: 0 30px 80px rgba(0,0,0,0.35);
+        animation: modalSlideUp 0.3s ease;
+        text-align: center;
+    `;
+    
+    // Determinar el icono según el tipo de acción
+    let icon = '⚠️';
+    let buttonColor = '#EF233C';
+    let buttonHover = '#D91A30';
+    
+    if (title.includes('Duplicar')) {
+        icon = '📋';
+        buttonColor = '#0EA5E9';
+        buttonHover = '#0284C7';
+    } else if (title.includes('despacho') || title.includes('Guía') || title.includes('Factura')) {
+        icon = '📦';
+        buttonColor = '#16A34A';
+        buttonHover = '#15803D';
+    } else if (title.includes('Aceptada') || title.includes('Aceptar')) {
+        icon = '✅';
+        buttonColor = '#2563EB';
+        buttonHover = '#1D4ED8';
+    }
+    
+    modal.innerHTML = `
+        <div style="font-size: 48px; margin-bottom: 12px;">${icon}</div>
+        <h2 style="font-size: 22px; font-weight: 900; color: #0F172A; margin-bottom: 8px;">${title}</h2>
+        <p style="font-size: 15px; color: #475569; line-height: 1.5; margin-bottom: 12px;">${message}</p>
+        <div style="background: #FEF2F2; border-radius: 12px; padding: 12px 16px; margin-bottom: 24px; border-left: 4px solid #EF233C;">
+            <span style="font-size: 13px; font-weight: 700; color: #DC2626;">${warning}</span>
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: center;">
+            <button class="confirm-cancel-btn" style="
+                padding: 12px 32px;
+                border-radius: 12px;
+                border: 1px solid #E5E7EB;
+                background: #FFFFFF;
+                color: #0F172A;
+                font-weight: 800;
+                font-size: 14px;
+                cursor: pointer;
+                transition: all 0.2s;
+            ">Cancelar</button>
+            <button class="confirm-accept-btn" style="
+                padding: 12px 32px;
+                border-radius: 12px;
+                border: none;
+                background: ${buttonColor};
+                color: #FFFFFF;
+                font-weight: 800;
+                font-size: 14px;
+                cursor: pointer;
+                transition: all 0.2s;
+                box-shadow: 0 4px 14px ${buttonColor}55;
+            ">${confirmText}</button>
+        </div>
+    `;
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    // Animaciones CSS
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes modalSlideUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .confirm-cancel-btn:hover {
+            background: #F1F5F9;
+        }
+        .confirm-accept-btn:hover {
+            background: ${buttonHover};
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px ${buttonColor}77;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Event listeners
+    modal.querySelector('.confirm-cancel-btn').addEventListener('click', function() {
+        overlay.remove();
+    });
+    
+    modal.querySelector('.confirm-accept-btn').addEventListener('click', function() {
+        overlay.remove();
+        if (typeof onConfirm === 'function') {
+            onConfirm();
+        }
+    });
+    
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            overlay.remove();
+        }
+    });
 }
 
 function toggleAllProductCheckboxes(checked) {
