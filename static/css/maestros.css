@@ -396,9 +396,9 @@
 }
 
 .b-block {
-  background: #FFE4E6;
-  color: #BE123C;
-  border: 1px solid #FDA4AF;
+  background: #FF0000 !important;
+  color: #FFFFFF !important;
+  border-color: #FF4444 !important;
 }
 
 .b-gray {
