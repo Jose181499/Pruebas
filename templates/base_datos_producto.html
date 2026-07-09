@@ -1631,14 +1631,13 @@ window.formatearFecha = formatearFecha;
     transform: translateY(-1px);
     box-shadow: 0 4px 16px rgba(0, 102, 255, 0.35);
 }
-
 /* ============================================================
-   BORDES ROJOS VERTICALES ENTRE COLUMNAS
+   BORDES ROJOS - VERSIÓN SUAVE (mismo color, menos intenso)
    ============================================================ */
 
-/* Bordes rojos entre celdas de datos */
+/* Bordes rojos entre celdas - más delgados */
 .bd-table tbody td {
-    border-right: 2px solid #ef4444 !important;
+    border-right: 1px solid #ef4444 !important;  /* Mismo rojo, pero 1px en vez de 2px */
     padding: 6px 10px;
 }
 
@@ -1647,24 +1646,24 @@ window.formatearFecha = formatearFecha;
     border-right: none !important;
 }
 
-/* Bordes rojos en los encabezados también */
+/* Bordes rojos en los encabezados - más delgados */
 .bd-table thead th {
-    border-right: 2px solid #ef4444 !important;
-    border-bottom: 3px solid #dc2626 !important;
+    border-right: 1px solid #ef4444 !important;  /* Mismo rojo, 1px */
+    border-bottom: 2px solid #ef4444 !important; /* Mismo rojo, 2px en vez de 3px */
 }
 
 .bd-table thead th:last-child {
     border-right: none !important;
 }
 
-/* Hover: fondo rojo suave */
+/* Hover: fondo rojo muy suave (igual) */
 .bd-table tbody tr:hover td {
     background: #fef2f2 !important;
 }
 
-/* Separación entre filas con borde inferior rojo (opcional) */
+/* Separación entre filas - mismo rojo pero más claro */
 .bd-table tbody tr {
-    border-bottom: 1px solid #fca5a5 !important;  /* Rojo claro entre filas */
+    border-bottom: 1px solid #f87171 !important;  /* Rojo un poco más claro que #fca5a5 */
 }
 
 /* Responsive */
