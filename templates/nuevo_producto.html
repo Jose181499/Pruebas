@@ -1018,16 +1018,12 @@
                 <h3 class="card-title"><i class="bi bi-toggle-on"></i> Estado disponible</h3>
                 <select class="state-select" id="estadoProducto" name="estado" onchange="actualizarEstadoChips()">
                     <option value="activo" {% if not producto or producto.estado == 'activo' %}selected{% endif %}>🟢 Activo</option>
-                    <option value="inactivo" {% if producto and producto.estado == 'inactivo' %}selected{% endif %}>⚪ Inactivo</option>
-                    <option value="bajo_pedido" {% if producto and producto.estado == 'bajo_pedido' %}selected{% endif %}>🟠 Bajo pedido</option>
-                    <option value="disponible" {% if producto and producto.estado == 'disponible' %}selected{% endif %}>🔵 Disponible</option>
+                   <option value="bajo_pedido" {% if producto and producto.estado == 'bajo_pedido' %}selected{% endif %}>🟠 Bajo pedido</option>
                     <option value="bloqueado" {% if producto and producto.estado == 'bloqueado' %}selected{% endif %}>🔴 Bloqueado</option>
                 </select>
                 <div class="state-list" id="stateChips">
                     <div class="state-chip active-state"><span class="dot"></span>Activo</div>
-                    <div class="state-chip inactive"><span class="dot"></span>Inactivo</div>
                     <div class="state-chip order"><span class="dot"></span>Bajo pedido</div>
-                    <div class="state-chip available"><span class="dot"></span>Disponible</div>
                     <div class="state-chip blocked"><span class="dot"></span>Bloqueado</div>
                 </div>
             </div>

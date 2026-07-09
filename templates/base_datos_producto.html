@@ -1631,22 +1631,38 @@ window.formatearFecha = formatearFecha;
 }
 
 /* ============================================================
-   BORDE ROJO VERTICAL PARA DIFERENCIAR FILAS
+   BORDES ROJOS VERTICALES ENTRE COLUMNAS
    ============================================================ */
-.bd-table tbody tr {
-    border-left: 4px solid #ef4444 !important;   /* Borde rojo a la izquierda */
-    border-right: 4px solid #ef4444 !important;  /* Borde rojo a la derecha */
-    transition: all 0.2s ease;
+
+/* Bordes rojos entre celdas de datos */
+.bd-table tbody td {
+    border-right: 2px solid #ef4444 !important;
+    padding: 6px 10px;
 }
 
-/* Efecto hover - borde más intenso */
+/* Quitar borde derecho de la última columna */
+.bd-table tbody td:last-child {
+    border-right: none !important;
+}
+
+/* Bordes rojos en los encabezados también */
+.bd-table thead th {
+    border-right: 2px solid #ef4444 !important;
+    border-bottom: 3px solid #dc2626 !important;
+}
+
+.bd-table thead th:last-child {
+    border-right: none !important;
+}
+
+/* Hover: fondo rojo suave */
 .bd-table tbody tr:hover td {
-    background: #fef2f2;  /* Fondo rojo suave */
+    background: #fef2f2 !important;
 }
 
-.bd-table tbody tr:hover {
-    border-left-color: #dc2626 !important;
-    border-right-color: #dc2626 !important;
+/* Separación entre filas con borde inferior rojo (opcional) */
+.bd-table tbody tr {
+    border-bottom: 1px solid #fca5a5 !important;  /* Rojo claro entre filas */
 }
 
 /* Responsive */
