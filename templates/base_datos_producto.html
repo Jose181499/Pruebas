@@ -580,15 +580,28 @@ function verProducto(id) {
             titulo.textContent = 'Error';
         });
 }
-
 function renderModalProducto(p) {
     var titulo = document.getElementById('modalVerTitulo');
     var body = document.getElementById('modalVerBody');
     
     titulo.textContent = p.descripcion || p.codigo || 'Producto';
     
-    var estado = (p.estado || 'activo').toLowerCase();
-    var estadoLabel = estado.charAt(0).toUpperCase() + estado.slice(1).replace('_', ' ');
+    // ✅ CAPITALIZAR ESTADO PARA EL MODAL
+    var estadoLabel = 'Activo';
+    if (p.estado) {
+        var estadoLower = p.estado.toLowerCase();
+        var estadoMap = {
+            'activo': 'Activo',
+            'inactivo': 'Inactivo',
+            'bajo_pedido': 'Bajo pedido',
+            'disponible': 'Disponible',
+            'bloqueado': 'Bloqueado'
+        };
+        estadoLabel = estadoMap[estadoLower] || p.estado.charAt(0).toUpperCase() + p.estado.slice(1).toLowerCase();
+    }
+    
+    // Guardar el estado en minúscula para la clase CSS
+    var estadoClass = (p.estado || 'activo').toLowerCase();
     
     var costo = p.costo_unitario ? parseFloat(p.costo_unitario).toFixed(2) : '0.00';
     var precio = p.precio_unitario ? parseFloat(p.precio_unitario).toFixed(2) : '0.00';
@@ -607,7 +620,7 @@ function renderModalProducto(p) {
             </div>
             <div class="info-item">
                 <span class="info-label">Estado</span>
-                <span class="info-value"><span class="badge-estado ${estado}">${estadoLabel}</span></span>
+                <span class="info-value"><span class="badge-estado ${estadoClass}">${estadoLabel}</span></span>
             </div>
             
             <div class="info-item">
@@ -679,6 +692,7 @@ function renderModalProducto(p) {
         };
     }
 }
+
 
 function cerrarModalVer() {
     var modal = document.getElementById('modalVerProducto');
