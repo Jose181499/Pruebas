@@ -1956,8 +1956,9 @@ function closeViewModal() {
     if (modal) modal.remove();
 }
 
+
 // ============================================================
-// EVENT DELEGATION - TABS, CREAR, EDITAR, TOGGLE, VIEW
+// EVENT DELEGATION - TABS, CREAR, EDITAR, ELIMINAR, VIEW
 // ============================================================
 document.addEventListener('click', function(e) {
     // Navegación de tabs
@@ -2004,12 +2005,29 @@ document.addEventListener('click', function(e) {
         return;
     }
 
-    // Toggle (Activar/Inactivar)
-    const togBtn = e.target.closest('[data-toggle]');
-    if (togBtn) {
+    // ============================================================
+    // ✅ ELIMINAR (data-delete) - CORREGIDO
+    // ============================================================
+    const deleteBtn = e.target.closest('[data-delete]');
+    if (deleteBtn) {
         e.preventDefault();
-        const [m, id] = togBtn.dataset.toggle.split('|');
-        toggleRecordHandler(m, parseInt(id));
+        e.stopPropagation();
+        console.log('🗑️ Click en eliminar:', deleteBtn.dataset.delete);
+        
+        const [m, id] = deleteBtn.dataset.delete.split('|');
+        const idNum = parseInt(id);
+        
+        console.log('📋 Módulo:', m, 'ID:', idNum);
+        
+        // Buscar el registro para mostrar el nombre
+        const registro = DS[m]?.find(x => x.id === idNum);
+        console.log('📋 Registro encontrado:', registro);
+        
+        const nombre = registro ? (registro.razon_social || registro.nombre || registro.codigo || 'este registro') : 'este registro';
+        
+        if (confirm(`¿Estás seguro de eliminar "${nombre}"? Esta acción no se puede deshacer.`)) {
+            eliminarRegistro(m, idNum);
+        }
         return;
     }
 
@@ -2022,7 +2040,6 @@ document.addEventListener('click', function(e) {
         return;
     }
 });
-
 
 // ============================================================
 // DOMContentLoaded - UNIFICADO Y COMPLETO

@@ -1458,46 +1458,72 @@ input[type="file"] { display: none; }
     { item:10, codigo:'PRD-000133', descripcion:'Masking tape 48mm x 40m',                      modelo:'MT-48',     marca:'Tuk',         categoria:'Ferretería',              subcategoria:'Cintas',                 peso:'0.20 kg', transporte:'🚗 Auto',      costo:'S/ 6.00',   venta:'S/ 12.00',  observacion:'Multiusos.',                                  estado:'Activo',      estadoClass:'st-active',   presentacionProveedor:'Caja x 1 unidad',    presentacionVenta:'Unidad',  ventaMinima:'1 unidad',   barras:'7750123456010', volumen:'0.0110', origen:'Importado', tiempo:'3–5 días',  abastecimiento:'Importación',        stockMinimo:8,  descripcionLarga:'Cinta adhesiva de uso general.' }
   ];
 
-  /* ── RENDER ────────────────────────────────────────────── */
-  window.bdRenderProductos = function (data) {
+/* ── RENDER ────────────────────────────────────────────── */
+window.bdRenderProductos = function (data) {
     const tbody = document.getElementById('bdProductTableBody');
     if (!tbody) return;
-    tbody.innerHTML = data.map(p => `
+    
+    // ✅ FUNCIÓN PARA CAPITALIZAR ESTADO
+    function capitalizarEstado(estado) {
+        if (!estado) return 'Activo';
+        const lower = estado.toLowerCase();
+        const mapa = {
+            'activo': 'Activo',
+            'inactivo': 'Inactivo',
+            'bajo_pedido': 'Bajo pedido',
+            'disponible': 'Disponible',
+            'bloqueado': 'Bloqueado'
+        };
+        return mapa[lower] || estado.charAt(0).toUpperCase() + estado.slice(1).toLowerCase();
+    }
+    
+    // ✅ FUNCIÓN PARA CAPITALIZAR TEXTO
+    function capitalizar(texto) {
+        if (!texto) return '-';
+        return texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase();
+    }
+    
+    tbody.innerHTML = data.map((p, index) => {
+        const estadoCapitalizado = capitalizarEstado(p.estado);
+        const estadoClass = p.estadoClass || 'st-active';
+        
+        return `
       <tr>
-        <td class="bd-col-item" style="text-align:center">${p.item}</td>
-        <td class="bd-col-code"><a class="bd-t-code" href="#">${p.codigo}</a></td>
-        <td class="bd-col-desc">${p.descripcion}</td>
-        <td class="bd-col-model">${p.modelo}</td>
-        <td class="bd-col-brand">${p.marca}</td>
-        <td class="bd-col-cat">${p.categoria}</td>
-        <td class="bd-col-subcat">${p.subcategoria}</td>
-        <td class="bd-col-weight">${p.peso}</td>
-        <td class="bd-col-transport">${p.transporte}</td>
-        <td class="bd-col-cost" style="font-weight:850">${p.costo}</td>
-        <td class="bd-col-sale" style="color:var(--empresa);font-weight:900">${p.venta}</td>
-        <td class="bd-col-obs" style="color:var(--muted)">${p.observacion}</td>
-        <td class="bd-col-status"><span class="bd-status ${p.estadoClass}"><span class="bd-dot"></span>${p.estado}</span></td>
+        <td class="bd-col-item" style="text-align:center">${index + 1}</td>
+        <td class="bd-col-code"><span class="bd-t-code">${p.codigo || '-'}</span></td>
+        <td class="bd-col-desc">${p.descripcion || '-'}</td>
+        <td class="bd-col-model">${p.modelo || '-'}</td>
+        <td class="bd-col-brand">${p.marca || '-'}</td>
+        <td class="bd-col-cat">${p.categoria || '-'}</td>
+        <td class="bd-col-subcat">${p.subcategoria || '-'}</td>
+        <td class="bd-col-weight">${p.peso || '0'}</td>
+        <td class="bd-col-transport">${p.transporte || '-'}</td>
+        <td class="bd-col-cost" style="font-weight:850">${p.costo || 'S/ 0.00'}</td>
+        <td class="bd-col-sale" style="color:var(--empresa);font-weight:900">${p.venta || 'S/ 0.00'}</td>
+        <td class="bd-col-obs" style="color:var(--muted)">${p.observacion || '-'}</td>
+        <td class="bd-col-status"><span class="bd-status ${estadoClass}"><span class="bd-dot"></span>${estadoCapitalizado}</span></td>
         <td class="bd-col-actions">
           <div class="row-actions">
-            <button title="Ver"><i class="bi bi-eye"></i></button>
-            <button title="Editar"><i class="bi bi-pencil"></i></button>
-            <button title="Más opciones"><i class="bi bi-three-dots-vertical"></i></button>
+            <button class="action-btn action-view" data-view="${p.codigo}" title="Ver"><i class="bi bi-eye"></i></button>
+            <button class="action-btn action-edit" title="Editar"><i class="bi bi-pencil"></i></button>
+            <button class="action-btn action-delete" data-delete="productos|${p.codigo}" title="Eliminar" style="color:#DC2626;"><i class="bi bi-trash"></i></button>
           </div>
         </td>
-        <td class="bd-col-prov-pres">${p.presentacionProveedor}</td>
-        <td class="bd-col-sale-pres">${p.presentacionVenta}</td>
-        <td class="bd-col-min-sale">${p.ventaMinima}</td>
-        <td class="bd-col-barras">${p.barras}</td>
-        <td class="bd-col-volumen">${p.volumen}</td>
-        <td class="bd-col-origen">${p.origen}</td>
-        <td class="bd-col-tiempo">${p.tiempo}</td>
-        <td class="bd-col-abast">${p.abastecimiento}</td>
-        <td class="bd-col-stock-min">${p.stockMinimo}</td>
-        <td class="bd-col-desc-larga" style="color:var(--muted)">${p.descripcionLarga}</td>
-      </tr>`
-    ).join('');
-    document.getElementById('bdCountText').textContent = `Mostrando 1 a ${data.length} de 245 productos`;
-  };
+        <td class="bd-col-prov-pres">${p.presentacionProveedor || '-'}</td>
+        <td class="bd-col-sale-pres">${p.presentacionVenta || '-'}</td>
+        <td class="bd-col-min-sale">${p.ventaMinima || '1 unidad'}</td>
+        <td class="bd-col-barras">${p.barras || '-'}</td>
+        <td class="bd-col-volumen">${p.volumen || '0'}</td>
+        <td class="bd-col-origen">${capitalizar(p.origen) || '-'}</td>
+        <td class="bd-col-tiempo">${p.tiempo || '-'}</td>
+        <td class="bd-col-abast">${p.abastecimiento || '-'}</td>
+        <td class="bd-col-stock-min">${p.stockMinimo || 0}</td>
+        <td class="bd-col-desc-larga" style="color:var(--muted)">${p.descripcionLarga || '-'}</td>
+      </tr>`;
+    }).join('');
+    
+    document.getElementById('bdCountText').textContent = `Mostrando 1 a ${data.length} de ${data.length} productos`;
+};
 
   /* ── FILTROS ───────────────────────────────────────────── */
   function bdAplicarFiltros() {
