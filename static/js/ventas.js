@@ -2582,8 +2582,7 @@ function openCotizacionModal(id = null) {
                 </div>
             </div>
 
-           // En openCotizacionModal - Punto 4: Productos
-// Reemplaza esta sección completa
+   
 
 <!-- Punto 4: Productos -->
 <div class="create-panel product-wide">

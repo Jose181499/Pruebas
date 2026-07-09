@@ -541,7 +541,7 @@ function renderTable(m, list) {
                 <div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;">
                     <button class="action-btn action-view" data-view="${m}|${r.id}" title="Ver detalle">👁️</button>
                     <button class="action-btn action-edit" data-edit="${m}|${r.id}" title="Editar">✏️</button>
-                    <button class="action-btn ${estadoClass}" data-toggle="${m}|${r.id}" title="${estadoDisplay}" style="color:#DC2626;font-size:14px;">🗑️</button>
+                    <button class="action-btn ${estadoClass}" data-delete="${m}|${r.id}" title="${estadoDisplay}" style="color:#DC2626;font-size:14px;">🗑️</button>
                 </div>
             </td>
         `;

@@ -1926,6 +1926,150 @@
 .btn-secondary-view.active:hover {
     background: #D91A30 !important;
 }
+
+
+/* ============================================================
+   MODAL DE COTIZACIÓN - PANTALLA COMPLETA
+   ============================================================ */
+#cotizacionModal .modal-box {
+    width: min(98vw, 98vw) !important;
+    max-width: 98vw !important;
+    height: 95vh !important;
+    max-height: 95vh !important;
+    border-radius: 16px !important;
+}
+
+#cotizacionModal .modal-body {
+    flex: 1 1 auto !important;
+    overflow: auto !important;
+    padding: 10px 16px !important;
+    background: #F8FAFC !important;
+}
+
+#cotizacionModal .modal-head {
+    flex-shrink: 0 !important;
+    min-height: 48px !important;
+}
+
+#cotizacionModal .modal-foot {
+    flex-shrink: 0 !important;
+    padding: 10px 16px !important;
+}
+
+/* Ajustes para el grid dentro del modal */
+#cotizacionModal .create-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+    align-items: start !important;
+}
+
+/* En pantallas más grandes, 3 columnas */
+@media (min-width: 1600px) {
+    #cotizacionModal .create-grid {
+        grid-template-columns: 1fr 1fr 280px !important;
+    }
+}
+
+/* En pantallas medianas, 1 columna */
+@media (max-width: 1200px) {
+    #cotizacionModal .create-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Ajustar el panel de productos para que ocupe todo el ancho */
+#cotizacionModal .create-panel.product-wide {
+    grid-column: 1 / -1 !important;
+}
+
+/* Reducir padding interno para aprovechar espacio */
+#cotizacionModal .create-panel .body {
+    padding: 6px 10px !important;
+}
+
+#cotizacionModal .create-panel h3 {
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+}
+
+/* Tabla de productos más compacta */
+#cotizacionModal .product-wide .table-scroll {
+    max-height: 200px !important;
+}
+
+#cotizacionModal .master-table td {
+    padding: 4px 6px !important;
+    font-size: 10px !important;
+}
+
+#cotizacionModal .master-table th {
+    padding: 4px 6px !important;
+    font-size: 9px !important;
+}
+
+/* Stepbar más compacto */
+#cotizacionModal .stepbar-bottom {
+    padding: 4px 12px !important;
+    min-height: 28px !important;
+    margin-top: 6px !important;
+}
+
+#cotizacionModal .stepbar-bottom .step {
+    font-size: 8px !important;
+}
+
+#cotizacionModal .stepbar-bottom .step .num {
+    width: 16px !important;
+    height: 16px !important;
+    font-size: 7px !important;
+}
+
+/* Formularios más compactos */
+#cotizacionModal .form-field input,
+#cotizacionModal .form-field select {
+    height: 26px !important;
+    font-size: 11px !important;
+    padding: 0 8px !important;
+}
+
+#cotizacionModal .form-field label {
+    font-size: 8.5px !important;
+    margin-bottom: 1px !important;
+}
+
+#cotizacionModal .form-field textarea {
+    font-size: 11px !important;
+    padding: 4px 8px !important;
+    min-height: 40px !important;
+}
+
+/* Grids más compactos */
+#cotizacionModal .form-grid {
+    gap: 4px !important;
+}
+
+/* Client card más compacto */
+#cotizacionModal .client-card .client-main-grid {
+    grid-template-columns: 120px 1fr 100px !important;
+    gap: 4px !important;
+}
+
+#cotizacionModal .client-card .client-secondary-grid,
+#cotizacionModal .client-card .client-contact-grid,
+#cotizacionModal .client-card .client-request-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 4px !important;
+}
+
+/* Resumen más compacto */
+#cotizacionModal .summary-card .side-row {
+    padding: 2px 0 !important;
+}
+
+#cotizacionModal .summary-total {
+    font-size: 18px !important;
+}
 </style>
 {% endblock %}
 
