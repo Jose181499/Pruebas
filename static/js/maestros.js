@@ -339,7 +339,9 @@ function bEstado(valor) {
     const estado = getEstado(valor);
     const badges = {
         'Activo': '<span class="badge b-ok">● Activo</span>',
-        'Inactivo': '<span class="badge b-gray">● Inactivo</span>'
+        'Observado': '<span class="badge b-warn">● Observado</span>',
+        'Bloqueado': '<span class="badge b-block">● Bloqueado</span>'
+        //'Inactivo': '<span class="badge b-gray">● Inactivo</span>'
     };
     return badges[estado] || `<span class="badge b-gray">${estado}</span>`;
 }

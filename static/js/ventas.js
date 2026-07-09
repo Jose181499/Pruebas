@@ -2433,6 +2433,7 @@ function exportData(module) {
 // FUNCIONES PARA MODALES DE COTIZACIÓN
 // ============================================================
 
+
 function openCotizacionModal(id = null) {
     editingId = id;
     const isEdit = id !== null;
@@ -2485,7 +2486,7 @@ function openCotizacionModal(id = null) {
                 </div>
             </div>
 
-            <!-- Punto 2: Condiciones comerciales CON CAMPOS PERSONALIZADOS -->
+            <!-- Punto 2: Condiciones comerciales -->
             <div class="create-panel">
                 <h3><span class="section-number">2.</span> <span class="section-title-colored">Condiciones comerciales</span></h3>
                 <div class="body">
@@ -2589,33 +2590,32 @@ function openCotizacionModal(id = null) {
                 </div>
             </div>
 
-   
-
-<!-- Punto 4: Productos -->
-<div class="create-panel product-wide">
-    <h3><span class="section-number">4.</span> <span class="section-title-colored">Productos cotizados</span>
-        <div class="products-toolbar">
-            <input list="productMasterList" id="quickProductSearch" placeholder="Buscar en data maestra..." onkeydown="if(event.key==='Enter'){addQuoteProductFromSearch()}">
-            <datalist id="productMasterList"></datalist>
-            <button class="btn btn-blue btn-add-product" onclick="addQuoteProductFromSearch()">+ Agregar producto</button>
-            <button class="btn btn-green btn-add-multiple" onclick="openProductSelector()" style="background:#16A34A !important; color:#fff !important;">📋 Seleccionar varios</button>
-        </div>
-    </h3>
-    <div class="body">
-        <div class="table-scroll">
-            <table class="master-table">
-                <thead>
-                    <tr>
-                        <th>Item</th><th>Código</th><th>Producto / Descripción</th><th>Modelo</th><th>Marca</th>
-                        <th>Unidad</th><th>Cant</th><th>Valor venta<br><small>Unitario S/.</small></th>
-                        <th>Monto total<br><small>Incluido IGV S/.</small></th><th>Stock</th><th>Entrega</th><th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="quoteProductRows"></tbody>
-            </table>
-        </div>
-    </div>
-</div>
+            <!-- Punto 4: Productos cotizados -->
+            <div class="create-panel product-wide">
+                <h3><span class="section-number">4.</span> <span class="section-title-colored">Productos cotizados</span>
+                    <div class="products-toolbar">
+                        <input list="productMasterList" id="quickProductSearch" placeholder="Buscar en data maestra..." onkeydown="if(event.key==='Enter'){addQuoteProductFromSearch()}">
+                        <datalist id="productMasterList"></datalist>
+                        <button class="btn btn-blue btn-add-product" onclick="addQuoteProductFromSearch()">+ Agregar producto</button>
+                        <button class="btn btn-green btn-add-multiple" onclick="openProductSelector()" style="background:#16A34A !important; color:#fff !important;">📋 Seleccionar varios</button>
+                    </div>
+                </h3>
+                <div class="body">
+                    <div class="table-scroll">
+                        <table class="master-table">
+                            <thead>
+                                <tr>
+                                    <th>Item</th><th>Código</th><th>Producto / Descripción</th><th>Modelo</th><th>Marca</th>
+                                    <th>Unidad</th><th>Cant</th><th>Valor venta<br><small>Unitario S/.</small></th>
+                                    <th>Monto total<br><small>Incluido IGV S/.</small></th><th>Stock</th><th>Entrega</th><th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="quoteProductRows"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Punto 5: Información adicional -->
             <div class="create-panel product-wide compact-bottom">
                 <h3><span class="section-number">5.</span> <span class="section-title-colored">Información adicional</span></h3>
@@ -2638,7 +2638,7 @@ function openCotizacionModal(id = null) {
             <span class="sep"></span>
             <span class="step status-review"><span class="num">2</span>En revisión</span>
             <span class="sep"></span>
-            <span class="step status-validated"><span class="num">3</span>Validada</span>
+            <span class="step status-validated"><span class="num">3</span>Validado por Hellen</span>
             <span class="sep"></span>
             <span class="step status-generated"><span class="num">4</span>Generada</span>
             <span class="sep"></span>
@@ -2649,11 +2649,12 @@ function openCotizacionModal(id = null) {
     // Cargar datalist de productos
     cargarDatalistProductos();
     
-    // Inicializar productos de ejemplo
-    if (PRODUCTOS_MAESTROS.length > 0) {
-        quoteProducts = PRODUCTOS_MAESTROS.slice(0, 2).map(p => ({...p, cantidad: 1}));
-        renderQuoteProducts();
-    }
+    // ============================================================
+    // 🔽 IMPORTANTE: NO cargar productos automáticamente
+    // ============================================================
+    quoteProducts = [];
+    renderQuoteProducts();
+    calcQuote(); // Actualizar totales a 0
     
     // Si es edición, cargar datos
     if (isEdit && id) {
@@ -2663,7 +2664,6 @@ function openCotizacionModal(id = null) {
     document.getElementById('cotizacionModal').classList.add('show');
     setTimeout(() => { calcQuote(); }, 100);
 }
-
 
 async function cargarCotizacionParaEditar(id) {
     try {
