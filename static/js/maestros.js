@@ -478,6 +478,9 @@ function renderStatusBoard(m) {
 // ============================================================
 // RENDER TABLE - SOPORTE PARA CLIENTES Y PROVEEDORES
 // ============================================================
+// ============================================================
+// RENDER TABLE - CON BOTÓN ELIMINAR (TACHO DE BASURA)
+// ============================================================
 
 function renderTable(m, list) {
     if (!list || !list.length) {
@@ -511,7 +514,7 @@ function renderTable(m, list) {
     
     let headersHtml = `<th style="width:50px;">Item</th><th style="width:100px;">Ámbito</th>`;
     headers.forEach(h => { headersHtml += `<th>${h}</th>`; });
-    headersHtml += `<th style="width:200px;">Acciones</th>`;
+    headersHtml += `<th style="width:120px;">Acciones</th>`;
     
     const rows = list.map((r, i) => {
         let cells = `<td><b>${i + 1}</b></td><td>${bAmbito(r.ambito || 'COMPARTIDO')}</td>`;
@@ -531,16 +534,13 @@ function renderTable(m, list) {
             }
         });
         
-        const isActive = getEstado(r.activo) === 'Activo';
-        const estadoDisplay = isActive ? 'Inactivar' : 'Activar';
-        const estadoClass = isActive ? 'action-delete' : 'action-activate';
-        
+        // ✅ BOTÓN ELIMINAR (TACHO DE BASURA) EN VEZ DE INACTIVAR/ACTIVAR
         cells += `
             <td>
                 <div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;">
                     <button class="action-btn action-view" data-view="${m}|${r.id}" title="Ver detalle">👁️</button>
                     <button class="action-btn action-edit" data-edit="${m}|${r.id}" title="Editar">✏️</button>
-                    <button class="action-btn ${estadoClass}" data-toggle="${m}|${r.id}" title="${estadoDisplay}">${estadoDisplay}</button>
+                    <button class="action-btn action-delete" data-delete="${m}|${r.id}" title="Eliminar" style="color:#DC2626;font-size:14px;">🗑️</button>
                 </div>
             </td>
         `;
@@ -2369,6 +2369,11 @@ document.addEventListener('DOMContentLoaded', function() {
 // VISTA COMPLETA - TODOS LOS CAMPOS DEL CLIENTE
 // ============================================================
 
+
+// ============================================================
+// VISTA COMPLETA - TODOS LOS CAMPOS DEL CLIENTE
+// ============================================================
+
 function renderClientesCompleta(list) {
     if (!list || !list.length) {
         return `<div class="empty-state">
@@ -2479,17 +2484,13 @@ function renderClientesCompleta(list) {
             cells += `<td>${value}</td>`;
         });
         
-        // Acciones
-        const isActive = r.estado === 'Activo' || r.estado === 'activo' || r.activo === true;
-        const estadoDisplay = isActive ? 'Inactivar' : 'Activar';
-        const estadoClass = isActive ? 'action-delete' : 'action-activate';
-        
+        // ✅ BOTÓN ELIMINAR (TACHO DE BASURA)
         cells += `
             <td>
                 <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">
                     <button class="action-btn action-view" data-view="clientes|${r.id}" title="Ver">👁️</button>
                     <button class="action-btn action-edit" data-edit="clientes|${r.id}" title="Editar">✏️</button>
-                    <button class="action-btn ${estadoClass}" data-toggle="clientes|${r.id}" title="${estadoDisplay}">${estadoDisplay}</button>
+                    <button class="action-btn action-delete" data-delete="clientes|${r.id}" title="Eliminar" style="color:#DC2626;font-size:14px;">🗑️</button>
                 </div>
             </td>
         `;
@@ -2507,7 +2508,6 @@ function renderClientesCompleta(list) {
         </table>
     </div>`;
 }
-
 
 
 
@@ -2604,16 +2604,13 @@ function renderProveedoresCompleta(list) {
             cells += `<td>${value}</td>`;
         });
         
-        const isActive = r.estado === 'Activo' || r.estado === 'activo' || r.activo === true;
-        const estadoDisplay = isActive ? 'Inactivar' : 'Activar';
-        const estadoClass = isActive ? 'action-delete' : 'action-activate';
-        
+        // ✅ BOTÓN ELIMINAR (TACHO DE BASURA)
         cells += `
             <td>
                 <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">
                     <button class="action-btn action-view" data-view="proveedores|${r.id}" title="Ver">👁️</button>
                     <button class="action-btn action-edit" data-edit="proveedores|${r.id}" title="Editar">✏️</button>
-                    <button class="action-btn ${estadoClass}" data-toggle="proveedores|${r.id}" title="${estadoDisplay}">${estadoDisplay}</button>
+                    <button class="action-btn action-delete" data-delete="proveedores|${r.id}" title="Eliminar" style="color:#DC2626;font-size:14px;">🗑️</button>
                 </div>
             </td>
         `;
@@ -2630,4 +2627,30 @@ function renderProveedoresCompleta(list) {
             <tbody>${rows}</tbody>
         </table>
     </div>`;
+}
+
+// ============================================================
+// ELIMINAR REGISTRO (DELETE REAL)
+// ============================================================
+
+async function eliminarRegistro(modulo, id) {
+    try {
+        const apiBase = getApiBase(modulo);
+        const response = await fetch(`${apiBase}/${modulo}/${id}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast(`✅ Registro eliminado correctamente`, 'success');
+            await loadModuleData(modulo, true);
+            renderModule(modulo);
+        } else {
+            showToast(`❌ Error: ${result.error || 'No se pudo eliminar'}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error eliminando:', error);
+        showToast(`❌ Error: ${error.message}`, 'error');
+    }
 }
