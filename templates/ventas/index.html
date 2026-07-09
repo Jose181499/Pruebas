@@ -1927,7 +1927,23 @@
     background: #D91A30 !important;
 }
 
+/* Agrega estas reglas o modifica las existentes */
+.modal-title {
+    font-weight: 400; /* En lugar de bold o 700, usa 400 para peso normal */
+    font-size: 1.1rem; /* Reduce el tamaño si es necesario */
+    line-height: 1.2; /* Reduce el espacio entre líneas */
+    margin: 0; /* Elimina márgenes extra */
+    padding: 0; /* Elimina padding extra */
+}
 
+.modal-head {
+    padding: 8px 16px; /* Reduce el padding superior/inferior */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 40px; /* Altura mínima más compacta */
+    gap: 12px;
+}
 
 </style>
 {% endblock %}
