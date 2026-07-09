@@ -205,6 +205,29 @@ async function apiFetch(url, options = {}) {
     }
 }
 
+// ============================================================
+// FUNCIÓN PARA FORMATEAR FECHA
+// ============================================================
+
+function formatFecha(fechaStr) {
+    if (!fechaStr) return '-';
+    
+    try {
+        const fecha = new Date(fechaStr);
+        if (isNaN(fecha.getTime())) return fechaStr;
+        
+        // Formato: 08/07/2026 22:48
+        const dia = String(fecha.getDate()).padStart(2, '0');
+        const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+        const anio = fecha.getFullYear();
+        const horas = String(fecha.getHours()).padStart(2, '0');
+        const minutos = String(fecha.getMinutes()).padStart(2, '0');
+        
+        return `${dia}/${mes}/${anio} ${horas}:${minutos}`;
+    } catch (e) {
+        return fechaStr;
+    }
+}
 
 async function cargarProductosMaestros() {
     try {
@@ -587,7 +610,7 @@ function renderCotizaciones() {
             return `
             <tr>
                 <td><b>${i + 1}</b></td>
-                <td class="date-cell">${fechaDisplay}</td>
+                <td class="date-cell">${formatFecha(r.fecha)}</td>
                 <td>${badgeStatus(r.estado)}</td>
                 <td class="quote-number-cell"><b>${sd(r.numero)}</b></td>
                 <td>${sd(r.ruc)}</td>
@@ -651,7 +674,7 @@ function renderCotizaciones() {
         return `
         <tr>
             <td><b>${i + 1}</b></td>
-            <td class="date-cell">${fechaDisplay}</td>
+            <td class="date-cell">${formatFecha(r.fecha)}</td>
             <td>${badgeStatus(r.estado)}</td>
             <td class="quote-number-cell"><b>${sd(r.numero)}</b></td>
             <td>${sd(r.ruc)}</td>
