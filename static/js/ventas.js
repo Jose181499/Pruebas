@@ -543,15 +543,47 @@ function setCotizacionView(mode) {
     // Renderizar la tabla con la vista seleccionada
     renderCotizaciones();
 }
-
 function renderCotizaciones() {
     const q = document.getElementById('qSearch')?.value?.toLowerCase() || '';
     const st = document.getElementById('qStatus')?.value || '';
     
+    // ============================================================
+    // FILTRO DE ESTADO MEJORADO - Con mapeo flexible
+    // ============================================================
     const list = cotizacionesData.filter(r => {
         const searchStr = `${r.numero || ''} ${r.ruc || ''} ${r.razon || ''} ${r.descripcion || ''} ${r.nota_cotizacion || ''}`.toLowerCase();
         const matchText = !q || searchStr.includes(q);
-        const matchStatus = !st || r.estado === st;
+        
+        // 🔽 FILTRO DE ESTADO MEJORADO - Coincidencia flexible
+        let matchStatus = true;
+        if (st) {
+            const estadoActual = (r.estado || '').toLowerCase().trim();
+            const estadoFiltro = st.toLowerCase().trim();
+            
+            // Mapeo de estados para coincidencias flexibles
+            const estadoMap = {
+                'borrador': ['borrador'],
+                'en revisión': ['en revisión', 'en revision', 'en proceso', 'proceso'],
+                'en proceso': ['en revisión', 'en revision', 'en proceso', 'proceso'],
+                'validada': ['validada', 'validado', 'validado por hellen', 'validada por hellen'],
+                'generada': ['generada', 'generado'],
+                'aceptada por cliente': ['aceptada por cliente', 'aceptada', 'aceptado', 'aceptado por cliente'],
+                'aceptada': ['aceptada por cliente', 'aceptada', 'aceptado', 'aceptado por cliente'],
+                'no concretada': ['no concretada', 'no concretado', 'perdida', 'perdido'],
+                'anulada': ['anulada', 'anulado', 'cancelada', 'cancelado']
+            };
+            
+            // Obtener las variaciones permitidas para este estado
+            const variaciones = estadoMap[estadoFiltro] || [estadoFiltro];
+            
+            // Verificar si el estado actual coincide con alguna variación
+            matchStatus = variaciones.some(v => 
+                estadoActual === v || 
+                estadoActual.includes(v) || 
+                v.includes(estadoActual)
+            );
+        }
+        
         return matchText && matchStatus;
     });
     
@@ -605,8 +637,6 @@ function renderCotizaciones() {
         }
         
         tbody.innerHTML = list.map((r, i) => {
-            const fecha = r.fecha || '';
-            const fechaDisplay = fecha.replace(' ', '<br>');
             return `
             <tr>
                 <td><b>${i + 1}</b></td>
@@ -645,7 +675,7 @@ function renderCotizaciones() {
             <th>Descripción</th>
             <th>Subtotal</th>
             <th>IGV</th>
-            <th>Total</th>
+            <th>Total<br><small>(Incluido IGV)</small></th>
             <th>Cond. Pago</th>
             <th>Tiempo Entrega</th>
             <th>Validez</th>
@@ -668,8 +698,6 @@ function renderCotizaciones() {
     }
     
     tbody.innerHTML = list.map((r, i) => {
-        const fecha = r.fecha || '';
-        const fechaDisplay = fecha.replace(' ', '<br>');
         const numProductos = r.productos?.length || r.items?.length || 0;
         return `
         <tr>
@@ -686,7 +714,7 @@ function renderCotizaciones() {
             <td class="left">${sd(r.descripcion || r.nota_cotizacion || r.notas || 'Sin descripción')}</td>
             <td><b>${money(r.subtotal || 0)}</b></td>
             <td><b>${money(r.igv || 0)}</b></td>
-            <td><b>${money(r.monto || r.total || 0)}</b></td>
+            <td><b>${money(r.total || r.monto || 0)}</b></td>
             <td>${sd(r.condicion || r.condicion_pago || r.forma_pago)}</td>
             <td>${sd(r.tiempo_entrega)}</td>
             <td>${sd(r.validez || r.validez_oferta)}</td>
@@ -705,7 +733,6 @@ function renderCotizaciones() {
         </tr>`;
     }).join('');
 }
-
 
 function renderDespachos() {
     const q = document.getElementById('despachoSearch')?.value?.toLowerCase() || '';
