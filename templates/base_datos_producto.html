@@ -302,9 +302,6 @@ async function cargarProductos() {
     }
 }
 
-// ============================================================
-// RENDERIZAR PRODUCTOS
-// ============================================================
 function bdRenderProductos(data) {
     if (!window.location.pathname.includes('/productos/base-datos')) {
         console.log('ℹ️ No estamos en la página de base de datos, omitiendo renderizado');
@@ -360,30 +357,28 @@ function bdRenderProductos(data) {
         var fecha = p.created_at || p.updated_at || p.fecha_creacion || p.fecha_registro || null;
         var fechaFormateada = formatearFecha(fecha);
         
+        // ✅ CAPITALIZAR ESTADO - VERSIÓN COMPLETA
+        var estadoMostrado = 'Activo';
+        if (p.estado) {
+            var estadoLower = p.estado.toLowerCase();
+            var estadoMap = {
+                'activo': 'Activo',
+                'inactivo': 'Inactivo',
+                'bajo_pedido': 'Bajo pedido',
+                'disponible': 'Disponible',
+                'bloqueado': 'Bloqueado'
+            };
+            estadoMostrado = estadoMap[estadoLower] || p.estado.charAt(0).toUpperCase() + p.estado.slice(1).toLowerCase();
+        }
+        
         html += '<tr>';
         html += '<td class="bd-col-item" style="text-align:center;color:#94a3b8;font-weight:600;">' + index + '</td>';
         html += '<td class="bd-col-code"><span class="bd-t-code">' + (p.codigo || '-') + '</span></td>';
-        html += '<td class="bd-col-date"><span class="bd-date-badge">' + fechaFormateada + '</span></td>';  // NUEVA COLUMNA
+        html += '<td class="bd-col-date"><span class="bd-date-badge">' + fechaFormateada + '</span></td>';
         html += '<td class="bd-col-desc"><strong>' + (p.descripcion || '-') + '</strong></td>';
         html += '<td class="bd-col-model">' + (p.modelo || '-') + '</td>';
         html += '<td class="bd-col-brand">' + (p.marca || '-') + '</td>';
         html += '<td class="bd-col-cat">' + categoria + '</td>';
-       // Capitalizar estado - versión mejorada
-var estadoMostrado = 'Activo';
-if (p.estado) {
-    var estadoLower = p.estado.toLowerCase();
-    // Mapeo de estados comunes
-    var estadoMap = {
-        'activo': 'Activo',
-        
-        'bajo_pedido': 'Bajo pedido',
-        
-        'bloqueado': 'Bloqueado'
-    };
-    estadoMostrado = estadoMap[estadoLower] || p.estado.charAt(0).toUpperCase() + p.estado.slice(1).toLowerCase();
-}
-        
-
         html += '<td class="bd-col-status"><span class="bd-status ' + estadoClass + '"><span class="bd-dot"></span>' + estadoMostrado + '</span></td>';
         html += '<td class="bd-col-actions"><div class="row-actions">';
         html += '<button class="btn-action btn-view" onclick="verProducto(' + p.id + ')" title="Ver"><i class="bi bi-eye"></i></button>';
@@ -443,6 +438,7 @@ if (p.estado) {
     var pageActual = document.getElementById('bdPaginaActual');
     if (pageActual) pageActual.textContent = window.bdPaginaActual;
 }
+
 
 // ============================================================
 // APLICAR FILTROS
