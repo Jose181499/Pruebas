@@ -365,7 +365,7 @@ def api_clientes_eliminar(id):
 
         # Eliminar puntos de entrega
         cur.execute("""
-            DELETE FROM clientes_puntos_entrega
+            DELETE FROM clientes_puntoss_entrega
             WHERE cliente_id = %s
         """, (id,))
 
