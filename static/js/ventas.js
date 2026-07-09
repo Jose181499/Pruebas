@@ -83,19 +83,21 @@ function today() {
 
 function badgeStatus(s) {
     const map = {
-        // 🔴 Rojo fluorescente NEON
+        // 🔴 Rojo fluorescente NEON - Borrador
         'Borrador': 'b-draft',
         'Eliminada': 'b-draft',
         
-        // 🟡 Amarillo fluorescente NEON
+        // 🟡 Amarillo fluorescente NEON - En revisión
         'En revisión': 'b-review',
         'En revisión interna': 'b-review',
         'En Proceso': 'b-review',
         
-        // 🟢 Verde fluorescente NEON
-        'Generada': 'b-generated',
-        'Validada': 'b-valid',
+        // 🔵 Azul bajito fluorescente - Validado por Hellen
         'Validado por Hellen': 'b-validated',
+        'Validada': 'b-validated',
+        
+        // 🟢 Verde fluorescente NEON - Generada
+        'Generada': 'b-generated',
         'Emitido': 'b-ok',
         'Emitida': 'b-ok',
         'Despachado': 'b-ok',
@@ -104,17 +106,16 @@ function badgeStatus(s) {
         'Aprobada': 'b-ok',
         'Procesada': 'b-ok',
         
-        // 🔵 Azul fluorescente NEON
+        // 🔵 Azul chillon fluorescente NEON - Aceptada por Cliente
         'Aceptada por Cliente': 'b-accepted',
         'Aceptada': 'b-accepted',
         'Aceptado': 'b-accepted',
         
-        // ⚪ Plomo
+        // ⚪ Plomo - Anulada/Cancelada
         'Anulada': 'b-canceled',
-        
         'Rechazada': 'b-canceled',
         'Cancelado': 'b-canceled',
-       
+        'Cancelar': 'b-canceled',
     };
     return `<span class="badge ${map[s] || 'b-gray'}">${s}</span>`;
 }
@@ -131,6 +132,8 @@ function closeModal(modalId) {
 function empresa() {
     return document.getElementById('empresaActiva')?.value || 'KCF';
 }
+
+
 
 // ============================================================
 // TOAST NOTIFICATIONS
@@ -543,6 +546,7 @@ function setCotizacionView(mode) {
     // Renderizar la tabla con la vista seleccionada
     renderCotizaciones();
 }
+
 function renderCotizaciones() {
     const q = document.getElementById('qSearch')?.value?.toLowerCase() || '';
     const st = document.getElementById('qStatus')?.value || '';
@@ -565,7 +569,7 @@ function renderCotizaciones() {
                 'borrador': ['borrador'],
                 'en revisión': ['en revisión', 'en revision', 'en proceso', 'proceso'],
                 'en proceso': ['en revisión', 'en revision', 'en proceso', 'proceso'],
-                'validada': ['validada', 'validado', 'validado por hellen', 'validada por hellen'],
+                'validado por hellen': ['validado por hellen', 'validada por hellen', 'validada', 'validado'],
                 'generada': ['generada', 'generado'],
                 'aceptada por cliente': ['aceptada por cliente', 'aceptada', 'aceptado', 'aceptado por cliente'],
                 'aceptada': ['aceptada por cliente', 'aceptada', 'aceptado', 'aceptado por cliente'],
@@ -595,6 +599,7 @@ function renderCotizaciones() {
         const total = cotizacionesData.length;
         const borradores = cotizacionesData.filter(x => x.estado === 'Borrador').length;
         const revision = cotizacionesData.filter(x => x.estado === 'En revisión' || x.estado === 'En Proceso').length;
+        const validados = cotizacionesData.filter(x => x.estado === 'Validado por Hellen' || x.estado === 'Validada').length;
         const generadas = cotizacionesData.filter(x => x.estado === 'Generada').length;
         const aceptadas = cotizacionesData.filter(x => x.estado === 'Aceptada por Cliente' || x.estado === 'Aceptada' || x.estado === 'Aceptado').length;
         
@@ -602,6 +607,7 @@ function renderCotizaciones() {
             <div class="status-card"><div class="status-dot dot-total">Σ</div><div><small>Total</small><b>${total}</b></div></div>
             <div class="status-card"><div class="status-dot dot-draft">B</div><div><small>Borradores</small><b>${borradores}</b></div></div>
             <div class="status-card"><div class="status-dot dot-review">R</div><div><small>En revisión</small><b>${revision}</b></div></div>
+            <div class="status-card"><div class="status-dot dot-validated">V</div><div><small>Validados</small><b>${validados}</b></div></div>
             <div class="status-card"><div class="status-dot dot-send">E</div><div><small>Generadas</small><b>${generadas}</b></div></div>
             <div class="status-card"><div class="status-dot dot-ok">A</div><div><small>Aceptadas</small><b>${aceptadas}</b></div></div>
         `;
@@ -733,6 +739,7 @@ function renderCotizaciones() {
         </tr>`;
     }).join('');
 }
+
 
 function renderDespachos() {
     const q = document.getElementById('despachoSearch')?.value?.toLowerCase() || '';
@@ -2638,10 +2645,7 @@ function openCotizacionModal(id = null) {
             <span class="step status-accepted"><span class="num">5</span>Aceptada</span>
         </div>
     `;
-    const modalBody = document.querySelector('#cotizacionModal .modal-body');
-if (modalBody) {
-    modalBody.style.padding = '10px 14px';
-}
+    
     // Cargar datalist de productos
     cargarDatalistProductos();
     
@@ -2760,32 +2764,39 @@ if (c.direccion_entrega) {
         showToast('Error al cargar la cotización: ' + error.message, 'error');
     }
 }
-
 function updateQuoteStatusBar(estado) {
     const steps = document.querySelectorAll('#quoteStatusBar .step');
-    const estados = ['Borrador', 'En revisión', 'Validada', 'Generada', 'Aceptada'];
-    const index = estados.indexOf(estado);
+    // Mapeo de estados con sus índices
+    const estadosMap = {
+        'Borrador': 0,
+        'En revisión': 1,
+        'Validado por Hellen': 2,
+        'Validada': 2,
+        'Generada': 3,
+        'Aceptada por Cliente': 4,
+        'Aceptada': 4
+    };
+    
+    const index = estadosMap[estado] !== undefined ? estadosMap[estado] : -1;
+    const stepLabels = ['Borrador', 'En revisión', 'Validado por Hellen', 'Generada', 'Aceptada'];
     
     steps.forEach((step, i) => {
         // Remover todas las clases de estado
         step.classList.remove('status-draft', 'status-review', 'status-validated', 'status-generated', 'status-accepted', 'inactive');
         
-        if (i <= index) {
-            // Activo
-            if (estado === 'Borrador') step.classList.add('status-draft');
-            else if (estado === 'En revisión') step.classList.add('status-review');
-            else if (estado === 'Validada') step.classList.add('status-validated');
-            else if (estado === 'Generada') step.classList.add('status-generated');
-            else if (estado === 'Aceptada') step.classList.add('status-accepted');
-            // Para otros estados, usar el color correspondiente
-            else if (estado === 'Aceptada por Cliente') step.classList.add('status-accepted');
+        if (i <= index && index >= 0) {
+            // Activo según el estado actual
+            if (i === 0) step.classList.add('status-draft');
+            else if (i === 1) step.classList.add('status-review');
+            else if (i === 2) step.classList.add('status-validated');
+            else if (i === 3) step.classList.add('status-generated');
+            else if (i === 4) step.classList.add('status-accepted');
         } else {
             // Inactivo
             step.classList.add('inactive');
         }
     });
 }
-
 
 function cargarDatalistProductos() {
     const dl = document.getElementById('productMasterList');
@@ -3883,6 +3894,57 @@ function openDevolucionModal(id = null) {
     `;
     
     document.getElementById('devolucionModal').classList.add('show');
+}
+
+
+// ============================================================
+// FUNCIÓN VALIDADO POR HELLEN
+// ============================================================
+
+function validateByHellen() {
+    // Verificar que hay productos en la cotización
+    if (quoteProducts.length === 0) {
+        showToast('⚠️ Agrega al menos un producto a la cotización', 'warning');
+        return;
+    }
+    
+    // Verificar que hay un cliente seleccionado
+    const ruc = document.getElementById('fRuc')?.value?.trim() || '';
+    if (!ruc) {
+        showToast('⚠️ Primero busca un cliente por RUC', 'warning');
+        return;
+    }
+    
+    showConfirmModal(
+        '✅ ¿Validar cotización por Hellen?',
+        'Estás a punto de marcar esta cotización como <b>"Validado por Hellen"</b>.',
+        '⚠️ Esta acción confirma que Hellen ha revisado y validado la cotización.',
+        async function() {
+            // Mostrar loading en el botón
+            const btn = document.querySelector('#cotizacionModal .btn-blue');
+            const originalText = btn?.textContent || '✅ Validado por Hellen';
+            if (btn) {
+                btn.textContent = '⏳ Validando...';
+                btn.disabled = true;
+            }
+            
+            try {
+                await guardarCotizacion('Validado por Hellen');
+                showToast('✅ Cotización validada por Hellen', 'success');
+                closeModal('cotizacionModal');
+                await loadCotizaciones();
+            } catch (error) {
+                console.error('Error validando cotización:', error);
+                showToast('❌ Error al validar: ' + error.message, 'error');
+            } finally {
+                if (btn) {
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                }
+            }
+        },
+        '✅ Sí, validar'
+    );
 }
 
 // ============================================================

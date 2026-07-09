@@ -1945,7 +1945,16 @@
     gap: 12px;
 }
 
-
+/* Stepbar - Validado por Hellen */
+.stepbar-bottom .step.status-validated .num { 
+    background: #4FC3F7 !important; 
+    color: #01579B !important;
+    box-shadow: 0 0 20px rgba(79, 195, 247, 0.6);
+}
+.stepbar-bottom .step.status-validated { 
+    color: #0288D1; 
+    font-weight: 900;
+}
 
 </style>
 {% endblock %}
@@ -1980,13 +1989,13 @@
             </div>
             <div class="clean-actions">
                 <select id="qStatus">
-                    <option value="">Todos los estados</option>
-                    <option value="Borrador">Borrador</option>
-                    <option value="En revisión">En revisión</option>
-                    <option value="Generada">Generada</option>
-                     <option value="Aceptada por Cliente">Aceptada por Cliente</option>
-                   
-                </select>
+            <option value="">Todos los estados</option>
+             <option value="En revisión">En revisión</option>
+            <option value="Validado por Hellen">Validado por Hellen</option>
+              <option value="Generada">Generada</option>
+             <option value="Aceptada por Cliente">Aceptada por Cliente</option>
+             
+            </select>
                 <button class="btn btn-secondary" onclick="exportData('cotizaciones')">📥 Exportar</button>
                 <button class="btn btn-electric-blue btn-create" onclick="openCotizacionModal()">+ Crear Nueva cotización</button>
             </div>
