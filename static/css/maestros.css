@@ -384,15 +384,15 @@
 }
 
 .b-ok {
-  background: #B6FF7A;
-  color: #0B5D1E;
-  border: 1px solid #7CFF3A;
+  background: #00FF41 !important;
+  color: #000000 !important;
+  border-color: #44FF77 !important
 }
 
 .b-warn {
-  background: #FEF3C7;
-  color: #B45309;
-  border: 1px solid #FDE68A;
+  background: #FFDD00 !important;
+  color: #000000 !important;
+  border-color: #FFEE44 !important
 }
 
 .b-block {
