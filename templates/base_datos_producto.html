@@ -1631,22 +1631,22 @@ window.formatearFecha = formatearFecha;
 }
 
 /* ============================================================
-   BORDE ROJO PARA DIFERENCIAR FILAS
+   BORDE ROJO VERTICAL PARA DIFERENCIAR FILAS
    ============================================================ */
 .bd-table tbody tr {
-    border-bottom: 2px solid #ef4444 !important;  /* Rojo intenso */
+    border-left: 4px solid #ef4444 !important;   /* Borde rojo a la izquierda */
+    border-right: 4px solid #ef4444 !important;  /* Borde rojo a la derecha */
     transition: all 0.2s ease;
 }
 
-/* Efecto hover para resaltar aún más */
+/* Efecto hover - borde más intenso */
 .bd-table tbody tr:hover td {
-    background: #fef2f2;  /* Fondo rojo muy suave al pasar el mouse */
-    border-bottom-color: #dc2626 !important;  /* Rojo más oscuro en hover */
+    background: #fef2f2;  /* Fondo rojo suave */
 }
 
-/* Si quieres que el borde sea solo en la parte inferior de cada celda */
-.bd-table tbody td {
-    border-bottom: 2px solid #ef4444 !important;
+.bd-table tbody tr:hover {
+    border-left-color: #dc2626 !important;
+    border-right-color: #dc2626 !important;
 }
 
 /* Responsive */
