@@ -476,9 +476,6 @@ function renderStatusBoard(m) {
 
 
 // ============================================================
-// RENDER TABLE - SOPORTE PARA CLIENTES Y PROVEEDORES
-// ============================================================
-// ============================================================
 // RENDER TABLE - CON BOTÓN ELIMINAR (TACHO DE BASURA)
 // ============================================================
 
@@ -534,13 +531,17 @@ function renderTable(m, list) {
             }
         });
         
-        // ✅ BOTÓN ELIMINAR (TACHO DE BASURA) EN VEZ DE INACTIVAR/ACTIVAR
+        // ✅ BOTÓN TACHO DE BASURA - USA TOGGLE (Activar/Inactivar)
+        const isActive = getEstado(r.activo) === 'Activo';
+        const estadoDisplay = isActive ? 'Desactivar' : 'Activar';
+        const estadoClass = isActive ? 'action-delete' : 'action-activate';
+        
         cells += `
             <td>
                 <div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;">
                     <button class="action-btn action-view" data-view="${m}|${r.id}" title="Ver detalle">👁️</button>
                     <button class="action-btn action-edit" data-edit="${m}|${r.id}" title="Editar">✏️</button>
-                    <button class="action-btn action-delete" data-delete="${m}|${r.id}" title="Eliminar" style="color:#DC2626;font-size:14px;">🗑️</button>
+                    <button class="action-btn ${estadoClass}" data-toggle="${m}|${r.id}" title="${estadoDisplay}" style="color:#DC2626;font-size:14px;">🗑️</button>
                 </div>
             </td>
         `;
@@ -548,7 +549,6 @@ function renderTable(m, list) {
         return `<tr>${cells}</tr>`;
     }).join('');
     
-    // ✅ IMPORTANTE: SIEMPRE devolver la tabla dentro de un div.table-scroll
     return `<div class="table-scroll">
         <table class="master-table">
             <thead><tr>${headersHtml}</tr></thead>
@@ -2382,10 +2382,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
-// ============================================================
-// VISTA COMPLETA - TODOS LOS CAMPOS DEL CLIENTE
-// ============================================================
-
 
 // ============================================================
 // VISTA COMPLETA - TODOS LOS CAMPOS DEL CLIENTE
@@ -2399,9 +2395,7 @@ function renderClientesCompleta(list) {
         </div>`;
     }
     
-    // TODOS LOS CAMPOS de la tabla clientes
     const allFields = [
-        // Datos principales
         { key: 'id', label: 'ID', width: '50px' },
         { key: 'codigo_cliente', label: 'Código / Cliente', width: '100px' },
         { key: 'ambito', label: 'Ámbito', width: '90px' },
@@ -2410,36 +2404,28 @@ function renderClientesCompleta(list) {
         { key: 'razon_social', label: 'Razón Social', width: '180px' },
         { key: 'nombre_comercial', label: 'Nombre Comercial', width: '150px' },
         { key: 'direccion_fiscal', label: 'Dirección Fiscal', width: '200px' },
-        // Condición comercial
         { key: 'condicion_pago', label: 'Condición Pago', width: '100px' },
         { key: 'dias_credito', label: 'Días Crédito', width: '80px' },
         { key: 'limite_credito', label: 'Límite Crédito', width: '100px' },
         { key: 'descuento', label: 'Descuento', width: '80px' },
-        // Contacto principal
         { key: 'nombre_contacto', label: 'Contacto', width: '130px' },
         { key: 'telefono_contacto', label: 'Teléfono', width: '110px' },
         { key: 'email_contacto', label: 'Email', width: '160px' },
-        // Contactos (se mostrarán como lista)
         { key: 'contactos', label: 'Contactos', width: '200px' },
-        // Puntos de entrega
         { key: 'puntos_entrega', label: 'Puntos de Entrega', width: '220px' },
-        // Estado
         { key: 'estado', label: 'Estado', width: '90px' },
         { key: 'activo', label: 'Activo', width: '70px' },
-        // Auditoría
         { key: 'observaciones', label: 'Observaciones', width: '150px' },
         { key: 'created_at', label: 'Creado', width: '110px' },
         { key: 'updated_at', label: 'Actualizado', width: '110px' }
     ];
     
-    // Construir headers
     let headersHtml = '<th style="width:40px;">Item</th>';
     allFields.forEach(f => {
         headersHtml += `<th style="width:${f.width || 'auto'};">${f.label}</th>`;
     });
     headersHtml += '<th style="width:100px;">Acciones</th>';
     
-    // Construir filas
     const rows = list.map((r, i) => {
         let cells = `<td><b>${i + 1}</b></td>`;
         allFields.forEach(f => {
@@ -2459,7 +2445,6 @@ function renderClientesCompleta(list) {
             } else if (f.key === 'ambito') {
                 value = bAmbito(value);
             } else if (f.key === 'contactos') {
-                // Mostrar contactos como lista
                 if (r.contactos && r.contactos.length > 0) {
                     value = r.contactos.map(c => 
                         `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;">
@@ -2473,7 +2458,6 @@ function renderClientesCompleta(list) {
                     value = '-';
                 }
             } else if (f.key === 'puntos_entrega') {
-                // Mostrar puntos de entrega como lista
                 if (r.puntos_entrega && r.puntos_entrega.length > 0) {
                     value = r.puntos_entrega.map(p => 
                         `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;">
@@ -2501,13 +2485,17 @@ function renderClientesCompleta(list) {
             cells += `<td>${value}</td>`;
         });
         
-        // ✅ BOTÓN ELIMINAR (TACHO DE BASURA)
+        // ✅ BOTÓN TACHO DE BASURA - USA TOGGLE
+        const isActive = r.estado === 'Activo' || r.estado === 'activo' || r.activo === true;
+        const estadoDisplay = isActive ? 'Desactivar' : 'Activar';
+        const estadoClass = isActive ? 'action-delete' : 'action-activate';
+        
         cells += `
             <td>
                 <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">
                     <button class="action-btn action-view" data-view="clientes|${r.id}" title="Ver">👁️</button>
                     <button class="action-btn action-edit" data-edit="clientes|${r.id}" title="Editar">✏️</button>
-                    <button class="action-btn action-delete" data-delete="clientes|${r.id}" title="Eliminar" style="color:#DC2626;font-size:14px;">🗑️</button>
+                    <button class="action-btn ${estadoClass}" data-toggle="clientes|${r.id}" title="${estadoDisplay}" style="color:#DC2626;font-size:14px;">🗑️</button>
                 </div>
             </td>
         `;
@@ -2525,7 +2513,6 @@ function renderClientesCompleta(list) {
         </table>
     </div>`;
 }
-
 
 
 // ============================================================
@@ -2621,13 +2608,17 @@ function renderProveedoresCompleta(list) {
             cells += `<td>${value}</td>`;
         });
         
-        // ✅ BOTÓN ELIMINAR (TACHO DE BASURA)
+        // ✅ BOTÓN TACHO DE BASURA - USA TOGGLE
+        const isActive = r.estado === 'Activo' || r.estado === 'activo' || r.activo === true;
+        const estadoDisplay = isActive ? 'Desactivar' : 'Activar';
+        const estadoClass = isActive ? 'action-delete' : 'action-activate';
+        
         cells += `
             <td>
                 <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">
                     <button class="action-btn action-view" data-view="proveedores|${r.id}" title="Ver">👁️</button>
                     <button class="action-btn action-edit" data-edit="proveedores|${r.id}" title="Editar">✏️</button>
-                    <button class="action-btn action-delete" data-delete="proveedores|${r.id}" title="Eliminar" style="color:#DC2626;font-size:14px;">🗑️</button>
+                    <button class="action-btn ${estadoClass}" data-toggle="proveedores|${r.id}" title="${estadoDisplay}" style="color:#DC2626;font-size:14px;">🗑️</button>
                 </div>
             </td>
         `;
