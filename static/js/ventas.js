@@ -2466,7 +2466,7 @@ function openCotizacionModal(id = null) {
                     <tr>
                         <th>Item</th><th>Código</th><th>Producto / Descripción</th><th>Modelo</th><th>Marca</th>
                         <th>Unidad</th><th>Cant</th><th>Valor venta<br><small>Unitario S/.</small></th>
-                        <th>Valor total<br><small>Tabla S/.</small></th><th>Stock</th><th>Entrega</th><th>Acciones</th>
+                        <th>Monto total<br><small>Incluido IGV S/.</small></th><th>Stock</th><th>Entrega</th><th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="quoteProductRows"></tbody>
@@ -2745,7 +2745,7 @@ function renderQuoteProducts() {
             </td>
             <td class="col-qty"><input style="width:70px;text-align:right" value="${p.cantidad || 1}" type="number" min="1" onchange="quoteProducts[${i}].cantidad=Number(this.value);calcQuote();"></td>
             <td class="col-price"><input style="width:90px;text-align:right" value="${p.valorVenta || 0}" type="number" step="0.01" onchange="quoteProducts[${i}].valorVenta=Number(this.value);calcQuote();"></td>
-            <td class="col-total"><b>${money((p.cantidad || 1) * (p.valorVenta || 0))}</b></td>
+            <td class="col-total"><b>${money(((p.cantidad || 1) * (p.valorVenta || 0)) * 1.18)}</b></td>
             <td class="col-stock">${p.stock || 0}</td>
             <td class="col-delivery">${p.entrega === 'Inmediata' ? '<span class="badge b-ok">Inmediata</span>' : '<span class="badge b-draft">' + (p.entrega || 'Por confirmar') + '</span>'}</td>
             <td class="col-actions">
@@ -4293,7 +4293,7 @@ function showCotizacionMenu(event, id) {
         <button class="menu-edit" onclick="openCotizacionModal(${id});this.closest('.menu-pop').remove()">👁 Ver / Editar</button>
         <button class="menu-duplicate" onclick="duplicateCotizacion(${id});this.closest('.menu-pop').remove()">⧉ Duplicar</button>
         <button class="menu-email" onclick="sendCotizacionEmail(${id});this.closest('.menu-pop').remove()">✉ Email</button>
-        <button class="menu-pdf" onclick="generateCotizacionPdf(${id});this.closest('.menu-pop').remove()">▣ PDF</button>
+        <button class="menu-pdf" onclick="generateCotizacionPdf(${id});this.closest('.menu-pop').remove()">📄 Descargar PDF</button>
         <div class="menu-divider"></div>
     `;
     
