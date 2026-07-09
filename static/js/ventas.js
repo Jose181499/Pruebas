@@ -31,7 +31,7 @@ const SUNAT_UNIDADES = [
     {codigo:'DZN',nombre:'Docena'}
 ];
 
-const ESTADOS_COTIZACION = ['Borrador', 'En Proceso', 'Generada', 'Aceptada por Cliente', 'No concretada', 'Anulada'];
+const ESTADOS_COTIZACION = ['Borrador', 'En Proceso', 'Generada', 'Aceptada por Cliente', 'Anulada'];
 const ESTADOS_PC = ['Pendiente', 'Recibido por correo', 'En revisión interna', 'Validado por Hellen', 'Listo para despacho', 'Anulado'];
 const ESTADOS_DESPACHO = ['Pendiente despacho', 'En preparación', 'Despachado', 'Entregado'];
 const ESTADOS_GUIA = ['Borrador', 'Pendiente despacho', 'Emitida', 'Entregada', 'Anulada'];
@@ -111,10 +111,10 @@ function badgeStatus(s) {
         
         // ⚪ Plomo
         'Anulada': 'b-canceled',
-        'No concretada': 'b-canceled',
+        
         'Rechazada': 'b-canceled',
         'Cancelado': 'b-canceled',
-        'No concretada': 'b-lost',
+       
     };
     return `<span class="badge ${map[s] || 'b-gray'}">${s}</span>`;
 }
@@ -1469,10 +1469,10 @@ async function marcarCotizacionNotClosed(id) {
     try {
         const response = await apiFetch(`/ventas/api/cotizaciones/${id}/toggle`, {
             method: 'PUT',
-            body: JSON.stringify({ estado: 'No concretada' })
+            
         });
         if (response.success) {
-            showToast('Cotización marcada como no concretada', 'success');
+            
             await loadCotizaciones();
         } else {
             showToast('Error: ' + (response.error || 'No se pudo actualizar'), 'error');
@@ -2719,7 +2719,7 @@ if (c.direccion_entrega) {
                 'Validada': '✅',
                 'Generada': '📄',
                 'Aceptada': '🎯',
-                'No concretada': '❌'
+                
             };
             title.textContent = `Editar cotización ${c.numero_cotizacion || ''} ${estadoEmoji[c.estado] || ''} (${c.estado})`;
         }
