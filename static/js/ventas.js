@@ -2578,7 +2578,7 @@ function openCotizacionModal(id = null) {
                     <div class="side-row value-sale-row"><b>Valor venta</b><span id="sumValue">S/ 0.00</span></div>
                     <div class="side-row"><b>IGV 18%</b><span id="sumIgv">S/ 0.00</span></div>
                     <div class="summary-sep"></div>
-                    <div class="total-row"><b>TOTAL</b><span class="summary-total" id="sumTotal">S/ 0.00</span></div>
+                    <div class="total-row"><b>TOTAL A PAGAR </b><span class="summary-total" id="sumTotal">S/ 0.00</span></div>
                 </div>
             </div>
 
