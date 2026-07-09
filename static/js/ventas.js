@@ -570,7 +570,7 @@ function renderCotizaciones() {
                 <th>Cód. Cliente</th>
                 <th>Razón social</th>
                 <th>Descripción principal</th>
-                <th>Monto total</th>
+                <th>Monto total<br><small>(Incluido IGV)</small></th>
                 <th>Cond. pago</th>
                 <th>Acciones</th>
             </tr>
@@ -594,7 +594,7 @@ function renderCotizaciones() {
                 <td><span class="code-pill">${sd(r.cod_cliente)}</span></td>
                 <td class="left"><b>${sd(r.razon)}</b></td>
                 <td class="left">${sd(r.descripcion || r.nota_cotizacion || 'Sin descripción')}</td>
-                <td><b>${money(r.monto || r.total || 0)}</b></td>
+                <td><b>${money(r.total || r.monto || 0)}</b></td>
                 <td>${sd(r.condicion || r.condicion_pago || r.forma_pago)}</td>
                 <td>
                     <button class="kebab" onclick="showCotizacionMenu(event, ${r.id})">⋮</button>
