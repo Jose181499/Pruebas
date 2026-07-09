@@ -98,7 +98,7 @@
                 <tr>
                     <!-- COLUMNAS SIEMPRE VISIBLES (PRINCIPAL) -->
                     <th class="bd-col-item">Ítem</th>
-                    <th class="bd-col-code">Código</th>
+                    <th class="bd-col-code">Código / Producto</th>
                     <th class="bd-col-date">Fecha / Hora</th>  <!-- NUEVA COLUMNA -->
                     <th class="bd-col-desc">Descripción</th>
                     <th class="bd-col-model">Modelo</th>
@@ -1628,6 +1628,25 @@ window.formatearFecha = formatearFecha;
     background: #0044CC;
     transform: translateY(-1px);
     box-shadow: 0 4px 16px rgba(0, 102, 255, 0.35);
+}
+
+/* ============================================================
+   BORDE ROJO PARA DIFERENCIAR FILAS
+   ============================================================ */
+.bd-table tbody tr {
+    border-bottom: 2px solid #ef4444 !important;  /* Rojo intenso */
+    transition: all 0.2s ease;
+}
+
+/* Efecto hover para resaltar aún más */
+.bd-table tbody tr:hover td {
+    background: #fef2f2;  /* Fondo rojo muy suave al pasar el mouse */
+    border-bottom-color: #dc2626 !important;  /* Rojo más oscuro en hover */
+}
+
+/* Si quieres que el borde sea solo en la parte inferior de cada celda */
+.bd-table tbody td {
+    border-bottom: 2px solid #ef4444 !important;
 }
 
 /* Responsive */
