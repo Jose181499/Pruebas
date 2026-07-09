@@ -2638,7 +2638,10 @@ function openCotizacionModal(id = null) {
             <span class="step status-accepted"><span class="num">5</span>Aceptada</span>
         </div>
     `;
-    
+    const modalBody = document.querySelector('#cotizacionModal .modal-body');
+if (modalBody) {
+    modalBody.style.padding = '10px 14px';
+}
     // Cargar datalist de productos
     cargarDatalistProductos();
     

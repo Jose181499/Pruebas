@@ -1945,6 +1945,48 @@
     gap: 12px;
 }
 
+
+/* En el bloque <style> de index.html */
+#cotizacionModal .modal-body {
+    padding: 10px 14px !important;
+}
+
+#cotizacionModal .create-panel .body {
+    padding: 6px 10px !important;
+}
+
+#cotizacionModal .create-panel h3 {
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+}
+
+#cotizacionModal .stepbar-bottom {
+    margin-top: 6px !important;
+    padding: 4px 12px !important;
+    min-height: 28px !important;
+}
+
+#cotizacionModal .product-wide .table-scroll {
+    max-height: 200px !important;
+}
+
+#cotizacionModal .compact-bottom .form-grid {
+    gap: 4px !important;
+}
+
+#cotizacionModal .compact-bottom .form-field select,
+#cotizacionModal .compact-bottom .form-field input {
+    height: 20px !important;
+    min-height: 20px !important;
+    font-size: 10px !important;
+}
+
+#cotizacionModal .compact-bottom .internal-note-box textarea {
+    height: 20px !important;
+    min-height: 20px !important;
+    max-height: 20px !important;
+}
+
 </style>
 {% endblock %}
 
@@ -2301,6 +2343,7 @@
 </div>
 <!-- MODAL SELECCIÓN MÚLTIPLE DE PRODUCTOS -->
 <div class="modal-bg" id="productSelectorModal">
+    <div class="modal-bg" id="productSelectorModal" style="z-index: 999999;"></div>
     <div class="modal-box" style="width:min(900px,96vw); max-height:85vh;">
         <div class="modal-head">
             <div class="modal-title">📋 Seleccionar productos</div>
