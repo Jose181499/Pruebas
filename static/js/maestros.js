@@ -2497,7 +2497,7 @@ function renderClientesCompleta(list) {
                 <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">
                     <button class="action-btn action-view" data-view="clientes|${r.id}" title="Ver">👁️</button>
                     <button class="action-btn action-edit" data-edit="clientes|${r.id}" title="Editar">✏️</button>
-                    <button class="action-btn ${estadoClass}" action-delete="clientes|${r.id}" title="${estadoDisplay}" style="color:#DC2626;font-size:14px;">🗑️</button>
+                    <button class="action-btn ${estadoClass}" data-delete="clientes|${r.id}" title="${estadoDisplay}" style="color:#DC2626;font-size:14px;">🗑️</button>
                 </div>
             </td>
         `;
@@ -2620,7 +2620,7 @@ function renderProveedoresCompleta(list) {
                 <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">
                     <button class="action-btn action-view" data-view="proveedores|${r.id}" title="Ver">👁️</button>
                     <button class="action-btn action-edit" data-edit="proveedores|${r.id}" title="Editar">✏️</button>
-                    <button class="action-btn ${estadoClass}" action-delete="proveedores|${r.id}" title="${estadoDisplay}" style="color:#DC2626;font-size:14px;">🗑️</button>
+                    <button class="action-btn ${estadoClass}" data-delete="proveedores|${r.id}" title="${estadoDisplay}" style="color:#DC2626;font-size:14px;">🗑️</button>
                 </div>
             </td>
         `;

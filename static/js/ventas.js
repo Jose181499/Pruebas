@@ -2649,20 +2649,53 @@ function openCotizacionModal(id = null) {
                 </div>
             </div>
             
-            <!-- Punto 5: Información adicional -->
-            <div class="create-panel product-wide compact-bottom">
-                <h3><span class="section-number">5.</span> <span class="section-title-colored">Información adicional</span></h3>
-                <div class="body">
-                    <div class="form-grid">
-                        <div class="form-field"><label>Seguimiento</label><select id="fSeguimiento"><option>Asesor</option><option>Helen Blas Príncipe</option><option>Edith</option></select></div>
-                        <div class="form-field"><label>Motivo</label><select id="fMotivo"><option>Proyecto nuevo</option><option>Recompra</option><option>Licitación</option><option>Reposición / stock</option><option>Solicitud única</option></select></div>
-                        <div class="form-field"><label>Transporte</label><select id="fTransporte"><option>Seleccione</option><option>Motorizado</option><option>Auto</option><option>Minivan</option><option>Camioneta</option><option>Camión</option><option>Agencia</option></select></div>
-                        <div class="form-field"><label>Parihuela</label><select id="fParihuela"><option>Seleccione</option><option>No</option><option>Sí - estándar</option><option>Sí - a medida</option><option>Por confirmar</option></select></div>
-                        <div class="form-field internal-note-box"><label>Nota interna</label><textarea id="fNotaInterna" placeholder="Interno: cliente, productos o coordinación"></textarea></div>
-                    </div>
-                </div>
+           <!-- Punto 5: Información adicional -->
+<div class="create-panel product-wide compact-bottom">
+    <h3><span class="section-number">5.</span> <span class="section-title-colored">Información adicional</span></h3>
+    <div class="body">
+        <div class="form-grid">
+            <div class="form-field"><label>Seguimiento</label>
+                <select id="fSeguimiento">
+                    <option>Asesor</option>
+                    <option selected>Helen Blas Príncipe</option>
+                    <option>Edith</option>
+                </select>
+            </div>
+            <div class="form-field"><label>Motivo</label>
+                <select id="fMotivo">
+                    <option>Proyecto nuevo</option>
+                    <option>Recompra</option>
+                    <option>Licitación</option>
+                    <option>Reposición / stock</option>
+                    <option selected>Solicitud única</option>
+                </select>
+            </div>
+            <div class="form-field"><label>Transporte</label>
+                <select id="fTransporte">
+                    <option>Seleccione</option>
+                    <option>Motorizado</option>
+                    <option>Auto</option>
+                    <option>Minivan</option>
+                    <option>Camioneta</option>
+                    <option>Camión</option>
+                    <option>Agencia</option>
+                </select>
+            </div>
+            <div class="form-field"><label>Parihuela</label>
+                <select id="fParihuela">
+                    <option>Seleccione</option>
+                    <option>No</option>
+                    <option>Sí - estándar</option>
+                    <option>Sí - a medida</option>
+                    <option>Por confirmar</option>
+                </select>
+            </div>
+            <div class="form-field internal-note-box"><label>Nota interna</label>
+                <textarea id="fNotaInterna" placeholder="Interno: cliente, productos o coordinación"></textarea>
             </div>
         </div>
+    </div>
+</div>
 
         <!-- ⬇️ BARRA DE ESTADO (STEPBAR) - AHORA AL FINAL ⬇️ -->
         <div class="stepbar-bottom" id="quoteStatusBar">
