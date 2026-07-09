@@ -368,8 +368,22 @@ function bdRenderProductos(data) {
         html += '<td class="bd-col-model">' + (p.modelo || '-') + '</td>';
         html += '<td class="bd-col-brand">' + (p.marca || '-') + '</td>';
         html += '<td class="bd-col-cat">' + categoria + '</td>';
-       
-        var estadoMostrado = p.estado ? p.estado.charAt(0).toUpperCase() + p.estado.slice(1).toLowerCase() : 'Activo';
+       // Capitalizar estado - versión mejorada
+var estadoMostrado = 'Activo';
+if (p.estado) {
+    var estadoLower = p.estado.toLowerCase();
+    // Mapeo de estados comunes
+    var estadoMap = {
+        'activo': 'Activo',
+        
+        'bajo_pedido': 'Bajo pedido',
+        
+        'bloqueado': 'Bloqueado'
+    };
+    estadoMostrado = estadoMap[estadoLower] || p.estado.charAt(0).toUpperCase() + p.estado.slice(1).toLowerCase();
+}
+        
+
         html += '<td class="bd-col-status"><span class="bd-status ' + estadoClass + '"><span class="bd-dot"></span>' + estadoMostrado + '</span></td>';
         html += '<td class="bd-col-actions"><div class="row-actions">';
         html += '<button class="btn-action btn-view" onclick="verProducto(' + p.id + ')" title="Ver"><i class="bi bi-eye"></i></button>';
