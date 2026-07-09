@@ -2381,7 +2381,7 @@ function renderClientesCompleta(list) {
     const allFields = [
         // Datos principales
         { key: 'id', label: 'ID', width: '50px' },
-        { key: 'codigo_cliente', label: 'Código', width: '100px' },
+        { key: 'codigo_cliente', label: 'Código / Cliente', width: '100px' },
         { key: 'ambito', label: 'Ámbito', width: '90px' },
         { key: 'tipo_documento', label: 'Tipo Doc.', width: '80px' },
         { key: 'numero_documento', label: 'N° Documento', width: '120px' },
@@ -2525,7 +2525,7 @@ function renderProveedoresCompleta(list) {
     
     const allFields = [
         { key: 'id', label: 'ID', width: '50px' },
-        { key: 'codigo_proveedor', label: 'Código', width: '100px' },
+        { key: 'codigo_proveedor', label: 'Código / Proveedor', width: '100px' },
         { key: 'ambito', label: 'Ámbito', width: '90px' },
         { key: 'ruc', label: 'RUC', width: '120px' },
         { key: 'razon_social', label: 'Razón Social', width: '180px' },
