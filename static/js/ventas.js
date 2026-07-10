@@ -4624,6 +4624,176 @@ function clearDateFilter() {
     showToast('🧹 Filtros de fecha limpiados', 'info');
 }
 
+
+
+// ============================================================
+// FUNCIONES SAP PARA MODAL DE PC
+// ============================================================
+
+function openPedidoCompraModalSAP(mode = 'cot') {
+    modalMode = mode;
+    editingId = null;
+    
+    const modal = document.getElementById('pedidoCompraModal');
+    const title = document.getElementById('pedidoCompraModalTitle');
+    const sub = document.getElementById('modalSub');
+    const note = document.getElementById('modeNote');
+    const cotBlock = document.getElementById('cotBlock');
+    const origen = document.getElementById('docOrigen');
+    
+    if (mode === 'cot') {
+        title.textContent = 'Crear PC desde cotización';
+        sub.textContent = 'Recomendado: jalar la cotización, crear PC espejo y validar contra el documento real del cliente.';
+        note.className = 'mini-note';
+        note.textContent = '✅ Recomendado: jalar la cotización, crear PC espejo y validar contra el documento real del cliente.';
+        cotBlock.style.display = 'block';
+        origen.textContent = 'Cotización';
+    } else {
+        title.textContent = 'PC directo / sin cotización';
+        sub.textContent = 'PC directo: requiere validación comercial. No comprar bajo pedido hasta quedar conforme.';
+        note.className = 'danger-note';
+        note.textContent = '⚠️ PC directo: requiere validación comercial. No comprar bajo pedido hasta quedar conforme.';
+        cotBlock.style.display = 'none';
+        origen.textContent = 'Directo';
+    }
+    
+    // Cargar cotizaciones en el select
+    const select = document.getElementById('pcCotSelect');
+    if (select && cotizacionesData) {
+        select.innerHTML = '<option value="">Seleccione una cotización</option>' + 
+            cotizacionesData.map(c => `<option value="${c.id}">${c.numero} · ${c.razon || 'Sin cliente'}</option>`).join('');
+    }
+    
+    // Limpiar y preparar el modal
+    clearPedidoModalSAP();
+    
+    // Mostrar modal
+    modal.classList.add('show');
+}
+
+function clearPedidoModalSAP() {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('pcFecha').value = now.toISOString().slice(0, 16);
+    document.getElementById('pcNumero').value = 'PC-' + new Date().toISOString().slice(0, 10).replaceAll('-', '') + '-' + String(Date.now()).slice(-4);
+    
+    ['pcCotNumero', 'pcCotFecha', 'pcCliente', 'pcRuc', 'pcContacto', 'pcEntrega', 'pcObs'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    document.getElementById('pcMonto').value = '0';
+    
+    const tbody = document.getElementById('pcItemsBody');
+    if (tbody) tbody.innerHTML = '';
+    addPedidoItemSAP();
+}
+
+function loadPedidoCotizacionSAP() {
+    const select = document.getElementById('pcCotSelect');
+    const cotId = select ? parseInt(select.value) : null;
+    if (!cotId) return;
+    
+    const cotizacion = cotizacionesData.find(c => c.id === cotId);
+    if (!cotizacion) return;
+    
+    document.getElementById('pcCotNumero').value = cotizacion.numero || '';
+    document.getElementById('pcCotFecha').value = cotizacion.fecha || '';
+    document.getElementById('pcCliente').value = cotizacion.razon || '';
+    document.getElementById('pcRuc').value = cotizacion.ruc || '';
+    document.getElementById('pcMonto').value = cotizacion.total || cotizacion.monto || 0;
+    
+    // Cargar productos
+    const productos = cotizacion.productos || [];
+    const tbody = document.getElementById('pcItemsBody');
+    if (tbody) {
+        tbody.innerHTML = '';
+        productos.forEach((p, i) => {
+            const faltante = Math.max((p.cantidad || 0) - (p.stock || 0), 0);
+            tbody.insertAdjacentHTML('beforeend', `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td><input value="${p.codigo || ''}" style="width:90px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px;"></td>
+                    <td><input value="${p.producto || p.descripcion || ''}" style="width:160px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px;"></td>
+                    <td><input type="number" value="${p.cantidad || 0}" style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;"></td>
+                    <td><input type="number" value="${p.cantidad || 1}" style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;"></td>
+                    <td><input type="number" step="0.01" value="${p.valorVenta || 0}" style="width:80px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:right;"></td>
+                    <td><input type="number" step="0.01" value="${p.valorVenta || 0}" style="width:80px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:right;"></td>
+                    <td><input type="number" value="${p.stock || 0}" style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;"></td>
+                    <td style="font-weight:900; color:#DC2626;">${faltante}</td>
+                </tr>
+            `);
+        });
+        if (productos.length === 0) addPedidoItemSAP();
+    }
+}
+
+function addPedidoItemSAP() {
+    const tbody = document.getElementById('pcItemsBody');
+    if (!tbody) return;
+    const idx = tbody.children.length + 1;
+    tbody.insertAdjacentHTML('beforeend', `
+        <tr>
+            <td>${idx}</td>
+            <td><input value="" style="width:90px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px;"></td>
+            <td><input value="" style="width:160px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px;"></td>
+            <td><input type="number" value="0" style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;"></td>
+            <td><input type="number" value="1" style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;"></td>
+            <td><input type="number" step="0.01" value="0" style="width:80px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:right;"></td>
+            <td><input type="number" step="0.01" value="0" style="width:80px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:right;"></td>
+            <td><input type="number" value="0" style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;"></td>
+            <td style="font-weight:900; color:#64748B;">0</td>
+        </tr>
+    `);
+}
+
+function savePedidoCompraSAP(force) {
+    const val = ['vPrecio', 'vCantidad', 'vProducto', 'vEntrega', 'vMoneda', 'vTransporte', 'vVigencia', 'vMargen']
+        .map(id => document.getElementById(id)?.value || 'Sí');
+    
+    const observed = force === 'observado' || val.some(v => v === 'No');
+    
+    const trs = document.querySelectorAll('#pcItemsBody tr');
+    const items = Array.from(trs).map(r => {
+        const inputs = r.querySelectorAll('input');
+        return [
+            inputs[0]?.value || '',
+            inputs[1]?.value || '',
+            Number(inputs[2]?.value || 0),
+            Number(inputs[3]?.value || 1),
+            Number(inputs[4]?.value || 0),
+            Number(inputs[6]?.value || 0),
+            Number(inputs[7]?.value || 0)
+        ];
+    });
+    
+    const stockFalta = items.some(i => Number(i[3]) > Number(i[6]));
+    const estado = observed ? 'PC observado' : (stockFalta ? 'PC conforme' : 'Listo para despacho');
+    
+    const pcData = {
+        id: Date.now(),
+        fecha: document.getElementById('pcFecha')?.value?.replace('T', ' ') || new Date().toISOString(),
+        medio: document.getElementById('pcMedio')?.value || 'Correo',
+        estado: estado,
+        numero: document.getElementById('pcNumero')?.value || 'PC-' + Date.now(),
+        cliente: document.getElementById('pcCliente')?.value || '',
+        ruc: document.getElementById('pcRuc')?.value || '',
+        cotizacion_numero: document.getElementById('pcCotNumero')?.value || 'SIN COTIZACIÓN',
+        monto: Number(document.getElementById('pcMonto')?.value || 0),
+        entrega: document.getElementById('pcEntrega')?.value || '',
+        reqCompra: observed ? 'Bloqueado' : (stockFalta ? 'Sí' : 'No'),
+        validacion: val,
+        items: items
+    };
+    
+    // Guardar en el array global
+    if (typeof pedidosData !== 'undefined') {
+        pedidosData.unshift(pcData);
+    }
+    
+    closeModal('pedidoCompraModal');
+    showToast(`✅ PC guardado como: ${estado}`, observed ? 'warning' : 'success');
+    loadPedidos();
+}
 // ============================================================
 // MODAL DE CONFIRMACIÓN UNIVERSAL (MEJORADO)
 // ============================================================
