@@ -409,7 +409,6 @@ window.initVentas = async function(tab) {
 };
 
 
-
 async function loadPedidos() {
     console.log('🔄 Cargando pedidos...');
     try {
@@ -417,19 +416,30 @@ async function loadPedidos() {
         if (data.success) {
             pedidosData = data.data || [];
             console.log(`✅ ${pedidosData.length} pedidos cargados`);
-            // Mostrar los primeros 2 para debug
+            
+            // Debug: mostrar los datos
             if (pedidosData.length > 0) {
                 console.log('📋 Primer pedido:', pedidosData[0]);
+                console.log('📋 Fecha del primer pedido:', pedidosData[0].fecha);
             }
-            renderPedidos(); // 🔽 Asegurar que se llame a render
+            
+            renderPedidos();
         } else {
             showToast('Error al cargar pedidos', 'error');
         }
     } catch (error) {
-        console.error('Error cargando pedidos:', error);
-        showToast('Error al cargar pedidos', 'error');
+        console.error('❌ Error cargando pedidos:', error);
+        showToast('Error al cargar pedidos: ' + error.message, 'error');
+        // Mostrar mensaje de error en la tabla
+        const tbody = document.getElementById('pcRows');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;color:#DC2626;padding:40px;">
+                ❌ Error al cargar los pedidos: ${error.message}
+            </td></tr>`;
+        }
     }
 }
+
 
 async function loadDespachos() {
     console.log('🔄 Cargando despachos...');
@@ -520,13 +530,23 @@ async function loadDevoluciones() {
 // FUNCIONES DE RENDERIZADO
 // ============================================================
 
-
-
 function renderPedidos() {
     const q = document.getElementById('pcSearch')?.value?.toLowerCase() || '';
     const st = document.getElementById('pcStatus')?.value || '';
     
-    console.log(`📊 Renderizando pedidos: ${pedidosData.length} registros, filtro: "${q}"`);
+    console.log(`📊 Renderizando pedidos: ${pedidosData?.length || 0} registros`);
+    
+    // Si no hay datos, mostrar mensaje
+    if (!pedidosData || pedidosData.length === 0) {
+        const tbody = document.getElementById('pcRows');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;color:#94A3B8;padding:40px;">
+                📭 No hay PC del cliente registrados. 
+                <br><small>Crea un PC desde cotización o directo.</small>
+            </td></tr>`;
+        }
+        return;
+    }
     
     const list = pedidosData.filter(r => {
         const searchStr = `${r.numero || ''} ${r.cliente || ''} ${r.ruc || ''} ${r.cotizacion_numero || ''}`.toLowerCase();
@@ -534,8 +554,6 @@ function renderPedidos() {
         const matchStatus = !st || r.estado === st;
         return matchText && matchStatus;
     });
-    
-    console.log(`📊 Resultados filtrados: ${list.length}`);
     
     const tbody = document.getElementById('pcRows');
     if (!tbody) {
@@ -545,8 +563,8 @@ function renderPedidos() {
     
     if (list.length === 0) {
         tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;color:#94A3B8;padding:40px;">
-            📭 No hay PC del cliente registrados. 
-            ${pedidosData.length > 0 ? `(${pedidosData.length} registros cargados pero no coinciden con el filtro)` : 'Crea un PC desde cotización o directo.'}
+            📭 No hay PC del cliente que coincidan con los filtros.
+            ${pedidosData.length > 0 ? `(${pedidosData.length} registros cargados)` : ''}
         </td></tr>`;
         return;
     }
@@ -554,7 +572,7 @@ function renderPedidos() {
     tbody.innerHTML = list.map((r, i) => `
         <tr>
             <td>${i + 1}</td>
-            <td class="date-cell">${r.fecha || r.created_at || '-'}</td>
+            <td class="date-cell">${formatearFecha(r.fecha || r.created_at)}</td>
             <td>${r.medio || r.correo_origen || '-'}</td>
             <td>${badgeStatus(r.estado)}</td>
             <td><b>${r.numero || '-'}</b></td>
@@ -562,7 +580,7 @@ function renderPedidos() {
             <td>${r.cotizacion_numero || '-'}</td>
             <td><b>${money(r.monto)}</b></td>
             <td>${r.entrega || r.lugar_entrega || '-'}</td>
-            <td>${r.reqCompra || (r.estado === 'PC observado' ? 'Bloqueado' : 'Sí')}</td>
+            <td>${r.req_compra || (r.estado === 'PC observado' ? 'Bloqueado' : 'Sí')}</td>
             <td>${r.guia || '-'}</td>
             <td>${r.factura || '-'}</td>
             <td>
@@ -570,7 +588,15 @@ function renderPedidos() {
             </td>
         </tr>
     `).join('');
+    
+    // Actualizar contador
+    const countEl = document.getElementById('pcCount');
+    if (countEl) {
+        countEl.textContent = `Mostrando ${list.length} de ${pedidosData.length} pedidos`;
+    }
 }
+
+
 // ============================================================
 // VISTAS DE COTIZACIONES - PRINCIPAL / COMPLETA
 // ============================================================
