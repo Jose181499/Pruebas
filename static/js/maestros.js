@@ -20,9 +20,9 @@ const MODULE_CONFIG = {
             { key: 'nombre_contacto', label: 'Contacto', type: 'text' },
             { key: 'telefono_contacto', label: 'Teléfono', type: 'text' },
             { key: 'email_contacto', label: 'Email', type: 'text' },
-            { key: 'activo', label: 'Estado', type: 'boolean' }
+            { key: 'estado', label: 'Estado', type: 'text' } // 🔧 CAMBIO: antes era { key: 'activo', label: 'Estado', type: 'boolean' }
         ],
-        displayFields: ['codigo_cliente', 'razon_social', 'numero_documento', 'nombre_comercial', 'nombre_contacto', 'telefono_contacto', 'email_contacto', 'activo'],
+        displayFields: ['codigo_cliente', 'razon_social', 'numero_documento', 'nombre_comercial', 'nombre_contacto', 'telefono_contacto', 'email_contacto', 'estado'], // 🔧 CAMBIO: antes era 'activo'
         headers: ['Código / Clientes ', 'Razón Social', 'RUC/DNI', 'Nombre Comercial', 'Contacto', 'Teléfono', 'Email', 'Estado'],
         idField: 'id',
         codeField: 'codigo_cliente',
@@ -40,9 +40,9 @@ const MODULE_CONFIG = {
             { key: 'contacto', label: 'Contacto', type: 'text' },
             { key: 'telefono', label: 'Teléfono', type: 'text' },
             { key: 'email', label: 'Email', type: 'text' },
-            { key: 'activo', label: 'Estado', type: 'boolean' }
+            { key: 'estado', label: 'Estado', type: 'text' } // 🔧 CAMBIO: antes era { key: 'activo', label: 'Estado', type: 'boolean' }
         ],
-        displayFields: ['codigo_proveedor', 'razon_social', 'ruc', 'razon_comercial', 'contacto', 'telefono', 'email', 'activo'],
+        displayFields: ['codigo_proveedor', 'razon_social', 'ruc', 'razon_comercial', 'contacto', 'telefono', 'email', 'estado'], // 🔧 CAMBIO: antes era 'activo'
         headers: ['Código / Proveedores ', 'Razón Social', 'RUC', 'Razón Comercial', 'Contacto', 'Teléfono', 'Email', 'Estado'],
         idField: 'id',
         codeField: 'codigo_proveedor',
@@ -519,7 +519,7 @@ function renderTable(m, list) {
         let cells = `<td><b>${i + 1}</b></td><td>${bAmbito(r.ambito || 'COMPARTIDO')}</td>`;
         
         displayFields.forEach(f => {
-            if (f === 'activo') {
+            if (f === 'activo' || f === 'estado') { // 🔧 CAMBIO: se agregó "|| f === 'estado'"
                 cells += `<td>${bEstado(r[f])}</td>`;
             } else if (f === 'decimales') {
                 cells += `<td>${r[f] ? '✅ Sí' : '❌ No'}</td>`;
@@ -2436,10 +2436,7 @@ function renderClientesCompleta(list) {
             if (value === undefined || value === null || value === '') {
                 value = '-';
             } else if (f.key === 'estado') {
-                const isActive = value === 'Activo' || value === 'activo';
-                value = isActive 
-                    ? '<span class="badge b-ok">● Activo</span>' 
-                    : '<span class="badge b-gray">● Inactivo</span>';
+                value = bEstado(value); // 🔧 CAMBIO: antes tenía su propia lógica if/else con solo Activo/Inactivo, ahora usa bEstado() para soportar Observado/Bloqueado también
             } else if (f.key === 'activo') {
                 value = value === true || value === 'true' 
                     ? '<span class="badge b-ok">✅ Sí</span>' 
@@ -2568,10 +2565,7 @@ function renderProveedoresCompleta(list) {
             if (value === undefined || value === null || value === '') {
                 value = '-';
             } else if (f.key === 'estado') {
-                const isActive = value === 'Activo' || value === 'activo';
-                value = isActive 
-                    ? '<span class="badge b-ok">● Activo</span>' 
-                    : '<span class="badge b-gray">● Inactivo</span>';
+                value = bEstado(value); // 🔧 CAMBIO: antes tenía su propia lógica if/else con solo Activo/Inactivo, ahora usa bEstado() para soportar Observado/Bloqueado también
             } else if (f.key === 'activo') {
                 value = value === true || value === 'true' 
                     ? '<span class="badge b-ok">✅ Sí</span>' 

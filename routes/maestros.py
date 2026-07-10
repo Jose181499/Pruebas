@@ -71,7 +71,7 @@ def api_clientes_listar():
                            telefono_contacto as telefono,
                            responsable as contacto, principal, activo,
                            condicion_pago, tiempo_credito
-                    FROM clientes_punto_entrega
+                    FROM clientes_puntos_entrega
                     WHERE cliente_id = %s AND activo = true
                     ORDER BY principal DESC, nombre_punto
                 """
@@ -213,7 +213,7 @@ def api_clientes_obtener(id):
                 SELECT id, nombre_punto as punto, direccion, telefono_contacto as telefono,
                        responsable as contacto, principal, activo,
                        condicion_pago, tiempo_credito
-                FROM clientes_punto_entrega
+                FROM clientes_puntos_entrega
                 WHERE cliente_id = %s AND activo = true
                 ORDER BY principal DESC, nombre_punto
             """
@@ -365,7 +365,7 @@ def api_clientes_eliminar(id):
 
         # Eliminar puntos de entrega
         cur.execute("""
-            DELETE FROM clientes_puntoss_entrega
+            DELETE FROM clientes_puntos_entrega
             WHERE cliente_id = %s
         """, (id,))
 
@@ -1088,6 +1088,40 @@ def api_categorias_obtener(id):
         current_app.logger.error(f"Error obteniendo categoría: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
+@maestros_bp.route('/api/categorias/<int:id>', methods=['DELETE'])
+@login_required
+def api_categorias_eliminar(id):
+    """Eliminar categoría"""
+    try:
+        from database import DATABASE_URL
+
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+
+        cur.execute("""
+            DELETE FROM categorias
+            WHERE id = %s
+            RETURNING id
+        """, (id,))
+
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        if result:
+            return jsonify({
+                "success": True,
+                "message": "Categoría eliminada correctamente"
+            })
+
+        return jsonify({"success": False, "error": "Categoría no encontrada"}), 404
+
+    except Exception as e:
+        current_app.logger.error(f"❌ Error eliminando categoría: {e}")
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
+
 
 @maestros_bp.route('/api/categorias/<int:id>', methods=['PUT'])
 @login_required
@@ -1143,6 +1177,8 @@ def api_categorias_actualizar(id):
         current_app.logger.error(f"Error actualizando categoría: {e}")
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
+
+
 
 
 @maestros_bp.route('/api/categorias/<int:id>/toggle', methods=['PUT'])
@@ -1281,6 +1317,40 @@ def api_marcas_obtener(id):
         return jsonify({"success": False, "error": "Marca no encontrada"}), 404
     except Exception as e:
         current_app.logger.error(f"Error obteniendo marca: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@maestros_bp.route('/api/marcas/<int:id>', methods=['DELETE'])
+@login_required
+def api_marcas_eliminar(id):
+    """Eliminar marca"""
+    try:
+        from database import DATABASE_URL
+
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+
+        cur.execute("""
+            DELETE FROM marcas
+            WHERE id = %s
+            RETURNING id
+        """, (id,))
+
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        if result:
+            return jsonify({
+                "success": True,
+                "message": "Marca eliminada correctamente"
+            })
+
+        return jsonify({"success": False, "error": "Marca no encontrada"}), 404
+
+    except Exception as e:
+        current_app.logger.error(f"❌ Error eliminando marca: {e}")
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -1484,6 +1554,40 @@ def api_um_obtener(id):
         return jsonify({"success": False, "error": "Unidad no encontrada"}), 404
     except Exception as e:
         current_app.logger.error(f"Error obteniendo unidad: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@maestros_bp.route('/api/um/<int:id>', methods=['DELETE'])
+@login_required
+def api_um_eliminar(id):
+    """Eliminar unidad de medida"""
+    try:
+        from database import DATABASE_URL
+
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+
+        cur.execute("""
+            DELETE FROM um
+            WHERE id = %s
+            RETURNING id
+        """, (id,))
+
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        if result:
+            return jsonify({
+                "success": True,
+                "message": "Unidad eliminada correctamente"
+            })
+
+        return jsonify({"success": False, "error": "Unidad no encontrada"}), 404
+
+    except Exception as e:
+        current_app.logger.error(f"❌ Error eliminando unidad de medida: {e}")
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
 
