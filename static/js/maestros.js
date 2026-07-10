@@ -1060,6 +1060,37 @@ async function consultarSunat() {
   }
 }
 
+//=============================================================
+// Dias de Credito (repuesta personalizada)
+//=============================================================
+
+//subfijo(opcional)
+function personalizarDiasCredito(selectId, sufijo = '') {
+    const valor = prompt('Ingrese el nuevo valor (solo números enteros):');
+    if (valor === null) return; // el usuario le dio Cancelar
+
+    const limpio = valor.trim();
+    if (!/^\d+$/.test(limpio)) {
+        showToast('⚠️ Solo se permiten números enteros.', 'warning');
+        return;
+    }
+
+    const select = document.getElementById(selectId);
+    if (!select) return;
+
+    const yaExiste = Array.from(select.options).some(o => o.value === limpio);
+    if (!yaExiste) {
+        const opt = document.createElement('option');
+        opt.value = limpio;
+        opt.textContent = sufijo ? `${limpio} ${sufijo}` : limpio;
+        select.appendChild(opt);
+    }
+
+    select.value = limpio;
+    select.dispatchEvent(new Event('change')); // por si algo más escucha "change"
+    showToast(`✅ Se agregó "${limpio}${sufijo ? ' ' + sufijo : ''}"`, 'success');
+}
+
 // ============================================================
 // GUARDAR CLIENTE
 // ============================================================
