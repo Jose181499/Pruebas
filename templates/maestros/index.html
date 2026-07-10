@@ -1282,8 +1282,21 @@
   gap: 6px 10px;
 }
 
+/* 🔧 NUEVO */
+.cm-grid-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.cm-grid-wrapper .cm-grid-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* 🔧 CAMBIO: de "1fr 1fr 1.1fr 200px" a solo 3 columnas */
 .cm-grid-main {
-  grid-template-columns: 1fr 1fr 1.1fr 200px;
+  grid-template-columns: 1fr 1fr 1.1fr;
 }
 
 .cm-grid-comercial {
@@ -1395,6 +1408,8 @@
 
 /* ── STATE BOX ─────────────────────────────────────────────── */
 .cm-state-box {
+  flex: 0 0 200px;          /* 🔧 NUEVO */
+  max-width: 200px;         /* 🔧 NUEVO */
   border: 1px solid #D1D5DB;
   border-radius: 8px;
   background: #F8FAFC;
@@ -1742,7 +1757,7 @@
 .proveedor-modal-wrap .cm-grid-main,
 .almacen-modal-wrap .cm-grid-main,
 .master-modal-wrap .cm-grid-main {
-    grid-template-columns: 1fr 1fr 1fr 140px !important;
+    grid-template-columns: 1fr 1fr 1fr !important; /* 🔧 CAMBIO: se quitó el "140px" */
 }
 
 /* Labels e inputs más pequeños */
@@ -2188,6 +2203,14 @@
 }
 
 @media (max-width: 768px) {
+
+  .cm-grid-wrapper {
+    flex-direction: column;
+  }
+  .cm-state-box {
+    flex-basis: auto;
+    }
+
   .cm-grid-main,
   .cm-grid-comercial,
   .cm-grid-contact,
