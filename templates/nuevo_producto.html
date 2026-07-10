@@ -856,13 +856,36 @@
                     <label>Unidad de medida <span class="req">*</span></label>
                     <select id="unidadMedida" name="unidad" required>
                         <option value="">Seleccione</option>
-                        <option value="KGM" {% if producto and producto.unidad == 'KGM' %}selected{% endif %}>KGM - Kilogramo</option>
-                        <option value="TNE" {% if producto and producto.unidad == 'TNE' %}selected{% endif %}>TNE - Tonelada</option>
-                        <option value="LBR" {% if producto and producto.unidad == 'LBR' %}selected{% endif %}>LBR - Libra</option>
-                        <option value="GRM" {% if producto and producto.unidad == 'GRM' %}selected{% endif %}>GRM - Gramo</option>
-                        <option value="ONZ" {% if producto and producto.unidad == 'ONZ' %}selected{% endif %}>ONZ - Onza</option>
-                        <option value="ZZ" {% if producto and producto.unidad == 'ZZ' %}selected{% endif %}>ZZ - Unidad</option>
-                        <option value="NIU" {% if producto and producto.unidad == 'NIU' %}selected{% endif %}>NIU - Unidad</option>
+                        <!-- UNIDADES DE MEDIDA SUNAT 2025 -->
+                        <option value="KGM" {% if producto and producto.unidad == 'KGM' %}selected{% endif %}>KGM - Kilogramo (kg)</option>
+                        <option value="TNE" {% if producto and producto.unidad == 'TNE' %}selected{% endif %}>TNE - Tonelada (t)</option>
+                        <option value="LBR" {% if producto and producto.unidad == 'LBR' %}selected{% endif %}>LBR - Libra (lb)</option>
+                        <option value="GRM" {% if producto and producto.unidad == 'GRM' %}selected{% endif %}>GRM - Gramo (g)</option>
+                        <option value="ONZ" {% if producto and producto.unidad == 'ONZ' %}selected{% endif %}>ONZ - Onza (oz)</option>
+                        <option value="MTR" {% if producto and producto.unidad == 'MTR' %}selected{% endif %}>MTR - Metro (m)</option>
+                        <option value="CMT" {% if producto and producto.unidad == 'CMT' %}selected{% endif %}>CMT - Centímetro (cm)</option>
+                        <option value="MMT" {% if producto and producto.unidad == 'MMT' %}selected{% endif %}>MMT - Milímetro (mm)</option>
+                        <option value="KTM" {% if producto and producto.unidad == 'KTM' %}selected{% endif %}>KTM - Kilómetro (km)</option>
+                        <option value="LTR" {% if producto and producto.unidad == 'LTR' %}selected{% endif %}>LTR - Litro (L)</option>
+                        <option value="MLT" {% if producto and producto.unidad == 'MLT' %}selected{% endif %}>MLT - Mililitro (mL)</option>
+                        <option value="CMQ" {% if producto and producto.unidad == 'CMQ' %}selected{% endif %}>CMQ - Centímetro cúbico (cm³)</option>
+                        <option value="MTQ" {% if producto and producto.unidad == 'MTQ' %}selected{% endif %}>MTQ - Metro cúbico (m³)</option>
+                        <option value="ZZ" {% if producto and producto.unidad == 'ZZ' %}selected{% endif %}>ZZ - Unidad (unidad)</option>
+                        <option value="NIU" {% if producto and producto.unidad == 'NIU' %}selected{% endif %}>NIU - Unidad (unidad)</option>
+                        <option value="CEN" {% if producto and producto.unidad == 'CEN' %}selected{% endif %}>CEN - Centenar (100 uds)</option>
+                        <option value="MIL" {% if producto and producto.unidad == 'MIL' %}selected{% endif %}>MIL - Millar (1000 uds)</option>
+                        <option value="PAR" {% if producto and producto.unidad == 'PAR' %}selected{% endif %}>PAR - Par (2 uds)</option>
+                        <option value="DOC" {% if producto and producto.unidad == 'DOC' %}selected{% endif %}>DOC - Docena (12 uds)</option>
+                        <option value="HUR" {% if producto and producto.unidad == 'HUR' %}selected{% endif %}>HUR - Hora (h)</option>
+                        <option value="DIA" {% if producto and producto.unidad == 'DIA' %}selected{% endif %}>DIA - Día</option>
+                        <option value="MES" {% if producto and producto.unidad == 'MES' %}selected{% endif %}>MES - Mes</option>
+                        <option value="ANO" {% if producto and producto.unidad == 'ANO' %}selected{% endif %}>ANO - Año</option>
+                        <option value="WEE" {% if producto and producto.unidad == 'WEE' %}selected{% endif %}>WEE - Semana</option>
+                        <option value="MWH" {% if producto and producto.unidad == 'MWH' %}selected{% endif %}>MWH - Megawatt-hora</option>
+                        <option value="KWH" {% if producto and producto.unidad == 'KWH' %}selected{% endif %}>KWH - Kilowatt-hora</option>
+                        <option value="JO" {% if producto and producto.unidad == 'JO' %}selected{% endif %}>JO - Joule</option>
+                        <option value="PA" {% if producto and producto.unidad == 'PA' %}selected{% endif %}>PA - Pascal</option>
+                        <option value="BAR" {% if producto and producto.unidad == 'BAR' %}selected{% endif %}>BAR - Bar</option>
                     </select>
                 </div>
                 <div class="field" id="field-categoria">
@@ -979,7 +1002,7 @@
                 </div>
             </div>
             <div class="grid full">
-                <div class="field"><label>Descripción detallada <span class="optional">(opcional)</span></label>
+                <div class="field"><label>Descripción detallada: Producto  <span class="optional">(opcional)</span></label>
                     <textarea name="descripcion_larga" placeholder="Descripción del producto" style="min-height:40px !important;max-height:60px !important;">{{ producto.descripcion_larga if producto else '' }}</textarea>
                 </div>
                 <div class="field"><label>Observaciones <span class="optional">(opcional)</span></label>
