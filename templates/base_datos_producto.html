@@ -232,25 +232,20 @@ function formatearFecha(fecha) {
     }
 }
 
-// ============================================================
-// FUNCIÓN PARA DETERMINAR SI UN PRODUCTO FUE EDITADO
-// ============================================================
-function fueEditado(created_at, updated_at) {
-    if (!created_at || !updated_at) return false;
-    if (created_at === updated_at) return false;
-    
+function fueEditado(fecha_creacion, updated_at) {
+    if (!fecha_creacion || !updated_at) return false;
+    if (fecha_creacion === updated_at) return false;
     try {
-        var created = new Date(created_at);
+        var created = new Date(fecha_creacion);
         var updated = new Date(updated_at);
         if (isNaN(created.getTime()) || isNaN(updated.getTime())) return false;
-        
-        // Si la diferencia es mayor a 1 minuto, consideramos que fue editado
         var diffMs = updated.getTime() - created.getTime();
-        return diffMs > 60000; // 1 minuto
+        return diffMs > 60000;
     } catch (e) {
         return false;
     }
 }
+
 
 // ============================================================
 // CAMBIAR VISTA
@@ -337,9 +332,6 @@ function editarProducto(id) {
     window.location.href = '/productos/nuevo-producto?id=' + id;
 }
 
-// ============================================================
-// RENDERIZAR PRODUCTOS - VERSIÓN CORREGIDA CON "EDITADO"
-// ============================================================
 function bdRenderProductos(data) {
     if (!window.location.pathname.includes('/productos/base-datos')) {
         console.log('ℹ️ No estamos en la página de base de datos, omitiendo renderizado');
@@ -401,15 +393,26 @@ function bdRenderProductos(data) {
         var categoria = p.categoria || p.familia || '-';
         var subcategoria = p.subcategoria || p.categoria_derivada || '-';
         
-        // ✅ FECHAS - Usar created_at y updated_at
-        var createdAt = p.created_at || p.fecha_creacion || p.fecha_registro || null;
-        var updatedAt = p.updated_at || p.updated_at || null;
+        // ✅ CAMBIO IMPORTANTE: usar los nombres de campos que devuelve tu API
+        // Tu API devuelve: fecha_creacion y updated_at (NO created_at)
+        var fechaCreacion = p.fecha_creacion || null;
+        var fechaActualizacion = p.updated_at || null;
         
-        // ✅ Determinar si fue editado
-        var editado = fueEditado(createdAt, updatedAt);
+        // ✅ Determinar si fue editado (comparar ambas fechas)
+        var editado = false;
+        if (fechaCreacion && fechaActualizacion && fechaCreacion !== fechaActualizacion) {
+            try {
+                var created = new Date(fechaCreacion);
+                var updated = new Date(fechaActualizacion);
+                if (!isNaN(created.getTime()) && !isNaN(updated.getTime())) {
+                    var diffMs = updated.getTime() - created.getTime();
+                    editado = diffMs > 60000; // 1 minuto
+                }
+            } catch(e) {}
+        }
         
-        // ✅ Fecha a mostrar: si fue editado, mostrar updated_at, sino created_at
-        var fechaMostrar = editado ? updatedAt : createdAt;
+        // ✅ Fecha a mostrar: si fue editado, mostrar updated_at, sino fecha_creacion
+        var fechaMostrar = editado ? fechaActualizacion : fechaCreacion;
         var fechaFormateada = formatearFecha(fechaMostrar);
         
         html += '<tr>';
@@ -482,6 +485,7 @@ function bdRenderProductos(data) {
     
     console.log('✅ Renderizado completado');
 }
+
 
 // ============================================================
 // APLICAR FILTROS
