@@ -591,13 +591,52 @@ def guardar_pc_db(data):
                 observaciones, valida_precios, valida_cantidades,
                 valida_stock, valida_entrega, valida_montos,
                 responsable, lugar_entrega, condicion_atencion,
-                creado_por
+                creado_por, 
+                items_json, 
+                medio,
+                entrega,
+                condicion_pago,
+                vendedor,
+                req_compra,
+                guia,
+                factura
             ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                %s, %s, %s, %s, %s, %s, 
+                %s, %s, %s, 
+                %s, %s, %s,
+                %s, %s, %s, %s, %s, %s,
+                %s, %s, %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s
             )
             RETURNING id, numero
         """
+        
+        # Convertir items a JSON
+        items_json = json.dumps(data.get('items', []))
+        
+        # Determinar req_compra basado en validaciones
+        valida_precios = data.get('valida_precios', False)
+        valida_cantidades = data.get('valida_cantidades', False)
+        valida_stock = data.get('valida_stock', False)
+        valida_entrega = data.get('valida_entrega', False)
+        valida_montos = data.get('valida_montos', False)
+        
+        # Calcular req_compra
+        if data.get('estado') == 'PC observado':
+            req_compra = 'Bloqueado'
+        elif data.get('estado') in ['Listo para despacho', 'PC atendido']:
+            req_compra = 'No'
+        else:
+            req_compra = 'Sí'
+        
         params = (
             data.get('numero'),
             data.get('fecha') or datetime.now().isoformat(),
@@ -607,25 +646,36 @@ def guardar_pc_db(data):
             float(data.get('monto', 0)),
             data.get('cotizacion_id'),
             data.get('cotizacion_numero'),
-            data.get('correo_origen'),
-            data.get('fecha_recepcion'),
+            data.get('correo_origen') or data.get('medio'),
+            data.get('fecha_recepcion') or data.get('fecha'),
             data.get('fecha_despacho'),
             data.get('archivo_oc'),
             data.get('observaciones'),
-            data.get('valida_precios', False),
-            data.get('valida_cantidades', False),
-            data.get('valida_stock', False),
-            data.get('valida_entrega', False),
-            data.get('valida_montos', False),
-            data.get('responsable', 'Hellen'),
-            data.get('lugar_entrega'),
-            data.get('condicion_atencion'),
-            data.get('creado_por')
+            valida_precios,
+            valida_cantidades,
+            valida_stock,
+            valida_entrega,
+            valida_montos,
+            data.get('responsable') or data.get('vendedor') or 'Hellen',
+            data.get('lugar_entrega') or data.get('entrega'),
+            data.get('condicion_atencion') or data.get('condicion_pago'),
+            data.get('creado_por'),
+            items_json,
+            data.get('medio') or data.get('correo_origen') or 'Correo',
+            data.get('entrega') or data.get('lugar_entrega'),
+            data.get('condicion_pago') or data.get('condicion_atencion'),
+            data.get('vendedor') or data.get('responsable') or 'Helen Blas Príncipe',
+            req_compra,
+            data.get('guia'),
+            data.get('factura')
         )
+        
         result = db_query(query, params)
         return result[0] if result else None
     except Exception as e:
         print(f"❌ Error en guardar_pc_db: {e}")
+        import traceback
+        traceback.print_exc()
         raise
 
 # ============================================================
@@ -2800,13 +2850,26 @@ def obtener_pc_db():
     try:
         query = """
             SELECT 
-                id, numero, fecha, estado, cliente, ruc, monto,
-                cotizacion_id, cotizacion_numero, correo_origen as medio,
+                id, numero, fecha, estado, 
+                cliente, ruc, monto,
+                cotizacion_id, cotizacion_numero, 
+                correo_origen,
                 fecha_recepcion, fecha_despacho, archivo_oc,
-                observaciones, valida_precios, valida_cantidades,
+                observaciones, 
+                valida_precios, valida_cantidades,
                 valida_stock, valida_entrega, valida_montos,
-                responsable, lugar_entrega as entrega, condicion_atencion as condicion_pago,
-                created_at, updated_at, items_json, vendedor
+                responsable, 
+                lugar_entrega, 
+                condicion_atencion,
+                medio,
+                entrega,
+                req_compra,
+                guia,
+                factura,
+                condicion_pago,
+                vendedor,
+                created_at, updated_at,
+                items_json
             FROM pedido_compra_pc
             ORDER BY id DESC
         """
@@ -2814,6 +2877,7 @@ def obtener_pc_db():
         
         # Procesar items_json
         for row in results:
+            # Si tiene items_json, usarlo
             if row.get('items_json'):
                 try:
                     row['items'] = json.loads(row['items_json'])
@@ -2821,8 +2885,33 @@ def obtener_pc_db():
                     row['items'] = []
             else:
                 row['items'] = []
+            
+            # Si no tiene medio, usar correo_origen como fallback
+            if not row.get('medio') and row.get('correo_origen'):
+                row['medio'] = 'Correo'
+            elif not row.get('medio'):
+                row['medio'] = 'No especificado'
+            
+            # Si no tiene entrega, usar lugar_entrega
+            if not row.get('entrega') and row.get('lugar_entrega'):
+                row['entrega'] = row['lugar_entrega']
+            
+            # Si no tiene condicion_pago, usar condicion_atencion
+            if not row.get('condicion_pago') and row.get('condicion_atencion'):
+                row['condicion_pago'] = row['condicion_atencion']
+            
+            # Si no tiene req_compra, calcular basado en estado
+            if not row.get('req_compra'):
+                if row.get('estado') == 'PC observado':
+                    row['req_compra'] = 'Bloqueado'
+                elif row.get('estado') in ['Listo para despacho', 'PC atendido']:
+                    row['req_compra'] = 'No'
+                else:
+                    row['req_compra'] = 'Sí'
         
         return results
     except Exception as e:
         print(f"❌ Error en obtener_pc_db: {e}")
+        import traceback
+        traceback.print_exc()
         return []
