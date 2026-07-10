@@ -715,7 +715,7 @@
 
 .cm-field input,
 .cm-field select {
-  width: 100%;
+  width: 90%;
   height: 32px;
   border-radius: 8px;
   border: 1px solid #D1D5DB;
@@ -728,7 +728,7 @@
 }
 
 .cm-field textarea {
-  width: 100%;
+  width: 90%;
   height: 40px;
   min-height: 40px;
   border-radius: 8px;
