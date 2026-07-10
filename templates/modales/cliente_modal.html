@@ -14,41 +14,62 @@
         <div class="cm-section-title">
           <span class="cm-bullet"></span>Información general
         </div>
-        <div class="cm-grid cm-grid-main">
-          <!-- Ámbito -->
-          <div class="cm-field">
-            <label>ÁMBITO *</label>
-            <select id="cli_ambito">
-              <option value="COMPARTIDO">Compartido KCF + AGD</option>
-              <option value="KCF">Solo KCF</option>
-              <option value="AGD">Solo AGD</option>
-            </select>
-          </div>
-          <!-- Tipo documento -->
-          <div class="cm-field">
-            <label>TIPO DOCUMENTO</label>
-            <select id="cli_tipoDoc">
-              <option value="RUC">RUC</option>
-              <option value="DNI">DNI</option>
-              <option value="CE">CE</option>
-            </select>
-          </div>
-          <!-- Número documento -->
-          <div class="cm-field">
-            <label>NÚMERO DOCUMENTO</label>
-            <div class="sunat-group">
-              <input id="cli_numero" type="text" placeholder="RUC/DNI">
-              <button class="sunat-btn" id="btnSunat">SUNAT</button>
+
+        <!-- 🔧 CAMBIO: nuevo contenedor flex que separa la grilla de campos del state-box -->
+        <div class="cm-grid-wrapper">
+
+          <!-- 🔧 CAMBIO: cm-grid-main ahora solo tiene los 6 campos (3 columnas), sin el state-box -->
+          <div class="cm-grid cm-grid-main">
+            <!-- Ámbito -->
+            <div class="cm-field">
+              <label>ÁMBITO *</label>
+              <select id="cli_ambito">
+                <option value="COMPARTIDO">Compartido KCF + AGD</option>
+                <option value="KCF">Solo KCF</option>
+                <option value="AGD">Solo AGD</option>
+              </select>
+            </div>
+            <!-- Tipo documento -->
+            <div class="cm-field">
+              <label>TIPO DOCUMENTO</label>
+              <select id="cli_tipoDoc">
+                <option value="RUC">RUC</option>
+                <option value="DNI">DNI</option>
+                <option value="CE">CE</option>
+              </select>
+            </div>
+            <!-- Número documento -->
+            <div class="cm-field">
+              <label>NÚMERO DOCUMENTO</label>
+              <div class="sunat-group">
+                <input id="cli_numero" type="text" placeholder="RUC/DNI">
+                <button class="sunat-btn" id="btnSunat">SUNAT</button>
+              </div>
+            </div>
+            <!-- Razón social -->
+            <div class="cm-field span-2">
+              <label>RAZÓN SOCIAL *</label>
+              <input id="cli_nombre" type="text">
+            </div>
+            <!-- Nombre comercial -->
+            <div class="cm-field">
+              <label>NOMBRE COMERCIAL</label>
+              <input id="cli_nombreComercial" type="text">
+            </div>
+            <!-- Dirección fiscal -->
+            <div class="cm-field span-3">
+              <label>DIRECCIÓN FISCAL</label>
+              <input id="cli_direccionFiscal" type="text">
             </div>
           </div>
-          <!-- Estado cliente -->
+
+          <!-- Estado cliente (misma caja, mismos IDs, ahora como columna aparte) -->
           <div class="cm-state-box" id="cliStateBox">
             <label>ESTADO CLIENTE *</label>
             <select id="cli_estado">
               <option value="Activo" selected>Activo</option>
               <option value="Observado">Observado</option>
               <option value="Bloqueado">Bloqueado</option>
-              
             </select>
             <div class="cm-state-indicator">
               <div class="cm-state-helper">
@@ -58,22 +79,10 @@
               <span class="cm-state-pill" id="cliStatePill"></span>
             </div>
           </div>
-          <!-- Razón social -->
-          <div class="cm-field span-2">
-            <label>RAZÓN SOCIAL *</label>
-            <input id="cli_nombre" type="text">
-          </div>
-          <!-- Nombre comercial -->
-          <div class="cm-field">
-            <label>NOMBRE COMERCIAL</label>
-            <input id="cli_nombreComercial" type="text">
-          </div>
-          <!-- Dirección fiscal -->
-          <div class="cm-field span-3">
-            <label>DIRECCIÓN FISCAL</label>
-            <input id="cli_direccionFiscal" type="text">
-          </div>
+
         </div>
+        <!-- fin cm-grid-wrapper -->
+
       </div>
 
       <!-- Condición comercial -->
@@ -168,6 +177,3 @@
     </div>
   </div>
 </div>
-
-
-

@@ -668,21 +668,23 @@
 .cm-grid {
   display: grid;
   gap: 6px 10px;
-  align-items: start;
 }
 
+/* nuevo contenedor flex — separa la grilla de campos del state-box */
+.cm-grid-wrapper {
+  display: flex;
+  align-items: flex-start; /* el state-box ya no se estira con la fila */
+  gap: 10px;
+}
+
+.cm-grid-wrapper .cm-grid-main {
+  flex: 1 1 auto;
+  min-width: 0; /* evita overflow en pantallas chicas */
+}
+
+/* cm-grid-main pasa de 4 a 3 columnas (ya no incluye el state-box) */
 .cm-grid-main {
-  grid-template-columns: 1fr 1fr 1.1fr 200px;
-  grid-auto-rows: min-content;
-  align-items: start;
-}
-
-/* Mantiene la caja de estado a la derecha sin aumentar
-   la altura de la primera fila de campos. */
-.cm-grid-main > .cm-state-box {
-  grid-column: 4;
-  grid-row: 1 / span 3;
-  align-self: start;
+  grid-template-columns: 1fr 1fr 1.1fr;
 }
 
 .cm-grid-comercial {
@@ -699,7 +701,6 @@
 
 .cm-field {
   min-width: 0;
-  align-self: start;
 }
 
 .cm-field.span-2 {
@@ -797,14 +798,15 @@
 }
 
 /* ── STATE BOX ─────────────────────────────────────────────── */
+/* cm-state-box ahora es columna fija dentro del flex, ya no celda de grid */
 .cm-state-box {
+  flex: 0 0 200px;
   border: 1px solid #D1D5DB;
   border-radius: 8px;
   background: #F8FAFC;
   padding: 4px 8px;
-  max-width: 129px;
+  max-width: 200px;      
   min-height: 52px;
-  max-height: 80px;
   position: relative;
   transition: all 0.2s;
 }
@@ -1216,10 +1218,6 @@
   .cm-grid-main {
     grid-template-columns: 1fr 1fr 1fr;
   }
-  .cm-grid-main > .cm-state-box {
-    grid-column: auto;
-    grid-row: auto;
-  }
   .cm-grid-comercial {
     grid-template-columns: 1fr 1fr;
   }
@@ -1232,6 +1230,15 @@
 }
 
 @media (max-width: 768px) {
+
+  .cm-grid-wrapper {
+    flex-direction: column; /* 🔧 CAMBIO: en móvil, el state-box baja debajo de los campos */
+  }
+  .cm-state-box {
+    flex-basis: auto;
+    max-width: 100%; /* 🔧 CAMBIO: ocupa todo el ancho disponible en móvil */
+  }
+
   .cm-grid-main,
   .cm-grid-comercial,
   .cm-grid-contact,
