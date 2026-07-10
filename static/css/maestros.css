@@ -668,10 +668,21 @@
 .cm-grid {
   display: grid;
   gap: 6px 10px;
+  align-items: start;
 }
 
 .cm-grid-main {
   grid-template-columns: 1fr 1fr 1.1fr 200px;
+  grid-auto-rows: min-content;
+  align-items: start;
+}
+
+/* Mantiene la caja de estado a la derecha sin aumentar
+   la altura de la primera fila de campos. */
+.cm-grid-main > .cm-state-box {
+  grid-column: 4;
+  grid-row: 1 / span 3;
+  align-self: start;
 }
 
 .cm-grid-comercial {
@@ -688,6 +699,7 @@
 
 .cm-field {
   min-width: 0;
+  align-self: start;
 }
 
 .cm-field.span-2 {
@@ -715,7 +727,7 @@
 
 .cm-field input,
 .cm-field select {
-  width: 90%;
+  width: 100%;
   height: 32px;
   border-radius: 8px;
   border: 1px solid #D1D5DB;
@@ -728,7 +740,7 @@
 }
 
 .cm-field textarea {
-  width: 90%;
+  width: 100%;
   height: 40px;
   min-height: 40px;
   border-radius: 8px;
@@ -1203,6 +1215,10 @@
 @media (max-width: 1200px) {
   .cm-grid-main {
     grid-template-columns: 1fr 1fr 1fr;
+  }
+  .cm-grid-main > .cm-state-box {
+    grid-column: auto;
+    grid-row: auto;
   }
   .cm-grid-comercial {
     grid-template-columns: 1fr 1fr;
