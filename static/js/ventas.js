@@ -1927,9 +1927,6 @@ window.createDocFromCotizacion = async function(id, tipo) {
     );
 };
 
-// ============================================================
-// FUNCIÓN PARA CAMBIAR DE TAB PROGRAMÁTICAMENTE
-// ============================================================
 function switchTab(tabId) {
     const tabs = document.querySelectorAll('.tab-btn');
     const sections = document.querySelectorAll('.section');
@@ -1957,15 +1954,43 @@ function switchTab(tabId) {
     
     // Cargar datos del módulo
     currentModule = tabId;
-    switch(tabId) {
-        case 'cotizaciones': loadCotizaciones(); break;
-        case 'pedido_compra': loadPedidos(); break;
-        case 'despachar': loadDespachos(); break;
-        case 'guias': loadGuias(); break;
-        case 'comprobantes': loadComprobantes(); break;
-        case 'notas_credito': loadNotas(); break;
-        case 'devoluciones': loadDevoluciones(); break;
+    
+    // ============================================================
+    // 🔽 SIEMPRE CARGAR COTIZACIONES PRIMERO
+    // ============================================================
+    async function cargarDatos() {
+        // Primero cargar cotizaciones si no están cargadas
+        if (typeof cotizacionesData === 'undefined' || cotizacionesData.length === 0) {
+            await loadCotizaciones();
+        }
+        
+        // Luego cargar el módulo específico
+        switch(tabId) {
+            case 'cotizaciones':
+                // Ya están cargadas
+                break;
+            case 'pedido_compra':
+                await loadPedidos();
+                break;
+            case 'despachar':
+                await loadDespachos();
+                break;
+            case 'guias':
+                await loadGuias();
+                break;
+            case 'comprobantes':
+                await loadComprobantes();
+                break;
+            case 'notas_credito':
+                await loadNotas();
+                break;
+            case 'devoluciones':
+                await loadDevoluciones();
+                break;
+        }
     }
+    
+    cargarDatos();
 }
 
 // ============================================================
@@ -4695,7 +4720,6 @@ function clearDateFilter() {
 // FUNCIONES SAP PARA MODAL DE PC
 // ============================================================
 
-
 function openPedidoCompraModalSAP(mode = 'cot') {
     modalMode = mode;
     editingId = null;
@@ -4725,17 +4749,51 @@ function openPedidoCompraModalSAP(mode = 'cot') {
     }
     
     // ============================================================
-    // 🔽 IMPORTANTE: CARGAR COTIZACIONES SI NO ESTÁN CARGADAS
+    // 🔽 VERIFICAR Y CARGAR COTIZACIONES SI ES NECESARIO
     // ============================================================
+    function abrirModal() {
+        clearPedidoModalSAP();
+        
+        // Limpiar buscador y resultados
+        const searchInput = document.getElementById('pcCotSearch');
+        if (searchInput) searchInput.value = '';
+        const resultsContainer = document.getElementById('cotizacionSearchResults');
+        if (resultsContainer) {
+            resultsContainer.style.display = 'none';
+            resultsContainer.innerHTML = '';
+        }
+        
+        modal.classList.add('show');
+        
+        // Mostrar estado de las cotizaciones
+        if (cotizacionesData && cotizacionesData.length > 0) {
+            console.log(`📋 ${cotizacionesData.length} cotizaciones disponibles para buscar`);
+        } else {
+            console.warn('⚠️ No hay cotizaciones cargadas. Intentando cargar...');
+            // Intentar cargar nuevamente
+            if (typeof loadCotizaciones === 'function') {
+                loadCotizaciones().then(() => {
+                    if (cotizacionesData && cotizacionesData.length > 0) {
+                        showToast(`✅ ${cotizacionesData.length} cotizaciones cargadas`, 'success');
+                    } else {
+                        showToast('⚠️ No hay cotizaciones disponibles', 'warning');
+                    }
+                });
+            }
+        }
+    }
+    
+    // Verificar si hay cotizaciones cargadas
     if (typeof cotizacionesData === 'undefined' || cotizacionesData.length === 0) {
         console.log('🔄 Cargando cotizaciones para el buscador de PC...');
+        showToast('⏳ Cargando cotizaciones...', 'info');
+        
         if (typeof loadCotizaciones === 'function') {
             loadCotizaciones().then(() => {
-                // Una vez cargadas, mostrar el modal
-                mostrarModalPC(mode);
+                abrirModal();
             }).catch(() => {
                 // Si falla, igual mostrar el modal
-                mostrarModalPC(mode);
+                abrirModal();
             });
         } else {
             // Fallback: intentar cargar manualmente
@@ -4746,14 +4804,14 @@ function openPedidoCompraModalSAP(mode = 'cot') {
                         cotizacionesData = data.data || [];
                         console.log(`✅ ${cotizacionesData.length} cotizaciones cargadas para PC`);
                     }
-                    mostrarModalPC(mode);
+                    abrirModal();
                 })
                 .catch(() => {
-                    mostrarModalPC(mode);
+                    abrirModal();
                 });
         }
     } else {
-        mostrarModalPC(mode);
+        abrirModal();
     }
 }
 
@@ -5975,10 +6033,6 @@ function setFieldValue(selectId, inputId, value) {
     }
 }
 
-// ============================================================
-// INICIALIZACIÓN
-// ============================================================
-
 window.initVentas = async function(tab) {
     console.log(`🚀 Inicializando ventas con tab: ${tab}`);
     currentModule = tab || 'cotizaciones';
@@ -5989,10 +6043,15 @@ window.initVentas = async function(tab) {
         cargarClientesMaestros()
     ]);
     
-    // Cargar datos según el módulo activo
+    // ============================================================
+    // 🔽 SIEMPRE CARGAR COTIZACIONES PRIMERO (para el buscador de PC)
+    // ============================================================
+    await loadCotizaciones();
+    
+    // Luego cargar los datos del módulo específico
     switch(currentModule) {
         case 'cotizaciones':
-            await loadCotizaciones();
+            // Ya están cargadas
             break;
         case 'pedido_compra':
             await loadPedidos();
@@ -6013,10 +6072,12 @@ window.initVentas = async function(tab) {
             await loadDevoluciones();
             break;
         default:
-            await loadCotizaciones();
+            // Ya están cargadas
+            break;
     }
     
     console.log('✅ Módulo Ventas inicializado correctamente');
+    console.log(`📋 ${cotizacionesData?.length || 0} cotizaciones disponibles`);
 };
 
 // ============================================================
@@ -6178,5 +6239,6 @@ window.showConfirmModal = showConfirmModal;
 window.showSuccessModal = showSuccessModal;
 window.updateQuoteStatusBar = updateQuoteStatusBar;
 window.deleteCotizacion = deleteCotizacion;
+window.initVentas = initVentas;
 
 console.log('✅ Módulo Ventas cargado correctamente - VERSIÓN COMPLETA FUNCIONAL');
