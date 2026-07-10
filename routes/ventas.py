@@ -610,11 +610,15 @@ def obtener_pc_db():
         print(f"❌ Error en obtener_pc_db: {e}")
         return []
 
+
 def guardar_pc_db(data):
     """Guarda un nuevo pedido de compra"""
     try:
         print("📝 Guardando PC en BD...")
+        print(f"📦 Datos recibidos: {data.keys()}")
+        
         items_json = json.dumps(data.get('items', []))
+        
         query = """
             INSERT INTO pedido_compra_pc (
                 numero, fecha, estado, cliente, ruc, monto,
@@ -633,30 +637,48 @@ def guardar_pc_db(data):
                 %s, %s, %s
             ) RETURNING id, numero
         """
+        
         params = (
-            data.get('numero'), data.get('fecha') or datetime.now().isoformat(),
-            data.get('estado', 'Pendiente'), data.get('cliente'), data.get('ruc'),
-            float(data.get('monto', 0)), data.get('cotizacion_id'),
-            data.get('cotizacion_numero'), data.get('correo_origen') or data.get('medio'),
-            data.get('fecha_recepcion') or data.get('fecha'), data.get('fecha_despacho'),
-            data.get('archivo_oc'), data.get('observaciones'),
-            data.get('valida_precios', False), data.get('valida_cantidades', False),
-            data.get('valida_stock', False), data.get('valida_entrega', False),
-            data.get('valida_montos', False), data.get('responsable') or data.get('vendedor') or 'Hellen',
+            data.get('numero'),
+            data.get('fecha') or datetime.now().isoformat(),
+            data.get('estado', 'Pendiente'),
+            data.get('cliente'),
+            data.get('ruc'),
+            float(data.get('monto', 0)),
+            data.get('cotizacion_id'),
+            data.get('cotizacion_numero'),
+            data.get('correo_origen') or data.get('medio'),
+            data.get('fecha_recepcion') or data.get('fecha'),
+            data.get('fecha_despacho'),
+            data.get('archivo_oc'),
+            data.get('observaciones'),
+            data.get('valida_precios', False),
+            data.get('valida_cantidades', False),
+            data.get('valida_stock', False),
+            data.get('valida_entrega', False),
+            data.get('valida_montos', False),
+            data.get('responsable') or data.get('vendedor') or 'Hellen',
             data.get('lugar_entrega') or data.get('entrega'),
             data.get('condicion_atencion') or data.get('condicion_pago'),
-            data.get('creado_por'), items_json,
+            data.get('creado_por'),
+            items_json,
             data.get('medio') or data.get('correo_origen') or 'Correo',
             data.get('entrega') or data.get('lugar_entrega'),
             data.get('condicion_pago') or data.get('condicion_atencion'),
             data.get('vendedor') or data.get('responsable') or 'Helen Blas Príncipe',
             data.get('req_compra', 'Sí')
         )
+        
+        print(f"📝 Parámetros: {params}")
         result = db_query(query, params)
+        print(f"✅ Resultado: {result}")
         return result[0] if result else None
     except Exception as e:
         print(f"❌ Error en guardar_pc_db: {e}")
+        import traceback
+        traceback.print_exc()
         raise
+
 
 # ============================================================
 # FUNCIONES DE AYUDA PARA DESPACHOS
