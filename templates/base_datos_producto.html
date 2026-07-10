@@ -100,7 +100,6 @@
                     <th class="bd-col-item">Ítem</th>
                     <th class="bd-col-code">Código / Producto</th>
                     <th class="bd-col-date">Fecha / Hora</th>
-                    <th class="bd-col-edit">Editado</th>  <!-- NUEVA COLUMNA -->
                     <th class="bd-col-desc">Descripción</th>
                     <th class="bd-col-model">Modelo</th>
                     <th class="bd-col-brand">Marca</th>
@@ -129,7 +128,7 @@
             </thead>
             <tbody id="bdProductTableBody">
                 <tr>
-                    <td colspan="26" style="text-align:center;color:#94A3B8;padding:40px;">
+                    <td colspan="25" style="text-align:center;color:#94A3B8;padding:40px;">
                         <i class="bi bi-inbox" style="font-size:32px;display:block;margin-bottom:10px;"></i>
                         Cargando productos...
                     </td>
@@ -198,6 +197,7 @@
         </div>
     </div>
 </div>
+
 <script>
 // ============================================================
 // FUNCIONES PARA BASE DE DATOS DE PRODUCTOS
@@ -233,7 +233,7 @@ function formatearFecha(fecha) {
 }
 
 // ============================================================
-// FUNCIÓN PARA COMPARAR FECHAS Y DETERMINAR SI FUE EDITADO
+// FUNCIÓN PARA DETERMINAR SI UN PRODUCTO FUE EDITADO
 // ============================================================
 function fueEditado(created_at, updated_at) {
     if (!created_at || !updated_at) return false;
@@ -323,12 +323,25 @@ async function cargarProductos() {
     }
 }
 
+// ============================================================
+// FUNCIÓN editarProducto - REDIRIGE A NUEVO PRODUCTO
+// ============================================================
+function editarProducto(id) {
+    if (!id) {
+        if (typeof mostrarNotificacion === 'function') {
+            mostrarNotificacion('error', '❌ Error', 'ID de producto no válido');
+        }
+        return;
+    }
+    console.log('✏️ Editando producto ID:', id);
+    window.location.href = '/productos/nuevo-producto?id=' + id;
+}
 
 // ============================================================
-// 🔥 REEMPLAZAR bdRenderProductos CON VERSIÓN CORREGIDA
+// RENDERIZAR PRODUCTOS - VERSIÓN CORREGIDA
 // ============================================================
 (function() {
-    console.log('🔥 Reemplazando bdRenderProductos...');
+    console.log('🔥 Inicializando bdRenderProductos...');
     
     window.bdRenderProductos = function(data) {
         if (!window.location.pathname.includes('/productos/base-datos')) {
@@ -336,7 +349,7 @@ async function cargarProductos() {
             return;
         }
         
-        console.log('🖥️ Renderizando productos (VERSIÓN CORREGIDA)...');
+        console.log('🖥️ Renderizando productos...');
         const tbody = document.getElementById('bdProductTableBody');
         if (!tbody) {
             console.error('❌ No se encontró bdProductTableBody');
@@ -344,7 +357,7 @@ async function cargarProductos() {
         }
         
         if (!data || data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="26" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay productos registrados</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="25" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay productos registrados</td></tr>`;
             document.getElementById('bdTotalRegistros').textContent = '0 registros';
             document.getElementById('bdPaginaInfo').textContent = '0/0';
             return;
@@ -372,7 +385,7 @@ async function cargarProductos() {
             else if (estado === 'bloqueado') estadoClass = 'st-blocked';
             else if (estado === 'disponible') estadoClass = 'st-available';
             
-            // ✅ CAPITALIZAR ESTADO
+            // CAPITALIZAR ESTADO
             var estadoMostrado = 'Activo';
             if (p.estado) {
                 var estadoLower = p.estado.toLowerCase();
@@ -394,22 +407,21 @@ async function cargarProductos() {
             // Fechas
             var createdAt = p.created_at || p.fecha_creacion || p.fecha_registro || null;
             var updatedAt = p.updated_at || p.updated_at || null;
-            var fechaFormateada = formatearFecha(createdAt);
             
-            // Verificar si fue editado
+            // Determinar si fue editado
             var editado = fueEditado(createdAt, updatedAt);
-            var editadoFecha = formatearFecha(updatedAt);
+            var fechaMostrar = editado ? updatedAt : createdAt;
+            var fechaFormateada = formatearFecha(fechaMostrar);
             
             html += '<tr>';
             html += '<td class="bd-col-item" style="text-align:center;color:#94a3b8;font-weight:600;">' + index + '</td>';
             html += '<td class="bd-col-code"><span class="bd-t-code">' + (p.codigo || '-') + '</span></td>';
-            html += '<td class="bd-col-date"><span class="bd-date-badge">' + fechaFormateada + '</span></td>';
             
-            // COLUMNA DE EDITADO
+            // COLUMNA FECHA / HORA CON INDICADOR DE EDICIÓN
             if (editado) {
-                html += '<td class="bd-col-edit"><span class="bd-edit-badge editado"><i class="bi bi-pencil-square"></i> ' + editadoFecha + '</span></td>';
+                html += '<td class="bd-col-date"><span class="bd-date-badge editado"><i class="bi bi-pencil-square"></i> ' + fechaFormateada + '</span></td>';
             } else {
-                html += '<td class="bd-col-edit"><span class="bd-edit-badge original"><i class="bi bi-check-circle"></i> Original</span></td>';
+                html += '<td class="bd-col-date"><span class="bd-date-badge">' + fechaFormateada + '</span></td>';
             }
             
             html += '<td class="bd-col-desc"><strong>' + (p.descripcion || '-') + '</strong></td>';
@@ -469,12 +481,12 @@ async function cargarProductos() {
         document.getElementById('bdPaginaInfo').textContent = window.bdPaginaActual + '/' + totalPaginas;
         document.getElementById('bdPaginaActual').textContent = window.bdPaginaActual;
         
-        console.log('✅ Renderizado completado con estados capitalizados');
+        console.log('✅ Renderizado completado');
     };
     
-    console.log('✅ bdRenderProductos reemplazado correctamente');
+    console.log('✅ bdRenderProductos inicializado correctamente');
     
-    // Forzar recarga de productos
+    // Recargar productos
     setTimeout(function() {
         if (typeof cargarProductos === 'function') {
             console.log('🔄 Recargando productos...');
@@ -619,13 +631,14 @@ function verProducto(id) {
             titulo.textContent = 'Error';
         });
 }
+
 function renderModalProducto(p) {
     var titulo = document.getElementById('modalVerTitulo');
     var body = document.getElementById('modalVerBody');
     
     titulo.textContent = p.descripcion || p.codigo || 'Producto';
     
-    // ✅ CAPITALIZAR ESTADO PARA EL MODAL
+    // CAPITALIZAR ESTADO PARA EL MODAL
     var estadoLabel = 'Activo';
     if (p.estado) {
         var estadoLower = p.estado.toLowerCase();
@@ -741,7 +754,6 @@ function renderModalProducto(p) {
     }
 }
 
-
 function cerrarModalVer() {
     var modal = document.getElementById('modalVerProducto');
     if (modal) {
@@ -764,7 +776,6 @@ document.addEventListener('keydown', function(e) {
         cerrarModalVer();
     }
 });
-
 
 // ============================================================
 // ELIMINAR PRODUCTO
@@ -1194,8 +1205,7 @@ window.fueEditado = fueEditado;
    ============================================================ */
 .bd-col-item { width: 40px; text-align: center; }
 .bd-col-code { width: 100px; text-align: center; }
-.bd-col-date { width: 135px; text-align: center; }
-.bd-col-edit { width: 150px; text-align: center; }  /* NUEVA COLUMNA */
+.bd-col-date { width: 160px; text-align: center; }
 .bd-col-desc { width: 150px; }
 .bd-col-model { width: 100px; }
 .bd-col-brand { width: 120px; }
@@ -1237,36 +1247,16 @@ window.fueEditado = fueEditado;
     border: 1px solid #e2e8f0;
 }
 
-/* ============================================================
-   EDITADO - BADGE
-   ============================================================ */
-.bd-edit-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 10px;
-    border-radius: 12px;
-    font-size: 10px;
-    font-weight: 600;
-    font-family: 'Courier New', monospace;
-    letter-spacing: 0.2px;
-    white-space: nowrap;
-}
-
-.bd-edit-badge.original {
-    background: #f1f5f9;
-    color: #64748b;
-    border: 1px solid #e2e8f0;
-}
-
-.bd-edit-badge.editado {
+/* BADGE PARA EDITADO */
+.bd-date-badge.editado {
     background: #fef3c7;
     color: #92400e;
     border: 1px solid #f59e0b;
 }
 
-.bd-edit-badge.editado i {
+.bd-date-badge.editado i {
     font-size: 12px;
+    margin-right: 4px;
 }
 
 /* ============================================================
@@ -1514,12 +1504,10 @@ window.fueEditado = fueEditado;
     }
     
     .bd-col-date {
-        min-width: 120px;
-    }
-    .bd-col-edit {
         min-width: 130px;
     }
 }
+
 /* ============================================================
    MODAL VER PRODUCTO - COMPACTO
    ============================================================ */
@@ -1744,39 +1732,36 @@ window.fueEditado = fueEditado;
     transform: translateY(-1px);
     box-shadow: 0 4px 16px rgba(0, 102, 255, 0.35);
 }
+
 /* ============================================================
-   BORDES ROJOS - VERSIÓN SUAVE (mismo color, menos intenso)
+   BORDES ROJOS - VERSIÓN SUAVE
    ============================================================ */
 
-/* Bordes rojos entre celdas - más delgados */
+/* Bordes rojos entre celdas */
 .bd-table tbody td {
-    border-right: 1px solid #ef4444 !important;  /* Mismo rojo, pero 1px en vez de 2px */
+    border-right: 1px solid #ef4444 !important;
     padding: 6px 10px;
 }
 
-/* Quitar borde derecho de la última columna */
 .bd-table tbody td:last-child {
     border-right: none !important;
 }
 
-/* Bordes rojos en los encabezados - más delgados */
 .bd-table thead th {
-    border-right: 1px solid #ef4444 !important;  /* Mismo rojo, 1px */
-    border-bottom: 2px solid #ef4444 !important; /* Mismo rojo, 2px en vez de 3px */
+    border-right: 1px solid #ef4444 !important;
+    border-bottom: 2px solid #ef4444 !important;
 }
 
 .bd-table thead th:last-child {
     border-right: none !important;
 }
 
-/* Hover: fondo rojo muy suave (igual) */
 .bd-table tbody tr:hover td {
     background: #fef2f2 !important;
 }
 
-/* Separación entre filas - mismo rojo pero más claro */
 .bd-table tbody tr {
-    border-bottom: 1px solid #f87171 !important;  /* Rojo un poco más claro que #fca5a5 */
+    border-bottom: 1px solid #f87171 !important;
 }
 
 /* Responsive */

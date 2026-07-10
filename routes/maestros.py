@@ -654,6 +654,49 @@ def api_proveedores_obtener(id):
     except Exception as e:
         current_app.logger.error(f"Error obteniendo proveedor: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
+
+@maestros_bp.route('/api/proveedores/<int:id>', methods=['DELETE'])
+@login_required
+def api_proveedores_eliminar(id):
+    """Eliminar proveedor"""
+    try:
+        from database import DATABASE_URL
+
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+
+        cur.execute("SELECT id FROM proveedores WHERE id = %s", (id,))
+        if not cur.fetchone():
+            cur.close()
+            conn.close()
+            return jsonify({"success": False, "error": "Proveedor no encontrado"}), 404
+
+        cur.execute("DELETE FROM proveedores_contactos WHERE proveedor_id = %s", (id,))
+        cur.execute("DELETE FROM proveedores_puntos_entrega WHERE proveedor_id = %s", (id,))
+
+        cur.execute("""
+            DELETE FROM proveedores
+            WHERE id = %s
+            RETURNING id
+        """, (id,))
+
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        if result:
+            return jsonify({
+                "success": True,
+                "message": "Proveedor eliminado correctamente"
+            })
+
+        return jsonify({"success": False, "error": "No se pudo eliminar el proveedor"})
+
+    except Exception as e:
+        current_app.logger.error(f"❌ Error eliminando proveedor: {e}")
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
  
 
 
@@ -883,6 +926,40 @@ def api_almacenes_obtener(id):
         return jsonify({"success": False, "error": "Almacén no encontrado"}), 404
     except Exception as e:
         current_app.logger.error(f"Error obteniendo almacén: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@maestros_bp.route('/api/almacenes/<int:id>', methods=['DELETE'])
+@login_required
+def api_almacenes_eliminar(id):
+    """Eliminar almacén"""
+    try:
+        from database import DATABASE_URL
+
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+
+        cur.execute("""
+            DELETE FROM almacenes
+            WHERE id = %s
+            RETURNING id
+        """, (id,))
+
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        if result:
+            return jsonify({
+                "success": True,
+                "message": "Almacén eliminado correctamente"
+            })
+
+        return jsonify({"success": False, "error": "Almacén no encontrado"}), 404
+
+    except Exception as e:
+        current_app.logger.error(f"❌ Error eliminando almacén: {e}")
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
 
