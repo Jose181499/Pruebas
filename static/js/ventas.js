@@ -663,7 +663,7 @@ function renderCotizaciones() {
                 <th>N° Cotización</th>
                 <th>RUC</th>
                 <th>Cód. Cliente</th>
-                <th>Razón social</th>
+                <th>Razón social (Cliente) </th>
                 <th>Descripción principal</th>
                 <th>Monto total<br><small>(Incluido IGV)</small></th>
                 <th>Cond. pago</th>
@@ -708,7 +708,7 @@ function renderCotizaciones() {
             <th>N° Cotización</th>
             <th>RUC</th>
             <th>Cód. Cliente</th>
-            <th>Razón social</th>
+            <th>Razón social (Cliente) </th>
             <th>Contacto</th>
             <th>Teléfono</th>
             <th>Email</th>
