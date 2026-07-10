@@ -99,7 +99,8 @@
                     <!-- COLUMNAS SIEMPRE VISIBLES (PRINCIPAL) -->
                     <th class="bd-col-item">Ítem</th>
                     <th class="bd-col-code">Código / Producto</th>
-                    <th class="bd-col-date">Fecha / Hora</th>  <!-- NUEVA COLUMNA -->
+                    <th class="bd-col-date">Fecha / Hora</th>
+                    <th class="bd-col-edit">Editado</th>  <!-- NUEVA COLUMNA -->
                     <th class="bd-col-desc">Descripción</th>
                     <th class="bd-col-model">Modelo</th>
                     <th class="bd-col-brand">Marca</th>
@@ -128,7 +129,7 @@
             </thead>
             <tbody id="bdProductTableBody">
                 <tr>
-                    <td colspan="25" style="text-align:center;color:#94A3B8;padding:40px;">
+                    <td colspan="26" style="text-align:center;color:#94A3B8;padding:40px;">
                         <i class="bi bi-inbox" style="font-size:32px;display:block;margin-bottom:10px;"></i>
                         Cargando productos...
                     </td>
@@ -232,6 +233,26 @@ function formatearFecha(fecha) {
 }
 
 // ============================================================
+// FUNCIÓN PARA COMPARAR FECHAS Y DETERMINAR SI FUE EDITADO
+// ============================================================
+function fueEditado(created_at, updated_at) {
+    if (!created_at || !updated_at) return false;
+    if (created_at === updated_at) return false;
+    
+    try {
+        var created = new Date(created_at);
+        var updated = new Date(updated_at);
+        if (isNaN(created.getTime()) || isNaN(updated.getTime())) return false;
+        
+        // Si la diferencia es mayor a 1 minuto, consideramos que fue editado
+        var diffMs = updated.getTime() - created.getTime();
+        return diffMs > 60000; // 1 minuto
+    } catch (e) {
+        return false;
+    }
+}
+
+// ============================================================
 // CAMBIAR VISTA
 // ============================================================
 function cambiarVista(vista) {
@@ -323,7 +344,7 @@ async function cargarProductos() {
         }
         
         if (!data || data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="25" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay productos registrados</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="26" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay productos registrados</td></tr>`;
             document.getElementById('bdTotalRegistros').textContent = '0 registros';
             document.getElementById('bdPaginaInfo').textContent = '0/0';
             return;
@@ -370,13 +391,27 @@ async function cargarProductos() {
             var categoria = p.categoria || p.familia || '-';
             var subcategoria = p.subcategoria || p.categoria_derivada || '-';
             
-            var fecha = p.created_at || p.updated_at || p.fecha_creacion || p.fecha_registro || null;
-            var fechaFormateada = formatearFecha(fecha);
+            // Fechas
+            var createdAt = p.created_at || p.fecha_creacion || p.fecha_registro || null;
+            var updatedAt = p.updated_at || p.updated_at || null;
+            var fechaFormateada = formatearFecha(createdAt);
+            
+            // Verificar si fue editado
+            var editado = fueEditado(createdAt, updatedAt);
+            var editadoFecha = formatearFecha(updatedAt);
             
             html += '<tr>';
             html += '<td class="bd-col-item" style="text-align:center;color:#94a3b8;font-weight:600;">' + index + '</td>';
             html += '<td class="bd-col-code"><span class="bd-t-code">' + (p.codigo || '-') + '</span></td>';
             html += '<td class="bd-col-date"><span class="bd-date-badge">' + fechaFormateada + '</span></td>';
+            
+            // COLUMNA DE EDITADO
+            if (editado) {
+                html += '<td class="bd-col-edit"><span class="bd-edit-badge editado"><i class="bi bi-pencil-square"></i> ' + editadoFecha + '</span></td>';
+            } else {
+                html += '<td class="bd-col-edit"><span class="bd-edit-badge original"><i class="bi bi-check-circle"></i> Original</span></td>';
+            }
+            
             html += '<td class="bd-col-desc"><strong>' + (p.descripcion || '-') + '</strong></td>';
             html += '<td class="bd-col-model">' + (p.modelo || '-') + '</td>';
             html += '<td class="bd-col-brand">' + (p.marca || '-') + '</td>';
@@ -612,9 +647,12 @@ function renderModalProducto(p) {
     var categoria = p.categoria || p.familia || '-';
     var subcategoria = p.subcategoria || p.categoria_derivada || '-';
     
-    // Fecha
-    var fecha = p.created_at || p.updated_at || p.fecha_creacion || null;
-    var fechaStr = fecha ? formatearFecha(fecha) : '-';
+    // Fechas
+    var createdAt = p.created_at || p.fecha_creacion || null;
+    var updatedAt = p.updated_at || p.updated_at || null;
+    var fechaCreacion = formatearFecha(createdAt);
+    var fechaEdicion = formatearFecha(updatedAt);
+    var editado = fueEditado(createdAt, updatedAt);
     
     body.innerHTML = `
         <div class="grid-info-ver">
@@ -670,9 +708,15 @@ function renderModalProducto(p) {
                 <span class="info-value">${p.stock_minimo || '0'}</span>
             </div>
             <div class="info-item">
-                <span class="info-label">Fecha registro</span>
-                <span class="info-value">${fechaStr}</span>
+                <span class="info-label">Fecha creación</span>
+                <span class="info-value">${fechaCreacion}</span>
             </div>
+            
+            ${editado ? `
+            <div class="info-item full" style="background:#fef3c7;border-radius:6px;padding:6px 10px;border:1px solid #f59e0b;">
+                <span class="info-label" style="color:#92400e;">✏️ Última edición</span>
+                <span class="info-value" style="color:#92400e;font-weight:700;">${fechaEdicion}</span>
+            </div>` : ''}
             
             <div class="info-item full">
                 <span class="info-label">Descripción</span>
@@ -834,6 +878,7 @@ window.editarProducto = editarProducto;
 window.eliminarProducto = eliminarProducto;
 window.bdExportarExcel = bdExportarExcel;
 window.formatearFecha = formatearFecha;
+window.fueEditado = fueEditado;
 </script>
 
 <style>
@@ -1149,7 +1194,8 @@ window.formatearFecha = formatearFecha;
    ============================================================ */
 .bd-col-item { width: 40px; text-align: center; }
 .bd-col-code { width: 100px; text-align: center; }
-.bd-col-date { width: 150px; text-align: center; }  /* NUEVA COLUMNA */
+.bd-col-date { width: 135px; text-align: center; }
+.bd-col-edit { width: 150px; text-align: center; }  /* NUEVA COLUMNA */
 .bd-col-desc { width: 150px; }
 .bd-col-model { width: 100px; }
 .bd-col-brand { width: 120px; }
@@ -1189,6 +1235,38 @@ window.formatearFecha = formatearFecha;
     font-family: 'Courier New', monospace;
     letter-spacing: 0.3px;
     border: 1px solid #e2e8f0;
+}
+
+/* ============================================================
+   EDITADO - BADGE
+   ============================================================ */
+.bd-edit-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+}
+
+.bd-edit-badge.original {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+}
+
+.bd-edit-badge.editado {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #f59e0b;
+}
+
+.bd-edit-badge.editado i {
+    font-size: 12px;
 }
 
 /* ============================================================
@@ -1437,6 +1515,9 @@ window.formatearFecha = formatearFecha;
     
     .bd-col-date {
         min-width: 120px;
+    }
+    .bd-col-edit {
+        min-width: 130px;
     }
 }
 /* ============================================================
