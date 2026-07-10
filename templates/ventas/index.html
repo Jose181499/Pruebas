@@ -2424,6 +2424,60 @@
     }
 }
 
+/* Estilos para el buscador de cotizaciones */
+#cotizacionSearchResults {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    box-shadow: 0 8px 30px rgba(15, 23, 42, 0.15);
+    max-height: 250px;
+    overflow-y: auto;
+    position: absolute;
+    z-index: 1000;
+    width: 100%;
+    margin-top: 4px;
+}
+
+#cotizacionSearchResults::-webkit-scrollbar {
+    width: 6px;
+}
+
+#cotizacionSearchResults::-webkit-scrollbar-track {
+    background: #F1F5F9;
+    border-radius: 3px;
+}
+
+#cotizacionSearchResults::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 3px;
+}
+
+#cotizacionSearchResults::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+}
+
+/* Input de búsqueda con foco */
+#pcCotSearch:focus {
+    border-color: #EF233C;
+    box-shadow: 0 0 0 3px rgba(239, 35, 60, 0.1);
+}
+
+/* Resultado seleccionado */
+.cotizacion-result-item {
+    padding: 10px 14px;
+    border-bottom: 1px solid #F1F5F9;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.cotizacion-result-item:hover {
+    background: #F8FAFC;
+}
+
+.cotizacion-result-item:last-child {
+    border-bottom: none;
+}
+
 </style>
 {% endblock %}
 

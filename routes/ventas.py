@@ -1436,6 +1436,7 @@ def api_pedido_compra_listar():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
 @ventas_bp.route('/ventas/api/pedido-compra/guardar', methods=['POST'])
 @login_required
 def api_pedido_compra_guardar():
@@ -1444,15 +1445,83 @@ def api_pedido_compra_guardar():
         usuario_id = session.get('usuario_id', 8)
         data['creado_por'] = usuario_id
         
+        # Verificar si viene de una cotización
+        cotizacion_id = data.get('cotizacion_id')
+        cotizacion_numero = data.get('cotizacion_numero')
+        
+        # Si tiene cotizacion_id, obtener más datos de la cotización
+        if cotizacion_id:
+            cot_query = """
+                SELECT 
+                    c.id, c.numero_cotizacion, c.fecha_creacion,
+                    c.condicion_pago, c.direccion_entrega, c.tiempo_entrega,
+                    c.vendedor, c.total,
+                    cl.razon_social as cliente_razon_social,
+                    cl.numero_documento as cliente_ruc,
+                    cl.nombre_contacto as cliente_contacto
+                FROM cotizaciones c
+                LEFT JOIN clientes cl ON cl.id = c.cliente_id::integer
+                WHERE c.id = %s
+            """
+            cot_data = db_query(cot_query, (cotizacion_id,))
+            if cot_data:
+                cot = cot_data[0]
+                # Si el PC no tiene estos datos, usar los de la cotización
+                if not data.get('cliente'):
+                    data['cliente'] = cot.get('cliente_razon_social')
+                if not data.get('ruc'):
+                    data['ruc'] = cot.get('cliente_ruc')
+                if not data.get('cotizacion_numero'):
+                    data['cotizacion_numero'] = cot.get('numero_cotizacion')
+                if not data.get('monto') or data.get('monto') == 0:
+                    data['monto'] = float(cot.get('total', 0))
+                if not data.get('lugar_entrega'):
+                    data['lugar_entrega'] = cot.get('direccion_entrega')
+                if not data.get('condicion_pago'):
+                    data['condicion_pago'] = cot.get('condicion_pago')
+                if not data.get('contacto'):
+                    data['contacto'] = cot.get('cliente_contacto')
+        
+        # Si no tiene número, generar uno
         if not data.get('numero'):
+            from datetime import datetime
             data['numero'] = f"PC-{datetime.now().strftime('%Y%m%d')}-{str(datetime.now().timestamp()).split('.')[0][-4:]}"
         
+        # Si no tiene fecha, usar ahora
+        if not data.get('fecha'):
+            from datetime import datetime
+            data['fecha'] = datetime.now().isoformat()
+        
+        # Guardar el PC
         result = guardar_pc_db(data)
+        
         if result:
-            return jsonify({'success': True, 'message': 'PC guardado', 'data': result})
+            # Si tiene cotizacion_id, actualizar el estado de la cotización
+            if cotizacion_id:
+                try:
+                    update_cot = """
+                        UPDATE cotizaciones 
+                        SET estado = 'Aceptada por Cliente', 
+                            updated_at = NOW()
+                        WHERE id = %s
+                        RETURNING id
+                    """
+                    db_query(update_cot, (cotizacion_id,))
+                except Exception as e:
+                    print(f"⚠️ No se pudo actualizar estado de cotización: {e}")
+            
+            return jsonify({
+                'success': True, 
+                'message': 'PC guardado correctamente', 
+                'data': result
+            })
+        
         return jsonify({'success': False, 'error': 'No se pudo guardar'}), 400
             
     except Exception as e:
+        print(f"❌ Error en api_pedido_compra_guardar: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # ============================================================
@@ -1892,23 +1961,24 @@ def api_devoluciones_toggle(id):
 
 
 # ============================================================
-# COTIZACIONES - OBTENER CON PRODUCTOS (PARA EDITAR)
-# ============================================================
+
 @ventas_bp.route('/ventas/api/cotizaciones/<int:id>/completa', methods=['GET'])
 @login_required
 def api_cotizaciones_obtener_completa(id):
-    """Obtiene una cotización con sus productos para edición"""
+    """Obtiene una cotización con sus productos para edición o para crear PC"""
     try:
         # Obtener cabecera
         query_cabecera = """
             SELECT 
-                c.id, c.numero_cotizacion, c.cliente_id, c.fecha_creacion, c.estado,
+                c.id, c.numero_cotizacion, c.fecha_creacion, c.estado,
                 c.subtotal, c.igv, c.total, c.usuario_id, c.notas,
                 c.forma_pago, c.tiempo_entrega, c.almacen, c.validez_oferta,
                 c.codigo_cotizacion, c.correlativo, c.condicion_pago,
                 c.direccion_entrega, c.requerimiento, c.nota_cotizacion,
                 c.descuento_porcentaje, c.descuento_monto, c.descuento_tipo,
                 c.contacto_cliente, c.telefono_cliente, c.email_cliente,
+                c.seguimiento, c.motivo, c.transporte, c.parihuela, c.nota_interna,
+                c.vendedor,
                 cl.id as cliente_id,
                 cl.razon_social as cliente_razon_social,
                 cl.numero_documento as cliente_ruc,
@@ -1931,10 +2001,22 @@ def api_cotizaciones_obtener_completa(id):
         query_productos = """
             SELECT 
                 d.id, d.producto_id, d.cantidad,
-                p.codigo, p.descripcion as producto, p.descripcion_larga,
-                p.modelo, p.marca, p.unidad as um, p.stock,
-                p.precio_unitario as valorVenta,
-                p.costo_unitario
+                d.precio_venta_unitario as valorVenta,
+                d.subtotal_venta,
+                d.descuento_porcentaje,
+                d.precio_venta_con_descuento,
+                d.subtotal_venta_con_descuento,
+                d.costo_unitario,
+                d.margen_porcentaje,
+                p.codigo, 
+                p.descripcion as producto, 
+                p.descripcion_larga,
+                p.modelo, 
+                p.marca, 
+                p.unidad as um, 
+                p.stock,
+                p.precio_unitario,
+                p.costo_unitario as costo
             FROM cotizacion_detalle d
             LEFT JOIN productos p ON p.id = d.producto_id
             WHERE d.cotizacion_id = %s
@@ -1943,7 +2025,8 @@ def api_cotizaciones_obtener_completa(id):
         
         # Combinar datos
         result = dict(cabecera[0])
-        # Asegurar que los campos de cliente tengan nombres consistentes
+        
+        # Asegurar nombres consistentes para el frontend
         result['cliente_razon_social'] = result.get('cliente_razon_social') or result.get('cliente_nombre_comercial') or f"Cliente {result.get('cliente_id', '')}"
         result['cliente_ruc'] = result.get('cliente_ruc') or str(result.get('cliente_id', ''))
         result['cod_cliente'] = result.get('cod_cliente') or f"CLI-{str(result.get('cliente_id', '')).zfill(6)}"
@@ -1954,16 +2037,18 @@ def api_cotizaciones_obtener_completa(id):
         for p in productos or []:
             result['productos'].append({
                 'id': p.get('producto_id'),
-                'codigo': p.get('codigo'),
+                'codigo': p.get('codigo') or '',
                 'producto': p.get('producto') or p.get('descripcion_larga') or 'Producto sin nombre',
                 'descripcion': p.get('descripcion_larga') or p.get('producto') or '',
                 'modelo': p.get('modelo') or '',
                 'marca': p.get('marca') or '',
                 'um': p.get('um') or 'NIU',
                 'cantidad': float(p.get('cantidad') or 1),
-                'valorVenta': float(p.get('valorVenta') or 0),
+                'valorVenta': float(p.get('valorVenta') or p.get('precio_unitario') or 0),
                 'stock': int(p.get('stock') or 0),
-                'costo_unitario': float(p.get('costo_unitario') or 0)
+                'costo_unitario': float(p.get('costo_unitario') or p.get('costo') or 0),
+                'subtotal_venta': float(p.get('subtotal_venta') or 0),
+                'descuento_porcentaje': float(p.get('descuento_porcentaje') or 0)
             })
         
         return jsonify({'success': True, 'data': result})
@@ -1973,7 +2058,6 @@ def api_cotizaciones_obtener_completa(id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 
 @ventas_bp.route('/ventas/api/cotizaciones/<int:id>/duplicar', methods=['POST'])
@@ -2584,4 +2668,161 @@ def api_clientes_buscar_por_ruc():
         print(f"❌ Error en api_clientes_buscar_por_ruc: {e}")
         import traceback
         traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 
+        
+@ventas_bp.route('/ventas/api/cotizaciones/buscar', methods=['GET'])
+@login_required
+def api_cotizaciones_buscar():
+    """Busca cotizaciones por texto (N° cotización, RUC, razón social) para el buscador del modal PC"""
+    try:
+        q = request.args.get('q', '').strip()
+        if not q or len(q) < 2:
+            return jsonify({'success': True, 'data': []})
+        
+        # Buscar en la base de datos
+        query = """
+            SELECT 
+                c.id, c.numero_cotizacion, c.fecha_creacion, c.estado,
+                c.total, c.subtotal, c.igv, c.condicion_pago,
+                c.direccion_entrega, c.tiempo_entrega, c.validez_oferta,
+                c.vendedor,
+                cl.id as cliente_id,
+                cl.razon_social as cliente_razon_social,
+                cl.numero_documento as cliente_ruc,
+                cl.nombre_comercial as cliente_nombre_comercial,
+                cl.codigo_cliente as cod_cliente,
+                cl.direccion_fiscal as cliente_direccion,
+                cl.telefono_contacto as cliente_telefono,
+                cl.nombre_contacto as cliente_contacto,
+                cl.email_contacto as cliente_email
+            FROM cotizaciones c
+            LEFT JOIN clientes cl ON cl.id = c.cliente_id::integer
+            WHERE c.estado != 'Anulada'
+            AND (
+                LOWER(c.numero_cotizacion) LIKE LOWER(%s) OR
+                LOWER(cl.razon_social) LIKE LOWER(%s) OR
+                LOWER(cl.numero_documento) LIKE LOWER(%s) OR
+                LOWER(cl.nombre_comercial) LIKE LOWER(%s) OR
+                LOWER(c.codigo_cotizacion) LIKE LOWER(%s)
+            )
+            ORDER BY c.fecha_creacion DESC
+            LIMIT 20
+        """
+        search_pattern = f'%{q}%'
+        results = db_query(query, (search_pattern, search_pattern, search_pattern, search_pattern, search_pattern))
+        
+        # Formatear respuesta
+        formatted_data = []
+        for row in results:
+            formatted_data.append({
+                'id': row.get('id'),
+                'numero': row.get('numero_cotizacion'),
+                'fecha': row.get('fecha_creacion'),
+                'estado': row.get('estado'),
+                'total': float(row.get('total', 0)),
+                'subtotal': float(row.get('subtotal', 0)),
+                'igv': float(row.get('igv', 0)),
+                'ruc': row.get('cliente_ruc'),
+                'razon': row.get('cliente_razon_social') or row.get('cliente_nombre_comercial'),
+                'cod_cliente': row.get('cod_cliente'),
+                'direccion': row.get('cliente_direccion'),
+                'telefono': row.get('cliente_telefono'),
+                'contacto': row.get('cliente_contacto'),
+                'email': row.get('cliente_email'),
+                'condicion_pago': row.get('condicion_pago'),
+                'direccion_entrega': row.get('direccion_entrega'),
+                'tiempo_entrega': row.get('tiempo_entrega'),
+                'validez_oferta': row.get('validez_oferta'),
+                'vendedor': row.get('vendedor')
+            })
+        
+        return jsonify({'success': True, 'data': formatted_data})
+        
+    except Exception as e:
+        print(f"❌ Error en api_cotizaciones_buscar: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
+def guardar_pc_db(data):
+    """Guarda un nuevo pedido de compra"""
+    try:
+        query = """
+            INSERT INTO pedido_compra_pc (
+                numero, fecha, estado, cliente, ruc, monto,
+                cotizacion_id, cotizacion_numero, correo_origen,
+                fecha_recepcion, fecha_despacho, archivo_oc,
+                observaciones, valida_precios, valida_cantidades,
+                valida_stock, valida_entrega, valida_montos,
+                responsable, lugar_entrega, condicion_atencion,
+                creado_por, items_json, condicion_pago, vendedor
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            )
+            RETURNING id, numero
+        """
+        params = (
+            data.get('numero'),
+            data.get('fecha') or datetime.now().isoformat(),
+            data.get('estado', 'Pendiente'),
+            data.get('cliente'),
+            data.get('ruc'),
+            float(data.get('monto', 0)),
+            data.get('cotizacion_id'),
+            data.get('cotizacion_numero'),
+            data.get('correo_origen') or data.get('medio'),
+            data.get('fecha_recepcion') or data.get('fecha'),
+            data.get('fecha_despacho'),
+            data.get('archivo_oc'),
+            data.get('observaciones'),
+            data.get('valida_precios', False),
+            data.get('valida_cantidades', False),
+            data.get('valida_stock', False),
+            data.get('valida_entrega', False),
+            data.get('valida_montos', False),
+            data.get('responsable') or data.get('vendedor') or 'Hellen',
+            data.get('lugar_entrega') or data.get('entrega'),
+            data.get('condicion_atencion') or data.get('condicion_pago'),
+            data.get('creado_por'),
+            json.dumps(data.get('items', [])),
+            data.get('condicion_pago'),
+            data.get('vendedor')
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en guardar_pc_db: {e}")
+        raise
+
+def obtener_pc_db():
+    """Obtiene todos los pedidos de compra"""
+    try:
+        query = """
+            SELECT 
+                id, numero, fecha, estado, cliente, ruc, monto,
+                cotizacion_id, cotizacion_numero, correo_origen as medio,
+                fecha_recepcion, fecha_despacho, archivo_oc,
+                observaciones, valida_precios, valida_cantidades,
+                valida_stock, valida_entrega, valida_montos,
+                responsable, lugar_entrega as entrega, condicion_atencion as condicion_pago,
+                created_at, updated_at, items_json, vendedor
+            FROM pedido_compra_pc
+            ORDER BY id DESC
+        """
+        results = db_query(query)
+        
+        # Procesar items_json
+        for row in results:
+            if row.get('items_json'):
+                try:
+                    row['items'] = json.loads(row['items_json'])
+                except:
+                    row['items'] = []
+            else:
+                row['items'] = []
+        
+        return results
+    except Exception as e:
+        print(f"❌ Error en obtener_pc_db: {e}")
+        return []

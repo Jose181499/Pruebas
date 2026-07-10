@@ -28,41 +28,64 @@
                 </div>
             </div>
 
-            <!-- ============================================================ -->
-            <!-- BLOQUE 2: Cotización relacionada -->
-            <!-- ============================================================ -->
-            <div class="form-section" id="cotBlock">
-                <div class="section-title">1. Cotización relacionada</div>
-                <div class="ficha-grid" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
-                    <div class="form-field" style="grid-column: span 2;">
-                        <label>Buscar cotización</label>
-                        <select id="pcCotSelect" onchange="loadPedidoCotizacionSAP()" style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; font-weight:850;">
-                            <option value="">Seleccione una cotización</option>
-                        </select>
-                    </div>
-                    <div class="form-field">
-                        <label>N° cotización</label>
-                        <input id="pcCotNumero" readonly style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; background:#F1F5F9; font-weight:850;">
-                    </div>
-                    <div class="form-field">
-                        <label>Fecha cotización</label>
-                        <input id="pcCotFecha" readonly style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; background:#F1F5F9; font-weight:850;">
-                    </div>
-                    <div class="form-field">
-                        <label>Cliente</label>
-                        <input id="pcCliente" readonly style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; background:#F1F5F9; font-weight:850;">
-                    </div>
-                    <div class="form-field">
-                        <label>RUC</label>
-                        <input id="pcRuc" readonly style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; background:#F1F5F9; font-weight:850;">
-                    </div>
-                    <div class="form-field">
-                        <label>Monto PC</label>
-                        <input id="pcMonto" type="number" step="0.01" value="0" style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; font-weight:850;">
-                    </div>
-                </div>
+        <!-- ============================================================ -->
+<!-- BLOQUE 2: Cotización relacionada - CON BUSCADOR -->
+<!-- ============================================================ -->
+<div class="form-section" id="cotBlock">
+    <div class="section-title">1. Cotización relacionada</div>
+    
+    <!-- BUSCADOR CON AUTOCOMPLETADO -->
+    <div class="ficha-grid" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+        <div class="form-field" style="grid-column: span 2; position:relative;">
+            <label>Buscar cotización</label>
+            <div style="position:relative;">
+                <input id="pcCotSearch" 
+                       placeholder="Escribe N° cotización, RUC, razón social..." 
+                       style="width:100%; height:38px; border-radius:9px; border:1px solid #CBD5E1; padding:0 40px 0 14px; font-weight:850; outline:none;"
+                       oninput="buscarCotizacionSAP(this.value)"
+                       onfocus="this.select()"
+                       autocomplete="off">
+                <button onclick="buscarCotizacionSAP(document.getElementById('pcCotSearch').value)" 
+                        style="position:absolute; right:6px; top:5px; height:28px; width:28px; border:0; background:transparent; color:#64748B; cursor:pointer; font-size:16px; border-radius:6px; display:flex; align-items:center; justify-content:center;"
+                        title="Buscar">
+                    🔍
+                </button>
             </div>
-
+            <!-- Resultados de búsqueda (autocomplete) -->
+            <div id="cotizacionSearchResults" 
+                 style="display:none; position:absolute; left:0; right:0; top:100%; background:#fff; border:1px solid #CBD5E1; border-radius:9px; box-shadow:0 8px 30px rgba(15,23,42,.15); max-height:240px; overflow-y:auto; z-index:100; margin-top:4px;">
+            </div>
+        </div>
+        <div class="form-field">
+            <label>N° cotización</label>
+            <input id="pcCotNumero" readonly style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; background:#F1F5F9; font-weight:850;">
+        </div>
+        <div class="form-field">
+            <label>Fecha cotización</label>
+            <input id="pcCotFecha" readonly style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; background:#F1F5F9; font-weight:850;">
+        </div>
+        <div class="form-field" style="grid-column: span 2;">
+            <label>Cliente</label>
+            <input id="pcCliente" readonly style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; background:#F1F5F9; font-weight:850;">
+        </div>
+        <div class="form-field">
+            <label>RUC</label>
+            <input id="pcRuc" readonly style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; background:#F1F5F9; font-weight:850;">
+        </div>
+        <div class="form-field">
+            <label>Monto PC</label>
+            <input id="pcMonto" type="number" step="0.01" value="0" style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; font-weight:850;">
+        </div>
+        <div class="form-field" style="grid-column: span 2;">
+            <label>Condición de pago (de la cotización)</label>
+            <input id="pcCondicionPago" readonly style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; background:#F1F5F9; font-weight:850;">
+        </div>
+        <div class="form-field">
+            <label>Vendedor</label>
+            <input id="pcVendedor" readonly style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; background:#F1F5F9; font-weight:850;">
+        </div>
+    </div>
+</div>
             <!-- ============================================================ -->
             <!-- BLOQUE 3: Datos del Pedido de Compra Cliente -->
             <!-- ============================================================ -->

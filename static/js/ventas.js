@@ -344,6 +344,7 @@ async function cargarClientesMaestros() {
 // FUNCIONES DE CARGA DE DATOS (CON API REAL)
 // ============================================================
 
+
 async function loadCotizaciones() {
     console.log('🔄 Cargando cotizaciones...');
     try {
@@ -352,6 +353,8 @@ async function loadCotizaciones() {
             cotizacionesData = data.data || [];
             console.log(`✅ ${cotizacionesData.length} cotizaciones cargadas`);
             renderCotizaciones();
+            // El buscador de PC usará cotizacionesData
+            return cotizacionesData;
         } else {
             showToast('Error al cargar cotizaciones: ' + (data.error || 'Error desconocido'), 'error');
         }
@@ -359,6 +362,7 @@ async function loadCotizaciones() {
         console.error('❌ Error cargando cotizaciones:', error);
         showToast('Error al cargar cotizaciones', 'error');
     }
+    return [];
 }
 
 async function loadPedidos() {
@@ -4962,6 +4966,384 @@ function deselectAllProducts() {
 
 function filterProductSelector() {
     renderProductSelector();
+}
+
+// ============================================================
+// BUSCADOR DE COTIZACIONES CON AUTOCOMPLETADO
+// ============================================================
+
+// Variable para almacenar el temporizador de búsqueda
+let cotizacionSearchTimer = null;
+// Variable para almacenar la cotización seleccionada
+let cotizacionSeleccionada = null;
+
+function buscarCotizacionSAP(query) {
+    const resultsContainer = document.getElementById('cotizacionSearchResults');
+    const searchInput = document.getElementById('pcCotSearch');
+    
+    // Limpiar timer anterior
+    if (cotizacionSearchTimer) {
+        clearTimeout(cotizacionSearchTimer);
+        cotizacionSearchTimer = null;
+    }
+    
+    const q = (query || '').trim();
+    
+    if (!q || q.length < 2) {
+        resultsContainer.style.display = 'none';
+        resultsContainer.innerHTML = '';
+        return;
+    }
+    
+    // Mostrar loading
+    resultsContainer.innerHTML = `<div style="padding:12px 16px; color:#94A3B8; font-weight:850; text-align:center;">⏳ Buscando cotizaciones...</div>`;
+    resultsContainer.style.display = 'block';
+    
+    // Buscar con debounce
+    cotizacionSearchTimer = setTimeout(() => {
+        // Buscar en cotizacionesData (cargado desde la API)
+        const results = cotizacionesData.filter(c => {
+            const searchStr = `${c.numero || ''} ${c.razon || ''} ${c.ruc || ''} ${c.descripcion || ''} ${c.cod_cliente || ''}`.toLowerCase();
+            return searchStr.includes(q.toLowerCase());
+        });
+        
+        if (results.length === 0) {
+            resultsContainer.innerHTML = `
+                <div style="padding:12px 16px; color:#94A3B8; font-weight:850; text-align:center;">
+                    ❌ No se encontraron cotizaciones para: "<b>${q}</b>"
+                </div>
+            `;
+            return;
+        }
+        
+        // Renderizar resultados
+        resultsContainer.innerHTML = results.map(c => `
+            <div onclick="seleccionarCotizacionSAP(${c.id})" 
+                 style="padding:10px 14px; border-bottom:1px solid #F1F5F9; cursor:pointer; transition:all 0.15s; display:flex; justify-content:space-between; align-items:center;"
+                 onmouseover="this.style.background='#F8FAFC'"
+                 onmouseout="this.style.background='#fff'">
+                <div>
+                    <div style="font-weight:900; color:#0F172A;">${c.numero || 'COT-XXXX'}</div>
+                    <div style="font-size:11px; color:#64748B;">${c.razon || 'Sin cliente'} ${c.ruc ? '| RUC: ' + c.ruc : ''}</div>
+                </div>
+                <div style="font-weight:900; color:#EF233C; font-size:13px;">${money(c.total || c.monto || 0)}</div>
+            </div>
+        `).join('');
+        
+        resultsContainer.style.display = 'block';
+        
+        // Cerrar resultados al hacer clic fuera
+        document.addEventListener('click', function closeResults(e) {
+            if (!resultsContainer.contains(e.target) && e.target !== searchInput) {
+                resultsContainer.style.display = 'none';
+                document.removeEventListener('click', closeResults);
+            }
+        });
+        
+    }, 300);
+}
+
+function seleccionarCotizacionSAP(cotizacionId) {
+    // Buscar la cotización en los datos
+    const cotizacion = cotizacionesData.find(c => c.id === cotizacionId);
+    if (!cotizacion) {
+        showToast('❌ Cotización no encontrada', 'error');
+        return;
+    }
+    
+    cotizacionSeleccionada = cotizacion;
+    
+    // Cerrar resultados
+    const resultsContainer = document.getElementById('cotizacionSearchResults');
+    resultsContainer.style.display = 'none';
+    resultsContainer.innerHTML = '';
+    
+    // Actualizar el input de búsqueda
+    const searchInput = document.getElementById('pcCotSearch');
+    searchInput.value = `${cotizacion.numero || ''} - ${cotizacion.razon || ''}`;
+    
+    // ============================================================
+    // CARGAR TODOS LOS DATOS DE LA COTIZACIÓN
+    // ============================================================
+    
+    // Datos básicos
+    document.getElementById('pcCotNumero').value = cotizacion.numero || '';
+    document.getElementById('pcCotFecha').value = formatFecha(cotizacion.fecha);
+    document.getElementById('pcCliente').value = cotizacion.razon || '';
+    document.getElementById('pcRuc').value = cotizacion.ruc || '';
+    document.getElementById('pcMonto').value = cotizacion.total || cotizacion.monto || 0;
+    document.getElementById('pcCondicionPago').value = cotizacion.condicion || cotizacion.condicion_pago || 'Contado';
+    document.getElementById('pcVendedor').value = cotizacion.vendedor || 'Helen Blas Príncipe';
+    
+    // Dirección de entrega
+    if (cotizacion.direccion_entrega) {
+        document.getElementById('pcEntrega').value = cotizacion.direccion_entrega;
+    }
+    
+    // ============================================================
+    // CARGAR PRODUCTOS EN LA TABLA
+    // ============================================================
+    const tbody = document.getElementById('pcItemsBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    // Obtener productos de la cotización
+    const productos = cotizacion.productos || [];
+    
+    if (productos.length === 0) {
+        // Si no hay productos, agregar una fila vacía
+        addPedidoItemSAP();
+        showToast('⚠️ Esta cotización no tiene productos', 'warning');
+        return;
+    }
+    
+    productos.forEach((p, i) => {
+        const cantidadCotizada = p.cantidad || 1;
+        const precioCotizado = p.valorVenta || 0;
+        const stock = p.stock || 0;
+        const faltante = Math.max(cantidadCotizada - stock, 0);
+        
+        tbody.insertAdjacentHTML('beforeend', `
+            <tr>
+                <td>${i + 1}</td>
+                <td>
+                    <input value="${p.codigo || ''}" 
+                           style="width:90px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px;"
+                           readonly>
+                </td>
+                <td>
+                    <input value="${p.producto || p.descripcion || ''}" 
+                           style="width:160px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px;"
+                           readonly>
+                </td>
+                <td>
+                    <input type="number" value="${cantidadCotizada}" 
+                           style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center; background:#F8FAFC;"
+                           readonly>
+                </td>
+                <td>
+                    <input type="number" value="${cantidadCotizada}" 
+                           style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;"
+                           onchange="actualizarFaltanteSAP(this, ${i})">
+                </td>
+                <td>
+                    <input type="number" step="0.01" value="${precioCotizado}" 
+                           style="width:80px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:right; background:#F8FAFC;"
+                           readonly>
+                </td>
+                <td>
+                    <input type="number" step="0.01" value="${precioCotizado}" 
+                           style="width:80px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:right;"
+                           onchange="actualizarPrecioPCSAP(this, ${i})">
+                </td>
+                <td>
+                    <input type="number" value="${stock}" 
+                           style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center; background:#F8FAFC;"
+                           readonly>
+                </td>
+                <td style="font-weight:900; color:#DC2626; text-align:center;">${faltante}</td>
+            </tr>
+        `);
+    });
+    
+    // Guardar referencia de los productos para calcular faltantes
+    window._productosCotizacion = productos;
+    window._filaProductos = [];
+    
+    showToast(`✅ Cotización ${cotizacion.numero} cargada con ${productos.length} productos`, 'success');
+}
+
+// Funciones auxiliares para la tabla de productos
+function actualizarFaltanteSAP(input, index) {
+    const row = input.closest('tr');
+    const inputs = row.querySelectorAll('input');
+    const cantidadPC = Number(inputs[3]?.value || 0);
+    const stock = Number(inputs[6]?.value || 0);
+    const faltanteCell = row.querySelector('td:last-child');
+    const faltante = Math.max(cantidadPC - stock, 0);
+    if (faltanteCell) {
+        faltanteCell.textContent = faltante;
+        faltanteCell.style.color = faltante > 0 ? '#DC2626' : '#16A34A';
+    }
+}
+
+function actualizarPrecioPCSAP(input, index) {
+    // Solo actualiza el valor, no hace más nada
+    const value = Number(input.value || 0);
+    if (value < 0) input.value = 0;
+}
+
+// ============================================================
+// FUNCIÓN PARA ABRIR EL MODAL (ACTUALIZADA)
+// ============================================================
+
+function openPedidoCompraModalSAP(mode = 'cot') {
+    modalMode = mode;
+    editingId = null;
+    cotizacionSeleccionada = null;
+    
+    const modal = document.getElementById('pedidoCompraModal');
+    const title = document.getElementById('pedidoCompraModalTitle');
+    const sub = document.getElementById('modalSub');
+    const note = document.getElementById('modeNote');
+    const cotBlock = document.getElementById('cotBlock');
+    const origen = document.getElementById('docOrigen');
+    
+    if (mode === 'cot') {
+        title.textContent = 'Crear PC desde cotización';
+        sub.textContent = 'Busca una cotización para cargar todos sus datos automáticamente.';
+        note.className = 'mini-note';
+        note.textContent = '✅ Escribe el N° de cotización, RUC o nombre del cliente para buscar y cargar los datos.';
+        cotBlock.style.display = 'block';
+        origen.textContent = 'Cotización';
+    } else {
+        title.textContent = 'PC directo / sin cotización';
+        sub.textContent = 'PC directo: requiere validación comercial. No comprar bajo pedido hasta quedar conforme.';
+        note.className = 'danger-note';
+        note.textContent = '⚠️ PC directo: requiere validación comercial. No comprar bajo pedido hasta quedar conforme.';
+        cotBlock.style.display = 'none';
+        origen.textContent = 'Directo';
+    }
+    
+    // Limpiar y preparar el modal
+    clearPedidoModalSAP();
+    
+    // Limpiar buscador y resultados
+    const searchInput = document.getElementById('pcCotSearch');
+    if (searchInput) searchInput.value = '';
+    const resultsContainer = document.getElementById('cotizacionSearchResults');
+    if (resultsContainer) {
+        resultsContainer.style.display = 'none';
+        resultsContainer.innerHTML = '';
+    }
+    
+    // Mostrar modal
+    modal.classList.add('show');
+}
+
+// ============================================================
+// FUNCIÓN PARA LIMPIAR EL MODAL (ACTUALIZADA)
+// ============================================================
+
+function clearPedidoModalSAP() {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('pcFecha').value = now.toISOString().slice(0, 16);
+    document.getElementById('pcNumero').value = 'PC-' + new Date().toISOString().slice(0, 10).replaceAll('-', '') + '-' + String(Date.now()).slice(-4);
+    
+    ['pcCotNumero', 'pcCotFecha', 'pcCliente', 'pcRuc', 'pcContacto', 'pcEntrega', 'pcObs', 'pcCondicionPago', 'pcVendedor'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    document.getElementById('pcMonto').value = '0';
+    
+    // Limpiar el buscador
+    const searchInput = document.getElementById('pcCotSearch');
+    if (searchInput) searchInput.value = '';
+    const resultsContainer = document.getElementById('cotizacionSearchResults');
+    if (resultsContainer) {
+        resultsContainer.style.display = 'none';
+        resultsContainer.innerHTML = '';
+    }
+    
+    const tbody = document.getElementById('pcItemsBody');
+    if (tbody) tbody.innerHTML = '';
+    addPedidoItemSAP();
+}
+
+// ============================================================
+// FUNCIÓN PARA GUARDAR PC (ACTUALIZADA)
+// ============================================================
+
+function savePedidoCompraSAP(force) {
+    // Validar que se haya seleccionado una cotización en modo 'cot'
+    if (modalMode === 'cot' && !cotizacionSeleccionada) {
+        const searchInput = document.getElementById('pcCotSearch');
+        const valor = searchInput?.value?.trim() || '';
+        if (!valor) {
+            showToast('⚠️ Debes buscar y seleccionar una cotización primero', 'warning');
+            searchInput?.focus();
+            return;
+        }
+        // Si hay texto pero no se seleccionó, intentar buscar automáticamente
+        const results = cotizacionesData.filter(c => {
+            const searchStr = `${c.numero || ''} ${c.razon || ''} ${c.ruc || ''}`.toLowerCase();
+            return searchStr.includes(valor.toLowerCase());
+        });
+        if (results.length === 0) {
+            showToast('⚠️ No se encontró la cotización. Verifica el texto ingresado.', 'warning');
+            return;
+        } else if (results.length === 1) {
+            // Auto-seleccionar si solo hay un resultado
+            seleccionarCotizacionSAP(results[0].id);
+            // Reintentar guardar después de un momento
+            setTimeout(() => savePedidoCompraSAP(force), 300);
+            return;
+        } else {
+            showToast('⚠️ Se encontraron varias cotizaciones. Selecciona una de la lista.', 'warning');
+            // Mostrar resultados
+            buscarCotizacionSAP(valor);
+            return;
+        }
+    }
+    
+    const val = ['vPrecio', 'vCantidad', 'vProducto', 'vEntrega', 'vMoneda', 'vTransporte', 'vVigencia', 'vMargen']
+        .map(id => document.getElementById(id)?.value || 'Sí');
+    
+    const observed = force === 'observado' || val.some(v => v === 'No');
+    
+    const trs = document.querySelectorAll('#pcItemsBody tr');
+    const items = Array.from(trs).map(r => {
+        const inputs = r.querySelectorAll('input');
+        return [
+            inputs[0]?.value || '',
+            inputs[1]?.value || '',
+            Number(inputs[2]?.value || 0),
+            Number(inputs[3]?.value || 1),
+            Number(inputs[4]?.value || 0),
+            Number(inputs[6]?.value || 0),
+            Number(inputs[7]?.value || 0)
+        ];
+    });
+    
+    const stockFalta = items.some(i => Number(i[3]) > Number(i[6]));
+    const estado = observed ? 'PC observado' : (stockFalta ? 'PC conforme' : 'Listo para despacho');
+    
+    const pcData = {
+        id: Date.now(),
+        fecha: document.getElementById('pcFecha')?.value?.replace('T', ' ') || new Date().toISOString(),
+        medio: document.getElementById('pcMedio')?.value || 'Correo',
+        estado: estado,
+        numero: document.getElementById('pcNumero')?.value || 'PC-' + Date.now(),
+        cliente: document.getElementById('pcCliente')?.value || '',
+        ruc: document.getElementById('pcRuc')?.value || '',
+        cotizacion_numero: document.getElementById('pcCotNumero')?.value || 'SIN COTIZACIÓN',
+        monto: Number(document.getElementById('pcMonto')?.value || 0),
+        entrega: document.getElementById('pcEntrega')?.value || '',
+        reqCompra: observed ? 'Bloqueado' : (stockFalta ? 'Sí' : 'No'),
+        validacion: val,
+        items: items,
+        cotizacion_id: cotizacionSeleccionada?.id || null,
+        condicion_pago: document.getElementById('pcCondicionPago')?.value || '',
+        vendedor: document.getElementById('pcVendedor')?.value || ''
+    };
+    
+    // Guardar en el array global
+    if (typeof pedidosData !== 'undefined') {
+        pedidosData.unshift(pcData);
+    }
+    
+    closeModal('pedidoCompraModal');
+    showToast(`✅ PC guardado como: ${estado}`, observed ? 'warning' : 'success');
+    
+    // Limpiar selección
+    cotizacionSeleccionada = null;
+    
+    // Recargar lista
+    if (typeof loadPedidos === 'function') {
+        loadPedidos();
+    }
 }
 
 function updateProductQty(idKey, value) {
