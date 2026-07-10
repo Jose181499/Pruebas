@@ -4294,7 +4294,7 @@ function formatearFecha(fecha) {
 }
 
 // ============================================================
-// RENDERIZAR PRODUCTOS - CON FECHA / HORA Y ESTADO CAPITALIZADO
+// RENDERIZAR PRODUCTOS - VERSIÓN CORREGIDA (PARA base.html)
 // ============================================================
 function bdRenderProductos(data) {
     if (!window.location.pathname.includes('/productos/base-datos')) {
@@ -4302,23 +4302,20 @@ function bdRenderProductos(data) {
         return;
     }
     
-    console.log('🖥️ Renderizando productos...', data);
+    console.log('🖥️ Renderizando productos (VERSIÓN CORREGIDA)...');
     const tbody = document.getElementById('bdProductTableBody');
     if (!tbody) {
-        console.error('❌ No se encontró el elemento bdProductTableBody');
+        console.error('❌ No se encontró bdProductTableBody');
         return;
     }
     
     if (!data || data.length === 0) {
         tbody.innerHTML = `<tr><td colspan="25" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay productos registrados</td></tr>`;
-        const countEl = document.getElementById('bdTotalRegistros');
-        if (countEl) countEl.textContent = '0 registros';
-        const pageInfo = document.getElementById('bdPaginaInfo');
-        if (pageInfo) pageInfo.textContent = '0/0';
+        document.getElementById('bdTotalRegistros').textContent = '0 registros';
+        document.getElementById('bdPaginaInfo').textContent = '0/0';
         return;
     }
     
-    // Paginación
     var total = data.length;
     var totalPaginas = Math.ceil(total / window.bdPorPagina);
     if (window.bdPaginaActual > totalPaginas) window.bdPaginaActual = totalPaginas;
@@ -4327,7 +4324,6 @@ function bdRenderProductos(data) {
     var inicio = (window.bdPaginaActual - 1) * window.bdPorPagina;
     var fin = Math.min(inicio + window.bdPorPagina, total);
     var paginaData = data.slice(inicio, fin);
-    
     var esVistaCompleta = window.bdVistaActual === 'completa';
     var html = '';
     
@@ -4342,15 +4338,7 @@ function bdRenderProductos(data) {
         else if (estado === 'bloqueado') estadoClass = 'st-blocked';
         else if (estado === 'disponible') estadoClass = 'st-available';
         
-        var costo = p.costo_unitario ? parseFloat(p.costo_unitario).toFixed(2) : '0.00';
-        var precio = p.precio_unitario ? parseFloat(p.precio_unitario).toFixed(2) : '0.00';
-        var categoria = p.categoria || p.familia || '-';
-        var subcategoria = p.subcategoria || p.categoria_derivada || '-';
-        
-        var fecha = p.created_at || p.updated_at || p.fecha_creacion || p.fecha_registro || null;
-        var fechaFormateada = formatearFecha(fecha);
-        
-        // ✅ CAPITALIZAR ESTADO CORRECTAMENTE
+        // CAPITALIZAR ESTADO
         var estadoMostrado = 'Activo';
         if (p.estado) {
             var estadoLower = p.estado.toLowerCase();
@@ -4364,15 +4352,48 @@ function bdRenderProductos(data) {
             estadoMostrado = estadoMap[estadoLower] || p.estado.charAt(0).toUpperCase() + p.estado.slice(1).toLowerCase();
         }
         
+        var costo = p.costo_unitario ? parseFloat(p.costo_unitario).toFixed(2) : '0.00';
+        var precio = p.precio_unitario ? parseFloat(p.precio_unitario).toFixed(2) : '0.00';
+        var categoria = p.categoria || p.familia || '-';
+        var subcategoria = p.subcategoria || p.categoria_derivada || '-';
+        
+        // ✅ CORREGIDO: usar fecha_creacion (NO created_at)
+        var fechaCreacion = p.fecha_creacion || null;
+        var fechaActualizacion = p.updated_at || null;
+        
+        // ✅ Determinar si fue editado
+        var editado = false;
+        if (fechaCreacion && fechaActualizacion && fechaCreacion !== fechaActualizacion) {
+            try {
+                var created = new Date(fechaCreacion);
+                var updated = new Date(fechaActualizacion);
+                if (!isNaN(created.getTime()) && !isNaN(updated.getTime())) {
+                    var diffMs = updated.getTime() - created.getTime();
+                    editado = diffMs > 60000;
+                }
+            } catch(e) {
+                console.warn('Error comparando fechas:', e);
+            }
+        }
+        
+        var fechaMostrar = editado ? fechaActualizacion : fechaCreacion;
+        var fechaFormateada = formatearFecha(fechaMostrar);
+        
         html += '<tr>';
         html += '<td class="bd-col-item" style="text-align:center;color:#94a3b8;font-weight:600;">' + index + '</td>';
         html += '<td class="bd-col-code"><span class="bd-t-code">' + (p.codigo || '-') + '</span></td>';
-        html += '<td class="bd-col-date"><span class="bd-date-badge">' + fechaFormateada + '</span></td>';
+        
+        // ✅ COLUMNA FECHA / HORA CON INDICADOR DE EDICIÓN
+        if (editado) {
+            html += '<td class="bd-col-date"><span class="bd-date-badge editado"><i class="bi bi-pencil-square"></i> ' + fechaFormateada + '</span></td>';
+        } else {
+            html += '<td class="bd-col-date"><span class="bd-date-badge">' + fechaFormateada + '</span></td>';
+        }
+        
         html += '<td class="bd-col-desc"><strong>' + (p.descripcion || '-') + '</strong></td>';
         html += '<td class="bd-col-model">' + (p.modelo || '-') + '</td>';
         html += '<td class="bd-col-brand">' + (p.marca || '-') + '</td>';
         html += '<td class="bd-col-cat">' + categoria + '</td>';
-        // ✅ USAR estadoMostrado
         html += '<td class="bd-col-status"><span class="bd-status ' + estadoClass + '"><span class="bd-dot"></span>' + estadoMostrado + '</span></td>';
         html += '<td class="bd-col-actions"><div class="row-actions">';
         html += '<button class="btn-action btn-view" onclick="verProducto(' + p.id + ')" title="Ver"><i class="bi bi-eye"></i></button>';
@@ -4380,7 +4401,7 @@ function bdRenderProductos(data) {
         html += '<button class="btn-action btn-delete" onclick="eliminarProducto(' + p.id + ')" title="Eliminar"><i class="bi bi-trash"></i></button>';
         html += '</div></td>';
         
-        // COLUMNAS - SEPARADAS POR VISTA
+        // COLUMNAS OCULTAS
         if (esVistaCompleta) {
             html += '<td class="bd-col-subcat">' + subcategoria + '</td>';
             html += '<td class="bd-col-weight">' + (p.peso || '0') + '</td>';
@@ -4422,16 +4443,13 @@ function bdRenderProductos(data) {
     
     tbody.innerHTML = html;
     
-    // Actualizar contadores
-    var totalEl = document.getElementById('bdTotalRegistros');
-    if (totalEl) totalEl.textContent = total + ' registros';
+    document.getElementById('bdTotalRegistros').textContent = total + ' registros';
+    document.getElementById('bdPaginaInfo').textContent = window.bdPaginaActual + '/' + totalPaginas;
+    document.getElementById('bdPaginaActual').textContent = window.bdPaginaActual;
     
-    var pageInfo = document.getElementById('bdPaginaInfo');
-    if (pageInfo) pageInfo.textContent = window.bdPaginaActual + '/' + totalPaginas;
-    
-    var pageActual = document.getElementById('bdPaginaActual');
-    if (pageActual) pageActual.textContent = window.bdPaginaActual;
+    console.log('✅ Renderizado completado con fechas corregidas');
 }
+
 
 // ============================================================
 // FILTROS - MODIFICADO PARA USAR bdProductosFiltrados
