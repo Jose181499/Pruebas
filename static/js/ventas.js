@@ -4599,6 +4599,32 @@ function toggleProductSelection(idKey, checked) {
 
 
 // ============================================================
+// FUNCIÓN PARA LIMPIAR FILTROS DE FECHA
+// ============================================================
+
+function clearDateFilter() {
+    console.log('🧹 Limpiando filtros de fecha...');
+    
+    const fechaInicio = document.getElementById('qFechaInicio');
+    const fechaFin = document.getElementById('qFechaFin');
+    
+    if (fechaInicio) {
+        fechaInicio.value = '';
+        console.log('  ✅ Fecha inicio limpiada');
+    }
+    
+    if (fechaFin) {
+        fechaFin.value = '';
+        console.log('  ✅ Fecha fin limpiada');
+    }
+    
+    // Volver a renderizar la tabla de cotizaciones
+    renderCotizaciones();
+    
+    showToast('🧹 Filtros de fecha limpiados', 'info');
+}
+
+// ============================================================
 // MODAL DE CONFIRMACIÓN UNIVERSAL (MEJORADO)
 // ============================================================
 
