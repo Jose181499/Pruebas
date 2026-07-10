@@ -4943,53 +4943,141 @@ function addPedidoItemSAP() {
     `);
 }
 
-function savePedidoCompraSAP(force) {
-    const val = ['vPrecio', 'vCantidad', 'vProducto', 'vEntrega', 'vMoneda', 'vTransporte', 'vVigencia', 'vMargen']
-        .map(id => document.getElementById(id)?.value || 'Sí');
+// ============================================================
+// FUNCIÓN PARA GUARDAR PC (VERSIÓN MEJORADA CON LOGS)
+// ============================================================
+
+async function savePedidoCompraSAP(force) {
+    console.log('🔄 savePedidoCompraSAP ejecutándose...', { force });
     
-    const observed = force === 'observado' || val.some(v => v === 'No');
-    
-    const trs = document.querySelectorAll('#pcItemsBody tr');
-    const items = Array.from(trs).map(r => {
-        const inputs = r.querySelectorAll('input');
-        return [
-            inputs[0]?.value || '',
-            inputs[1]?.value || '',
-            Number(inputs[2]?.value || 0),
-            Number(inputs[3]?.value || 1),
-            Number(inputs[4]?.value || 0),
-            Number(inputs[6]?.value || 0),
-            Number(inputs[7]?.value || 0)
-        ];
-    });
-    
-    const stockFalta = items.some(i => Number(i[3]) > Number(i[6]));
-    const estado = observed ? 'PC observado' : (stockFalta ? 'PC conforme' : 'Listo para despacho');
-    
-    const pcData = {
-        id: Date.now(),
-        fecha: document.getElementById('pcFecha')?.value?.replace('T', ' ') || new Date().toISOString(),
-        medio: document.getElementById('pcMedio')?.value || 'Correo',
-        estado: estado,
-        numero: document.getElementById('pcNumero')?.value || 'PC-' + Date.now(),
-        cliente: document.getElementById('pcCliente')?.value || '',
-        ruc: document.getElementById('pcRuc')?.value || '',
-        cotizacion_numero: document.getElementById('pcCotNumero')?.value || 'SIN COTIZACIÓN',
-        monto: Number(document.getElementById('pcMonto')?.value || 0),
-        entrega: document.getElementById('pcEntrega')?.value || '',
-        reqCompra: observed ? 'Bloqueado' : (stockFalta ? 'Sí' : 'No'),
-        validacion: val,
-        items: items
-    };
-    
-    // Guardar en el array global
-    if (typeof pedidosData !== 'undefined') {
-        pedidosData.unshift(pcData);
+    try {
+        // Validar que se haya seleccionado una cotización en modo 'cot'
+        if (modalMode === 'cot' && !cotizacionSeleccionada) {
+            const searchInput = document.getElementById('pcCotSearch');
+            const valor = searchInput?.value?.trim() || '';
+            if (!valor) {
+                showToast('⚠️ Debes buscar y seleccionar una cotización primero', 'warning');
+                searchInput?.focus();
+                return;
+            }
+            // Si hay texto pero no se seleccionó, intentar buscar automáticamente
+            const results = cotizacionesData.filter(c => {
+                const searchStr = `${c.numero || ''} ${c.razon || ''} ${c.ruc || ''}`.toLowerCase();
+                return searchStr.includes(valor.toLowerCase());
+            });
+            if (results.length === 0) {
+                showToast('⚠️ No se encontró la cotización. Verifica el texto ingresado.', 'warning');
+                return;
+            } else if (results.length === 1) {
+                // Auto-seleccionar si solo hay un resultado
+                seleccionarCotizacionSAP(results[0].id);
+                // Reintentar guardar después de un momento
+                setTimeout(() => savePedidoCompraSAP(force), 300);
+                return;
+            } else {
+                showToast('⚠️ Se encontraron varias cotizaciones. Selecciona una de la lista.', 'warning');
+                buscarCotizacionSAP(valor);
+                return;
+            }
+        }
+        
+        // Leer validaciones
+        const val = ['vPrecio', 'vCantidad', 'vProducto', 'vEntrega', 'vMoneda', 'vTransporte', 'vVigencia', 'vMargen']
+            .map(id => document.getElementById(id)?.value || 'Sí');
+        
+        console.log('📋 Validaciones:', val);
+        
+        const observed = force === 'observado' || val.some(v => v === 'No');
+        
+        // Leer items de la tabla
+        const trs = document.querySelectorAll('#pcItemsBody tr');
+        const items = Array.from(trs).map(r => {
+            const inputs = r.querySelectorAll('input');
+            return [
+                inputs[0]?.value || '',
+                inputs[1]?.value || '',
+                Number(inputs[2]?.value || 0),
+                Number(inputs[3]?.value || 1),
+                Number(inputs[4]?.value || 0),
+                Number(inputs[6]?.value || 0),
+                Number(inputs[7]?.value || 0)
+            ];
+        });
+        
+        console.log('📦 Items del PC:', items);
+        
+        const stockFalta = items.some(i => Number(i[3]) > Number(i[6]));
+        const estado = observed ? 'PC observado' : (stockFalta ? 'PC conforme' : 'Listo para despacho');
+        
+        // Preparar datos para enviar
+        const pcData = {
+            id: null, // Nuevo registro
+            numero: document.getElementById('pcNumero')?.value || 'PC-' + Date.now(),
+            fecha: document.getElementById('pcFecha')?.value?.replace('T', ' ') || new Date().toISOString(),
+            medio: document.getElementById('pcMedio')?.value || 'Correo',
+            estado: estado,
+            cliente: document.getElementById('pcCliente')?.value || '',
+            ruc: document.getElementById('pcRuc')?.value || '',
+            cotizacion_id: cotizacionSeleccionada?.id || null,
+            cotizacion_numero: document.getElementById('pcCotNumero')?.value || 'SIN COTIZACIÓN',
+            monto: Number(document.getElementById('pcMonto')?.value || 0),
+            entrega: document.getElementById('pcEntrega')?.value || '',
+            lugar_entrega: document.getElementById('pcEntrega')?.value || '',
+            condicion_pago: document.getElementById('pcCondicionPago')?.value || '',
+            vendedor: document.getElementById('pcVendedor')?.value || 'Helen Blas Príncipe',
+            responsable: 'Hellen',
+            observaciones: document.getElementById('pcObs')?.value || '',
+            items: items,
+            valida_precios: val[0] === 'Sí',
+            valida_cantidades: val[1] === 'Sí',
+            valida_stock: val[2] === 'Sí',
+            valida_entrega: val[3] === 'Sí',
+            valida_montos: val[4] === 'Sí',
+            req_compra: observed ? 'Bloqueado' : (stockFalta ? 'Sí' : 'No')
+        };
+        
+        console.log('📦 Datos a enviar a la API:', pcData);
+        
+        // ============================================================
+        // ENVIAR A LA API
+        // ============================================================
+        showToast('⏳ Guardando PC...', 'info');
+        
+        const response = await fetch('/ventas/api/pedido-compra/guardar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(pcData)
+        });
+        
+        const result = await response.json();
+        console.log('📦 Respuesta del servidor:', result);
+        
+        if (result.success) {
+            showToast(`✅ PC guardado como: ${estado}`, 'success');
+            
+            // Cerrar modal
+            closeModal('pedidoCompraModal');
+            
+            // Limpiar selección
+            cotizacionSeleccionada = null;
+            
+            // Recargar la lista de pedidos
+            await loadPedidos();
+            
+            // También recargar cotizaciones si es necesario
+            if (typeof loadCotizaciones === 'function') {
+                await loadCotizaciones();
+            }
+        } else {
+            showToast('❌ Error: ' + (result.error || 'No se pudo guardar'), 'error');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error en savePedidoCompraSAP:', error);
+        showToast('❌ Error al guardar el PC: ' + error.message, 'error');
     }
-    
-    closeModal('pedidoCompraModal');
-    showToast(`✅ PC guardado como: ${estado}`, observed ? 'warning' : 'success');
-    loadPedidos();
 }
 // ============================================================
 // MODAL DE CONFIRMACIÓN UNIVERSAL (MEJORADO)
