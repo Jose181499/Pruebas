@@ -649,7 +649,8 @@ function renderModalProducto(p) {
     var categoria = p.categoria || p.familia || '-';
     var subcategoria = p.subcategoria || p.categoria_derivada || '-';
     
-    var createdAt = p.created_at || p.fecha_creacion || null;
+    var fechaCreacion = p.fecha_creacion || null;
+    var fechaActualizacion = p.updated_at || null;
     var updatedAt = p.updated_at || p.updated_at || null;
     var fechaCreacion = formatearFecha(createdAt);
     var fechaEdicion = formatearFecha(updatedAt);
