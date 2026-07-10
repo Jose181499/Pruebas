@@ -623,6 +623,7 @@ function verProducto(id) {
         });
 }
 
+
 function renderModalProducto(p) {
     var titulo = document.getElementById('modalVerTitulo');
     var body = document.getElementById('modalVerBody');
@@ -649,27 +650,26 @@ function renderModalProducto(p) {
     var categoria = p.categoria || p.familia || '-';
     var subcategoria = p.subcategoria || p.categoria_derivada || '-';
     
+    // ✅ CORREGIDO: Fechas
+    var fechaCreacion = p.fecha_creacion || null;
+    var fechaActualizacion = p.updated_at || null;
     
- // ✅ VERSIÓN CORRECTA - SOLO ESTO
-var fechaCreacion = p.fecha_creacion || null;
-var fechaActualizacion = p.updated_at || null;
-
-var editado = false;
-if (fechaCreacion && fechaActualizacion && fechaCreacion !== fechaActualizacion) {
-    try {
-        var created = new Date(fechaCreacion);
-        var updated = new Date(fechaActualizacion);
-        if (!isNaN(created.getTime()) && !isNaN(updated.getTime())) {
-            var diffMs = updated.getTime() - created.getTime();
-            editado = diffMs > 60000;
+    var editado = false;
+    if (fechaCreacion && fechaActualizacion && fechaCreacion !== fechaActualizacion) {
+        try {
+            var created = new Date(fechaCreacion);
+            var updated = new Date(fechaActualizacion);
+            if (!isNaN(created.getTime()) && !isNaN(updated.getTime())) {
+                var diffMs = updated.getTime() - created.getTime();
+                editado = diffMs > 60000;
+            }
+        } catch(e) {
+            console.warn('Error comparando fechas:', e);
         }
-    } catch(e) {
-        console.warn('Error comparando fechas:', e);
     }
-}
-
-var fechaMostrar = editado ? fechaActualizacion : fechaCreacion;
-var fechaFormateada = formatearFecha(fechaMostrar);
+    
+    var fechaCreacionStr = formatearFecha(fechaCreacion);
+    var fechaEdicionStr = formatearFecha(fechaActualizacion);
     
     body.innerHTML = `
         <div class="grid-info-ver">
@@ -725,15 +725,15 @@ var fechaFormateada = formatearFecha(fechaMostrar);
                 <span class="info-value">${p.stock_minimo || '0'}</span>
             </div>
             <div class="info-item">
-                <span class="info-label">Fecha creación</span>
-                <span class="info-value">${fechaCreacion}</span>
-            </div>
-            
-            ${editado ? `
-            <div class="info-item full" style="background:#fef3c7;border-radius:6px;padding:6px 10px;border:1px solid #f59e0b;">
-                <span class="info-label" style="color:#92400e;">✏️ Última edición</span>
-                <span class="info-value" style="color:#92400e;font-weight:700;">${fechaEdicion}</span>
-            </div>` : ''}
+    <span class="info-label">Fecha creación</span>
+    <span class="info-value">${fechaCreacionStr}</span>  <!-- ✅ Usa fechaCreacionStr -->
+</div>
+
+${editado ? `
+<div class="info-item full" style="background:#fef3c7;border-radius:6px;padding:6px 10px;border:1px solid #f59e0b;">
+    <span class="info-label" style="color:#92400e;">✏️ Última edición</span>
+    <span class="info-value" style="color:#92400e;font-weight:700;">${fechaEdicionStr}</span>  <!-- ✅ Usa fechaEdicionStr -->
+</div>` : ''}
             
             <div class="info-item full">
                 <span class="info-label">Descripción</span>
@@ -756,6 +756,7 @@ var fechaFormateada = formatearFecha(fechaMostrar);
         };
     }
 }
+
 
 function cerrarModalVer() {
     var modal = document.getElementById('modalVerProducto');
