@@ -790,7 +790,9 @@
   border-radius: 8px;
   background: #F8FAFC;
   padding: 4px 8px;
+  max-width: 132px;
   min-height: 52px;
+  max-height: 80px;
   position: relative;
   transition: all 0.2s;
 }

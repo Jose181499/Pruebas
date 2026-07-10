@@ -156,15 +156,18 @@
           <div class="cm-grid cm-grid-comercial">
             <div class="cm-field">
               <label>CONDICIÓN DE PAGO *</label>
-              <select id="prov_condicion">
-                <option value="Contado">Contado</option>
-                <option value="Crédito 7 días">Crédito 7 días</option>
-                <option value="Crédito 15 días">Crédito 15 días</option>
-                <option value="Crédito 30 días">Crédito 30 días</option>
-                <option value="Crédito 45 días">Crédito 45 días</option>
-                <option value="Crédito 60 días">Crédito 60 días</option>
-                <option value="Crédito 90 días">Crédito 90 días</option>
-              </select>
+              <div style="display: flex; gap: 6px;">
+                <select id="prov_condicion" flex:1>
+                  <option value="Contado">Contado</option>
+                  <option value="Crédito 7 días">Crédito 7 días</option>
+                  <option value="Crédito 15 días">Crédito 15 días</option>
+                  <option value="Crédito 30 días">Crédito 30 días</option>
+                  <option value="Crédito 45 días">Crédito 45 días</option>
+                  <option value="Crédito 60 días">Crédito 60 días</option>
+                  <option value="Crédito 90 días">Crédito 90 días</option>
+                </select>
+                <button type="button" class="btn btn-sm" onclick="personalizarDiasCredito('prov_condicion', 'dias')"><i class="bi bi-pencil"></i></button>
+              </div>
             </div>
             <div class="cm-field">
               <label>LÍNEA DE CRÉDITO</label>
