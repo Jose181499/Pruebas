@@ -649,12 +649,27 @@ function renderModalProducto(p) {
     var categoria = p.categoria || p.familia || '-';
     var subcategoria = p.subcategoria || p.categoria_derivada || '-';
     
-    var fechaCreacion = p.fecha_creacion || null;
-    var fechaActualizacion = p.updated_at || null;
-    var updatedAt = p.updated_at || p.updated_at || null;
-    var fechaCreacion = formatearFecha(createdAt);
-    var fechaEdicion = formatearFecha(updatedAt);
-    var editado = fueEditado(createdAt, updatedAt);
+    
+ // ✅ VERSIÓN CORRECTA - SOLO ESTO
+var fechaCreacion = p.fecha_creacion || null;
+var fechaActualizacion = p.updated_at || null;
+
+var editado = false;
+if (fechaCreacion && fechaActualizacion && fechaCreacion !== fechaActualizacion) {
+    try {
+        var created = new Date(fechaCreacion);
+        var updated = new Date(fechaActualizacion);
+        if (!isNaN(created.getTime()) && !isNaN(updated.getTime())) {
+            var diffMs = updated.getTime() - created.getTime();
+            editado = diffMs > 60000;
+        }
+    } catch(e) {
+        console.warn('Error comparando fechas:', e);
+    }
+}
+
+var fechaMostrar = editado ? fechaActualizacion : fechaCreacion;
+var fechaFormateada = formatearFecha(fechaMostrar);
     
     body.innerHTML = `
         <div class="grid-info-ver">
