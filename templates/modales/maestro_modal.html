@@ -9,25 +9,47 @@
     </div>
     
     <!-- BODY -->
-    <div class="mm-body" style="flex:1 1 auto;overflow:auto;padding:8px 14px 6px;">
+    <div class="mm-body" style="flex:1 1 auto;overflow:auto;padding:8px 14px 6px; position:relative;">
       
       <!-- 🔥 NUEVO: ESTADO VISUAL - AGREGADO -->
-      <div class="cm-state-box s-green" id="mmStateBox" style="margin-bottom:12px; position:absolute; right:20px; top:0;">
-        <label>ESTADO *</label>
-        <select id="mm_estado" style="width:100%;height:32px;border-radius:8px;border:1px solid #D1D5DB;background:#fff;color:#0F172A;font-size:12px;padding:0 10px;box-sizing:border-box;">
-          <option value="Activo" selected>Activo</option>
-          <option value="Observado">Observado</option>
-          <option value="Bloqueado">Bloqueado</option>
-         
-        </select>
-        <div class="cm-state-indicator" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px;padding:4px 8px;background:rgba(255,255,255,0.6);border-radius:6px;">
-          <div class="cm-state-helper" style="display:flex;align-items:center;gap:6px;flex:1 1 auto;">
-            <span class="cm-state-helper-dot" id="mmStateDot" style="width:7px;height:7px;border-radius:50%;flex:0 0 auto;background:#84CC16;"></span>
-            <span class="cm-state-helper-text" id="mmStateText" style="font-size:10px;font-weight:600;color:#334155;">Registro habilitado para operar normalmente.</span>
-          </div>
-          <span class="cm-state-pill pill-green" id="mmStatePill" style="display:inline-flex;align-items:center;padding:1px 8px;border-radius:999px;font-size:10px;font-weight:700;background:#D9F99D;color:#166534;">Activo</span>
-        </div>
-      </div>
+      <div class="cm-state-box s-green"
+     id="mmStateBox"
+     style="position:absolute; right:20px; top:40px; width:200px; margin-bottom:12px; z-index:2;">
+
+  <label>ESTADO *</label>
+
+  <select id="mm_estado"
+          style="width:100%;height:32px;border-radius:8px;border:1px solid #D1D5DB;background:#fff;color:#0F172A;font-size:12px;padding:0 10px;box-sizing:border-box;">
+    <option value="Activo" selected>Activo</option>
+    <option value="Observado">Observado</option>
+    <option value="Bloqueado">Bloqueado</option>
+  </select>
+
+  <div class="cm-state-indicator"
+       style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px;padding:4px 8px;background:rgba(255,255,255,0.6);border-radius:6px;">
+
+    <div class="cm-state-helper"
+         style="display:flex;align-items:center;gap:6px;flex:1 1 auto;">
+
+      <span class="cm-state-helper-dot"
+            id="mmStateDot"
+            style="width:7px;height:7px;border-radius:50%;flex:0 0 auto;background:#84CC16;"></span>
+
+      <span class="cm-state-helper-text"
+            id="mmStateText"
+            style="font-size:10px;font-weight:600;color:#334155;">
+        Registro habilitado para operar normalmente.
+      </span>
+    </div>
+
+    <span class="cm-state-pill pill-green"
+          id="mmStatePill"
+          style="display:inline-flex;align-items:center;padding:1px 8px;border-radius:999px;font-size:10px;font-weight:700;background:#D9F99D;color:#166534;">
+      Activo
+    </span>
+
+  </div>
+</div>
       
       <div class="help-box" id="mmHelp" style="padding:9px 10px;border:1px solid #BFDBFE;background:#EFF6FF;color:#1D4ED8;border-radius:10px;font-size:11px;font-weight:850;line-height:1.45;margin-bottom:10px;">Completa el registro.</div>
       <div id="mmFields"></div>
