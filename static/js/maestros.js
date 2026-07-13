@@ -456,7 +456,40 @@ function renderStatusBoard(m) {
     const config = MODULE_CONFIG[m];
     const usaEstadoTexto = config.fields.some(f => f.key === 'estado');
 
-    const activos = data.filter(r => getEstado(usaEstadoTexto ? r.estado : r.activo) === 'Activo').length;
+    if (usaEstadoTexto) {
+        // Clientes y Proveedores: Activo / Observado / Bloqueado / Total
+        const activos = data.filter(r => getEstado(r.estado) === 'Activo').length;
+        const observados = data.filter(r => getEstado(r.estado) === 'Observado').length;
+        const bloqueados = data.filter(r => getEstado(r.estado) === 'Bloqueado').length;
+
+        return `
+            <div class="master-status-board">
+                <div class="master-status-card active">
+                    <span class="master-status-dot msd-active">●</span>
+                    <b>${activos}</b>
+                    <small>Act</small>
+                </div>
+                <div class="master-status-card observed">
+                    <span class="master-status-dot msd-observed">●</span>
+                    <b>${observados}</b>
+                    <small>Obs</small>
+                </div>
+                <div class="master-status-card blocked">
+                    <span class="master-status-dot msd-blocked">●</span>
+                    <b>${bloqueados}</b>
+                    <small>Bloq</small>
+                </div>
+                <div class="master-status-card total">
+                    <span class="master-status-dot msd-total">●</span>
+                    <b>${data.length}</b>
+                    <small>Tot</small>
+                </div>
+            </div>
+        `;
+    }
+
+    // Almacenes, Categorías, Marcas, UM: solo Activo / Total (sin cambios)
+    const activos = data.filter(r => getEstado(r.activo) === 'Activo').length;
 
     return `
         <div class="master-status-board">
