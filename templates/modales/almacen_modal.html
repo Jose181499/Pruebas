@@ -9,54 +9,84 @@
     
     <!-- BODY -->
     <div class="cm-body">
+      
       <!-- Información general -->
-      <div class="cm-section">
-        <div class="cm-section-title">
-          <span class="cm-bullet"></span>Información general
-        </div>
-        <div class="cm-grid cm-grid-main">
-          <div class="cm-field">
-            <label>EMPRESA *</label>
-            <select id="alm_empresa">
-              <option value="KCF">KCF</option>
-              <option value="AGD">AGD</option>
-            </select>
-          </div>
-          <div class="cm-field">
-            <label>CÓDIGO ALMACÉN *</label>
-            <input id="alm_codigo" type="text" placeholder="ALM-001">
-          </div>
-          <div class="cm-field">
-            <label>NOMBRE DE ALMACÉN *</label>
-            <input id="alm_nombre" type="text">
-          </div>
-          <div class="cm-state-box" id="almStateBox">
-            <label>ESTADO ALMACÉN *</label>
-            <select id="alm_estado">
-              <option value="Activo" selected>Activo</option>
-              <option value="Observado">Observado</option>
-              <option value="Bloqueado">Bloqueado</option>
-            </select>
-            <div class="cm-state-indicator">
-              <div class="cm-state-helper">
-                <span class="cm-state-helper-dot" id="almStateDot"></span>
-                <span class="cm-state-helper-text" id="almStateText"></span>
-              </div>
-              <span class="cm-state-pill" id="almStatePill"></span>
-            </div>
-          </div>
-          <div class="cm-field">
-            <label>TIPO DE ALMACÉN *</label>
-            <select id="alm_tipo">
-              <option value="Principal">Principal</option>
-              <option value="Secundario">Secundario</option>
-              <option value="Temporal">Temporal</option>
-              <option value="Consignación">Consignación</option>
-              <option value="Virtual">Virtual</option>
-            </select>
-          </div>
-        </div>
+<div class="cm-section">
+  <div class="cm-section-title">
+    <span class="cm-bullet"></span>Información general
+  </div>
+
+  <!-- Contenedor que separa los campos de la caja de estado -->
+  <div class="cm-grid-wrapper">
+
+    <!-- Columna izquierda: campos del almacén -->
+    <div class="cm-grid cm-grid-main">
+
+      <div class="cm-field">
+        <label>EMPRESA *</label>
+        <select id="alm_empresa">
+          <option value="KCF">KCF</option>
+          <option value="AGD">AGD</option>
+        </select>
       </div>
+
+      <div class="cm-field">
+        <label>CÓDIGO ALMACÉN *</label>
+        <input id="alm_codigo" type="text" placeholder="ALM-001">
+      </div>
+
+      <div class="cm-field">
+        <label>NOMBRE DE ALMACÉN *</label>
+        <input id="alm_nombre" type="text">
+      </div>
+
+      <div class="cm-field">
+        <label>TIPO DE ALMACÉN *</label>
+        <select id="alm_tipo">
+          <option value="Principal">Principal</option>
+          <option value="Secundario">Secundario</option>
+          <option value="Temporal">Temporal</option>
+          <option value="Consignación">Consignación</option>
+          <option value="Virtual">Virtual</option>
+        </select>
+      </div>
+
+    </div>
+
+    <!-- Columna derecha: estado del almacén -->
+    <div class="cm-state-box" id="almStateBox">
+      <label>ESTADO ALMACÉN *</label>
+
+      <select id="alm_estado">
+        <option value="Activo" selected>Activo</option>
+        <option value="Observado">Observado</option>
+        <option value="Bloqueado">Bloqueado</option>
+      </select>
+
+      <div class="cm-state-indicator">
+        <div class="cm-state-helper">
+          <span
+            class="cm-state-helper-dot"
+            id="almStateDot"
+          ></span>
+
+          <span
+            class="cm-state-helper-text"
+            id="almStateText"
+          ></span>
+        </div>
+
+        <span
+          class="cm-state-pill"
+          id="almStatePill"
+        ></span>
+      </div>
+    </div>
+
+  </div>
+  <!-- fin cm-grid-wrapper -->
+
+</div>
 
       <!-- Responsable -->
       <div class="cm-section">

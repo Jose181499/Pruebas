@@ -39,6 +39,17 @@ const ESTADOS_COMPROBANTE = ['Borrador', 'Emitido', 'Enviado', 'Pagado', 'Anulad
 const ESTADOS_NOTA = ['Borrador', 'Emitida', 'Enviada', 'Aplicada', 'Anulada'];
 const ESTADOS_DEVOLUCION = ['Pendiente', 'En revisión', 'Aprobada', 'Rechazada', 'Procesada'];
 
+// Agregar al inicio del archivo, en la sección de variables globales
+let validationStatus = {
+    precios: false,
+    cantidades: false,
+    stock: false,
+    entrega: false,
+    moneda: false,
+    transporte: false,
+    vigencia: false,
+    margen: false
+};
 // ============================================================
 // VARIABLES GLOBALES
 // ============================================================
@@ -3004,53 +3015,134 @@ function updateQuoteStatusBar(estado) {
 }
 
 
+// Agregar esta función completa
+function updateValidationStatus() {
+    const vPrecio = document.getElementById('vPrecio')?.value === 'Sí';
+    const vCantidad = document.getElementById('vCantidad')?.value === 'Sí';
+    const vProducto = document.getElementById('vProducto')?.value === 'Sí';
+    const vEntrega = document.getElementById('vEntrega')?.value === 'Sí';
+    const vMoneda = document.getElementById('vMoneda')?.value === 'Sí';
+    const vTransporte = document.getElementById('vTransporte')?.value === 'Sí';
+    const vVigencia = document.getElementById('vVigencia')?.value === 'Sí';
+    const vMargen = document.getElementById('vMargen')?.value === 'Sí';
+    
+    validationStatus = {
+        precios: vPrecio,
+        cantidades: vCantidad,
+        stock: vProducto,
+        entrega: vEntrega,
+        moneda: vMoneda,
+        transporte: vTransporte,
+        vigencia: vVigencia,
+        margen: vMargen
+    };
+    
+    updateValidationIcon('vPrecioIcon', vPrecio);
+    updateValidationIcon('vCantidadIcon', vCantidad);
+    updateValidationIcon('vProductoIcon', vProducto);
+    updateValidationIcon('vEntregaIcon', vEntrega);
+    updateValidationIcon('vMonedaIcon', vMoneda);
+    updateValidationIcon('vTransporteIcon', vTransporte);
+    updateValidationIcon('vVigenciaIcon', vVigencia);
+    updateValidationIcon('vMargenIcon', vMargen);
+    
+    updateValidationSemaphore();
+}
+
 // ============================================================
-// VALIDACIÓN PC VS COTIZACIÓN - FUNCIÓN COMPLETA
+// VALIDACIÓN PC VS COTIZACIÓN - FUNCIÓN COMPLETA Y CORREGIDA
 // ============================================================
 
 function renderValidacion() {
     const q = document.getElementById('valSearch')?.value?.toLowerCase() || '';
     const filtro = document.getElementById('valFiltro')?.value || '';
     
-    // Construir datos de validación desde los PCs
+    console.log('🔍 Renderizando validación con', pedidosData?.length || 0, 'PCs');
+    
     const validaciones = [];
     
     pedidosData.forEach(p => {
-        // Si el PC no tiene items, usar datos básicos
-        const items = p.items || [];
+        // 🔽 LEER VALIDACIONES REALES DE LA BD
+        const validaPrecios = p.valida_precios !== undefined ? p.valida_precios : true;
+        const validaCantidades = p.valida_cantidades !== undefined ? p.valida_cantidades : true;
+        const validaStock = p.valida_stock !== undefined ? p.valida_stock : true;
+        const validaEntrega = p.valida_entrega !== undefined ? p.valida_entrega : true;
+        const validaMoneda = p.valida_moneda !== undefined ? p.valida_moneda : true;
+        const validaTransporte = p.valida_transporte !== undefined ? p.valida_transporte : true;
+        const validaVigencia = p.valida_vigencia !== undefined ? p.valida_vigencia : true;
+        const validaMargen = p.valida_margen !== undefined ? p.valida_margen : true;
         
+        // Obtener items del PC
+        let items = p.items || [];
+        
+        // Si items está vacío pero hay items_json, parsearlo
+        if (items.length === 0 && p.items_json) {
+            try {
+                if (typeof p.items_json === 'string') {
+                    items = JSON.parse(p.items_json);
+                } else if (Array.isArray(p.items_json)) {
+                    items = p.items_json;
+                }
+            } catch(e) {
+                console.warn('⚠️ Error parseando items_json:', e);
+                items = [];
+            }
+        }
+        
+        // Si el PC no tiene items, usar datos básicos
         if (items.length === 0) {
-            // Un solo item genérico
+            const estadoPC = p.estado || 'Pendiente';
+            const esObservado = estadoPC === 'PC observado' || 
+                               estadoPC === 'Bloqueado' ||
+                               !validaPrecios || !validaCantidades || !validaEntrega || !validaMoneda;
+            
             validaciones.push({
                 pc: p.numero || p.pc || 'PC-XXXX',
                 cliente: p.cliente || 'Sin cliente',
-                producto: p.descripcion || 'Producto sin descripción',
-                precio: p.estado === 'PC observado' ? '❌ No' : '✅ Sí',
-                cantidad: p.estado === 'PC observado' ? '❌ No' : '✅ Sí',
-                entrega: p.estado === 'PC observado' ? '❌ No' : '✅ Sí',
-                moneda: '✅ Sí',
-                stock: (p.stock || 0) >= (p.cantidad || 0) ? '✅ OK' : `⚠️ Falta ${(p.cantidad || 0) - (p.stock || 0)}`,
-                estado: p.estado || 'Pendiente',
+                producto: p.descripcion || p.producto || 'Producto sin descripción',
+                precio: validaPrecios ? '✅ Sí' : '❌ No',
+                cantidad: validaCantidades ? '✅ Sí' : '❌ No',
+                entrega: validaEntrega ? '✅ Sí' : '❌ No',
+                moneda: validaMoneda ? '✅ Sí' : '❌ No',
+                stock: validaStock ? '✅ OK' : '⚠️ Stock insuficiente',
+                estado: estadoPC,
                 id: p.id,
-                req_compra: p.req_compra || (p.estado === 'PC observado' ? 'Bloqueado' : 'No')
+                req_compra: p.req_compra || (esObservado ? 'Bloqueado' : 'No'),
+                precioOk: validaPrecios,
+                cantidadOk: validaCantidades,
+                entregaOk: validaEntrega,
+                monedaOk: validaMoneda,
+                stockOk: validaStock,
+                transporteOk: validaTransporte,
+                vigenciaOk: validaVigencia,
+                margenOk: validaMargen,
+                faltante: 0,
+                esObservado: esObservado
             });
         } else {
             // Cada item es una fila de validación
             items.forEach((item, idx) => {
                 const codigo = item.codigo || item[0] || '';
                 const descripcion = item.producto || item.descripcion || item[1] || 'Sin descripción';
-                const cantidad_pc = parseFloat(item.cantidad_pc || item[3] || 0);
-                const cantidad_cot = parseFloat(item.cantidad_cotizada || item[2] || 0);
+                const cantidad_pc = parseFloat(item.cantidad_pc || item.cantidad || item[3] || 0);
+                const cantidad_cot = parseFloat(item.cantidad_cotizada || item.cantidad_cot || item[2] || 0);
                 const stock = parseFloat(item.stock || item[6] || 0);
-                const precio_pc = parseFloat(item.precio_pc || item[4] || 0);
-                const precio_cot = parseFloat(item.precio_cotizado || item[5] || 0);
+                const precio_pc = parseFloat(item.precio_pc || item.precio || item[4] || 0);
+                const precio_cot = parseFloat(item.precio_cotizado || item.precio_cot || item[5] || 0);
                 
-                // Calcular validaciones
-                const precioOk = Math.abs(precio_pc - precio_cot) / (precio_cot || 1) * 100 <= 5;
-                const cantidadOk = cantidad_pc === cantidad_cot;
-                const stockOk = cantidad_pc <= stock;
-                const entregaOk = p.estado !== 'PC observado';
-                const monedaOk = true; // Asumir que coincide
+                const precioOk = validaPrecios && (precio_pc === 0 || precio_cot === 0 || Math.abs(precio_pc - precio_cot) / (precio_cot || 1) * 100 <= 5);
+                const cantidadOk = validaCantidades && (cantidad_pc === cantidad_cot);
+                const stockOk = validaStock && (cantidad_pc <= stock);
+                const entregaOk = validaEntrega;
+                const monedaOk = validaMoneda;
+                const transporteOk = validaTransporte;
+                const vigenciaOk = validaVigencia;
+                const margenOk = validaMargen;
+                
+                const estadoPC = p.estado || 'Pendiente';
+                const esObservado = estadoPC === 'PC observado' || 
+                                   estadoPC === 'Bloqueado' ||
+                                   !precioOk || !cantidadOk || !entregaOk || !monedaOk;
                 
                 const faltante = Math.max(cantidad_pc - stock, 0);
                 
@@ -3063,16 +3155,20 @@ function renderValidacion() {
                     entrega: entregaOk ? '✅ Sí' : '❌ No',
                     moneda: monedaOk ? '✅ Sí' : '❌ No',
                     stock: stockOk ? `✅ Stock: ${stock}` : `⚠️ Falta: ${faltante}`,
-                    estado: p.estado || 'Pendiente',
+                    estado: estadoPC,
                     id: p.id,
-                    req_compra: p.req_compra || (p.estado === 'PC observado' ? 'Bloqueado' : 'No'),
+                    req_compra: p.req_compra || (esObservado ? 'Bloqueado' : 'No'),
                     item_idx: idx,
                     precioOk: precioOk,
                     cantidadOk: cantidadOk,
                     entregaOk: entregaOk,
                     monedaOk: monedaOk,
                     stockOk: stockOk,
-                    faltante: faltante
+                    transporteOk: transporteOk,
+                    vigenciaOk: vigenciaOk,
+                    margenOk: margenOk,
+                    faltante: faltante,
+                    esObservado: esObservado
                 });
             });
         }
@@ -3100,7 +3196,8 @@ function renderValidacion() {
             v.precio === '❌ No' || 
             v.cantidad === '❌ No' || 
             v.entrega === '❌ No' || 
-            v.estado === 'PC observado'
+            v.estado === 'PC observado' ||
+            v.estado === 'Bloqueado'
         );
     } else if (filtro === 'compra') {
         data = data.filter(v => 
@@ -3123,32 +3220,41 @@ function renderValidacion() {
     }
     
     tbody.innerHTML = data.map((v, i) => {
-        const esConforme = v.precio === '✅ Sí' && 
-                          v.cantidad === '✅ Sí' && 
-                          v.entrega === '✅ Sí' && 
-                          v.moneda === '✅ Sí' && 
-                          v.stock.includes('✅');
+        const todasValidas = v.precio === '✅ Sí' && 
+                            v.cantidad === '✅ Sí' && 
+                            v.entrega === '✅ Sí' && 
+                            v.moneda === '✅ Sí' && 
+                            v.stock.includes('✅') &&
+                            v.transporteOk !== false &&
+                            v.vigenciaOk !== false &&
+                            v.margenOk !== false;
         
         const esObservado = v.precio === '❌ No' || 
                            v.cantidad === '❌ No' || 
                            v.entrega === '❌ No' || 
-                           v.estado === 'PC observado';
+                           v.estado === 'PC observado' ||
+                           v.estado === 'Bloqueado';
         
         let resultado = '';
         let badgeClass = '';
+        let accionHtml = '';
         
-        if (esConforme && v.faltante <= 0) {
+        if (todasValidas && v.faltante <= 0) {
             resultado = '✅ Listo para despacho';
             badgeClass = 'badge-val-ok';
+            accionHtml = `<button class="btn btn-green btn-sm" onclick="enviarADespacho(${v.id})">🚚 Enviar a despacho</button>`;
         } else if (esObservado) {
             resultado = '⚠️ Bloqueado por observación';
             badgeClass = 'badge-val-error';
+            accionHtml = `<button class="btn btn-danger btn-sm" onclick="solicitarCorreccion(${v.id})">📝 Solicitar corrección</button>`;
         } else if (v.faltante > 0) {
             resultado = '🔄 Requiere compra';
             badgeClass = 'badge-val-warning';
+            accionHtml = `<button class="btn btn-warning btn-sm" onclick="generarOrdenCompra(${v.id})">🛒 Generar compra</button>`;
         } else {
-            resultado = '⏳ Pendiente';
+            resultado = '⏳ Pendiente de validación';
             badgeClass = 'badge-val-warning';
+            accionHtml = `<button class="btn btn-blue btn-sm" onclick="validarPCSAP()">🔍 Validar</button>`;
         }
         
         return `
@@ -3162,15 +3268,7 @@ function renderValidacion() {
             <td class="${v.moneda === '✅ Sí' ? 'val-ok' : 'val-error'}">${v.moneda}</td>
             <td class="${v.stock.includes('✅') ? 'val-ok' : 'val-warning'}">${v.stock}</td>
             <td><span class="badge-val ${badgeClass}">${resultado}</span></td>
-            <td>
-                ${esObservado ? 
-                    `<button class="btn btn-danger btn-sm" onclick="solicitarCorreccion(${v.id})">📝 Solicitar corrección</button>` : 
-                    (v.faltante > 0 ? 
-                        `<button class="btn btn-warning btn-sm" onclick="generarOrdenCompra(${v.id})">🛒 Generar compra</button>` :
-                        `<button class="btn btn-green btn-sm" onclick="enviarADespacho(${v.id})">🚚 Enviar a despacho</button>`
-                    )
-                }
-            </td>
+            <td>${accionHtml}</td>
         </tr>`;
     }).join('');
     
@@ -3179,6 +3277,199 @@ function renderValidacion() {
         countEl.textContent = `Mostrando ${data.length} de ${validaciones.length} validaciones`;
     }
 }
+
+// ============================================================
+// VALIDAR PC - FUNCIÓN PARA EL BOTÓN
+// ============================================================
+
+function validarPCSAP() {
+    // Verificar que se haya seleccionado una cotización
+    if (!cotizacionSeleccionada) {
+        const searchInput = document.getElementById('pcCotSearch');
+        const valor = searchInput?.value?.trim() || '';
+        if (!valor) {
+            showToast('⚠️ Primero busca y selecciona una cotización', 'warning');
+            searchInput?.focus();
+            return;
+        }
+        // Intentar buscar automáticamente
+        const results = cotizacionesData.filter(c => {
+            const searchStr = `${c.numero || ''} ${c.razon || ''} ${c.ruc || ''}`.toLowerCase();
+            return searchStr.includes(valor.toLowerCase());
+        });
+        if (results.length === 0) {
+            showToast('⚠️ No se encontró la cotización. Verifica el texto ingresado.', 'warning');
+            return;
+        } else if (results.length === 1) {
+            seleccionarCotizacionSAP(results[0].id);
+            setTimeout(() => validarPCSAP(), 300);
+            return;
+        } else {
+            showToast('⚠️ Se encontraron varias cotizaciones. Selecciona una de la lista.', 'warning');
+            buscarCotizacionSAP(valor);
+            return;
+        }
+    }
+
+    // Mostrar loading
+    showToast('🔍 Validando PC contra cotización...', 'info');
+    
+    // Obtener los valores de los selects de validación
+    const vPrecio = document.getElementById('vPrecio')?.value === 'Sí';
+    const vCantidad = document.getElementById('vCantidad')?.value === 'Sí';
+    const vProducto = document.getElementById('vProducto')?.value === 'Sí';
+    const vEntrega = document.getElementById('vEntrega')?.value === 'Sí';
+    const vMoneda = document.getElementById('vMoneda')?.value === 'Sí';
+    const vTransporte = document.getElementById('vTransporte')?.value === 'Sí';
+    const vVigencia = document.getElementById('vVigencia')?.value === 'Sí';
+    const vMargen = document.getElementById('vMargen')?.value === 'Sí';
+    
+    // Actualizar el estado de validación
+    validationStatus = {
+        precios: vPrecio,
+        cantidades: vCantidad,
+        stock: vProducto,
+        entrega: vEntrega,
+        moneda: vMoneda,
+        transporte: vTransporte,
+        vigencia: vVigencia,
+        margen: vMargen
+    };
+    
+    // Actualizar íconos
+    updateValidationIcon('vPrecioIcon', vPrecio);
+    updateValidationIcon('vCantidadIcon', vCantidad);
+    updateValidationIcon('vProductoIcon', vProducto);
+    updateValidationIcon('vEntregaIcon', vEntrega);
+    updateValidationIcon('vMonedaIcon', vMoneda);
+    updateValidationIcon('vTransporteIcon', vTransporte);
+    updateValidationIcon('vVigenciaIcon', vVigencia);
+    updateValidationIcon('vMargenIcon', vMargen);
+    
+    // Verificar si todas las validaciones son correctas
+    const todasValidas = vPrecio && vCantidad && vProducto && vEntrega && 
+                         vMoneda && vTransporte && vVigencia && vMargen;
+    
+    // Obtener items de la tabla
+    const items = obtenerItemsPCSAP();
+    
+    // Verificar stock
+    let faltanteTotal = 0;
+    items.forEach(item => {
+        const stock = parseFloat(item[6]) || 0;
+        const cantidadPC = parseFloat(item[3]) || 0;
+        faltanteTotal += Math.max(cantidadPC - stock, 0);
+    });
+    
+    // Determinar resultado
+    let resultado = '';
+    let color = '';
+    let mensaje = '';
+    
+    if (!todasValidas) {
+        resultado = '⚠️ PC observado';
+        color = '#DC2626';
+        mensaje = 'Hay puntos de validación marcados como "No". El PC quedará bloqueado.';
+    } else if (faltanteTotal > 0) {
+        resultado = '🔄 Requiere compra';
+        color = '#D97706';
+        mensaje = `Faltan ${faltanteTotal} unidades en stock. Se requiere compra.`;
+    } else {
+        resultado = '✅ PC conforme';
+        color = '#16A34A';
+        mensaje = 'Todos los puntos de validación son correctos y hay stock disponible.';
+    }
+    
+    // Mostrar semáforo
+    const semaphore = document.getElementById('validationSemaphore');
+    if (semaphore) {
+        semaphore.style.display = 'block';
+        semaphore.style.borderColor = color;
+        semaphore.style.background = todasValidas ? '#F0FDF4' : '#FEF2F2';
+        
+        document.getElementById('validationIcon').textContent = todasValidas ? '✅' : '⚠️';
+        document.getElementById('validationTitle').textContent = resultado;
+        document.getElementById('validationTitle').style.color = color;
+        document.getElementById('validationSubtitle').textContent = mensaje;
+        
+        // Actualizar chips
+        const chipsContainer = document.getElementById('validationChips');
+        if (chipsContainer) {
+            const puntos = [
+                { label: 'Precio', ok: vPrecio },
+                { label: 'Cantidad', ok: vCantidad },
+                { label: 'Stock', ok: vProducto },
+                { label: 'Entrega', ok: vEntrega },
+                { label: 'Moneda', ok: vMoneda },
+                { label: 'Transporte', ok: vTransporte },
+                { label: 'Vigencia', ok: vVigencia },
+                { label: 'Margen', ok: vMargen }
+            ];
+            
+            chipsContainer.innerHTML = puntos.map(p => `
+                <span style="display:inline-flex; align-items:center; gap:4px; padding:2px 10px; border-radius:20px; font-size:10px; font-weight:900; background:${p.ok ? '#DCFCE7' : '#FEE2E2'}; color:${p.ok ? '#166534' : '#991B1B'}; border:1px solid ${p.ok ? '#86EFAC' : '#FCA5A5'};">
+                    ${p.ok ? '✅' : '❌'} ${p.label}
+                </span>
+            `).join('');
+        }
+    }
+    
+    // Actualizar resumen del documento
+    const docEstado = document.getElementById('docEstado');
+    const docStock = document.getElementById('docStock');
+    const docSalida = document.getElementById('docSalida');
+    
+    if (docEstado) {
+        docEstado.textContent = resultado;
+        docEstado.style.color = color;
+    }
+    
+    if (docStock) {
+        docStock.textContent = faltanteTotal > 0 ? `Falta: ${faltanteTotal}` : 'Disponible';
+        docStock.style.color = faltanteTotal > 0 ? '#D97706' : '#16A34A';
+    }
+    
+    if (docSalida) {
+        docSalida.textContent = todasValidas && faltanteTotal === 0 ? 'Listo para despacho' : 'Bloqueado';
+        docSalida.style.color = todasValidas && faltanteTotal === 0 ? '#16A34A' : '#DC2626';
+    }
+    
+    // Mostrar resultado
+    if (todasValidas && faltanteTotal === 0) {
+        showToast('✅ PC validado correctamente - Listo para despacho', 'success');
+    } else if (!todasValidas) {
+        showToast('⚠️ PC observado - Revisa los puntos marcados como "No"', 'warning');
+    } else {
+        showToast(`🔄 ${mensaje}`, 'info');
+    }
+}
+
+// ============================================================
+// OBTENER ITEMS DEL PC - FUNCIÓN AUXILIAR
+// ============================================================
+
+function obtenerItemsPCSAP() {
+    const items = [];
+    const rows = document.querySelectorAll('#pcItemsBody tr');
+    
+    rows.forEach(row => {
+        const inputs = row.querySelectorAll('input');
+        if (inputs.length >= 8) {
+            items.push([
+                inputs[0]?.value || '',      // código
+                inputs[1]?.value || '',      // descripción
+                parseFloat(inputs[2]?.value) || 0,  // cantidad cotizada
+                parseFloat(inputs[3]?.value) || 1,   // cantidad PC
+                parseFloat(inputs[4]?.value) || 0,   // precio cotizado
+                parseFloat(inputs[5]?.value) || 0,   // precio PC
+                parseFloat(inputs[6]?.value) || 0    // stock
+            ]);
+        }
+    });
+    
+    return items;
+}
+
 
 // ============================================================
 // ACCIONES DE VALIDACIÓN
@@ -3409,69 +3700,85 @@ function openPedidoCompraModal(mode = 'cot') {
         </div>
         
         <div class="form-section">
-            <div class="section-title">4. Validación comercial obligatoria</div>
-            <div class="pc-check-grid">
-                <div class="pc-check-card">
-                    <label>Precio coincide</label>
-                    <select id="vPrecio" class="pc-val-select">
-                        <option value="Sí">✅ Sí</option>
-                        <option value="No">❌ No</option>
-                    </select>
-                </div>
-                <div class="pc-check-card">
-                    <label>Cantidad coincide</label>
-                    <select id="vCantidad" class="pc-val-select">
-                        <option value="Sí">✅ Sí</option>
-                        <option value="No">❌ No</option>
-                    </select>
-                </div>
-                <div class="pc-check-card">
-                    <label>Producto/modelo coincide</label>
-                    <select id="vProducto" class="pc-val-select">
-                        <option value="Sí">✅ Sí</option>
-                        <option value="No">❌ No</option>
-                    </select>
-                </div>
-                <div class="pc-check-card">
-                    <label>Lugar entrega coincide</label>
-                    <select id="vEntrega" class="pc-val-select">
-                        <option value="Sí">✅ Sí</option>
-                        <option value="No">❌ No</option>
-                    </select>
-                </div>
-                <div class="pc-check-card">
-                    <label>Moneda coincide</label>
-                    <select id="vMoneda" class="pc-val-select">
-                        <option value="Sí">✅ Sí</option>
-                        <option value="No">❌ No</option>
-                    </select>
-                </div>
-                <div class="pc-check-card">
-                    <label>Transporte considerado</label>
-                    <select id="vTransporte" class="pc-val-select">
-                        <option value="Sí">✅ Sí</option>
-                        <option value="No">❌ No</option>
-                    </select>
-                </div>
-                <div class="pc-check-card">
-                    <label>Cotización vigente</label>
-                    <select id="vVigencia" class="pc-val-select">
-                        <option value="Sí">✅ Sí</option>
-                        <option value="No">❌ No</option>
-                    </select>
-                </div>
-                <div class="pc-check-card">
-                    <label>Margen conforme</label>
-                    <select id="vMargen" class="pc-val-select">
-                        <option value="Sí">✅ Sí</option>
-                        <option value="No">❌ No</option>
-                    </select>
-                </div>
-            </div>
-            <div id="validationResult" class="mini-note" style="margin-top:10px;">
-                ℹ️ Si algún punto es <b>"No"</b>, el PC quedará <b>observado y bloqueado</b>.
-            </div>
+    <div class="section-title">4. Validación comercial obligatoria</div>
+    <div class="pc-check-grid">
+        <div class="pc-check-card">
+            <label>
+                <span id="vPrecioIcon">⚪</span> Precio coincide
+            </label>
+            <select id="vPrecio" class="pc-val-select" onchange="updateValidationStatus()">
+                <option value="Sí">✅ Sí</option>
+                <option value="No">❌ No</option>
+            </select>
         </div>
+        <div class="pc-check-card">
+            <label>
+                <span id="vCantidadIcon">⚪</span> Cantidad coincide
+            </label>
+            <select id="vCantidad" class="pc-val-select" onchange="updateValidationStatus()">
+                <option value="Sí">✅ Sí</option>
+                <option value="No">❌ No</option>
+            </select>
+        </div>
+        <div class="pc-check-card">
+            <label>
+                <span id="vProductoIcon">⚪</span> Producto/modelo coincide
+            </label>
+            <select id="vProducto" class="pc-val-select" onchange="updateValidationStatus()">
+                <option value="Sí">✅ Sí</option>
+                <option value="No">❌ No</option>
+            </select>
+        </div>
+        <div class="pc-check-card">
+            <label>
+                <span id="vEntregaIcon">⚪</span> Lugar entrega coincide
+            </label>
+            <select id="vEntrega" class="pc-val-select" onchange="updateValidationStatus()">
+                <option value="Sí">✅ Sí</option>
+                <option value="No">❌ No</option>
+            </select>
+        </div>
+        <div class="pc-check-card">
+            <label>
+                <span id="vMonedaIcon">⚪</span> Moneda coincide
+            </label>
+            <select id="vMoneda" class="pc-val-select" onchange="updateValidationStatus()">
+                <option value="Sí">✅ Sí</option>
+                <option value="No">❌ No</option>
+            </select>
+        </div>
+        <div class="pc-check-card">
+            <label>
+                <span id="vTransporteIcon">⚪</span> Transporte considerado
+            </label>
+            <select id="vTransporte" class="pc-val-select" onchange="updateValidationStatus()">
+                <option value="Sí">✅ Sí</option>
+                <option value="No">❌ No</option>
+            </select>
+        </div>
+        <div class="pc-check-card">
+            <label>
+                <span id="vVigenciaIcon">⚪</span> Cotización vigente
+            </label>
+            <select id="vVigencia" class="pc-val-select" onchange="updateValidationStatus()">
+                <option value="Sí">✅ Sí</option>
+                <option value="No">❌ No</option>
+            </select>
+        </div>
+        <div class="pc-check-card">
+            <label>
+                <span id="vMargenIcon">⚪</span> Margen conforme
+            </label>
+            <select id="vMargen" class="pc-val-select" onchange="updateValidationStatus()">
+                <option value="Sí">✅ Sí</option>
+                <option value="No">❌ No</option>
+            </select>
+        </div>
+    </div>
+    <div id="validationResult" class="mini-note" style="margin-top:10px;">
+        ℹ️ Si algún punto es <b>"No"</b>, el PC quedará <b>observado y bloqueado</b>.
+    </div>
+</div>
     `;
     
     // Inicializar valores por defecto
@@ -6383,6 +6690,47 @@ function showDevolucionMenu(event, id) {
     document.body.appendChild(pop);
 }
 
+// Agregar esta función
+function updateValidationIcon(elementId, isValid) {
+    const el = document.getElementById(elementId);
+    if (el) {
+        el.textContent = isValid ? '✅' : '❌';
+        el.style.color = isValid ? '#16A34A' : '#DC2626';
+    }
+}
+
+
+// Agregar esta función
+function updateValidationSemaphore() {
+    const semaphore = document.getElementById('validationSemaphore');
+    if (!semaphore) return;
+    
+    const allValid = Object.values(validationStatus).every(v => v === true);
+    const anyInvalid = Object.values(validationStatus).some(v => v === false);
+    
+    semaphore.style.display = 'block';
+    
+    if (allValid) {
+        semaphore.style.borderColor = '#16A34A';
+        semaphore.style.background = '#F0FDF4';
+        document.getElementById('validationIcon').textContent = '✅';
+        document.getElementById('validationTitle').textContent = '¡PC conforme!';
+        document.getElementById('validationTitle').style.color = '#166534';
+    } else if (anyInvalid) {
+        semaphore.style.borderColor = '#DC2626';
+        semaphore.style.background = '#FEF2F2';
+        document.getElementById('validationIcon').textContent = '⚠️';
+        document.getElementById('validationTitle').textContent = 'PC observado';
+        document.getElementById('validationTitle').style.color = '#991B1B';
+    } else {
+        semaphore.style.borderColor = '#F59E0B';
+        semaphore.style.background = '#FFFBEB';
+        document.getElementById('validationIcon').textContent = '⏳';
+        document.getElementById('validationTitle').textContent = 'Validando...';
+        document.getElementById('validationTitle').style.color = '#92400E';
+    }
+}
+
 
 // ============================================================
 // FUNCIONES PARA CAMPOS PERSONALIZADOS
@@ -6672,5 +7020,7 @@ window.showSuccessModal = showSuccessModal;
 window.updateQuoteStatusBar = updateQuoteStatusBar;
 window.deleteCotizacion = deleteCotizacion;
 window.initVentas = initVentas;
+window.validarPCSAP = validarPCSAP;
+
 
 console.log('✅ Módulo Ventas cargado correctamente - VERSIÓN COMPLETA FUNCIONAL');
