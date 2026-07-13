@@ -539,7 +539,7 @@ function renderTable(m, list) {
         const estadoClass = isActive ? 'action-delete' : 'action-activate';
         
         cells += `
-            <td width="120px">
+            <td style="width="120px">
                 <div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;">
                     <button class="action-btn action-view" data-view="${m}|${r.id}" title="Ver detalle">👁️</button>
                     <button class="action-btn action-edit" data-edit="${m}|${r.id}" title="Editar">✏️</button>
@@ -551,7 +551,7 @@ function renderTable(m, list) {
         return `<tr>${cells}</tr>`;
     }).join('');
     
-    return `<div class="table-scroll">
+    return `<div class="table-scroll style:min-width: 1350px;">
         <table class="master-table style: min-width: 1350px;">
             <thead><tr>${headersHtml}</tr></thead>
             <tbody>${rows}</tbody>
