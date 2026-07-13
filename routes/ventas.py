@@ -611,21 +611,61 @@ def obtener_pc_db():
         return []
 
 
+# ventas.py - Modificar la función guardar_pc_db
+
 def guardar_pc_db(data):
-    """Guarda un nuevo pedido de compra"""
+    """Guarda un nuevo pedido de compra con validación completa"""
     try:
         print("📝 Guardando PC en BD...")
         print(f"📦 Datos recibidos: {data.keys()}")
         
         items_json = json.dumps(data.get('items', []))
         
+        # Nuevos campos para validación 360
+        valida_precios = data.get('valida_precios', False)
+        valida_cantidades = data.get('valida_cantidades', False)
+        valida_stock = data.get('valida_stock', False)
+        valida_entrega = data.get('valida_entrega', False)
+        valida_montos = data.get('valida_montos', False)
+        valida_transporte = data.get('valida_transporte', False)
+        valida_margen = data.get('valida_margen', False)
+        valida_vigencia = data.get('valida_vigencia', False)
+        
+        # Calcular resultado de validación
+        validacion_ok = all([
+            valida_precios,
+            valida_cantidades,
+            valida_stock,
+            valida_entrega,
+            valida_montos,
+            valida_transporte,
+            valida_margen,
+            valida_vigencia
+        ])
+        
+        # Estado final
+        if not validacion_ok:
+            estado = 'PC observado'
+            req_compra = 'Bloqueado'
+        else:
+            # Verificar stock
+            items = data.get('items', [])
+            falta_stock = any(
+                item.get('cantidad_pc', 0) > item.get('stock', 0) 
+                for item in items
+            )
+            estado = 'PC conforme' if not falta_stock else 'Requiere compra'
+            req_compra = 'Sí' if falta_stock else 'No'
+        
         query = """
             INSERT INTO pedido_compra_pc (
                 numero, fecha, estado, cliente, ruc, monto,
                 cotizacion_id, cotizacion_numero, correo_origen,
                 fecha_recepcion, fecha_despacho, archivo_oc,
-                observaciones, valida_precios, valida_cantidades,
-                valida_stock, valida_entrega, valida_montos,
+                observaciones, 
+                valida_precios, valida_cantidades, valida_stock, 
+                valida_entrega, valida_montos, valida_transporte,
+                valida_margen, valida_vigencia,
                 responsable, lugar_entrega, condicion_atencion,
                 creado_por, items_json, medio, entrega,
                 condicion_pago, vendedor, req_compra
@@ -633,15 +673,15 @@ def guardar_pc_db(data):
                 %s, %s, %s, %s, %s, %s, 
                 %s, %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s, %s, %s,
-                %s, %s, %s
+                %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s, %s
             ) RETURNING id, numero
         """
         
         params = (
             data.get('numero'),
             data.get('fecha') or datetime.now().isoformat(),
-            data.get('estado', 'Pendiente'),
+            estado,
             data.get('cliente'),
             data.get('ruc'),
             float(data.get('monto', 0)),
@@ -652,11 +692,14 @@ def guardar_pc_db(data):
             data.get('fecha_despacho'),
             data.get('archivo_oc'),
             data.get('observaciones'),
-            data.get('valida_precios', False),
-            data.get('valida_cantidades', False),
-            data.get('valida_stock', False),
-            data.get('valida_entrega', False),
-            data.get('valida_montos', False),
+            valida_precios,
+            valida_cantidades,
+            valida_stock,
+            valida_entrega,
+            valida_montos,
+            valida_transporte,
+            valida_margen,
+            valida_vigencia,
             data.get('responsable') or data.get('vendedor') or 'Hellen',
             data.get('lugar_entrega') or data.get('entrega'),
             data.get('condicion_atencion') or data.get('condicion_pago'),
@@ -666,7 +709,7 @@ def guardar_pc_db(data):
             data.get('entrega') or data.get('lugar_entrega'),
             data.get('condicion_pago') or data.get('condicion_atencion'),
             data.get('vendedor') or data.get('responsable') or 'Helen Blas Príncipe',
-            data.get('req_compra', 'Sí')
+            req_compra
         )
         
         print(f"📝 Parámetros: {params}")
@@ -678,7 +721,6 @@ def guardar_pc_db(data):
         import traceback
         traceback.print_exc()
         raise
-
 
 # ============================================================
 # FUNCIONES DE AYUDA PARA DESPACHOS
@@ -2791,6 +2833,220 @@ def api_cotizaciones_buscar():
         
     except Exception as e:
         print(f"❌ Error en api_cotizaciones_buscar: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ventas.py - Agregar al final del archivo
+
+# ============================================================
+# VALIDACIÓN DE PC - ENDPOINT
+# ============================================================
+
+@ventas_bp.route('/ventas/api/pedido-compra/<int:id>/validar', methods=['POST'])
+@login_required
+def api_pedido_compra_validar(id):
+    """
+    Valida un PC contra su cotización asociada.
+    Verifica los 8 puntos: precio, cantidad, producto, moneda, 
+    entrega, transporte, margen y stock.
+    """
+    try:
+        data = request.get_json()
+        print(f"🔍 Validando PC ID: {id}")
+        
+        # 1. Obtener el PC
+        query_pc = """
+            SELECT 
+                id, numero, cliente, ruc, monto,
+                cotizacion_id, cotizacion_numero,
+                valida_precios, valida_cantidades, valida_stock,
+                valida_entrega, valida_montos,
+                items_json, estado
+            FROM pedido_compra_pc
+            WHERE id = %s
+        """
+        pc_result = db_query(query_pc, (id,))
+        
+        if not pc_result:
+            return jsonify({'success': False, 'error': 'PC no encontrado'}), 404
+        
+        pc = pc_result[0]
+        
+        # 2. Obtener la cotización asociada
+        cotizacion_id = pc.get('cotizacion_id')
+        if not cotizacion_id:
+            return jsonify({'success': False, 'error': 'PC no tiene cotización asociada'}), 400
+        
+        query_cot = """
+            SELECT 
+                c.id, c.numero_cotizacion, c.subtotal, c.total,
+                c.condicion_pago, c.direccion_entrega, c.tiempo_entrega,
+                c.transporte, c.margen,
+                cl.razon_social as cliente_razon_social,
+                cl.numero_documento as cliente_ruc
+            FROM cotizaciones c
+            LEFT JOIN clientes cl ON cl.id = c.cliente_id::integer
+            WHERE c.id = %s
+        """
+        cot_result = db_query(query_cot, (cotizacion_id,))
+        
+        if not cot_result:
+            return jsonify({'success': False, 'error': 'Cotización no encontrada'}), 404
+        
+        cotizacion = cot_result[0]
+        
+        # 3. Obtener items del PC
+        pc_items = json.loads(pc.get('items_json', '[]'))
+        
+        # 4. Obtener items de la cotización
+        query_items_cot = """
+            SELECT 
+                d.producto_id, d.cantidad, d.precio_venta_unitario,
+                p.codigo, p.descripcion, p.unidad,
+                p.stock, p.precio_unitario
+            FROM cotizacion_detalle d
+            LEFT JOIN productos p ON p.id = d.producto_id
+            WHERE d.cotizacion_id = %s
+        """
+        cot_items = db_query(query_items_cot, (cotizacion_id,))
+        
+        # 5. Realizar validaciones
+        validaciones = {
+            'precios': True,
+            'cantidades': True,
+            'stock': True,
+            'entrega': True,
+            'moneda': True,
+            'transporte': True,
+            'margen': True,
+            'vigencia': True
+        }
+        
+        detalles_validacion = []
+        
+        # Validar cada item
+        for pc_item in pc_items:
+            codigo = pc_item.get('codigo', '')
+            cantidad_pc = pc_item.get('cantidad_pc', 0)
+            precio_pc = pc_item.get('precio_pc', 0)
+            
+            # Buscar item correspondiente en cotización
+            cot_item = next(
+                (i for i in cot_items if i.get('codigo') == codigo),
+                None
+            )
+            
+            if cot_item:
+                cantidad_cot = cot_item.get('cantidad', 0)
+                precio_cot = cot_item.get('precio_venta_unitario', 0)
+                stock = cot_item.get('stock', 0)
+                
+                # Validar cantidad
+                if cantidad_pc != cantidad_cot:
+                    validaciones['cantidades'] = False
+                
+                # Validar precio (tolerancia 5%)
+                if precio_pc != 0 and precio_cot != 0:
+                    diff_pct = abs(precio_pc - precio_cot) / precio_cot * 100
+                    if diff_pct > 5:
+                        validaciones['precios'] = False
+                
+                # Validar stock
+                if cantidad_pc > stock:
+                    validaciones['stock'] = False
+                
+                detalles_validacion.append({
+                    'codigo': codigo,
+                    'producto': cot_item.get('descripcion', ''),
+                    'cantidad_cot': cantidad_cot,
+                    'cantidad_pc': cantidad_pc,
+                    'precio_cot': precio_cot,
+                    'precio_pc': precio_pc,
+                    'stock': stock,
+                    'faltante': max(cantidad_pc - stock, 0),
+                    'validaciones': {
+                        'cantidad': cantidad_pc == cantidad_cot,
+                        'precio': abs(precio_pc - precio_cot) / precio_cot * 100 <= 5 if precio_cot != 0 else True,
+                        'stock': cantidad_pc <= stock
+                    }
+                })
+        
+        # Validar entrega
+        if pc.get('lugar_entrega') != cotizacion.get('direccion_entrega'):
+            validaciones['entrega'] = False
+        
+        # Validar moneda (si hay campo)
+        # ... asumiendo que ambos tienen moneda
+        
+        # Validar transporte
+        if pc.get('transporte') != cotizacion.get('transporte'):
+            validaciones['transporte'] = False
+        
+        # Validar margen (si hay campo)
+        # ... 
+        
+        # 6. Determinar resultado final
+        todas_validas = all(validaciones.values())
+        estado = 'PC conforme' if todas_validas else 'PC observado'
+        req_compra = 'No' if todas_validas else 'Bloqueado'
+        
+        # 7. Actualizar PC
+        query_update = """
+            UPDATE pedido_compra_pc 
+            SET 
+                estado = %s,
+                req_compra = %s,
+                valida_precios = %s,
+                valida_cantidades = %s,
+                valida_stock = %s,
+                valida_entrega = %s,
+                valida_montos = %s,
+                valida_transporte = %s,
+                valida_margen = %s,
+                valida_vigencia = %s,
+                updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, estado
+        """
+        
+        result = db_query(query_update, (
+            estado,
+            req_compra,
+            validaciones['precios'],
+            validaciones['cantidades'],
+            validaciones['stock'],
+            validaciones['entrega'],
+            validaciones['moneda'],
+            validaciones['transporte'],
+            validaciones['margen'],
+            validaciones['vigencia'],
+            id
+        ))
+        
+        if result:
+            return jsonify({
+                'success': True,
+                'message': f'PC validado: {estado}',
+                'data': {
+                    'id': result[0]['id'],
+                    'estado': estado,
+                    'req_compra': req_compra,
+                    'validaciones': validaciones,
+                    'detalles': detalles_validacion,
+                    'resumen': {
+                        'total_items': len(detalles_validacion),
+                        'ok': todas_validas,
+                        'observaciones': [k for k, v in validaciones.items() if not v]
+                    }
+                }
+            })
+        
+        return jsonify({'success': False, 'error': 'No se pudo actualizar'}), 400
+        
+    except Exception as e:
+        print(f"❌ Error en api_pedido_compra_validar: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500

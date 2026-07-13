@@ -2486,6 +2486,7 @@
 <div class="tabs" id="tabsRow">
     <button class="tab-btn active" data-tab="cotizaciones">📄 Cotizaciones</button>
     <button class="tab-btn" data-tab="pedido_compra">📋 PC Pedido Compras</button>
+     <button class="tab-btn" data-tab="validacion">🔍 Validación</button> 
     <button class="tab-btn" data-tab="despachar">🚚 Despachar</button>
     <button class="tab-btn" data-tab="guias">📦 Guías Remisión</button>
     <button class="tab-btn" data-tab="comprobantes">🧾 Facturas</button>
@@ -2610,6 +2611,57 @@
         </div>
     </div>
 </div>
+
+<!-- ============================================================ -->
+<!-- VALIDACIÓN PC VS COTIZACIÓN -->
+<!-- ============================================================ -->
+<div id="validacion" class="section">
+    <div class="panel">
+        <div class="clean-header">
+            <div class="master-title-wrap">
+                <div class="master-title">🔍 Validación PC vs Cotización</div>
+                <div class="master-subtitle">Revisión de precio, cantidad, producto, moneda, entrega, transporte, margen y stock</div>
+            </div>
+            <div class="search-box">
+                <input id="valSearch" placeholder="Buscar validación..." oninput="renderValidacion()">
+            </div>
+            <div class="clean-actions">
+                <select id="valFiltro" onchange="renderValidacion()">
+                    <option value="">Todos los resultados</option>
+                    <option value="ok">✅ Conforme</option>
+                    <option value="observado">⚠️ Observado</option>
+                    <option value="compra">🔄 Requiere compra</option>
+                </select>
+                <button class="btn btn-secondary" onclick="exportData('validacion')">📥 Exportar</button>
+            </div>
+        </div>
+        <div class="table-scroll">
+            <table class="master-table val-table">
+                <thead>
+                    <tr>
+                        <th>PC</th>
+                        <th>Cliente</th>
+                        <th>Producto</th>
+                        <th>Precio</th>
+                        <th>Cantidad</th>
+                        <th>Entrega</th>
+                        <th>Moneda</th>
+                        <th>Stock</th>
+                        <th>Resultado</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="valRows"></tbody>
+            </table>
+        </div>
+        <div class="footer-table">
+            <span id="valCount">Mostrando 0 de 0 validaciones</span>
+            <span><b>Regla:</b> Si el PC no está conforme, el sistema bloquea compra, despacho, guía y factura.</span>
+        </div>
+    </div>
+</div>
+
+
 <!-- ============================================================ -->
 <!-- DESPACHAR -->
 <!-- ============================================================ -->

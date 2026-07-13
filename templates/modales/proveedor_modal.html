@@ -14,40 +14,62 @@
         <div class="cm-section-title">
           <span class="cm-bullet"></span>Información general
         </div>
-        <div class="cm-grid cm-grid-main">
-          <div class="cm-field">
-            <label>ÁMBITO *</label>
-            <select id="prov_ambito">
-              <option value="COMPARTIDO">Compartido KCF + AGD</option>
-              <option value="KCF">Solo KCF</option>
-              <option value="AGD">Solo AGD</option>
-            </select>
+
+        <!--  mismo wrapper flex usado en el modal cliente -->
+        <div class="cm-grid-wrapper">
+
+          <!-- cm-grid-main ahora solo tiene los 6 campos (3 columnas), sin el state-box -->
+          <div class="cm-grid cm-grid-main">
+            <div class="cm-field">
+              <label>ÁMBITO *</label>
+              <select id="prov_ambito">
+                <option value="COMPARTIDO">Compartido KCF + AGD</option>
+                <option value="KCF">Solo KCF</option>
+                <option value="AGD">Solo AGD</option>
+              </select>
+            </div>
+            <div class="cm-field">
+              <label>TIPO PROVEEDOR</label>
+              <select id="prov_tipo">
+                <option value="Recurrente">Recurrente</option>
+                <option value="Web">Web</option>
+                <option value="Ocasional">Ocasional</option>
+                <option value="Servicio">Servicio</option>
+                <option value="Única compra">Única compra</option>
+              </select>
+            </div>
+            <div class="cm-field">
+              <label>TIPO DOCUMENTO</label>
+              <select id="prov_tipoDoc">
+                <option value="RUC">RUC</option>
+                <option value="DNI">DNI</option>
+                <option value="CE">CE</option>
+              </select>
+            </div>
+            <div class="cm-field span-2">
+              <label>RAZÓN SOCIAL *</label>
+              <input id="prov_razonSocial" type="text">
+            </div>
+            <div class="cm-field">
+              <label>RUC *</label>
+              <div class="sunat-group">
+                <input id="prov_ruc" type="text" placeholder="RUC">
+                <button class="sunat-btn" id="provSunat">SUNAT</button>
+              </div>
+            </div>
+            <div class="cm-field span-3">
+              <label>DIRECCIÓN FISCAL</label>
+              <input id="prov_direccionFiscal" type="text">
+            </div>
           </div>
-          <div class="cm-field">
-            <label>TIPO PROVEEDOR</label>
-            <select id="prov_tipo">
-              <option value="Recurrente">Recurrente</option>
-              <option value="Web">Web</option>
-              <option value="Ocasional">Ocasional</option>
-              <option value="Servicio">Servicio</option>
-              <option value="Única compra">Única compra</option>
-            </select>
-          </div>
-          <div class="cm-field">
-            <label>TIPO DOCUMENTO</label>
-            <select id="prov_tipoDoc">
-              <option value="RUC">RUC</option>
-              <option value="DNI">DNI</option>
-              <option value="CE">CE</option>
-            </select>
-          </div>
+
+          <!-- Estado proveedor  -->
           <div class="cm-state-box" id="provStateBox">
             <label>ESTADO PROVEEDOR *</label>
             <select id="prov_estado">
               <option value="Activo" selected>Activo</option>
               <option value="Observado">Observado</option>
               <option value="Bloqueado">Bloqueado</option>
-             
             </select>
             <div class="cm-state-indicator">
               <div class="cm-state-helper">
@@ -57,22 +79,10 @@
               <span class="cm-state-pill" id="provStatePill"></span>
             </div>
           </div>
-          <div class="cm-field span-2">
-            <label>RAZÓN SOCIAL *</label>
-            <input id="prov_razonSocial" type="text">
-          </div>
-          <div class="cm-field">
-            <label>RUC *</label>
-            <div class="sunat-group">
-              <input id="prov_ruc" type="text" placeholder="RUC">
-              <button class="sunat-btn" id="provSunat">SUNAT</button>
-            </div>
-          </div>
-          <div class="cm-field span-3">
-            <label>DIRECCIÓN FISCAL</label>
-            <input id="prov_direccionFiscal" type="text">
-          </div>
+
         </div>
+        <!-- fin cm-grid-wrapper -->
+
       </div>
 
       <!-- Contacto principal -->
@@ -250,6 +260,3 @@
     </div>
   </div>
 </div>
-
-
-

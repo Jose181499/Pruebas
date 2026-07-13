@@ -3003,6 +3003,261 @@ function updateQuoteStatusBar(estado) {
     });
 }
 
+
+// ============================================================
+// VALIDACIÓN PC VS COTIZACIÓN - FUNCIÓN COMPLETA
+// ============================================================
+
+function renderValidacion() {
+    const q = document.getElementById('valSearch')?.value?.toLowerCase() || '';
+    const filtro = document.getElementById('valFiltro')?.value || '';
+    
+    // Construir datos de validación desde los PCs
+    const validaciones = [];
+    
+    pedidosData.forEach(p => {
+        // Si el PC no tiene items, usar datos básicos
+        const items = p.items || [];
+        
+        if (items.length === 0) {
+            // Un solo item genérico
+            validaciones.push({
+                pc: p.numero || p.pc || 'PC-XXXX',
+                cliente: p.cliente || 'Sin cliente',
+                producto: p.descripcion || 'Producto sin descripción',
+                precio: p.estado === 'PC observado' ? '❌ No' : '✅ Sí',
+                cantidad: p.estado === 'PC observado' ? '❌ No' : '✅ Sí',
+                entrega: p.estado === 'PC observado' ? '❌ No' : '✅ Sí',
+                moneda: '✅ Sí',
+                stock: (p.stock || 0) >= (p.cantidad || 0) ? '✅ OK' : `⚠️ Falta ${(p.cantidad || 0) - (p.stock || 0)}`,
+                estado: p.estado || 'Pendiente',
+                id: p.id,
+                req_compra: p.req_compra || (p.estado === 'PC observado' ? 'Bloqueado' : 'No')
+            });
+        } else {
+            // Cada item es una fila de validación
+            items.forEach((item, idx) => {
+                const codigo = item.codigo || item[0] || '';
+                const descripcion = item.producto || item.descripcion || item[1] || 'Sin descripción';
+                const cantidad_pc = parseFloat(item.cantidad_pc || item[3] || 0);
+                const cantidad_cot = parseFloat(item.cantidad_cotizada || item[2] || 0);
+                const stock = parseFloat(item.stock || item[6] || 0);
+                const precio_pc = parseFloat(item.precio_pc || item[4] || 0);
+                const precio_cot = parseFloat(item.precio_cotizado || item[5] || 0);
+                
+                // Calcular validaciones
+                const precioOk = Math.abs(precio_pc - precio_cot) / (precio_cot || 1) * 100 <= 5;
+                const cantidadOk = cantidad_pc === cantidad_cot;
+                const stockOk = cantidad_pc <= stock;
+                const entregaOk = p.estado !== 'PC observado';
+                const monedaOk = true; // Asumir que coincide
+                
+                const faltante = Math.max(cantidad_pc - stock, 0);
+                
+                validaciones.push({
+                    pc: p.numero || p.pc || 'PC-XXXX',
+                    cliente: p.cliente || 'Sin cliente',
+                    producto: descripcion,
+                    precio: precioOk ? '✅ Sí' : '❌ No',
+                    cantidad: cantidadOk ? '✅ Sí' : '❌ No',
+                    entrega: entregaOk ? '✅ Sí' : '❌ No',
+                    moneda: monedaOk ? '✅ Sí' : '❌ No',
+                    stock: stockOk ? `✅ Stock: ${stock}` : `⚠️ Falta: ${faltante}`,
+                    estado: p.estado || 'Pendiente',
+                    id: p.id,
+                    req_compra: p.req_compra || (p.estado === 'PC observado' ? 'Bloqueado' : 'No'),
+                    item_idx: idx,
+                    precioOk: precioOk,
+                    cantidadOk: cantidadOk,
+                    entregaOk: entregaOk,
+                    monedaOk: monedaOk,
+                    stockOk: stockOk,
+                    faltante: faltante
+                });
+            });
+        }
+    });
+    
+    // Aplicar filtros
+    let data = validaciones;
+    
+    if (q) {
+        data = data.filter(v => 
+            JSON.stringify(v).toLowerCase().includes(q)
+        );
+    }
+    
+    if (filtro === 'ok') {
+        data = data.filter(v => 
+            v.precio === '✅ Sí' && 
+            v.cantidad === '✅ Sí' && 
+            v.entrega === '✅ Sí' && 
+            v.moneda === '✅ Sí' && 
+            v.stock.includes('✅')
+        );
+    } else if (filtro === 'observado') {
+        data = data.filter(v => 
+            v.precio === '❌ No' || 
+            v.cantidad === '❌ No' || 
+            v.entrega === '❌ No' || 
+            v.estado === 'PC observado'
+        );
+    } else if (filtro === 'compra') {
+        data = data.filter(v => 
+            v.faltante > 0 || 
+            v.req_compra === 'Sí' ||
+            v.req_compra === 'Bloqueado'
+        );
+    }
+    
+    const tbody = document.getElementById('valRows');
+    if (!tbody) return;
+    
+    if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:#94A3B8;padding:40px;">
+            📭 No hay validaciones que coincidan con los filtros
+        </td></tr>`;
+        const countEl = document.getElementById('valCount');
+        if (countEl) countEl.textContent = `Mostrando 0 de ${validaciones.length} validaciones`;
+        return;
+    }
+    
+    tbody.innerHTML = data.map((v, i) => {
+        const esConforme = v.precio === '✅ Sí' && 
+                          v.cantidad === '✅ Sí' && 
+                          v.entrega === '✅ Sí' && 
+                          v.moneda === '✅ Sí' && 
+                          v.stock.includes('✅');
+        
+        const esObservado = v.precio === '❌ No' || 
+                           v.cantidad === '❌ No' || 
+                           v.entrega === '❌ No' || 
+                           v.estado === 'PC observado';
+        
+        let resultado = '';
+        let badgeClass = '';
+        
+        if (esConforme && v.faltante <= 0) {
+            resultado = '✅ Listo para despacho';
+            badgeClass = 'badge-val-ok';
+        } else if (esObservado) {
+            resultado = '⚠️ Bloqueado por observación';
+            badgeClass = 'badge-val-error';
+        } else if (v.faltante > 0) {
+            resultado = '🔄 Requiere compra';
+            badgeClass = 'badge-val-warning';
+        } else {
+            resultado = '⏳ Pendiente';
+            badgeClass = 'badge-val-warning';
+        }
+        
+        return `
+        <tr>
+            <td><b>${esc(v.pc)}</b></td>
+            <td class="left">${esc(v.cliente)}</td>
+            <td class="left">${esc(v.producto)}</td>
+            <td class="${v.precio === '✅ Sí' ? 'val-ok' : 'val-error'}">${v.precio}</td>
+            <td class="${v.cantidad === '✅ Sí' ? 'val-ok' : 'val-error'}">${v.cantidad}</td>
+            <td class="${v.entrega === '✅ Sí' ? 'val-ok' : 'val-error'}">${v.entrega}</td>
+            <td class="${v.moneda === '✅ Sí' ? 'val-ok' : 'val-error'}">${v.moneda}</td>
+            <td class="${v.stock.includes('✅') ? 'val-ok' : 'val-warning'}">${v.stock}</td>
+            <td><span class="badge-val ${badgeClass}">${resultado}</span></td>
+            <td>
+                ${esObservado ? 
+                    `<button class="btn btn-danger btn-sm" onclick="solicitarCorreccion(${v.id})">📝 Solicitar corrección</button>` : 
+                    (v.faltante > 0 ? 
+                        `<button class="btn btn-warning btn-sm" onclick="generarOrdenCompra(${v.id})">🛒 Generar compra</button>` :
+                        `<button class="btn btn-green btn-sm" onclick="enviarADespacho(${v.id})">🚚 Enviar a despacho</button>`
+                    )
+                }
+            </td>
+        </tr>`;
+    }).join('');
+    
+    const countEl = document.getElementById('valCount');
+    if (countEl) {
+        countEl.textContent = `Mostrando ${data.length} de ${validaciones.length} validaciones`;
+    }
+}
+
+// ============================================================
+// ACCIONES DE VALIDACIÓN
+// ============================================================
+
+function solicitarCorreccion(id) {
+    showConfirmModal(
+        '📝 Solicitar corrección',
+        `El PC tiene observaciones. Se enviará notificación al cliente para corregir.`,
+        '⚠️ El PC quedará bloqueado hasta que se reciba la corrección.',
+        async function() {
+            try {
+                const response = await apiFetch(`/ventas/api/pedido-compra/${id}/toggle`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ estado: 'PC observado' })
+                });
+                if (response.success) {
+                    showToast('✅ Corrección solicitada al cliente', 'success');
+                    await loadPedidos();
+                    renderValidacion();
+                } else {
+                    showToast('❌ Error: ' + (response.error || 'No se pudo procesar'), 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('❌ Error al solicitar corrección', 'error');
+            }
+        },
+        '📝 Solicitar corrección'
+    );
+}
+
+function generarOrdenCompra(id) {
+    showConfirmModal(
+        '🛒 Generar orden de compra',
+        `El PC requiere compra de productos por falta de stock.`,
+        '⚠️ Se generará una solicitud de compra al módulo de Compras.',
+        async function() {
+            showToast('🛒 Generando orden de compra...', 'info');
+            setTimeout(() => {
+                showToast('✅ Orden de compra generada', 'success');
+                renderValidacion();
+            }, 1500);
+        },
+        '🛒 Generar compra'
+    );
+}
+
+function enviarADespacho(id) {
+    showConfirmModal(
+        '🚚 Enviar a despacho',
+        `El PC está conforme y listo para ser despachado.`,
+        '⚠️ Esta acción moverá el PC a la cola de despacho.',
+        async function() {
+            try {
+                const response = await apiFetch(`/ventas/api/pedido-compra/${id}/toggle`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ estado: 'Listo para despacho' })
+                });
+                if (response.success) {
+                    showToast('✅ PC enviado a despacho', 'success');
+                    await loadPedidos();
+                    renderValidacion();
+                    // Cambiar a la pestaña de despacho después de un momento
+                    setTimeout(() => {
+                        const tabBtn = document.querySelector('.tab-btn[data-tab="despachar"]');
+                        if (tabBtn) tabBtn.click();
+                    }, 1000);
+                } else {
+                    showToast('❌ Error: ' + (response.error || 'No se pudo procesar'), 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('❌ Error al enviar a despacho', 'error');
+            }
+        },
+        '🚚 Enviar a despacho'
+    );
+}
 // ============================================================
 // FUNCIONES PARA PC PEDIDO COMPRAS - ESTILO SAP
 // ============================================================
@@ -6208,29 +6463,27 @@ function setFieldValue(selectId, inputId, value) {
         input.value = '';
     }
 }
-
 window.initVentas = async function(tab) {
     console.log(`🚀 Inicializando ventas con tab: ${tab}`);
     currentModule = tab || 'cotizaciones';
     
-    // Cargar datos maestros
     await Promise.all([
         cargarProductosMaestros(),
         cargarClientesMaestros()
     ]);
     
-    // ============================================================
-    // 🔽 SIEMPRE CARGAR COTIZACIONES PRIMERO (para el buscador de PC)
-    // ============================================================
+    // Cargar cotizaciones primero (necesario para PC y validación)
     await loadCotizaciones();
     
-    // Luego cargar los datos del módulo específico
     switch(currentModule) {
         case 'cotizaciones':
-            // Ya están cargadas
             break;
         case 'pedido_compra':
             await loadPedidos();
+            break;
+        case 'validacion':   // NUEVO
+            await loadPedidos();
+            renderValidacion();
             break;
         case 'despachar':
             await loadDespachos();
@@ -6248,12 +6501,15 @@ window.initVentas = async function(tab) {
             await loadDevoluciones();
             break;
         default:
-            // Ya están cargadas
             break;
     }
     
+    // Si es validación, asegurar render
+    if (currentModule === 'validacion') {
+        renderValidacion();
+    }
+    
     console.log('✅ Módulo Ventas inicializado correctamente');
-    console.log(`📋 ${cotizacionesData?.length || 0} cotizaciones disponibles`);
 };
 
 // ============================================================

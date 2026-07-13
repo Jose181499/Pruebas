@@ -1,4 +1,4 @@
-<!-- MODAL PEDIDO COMPRA - ESTILO SAP COMPLETO -->
+<!-- MODAL PEDIDO COMPRA - ESTILO SAP CON VALIDACIÓN COMPLETA -->
 <div class="modal-bg" id="pedidoCompraModal">
     <div class="modal-box" style="width:min(1200px,96vw); max-height:92vh;">
         <div class="modal-head">
@@ -9,6 +9,21 @@
             <button class="btn btn-secondary" style="background:transparent;color:#fff;border-color:#fff;padding:6px 14px;min-height:34px;border-radius:14px" onclick="closeModal('pedidoCompraModal')">✕ Cerrar</button>
         </div>
         <div class="modal-body" id="pedidoCompraForm">
+            
+            <!-- 🔽 SEMÁFORO DE VALIDACIÓN - NUEVO -->
+            <div id="validationSemaphore" style="margin-bottom:12px; padding:10px 16px; border-radius:12px; display:none; border:2px solid; transition:all 0.3s;">
+                <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                    <div id="validationIcon" style="font-size:28px;">⏳</div>
+                    <div>
+                        <div id="validationTitle" style="font-weight:1000; font-size:15px;">Validando...</div>
+                        <div id="validationSubtitle" style="font-size:12px; opacity:0.8;">Revisando los 8 puntos de validación</div>
+                    </div>
+                    <div style="margin-left:auto; display:flex; gap:6px;" id="validationChips">
+                        <!-- Se generan desde JavaScript -->
+                    </div>
+                </div>
+            </div>
+
             <!-- Nota de modo -->
             <div id="modeNote" class="mini-note" style="margin-bottom:12px; padding:10px 14px; background:#EFF6FF; border:1px solid #BFDBFE; color:#1E3A8A; border-radius:12px; font-weight:900; font-size:12px;">
                 ✅ Recomendado: jalar la cotización, crear PC espejo y validar contra el documento real del cliente.
@@ -18,74 +33,73 @@
             <!-- BLOQUE 1: Resumen de control del documento (estilo SAP) -->
             <!-- ============================================================ -->
             <div class="form-section">
-                <div class="section-title">Resumen de control del documento</div>
+                <div class="section-title">📊 Resumen de control del documento</div>
                 <div class="sap-doc-summary">
                     <div class="sap-doc-box"><small>Documento</small><b>PC Cliente</b></div>
                     <div class="sap-doc-box"><small>Origen</small><b id="docOrigen">Cotización</b></div>
-                    <div class="sap-doc-box"><small>Control</small><b>Validación obligatoria</b></div>
-                    <div class="sap-doc-box"><small>Stock</small><b>Reserva / Compra</b></div>
-                    <div class="sap-doc-box"><small>Salida</small><b>Guía / Factura</b></div>
+                    <div class="sap-doc-box"><small>Estado</small><b id="docEstado">Pendiente</b></div>
+                    <div class="sap-doc-box"><small>Stock</small><b id="docStock">Por validar</b></div>
+                    <div class="sap-doc-box"><small>Salida</small><b id="docSalida">Pendiente</b></div>
                 </div>
             </div>
 
-        <!-- ============================================================ -->
-<!-- BLOQUE 2: Cotización relacionada - CON BUSCADOR -->
-<!-- ============================================================ -->
-<div class="form-section" id="cotBlock">
-    <div class="section-title">1. Cotización relacionada</div>
-    
-    <!-- BUSCADOR CON AUTOCOMPLETADO -->
-    <div class="ficha-grid" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
-        <div class="form-field" style="grid-column: span 2; position:relative;">
-            <label>Buscar cotización</label>
-            <div style="position:relative;">
-                <input id="pcCotSearch" 
-                       placeholder="Escribe N° cotización, RUC, razón social..." 
-                       style="width:100%; height:38px; border-radius:9px; border:1px solid #CBD5E1; padding:0 40px 0 14px; font-weight:850; outline:none;"
-                       oninput="buscarCotizacionSAP(this.value)"
-                       onfocus="this.select()"
-                       autocomplete="off">
-                <button onclick="buscarCotizacionSAP(document.getElementById('pcCotSearch').value)" 
-                        style="position:absolute; right:6px; top:5px; height:28px; width:28px; border:0; background:transparent; color:#64748B; cursor:pointer; font-size:16px; border-radius:6px; display:flex; align-items:center; justify-content:center;"
-                        title="Buscar">
-                    🔍
-                </button>
+            <!-- ============================================================ -->
+            <!-- BLOQUE 2: Cotización relacionada - CON BUSCADOR -->
+            <!-- ============================================================ -->
+            <div class="form-section" id="cotBlock">
+                <div class="section-title">1. Cotización relacionada</div>
+                
+                <!-- BUSCADOR CON AUTOCOMPLETADO -->
+                <div class="ficha-grid" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+                    <div class="form-field" style="grid-column: span 2; position:relative;">
+                        <label>Buscar cotización</label>
+                        <div style="position:relative;">
+                            <input id="pcCotSearch" 
+                                   placeholder="Escribe N° cotización, RUC, razón social..." 
+                                   style="width:100%; height:38px; border-radius:9px; border:1px solid #CBD5E1; padding:0 40px 0 14px; font-weight:850; outline:none;"
+                                   oninput="buscarCotizacionSAP(this.value)"
+                                   onfocus="this.select()"
+                                   autocomplete="off">
+                            <button onclick="buscarCotizacionSAP(document.getElementById('pcCotSearch').value)" 
+                                    style="position:absolute; right:6px; top:5px; height:28px; width:28px; border:0; background:transparent; color:#64748B; cursor:pointer; font-size:16px; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                🔍
+                            </button>
+                        </div>
+                        <div id="cotizacionSearchResults" 
+                             style="display:none; position:absolute; left:0; right:0; top:100%; background:#fff; border:1px solid #CBD5E1; border-radius:9px; box-shadow:0 8px 30px rgba(15,23,42,.15); max-height:240px; overflow-y:auto; z-index:100; margin-top:4px;">
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label>N° cotización</label>
+                        <input id="pcCotNumero" readonly style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; background:#F1F5F9; font-weight:850;">
+                    </div>
+                    <div class="form-field">
+                        <label>Fecha cotización</label>
+                        <input id="pcCotFecha" readonly style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; background:#F1F5F9; font-weight:850;">
+                    </div>
+                    <div class="form-field" style="grid-column: span 2;">
+                        <label>Cliente</label>
+                        <input id="pcCliente" readonly style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; background:#F1F5F9; font-weight:850;">
+                    </div>
+                    <div class="form-field">
+                        <label>RUC</label>
+                        <input id="pcRuc" readonly style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; background:#F1F5F9; font-weight:850;">
+                    </div>
+                    <div class="form-field">
+                        <label>Monto PC</label>
+                        <input id="pcMonto" type="number" step="0.01" value="0" style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; font-weight:850;">
+                    </div>
+                    <div class="form-field" style="grid-column: span 2;">
+                        <label>Condición de pago (de la cotización)</label>
+                        <input id="pcCondicionPago" readonly style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; background:#F1F5F9; font-weight:850;">
+                    </div>
+                    <div class="form-field">
+                        <label>Vendedor</label>
+                        <input id="pcVendedor" readonly style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; background:#F1F5F9; font-weight:850;">
+                    </div>
+                </div>
             </div>
-            <!-- Resultados de búsqueda (autocomplete) -->
-            <div id="cotizacionSearchResults" 
-                 style="display:none; position:absolute; left:0; right:0; top:100%; background:#fff; border:1px solid #CBD5E1; border-radius:9px; box-shadow:0 8px 30px rgba(15,23,42,.15); max-height:240px; overflow-y:auto; z-index:100; margin-top:4px;">
-            </div>
-        </div>
-        <div class="form-field">
-            <label>N° cotización</label>
-            <input id="pcCotNumero" readonly style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; background:#F1F5F9; font-weight:850;">
-        </div>
-        <div class="form-field">
-            <label>Fecha cotización</label>
-            <input id="pcCotFecha" readonly style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; background:#F1F5F9; font-weight:850;">
-        </div>
-        <div class="form-field" style="grid-column: span 2;">
-            <label>Cliente</label>
-            <input id="pcCliente" readonly style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; background:#F1F5F9; font-weight:850;">
-        </div>
-        <div class="form-field">
-            <label>RUC</label>
-            <input id="pcRuc" readonly style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; background:#F1F5F9; font-weight:850;">
-        </div>
-        <div class="form-field">
-            <label>Monto PC</label>
-            <input id="pcMonto" type="number" step="0.01" value="0" style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; font-weight:850;">
-        </div>
-        <div class="form-field" style="grid-column: span 2;">
-            <label>Condición de pago (de la cotización)</label>
-            <input id="pcCondicionPago" readonly style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; background:#F1F5F9; font-weight:850;">
-        </div>
-        <div class="form-field">
-            <label>Vendedor</label>
-            <input id="pcVendedor" readonly style="width:100%; height:34px; border-radius:9px; border:1px solid #CBD5E1; padding:0 10px; background:#F1F5F9; font-weight:850;">
-        </div>
-    </div>
-</div>
+
             <!-- ============================================================ -->
             <!-- BLOQUE 3: Datos del Pedido de Compra Cliente -->
             <!-- ============================================================ -->
@@ -160,74 +174,94 @@
                                 <th>Precio PC</th>
                                 <th>Stock</th>
                                 <th>Faltante</th>
+                                <th>Validación</th>
                             </tr>
                         </thead>
                         <tbody id="pcItemsBody"></tbody>
                     </table>
                 </div>
-                <div style="margin-top:8px;">
+                <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
                     <button class="btn btn-soft" onclick="addPedidoItemSAP()" style="height:32px; padding:0 16px; border-radius:9px; border:1px solid #CBD5E1; background:#F1F5F9; font-weight:850; cursor:pointer;">+ Agregar ítem</button>
+                    <button class="btn btn-blue" onclick="validarPCSAP()" style="height:32px; padding:0 16px; border-radius:9px; border:none; background:#2563EB; color:#fff; font-weight:900; cursor:pointer; box-shadow:0 2px 8px rgba(37,99,235,0.3);">
+                        🔍 Validar PC
+                    </button>
                 </div>
             </div>
 
             <!-- ============================================================ -->
-            <!-- BLOQUE 5: Validación comercial obligatoria -->
+            <!-- BLOQUE 5: Validación comercial obligatoria - 8 PUNTOS -->
             <!-- ============================================================ -->
             <div class="form-section">
-                <div class="section-title">4. Validación comercial obligatoria</div>
+                <div class="section-title">4. Validación comercial obligatoria <span style="font-size:10px; color:#64748B;">(8 puntos)</span></div>
                 <div class="validate-grid" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px;">
                     <div class="check-card" style="border:1px solid #E2E8F0; border-radius:12px; padding:9px; background:#F8FAFC;">
-                        <label style="font-size:11px; font-weight:1000; color:#334155; display:block; margin-bottom:5px;">Precio coincide</label>
-                        <select id="vPrecio" class="pc-val-select" style="width:100%; height:32px; border:1px solid #CBD5E1; border-radius:9px; font-weight:900; padding:0 8px; background:#fff;">
+                        <label style="font-size:11px; font-weight:1000; color:#334155; display:block; margin-bottom:5px;">
+                            <span id="vPrecioIcon">⚪</span> Precio coincide
+                        </label>
+                        <select id="vPrecio" class="pc-val-select" style="width:100%; height:32px; border:1px solid #CBD5E1; border-radius:9px; font-weight:900; padding:0 8px; background:#fff;" onchange="updateValidationStatus()">
                             <option value="Sí">✅ Sí</option>
                             <option value="No">❌ No</option>
                         </select>
                     </div>
                     <div class="check-card" style="border:1px solid #E2E8F0; border-radius:12px; padding:9px; background:#F8FAFC;">
-                        <label style="font-size:11px; font-weight:1000; color:#334155; display:block; margin-bottom:5px;">Cantidad coincide</label>
-                        <select id="vCantidad" class="pc-val-select" style="width:100%; height:32px; border:1px solid #CBD5E1; border-radius:9px; font-weight:900; padding:0 8px; background:#fff;">
+                        <label style="font-size:11px; font-weight:1000; color:#334155; display:block; margin-bottom:5px;">
+                            <span id="vCantidadIcon">⚪</span> Cantidad coincide
+                        </label>
+                        <select id="vCantidad" class="pc-val-select" style="width:100%; height:32px; border:1px solid #CBD5E1; border-radius:9px; font-weight:900; padding:0 8px; background:#fff;" onchange="updateValidationStatus()">
                             <option value="Sí">✅ Sí</option>
                             <option value="No">❌ No</option>
                         </select>
                     </div>
                     <div class="check-card" style="border:1px solid #E2E8F0; border-radius:12px; padding:9px; background:#F8FAFC;">
-                        <label style="font-size:11px; font-weight:1000; color:#334155; display:block; margin-bottom:5px;">Producto/modelo coincide</label>
-                        <select id="vProducto" class="pc-val-select" style="width:100%; height:32px; border:1px solid #CBD5E1; border-radius:9px; font-weight:900; padding:0 8px; background:#fff;">
+                        <label style="font-size:11px; font-weight:1000; color:#334155; display:block; margin-bottom:5px;">
+                            <span id="vProductoIcon">⚪</span> Producto/modelo coincide
+                        </label>
+                        <select id="vProducto" class="pc-val-select" style="width:100%; height:32px; border:1px solid #CBD5E1; border-radius:9px; font-weight:900; padding:0 8px; background:#fff;" onchange="updateValidationStatus()">
                             <option value="Sí">✅ Sí</option>
                             <option value="No">❌ No</option>
                         </select>
                     </div>
                     <div class="check-card" style="border:1px solid #E2E8F0; border-radius:12px; padding:9px; background:#F8FAFC;">
-                        <label style="font-size:11px; font-weight:1000; color:#334155; display:block; margin-bottom:5px;">Lugar entrega coincide</label>
-                        <select id="vEntrega" class="pc-val-select" style="width:100%; height:32px; border:1px solid #CBD5E1; border-radius:9px; font-weight:900; padding:0 8px; background:#fff;">
+                        <label style="font-size:11px; font-weight:1000; color:#334155; display:block; margin-bottom:5px;">
+                            <span id="vEntregaIcon">⚪</span> Lugar entrega coincide
+                        </label>
+                        <select id="vEntrega" class="pc-val-select" style="width:100%; height:32px; border:1px solid #CBD5E1; border-radius:9px; font-weight:900; padding:0 8px; background:#fff;" onchange="updateValidationStatus()">
                             <option value="Sí">✅ Sí</option>
                             <option value="No">❌ No</option>
                         </select>
                     </div>
                     <div class="check-card" style="border:1px solid #E2E8F0; border-radius:12px; padding:9px; background:#F8FAFC;">
-                        <label style="font-size:11px; font-weight:1000; color:#334155; display:block; margin-bottom:5px;">Moneda coincide</label>
-                        <select id="vMoneda" class="pc-val-select" style="width:100%; height:32px; border:1px solid #CBD5E1; border-radius:9px; font-weight:900; padding:0 8px; background:#fff;">
+                        <label style="font-size:11px; font-weight:1000; color:#334155; display:block; margin-bottom:5px;">
+                            <span id="vMonedaIcon">⚪</span> Moneda coincide
+                        </label>
+                        <select id="vMoneda" class="pc-val-select" style="width:100%; height:32px; border:1px solid #CBD5E1; border-radius:9px; font-weight:900; padding:0 8px; background:#fff;" onchange="updateValidationStatus()">
                             <option value="Sí">✅ Sí</option>
                             <option value="No">❌ No</option>
                         </select>
                     </div>
                     <div class="check-card" style="border:1px solid #E2E8F0; border-radius:12px; padding:9px; background:#F8FAFC;">
-                        <label style="font-size:11px; font-weight:1000; color:#334155; display:block; margin-bottom:5px;">Transporte considerado</label>
-                        <select id="vTransporte" class="pc-val-select" style="width:100%; height:32px; border:1px solid #CBD5E1; border-radius:9px; font-weight:900; padding:0 8px; background:#fff;">
+                        <label style="font-size:11px; font-weight:1000; color:#334155; display:block; margin-bottom:5px;">
+                            <span id="vTransporteIcon">⚪</span> Transporte considerado
+                        </label>
+                        <select id="vTransporte" class="pc-val-select" style="width:100%; height:32px; border:1px solid #CBD5E1; border-radius:9px; font-weight:900; padding:0 8px; background:#fff;" onchange="updateValidationStatus()">
                             <option value="Sí">✅ Sí</option>
                             <option value="No">❌ No</option>
                         </select>
                     </div>
                     <div class="check-card" style="border:1px solid #E2E8F0; border-radius:12px; padding:9px; background:#F8FAFC;">
-                        <label style="font-size:11px; font-weight:1000; color:#334155; display:block; margin-bottom:5px;">Cotización vigente</label>
-                        <select id="vVigencia" class="pc-val-select" style="width:100%; height:32px; border:1px solid #CBD5E1; border-radius:9px; font-weight:900; padding:0 8px; background:#fff;">
+                        <label style="font-size:11px; font-weight:1000; color:#334155; display:block; margin-bottom:5px;">
+                            <span id="vVigenciaIcon">⚪</span> Cotización vigente
+                        </label>
+                        <select id="vVigencia" class="pc-val-select" style="width:100%; height:32px; border:1px solid #CBD5E1; border-radius:9px; font-weight:900; padding:0 8px; background:#fff;" onchange="updateValidationStatus()">
                             <option value="Sí">✅ Sí</option>
                             <option value="No">❌ No</option>
                         </select>
                     </div>
                     <div class="check-card" style="border:1px solid #E2E8F0; border-radius:12px; padding:9px; background:#F8FAFC;">
-                        <label style="font-size:11px; font-weight:1000; color:#334155; display:block; margin-bottom:5px;">Margen conforme</label>
-                        <select id="vMargen" class="pc-val-select" style="width:100%; height:32px; border:1px solid #CBD5E1; border-radius:9px; font-weight:900; padding:0 8px; background:#fff;">
+                        <label style="font-size:11px; font-weight:1000; color:#334155; display:block; margin-bottom:5px;">
+                            <span id="vMargenIcon">⚪</span> Margen conforme
+                        </label>
+                        <select id="vMargen" class="pc-val-select" style="width:100%; height:32px; border:1px solid #CBD5E1; border-radius:9px; font-weight:900; padding:0 8px; background:#fff;" onchange="updateValidationStatus()">
                             <option value="Sí">✅ Sí</option>
                             <option value="No">❌ No</option>
                         </select>
@@ -242,7 +276,7 @@
         <!-- ============================================================ -->
         <!-- FOOTER DEL MODAL -->
         <!-- ============================================================ -->
-        <div class="modal-foot" style="padding:10px 14px; display:flex; justify-content:flex-end; gap:8px; border-top:1px solid #E5E7EB; background:#F8FAFC;">
+        <div class="modal-foot" style="padding:10px 14px; display:flex; justify-content:flex-end; gap:8px; border-top:1px solid #E5E7EB; background:#F8FAFC; flex-wrap:wrap;">
             <button class="btn btn-secondary" onclick="closeModal('pedidoCompraModal')" style="height:36px; padding:0 18px; border-radius:10px; border:1px solid #CBD5E1; background:#fff; font-weight:900; cursor:pointer;">Cancelar</button>
             <button class="btn btn-danger" onclick="savePedidoCompraSAP('observado')" style="height:36px; padding:0 18px; border-radius:10px; border:none; background:#DC2626; color:#fff; font-weight:900; cursor:pointer;">⚠️ Guardar observado</button>
             <button class="btn btn-primary" onclick="savePedidoCompraSAP('auto')" style="height:36px; padding:0 18px; border-radius:10px; border:none; background:#EF233C; color:#fff; font-weight:900; cursor:pointer; box-shadow:0 4px 14px rgba(239,35,60,0.3);">✅ Guardar PC Cliente</button>
