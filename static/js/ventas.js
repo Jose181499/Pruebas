@@ -524,12 +524,13 @@ async function loadDevoluciones() {
     }
 }
 
-// ============================================================
-// FUNCIONES DE RENDERIZADO
-// ============================================================
 function renderPedidos() {
     const q = document.getElementById('pcSearch')?.value?.toLowerCase() || '';
     const st = document.getElementById('pcStatus')?.value || '';
+    
+    // 🔽 FILTRO POR FECHAS - NUEVO
+    const fechaInicio = document.getElementById('pcFechaInicio')?.value || '';
+    const fechaFin = document.getElementById('pcFechaFin')?.value || '';
     
     console.log(`📊 Renderizando pedidos: ${pedidosData?.length || 0} registros`);
     
@@ -549,7 +550,46 @@ function renderPedidos() {
         const searchStr = `${r.numero || ''} ${r.cliente || ''} ${r.ruc || ''} ${r.cotizacion_numero || ''}`.toLowerCase();
         const matchText = !q || searchStr.includes(q);
         const matchStatus = !st || r.estado === st;
-        return matchText && matchStatus;
+        
+        // 🔽 FILTRO POR FECHAS
+        let matchFecha = true;
+        if (fechaInicio || fechaFin) {
+            let fechaPC = r.fecha || r.created_at || '';
+            let fechaObj = null;
+            try {
+                if (typeof fechaPC === 'string') {
+                    fechaObj = new Date(fechaPC);
+                    if (fechaPC.includes('/')) {
+                        const partes = fechaPC.split(/[\/\s:]/);
+                        if (partes.length >= 3) {
+                            fechaObj = new Date(partes[2], partes[1] - 1, partes[0]);
+                        }
+                    }
+                } else if (fechaPC instanceof Date) {
+                    fechaObj = fechaPC;
+                }
+            } catch (e) {
+                fechaObj = null;
+            }
+            
+            if (fechaObj && !isNaN(fechaObj.getTime())) {
+                const fechaStr = fechaObj.toISOString().split('T')[0];
+                if (fechaInicio && fechaFin) {
+                    matchFecha = fechaStr >= fechaInicio && fechaStr <= fechaFin;
+                } else if (fechaInicio) {
+                    matchFecha = fechaStr >= fechaInicio;
+                } else if (fechaFin) {
+                    matchFecha = fechaStr <= fechaFin;
+                }
+            } else {
+                // Si no se puede parsear la fecha, mostrar el registro si no hay filtros
+                if (fechaInicio || fechaFin) {
+                    matchFecha = false;
+                }
+            }
+        }
+        
+        return matchText && matchStatus && matchFecha;
     });
     
     const tbody = document.getElementById('pcRows');
@@ -592,6 +632,7 @@ function renderPedidos() {
         countEl.textContent = `Mostrando ${list.length} de ${pedidosData.length} pedidos`;
     }
 }
+
 
 // ============================================================
 // VISTAS DE COTIZACIONES - PRINCIPAL / COMPLETA
@@ -3549,7 +3590,37 @@ function enviarADespacho(id) {
         '🚚 Enviar a despacho'
     );
 }
+
 // ============================================================
+// LIMPIAR FILTROS DE FECHA - PC
+// ============================================================
+
+function clearPcDateFilter() {
+    console.log('🧹 Limpiando filtros de fecha de PC...');
+    
+    const fechaInicio = document.getElementById('pcFechaInicio');
+    const fechaFin = document.getElementById('pcFechaFin');
+    
+    if (fechaInicio) {
+        fechaInicio.value = '';
+    }
+    
+    if (fechaFin) {
+        fechaFin.value = '';
+    }
+    
+    // Volver a renderizar la tabla de pedidos
+    renderPedidos();
+    
+    showToast('🧹 Filtros de fecha limpiados', 'info');
+}
+
+// Exportar la función
+window.clearPcDateFilter = clearPcDateFilter;
+
+
+// ==
+// ==========================================================
 // FUNCIONES PARA PC PEDIDO COMPRAS - ESTILO SAP
 // ============================================================
 

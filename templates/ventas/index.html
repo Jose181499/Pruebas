@@ -2547,6 +2547,7 @@
     </div>
 </div>
 
+
 <!-- ============================================================ -->
 <!-- PC PEDIDO COMPRAS - Estilo SAP -->
 <!-- ============================================================ -->
@@ -2557,17 +2558,24 @@
                 <div class="master-title">📋 PC Pedido Compras</div>
                 <div class="master-subtitle">Aceptación formal del cliente recibida por correo / WhatsApp / plataforma</div>
             </div>
-            <div class="search-box">
-                <input id="pcSearch" placeholder="Buscar por PC / Cliente / RUC / Cotización / Producto..." oninput="renderPedidos()">
+            <div class="search-box" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <input id="pcSearch" placeholder="Buscar por PC / Cliente / RUC / Cotización / Producto..." style="flex:1; min-width:150px;" oninput="renderPedidos()">
+                <!-- 🔽 FILTRO DE FECHAS - NUEVO -->
+                <div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
+                    <input type="date" id="pcFechaInicio" style="height:38px; border-radius:12px; border:1px solid #E5E7EB; padding:0 10px; font-weight:800; background:#fff; color:#0F172A; outline:none; font-size:11px; width:140px;" title="Fecha inicio" onchange="renderPedidos()">
+                    <span style="font-weight:900; color:#64748B; font-size:12px;">→</span>
+                    <input type="date" id="pcFechaFin" style="height:38px; border-radius:12px; border:1px solid #E5E7EB; padding:0 10px; font-weight:800; background:#fff; color:#0F172A; outline:none; font-size:11px; width:140px;" title="Fecha fin" onchange="renderPedidos()">
+                    <button class="btn btn-secondary" onclick="clearPcDateFilter()" style="height:38px; padding:0 12px; font-size:11px;" title="Limpiar filtros">✕</button>
+                </div>
             </div>
             <div class="clean-actions">
                 <button class="btn btn-secondary" onclick="exportData('pedido_compra')">📥 Exportar</button>
-             <button class="btn-sap-primary" onclick="openPedidoCompraModalSAP('cot')">
-    <i class="bi bi-diagram-3"></i> PC desde cotización
-</button>
-<button class="btn-sap-gray" onclick="openPedidoCompraModalSAP('directo')">
-    <i class="bi bi-file-earmark-plus"></i> PC directo
-</button>
+                <button class="btn-sap-primary" onclick="openPedidoCompraModalSAP('cot')">
+                    <i class="bi bi-diagram-3"></i> PC desde cotización
+                </button>
+                <button class="btn-sap-gray" onclick="openPedidoCompraModalSAP('directo')">
+                    <i class="bi bi-file-earmark-plus"></i> PC directo
+                </button>
             </div>
         </div>
        
