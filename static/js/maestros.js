@@ -2457,7 +2457,7 @@ function renderClientesCompleta(list) {
     allFields.forEach(f => {
         headersHtml += `<th style="width:${f.width || 'auto'};">${f.label}</th>`;
     });
-    headersHtml += '<th style="width:100px;">Acciones</th>';
+    headersHtml += '<th style="width:160px; min-width:160px; max-width; 160px; white-space:nowrap;" >Acciones</th>';
     
     const rows = list.map((r, i) => {
         let cells = `<td><b>${i + 1}</b></td>`;
@@ -2586,7 +2586,7 @@ function renderProveedoresCompleta(list) {
     allFields.forEach(f => {
         headersHtml += `<th style="width:${f.width || 'auto'};">${f.label}</th>`;
     });
-    headersHtml += '<th style="width:100px;">Acciones</th>';
+    headersHtml += '<th style="width:160px; min-width:160px; max-width; 160px; white-space:nowrap" >Acciones</th>';
     
     const rows = list.map((r, i) => {
         let cells = `<td><b>${i + 1}</b></td>`;
