@@ -370,17 +370,19 @@ function empresa() {
 function filtered(m) {
     const q = (document.getElementById(`search_${m}`)?.value || '').toLowerCase().trim();
     const st = document.getElementById(`estado_${m}`)?.value || 'TODOS';
-    
+    const config = MODULE_CONFIG[m];
+    const usaEstadoTexto = config.fields.some(f => f.key === 'estado');
+
     return (DS[m] || []).filter(r => {
         const okQ = !q || JSON.stringify(r).toLowerCase().includes(q);
-        
+
         let okSt = true;
         if (st !== 'TODOS') {
-            const estado = getEstado(r.activo);
-            if (st === 'Activos') okSt = estado === 'Activo';
-            else if (st === 'Inactivos') okSt = estado === 'Inactivo';
+            const valorEstado = usaEstadoTexto ? r.estado : r.activo;
+            const estado = getEstado(valorEstado);
+            okSt = estado === st;
         }
-        
+
         return okQ && okSt;
     });
 }
@@ -451,20 +453,17 @@ function filterTable(m) {
 
 function renderStatusBoard(m) {
     const data = DS[m] || [];
-    const activos = data.filter(r => getEstado(r.activo) === 'Activo').length;
-    const inactivos = data.filter(r => getEstado(r.activo) === 'Inactivo').length;
-    
+    const config = MODULE_CONFIG[m];
+    const usaEstadoTexto = config.fields.some(f => f.key === 'estado');
+
+    const activos = data.filter(r => getEstado(usaEstadoTexto ? r.estado : r.activo) === 'Activo').length;
+
     return `
         <div class="master-status-board">
             <div class="master-status-card active">
                 <span class="master-status-dot msd-active">●</span>
                 <b>${activos}</b>
                 <small>Act</small>
-            </div>
-            <div class="master-status-card inactive">
-                <span class="master-status-dot msd-inactive">●</span>
-                <b>${inactivos}</b>
-                <small>Inact</small>
             </div>
             <div class="master-status-card total">
                 <span class="master-status-dot msd-total">●</span>
@@ -559,6 +558,25 @@ function renderTable(m, list) {
     </div>`;
 }
 
+function getEstadoFilterOptions(m) {
+    const config = MODULE_CONFIG[m];
+    const usaEstadoTexto = config.fields.some(f => f.key === 'estado');
+
+    if (usaEstadoTexto) {
+        return `
+            <option value="TODOS">Todos los estados</option>
+            <option value="Activo">✅ Activo</option>
+            <option value="Observado">⚠️ Observado</option>
+            <option value="Bloqueado">⛔ Bloqueado</option>
+        `;
+    }
+
+    return `
+        <option value="TODOS">Todos los estados</option>
+        <option value="Activo">✅ Activo</option>
+    `;
+}
+
 
 function renderModule(m) {
     const config = MODULE_CONFIG[m];
@@ -592,9 +610,7 @@ function renderModule(m) {
                 </div>
                 <div class="clean-actions">
                     <select id="estado_${m}" class="status-filter">
-                        <option value="TODOS">Todos los estados</option>
-                        <option value="Activos">✅ Activos</option>
-                        <option value="Inactivos">⛔ Inactivos</option>
+                        ${getEstadoFilterOptions(m)}
                     </select>
                     <button class="btn btn-secondary" data-bulk="${m}">📥 Importar</button>
                     <button class="btn btn-primary btn-create" data-new="${m}">+ Crear Nuevo ${config.title.slice(0, -1)}</button>
