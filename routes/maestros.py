@@ -136,9 +136,9 @@ def api_clientes_guardar():
             data.get('razon_social'),
             data.get('nombre_comercial', data.get('razon_social')),
             data.get('direccion_fiscal'),
-            data.get('telefono_contacto'),
-            data.get('nombre_contacto'),
-            data.get('email_contacto'),
+            data.get('telefono_contacto') or data.get('telefono'),
+            data.get('nombre_contacto') or data.get('contacto'),
+            data.get('email_contacto') or data.get('email'),
             True
         )
         
