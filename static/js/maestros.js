@@ -552,7 +552,7 @@ function renderTable(m, list) {
     }).join('');
     
     return `<div class="table-scroll">
-        <table class="master-table">
+        <table class="master-table style: min-width: 1350px;">
             <thead><tr>${headersHtml}</tr></thead>
             <tbody>${rows}</tbody>
         </table>
