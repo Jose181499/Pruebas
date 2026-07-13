@@ -513,7 +513,7 @@ function renderTable(m, list) {
     
     let headersHtml = `<th style="width:50px;">Item</th><th style="width:100px;">Ámbito</th>`;
     headers.forEach(h => { headersHtml += `<th>${h}</th>`; });
-    headersHtml += `<th style="width:120px;">Acciones</th>`;
+    headersHtml += `<th style="width:160px; min-width:160px; max-width; 160px; white-space:nowrap">Acciones</th>`;
     
     const rows = list.map((r, i) => {
         let cells = `<td><b>${i + 1}</b></td><td>${bAmbito(r.ambito || 'COMPARTIDO')}</td>`;
@@ -539,7 +539,7 @@ function renderTable(m, list) {
         const estadoClass = isActive ? 'action-delete' : 'action-activate';
         
         cells += `
-            <td style="width="120px">
+            <td style="width=120px;">
                 <div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;">
                     <button class="action-btn action-view" data-view="${m}|${r.id}" title="Ver detalle">👁️</button>
                     <button class="action-btn action-edit" data-edit="${m}|${r.id}" title="Editar">✏️</button>
