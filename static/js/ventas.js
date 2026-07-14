@@ -5322,6 +5322,7 @@ function openPedidoCompraModalSAP(mode = 'cot', id = null) {
     console.log('✅ Modal PC abierto correctamente');
 }
 
+
 async function cargarPCParaEditar(id) {
     try {
         console.log('📥 Cargando PC para editar ID:', id);
@@ -5336,7 +5337,69 @@ async function cargarPCParaEditar(id) {
         
         const pc = response.data;
         console.log('📦 Datos del PC:', pc);
-        console.log('📦 Items del PC:', pc.items);
+        
+        // 🔽 FUNCIÓN PARA NORMALIZAR ITEMS (acepta ambos formatos)
+        const normalizarItems = (items) => {
+            if (!items || !Array.isArray(items) || items.length === 0) {
+                return [];
+            }
+            
+            return items.map(item => {
+                // Si ya tiene el formato correcto (con cantidad_pc y precio_pc)
+                if (item.cantidad_pc !== undefined && item.precio_pc !== undefined) {
+                    return {
+                        codigo: item.codigo || '',
+                        producto: item.producto || '',
+                        cantidad_cotizada: parseFloat(item.cantidad_cotizada) || 0,
+                        cantidad_pc: parseFloat(item.cantidad_pc) || 1,
+                        precio_cotizado: parseFloat(item.precio_cotizado) || 0,
+                        precio_pc: parseFloat(item.precio_pc) || 0,
+                        stock: parseFloat(item.stock) || 0
+                    };
+                }
+                
+                // Si tiene el formato antiguo (con cantidad y valorVenta)
+                if (item.cantidad !== undefined || item.valorVenta !== undefined) {
+                    return {
+                        codigo: item.codigo || '',
+                        producto: item.producto || '',
+                        cantidad_cotizada: parseFloat(item.cantidad) || 0,
+                        cantidad_pc: parseFloat(item.cantidad) || 1,
+                        precio_cotizado: parseFloat(item.valorVenta) || 0,
+                        precio_pc: parseFloat(item.valorVenta) || 0,
+                        stock: parseFloat(item.stock) || 0
+                    };
+                }
+                
+                // Si tiene formato de array [codigo, producto, cantidad, valorVenta, stock]
+                if (Array.isArray(item)) {
+                    return {
+                        codigo: item[0] || '',
+                        producto: item[1] || '',
+                        cantidad_cotizada: parseFloat(item[2]) || 0,
+                        cantidad_pc: parseFloat(item[2]) || 1,
+                        precio_cotizado: parseFloat(item[3]) || 0,
+                        precio_pc: parseFloat(item[3]) || 0,
+                        stock: parseFloat(item[4]) || 0
+                    };
+                }
+                
+                // Fallback: intentar usar lo que haya
+                return {
+                    codigo: item.codigo || '',
+                    producto: item.producto || '',
+                    cantidad_cotizada: parseFloat(item.cantidad_cotizada || item.cantidad || 0),
+                    cantidad_pc: parseFloat(item.cantidad_pc || item.cantidad || 1),
+                    precio_cotizado: parseFloat(item.precio_cotizado || item.valorVenta || item.precio || 0),
+                    precio_pc: parseFloat(item.precio_pc || item.valorVenta || item.precio || 0),
+                    stock: parseFloat(item.stock || 0)
+                };
+            });
+        };
+        
+        // 🔽 NORMALIZAR ITEMS
+        const itemsNormalizados = normalizarItems(pc.items || []);
+        console.log('📦 Items normalizados:', itemsNormalizados);
         
         // Función auxiliar para setear valor
         const setValue = (id, value) => {
@@ -5422,19 +5485,18 @@ async function cargarPCParaEditar(id) {
         }
         
         // ============================================================
-        // CARGAR PRODUCTOS (ITEMS) - AHORA COMO OBJETOS
+        // CARGAR PRODUCTOS (ITEMS) - CON DATOS NORMALIZADOS
         // ============================================================
         const tbody = document.getElementById('pcItemsBody');
         if (tbody) {
             tbody.innerHTML = '';
-            const items = pc.items || [];
+            const items = itemsNormalizados;
             console.log(`📦 Cargando ${items.length} items...`);
             
             if (items.length === 0) {
                 addPedidoItemSAP();
             } else {
                 items.forEach((item, idx) => {
-                    // 🔽 AHORA ACCEDEMOS A PROPIEDADES DE OBJETOS
                     const codigo = item.codigo || '';
                     const producto = item.producto || 'Producto sin nombre';
                     const cantidadCotizada = parseFloat(item.cantidad_cotizada) || 0;
@@ -5509,7 +5571,6 @@ async function cargarPCParaEditar(id) {
         showToast('❌ Error al cargar el PC: ' + error.message, 'error');
     }
 }
-
 
 // ============================================================
 // FUNCIÓN PARA MOSTRAR EL MODAL (separada para claridad)
