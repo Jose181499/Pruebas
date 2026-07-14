@@ -3238,172 +3238,82 @@ function renderValidacion() {
     }
 }
 
-// ============================================================
-// VALIDAR PC - FUNCIÓN PARA EL BOTÓN
-// ============================================================
 
+// Función de validación actualizada - SIN MARGEN
 function validarPCSAP() {
-    // Verificar que se haya seleccionado una cotización
-    if (!cotizacionSeleccionada) {
-        const searchInput = document.getElementById('pcCotSearch');
-        const valor = searchInput?.value?.trim() || '';
-        if (!valor) {
-            showToast('⚠️ Primero busca y selecciona una cotización', 'warning');
-            searchInput?.focus();
-            return;
-        }
-        // Intentar buscar automáticamente
-        const results = cotizacionesData.filter(c => {
-            const searchStr = `${c.numero || ''} ${c.razon || ''} ${c.ruc || ''}`.toLowerCase();
-            return searchStr.includes(valor.toLowerCase());
-        });
-        if (results.length === 0) {
-            showToast('⚠️ No se encontró la cotización. Verifica el texto ingresado.', 'warning');
-            return;
-        } else if (results.length === 1) {
-            seleccionarCotizacionSAP(results[0].id);
-            setTimeout(() => validarPCSAP(), 300);
-            return;
-        } else {
-            showToast('⚠️ Se encontraron varias cotizaciones. Selecciona una de la lista.', 'warning');
-            buscarCotizacionSAP(valor);
-            return;
-        }
-    }
-
-    // Mostrar loading
-    showToast('🔍 Validando PC contra cotización...', 'info');
-    
-    // Obtener los valores de los selects de validación
-    const vPrecio = document.getElementById('vPrecio')?.value === 'Sí';
-    const vCantidad = document.getElementById('vCantidad')?.value === 'Sí';
-    const vProducto = document.getElementById('vProducto')?.value === 'Sí';
-    const vEntrega = document.getElementById('vEntrega')?.value === 'Sí';
-    const vMoneda = document.getElementById('vMoneda')?.value === 'Sí';
-    const vTransporte = document.getElementById('vTransporte')?.value === 'Sí';
-    const vVigencia = document.getElementById('vVigencia')?.value === 'Sí';
-    const vMargen = document.getElementById('vMargen')?.value === 'Sí';
-    
-    // Actualizar el estado de validación
-    validationStatus = {
-        precios: vPrecio,
-        cantidades: vCantidad,
-        stock: vProducto,
-        entrega: vEntrega,
-        moneda: vMoneda,
-        transporte: vTransporte,
-        vigencia: vVigencia,
-        margen: vMargen
-    };
-    
-    // Actualizar íconos
-    updateValidationIcon('vPrecioIcon', vPrecio);
-    updateValidationIcon('vCantidadIcon', vCantidad);
-    updateValidationIcon('vProductoIcon', vProducto);
-    updateValidationIcon('vEntregaIcon', vEntrega);
-    updateValidationIcon('vMonedaIcon', vMoneda);
-    updateValidationIcon('vTransporteIcon', vTransporte);
-    updateValidationIcon('vVigenciaIcon', vVigencia);
-    updateValidationIcon('vMargenIcon', vMargen);
-    
-    // Verificar si todas las validaciones son correctas
-    const todasValidas = vPrecio && vCantidad && vProducto && vEntrega && 
-                         vMoneda && vTransporte && vVigencia && vMargen;
-    
-    // Obtener items de la tabla
-    const items = obtenerItemsPCSAP();
-    
-    // Verificar stock
-    let faltanteTotal = 0;
-    items.forEach(item => {
-        const stock = parseFloat(item[6]) || 0;
-        const cantidadPC = parseFloat(item[3]) || 0;
-        faltanteTotal += Math.max(cantidadPC - stock, 0);
-    });
-    
-    // Determinar resultado
-    let resultado = '';
-    let color = '';
-    let mensaje = '';
-    
-    if (!todasValidas) {
-        resultado = '⚠️ PC observado';
-        color = '#DC2626';
-        mensaje = 'Hay puntos de validación marcados como "No". El PC quedará bloqueado.';
-    } else if (faltanteTotal > 0) {
-        resultado = '🔄 Requiere compra';
-        color = '#D97706';
-        mensaje = `Faltan ${faltanteTotal} unidades en stock. Se requiere compra.`;
-    } else {
-        resultado = '✅ PC conforme';
-        color = '#16A34A';
-        mensaje = 'Todos los puntos de validación son correctos y hay stock disponible.';
-    }
+    const semaphore = document.getElementById('validationSemaphore');
+    const icon = document.getElementById('validationIcon');
+    const title = document.getElementById('validationTitle');
+    const subtitle = document.getElementById('validationSubtitle');
+    const chips = document.getElementById('validationChips');
     
     // Mostrar semáforo
-    const semaphore = document.getElementById('validationSemaphore');
-    if (semaphore) {
-        semaphore.style.display = 'block';
-        semaphore.style.borderColor = color;
-        semaphore.style.background = todasValidas ? '#F0FDF4' : '#FEF2F2';
-        
-        document.getElementById('validationIcon').textContent = todasValidas ? '✅' : '⚠️';
-        document.getElementById('validationTitle').textContent = resultado;
-        document.getElementById('validationTitle').style.color = color;
-        document.getElementById('validationSubtitle').textContent = mensaje;
-        
-        // Actualizar chips
-        const chipsContainer = document.getElementById('validationChips');
-        if (chipsContainer) {
-            const puntos = [
-                { label: 'Precio', ok: vPrecio },
-                { label: 'Cantidad', ok: vCantidad },
-                { label: 'Stock', ok: vProducto },
-                { label: 'Entrega', ok: vEntrega },
-                { label: 'Moneda', ok: vMoneda },
-                { label: 'Transporte', ok: vTransporte },
-                { label: 'Vigencia', ok: vVigencia },
-                { label: 'Margen', ok: vMargen }
-            ];
-            
-            chipsContainer.innerHTML = puntos.map(p => `
-                <span style="display:inline-flex; align-items:center; gap:4px; padding:2px 10px; border-radius:20px; font-size:10px; font-weight:900; background:${p.ok ? '#DCFCE7' : '#FEE2E2'}; color:${p.ok ? '#166534' : '#991B1B'}; border:1px solid ${p.ok ? '#86EFAC' : '#FCA5A5'};">
-                    ${p.ok ? '✅' : '❌'} ${p.label}
-                </span>
-            `).join('');
+    semaphore.style.display = 'block';
+    semaphore.style.borderColor = '#F59E0B';
+    semaphore.style.background = '#FEF3C7';
+    icon.textContent = '⏳';
+    title.textContent = 'Validando...';
+    subtitle.textContent = 'Revisando los 6 puntos de validación';
+    chips.innerHTML = '';
+    
+    // Obtener valores de validación
+    const validaciones = {
+        precio: document.getElementById('vPrecio').value === 'Sí',
+        producto: document.getElementById('vProducto').value === 'Sí',
+        entrega: document.getElementById('vEntrega').value === 'Sí',
+        transporte: document.getElementById('vTransporte').value === 'Sí',
+        cantidad: document.getElementById('vCantidad').value === 'Sí',
+        moneda: document.getElementById('vMoneda').value === 'Sí'
+    };
+    
+    // Contar cuántos están OK
+    const total = Object.values(validaciones).length;
+    const okCount = Object.values(validaciones).filter(v => v).length;
+    const noCount = total - okCount;
+    
+    // Actualizar chips con estados
+    const labels = {
+        precio: '💰 Precio',
+        producto: '📦 Producto',
+        entrega: '📍 Lugar Entrega',
+        transporte: '🚚 Transporte',
+        cantidad: '🔢 Cantidad',
+        moneda: '💵 Moneda'
+    };
+    
+    chips.innerHTML = Object.entries(validaciones).map(([key, ok]) => {
+        const label = labels[key] || key;
+        const color = ok ? '#10B981' : '#EF4444';
+        const emoji = ok ? '✅' : '❌';
+        return `<span style="background:${color}20; color:${color}; padding:1px 6px; border-radius:10px; font-size:8px; font-weight:800;">${emoji} ${label}</span>`;
+    }).join('');
+    
+    // Determinar resultado
+    setTimeout(() => {
+        if (noCount === 0) {
+            // Todo OK
+            semaphore.style.borderColor = '#10B981';
+            semaphore.style.background = '#D1FAE5';
+            icon.textContent = '✅';
+            title.textContent = '¡Validación exitosa!';
+            subtitle.textContent = `Los ${total} puntos de validación están correctos`;
+        } else if (noCount <= 2) {
+            // Algunos NO
+            semaphore.style.borderColor = '#F59E0B';
+            semaphore.style.background = '#FEF3C7';
+            icon.textContent = '⚠️';
+            title.textContent = 'Validación con observaciones';
+            subtitle.textContent = `${noCount} punto(s) marcado(s) como "No" - Revisar antes de guardar`;
+        } else {
+            // Muchos NO
+            semaphore.style.borderColor = '#EF4444';
+            semaphore.style.background = '#FEE2E2';
+            icon.textContent = '❌';
+            title.textContent = 'Validación fallida';
+            subtitle.textContent = `${noCount} punto(s) marcado(s) como "No" - El PC quedará observado`;
         }
-    }
-    
-    // Actualizar resumen del documento
-    const docEstado = document.getElementById('docEstado');
-    const docStock = document.getElementById('docStock');
-    const docSalida = document.getElementById('docSalida');
-    
-    if (docEstado) {
-        docEstado.textContent = resultado;
-        docEstado.style.color = color;
-    }
-    
-    if (docStock) {
-        docStock.textContent = faltanteTotal > 0 ? `Falta: ${faltanteTotal}` : 'Disponible';
-        docStock.style.color = faltanteTotal > 0 ? '#D97706' : '#16A34A';
-    }
-    
-    if (docSalida) {
-        docSalida.textContent = todasValidas && faltanteTotal === 0 ? 'Listo para despacho' : 'Bloqueado';
-        docSalida.style.color = todasValidas && faltanteTotal === 0 ? '#16A34A' : '#DC2626';
-    }
-    
-    // Mostrar resultado
-    if (todasValidas && faltanteTotal === 0) {
-        showToast('✅ PC validado correctamente - Listo para despacho', 'success');
-    } else if (!todasValidas) {
-        showToast('⚠️ PC observado - Revisa los puntos marcados como "No"', 'warning');
-    } else {
-        showToast(`🔄 ${mensaje}`, 'info');
-    }
+    }, 800);
 }
-
 // ============================================================
 // OBTENER ITEMS DEL PC - FUNCIÓN AUXILIAR
 // ============================================================
