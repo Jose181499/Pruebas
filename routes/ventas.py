@@ -1863,9 +1863,21 @@ def api_pedido_compra_toggle(id):
         if not nuevo_estado:
             return jsonify({'success': False, 'error': 'Estado requerido'}), 400
         
-        estados_validos = ['Pendiente', 'Recibido por correo', 'En revisión interna', 'Validado por Hellen', 'Listo para despacho', 'Anulado']
+        # 🔽 Actualizar la lista de estados válidos
+        estados_validos = [
+            'Pendiente', 
+            'Recibido por correo', 
+            'En revisión interna', 
+            'Validado por Hellen', 
+            'Listo para despacho', 
+            'Anulado',
+            'PC observado',        # ← Agregar este
+            'PC conforme',          # ← Agregar este
+            'Bloqueado'             # ← Agregar este
+        ]
+        
         if nuevo_estado not in estados_validos:
-            return jsonify({'success': False, 'error': f'Estado inválido'}), 400
+            return jsonify({'success': False, 'error': f'Estado inválido. Permitidos: {", ".join(estados_validos)}'}), 400
         
         query = """
             UPDATE pedido_compra_pc 
@@ -1887,7 +1899,6 @@ def api_pedido_compra_toggle(id):
     except Exception as e:
         print(f"❌ Error en api_pedido_compra_toggle: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 # ============================================================
 # GUÍAS - ENDPOINTS ADICIONALES

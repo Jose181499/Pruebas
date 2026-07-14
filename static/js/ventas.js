@@ -3523,9 +3523,10 @@ function solicitarCorreccion(id) {
         '⚠️ El PC quedará bloqueado hasta que se reciba la corrección.',
         async function() {
             try {
+                // Cambiar 'PC observado' por 'En revisión interna' que sí está en la lista
                 const response = await apiFetch(`/ventas/api/pedido-compra/${id}/toggle`, {
                     method: 'PUT',
-                    body: JSON.stringify({ estado: 'PC observado' })
+                    body: JSON.stringify({ estado: 'En revisión interna' })
                 });
                 if (response.success) {
                     showToast('✅ Corrección solicitada al cliente', 'success');
@@ -3542,6 +3543,7 @@ function solicitarCorreccion(id) {
         '📝 Solicitar corrección'
     );
 }
+
 
 function generarOrdenCompra(id) {
     showConfirmModal(

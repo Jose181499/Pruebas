@@ -14,24 +14,6 @@ productos_bp = Blueprint('productos', __name__, url_prefix='/productos')
 # FUNCIONES DE UTILIDAD
 # ============================================================
 
-def generar_codigo_con_lock(cur):
-    """
-    Genera el siguiente código de forma ATÓMICA dentro de la transacción actual.
-    El advisory lock evita que dos peticiones simultáneas calculen el mismo número.
-    """
-    # 🔒 Bloqueo: cualquier otra transacción que intente esto mismo esperará aquí
-    cur.execute("SELECT pg_advisory_xact_lock(hashtext('productos_codigo_lock'))")
-
-    cur.execute("""
-        SELECT MAX(CAST(REPLACE(codigo, 'PRD-', '') AS INTEGER)) as max_num
-        FROM productos 
-        WHERE codigo LIKE 'PRD-%' 
-        AND codigo ~ '^PRD-[0-9]+$'
-    """)
-    row = cur.fetchone()
-    max_num = row['max_num'] if row and row['max_num'] is not None else 0
-    nuevo_num = max_num + 1
-    return f"PRD-{str(nuevo_num).zfill(4)}"
 
 def safe_float(value, default=0):
     """Convierte a float de forma segura"""
@@ -276,6 +258,7 @@ def create_producto():
     try:
         print("📥 Recibiendo solicitud POST /api/productos")
         
+        # Obtener datos
         if request.content_type and 'application/json' in request.content_type:
             data = request.get_json()
         else:
@@ -286,8 +269,8 @@ def create_producto():
         
         print(f"📦 Datos recibidos: {data}")
         
-        # 🔧 CAMBIO: 'codigo' ya NO es requerido del frontend, se genera en el backend
-        required_fields = ['descripcion', 'modelo', 'marca', 'familia', 'unidad', 'transporte']
+        # Validar campos requeridos
+        required_fields = ['codigo', 'descripcion', 'modelo', 'marca', 'familia', 'unidad', 'transporte']
         for field in required_fields:
             if not data.get(field):
                 return jsonify({
@@ -295,12 +278,9 @@ def create_producto():
                     'error': f'El campo "{field}" es requerido'
                 }), 400
         
+        # Insertar producto usando las funciones seguras
         with db_tx() as conn:
             cur = conn.cursor(cursor_factory=RealDictCursor)
-            
-            # 🔧 CAMBIO: el código se genera AQUÍ, dentro de la misma transacción y con lock
-            codigo = generar_codigo_con_lock(cur)
-            print(f"🆕 Código generado de forma segura: {codigo}")
             
             cur.execute("""
                 INSERT INTO productos (
@@ -328,7 +308,7 @@ def create_producto():
                 )
                 RETURNING id, codigo
             """, (
-                codigo,  # 🔧 CAMBIO: antes era data.get('codigo')
+                data.get('codigo'),
                 data.get('descripcion'),
                 data.get('descripcion_larga', ''),
                 data.get('modelo'),
