@@ -5869,6 +5869,383 @@ function filterProductSelector() {
 }
 
 // ============================================================
+// RENDERIZAR CONTENIDO DEL FORMULARIO DE COTIZACIÓN
+// ============================================================
+
+function renderCotizacionFormContent(isEdit) {
+    // Opciones para selects
+    const condicionOptions = `
+        <option value="Contado">Contado</option>
+        <option value="Crédito 7 días">Crédito 7 días</option>
+        <option value="Crédito 15 días">Crédito 15 días</option>
+        <option value="Crédito 30 días">Crédito 30 días</option>
+        <option value="Crédito 45 días">Crédito 45 días</option>
+        <option value="Crédito 60 días">Crédito 60 días</option>
+        <option value="Crédito 90 días">Crédito 90 días</option>
+        <option value="Personalizado">✏️ Personalizado...</option>
+    `;
+    
+    const tiempoOptions = `
+        <option value="Inmediata">Inmediata</option>
+        <option value="3 días hábiles">3 días hábiles</option>
+        <option value="5 días hábiles">5 días hábiles</option>
+        <option value="7 días hábiles">7 días hábiles</option>
+        <option value="10 días hábiles">10 días hábiles</option>
+        <option value="15 días hábiles">15 días hábiles</option>
+        <option value="Personalizado">✏️ Personalizado...</option>
+    `;
+    
+    const validezOptions = `
+        <option value="7 días">7 días</option>
+        <option value="15 días" selected>15 días</option>
+        <option value="30 días">30 días</option>
+        <option value="45 días">45 días</option>
+        <option value="60 días">60 días</option>
+        <option value="Personalizado">✏️ Personalizado...</option>
+    `;
+    
+    const seguimientoOptions = `
+        <option value="Asesor">Asesor</option>
+        <option value="Cliente">Cliente</option>
+        <option value="Ambos">Ambos</option>
+    `;
+    
+    const motivoOptions = `
+        <option value="Proyecto nuevo">Proyecto nuevo</option>
+        <option value="Renovación">Renovación</option>
+        <option value="Ampliación">Ampliación</option>
+        <option value="Mantenimiento">Mantenimiento</option>
+        <option value="Otro">Otro</option>
+    `;
+    
+    const transporteOptions = `
+        <option value="Seleccione">-- Seleccione --</option>
+        <option value="Incluido en precio">Incluido en precio</option>
+        <option value="Cotizar aparte">Cotizar aparte</option>
+        <option value="Cliente asume">Cliente asume</option>
+    `;
+    
+    const parihuelaOptions = `
+        <option value="Seleccione">-- Seleccione --</option>
+        <option value="Incluido">Incluido</option>
+        <option value="Cotizar aparte">Cotizar aparte</option>
+        <option value="Cliente asume">Cliente asume</option>
+    `;
+    
+    const fuenteOptions = `
+        <option value="Correo">Correo</option>
+        <option value="WhatsApp">WhatsApp</option>
+        <option value="Llamada">Llamada</option>
+        <option value="Plataforma">Plataforma</option>
+        <option value="Presencial">Presencial</option>
+    `;
+    
+    return `
+        <!-- STEPBAR -->
+        <div class="stepbar" id="quoteStatusBar">
+            <span class="step-label">⏳ Progreso:</span>
+            <div class="step status-draft"><span class="num">1</span> Borrador</div>
+            <span class="sep"></span>
+            <div class="step inactive"><span class="num">2</span> En revisión</div>
+            <span class="sep"></span>
+            <div class="step inactive"><span class="num">3</span> Validado por Hellen</div>
+            <span class="sep"></span>
+            <div class="step inactive"><span class="num">4</span> Generada</div>
+            <span class="sep"></span>
+            <div class="step inactive"><span class="num">5</span> Aceptada</div>
+        </div>
+        
+        <!-- CLIENTE -->
+        <div class="create-panel client-card">
+            <h3><span class="section-number">1.</span> <span class="section-title-colored">Cliente</span></h3>
+            <div class="body">
+                <div class="client-search-row">
+                    <div class="form-field">
+                        <label>🔍 Buscar por RUC</label>
+                        <input id="fRucSearch" placeholder="Ingresa 11 dígitos" maxlength="11" oninput="autoLoadClientByRuc(this.value)">
+                    </div>
+                    <button class="btn-search-ruc" onclick="loadClient()">🔍 Buscar</button>
+                </div>
+                <div id="clientConfirmBox"></div>
+                <div class="client-main-grid">
+                    <div class="form-field">
+                        <label>RUC</label>
+                        <input id="fRuc" readonly>
+                    </div>
+                    <div class="form-field">
+                        <label>Razón Social</label>
+                        <input id="fRazon" readonly>
+                    </div>
+                    <div class="form-field">
+                        <label>Código Cliente</label>
+                        <input id="fCodCliente" class="client-code-input" placeholder="PENDIENTE" readonly>
+                    </div>
+                </div>
+                <div class="client-secondary-grid">
+                    <div class="form-field">
+                        <label>Nombre Comercial</label>
+                        <input id="fComercial" placeholder="Nombre comercial">
+                    </div>
+                    <div class="form-field">
+                        <label>Dirección Fiscal</label>
+                        <input id="fDireccion" placeholder="Dirección fiscal">
+                    </div>
+                </div>
+                <div class="client-contact-grid">
+                    <div class="form-field">
+                        <label>Contacto</label>
+                        <input id="fContacto" placeholder="Nombre del contacto">
+                    </div>
+                    <div class="form-field">
+                        <label>Teléfono</label>
+                        <input id="fTelefono" placeholder="Número de contacto">
+                    </div>
+                    <div class="form-field">
+                        <label>Email</label>
+                        <input id="fCorreo" placeholder="email@empresa.com">
+                    </div>
+                </div>
+                <div class="client-save-zone">
+                    <button class="btn-save-client" onclick="saveClientFromQuote()">💾 Guardar / Actualizar cliente</button>
+                    <span class="save-help">✅ Presiona este botón después de crear o editar los datos del cliente</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CONDICIONES COMERCIALES -->
+        <div class="create-panel">
+            <h3><span class="section-number">2.</span> <span class="section-title-colored">Condiciones Comerciales</span></h3>
+            <div class="body">
+                <div class="form-grid">
+                    <div class="form-field col-3">
+                        <label>👤 Vendedor</label>
+                        <input id="fVendedor" value="${CONFIG.asesorDefault}">
+                    </div>
+                    <div class="form-field col-3">
+                        <label>💵 Condición de Pago</label>
+                        <select id="fCondicion" onchange="toggleCustomField('fCondicion','fCondicionCustom')">
+                            ${condicionOptions}
+                        </select>
+                        <input id="fCondicionCustom" placeholder="Ej: 50% anticipo, 50% contra entrega" style="display:none; margin-top:4px; height:28px; font-size:12px;">
+                    </div>
+                    <div class="form-field col-2">
+                        <label>⏱ Tiempo de Entrega</label>
+                        <select id="fTiempo" onchange="toggleCustomField('fTiempo','fTiempoCustom')">
+                            ${tiempoOptions}
+                        </select>
+                        <input id="fTiempoCustom" placeholder="Ej: 10 días hábiles" style="display:none; margin-top:4px; height:28px; font-size:12px;">
+                    </div>
+                    <div class="form-field col-2">
+                        <label>📅 Validez de Oferta</label>
+                        <select id="fValidez" onchange="toggleCustomField('fValidez','fValidezCustom')">
+                            ${validezOptions}
+                        </select>
+                        <input id="fValidezCustom" placeholder="Ej: 20 días" style="display:none; margin-top:4px; height:28px; font-size:12px;">
+                    </div>
+                    <div class="form-field col-2">
+                        <label>📍 Dirección de Entrega</label>
+                        <select id="fDireccionEntrega" onchange="toggleCustomField('fDireccionEntrega','fDireccionEntregaCustom')">
+                            <option value="">Sin dirección</option>
+                            <option value="Personalizado">✏️ Personalizado...</option>
+                        </select>
+                        <input id="fDireccionEntregaCustom" placeholder="Ej: Av. Los Alamos 123 - Lima" style="display:none; margin-top:4px; height:28px; font-size:12px;">
+                    </div>
+                    <div class="form-field col-3">
+                        <label>📋 Requerimiento / Producto</label>
+                        <input id="fReq" placeholder="Descripción corta del requerimiento">
+                    </div>
+                    <div class="form-field col-3">
+                        <label>📌 Seguimiento</label>
+                        <select id="fSeguimiento">${seguimientoOptions}</select>
+                    </div>
+                    <div class="form-field col-3">
+                        <label>📝 Motivo</label>
+                        <select id="fMotivo">${motivoOptions}</select>
+                    </div>
+                    <div class="form-field col-3">
+                        <label>📦 Transporte</label>
+                        <select id="fTransporte">${transporteOptions}</select>
+                    </div>
+                    <div class="form-field col-3">
+                        <label>📦 Parihuela</label>
+                        <select id="fParihuela">${parihuelaOptions}</select>
+                    </div>
+                    <div class="form-field col-3">
+                        <label>📨 Fuente / Medio</label>
+                        <select id="fFuente">${fuenteOptions}</select>
+                    </div>
+                    <div class="form-field col-6">
+                        <label>📝 Nota Interna</label>
+                        <input id="fNotaInterna" placeholder="Comentarios internos...">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- PRODUCTOS -->
+        <div class="create-panel product-wide">
+            <h3>
+                <span class="section-number">3.</span> <span class="section-title-colored">Productos</span>
+                <span class="products-toolbar">
+                    <input id="quickProductSearch" placeholder="Escribe el código del producto...">
+                    <button class="btn-add-product" onclick="addQuoteProductFromSearch()">+ Agregar</button>
+                    <button class="btn-add-product" style="background:#8B5CF6 !important;" onclick="openProductSelector()">📋 Seleccionar múltiples</button>
+                </span>
+            </h3>
+            <div class="body" style="padding:0;">
+                <div class="table-scroll">
+                    <table class="master-table">
+                        <thead>
+                            <tr>
+                                <th style="width:40px;">Item</th>
+                                <th style="width:80px;">Código</th>
+                                <th>Producto</th>
+                                <th style="width:90px;">Modelo</th>
+                                <th style="width:80px;">Marca</th>
+                                <th style="width:60px;">UM SUNAT</th>
+                                <th style="width:70px;">Cant.</th>
+                                <th style="width:90px;">Precio</th>
+                                <th style="width:100px;">Total c/IGV</th>
+                                <th style="width:60px;">Stock</th>
+                                <th style="width:100px;">Entrega</th>
+                                <th style="width:45px;">✕</th>
+                            </tr>
+                        </thead>
+                        <tbody id="quoteProductRows">
+                            <tr><td colspan="12" style="text-align:center;color:#94A3B8;padding:20px;">📭 Agregue productos a la cotización</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- RESUMEN -->
+        <div class="create-panel summary-card">
+            <h3><span class="section-number">4.</span> <span class="section-title-colored">Resumen</span></h3>
+            <div class="body">
+                <div class="side-row"><b>Subtotal</b><span id="sumSubtotal">S/ 0.00</span></div>
+                <div class="side-row"><b>Descuento</b>
+                    <span style="display:flex;gap:5px;align-items:center;justify-content:flex-end;">
+                        <input id="fDiscountValue" type="number" value="0" step="0.01" style="width:70px;height:24px;border:1px solid #CBD5E1;border-radius:4px;padding:0 4px;text-align:right;font-weight:800;">
+                        <select id="fDiscountType" style="height:24px;border-radius:4px;border:1px solid #CBD5E1;font-weight:800;" onchange="calcQuote()">
+                            <option value="%">%</option>
+                            <option value="S/">S/</option>
+                        </select>
+                        <span id="sumDiscountPct" style="min-width:40px;font-weight:700;">0%</span>
+                    </span>
+                </div>
+                <div class="side-row"><b>Descuento (monto)</b><span id="sumDiscount">-S/ 0.00</span></div>
+                <div class="summary-sep"></div>
+                <div class="side-row"><b>Valor Venta</b><span id="sumValue">S/ 0.00</span></div>
+                <div class="side-row"><b>IGV 18%</b><span id="sumIgv">S/ 0.00</span></div>
+                <div class="summary-sep"></div>
+                <div class="total-row"><b>TOTAL</b><span class="summary-total" id="sumTotal">S/ 0.00</span></div>
+            </div>
+        </div>
+    `;
+}
+
+// ============================================================
+// INICIALIZAR EVENTOS DEL FORMULARIO DE COTIZACIÓN
+// ============================================================
+
+function inicializarEventosCotizacion(isEdit) {
+    // Evento para el descuento
+    const discountValue = document.getElementById('fDiscountValue');
+    const discountType = document.getElementById('fDiscountType');
+    
+    if (discountValue) {
+        discountValue.addEventListener('input', calcQuote);
+    }
+    if (discountType) {
+        discountType.addEventListener('change', calcQuote);
+    }
+    
+    // Evento para el buscador rápido de productos (Enter)
+    const quickSearch = document.getElementById('quickProductSearch');
+    if (quickSearch) {
+        quickSearch.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addQuoteProductFromSearch();
+            }
+        });
+    }
+    
+    // Inicializar campos personalizados
+    document.querySelectorAll('select[onchange*="toggleCustomField"]').forEach(select => {
+        const selectId = select.id;
+        const inputId = selectId.replace('f', 'f') + 'Custom';
+        const input = document.getElementById(inputId);
+        if (input) {
+            input.style.display = 'none';
+        }
+    });
+}
+
+// ============================================================
+// FUNCIÓN PARA ABRIR MODAL DE COTIZACIÓN - EXPORTADA AL WINDOW
+// ============================================================
+
+window.openCotizacionModal = function(id = null) {
+    console.log('📋 Abriendo modal de cotización', { id });
+    editingId = id;
+    const isEdit = id !== null;
+    
+    // Obtener el modal
+    const modal = document.getElementById('cotizacionModal');
+    if (!modal) {
+        console.error('❌ Modal #cotizacionModal no encontrado');
+        showToast('Error: Modal de cotización no disponible', 'error');
+        return;
+    }
+    
+    // Limpiar el contenido anterior
+    const body = document.getElementById('cotizacionForm');
+    if (!body) {
+        console.error('❌ #cotizacionForm no encontrado');
+        showToast('Error: Formulario no disponible', 'error');
+        return;
+    }
+    
+    // Resetear variables globales
+    quoteProducts = [];
+    cotizacionSeleccionada = null;
+    
+    // Establecer el título
+    const title = document.getElementById('cotizacionModalTitle');
+    if (title) {
+        title.textContent = isEdit ? '✏️ Editar cotización' : '📄 Nueva cotización';
+    }
+    
+    // Renderizar el contenido del modal
+    body.innerHTML = renderCotizacionFormContent(isEdit);
+    
+    // Renderizar los botones del footer según el rol
+    renderCotizacionFooter(isEdit);
+    
+    // Inicializar eventos del formulario
+    inicializarEventosCotizacion(isEdit);
+    
+    // Si es edición, cargar los datos
+    if (isEdit) {
+        setTimeout(() => {
+            cargarCotizacionParaEditar(id);
+        }, 100);
+    } else {
+        // Nueva cotización: valores por defecto
+        const now = new Date();
+        const fechaStr = now.toISOString().slice(0, 16);
+        document.getElementById('fFecha')?.setAttribute('value', fechaStr);
+        document.getElementById('fVendedor')?.setAttribute('value', CONFIG.asesorDefault);
+    }
+    
+    // Mostrar el modal
+    modal.classList.add('show');
+    console.log('✅ Modal de cotización abierto correctamente');
+};
+
+// ============================================================
 // BUSCADOR DE COTIZACIONES CON AUTOCOMPLETADO
 // ============================================================
 
@@ -7168,90 +7545,87 @@ document.addEventListener('DOMContentLoaded', function() {
 // ============================================================
 // EXPORTAR FUNCIONES AL WINDOW
 // ============================================================
+// ============================================================
+// EXPORTAR FUNCIONES QUE FALTAN AL WINDOW
+// ============================================================
 
-window.loadCotizaciones = loadCotizaciones;
-window.loadPedidos = loadPedidos;
-window.loadDespachos = loadDespachos;
-window.loadGuias = loadGuias;
-window.loadComprobantes = loadComprobantes;
-window.loadNotas = loadNotas;
-window.loadDevoluciones = loadDevoluciones;
+// Funciones del modal de cotización
+window.renderCotizacionFormContent = renderCotizacionFormContent;
+window.inicializarEventosCotizacion = inicializarEventosCotizacion;
+window.cargarCotizacionParaEditar = cargarCotizacionParaEditar;
+window.validateByHellen = validateByHellen;
 
-window.openCotizacionModal = openCotizacionModal;
+// Funciones de campos personalizados
+window.toggleCustomField = toggleCustomField;
+window.getFieldValue = getFieldValue;
+window.setFieldValue = setFieldValue;
+
+// Funciones de validación PC
+window.updateValidationStatus = updateValidationStatus;
+window.updateValidationIcon = updateValidationIcon;
+window.updateValidationSemaphore = updateValidationSemaphore;
+
+// Funciones de selector de productos
+window.openProductSelector = openProductSelector;
+window.renderProductSelector = renderProductSelector;
+window.toggleProductSelection = toggleProductSelection;
+window.selectAllProducts = selectAllProducts;
+window.deselectAllProducts = deselectAllProducts;
+window.filterProductSelector = filterProductSelector;
+window.addSelectedProducts = addSelectedProducts;
+window.toggleAllProductCheckboxes = toggleAllProductCheckboxes;
+
+// Funciones de PC SAP
+window.openPedidoCompraModalSAP = openPedidoCompraModalSAP;
+window.clearPedidoModalSAP = clearPedidoModalSAP;
+window.addPedidoItemSAP = addPedidoItemSAP;
+window.eliminarItemSAP = eliminarItemSAP;
+window.reordenarItemsSAP = reordenarItemsSAP;
+window.savePedidoCompraSAP = savePedidoCompraSAP;
+window.buscarCotizacionSAP = buscarCotizacionSAP;
+window.seleccionarCotizacionSAP = seleccionarCotizacionSAP;
+window.loadPedidoCotizacionSAP = loadPedidoCotizacionSAP;
+window.actualizarFaltanteSAP = actualizarFaltanteSAP;
+window.actualizarPrecioPCSAP = actualizarPrecioPCSAP;
+
+// Funciones de validación
+window.solicitarCorreccion = solicitarCorreccion;
+window.generarOrdenCompra = generarOrdenCompra;
+window.enviarADespacho = enviarADespacho;
+window.renderValidacion = renderValidacion;
+
+// Funciones de creación desde cotización
+window.openGuiaModalWithData = openGuiaModalWithData;
+window.openComprobanteModalWithData = openComprobanteModalWithData;
+window.openDespachoModalWithData = openDespachoModalWithData;
+window.loadGuiaFromCotizacion = loadGuiaFromCotizacion;
+
+// Funciones de menús
+window.createMenuWithClose = createMenuWithClose;
+
+// Funciones de PC (versión antigua)
 window.openPedidoCompraModal = openPedidoCompraModal;
-window.openDespachoModal = openDespachoModal;
-window.openGuiaModal = openGuiaModal;
-window.openComprobanteModal = openComprobanteModal;
-window.openNotaCreditoModal = openNotaCreditoModal;
-window.openDevolucionModal = openDevolucionModal;
+window.loadPedidoCotizacion = loadPedidoCotizacion;
+window.addPedidoItem = addPedidoItem;
 
-window.saveCotizacionDraft = saveCotizacionDraft;
-window.sendCotizacionToReview = sendCotizacionToReview;
-window.generateCotizacionPdfAndSend = generateCotizacionPdfAndSend;
+// Funciones de productos
+window.cargarProductosMaestros = cargarProductosMaestros;
+window.cargarClientesMaestros = cargarClientesMaestros;
+window.cargarDatalistProductos = cargarDatalistProductos;
+window.productTableHtml = productTableHtml;
 
-window.savePedidoCompra = savePedidoCompra;
-window.saveDespacho = saveDespacho;
-window.saveGuia = saveGuia;
-window.saveComprobante = saveComprobante;
-window.saveNotaCredito = saveNotaCredito;
-window.saveDevolucion = saveDevolucion;
-
-window.showCotizacionMenu = showCotizacionMenu;
-window.showPedidoMenu = showPedidoMenu;
-window.showGuiaMenu = showGuiaMenu;
-window.showComprobanteMenu = showComprobanteMenu;
-window.showNotaMenu = showNotaMenu;
-window.showDevolucionMenu = showDevolucionMenu;
-
-window.exportData = exportData;
-window.marcarDespachado = marcarDespachado;
-window.closeModal = closeModal;
-window.addQuoteProductFromSearch = addQuoteProductFromSearch;
-window.calcQuote = calcQuote;
-window.loadClient = loadClient;
-window.autoLoadClientByRuc = autoLoadClientByRuc;
-window.saveClientFromQuote = saveClientFromQuote;
-window.renderQuoteProducts = renderQuoteProducts;
-
-// Acciones del menú
-window.duplicateCotizacion = duplicateCotizacion;
-window.sendCotizacionEmail = sendCotizacionEmail;
-window.generateCotizacionPdf = generateCotizacionPdf;
-window.marcarCotizacionAccepted = marcarCotizacionAccepted;
-window.marcarCotizacionPending = marcarCotizacionPending;
-window.marcarCotizacionNotClosed = marcarCotizacionNotClosed;
-window.reactivarCotizacion = reactivarCotizacion;
-window.createDocFromCotizacion = createDocFromCotizacion;
-window.deleteCotizacion = deleteCotizacion;
-
-window.validatePedidoCompra = validatePedidoCompra;
-window.createDespachoFromPedido = createDespachoFromPedido;
-window.createGuiaFromPedido = createGuiaFromPedido;
-window.createFacturaFromPedido = createFacturaFromPedido;
-window.deletePedidoCompra = deletePedidoCompra;
-
-window.generateGuiaPdf = generateGuiaPdf;
-window.markGuiaEmitida = markGuiaEmitida;
-window.deleteGuia = deleteGuia;
-
-window.generateComprobantePdf = generateComprobantePdf;
-window.markComprobanteEmitido = markComprobanteEmitido;
-window.deleteComprobante = deleteComprobante;
-
-window.generateNotaPdf = generateNotaPdf;
-window.markNotaEmitida = markNotaEmitida;
-window.deleteNota = deleteNota;
-
-window.approveDevolucion = approveDevolucion;
-window.rejectDevolucion = rejectDevolucion;
-window.deleteDevolucion = deleteDevolucion;
-
-window.showConfirmModal = showConfirmModal;
+// Funciones de modal de éxito
 window.showSuccessModal = showSuccessModal;
-window.updateQuoteStatusBar = updateQuoteStatusBar;
-window.deleteCotizacion = deleteCotizacion;
-window.initVentas = initVentas;
-window.validarPCSAP = validarPCSAP;
 
+// Funciones de formato
+window.formatFecha = formatFecha;
+window.formatearFecha = formatearFecha; // si existe esta función
+window.money = money;
+window.badgeStatus = badgeStatus;
+window.options = options;
+window.sd = sd;
+window.esc = esc;
+window.today = today;
+window.now = now;
 
-console.log('✅ Módulo Ventas cargado correctamente - VERSIÓN COMPLETA FUNCIONAL');
+console.log('✅ Todas las funciones exportadas al window correctamente');
