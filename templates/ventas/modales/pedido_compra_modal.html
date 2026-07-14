@@ -1,4 +1,4 @@
-<!-- MODAL PEDIDO COMPRA - VERSIÓN REORGANIZADA -->
+<!-- MODAL PEDIDO COMPRA - VERSIÓN CON BOTÓN ELIMINAR -->
 <div class="modal-bg" id="pedidoCompraModal">
     <div class="modal-box" style="width:min(1100px,96vw); max-height:100vh; display:flex; flex-direction:column; border-radius:12px;">
         
@@ -20,7 +20,7 @@
                     <div id="validationIcon" style="font-size:18px;">⏳</div>
                     <div>
                         <div id="validationTitle" style="font-weight:900; font-size:12px;">Validando...</div>
-                        <div id="validationSubtitle" style="font-size:9px; opacity:0.8;">Revisando los 7 puntos de validación</div>
+                        <div id="validationSubtitle" style="font-size:9px; opacity:0.8;">Revisando los 6 puntos de validación</div>
                     </div>
                     <div style="margin-left:auto; display:flex; gap:3px; flex-wrap:wrap;" id="validationChips"></div>
                 </div>
@@ -143,7 +143,7 @@
                 </div>
             </div>
 
-            <!-- BLOQUE 3: Ítems del PC - CON BOTONES EN LA PARTE SUPERIOR DERECHA -->
+            <!-- BLOQUE 3: Ítems del PC - CON BOTÓN ELIMINAR -->
             <div class="form-section" style="padding:4px 10px; margin-bottom:4px; border-radius:6px; border:1px solid #E2E8F0;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
                     <div class="section-title" style="font-size:10px; font-weight:900; color:#7F1D1D; margin:0;">3. Ítems del PC</div>
@@ -165,6 +165,7 @@
                                 <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Precio PC</th>
                                 <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Stock</th>
                                 <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Faltante</th>
+                                <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Acción</th>
                             </tr>
                         </thead>
                         <tbody id="pcItemsBody"></tbody>

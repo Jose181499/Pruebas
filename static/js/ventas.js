@@ -5484,25 +5484,66 @@ function loadPedidoCotizacionSAP() {
     }
 }
 
+// Función para agregar ítem con botón eliminar
 function addPedidoItemSAP() {
     const tbody = document.getElementById('pcItemsBody');
-    if (!tbody) return;
-    const idx = tbody.children.length + 1;
-    tbody.insertAdjacentHTML('beforeend', `
-        <tr>
-            <td>${idx}</td>
-            <td><input value="" style="width:90px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px;"></td>
-            <td><input value="" style="width:160px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px;"></td>
-            <td><input type="number" value="0" style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;"></td>
-            <td><input type="number" value="1" style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;"></td>
-            <td><input type="number" step="0.01" value="0" style="width:80px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:right;"></td>
-            <td><input type="number" step="0.01" value="0" style="width:80px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:right;"></td>
-            <td><input type="number" value="0" style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;"></td>
-            <td style="font-weight:900; color:#64748B;">0</td>
-        </tr>
-    `);
+    const rowCount = tbody.children.length + 1;
+    
+    const tr = document.createElement('tr');
+    tr.id = `item-row-${rowCount}`;
+    tr.style.borderBottom = '1px solid #E2E8F0';
+    
+    tr.innerHTML = `
+        <td style="padding:2px 3px; text-align:center; font-weight:800; font-size:9px;">${rowCount}</td>
+        <td style="padding:2px 3px;"><input type="text" placeholder="Código" style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none;"></td>
+        <td style="padding:2px 3px;"><input type="text" placeholder="Descripción" style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none;"></td>
+        <td style="padding:2px 3px;"><input type="number" value="0" style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;"></td>
+        <td style="padding:2px 3px;"><input type="number" value="0" style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;"></td>
+        <td style="padding:2px 3px;"><input type="number" step="0.01" value="0" style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;"></td>
+        <td style="padding:2px 3px;"><input type="number" step="0.01" value="0" style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;"></td>
+        <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B;">0</td>
+        <td style="padding:2px 3px; text-align:center; font-size:8px; color:#EF4444;">0</td>
+        <td style="padding:2px 3px; text-align:center;">
+            <button onclick="eliminarItemSAP('${tr.id}')" 
+                    style="background:transparent; border:none; color:#EF4444; cursor:pointer; font-size:12px; font-weight:900; padding:0 4px; border-radius:3px; transition:all 0.2s;"
+                    onmouseover="this.style.background='#FEE2E2'; this.style.color='#DC2626';"
+                    onmouseout="this.style.background='transparent'; this.style.color='#EF4444';">
+                ✕
+            </button>
+        </td>
+    `;
+    
+    tbody.appendChild(tr);
 }
 
+// Función para eliminar ítem
+function eliminarItemSAP(rowId) {
+    const row = document.getElementById(rowId);
+    if (row) {
+        row.remove();
+        // Re-numerar los ítems
+        reordenarItemsSAP();
+    }
+}
+
+// Función para reordenar números de ítems
+function reordenarItemsSAP() {
+    const rows = document.querySelectorAll('#pcItemsBody tr');
+    rows.forEach((row, index) => {
+        const numCell = row.querySelector('td:first-child');
+        if (numCell) {
+            numCell.textContent = index + 1;
+        }
+        // Actualizar el ID de la fila
+        const newId = `item-row-${index + 1}`;
+        row.id = newId;
+        // Actualizar el onclick del botón eliminar
+        const deleteBtn = row.querySelector('td:last-child button');
+        if (deleteBtn) {
+            deleteBtn.setAttribute('onclick', `eliminarItemSAP('${newId}')`);
+        }
+    });
+}
 
 
 async function savePedidoCompraSAP(force) {
