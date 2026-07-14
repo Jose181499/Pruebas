@@ -5342,7 +5342,6 @@ async function cargarPCParaEditar(id) {
             const el = document.getElementById(id);
             if (el) {
                 el.value = value || '';
-                // Quitar readonly para editar
                 if (el.hasAttribute('readonly')) {
                     el.removeAttribute('readonly');
                     el.style.background = '#FFFFFF';
@@ -5352,9 +5351,30 @@ async function cargarPCParaEditar(id) {
             return false;
         };
         
+        // 🔽 FUNCIÓN PARA FORMATEAR FECHA PARA DATETIME-LOCAL
+        const formatDateForInput = (dateStr) => {
+            if (!dateStr) return '';
+            try {
+                const date = new Date(dateStr);
+                if (isNaN(date.getTime())) return '';
+                // Formato: YYYY-MM-DDTHH:mm
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                return `${year}-${month}-${day}T${hours}:${minutes}`;
+            } catch (e) {
+                return '';
+            }
+        };
+        
         // Llenar campos
         setValue('pcNumero', pc.numero);
-        setValue('pcFecha', pc.fecha);
+        
+        // 🔽 USAR LA FUNCIÓN DE FORMATEO PARA LA FECHA
+        const fechaFormateada = formatDateForInput(pc.fecha);
+        setValue('pcFecha', fechaFormateada);
         
         const medioSelect = document.getElementById('pcMedio');
         if (medioSelect && pc.medio) {
@@ -5373,7 +5393,6 @@ async function cargarPCParaEditar(id) {
         // Condición pago
         const condSelect = document.getElementById('pcCondicion');
         if (condSelect && pc.condicion_pago) {
-            // Buscar si existe en las opciones
             let found = false;
             for (let opt of condSelect.options) {
                 if (opt.value === pc.condicion_pago) {
@@ -5383,7 +5402,6 @@ async function cargarPCParaEditar(id) {
                 }
             }
             if (!found) {
-                // Si no está, agregar como opción
                 const opt = document.createElement('option');
                 opt.value = pc.condicion_pago;
                 opt.textContent = pc.condicion_pago;
@@ -5477,6 +5495,7 @@ async function cargarPCParaEditar(id) {
         showToast('❌ Error al cargar el PC: ' + error.message, 'error');
     }
 }
+
 
 // ============================================================
 // FUNCIÓN PARA MOSTRAR EL MODAL (separada para claridad)
