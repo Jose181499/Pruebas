@@ -5374,10 +5374,6 @@ function clearDateFilter() {
 }
 
 
-// ============================================================
-// FUNCIÓN PARA ABRIR MODAL DE PC - VERSIÓN CORREGIDA
-// ============================================================
-
 function openPedidoCompraModalSAP(mode = 'cot', id = null) {
     console.log('📋 Abriendo modal PC:', { mode, id });
     
@@ -5389,34 +5385,42 @@ function openPedidoCompraModalSAP(mode = 'cot', id = null) {
         return;
     }
     
-    // Obtener elementos del modal (con verificación)
+    // Limpiar primero SIEMPRE
+    clearPedidoModalSAP();
+    
+    // Obtener elementos del header
     const title = document.getElementById('pedidoCompraModalTitle');
     const sub = document.getElementById('modalSub');
-    const note = document.getElementById('modeNote');
-    const cotBlock = document.getElementById('cotBlock');
-    const origen = document.getElementById('docOrigen');
     
     // Si estamos editando (id != null)
     if (id) {
-        // Verificar que el elemento title existe antes de usarlo
-        if (title) title.textContent = 'Editar PC Cliente';
-        if (sub) sub.textContent = 'Revisa y actualiza los datos del PC.';
+        if (title) title.textContent = '✏️ Editar PC Cliente';
+        if (sub) sub.textContent = 'Revisa y actualiza los datos del PC. Los campos pueden modificarse.';
+        
+        // Ocultar bloque de búsqueda de cotización
+        const cotBlock = document.getElementById('cotBlock');
+        if (cotBlock) cotBlock.style.display = 'none';
+        
+        // Cambiar nota de modo
+        const note = document.getElementById('modeNote');
         if (note) {
             note.className = 'mini-note';
-            note.textContent = '📝 Editando PC existente. Puedes modificar los datos.';
+            note.textContent = '📝 Editando PC existente. Puedes modificar cualquier campo.';
         }
-        if (cotBlock) cotBlock.style.display = 'block';
+        
+        // Cambiar origen
+        const origen = document.getElementById('docOrigen');
         if (origen) origen.textContent = 'Edición';
         
-        // Cargar datos del PC para editar
+        // Cargar datos del PC
         cargarPCParaEditar(id);
         modal.classList.add('show');
         return;
     }
     
-    // Si es NUEVO (mode = 'cot' o 'directo')
+    // Si es NUEVO
     if (title) {
-        title.textContent = mode === 'cot' ? 'Crear PC desde cotización' : 'PC directo / sin cotización';
+        title.textContent = mode === 'cot' ? '➕ Crear PC desde cotización' : '📝 PC directo / sin cotización';
     }
     
     if (sub) {
@@ -5425,6 +5429,13 @@ function openPedidoCompraModalSAP(mode = 'cot', id = null) {
             : 'PC directo: requiere validación comercial. No comprar bajo pedido hasta quedar conforme.';
     }
     
+    // Mostrar/ocultar bloque de cotización según modo
+    const cotBlock = document.getElementById('cotBlock');
+    if (cotBlock) {
+        cotBlock.style.display = mode === 'cot' ? 'block' : 'none';
+    }
+    
+    const note = document.getElementById('modeNote');
     if (note) {
         if (mode === 'cot') {
             note.className = 'mini-note';
@@ -5435,21 +5446,19 @@ function openPedidoCompraModalSAP(mode = 'cot', id = null) {
         }
     }
     
-    // Mostrar/ocultar bloque de cotización según modo
-    if (cotBlock) {
-        cotBlock.style.display = mode === 'cot' ? 'block' : 'none';
-    }
-    
+    const origen = document.getElementById('docOrigen');
     if (origen) {
         origen.textContent = mode === 'cot' ? 'Cotización' : 'Directo';
     }
     
-    // Limpiar y preparar el modal
-    clearPedidoModalSAP();
-    
     // Si es modo cotización, cargar cotizaciones disponibles
     if (mode === 'cot') {
-        // Asegurar que las cotizaciones están cargadas
+        const searchInput = document.getElementById('pcCotSearch');
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.placeholder = 'Escribe N° cotización, RUC, razón social...';
+        }
+        
         if (typeof cotizacionesData === 'undefined' || cotizacionesData.length === 0) {
             showToast('⏳ Cargando cotizaciones...', 'info');
             loadCotizaciones().then(() => {
@@ -5462,6 +5471,7 @@ function openPedidoCompraModalSAP(mode = 'cot', id = null) {
     modal.classList.add('show');
     console.log('✅ Modal PC abierto correctamente');
 }
+
 
 async function cargarPCParaEditar(id) {
     try {
@@ -5478,15 +5488,30 @@ async function cargarPCParaEditar(id) {
         const pc = response.data;
         console.log('📦 Datos del PC:', pc);
         
-        // Llenar campos del modal (verificando que existan)
+        // Función auxiliar
         const setValue = (id, value) => {
             const el = document.getElementById(id);
-            if (el) el.value = value || '';
+            if (el) {
+                el.value = value || '';
+                // Quitar readonly para editar
+                if (el.hasAttribute('readonly')) {
+                    el.removeAttribute('readonly');
+                    el.style.background = '#FFFFFF';
+                }
+                return true;
+            }
+            return false;
         };
         
+        // Llenar campos
         setValue('pcNumero', pc.numero);
         setValue('pcFecha', pc.fecha);
-        setValue('pcMedio', pc.medio || 'Correo');
+        
+        const medioSelect = document.getElementById('pcMedio');
+        if (medioSelect && pc.medio) {
+            medioSelect.value = pc.medio;
+        }
+        
         setValue('pcCliente', pc.cliente);
         setValue('pcRuc', pc.ruc);
         setValue('pcMonto', pc.monto || 0);
@@ -5495,6 +5520,39 @@ async function cargarPCParaEditar(id) {
         setValue('pcCondicionPago', pc.condicion_pago || 'Contado');
         setValue('pcVendedor', pc.vendedor || 'Helen Blas Príncipe');
         setValue('pcCotNumero', pc.cotizacion_numero || '');
+        
+        // Condición pago
+        const condSelect = document.getElementById('pcCondicion');
+        if (condSelect && pc.condicion_pago) {
+            // Buscar si existe en las opciones
+            let found = false;
+            for (let opt of condSelect.options) {
+                if (opt.value === pc.condicion_pago) {
+                    opt.selected = true;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                // Si no está, agregar como opción
+                const opt = document.createElement('option');
+                opt.value = pc.condicion_pago;
+                opt.textContent = pc.condicion_pago;
+                condSelect.appendChild(opt);
+                condSelect.value = pc.condicion_pago;
+            }
+        }
+        
+        // Moneda
+        const monedaSelect = document.getElementById('pcMoneda');
+        if (monedaSelect && pc.moneda) {
+            for (let opt of monedaSelect.options) {
+                if (opt.value === pc.moneda || opt.textContent.includes(pc.moneda)) {
+                    opt.selected = true;
+                    break;
+                }
+            }
+        }
         
         // Cargar items
         const tbody = document.getElementById('pcItemsBody');
@@ -5506,7 +5564,10 @@ async function cargarPCParaEditar(id) {
                 addPedidoItemSAP();
             } else {
                 items.forEach((item, idx) => {
-                    const faltante = Math.max((item.cantidad_pc || 0) - (item.stock || 0), 0);
+                    const cantidadPC = parseFloat(item.cantidad_pc) || 1;
+                    const stock = parseFloat(item.stock) || 0;
+                    const faltante = Math.max(cantidadPC - stock, 0);
+                    
                     tbody.insertAdjacentHTML('beforeend', `
                         <tr>
                             <td>${idx + 1}</td>
@@ -5523,7 +5584,7 @@ async function cargarPCParaEditar(id) {
                                        style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;">
                             </td>
                             <td>
-                                <input type="number" value="${item.cantidad_pc || 1}" 
+                                <input type="number" value="${cantidadPC}" 
                                        style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;">
                             </td>
                             <td>
@@ -5535,7 +5596,7 @@ async function cargarPCParaEditar(id) {
                                        style="width:80px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:right;">
                             </td>
                             <td>
-                                <input type="number" value="${item.stock || 0}" 
+                                <input type="number" value="${stock}" 
                                        style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;">
                             </td>
                             <td style="font-weight:900; color:${faltante > 0 ? '#DC2626' : '#16A34A'}; text-align:center;">
@@ -5544,6 +5605,19 @@ async function cargarPCParaEditar(id) {
                         </tr>
                     `);
                 });
+            }
+        }
+        
+        // Mostrar estado actual
+        const docEstado = document.getElementById('docEstado');
+        if (docEstado && pc.estado) {
+            docEstado.textContent = pc.estado;
+            if (pc.estado === 'PC observado' || pc.estado === 'Bloqueado') {
+                docEstado.style.color = '#DC2626';
+            } else if (pc.estado === 'Listo para despacho') {
+                docEstado.style.color = '#16A34A';
+            } else {
+                docEstado.style.color = '#F59E0B';
             }
         }
         
@@ -6169,34 +6243,147 @@ function actualizarPrecioPCSAP(input, index) {
     if (value < 0) input.value = 0;
 }
 
-// ============================================================
-// FUNCIÓN PARA LIMPIAR EL MODAL (ACTUALIZADA)
-// ============================================================
+
 
 function clearPedidoModalSAP() {
+    console.log('🧹 Limpiando modal de PC...');
+    
+    // Función auxiliar para establecer valor si el elemento existe
+    const setValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.value = value !== undefined ? value : '';
+            return true;
+        }
+        return false;
+    };
+    
+    // Fecha actual
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    document.getElementById('pcFecha').value = now.toISOString().slice(0, 16);
-    document.getElementById('pcNumero').value = 'PC-' + new Date().toISOString().slice(0, 10).replaceAll('-', '') + '-' + String(Date.now()).slice(-4);
+    const fechaStr = now.toISOString().slice(0, 16);
     
-    ['pcCotNumero', 'pcCotFecha', 'pcCliente', 'pcRuc', 'pcContacto', 'pcEntrega', 'pcObs', 'pcCondicionPago', 'pcVendedor'].forEach(id => {
+    // 1. Limpiar campos de fecha y número
+    setValue('pcFecha', fechaStr);
+    setValue('pcNumero', 'PC-' + new Date().toISOString().slice(0, 10).replaceAll('-', '') + '-' + String(Date.now()).slice(-4));
+    
+    // 2. Limpiar campos de texto (todos los que existen en el modal)
+    const camposTexto = [
+        'pcCotNumero', 'pcCotFecha', 'pcCliente', 'pcRuc', 
+        'pcContacto', 'pcEntrega', 'pcObs', 'pcCondicionPago', 
+        'pcVendedor', 'pcCotSearch'
+    ];
+    
+    camposTexto.forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.value = '';
+        if (el) {
+            el.value = '';
+            // Si es readonly, asegurar que se pueda editar después
+            if (el.hasAttribute('readonly')) {
+                el.removeAttribute('readonly');
+                el.style.background = '#FFFFFF';
+            }
+        }
     });
-    document.getElementById('pcMonto').value = '0';
     
-    // Limpiar el buscador
+    // 3. Limpiar selects a valores por defecto
+    const selects = ['pcMedio', 'pcCondicion', 'pcMoneda'];
+    selects.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && el.options.length > 0) {
+            el.selectedIndex = 0;
+        }
+    });
+    
+    // 4. Limpiar monto
+    setValue('pcMonto', '0');
+    
+    // 5. Limpiar buscador y resultados
     const searchInput = document.getElementById('pcCotSearch');
-    if (searchInput) searchInput.value = '';
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.placeholder = 'Escribe N° cotización, RUC, razón social...';
+        searchInput.removeAttribute('readonly');
+        searchInput.style.background = '#FFFFFF';
+    }
+    
     const resultsContainer = document.getElementById('cotizacionSearchResults');
     if (resultsContainer) {
         resultsContainer.style.display = 'none';
         resultsContainer.innerHTML = '';
     }
     
+    // 6. Limpiar tabla de items
     const tbody = document.getElementById('pcItemsBody');
-    if (tbody) tbody.innerHTML = '';
-    addPedidoItemSAP();
+    if (tbody) {
+        tbody.innerHTML = '';
+        // Agregar una fila vacía
+        addPedidoItemSAP();
+    }
+    
+    // 7. Resetear validaciones a "Sí"
+    const validaciones = ['vPrecio', 'vCantidad', 'vProducto', 'vEntrega', 'vMoneda', 'vTransporte', 'vVigencia', 'vMargen'];
+    validaciones.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.value = 'Sí';
+        }
+    });
+    
+    // 8. Resetear íconos de validación
+    validaciones.forEach(id => {
+        const iconId = id.replace('v', '') + 'Icon'; // vPrecio -> PrecioIcon
+        const icon = document.getElementById(iconId);
+        if (icon) {
+            icon.textContent = '⚪';
+            icon.style.color = '';
+        }
+    });
+    
+    // 9. Limpiar semáforo
+    const semaphore = document.getElementById('validationSemaphore');
+    if (semaphore) {
+        semaphore.style.display = 'none';
+        semaphore.style.borderColor = '';
+        semaphore.style.background = '';
+    }
+    
+    // 10. Resetear resumen del documento
+    const resetDoc = (id, text, color = '#0F172A') => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.textContent = text;
+            el.style.color = color;
+        }
+    };
+    
+    resetDoc('docEstado', 'Pendiente');
+    resetDoc('docStock', 'Por validar');
+    resetDoc('docSalida', 'Pendiente');
+    
+    const origen = document.getElementById('docOrigen');
+    if (origen) {
+        origen.textContent = 'Cotización';
+        origen.style.color = '#0F172A';
+    }
+    
+    // 11. Resetear resultado de validación
+    const validationResult = document.getElementById('validationResult');
+    if (validationResult) {
+        validationResult.innerHTML = 'ℹ️ Si algún punto es <b>"No"</b>, el PC quedará <b>observado y bloqueado</b>.';
+        validationResult.style.background = '#EFF6FF';
+        validationResult.style.color = '#1E3A8A';
+        validationResult.style.border = '1px solid #BFDBFE';
+    }
+    
+    // 12. Resetear cotización seleccionada
+    cotizacionSeleccionada = null;
+    
+    // 13. Resetear modo de edición
+    modalMode = 'cot';
+    editingId = null;
+    
+    console.log('✅ Modal de PC limpiado correctamente');
 }
 
 // ============================================================
