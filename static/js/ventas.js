@@ -5373,7 +5373,6 @@ function clearDateFilter() {
     showToast('🧹 Filtros de fecha limpiados', 'info');
 }
 
-
 function openPedidoCompraModalSAP(mode = 'cot', id = null) {
     console.log('📋 Abriendo modal PC:', { mode, id });
     
@@ -5385,7 +5384,7 @@ function openPedidoCompraModalSAP(mode = 'cot', id = null) {
         return;
     }
     
-    // Limpiar primero SIEMPRE
+    // ⚠️ SIEMPRE LIMPIAR PRIMERO ⚠️
     clearPedidoModalSAP();
     
     // Obtener elementos del header
@@ -5418,7 +5417,7 @@ function openPedidoCompraModalSAP(mode = 'cot', id = null) {
         return;
     }
     
-    // Si es NUEVO
+    // Si es NUEVO (modo cotización o directo)
     if (title) {
         title.textContent = mode === 'cot' ? '➕ Crear PC desde cotización' : '📝 PC directo / sin cotización';
     }
@@ -5471,7 +5470,6 @@ function openPedidoCompraModalSAP(mode = 'cot', id = null) {
     modal.classList.add('show');
     console.log('✅ Modal PC abierto correctamente');
 }
-
 
 async function cargarPCParaEditar(id) {
     try {
@@ -6244,9 +6242,8 @@ function actualizarPrecioPCSAP(input, index) {
 }
 
 
-
 function clearPedidoModalSAP() {
-    console.log('🧹 Limpiando modal de PC...');
+    console.log('🧹 Limpiando modal de PC a estado inicial...');
     
     // Función auxiliar para establecer valor si el elemento existe
     const setValue = (id, value) => {
@@ -6263,92 +6260,51 @@ function clearPedidoModalSAP() {
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     const fechaStr = now.toISOString().slice(0, 16);
     
-    // 1. Limpiar campos de fecha y número
-    setValue('pcFecha', fechaStr);
-    setValue('pcNumero', 'PC-' + new Date().toISOString().slice(0, 10).replaceAll('-', '') + '-' + String(Date.now()).slice(-4));
-    
-    // 2. Limpiar campos de texto (todos los que existen en el modal)
-    const camposTexto = [
-        'pcCotNumero', 'pcCotFecha', 'pcCliente', 'pcRuc', 
-        'pcContacto', 'pcEntrega', 'pcObs', 'pcCondicionPago', 
-        'pcVendedor', 'pcCotSearch'
-    ];
-    
-    camposTexto.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.value = '';
-            // Si es readonly, asegurar que se pueda editar después
-            if (el.hasAttribute('readonly')) {
-                el.removeAttribute('readonly');
-                el.style.background = '#FFFFFF';
-            }
-        }
-    });
-    
-    // 3. Limpiar selects a valores por defecto
-    const selects = ['pcMedio', 'pcCondicion', 'pcMoneda'];
-    selects.forEach(id => {
-        const el = document.getElementById(id);
-        if (el && el.options.length > 0) {
-            el.selectedIndex = 0;
-        }
-    });
-    
-    // 4. Limpiar monto
-    setValue('pcMonto', '0');
-    
-    // 5. Limpiar buscador y resultados
-    const searchInput = document.getElementById('pcCotSearch');
-    if (searchInput) {
-        searchInput.value = '';
-        searchInput.placeholder = 'Escribe N° cotización, RUC, razón social...';
-        searchInput.removeAttribute('readonly');
-        searchInput.style.background = '#FFFFFF';
+    // ============================================================
+    // 1. RESTAURAR TÍTULO Y SUBTÍTULO (para modo creación)
+    // ============================================================
+    const title = document.getElementById('pedidoCompraModalTitle');
+    if (title) {
+        title.textContent = 'Crear PC Cliente';
     }
     
-    const resultsContainer = document.getElementById('cotizacionSearchResults');
-    if (resultsContainer) {
-        resultsContainer.style.display = 'none';
-        resultsContainer.innerHTML = '';
+    const sub = document.getElementById('modalSub');
+    if (sub) {
+        sub.textContent = 'Primero se valida. No comprar ni despachar si existe observación.';
     }
     
-    // 6. Limpiar tabla de items
-    const tbody = document.getElementById('pcItemsBody');
-    if (tbody) {
-        tbody.innerHTML = '';
-        // Agregar una fila vacía
-        addPedidoItemSAP();
+    // ============================================================
+    // 2. RESTAURAR NOTA DE MODO
+    // ============================================================
+    const note = document.getElementById('modeNote');
+    if (note) {
+        note.className = 'mini-note';
+        note.textContent = '✅ Recomendado: jalar la cotización, crear PC espejo y validar contra el documento real del cliente.';
+        note.style.background = '#EFF6FF';
+        note.style.border = '1px solid #BFDBFE';
+        note.style.color = '#1E3A8A';
     }
     
-    // 7. Resetear validaciones a "Sí"
-    const validaciones = ['vPrecio', 'vCantidad', 'vProducto', 'vEntrega', 'vMoneda', 'vTransporte', 'vVigencia', 'vMargen'];
-    validaciones.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.value = 'Sí';
-        }
-    });
-    
-    // 8. Resetear íconos de validación
-    validaciones.forEach(id => {
-        const iconId = id.replace('v', '') + 'Icon'; // vPrecio -> PrecioIcon
-        const icon = document.getElementById(iconId);
-        if (icon) {
-            icon.textContent = '⚪';
-            icon.style.color = '';
-        }
-    });
-    
-    // 9. Limpiar semáforo
-    const semaphore = document.getElementById('validationSemaphore');
-    if (semaphore) {
-        semaphore.style.display = 'none';
-        semaphore.style.borderColor = '';
-        semaphore.style.background = '';
+    // ============================================================
+    // 3. RESTAURAR BLOQUE DE COTIZACIÓN (visible)
+    // ============================================================
+    const cotBlock = document.getElementById('cotBlock');
+    if (cotBlock) {
+        cotBlock.style.display = 'block';
     }
     
-    // 10. Resetear resumen del documento
+    // ============================================================
+    // 4. RESTAURAR ORIGEN
+    // ============================================================
+    const origen = document.getElementById('docOrigen');
+    if (origen) {
+        origen.textContent = 'Cotización';
+        origen.style.color = '#0F172A';
+    }
+    
+    // ============================================================
+    // 5. RESTAURAR ESTADO DEL DOCUMENTO
+    // ============================================================
     const resetDoc = (id, text, color = '#0F172A') => {
         const el = document.getElementById(id);
         if (el) {
@@ -6361,13 +6317,123 @@ function clearPedidoModalSAP() {
     resetDoc('docStock', 'Por validar');
     resetDoc('docSalida', 'Pendiente');
     
-    const origen = document.getElementById('docOrigen');
-    if (origen) {
-        origen.textContent = 'Cotización';
-        origen.style.color = '#0F172A';
+    // ============================================================
+    // 6. LIMPIAR CAMPOS DE FECHA Y NÚMERO
+    // ============================================================
+    setValue('pcFecha', fechaStr);
+    setValue('pcNumero', 'PC-' + new Date().toISOString().slice(0, 10).replaceAll('-', '') + '-' + String(Date.now()).slice(-4));
+    
+    // ============================================================
+    // 7. RESTAURAR SELECTS A VALORES POR DEFECTO
+    // ============================================================
+    const selects = {
+        'pcMedio': 'Correo',
+        'pcCondicion': 'Contado',
+        'pcMoneda': 'Soles (S/)'
+    };
+    
+    Object.keys(selects).forEach(id => {
+        const el = document.getElementById(id);
+        if (el && el.options.length > 0) {
+            // Buscar el valor en las opciones
+            let found = false;
+            for (let opt of el.options) {
+                if (opt.value === selects[id] || opt.textContent === selects[id]) {
+                    opt.selected = true;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                el.selectedIndex = 0;
+            }
+        }
+    });
+    
+    // ============================================================
+    // 8. LIMPIAR TODOS LOS CAMPOS DE TEXTO
+    // ============================================================
+    const camposTexto = [
+        'pcCotNumero', 'pcCotFecha', 'pcCliente', 'pcRuc', 
+        'pcContacto', 'pcEntrega', 'pcObs', 'pcCondicionPago', 
+        'pcVendedor', 'pcCotSearch'
+    ];
+    
+    camposTexto.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.value = '';
+            // Quitar readonly y restaurar estilo
+            el.removeAttribute('readonly');
+            el.style.background = '#FFFFFF';
+            // Restaurar placeholder del buscador
+            if (id === 'pcCotSearch') {
+                el.placeholder = 'Escribe N° cotización, RUC, razón social...';
+            }
+        }
+    });
+    
+    // ============================================================
+    // 9. LIMPIAR MONTO
+    // ============================================================
+    setValue('pcMonto', '0');
+    
+    // ============================================================
+    // 10. LIMPIAR TABLA DE ITEMS
+    // ============================================================
+    const tbody = document.getElementById('pcItemsBody');
+    if (tbody) {
+        tbody.innerHTML = '';
+        addPedidoItemSAP(); // Agregar una fila vacía
     }
     
-    // 11. Resetear resultado de validación
+    // ============================================================
+    // 11. RESETEAR VALIDACIONES A "Sí"
+    // ============================================================
+    const validaciones = ['vPrecio', 'vCantidad', 'vProducto', 'vEntrega', 'vMoneda', 'vTransporte', 'vVigencia', 'vMargen'];
+    
+    validaciones.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.value = 'Sí';
+        }
+    });
+    
+    // ============================================================
+    // 12. RESETEAR ÍCONOS DE VALIDACIÓN ⚪
+    // ============================================================
+    const iconMap = {
+        'vPrecio': 'PrecioIcon',
+        'vCantidad': 'CantidadIcon',
+        'vProducto': 'ProductoIcon',
+        'vEntrega': 'EntregaIcon',
+        'vMoneda': 'MonedaIcon',
+        'vTransporte': 'TransporteIcon',
+        'vVigencia': 'VigenciaIcon',
+        'vMargen': 'MargenIcon'
+    };
+    
+    Object.keys(iconMap).forEach(id => {
+        const icon = document.getElementById(iconMap[id]);
+        if (icon) {
+            icon.textContent = '⚪';
+            icon.style.color = '';
+        }
+    });
+    
+    // ============================================================
+    // 13. RESTAURAR SEMÁFORO (oculto)
+    // ============================================================
+    const semaphore = document.getElementById('validationSemaphore');
+    if (semaphore) {
+        semaphore.style.display = 'none';
+        semaphore.style.borderColor = '';
+        semaphore.style.background = '';
+    }
+    
+    // ============================================================
+    // 14. RESTAURAR RESULTADO DE VALIDACIÓN
+    // ============================================================
     const validationResult = document.getElementById('validationResult');
     if (validationResult) {
         validationResult.innerHTML = 'ℹ️ Si algún punto es <b>"No"</b>, el PC quedará <b>observado y bloqueado</b>.';
@@ -6376,15 +6442,25 @@ function clearPedidoModalSAP() {
         validationResult.style.border = '1px solid #BFDBFE';
     }
     
-    // 12. Resetear cotización seleccionada
-    cotizacionSeleccionada = null;
+    // ============================================================
+    // 15. LIMPIAR RESULTADOS DE BÚSQUEDA
+    // ============================================================
+    const resultsContainer = document.getElementById('cotizacionSearchResults');
+    if (resultsContainer) {
+        resultsContainer.style.display = 'none';
+        resultsContainer.innerHTML = '';
+    }
     
-    // 13. Resetear modo de edición
+    // ============================================================
+    // 16. RESETEAR VARIABLES GLOBALES
+    // ============================================================
+    cotizacionSeleccionada = null;
     modalMode = 'cot';
     editingId = null;
     
-    console.log('✅ Modal de PC limpiado correctamente');
+    console.log('✅ Modal de PC restaurado a estado inicial');
 }
+
 
 // ============================================================
 // FUNCIÓN PARA GUARDAR PC (ACTUALIZADA)
