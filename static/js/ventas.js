@@ -104,7 +104,7 @@ function badgeStatus(s) {
         'En Proceso': 'b-review',
         
         // 🔵 Azul bajito fluorescente - Validado por Hellen
-        'Validado por Hellen': 'b-validated',
+        'Validada': 'b-validated',
         'Validada': 'b-validated',
         
         // 🟢 Verde fluorescente NEON - Generada
