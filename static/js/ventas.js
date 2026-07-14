@@ -5352,7 +5352,7 @@ async function cargarPCParaEditar(id) {
             return false;
         };
         
-        // 🔽 FORMATEAR FECHA PARA DATETIME-LOCAL
+        // FORMATEAR FECHA PARA DATETIME-LOCAL
         const formatDateForInput = (dateStr) => {
             if (!dateStr) return '';
             try {
@@ -5422,7 +5422,7 @@ async function cargarPCParaEditar(id) {
         }
         
         // ============================================================
-        // CARGAR PRODUCTOS (ITEMS)
+        // CARGAR PRODUCTOS (ITEMS) - AHORA COMO OBJETOS
         // ============================================================
         const tbody = document.getElementById('pcItemsBody');
         if (tbody) {
@@ -5434,6 +5434,7 @@ async function cargarPCParaEditar(id) {
                 addPedidoItemSAP();
             } else {
                 items.forEach((item, idx) => {
+                    // 🔽 AHORA ACCEDEMOS A PROPIEDADES DE OBJETOS
                     const codigo = item.codigo || '';
                     const producto = item.producto || 'Producto sin nombre';
                     const cantidadCotizada = parseFloat(item.cantidad_cotizada) || 0;
@@ -5612,15 +5613,15 @@ function addPedidoItemSAP() {
     `);
 }
 
-// ============================================================
-// FUNCIÓN PARA GUARDAR PC (VERSIÓN MEJORADA CON LOGS)
-// ============================================================
+
 
 async function savePedidoCompraSAP(force) {
     console.log('🔄 savePedidoCompraSAP ejecutándose...', { force });
     
     try {
-        // Validar que se haya seleccionado una cotización en modo 'cot'
+        // ============================================================
+        // 1. VALIDAR QUE SE HAYA SELECCIONADO UNA COTIZACIÓN
+        // ============================================================
         if (modalMode === 'cot' && !cotizacionSeleccionada) {
             const searchInput = document.getElementById('pcCotSearch');
             const valor = searchInput?.value?.trim() || '';
@@ -5629,7 +5630,7 @@ async function savePedidoCompraSAP(force) {
                 searchInput?.focus();
                 return;
             }
-            // Si hay texto pero no se seleccionó, intentar buscar automáticamente
+            // Buscar automáticamente
             const results = cotizacionesData.filter(c => {
                 const searchStr = `${c.numero || ''} ${c.razon || ''} ${c.ruc || ''}`.toLowerCase();
                 return searchStr.includes(valor.toLowerCase());
@@ -5638,9 +5639,7 @@ async function savePedidoCompraSAP(force) {
                 showToast('⚠️ No se encontró la cotización. Verifica el texto ingresado.', 'warning');
                 return;
             } else if (results.length === 1) {
-                // Auto-seleccionar si solo hay un resultado
                 seleccionarCotizacionSAP(results[0].id);
-                // Reintentar guardar después de un momento
                 setTimeout(() => savePedidoCompraSAP(force), 300);
                 return;
             } else {
@@ -5650,7 +5649,9 @@ async function savePedidoCompraSAP(force) {
             }
         }
         
-        // Leer validaciones
+        // ============================================================
+        // 2. LEER VALIDACIONES
+        // ============================================================
         const val = ['vPrecio', 'vCantidad', 'vProducto', 'vEntrega', 'vMoneda', 'vTransporte', 'vVigencia', 'vMargen']
             .map(id => document.getElementById(id)?.value || 'Sí');
         
@@ -5658,29 +5659,37 @@ async function savePedidoCompraSAP(force) {
         
         const observed = force === 'observado' || val.some(v => v === 'No');
         
-        // Leer items de la tabla
+        // ============================================================
+        // 3. LEER ITEMS DE LA TABLA - AHORA COMO OBJETOS
+        // ============================================================
         const trs = document.querySelectorAll('#pcItemsBody tr');
         const items = Array.from(trs).map(r => {
             const inputs = r.querySelectorAll('input');
-            return [
-                inputs[0]?.value || '',
-                inputs[1]?.value || '',
-                Number(inputs[2]?.value || 0),
-                Number(inputs[3]?.value || 1),
-                Number(inputs[4]?.value || 0),
-                Number(inputs[6]?.value || 0),
-                Number(inputs[7]?.value || 0)
-            ];
+            // 🔽 AHORA DEVOLVEMOS OBJETOS CON PROPIEDADES NOMBRADAS
+            return {
+                codigo: inputs[0]?.value || '',
+                producto: inputs[1]?.value || '',
+                cantidad_cotizada: Number(inputs[2]?.value || 0),
+                cantidad_pc: Number(inputs[3]?.value || 1),
+                precio_cotizado: Number(inputs[4]?.value || 0),
+                precio_pc: Number(inputs[5]?.value || 0),
+                stock: Number(inputs[6]?.value || 0)
+            };
         });
         
-        console.log('📦 Items del PC:', items);
+        console.log('📦 Items del PC (como objetos):', items);
         
-        const stockFalta = items.some(i => Number(i[3]) > Number(i[6]));
+        // ============================================================
+        // 4. VERIFICAR STOCK Y DETERMINAR ESTADO
+        // ============================================================
+        const stockFalta = items.some(i => Number(i.cantidad_pc) > Number(i.stock));
         const estado = observed ? 'PC observado' : (stockFalta ? 'PC conforme' : 'Listo para despacho');
         
-        // Preparar datos para enviar
+        // ============================================================
+        // 5. PREPARAR DATOS PARA ENVIAR A LA API
+        // ============================================================
         const pcData = {
-            id: null, // Nuevo registro
+            id: editingId || null,
             numero: document.getElementById('pcNumero')?.value || 'PC-' + Date.now(),
             fecha: document.getElementById('pcFecha')?.value?.replace('T', ' ') || new Date().toISOString(),
             medio: document.getElementById('pcMedio')?.value || 'Correo',
@@ -5696,19 +5705,25 @@ async function savePedidoCompraSAP(force) {
             vendedor: document.getElementById('pcVendedor')?.value || 'Helen Blas Príncipe',
             responsable: 'Hellen',
             observaciones: document.getElementById('pcObs')?.value || '',
+            // 🔽 ITEMS COMO OBJETOS
             items: items,
+            // 🔽 VALIDACIONES
             valida_precios: val[0] === 'Sí',
             valida_cantidades: val[1] === 'Sí',
             valida_stock: val[2] === 'Sí',
             valida_entrega: val[3] === 'Sí',
             valida_montos: val[4] === 'Sí',
+            valida_transporte: val[5] === 'Sí',
+            valida_vigencia: val[6] === 'Sí',
+            valida_margen: val[7] === 'Sí',
+            // 🔽 REQUISITO DE COMPRA
             req_compra: observed ? 'Bloqueado' : (stockFalta ? 'Sí' : 'No')
         };
         
         console.log('📦 Datos a enviar a la API:', pcData);
         
         // ============================================================
-        // ENVIAR A LA API
+        // 6. ENVIAR A LA API
         // ============================================================
         showToast('⏳ Guardando PC...', 'info');
         
@@ -5733,12 +5748,15 @@ async function savePedidoCompraSAP(force) {
             cotizacionSeleccionada = null;
             
             // Recargar la lista de pedidos
-            await loadPedidos();
+            if (typeof loadPedidos === 'function') {
+                await loadPedidos();
+            }
             
             // También recargar cotizaciones si es necesario
             if (typeof loadCotizaciones === 'function') {
                 await loadCotizaciones();
             }
+            
         } else {
             showToast('❌ Error: ' + (result.error || 'No se pudo guardar'), 'error');
         }
@@ -5748,6 +5766,7 @@ async function savePedidoCompraSAP(force) {
         showToast('❌ Error al guardar el PC: ' + error.message, 'error');
     }
 }
+
 // ============================================================
 // MODAL DE CONFIRMACIÓN UNIVERSAL (MEJORADO)
 // ============================================================
