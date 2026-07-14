@@ -2101,7 +2101,7 @@ def api_cotizaciones_obtener_completa(id):
         if not cabecera:
             return jsonify({'success': False, 'error': 'Cotización no encontrada'}), 404
         
-        # Obtener productos
+        # 🔽 OBTENER PRODUCTOS - VERIFICAR QUE ESTE QUERY FUNCIONE
         query_productos = """
             SELECT 
                 d.id, d.producto_id, d.cantidad,
@@ -2127,6 +2127,8 @@ def api_cotizaciones_obtener_completa(id):
         """
         productos = db_query(query_productos, (id,))
         
+        print(f"📦 Productos encontrados: {len(productos) if productos else 0}")
+        
         # Combinar datos
         result = dict(cabecera[0])
         
@@ -2136,9 +2138,9 @@ def api_cotizaciones_obtener_completa(id):
         result['cod_cliente'] = result.get('cod_cliente') or f"CLI-{str(result.get('cliente_id', '')).zfill(6)}"
         result['cliente_direccion'] = result.get('cliente_direccion') or result.get('direccion_entrega', '')
         
-        # Productos
+        # 🔽 ASEGURAR QUE PRODUCTOS SE DEVUELVAN CORRECTAMENTE
         result['productos'] = []
-        for p in productos or []:
+        for p in (productos or []):
             result['productos'].append({
                 'id': p.get('producto_id'),
                 'codigo': p.get('codigo') or '',
@@ -2154,6 +2156,8 @@ def api_cotizaciones_obtener_completa(id):
                 'subtotal_venta': float(p.get('subtotal_venta') or 0),
                 'descuento_porcentaje': float(p.get('descuento_porcentaje') or 0)
             })
+        
+        print(f"📦 Productos en respuesta: {len(result['productos'])}")
         
         return jsonify({'success': True, 'data': result})
         

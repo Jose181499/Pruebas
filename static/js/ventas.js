@@ -5981,114 +5981,129 @@ function buscarCotizacionSAP(query) {
 }
 
 function seleccionarCotizacionSAP(cotizacionId) {
-    // Buscar la cotización en los datos
+    // Buscar la cotización en los datos básicos
     const cotizacion = cotizacionesData.find(c => c.id === cotizacionId);
     if (!cotizacion) {
         showToast('❌ Cotización no encontrada', 'error');
         return;
     }
     
-    cotizacionSeleccionada = cotizacion;
+    // Mostrar loading
+    showToast('⏳ Cargando productos de la cotización...', 'info');
     
-    // Cerrar resultados
-    const resultsContainer = document.getElementById('cotizacionSearchResults');
-    resultsContainer.style.display = 'none';
-    resultsContainer.innerHTML = '';
-    
-    // Actualizar el input de búsqueda
-    const searchInput = document.getElementById('pcCotSearch');
-    searchInput.value = `${cotizacion.numero || ''} - ${cotizacion.razon || ''}`;
-    
-    // ============================================================
-    // CARGAR TODOS LOS DATOS DE LA COTIZACIÓN
-    // ============================================================
-    
-    // Datos básicos
-    document.getElementById('pcCotNumero').value = cotizacion.numero || '';
-    document.getElementById('pcCotFecha').value = formatFecha(cotizacion.fecha);
-    document.getElementById('pcCliente').value = cotizacion.razon || '';
-    document.getElementById('pcRuc').value = cotizacion.ruc || '';
-    document.getElementById('pcMonto').value = cotizacion.total || cotizacion.monto || 0;
-    document.getElementById('pcCondicionPago').value = cotizacion.condicion || cotizacion.condicion_pago || 'Contado';
-    document.getElementById('pcVendedor').value = cotizacion.vendedor || 'Helen Blas Príncipe';
-    
-    // Dirección de entrega
-    if (cotizacion.direccion_entrega) {
-        document.getElementById('pcEntrega').value = cotizacion.direccion_entrega;
-    }
-    
-    // ============================================================
-    // CARGAR PRODUCTOS EN LA TABLA
-    // ============================================================
-    const tbody = document.getElementById('pcItemsBody');
-    if (!tbody) return;
-    
-    tbody.innerHTML = '';
-    
-    // Obtener productos de la cotización
-    const productos = cotizacion.productos || [];
-    
-    if (productos.length === 0) {
-        // Si no hay productos, agregar una fila vacía
-        addPedidoItemSAP();
-        showToast('⚠️ Esta cotización no tiene productos', 'warning');
-        return;
-    }
-    
-    productos.forEach((p, i) => {
-        const cantidadCotizada = p.cantidad || 1;
-        const precioCotizado = p.valorVenta || 0;
-        const stock = p.stock || 0;
-        const faltante = Math.max(cantidadCotizada - stock, 0);
-        
-        tbody.insertAdjacentHTML('beforeend', `
-            <tr>
-                <td>${i + 1}</td>
-                <td>
-                    <input value="${p.codigo || ''}" 
-                           style="width:90px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px;"
-                           readonly>
-                </td>
-                <td>
-                    <input value="${p.producto || p.descripcion || ''}" 
-                           style="width:160px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px;"
-                           readonly>
-                </td>
-                <td>
-                    <input type="number" value="${cantidadCotizada}" 
-                           style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center; background:#F8FAFC;"
-                           readonly>
-                </td>
-                <td>
-                    <input type="number" value="${cantidadCotizada}" 
-                           style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;"
-                           onchange="actualizarFaltanteSAP(this, ${i})">
-                </td>
-                <td>
-                    <input type="number" step="0.01" value="${precioCotizado}" 
-                           style="width:80px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:right; background:#F8FAFC;"
-                           readonly>
-                </td>
-                <td>
-                    <input type="number" step="0.01" value="${precioCotizado}" 
-                           style="width:80px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:right;"
-                           onchange="actualizarPrecioPCSAP(this, ${i})">
-                </td>
-                <td>
-                    <input type="number" value="${stock}" 
-                           style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center; background:#F8FAFC;"
-                           readonly>
-                </td>
-                <td style="font-weight:900; color:#DC2626; text-align:center;">${faltante}</td>
-            </tr>
-        `);
-    });
-    
-    // Guardar referencia de los productos para calcular faltantes
-    window._productosCotizacion = productos;
-    window._filaProductos = [];
-    
-    showToast(`✅ Cotización ${cotizacion.numero} cargada con ${productos.length} productos`, 'success');
+    // 🔽 CARGAR DATOS COMPLETOS (CON PRODUCTOS)
+    apiFetch(`/ventas/api/cotizaciones/${cotizacionId}/completa`)
+        .then(response => {
+            if (!response.success) {
+                showToast('❌ Error al cargar productos: ' + (response.error || 'Desconocido'), 'error');
+                return;
+            }
+            
+            const data = response.data;
+            console.log('📦 Datos completos de cotización:', data);
+            
+            // Guardar la cotización completa
+            cotizacionSeleccionada = data;
+            
+            // Cerrar resultados
+            const resultsContainer = document.getElementById('cotizacionSearchResults');
+            resultsContainer.style.display = 'none';
+            resultsContainer.innerHTML = '';
+            
+            // Actualizar el input de búsqueda
+            const searchInput = document.getElementById('pcCotSearch');
+            searchInput.value = `${data.numero_cotizacion || ''} - ${data.cliente_razon_social || ''}`;
+            
+            // ============================================================
+            // CARGAR DATOS BÁSICOS
+            // ============================================================
+            document.getElementById('pcCotNumero').value = data.numero_cotizacion || '';
+            document.getElementById('pcCotFecha').value = formatFecha(data.fecha_creacion);
+            document.getElementById('pcCliente').value = data.cliente_razon_social || '';
+            document.getElementById('pcRuc').value = data.cliente_ruc || '';
+            document.getElementById('pcMonto').value = data.total || 0;
+            document.getElementById('pcCondicionPago').value = data.condicion_pago || 'Contado';
+            document.getElementById('pcVendedor').value = data.vendedor || 'Helen Blas Príncipe';
+            
+            if (data.direccion_entrega) {
+                document.getElementById('pcEntrega').value = data.direccion_entrega;
+            }
+            
+            // ============================================================
+            // CARGAR PRODUCTOS EN LA TABLA
+            // ============================================================
+            const tbody = document.getElementById('pcItemsBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            // Obtener productos de la respuesta completa
+            const productos = data.productos || [];
+            console.log(`📦 ${productos.length} productos encontrados en la cotización`);
+            
+            if (productos.length === 0) {
+                addPedidoItemSAP();
+                showToast('⚠️ Esta cotización no tiene productos', 'warning');
+                return;
+            }
+            
+            productos.forEach((p, i) => {
+                const cantidadCotizada = p.cantidad || 1;
+                const precioCotizado = p.valorVenta || 0;
+                const stock = p.stock || 0;
+                const faltante = Math.max(cantidadCotizada - stock, 0);
+                
+                tbody.insertAdjacentHTML('beforeend', `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>
+                            <input value="${p.codigo || ''}" 
+                                   style="width:90px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; background:#F8FAFC;"
+                                   readonly>
+                        </td>
+                        <td>
+                            <input value="${p.producto || p.descripcion || ''}" 
+                                   style="width:160px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; background:#F8FAFC;"
+                                   readonly>
+                        </td>
+                        <td>
+                            <input type="number" value="${cantidadCotizada}" 
+                                   style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center; background:#F8FAFC;"
+                                   readonly>
+                        </td>
+                        <td>
+                            <input type="number" value="${cantidadCotizada}" 
+                                   style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;"
+                                   onchange="actualizarFaltanteSAP(this, ${i})">
+                        </td>
+                        <td>
+                            <input type="number" step="0.01" value="${precioCotizado}" 
+                                   style="width:80px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:right; background:#F8FAFC;"
+                                   readonly>
+                        </td>
+                        <td>
+                            <input type="number" step="0.01" value="${precioCotizado}" 
+                                   style="width:80px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:right;"
+                                   onchange="actualizarPrecioPCSAP(this, ${i})">
+                        </td>
+                        <td>
+                            <input type="number" value="${stock}" 
+                                   style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center; background:#F8FAFC;"
+                                   readonly>
+                        </td>
+                        <td style="font-weight:900; color:${faltante > 0 ? '#DC2626' : '#16A34A'}; text-align:center;">
+                            ${faltante}
+                        </td>
+                    </tr>
+                `);
+            });
+            
+            showToast(`✅ Cotización ${data.numero_cotizacion} cargada con ${productos.length} productos`, 'success');
+        })
+        .catch(error => {
+            console.error('❌ Error cargando cotización completa:', error);
+            showToast('❌ Error al cargar los productos de la cotización', 'error');
+        });
 }
 
 // Funciones auxiliares para la tabla de productos
