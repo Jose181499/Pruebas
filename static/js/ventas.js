@@ -5225,7 +5225,7 @@ function openPedidoCompraModalSAP(mode = 'cot', id = null) {
         const searchInput = document.getElementById('pcCotSearch');
         if (searchInput) {
             searchInput.value = '';
-            searchInput.placeholder = 'Escribe N° cotización, RUC, razón social...';
+            searchInput.placeholder = 'Buscar Cotizacion : Escribe N° cotización, RUC, razón social...';
         }
         
         if (typeof cotizacionesData === 'undefined' || cotizacionesData.length === 0) {
