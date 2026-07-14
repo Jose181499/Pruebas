@@ -3061,3 +3061,46 @@ def api_pedido_compra_validar(id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
+@ventas_bp.route('/ventas/api/pedido-compra/<int:id>', methods=['GET'])
+@login_required
+def api_pedido_compra_obtener(id):
+    """Obtiene un pedido de compra por su ID"""
+    try:
+        query = """
+            SELECT 
+                id, numero, fecha, estado, cliente, ruc, monto,
+                cotizacion_id, cotizacion_numero, correo_origen,
+                fecha_recepcion, fecha_despacho, archivo_oc,
+                observaciones, valida_precios, valida_cantidades,
+                valida_stock, valida_entrega, valida_montos,
+                responsable, lugar_entrega, condicion_atencion,
+                medio, entrega, req_compra, guia, factura,
+                condicion_pago, vendedor, items_json,
+                created_at, updated_at
+            FROM pedido_compra_pc
+            WHERE id = %s
+        """
+        result = db_query(query, (id,))
+        
+        if not result:
+            return jsonify({'success': False, 'error': 'PC no encontrado'}), 404
+        
+        pc = result[0]
+        
+        # Parsear items_json
+        if pc.get('items_json'):
+            try:
+                pc['items'] = json.loads(pc['items_json'])
+            except:
+                pc['items'] = []
+        else:
+            pc['items'] = []
+        
+        return jsonify({'success': True, 'data': pc})
+        
+    except Exception as e:
+        print(f"❌ Error en api_pedido_compra_obtener: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
