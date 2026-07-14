@@ -3069,7 +3069,7 @@ def api_pedido_compra_validar(id):
 @ventas_bp.route('/ventas/api/pedido-compra/<int:id>', methods=['GET'])
 @login_required
 def api_pedido_compra_obtener(id):
-    """Obtiene un pedido de compra por su ID"""
+    """Obtiene un pedido de compra por su ID con items formateados"""
     try:
         query = """
             SELECT 
@@ -3078,6 +3078,7 @@ def api_pedido_compra_obtener(id):
                 fecha_recepcion, fecha_despacho, archivo_oc,
                 observaciones, valida_precios, valida_cantidades,
                 valida_stock, valida_entrega, valida_montos,
+                valida_transporte, valida_margen, valida_vigencia,
                 responsable, lugar_entrega, condicion_atencion,
                 medio, entrega, req_compra, guia, factura,
                 condicion_pago, vendedor, items_json,
@@ -3092,14 +3093,56 @@ def api_pedido_compra_obtener(id):
         
         pc = result[0]
         
-        # Parsear items_json
+        # Parsear items_json correctamente
+        items = []
         if pc.get('items_json'):
             try:
-                pc['items'] = json.loads(pc['items_json'])
-            except:
-                pc['items'] = []
-        else:
-            pc['items'] = []
+                raw_items = json.loads(pc['items_json'])
+                # Si es una lista de listas (formato antiguo), convertir a objetos
+                if isinstance(raw_items, list) and len(raw_items) > 0:
+                    if isinstance(raw_items[0], list):
+                        # Formato: [[codigo, descripcion, cant_cot, cant_pc, precio_cot, precio_pc, stock], ...]
+                        for item in raw_items:
+                            if len(item) >= 7:
+                                items.append({
+                                    'codigo': item[0] or '',
+                                    'producto': item[1] or '',
+                                    'cantidad_cotizada': float(item[2] or 0),
+                                    'cantidad_pc': float(item[3] or 1),
+                                    'precio_cotizado': float(item[4] or 0),
+                                    'precio_pc': float(item[5] or 0),
+                                    'stock': float(item[6] or 0)
+                                })
+                            elif len(item) >= 2:
+                                # Mínimo: codigo y descripcion
+                                items.append({
+                                    'codigo': item[0] or '',
+                                    'producto': item[1] or '',
+                                    'cantidad_cotizada': float(item[2] or 0) if len(item) > 2 else 0,
+                                    'cantidad_pc': float(item[3] or 1) if len(item) > 3 else 1,
+                                    'precio_cotizado': float(item[4] or 0) if len(item) > 4 else 0,
+                                    'precio_pc': float(item[5] or 0) if len(item) > 5 else 0,
+                                    'stock': float(item[6] or 0) if len(item) > 6 else 0
+                                })
+                    else:
+                        # Ya es una lista de objetos
+                        for item in raw_items:
+                            if isinstance(item, dict):
+                                items.append({
+                                    'codigo': item.get('codigo', ''),
+                                    'producto': item.get('producto', item.get('descripcion', '')),
+                                    'cantidad_cotizada': float(item.get('cantidad_cotizada', item.get('cantidad', 0))),
+                                    'cantidad_pc': float(item.get('cantidad_pc', item.get('cantidad', 1))),
+                                    'precio_cotizado': float(item.get('precio_cotizado', item.get('precio_cot', 0))),
+                                    'precio_pc': float(item.get('precio_pc', item.get('precio', 0))),
+                                    'stock': float(item.get('stock', 0))
+                                })
+            except Exception as e:
+                print(f"⚠️ Error parseando items_json: {e}")
+                items = []
+        
+        pc['items'] = items
+        pc['items_json'] = None  # No devolver el JSON crudo
         
         return jsonify({'success': True, 'data': pc})
         

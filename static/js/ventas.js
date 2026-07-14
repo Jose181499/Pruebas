@@ -5336,12 +5336,13 @@ async function cargarPCParaEditar(id) {
         
         const pc = response.data;
         console.log('📦 Datos del PC:', pc);
+        console.log('📦 Items del PC:', pc.items);
         
-        // Función auxiliar
+        // Función auxiliar para setear valor
         const setValue = (id, value) => {
             const el = document.getElementById(id);
             if (el) {
-                el.value = value || '';
+                el.value = value !== undefined && value !== null ? value : '';
                 if (el.hasAttribute('readonly')) {
                     el.removeAttribute('readonly');
                     el.style.background = '#FFFFFF';
@@ -5351,13 +5352,12 @@ async function cargarPCParaEditar(id) {
             return false;
         };
         
-        // 🔽 FUNCIÓN PARA FORMATEAR FECHA PARA DATETIME-LOCAL
+        // 🔽 FORMATEAR FECHA PARA DATETIME-LOCAL
         const formatDateForInput = (dateStr) => {
             if (!dateStr) return '';
             try {
                 const date = new Date(dateStr);
                 if (isNaN(date.getTime())) return '';
-                // Formato: YYYY-MM-DDTHH:mm
                 const year = date.getFullYear();
                 const month = String(date.getMonth() + 1).padStart(2, '0');
                 const day = String(date.getDate()).padStart(2, '0');
@@ -5369,13 +5369,13 @@ async function cargarPCParaEditar(id) {
             }
         };
         
-        // Llenar campos
+        // ============================================================
+        // LLENAR CAMPOS BÁSICOS
+        // ============================================================
         setValue('pcNumero', pc.numero);
+        setValue('pcFecha', formatDateForInput(pc.fecha));
         
-        // 🔽 USAR LA FUNCIÓN DE FORMATEO PARA LA FECHA
-        const fechaFormateada = formatDateForInput(pc.fecha);
-        setValue('pcFecha', fechaFormateada);
-        
+        // Medio
         const medioSelect = document.getElementById('pcMedio');
         if (medioSelect && pc.medio) {
             medioSelect.value = pc.medio;
@@ -5384,7 +5384,7 @@ async function cargarPCParaEditar(id) {
         setValue('pcCliente', pc.cliente);
         setValue('pcRuc', pc.ruc);
         setValue('pcMonto', pc.monto || 0);
-        setValue('pcEntrega', pc.lugar_entrega);
+        setValue('pcEntrega', pc.lugar_entrega || pc.entrega);
         setValue('pcObs', pc.observaciones);
         setValue('pcCondicionPago', pc.condicion_pago || 'Contado');
         setValue('pcVendedor', pc.vendedor || 'Helen Blas Príncipe');
@@ -5421,45 +5421,56 @@ async function cargarPCParaEditar(id) {
             }
         }
         
-        // Cargar items
+        // ============================================================
+        // CARGAR PRODUCTOS (ITEMS)
+        // ============================================================
         const tbody = document.getElementById('pcItemsBody');
         if (tbody) {
             tbody.innerHTML = '';
             const items = pc.items || [];
+            console.log(`📦 Cargando ${items.length} items...`);
             
             if (items.length === 0) {
                 addPedidoItemSAP();
             } else {
                 items.forEach((item, idx) => {
+                    const codigo = item.codigo || '';
+                    const producto = item.producto || 'Producto sin nombre';
+                    const cantidadCotizada = parseFloat(item.cantidad_cotizada) || 0;
                     const cantidadPC = parseFloat(item.cantidad_pc) || 1;
+                    const precioCotizado = parseFloat(item.precio_cotizado) || 0;
+                    const precioPC = parseFloat(item.precio_pc) || 0;
                     const stock = parseFloat(item.stock) || 0;
                     const faltante = Math.max(cantidadPC - stock, 0);
+                    
+                    console.log(`  Item ${idx+1}: ${codigo} - ${producto} (Cant: ${cantidadPC}, Stock: ${stock})`);
                     
                     tbody.insertAdjacentHTML('beforeend', `
                         <tr>
                             <td>${idx + 1}</td>
                             <td>
-                                <input value="${item.codigo || ''}" 
+                                <input value="${codigo}" 
                                        style="width:90px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px;">
                             </td>
                             <td>
-                                <input value="${item.producto || ''}" 
+                                <input value="${producto}" 
                                        style="width:160px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px;">
                             </td>
                             <td>
-                                <input type="number" value="${item.cantidad_cotizada || 0}" 
+                                <input type="number" value="${cantidadCotizada}" 
                                        style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;">
                             </td>
                             <td>
                                 <input type="number" value="${cantidadPC}" 
-                                       style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;">
+                                       style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;"
+                                       onchange="actualizarFaltanteSAP(this, ${idx})">
                             </td>
                             <td>
-                                <input type="number" step="0.01" value="${item.precio_cotizado || 0}" 
+                                <input type="number" step="0.01" value="${precioCotizado}" 
                                        style="width:80px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:right;">
                             </td>
                             <td>
-                                <input type="number" step="0.01" value="${item.precio_pc || 0}" 
+                                <input type="number" step="0.01" value="${precioPC}" 
                                        style="width:80px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:right;">
                             </td>
                             <td>
@@ -5475,7 +5486,9 @@ async function cargarPCParaEditar(id) {
             }
         }
         
-        // Mostrar estado actual
+        // ============================================================
+        // MOSTRAR ESTADO ACTUAL
+        // ============================================================
         const docEstado = document.getElementById('docEstado');
         if (docEstado && pc.estado) {
             docEstado.textContent = pc.estado;
