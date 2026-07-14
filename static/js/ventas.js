@@ -5872,11 +5872,6 @@ function filterProductSelector() {
 // RENDERIZAR CONTENIDO DEL FORMULARIO DE COTIZACIÓN
 // ============================================================
 
-
-// ============================================================
-// RENDERIZAR CONTENIDO DEL FORMULARIO DE COTIZACIÓN - CON ESTILOS INLINE
-// ============================================================
-
 // ============================================================
 // RENDERIZAR CONTENIDO DEL FORMULARIO DE COTIZACIÓN - CON ESTILOS INLINE
 // ============================================================
@@ -6179,6 +6174,7 @@ function renderCotizacionFormContent(isEdit) {
         </div>
     `;
 }
+
 
 // ============================================================
 // INICIALIZAR EVENTOS DEL FORMULARIO DE COTIZACIÓN
