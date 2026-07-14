@@ -3573,7 +3573,7 @@ function openPedidoCompraModal(mode = 'cot') {
     
     const modeNote = mode === 'cot' 
         ? '✅ Recomendado: jalar la cotización, crear PC espejo y validar contra el documento real del cliente.' 
-        : '⚠️ PC directo: requiere validación comercial. No comprar bajo pedido hasta quedar conforme.';
+        : '';
     
     const showCotBlock = mode === 'cot' ? '' : 'style="display:none;"';
     
@@ -5211,7 +5211,7 @@ function openPedidoCompraModalSAP(mode = 'cot', id = null) {
             note.textContent = '✅ Escribe el N° de cotización, RUC o nombre del cliente para buscar y cargar los datos.';
         } else {
             note.className = 'danger-note';
-            note.textContent = '⚠️ PC directo: requiere validación comercial. No comprar bajo pedido hasta quedar conforme.';
+            note.textContent = '';
         }
     }
     
