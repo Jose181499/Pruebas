@@ -5374,33 +5374,37 @@ function clearDateFilter() {
 }
 
 
+// ============================================================
+// FUNCIÓN PARA ABRIR MODAL DE PC - VERSIÓN CORREGIDA
+// ============================================================
 
 function openPedidoCompraModalSAP(mode = 'cot', id = null) {
-    modalMode = mode;
-    editingId = id;
-    cotizacionSeleccionada = null;
+    console.log('📋 Abriendo modal PC:', { mode, id });
     
+    // Obtener el modal
     const modal = document.getElementById('pedidoCompraModal');
+    if (!modal) {
+        console.error('❌ Modal #pedidoCompraModal no encontrado');
+        showToast('Error: Modal de PC no disponible', 'error');
+        return;
+    }
+    
+    // Obtener elementos del modal (con verificación)
     const title = document.getElementById('pedidoCompraModalTitle');
     const sub = document.getElementById('modalSub');
     const note = document.getElementById('modeNote');
     const cotBlock = document.getElementById('cotBlock');
     const origen = document.getElementById('docOrigen');
     
-    // 🔽 VERIFICAR QUE EXISTAN ANTES DE USARLOS
-    if (!modal || !title) {
-        console.error('❌ Modal de PC no encontrado');
-        showToast('Error: Modal de PC no disponible', 'error');
-        return;
-    }
-    
-    // Si estamos editando (id != null), cargar el PC existente
+    // Si estamos editando (id != null)
     if (id) {
-        mode = 'editar';
-        title.textContent = 'Editar PC Cliente';
-        sub.textContent = 'Revisa y actualiza los datos del PC.';
-        note.className = 'mini-note';
-        note.textContent = '📝 Editando PC existente. Puedes modificar los datos.';
+        // Verificar que el elemento title existe antes de usarlo
+        if (title) title.textContent = 'Editar PC Cliente';
+        if (sub) sub.textContent = 'Revisa y actualiza los datos del PC.';
+        if (note) {
+            note.className = 'mini-note';
+            note.textContent = '📝 Editando PC existente. Puedes modificar los datos.';
+        }
         if (cotBlock) cotBlock.style.display = 'block';
         if (origen) origen.textContent = 'Edición';
         
@@ -5410,37 +5414,59 @@ function openPedidoCompraModalSAP(mode = 'cot', id = null) {
         return;
     }
     
-    // Si es nuevo
-    if (mode === 'cot') {
-        title.textContent = 'Crear PC desde cotización';
-        sub.textContent = 'Busca una cotización para cargar todos sus datos automáticamente.';
-        if (note) {
+    // Si es NUEVO (mode = 'cot' o 'directo')
+    if (title) {
+        title.textContent = mode === 'cot' ? 'Crear PC desde cotización' : 'PC directo / sin cotización';
+    }
+    
+    if (sub) {
+        sub.textContent = mode === 'cot' 
+            ? 'Busca una cotización para cargar todos sus datos automáticamente.'
+            : 'PC directo: requiere validación comercial. No comprar bajo pedido hasta quedar conforme.';
+    }
+    
+    if (note) {
+        if (mode === 'cot') {
             note.className = 'mini-note';
             note.textContent = '✅ Escribe el N° de cotización, RUC o nombre del cliente para buscar y cargar los datos.';
-        }
-        if (cotBlock) cotBlock.style.display = 'block';
-        if (origen) origen.textContent = 'Cotización';
-    } else {
-        title.textContent = 'PC directo / sin cotización';
-        sub.textContent = 'PC directo: requiere validación comercial. No comprar bajo pedido hasta quedar conforme.';
-        if (note) {
+        } else {
             note.className = 'danger-note';
             note.textContent = '⚠️ PC directo: requiere validación comercial. No comprar bajo pedido hasta quedar conforme.';
         }
-        if (cotBlock) cotBlock.style.display = 'none';
-        if (origen) origen.textContent = 'Directo';
+    }
+    
+    // Mostrar/ocultar bloque de cotización según modo
+    if (cotBlock) {
+        cotBlock.style.display = mode === 'cot' ? 'block' : 'none';
+    }
+    
+    if (origen) {
+        origen.textContent = mode === 'cot' ? 'Cotización' : 'Directo';
     }
     
     // Limpiar y preparar el modal
     clearPedidoModalSAP();
     
+    // Si es modo cotización, cargar cotizaciones disponibles
+    if (mode === 'cot') {
+        // Asegurar que las cotizaciones están cargadas
+        if (typeof cotizacionesData === 'undefined' || cotizacionesData.length === 0) {
+            showToast('⏳ Cargando cotizaciones...', 'info');
+            loadCotizaciones().then(() => {
+                console.log(`✅ ${cotizacionesData.length} cotizaciones cargadas`);
+            });
+        }
+    }
+    
     // Mostrar modal
     modal.classList.add('show');
+    console.log('✅ Modal PC abierto correctamente');
 }
 
 async function cargarPCParaEditar(id) {
     try {
         console.log('📥 Cargando PC para editar ID:', id);
+        showToast('⏳ Cargando datos del PC...', 'info');
         
         const response = await apiFetch(`/ventas/api/pedido-compra/${id}`);
         
@@ -5452,42 +5478,72 @@ async function cargarPCParaEditar(id) {
         const pc = response.data;
         console.log('📦 Datos del PC:', pc);
         
-        // Llenar campos del modal
-        document.getElementById('pcNumero').value = pc.numero || '';
-        document.getElementById('pcFecha').value = pc.fecha || '';
-        document.getElementById('pcMedio').value = pc.medio || 'Correo';
-        document.getElementById('pcCliente').value = pc.cliente || '';
-        document.getElementById('pcRuc').value = pc.ruc || '';
-        document.getElementById('pcMonto').value = pc.monto || 0;
-        document.getElementById('pcEntrega').value = pc.lugar_entrega || '';
-        document.getElementById('pcObs').value = pc.observaciones || '';
-        document.getElementById('pcCondicionPago').value = pc.condicion_pago || 'Contado';
-        document.getElementById('pcVendedor').value = pc.vendedor || 'Helen Blas Príncipe';
-        document.getElementById('pcCotNumero').value = pc.cotizacion_numero || '';
+        // Llenar campos del modal (verificando que existan)
+        const setValue = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) el.value = value || '';
+        };
+        
+        setValue('pcNumero', pc.numero);
+        setValue('pcFecha', pc.fecha);
+        setValue('pcMedio', pc.medio || 'Correo');
+        setValue('pcCliente', pc.cliente);
+        setValue('pcRuc', pc.ruc);
+        setValue('pcMonto', pc.monto || 0);
+        setValue('pcEntrega', pc.lugar_entrega);
+        setValue('pcObs', pc.observaciones);
+        setValue('pcCondicionPago', pc.condicion_pago || 'Contado');
+        setValue('pcVendedor', pc.vendedor || 'Helen Blas Príncipe');
+        setValue('pcCotNumero', pc.cotizacion_numero || '');
         
         // Cargar items
         const tbody = document.getElementById('pcItemsBody');
         if (tbody) {
             tbody.innerHTML = '';
             const items = pc.items || [];
-            items.forEach((item, idx) => {
-                tbody.insertAdjacentHTML('beforeend', `
-                    <tr>
-                        <td>${idx + 1}</td>
-                        <td><input value="${item.codigo || ''}" style="width:90px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px;"></td>
-                        <td><input value="${item.producto || ''}" style="width:160px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px;"></td>
-                        <td><input type="number" value="${item.cantidad_cotizada || 0}" style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;"></td>
-                        <td><input type="number" value="${item.cantidad_pc || 1}" style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;"></td>
-                        <td><input type="number" step="0.01" value="${item.precio_cotizado || 0}" style="width:80px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:right;"></td>
-                        <td><input type="number" step="0.01" value="${item.precio_pc || 0}" style="width:80px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:right;"></td>
-                        <td><input type="number" value="${item.stock || 0}" style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;"></td>
-                        <td style="font-weight:900; color:#DC2626; text-align:center;">${Math.max((item.cantidad_pc || 0) - (item.stock || 0), 0)}</td>
-                    </tr>
-                `);
-            });
             
             if (items.length === 0) {
                 addPedidoItemSAP();
+            } else {
+                items.forEach((item, idx) => {
+                    const faltante = Math.max((item.cantidad_pc || 0) - (item.stock || 0), 0);
+                    tbody.insertAdjacentHTML('beforeend', `
+                        <tr>
+                            <td>${idx + 1}</td>
+                            <td>
+                                <input value="${item.codigo || ''}" 
+                                       style="width:90px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px;">
+                            </td>
+                            <td>
+                                <input value="${item.producto || ''}" 
+                                       style="width:160px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px;">
+                            </td>
+                            <td>
+                                <input type="number" value="${item.cantidad_cotizada || 0}" 
+                                       style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;">
+                            </td>
+                            <td>
+                                <input type="number" value="${item.cantidad_pc || 1}" 
+                                       style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;">
+                            </td>
+                            <td>
+                                <input type="number" step="0.01" value="${item.precio_cotizado || 0}" 
+                                       style="width:80px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:right;">
+                            </td>
+                            <td>
+                                <input type="number" step="0.01" value="${item.precio_pc || 0}" 
+                                       style="width:80px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:right;">
+                            </td>
+                            <td>
+                                <input type="number" value="${item.stock || 0}" 
+                                       style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;">
+                            </td>
+                            <td style="font-weight:900; color:${faltante > 0 ? '#DC2626' : '#16A34A'}; text-align:center;">
+                                ${faltante}
+                            </td>
+                        </tr>
+                    `);
+                });
             }
         }
         
@@ -5498,7 +5554,6 @@ async function cargarPCParaEditar(id) {
         showToast('❌ Error al cargar el PC: ' + error.message, 'error');
     }
 }
-
 
 // ============================================================
 // FUNCIÓN PARA MOSTRAR EL MODAL (separada para claridad)
@@ -6112,54 +6167,6 @@ function actualizarPrecioPCSAP(input, index) {
     // Solo actualiza el valor, no hace más nada
     const value = Number(input.value || 0);
     if (value < 0) input.value = 0;
-}
-
-// ============================================================
-// FUNCIÓN PARA ABRIR EL MODAL (ACTUALIZADA)
-// ============================================================
-
-function openPedidoCompraModalSAP(mode = 'cot') {
-    modalMode = mode;
-    editingId = null;
-    cotizacionSeleccionada = null;
-    
-    const modal = document.getElementById('pedidoCompraModal');
-    const title = document.getElementById('pedidoCompraModalTitle');
-    const sub = document.getElementById('modalSub');
-    const note = document.getElementById('modeNote');
-    const cotBlock = document.getElementById('cotBlock');
-    const origen = document.getElementById('docOrigen');
-    
-    if (mode === 'cot') {
-        title.textContent = 'Crear PC desde cotización';
-        sub.textContent = 'Busca una cotización para cargar todos sus datos automáticamente.';
-        note.className = 'mini-note';
-        note.textContent = '✅ Escribe el N° de cotización, RUC o nombre del cliente para buscar y cargar los datos.';
-        cotBlock.style.display = 'block';
-        origen.textContent = 'Cotización';
-    } else {
-        title.textContent = 'PC directo / sin cotización';
-        sub.textContent = 'PC directo: requiere validación comercial. No comprar bajo pedido hasta quedar conforme.';
-        note.className = 'danger-note';
-        note.textContent = '⚠️ PC directo: requiere validación comercial. No comprar bajo pedido hasta quedar conforme.';
-        cotBlock.style.display = 'none';
-        origen.textContent = 'Directo';
-    }
-    
-    // Limpiar y preparar el modal
-    clearPedidoModalSAP();
-    
-    // Limpiar buscador y resultados
-    const searchInput = document.getElementById('pcCotSearch');
-    if (searchInput) searchInput.value = '';
-    const resultsContainer = document.getElementById('cotizacionSearchResults');
-    if (resultsContainer) {
-        resultsContainer.style.display = 'none';
-        resultsContainer.innerHTML = '';
-    }
-    
-    // Mostrar modal
-    modal.classList.add('show');
 }
 
 // ============================================================
