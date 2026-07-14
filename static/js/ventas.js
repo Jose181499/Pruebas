@@ -4459,155 +4459,6 @@ async function saveClientFromQuote() {
 
 
 
-// ============================================================
-// FUNCIONES PARA OTROS MODALES
-// ============================================================
-
-function openPedidoCompraModal(id = null) {
-    editingId = id;
-    const isEdit = id !== null;
-    const title = isEdit ? 'Editar PC Pedido Compras' : 'Nuevo PC Pedido Compras';
-    document.getElementById('pedidoCompraModalTitle').textContent = title;
-    
-    const formContainer = document.getElementById('pedidoCompraForm');
-    if (!formContainer) return;
-    
-    const cotOptions = cotizacionesData.map(q => 
-        `<option value="${q.numero}">${q.numero} - ${q.razon || 'Sin cliente'}</option>`
-    ).join('');
-    
-    formContainer.innerHTML = `
-        <div class="pc-alert">
-            <b>📋 PC Pedido Compras = aceptación formal del cliente.</b> 
-            Llega por correo como OC/Pedido. Aquí se sube el PDF/archivo y se valida precio, cantidad, stock, lugar de entrega y monto antes de atender.
-        </div>
-        
-        <div class="ficha-section">
-            <div class="ficha-section-title">1. Aceptación del cliente <small>correo + PC/OC recibido</small></div>
-            <div class="ficha-grid">
-                <div class="form-field col-4"><label>Cotización vinculada</label>
-                    <select id="pcCotizacion">${cotOptions || '<option value="">Sin cotizaciones</option>'}</select>
-                </div>
-                <div class="form-field col-4"><label>N° PC / OC Cliente</label>
-                    <input id="pcNumero" placeholder="PC-2026-0001">
-                </div>
-                <div class="form-field col-4"><label>Estado</label>
-                    <select id="pcEstado">
-                        ${options(ESTADOS_PC, 'Pendiente')}
-                    </select>
-                </div>
-                <div class="form-field col-4"><label>Cliente</label>
-                    <input id="pcCliente" placeholder="Razón social del cliente">
-                </div>
-                <div class="form-field col-4"><label>RUC</label>
-                    <input id="pcRuc" placeholder="12345678901">
-                </div>
-                <div class="form-field col-4"><label>Monto PC / OC</label>
-                    <input id="pcMonto" type="number" value="0">
-                </div>
-                <div class="form-field col-4"><label>Correo origen</label>
-                    <input id="pcCorreo" placeholder="correo@cliente.com">
-                </div>
-                <div class="form-field col-4"><label>Fecha recepción</label>
-                    <input id="pcFechaRecep" type="date" value="${today()}">
-                </div>
-                <div class="form-field col-4"><label>Fecha requerida despacho</label>
-                    <input id="pcFechaDesp" type="date">
-                </div>
-            </div>
-        </div>
-        
-        <div class="ficha-section">
-            <div class="ficha-section-title">2. Subir sustento del cliente <small>PDF / correo / archivo OC</small></div>
-            <div class="ficha-grid">
-                <div class="form-field col-6">
-                    <label>Subir PDF / archivo recibido</label>
-                    <div class="pc-file-box">
-                        <input id="pcFile" type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx">
-                        <div class="pc-file-note">Se guarda el nombre del archivo.</div>
-                    </div>
-                </div>
-                <div class="form-field col-6">
-                    <label>Archivo registrado</label>
-                    <input id="pcArchivo" placeholder="archivo.pdf" readonly>
-                </div>
-                <div class="form-field col-12">
-                    <label>Observación</label>
-                    <textarea id="pcObs" placeholder="Observaciones del PC recibido"></textarea>
-                </div>
-            </div>
-        </div>
-        
-        <div class="ficha-section">
-            <div class="ficha-section-title">3. Validación interna antes de atender <small>obligatorio para Hellen</small></div>
-            <div class="pc-check-grid">
-                <div class="pc-check-card">
-                    <label><input id="pcValPrecios" type="checkbox"> Precios</label>
-                    <small>PC vs cotización.</small>
-                </div>
-                <div class="pc-check-card">
-                    <label><input id="pcValCant" type="checkbox"> Cantidades</label>
-                    <small>Cantidades solicitadas.</small>
-                </div>
-                <div class="pc-check-card">
-                    <label><input id="pcValStock" type="checkbox"> Stock</label>
-                    <small>Disponibilidad real.</small>
-                </div>
-                <div class="pc-check-card">
-                    <label><input id="pcValEntrega" type="checkbox"> Lugar entrega</label>
-                    <small>Dirección y sede.</small>
-                </div>
-                <div class="pc-check-card">
-                    <label><input id="pcValMonto" type="checkbox"> Montos</label>
-                    <small>Total, IGV y moneda.</small>
-                </div>
-            </div>
-            <div class="ficha-grid">
-                <div class="form-field col-4"><label>Valida internamente</label>
-                    <input id="pcResp" value="Hellen">
-                </div>
-                <div class="form-field col-4"><label>Lugar de entrega</label>
-                    <input id="pcLugar" placeholder="Dirección de entrega">
-                </div>
-                <div class="form-field col-4"><label>Condición de atención</label>
-                    <select id="pcCondicion">
-                        <option>Atender completo</option>
-                        <option>Atender parcial</option>
-                        <option>Esperar stock</option>
-                        <option>Revisar diferencia</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-        
-        <div class="ficha-section">
-            <div class="ficha-section-title">4. Productos vinculados <small>desde cotización</small></div>
-            <div id="pcProductsPreview">
-                <div style="padding:10px;text-align:center;color:#94A3B8;">Seleccione una cotización para ver los productos.</div>
-            </div>
-        </div>
-    `;
-    
-    document.getElementById('pcCotizacion')?.addEventListener('change', function() {
-        const num = this.value;
-        const q = cotizacionesData.find(x => x.numero === num);
-        if (q && q.productos && q.productos.length > 0) {
-            document.getElementById('pcProductsPreview').innerHTML = productTableHtml(q.productos);
-        } else {
-            document.getElementById('pcProductsPreview').innerHTML = `
-                <div style="padding:10px;text-align:center;color:#94A3B8;">No hay productos en esta cotización.</div>
-            `;
-        }
-    });
-    
-    document.getElementById('pcFile')?.addEventListener('change', function() {
-        if (this.files[0]) {
-            document.getElementById('pcArchivo').value = this.files[0].name;
-        }
-    });
-    
-    document.getElementById('pedidoCompraModal').classList.add('show');
-}
 
 function productTableHtml(productos) {
     if (!productos || productos.length === 0) {
@@ -6970,6 +6821,7 @@ function showCotizacionMenu(event, id) {
     createMenuWithClose(event, menuHtml);
 }
 
+
 function showPedidoMenu(event, id) {
     event.stopPropagation();
     document.querySelectorAll('.menu-pop').forEach(el => el.remove());
@@ -6982,7 +6834,7 @@ function showPedidoMenu(event, id) {
     pop.style.top = top + 'px';
     
     pop.innerHTML = `
-        <button onclick="openPedidoCompraModal(${id});this.closest('.menu-pop').remove()">👁 Ver / Editar</button>
+        <button onclick="openPedidoCompraModalSAP('editar', ${id});this.closest('.menu-pop').remove()">👁 Ver / Editar</button>
         <button onclick="validatePedidoCompra(${id});this.closest('.menu-pop').remove()">✅ Validar Hellen</button>
         <button onclick="createDespachoFromPedido(${id});this.closest('.menu-pop').remove()">🚚 Crear despacho</button>
         <button onclick="createGuiaFromPedido(${id});this.closest('.menu-pop').remove()">📦 Crear guía</button>
