@@ -5877,6 +5877,10 @@ function filterProductSelector() {
 // RENDERIZAR CONTENIDO DEL FORMULARIO DE COTIZACIÓN - CON ESTILOS INLINE
 // ============================================================
 
+// ============================================================
+// RENDERIZAR CONTENIDO DEL FORMULARIO DE COTIZACIÓN - CON ESTILOS INLINE
+// ============================================================
+
 function renderCotizacionFormContent(isEdit) {
     // Opciones para selects
     const condicionOptions = `
