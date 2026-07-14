@@ -478,9 +478,7 @@ function renderModalProducto(p) {
         var estadoLower = p.estado.toLowerCase();
         var estadoMap = {
             'activo': 'Activo',
-            'inactivo': 'Inactivo',
             'bajo_pedido': 'Bajo pedido',
-            'disponible': 'Disponible',
             'bloqueado': 'Bloqueado'
         };
         estadoLabel = estadoMap[estadoLower] || p.estado.charAt(0).toUpperCase() + p.estado.slice(1).toLowerCase();
@@ -707,19 +705,16 @@ window.bdRenderProductos = function(data) {
         
         var estadoClass = 'st-active';
         var estado = (p.estado || 'activo').toLowerCase();
-        if (estado === 'inactivo') estadoClass = 'st-inactive';
-        else if (estado === 'bajo_pedido') estadoClass = 'st-pending';
+        if (estado === 'bajo_pedido') estadoClass = 'st-pending';
         else if (estado === 'bloqueado') estadoClass = 'st-blocked';
-        else if (estado === 'disponible') estadoClass = 'st-available';
+
         
         var estadoMostrado = 'Activo';
         if (p.estado) {
             var estadoLower = p.estado.toLowerCase();
             var estadoMap = {
                 'activo': 'Activo',
-                'inactivo': 'Inactivo',
                 'bajo_pedido': 'Bajo pedido',
-                'disponible': 'Disponible',
                 'bloqueado': 'Bloqueado'
             };
             estadoMostrado = estadoMap[estadoLower] || p.estado.charAt(0).toUpperCase() + p.estado.slice(1).toLowerCase();
@@ -1683,10 +1678,8 @@ window.fueEditado = fueEditado;
 }
 
 .badge-estado.activo { background: #dcfce7; color: #166534; }
-.badge-estado.inactivo { background: #f1f5f9; color: #475569; }
 .badge-estado.bajo_pedido { background: #fef3c7; color: #92400e; }
 .badge-estado.bloqueado { background: #fee2e2; color: #991b1b; }
-.badge-estado.disponible { background: #dbeafe; color: #1e40af; }
 
 .grid-info-ver .info-value .precio-venta {
     color: #0066FF;

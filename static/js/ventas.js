@@ -2658,269 +2658,188 @@ function exportData(module) {
 // ============================================================
 
 
-function openCotizacionModal(id = null) {
-    editingId = id;
-    const isEdit = id !== null;
-    const title = isEdit ? 'Editar cotización' : 'Nueva cotización';
-    document.getElementById('cotizacionModalTitle').textContent = title;
-    
-    const formContainer = document.getElementById('cotizacionForm');
-    if (!formContainer) return;
-    
-    // Generar HTML del formulario
-    formContainer.innerHTML = `
-        <div class="create-grid">
-            <!-- Punto 1: Datos del cliente -->
-            <div class="create-panel client-card">
-                <h3><span class="section-number">1.</span> <span class="section-title-colored">Datos del cliente</span></h3>
-                <div class="body">
-                    <div class="client-search-row">
-                        <div class="form-field">
-                            <label>Buscar por RUC</label>
-                            <input id="fRucSearch" placeholder="Ingrese o pegue RUC" oninput="autoLoadClientByRuc(this.value)">
-                        </div>
-                        <div class="form-field">
-                            <label>&nbsp;</label>
-                            <button class="btn btn-blue btn-search-ruc" onclick="loadClient()">🔍 Buscar</button>
-                        </div>
-                    </div>
-                    <div id="clientConfirmBox" class="client-confirm-box"></div>
-                    <div class="client-main-grid">
-                        <div class="form-field"><label>RUC</label><input id="fRuc" readonly></div>
-                        <div class="form-field"><label>Razón social</label><input id="fRazon" readonly></div>
-                        <div class="form-field"><label>Cód. cliente</label><input class="client-code-input" id="fCodCliente" readonly></div>
-                    </div>
-                    <div class="client-secondary-grid">
-                        <div class="form-field"><label>Razón comercial</label><input id="fComercial"></div>
-                        <div class="form-field"><label>Dirección fiscal</label><input id="fDireccion"></div>
-                    </div>
-                    <div class="client-contact-grid">
-                        <div class="form-field"><label>Contacto</label><input id="fContacto"></div>
-                        <div class="form-field"><label>Teléfono</label><input id="fTelefono"></div>
-                        <div class="form-field"><label>Correo</label><input id="fCorreo"></div>
-                    </div>
-                    <div class="client-request-grid">
-                        <div class="form-field"><label>N° requerimiento</label><input id="fReq" placeholder="Ingrese el requerimiento"></div>
-                        <div class="form-field"><label>Fuente</label><select id="fFuente"><option>Correo</option><option>WhatsApp</option><option>Llamada</option><option>Portal</option></select></div>
-                    </div>
-                    <div class="client-save-zone">
-                        <button class="btn btn-green btn-save-client" onclick="saveClientFromQuote()">💾 Guardar / Actualizar</button>
-                        <div class="save-help">Se guardará en Maestros para futuras cotizaciones.</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Punto 2: Condiciones comerciales -->
-            <div class="create-panel">
-                <h3><span class="section-number">2.</span> <span class="section-title-colored">Condiciones comerciales</span></h3>
-                <div class="body">
-                    <div class="form-grid">
-                        <div class="form-field col-4">
-                            <label>Asesor</label>
-                            <input id="fVendedor" value="Helen Blas Príncipe" readonly style="background:#F1F5F9; cursor:default;">
-                        </div>
-                        <div class="form-field col-5">
-                            <label>Email asesor</label>
-                            <input id="fEmailAsesor" value="ventas@kcfcorporacion.com">
-                        </div>
-                        <div class="form-field col-3">
-                            <label>Teléfono asesor</label>
-                            <input id="fTelAsesor" value="999932051">
-                        </div>
-                        <div class="form-field col-4">
-                            <label>Moneda</label>
-                            <select id="fMoneda">
-                                <option value="Soles (S/.)">Soles (S/.)</option>
-                                <option value="Dólares ($)">Dólares ($)</option>
-                            </select>
-                        </div>
-                        <div class="form-field col-4">
-                            <label>Condición de pago</label>
-                            <select id="fCondicion" onchange="toggleCustomField('fCondicion', 'fCondicionCustom')">
-                                <option value="Contado">Contado</option>
-                                <option value="Crédito 7 días">Crédito 7 días</option>
-                                <option value="Crédito 15 días">Crédito 15 días</option>
-                                <option value="Crédito 30 días">Crédito 30 días</option>
-                                <option value="Crédito 45 días">Crédito 45 días</option>
-                                <option value="Crédito 60 días">Crédito 60 días</option>
-                                <option value="Crédito 90 días">Crédito 90 días</option>
-                                <option value="Personalizado">✏️ Personalizado</option>
-                            </select>
-                            <input id="fCondicionCustom" placeholder="Ej: Crédito 120 días" style="display:none; margin-top:4px; height:28px; width:100%; border:1px solid #E5E7EB; border-radius:6px; padding:0 8px; font-size:11px;">
-                        </div>
-                        <div class="form-field col-4">
-                            <label>Tiempo de entrega</label>
-                            <select id="fTiempo" onchange="toggleCustomField('fTiempo', 'fTiempoCustom')">
-                                <option value="Inmediato">Inmediato</option>
-                                <option value="1 día hábil">1 día hábil</option>
-                                <option value="3 días hábiles">3 días hábiles</option>
-                                <option value="5 días hábiles">5 días hábiles</option>
-                                <option value="7 días hábiles">7 días hábiles</option>
-                                <option value="Bajo pedido">Bajo pedido</option>
-                                <option value="Personalizado">✏️ Personalizado</option>
-                            </select>
-                            <input id="fTiempoCustom" placeholder="Ej: 10 días hábiles" style="display:none; margin-top:4px; height:28px; width:100%; border:1px solid #E5E7EB; border-radius:6px; padding:0 8px; font-size:11px;">
-                        </div>
-                        <div class="form-field col-4">
-                            <label>Validez</label>
-                            <select id="fValidez" onchange="toggleCustomField('fValidez', 'fValidezCustom')">
-                                <option value="7 días">7 días</option>
-                                <option value="15 días">15 días</option>
-                                <option value="30 días">30 días</option>
-                                <option value="60 días">60 días</option>
-                                <option value="Personalizado">✏️ Personalizado</option>
-                            </select>
-                            <input id="fValidezCustom" placeholder="Ej: 45 días" style="display:none; margin-top:4px; height:28px; width:100%; border:1px solid #E5E7EB; border-radius:6px; padding:0 8px; font-size:11px;">
-                        </div>
-                        <div class="form-field col-8">
-                            <label>Dirección de entrega</label>
-                            <select id="fDireccionEntrega" onchange="toggleCustomField('fDireccionEntrega', 'fDireccionEntregaCustom')">
-                                <option value="Dirección cliente">Dirección cliente</option>
-                                <option value="Otra dirección">Otra dirección</option>
-                                <option value="Personalizado">✏️ Personalizado</option>
-                            </select>
-                            <input id="fDireccionEntregaCustom" placeholder="Ingrese dirección personalizada" style="display:none; margin-top:4px; height:28px; width:100%; border:1px solid #E5E7EB; border-radius:6px; padding:0 8px; font-size:11px;">
-                        </div>
-                        <div class="form-field col-4">
-                            <label>Descuento especial</label>
-                            <input id="fDiscountValue" type="number" value="0" oninput="calcQuote()">
-                        </div>
-                        <div class="form-field col-2">
-                            <label>Tipo</label>
-                            <select id="fDiscountType" onchange="calcQuote()">
-                                <option value="%">%</option>
-                                <option value="S/">S/</option>
-                            </select>
-                        </div>
-                        <div class="form-field col-12">
-                            <label>Nota comercial</label>
-                            <textarea id="fNotaComercial" placeholder="Ingrese comentarios comerciales..."></textarea>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Punto 3: Resumen -->
-            <div class="create-panel summary-card">
-                <h3><span class="section-number">3.</span> <span class="section-title-colored">Resumen</span></h3>
-                <div class="body">
-                    <div class="side-row"><b>Subtotal</b><span id="sumSubtotal">S/ 0.00</span></div>
-                    <div class="side-row"><b>Descuento</b><span id="sumDiscountPct">0.00%</span></div>
-                    <div class="side-row"><b>Dscto aplicado</b><span id="sumDiscount">S/ 0.00</span></div>
-                    <div class="side-row value-sale-row"><b>Valor venta</b><span id="sumValue">S/ 0.00</span></div>
-                    <div class="side-row"><b>IGV 18%</b><span id="sumIgv">S/ 0.00</span></div>
-                    <div class="summary-sep"></div>
-                    <div class="total-row"><b>TOTAL A PAGAR </b><span class="summary-total" id="sumTotal">S/ 0.00</span></div>
-                </div>
-            </div>
-
-            <!-- Punto 4: Productos cotizados -->
-            <div class="create-panel product-wide">
-                <h3><span class="section-number">4.</span> <span class="section-title-colored">Productos cotizados</span>
-                    <div class="products-toolbar">
-                        <input list="productMasterList" id="quickProductSearch" placeholder="Buscar en data maestra..." onkeydown="if(event.key==='Enter'){addQuoteProductFromSearch()}">
-                        <datalist id="productMasterList"></datalist>
-                        <button class="btn btn-blue btn-add-product" onclick="addQuoteProductFromSearch()">+ Agregar producto</button>
-                        <button class="btn btn-green btn-add-multiple" onclick="openProductSelector()" style="background:#16A34A !important; color:#fff !important;">📋 Seleccionar varios</button>
-                    </div>
-                </h3>
-                <div class="body">
-                    <div class="table-scroll">
-                        <table class="master-table">
-                            <thead>
-                                <tr>
-                                    <th>Item</th><th>Código</th><th>Producto / Descripción</th><th>Modelo</th><th>Marca</th>
-                                    <th>Unidad</th><th>Cant</th><th>Valor venta<br><small>Unitario S/.</small></th>
-                                    <th>Monto total<br><small>Incluido IGV S/.</small></th><th>Stock</th><th>Entrega</th><th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="quoteProductRows"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            
-           <!-- Punto 5: Información adicional -->
-<div class="create-panel product-wide compact-bottom">
-    <h3><span class="section-number">5.</span> <span class="section-title-colored">Información adicional</span></h3>
-    <div class="body">
-        <div class="form-grid">
-            <div class="form-field"><label>Seguimiento</label>
-                <select id="fSeguimiento">
-                    <option>Asesor</option>
-                    <option selected>Helen Blas Príncipe</option>
-                    <option>Edith</option>
-                </select>
-            </div>
-            <div class="form-field"><label>Motivo</label>
-                <select id="fMotivo">
-                    <option>Proyecto nuevo</option>
-                    <option>Recompra</option>
-                    <option>Licitación</option>
-                    <option>Reposición / stock</option>
-                    <option selected>Solicitud única</option>
-                </select>
-            </div>
-            <div class="form-field"><label>Transporte</label>
-                <select id="fTransporte">
-                    <option>Seleccione</option>
-                    <option>Motorizado</option>
-                    <option>Auto</option>
-                    <option>Minivan</option>
-                    <option>Camioneta</option>
-                    <option>Camión</option>
-                    <option>Agencia</option>
-                </select>
-            </div>
-            <div class="form-field"><label>Parihuela</label>
-                <select id="fParihuela">
-                    <option>Seleccione</option>
-                    <option>No</option>
-                    <option>Sí - estándar</option>
-                    <option>Sí - a medida</option>
-                    <option>Por confirmar</option>
-                </select>
-            </div>
-            <div class="form-field internal-note-box"><label>Nota interna</label>
-                <textarea id="fNotaInterna" placeholder="Interno: cliente, productos o coordinación"></textarea>
-            </div>
-        </div>
-    </div>
-</div>
-
-        <!-- ⬇️ BARRA DE ESTADO (STEPBAR) - AHORA AL FINAL ⬇️ -->
-        <div class="stepbar-bottom" id="quoteStatusBar">
-            <span class="step-label">Estatus:</span>
-            <span class="step status-draft"><span class="num">1</span>Borrador</span>
-            <span class="sep"></span>
-            <span class="step status-review"><span class="num">2</span>En revisión</span>
-            <span class="sep"></span>
-            <span class="step status-validated"><span class="num">3</span>Validado por Hellen</span>
-            <span class="sep"></span>
-            <span class="step status-generated"><span class="num">4</span>Generada</span>
-            <span class="sep"></span>
-            <span class="step status-accepted"><span class="num">5</span>Aceptada</span>
-        </div>
-    `;
-    
-    // Cargar datalist de productos
-    cargarDatalistProductos();
-    
-    // ============================================================
-    // 🔽 IMPORTANTE: NO cargar productos automáticamente
-    // ============================================================
-    quoteProducts = [];
-    renderQuoteProducts();
-    calcQuote(); // Actualizar totales a 0
-    
-    // Si es edición, cargar datos
-    if (isEdit && id) {
-        cargarCotizacionParaEditar(id);
+// ============================================================
+// OBTENER ROL DEL USUARIO
+// ============================================================
+function getUsuarioRol() {
+    // Opción 1: Desde el elemento hidden en el HTML
+    const rolElement = document.getElementById('usuarioRol');
+    if (rolElement) {
+        return rolElement.value || 'vendedor';
     }
     
-    document.getElementById('cotizacionModal').classList.add('show');
-    setTimeout(() => { calcQuote(); }, 100);
+    // Opción 2: Desde FLASK_SESSION (definido en base.html)
+    if (typeof FLASK_SESSION !== 'undefined' && FLASK_SESSION.rol) {
+        return FLASK_SESSION.rol;
+    }
+    
+    // Opción 3: Desde sessionStorage (fallback)
+    try {
+        const sessionData = sessionStorage.getItem('erp_session');
+        if (sessionData) {
+            const parsed = JSON.parse(sessionData);
+            return parsed.rol || 'vendedor';
+        }
+    } catch (e) {
+        console.warn('Error obteniendo rol de sessionStorage:', e);
+    }
+    
+    // Opción 4: Desde localStorage (fallback)
+    try {
+        const sessionData = localStorage.getItem('erp_session');
+        if (sessionData) {
+            const parsed = JSON.parse(sessionData);
+            return parsed.rol || 'vendedor';
+        }
+    } catch (e) {
+        console.warn('Error obteniendo rol de localStorage:', e);
+    }
+    
+    // Default: vendedor
+    return 'vendedor';
 }
+
+// ============================================================
+// RENDERIZAR BOTONES DEL FOOTER SEGÚN ROL
+// ============================================================
+function renderCotizacionFooter(esEdicion = false) {
+    const footer = document.getElementById('cotizacionModalFooter');
+    if (!footer) return;
+    
+    const rol = getUsuarioRol();
+    const isAdminOrHellen = rol === 'admin' || rol === 'hellen' || rol === 'administrador' || rol === 'superadmin';
+    
+    console.log('👤 Rol del usuario:', rol, '| Es Admin/Hellen:', isAdminOrHellen);
+    
+    let botonesHtml = '';
+    
+    if (isAdminOrHellen) {
+        // ============================================================
+        // MODO ADMIN / HELLEN - Botones: Cancelar, Validado por Hellen, Revisión, Generar
+        // ============================================================
+        botonesHtml = `
+            <!-- Cancelar - Gris -->
+            <button class="btn btn-secondary" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #9CA3AF;background:#6B7280;color:#fff;font-weight:800;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='#4B5563'" onmouseout="this.style.background='#6B7280'" onclick="closeModal('cotizacionModal')">Cancelar</button>
+            
+            <!-- Validado por Hellen - Verde Oscuro -->
+            <button class="btn btn-blue" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #15803D;background:#166534;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(22,101,52,0.3);" onmouseover="this.style.background='#15803D';this.style.boxShadow='0 0 25px rgba(22,101,52,0.5)'" onmouseout="this.style.background='#166534';this.style.boxShadow='0 0 15px rgba(22,101,52,0.3)'" onclick="validateByHellen()">✅ Validado por Hellen</button>
+            
+            <!-- Revisión - Azul (para enviar a revisión) -->
+            <button class="btn btn-blue" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #0d6efd;background:#0d6efd;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(13,110,253,0.3);" onmouseover="this.style.background='#0b5ed7';this.style.boxShadow='0 0 25px rgba(13,110,253,0.5)'" onmouseout="this.style.background='#0d6efd';this.style.boxShadow='0 0 15px rgba(13,110,253,0.3)'" onclick="sendCotizacionToReview()">📤 Revisión</button>
+            
+            <!-- Generar - Verde Fluorescente NEON -->
+            <button class="btn btn-green" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #00FF41;background:#00FF41;color:#000;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 25px rgba(0,255,65,0.5);" onmouseover="this.style.background='#44FF77';this.style.boxShadow='0 0 35px rgba(0,255,65,0.7)'" onmouseout="this.style.background='#00FF41';this.style.boxShadow='0 0 25px rgba(0,255,65,0.5)'" onclick="generateCotizacionPdfAndSend()">📄 Generar</button>
+        `;
+    } else {
+        // ============================================================
+        // MODO VENDEDOR - Botones: Cancelar, Solicitar revisión, Validado, Generar
+        // ============================================================
+        botonesHtml = `
+            <!-- Cancelar - Gris -->
+            <button class="btn btn-secondary" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #9CA3AF;background:#6B7280;color:#fff;font-weight:800;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='#4B5563'" onmouseout="this.style.background='#6B7280'" onclick="closeModal('cotizacionModal')">Cancelar</button>
+            
+            <!-- Solicitar revisión - Amarillo Fluorescente -->
+            <button class="btn btn-warning" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #FFDD00;background:#FFDD00;color:#000;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 25px rgba(255,221,0,0.5);" onmouseover="this.style.background='#FFE733';this.style.boxShadow='0 0 35px rgba(255,221,0,0.7)'" onmouseout="this.style.background='#FFDD00';this.style.boxShadow='0 0 25px rgba(255,221,0,0.5)'" onclick="sendCotizacionToReview()">⭐ Solicitar revisión</button>
+            
+            <!-- Validado por Hellen - Verde Oscuro -->
+            <button class="btn btn-blue" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #15803D;background:#166534;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(22,101,52,0.3);" onmouseover="this.style.background='#15803D';this.style.boxShadow='0 0 25px rgba(22,101,52,0.5)'" onmouseout="this.style.background='#166534';this.style.boxShadow='0 0 15px rgba(22,101,52,0.3)'" onclick="validateByHellen()">✅ Validado por Hellen</button>
+            
+            <!-- Generar - Verde Fluorescente NEON -->
+            <button class="btn btn-green" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #00FF41;background:#00FF41;color:#000;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 25px rgba(0,255,65,0.5);" onmouseover="this.style.background='#44FF77';this.style.boxShadow='0 0 35px rgba(0,255,65,0.7)'" onmouseout="this.style.background='#00FF41';this.style.boxShadow='0 0 25px rgba(0,255,65,0.5)'" onclick="generateCotizacionPdfAndSend()">📄 Generar</button>
+        `;
+    }
+    
+    footer.innerHTML = botonesHtml;
+}
+
+// ============================================================
+// OBTENER ROL DEL USUARIO
+// ============================================================
+function getUsuarioRol() {
+    // Opción 1: Desde un elemento hidden en el HTML
+    const rolElement = document.getElementById('usuarioRol');
+    if (rolElement) {
+        return rolElement.value || 'vendedor';
+    }
+    
+    // Opción 2: Desde un script con data-user
+    const userData = document.querySelector('script[data-user]');
+    if (userData) {
+        try {
+            const data = JSON.parse(userData.dataset.user);
+            return data.rol || 'vendedor';
+        } catch (e) {
+            return 'vendedor';
+        }
+    }
+    
+    // Opción 3: Fallback - intentar obtener de la sesión desde el HTML
+    const sessionScript = document.querySelector('script#sessionData');
+    if (sessionScript) {
+        try {
+            const data = JSON.parse(sessionScript.textContent);
+            return data.rol || 'vendedor';
+        } catch (e) {
+            return 'vendedor';
+        }
+    }
+    
+    return 'vendedor';
+}
+
+// ============================================================
+// RENDERIZAR BOTONES DEL FOOTER SEGÚN ROL
+// ============================================================
+function renderCotizacionFooter(esEdicion = false) {
+    const footer = document.getElementById('cotizacionModalFooter');
+    if (!footer) return;
+    
+    const rol = getUsuarioRol();
+    const isAdminOrHellen = rol === 'admin' || rol === 'hellen' || rol === 'administrador' || rol === 'superadmin';
+    
+    console.log('👤 Rol del usuario:', rol, '| Es Admin/Hellen:', isAdminOrHellen);
+    
+    let botonesHtml = '';
+    
+    if (isAdminOrHellen) {
+        // ============================================================
+        // MODO ADMIN / HELLEN - Botones: Cancelar, Validado por Hellen, Revisión, Generar
+        // ============================================================
+        botonesHtml = `
+            <!-- Cancelar - Gris -->
+            <button class="btn btn-secondary" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #9CA3AF;background:#6B7280;color:#fff;font-weight:800;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='#4B5563'" onmouseout="this.style.background='#6B7280'" onclick="closeModal('cotizacionModal')">Cancelar</button>
+            
+            <!-- Validado por Hellen - Verde Oscuro -->
+            <button class="btn btn-blue" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #15803D;background:#166534;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(22,101,52,0.3);" onmouseover="this.style.background='#15803D';this.style.boxShadow='0 0 25px rgba(22,101,52,0.5)'" onmouseout="this.style.background='#166534';this.style.boxShadow='0 0 15px rgba(22,101,52,0.3)'" onclick="validateByHellen()">✅ Validado por Hellen</button>
+            
+            <!-- Revisión - Azul (para enviar a revisión) -->
+            <button class="btn btn-blue" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #0d6efd;background:#0d6efd;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(13,110,253,0.3);" onmouseover="this.style.background='#0b5ed7';this.style.boxShadow='0 0 25px rgba(13,110,253,0.5)'" onmouseout="this.style.background='#0d6efd';this.style.boxShadow='0 0 15px rgba(13,110,253,0.3)'" onclick="sendCotizacionToReview()">📤 Revisión</button>
+            
+            <!-- Generar - Verde Fluorescente NEON -->
+            <button class="btn btn-green" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #00FF41;background:#00FF41;color:#000;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 25px rgba(0,255,65,0.5);" onmouseover="this.style.background='#44FF77';this.style.boxShadow='0 0 35px rgba(0,255,65,0.7)'" onmouseout="this.style.background='#00FF41';this.style.boxShadow='0 0 25px rgba(0,255,65,0.5)'" onclick="generateCotizacionPdfAndSend()">📄 Generar</button>
+        `;
+    } else {
+        // ============================================================
+        // MODO VENDEDOR - Botones: Cancelar, Solicitar revisión, Validado, Generar
+        // ============================================================
+        botonesHtml = `
+            <!-- Cancelar - Gris -->
+            <button class="btn btn-secondary" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #9CA3AF;background:#6B7280;color:#fff;font-weight:800;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='#4B5563'" onmouseout="this.style.background='#6B7280'" onclick="closeModal('cotizacionModal')">Cancelar</button>
+            
+            <!-- Solicitar revisión - Amarillo Fluorescente ⭐ -->
+            <button class="btn btn-warning" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #FFDD00;background:#FFDD00;color:#000;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 25px rgba(255,221,0,0.5);" onmouseover="this.style.background='#FFE733';this.style.boxShadow='0 0 35px rgba(255,221,0,0.7)'" onmouseout="this.style.background='#FFDD00';this.style.boxShadow='0 0 25px rgba(255,221,0,0.5)'" onclick="sendCotizacionToReview()">⭐ Solicitar revisión</button>
+            
+            <!-- Validado por Hellen - Verde Oscuro -->
+            <button class="btn btn-blue" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #15803D;background:#166534;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(22,101,52,0.3);" onmouseover="this.style.background='#15803D';this.style.boxShadow='0 0 25px rgba(22,101,52,0.5)'" onmouseout="this.style.background='#166534';this.style.boxShadow='0 0 15px rgba(22,101,52,0.3)'" onclick="validateByHellen()">✅ Validado por Hellen</button>
+            
+            <!-- Generar - Verde Fluorescente NEON -->
+            <button class="btn btn-green" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #00FF41;background:#00FF41;color:#000;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 25px rgba(0,255,65,0.5);" onmouseover="this.style.background='#44FF77';this.style.boxShadow='0 0 35px rgba(0,255,65,0.7)'" onmouseout="this.style.background='#00FF41';this.style.boxShadow='0 0 25px rgba(0,255,65,0.5)'" onclick="generateCotizacionPdfAndSend()">📄 Generar</button>
+        `;
+    }
+    
+    footer.innerHTML = botonesHtml;
+}
+
 
 async function cargarCotizacionParaEditar(id) {
     try {
