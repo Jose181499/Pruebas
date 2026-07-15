@@ -1,6 +1,7 @@
 <!-- MODAL PEDIDO COMPRA - VERSIÓN CON BOTÓN ELIMINAR -->
 <div class="modal-bg" id="pedidoCompraModal">
-    <div class="modal-box" style="width:min(1100px,96vw); max-height:100vh; display:flex; flex-direction:column; border-radius:12px;">
+    <!-- MODIFICACIÓN: Aumenté el ancho máximo y el padding -->
+    <div class="modal-box" style="width:min(1400px,98vw); max-height:100vh; display:flex; flex-direction:column; border-radius:12px;">
         
         <!-- HEADER COMPACTO -->
         <div class="modal-head" style="padding:6px 14px; min-height:34px; flex-shrink:0; background:#0F172A;">
@@ -143,22 +144,26 @@
                 </div>
             </div>
 
-            <!-- BLOQUE 3: Ítems del PC - CON BOTÓN ELIMINAR -->
+            <!-- BLOQUE 3: Ítems del PC - CON BOTÓN ELIMINAR Y NUEVOS CAMPOS -->
             <div class="form-section" style="padding:4px 10px; margin-bottom:4px; border-radius:6px; border:1px solid #E2E8F0;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
-                    <div class="section-title" style="font-size:10px; font-weight:900; color:#7F1D1D; margin:0;">3. Ítems del PC</div>
+                    <div class="section-title" style="font-size:10px; font-weight:900; color:#7F1D1D; margin:0;">3. Productos del PC</div>
                     <div style="display:flex; gap:4px;">
                         <button class="btn btn-soft" onclick="addPedidoItemSAP()" style="height:22px; padding:0 10px; font-size:9px; border-radius:4px; border:1px solid #CBD5E1; background:#F1F5F9; font-weight:800; cursor:pointer;">+ Agregar ítem</button>
                         <button class="btn btn-blue" onclick="validarPCSAP()" style="height:22px; padding:0 10px; font-size:9px; border-radius:4px; border:none; background:#2563EB; color:#fff; font-weight:900; cursor:pointer; box-shadow:0 2px 6px rgba(37,99,235,0.25);">🔍 Validar PC</button>
                     </div>
                 </div>
-                <div class="table-scroll" style="max-height:80px; overflow:auto;">
+                <!-- MODIFICACIÓN: Aumenté el max-height para ver más filas -->
+                <div class="table-scroll" style="max-height:200px; overflow:auto;">
                     <table class="master-table" style="font-size:9px; width:100%; border-collapse:collapse;">
                         <thead>
                             <tr>
                                 <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Item</th>
                                 <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Código</th>
                                 <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Descripción</th>
+                                <!-- NUEVOS CAMPOS: Modelo y Marca -->
+                                <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Marca</th>
+                                <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Modelo</th>
                                 <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Cant. cot</th>
                                 <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Cant. PC</th>
                                 <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Precio cot</th>
@@ -173,58 +178,97 @@
                 </div>
             </div>
 
-            <!-- BLOQUE 4: Validación comercial -->
+            <!-- BLOQUE 4: Validación comercial - VERSIÓN CON TOGGLES SWITCHES -->
             <div class="form-section" style="padding:4px 10px; border-radius:6px; border:1px solid #E2E8F0;">
-                <div class="section-title" style="font-size:10px; font-weight:900; color:#7F1D1D; margin-bottom:2px;">4. Validación comercial</div>
-                <div style="display:grid; grid-template-columns:repeat(6,1fr); gap:3px;">
-                    <div class="check-card" style="padding:2px 5px; border-radius:4px; border:1px solid #E2E8F0; background:#F8FAFC;">
-                        <label style="font-size:7.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px;"><span id="vPrecioIcon">⚪</span> Precio</label>
-                        <select id="vPrecio" class="pc-val-select" style="width:100%; height:18px; border-radius:4px; border:1px solid #CBD5E1; font-weight:800; font-size:8px; padding:0 2px; background:#fff;" onchange="updateValidationStatus()">
-                            <option value="Sí">✅ Sí</option>
-                            <option value="No">❌ No</option>
-                        </select>
+                <div class="section-title" style="font-size:10px; font-weight:900; color:#7F1D1D; margin-bottom:4px;">4. Validación comercial <span style="font-weight:400; font-size:8px; color:#64748B;">(Marcar ✅ para validar)</span></div>
+                
+                <!-- Grid de validaciones con switches tipo toggle -->
+                <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:6px;">
+                    
+                    <!-- Precio -->
+                    <div class="check-card" style="padding:4px 6px; border-radius:6px; border:1px solid #E2E8F0; background:#F8FAFC; display:flex; flex-direction:column; align-items:center;">
+                        <label style="font-size:7.5px; font-weight:900; color:#334155; margin-bottom:3px;">💰 Precio</label>
+                        <label class="switch" style="position:relative; display:inline-block; width:34px; height:18px;">
+                            <input type="checkbox" id="vPrecio" checked onchange="updateValidationStatus()" style="opacity:0; width:0; height:0;">
+                            <span class="slider" style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#ccc; transition:.3s; border-radius:18px; display:block;">
+                                <span class="slider-thumb" style="position:absolute; content:''; height:14px; width:14px; left:2px; bottom:2px; background:white; transition:.3s; border-radius:50%;"></span>
+                            </span>
+                        </label>
+                        <span id="vPrecioLabel" style="font-size:7px; font-weight:700; margin-top:2px;">✅ Válido</span>
                     </div>
-                    <div class="check-card" style="padding:2px 5px; border-radius:4px; border:1px solid #E2E8F0; background:#F8FAFC;">
-                        <label style="font-size:7.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px;"><span id="vProductoIcon">⚪</span> Producto</label>
-                        <select id="vProducto" class="pc-val-select" style="width:100%; height:18px; border-radius:4px; border:1px solid #CBD5E1; font-weight:800; font-size:8px; padding:0 2px; background:#fff;" onchange="updateValidationStatus()">
-                            <option value="Sí">✅ Sí</option>
-                            <option value="No">❌ No</option>
-                        </select>
+
+                    <!-- Producto -->
+                    <div class="check-card" style="padding:4px 6px; border-radius:6px; border:1px solid #E2E8F0; background:#F8FAFC; display:flex; flex-direction:column; align-items:center;">
+                        <label style="font-size:7.5px; font-weight:900; color:#334155; margin-bottom:3px;">📦 Producto</label>
+                        <label class="switch" style="position:relative; display:inline-block; width:34px; height:18px;">
+                            <input type="checkbox" id="vProducto" checked onchange="updateValidationStatus()" style="opacity:0; width:0; height:0;">
+                            <span class="slider" style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#ccc; transition:.3s; border-radius:18px; display:block;">
+                                <span class="slider-thumb" style="position:absolute; content:''; height:14px; width:14px; left:2px; bottom:2px; background:white; transition:.3s; border-radius:50%;"></span>
+                            </span>
+                        </label>
+                        <span id="vProductoLabel" style="font-size:7px; font-weight:700; margin-top:2px;">✅ Válido</span>
                     </div>
-                    <div class="check-card" style="padding:2px 5px; border-radius:4px; border:1px solid #E2E8F0; background:#F8FAFC;">
-                        <label style="font-size:7.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px;"><span id="vEntregaIcon">⚪</span> Lugar Entrega</label>
-                        <select id="vEntrega" class="pc-val-select" style="width:100%; height:18px; border-radius:4px; border:1px solid #CBD5E1; font-weight:800; font-size:8px; padding:0 2px; background:#fff;" onchange="updateValidationStatus()">
-                            <option value="Sí">✅ Sí</option>
-                            <option value="No">❌ No</option>
-                        </select>
+
+                    <!-- Lugar Entrega -->
+                    <div class="check-card" style="padding:4px 6px; border-radius:6px; border:1px solid #E2E8F0; background:#F8FAFC; display:flex; flex-direction:column; align-items:center;">
+                        <label style="font-size:7.5px; font-weight:900; color:#334155; margin-bottom:3px;">📍 Entrega</label>
+                        <label class="switch" style="position:relative; display:inline-block; width:34px; height:18px;">
+                            <input type="checkbox" id="vEntrega" checked onchange="updateValidationStatus()" style="opacity:0; width:0; height:0;">
+                            <span class="slider" style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#ccc; transition:.3s; border-radius:18px; display:block;">
+                                <span class="slider-thumb" style="position:absolute; content:''; height:14px; width:14px; left:2px; bottom:2px; background:white; transition:.3s; border-radius:50%;"></span>
+                            </span>
+                        </label>
+                        <span id="vEntregaLabel" style="font-size:7px; font-weight:700; margin-top:2px;">✅ Válido</span>
                     </div>
-                    <div class="check-card" style="padding:2px 5px; border-radius:4px; border:1px solid #E2E8F0; background:#F8FAFC;">
-                        <label style="font-size:7.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px;"><span id="vTransporteIcon">⚪</span> Transporte</label>
-                        <select id="vTransporte" class="pc-val-select" style="width:100%; height:18px; border-radius:4px; border:1px solid #CBD5E1; font-weight:800; font-size:8px; padding:0 2px; background:#fff;" onchange="updateValidationStatus()">
-                            <option value="Sí">✅ Sí</option>
-                            <option value="No">❌ No</option>
-                        </select>
+
+                    <!-- Transporte -->
+                    <div class="check-card" style="padding:4px 6px; border-radius:6px; border:1px solid #E2E8F0; background:#F8FAFC; display:flex; flex-direction:column; align-items:center;">
+                        <label style="font-size:7.5px; font-weight:900; color:#334155; margin-bottom:3px;">🚚 Transporte</label>
+                        <label class="switch" style="position:relative; display:inline-block; width:34px; height:18px;">
+                            <input type="checkbox" id="vTransporte" checked onchange="updateValidationStatus()" style="opacity:0; width:0; height:0;">
+                            <span class="slider" style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#ccc; transition:.3s; border-radius:18px; display:block;">
+                                <span class="slider-thumb" style="position:absolute; content:''; height:14px; width:14px; left:2px; bottom:2px; background:white; transition:.3s; border-radius:50%;"></span>
+                            </span>
+                        </label>
+                        <span id="vTransporteLabel" style="font-size:7px; font-weight:700; margin-top:2px;">✅ Válido</span>
                     </div>
-                    <div class="check-card" style="padding:2px 5px; border-radius:4px; border:1px solid #E2E8F0; background:#F8FAFC;">
-                        <label style="font-size:7.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px;"><span id="vCantidadIcon">⚪</span> Cantidad</label>
-                        <select id="vCantidad" class="pc-val-select" style="width:100%; height:18px; border-radius:4px; border:1px solid #CBD5E1; font-weight:800; font-size:8px; padding:0 2px; background:#fff;" onchange="updateValidationStatus()">
-                            <option value="Sí">✅ Sí</option>
-                            <option value="No">❌ No</option>
-                        </select>
+
+                    <!-- Cantidad -->
+                    <div class="check-card" style="padding:4px 6px; border-radius:6px; border:1px solid #E2E8F0; background:#F8FAFC; display:flex; flex-direction:column; align-items:center;">
+                        <label style="font-size:7.5px; font-weight:900; color:#334155; margin-bottom:3px;">🔢 Cantidad</label>
+                        <label class="switch" style="position:relative; display:inline-block; width:34px; height:18px;">
+                            <input type="checkbox" id="vCantidad" checked onchange="updateValidationStatus()" style="opacity:0; width:0; height:0;">
+                            <span class="slider" style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#ccc; transition:.3s; border-radius:18px; display:block;">
+                                <span class="slider-thumb" style="position:absolute; content:''; height:14px; width:14px; left:2px; bottom:2px; background:white; transition:.3s; border-radius:50%;"></span>
+                            </span>
+                        </label>
+                        <span id="vCantidadLabel" style="font-size:7px; font-weight:700; margin-top:2px;">✅ Válido</span>
                     </div>
-                    <div class="check-card" style="padding:2px 5px; border-radius:4px; border:1px solid #E2E8F0; background:#F8FAFC;">
-                        <label style="font-size:7.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px;"><span id="vMonedaIcon">⚪</span> Moneda</label>
-                        <select id="vMoneda" class="pc-val-select" style="width:100%; height:18px; border-radius:4px; border:1px solid #CBD5E1; font-weight:800; font-size:8px; padding:0 2px; background:#fff;" onchange="updateValidationStatus()">
-                            <option value="Sí">✅ Sí</option>
-                            <option value="No">❌ No</option>
-                        </select>
+
+                    <!-- Moneda -->
+                    <div class="check-card" style="padding:4px 6px; border-radius:6px; border:1px solid #E2E8F0; background:#F8FAFC; display:flex; flex-direction:column; align-items:center;">
+                        <label style="font-size:7.5px; font-weight:900; color:#334155; margin-bottom:3px;">💱 Moneda</label>
+                        <label class="switch" style="position:relative; display:inline-block; width:34px; height:18px;">
+                            <input type="checkbox" id="vMoneda" checked onchange="updateValidationStatus()" style="opacity:0; width:0; height:0;">
+                            <span class="slider" style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#ccc; transition:.3s; border-radius:18px; display:block;">
+                                <span class="slider-thumb" style="position:absolute; content:''; height:14px; width:14px; left:2px; bottom:2px; background:white; transition:.3s; border-radius:50%;"></span>
+                            </span>
+                        </label>
+                        <span id="vMonedaLabel" style="font-size:7px; font-weight:700; margin-top:2px;">✅ Válido</span>
                     </div>
-                    <div class="check-card" style="padding:2px 5px; border-radius:4px; border:1px solid #E2E8F0; background:#F8FAFC;">
-                        <label style="font-size:7.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px;"><span id="vMonedaIcon">⚪</span> Vigencia</label>
-                        <select id="vMoneda" class="pc-val-select" style="width:100%; height:18px; border-radius:4px; border:1px solid #CBD5E1; font-weight:800; font-size:8px; padding:0 2px; background:#fff;" onchange="updateValidationStatus()">
-                            <option value="Sí">✅ Sí</option>
-                            <option value="No">❌ No</option>
-                        </select>
+
+                    <!-- Vigencia -->
+                    <div class="check-card" style="padding:4px 6px; border-radius:6px; border:1px solid #E2E8F0; background:#F8FAFC; display:flex; flex-direction:column; align-items:center;">
+                        <label style="font-size:7.5px; font-weight:900; color:#334155; margin-bottom:3px;">📅 Vigencia</label>
+                        <label class="switch" style="position:relative; display:inline-block; width:34px; height:18px;">
+                            <input type="checkbox" id="vVigencia" checked onchange="updateValidationStatus()" style="opacity:0; width:0; height:0;">
+                            <span class="slider" style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#ccc; transition:.3s; border-radius:18px; display:block;">
+                                <span class="slider-thumb" style="position:absolute; content:''; height:14px; width:14px; left:2px; bottom:2px; background:white; transition:.3s; border-radius:50%;"></span>
+                            </span>
+                        </label>
+                        <span id="vVigenciaLabel" style="font-size:7px; font-weight:700; margin-top:2px;">✅ Válido</span>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -237,3 +281,79 @@
         </div>
     </div>
 </div>
+
+<!-- CSS para los switches toggle -->
+<style>
+/* Estilos para los switches tipo toggle */
+.switch input:checked + .slider {
+    background: #22C55E;
+}
+
+.switch input:checked + .slider .slider-thumb {
+    transform: translateX(16px);
+}
+
+.switch input:not(:checked) + .slider {
+    background: #EF4444;
+}
+
+/* Efecto hover */
+.switch:hover .slider {
+    box-shadow: 0 0 8px rgba(34,197,94,0.3);
+}
+
+/* Estilo para el texto de validación */
+.check-card .validation-text {
+    transition: all 0.3s;
+}
+
+/* Animación suave al cambiar */
+.slider, .slider-thumb {
+    transition: 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+</style>
+
+<script>
+// Función para actualizar el estado de validación
+function updateValidationStatus() {
+    const validations = [
+        'vPrecio', 'vProducto', 'vEntrega', 
+        'vTransporte', 'vCantidad', 'vMoneda', 'vVigencia'
+    ];
+    
+    validations.forEach(id => {
+        const checkbox = document.getElementById(id);
+        const label = document.getElementById(id + 'Label');
+        
+        if (checkbox.checked) {
+            label.textContent = '✅ Válido';
+            label.style.color = '#16A34A';
+        } else {
+            label.textContent = '❌ No válido';
+            label.style.color = '#DC2626';
+        }
+    });
+    
+    // Actualizar semáforo si existe
+    updateValidationSemaphore();
+}
+
+// Función para obtener valores de validación (para usar al guardar)
+function getValidationValues() {
+    const validations = [
+        'vPrecio', 'vProducto', 'vEntrega', 
+        'vTransporte', 'vCantidad', 'vMoneda', 'vVigencia'
+    ];
+    
+    const result = {};
+    validations.forEach(id => {
+        result[id] = document.getElementById(id).checked ? 'Sí' : 'No';
+    });
+    return result;
+}
+
+// Inicializar al cargar
+document.addEventListener('DOMContentLoaded', function() {
+    updateValidationStatus();
+});
+</script>
