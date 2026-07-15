@@ -130,7 +130,7 @@ def productos_base_datos():
 @login_required
 def productos_comparativo():
     """Página de comparativo de costos"""
-    return render_template('nuevo_producto.html', 
+    return render_template('comparativo_costos.html', 
                           active_tab='comparativo',
                           producto=None,
                           editando=False)
