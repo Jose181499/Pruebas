@@ -243,6 +243,57 @@ function formatFecha(fechaStr) {
     }
 }
 
+function formatearFecha(fechaStr) {
+    if (!fechaStr) return '-';
+    
+    try {
+        let fecha;
+        if (typeof fechaStr === 'string') {
+            // Si la fecha viene con formato ISO (YYYY-MM-DDTHH:MM:SS)
+            if (fechaStr.includes('T')) {
+                fecha = new Date(fechaStr);
+            } 
+            // Si viene con formato DD/MM/YYYY HH:MM:SS
+            else if (fechaStr.includes('/')) {
+                const partes = fechaStr.split(/[\/\s:]/);
+                if (partes.length >= 3) {
+                    // Formato: DD/MM/YYYY HH:MM:SS
+                    fecha = new Date(partes[2], partes[1] - 1, partes[0], 
+                                    partes[3] || 0, partes[4] || 0, partes[5] || 0);
+                } else {
+                    fecha = new Date(fechaStr);
+                }
+            } 
+            // Formato YYYY-MM-DD
+            else if (fechaStr.includes('-')) {
+                fecha = new Date(fechaStr);
+            } 
+            else {
+                fecha = new Date(fechaStr);
+            }
+        } else if (fechaStr instanceof Date) {
+            fecha = fechaStr;
+        } else {
+            fecha = new Date(fechaStr);
+        }
+        
+        if (isNaN(fecha.getTime())) {
+            return String(fechaStr);
+        }
+        
+        const dia = String(fecha.getDate()).padStart(2, '0');
+        const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+        const anio = fecha.getFullYear();
+        const horas = String(fecha.getHours()).padStart(2, '0');
+        const minutos = String(fecha.getMinutes()).padStart(2, '0');
+        
+        return `${dia}/${mes}/${anio} ${horas}:${minutos}`;
+        
+    } catch (e) {
+        return String(fechaStr);
+    }
+}
+
 async function cargarProductosMaestros() {
     try {
         console.log('🔄 Cargando productos maestros desde base de datos...');
