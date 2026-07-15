@@ -8,7 +8,699 @@
 {% block subtitle %}{% endblock %}
 
 {% block extra_css %}
+<style>
+        /* ============================================
+           ESTILOS PARA BOTONES DE ACCIÓN (Guardar/Cancelar)
+           ============================================ */
+        
+        /* Contenedor principal de la cabecera */
+        .page-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding: 0 4px;
+        }
+        
+        /* Contenedor de los botones - alineados a la derecha */
+        .page-head .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        /* Estilos base para ambos botones */
+        .page-head .actions .btn {
+            padding: 12px 28px;
+            font-size: 15px;
+            font-weight: 700;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-width: 130px;
+            letter-spacing: 0.3px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: none;
+            outline: none;
+        }
+        
+        /* ============================================
+           BOTÓN GUARDAR - AZUL ELÉCTRICO ⚡
+           ============================================ */
+        .page-head .actions .btn.primary {
+            background: linear-gradient(135deg, #0066FF, #0044CC);
+            color: white;
+            border: 2px solid #0066FF;
+            box-shadow: 0 4px 15px rgba(0, 102, 255, 0.4);
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+        }
+        
+        .page-head .actions .btn.primary:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 102, 255, 0.6);
+            background: linear-gradient(135deg, #1A75FF, #0055DD);
+            border-color: #1A75FF;
+        }
+        
+        .page-head .actions .btn.primary:active {
+            transform: translateY(0px) scale(0.98);
+            box-shadow: 0 2px 10px rgba(0, 102, 255, 0.3);
+        }
+        
+        /* Efecto de brillo en el botón azul */
+        .page-head .actions .btn.primary::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #0066FF, #00CCFF, #0066FF);
+            background-size: 300% 300%;
+            border-radius: 12px;
+            z-index: -1;
+            animation: electricGlow 3s ease-in-out infinite;
+            opacity: 0.7;
+        }
+        
+        @keyframes electricGlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* Estilo del botón Cancelar (outline) */
+        .page-head .actions .btn.outline {
+            background: white;
+            color: #555;
+            border: 2px solid #ddd;
+        }
+        
+        .page-head .actions .btn.outline:hover {
+            border-color: #ff4444;
+            color: #ff4444;
+            background: rgba(255, 68, 68, 0.05);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 68, 68, 0.15);
+        }
+        
+        .page-head .actions .btn.outline:active {
+            transform: translateY(0px);
+        }
+        
+        /* Iconos dentro de los botones */
+        .page-head .actions .btn i {
+            font-size: 18px;
+            line-height: 1;
+        }
+        
+        /* ============================================
+           MODAL DE CONFIRMACIÓN
+           ============================================ */
+        
+        .modal-confirm-overlay {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: rgba(0, 0, 0, 0.7) !important;
+            display: none !important;
+            align-items: center !important;
+            justify-content: center !important;
+            z-index: 99999999 !important;
+            padding: 20px !important;
+            backdrop-filter: blur(8px) !important;
+            -webkit-backdrop-filter: blur(8px) !important;
+            opacity: 0 !important;
+            transition: opacity 0.3s ease !important;
+        }
+        
+        .modal-confirm-overlay.active {
+            display: flex !important;
+            opacity: 1 !important;
+        }
+        
+        .modal-confirm-content {
+            background: white !important;
+            border-radius: 20px !important;
+            max-width: 480px !important;
+            width: 100% !important;
+            padding: 40px !important;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.4) !important;
+            text-align: center !important;
+            position: relative !important;
+            animation: modalSlideIn 0.4s ease !important;
+            border-top: 6px solid #f59e0b !important;
+            transform: scale(0.9) !important;
+            transition: transform 0.3s ease !important;
+        }
+        
+        .modal-confirm-overlay.active .modal-confirm-content {
+            transform: scale(1) !important;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .modal-confirm-icon {
+            font-size: 72px !important;
+            margin-bottom: 12px !important;
+            display: block !important;
+            animation: pulse 1.5s ease-in-out infinite !important;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .modal-confirm-title {
+            margin: 0 0 8px 0 !important;
+            color: #1e293b !important;
+            font-size: 24px !important;
+            font-weight: 800 !important;
+        }
+        
+        .modal-confirm-subtitle {
+            color: #64748b !important;
+            font-size: 15px !important;
+            margin-bottom: 24px !important;
+            line-height: 1.6 !important;
+        }
+        
+        .modal-confirm-buttons {
+            display: flex !important;
+            gap: 12px !important;
+            justify-content: center !important;
+            flex-wrap: wrap !important;
+        }
+        
+        .modal-btn-confirm {
+            background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+            color: white !important;
+            border: none !important;
+            padding: 14px 36px !important;
+            border-radius: 12px !important;
+            font-weight: 700 !important;
+            font-size: 16px !important;
+            cursor: pointer !important;
+            transition: all 0.3s !important;
+            box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4) !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            min-width: 140px !important;
+            justify-content: center !important;
+        }
+        
+        .modal-btn-confirm:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 30px rgba(245, 158, 11, 0.6) !important;
+        }
+        
+        .modal-btn-cancel {
+            background: #e2e8f0 !important;
+            color: #475569 !important;
+            border: none !important;
+            padding: 14px 36px !important;
+            border-radius: 12px !important;
+            font-weight: 700 !important;
+            font-size: 16px !important;
+            cursor: pointer !important;
+            transition: all 0.3s !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            min-width: 140px !important;
+            justify-content: center !important;
+        }
+        
+        .modal-btn-cancel:hover {
+            background: #cbd5e1 !important;
+            transform: translateY(-2px) !important;
+        }
+        
+        /* ============================================
+           NOTIFICACIONES FLOTANTES
+           ============================================ */
+        
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
 
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100px) scale(0.9);
+            }
+        }
+        
+        /* ============================================
+           RESALTAR CAMPOS CON ERROR
+           ============================================ */
+        .field.error input,
+        .field.error select,
+        .field.error textarea {
+            border-color: #DC2626 !important;
+            background-color: #FFF8F8 !important;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15) !important;
+        }
+        
+        .field.error label {
+            color: #DC2626 !important;
+        }
+        
+        .field.error label .req {
+            color: #DC2626 !important;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-4px); }
+            40% { transform: translateX(4px); }
+            60% { transform: translateX(-3px); }
+            80% { transform: translateX(3px); }
+        }
+        
+        .field.error input,
+        .field.error select {
+            animation: shake 0.3s ease;
+        }
+        
+        /* ============================================
+           AJUSTES PARA REDUCIR TAMAÑO DE CAMPOS
+           ============================================ */
+        
+        .np-layout {
+            gap: 12px !important;
+        }
+        
+        .card {
+            padding: 14px !important;
+            margin-bottom: 10px !important;
+        }
+        
+        .card-title {
+            font-size: 14px !important;
+            margin-bottom: 10px !important;
+        }
+        
+        .field {
+            margin-bottom: 6px !important;
+        }
+        
+        .field label {
+            font-size: 12px !important;
+            margin-bottom: 2px !important;
+        }
+        
+        .field input,
+        .field select,
+        .field textarea {
+            padding: 5px 8px !important;
+            font-size: 12px !important;
+            min-height: 28px !important;
+        }
+        
+        .field textarea {
+            min-height: 50px !important;
+            max-height: 80px !important;
+        }
+        
+        .grid {
+            gap: 6px 10px !important;
+            margin-bottom: 4px !important;
+        }
+        
+        .grid.two {
+            gap: 6px 10px !important;
+        }
+        
+        .grid.full {
+            gap: 6px 10px !important;
+        }
+        
+        .input-unit {
+            height: 28px !important;
+        }
+        
+        .input-unit input {
+            padding: 4px 6px !important;
+            font-size: 12px !important;
+            height: 28px !important;
+        }
+        
+        .input-unit span {
+            font-size: 11px !important;
+            padding: 0 6px !important;
+            height: 28px !important;
+            line-height: 28px !important;
+        }
+        
+        .upload {
+            padding: 12px !important;
+            min-height: 100px !important;
+        }
+        
+        .upload .cloud i {
+            font-size: 30px !important;
+        }
+        
+        .upload strong {
+            font-size: 13px !important;
+        }
+        
+        .upload .drag-hint {
+            font-size: 11px !important;
+        }
+        
+        .upload .file-badge {
+            font-size: 11px !important;
+            padding: 3px 10px !important;
+        }
+        
+        .operation {
+            padding: 10px !important;
+            margin-top: 8px !important;
+        }
+        
+        .operation .op-item {
+            padding: 4px 0 !important;
+            gap: 6px !important;
+        }
+        
+        .operation .op-title {
+            font-size: 13px !important;
+        }
+        
+        .operation .op-desc {
+            font-size: 11px !important;
+        }
+        
+        .price-box {
+            padding: 8px 0 !important;
+        }
+        
+        .price-label {
+            font-size: 13px !important;
+        }
+        
+        .tax {
+            font-size: 10px !important;
+        }
+        
+       
+        
+      
+        
+        .margin-grid {
+            gap: 6px !important;
+            margin-top: 6px !important;
+        }
+        
+        .margin-box {
+            padding: 6px 10px !important;
+            font-size: 12px !important;
+        }
+        
+        .margin-box b {
+            font-size: 14px !important;
+        }
+        
+        .state-select {
+            padding: 4px 8px !important;
+            font-size: 12px !important;
+            height: 30px !important;
+        }
+        
+        .state-list {
+            gap: 4px !important;
+            margin-top: 6px !important;
+        }
+        
+        .state-chip {
+            padding: 2px 8px !important;
+            font-size: 10px !important;
+        }
+        
+        .state-chip .dot {
+            width: 6px !important;
+            height: 6px !important;
+        }
+        
+        .code-box {
+            padding: 4px 8px !important;
+        }
+        
+        .code-value {
+            font-size: 14px !important;
+            padding: 2px 6px !important;
+        }
+        
+        .code-value .pill {
+            font-size: 9px !important;
+            padding: 1px 6px !important;
+        }
+        
+        .form-header {
+            gap: 8px !important;
+            margin-bottom: 8px !important;
+        }
+        
+        .np-layout {
+            display: grid !important;
+            grid-template-columns: 280px 1fr 260px !important;
+            gap: 12px !important;
+            align-items: start !important;
+        }
+        
+        @media (max-width: 1200px) {
+            .np-layout {
+                grid-template-columns: 1fr 1fr !important;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .page-head {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            
+            .page-head .actions {
+                justify-content: center;
+                gap: 8px;
+            }
+            
+            .page-head .actions .btn {
+                flex: 1;
+                min-width: 90px;
+                padding: 8px 16px;
+                font-size: 13px;
+            }
+            
+            .page-head .actions .btn i {
+                font-size: 16px;
+            }
+            
+            .np-layout {
+                flex-direction: column !important;
+                grid-template-columns: 1fr !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .page-head .actions {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .page-head .actions .btn {
+                width: 100%;
+                padding: 10px;
+                font-size: 14px;
+            }
+        }
+        
+        .page-head .actions .btn.primary.loading {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+        
+        .page-head .actions .btn.primary.loading::after {
+            content: '';
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+        }
+
+                /* ============================================
+           PRECIOS - VALOR VENTA (AZUL) Y COSTO (GRIS)
+           ============================================ */
+
+             /* ============================================
+           PRECIOS - INPUTS DE DINERO
+           ============================================ */
+
+      
+
+           /* Contenedor del input de dinero - SIN BORDE */
+    .money {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 0 12px !important;
+    height: 42px !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    border: none !important;  /* ← BORDE ELIMINADO */
+    transition: all 0.2s ease !important;
+        }
+
+        /* Input dentro de .money */
+        .money input {
+            flex: 1 !important;
+            border: none !important;
+            outline: none !important;
+            background: transparent !important;
+            font-size: 16px !important;
+            font-weight: 700 !important;
+            color: #1a1a2e !important;
+            padding: 4px 0 !important;
+            height: 30px !important;
+            text-align: right !important;
+            min-width: 0 !important;
+        }
+
+        /* Símbolo S/ dentro de .money */
+        .money span {
+            font-size: 16px !important;
+            font-weight: 700 !important;
+            color: #6b7280 !important;
+            flex-shrink: 0 !important;
+        }
+
+        /* ============================================
+           VALOR VENTA - BORDE AZUL
+           ============================================ */
+
+        /* Contenedor del valor venta */
+        .price-box.sale .money {
+            border-color: #0066FF !important;
+            background: #f8fbff !important;
+        }
+
+        .price-box.sale .money:focus-within {
+            border-color: #0044CC !important;
+            box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.15) !important;
+        }
+
+        /* Símbolo S/ en azul para VENTA */
+        .price-box.sale .money span {
+            color: #0066FF !important;
+        }
+
+        /* Input de valor venta */
+        #valorVenta {
+            color: #0044CC !important;
+        }
+
+        /* ============================================
+           VALOR COSTO - BORDE ROJO
+           ============================================ */
+
+        /* Contenedor del valor costo */
+        .price-box .money.cost {
+            border-color: #DC2626 !important;
+            background: #fef2f2 !important;
+        }
+
+        .price-box .money.cost:focus-within {
+            border-color: #B91C1C !important;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15) !important;
+        }
+
+        /* Símbolo S/ en rojo para COSTO */
+        .price-box .money.cost span {
+            color: #DC2626 !important;
+        }
+
+        /* Input de valor costo */
+        #valorCosto {
+            color: #B91C1C !important;
+        }
+
+        /* VALOR VENTA - Borde AZUL ELÉCTRICO */
+        #valorVenta {
+            border: 2px solid #0066FF !important;
+            box-shadow: none !important;
+        }
+
+        #valorVenta:focus {
+            border-color: #0044CC !important;
+            box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.15) !important;
+        }
+
+        /* VALOR COSTO - Borde GRIS (igual que antes) */
+        #valorCosto {
+            border: 1px solid #d50c02db !important;
+            box-shadow: none !important;
+        }
+
+        #valorCosto:focus {
+            border-color: #ec0808 !important;
+            box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.1) !important;
+        }
+
+      
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+</style>
 {% endblock %}
 
 {% block content %}
