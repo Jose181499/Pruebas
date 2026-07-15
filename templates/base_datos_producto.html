@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{% if editando %}Editar Producto{% else %}Nuevo Producto{% endif %} - ERP Multiempresa{% endblock %}
+{% block title %}Base de Datos: Producto - ERP Multiempresa{% endblock %}
 
 
 
@@ -9,14 +9,7 @@
 
 {% block extra_css %}
 <style>
-/* ============================================================
-   ESTILOS COMPACTOS PARA BASE DE DATOS DE PRODUCTOS
-   ============================================================ */
-
-/* ============================================================
-   TOOLBAR COMPACTA - MÁS DELGADA
-   ============================================================ */
-.bd-toolbar-compact {
+    .bd-toolbar-compact {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -776,10 +769,8 @@
 }
 
 .badge-estado.activo { background: #dcfce7; color: #166534; }
-.badge-estado.inactivo { background: #f1f5f9; color: #475569; }
 .badge-estado.bajo_pedido { background: #fef3c7; color: #92400e; }
 .badge-estado.bloqueado { background: #fee2e2; color: #991b1b; }
-.badge-estado.disponible { background: #dbeafe; color: #1e40af; }
 
 .grid-info-ver .info-value .precio-venta {
     color: #0066FF;
@@ -849,6 +840,8 @@
 .bd-table tbody td {
     border-right: 1px solid #ef4444 !important;
     padding: 6px 10px;
+
+    box-shadow: inset 0 -1px 0 #d1d5db;
 }
 
 .bd-table tbody td:last-child {
@@ -915,7 +908,6 @@
 {% endblock %}
 
 {% block content %}
-
 <div class="page-head">
     <div>
         <h1>Base de datos: Producto</h1>
@@ -997,9 +989,7 @@
         <select id="bdEstadoFilter">
             <option value="">Estado</option>
             <option value="activo">🟢 Activo</option>
-            <option value="inactivo">⚪ Inactivo</option>
             <option value="bajo_pedido">🟠 Bajo pedido</option>
-            <option value="disponible">🔵 Disponible</option>
             <option value="bloqueado">🔴 Bloqueado</option>
         </select>
     </div>
@@ -1114,8 +1104,10 @@
         </div>
     </div>
 </div>
-
 {% endblock %}
+
+
+
 
 
 {% block extra_js %}
@@ -1401,9 +1393,7 @@ function renderModalProducto(p) {
         var estadoLower = p.estado.toLowerCase();
         var estadoMap = {
             'activo': 'Activo',
-            'inactivo': 'Inactivo',
             'bajo_pedido': 'Bajo pedido',
-            'disponible': 'Disponible',
             'bloqueado': 'Bloqueado'
         };
         estadoLabel = estadoMap[estadoLower] || p.estado.charAt(0).toUpperCase() + p.estado.slice(1).toLowerCase();
@@ -1630,19 +1620,16 @@ window.bdRenderProductos = function(data) {
         
         var estadoClass = 'st-active';
         var estado = (p.estado || 'activo').toLowerCase();
-        if (estado === 'inactivo') estadoClass = 'st-inactive';
-        else if (estado === 'bajo_pedido') estadoClass = 'st-pending';
+        if (estado === 'bajo_pedido') estadoClass = 'st-pending';
         else if (estado === 'bloqueado') estadoClass = 'st-blocked';
-        else if (estado === 'disponible') estadoClass = 'st-available';
+
         
         var estadoMostrado = 'Activo';
         if (p.estado) {
             var estadoLower = p.estado.toLowerCase();
             var estadoMap = {
                 'activo': 'Activo',
-                'inactivo': 'Inactivo',
                 'bajo_pedido': 'Bajo pedido',
-                'disponible': 'Disponible',
                 'bloqueado': 'Bloqueado'
             };
             estadoMostrado = estadoMap[estadoLower] || p.estado.charAt(0).toUpperCase() + p.estado.slice(1).toLowerCase();

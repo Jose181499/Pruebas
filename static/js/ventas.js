@@ -6722,18 +6722,7 @@ function clearPedidoModalSAP() {
         }
     };
     
-    // Función auxiliar para establecer valor editable
-   function setEditableValue(id, value) {
-    const el = document.getElementById(id);
-    if (el) {
-        el.value = value !== undefined && value !== null ? value : '';
-        el.readOnly = false;
-        el.style.background = '#FFFFFF';
-        el.style.color = '#0F172A';
-        el.style.cursor = 'text';
-    }
-}
-    
+
     // Fecha actual
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -6920,6 +6909,16 @@ function clearPedidoModalSAP() {
     console.log('✅ Modal de PC restaurado a estado inicial');
 }
 
+function setEditableValue(id, value) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.value = value !== undefined && value !== null ? value : '';
+        el.readOnly = false;
+        el.style.background = '#FFFFFF';
+        el.style.color = '#0F172A';
+        el.style.cursor = 'text';
+    }
+}
 
 // ============================================================
 // FUNCIÓN PARA GUARDAR PC (ACTUALIZADA)
