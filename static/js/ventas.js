@@ -3031,10 +3031,15 @@ function updateQuoteStatusBar(estado) {
 
 // Función para actualizar el estado de validación
 function updateValidationStatus() {
+    console.log('🔄 Actualizando estado de validación...');
+    
     const validations = [
         'vPrecio', 'vProducto', 'vEntrega', 
         'vTransporte', 'vCantidad', 'vMoneda', 'vVigencia'
     ];
+    
+    let allValid = true;
+    let anyInvalid = false;
     
     validations.forEach(id => {
         const checkbox = document.getElementById(id);
@@ -3047,15 +3052,17 @@ function updateValidationStatus() {
             } else {
                 label.textContent = '❌ No válido';
                 label.style.color = '#DC2626';
+                allValid = false;
+                anyInvalid = true;
             }
         }
     });
     
-    // Actualizar semáforo si existe
-    if (typeof updateValidationSemaphore === 'function') {
-        updateValidationSemaphore();
-    }
+    // Actualizar semáforo
+    updateValidationSemaphore(allValid, anyInvalid);
 }
+
+
 
 // Función para obtener valores de validación (para usar al guardar)
 function getValidationValues() {
@@ -5181,6 +5188,12 @@ function openPedidoCompraModalSAP(mode = 'cot', id = null) {
         // Cargar datos del PC
         cargarPCParaEditar(id);
         modal.classList.add('show');
+        
+        // 🔽 Inicializar switches después de cargar los datos
+        setTimeout(() => {
+            inicializarSwitchesValidacion();
+        }, 300);
+        
         return;
     }
     
@@ -5240,6 +5253,11 @@ function openPedidoCompraModalSAP(mode = 'cot', id = null) {
     // Mostrar modal
     modal.classList.add('show');
     console.log('✅ Modal PC abierto correctamente');
+    
+    // 🔽 Inicializar switches después de un momento
+    setTimeout(() => {
+        inicializarSwitchesValidacion();
+    }, 200);
 }
 
 
@@ -5480,6 +5498,26 @@ async function cargarPCParaEditar(id) {
             }
         }
         
+        function actualizarFaltanteDesdeInput(input) {
+    const row = input.closest('tr');
+    if (!row) return;
+    
+    const inputs = row.querySelectorAll('input');
+    // Índices: [0]=código, [1]=descripción, [2]=marca, [3]=modelo
+    // [4]=cant_cot, [5]=cant_pc, [6]=precio_cot, [7]=precio_pc, [8]=stock
+    const cantidadPC = Number(inputs[5]?.value || 0);
+    const stock = Number(inputs[8]?.value || 0);
+    const faltanteCell = row.querySelector('td:nth-child(11)'); // 11va columna
+    const faltante = Math.max(cantidadPC - stock, 0);
+    
+    if (faltanteCell) {
+        faltanteCell.textContent = faltante;
+        faltanteCell.style.color = faltante > 0 ? '#DC2626' : '#16A34A';
+    }
+}
+
+
+
         // ============================================================
         // MOSTRAR ESTADO ACTUAL
         // ============================================================
@@ -6669,7 +6707,6 @@ function actualizarPrecioPCSAP(input, index) {
     if (value < 0) input.value = 0;
 }
 
-
 function clearPedidoModalSAP() {
     console.log('🧹 Limpiando modal de PC a estado inicial...');
     
@@ -6799,21 +6836,83 @@ function clearPedidoModalSAP() {
     }
     
     // ============================================================
-    // 10. RESETEAR VALIDACIONES
+    // 10. RESETEAR SWITCHES DE VALIDACIÓN A "Sí"
     // ============================================================
-    const validaciones = ['vPrecio', 'vCantidad', 'vProducto', 'vEntrega', 'vMoneda', 'vTransporte', 'vVigencia', 'vMargen'];
-    validaciones.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.value = 'Sí';
-            el.disabled = false;
-            el.style.background = '#FFFFFF';
-            el.style.cursor = 'pointer';
+    const validations = ['vPrecio', 'vProducto', 'vEntrega', 'vTransporte', 'vCantidad', 'vMoneda', 'vVigencia'];
+    validations.forEach(id => {
+        const checkbox = document.getElementById(id);
+        if (checkbox) {
+            checkbox.checked = true;
+            const label = document.getElementById(id + 'Label');
+            if (label) {
+                label.textContent = '✅ Válido';
+                label.style.color = '#16A34A';
+            }
         }
     });
     
     // ============================================================
-    // 11. RESETEAR VARIABLES GLOBALES
+    // 11. RESETEAR SEMÁFORO (estado inicial)
+    // ============================================================
+    const semaphore = document.getElementById('validationSemaphore');
+    if (semaphore) {
+        semaphore.style.display = 'block';
+        semaphore.style.borderColor = '#F59E0B';
+        semaphore.style.background = '#FFFBEB';
+    }
+    
+    const icon = document.getElementById('validationIcon');
+    if (icon) icon.textContent = '⏳';
+    
+    const titleSemaphore = document.getElementById('validationTitle');
+    if (titleSemaphore) {
+        titleSemaphore.textContent = 'Validando...';
+        titleSemaphore.style.color = '#92400E';
+    }
+    
+    const subtitleSemaphore = document.getElementById('validationSubtitle');
+    if (subtitleSemaphore) {
+        subtitleSemaphore.textContent = 'Revisando los puntos de validación';
+        subtitleSemaphore.style.color = '#92400E';
+    }
+    
+    const chips = document.getElementById('validationChips');
+    if (chips) chips.innerHTML = '';
+    
+    // ============================================================
+    // 12. RESETEAR RESULTADO DE VALIDACIÓN
+    // ============================================================
+    const validationResult = document.getElementById('validationResult');
+    if (validationResult) {
+        validationResult.innerHTML = 'ℹ️ Si algún punto es <b>"No"</b>, el PC quedará <b>observado y bloqueado</b>.';
+        validationResult.style.background = '#EFF6FF';
+        validationResult.style.color = '#1E3A8A';
+        validationResult.style.border = '1px solid #BFDBFE';
+    }
+    
+    // ============================================================
+    // 13. RESETEAR ÍCONOS DE VALIDACIÓN ⚪
+    // ============================================================
+    const iconMap = {
+        'vPrecio': 'vPrecioIcon',
+        'vCantidad': 'vCantidadIcon',
+        'vProducto': 'vProductoIcon',
+        'vEntrega': 'vEntregaIcon',
+        'vMoneda': 'vMonedaIcon',
+        'vTransporte': 'vTransporteIcon',
+        'vVigencia': 'vVigenciaIcon'
+    };
+    
+    Object.keys(iconMap).forEach(id => {
+        const iconEl = document.getElementById(iconMap[id]);
+        if (iconEl) {
+            iconEl.textContent = '⚪';
+            iconEl.style.color = '';
+        }
+    });
+    
+    // ============================================================
+    // 14. RESETEAR VARIABLES GLOBALES
     // ============================================================
     cotizacionSeleccionada = null;
     modalMode = 'cot';
@@ -7445,34 +7544,118 @@ function updateValidationIcon(elementId, isValid) {
 
 
 // Agregar esta función
-function updateValidationSemaphore() {
+
+function updateValidationSemaphore(allValid, anyInvalid) {
     const semaphore = document.getElementById('validationSemaphore');
-    if (!semaphore) return;
+    if (!semaphore) {
+        console.warn('⚠️ Semáforo no encontrado');
+        return;
+    }
     
-    const allValid = Object.values(validationStatus).every(v => v === true);
-    const anyInvalid = Object.values(validationStatus).some(v => v === false);
+    const icon = document.getElementById('validationIcon');
+    const title = document.getElementById('validationTitle');
+    const subtitle = document.getElementById('validationSubtitle');
+    const chips = document.getElementById('validationChips');
+    
+    console.log('🔴 Actualizando semáforo:', { allValid, anyInvalid });
     
     semaphore.style.display = 'block';
     
     if (allValid) {
         semaphore.style.borderColor = '#16A34A';
         semaphore.style.background = '#F0FDF4';
-        document.getElementById('validationIcon').textContent = '✅';
-        document.getElementById('validationTitle').textContent = '¡PC conforme!';
-        document.getElementById('validationTitle').style.color = '#166534';
+        if (icon) icon.textContent = '✅';
+        if (title) {
+            title.textContent = '¡PC conforme!';
+            title.style.color = '#166534';
+        }
+        if (subtitle) {
+            subtitle.textContent = 'Todos los puntos de validación están correctos';
+            subtitle.style.color = '#166534';
+        }
     } else if (anyInvalid) {
         semaphore.style.borderColor = '#DC2626';
         semaphore.style.background = '#FEF2F2';
-        document.getElementById('validationIcon').textContent = '⚠️';
-        document.getElementById('validationTitle').textContent = 'PC observado';
-        document.getElementById('validationTitle').style.color = '#991B1B';
+        if (icon) icon.textContent = '⚠️';
+        if (title) {
+            title.textContent = 'PC observado';
+            title.style.color = '#991B1B';
+        }
+        if (subtitle) {
+            subtitle.textContent = 'Hay puntos marcados como "No" - Revisar antes de guardar';
+            subtitle.style.color = '#991B1B';
+        }
     } else {
         semaphore.style.borderColor = '#F59E0B';
         semaphore.style.background = '#FFFBEB';
-        document.getElementById('validationIcon').textContent = '⏳';
-        document.getElementById('validationTitle').textContent = 'Validando...';
-        document.getElementById('validationTitle').style.color = '#92400E';
+        if (icon) icon.textContent = '⏳';
+        if (title) {
+            title.textContent = 'Validando...';
+            title.style.color = '#92400E';
+        }
+        if (subtitle) {
+            subtitle.textContent = 'Revisando los puntos de validación';
+            subtitle.style.color = '#92400E';
+        }
     }
+    
+    // Actualizar chips
+    if (chips) {
+        const validations = [
+            { id: 'vPrecio', label: '💰 Precio' },
+            { id: 'vProducto', label: '📦 Producto' },
+            { id: 'vEntrega', label: '📍 Lugar Entrega' },
+            { id: 'vTransporte', label: '🚚 Transporte' },
+            { id: 'vCantidad', label: '🔢 Cantidad' },
+            { id: 'vMoneda', label: '💵 Moneda' },
+            { id: 'vVigencia', label: '📅 Vigencia' }
+        ];
+        
+        chips.innerHTML = validations.map(({ id, label }) => {
+            const checkbox = document.getElementById(id);
+            const ok = checkbox ? checkbox.checked : true;
+            const color = ok ? '#10B981' : '#EF4444';
+            const bgColor = ok ? '#10B98120' : '#EF444420';
+            const emoji = ok ? '✅' : '❌';
+            return `<span style="background:${bgColor}; color:${color}; padding:2px 8px; border-radius:10px; font-size:8px; font-weight:800;">${emoji} ${label}</span>`;
+        }).join('');
+    }
+}
+
+function inicializarSwitchesValidacion() {
+    console.log('🔄 Inicializando switches de validación...');
+    
+    const validations = [
+        'vPrecio', 'vProducto', 'vEntrega', 
+        'vTransporte', 'vCantidad', 'vMoneda', 'vVigencia'
+    ];
+    
+    validations.forEach(id => {
+        const checkbox = document.getElementById(id);
+        if (checkbox) {
+            // Remover listeners anteriores para evitar duplicados
+            checkbox.removeEventListener('change', updateValidationStatus);
+            checkbox.addEventListener('change', updateValidationStatus);
+            
+            // Actualizar el label inicial
+            const label = document.getElementById(id + 'Label');
+            if (label) {
+                if (checkbox.checked) {
+                    label.textContent = '✅ Válido';
+                    label.style.color = '#16A34A';
+                } else {
+                    label.textContent = '❌ No válido';
+                    label.style.color = '#DC2626';
+                }
+            }
+        }
+    });
+    
+    // Actualizar estado inicial del semáforo
+    setTimeout(() => {
+        updateValidationStatus();
+        console.log('✅ Switches de validación inicializados');
+    }, 100);
 }
 
 
