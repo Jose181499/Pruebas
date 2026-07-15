@@ -5218,7 +5218,7 @@ function openPedidoCompraModalSAP(mode = 'cot', id = null) {
     if (note) {
         if (mode === 'cot') {
             note.className = 'mini-note';
-            note.textContent = '✅ Busca una cotización para cargar sus datos. Todos los datos de la cotización son de solo lectura.';
+            note.textContent = '';
         } else {
             note.className = 'danger-note';
             note.textContent = '⚠️ Modo directo: no hay cotización asociada. Todos los datos deben ingresarse manualmente.';
@@ -6723,16 +6723,16 @@ function clearPedidoModalSAP() {
     };
     
     // Función auxiliar para establecer valor editable
-    const setEditableValue = (id, value) => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.value = value !== undefined ? value : '';
-            el.readOnly = false;
-            el.style.background = '#FFFFFF';
-            el.style.color = '#0F172A';
-            el.style.cursor = 'text';
-        }
-    };
+   function setEditableValue(id, value) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.value = value !== undefined && value !== null ? value : '';
+        el.readOnly = false;
+        el.style.background = '#FFFFFF';
+        el.style.color = '#0F172A';
+        el.style.cursor = 'text';
+    }
+}
     
     // Fecha actual
     const now = new Date();
@@ -7931,6 +7931,7 @@ window.cargarProductosMaestros = cargarProductosMaestros;
 window.cargarClientesMaestros = cargarClientesMaestros;
 window.cargarDatalistProductos = cargarDatalistProductos;
 window.productTableHtml = productTableHtml;
+window.setEditableValue = setEditableValue;
 
 // Funciones de modal de éxito
 window.showSuccessModal = showSuccessModal;
