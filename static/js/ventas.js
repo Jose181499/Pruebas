@@ -1452,7 +1452,7 @@ async function savePedidoCompra(estado) {
             fecha: document.getElementById('pcFecha')?.value || '',
             contacto: document.getElementById('pcContacto')?.value || '',
             moneda: document.getElementById('pcMoneda')?.value || 'Soles (S/)',
-            condicion_pago: document.getElementById('pcCondicion')?.value || 'Contado',
+            condicion_pago: getPcCondicionValue(),
             lugar_entrega: document.getElementById('pcEntrega')?.value || '',
             observaciones: document.getElementById('pcObs')?.value || '',
             validaciones: validaciones,
@@ -6917,6 +6917,80 @@ function setEditableValue(id, value) {
         el.style.background = '#FFFFFF';
         el.style.color = '#0F172A';
         el.style.cursor = 'text';
+    }
+}
+
+
+/**
+ * Muestra/oculta el campo personalizado para Condición de Pago
+ */
+function toggleCustomPcCondicion() {
+    const select = document.getElementById('pcCondicion');
+    const customInput = document.getElementById('pcCondicionCustom');
+    
+    if (!select || !customInput) return;
+    
+    if (select.value === 'Personalizado') {
+        customInput.style.display = 'block';
+        customInput.focus();
+    } else {
+        customInput.style.display = 'none';
+        customInput.value = '';
+    }
+}
+
+/**
+ * Obtiene el valor de la condición de pago (incluyendo personalizado)
+ */
+function getPcCondicionValue() {
+    const select = document.getElementById('pcCondicion');
+    const customInput = document.getElementById('pcCondicionCustom');
+    
+    if (!select) return 'Contado';
+    
+    if (select.value === 'Personalizado' && customInput) {
+        return customInput.value.trim() || 'Personalizado';
+    }
+    
+    return select.value;
+}
+
+/**
+ * Establece el valor de la condición de pago (soporta personalizado)
+ */
+function setPcCondicionValue(value) {
+    const select = document.getElementById('pcCondicion');
+    const customInput = document.getElementById('pcCondicionCustom');
+    
+    if (!select) return;
+    
+    if (!value) {
+        select.value = 'Contado';
+        if (customInput) {
+            customInput.style.display = 'none';
+            customInput.value = '';
+        }
+        return;
+    }
+    
+    // Verificar si el valor está en las opciones del select
+    let found = false;
+    for (let opt of select.options) {
+        if (opt.value === value) {
+            opt.selected = true;
+            found = true;
+            break;
+        }
+    }
+    
+    if (!found && customInput) {
+        // Si no está en las opciones, seleccionar "Personalizado"
+        select.value = 'Personalizado';
+        customInput.value = value;
+        customInput.style.display = 'block';
+    } else if (customInput) {
+        customInput.style.display = 'none';
+        customInput.value = '';
     }
 }
 
