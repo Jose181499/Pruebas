@@ -4317,6 +4317,7 @@ function calcQuote() {
     set('sumTiempoEntrega', tiempoEntrega);
 }
 
+
 async function loadClient() {
     const rucInput = document.getElementById('fRucSearch');
     const ruc = rucInput?.value?.replace(/\D/g, '').trim() || '';
@@ -4338,87 +4339,77 @@ async function loadClient() {
     }
     
     try {
-        // ============================================================
-        // PASO 1: BUSCAR PRIMERO EN LA BASE DE DATOS
-        // ============================================================
         console.log('🔍 Buscando cliente en base de datos por RUC:', ruc);
         
-        // Usar el endpoint de maestros que ya existe
+        // Buscar en la base de datos
         const bdResponse = await fetch(`/maestros/api/clientes/buscar?q=${ruc}`);
         const bdData = await bdResponse.json();
         
         console.log('📦 Respuesta BD:', bdData);
         
-       if (bdData.success && bdData.data && bdData.data.length > 0) {
-    const cliente = bdData.data[0];
-    
-    // Llenar el formulario con los datos de la BD
-    document.getElementById('fRuc').value = cliente.ruc || ruc;
-    document.getElementById('fRazon').value = cliente.razon_social || '';
-    document.getElementById('fComercial').value = cliente.nombre_comercial || cliente.razon_social || '';
-    document.getElementById('fCodCliente').value = cliente.codigo_cliente || 'PENDIENTE';
-    document.getElementById('fDireccion').value = cliente.direccion_fiscal || '';
-    document.getElementById('fContacto').value = cliente.nombre_contacto || '';
-    document.getElementById('fTelefono').value = cliente.telefono_contacto || '';
-    document.getElementById('fCorreo').value = cliente.email_contacto || '';
-    
-    // 🔽 Condición de pago
-    if (cliente.condicion_pago && document.getElementById('fCondicion')) {
-        setFieldValue('fCondicion', 'fCondicionCustom', cliente.condicion_pago);
-    }
-    
-    // 🔽 Dirección de entrega desde puntos de entrega
-    let direccionEntrega = '';
-    if (cliente.puntos_entrega && cliente.puntos_entrega.length > 0) {
-        const principal = cliente.puntos_entrega.find(p => p.principal === true);
-        if (principal) {
-            direccionEntrega = principal.direccion || '';
-            if (principal.condicion_pago && document.getElementById('fCondicion')) {
-                setFieldValue('fCondicion', 'fCondicionCustom', principal.condicion_pago);
-            }
-        } else {
-            const primero = cliente.puntos_entrega[0];
-            direccionEntrega = primero.direccion || '';
-            if (primero.condicion_pago && document.getElementById('fCondicion')) {
-                setFieldValue('fCondicion', 'fCondicionCustom', primero.condicion_pago);
-            }
-        }
-    }
-    
-    if (!direccionEntrega && cliente.direccion_fiscal) {
-        direccionEntrega = cliente.direccion_fiscal;
-    }
-    
-    if (direccionEntrega && document.getElementById('fDireccionEntrega')) {
-        setFieldValue('fDireccionEntrega', 'fDireccionEntregaCustom', direccionEntrega);
-    }
+        if (bdData.success && bdData.data && bdData.data.length > 0) {
+            const cliente = bdData.data[0];
             
-            // Guardar referencia del cliente CON ID para futuras operaciones
-            window._clienteConsultado = {
-                id: cliente.id,
-                ruc: cliente.ruc || ruc,
-                razon_social: cliente.razon_social || '',
-                nombre_comercial: cliente.nombre_comercial || cliente.razon_social || '',
-                direccion: cliente.direccion_fiscal || '',
-                contacto: cliente.nombre_contacto || '',
-                telefono: cliente.telefono_contacto || '',
-                email: cliente.email_contacto || '',
-                codigo_cliente: cliente.codigo_cliente || 'PENDIENTE',
-                condicion_pago: cliente.condicion_pago || '',
-                tiempo_entrega: cliente.tiempo_entrega || '',
-                direccion_entrega: direccionEntrega || '',
-                origen: 'base_datos'
-            };
+            // ============================================================
+            // LLENAR SOLO LOS CAMPOS QUE EXISTEN EN EL NUEVO HTML
+            // ============================================================
             
-            // Mostrar mensaje de éxito con información adicional
+            // 1. DATOS DEL CLIENTE
+            const fRuc = document.getElementById('fRuc');
+            const fRazon = document.getElementById('fRazon');
+            const fDireccion = document.getElementById('fDireccion');
+            const fContacto = document.getElementById('fContacto');
+            const fTelefono = document.getElementById('fTelefono');
+            const fReq = document.getElementById('fReq');
+            const fFuente = document.getElementById('fFuente');
+            
+            if (fRuc) fRuc.value = cliente.ruc || ruc;
+            if (fRazon) fRazon.value = cliente.razon_social || '';
+            if (fDireccion) fDireccion.value = cliente.direccion_fiscal || '';
+            if (fContacto) fContacto.value = cliente.nombre_contacto || '';
+            if (fTelefono) fTelefono.value = cliente.telefono_contacto || '';
+            
+            // 2. CONDICIONES COMERCIALES
+            const fVendedor = document.getElementById('fVendedor');
+            const fEmailAsesor = document.getElementById('fEmailAsesor');
+            const fTelefonoAsesor = document.getElementById('fTelefonoAsesor');
+            const fMoneda = document.getElementById('fMoneda');
+            const fCondicion = document.getElementById('fCondicion');
+            const fTiempo = document.getElementById('fTiempo');
+            const fValidez = document.getElementById('fValidez');
+            const fDireccionEntrega = document.getElementById('fDireccionEntrega');
+            
+            if (fVendedor) fVendedor.value = CONFIG.asesorDefault;
+            if (fEmailAsesor) fEmailAsesor.value = CONFIG.emailAsesorDefault;
+            if (fTelefonoAsesor) fTelefonoAsesor.value = CONFIG.telefonoAsesorDefault;
+            
+            if (cliente.condicion_pago && fCondicion) {
+                setFieldValue('fCondicion', 'fCondicionCustom', cliente.condicion_pago);
+            }
+            
+            // Dirección de entrega desde puntos de entrega
+            let direccionEntrega = '';
+            if (cliente.puntos_entrega && cliente.puntos_entrega.length > 0) {
+                const principal = cliente.puntos_entrega.find(p => p.principal === true);
+                if (principal) {
+                    direccionEntrega = principal.direccion || '';
+                } else {
+                    direccionEntrega = cliente.puntos_entrega[0].direccion || '';
+                }
+            }
+            if (!direccionEntrega && cliente.direccion_fiscal) {
+                direccionEntrega = cliente.direccion_fiscal;
+            }
+            if (direccionEntrega && fDireccionEntrega) {
+                setFieldValue('fDireccionEntrega', 'fDireccionEntregaCustom', direccionEntrega);
+            }
+            
+            // Mostrar mensaje de éxito
             const confirmBox = document.getElementById('clientConfirmBox');
             if (confirmBox) {
-                let mensaje = `✅ Cliente encontrado en sistema | Código: ${cliente.codigo_cliente || 'PENDIENTE'}`;
-                if (cliente.condicion_pago) {
-                    mensaje += ` | Pago: ${cliente.condicion_pago}`;
-                }
-                if (direccionEntrega) {
-                    mensaje += ` | Entrega: ${direccionEntrega.substring(0, 30)}${direccionEntrega.length > 30 ? '...' : ''}`;
+                let mensaje = `✅ Cliente encontrado en sistema`;
+                if (cliente.codigo_cliente) {
+                    mensaje += ` | Código: ${cliente.codigo_cliente}`;
                 }
                 confirmBox.textContent = mensaje;
                 confirmBox.className = 'show existente';
@@ -4426,11 +4417,11 @@ async function loadClient() {
             }
             
             showToast(`✅ Cliente encontrado en sistema: ${cliente.razon_social}`, 'success');
-            return;  // Salir de la función, no consultar SUNAT
+            return;
         }
         
         // ============================================================
-        // PASO 2: SI NO ESTÁ EN BD, CONSULTAR SUNAT
+        // SI NO ESTÁ EN BD, CONSULTAR SUNAT
         // ============================================================
         console.log('🌞 Cliente no encontrado en BD, consultando SUNAT...');
         
@@ -4440,57 +4431,23 @@ async function loadClient() {
         console.log('📦 Respuesta SUNAT:', sunatData);
         
         if (sunatData.success) {
+            // Llenar con datos de SUNAT
+            const fRuc = document.getElementById('fRuc');
+            const fRazon = document.getElementById('fRazon');
+            const fDireccion = document.getElementById('fDireccion');
+            
+            if (fRuc) fRuc.value = sunatData.ruc || ruc;
+            if (fRazon) fRazon.value = sunatData.razon_social || '';
+            if (fDireccion) fDireccion.value = sunatData.direccion || '';
+            
             const confirmBox = document.getElementById('clientConfirmBox');
-            
-            // Llenar el formulario con los datos de SUNAT
-            document.getElementById('fRuc').value = sunatData.ruc || ruc;
-            document.getElementById('fRazon').value = sunatData.razon_social || '';
-            document.getElementById('fComercial').value = sunatData.nombre_comercial || sunatData.razon_social || '';
-            document.getElementById('fCodCliente').value = 'PENDIENTE'; // Se generará al guardar
-            document.getElementById('fDireccion').value = sunatData.direccion || '';
-            document.getElementById('fContacto').value = sunatData.contacto || '';
-            document.getElementById('fTelefono').value = sunatData.telefono || '';
-            document.getElementById('fCorreo').value = sunatData.email || '';
-            
-            // Guardar referencia del cliente de SUNAT (sin ID porque es nuevo)
-            window._clienteConsultado = {
-                id: null,  // No tiene ID porque es nuevo
-                ruc: sunatData.ruc || ruc,
-                razon_social: sunatData.razon_social || '',
-                nombre_comercial: sunatData.nombre_comercial || sunatData.razon_social || '',
-                direccion: sunatData.direccion || '',
-                contacto: sunatData.contacto || '',
-                telefono: sunatData.telefono || '',
-                email: sunatData.email || '',
-                codigo_cliente: 'PENDIENTE',
-                origen: 'sunat'
-            };
-            
-            // Mostrar mensaje según estado
-            if (sunatData.estado) {
-                const estadoMap = {
-                    'ACTIVO': '✅ Activo',
-                    'BAJA': '❌ Inactivo',
-                    'SUSPENDIDO': '⚠️ Observado',
-                    'BAJA DE OFICIO': '❌ Inactivo'
-                };
-                const estadoDisplay = estadoMap[sunatData.estado.toUpperCase()] || sunatData.estado;
-                
-                if (confirmBox) {
-                    confirmBox.textContent = `🌞 Datos consultados en SUNAT | Estado: ${estadoDisplay}`;
-                    confirmBox.className = 'show nuevo';
-                    setTimeout(() => { confirmBox.className = ''; }, 5000);
-                }
-            } else {
-                if (confirmBox) {
-                    confirmBox.textContent = '🌞 Datos consultados en SUNAT';
-                    confirmBox.className = 'show nuevo';
-                    setTimeout(() => { confirmBox.className = ''; }, 5000);
-                }
+            if (confirmBox) {
+                confirmBox.textContent = '🌞 Datos consultados en SUNAT';
+                confirmBox.className = 'show nuevo';
+                setTimeout(() => { confirmBox.className = ''; }, 5000);
             }
             
             showToast('🌞 Datos cargados desde SUNAT', 'info');
-            
         } else {
             showToast('❌ ' + (sunatData.error || 'Error al consultar SUNAT'), 'error');
             const confirmBox = document.getElementById('clientConfirmBox');
@@ -4511,7 +4468,6 @@ async function loadClient() {
         }
     }
 }
-
 let __rucAutoTimer = null;
 
 function autoLoadClientByRuc(value) {
