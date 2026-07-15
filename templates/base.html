@@ -437,6 +437,22 @@
                 </div>
             </main>
         </div>
+        <!-- MODAL DE ÉXITO - PRODUCTO GUARDADO -->
+        <div class="modal-overlay" id="modalExito">
+            <div class="modal-box modal-exito">
+                <div class="modal-exito-icon">✅</div>
+                <h2 class="modal-exito-title">¡Producto guardado!</h2>
+                <p class="modal-exito-message" id="modalExitoMensaje">El producto se ha registrado exitosamente.</p>
+                <div class="modal-exito-detail">
+                    <span class="modal-exito-label">Código generado</span>
+                    <span class="modal-exito-codigo" id="modalExitoCodigo">PRD-0001</span>
+                </div>
+                <div class="modal-exito-actions">
+                    <button class="btn btn-outline" onclick="cerrarModalExito()">Ver producto</button>
+                    <button class="btn primary" onclick="cerrarModalExitoYLimpiar()">Continuar</button>
+                </div>
+            </div>
+        </div>
         
 
         <!-- MODAL DE PERMISOS -->
@@ -649,6 +665,233 @@
                 }
             });
         }
+
+
+
+        //=============================================================
+        // Funciones del Modal Exito
+        //=============================================================
+        async function generarCodigoProducto() {
+            try {
+                const response = await fetch('/productos/api/productos/ultimo-codigo');
+                const data = await response.json();
+                if (data.success) {
+                    const codigoEl = document.getElementById('codigoProducto');
+                    const generadoEl = document.getElementById('codigoGenerado');
+                    if (codigoEl) codigoEl.textContent = data.data.codigo;
+                    if (generadoEl) generadoEl.value = data.data.codigo;
+                }
+            } catch (e) {
+                console.error('❌ Error generando código:', e);
+                // ✅ FALLBACK CORREGIDO - usar número secuencial
+                fetch('/productos/api/productos/ultimo-codigo')
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            const codigoEl = document.getElementById('codigoProducto');
+                            const generadoEl = document.getElementById('codigoGenerado');
+                            if (codigoEl) codigoEl.textContent = data.data.codigo;
+                            if (generadoEl) generadoEl.value = data.data.codigo;
+                        }
+                    })
+                    .catch(() => {
+                        // Último recurso: PRD-0001
+                        const codigoEl = document.getElementById('codigoProducto');
+                        const generadoEl = document.getElementById('codigoGenerado');
+                        if (codigoEl) codigoEl.textContent = 'PRD-0001';
+                        if (generadoEl) generadoEl.value = 'PRD-0001';
+                    });
+            }
+        }
+
+        function mostrarModalExito(codigo) {
+            const modal = document.getElementById('modalExito');
+            const codigoEl = document.getElementById('modalExitoCodigo');
+            
+            if (codigoEl) codigoEl.textContent = codigo || 'PRD-0001';
+            if (modal) modal.classList.add('show');
+            
+            // Cerrar automáticamente después de 5 segundos
+            setTimeout(() => {
+                cerrarModalExito();
+            }, 6000);
+        }
+
+        function cerrarModalExito() {
+            const modal = document.getElementById('modalExito');
+            if (modal) modal.classList.remove('show');
+            
+            // Redirigir a base de datos
+            window.location.href = '/productos/base-datos';
+        }
+
+        function cerrarModalExitoYLimpiar() {
+            const modal = document.getElementById('modalExito');
+            if (modal) modal.classList.remove('show');
+            
+            // Limpiar formulario sin preguntar
+            limpiarFormularioSinConfirmar();
+            generarCodigoProducto();
+
+            mostrarNotificacion('info', 'Formulario limpiado', 'Todos los campos han sido reiniciados.');
+        }
+
+        function limpiarFormularioSinConfirmar() {
+            document.querySelectorAll('.form-card input:not([type="hidden"]), .form-card textarea, .form-card select').forEach(el => {
+                if (el.type === 'checkbox') {
+                    el.checked = el.value === 'venta';
+                } else if (el.tagName === 'SELECT') {
+                    el.selectedIndex = 0;
+                } else if (el.type !== 'file') {
+                    el.value = '';
+                }
+            });
+            
+            // Resetear valores
+            const valorVenta = document.getElementById('valorVenta');
+            const valorCosto = document.getElementById('valorCosto');
+            const estadoProducto = document.getElementById('estadoProducto');
+            const fotoProducto = document.getElementById('fotoProducto');
+            const previewContainer = document.getElementById('previewContainer');
+            const fileBadge = document.getElementById('fileBadge');
+            const uploadArea = document.getElementById('uploadArea');
+            
+            if (valorVenta) valorVenta.value = '0.00';
+            if (valorCosto) valorCosto.value = '0.00';
+            if (estadoProducto) estadoProducto.value = 'activo';
+            if (fotoProducto) fotoProducto.value = '';
+            if (previewContainer) previewContainer.innerHTML = '';
+            if (fileBadge) fileBadge.innerHTML = '<i class="bi bi-paperclip"></i> Ningún archivo';
+            if (uploadArea) uploadArea.classList.remove('has-image');
+            
+            calcularMargen();
+            actualizarEstadoChips();
+        }
+        
+        // ============================================================
+        // FUNCIONES PARA NUEVO PRODUCTO
+        // ============================================================
+
+        // En base.html, reemplaza la función generarCodigoProducto():
+        async function generarCodigoProducto() {
+            try {
+                const response = await fetch('/productos/api/productos/ultimo-codigo');
+                const data = await response.json();
+                if (data.success) {
+                    const codigoEl = document.getElementById('codigoProducto');
+                    const generadoEl = document.getElementById('codigoGenerado');
+                    if (codigoEl) codigoEl.textContent = data.data.codigo;
+                    if (generadoEl) generadoEl.value = data.data.codigo;
+                }
+            } catch (e) {
+                console.error('❌ Error generando código:', e);
+                // ✅ FALLBACK CORREGIDO - usar número secuencial
+                fetch('/productos/api/productos/ultimo-codigo')
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            const codigoEl = document.getElementById('codigoProducto');
+                            const generadoEl = document.getElementById('codigoGenerado');
+                            if (codigoEl) codigoEl.textContent = data.data.codigo;
+                            if (generadoEl) generadoEl.value = data.data.codigo;
+                        }
+                    })
+                    .catch(() => {
+                        // Último recurso: PRD-0001
+                        const codigoEl = document.getElementById('codigoProducto');
+                        const generadoEl = document.getElementById('codigoGenerado');
+                        if (codigoEl) codigoEl.textContent = 'PRD-0001';
+                        if (generadoEl) generadoEl.value = 'PRD-0001';
+                    });
+            }
+        }
+
+        // Calcular margen
+        window.calcularMargen = function() {
+            const venta = parseFloat(document.getElementById('valorVenta')?.value || 0);
+            const costo = parseFloat(document.getElementById('valorCosto')?.value || 0);
+            const margen = venta - costo;
+            const pct = venta > 0 ? (margen / venta) * 100 : 0;
+            
+            const pctEl = document.getElementById('margenPct');
+            const solEl = document.getElementById('margenSol');
+            
+            if (pctEl) {
+                pctEl.textContent = pct.toFixed(2) + '%';
+                pctEl.className = pct >= 0 ? 'positive' : 'negative';
+            }
+            if (solEl) {
+                solEl.textContent = 'S/ ' + margen.toFixed(2);
+                solEl.className = margen >= 0 ? 'positive' : 'negative';
+            }
+        };
+
+        // Actualizar chips de estado
+        window.actualizarEstadoChips = function() {
+            const val = document.getElementById('estadoProducto')?.value;
+            if (!val) return;
+            
+            const map = {
+                'activo': 'active-state',
+                'inactivo': 'inactive',
+                'bajo_pedido': 'order',
+                'disponible': 'available',
+                'bloqueado': 'blocked'
+            };
+            
+            const cur = map[val] || 'active-state';
+            document.querySelectorAll('.state-chip').forEach(chip => {
+                const isCur = chip.classList.contains(cur);
+                chip.classList.toggle('highlight', isCur);
+                chip.classList.toggle('dim', !isCur);
+            });
+        };
+
+        // Limpiar formulario
+        window.limpiarFormulario = function() {
+            if (!confirm('¿Deseas limpiar el formulario?')) return;
+            
+            document.querySelectorAll('.form-card input:not([type="hidden"]), .form-card textarea, .form-card select').forEach(el => {
+                if (el.type === 'checkbox') {
+                    el.checked = el.value === 'venta';
+                } else if (el.tagName === 'SELECT') {
+                    el.selectedIndex = 0;
+                } else if (el.type !== 'file') {
+                    el.value = '';
+                }
+            });
+            
+            // Resetear valores
+            const valorVenta = document.getElementById('valorVenta');
+            const valorCosto = document.getElementById('valorCosto');
+            const estadoProducto = document.getElementById('estadoProducto');
+            const fotoProducto = document.getElementById('fotoProducto');
+            const previewContainer = document.getElementById('previewContainer');
+            const fileBadge = document.getElementById('fileBadge');
+            const uploadArea = document.getElementById('uploadArea');
+            
+            if (valorVenta) valorVenta.value = '0.00';
+            if (valorCosto) valorCosto.value = '0.00';
+            if (estadoProducto) estadoProducto.value = 'activo';
+            if (fotoProducto) fotoProducto.value = '';
+            if (previewContainer) previewContainer.innerHTML = '';
+            if (fileBadge) fileBadge.innerHTML = '<i class="bi bi-paperclip"></i> Ningún archivo';
+            if (uploadArea) uploadArea.classList.remove('has-image');
+            
+            calcularMargen();
+            actualizarEstadoChips();
+            generarCodigoProducto();
+            
+            mostrarNotificacion('info', 'Formulario limpiado', 'Todos los campos han sido reiniciados.');
+        };
+
+
+
+        //=============================================================
+        // Guardar Producto y Mostral modal Exito
+        //=============================================================
+        
+
 
         // ============================================================
         // RE-ACTUALIZAR AL CAMBIAR DE PÁGINA (SPA)
@@ -2038,38 +2281,8 @@
                 toast('❌ Error al guardar permisos');
             }
         });
-        //////
-        // ============================================================
-        // MODAL DE ÉXITO PARA PRODUCTOS
-        // ============================================================
-
-        
-
-        
-
-        
-        // ============================================================
-        // FUNCIONES PARA NUEVO PRODUCTO
-        // ============================================================
-
-        // En base.html, reemplaza la función generarCodigoProducto():
        
 
-        // ============================================================
-        // GUARDAR PRODUCTO - Event Listener
-        // ============================================================
-
-        // ============================================================
-        // FUNCIONES PARA EMPRESAS - CRUD COMPLETO
-        // ============================================================
-
-        // ============================================================
-        // FUNCIONES PARA EMPRESAS - CRUD COMPLETO (VERSIÓN CORREGIDA)
-        // ============================================================
-
-        // ============================================================
-        // ABRIR MODAL DE EMPRESA - VERSIÓN COMPLETA Y FUNCIONAL
-        // ============================================================
         window.abrirModalEmpresa = function(empresaId) {
             console.log('🟢 abrirModalEmpresa EJECUTADA - empresaId:', empresaId);
             
@@ -2088,6 +2301,10 @@
                 alert('Error: La función del modal no está disponible. Recarga la página.');
             }
         };
+
+        
+
+
         // ============================================================
         // CREAR MODAL COMPLETO DE EMPRESAS - CON TODOS LOS CAMPOS
         // ============================================================

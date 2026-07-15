@@ -1626,42 +1626,9 @@
         }
     }
 
-    function limpiarFormulario() {
-        if (!confirm('¿Estás seguro de que deseas limpiar el formulario? Los cambios no guardados se perderán.')) {
-            return;
-        }
-        
-        var elementos = document.querySelectorAll('.form-card input:not([type="hidden"]), .form-card textarea, .form-card select');
-        for (var i = 0; i < elementos.length; i++) {
-            var el = elementos[i];
-            if (el.type === 'checkbox') {
-                el.checked = el.value === 'venta';
-            } else if (el.tagName === 'SELECT') {
-                el.selectedIndex = 0;
-            } else if (el.type !== 'file') {
-                el.value = '';
-            }
-        }
-        
-        var valorVenta = document.getElementById('valorVenta');
-        var valorCosto = document.getElementById('valorCosto');
-        var estadoProducto = document.getElementById('estadoProducto');
-        var fotoProducto = document.getElementById('fotoProducto');
-        var previewContainer = document.getElementById('previewContainer');
-        var fileBadge = document.getElementById('fileBadge');
-        var uploadArea = document.getElementById('uploadArea');
-        
-        if (valorVenta) valorVenta.value = '0.00';
-        if (valorCosto) valorCosto.value = '0.00';
-        if (estadoProducto) estadoProducto.value = 'activo';
-        if (fotoProducto) fotoProducto.value = '';
-        if (previewContainer) previewContainer.innerHTML = '';
-        if (fileBadge) fileBadge.innerHTML = '<i class="bi bi-paperclip"></i> Ningún archivo';
-        if (uploadArea) uploadArea.classList.remove('has-image');
-        
-        calcularMargen();
-        actualizarEstadoChips();
-    }
+    
+    
+    
 
     // ============================================================
     // INICIALIZAR
