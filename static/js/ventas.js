@@ -5151,7 +5151,7 @@ function openPedidoCompraModalSAP(mode = 'cot', id = null) {
         return;
     }
     
-    // ⚠️ SIEMPRE LIMPIAR PRIMERO ⚠️
+    // SIEMPRE LIMPIAR PRIMERO
     clearPedidoModalSAP();
     
     // Obtener elementos del header
@@ -5161,17 +5161,17 @@ function openPedidoCompraModalSAP(mode = 'cot', id = null) {
     // Si estamos editando (id != null)
     if (id) {
         if (title) title.textContent = '✏️ Editar PC Cliente';
-        if (sub) sub.textContent = 'Revisa y actualiza los datos del PC. Los campos pueden modificarse.';
+        if (sub) sub.textContent = 'Revisa y actualiza los datos del PC. Los campos de cotización son de solo lectura.';
         
         // Ocultar bloque de búsqueda de cotización
         const cotBlock = document.getElementById('cotBlock');
-        if (cotBlock) cotBlock.style.display = 'none';
+        if (cotBlock) cotBlock.style.display = 'block';
         
         // Cambiar nota de modo
         const note = document.getElementById('modeNote');
         if (note) {
             note.className = 'mini-note';
-            note.textContent = '📝 Editando PC existente. Puedes modificar cualquier campo.';
+            note.textContent = '📝 Editando PC existente. Los datos de la cotización son de solo lectura.';
         }
         
         // Cambiar origen
@@ -5191,7 +5191,7 @@ function openPedidoCompraModalSAP(mode = 'cot', id = null) {
     
     if (sub) {
         sub.textContent = mode === 'cot' 
-            ? 'Busca una cotización para cargar todos sus datos automáticamente.'
+            ? 'Busca una cotización para cargar todos sus datos automáticamente. Los datos de la cotización son de solo lectura.'
             : 'PC directo: requiere validación comercial. No comprar bajo pedido hasta quedar conforme.';
     }
     
@@ -5205,10 +5205,10 @@ function openPedidoCompraModalSAP(mode = 'cot', id = null) {
     if (note) {
         if (mode === 'cot') {
             note.className = 'mini-note';
-            note.textContent = '';
+            note.textContent = '✅ Busca una cotización para cargar sus datos. Todos los datos de la cotización son de solo lectura.';
         } else {
             note.className = 'danger-note';
-            note.textContent = '';
+            note.textContent = '⚠️ Modo directo: no hay cotización asociada. Todos los datos deben ingresarse manualmente.';
         }
     }
     
@@ -5223,6 +5223,10 @@ function openPedidoCompraModalSAP(mode = 'cot', id = null) {
         if (searchInput) {
             searchInput.value = '';
             searchInput.placeholder = 'Buscar Cotizacion : Escribe N° cotización, RUC, razón social...';
+            searchInput.readOnly = false;
+            searchInput.style.background = '#FFFFFF';
+            searchInput.style.color = '#0F172A';
+            searchInput.style.cursor = 'text';
         }
         
         if (typeof cotizacionesData === 'undefined' || cotizacionesData.length === 0) {
@@ -5585,6 +5589,8 @@ function loadPedidoCotizacionSAP() {
 
 function addPedidoItemSAP() {
     const tbody = document.getElementById('pcItemsBody');
+    if (!tbody) return;
+    
     const rowCount = tbody.children.length + 1;
     
     const tr = document.createElement('tr');
@@ -5592,21 +5598,46 @@ function addPedidoItemSAP() {
     tr.style.borderBottom = '1px solid #E2E8F0';
     
     tr.innerHTML = `
-        <td style="padding:2px 3px; text-align:center; font-weight:800; font-size:9px;">${rowCount}</td>
-        <td style="padding:2px 3px;"><input type="text" placeholder="Código" style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none;"></td>
-        <td style="padding:2px 3px;"><input type="text" placeholder="Descripción" style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none;"></td>
-        <!-- 🔽 NUEVOS CAMPOS -->
-        <td style="padding:2px 3px;"><input type="text" placeholder="Marca" style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none;"></td>
-        <td style="padding:2px 3px;"><input type="text" placeholder="Modelo" style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none;"></td>
-        <td style="padding:2px 3px;"><input type="number" value="0" style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;"></td>
-        <td style="padding:2px 3px;"><input type="number" value="0" style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;"></td>
-        <td style="padding:2px 3px;"><input type="number" step="0.01" value="0" style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;"></td>
-        <td style="padding:2px 3px;"><input type="number" step="0.01" value="0" style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;"></td>
-        <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B;">0</td>
-        <td style="padding:2px 3px; text-align:center; font-size:8px; color:#EF4444;">0</td>
+        <td style="padding:2px 3px; text-align:center; font-weight:800; font-size:9px; background:#F8FAFC;">${rowCount}</td>
+        <td style="padding:2px 3px;">
+            <input type="text" placeholder="Código" 
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:800;"
+                   onchange="buscarProductoPorCodigo(this)">
+        </td>
+        <td style="padding:2px 3px;">
+            <input type="text" placeholder="Descripción" 
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none;">
+        </td>
+        <td style="padding:2px 3px;">
+            <input type="text" placeholder="Marca" 
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700;">
+        </td>
+        <td style="padding:2px 3px;">
+            <input type="text" placeholder="Modelo" 
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700;">
+        </td>
+        <td style="padding:2px 3px;">
+            <input type="number" value="0" 
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;">
+        </td>
+        <td style="padding:2px 3px;">
+            <input type="number" value="0" 
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900;"
+                   onchange="actualizarFaltanteDesdeInput(this)">
+        </td>
+        <td style="padding:2px 3px;">
+            <input type="number" step="0.01" value="0" 
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;">
+        </td>
+        <td style="padding:2px 3px;">
+            <input type="number" step="0.01" value="0" 
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;">
+        </td>
+        <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B; font-weight:800;">0</td>
+        <td style="padding:2px 3px; text-align:center; font-size:8px; font-weight:900; color:#EF4444;">0</td>
         <td style="padding:2px 3px; text-align:center;">
             <button onclick="eliminarItemSAP('${tr.id}')" 
-                    style="background:transparent; border:none; color:#EF4444; cursor:pointer; font-size:12px; font-weight:900; padding:0 4px; border-radius:3px; transition:all 0.2s;"
+                    style="background:transparent; border:none; color:#EF4444; cursor:pointer; font-size:12px; font-weight:900; padding:0 4px; border-radius:3px; transition:all 0.2s; width:22px; height:22px;"
                     onmouseover="this.style.background='#FEE2E2'; this.style.color='#DC2626';"
                     onmouseout="this.style.background='transparent'; this.style.color='#EF4444';">
                 ✕
@@ -5616,6 +5647,7 @@ function addPedidoItemSAP() {
     
     tbody.appendChild(tr);
 }
+
 
 // Función para eliminar ítem
 function eliminarItemSAP(rowId) {
@@ -6489,55 +6521,32 @@ function seleccionarCotizacionSAP(cotizacionId) {
             }
             
             // ============================================================
-            // CARGAR DATOS BÁSICOS
+            // FUNCIÓN PARA SETEAR VALORES EN MODO READONLY
             // ============================================================
-            const setVal = (id, val) => {
+            const setReadonlyValue = (id, val) => {
                 const el = document.getElementById(id);
-                if (el) el.value = val !== undefined && val !== null ? val : '';
+                if (el) {
+                    el.value = val !== undefined && val !== null ? val : '';
+                    el.readOnly = true;
+                    el.style.background = '#F1F5F9';
+                    el.style.color = '#64748B';
+                    el.style.cursor = 'not-allowed';
+                }
             };
             
-            setVal('pcCotNumero', data.numero_cotizacion || '');
-            setVal('pcCotFecha', data.fecha_creacion ? formatFecha(data.fecha_creacion) : '');
-            setVal('pcCliente', data.cliente_razon_social || '');
-            setVal('pcRuc', data.cliente_ruc || '');
-            setVal('pcMonto', data.total || 0);
-            setVal('pcCondicionPago', data.condicion_pago || 'Contado');
-            setVal('pcVendedor', data.vendedor || 'Helen Blas Príncipe');
+            // ============================================================
+            // CARGAR DATOS BÁSICOS - TODOS EN MODO READONLY
+            // ============================================================
+            setReadonlyValue('pcCotNumero', data.numero_cotizacion || '');
+            setReadonlyValue('pcCotFecha', data.fecha_creacion ? formatFecha(data.fecha_creacion) : '');
+            setReadonlyValue('pcCliente', data.cliente_razon_social || '');
+            setReadonlyValue('pcRuc', data.cliente_ruc || '');
+            setReadonlyValue('pcMonto', data.total || 0);
+            setReadonlyValue('pcCondicionPago', data.condicion_pago || 'Contado');
+            setReadonlyValue('pcVendedor', data.vendedor || 'Helen Blas Príncipe');
             
             if (data.direccion_entrega) {
-                setVal('pcEntrega', data.direccion_entrega);
-            }
-            
-            // Condición pago
-            const condSelect = document.getElementById('pcCondicion');
-            if (condSelect && data.condicion_pago) {
-                let found = false;
-                for (let opt of condSelect.options) {
-                    if (opt.value === data.condicion_pago || opt.textContent === data.condicion_pago) {
-                        opt.selected = true;
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    const opt = document.createElement('option');
-                    opt.value = data.condicion_pago;
-                    opt.textContent = data.condicion_pago;
-                    condSelect.appendChild(opt);
-                    condSelect.value = data.condicion_pago;
-                }
-            }
-            
-            // Moneda
-            const monedaSelect = document.getElementById('pcMoneda');
-            if (monedaSelect) {
-                const moneda = data.moneda || 'Soles (S/)';
-                for (let opt of monedaSelect.options) {
-                    if (opt.value === moneda || opt.textContent.includes(moneda)) {
-                        opt.selected = true;
-                        break;
-                    }
-                }
+                setReadonlyValue('pcEntrega', data.direccion_entrega);
             }
             
             // ============================================================
@@ -6564,7 +6573,7 @@ function seleccionarCotizacionSAP(cotizacionId) {
                 const stock = p.stock || 0;
                 const faltante = Math.max(cantidadCotizada - stock, 0);
                 
-                // 🔽 OBTENER MARCA Y MODELO DEL PRODUCTO
+                // OBTENER MARCA Y MODELO DEL PRODUCTO
                 const marca = p.marca || '';
                 const modelo = p.modelo || '';
                 const codigo = p.codigo || '';
@@ -6578,27 +6587,27 @@ function seleccionarCotizacionSAP(cotizacionId) {
                     <td style="padding:2px 3px; text-align:center; font-weight:800; font-size:9px; background:#F8FAFC;">${i + 1}</td>
                     <td style="padding:2px 3px;">
                         <input value="${esc(codigo)}" 
-                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800; color:#1D4ED8;"
+                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800; color:#1D4ED8; cursor:not-allowed;"
                                readonly>
                     </td>
                     <td style="padding:2px 3px;">
                         <input value="${esc(descripcion)}" 
-                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800;"
+                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800; cursor:not-allowed;"
                                readonly>
                     </td>
                     <td style="padding:2px 3px;">
                         <input value="${esc(marca)}" 
-                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A;"
+                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A; cursor:not-allowed;"
                                readonly>
                     </td>
                     <td style="padding:2px 3px;">
                         <input value="${esc(modelo)}" 
-                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A;"
+                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A; cursor:not-allowed;"
                                readonly>
                     </td>
                     <td style="padding:2px 3px;">
                         <input type="number" value="${cantidadCotizada}" 
-                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center;"
+                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center; cursor:not-allowed;"
                                readonly>
                     </td>
                     <td style="padding:2px 3px;">
@@ -6608,13 +6617,12 @@ function seleccionarCotizacionSAP(cotizacionId) {
                     </td>
                     <td style="padding:2px 3px;">
                         <input type="number" step="0.01" value="${precioCotizado}" 
-                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center;"
+                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center; cursor:not-allowed;"
                                readonly>
                     </td>
                     <td style="padding:2px 3px;">
                         <input type="number" step="0.01" value="${precioCotizado}" 
-                               style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;"
-                               onchange="actualizarPrecioPCSAP(this, ${i})">
+                               style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;">
                     </td>
                     <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B; font-weight:800;">${stock}</td>
                     <td style="padding:2px 3px; text-align:center; font-size:8px; font-weight:900; color:${faltante > 0 ? '#DC2626' : '#16A34A'};">${faltante}</td>
@@ -6665,14 +6673,28 @@ function actualizarPrecioPCSAP(input, index) {
 function clearPedidoModalSAP() {
     console.log('🧹 Limpiando modal de PC a estado inicial...');
     
-    // Función auxiliar para establecer valor si el elemento existe
-    const setValue = (id, value) => {
+    // Función auxiliar para establecer valor en readonly
+    const setReadonlyValue = (id, value) => {
         const el = document.getElementById(id);
         if (el) {
             el.value = value !== undefined ? value : '';
-            return true;
+            el.readOnly = true;
+            el.style.background = '#F1F5F9';
+            el.style.color = '#64748B';
+            el.style.cursor = 'not-allowed';
         }
-        return false;
+    };
+    
+    // Función auxiliar para establecer valor editable
+    const setEditableValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.value = value !== undefined ? value : '';
+            el.readOnly = false;
+            el.style.background = '#FFFFFF';
+            el.style.color = '#0F172A';
+            el.style.cursor = 'text';
+        }
     };
     
     // Fecha actual
@@ -6706,7 +6728,7 @@ function clearPedidoModalSAP() {
     }
     
     // ============================================================
-    // 3. RESTAURAR BLOQUE DE COTIZACIÓN (visible)
+    // 3. RESTAURAR BLOQUE DE COTIZACIÓN (visible) - TODOS READONLY
     // ============================================================
     const cotBlock = document.getElementById('cotBlock');
     if (cotBlock) {
@@ -6714,156 +6736,32 @@ function clearPedidoModalSAP() {
     }
     
     // ============================================================
-    // 4. RESTAURAR ORIGEN
+    // 4. LIMPIAR CAMPOS DE COTIZACIÓN (READONLY)
     // ============================================================
-    const origen = document.getElementById('docOrigen');
-    if (origen) {
-        origen.textContent = 'Cotización';
-        origen.style.color = '#0F172A';
+    setReadonlyValue('pcCotNumero', '');
+    setReadonlyValue('pcCotFecha', '');
+    setReadonlyValue('pcCliente', '');
+    setReadonlyValue('pcRuc', '');
+    setReadonlyValue('pcMonto', '0');
+    setReadonlyValue('pcCondicionPago', '');
+    setReadonlyValue('pcVendedor', '');
+    setReadonlyValue('pcEntrega', '');
+    
+    // ============================================================
+    // 5. LIMPIAR BUSCADOR (EDITABLE)
+    // ============================================================
+    const searchInput = document.getElementById('pcCotSearch');
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.placeholder = 'Buscar Cotizacion : Escribe N° cotización, RUC, razón social...';
+        searchInput.readOnly = false;
+        searchInput.style.background = '#FFFFFF';
+        searchInput.style.color = '#0F172A';
+        searchInput.style.cursor = 'text';
     }
     
     // ============================================================
-    // 5. RESTAURAR ESTADO DEL DOCUMENTO
-    // ============================================================
-    const resetDoc = (id, text, color = '#0F172A') => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.textContent = text;
-            el.style.color = color;
-        }
-    };
-    
-    resetDoc('docEstado', 'Pendiente');
-    resetDoc('docStock', 'Por validar');
-    resetDoc('docSalida', 'Pendiente');
-    
-    // ============================================================
-    // 6. LIMPIAR CAMPOS DE FECHA Y NÚMERO
-    // ============================================================
-    setValue('pcFecha', fechaStr);
-    setValue('pcNumero', 'PC-' + new Date().toISOString().slice(0, 10).replaceAll('-', '') + '-' + String(Date.now()).slice(-4));
-    
-    // ============================================================
-    // 7. RESTAURAR SELECTS A VALORES POR DEFECTO
-    // ============================================================
-    const selects = {
-        'pcMedio': 'Correo',
-        'pcCondicion': 'Contado',
-        'pcMoneda': 'Soles (S/)'
-    };
-    
-    Object.keys(selects).forEach(id => {
-        const el = document.getElementById(id);
-        if (el && el.options.length > 0) {
-            // Buscar el valor en las opciones
-            let found = false;
-            for (let opt of el.options) {
-                if (opt.value === selects[id] || opt.textContent === selects[id]) {
-                    opt.selected = true;
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                el.selectedIndex = 0;
-            }
-        }
-    });
-    
-    // ============================================================
-    // 8. LIMPIAR TODOS LOS CAMPOS DE TEXTO
-    // ============================================================
-    const camposTexto = [
-        'pcCotNumero', 'pcCotFecha', 'pcCliente', 'pcRuc', 
-        'pcContacto', 'pcEntrega', 'pcObs', 'pcCondicionPago', 
-        'pcVendedor', 'pcCotSearch'
-    ];
-    
-    camposTexto.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.value = '';
-            // Quitar readonly y restaurar estilo
-            el.removeAttribute('readonly');
-            el.style.background = '#FFFFFF';
-            // Restaurar placeholder del buscador
-            if (id === 'pcCotSearch') {
-                el.placeholder = 'Escribe N° cotización, RUC, razón social...';
-            }
-        }
-    });
-    
-    // ============================================================
-    // 9. LIMPIAR MONTO
-    // ============================================================
-    setValue('pcMonto', '0');
-    
-    // ============================================================
-    // 10. LIMPIAR TABLA DE ITEMS
-    // ============================================================
-    const tbody = document.getElementById('pcItemsBody');
-    if (tbody) {
-        tbody.innerHTML = '';
-        addPedidoItemSAP(); // Agregar una fila vacía
-    }
-    
-    // ============================================================
-    // 11. RESETEAR VALIDACIONES A "Sí"
-    // ============================================================
-    const validaciones = ['vPrecio', 'vCantidad', 'vProducto', 'vEntrega', 'vMoneda', 'vTransporte', 'vVigencia', 'vMargen'];
-    
-    validaciones.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.value = 'Sí';
-        }
-    });
-    
-    // ============================================================
-    // 12. RESETEAR ÍCONOS DE VALIDACIÓN ⚪
-    // ============================================================
-    const iconMap = {
-        'vPrecio': 'PrecioIcon',
-        'vCantidad': 'CantidadIcon',
-        'vProducto': 'ProductoIcon',
-        'vEntrega': 'EntregaIcon',
-        'vMoneda': 'MonedaIcon',
-        'vTransporte': 'TransporteIcon',
-        'vVigencia': 'VigenciaIcon',
-        'vMargen': 'MargenIcon'
-    };
-    
-    Object.keys(iconMap).forEach(id => {
-        const icon = document.getElementById(iconMap[id]);
-        if (icon) {
-            icon.textContent = '⚪';
-            icon.style.color = '';
-        }
-    });
-    
-    // ============================================================
-    // 13. RESTAURAR SEMÁFORO (oculto)
-    // ============================================================
-    const semaphore = document.getElementById('validationSemaphore');
-    if (semaphore) {
-        semaphore.style.display = 'none';
-        semaphore.style.borderColor = '';
-        semaphore.style.background = '';
-    }
-    
-    // ============================================================
-    // 14. RESTAURAR RESULTADO DE VALIDACIÓN
-    // ============================================================
-    const validationResult = document.getElementById('validationResult');
-    if (validationResult) {
-        validationResult.innerHTML = 'ℹ️ Si algún punto es <b>"No"</b>, el PC quedará <b>observado y bloqueado</b>.';
-        validationResult.style.background = '#EFF6FF';
-        validationResult.style.color = '#1E3A8A';
-        validationResult.style.border = '1px solid #BFDBFE';
-    }
-    
-    // ============================================================
-    // 15. LIMPIAR RESULTADOS DE BÚSQUEDA
+    // 6. LIMPIAR RESULTADOS DE BÚSQUEDA
     // ============================================================
     const resultsContainer = document.getElementById('cotizacionSearchResults');
     if (resultsContainer) {
@@ -6872,7 +6770,50 @@ function clearPedidoModalSAP() {
     }
     
     // ============================================================
-    // 16. RESETEAR VARIABLES GLOBALES
+    // 7. CAMPOS DE FECHA Y NÚMERO (EDITABLES)
+    // ============================================================
+    setEditableValue('pcFecha', fechaStr);
+    setEditableValue('pcNumero', 'PC-' + new Date().toISOString().slice(0, 10).replaceAll('-', '') + '-' + String(Date.now()).slice(-4));
+    
+    // ============================================================
+    // 8. RESTAURAR SELECTS
+    // ============================================================
+    const selects = ['pcMedio', 'pcCondicion', 'pcMoneda'];
+    selects.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && el.options.length > 0) {
+            el.disabled = false;
+            el.selectedIndex = 0;
+            el.style.background = '#FFFFFF';
+            el.style.cursor = 'pointer';
+        }
+    });
+    
+    // ============================================================
+    // 9. LIMPIAR TABLA DE ITEMS
+    // ============================================================
+    const tbody = document.getElementById('pcItemsBody');
+    if (tbody) {
+        tbody.innerHTML = '';
+        addPedidoItemSAP(); // Agregar una fila vacía
+    }
+    
+    // ============================================================
+    // 10. RESETEAR VALIDACIONES
+    // ============================================================
+    const validaciones = ['vPrecio', 'vCantidad', 'vProducto', 'vEntrega', 'vMoneda', 'vTransporte', 'vVigencia', 'vMargen'];
+    validaciones.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.value = 'Sí';
+            el.disabled = false;
+            el.style.background = '#FFFFFF';
+            el.style.cursor = 'pointer';
+        }
+    });
+    
+    // ============================================================
+    // 11. RESETEAR VARIABLES GLOBALES
     // ============================================================
     cotizacionSeleccionada = null;
     modalMode = 'cot';
