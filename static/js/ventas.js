@@ -6663,59 +6663,143 @@ function renderCotizacionFormContent(isEdit) {
             </div>
         </div>
         
-        <!-- ============================================================ -->
-        <!-- 5. INFORMACIÓN ADICIONAL - INTERNO (después de productos) -->
-        <!-- ============================================================ -->
-        <div class="create-panel" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;box-shadow:0 4px 12px rgba(15,23,42,.06);overflow:hidden;margin-bottom:10px;">
-            <h3 style="padding:6px 12px;border-bottom:1px solid #E5E7EB;font-size:12px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:6px;margin:0;">
-                <span style="color:#EF233C;font-weight:1000;">5.</span> 
-                <span style="color:#EF233C;font-weight:1000;">Información adicional</span>
-                <span style="font-weight:400;font-size:8px;color:#64748B;margin-left:4px;">- interno</span>
-            </h3>
-            <div class="body" style="padding:8px 10px;">
-                <!-- Fila: Seguimiento | Motivo -->
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;">
-                    <div class="form-field">
-                        <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Seguimiento</label>
-                        <input id="fSeguimiento" value="Helen Blas Príncipe" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 6px;">
-                    </div>
-                    <div class="form-field">
-                        <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Motivo</label>
-                        <input id="fMotivo" value="Solicitud única del cliente" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 6px;">
-                    </div>
-                </div>
-                <!-- Fila: Transporte | Parihuela -->
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;">
-                    <div class="form-field">
-                        <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Transporte</label>
-                        <select id="fTransporte" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
-                            <option value="Seleccione" selected>-- Seleccione --</option>
-                            <option value="Incluido en precio">Incluido en precio</option>
-                            <option value="Cotizar aparte">Cotizar aparte</option>
-                            <option value="Cliente asume">Cliente asume</option>
-                        </select>
-                    </div>
-                    <div class="form-field">
-                        <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Parihuela</label>
-                        <select id="fParihuela" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
-                            <option value="Seleccione" selected>-- Seleccione --</option>
-                            <option value="Incluido">Incluido</option>
-                            <option value="Cotizar aparte">Cotizar aparte</option>
-                            <option value="Cliente asume">Cliente asume</option>
-                        </select>
-                    </div>
-                </div>
-                <!-- Fila: Nota interna (ocupa todo el ancho) -->
-                <div style="display:grid;grid-template-columns:1fr;gap:5px;">
-                    <div class="form-field">
-                        <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Nota interna</label>
-                        <input id="fNotaInterna" placeholder="Interno: cliente, productos o coordinación" value="Interno: cliente, productos o coordinación" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 6px;">
-                    </div>
-                </div>
+       <!-- ============================================================ -->
+<!-- 5. INFORMACIÓN ADICIONAL - INTERNO (después de productos) -->
+<!-- ============================================================ -->
+<div class="create-panel" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;box-shadow:0 4px 12px rgba(15,23,42,.06);overflow:hidden;margin-bottom:10px;">
+    <h3 style="padding:6px 12px;border-bottom:1px solid #E5E7EB;font-size:12px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:6px;margin:0;">
+        <span style="color:#EF233C;font-weight:1000;">5.</span> 
+        <span style="color:#EF233C;font-weight:1000;">Información adicional</span>
+        <span style="font-weight:400;font-size:8px;color:#64748B;margin-left:4px;">- interno</span>
+    </h3>
+    <div class="body" style="padding:8px 10px;">
+        <!-- Fila 1: Seguimiento | Motivo -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;">
+            <div class="form-field">
+                <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Seguimiento</label>
+                <input id="fSeguimiento" value="Helen Blas Príncipe" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 6px;">
+            </div>
+            <div class="form-field">
+                <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Motivo</label>
+                <input id="fMotivo" value="Solicitud única del cliente" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 6px;">
+            </div>
+        </div>
+        
+        <!-- Fila 2: Transporte | Parihuela (SELECTS) -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;">
+            <div class="form-field">
+                <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Transporte</label>
+                <select id="fTransporte" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
+                    <option value="Seleccione" selected>-- Seleccione --</option>
+                    <option value="Incluido en precio">Incluido en precio</option>
+                    <option value="Cotizar aparte">Cotizar aparte</option>
+                    <option value="Cliente asume">Cliente asume</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Parihuela</label>
+                <select id="fParihuela" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
+                    <option value="Seleccione" selected>-- Seleccione --</option>
+                    <option value="Incluido">Incluido</option>
+                    <option value="Cotizar aparte">Cotizar aparte</option>
+                    <option value="Cliente asume">Cliente asume</option>
+                </select>
             </div>
         </div>
 
+        <!-- NUEVA FILA 3: Motorizado / Auto / Minivan / Camioneta / Camión / Agencia (en UNA línea) -->
+        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:4px;">
+            <div class="form-field">
+                <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Motorizado</label>
+                <select id="fMotorizado" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
+                    <option value="Seleccione" selected>--</option>
+                    <option value="Si">Sí</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Auto</label>
+                <select id="fAuto" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
+                    <option value="Seleccione" selected>--</option>
+                    <option value="Si">Sí</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Minivan</label>
+                <select id="fMinivan" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
+                    <option value="Seleccione" selected>--</option>
+                    <option value="Si">Sí</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Camioneta</label>
+                <select id="fCamioneta" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
+                    <option value="Seleccione" selected>--</option>
+                    <option value="Si">Sí</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Camión</label>
+                <select id="fCamion" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
+                    <option value="Seleccione" selected>--</option>
+                    <option value="Si">Sí</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Agencia</label>
+                <select id="fAgencia" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
+                    <option value="Seleccione" selected>--</option>
+                    <option value="Si">Sí</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
+        </div>
 
+        <!-- NUEVA FILA 4: No | Sí - estándar | Sí - a medida | Por confirmar (en UNA línea) -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:4px;">
+            <div class="form-field">
+                <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">No</label>
+                <select id="fNo" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
+                    <option value="Seleccione" selected>--</option>
+                    <option value="Seleccionado">Seleccionado</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Sí - estándar</label>
+                <select id="fSiEstandar" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
+                    <option value="Seleccione" selected>--</option>
+                    <option value="Seleccionado">Seleccionado</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Sí - a medida</label>
+                <select id="fSiAMedida" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
+                    <option value="Seleccione" selected>--</option>
+                    <option value="Seleccionado">Seleccionado</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Por confirmar</label>
+                <select id="fPorConfirmar" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
+                    <option value="Seleccione" selected>--</option>
+                    <option value="Seleccionado">Seleccionado</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Fila 5: Nota interna (ocupa todo el ancho) -->
+        <div style="display:grid;grid-template-columns:1fr;gap:5px;">
+            <div class="form-field">
+                <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Nota interna</label>
+                <input id="fNotaInterna" placeholder="Interno: cliente, productos o coordinación" value="Interno: cliente, productos o coordinación" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 6px;">
+            </div>
+        </div>
+    </div>
+</div>
 
         <!-- ============================================================ -->
         <!-- STEPBAR - FLUJO DE ESTADOS -->
