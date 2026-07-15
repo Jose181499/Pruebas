@@ -6555,20 +6555,10 @@ function renderCotizacionFormContent(isEdit) {
                             </select>
                             <input id="fDireccionEntregaCustom" placeholder="Ej: Av. Los Alamos 123 - Lima" style="display:none;margin-top:2px;width:100%;height:22px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 6px;">
                         </div>
-                        <div class="form-field">
-                            <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Tipo</label>
-                            <select id="fTipo" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
-                                ${tipoOptions}
-                            </select>
-                        </div>
                     </div>
                     <!-- Descuento Especial | Nota Comercial -->
                     <div style="display:grid;grid-template-columns:1fr 2.5fr;gap:5px;">
-                        <div class="form-field">
-                            <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Descuento Especial</label>
-                            <input id="fDescuentoEspecial" type="number" value="0" step="0.01" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 6px;" oninput="calcQuote()">
-                        </div>
-                        <div class="form-field">
+                      <div class="form-field">
                             <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Nota Comercial</label>
                             <input id="fNotaComercial" placeholder="Ingrese comentarios comerciales relacionados con el cliente, la oferta o los productos..." style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 6px;">
                         </div>
