@@ -289,12 +289,50 @@
             </div>
         </div>
 
-        <!-- FOOTER CON BOTONES ACTUALIZADOS -->
-        <div class="modal-foot" style="padding:4px 12px; display:flex; justify-content:flex-end; gap:5px; border-top:1px solid #E5E7EB; background:#F8FAFC; flex-shrink:0;">
-            <button class="btn btn-secondary" onclick="closeModal('pedidoCompraModal')" style="height:28px; padding:0 14px; font-size:10px; border-radius:6px; border:1px solid #CBD5E1; background:#94A3B8; color:#fff; font-weight:900; cursor:pointer; transition:all 0.2s;">Cancelar</button>
-            <button class="btn btn-danger" onclick="savePedidoCompraSAP('observado')" style="height:28px; padding:0 14px; font-size:10px; border-radius:6px; border:2px solid #fff700; background:#e5ff00; color:#000; font-weight:900; cursor:pointer; transition:all 0.2s; box-shadow:0 0 15px rgb(238, 255, 0);">⚠️ Crear Pc Observado</button>
-            <button class="btn btn-primary" onclick="savePedidoCompraSAP('auto')" style="height:28px; padding:0 14px; font-size:10px; border-radius:6px; border:none; background:#16A34A; color:#fff; font-weight:900; cursor:pointer; transition:all 0.2s; box-shadow:0 2px 8px rgba(22,163,74,0.3);">✅ Crear Pc Conforme </button>
-        </div>
+       <!-- FOOTER CON BOTONES ACTUALIZADOS - COLORES FLUORESCENTES MÁS FUERTES -->
+<div class="modal-foot" style="padding:4px 12px; display:flex; justify-content:flex-end; gap:5px; border-top:1px solid #E5E7EB; background:#F8FAFC; flex-shrink:0;">
+    <button class="btn btn-secondary" onclick="closeModal('pedidoCompraModal')" style="height:28px; padding:0 14px; font-size:10px; border-radius:6px; border:1px solid #CBD5E1; background:#94A3B8; color:#fff; font-weight:900; cursor:pointer; transition:all 0.2s;">Cancelar</button>
+    
+    <!-- ⚠️ Crear PC Observado - AMARILLO FLUORESCENTE NEON MÁS FUERTE -->
+    <button class="btn btn-danger" onclick="savePedidoCompraSAP('observado')" style="
+        height:28px; 
+        padding:0 14px; 
+        font-size:10px; 
+        border-radius:6px; 
+        border:2px solid #FFEE00; 
+        background:#FFDD00; 
+        color:#000000; 
+        font-weight:900; 
+        cursor:pointer; 
+        transition:all 0.2s; 
+        box-shadow:0 0 30px rgba(255, 221, 0, 0.8), inset 0 0 15px rgba(255, 255, 255, 0.3);
+        text-shadow: 0 0 10px rgba(0,0,0,0.1);
+    " 
+    onmouseover="this.style.background='#FFE633'; this.style.boxShadow='0 0 50px rgba(255, 221, 0, 1), inset 0 0 20px rgba(255,255,255,0.4)'; this.style.transform='scale(1.02)';"
+    onmouseout="this.style.background='#FFDD00'; this.style.boxShadow='0 0 30px rgba(255, 221, 0, 0.8), inset 0 0 15px rgba(255,255,255,0.3)'; this.style.transform='scale(1)';">
+    ⚠️ Crear Pc Observado
+    </button>
+    
+    <!-- ✅ Crear PC Conforme - VERDE FLUORESCENTE NEON MÁS FUERTE -->
+    <button class="btn btn-primary" onclick="savePedidoCompraSAP('auto')" style="
+        height:28px; 
+        padding:0 14px; 
+        font-size:10px; 
+        border-radius:6px; 
+        border:2px solid #00FF41; 
+        background:#00CC33; 
+        color:#000000; 
+        font-weight:900; 
+        cursor:pointer; 
+        transition:all 0.2s; 
+        box-shadow:0 0 30px rgba(0, 255, 65, 0.7), inset 0 0 15px rgba(255, 255, 255, 0.2);
+        text-shadow: 0 0 10px rgba(0,0,0,0.1);
+    "
+    onmouseover="this.style.background='#00FF41'; this.style.boxShadow='0 0 50px rgba(0, 255, 65, 1), inset 0 0 25px rgba(255,255,255,0.4)'; this.style.transform='scale(1.02)';"
+    onmouseout="this.style.background='#00CC33'; this.style.boxShadow='0 0 30px rgba(0, 255, 65, 0.7), inset 0 0 15px rgba(255,255,255,0.2)'; this.style.transform='scale(1)';">
+    ✅ Crear Pc Conforme
+    </button>
+</div>
     </div>
 </div>
 
