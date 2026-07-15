@@ -32,7 +32,7 @@ const SUNAT_UNIDADES = [
 ];
 
 const ESTADOS_COTIZACION = ['Borrador', 'En Proceso', 'Generada', 'Aceptada por Cliente', 'Anulada'];
-const ESTADOS_PC = ['Pendiente', 'Recibido por correo', 'En revisión interna', 'Validado por Hellen', 'Listo para despacho', 'Anulado'];
+const ESTADOS_PC = ['Pendiente', 'Recibido por correo', 'En revisión interna', 'Validado ', 'Listo para despacho', 'Anulado'];
 const ESTADOS_DESPACHO = ['Pendiente despacho', 'En preparación', 'Despachado', 'Entregado'];
 const ESTADOS_GUIA = ['Borrador', 'Pendiente despacho', 'Emitida', 'Entregada', 'Anulada'];
 const ESTADOS_COMPROBANTE = ['Borrador', 'Emitido', 'Enviado', 'Pagado', 'Anulado'];
@@ -3175,13 +3175,13 @@ function renderCotizacionFooter(esEdicion = false) {
             <button class="btn btn-secondary" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #9CA3AF;background:#6B7280;color:#fff;font-weight:800;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='#4B5563'" onmouseout="this.style.background='#6B7280'" onclick="closeModal('cotizacionModal')">Cancelar</button>
             
             <!-- Validado por Hellen - Verde Oscuro -->
-            <button class="btn btn-blue" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #15803D;background:#166534;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(22,101,52,0.3);" onmouseover="this.style.background='#15803D';this.style.boxShadow='0 0 25px rgba(22,101,52,0.5)'" onmouseout="this.style.background='#166534';this.style.boxShadow='0 0 15px rgba(22,101,52,0.3)'" onclick="validateByHellen()">✅ Validado por Hellen</button>
+            <button class="btn btn-blue" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #15803D;background:#166534;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(22,101,52,0.3);" onmouseover="this.style.background='#15803D';this.style.boxShadow='0 0 25px rgba(22,101,52,0.5)'" onmouseout="this.style.background='#166534';this.style.boxShadow='0 0 15px rgba(22,101,52,0.3)'" onclick="validateByHellen()">✅ Validado</button>
             
             <!-- Revisión - Azul (para enviar a revisión) -->
             <button class="btn btn-blue" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #0d6efd;background:#0d6efd;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(13,110,253,0.3);" onmouseover="this.style.background='#0b5ed7';this.style.boxShadow='0 0 25px rgba(13,110,253,0.5)'" onmouseout="this.style.background='#0d6efd';this.style.boxShadow='0 0 15px rgba(13,110,253,0.3)'" onclick="sendCotizacionToReview()">📤 Revisión</button>
             
             <!-- Generar - Verde Fluorescente NEON -->
-            <button class="btn btn-green" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #00FF41;background:#00FF41;color:#000;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 25px rgba(0,255,65,0.5);" onmouseover="this.style.background='#44FF77';this.style.boxShadow='0 0 35px rgba(0,255,65,0.7)'" onmouseout="this.style.background='#00FF41';this.style.boxShadow='0 0 25px rgba(0,255,65,0.5)'" onclick="generateCotizacionPdfAndSend()">📄 Generar</button>
+            <button class="btn btn-green" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #00FF41;background:#00FF41;color:#000;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 25px rgba(0,255,65,0.5);" onmouseover="this.style.background='#44FF77';this.style.boxShadow='0 0 35px rgba(0,255,65,0.7)'" onmouseout="this.style.background='#00FF41';this.style.boxShadow='0 0 25px rgba(0,255,65,0.5)'" onclick="generateCotizacionPdfAndSend()">📄 Generar Cotizacion</button>
         `;
     } else {
         // ============================================================
@@ -3195,10 +3195,10 @@ function renderCotizacionFooter(esEdicion = false) {
             <button class="btn btn-warning" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #FFDD00;background:#FFDD00;color:#000;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 25px rgba(255,221,0,0.5);" onmouseover="this.style.background='#FFE733';this.style.boxShadow='0 0 35px rgba(255,221,0,0.7)'" onmouseout="this.style.background='#FFDD00';this.style.boxShadow='0 0 25px rgba(255,221,0,0.5)'" onclick="sendCotizacionToReview()">⭐ Solicitar revisión</button>
             
             <!-- Validado por Hellen - Verde Oscuro -->
-            <button class="btn btn-blue" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #15803D;background:#166534;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(22,101,52,0.3);" onmouseover="this.style.background='#15803D';this.style.boxShadow='0 0 25px rgba(22,101,52,0.5)'" onmouseout="this.style.background='#166534';this.style.boxShadow='0 0 15px rgba(22,101,52,0.3)'" onclick="validateByHellen()">✅ Validado por Hellen</button>
+            <button class="btn btn-blue" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #15803D;background:#166534;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(22,101,52,0.3);" onmouseover="this.style.background='#15803D';this.style.boxShadow='0 0 25px rgba(22,101,52,0.5)'" onmouseout="this.style.background='#166534';this.style.boxShadow='0 0 15px rgba(22,101,52,0.3)'" onclick="validateByHellen()">✅ Validado </button>
             
             <!-- Generar - Verde Fluorescente NEON -->
-            <button class="btn btn-green" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #00FF41;background:#00FF41;color:#000;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 25px rgba(0,255,65,0.5);" onmouseover="this.style.background='#44FF77';this.style.boxShadow='0 0 35px rgba(0,255,65,0.7)'" onmouseout="this.style.background='#00FF41';this.style.boxShadow='0 0 25px rgba(0,255,65,0.5)'" onclick="generateCotizacionPdfAndSend()">📄 Generar</button>
+            <button class="btn btn-green" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #00FF41;background:#00FF41;color:#000;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 25px rgba(0,255,65,0.5);" onmouseover="this.style.background='#44FF77';this.style.boxShadow='0 0 35px rgba(0,255,65,0.7)'" onmouseout="this.style.background='#00FF41';this.style.boxShadow='0 0 25px rgba(0,255,65,0.5)'" onclick="generateCotizacionPdfAndSend()">📄 Generar Cotizacion</button>
         `;
     }
     
@@ -3319,7 +3319,7 @@ function updateQuoteStatusBar(estado) {
     };
     
     const index = estadosMap[estado] !== undefined ? estadosMap[estado] : -1;
-    const stepLabels = ['Borrador', 'En revisión', 'Validado por Hellen', 'Generada', 'Aceptada'];
+    const stepLabels = ['Borrador', 'En revisión', 'Validada ', 'Generada', 'Aceptada'];
     
     steps.forEach((step, i) => {
         // Remover todas las clases de estado
@@ -5125,20 +5125,20 @@ function validateByHellen() {
     
     showConfirmModal(
         '✅ ¿Validar cotización por Hellen?',
-        'Estás a punto de marcar esta cotización como <b>"Validado por Hellen"</b>.',
+        'Estás a punto de marcar esta cotización como <b>"Validada "</b>.',
         '⚠️ Esta acción confirma que Hellen ha revisado y validado la cotización.',
         async function() {
             // Mostrar loading en el botón
             const btn = document.querySelector('#cotizacionModal .btn-blue');
-            const originalText = btn?.textContent || '✅ Validado por Hellen';
+            const originalText = btn?.textContent || '✅ Validado ';
             if (btn) {
                 btn.textContent = '⏳ Validando...';
                 btn.disabled = true;
             }
             
             try {
-                await guardarCotizacion('Validado por Hellen');
-                showToast('✅ Cotización validada por Hellen', 'success');
+                await guardarCotizacion('Validado ');
+                showToast('✅ Cotización validada ', 'success');
                 closeModal('cotizacionModal');
                 await loadCotizaciones();
             } catch (error) {
@@ -6680,11 +6680,11 @@ function renderCotizacionFormContent(isEdit) {
             </div>
             <span style="height:1px;width:12px;background:#E5E7EB;border-radius:99px;flex-shrink:0;"></span>
             <div class="step inactive" style="display:flex;align-items:center;gap:4px;white-space:nowrap;font-weight:700;color:#94A3B8;font-size:9px;flex-shrink:0;">
-                <span style="width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:#E2E8F0;color:#94A3B8;font-size:8px;font-weight:1000;">3</span> Validado por Hellen
+                <span style="width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:#E2E8F0;color:#94A3B8;font-size:8px;font-weight:1000;">3</span> Validado 
             </div>
             <span style="height:1px;width:12px;background:#E5E7EB;border-radius:99px;flex-shrink:0;"></span>
             <div class="step inactive" style="display:flex;align-items:center;gap:4px;white-space:nowrap;font-weight:700;color:#94A3B8;font-size:9px;flex-shrink:0;">
-                <span style="width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:#E2E8F0;color:#94A3B8;font-size:8px;font-weight:1000;">4</span> Generada
+                <span style="width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:#E2E8F0;color:#94A3B8;font-size:8px;font-weight:1000;">4</span> Generada Nueva Cotizacion
             </div>
             <span style="height:1px;width:12px;background:#E5E7EB;border-radius:99px;flex-shrink:0;"></span>
             <div class="step inactive" style="display:flex;align-items:center;gap:4px;white-space:nowrap;font-weight:700;color:#94A3B8;font-size:9px;flex-shrink:0;">
