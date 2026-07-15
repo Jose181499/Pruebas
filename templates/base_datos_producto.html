@@ -1,924 +1,15 @@
-<!-- templates/base_datos_producto.html -->
-<div class="page-head">
-    <div>
-        <h1>Base de datos: Producto</h1>
-        <p class="subtitle">Consulta, filtra y gestiona todos los productos del sistema.</p>
-    </div>
-</div>
+{% extends "base.html" %}
 
-<!-- BARRA DE HERRAMIENTAS COMPACTA - MÁS DELGADA -->
-<div class="bd-toolbar-compact">
-    <div class="bd-search-wrap-compact">
-        <i class="bi bi-search"></i>
-        <input id="bdSearchInput" type="text" placeholder="Buscar por nombre, código, modelo, marca, categoría..." />
-    </div>
-    <div class="bd-actions-compact">
-        <button class="btn-compact" type="button" onclick="bdExportarExcel()"><i class="bi bi-file-earmark-excel" style="color:var(--ok)"></i></button>
-        <button class="btn-compact" type="button" onclick="bdLimpiarFiltros()"><i class="bi bi-funnel"></i></button>
-    </div>
-</div>
-
-<!-- FILTROS COMPACTOS EN UNA SOLA FILA -->
-<div class="bd-filters-compact">
-    <div class="bd-filter-group">
-        <select id="bdCategoriaFilter">
-            <option value="">Categoría</option>
-            <option>Seguridad Industrial</option>
-            <option>Indumentaria de Oficina</option>
-            <option>Tecnología</option>
-            <option>Limpieza</option>
-            <option>Cuidado Personal</option>
-            <option>Ferretería</option>
-            <option>Iluminación</option>
-        </select>
-    </div>
-    <div class="bd-filter-group">
-        <select id="bdSubcategoriaFilter">
-            <option value="">Subcategoría</option>
-            <option>Señalización y tráfico</option>
-            <option>Chalecos</option>
-            <option>Taladros</option>
-            <option>Extintores</option>
-            <option>Protección personal</option>
-            <option>Cintas</option>
-            <option>Primeros Auxilios</option>
-            <option>Lámparas</option>
-            <option>Calzado</option>
-        </select>
-    </div>
-    <div class="bd-filter-group">
-        <select id="bdMarcaFilter">
-            <option value="">Marca</option>
-            <option>KCF Safety</option>
-            <option>EasyWon</option>
-            <option>Borweg</option>
-            <option>Kidde</option>
-            <option>3M</option>
-            <option>Protex</option>
-            <option>Nova Safe</option>
-            <option>Philips</option>
-            <option>Tuk</option>
-            <option>Descartame</option>
-        </select>
-    </div>
-    <div class="bd-filter-group">
-        <select id="bdModeloFilter">
-            <option value="">Modelo</option>
-            <option>CS-75</option>
-            <option>SR-8891</option>
-            <option>TAL-850M</option>
-            <option>PQS-6</option>
-            <option>CS-100R</option>
-            <option>ZP-100</option>
-            <option>BOT-VIP36</option>
-            <option>LED-20W</option>
-            <option>MT-48</option>
-            <option>NIT-010</option>
-        </select>
-    </div>
-    <div class="bd-filter-group">
-        <select id="bdEstadoFilter">
-            <option value="">Estado</option>
-            <option value="activo">🟢 Activo</option>
-            <option value="bajo_pedido">🟠 Bajo pedido</option>
-            <option value="bloqueado">🔴 Bloqueado</option>
-        </select>
-    </div>
-</div>
-
-<!-- ============================================================ -->
-<!-- TABLA DE PRODUCTOS                                           -->
-<!-- ============================================================ -->
-<div class="bd-table-card" id="tablaContainer">
-    <div class="bd-table-scroll">
-        <table class="bd-table" id="bdTable">
-            <thead>
-                <tr>
-                    <!-- COLUMNAS SIEMPRE VISIBLES (PRINCIPAL) -->
-                    <th class="bd-col-item">Ítem</th>
-                    <th class="bd-col-code">Código</th>
-                    <th class="bd-col-date">Fecha / Hora</th>
-                    <th class="bd-col-desc">Descripción</th>
-                    <th class="bd-col-model">Modelo</th>
-                    <th class="bd-col-brand">Marca</th>
-                    <th class="bd-col-cat">Categoría</th>
-                    <th class="bd-col-status">Estado</th>
-                    <th class="bd-col-actions">Acciones</th>
-
-                    <!-- COLUMNAS OCULTAS EN VISTA PRINCIPAL (COMPLETA) -->
-                    <th class="bd-col-subcat col-oculta">Subcategoría</th>
-                    <th class="bd-col-weight col-oculta">Peso (kg)</th>
-                    <th class="bd-col-transport col-oculta">Transporte</th>
-                    <th class="bd-col-cost col-oculta">Costo</th>
-                    <th class="bd-col-sale col-oculta">Venta</th>
-                    <th class="bd-col-obs col-oculta">Observación</th>
-                    <th class="bd-col-prov-pres col-oculta">Pres. Proveedor</th>
-                    <th class="bd-col-sale-pres col-oculta">Pres. Venta</th>
-                    <th class="bd-col-min-sale col-oculta">Venta mín.</th>
-                    <th class="bd-col-barras col-oculta">Código barras</th>
-                    <th class="bd-col-volumen col-oculta">Volumen (m³)</th>
-                    <th class="bd-col-origen col-oculta">Origen</th>
-                    <th class="bd-col-tiempo col-oculta">Tiempo entrega</th>
-                    <th class="bd-col-abast col-oculta">Abastecimiento</th>
-                    <th class="bd-col-stock-min col-oculta">Stock mín.</th>
-                    <th class="bd-col-desc-larga col-oculta">Descripción larga</th>
-                </tr>
-            </thead>
-            <tbody id="bdProductTableBody">
-                <tr>
-                    <td colspan="25" style="text-align:center;color:#94A3B8;padding:40px;">
-                        <i class="bi bi-inbox" style="font-size:32px;display:block;margin-bottom:10px;"></i>
-                        Cargando productos...
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-    
-    <!-- ============================================================ -->
-    <!-- FOOTER CON BOTONES DE VISTA, CONTADOR Y PAGINACIÓN           -->
-    <!-- ============================================================ -->
-    <div class="bd-footer">
-        <div class="bd-footer-left">
-            <!-- BOTONES DE VISTA: PRINCIPAL / COMPLETA -->
-            <div class="bd-view-toggle-footer">
-                <span class="view-label">Vista de datos</span>
-                <button class="view-btn-footer active" id="viewPrincipalFooter" onclick="cambiarVista('principal')">
-                    <span class="view-number">1</span> Principal
-                </button>
-                <button class="view-btn-footer" id="viewCompletaFooter" onclick="cambiarVista('completa')">
-                    <span class="view-number">2</span> Completa
-                </button>
-            </div>
-        </div>
-        
-        <div class="bd-footer-center">
-            <span class="bd-count" id="bdTotalRegistros">0 registros</span>
-        </div>
-        
-        <div class="bd-footer-right">
-            <div class="pagination">
-                <span class="page-info" id="bdPaginaInfo">1/1</span>
-                <button class="page-btn" onclick="bdPaginaAnterior()">‹</button>
-                <span class="page-btn page-active" id="bdPaginaActual">1</span>
-                <button class="page-btn" onclick="bdPaginaSiguiente()">›</button>
-                <select class="page-select" id="bdPorPaginaSelect" onchange="bdCambiarPorPagina()">
-                    <option value="10">10 por página</option>
-                    <option value="20" selected>20 por página</option>
-                    <option value="50">50 por página</option>
-                    <option value="100">100 por página</option>
-                </select>
-            </div>
-        </div>
-    </div>
-</div>
-<div class="scroll-note"><i class="bi bi-arrows-expand"></i> Las columnas complementarias se visualizan desplazando la barra horizontal de la tabla.</div>
-<!-- ============================================================ -->
-
-
-<!-- MODAL VER PRODUCTO - COMPACTO                                -->
-<!-- ============================================================ -->
-<div class="modal-ver-producto" id="modalVerProducto" style="display:none;">
-    <div class="modal-overlay-ver" onclick="cerrarModalVer()"></div>
-    <div class="modal-contenido-ver">
-        <div class="modal-header-ver">
-            <span class="modal-icon-ver">📦</span>
-            <span class="modal-title-ver" id="modalVerTitulo">Producto</span>
-            <button class="modal-close-ver" onclick="cerrarModalVer()">✕</button>
-        </div>
-        <div class="modal-body-ver" id="modalVerBody">
-            <div style="text-align:center;padding:20px;color:#94a3b8;">Cargando...</div>
-        </div>
-        <div class="modal-footer-ver">
-            <button class="btn-modal-ver btn-secondary" onclick="cerrarModalVer()">Cerrar</button>
-            <button class="btn-modal-ver btn-primary" id="btnEditarDesdeModal" onclick="editarDesdeModal()">✏️ Editar</button>
-        </div>
-    </div>
-</div>
-
-<script>
-// ============================================================
-// FUNCIONES PARA BASE DE DATOS DE PRODUCTOS
-// ============================================================
-
-// Variables globales
-window.bdProductos = [];
-window.bdProductosFiltrados = [];
-window.bdVistaActual = 'principal';
-window.bdPaginaActual = 1;
-window.bdPorPagina = 20;
-
-// ============================================================
-// FUNCIÓN PARA FORMATEAR FECHA
-// ============================================================
-function formatearFecha(fecha) {
-    if (!fecha) return '-';
-    
-    try {
-        var d = new Date(fecha);
-        if (isNaN(d.getTime())) return '-';
-        
-        var dia = String(d.getDate()).padStart(2, '0');
-        var mes = String(d.getMonth() + 1).padStart(2, '0');
-        var anio = d.getFullYear();
-        var horas = String(d.getHours()).padStart(2, '0');
-        var minutos = String(d.getMinutes()).padStart(2, '0');
-        
-        return dia + '/' + mes + '/' + anio + ' ' + horas + ':' + minutos;
-    } catch (e) {
-        return '-';
-    }
-}
-
-function fueEditado(fecha_creacion, updated_at) {
-    if (!fecha_creacion || !updated_at) return false;
-    if (fecha_creacion === updated_at) return false;
-    try {
-        var created = new Date(fecha_creacion);
-        var updated = new Date(updated_at);
-        if (isNaN(created.getTime()) || isNaN(updated.getTime())) return false;
-        var diffMs = updated.getTime() - created.getTime();
-        return diffMs > 60000;
-    } catch (e) {
-        return false;
-    }
-}
-
-
-// ============================================================
-// CAMBIAR VISTA
-// ============================================================
-function cambiarVista(vista) {
-    console.log('🔄 Cambiando a vista:', vista);
-    window.bdVistaActual = vista;
-    
-    var viewPrincipal = document.getElementById('viewPrincipalFooter');
-    var viewCompleta = document.getElementById('viewCompletaFooter');
-    
-    if (viewPrincipal) viewPrincipal.classList.remove('active');
-    if (viewCompleta) viewCompleta.classList.remove('active');
-    
-    if (vista === 'principal') {
-        if (viewPrincipal) viewPrincipal.classList.add('active');
-    } else {
-        if (viewCompleta) viewCompleta.classList.add('active');
-    }
-    
-    var container = document.getElementById('tablaContainer');
-    if (container) {
-        if (vista === 'completa') {
-            container.classList.add('vista-completa');
-        } else {
-            container.classList.remove('vista-completa');
-        }
-    }
-    
-    if (typeof bdRenderProductos === 'function') {
-        bdRenderProductos(window.bdProductosFiltrados || window.bdProductos || []);
-    }
-}
-
-// ============================================================
-// CARGAR PRODUCTOS
-// ============================================================
-async function cargarProductos() {
-    console.log('🔄 Cargando productos desde la API...');
-    
-    if (!window.location.pathname.includes('/productos/base-datos')) {
-        console.log('ℹ️ No estamos en la página de base de datos, omitiendo carga');
-        return [];
-    }
-    
-    try {
-        const response = await fetch('/productos/api/productos');
-        const result = await response.json();
-        console.log('📦 Datos recibidos:', result);
-        
-        if (result.success) {
-            window.bdProductos = result.data || [];
-            window.bdProductosFiltrados = window.bdProductos;
-            console.log(`✅ ${window.bdProductos.length} productos cargados`);
-            bdRenderProductos(window.bdProductosFiltrados);
-            return window.bdProductos;
-        } else {
-            console.error('❌ Error en la respuesta:', result.error);
-            if (typeof mostrarNotificacion === 'function') {
-                mostrarNotificacion('error', 'Error', result.error || 'Error al cargar productos');
-            }
-            return [];
-        }
-    } catch (error) {
-        console.error('❌ Error cargando productos:', error);
-        if (typeof mostrarNotificacion === 'function') {
-            mostrarNotificacion('error', 'Error', 'Error al cargar productos desde el servidor');
-        }
-        return [];
-    }
-}
-
-// ============================================================
-// FUNCIÓN editarProducto - REDIRIGE A NUEVO PRODUCTO
-// ============================================================
-function editarProducto(id) {
-    if (!id) {
-        if (typeof mostrarNotificacion === 'function') {
-            mostrarNotificacion('error', '❌ Error', 'ID de producto no válido');
-        }
-        return;
-    }
-    console.log('✏️ Editando producto ID:', id);
-    window.location.href = '/productos/nuevo-producto?id=' + id;
-}
-
-// ============================================================
-// APLICAR FILTROS
-// ============================================================
-function bdAplicarFiltros() {
-    var q = document.getElementById('bdSearchInput')?.value?.trim().toLowerCase() || '';
-    var categoria = document.getElementById('bdCategoriaFilter')?.value || '';
-    var subcateg = document.getElementById('bdSubcategoriaFilter')?.value || '';
-    var marca = document.getElementById('bdMarcaFilter')?.value || '';
-    var modelo = document.getElementById('bdModeloFilter')?.value || '';
-    var estado = document.getElementById('bdEstadoFilter')?.value || '';
-    
-    if (!window.bdProductos) return;
-    
-    window.bdProductosFiltrados = window.bdProductos.filter(function(p) {
-        var texto = (p.codigo || '') + ' ' + (p.descripcion || '') + ' ' + (p.modelo || '') + ' ' + (p.marca || '') + ' ' + (p.familia || '') + ' ' + (p.categoria_derivada || '');
-        var coincideTexto = !q || texto.toLowerCase().includes(q);
-        var coincideCategoria = !categoria || (p.familia === categoria || p.categoria === categoria);
-        var coincideSubcategoria = !subcateg || (p.categoria_derivada === subcateg || p.subcategoria === subcateg);
-        var coincideMarca = !marca || p.marca === marca;
-        var coincideModelo = !modelo || p.modelo === modelo;
-        var coincideEstado = !estado || (p.estado || 'activo') === estado;
-        return coincideTexto && coincideCategoria && coincideSubcategoria && coincideMarca && coincideModelo && coincideEstado;
-    });
-    
-    window.bdPaginaActual = 1;
-    bdRenderProductos(window.bdProductosFiltrados);
-}
-
-// ============================================================
-// LIMPIAR FILTROS
-// ============================================================
-function bdLimpiarFiltros() {
-    var searchInput = document.getElementById('bdSearchInput');
-    var categoriaFilter = document.getElementById('bdCategoriaFilter');
-    var subcategoriaFilter = document.getElementById('bdSubcategoriaFilter');
-    var marcaFilter = document.getElementById('bdMarcaFilter');
-    var modeloFilter = document.getElementById('bdModeloFilter');
-    var estadoFilter = document.getElementById('bdEstadoFilter');
-    
-    if (searchInput) searchInput.value = '';
-    if (categoriaFilter) categoriaFilter.selectedIndex = 0;
-    if (subcategoriaFilter) subcategoriaFilter.selectedIndex = 0;
-    if (marcaFilter) marcaFilter.selectedIndex = 0;
-    if (modeloFilter) modeloFilter.selectedIndex = 0;
-    if (estadoFilter) estadoFilter.selectedIndex = 0;
-    
-    window.bdProductosFiltrados = window.bdProductos;
-    window.bdPaginaActual = 1;
-    bdRenderProductos(window.bdProductosFiltrados);
-    
-    if (typeof mostrarNotificacion === 'function') {
-        mostrarNotificacion('info', 'Filtros limpiados', 'Mostrando todos los productos.');
-    }
-}
-
-// ============================================================
-// PAGINACIÓN
-// ============================================================
-function bdPaginaAnterior() {
-    if (window.bdPaginaActual > 1) {
-        window.bdPaginaActual--;
-        bdRenderProductos(window.bdProductosFiltrados);
-    }
-}
-
-function bdPaginaSiguiente() {
-    var total = window.bdProductosFiltrados.length;
-    var totalPaginas = Math.ceil(total / window.bdPorPagina);
-    if (window.bdPaginaActual < totalPaginas) {
-        window.bdPaginaActual++;
-        bdRenderProductos(window.bdProductosFiltrados);
-    }
-}
-
-function bdCambiarPorPagina() {
-    window.bdPorPagina = parseInt(document.getElementById('bdPorPaginaSelect')?.value || 20);
-    window.bdPaginaActual = 1;
-    bdRenderProductos(window.bdProductosFiltrados);
-}
-
-// ============================================================
-// EXPORTAR EXCEL
-// ============================================================
-function bdExportarExcel() {
-    if (typeof mostrarNotificacion === 'function') {
-        mostrarNotificacion('success', '📊 Exportando...', 'El archivo Excel se está generando.');
-    }
-}
-
-// ============================================================
-// VER PRODUCTO - MODAL COMPACTO
-// ============================================================
-var productoIdActual = null;
-
-function verProducto(id) {
-    if (!id) {
-        if (typeof mostrarNotificacion === 'function') {
-            mostrarNotificacion('error', '❌ Error', 'ID de producto no válido');
-        }
-        return;
-    }
-    
-    productoIdActual = id;
-    
-    var modal = document.getElementById('modalVerProducto');
-    var body = document.getElementById('modalVerBody');
-    var titulo = document.getElementById('modalVerTitulo');
-    
-    if (!modal || !body) return;
-    
-    modal.classList.add('active');
-    modal.style.display = 'flex';
-    titulo.textContent = 'Cargando...';
-    body.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;"><i class="bi bi-hourglass-split" style="font-size:24px;display:block;margin-bottom:8px;"></i>Cargando producto...</div>';
-    
-    fetch('/productos/api/productos/' + id)
-        .then(function(response) { 
-            if (!response.ok) throw new Error('Error al cargar el producto');
-            return response.json(); 
-        })
-        .then(function(data) {
-            if (data.success && data.data) {
-                var p = data.data;
-                renderModalProducto(p);
-            } else {
-                body.innerHTML = '<div style="text-align:center;padding:20px;color:#dc2626;">❌ ' + (data.error || 'Producto no encontrado') + '</div>';
-                titulo.textContent = 'Error';
-            }
-        })
-        .catch(function(error) {
-            console.error('Error:', error);
-            body.innerHTML = '<div style="text-align:center;padding:20px;color:#dc2626;">❌ Error al cargar el producto</div>';
-            titulo.textContent = 'Error';
-        });
-}
-
-
-function renderModalProducto(p) {
-    var titulo = document.getElementById('modalVerTitulo');
-    var body = document.getElementById('modalVerBody');
-    
-    titulo.textContent = p.descripcion || p.codigo || 'Producto';
-    
-    var estadoLabel = 'Activo';
-    if (p.estado) {
-        var estadoLower = p.estado.toLowerCase();
-        var estadoMap = {
-            'activo': 'Activo',
-            'bajo_pedido': 'Bajo pedido',
-            'bloqueado': 'Bloqueado'
-        };
-        estadoLabel = estadoMap[estadoLower] || p.estado.charAt(0).toUpperCase() + p.estado.slice(1).toLowerCase();
-    }
-    
-    var estadoClass = (p.estado || 'activo').toLowerCase();
-    
-    var costo = p.costo_unitario ? parseFloat(p.costo_unitario).toFixed(2) : '0.00';
-    var precio = p.precio_unitario ? parseFloat(p.precio_unitario).toFixed(2) : '0.00';
-    var categoria = p.categoria || p.familia || '-';
-    var subcategoria = p.subcategoria || p.categoria_derivada || '-';
-    
-    // ✅ CORREGIDO: Fechas
-    var fechaCreacion = p.fecha_creacion || null;
-    var fechaActualizacion = p.updated_at || null;
-    
-    var editado = false;
-    if (fechaCreacion && fechaActualizacion && fechaCreacion !== fechaActualizacion) {
-        try {
-            var created = new Date(fechaCreacion);
-            var updated = new Date(fechaActualizacion);
-            if (!isNaN(created.getTime()) && !isNaN(updated.getTime())) {
-                var diffMs = updated.getTime() - created.getTime();
-                editado = diffMs > 60000;
-            }
-        } catch(e) {
-            console.warn('Error comparando fechas:', e);
-        }
-    }
-    
-    var fechaCreacionStr = formatearFecha(fechaCreacion);
-    var fechaEdicionStr = formatearFecha(fechaActualizacion);
-    
-    body.innerHTML = `
-        <div class="grid-info-ver">
-            <div class="info-item">
-                <span class="info-label">Código</span>
-                <span class="info-value"><span class="bd-t-code">${p.codigo || '-'}</span></span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Estado</span>
-                <span class="info-value"><span class="badge-estado ${estadoClass}">${estadoLabel}</span></span>
-            </div>
-            
-            <div class="info-item">
-                <span class="info-label">Modelo</span>
-                <span class="info-value">${p.modelo || '-'}</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Marca</span>
-                <span class="info-value">${p.marca || '-'}</span>
-            </div>
-            
-            <div class="info-item">
-                <span class="info-label">Categoría</span>
-                <span class="info-value">${categoria}</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Subcategoría</span>
-                <span class="info-value">${subcategoria}</span>
-            </div>
-            
-            <div class="divider-ver"></div>
-            
-            <div class="info-item">
-                <span class="info-label">Valor Venta</span>
-                <span class="info-value precio-venta">S/ ${precio}</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Valor Costo</span>
-                <span class="info-value precio-costo">S/ ${costo}</span>
-            </div>
-            
-            <div class="info-item">
-                <span class="info-label">Unidad</span>
-                <span class="info-value">${p.unidad || '-'}</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Transporte</span>
-                <span class="info-value">${p.transporte || '-'}</span>
-            </div>
-            
-            <div class="info-item">
-                <span class="info-label">Stock mínimo</span>
-                <span class="info-value">${p.stock_minimo || '0'}</span>
-            </div>
-            <div class="info-item">
-    <span class="info-label">Fecha creación</span>
-    <span class="info-value">${fechaCreacionStr}</span>  <!-- ✅ Usa fechaCreacionStr -->
-</div>
-
-${editado ? `
-<div class="info-item full" style="background:#fef3c7;border-radius:6px;padding:6px 10px;border:1px solid #f59e0b;">
-    <span class="info-label" style="color:#92400e;">✏️ Última edición</span>
-    <span class="info-value" style="color:#92400e;font-weight:700;">${fechaEdicionStr}</span>  <!-- ✅ Usa fechaEdicionStr -->
-</div>` : ''}
-            
-            <div class="info-item full">
-                <span class="info-label">Descripción</span>
-                <span class="info-value">${p.descripcion_larga || p.descripcion || '-'}</span>
-            </div>
-            
-            ${p.observaciones ? `
-            <div class="info-item full">
-                <span class="info-label">Observaciones</span>
-                <span class="info-value" style="font-weight:400;color:#475569;">${p.observaciones}</span>
-            </div>` : ''}
-        </div>
-    `;
-    
-    var btnEditar = document.getElementById('btnEditarDesdeModal');
-    if (btnEditar) {
-        btnEditar.onclick = function() {
-            cerrarModalVer();
-            editarProducto(p.id);
-        };
-    }
-}
-
-
-function cerrarModalVer() {
-    var modal = document.getElementById('modalVerProducto');
-    if (modal) {
-        modal.classList.remove('active');
-        modal.style.display = 'none';
-    }
-    productoIdActual = null;
-}
-
-function editarDesdeModal() {
-    if (productoIdActual) {
-        cerrarModalVer();
-        editarProducto(productoIdActual);
-    }
-}
-
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        cerrarModalVer();
-    }
-});
-
-// ============================================================
-// ELIMINAR PRODUCTO
-// ============================================================
-function eliminarProducto(id) {
-    if (!id) {
-        if (typeof mostrarNotificacion === 'function') {
-            mostrarNotificacion('error', '❌ Error', 'ID de producto no válido');
-        }
-        return;
-    }
-    
-    var producto = window.bdProductos.find(function(p) { return p.id == id; });
-    var nombre = producto ? (producto.descripcion || producto.codigo) : 'este producto';
-    
-    if (!confirm('¿Estás seguro de eliminar "' + nombre + '"? Esta acción no se puede deshacer.')) {
-        return;
-    }
-    
-    fetch('/productos/api/productos/' + id, { method: 'DELETE' })
-        .then(function(response) { return response.json(); })
-        .then(function(data) {
-            if (data.success) {
-                if (typeof mostrarNotificacion === 'function') {
-                    mostrarNotificacion('success', '✅ Eliminado', '"' + nombre + '" eliminado correctamente');
-                }
-                cargarProductos();
-            } else {
-                if (typeof mostrarNotificacion === 'function') {
-                    mostrarNotificacion('error', '❌ Error', data.error || 'Error al eliminar');
-                }
-            }
-        })
-        .catch(function(error) {
-            console.error('Error:', error);
-            if (typeof mostrarNotificacion === 'function') {
-                mostrarNotificacion('error', '❌ Error', 'Error al comunicarse con el servidor');
-            }
-        });
-}
+{% block title %}Base de Datos: Producto - ERP Multiempresa{% endblock %}
 
 
 
-// ============================================================
-// 🔥 FORZAR SOBRESCRITURA DEFINITIVA - AGREGAR AL FINAL DEL ARCHIVO
-// ============================================================
+{% block page_title %}{% endblock %}
+{% block subtitle %}{% endblock %}
 
-// 1. Asegurar que la función correcta esté definida
-window.bdRenderProductos = function(data) {
-    if (!window.location.pathname.includes('/productos/base-datos')) {
-        console.log('ℹ️ No estamos en la página de base de datos');
-        return;
-    }
-    
-    console.log('🖥️ Renderizando productos (VERSIÓN CORREGIDA FINAL)...');
-    const tbody = document.getElementById('bdProductTableBody');
-    if (!tbody) {
-        console.error('❌ No se encontró bdProductTableBody');
-        return;
-    }
-    
-    if (!data || data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="25" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay productos registrados</td></tr>`;
-        document.getElementById('bdTotalRegistros').textContent = '0 registros';
-        document.getElementById('bdPaginaInfo').textContent = '0/0';
-        return;
-    }
-    
-    var total = data.length;
-    var totalPaginas = Math.ceil(total / window.bdPorPagina);
-    if (window.bdPaginaActual > totalPaginas) window.bdPaginaActual = totalPaginas;
-    if (window.bdPaginaActual < 1) window.bdPaginaActual = 1;
-    
-    var inicio = (window.bdPaginaActual - 1) * window.bdPorPagina;
-    var fin = Math.min(inicio + window.bdPorPagina, total);
-    var paginaData = data.slice(inicio, fin);
-    var esVistaCompleta = window.bdVistaActual === 'completa';
-    var html = '';
-    
-    for (var i = 0; i < paginaData.length; i++) {
-        var p = paginaData[i];
-        var index = inicio + i + 1;
-        
-        var estadoClass = 'st-active';
-        var estado = (p.estado || 'activo').toLowerCase();
-        if (estado === 'bajo_pedido') estadoClass = 'st-pending';
-        else if (estado === 'bloqueado') estadoClass = 'st-blocked';
-
-        
-        var estadoMostrado = 'Activo';
-        if (p.estado) {
-            var estadoLower = p.estado.toLowerCase();
-            var estadoMap = {
-                'activo': 'Activo',
-                'bajo_pedido': 'Bajo pedido',
-                'bloqueado': 'Bloqueado'
-            };
-            estadoMostrado = estadoMap[estadoLower] || p.estado.charAt(0).toUpperCase() + p.estado.slice(1).toLowerCase();
-        }
-        
-        var costo = p.costo_unitario ? parseFloat(p.costo_unitario).toFixed(2) : '0.00';
-        var precio = p.precio_unitario ? parseFloat(p.precio_unitario).toFixed(2) : '0.00';
-        var categoria = p.categoria || p.familia || '-';
-        var subcategoria = p.subcategoria || p.categoria_derivada || '-';
-        
-        // ✅ CORREGIDO: usar fecha_creacion (NO created_at)
-        var fechaCreacion = p.fecha_creacion || null;
-        var fechaActualizacion = p.updated_at || null;
-        
-        // ✅ Determinar si fue editado
-        var editado = false;
-        if (fechaCreacion && fechaActualizacion && fechaCreacion !== fechaActualizacion) {
-            try {
-                var created = new Date(fechaCreacion);
-                var updated = new Date(fechaActualizacion);
-                if (!isNaN(created.getTime()) && !isNaN(updated.getTime())) {
-                    var diffMs = updated.getTime() - created.getTime();
-                    editado = diffMs > 60000;
-                }
-            } catch(e) {
-                console.warn('Error comparando fechas:', e);
-            }
-        }
-        
-        var fechaMostrar = editado ? fechaActualizacion : fechaCreacion;
-        var fechaFormateada = formatearFecha(fechaMostrar);
-        
-        html += '<tr>';
-        html += '<td class="bd-col-item" style="text-align:center;color:#94a3b8;font-weight:600;">' + index + '</td>';
-        html += '<td class="bd-col-code"><span class="bd-t-code">' + (p.codigo || '-') + '</span></td>';
-        
-        if (editado) {
-            html += '<td class="bd-col-date"><span class="bd-date-badge editado"><i class="bi bi-pencil-square"></i> ' + fechaFormateada + '</span></td>';
-        } else {
-            html += '<td class="bd-col-date"><span class="bd-date-badge">' + fechaFormateada + '</span></td>';
-        }
-        
-        html += '<td class="bd-col-desc"><strong>' + (p.descripcion || '-') + '</strong></td>';
-        html += '<td class="bd-col-model">' + (p.modelo || '-') + '</td>';
-        html += '<td class="bd-col-brand">' + (p.marca || '-') + '</td>';
-        html += '<td class="bd-col-cat">' + categoria + '</td>';
-        html += '<td class="bd-col-status"><span class="bd-status ' + estadoClass + '"><span class="bd-dot"></span>' + estadoMostrado + '</span></td>';
-        html += '<td class="bd-col-actions"><div class="row-actions">';
-        html += '<button class="btn-action btn-view" onclick="verProducto(' + p.id + ')" title="Ver"><i class="bi bi-eye"></i></button>';
-        html += '<button class="btn-action btn-edit" onclick="editarProducto(' + p.id + ')" title="Editar"><i class="bi bi-pencil"></i></button>';
-        html += '<button class="btn-action btn-delete" onclick="eliminarProducto(' + p.id + ')" title="Eliminar"><i class="bi bi-trash"></i></button>';
-        html += '</div></td>';
-        
-        // COLUMNAS OCULTAS
-        if (esVistaCompleta) {
-            html += '<td class="bd-col-subcat">' + subcategoria + '</td>';
-            html += '<td class="bd-col-weight">' + (p.peso || '0') + '</td>';
-            html += '<td class="bd-col-transport">' + (p.transporte || '-') + '</td>';
-            html += '<td class="bd-col-cost" style="font-weight:600;">S/ ' + costo + '</td>';
-            html += '<td class="bd-col-sale" style="font-weight:700;color:#0066FF;">S/ ' + precio + '</td>';
-            html += '<td class="bd-col-obs">' + (p.observaciones || '-') + '</td>';
-            html += '<td class="bd-col-prov-pres">' + (p.presentacion_proveedor || '-') + '</td>';
-            html += '<td class="bd-col-sale-pres">' + (p.presentacion_venta || '-') + '</td>';
-            html += '<td class="bd-col-min-sale">' + (p.venta_minima || '1') + '</td>';
-            html += '<td class="bd-col-barras">' + (p.codigo_barras || '-') + '</td>';
-            html += '<td class="bd-col-volumen">' + (p.volumen || '0') + '</td>';
-            html += '<td class="bd-col-origen">' + (p.origen || '-') + '</td>';
-            html += '<td class="bd-col-tiempo">' + (p.tiempo_entrega || '-') + '</td>';
-            html += '<td class="bd-col-abast">' + (p.abastecimiento || '-') + '</td>';
-            html += '<td class="bd-col-stock-min">' + (p.stock_minimo || '0') + '</td>';
-            html += '<td class="bd-col-desc-larga" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (p.descripcion_larga || '-') + '</td>';
-        } else {
-            html += '<td class="bd-col-subcat col-oculta">' + subcategoria + '</td>';
-            html += '<td class="bd-col-weight col-oculta">' + (p.peso || '0') + '</td>';
-            html += '<td class="bd-col-transport col-oculta">' + (p.transporte || '-') + '</td>';
-            html += '<td class="bd-col-cost col-oculta" style="font-weight:600;">S/ ' + costo + '</td>';
-            html += '<td class="bd-col-sale col-oculta" style="font-weight:700;color:#0066FF;">S/ ' + precio + '</td>';
-            html += '<td class="bd-col-obs col-oculta">' + (p.observaciones || '-') + '</td>';
-            html += '<td class="bd-col-prov-pres col-oculta">' + (p.presentacion_proveedor || '-') + '</td>';
-            html += '<td class="bd-col-sale-pres col-oculta">' + (p.presentacion_venta || '-') + '</td>';
-            html += '<td class="bd-col-min-sale col-oculta">' + (p.venta_minima || '1') + '</td>';
-            html += '<td class="bd-col-barras col-oculta">' + (p.codigo_barras || '-') + '</td>';
-            html += '<td class="bd-col-volumen col-oculta">' + (p.volumen || '0') + '</td>';
-            html += '<td class="bd-col-origen col-oculta">' + (p.origen || '-') + '</td>';
-            html += '<td class="bd-col-tiempo col-oculta">' + (p.tiempo_entrega || '-') + '</td>';
-            html += '<td class="bd-col-abast col-oculta">' + (p.abastecimiento || '-') + '</td>';
-            html += '<td class="bd-col-stock-min col-oculta">' + (p.stock_minimo || '0') + '</td>';
-            html += '<td class="bd-col-desc-larga col-oculta" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (p.descripcion_larga || '-') + '</td>';
-        }
-        
-        html += '</tr>';
-    }
-    
-    tbody.innerHTML = html;
-    
-    document.getElementById('bdTotalRegistros').textContent = total + ' registros';
-    document.getElementById('bdPaginaInfo').textContent = window.bdPaginaActual + '/' + totalPaginas;
-    document.getElementById('bdPaginaActual').textContent = window.bdPaginaActual;
-    
-    console.log('✅ Renderizado completado con fechas corregidas');
-};
-
-// 2. Forzar ejecución después de cargar la página
-setTimeout(function() {
-    console.log('🔥 Ejecutando carga forzada de productos...');
-    if (window.location.pathname.includes('/productos/base-datos')) {
-        // Primero limpiar productos existentes
-        window.bdProductos = [];
-        window.bdProductosFiltrados = [];
-        // Luego cargar
-        if (typeof cargarProductos === 'function') {
-            cargarProductos();
-        } else {
-            console.error('❌ cargarProductos no está definida');
-        }
-    }
-}, 500);
-
-console.log('✅ Script de corrección definitiva cargado');
-
-// ============================================================
-// INICIALIZAR
-// ============================================================
-document.addEventListener('DOMContentLoaded', function() {
-    if (window.location.pathname.includes('/productos/base-datos')) {
-        console.log('🔄 Inicializando Base de datos de productos...');
-        
-        var searchInput = document.getElementById('bdSearchInput');
-        var categoriaFilter = document.getElementById('bdCategoriaFilter');
-        var subcategoriaFilter = document.getElementById('bdSubcategoriaFilter');
-        var marcaFilter = document.getElementById('bdMarcaFilter');
-        var modeloFilter = document.getElementById('bdModeloFilter');
-        var estadoFilter = document.getElementById('bdEstadoFilter');
-        
-        if (searchInput) {
-            var newSearch = searchInput.cloneNode(true);
-            searchInput.parentNode.replaceChild(newSearch, searchInput);
-            newSearch.addEventListener('input', bdAplicarFiltros);
-        }
-        
-        if (categoriaFilter) {
-            var newCategoria = categoriaFilter.cloneNode(true);
-            categoriaFilter.parentNode.replaceChild(newCategoria, categoriaFilter);
-            newCategoria.addEventListener('change', bdAplicarFiltros);
-        }
-        
-        if (subcategoriaFilter) {
-            var newSubcategoria = subcategoriaFilter.cloneNode(true);
-            subcategoriaFilter.parentNode.replaceChild(newSubcategoria, subcategoriaFilter);
-            newSubcategoria.addEventListener('change', bdAplicarFiltros);
-        }
-        
-        if (marcaFilter) {
-            var newMarca = marcaFilter.cloneNode(true);
-            marcaFilter.parentNode.replaceChild(newMarca, marcaFilter);
-            newMarca.addEventListener('change', bdAplicarFiltros);
-        }
-        
-        if (modeloFilter) {
-            var newModelo = modeloFilter.cloneNode(true);
-            modeloFilter.parentNode.replaceChild(newModelo, modeloFilter);
-            newModelo.addEventListener('change', bdAplicarFiltros);
-        }
-        
-        if (estadoFilter) {
-            var newEstado = estadoFilter.cloneNode(true);
-            estadoFilter.parentNode.replaceChild(newEstado, estadoFilter);
-            newEstado.addEventListener('change', bdAplicarFiltros);
-        }
-        
-        setTimeout(function() {
-            cargarProductos();
-        }, 200);
-        
-        console.log('✅ Base de datos de productos inicializada');
-    }
-});
-
-// Exponer funciones globalmente
-window.cargarProductos = cargarProductos;
-window.bdRenderProductos = bdRenderProductos;
-window.bdAplicarFiltros = bdAplicarFiltros;
-window.bdLimpiarFiltros = bdLimpiarFiltros;
-window.cambiarVista = cambiarVista;
-window.bdPaginaAnterior = bdPaginaAnterior;
-window.bdPaginaSiguiente = bdPaginaSiguiente;
-window.bdCambiarPorPagina = bdCambiarPorPagina;
-window.verProducto = verProducto;
-window.editarProducto = editarProducto;
-window.eliminarProducto = eliminarProducto;
-window.bdExportarExcel = bdExportarExcel;
-window.formatearFecha = formatearFecha;
-window.fueEditado = fueEditado;
-</script>
-
+{% block extra_css %}
 <style>
-/* ============================================================
-   ESTILOS COMPACTOS PARA BASE DE DATOS DE PRODUCTOS
-   ============================================================ */
-
-/* ============================================================
-   TOOLBAR COMPACTA - MÁS DELGADA
-   ============================================================ */
-.bd-toolbar-compact {
+    .bd-toolbar-compact {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -1814,3 +905,728 @@ window.fueEditado = fueEditado;
     }
 }
 </style>
+{% endblock %}
+
+{% block content %}
+<!-- Todo tu contenido actual: page-head, toolbar, filtros, tabla, modal ver producto -->
+{% endblock %}
+
+
+
+
+
+{% block extra_js %}
+<script>
+// ============================================================
+// FUNCIONES PARA BASE DE DATOS DE PRODUCTOS
+// ============================================================
+
+// Variables globales
+window.bdProductos = [];
+window.bdProductosFiltrados = [];
+window.bdVistaActual = 'principal';
+window.bdPaginaActual = 1;
+window.bdPorPagina = 20;
+
+// ============================================================
+// FUNCIÓN PARA FORMATEAR FECHA
+// ============================================================
+function formatearFecha(fecha) {
+    if (!fecha) return '-';
+    
+    try {
+        var d = new Date(fecha);
+        if (isNaN(d.getTime())) return '-';
+        
+        var dia = String(d.getDate()).padStart(2, '0');
+        var mes = String(d.getMonth() + 1).padStart(2, '0');
+        var anio = d.getFullYear();
+        var horas = String(d.getHours()).padStart(2, '0');
+        var minutos = String(d.getMinutes()).padStart(2, '0');
+        
+        return dia + '/' + mes + '/' + anio + ' ' + horas + ':' + minutos;
+    } catch (e) {
+        return '-';
+    }
+}
+
+function fueEditado(fecha_creacion, updated_at) {
+    if (!fecha_creacion || !updated_at) return false;
+    if (fecha_creacion === updated_at) return false;
+    try {
+        var created = new Date(fecha_creacion);
+        var updated = new Date(updated_at);
+        if (isNaN(created.getTime()) || isNaN(updated.getTime())) return false;
+        var diffMs = updated.getTime() - created.getTime();
+        return diffMs > 60000;
+    } catch (e) {
+        return false;
+    }
+}
+
+
+// ============================================================
+// CAMBIAR VISTA
+// ============================================================
+function cambiarVista(vista) {
+    console.log('🔄 Cambiando a vista:', vista);
+    window.bdVistaActual = vista;
+    
+    var viewPrincipal = document.getElementById('viewPrincipalFooter');
+    var viewCompleta = document.getElementById('viewCompletaFooter');
+    
+    if (viewPrincipal) viewPrincipal.classList.remove('active');
+    if (viewCompleta) viewCompleta.classList.remove('active');
+    
+    if (vista === 'principal') {
+        if (viewPrincipal) viewPrincipal.classList.add('active');
+    } else {
+        if (viewCompleta) viewCompleta.classList.add('active');
+    }
+    
+    var container = document.getElementById('tablaContainer');
+    if (container) {
+        if (vista === 'completa') {
+            container.classList.add('vista-completa');
+        } else {
+            container.classList.remove('vista-completa');
+        }
+    }
+    
+    if (typeof bdRenderProductos === 'function') {
+        bdRenderProductos(window.bdProductosFiltrados || window.bdProductos || []);
+    }
+}
+
+// ============================================================
+// CARGAR PRODUCTOS
+// ============================================================
+async function cargarProductos() {
+    console.log('🔄 Cargando productos desde la API...');
+    
+    if (!window.location.pathname.includes('/productos/base-datos')) {
+        console.log('ℹ️ No estamos en la página de base de datos, omitiendo carga');
+        return [];
+    }
+    
+    try {
+        const response = await fetch('/productos/api/productos');
+        const result = await response.json();
+        console.log('📦 Datos recibidos:', result);
+        
+        if (result.success) {
+            window.bdProductos = result.data || [];
+            window.bdProductosFiltrados = window.bdProductos;
+            console.log(`✅ ${window.bdProductos.length} productos cargados`);
+            bdRenderProductos(window.bdProductosFiltrados);
+            return window.bdProductos;
+        } else {
+            console.error('❌ Error en la respuesta:', result.error);
+            if (typeof mostrarNotificacion === 'function') {
+                mostrarNotificacion('error', 'Error', result.error || 'Error al cargar productos');
+            }
+            return [];
+        }
+    } catch (error) {
+        console.error('❌ Error cargando productos:', error);
+        if (typeof mostrarNotificacion === 'function') {
+            mostrarNotificacion('error', 'Error', 'Error al cargar productos desde el servidor');
+        }
+        return [];
+    }
+}
+
+// ============================================================
+// FUNCIÓN editarProducto - REDIRIGE A NUEVO PRODUCTO
+// ============================================================
+function editarProducto(id) {
+    if (!id) {
+        if (typeof mostrarNotificacion === 'function') {
+            mostrarNotificacion('error', '❌ Error', 'ID de producto no válido');
+        }
+        return;
+    }
+    console.log('✏️ Editando producto ID:', id);
+    window.location.href = '/productos/nuevo-producto?id=' + id;
+}
+
+// ============================================================
+// APLICAR FILTROS
+// ============================================================
+function bdAplicarFiltros() {
+    var q = document.getElementById('bdSearchInput')?.value?.trim().toLowerCase() || '';
+    var categoria = document.getElementById('bdCategoriaFilter')?.value || '';
+    var subcateg = document.getElementById('bdSubcategoriaFilter')?.value || '';
+    var marca = document.getElementById('bdMarcaFilter')?.value || '';
+    var modelo = document.getElementById('bdModeloFilter')?.value || '';
+    var estado = document.getElementById('bdEstadoFilter')?.value || '';
+    
+    if (!window.bdProductos) return;
+    
+    window.bdProductosFiltrados = window.bdProductos.filter(function(p) {
+        var texto = (p.codigo || '') + ' ' + (p.descripcion || '') + ' ' + (p.modelo || '') + ' ' + (p.marca || '') + ' ' + (p.familia || '') + ' ' + (p.categoria_derivada || '');
+        var coincideTexto = !q || texto.toLowerCase().includes(q);
+        var coincideCategoria = !categoria || (p.familia === categoria || p.categoria === categoria);
+        var coincideSubcategoria = !subcateg || (p.categoria_derivada === subcateg || p.subcategoria === subcateg);
+        var coincideMarca = !marca || p.marca === marca;
+        var coincideModelo = !modelo || p.modelo === modelo;
+        var coincideEstado = !estado || (p.estado || 'activo') === estado;
+        return coincideTexto && coincideCategoria && coincideSubcategoria && coincideMarca && coincideModelo && coincideEstado;
+    });
+    
+    window.bdPaginaActual = 1;
+    bdRenderProductos(window.bdProductosFiltrados);
+}
+
+// ============================================================
+// LIMPIAR FILTROS
+// ============================================================
+function bdLimpiarFiltros() {
+    var searchInput = document.getElementById('bdSearchInput');
+    var categoriaFilter = document.getElementById('bdCategoriaFilter');
+    var subcategoriaFilter = document.getElementById('bdSubcategoriaFilter');
+    var marcaFilter = document.getElementById('bdMarcaFilter');
+    var modeloFilter = document.getElementById('bdModeloFilter');
+    var estadoFilter = document.getElementById('bdEstadoFilter');
+    
+    if (searchInput) searchInput.value = '';
+    if (categoriaFilter) categoriaFilter.selectedIndex = 0;
+    if (subcategoriaFilter) subcategoriaFilter.selectedIndex = 0;
+    if (marcaFilter) marcaFilter.selectedIndex = 0;
+    if (modeloFilter) modeloFilter.selectedIndex = 0;
+    if (estadoFilter) estadoFilter.selectedIndex = 0;
+    
+    window.bdProductosFiltrados = window.bdProductos;
+    window.bdPaginaActual = 1;
+    bdRenderProductos(window.bdProductosFiltrados);
+    
+    if (typeof mostrarNotificacion === 'function') {
+        mostrarNotificacion('info', 'Filtros limpiados', 'Mostrando todos los productos.');
+    }
+}
+
+// ============================================================
+// PAGINACIÓN
+// ============================================================
+function bdPaginaAnterior() {
+    if (window.bdPaginaActual > 1) {
+        window.bdPaginaActual--;
+        bdRenderProductos(window.bdProductosFiltrados);
+    }
+}
+
+function bdPaginaSiguiente() {
+    var total = window.bdProductosFiltrados.length;
+    var totalPaginas = Math.ceil(total / window.bdPorPagina);
+    if (window.bdPaginaActual < totalPaginas) {
+        window.bdPaginaActual++;
+        bdRenderProductos(window.bdProductosFiltrados);
+    }
+}
+
+function bdCambiarPorPagina() {
+    window.bdPorPagina = parseInt(document.getElementById('bdPorPaginaSelect')?.value || 20);
+    window.bdPaginaActual = 1;
+    bdRenderProductos(window.bdProductosFiltrados);
+}
+
+// ============================================================
+// EXPORTAR EXCEL
+// ============================================================
+function bdExportarExcel() {
+    if (typeof mostrarNotificacion === 'function') {
+        mostrarNotificacion('success', '📊 Exportando...', 'El archivo Excel se está generando.');
+    }
+}
+
+// ============================================================
+// VER PRODUCTO - MODAL COMPACTO
+// ============================================================
+var productoIdActual = null;
+
+function verProducto(id) {
+    if (!id) {
+        if (typeof mostrarNotificacion === 'function') {
+            mostrarNotificacion('error', '❌ Error', 'ID de producto no válido');
+        }
+        return;
+    }
+    
+    productoIdActual = id;
+    
+    var modal = document.getElementById('modalVerProducto');
+    var body = document.getElementById('modalVerBody');
+    var titulo = document.getElementById('modalVerTitulo');
+    
+    if (!modal || !body) return;
+    
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+    titulo.textContent = 'Cargando...';
+    body.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;"><i class="bi bi-hourglass-split" style="font-size:24px;display:block;margin-bottom:8px;"></i>Cargando producto...</div>';
+    
+    fetch('/productos/api/productos/' + id)
+        .then(function(response) { 
+            if (!response.ok) throw new Error('Error al cargar el producto');
+            return response.json(); 
+        })
+        .then(function(data) {
+            if (data.success && data.data) {
+                var p = data.data;
+                renderModalProducto(p);
+            } else {
+                body.innerHTML = '<div style="text-align:center;padding:20px;color:#dc2626;">❌ ' + (data.error || 'Producto no encontrado') + '</div>';
+                titulo.textContent = 'Error';
+            }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            body.innerHTML = '<div style="text-align:center;padding:20px;color:#dc2626;">❌ Error al cargar el producto</div>';
+            titulo.textContent = 'Error';
+        });
+}
+
+
+function renderModalProducto(p) {
+    var titulo = document.getElementById('modalVerTitulo');
+    var body = document.getElementById('modalVerBody');
+    
+    titulo.textContent = p.descripcion || p.codigo || 'Producto';
+    
+    var estadoLabel = 'Activo';
+    if (p.estado) {
+        var estadoLower = p.estado.toLowerCase();
+        var estadoMap = {
+            'activo': 'Activo',
+            'bajo_pedido': 'Bajo pedido',
+            'bloqueado': 'Bloqueado'
+        };
+        estadoLabel = estadoMap[estadoLower] || p.estado.charAt(0).toUpperCase() + p.estado.slice(1).toLowerCase();
+    }
+    
+    var estadoClass = (p.estado || 'activo').toLowerCase();
+    
+    var costo = p.costo_unitario ? parseFloat(p.costo_unitario).toFixed(2) : '0.00';
+    var precio = p.precio_unitario ? parseFloat(p.precio_unitario).toFixed(2) : '0.00';
+    var categoria = p.categoria || p.familia || '-';
+    var subcategoria = p.subcategoria || p.categoria_derivada || '-';
+    
+    // ✅ CORREGIDO: Fechas
+    var fechaCreacion = p.fecha_creacion || null;
+    var fechaActualizacion = p.updated_at || null;
+    
+    var editado = false;
+    if (fechaCreacion && fechaActualizacion && fechaCreacion !== fechaActualizacion) {
+        try {
+            var created = new Date(fechaCreacion);
+            var updated = new Date(fechaActualizacion);
+            if (!isNaN(created.getTime()) && !isNaN(updated.getTime())) {
+                var diffMs = updated.getTime() - created.getTime();
+                editado = diffMs > 60000;
+            }
+        } catch(e) {
+            console.warn('Error comparando fechas:', e);
+        }
+    }
+    
+    var fechaCreacionStr = formatearFecha(fechaCreacion);
+    var fechaEdicionStr = formatearFecha(fechaActualizacion);
+    
+    body.innerHTML = `
+        <div class="grid-info-ver">
+            <div class="info-item">
+                <span class="info-label">Código</span>
+                <span class="info-value"><span class="bd-t-code">${p.codigo || '-'}</span></span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Estado</span>
+                <span class="info-value"><span class="badge-estado ${estadoClass}">${estadoLabel}</span></span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Modelo</span>
+                <span class="info-value">${p.modelo || '-'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Marca</span>
+                <span class="info-value">${p.marca || '-'}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Categoría</span>
+                <span class="info-value">${categoria}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Subcategoría</span>
+                <span class="info-value">${subcategoria}</span>
+            </div>
+            
+            <div class="divider-ver"></div>
+            
+            <div class="info-item">
+                <span class="info-label">Valor Venta</span>
+                <span class="info-value precio-venta">S/ ${precio}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Valor Costo</span>
+                <span class="info-value precio-costo">S/ ${costo}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Unidad</span>
+                <span class="info-value">${p.unidad || '-'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Transporte</span>
+                <span class="info-value">${p.transporte || '-'}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Stock mínimo</span>
+                <span class="info-value">${p.stock_minimo || '0'}</span>
+            </div>
+            <div class="info-item">
+    <span class="info-label">Fecha creación</span>
+    <span class="info-value">${fechaCreacionStr}</span>  <!-- ✅ Usa fechaCreacionStr -->
+</div>
+
+${editado ? `
+<div class="info-item full" style="background:#fef3c7;border-radius:6px;padding:6px 10px;border:1px solid #f59e0b;">
+    <span class="info-label" style="color:#92400e;">✏️ Última edición</span>
+    <span class="info-value" style="color:#92400e;font-weight:700;">${fechaEdicionStr}</span>  <!-- ✅ Usa fechaEdicionStr -->
+</div>` : ''}
+            
+            <div class="info-item full">
+                <span class="info-label">Descripción</span>
+                <span class="info-value">${p.descripcion_larga || p.descripcion || '-'}</span>
+            </div>
+            
+            ${p.observaciones ? `
+            <div class="info-item full">
+                <span class="info-label">Observaciones</span>
+                <span class="info-value" style="font-weight:400;color:#475569;">${p.observaciones}</span>
+            </div>` : ''}
+        </div>
+    `;
+    
+    var btnEditar = document.getElementById('btnEditarDesdeModal');
+    if (btnEditar) {
+        btnEditar.onclick = function() {
+            cerrarModalVer();
+            editarProducto(p.id);
+        };
+    }
+}
+
+
+function cerrarModalVer() {
+    var modal = document.getElementById('modalVerProducto');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+    }
+    productoIdActual = null;
+}
+
+function editarDesdeModal() {
+    if (productoIdActual) {
+        cerrarModalVer();
+        editarProducto(productoIdActual);
+    }
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        cerrarModalVer();
+    }
+});
+
+// ============================================================
+// ELIMINAR PRODUCTO
+// ============================================================
+function eliminarProducto(id) {
+    if (!id) {
+        if (typeof mostrarNotificacion === 'function') {
+            mostrarNotificacion('error', '❌ Error', 'ID de producto no válido');
+        }
+        return;
+    }
+    
+    var producto = window.bdProductos.find(function(p) { return p.id == id; });
+    var nombre = producto ? (producto.descripcion || producto.codigo) : 'este producto';
+    
+    if (!confirm('¿Estás seguro de eliminar "' + nombre + '"? Esta acción no se puede deshacer.')) {
+        return;
+    }
+    
+    fetch('/productos/api/productos/' + id, { method: 'DELETE' })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                if (typeof mostrarNotificacion === 'function') {
+                    mostrarNotificacion('success', '✅ Eliminado', '"' + nombre + '" eliminado correctamente');
+                }
+                cargarProductos();
+            } else {
+                if (typeof mostrarNotificacion === 'function') {
+                    mostrarNotificacion('error', '❌ Error', data.error || 'Error al eliminar');
+                }
+            }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            if (typeof mostrarNotificacion === 'function') {
+                mostrarNotificacion('error', '❌ Error', 'Error al comunicarse con el servidor');
+            }
+        });
+}
+
+
+
+// ============================================================
+// 🔥 FORZAR SOBRESCRITURA DEFINITIVA - AGREGAR AL FINAL DEL ARCHIVO
+// ============================================================
+
+// 1. Asegurar que la función correcta esté definida
+window.bdRenderProductos = function(data) {
+    if (!window.location.pathname.includes('/productos/base-datos')) {
+        console.log('ℹ️ No estamos en la página de base de datos');
+        return;
+    }
+    
+    console.log('🖥️ Renderizando productos (VERSIÓN CORREGIDA FINAL)...');
+    const tbody = document.getElementById('bdProductTableBody');
+    if (!tbody) {
+        console.error('❌ No se encontró bdProductTableBody');
+        return;
+    }
+    
+    if (!data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="25" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay productos registrados</td></tr>`;
+        document.getElementById('bdTotalRegistros').textContent = '0 registros';
+        document.getElementById('bdPaginaInfo').textContent = '0/0';
+        return;
+    }
+    
+    var total = data.length;
+    var totalPaginas = Math.ceil(total / window.bdPorPagina);
+    if (window.bdPaginaActual > totalPaginas) window.bdPaginaActual = totalPaginas;
+    if (window.bdPaginaActual < 1) window.bdPaginaActual = 1;
+    
+    var inicio = (window.bdPaginaActual - 1) * window.bdPorPagina;
+    var fin = Math.min(inicio + window.bdPorPagina, total);
+    var paginaData = data.slice(inicio, fin);
+    var esVistaCompleta = window.bdVistaActual === 'completa';
+    var html = '';
+    
+    for (var i = 0; i < paginaData.length; i++) {
+        var p = paginaData[i];
+        var index = inicio + i + 1;
+        
+        var estadoClass = 'st-active';
+        var estado = (p.estado || 'activo').toLowerCase();
+        if (estado === 'bajo_pedido') estadoClass = 'st-pending';
+        else if (estado === 'bloqueado') estadoClass = 'st-blocked';
+
+        
+        var estadoMostrado = 'Activo';
+        if (p.estado) {
+            var estadoLower = p.estado.toLowerCase();
+            var estadoMap = {
+                'activo': 'Activo',
+                'bajo_pedido': 'Bajo pedido',
+                'bloqueado': 'Bloqueado'
+            };
+            estadoMostrado = estadoMap[estadoLower] || p.estado.charAt(0).toUpperCase() + p.estado.slice(1).toLowerCase();
+        }
+        
+        var costo = p.costo_unitario ? parseFloat(p.costo_unitario).toFixed(2) : '0.00';
+        var precio = p.precio_unitario ? parseFloat(p.precio_unitario).toFixed(2) : '0.00';
+        var categoria = p.categoria || p.familia || '-';
+        var subcategoria = p.subcategoria || p.categoria_derivada || '-';
+        
+        // ✅ CORREGIDO: usar fecha_creacion (NO created_at)
+        var fechaCreacion = p.fecha_creacion || null;
+        var fechaActualizacion = p.updated_at || null;
+        
+        // ✅ Determinar si fue editado
+        var editado = false;
+        if (fechaCreacion && fechaActualizacion && fechaCreacion !== fechaActualizacion) {
+            try {
+                var created = new Date(fechaCreacion);
+                var updated = new Date(fechaActualizacion);
+                if (!isNaN(created.getTime()) && !isNaN(updated.getTime())) {
+                    var diffMs = updated.getTime() - created.getTime();
+                    editado = diffMs > 60000;
+                }
+            } catch(e) {
+                console.warn('Error comparando fechas:', e);
+            }
+        }
+        
+        var fechaMostrar = editado ? fechaActualizacion : fechaCreacion;
+        var fechaFormateada = formatearFecha(fechaMostrar);
+        
+        html += '<tr>';
+        html += '<td class="bd-col-item" style="text-align:center;color:#94a3b8;font-weight:600;">' + index + '</td>';
+        html += '<td class="bd-col-code"><span class="bd-t-code">' + (p.codigo || '-') + '</span></td>';
+        
+        if (editado) {
+            html += '<td class="bd-col-date"><span class="bd-date-badge editado"><i class="bi bi-pencil-square"></i> ' + fechaFormateada + '</span></td>';
+        } else {
+            html += '<td class="bd-col-date"><span class="bd-date-badge">' + fechaFormateada + '</span></td>';
+        }
+        
+        html += '<td class="bd-col-desc"><strong>' + (p.descripcion || '-') + '</strong></td>';
+        html += '<td class="bd-col-model">' + (p.modelo || '-') + '</td>';
+        html += '<td class="bd-col-brand">' + (p.marca || '-') + '</td>';
+        html += '<td class="bd-col-cat">' + categoria + '</td>';
+        html += '<td class="bd-col-status"><span class="bd-status ' + estadoClass + '"><span class="bd-dot"></span>' + estadoMostrado + '</span></td>';
+        html += '<td class="bd-col-actions"><div class="row-actions">';
+        html += '<button class="btn-action btn-view" onclick="verProducto(' + p.id + ')" title="Ver"><i class="bi bi-eye"></i></button>';
+        html += '<button class="btn-action btn-edit" onclick="editarProducto(' + p.id + ')" title="Editar"><i class="bi bi-pencil"></i></button>';
+        html += '<button class="btn-action btn-delete" onclick="eliminarProducto(' + p.id + ')" title="Eliminar"><i class="bi bi-trash"></i></button>';
+        html += '</div></td>';
+        
+        // COLUMNAS OCULTAS
+        if (esVistaCompleta) {
+            html += '<td class="bd-col-subcat">' + subcategoria + '</td>';
+            html += '<td class="bd-col-weight">' + (p.peso || '0') + '</td>';
+            html += '<td class="bd-col-transport">' + (p.transporte || '-') + '</td>';
+            html += '<td class="bd-col-cost" style="font-weight:600;">S/ ' + costo + '</td>';
+            html += '<td class="bd-col-sale" style="font-weight:700;color:#0066FF;">S/ ' + precio + '</td>';
+            html += '<td class="bd-col-obs">' + (p.observaciones || '-') + '</td>';
+            html += '<td class="bd-col-prov-pres">' + (p.presentacion_proveedor || '-') + '</td>';
+            html += '<td class="bd-col-sale-pres">' + (p.presentacion_venta || '-') + '</td>';
+            html += '<td class="bd-col-min-sale">' + (p.venta_minima || '1') + '</td>';
+            html += '<td class="bd-col-barras">' + (p.codigo_barras || '-') + '</td>';
+            html += '<td class="bd-col-volumen">' + (p.volumen || '0') + '</td>';
+            html += '<td class="bd-col-origen">' + (p.origen || '-') + '</td>';
+            html += '<td class="bd-col-tiempo">' + (p.tiempo_entrega || '-') + '</td>';
+            html += '<td class="bd-col-abast">' + (p.abastecimiento || '-') + '</td>';
+            html += '<td class="bd-col-stock-min">' + (p.stock_minimo || '0') + '</td>';
+            html += '<td class="bd-col-desc-larga" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (p.descripcion_larga || '-') + '</td>';
+        } else {
+            html += '<td class="bd-col-subcat col-oculta">' + subcategoria + '</td>';
+            html += '<td class="bd-col-weight col-oculta">' + (p.peso || '0') + '</td>';
+            html += '<td class="bd-col-transport col-oculta">' + (p.transporte || '-') + '</td>';
+            html += '<td class="bd-col-cost col-oculta" style="font-weight:600;">S/ ' + costo + '</td>';
+            html += '<td class="bd-col-sale col-oculta" style="font-weight:700;color:#0066FF;">S/ ' + precio + '</td>';
+            html += '<td class="bd-col-obs col-oculta">' + (p.observaciones || '-') + '</td>';
+            html += '<td class="bd-col-prov-pres col-oculta">' + (p.presentacion_proveedor || '-') + '</td>';
+            html += '<td class="bd-col-sale-pres col-oculta">' + (p.presentacion_venta || '-') + '</td>';
+            html += '<td class="bd-col-min-sale col-oculta">' + (p.venta_minima || '1') + '</td>';
+            html += '<td class="bd-col-barras col-oculta">' + (p.codigo_barras || '-') + '</td>';
+            html += '<td class="bd-col-volumen col-oculta">' + (p.volumen || '0') + '</td>';
+            html += '<td class="bd-col-origen col-oculta">' + (p.origen || '-') + '</td>';
+            html += '<td class="bd-col-tiempo col-oculta">' + (p.tiempo_entrega || '-') + '</td>';
+            html += '<td class="bd-col-abast col-oculta">' + (p.abastecimiento || '-') + '</td>';
+            html += '<td class="bd-col-stock-min col-oculta">' + (p.stock_minimo || '0') + '</td>';
+            html += '<td class="bd-col-desc-larga col-oculta" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (p.descripcion_larga || '-') + '</td>';
+        }
+        
+        html += '</tr>';
+    }
+    
+    tbody.innerHTML = html;
+    
+    document.getElementById('bdTotalRegistros').textContent = total + ' registros';
+    document.getElementById('bdPaginaInfo').textContent = window.bdPaginaActual + '/' + totalPaginas;
+    document.getElementById('bdPaginaActual').textContent = window.bdPaginaActual;
+    
+    console.log('✅ Renderizado completado con fechas corregidas');
+};
+
+// 2. Forzar ejecución después de cargar la página
+setTimeout(function() {
+    console.log('🔥 Ejecutando carga forzada de productos...');
+    if (window.location.pathname.includes('/productos/base-datos')) {
+        // Primero limpiar productos existentes
+        window.bdProductos = [];
+        window.bdProductosFiltrados = [];
+        // Luego cargar
+        if (typeof cargarProductos === 'function') {
+            cargarProductos();
+        } else {
+            console.error('❌ cargarProductos no está definida');
+        }
+    }
+}, 500);
+
+console.log('✅ Script de corrección definitiva cargado');
+
+// ============================================================
+// INICIALIZAR
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.location.pathname.includes('/productos/base-datos')) {
+        console.log('🔄 Inicializando Base de datos de productos...');
+        
+        var searchInput = document.getElementById('bdSearchInput');
+        var categoriaFilter = document.getElementById('bdCategoriaFilter');
+        var subcategoriaFilter = document.getElementById('bdSubcategoriaFilter');
+        var marcaFilter = document.getElementById('bdMarcaFilter');
+        var modeloFilter = document.getElementById('bdModeloFilter');
+        var estadoFilter = document.getElementById('bdEstadoFilter');
+        
+        if (searchInput) {
+            var newSearch = searchInput.cloneNode(true);
+            searchInput.parentNode.replaceChild(newSearch, searchInput);
+            newSearch.addEventListener('input', bdAplicarFiltros);
+        }
+        
+        if (categoriaFilter) {
+            var newCategoria = categoriaFilter.cloneNode(true);
+            categoriaFilter.parentNode.replaceChild(newCategoria, categoriaFilter);
+            newCategoria.addEventListener('change', bdAplicarFiltros);
+        }
+        
+        if (subcategoriaFilter) {
+            var newSubcategoria = subcategoriaFilter.cloneNode(true);
+            subcategoriaFilter.parentNode.replaceChild(newSubcategoria, subcategoriaFilter);
+            newSubcategoria.addEventListener('change', bdAplicarFiltros);
+        }
+        
+        if (marcaFilter) {
+            var newMarca = marcaFilter.cloneNode(true);
+            marcaFilter.parentNode.replaceChild(newMarca, marcaFilter);
+            newMarca.addEventListener('change', bdAplicarFiltros);
+        }
+        
+        if (modeloFilter) {
+            var newModelo = modeloFilter.cloneNode(true);
+            modeloFilter.parentNode.replaceChild(newModelo, modeloFilter);
+            newModelo.addEventListener('change', bdAplicarFiltros);
+        }
+        
+        if (estadoFilter) {
+            var newEstado = estadoFilter.cloneNode(true);
+            estadoFilter.parentNode.replaceChild(newEstado, estadoFilter);
+            newEstado.addEventListener('change', bdAplicarFiltros);
+        }
+        
+        setTimeout(function() {
+            cargarProductos();
+        }, 200);
+        
+        console.log('✅ Base de datos de productos inicializada');
+    }
+});
+
+// Exponer funciones globalmente
+window.cargarProductos = cargarProductos;
+window.bdRenderProductos = bdRenderProductos;
+window.bdAplicarFiltros = bdAplicarFiltros;
+window.bdLimpiarFiltros = bdLimpiarFiltros;
+window.cambiarVista = cambiarVista;
+window.bdPaginaAnterior = bdPaginaAnterior;
+window.bdPaginaSiguiente = bdPaginaSiguiente;
+window.bdCambiarPorPagina = bdCambiarPorPagina;
+window.verProducto = verProducto;
+window.editarProducto = editarProducto;
+window.eliminarProducto = eliminarProducto;
+window.bdExportarExcel = bdExportarExcel;
+window.formatearFecha = formatearFecha;
+window.fueEditado = fueEditado;
+</script>
+{% endblock %}

@@ -2974,40 +2974,76 @@ function updateQuoteStatusBar(estado) {
     });
 }
 
+// ============================================================
+// INICIALIZACIÓN DE SWITCHES TOGGLE PARA VALIDACIÓN PC
+// ============================================================
 
-// Agregar esta función completa
+// Función para actualizar el estado de validación
 function updateValidationStatus() {
-    const vPrecio = document.getElementById('vPrecio')?.value === 'Sí';
-    const vCantidad = document.getElementById('vCantidad')?.value === 'Sí';
-    const vProducto = document.getElementById('vProducto')?.value === 'Sí';
-    const vEntrega = document.getElementById('vEntrega')?.value === 'Sí';
-    const vMoneda = document.getElementById('vMoneda')?.value === 'Sí';
-    const vTransporte = document.getElementById('vTransporte')?.value === 'Sí';
-    const vVigencia = document.getElementById('vVigencia')?.value === 'Sí';
-    const vMargen = document.getElementById('vMargen')?.value === 'Sí';
+    const validations = [
+        'vPrecio', 'vProducto', 'vEntrega', 
+        'vTransporte', 'vCantidad', 'vMoneda', 'vVigencia'
+    ];
     
-    validationStatus = {
-        precios: vPrecio,
-        cantidades: vCantidad,
-        stock: vProducto,
-        entrega: vEntrega,
-        moneda: vMoneda,
-        transporte: vTransporte,
-        vigencia: vVigencia,
-        margen: vMargen
-    };
+    validations.forEach(id => {
+        const checkbox = document.getElementById(id);
+        const label = document.getElementById(id + 'Label');
+        
+        if (checkbox && label) {
+            if (checkbox.checked) {
+                label.textContent = '✅ Válido';
+                label.style.color = '#16A34A';
+            } else {
+                label.textContent = '❌ No válido';
+                label.style.color = '#DC2626';
+            }
+        }
+    });
     
-    updateValidationIcon('vPrecioIcon', vPrecio);
-    updateValidationIcon('vCantidadIcon', vCantidad);
-    updateValidationIcon('vProductoIcon', vProducto);
-    updateValidationIcon('vEntregaIcon', vEntrega);
-    updateValidationIcon('vMonedaIcon', vMoneda);
-    updateValidationIcon('vTransporteIcon', vTransporte);
-    updateValidationIcon('vVigenciaIcon', vVigencia);
-    updateValidationIcon('vMargenIcon', vMargen);
-    
-    updateValidationSemaphore();
+    // Actualizar semáforo si existe
+    if (typeof updateValidationSemaphore === 'function') {
+        updateValidationSemaphore();
+    }
 }
+
+// Función para obtener valores de validación (para usar al guardar)
+function getValidationValues() {
+    const validations = [
+        'vPrecio', 'vProducto', 'vEntrega', 
+        'vTransporte', 'vCantidad', 'vMoneda', 'vVigencia'
+    ];
+    
+    const result = {};
+    validations.forEach(id => {
+        const checkbox = document.getElementById(id);
+        result[id] = checkbox ? (checkbox.checked ? 'Sí' : 'No') : 'Sí';
+    });
+    return result;
+}
+
+// Inicializar al cargar la página (se ejecuta después de que el DOM esté listo)
+document.addEventListener('DOMContentLoaded', function() {
+    // Esperar un poco para que el modal se haya renderizado
+    setTimeout(function() {
+        // Buscar si existe el modal de PC
+        const modal = document.getElementById('pedidoCompraModal');
+        if (modal) {
+            // Inicializar los switches que estén dentro del modal
+            const switches = modal.querySelectorAll('.switch input[type="checkbox"]');
+            switches.forEach(function(sw) {
+                // Asegurar que los switches tengan el estado inicial correcto
+                if (sw.checked) {
+                    const label = document.getElementById(sw.id + 'Label');
+                    if (label) {
+                        label.textContent = '✅ Válido';
+                        label.style.color = '#16A34A';
+                    }
+                }
+            });
+        }
+        updateValidationStatus();
+    }, 500);
+});
 
 // ============================================================
 // VALIDACIÓN PC VS COTIZACIÓN - FUNCIÓN COMPLETA Y CORREGIDA
@@ -5167,56 +5203,49 @@ async function cargarPCParaEditar(id) {
         const pc = response.data;
         console.log('📦 Datos del PC:', pc);
         
-        // 🔽 FUNCIÓN PARA NORMALIZAR ITEMS (acepta ambos formatos)
+        // FUNCIÓN PARA NORMALIZAR ITEMS (con marca y modelo)
         const normalizarItems = (items) => {
             if (!items || !Array.isArray(items) || items.length === 0) {
                 return [];
             }
             
             return items.map(item => {
-                // Si ya tiene el formato correcto (con cantidad_pc y precio_pc)
-                if (item.cantidad_pc !== undefined && item.precio_pc !== undefined) {
+                // Si es un objeto con propiedades
+                if (typeof item === 'object' && !Array.isArray(item)) {
                     return {
                         codigo: item.codigo || '',
-                        producto: item.producto || '',
-                        cantidad_cotizada: parseFloat(item.cantidad_cotizada) || 0,
-                        cantidad_pc: parseFloat(item.cantidad_pc) || 1,
-                        precio_cotizado: parseFloat(item.precio_cotizado) || 0,
-                        precio_pc: parseFloat(item.precio_pc) || 0,
-                        stock: parseFloat(item.stock) || 0
+                        producto: item.producto || item.descripcion || '',
+                        marca: item.marca || '',
+                        modelo: item.modelo || '',
+                        cantidad_cotizada: parseFloat(item.cantidad_cotizada || item.cantidad || 0),
+                        cantidad_pc: parseFloat(item.cantidad_pc || item.cantidad || 1),
+                        precio_cotizado: parseFloat(item.precio_cotizado || item.valorVenta || item.precio || 0),
+                        precio_pc: parseFloat(item.precio_pc || item.valorVenta || item.precio || 0),
+                        stock: parseFloat(item.stock || 0)
                     };
                 }
                 
-                // Si tiene el formato antiguo (con cantidad y valorVenta)
-                if (item.cantidad !== undefined || item.valorVenta !== undefined) {
-                    return {
-                        codigo: item.codigo || '',
-                        producto: item.producto || '',
-                        cantidad_cotizada: parseFloat(item.cantidad) || 0,
-                        cantidad_pc: parseFloat(item.cantidad) || 1,
-                        precio_cotizado: parseFloat(item.valorVenta) || 0,
-                        precio_pc: parseFloat(item.valorVenta) || 0,
-                        stock: parseFloat(item.stock) || 0
-                    };
-                }
-                
-                // Si tiene formato de array [codigo, producto, cantidad, valorVenta, stock]
+                // Si es un array [codigo, descripcion, marca, modelo, cant_cot, cant_pc, precio_cot, precio_pc, stock]
                 if (Array.isArray(item)) {
                     return {
                         codigo: item[0] || '',
                         producto: item[1] || '',
-                        cantidad_cotizada: parseFloat(item[2]) || 0,
-                        cantidad_pc: parseFloat(item[2]) || 1,
-                        precio_cotizado: parseFloat(item[3]) || 0,
-                        precio_pc: parseFloat(item[3]) || 0,
-                        stock: parseFloat(item[4]) || 0
+                        marca: item[2] || '',
+                        modelo: item[3] || '',
+                        cantidad_cotizada: parseFloat(item[4]) || 0,
+                        cantidad_pc: parseFloat(item[5]) || 1,
+                        precio_cotizado: parseFloat(item[6]) || 0,
+                        precio_pc: parseFloat(item[7]) || 0,
+                        stock: parseFloat(item[8]) || 0
                     };
                 }
                 
-                // Fallback: intentar usar lo que haya
+                // Fallback
                 return {
                     codigo: item.codigo || '',
                     producto: item.producto || '',
+                    marca: item.marca || '',
+                    modelo: item.modelo || '',
                     cantidad_cotizada: parseFloat(item.cantidad_cotizada || item.cantidad || 0),
                     cantidad_pc: parseFloat(item.cantidad_pc || item.cantidad || 1),
                     precio_cotizado: parseFloat(item.precio_cotizado || item.valorVenta || item.precio || 0),
@@ -5226,7 +5255,7 @@ async function cargarPCParaEditar(id) {
             });
         };
         
-        // 🔽 NORMALIZAR ITEMS
+        // NORMALIZAR ITEMS
         const itemsNormalizados = normalizarItems(pc.items || []);
         console.log('📦 Items normalizados:', itemsNormalizados);
         
@@ -5266,13 +5295,6 @@ async function cargarPCParaEditar(id) {
         // ============================================================
         setValue('pcNumero', pc.numero);
         setValue('pcFecha', formatDateForInput(pc.fecha));
-        
-        // Medio
-        const medioSelect = document.getElementById('pcMedio');
-        if (medioSelect && pc.medio) {
-            medioSelect.value = pc.medio;
-        }
-        
         setValue('pcCliente', pc.cliente);
         setValue('pcRuc', pc.ruc);
         setValue('pcMonto', pc.monto || 0);
@@ -5281,6 +5303,12 @@ async function cargarPCParaEditar(id) {
         setValue('pcCondicionPago', pc.condicion_pago || 'Contado');
         setValue('pcVendedor', pc.vendedor || 'Helen Blas Príncipe');
         setValue('pcCotNumero', pc.cotizacion_numero || '');
+        
+        // Medio
+        const medioSelect = document.getElementById('pcMedio');
+        if (medioSelect && pc.medio) {
+            medioSelect.value = pc.medio;
+        }
         
         // Condición pago
         const condSelect = document.getElementById('pcCondicion');
@@ -5314,13 +5342,13 @@ async function cargarPCParaEditar(id) {
         }
         
         // ============================================================
-        // CARGAR PRODUCTOS (ITEMS) - CON DATOS NORMALIZADOS
+        // CARGAR PRODUCTOS (ITEMS) CON MARCA Y MODELO
         // ============================================================
         const tbody = document.getElementById('pcItemsBody');
         if (tbody) {
             tbody.innerHTML = '';
             const items = itemsNormalizados;
-            console.log(`📦 Cargando ${items.length} items...`);
+            console.log(`📦 Cargando ${items.length} items para edición...`);
             
             if (items.length === 0) {
                 addPedidoItemSAP();
@@ -5328,6 +5356,8 @@ async function cargarPCParaEditar(id) {
                 items.forEach((item, idx) => {
                     const codigo = item.codigo || '';
                     const producto = item.producto || 'Producto sin nombre';
+                    const marca = item.marca || '';
+                    const modelo = item.modelo || '';
                     const cantidadCotizada = parseFloat(item.cantidad_cotizada) || 0;
                     const cantidadPC = parseFloat(item.cantidad_pc) || 1;
                     const precioCotizado = parseFloat(item.precio_cotizado) || 0;
@@ -5335,45 +5365,62 @@ async function cargarPCParaEditar(id) {
                     const stock = parseFloat(item.stock) || 0;
                     const faltante = Math.max(cantidadPC - stock, 0);
                     
-                    console.log(`  Item ${idx+1}: ${codigo} - ${producto} (Cant: ${cantidadPC}, Stock: ${stock})`);
+                    const tr = document.createElement('tr');
+                    tr.id = `item-row-${idx + 1}`;
+                    tr.style.borderBottom = '1px solid #E2E8F0';
                     
-                    tbody.insertAdjacentHTML('beforeend', `
-                        <tr>
-                            <td>${idx + 1}</td>
-                            <td>
-                                <input value="${codigo}" 
-                                       style="width:90px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px;">
-                            </td>
-                            <td>
-                                <input value="${producto}" 
-                                       style="width:160px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px;">
-                            </td>
-                            <td>
-                                <input type="number" value="${cantidadCotizada}" 
-                                       style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;">
-                            </td>
-                            <td>
-                                <input type="number" value="${cantidadPC}" 
-                                       style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;"
-                                       onchange="actualizarFaltanteSAP(this, ${idx})">
-                            </td>
-                            <td>
-                                <input type="number" step="0.01" value="${precioCotizado}" 
-                                       style="width:80px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:right;">
-                            </td>
-                            <td>
-                                <input type="number" step="0.01" value="${precioPC}" 
-                                       style="width:80px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:right;">
-                            </td>
-                            <td>
-                                <input type="number" value="${stock}" 
-                                       style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;">
-                            </td>
-                            <td style="font-weight:900; color:${faltante > 0 ? '#DC2626' : '#16A34A'}; text-align:center;">
-                                ${faltante}
-                            </td>
-                        </tr>
-                    `);
+                    tr.innerHTML = `
+                        <td style="padding:2px 3px; text-align:center; font-weight:800; font-size:9px; background:#F8FAFC;">${idx + 1}</td>
+                        <td style="padding:2px 3px;">
+                            <input value="${esc(codigo)}" 
+                                   style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800; color:#1D4ED8;"
+                                   readonly>
+                        </td>
+                        <td style="padding:2px 3px;">
+                            <input value="${esc(producto)}" 
+                                   style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800;"
+                                   readonly>
+                        </td>
+                        <td style="padding:2px 3px;">
+                            <input value="${esc(marca)}" 
+                                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A;">
+                        </td>
+                        <td style="padding:2px 3px;">
+                            <input value="${esc(modelo)}" 
+                                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A;">
+                        </td>
+                        <td style="padding:2px 3px;">
+                            <input type="number" value="${cantidadCotizada}" 
+                                   style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center;"
+                                   readonly>
+                        </td>
+                        <td style="padding:2px 3px;">
+                            <input type="number" value="${cantidadPC}" 
+                                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900;"
+                                   onchange="actualizarFaltanteDesdeInput(this)">
+                        </td>
+                        <td style="padding:2px 3px;">
+                            <input type="number" step="0.01" value="${precioCotizado}" 
+                                   style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center;"
+                                   readonly>
+                        </td>
+                        <td style="padding:2px 3px;">
+                            <input type="number" step="0.01" value="${precioPC}" 
+                                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;">
+                        </td>
+                        <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B; font-weight:800;">${stock}</td>
+                        <td style="padding:2px 3px; text-align:center; font-size:8px; font-weight:900; color:${faltante > 0 ? '#DC2626' : '#16A34A'};">${faltante}</td>
+                        <td style="padding:2px 3px; text-align:center;">
+                            <button onclick="eliminarItemSAP('${tr.id}')" 
+                                    style="background:transparent; border:none; color:#EF4444; cursor:pointer; font-size:12px; font-weight:900; padding:0 4px; border-radius:3px; transition:all 0.2s; width:22px; height:22px;"
+                                    onmouseover="this.style.background='#FEE2E2'; this.style.color='#DC2626';"
+                                    onmouseout="this.style.background='transparent'; this.style.color='#EF4444';">
+                                ✕
+                            </button>
+                        </td>
+                    `;
+                    
+                    tbody.appendChild(tr);
                 });
             }
         }
@@ -5400,6 +5447,7 @@ async function cargarPCParaEditar(id) {
         showToast('❌ Error al cargar el PC: ' + error.message, 'error');
     }
 }
+
 
 // ============================================================
 // FUNCIÓN PARA MOSTRAR EL MODAL (separada para claridad)
@@ -5484,7 +5532,6 @@ function loadPedidoCotizacionSAP() {
     }
 }
 
-// Función para agregar ítem con botón eliminar
 function addPedidoItemSAP() {
     const tbody = document.getElementById('pcItemsBody');
     const rowCount = tbody.children.length + 1;
@@ -5497,6 +5544,9 @@ function addPedidoItemSAP() {
         <td style="padding:2px 3px; text-align:center; font-weight:800; font-size:9px;">${rowCount}</td>
         <td style="padding:2px 3px;"><input type="text" placeholder="Código" style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none;"></td>
         <td style="padding:2px 3px;"><input type="text" placeholder="Descripción" style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none;"></td>
+        <!-- 🔽 NUEVOS CAMPOS -->
+        <td style="padding:2px 3px;"><input type="text" placeholder="Marca" style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none;"></td>
+        <td style="padding:2px 3px;"><input type="text" placeholder="Modelo" style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none;"></td>
         <td style="padding:2px 3px;"><input type="number" value="0" style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;"></td>
         <td style="padding:2px 3px;"><input type="number" value="0" style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;"></td>
         <td style="padding:2px 3px;"><input type="number" step="0.01" value="0" style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;"></td>
@@ -5545,14 +5595,11 @@ function reordenarItemsSAP() {
     });
 }
 
-
 async function savePedidoCompraSAP(force) {
     console.log('🔄 savePedidoCompraSAP ejecutándose...', { force });
     
     try {
-        // ============================================================
-        // 1. VALIDAR QUE SE HAYA SELECCIONADO UNA COTIZACIÓN
-        // ============================================================
+        // Validar que se haya seleccionado una cotización en modo 'cot'
         if (modalMode === 'cot' && !cotizacionSeleccionada) {
             const searchInput = document.getElementById('pcCotSearch');
             const valor = searchInput?.value?.trim() || '';
@@ -5561,7 +5608,7 @@ async function savePedidoCompraSAP(force) {
                 searchInput?.focus();
                 return;
             }
-            // Buscar automáticamente
+            // Si hay texto pero no se seleccionó, intentar buscar automáticamente
             const results = cotizacionesData.filter(c => {
                 const searchStr = `${c.numero || ''} ${c.razon || ''} ${c.ruc || ''}`.toLowerCase();
                 return searchStr.includes(valor.toLowerCase());
@@ -5570,7 +5617,9 @@ async function savePedidoCompraSAP(force) {
                 showToast('⚠️ No se encontró la cotización. Verifica el texto ingresado.', 'warning');
                 return;
             } else if (results.length === 1) {
+                // Auto-seleccionar si solo hay un resultado
                 seleccionarCotizacionSAP(results[0].id);
+                // Reintentar guardar después de un momento
                 setTimeout(() => savePedidoCompraSAP(force), 300);
                 return;
             } else {
@@ -5580,9 +5629,7 @@ async function savePedidoCompraSAP(force) {
             }
         }
         
-        // ============================================================
-        // 2. LEER VALIDACIONES
-        // ============================================================
+        // Leer validaciones
         const val = ['vPrecio', 'vCantidad', 'vProducto', 'vEntrega', 'vMoneda', 'vTransporte', 'vVigencia', 'vMargen']
             .map(id => document.getElementById(id)?.value || 'Sí');
         
@@ -5591,33 +5638,33 @@ async function savePedidoCompraSAP(force) {
         const observed = force === 'observado' || val.some(v => v === 'No');
         
         // ============================================================
-        // 3. LEER ITEMS DE LA TABLA - AHORA COMO OBJETOS
+        // LEER ITEMS DE LA TABLA CON MARCA Y MODELO
         // ============================================================
         const trs = document.querySelectorAll('#pcItemsBody tr');
         const items = Array.from(trs).map(r => {
             const inputs = r.querySelectorAll('input');
-            // 🔽 AHORA DEVOLVEMOS OBJETOS CON PROPIEDADES NOMBRADAS
+            // 🔽 AHORA INCLUYE MARCA Y MODELO
             return {
                 codigo: inputs[0]?.value || '',
                 producto: inputs[1]?.value || '',
-                cantidad_cotizada: Number(inputs[2]?.value || 0),
-                cantidad_pc: Number(inputs[3]?.value || 1),
-                precio_cotizado: Number(inputs[4]?.value || 0),
-                precio_pc: Number(inputs[5]?.value || 0),
-                stock: Number(inputs[6]?.value || 0)
+                marca: inputs[2]?.value || '',        // NUEVO
+                modelo: inputs[3]?.value || '',        // NUEVO
+                cantidad_cotizada: Number(inputs[4]?.value || 0),
+                cantidad_pc: Number(inputs[5]?.value || 1),
+                precio_cotizado: Number(inputs[6]?.value || 0),
+                precio_pc: Number(inputs[7]?.value || 0),
+                stock: Number(inputs[8]?.value || 0)
             };
         });
         
-        console.log('📦 Items del PC (como objetos):', items);
+        console.log('📦 Items del PC (con marca y modelo):', items);
         
-        // ============================================================
-        // 4. VERIFICAR STOCK Y DETERMINAR ESTADO
-        // ============================================================
+        // Verificar stock
         const stockFalta = items.some(i => Number(i.cantidad_pc) > Number(i.stock));
         const estado = observed ? 'PC observado' : (stockFalta ? 'PC conforme' : 'Listo para despacho');
         
         // ============================================================
-        // 5. PREPARAR DATOS PARA ENVIAR A LA API
+        // PREPARAR DATOS PARA ENVIAR A LA API
         // ============================================================
         const pcData = {
             id: editingId || null,
@@ -5636,7 +5683,7 @@ async function savePedidoCompraSAP(force) {
             vendedor: document.getElementById('pcVendedor')?.value || 'Helen Blas Príncipe',
             responsable: 'Hellen',
             observaciones: document.getElementById('pcObs')?.value || '',
-            // 🔽 ITEMS COMO OBJETOS
+            // 🔽 ITEMS CON MARCA Y MODELO
             items: items,
             // 🔽 VALIDACIONES
             valida_precios: val[0] === 'Sí',
@@ -5654,7 +5701,7 @@ async function savePedidoCompraSAP(force) {
         console.log('📦 Datos a enviar a la API:', pcData);
         
         // ============================================================
-        // 6. ENVIAR A LA API
+        // ENVIAR A LA API
         // ============================================================
         showToast('⏳ Guardando PC...', 'info');
         
@@ -6351,6 +6398,7 @@ function buscarCotizacionSAP(query) {
     }, 300);
 }
 
+
 function seleccionarCotizacionSAP(cotizacionId) {
     // Buscar la cotización en los datos básicos
     const cotizacion = cotizacionesData.find(c => c.id === cotizacionId);
@@ -6362,7 +6410,7 @@ function seleccionarCotizacionSAP(cotizacionId) {
     // Mostrar loading
     showToast('⏳ Cargando productos de la cotización...', 'info');
     
-    // 🔽 CARGAR DATOS COMPLETOS (CON PRODUCTOS)
+    // CARGAR DATOS COMPLETOS (CON PRODUCTOS)
     apiFetch(`/ventas/api/cotizaciones/${cotizacionId}/completa`)
         .then(response => {
             if (!response.success) {
@@ -6378,30 +6426,71 @@ function seleccionarCotizacionSAP(cotizacionId) {
             
             // Cerrar resultados
             const resultsContainer = document.getElementById('cotizacionSearchResults');
-            resultsContainer.style.display = 'none';
-            resultsContainer.innerHTML = '';
+            if (resultsContainer) {
+                resultsContainer.style.display = 'none';
+                resultsContainer.innerHTML = '';
+            }
             
             // Actualizar el input de búsqueda
             const searchInput = document.getElementById('pcCotSearch');
-            searchInput.value = `${data.numero_cotizacion || ''} - ${data.cliente_razon_social || ''}`;
+            if (searchInput) {
+                searchInput.value = `${data.numero_cotizacion || ''} - ${data.cliente_razon_social || ''}`;
+            }
             
             // ============================================================
             // CARGAR DATOS BÁSICOS
             // ============================================================
-            document.getElementById('pcCotNumero').value = data.numero_cotizacion || '';
-            document.getElementById('pcCotFecha').value = formatFecha(data.fecha_creacion);
-            document.getElementById('pcCliente').value = data.cliente_razon_social || '';
-            document.getElementById('pcRuc').value = data.cliente_ruc || '';
-            document.getElementById('pcMonto').value = data.total || 0;
-            document.getElementById('pcCondicionPago').value = data.condicion_pago || 'Contado';
-            document.getElementById('pcVendedor').value = data.vendedor || 'Helen Blas Príncipe';
+            const setVal = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.value = val !== undefined && val !== null ? val : '';
+            };
+            
+            setVal('pcCotNumero', data.numero_cotizacion || '');
+            setVal('pcCotFecha', data.fecha_creacion ? formatFecha(data.fecha_creacion) : '');
+            setVal('pcCliente', data.cliente_razon_social || '');
+            setVal('pcRuc', data.cliente_ruc || '');
+            setVal('pcMonto', data.total || 0);
+            setVal('pcCondicionPago', data.condicion_pago || 'Contado');
+            setVal('pcVendedor', data.vendedor || 'Helen Blas Príncipe');
             
             if (data.direccion_entrega) {
-                document.getElementById('pcEntrega').value = data.direccion_entrega;
+                setVal('pcEntrega', data.direccion_entrega);
+            }
+            
+            // Condición pago
+            const condSelect = document.getElementById('pcCondicion');
+            if (condSelect && data.condicion_pago) {
+                let found = false;
+                for (let opt of condSelect.options) {
+                    if (opt.value === data.condicion_pago || opt.textContent === data.condicion_pago) {
+                        opt.selected = true;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    const opt = document.createElement('option');
+                    opt.value = data.condicion_pago;
+                    opt.textContent = data.condicion_pago;
+                    condSelect.appendChild(opt);
+                    condSelect.value = data.condicion_pago;
+                }
+            }
+            
+            // Moneda
+            const monedaSelect = document.getElementById('pcMoneda');
+            if (monedaSelect) {
+                const moneda = data.moneda || 'Soles (S/)';
+                for (let opt of monedaSelect.options) {
+                    if (opt.value === moneda || opt.textContent.includes(moneda)) {
+                        opt.selected = true;
+                        break;
+                    }
+                }
             }
             
             // ============================================================
-            // CARGAR PRODUCTOS EN LA TABLA
+            // CARGAR PRODUCTOS EN LA TABLA CON MARCA Y MODELO
             // ============================================================
             const tbody = document.getElementById('pcItemsBody');
             if (!tbody) return;
@@ -6424,49 +6513,71 @@ function seleccionarCotizacionSAP(cotizacionId) {
                 const stock = p.stock || 0;
                 const faltante = Math.max(cantidadCotizada - stock, 0);
                 
-                tbody.insertAdjacentHTML('beforeend', `
-                    <tr>
-                        <td>${i + 1}</td>
-                        <td>
-                            <input value="${p.codigo || ''}" 
-                                   style="width:90px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; background:#F8FAFC;"
-                                   readonly>
-                        </td>
-                        <td>
-                            <input value="${p.producto || p.descripcion || ''}" 
-                                   style="width:160px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; background:#F8FAFC;"
-                                   readonly>
-                        </td>
-                        <td>
-                            <input type="number" value="${cantidadCotizada}" 
-                                   style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center; background:#F8FAFC;"
-                                   readonly>
-                        </td>
-                        <td>
-                            <input type="number" value="${cantidadCotizada}" 
-                                   style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center;"
-                                   onchange="actualizarFaltanteSAP(this, ${i})">
-                        </td>
-                        <td>
-                            <input type="number" step="0.01" value="${precioCotizado}" 
-                                   style="width:80px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:right; background:#F8FAFC;"
-                                   readonly>
-                        </td>
-                        <td>
-                            <input type="number" step="0.01" value="${precioCotizado}" 
-                                   style="width:80px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:right;"
-                                   onchange="actualizarPrecioPCSAP(this, ${i})">
-                        </td>
-                        <td>
-                            <input type="number" value="${stock}" 
-                                   style="width:60px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-size:11px; text-align:center; background:#F8FAFC;"
-                                   readonly>
-                        </td>
-                        <td style="font-weight:900; color:${faltante > 0 ? '#DC2626' : '#16A34A'}; text-align:center;">
-                            ${faltante}
-                        </td>
-                    </tr>
-                `);
+                // 🔽 OBTENER MARCA Y MODELO DEL PRODUCTO
+                const marca = p.marca || '';
+                const modelo = p.modelo || '';
+                const codigo = p.codigo || '';
+                const descripcion = p.producto || p.descripcion || 'Sin descripción';
+                
+                const tr = document.createElement('tr');
+                tr.id = `item-row-${i + 1}`;
+                tr.style.borderBottom = '1px solid #E2E8F0';
+                
+                tr.innerHTML = `
+                    <td style="padding:2px 3px; text-align:center; font-weight:800; font-size:9px; background:#F8FAFC;">${i + 1}</td>
+                    <td style="padding:2px 3px;">
+                        <input value="${esc(codigo)}" 
+                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800; color:#1D4ED8;"
+                               readonly>
+                    </td>
+                    <td style="padding:2px 3px;">
+                        <input value="${esc(descripcion)}" 
+                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800;"
+                               readonly>
+                    </td>
+                    <td style="padding:2px 3px;">
+                        <input value="${esc(marca)}" 
+                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A;"
+                               readonly>
+                    </td>
+                    <td style="padding:2px 3px;">
+                        <input value="${esc(modelo)}" 
+                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A;"
+                               readonly>
+                    </td>
+                    <td style="padding:2px 3px;">
+                        <input type="number" value="${cantidadCotizada}" 
+                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center;"
+                               readonly>
+                    </td>
+                    <td style="padding:2px 3px;">
+                        <input type="number" value="${cantidadCotizada}" 
+                               style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900;"
+                               onchange="actualizarFaltanteDesdeInput(this)">
+                    </td>
+                    <td style="padding:2px 3px;">
+                        <input type="number" step="0.01" value="${precioCotizado}" 
+                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center;"
+                               readonly>
+                    </td>
+                    <td style="padding:2px 3px;">
+                        <input type="number" step="0.01" value="${precioCotizado}" 
+                               style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;"
+                               onchange="actualizarPrecioPCSAP(this, ${i})">
+                    </td>
+                    <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B; font-weight:800;">${stock}</td>
+                    <td style="padding:2px 3px; text-align:center; font-size:8px; font-weight:900; color:${faltante > 0 ? '#DC2626' : '#16A34A'};">${faltante}</td>
+                    <td style="padding:2px 3px; text-align:center;">
+                        <button onclick="eliminarItemSAP('${tr.id}')" 
+                                style="background:transparent; border:none; color:#EF4444; cursor:pointer; font-size:12px; font-weight:900; padding:0 4px; border-radius:3px; transition:all 0.2s; width:22px; height:22px;"
+                                onmouseover="this.style.background='#FEE2E2'; this.style.color='#DC2626';"
+                                onmouseout="this.style.background='transparent'; this.style.color='#EF4444';">
+                            ✕
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(tr);
             });
             
             showToast(`✅ Cotización ${data.numero_cotizacion} cargada con ${productos.length} productos`, 'success');
@@ -6476,6 +6587,8 @@ function seleccionarCotizacionSAP(cotizacionId) {
             showToast('❌ Error al cargar los productos de la cotización', 'error');
         });
 }
+
+
 
 // Funciones auxiliares para la tabla de productos
 function actualizarFaltanteSAP(input, index) {
