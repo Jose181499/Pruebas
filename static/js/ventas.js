@@ -4301,6 +4301,9 @@ function calcQuote() {
     const igv = value * CONFIG.igv;
     const total = value + igv;
     
+    // Obtener el tiempo de entrega seleccionado
+    const tiempoEntrega = getFieldValue('fTiempo', 'fTiempoCustom') || '5 días hábiles';
+    
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
     set('sumSubtotal', money(subtotal));
     set('sumDiscountPct', dt === '%' ? dv.toFixed(2) + '%' : money(dv));
@@ -4308,6 +4311,7 @@ function calcQuote() {
     set('sumValue', money(value));
     set('sumIgv', money(igv));
     set('sumTotal', money(total));
+    set('sumTiempoEntrega', tiempoEntrega);  // 🔽 NUEVO
 }
 
 
@@ -6354,6 +6358,10 @@ function filterProductSelector() {
 // RENDERIZAR CONTENIDO DEL FORMULARIO DE COTIZACIÓN - ESTILO IMAGEN
 // ============================================================
 
+// ============================================================
+// RENDERIZAR CONTENIDO DEL FORMULARIO DE COTIZACIÓN - ESTILO IMAGEN
+// ============================================================
+
 function renderCotizacionFormContent(isEdit) {
     const condicionOptions = `
         <option value="Contado">Contado</option>
@@ -6388,7 +6396,7 @@ function renderCotizacionFormContent(isEdit) {
 
     return `
         <!-- ============================================================ -->
-        <!-- 1. DATOS DEL CLIENTE - EXACTAMENTE COMO EN LA IMAGEN -->
+        <!-- 1. DATOS DEL CLIENTE -->
         <!-- ============================================================ -->
         <div class="create-panel client-card" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;box-shadow:0 4px 12px rgba(15,23,42,.06);overflow:hidden;margin-bottom:10px;">
             <h3 style="padding:8px 14px;border-bottom:1px solid #E5E7EB;font-size:13px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:8px;margin:0;">
@@ -6455,7 +6463,7 @@ function renderCotizacionFormContent(isEdit) {
         </div>
 
         <!-- ============================================================ -->
-        <!-- 2. CONDICIONES COMERCIALES - EXACTAMENTE COMO EN LA IMAGEN -->
+        <!-- 2. CONDICIONES COMERCIALES -->
         <!-- ============================================================ -->
         <div class="create-panel" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;box-shadow:0 4px 12px rgba(15,23,42,.06);overflow:hidden;margin-bottom:10px;">
             <h3 style="padding:8px 14px;border-bottom:1px solid #E5E7EB;font-size:13px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:8px;margin:0;">
@@ -6539,18 +6547,11 @@ function renderCotizacionFormContent(isEdit) {
                         <input id="fNotaComercial" placeholder="Ingrese comentarios comerciales relacionados con el cliente, la oferta o los productos..." style="width:100%;height:30px;border:1px solid #E5E7EB;border-radius:9px;background:#FFFFFF;outline:none;color:#0F172A;font-size:12px;padding:0 10px;transition:all 0.2s;font-family:inherit;">
                     </div>
                 </div>
-                <!-- Fila 5: N° Requerimiento (escondido pero presente) -->
-                <div style="display:none;">
-                    <div class="form-field">
-                        <label style="display:block;font-size:9.5px;font-weight:950;color:#334155;margin-bottom:2px;text-transform:uppercase;letter-spacing:0.2px;">N° Requerimiento</label>
-                        <input id="fReq" placeholder="Ingrese el requerimiento" style="width:100%;height:30px;border:1px solid #E5E7EB;border-radius:9px;background:#FFFFFF;outline:none;color:#0F172A;font-size:12px;padding:0 10px;transition:all 0.2s;font-family:inherit;">
-                    </div>
-                </div>
             </div>
         </div>
 
         <!-- ============================================================ -->
-        <!-- 3. RESUMEN - EXACTAMENTE COMO EN LA IMAGEN -->
+        <!-- 3. RESUMEN - 3 COLUMNAS HORIZONTALES (CORREGIDO) -->
         <!-- ============================================================ -->
         <div class="create-panel summary-card" style="background:linear-gradient(180deg, #FFFFFF 0%, #FBFCFE 100%);border:1px solid #E5E7EB;border-radius:12px;box-shadow:0 4px 12px rgba(15,23,42,.06);overflow:hidden;margin-bottom:10px;">
             <h3 style="padding:8px 14px;border-bottom:1px solid #E5E7EB;font-size:13px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:8px;margin:0;">
@@ -6558,51 +6559,56 @@ function renderCotizacionFormContent(isEdit) {
                 <span style="color:#EF233C;font-weight:1000;">Resumen</span>
             </h3>
             <div class="body" style="padding:10px 14px;">
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
-                    <!-- Columna 1 -->
-                    <div>
-                        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #F1F5F9;">
-                            <span style="font-size:11px;color:#475569;font-weight:850;">Subtotal</span>
-                            <span id="sumSubtotal" style="font-size:12px;font-weight:1000;color:#0F172A;">S/ 0.00</span>
+                <!-- 🔥 IMPORTANTE: 3 COLUMNAS CON GRID -->
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; align-items:start;">
+                    
+                    <!-- COLUMNA 1 -->
+                    <div style="display:flex; flex-direction:column; gap:4px;">
+                        <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #F1F5F9;">
+                            <span style="font-size:11px; color:#475569; font-weight:850;">Subtotal</span>
+                            <span id="sumSubtotal" style="font-size:12px; font-weight:1000; color:#0F172A;">S/ 0.00</span>
                         </div>
-                        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #F1F5F9;">
-                            <span style="font-size:11px;color:#475569;font-weight:850;">Descuento</span>
-                            <span style="display:flex;gap:4px;align-items:center;">
-                                <input id="fDiscountValue" type="number" value="0" step="0.01" style="width:60px;height:22px;border:1px solid #CBD5E1;border-radius:4px;padding:0 4px;text-align:right;font-weight:800;font-size:11px;font-family:inherit;">
-                                <select id="fDiscountType" style="height:22px;border-radius:4px;border:1px solid #CBD5E1;font-weight:800;font-size:10px;font-family:inherit;" onchange="calcQuote()">
+                        <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #F1F5F9;">
+                            <span style="font-size:11px; color:#475569; font-weight:850;">Descuento</span>
+                            <span style="display:flex; gap:4px; align-items:center;">
+                                <input id="fDiscountValue" type="number" value="0" step="0.01" style="width:60px; height:22px; border:1px solid #CBD5E1; border-radius:4px; padding:0 4px; text-align:right; font-weight:800; font-size:11px; font-family:inherit;">
+                                <select id="fDiscountType" style="height:22px; border-radius:4px; border:1px solid #CBD5E1; font-weight:800; font-size:10px; font-family:inherit;" onchange="calcQuote()">
                                     <option value="%">%</option>
                                     <option value="S/">S/</option>
                                 </select>
-                                <span id="sumDiscountPct" style="min-width:35px;font-weight:700;font-size:11px;">0%</span>
+                                <span id="sumDiscountPct" style="min-width:35px; font-weight:700; font-size:11px;">0%</span>
                             </span>
                         </div>
-                        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #F1F5F9;">
-                            <span style="font-size:11px;color:#475569;font-weight:850;">Tiempo de entrega</span>
-                            <span id="sumTiempoEntrega" style="font-size:11px;font-weight:800;color:#0F172A;">5 días hábiles</span>
+                        <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #F1F5F9;">
+                            <span style="font-size:11px; color:#475569; font-weight:850;">Tiempo de entrega</span>
+                            <span id="sumTiempoEntrega" style="font-size:11px; font-weight:800; color:#0F172A;">5 días hábiles</span>
                         </div>
                     </div>
-                    <!-- Columna 2 -->
-                    <div>
-                        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #F1F5F9;">
-                            <span style="font-size:11px;color:#475569;font-weight:850;">Dscto aplicado</span>
-                            <span id="sumDiscount" style="font-size:12px;font-weight:1000;color:#0F172A;">-S/ 0.00</span>
+
+                    <!-- COLUMNA 2 -->
+                    <div style="display:flex; flex-direction:column; gap:4px;">
+                        <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #F1F5F9;">
+                            <span style="font-size:11px; color:#475569; font-weight:850;">Dscto aplicado</span>
+                            <span id="sumDiscount" style="font-size:12px; font-weight:1000; color:#0F172A;">-S/ 0.00</span>
                         </div>
-                        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #F1F5F9;">
-                            <span style="font-size:11px;color:#475569;font-weight:850;">IGV 18%</span>
-                            <span id="sumIgv" style="font-size:12px;font-weight:1000;color:#0F172A;">S/ 0.00</span>
+                        <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #F1F5F9;">
+                            <span style="font-size:11px; color:#475569; font-weight:850;">IGV 18%</span>
+                            <span id="sumIgv" style="font-size:12px; font-weight:1000; color:#0F172A;">S/ 0.00</span>
                         </div>
                     </div>
-                    <!-- Columna 3 -->
-                    <div style="display:flex;flex-direction:column;justify-content:center;align-items:flex-end;background:#FFF5F6;border-radius:8px;padding:8px 12px;border:1px solid #FCA5A5;">
-                        <span style="font-size:10px;color:#7F1D1D;font-weight:900;text-transform:uppercase;">TOTAL</span>
-                        <span id="sumTotal" style="font-size:22px;font-weight:1000;color:#EF233C;letter-spacing:-0.5px;">S/ 0.00</span>
+
+                    <!-- COLUMNA 3 - TOTAL DESTACADO -->
+                    <div style="display:flex; flex-direction:column; justify-content:center; align-items:flex-end; background:#FFF5F6; border-radius:8px; padding:8px 12px; border:1px solid #FCA5A5; min-height:65px;">
+                        <span style="font-size:10px; color:#7F1D1D; font-weight:900; text-transform:uppercase;">TOTAL</span>
+                        <span id="sumTotal" style="font-size:22px; font-weight:1000; color:#EF233C; letter-spacing:-0.5px;">S/ 0.00</span>
                     </div>
+
                 </div>
             </div>
         </div>
 
         <!-- ============================================================ -->
-        <!-- 4. PRODUCTOS COTIZADOS - EXACTAMENTE COMO EN LA IMAGEN -->
+        <!-- 4. PRODUCTOS COTIZADOS -->
         <!-- ============================================================ -->
         <div class="create-panel product-wide" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;box-shadow:0 4px 12px rgba(15,23,42,.06);overflow:hidden;">
             <h3 style="padding:8px 14px;border-bottom:1px solid #E5E7EB;font-size:13px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:8px;margin:0;flex-wrap:wrap;">
@@ -6668,7 +6674,6 @@ function renderCotizacionFormContent(isEdit) {
         </div>
     `;
 }
-
 
 // ============================================================
 // INICIALIZAR EVENTOS DEL FORMULARIO DE COTIZACIÓN
