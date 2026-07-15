@@ -6584,7 +6584,7 @@ function seleccionarCotizacionSAP(cotizacionId) {
             setReadonlyValue('pcVendedor', data.vendedor || 'Helen Blas Príncipe');
             
             if (data.direccion_entrega) {
-                setReadonlyValue('pcEntrega', data.direccion_entrega);
+                setEditableValue('pcEntrega', data.direccion_entrega);
             }
             
             // ============================================================
@@ -6782,8 +6782,7 @@ function clearPedidoModalSAP() {
     setReadonlyValue('pcMonto', '0');
     setReadonlyValue('pcCondicionPago', '');
     setReadonlyValue('pcVendedor', '');
-    setReadonlyValue('pcEntrega', '');
-    
+    setEditableValue('pcEntrega', '');
     // ============================================================
     // 5. LIMPIAR BUSCADOR (EDITABLE)
     // ============================================================
