@@ -4341,7 +4341,6 @@ async function loadClient() {
     try {
         console.log('🔍 Buscando cliente en base de datos por RUC:', ruc);
         
-        // Buscar en la base de datos
         const bdResponse = await fetch(`/maestros/api/clientes/buscar?q=${ruc}`);
         const bdData = await bdResponse.json();
         
@@ -4350,16 +4349,13 @@ async function loadClient() {
         if (bdData.success && bdData.data && bdData.data.length > 0) {
             const cliente = bdData.data[0];
             
-            // ============================================================
-            // LLENAR SOLO LOS CAMPOS QUE EXISTEN EN EL NUEVO HTML
-            // ============================================================
-            
             // 1. DATOS DEL CLIENTE
             const fRuc = document.getElementById('fRuc');
             const fRazon = document.getElementById('fRazon');
             const fDireccion = document.getElementById('fDireccion');
             const fContacto = document.getElementById('fContacto');
             const fTelefono = document.getElementById('fTelefono');
+            const fCorreo = document.getElementById('fCorreo'); // 🔽 NUEVO
             const fReq = document.getElementById('fReq');
             const fFuente = document.getElementById('fFuente');
             
@@ -4368,6 +4364,7 @@ async function loadClient() {
             if (fDireccion) fDireccion.value = cliente.direccion_fiscal || '';
             if (fContacto) fContacto.value = cliente.nombre_contacto || '';
             if (fTelefono) fTelefono.value = cliente.telefono_contacto || '';
+            if (fCorreo) fCorreo.value = cliente.email_contacto || ''; // 🔽 NUEVO
             
             // 2. CONDICIONES COMERCIALES
             const fVendedor = document.getElementById('fVendedor');
@@ -4378,16 +4375,19 @@ async function loadClient() {
             const fTiempo = document.getElementById('fTiempo');
             const fValidez = document.getElementById('fValidez');
             const fDireccionEntrega = document.getElementById('fDireccionEntrega');
+            const fDescuentoEspecial = document.getElementById('fDescuentoEspecial');
+            const fNotaComercial = document.getElementById('fNotaComercial');
             
             if (fVendedor) fVendedor.value = CONFIG.asesorDefault;
             if (fEmailAsesor) fEmailAsesor.value = CONFIG.emailAsesorDefault;
             if (fTelefonoAsesor) fTelefonoAsesor.value = CONFIG.telefonoAsesorDefault;
+            if (fMoneda) fMoneda.value = 'Soles (S/.)';
             
             if (cliente.condicion_pago && fCondicion) {
                 setFieldValue('fCondicion', 'fCondicionCustom', cliente.condicion_pago);
             }
             
-            // Dirección de entrega desde puntos de entrega
+            // Dirección de entrega
             let direccionEntrega = '';
             if (cliente.puntos_entrega && cliente.puntos_entrega.length > 0) {
                 const principal = cliente.puntos_entrega.find(p => p.principal === true);
@@ -4404,7 +4404,14 @@ async function loadClient() {
                 setFieldValue('fDireccionEntrega', 'fDireccionEntregaCustom', direccionEntrega);
             }
             
-            // Mostrar mensaje de éxito
+            if (fDescuentoEspecial) fDescuentoEspecial.value = 0;
+            if (fNotaComercial) fNotaComercial.value = '';
+            if (fTiempo) fTiempo.value = '5 días hábiles';
+            if (fValidez) fValidez.value = '15 días';
+            if (fTipo) fTipo.value = '0';
+            if (fReq) fReq.value = '';
+            if (fFuente) fFuente.value = 'Correo';
+            
             const confirmBox = document.getElementById('clientConfirmBox');
             if (confirmBox) {
                 let mensaje = `✅ Cliente encontrado en sistema`;
@@ -4420,9 +4427,7 @@ async function loadClient() {
             return;
         }
         
-        // ============================================================
         // SI NO ESTÁ EN BD, CONSULTAR SUNAT
-        // ============================================================
         console.log('🌞 Cliente no encontrado en BD, consultando SUNAT...');
         
         const sunatResponse = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
@@ -4431,14 +4436,15 @@ async function loadClient() {
         console.log('📦 Respuesta SUNAT:', sunatData);
         
         if (sunatData.success) {
-            // Llenar con datos de SUNAT
             const fRuc = document.getElementById('fRuc');
             const fRazon = document.getElementById('fRazon');
             const fDireccion = document.getElementById('fDireccion');
+            const fCorreo = document.getElementById('fCorreo'); // 🔽 NUEVO
             
             if (fRuc) fRuc.value = sunatData.ruc || ruc;
             if (fRazon) fRazon.value = sunatData.razon_social || '';
             if (fDireccion) fDireccion.value = sunatData.direccion || '';
+            if (fCorreo) fCorreo.value = sunatData.email || ''; // 🔽 NUEVO
             
             const confirmBox = document.getElementById('clientConfirmBox');
             if (confirmBox) {
@@ -4468,6 +4474,8 @@ async function loadClient() {
         }
     }
 }
+
+
 let __rucAutoTimer = null;
 
 function autoLoadClientByRuc(value) {
@@ -4553,21 +4561,20 @@ async function saveClientFromQuote() {
         // ============================================================
         // PREPARAR DATOS DEL CLIENTE
         // ============================================================
-        const clienteData = {
-            tipo_documento: 'RUC',
-            numero_documento: ruc,
-            ruc: ruc,
-            razon_social: document.getElementById('fRazon')?.value?.trim() || '',
-            nombre_comercial: document.getElementById('fComercial')?.value?.trim() || '',
-            direccion_fiscal: document.getElementById('fDireccion')?.value?.trim() || '',
-            nombre_contacto: document.getElementById('fContacto')?.value?.trim() || '',
-            telefono_contacto: document.getElementById('fTelefono')?.value?.trim() || '',
-            email_contacto: document.getElementById('fCorreo')?.value?.trim() || '',
-            condicion_pago: document.getElementById('fCondicion')?.value || 'Contado',
-            activo: true,
-            estado: 'Activo'
-        };
-        
+     const clienteData = {
+    tipo_documento: 'RUC',
+    numero_documento: ruc,
+    ruc: ruc,
+    razon_social: document.getElementById('fRazon')?.value?.trim() || '',
+    nombre_comercial: document.getElementById('fComercial')?.value?.trim() || '',
+    direccion_fiscal: document.getElementById('fDireccion')?.value?.trim() || '',
+    nombre_contacto: document.getElementById('fContacto')?.value?.trim() || '',
+    telefono_contacto: document.getElementById('fTelefono')?.value?.trim() || '',
+    email_contacto: document.getElementById('fCorreo')?.value?.trim() || '', // 🔽 NUEVO
+    condicion_pago: document.getElementById('fCondicion')?.value || 'Contado',
+    activo: true,
+    estado: 'Activo'
+};
         console.log('📦 Datos a guardar:', clienteData);
         
         // ============================================================
@@ -6314,344 +6321,6 @@ function filterProductSelector() {
 
 
 
-// ============================================================
-// RENDERIZAR CONTENIDO DEL FORMULARIO DE COTIZACIÓN - VERSIÓN COMPLETA
-// ============================================================
-
-function renderCotizacionFormContent(isEdit) {
-    const condicionOptions = `
-        <option value="Contado">Contado</option>
-        <option value="Credito 7 Dias">Credito 7 Dias</option>
-        <option value="Credito 15 Dias">Credito 15 Dias</option>
-        <option value="Credito 30 Dias">Credito 30 Dias</option>
-        <option value="Credito 45 Dias">Credito 45 Dias</option>
-        <option value="Credito 60 Dias">Credito 60 Dias</option>
-        <option value="Credito 90 Dias">Credito 90 Dias</option>
-        <option value="Credito 120 Dias">Credito 120 Dias</option>
-        <option value="Personalizado">✏️ Personalizado...</option>
-    `;
-
-    const tiempoOptions = `
-        <option value="Inmediata">Inmediata</option>
-        <option value="3 días hábiles">3 días hábiles</option>
-        <option value="5 días hábiles" selected>5 días hábiles</option>
-        <option value="7 días hábiles">7 días hábiles</option>
-        <option value="10 días hábiles">10 días hábiles</option>
-        <option value="15 días hábiles">15 días hábiles</option>
-        <option value="Personalizado">✏️ Personalizado...</option>
-    `;
-
-    const validezOptions = `
-        <option value="7 días">7 días</option>
-        <option value="15 días" selected>15 días</option>
-        <option value="30 días">30 días</option>
-        <option value="45 días">45 días</option>
-        <option value="60 días">60 días</option>
-        <option value="Personalizado">✏️ Personalizado...</option>
-    `;
-
-    const fuenteOptions = `
-        <option value="Correo">Correo</option>
-        <option value="WhatsApp">WhatsApp</option>
-        <option value="Llamada">Llamada</option>
-        <option value="Plataforma">Plataforma</option>
-        <option value="Presencial">Presencial</option>
-    `;
-
-    const tipoOptions = `
-        <option value="0">0</option>
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-    `;
-
-    return `
-        <!-- ============================================================ -->
-        <!-- FILA SUPERIOR: 3 SECCIONES EN HORIZONTAL -->
-        <!-- ============================================================ -->
-        <div style="display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 12px !important; width: 100% !important; margin-bottom: 12px !important;">
-            
-            <!-- ============================================================ -->
-            <!-- 1. DATOS DEL CLIENTE -->
-            <!-- ============================================================ -->
-            <div class="create-panel client-card" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;box-shadow:0 4px 12px rgba(15,23,42,.06);overflow:hidden;">
-                <h3 style="padding:6px 12px;border-bottom:1px solid #E5E7EB;font-size:12px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:6px;margin:0;">
-                    <span style="color:#EF233C;font-weight:1000;">1.</span> 
-                    <span style="color:#EF233C;font-weight:1000;">Datos del Cliente</span>
-                </h3>
-                <div class="body" style="padding:8px 10px;">
-                    <!-- Buscar por RUC -->
-                    <div style="display:grid;grid-template-columns:1fr 90px;gap:6px;align-items:end;margin-bottom:6px;">
-                        <div class="form-field">
-                            <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Buscar por RUC</label>
-                            <input id="fRucSearch" placeholder="Ingresa 11 dígitos" maxlength="11" oninput="autoLoadClientByRuc(this.value)" style="width:100%;height:26px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 8px;">
-                        </div>
-                        <button onclick="loadClient()" style="width:100%;height:26px;border-radius:6px;font-size:10px;padding:0 8px;background:#2563EB;color:#fff;border:0;font-weight:950;cursor:pointer;">🔍 Buscar</button>
-                    </div>
-                    <!-- RUC | Razón Social -->
-                    <div style="display:grid;grid-template-columns:1fr 1.8fr;gap:5px;margin-bottom:4px;">
-                        <div class="form-field">
-                            <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">RUC</label>
-                            <input id="fRuc" readonly style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#F1F5F9;outline:none;color:#0F172A;font-size:11px;padding:0 6px;">
-                        </div>
-                        <div class="form-field">
-                            <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Razón Social</label>
-                            <input id="fRazon" readonly style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#F1F5F9;outline:none;color:#0F172A;font-size:11px;padding:0 6px;">
-                        </div>
-                    </div>
-                    <!-- Dirección Fiscal -->
-                    <div style="display:grid;grid-template-columns:1fr;gap:5px;margin-bottom:4px;">
-                        <div class="form-field">
-                            <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Dirección Fiscal</label>
-                            <input id="fDireccion" placeholder="Dirección fiscal" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 6px;">
-                        </div>
-                    </div>
-                    <!-- Contacto | Teléfono -->
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:4px;">
-                        <div class="form-field">
-                            <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Contacto</label>
-                            <input id="fContacto" placeholder="Nombre del contacto" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 6px;">
-                        </div>
-                        <div class="form-field">
-                            <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Teléfono</label>
-                            <input id="fTelefono" placeholder="Número de contacto" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 6px;">
-                        </div>
-                    </div>
-                    <!-- N° Requerimiento | Fuente -->
-                    <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:5px;margin-bottom:4px;">
-                        <div class="form-field">
-                            <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">N° Requerimiento</label>
-                            <input id="fReq" placeholder="Ingrese el requerimiento" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 6px;">
-                        </div>
-                        <div class="form-field">
-                            <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Fuente del requerimiento</label>
-                            <select id="fFuente" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
-                                ${fuenteOptions}
-                            </select>
-                        </div>
-                    </div>
-                    <!-- Guardar -->
-                    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:4px;">
-                        <button onclick="saveClientFromQuote()" style="min-width:150px;height:28px;border-radius:8px;font-size:10px;font-weight:950;border:0;background:#16A34A;color:#fff;cursor:pointer;">💾 Guardar / Actualizar</button>
-                        <span style="color:#64748B;font-size:8px;font-weight:850;line-height:1.1;">Se guardará en Maestros para futuras cotizaciones.</span>
-                    </div>
-                    <div id="clientConfirmBox" style="display:none;margin-top:4px;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:900;text-align:center;border:1px solid transparent;"></div>
-                </div>
-            </div>
-
-            <!-- ============================================================ -->
-            <!-- 2. CONDICIONES COMERCIALES -->
-            <!-- ============================================================ -->
-            <div class="create-panel" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;box-shadow:0 4px 12px rgba(15,23,42,.06);overflow:hidden;">
-                <h3 style="padding:6px 12px;border-bottom:1px solid #E5E7EB;font-size:12px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:6px;margin:0;">
-                    <span style="color:#EF233C;font-weight:1000;">2.</span> 
-                    <span style="color:#EF233C;font-weight:1000;">Condiciones Comerciales</span>
-                </h3>
-                <div class="body" style="padding:8px 10px;">
-                    <!-- Asesor | Email Asesor | Teléfono Asesor -->
-                    <div style="display:grid;grid-template-columns:1.2fr 1.8fr 1fr;gap:5px;margin-bottom:4px;">
-                        <div class="form-field">
-                            <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Asesor</label>
-                            <input id="fVendedor" value="${CONFIG.asesorDefault}" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 6px;">
-                        </div>
-                        <div class="form-field">
-                            <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Email Asesor</label>
-                            <input id="fEmailAsesor" value="${CONFIG.emailAsesorDefault}" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 6px;">
-                        </div>
-                        <div class="form-field">
-                            <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Teléfono Asesor</label>
-                            <input id="fTelefonoAsesor" value="${CONFIG.telefonoAsesorDefault}" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 6px;">
-                        </div>
-                    </div>
-                    <!-- Moneda | Condición Pago | Tiempo Entrega -->
-                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:4px;">
-                        <div class="form-field">
-                            <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Moneda</label>
-                            <select id="fMoneda" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
-                                <option value="Soles (S/.)" selected>Soles (S/.)</option>
-                                <option value="Dólares ($)">Dólares ($)</option>
-                            </select>
-                        </div>
-                        <div class="form-field">
-                            <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Condición de Pago</label>
-                            <select id="fCondicion" onchange="toggleCustomField('fCondicion','fCondicionCustom')" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
-                                ${condicionOptions}
-                            </select>
-                            <input id="fCondicionCustom" placeholder="Ej: 50% anticipo, 50% contra entrega" style="display:none;margin-top:2px;width:100%;height:22px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 6px;">
-                        </div>
-                        <div class="form-field">
-                            <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Tiempo de Entrega</label>
-                            <select id="fTiempo" onchange="toggleCustomField('fTiempo','fTiempoCustom')" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
-                                ${tiempoOptions}
-                            </select>
-                            <input id="fTiempoCustom" placeholder="Ej: 10 días hábiles" style="display:none;margin-top:2px;width:100%;height:22px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 6px;">
-                        </div>
-                    </div>
-                    <!-- Validez Oferta | Dirección Entrega | Tipo -->
-                    <div style="display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:5px;margin-bottom:4px;">
-                        <div class="form-field">
-                            <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Validez de Oferta</label>
-                            <select id="fValidez" onchange="toggleCustomField('fValidez','fValidezCustom')" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
-                                ${validezOptions}
-                            </select>
-                            <input id="fValidezCustom" placeholder="Ej: 20 días" style="display:none;margin-top:2px;width:100%;height:22px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 6px;">
-                        </div>
-                        <div class="form-field">
-                            <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Dirección de Entrega</label>
-                            <select id="fDireccionEntrega" onchange="toggleCustomField('fDireccionEntrega','fDireccionEntregaCustom')" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
-                                <option value="">Sin dirección</option>
-                                <option value="Personalizado">✏️ Personalizado...</option>
-                            </select>
-                            <input id="fDireccionEntregaCustom" placeholder="Ej: Av. Los Alamos 123 - Lima" style="display:none;margin-top:2px;width:100%;height:22px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 6px;">
-                        </div>
-                        <div class="form-field">
-                            <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Tipo</label>
-                            <select id="fTipo" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
-                                ${tipoOptions}
-                            </select>
-                        </div>
-                    </div>
-                    <!-- Descuento Especial | Nota Comercial -->
-                    <div style="display:grid;grid-template-columns:1fr 2.5fr;gap:5px;">
-                        <div class="form-field">
-                            <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Descuento Especial</label>
-                            <input id="fDescuentoEspecial" type="number" value="0" step="0.01" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 6px;" oninput="calcQuote()">
-                        </div>
-                        <div class="form-field">
-                            <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Nota Comercial</label>
-                            <input id="fNotaComercial" placeholder="Ingrese comentarios comerciales relacionados con el cliente, la oferta o los productos..." style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 6px;">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ============================================================ -->
-            <!-- 3. RESUMEN - CON 3 COLUMNAS HORIZONTALES -->
-            <!-- ============================================================ -->
-            <div class="create-panel summary-card" style="background:linear-gradient(180deg, #FFFFFF 0%, #FBFCFE 100%);border:1px solid #E5E7EB;border-radius:12px;box-shadow:0 4px 12px rgba(15,23,42,.06);overflow:hidden;">
-                <h3 style="padding:6px 12px;border-bottom:1px solid #E5E7EB;font-size:12px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:6px;margin:0;">
-                    <span style="color:#EF233C;font-weight:1000;">3.</span> 
-                    <span style="color:#EF233C;font-weight:1000;">Resumen</span>
-                </h3>
-                <div class="body" style="padding:8px 10px;">
-                    <!-- 3 COLUMNAS HORIZONTALES DENTRO DEL RESUMEN -->
-                    <div style="display:flex;flex-direction:row;flex-wrap:nowrap;gap:8px;width:100%;justify-content:space-between;padding:2px 0;">
-                        
-                        <!-- COLUMNA 1 -->
-                        <div style="flex:1;min-width:0;padding:6px 8px;background:#FAFBFC;border-radius:6px;border:1px solid #E5E7EB;display:flex;flex-direction:column;gap:2px;">
-                            <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-bottom:1px solid #F1F5F9;">
-                                <span style="font-size:11px;color:#475569;font-weight:600;">Subtotal</span>
-                                <span id="sumSubtotal" style="font-size:12px;font-weight:700;color:#0F172A;">S/ 0.00</span>
-                            </div>
-                            <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-bottom:1px solid #F1F5F9;">
-                                <span style="font-size:11px;color:#475569;font-weight:600;">Descuento</span>
-                                <span style="display:flex;gap:2px;align-items:center;">
-                                    <input id="fDiscountValue" type="number" value="0" step="0.01" style="width:45px;height:22px;border:1px solid #CBD5E1;border-radius:3px;padding:0 2px;text-align:right;font-weight:700;font-size:11px;background:white;">
-                                    <select id="fDiscountType" style="height:22px;border-radius:3px;border:1px solid #CBD5E1;font-weight:700;font-size:10px;background:white;padding:0 2px;" onchange="calcQuote()">
-                                        <option value="%">%</option>
-                                        <option value="S/">S/</option>
-                                    </select>
-                                    <span id="sumDiscountPct" style="min-width:25px;font-weight:600;font-size:11px;">0%</span>
-                                </span>
-                            </div>
-                            <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;">
-                                <span style="font-size:11px;color:#475569;font-weight:600;">Tiempo de entrega</span>
-                                <span id="sumTiempoEntrega" style="font-size:11px;font-weight:700;color:#0F172A;">5 días hábiles</span>
-                            </div>
-                        </div>
-                        
-                        <!-- COLUMNA 2 -->
-                        <div style="flex:1;min-width:0;padding:6px 8px;background:#FAFBFC;border-radius:6px;border:1px solid #E5E7EB;display:flex;flex-direction:column;gap:2px;">
-                            <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-bottom:1px solid #F1F5F9;">
-                                <span style="font-size:11px;color:#475569;font-weight:600;">Dscto aplicado</span>
-                                <span id="sumDiscount" style="font-size:12px;font-weight:700;color:#0F172A;">-S/ 0.00</span>
-                            </div>
-                            <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;">
-                                <span style="font-size:11px;color:#475569;font-weight:600;">IGV 18%</span>
-                                <span id="sumIgv" style="font-size:12px;font-weight:700;color:#0F172A;">S/ 0.00</span>
-                            </div>
-                            <div style="height:20px;"></div>
-                        </div>
-                        
-                        <!-- COLUMNA 3 - TOTAL -->
-                        <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:center;background:#FFF5F6;border-radius:6px;padding:6px 10px;border:2px solid #FCA5A5;min-height:60px;">
-                            <span style="font-size:10px;color:#7F1D1D;font-weight:800;text-transform:uppercase;margin-bottom:1px;">TOTAL</span>
-                            <span id="sumTotal" style="font-size:20px;font-weight:900;color:#EF233C;letter-spacing:-0.5px;">S/ 0.00</span>
-                        </div>
-                        
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- ============================================================ -->
-        <!-- FILA INFERIOR: 4. PRODUCTOS COTIZADOS (OCUPA TODO EL ANCHO) -->
-        <!-- ============================================================ -->
-        <div class="create-panel product-wide" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;box-shadow:0 4px 12px rgba(15,23,42,.06);overflow:hidden;margin-bottom:10px;">
-            <h3 style="padding:8px 14px;border-bottom:1px solid #E5E7EB;font-size:13px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:8px;margin:0;flex-wrap:wrap;">
-                <span style="color:#EF233C;font-weight:1000;">4.</span> 
-                <span style="color:#EF233C;font-weight:1000;">Productos Cotizados</span>
-                <span style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap;">
-                    <input id="quickProductSearch" placeholder="Buscar producto por código..." style="width:200px;height:30px;border:1px solid #CBD5E1;border-radius:8px;padding:0 10px;font-size:11px;font-weight:850;outline:none;">
-                    <button onclick="addQuoteProductFromSearch()" style="height:30px;padding:0 12px;font-size:11px;border-radius:8px;font-weight:1000;background:#2563EB;color:#fff;border:0;cursor:pointer;">+ Agregar Producto</button>
-                    <button onclick="openProductSelector()" style="height:30px;padding:0 12px;font-size:11px;border-radius:8px;font-weight:1000;background:#8B5CF6;color:#fff;border:0;cursor:pointer;">📋 Seleccionar</button>
-                </span>
-            </h3>
-            <div class="body" style="padding:0;">
-                <div style="overflow:auto;max-height:220px;">
-                    <table style="width:100%;border-collapse:collapse;font-size:10px;min-width:1100px;">
-                        <thead>
-                            <tr>
-                                <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:35px;">Item</th>
-                                <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:80px;">Código</th>
-                                <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;">Producto / Descripción</th>
-                                <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:80px;">Modelo</th>
-                                <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:75px;">Marca</th>
-                                <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:55px;">Unidad</th>
-                                <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:50px;">Cant</th>
-                                <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:90px;">Valor Venta Unitario S/.</th>
-                                <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:100px;">Valor total S/.</th>
-                                <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:55px;">Stock</th>
-                                <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:70px;">Entrega</th>
-                                <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:40px;">✕</th>
-                            </tr>
-                        </thead>
-                        <tbody id="quoteProductRows">
-                            <tr><td colspan="12" style="text-align:center;color:#94A3B8;padding:20px;font-size:11px;">📭 Agregue productos a la cotización</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- ============================================================ -->
-        <!-- STEPBAR - FLUJO DE ESTADOS -->
-        <!-- ============================================================ -->
-        <div style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px;box-shadow:0 2px 8px rgba(15,23,42,.04);overflow-x:auto;flex-wrap:nowrap;min-height:30px;">
-            <span style="font-weight:900;color:#64748B;margin-right:6px;font-size:9px;flex-shrink:0;text-transform:uppercase;letter-spacing:0.3px;">Flujo:</span>
-            <div class="step status-draft" style="display:flex;align-items:center;gap:4px;white-space:nowrap;font-weight:800;color:#FF0000;font-size:9px;flex-shrink:0;">
-                <span style="width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:#FF0000;color:#FFFFFF;font-size:8px;font-weight:1000;box-shadow:0 0 12px rgba(255,0,0,0.4);">1</span> Borrador
-            </div>
-            <span style="height:1px;width:12px;background:#E5E7EB;border-radius:99px;flex-shrink:0;"></span>
-            <div class="step inactive" style="display:flex;align-items:center;gap:4px;white-space:nowrap;font-weight:700;color:#94A3B8;font-size:9px;flex-shrink:0;">
-                <span style="width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:#E2E8F0;color:#94A3B8;font-size:8px;font-weight:1000;">2</span> En revisión
-            </div>
-            <span style="height:1px;width:12px;background:#E5E7EB;border-radius:99px;flex-shrink:0;"></span>
-            <div class="step inactive" style="display:flex;align-items:center;gap:4px;white-space:nowrap;font-weight:700;color:#94A3B8;font-size:9px;flex-shrink:0;">
-                <span style="width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:#E2E8F0;color:#94A3B8;font-size:8px;font-weight:1000;">3</span> Validado por Hellen
-            </div>
-            <span style="height:1px;width:12px;background:#E5E7EB;border-radius:99px;flex-shrink:0;"></span>
-            <div class="step inactive" style="display:flex;align-items:center;gap:4px;white-space:nowrap;font-weight:700;color:#94A3B8;font-size:9px;flex-shrink:0;">
-                <span style="width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:#E2E8F0;color:#94A3B8;font-size:8px;font-weight:1000;">4</span> Generada
-            </div>
-            <span style="height:1px;width:12px;background:#E5E7EB;border-radius:99px;flex-shrink:0;"></span>
-            <div class="step inactive" style="display:flex;align-items:center;gap:4px;white-space:nowrap;font-weight:700;color:#94A3B8;font-size:9px;flex-shrink:0;">
-                <span style="width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:#E2E8F0;color:#94A3B8;font-size:8px;font-weight:1000;">5</span> Aceptada
-            </div>
-        </div>
-    `;
-}
 // ============================================================
 // INICIALIZAR EVENTOS DEL FORMULARIO DE COTIZACIÓN
 // ============================================================
