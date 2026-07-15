@@ -2553,6 +2553,44 @@
     transform: scale(0.95);
 }
 
+/* ============================================================
+   FIX PARA MODAL DE COTIZACIÓN - EVITA QUE EL CONTENIDO SE VAYA HACIA ABAJO
+   ============================================================ */
+
+#cotizacionModal .modal-body {
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    max-height: calc(100vh - 180px) !important;
+    padding: 12px 16px !important;
+}
+
+#cotizacionModal .modal-box {
+    max-height: calc(100vh - 30px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+#cotizacionModal .modal-box .create-panel {
+    margin-bottom: 10px !important;
+    flex-shrink: 0 !important;
+}
+
+#cotizacionModal .modal-box .product-wide {
+    flex-shrink: 0 !important;
+}
+
+#cotizacionModal .modal-box .summary-card {
+    flex-shrink: 0 !important;
+}
+
+/* Stepbar del modal - que no ocupe espacio extra */
+#cotizacionModal .stepbar-bottom {
+    flex-shrink: 0 !important;
+    margin-top: 8px !important;
+    min-height: 30px !important;
+    padding: 4px 12px !important;
+}
+
 </style>
 {% endblock %}
 
