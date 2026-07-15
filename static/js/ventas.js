@@ -1398,6 +1398,320 @@ function generateCotizacionPdfAndSend() {
 
 
 // ============================================================
+// SELECCIÓN MÚLTIPLE DE PRODUCTOS PARA PC
+// ============================================================
+
+let productSelectorPcData = [];
+let selectedPcProductIds = new Set();
+
+/**
+ * Abre el selector múltiple de productos para PC
+ */
+function openProductSelectorPC() {
+    // Si no hay productos maestros, cargarlos primero
+    if (PRODUCTOS_MAESTROS.length === 0) {
+        showToast('⏳ Cargando productos...', 'info');
+        cargarProductosMaestros().then(() => {
+            setTimeout(() => openProductSelectorPC(), 300);
+        });
+        return;
+    }
+    
+    // Resetear selecciones
+    selectedPcProductIds = new Set();
+    productSelectorPcData = [...PRODUCTOS_MAESTROS];
+    
+    // Renderizar tabla
+    renderProductSelectorPc();
+    
+    // Mostrar modal
+    document.getElementById('productSelectorPcModal').classList.add('show');
+    
+    // Enfocar buscador
+    setTimeout(() => {
+        document.getElementById('productSelectorPcSearch')?.focus();
+    }, 300);
+}
+
+/**
+ * Renderiza la tabla de productos del selector de PC
+ */
+function renderProductSelectorPc() {
+    const tbody = document.getElementById('productSelectorPcRows');
+    const search = document.getElementById('productSelectorPcSearch')?.value?.toLowerCase() || '';
+    
+    // Filtrar productos
+    let filtered = productSelectorPcData;
+    if (search) {
+        filtered = productSelectorPcData.filter(p => 
+            (p.codigo && p.codigo.toLowerCase().includes(search)) ||
+            (p.producto && p.producto.toLowerCase().includes(search)) ||
+            (p.descripcion && p.descripcion.toLowerCase().includes(search)) ||
+            (p.marca && p.marca.toLowerCase().includes(search)) ||
+            (p.modelo && p.modelo.toLowerCase().includes(search))
+        );
+    }
+    
+    if (!tbody) return;
+    
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#94A3B8;padding:30px;">📭 No se encontraron productos</td></tr>`;
+        document.getElementById('selectedPcCount').textContent = selectedPcProductIds.size;
+        return;
+    }
+    
+    tbody.innerHTML = filtered.map((p, index) => {
+        const idKey = p.id || p.codigo;
+        const isChecked = selectedPcProductIds.has(idKey);
+        const valorVenta = parseFloat(p.valorVenta) || 0;
+        
+        return `
+        <tr>
+            <td style="text-align:center;">
+                <input type="checkbox" class="product-select-pc-checkbox" 
+                       data-id="${idKey}" 
+                       ${isChecked ? 'checked' : ''}
+                       onchange="toggleProductSelectionPc('${idKey}', this.checked)">
+            </td>
+            <td style="font-weight:900; color:#0F172A;">${p.codigo || '-'}</td>
+            <td style="text-align:left; font-weight:800;">${p.producto || p.descripcion || 'Sin nombre'}</td>
+            <td>${p.marca || '-'}</td>
+            <td>${p.modelo || '-'}</td>
+            <td>${p.um || 'NIU'}</td>
+            <td>${p.stock || 0}</td>
+            <td style="font-weight:900; color:#059669;">S/ ${valorVenta.toFixed(2)}</td>
+            <td>
+                <input type="number" class="product-select-pc-qty" 
+                       data-id="${idKey}"
+                       value="1" 
+                       min="1" 
+                       style="width:60px; height:28px; border:1px solid #E5E7EB; border-radius:6px; text-align:center; font-size:12px;">
+            </td>
+        </tr>
+    `}).join('');
+    
+    document.getElementById('selectedPcCount').textContent = selectedPcProductIds.size;
+    
+    // Actualizar el checkbox "Seleccionar todos"
+    const totalCheckboxes = document.querySelectorAll('.product-select-pc-checkbox').length;
+    const checkedCheckboxes = document.querySelectorAll('.product-select-pc-checkbox:checked').length;
+    const selectAllCheckbox = document.getElementById('selectAllPcCheckbox');
+    if (selectAllCheckbox) {
+        if (totalCheckboxes > 0 && checkedCheckboxes === totalCheckboxes) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedCheckboxes > 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        }
+    }
+}
+
+/**
+ * Alterna la selección de un producto en el selector de PC
+ */
+function toggleProductSelectionPc(idKey, checked) {
+    if (checked) {
+        selectedPcProductIds.add(idKey);
+    } else {
+        selectedPcProductIds.delete(idKey);
+    }
+    document.getElementById('selectedPcCount').textContent = selectedPcProductIds.size;
+    
+    // Actualizar el checkbox "Seleccionar todos"
+    const totalCheckboxes = document.querySelectorAll('.product-select-pc-checkbox').length;
+    const checkedCheckboxes = document.querySelectorAll('.product-select-pc-checkbox:checked').length;
+    const selectAllCheckbox = document.getElementById('selectAllPcCheckbox');
+    if (selectAllCheckbox) {
+        if (totalCheckboxes > 0 && checkedCheckboxes === totalCheckboxes) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedCheckboxes > 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        }
+    }
+}
+
+/**
+ * Selecciona todos los productos del selector de PC
+ */
+function selectAllProductsPc() {
+    document.querySelectorAll('.product-select-pc-checkbox').forEach(cb => {
+        cb.checked = true;
+        const idKey = cb.dataset.id;
+        selectedPcProductIds.add(idKey);
+    });
+    document.getElementById('selectedPcCount').textContent = selectedPcProductIds.size;
+    const selectAllCheckbox = document.getElementById('selectAllPcCheckbox');
+    if (selectAllCheckbox) selectAllCheckbox.checked = true;
+}
+
+/**
+ * Deselecciona todos los productos del selector de PC
+ */
+function deselectAllProductsPc() {
+    document.querySelectorAll('.product-select-pc-checkbox').forEach(cb => {
+        cb.checked = false;
+        const idKey = cb.dataset.id;
+        selectedPcProductIds.delete(idKey);
+    });
+    document.getElementById('selectedPcCount').textContent = selectedPcProductIds.size;
+    const selectAllCheckbox = document.getElementById('selectAllPcCheckbox');
+    if (selectAllCheckbox) selectAllCheckbox.checked = false;
+}
+
+/**
+ * Filtra los productos del selector de PC por búsqueda
+ */
+function filterProductSelectorPc() {
+    renderProductSelectorPc();
+}
+
+/**
+ * Agrega los productos seleccionados a la tabla del PC
+ */
+function addSelectedProductsPc() {
+    if (selectedPcProductIds.size === 0) {
+        showToast('⚠️ Selecciona al menos un producto', 'warning');
+        return;
+    }
+    
+    let addedCount = 0;
+    let notFoundCount = 0;
+    
+    selectedPcProductIds.forEach(idKey => {
+        // Buscar el producto por id o codigo
+        let product = PRODUCTOS_MAESTROS.find(p => p.id == idKey || p.codigo == idKey);
+        
+        if (!product) {
+            notFoundCount++;
+            return;
+        }
+        
+        // Obtener la cantidad del input correspondiente
+        const qtyInput = document.querySelector(`.product-select-pc-qty[data-id="${idKey}"]`);
+        const cantidad = parseInt(qtyInput?.value || 1);
+        
+        // Obtener datos del producto
+        const codigo = product.codigo || '';
+        const descripcion = product.producto || product.descripcion || 'Sin descripción';
+        const marca = product.marca || '';
+        const modelo = product.modelo || '';
+        const precio = parseFloat(product.valorVenta) || 0;
+        const stock = parseInt(product.stock) || 0;
+        
+        // Agregar fila a la tabla del PC
+        agregarItemPCTable(codigo, descripcion, marca, modelo, cantidad, precio, stock);
+        
+        addedCount++;
+    });
+    
+    // Cerrar modal
+    closeModal('productSelectorPcModal');
+    
+    // Mostrar mensaje
+    if (addedCount > 0) {
+        showToast(`✅ ${addedCount} productos agregados correctamente`, 'success');
+    }
+    if (notFoundCount > 0) {
+        showToast(`⚠️ ${notFoundCount} productos no encontrados`, 'warning');
+    }
+}
+
+/**
+ * Agrega un item a la tabla del PC
+ */
+function agregarItemPCTable(codigo, descripcion, marca, modelo, cantidad, precio, stock) {
+    const tbody = document.getElementById('pcItemsBody');
+    if (!tbody) return;
+    
+    const rowCount = tbody.children.length + 1;
+    const faltante = Math.max(cantidad - stock, 0);
+    
+    const tr = document.createElement('tr');
+    tr.id = `item-row-${rowCount}`;
+    tr.style.borderBottom = '1px solid #E2E8F0';
+    
+    tr.innerHTML = `
+        <td style="padding:2px 3px; text-align:center; font-weight:800; font-size:9px; background:#F8FAFC;">${rowCount}</td>
+        <td style="padding:2px 3px;">
+            <input value="${esc(codigo)}" 
+                   style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800; color:#1D4ED8;"
+                   readonly>
+        </td>
+        <td style="padding:2px 3px;">
+            <input value="${esc(descripcion)}" 
+                   style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800;"
+                   readonly>
+        </td>
+        <td style="padding:2px 3px;">
+            <input value="${esc(marca)}" 
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A;">
+        </td>
+        <td style="padding:2px 3px;">
+            <input value="${esc(modelo)}" 
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A;">
+        </td>
+        <td style="padding:2px 3px;">
+            <input type="number" value="${cantidad}" 
+                   style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center;"
+                   readonly>
+        </td>
+        <td style="padding:2px 3px;">
+            <input type="number" value="${cantidad}" 
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900;"
+                   onchange="actualizarFaltanteDesdeInput(this)">
+        </td>
+        <td style="padding:2px 3px;">
+            <input type="number" step="0.01" value="${precio}" 
+                   style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center;"
+                   readonly>
+        </td>
+        <td style="padding:2px 3px;">
+            <input type="number" step="0.01" value="${precio}" 
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;">
+        </td>
+        <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B; font-weight:800;">${stock}</td>
+        <td style="padding:2px 3px; text-align:center; font-size:8px; font-weight:900; color:${faltante > 0 ? '#DC2626' : '#16A34A'};">${faltante}</td>
+        <td style="padding:2px 3px; text-align:center;">
+            <button onclick="eliminarItemSAP('${tr.id}')" 
+                    style="background:transparent; border:none; color:#EF4444; cursor:pointer; font-size:12px; font-weight:900; padding:0 4px; border-radius:3px; transition:all 0.2s; width:22px; height:22px;"
+                    onmouseover="this.style.background='#FEE2E2'; this.style.color='#DC2626';"
+                    onmouseout="this.style.background='transparent'; this.style.color='#EF4444';">
+                ✕
+            </button>
+        </td>
+    `;
+    
+    tbody.appendChild(tr);
+    reordenarItemsSAP();
+}
+
+/**
+ * Alterna todos los checkboxes del selector de PC
+ */
+function toggleAllProductCheckboxesPc(checked) {
+    document.querySelectorAll('.product-select-pc-checkbox').forEach(cb => {
+        cb.checked = checked;
+        const idKey = cb.dataset.id;
+        if (checked) {
+            selectedPcProductIds.add(idKey);
+        } else {
+            selectedPcProductIds.delete(idKey);
+        }
+    });
+    document.getElementById('selectedPcCount').textContent = selectedPcProductIds.size;
+}
+
+
+// ============================================================
 // FUNCIONES DE GUARDADO PARA PC, DESPACHO, GUÍAS, ETC.
 // ============================================================
 
@@ -8005,6 +8319,16 @@ window.cargarClientesMaestros = cargarClientesMaestros;
 window.cargarDatalistProductos = cargarDatalistProductos;
 window.productTableHtml = productTableHtml;
 window.setEditableValue = setEditableValue;
+
+window.openProductSelectorPC = openProductSelectorPC;
+window.renderProductSelectorPc = renderProductSelectorPc;
+window.toggleProductSelectionPc = toggleProductSelectionPc;
+window.selectAllProductsPc = selectAllProductsPc;
+window.deselectAllProductsPc = deselectAllProductsPc;
+window.filterProductSelectorPc = filterProductSelectorPc;
+window.addSelectedProductsPc = addSelectedProductsPc;
+window.toggleAllProductCheckboxesPc = toggleAllProductCheckboxesPc;
+window.agregarItemPCTable = agregarItemPCTable;
 
 // Funciones de modal de éxito
 window.showSuccessModal = showSuccessModal;

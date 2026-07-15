@@ -110,7 +110,7 @@
                         <input id="pcFecha" type="datetime-local" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 4px; font-size:10px;">
                     </div>
                     <div class="form-field">
-                        <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Nunmero De PC </label>
+                        <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Numero De PC </label>
                         <input id="pcNumero" placeholder="PC-20260713-0001" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; font-size:10px;">
                     </div>
                     <div class="form-field">
@@ -166,15 +166,17 @@
 </div>
             </div>
 
-            <!-- BLOQUE 3: Ítems del PC - CON BOTÓN ELIMINAR Y NUEVOS CAMPOS -->
-            <div class="form-section" style="padding:4px 10px; margin-bottom:4px; border-radius:6px; border:1px solid #E2E8F0;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
-                    <div class="section-title" style="font-size:10px; font-weight:900; color:#7F1D1D; margin:0;">3. Productos del PC</div>
-                    <div style="display:flex; gap:4px;">
-                        <button class="btn btn-soft" onclick="addPedidoItemSAP()" style="height:22px; padding:0 10px; font-size:9px; border-radius:4px; border:1px solid #CBD5E1; background:#F1F5F9; font-weight:800; cursor:pointer;">+ Agregar ítem</button>
-                        <button class="btn btn-blue" onclick="validarPCSAP()" style="height:22px; padding:0 10px; font-size:9px; border-radius:4px; border:none; background:#2563EB; color:#fff; font-weight:900; cursor:pointer; box-shadow:0 2px 6px rgba(37,99,235,0.25);">🔍 Validar PC</button>
-                    </div>
-                </div>
+           <!-- BLOQUE 3: Ítems del PC - CON BOTÓN ELIMINAR Y NUEVOS CAMPOS -->
+<div class="form-section" style="padding:4px 10px; margin-bottom:4px; border-radius:6px; border:1px solid #E2E8F0;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px; flex-wrap:wrap; gap:4px;">
+        <div class="section-title" style="font-size:10px; font-weight:900; color:#7F1D1D; margin:0;">3. Productos del PC</div>
+        <div style="display:flex; gap:4px; flex-wrap:wrap;">
+            <button class="btn btn-soft" onclick="addPedidoItemSAP()" style="height:22px; padding:0 10px; font-size:9px; border-radius:4px; border:1px solid #CBD5E1; background:#F1F5F9; font-weight:800; cursor:pointer;">+ Agregar ítem</button>
+            <!-- 🔽 NUEVO BOTÓN DE SELECCIÓN MÚLTIPLE -->
+            <button class="btn btn-soft" onclick="openProductSelectorPC()" style="height:22px; padding:0 10px; font-size:9px; border-radius:4px; border:1px solid #CBD5E1; background:#8B5CF6; color:#fff; font-weight:800; cursor:pointer;">📋 Seleccionar múltiples</button>
+            <button class="btn btn-blue" onclick="validarPCSAP()" style="height:22px; padding:0 10px; font-size:9px; border-radius:4px; border:none; background:#2563EB; color:#fff; font-weight:900; cursor:pointer; box-shadow:0 2px 6px rgba(37,99,235,0.25);">🔍 Validar PC</button>
+        </div>
+    </div>
                 <!-- MODIFICACIÓN: Aumenté el max-height para ver más filas -->
                 <div class="table-scroll" style="max-height:200px; overflow:auto;">
                     <table class="master-table" style="font-size:9px; width:100%; border-collapse:collapse;">
@@ -301,6 +303,55 @@
     <button class="btn-neon-yellow" onclick="savePedidoCompraSAP('observado')">⚠️ Crear Pc Observado</button>
     <button class="btn-neon-green" onclick="savePedidoCompraSAP('auto')">✅ Crear Pc Conforme</button>
 </div>
+    </div>
+</div>
+<!-- MODAL SELECCIÓN MÚLTIPLE DE PRODUCTOS PARA PC -->
+<div class="modal-bg" id="productSelectorPcModal">
+    <div class="modal-box" style="width:min(900px,96vw); max-height:85vh;">
+        <div class="modal-head">
+            <div class="modal-title">📋 Seleccionar productos para PC</div>
+            <button class="btn btn-secondary" style="background:transparent;color:#fff;border-color:#fff;padding:6px 14px;min-height:34px;border-radius:14px" onclick="closeModal('productSelectorPcModal')">✕ Cerrar</button>
+        </div>
+        <div class="modal-body" style="padding:12px 16px;">
+            <!-- Buscador -->
+            <div style="display:flex; gap:10px; margin-bottom:12px; align-items:center; flex-wrap:wrap;">
+                <input id="productSelectorPcSearch" placeholder="Buscar producto por código o descripción..." style="flex:1; height:36px; border:1px solid #E5E7EB; border-radius:8px; padding:0 12px; font-size:13px; outline:none; min-width:200px;">
+                <button class="btn btn-blue" onclick="filterProductSelectorPc()" style="height:36px; padding:0 20px;">🔍 Buscar</button>
+                <button class="btn btn-green" onclick="selectAllProductsPc()" style="height:36px; padding:0 16px; background:#16A34A; color:#fff; border:none; border-radius:8px; font-weight:800; cursor:pointer;">✅ Seleccionar todos</button>
+                <button class="btn btn-secondary" onclick="deselectAllProductsPc()" style="height:36px; padding:0 16px; background:#F1F5F9; color:#0F172A; border:1px solid #E5E7EB; border-radius:8px; font-weight:800; cursor:pointer;">⬜ Deseleccionar todos</button>
+            </div>
+            
+            <!-- Tabla de productos -->
+            <div style="border:1px solid #E5E7EB; border-radius:10px; overflow:auto; max-height:50vh;">
+                <table class="master-table" style="font-size:11px;">
+                    <thead>
+                        <tr>
+                            <th style="width:40px;"><input type="checkbox" id="selectAllPcCheckbox" onchange="toggleAllProductCheckboxesPc(this.checked)"></th>
+                            <th style="width:70px;">Código</th>
+                            <th>Producto</th>
+                            <th style="width:80px;">Marca</th>
+                            <th style="width:70px;">Modelo</th>
+                            <th style="width:70px;">Unidad</th>
+                            <th style="width:70px;">Stock</th>
+                            <th style="width:90px;">Precio</th>
+                            <th style="width:80px;">Cantidad</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productSelectorPcRows"></tbody>
+                </table>
+            </div>
+            
+            <!-- Resumen selección -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding:10px 14px; background:#F8FAFC; border-radius:8px; border:1px solid #E5E7EB; flex-wrap:wrap; gap:8px;">
+                <span style="font-weight:850; color:#0F172A;">Seleccionados: <span id="selectedPcCount">0</span> productos</span>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="btn btn-secondary" onclick="closeModal('productSelectorPcModal')" style="height:34px; padding:0 20px; background:#F1F5F9; color:#0F172A; border:1px solid #E5E7EB; border-radius:8px; font-weight:800; cursor:pointer;">Cancelar</button>
+                    <button class="btn btn-green" onclick="addSelectedProductsPc()" style="height:34px; padding:0 28px; background:#16A34A; color:#fff; border:none; border-radius:10px; font-weight:900; font-size:13px; cursor:pointer;">
+                        ✅ Agregar seleccionados
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
