@@ -2479,7 +2479,79 @@
 }
 
 
+/* ============================================================
+   BOTONES NEON FLUORESCENTES - MODAL PC (MÁS FUERTES)
+   ============================================================ */
 
+/* 🟡 AMARILLO NEON FLUORESCENTE ULTRA - PC Observado */
+.btn-neon-yellow {
+    height: 28px;
+    padding: 0 18px;
+    font-size: 10px;
+    border-radius: 6px;
+    border: 2px solid #FFCC00;
+    background: #FFCC00;
+    color: #000000;
+    font-weight: 900;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 0 40px rgba(255, 204, 0, 1), 
+                0 0 80px rgba(255, 204, 0, 0.6), 
+                inset 0 0 20px rgba(255, 255, 200, 0.5);
+    text-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+    animation: neon-pulse-yellow 1.5s ease-in-out infinite;
+}
+
+.btn-neon-yellow:hover {
+    background: #FFD633;
+    box-shadow: 0 0 60px rgba(255, 204, 0, 1), 
+                0 0 100px rgba(255, 204, 0, 0.8), 
+                inset 0 0 30px rgba(255, 255, 200, 0.6);
+    transform: scale(1.05);
+}
+
+.btn-neon-yellow:active {
+    transform: scale(0.95);
+}
+
+/* 🟢 VERDE NEON FLUORESCENTE ULTRA - PC Conforme */
+.btn-neon-green {
+    height: 28px;
+    padding: 0 18px;
+    font-size: 10px;
+    border-radius: 6px;
+    border: 2px solid #00FF00;
+    background: #00EE00;
+    color: #000000;
+    font-weight: 900;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 0 40px rgba(0, 255, 0, 1), 
+                0 0 80px rgba(0, 255, 0, 0.6), 
+                inset 0 0 20px rgba(200, 255, 200, 0.5);
+    text-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+    animation: neon-pulse-green 1.5s ease-in-out infinite;
+}
+
+.btn-neon-green:hover {
+    background: #33FF33;
+    box-shadow: 0 0 60px rgba(0, 255, 0, 1), 
+                0 0 100px rgba(0, 255, 0, 0.8), 
+                inset 0 0 30px rgba(200, 255, 200, 0.6);
+    transform: scale(1.05);
+}
+
+.btn-neon-green:active {
+    transform: scale(0.95);
+}
 
 </style>
 {% endblock %}
