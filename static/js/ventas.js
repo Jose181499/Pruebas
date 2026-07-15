@@ -6463,8 +6463,8 @@ function renderCotizacionFormContent(isEdit) {
                 </div>
             </div>
 
-            <!-- ============================================================ -->
-            <!-- 2. CONDICIONES COMERCIALES -->
+                      <!-- ============================================================ -->
+            <!-- 2. CONDICIONES COMERCIALES - SIN CAMPOS DUPLICADOS -->
             <!-- ============================================================ -->
             <div class="create-panel" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;box-shadow:0 4px 12px rgba(15,23,42,.06);overflow:hidden;">
                 <h3 style="padding:6px 12px;border-bottom:1px solid #E5E7EB;font-size:12px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:6px;margin:0;">
@@ -6485,28 +6485,6 @@ function renderCotizacionFormContent(isEdit) {
                         <div class="form-field">
                             <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Teléfono</label>
                             <input id="fTelefonoAsesor" value="${CONFIG.telefonoAsesorDefault}" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 6px;">
-                        </div>
-                    </div>
-                    <!-- RUC | Razón Social | Cód. Cliente | Moneda -->
-                    <div style="display:grid;grid-template-columns:1fr 1.5fr 1fr 0.8fr;gap:5px;margin-bottom:4px;">
-                        <div class="form-field">
-                            <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">RUC</label>
-                            <input id="fRuc2" readonly style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#F1F5F9;outline:none;color:#0F172A;font-size:11px;padding:0 6px;">
-                        </div>
-                        <div class="form-field">
-                            <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Razón Social</label>
-                            <input id="fRazon2" readonly style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#F1F5F9;outline:none;color:#0F172A;font-size:11px;padding:0 6px;">
-                        </div>
-                        <div class="form-field">
-                            <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Cód. Cliente</label>
-                            <input id="fCodCliente2" placeholder="PENDIENTE" readonly style="width:100%;height:24px;border:1px solid #BFDBFE;border-radius:6px;background:#FFFFFF;outline:none;color:#2563EB;font-size:11px;padding:0 6px;text-align:center;font-weight:1000;">
-                        </div>
-                        <div class="form-field">
-                            <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Moneda</label>
-                            <select id="fMoneda" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
-                                <option value="Soles (S/.)" selected>Soles</option>
-                                <option value="Dólares ($)">Dólares</option>
-                            </select>
                         </div>
                     </div>
                     <!-- Condición | Tiempo | Validez -->
