@@ -1625,9 +1625,7 @@ function addSelectedProductsPc() {
     }
 }
 
-/**
- * Agrega un item a la tabla del PC
- */
+
 function agregarItemPCTable(codigo, descripcion, marca, modelo, cantidad, precio, stock) {
     const tbody = document.getElementById('pcItemsBody');
     if (!tbody) return;
@@ -1651,32 +1649,35 @@ function agregarItemPCTable(codigo, descripcion, marca, modelo, cantidad, precio
                    style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800;"
                    readonly>
         </td>
-        <td style="padding:2px 3px;">
-            <input value="${esc(marca)}" 
-                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A;">
-        </td>
+        <!-- 🔽 MODELO PRIMERO -->
         <td style="padding:2px 3px;">
             <input value="${esc(modelo)}" 
                    style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A;">
         </td>
+        <!-- 🔽 MARCA DESPUÉS -->
         <td style="padding:2px 3px;">
+            <input value="${esc(marca)}" 
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A;">
+        </td>
+        <!-- 🔽 COLUMNAS CON ANCHO REDUCIDO -->
+        <td style="padding:2px 3px; width:55px;">
             <input type="number" value="${cantidad}" 
-                   style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center;"
+                   style="width:45px; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center;"
                    readonly>
         </td>
-        <td style="padding:2px 3px;">
+        <td style="padding:2px 3px; width:55px;">
             <input type="number" value="${cantidad}" 
-                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900;"
+                   style="width:45px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900;"
                    onchange="actualizarFaltanteDesdeInput(this)">
         </td>
-        <td style="padding:2px 3px;">
+        <td style="padding:2px 3px; width:65px;">
             <input type="number" step="0.01" value="${precio}" 
-                   style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center;"
+                   style="width:55px; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center;"
                    readonly>
         </td>
-        <td style="padding:2px 3px;">
+        <td style="padding:2px 3px; width:65px;">
             <input type="number" step="0.01" value="${precio}" 
-                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;">
+                   style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;">
         </td>
         <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B; font-weight:800;">${stock}</td>
         <td style="padding:2px 3px; text-align:center; font-size:8px; font-weight:900; color:${faltante > 0 ? '#DC2626' : '#16A34A'};">${faltante}</td>
@@ -5706,75 +5707,79 @@ async function cargarPCParaEditar(id) {
             if (items.length === 0) {
                 addPedidoItemSAP();
             } else {
-                items.forEach((item, idx) => {
-                    const codigo = item.codigo || '';
-                    const producto = item.producto || 'Producto sin nombre';
-                    const marca = item.marca || '';
-                    const modelo = item.modelo || '';
-                    const cantidadCotizada = parseFloat(item.cantidad_cotizada) || 0;
-                    const cantidadPC = parseFloat(item.cantidad_pc) || 1;
-                    const precioCotizado = parseFloat(item.precio_cotizado) || 0;
-                    const precioPC = parseFloat(item.precio_pc) || 0;
-                    const stock = parseFloat(item.stock) || 0;
-                    const faltante = Math.max(cantidadPC - stock, 0);
-                    
-                    const tr = document.createElement('tr');
-                    tr.id = `item-row-${idx + 1}`;
-                    tr.style.borderBottom = '1px solid #E2E8F0';
-                    
-                    tr.innerHTML = `
-                        <td style="padding:2px 3px; text-align:center; font-weight:800; font-size:9px; background:#F8FAFC;">${idx + 1}</td>
-                        <td style="padding:2px 3px;">
-                            <input value="${esc(codigo)}" 
-                                   style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800; color:#1D4ED8;"
-                                   readonly>
-                        </td>
-                        <td style="padding:2px 3px;">
-                            <input value="${esc(producto)}" 
-                                   style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800;"
-                                   readonly>
-                        </td>
-                        <td style="padding:2px 3px;">
-                            <input value="${esc(marca)}" 
-                                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A;">
-                        </td>
-                        <td style="padding:2px 3px;">
-                            <input value="${esc(modelo)}" 
-                                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A;">
-                        </td>
-                        <td style="padding:2px 3px;">
-                            <input type="number" value="${cantidadCotizada}" 
-                                   style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center;"
-                                   readonly>
-                        </td>
-                        <td style="padding:2px 3px;">
-                            <input type="number" value="${cantidadPC}" 
-                                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900;"
-                                   onchange="actualizarFaltanteDesdeInput(this)">
-                        </td>
-                        <td style="padding:2px 3px;">
-                            <input type="number" step="0.01" value="${precioCotizado}" 
-                                   style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center;"
-                                   readonly>
-                        </td>
-                        <td style="padding:2px 3px;">
-                            <input type="number" step="0.01" value="${precioPC}" 
-                                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;">
-                        </td>
-                        <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B; font-weight:800;">${stock}</td>
-                        <td style="padding:2px 3px; text-align:center; font-size:8px; font-weight:900; color:${faltante > 0 ? '#DC2626' : '#16A34A'};">${faltante}</td>
-                        <td style="padding:2px 3px; text-align:center;">
-                            <button onclick="eliminarItemSAP('${tr.id}')" 
-                                    style="background:transparent; border:none; color:#EF4444; cursor:pointer; font-size:12px; font-weight:900; padding:0 4px; border-radius:3px; transition:all 0.2s; width:22px; height:22px;"
-                                    onmouseover="this.style.background='#FEE2E2'; this.style.color='#DC2626';"
-                                    onmouseout="this.style.background='transparent'; this.style.color='#EF4444';">
-                                ✕
-                            </button>
-                        </td>
-                    `;
-                    
-                    tbody.appendChild(tr);
-                });
+                // Dentro de cargarPCParaEditar, donde se crea el tr para cada item
+items.forEach((item, idx) => {
+    const codigo = item.codigo || '';
+    const producto = item.producto || 'Producto sin nombre';
+    const marca = item.marca || '';
+    const modelo = item.modelo || '';
+    const cantidadCotizada = parseFloat(item.cantidad_cotizada) || 0;
+    const cantidadPC = parseFloat(item.cantidad_pc) || 1;
+    const precioCotizado = parseFloat(item.precio_cotizado) || 0;
+    const precioPC = parseFloat(item.precio_pc) || 0;
+    const stock = parseFloat(item.stock) || 0;
+    const faltante = Math.max(cantidadPC - stock, 0);
+    
+    const tr = document.createElement('tr');
+    tr.id = `item-row-${idx + 1}`;
+    tr.style.borderBottom = '1px solid #E2E8F0';
+    
+    tr.innerHTML = `
+        <td style="padding:2px 3px; text-align:center; font-weight:800; font-size:9px; background:#F8FAFC;">${idx + 1}</td>
+        <td style="padding:2px 3px;">
+            <input value="${esc(codigo)}" 
+                   style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800; color:#1D4ED8;"
+                   readonly>
+        </td>
+        <td style="padding:2px 3px;">
+            <input value="${esc(producto)}" 
+                   style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800;"
+                   readonly>
+        </td>
+        <!-- 🔽 MODELO PRIMERO -->
+        <td style="padding:2px 3px;">
+            <input value="${esc(modelo)}" 
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A;">
+        </td>
+        <!-- 🔽 MARCA DESPUÉS -->
+        <td style="padding:2px 3px;">
+            <input value="${esc(marca)}" 
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A;">
+        </td>
+        <!-- 🔽 COLUMNAS CON ANCHO REDUCIDO -->
+        <td style="padding:2px 3px; width:55px;">
+            <input type="number" value="${cantidadCotizada}" 
+                   style="width:45px; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center;"
+                   readonly>
+        </td>
+        <td style="padding:2px 3px; width:55px;">
+            <input type="number" value="${cantidadPC}" 
+                   style="width:45px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900;"
+                   onchange="actualizarFaltanteDesdeInput(this)">
+        </td>
+        <td style="padding:2px 3px; width:65px;">
+            <input type="number" step="0.01" value="${precioCotizado}" 
+                   style="width:55px; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center;"
+                   readonly>
+        </td>
+        <td style="padding:2px 3px; width:65px;">
+            <input type="number" step="0.01" value="${precioPC}" 
+                   style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;">
+        </td>
+        <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B; font-weight:800;">${stock}</td>
+        <td style="padding:2px 3px; text-align:center; font-size:8px; font-weight:900; color:${faltante > 0 ? '#DC2626' : '#16A34A'};">${faltante}</td>
+        <td style="padding:2px 3px; text-align:center;">
+            <button onclick="eliminarItemSAP('${tr.id}')" 
+                    style="background:transparent; border:none; color:#EF4444; cursor:pointer; font-size:12px; font-weight:900; padding:0 4px; border-radius:3px; transition:all 0.2s; width:22px; height:22px;"
+                    onmouseover="this.style.background='#FEE2E2'; this.style.color='#DC2626';"
+                    onmouseout="this.style.background='transparent'; this.style.color='#EF4444';">
+                ✕
+            </button>
+        </td>
+    `;
+    
+    tbody.appendChild(tr);
+});
             }
         }
         
@@ -5905,6 +5910,7 @@ function loadPedidoCotizacionSAP() {
     }
 }
 
+
 function addPedidoItemSAP() {
     const tbody = document.getElementById('pcItemsBody');
     if (!tbody) return;
@@ -5926,30 +5932,33 @@ function addPedidoItemSAP() {
             <input type="text" placeholder="Descripción" 
                    style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none;">
         </td>
-        <td style="padding:2px 3px;">
-            <input type="text" placeholder="Marca" 
-                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700;">
-        </td>
+        <!-- 🔽 MODELO PRIMERO -->
         <td style="padding:2px 3px;">
             <input type="text" placeholder="Modelo" 
                    style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700;">
         </td>
+        <!-- 🔽 MARCA DESPUÉS -->
         <td style="padding:2px 3px;">
-            <input type="number" value="0" 
-                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;">
+            <input type="text" placeholder="Marca" 
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700;">
         </td>
-        <td style="padding:2px 3px;">
+        <!-- 🔽 COLUMNAS CON ANCHO REDUCIDO -->
+        <td style="padding:2px 3px; width:55px;">
             <input type="number" value="0" 
-                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900;"
+                   style="width:45px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;">
+        </td>
+        <td style="padding:2px 3px; width:55px;">
+            <input type="number" value="1" 
+                   style="width:45px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900;"
                    onchange="actualizarFaltanteDesdeInput(this)">
         </td>
-        <td style="padding:2px 3px;">
+        <td style="padding:2px 3px; width:65px;">
             <input type="number" step="0.01" value="0" 
-                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;">
+                   style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;">
         </td>
-        <td style="padding:2px 3px;">
+        <td style="padding:2px 3px; width:65px;">
             <input type="number" step="0.01" value="0" 
-                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;">
+                   style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;">
         </td>
         <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B; font-weight:800;">0</td>
         <td style="padding:2px 3px; text-align:center; font-size:8px; font-weight:900; color:#EF4444;">0</td>
