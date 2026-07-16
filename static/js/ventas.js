@@ -3771,13 +3771,13 @@ function validarPCSAP() {
     
     // Construir lista de validaciones fallidas
     const labels = {
-        precio: '💰 Precio',
-        producto: '📦 Producto',
-        entrega: '📍 Lugar Entrega',
-        transporte: '🚚 Transporte',
-        cantidad: '🔢 Cantidad',
-        moneda: '💵 Moneda',
-        vigencia: '📅 Vigencia'
+        precio: ' Precio',
+        producto: ' Producto',
+        entrega: ' Lugar Entrega',
+        transporte: ' Transporte',
+        cantidad: ' Cantidad',
+        moneda: ' Moneda',
+        vigencia: ' Vigencia'
     };
     
     const detalles = [];
