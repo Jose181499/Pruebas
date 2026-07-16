@@ -3647,21 +3647,7 @@ function renderValidacion() {
 
 // Función de validación actualizada - SIN MARGEN
 function validarPCSAP() {
-    const semaphore = document.getElementById('validationSemaphore');
-    const icon = document.getElementById('validationIcon');
-    const title = document.getElementById('validationTitle');
-    const subtitle = document.getElementById('validationSubtitle');
-    const chips = document.getElementById('validationChips');
-    
-    // Mostrar semáforo
-    semaphore.style.display = 'block';
-    semaphore.style.borderColor = '#F59E0B';
-    semaphore.style.background = '#FEF3C7';
-    icon.textContent = '⏳';
-    title.textContent = 'Validando...';
-    subtitle.textContent = 'Revisando los 6 puntos de validación';
-    chips.innerHTML = '';
-    
+   
     // Obtener valores de validación
     const validaciones = {
         precio: document.getElementById('vPrecio').value === 'Sí',
@@ -8070,84 +8056,7 @@ function updateValidationIcon(elementId, isValid) {
 }
 
 
-// Agregar esta función
 
-function updateValidationSemaphore(allValid, anyInvalid) {
-    const semaphore = document.getElementById('validationSemaphore');
-    if (!semaphore) {
-        console.warn('⚠️ Semáforo no encontrado');
-        return;
-    }
-    
-    const icon = document.getElementById('validationIcon');
-    const title = document.getElementById('validationTitle');
-    const subtitle = document.getElementById('validationSubtitle');
-    const chips = document.getElementById('validationChips');
-    
-    console.log('🔴 Actualizando semáforo:', { allValid, anyInvalid });
-    
-    semaphore.style.display = 'block';
-    
-    if (allValid) {
-        semaphore.style.borderColor = '#16A34A';
-        semaphore.style.background = '#F0FDF4';
-        if (icon) icon.textContent = '✅';
-        if (title) {
-            title.textContent = '¡PC conforme!';
-            title.style.color = '#166534';
-        }
-        if (subtitle) {
-            subtitle.textContent = 'Todos los puntos de validación están correctos';
-            subtitle.style.color = '#166534';
-        }
-    } else if (anyInvalid) {
-        semaphore.style.borderColor = '#DC2626';
-        semaphore.style.background = '#FEF2F2';
-        if (icon) icon.textContent = '⚠️';
-        if (title) {
-            title.textContent = 'PC observado';
-            title.style.color = '#991B1B';
-        }
-        if (subtitle) {
-            subtitle.textContent = 'Hay puntos marcados como "No" - Revisar antes de guardar';
-            subtitle.style.color = '#991B1B';
-        }
-    } else {
-        semaphore.style.borderColor = '#F59E0B';
-        semaphore.style.background = '#FFFBEB';
-        if (icon) icon.textContent = '⏳';
-        if (title) {
-            title.textContent = 'Validando...';
-            title.style.color = '#92400E';
-        }
-        if (subtitle) {
-            subtitle.textContent = 'Revisando los puntos de validación';
-            subtitle.style.color = '#92400E';
-        }
-    }
-    
-    // Actualizar chips
-    if (chips) {
-        const validations = [
-            { id: 'vPrecio', label: '💰 Precio' },
-            { id: 'vProducto', label: '📦 Producto' },
-            { id: 'vEntrega', label: '📍 Lugar Entrega' },
-            { id: 'vTransporte', label: '🚚 Transporte' },
-            { id: 'vCantidad', label: '🔢 Cantidad' },
-            { id: 'vMoneda', label: '💵 Moneda' },
-            { id: 'vVigencia', label: '📅 Vigencia' }
-        ];
-        
-        chips.innerHTML = validations.map(({ id, label }) => {
-            const checkbox = document.getElementById(id);
-            const ok = checkbox ? checkbox.checked : true;
-            const color = ok ? '#10B981' : '#EF4444';
-            const bgColor = ok ? '#10B98120' : '#EF444420';
-            const emoji = ok ? '✅' : '❌';
-            return `<span style="background:${bgColor}; color:${color}; padding:2px 8px; border-radius:10px; font-size:8px; font-weight:800;">${emoji} ${label}</span>`;
-        }).join('');
-    }
-}
 
 function inicializarSwitchesValidacion() {
     console.log('🔄 Inicializando switches de validación...');
