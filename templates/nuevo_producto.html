@@ -1260,18 +1260,24 @@
             return response.json();
         })
         .then(function(result) {
-            console.log('📦 Resultado completo:', result);
-            btnGuardar.classList.remove('loading');
-            btnGuardar.innerHTML = textoOriginal;
+        console.log('📦 Resultado completo:', result);
+        btnGuardar.classList.remove('loading');
+        btnGuardar.innerHTML = textoOriginal;
+        
+        if (result.success) {
+            var codigo = result.data?.codigo || result.codigo || 'N/A';
+            console.log('📦 Código del producto:', codigo);
             
-            if (result.success) {
-                var codigo = result.data?.codigo || result.codigo || 'N/A';
-                console.log('📦 Código del producto:', codigo);
-                mostrarNotificacionExito(esEdicion, codigo);
+            // 🔧 CAMBIO: usa el modal de base.html en vez de la notificación local
+            if (typeof mostrarModalExito === 'function') {
+                mostrarModalExito(codigo);
             } else {
-                mostrarNotificacionError(result.error || 'Error desconocido');
+                mostrarNotificacionExito(esEdicion, codigo);
             }
-        })
+        } else {
+            mostrarNotificacionError(result.error || 'Error desconocido');
+        }
+    })
         .catch(function(error) {
             console.error('❌ Error:', error);
             btnGuardar.classList.remove('loading');
