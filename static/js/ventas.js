@@ -830,51 +830,56 @@ function renderCotizaciones() {
     const thead = document.getElementById('cotizacionesTableHead');
     if (!tbody || !thead) return;
     
-    // ============================================================
-    // VISTA PRINCIPAL - Columnas resumidas
-    // ============================================================
-    if (cotizacionViewMode === 'principal') {
-        thead.innerHTML = `
-            <tr>
-                <th>Item</th>
-                <th>Fecha / Hora</th>
-                <th>Estado</th>
-                <th>N° Cotización</th>
-                <th>RUC</th>
-                <th>Cód. Cliente</th>
-                <th>Razón social (Cliente) </th>
-                <th>Descripción principal</th>
-                <th>Monto total<br><small>(Incluido IGV)</small></th>
-                <th>Cond. pago</th>
-                <th>Acciones</th>
-            </tr>
-        `;
-        
-        if (list.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay cotizaciones que coincidan con los filtros</td></tr>`;
-            return;
-        }
-        
-        tbody.innerHTML = list.map((r, i) => {
-            return `
-            <tr>
-                <td><b>${i + 1}</b></td>
-                <td class="date-cell">${formatFecha(r.fecha)}</td>
-                <td>${badgeStatus(r.estado)}</td>
-                <td class="quote-number-cell"><b>${sd(r.numero)}</b></td>
-                <td>${sd(r.ruc)}</td>
-                <td><span class="code-pill">${sd(r.cod_cliente)}</span></td>
-                <td class="left"><b>${sd(r.razon)}</b></td>
-                <td class="left">${sd(r.descripcion || r.nota_cotizacion || 'Sin descripción')}</td>
-                <td><b>${money(r.total || r.monto || 0)}</b></td>
-                <td>${sd(r.condicion || r.condicion_pago || r.forma_pago)}</td>
-                <td>
-                    <button class="kebab" onclick="showCotizacionMenu(event, ${r.id})">⋮</button>
-                </td>
-            </tr>`;
-        }).join('');
+   // ============================================================
+// VISTA PRINCIPAL - Columnas resumidas
+// ============================================================
+if (cotizacionViewMode === 'principal') {
+    thead.innerHTML = `
+        <tr>
+            <th>Item</th>
+            <th>Fecha / Hora</th>
+            <th>Estado</th>
+            <th>N° Cotización</th>
+            <th>RUC</th>
+            <th>Cód. Cliente</th>
+            <th>Razón social (Cliente)</th>
+            <th>Descripción principal</th>
+            <th>Monto total<br><small>(Sin IGV)</small></th>
+            <th>Monto total<br><small>(Incluido IGV)</small></th>
+            <th>Cond. pago</th>
+            <th>Acciones</th>
+        </tr>
+    `;
+    
+    if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay cotizaciones que coincidan con los filtros</td></tr>`;
         return;
     }
+    
+    tbody.innerHTML = list.map((r, i) => {
+        const totalConIgv = r.total || r.monto || 0;
+        const totalSinIgv = totalConIgv / 1.18;
+        
+        return `
+        <tr>
+            <td><b>${i + 1}</b></td>
+            <td class="date-cell">${formatFecha(r.fecha)}</td>
+            <td>${badgeStatus(r.estado)}</td>
+            <td class="quote-number-cell"><b>${sd(r.numero)}</b></td>
+            <td>${sd(r.ruc)}</td>
+            <td><span class="code-pill">${sd(r.cod_cliente)}</span></td>
+            <td class="left"><b>${sd(r.razon)}</b></td>
+            <td class="left">${sd(r.descripcion || r.nota_cotizacion || 'Sin descripción')}</td>
+            <td><b>${money(totalSinIgv)}</b></td>
+            <td><b>${money(totalConIgv)}</b></td>
+            <td>${sd(r.condicion || r.condicion_pago || r.forma_pago)}</td>
+            <td>
+                <button class="kebab" onclick="showCotizacionMenu(event, ${r.id})">⋮</button>
+            </td>
+        </tr>`;
+    }).join('');
+    return;
+}
     
     // ============================================================
     // VISTA COMPLETA - Todas las columnas
