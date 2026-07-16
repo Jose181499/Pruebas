@@ -3477,6 +3477,8 @@ function renderValidacion() {
                 cantidad: validaCantidades ? '✅ Sí' : '❌ No',
                 entrega: validaEntrega ? '✅ Sí' : '❌ No',
                 moneda: validaMoneda ? '✅ Sí' : '❌ No',
+                transporte: validaTransporte ? '✅ Sí' : '❌ No',
+                vigencia: validaVigencia ? '✅ Sí' : '❌ No',
                 stock: validaStock ? '✅ OK' : '⚠️ Stock insuficiente',
                 estado: estadoPC,
                 id: p.id,
@@ -3485,9 +3487,9 @@ function renderValidacion() {
                 cantidadOk: validaCantidades,
                 entregaOk: validaEntrega,
                 monedaOk: validaMoneda,
-                stockOk: validaStock,
                 transporteOk: validaTransporte,
                 vigenciaOk: validaVigencia,
+                stockOk: validaStock,
                 margenOk: validaMargen,
                 faltante: 0,
                 esObservado: esObservado
@@ -3527,6 +3529,8 @@ function renderValidacion() {
                     cantidad: cantidadOk ? '✅ Sí' : '❌ No',
                     entrega: entregaOk ? '✅ Sí' : '❌ No',
                     moneda: monedaOk ? '✅ Sí' : '❌ No',
+                    transporte: transporteOk ? '✅ Sí' : '❌ No',
+                    vigencia: vigenciaOk ? '✅ Sí' : '❌ No',
                     stock: stockOk ? `✅ Stock: ${stock}` : `⚠️ Falta: ${faltante}`,
                     estado: estadoPC,
                     id: p.id,
@@ -3536,9 +3540,9 @@ function renderValidacion() {
                     cantidadOk: cantidadOk,
                     entregaOk: entregaOk,
                     monedaOk: monedaOk,
-                    stockOk: stockOk,
                     transporteOk: transporteOk,
                     vigenciaOk: vigenciaOk,
+                    stockOk: stockOk,
                     margenOk: margenOk,
                     faltante: faltante,
                     esObservado: esObservado
@@ -3562,6 +3566,8 @@ function renderValidacion() {
             v.cantidad === '✅ Sí' && 
             v.entrega === '✅ Sí' && 
             v.moneda === '✅ Sí' && 
+            v.transporte === '✅ Sí' &&
+            v.vigencia === '✅ Sí' &&
             v.stock.includes('✅')
         );
     } else if (filtro === 'observado') {
@@ -3569,6 +3575,9 @@ function renderValidacion() {
             v.precio === '❌ No' || 
             v.cantidad === '❌ No' || 
             v.entrega === '❌ No' || 
+            v.moneda === '❌ No' ||
+            v.transporte === '❌ No' ||
+            v.vigencia === '❌ No' ||
             v.estado === 'PC observado' ||
             v.estado === 'Bloqueado'
         );
@@ -3584,7 +3593,7 @@ function renderValidacion() {
     if (!tbody) return;
     
     if (data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:#94A3B8;padding:40px;">
+        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:#94A3B8;padding:40px;">
             📭 No hay validaciones que coincidan con los filtros
         </td></tr>`;
         const countEl = document.getElementById('valCount');
@@ -3592,19 +3601,23 @@ function renderValidacion() {
         return;
     }
     
+    // 🔽 NUEVA TABLA CON LOS MISMOS CAMPOS QUE EL PC
     tbody.innerHTML = data.map((v, i) => {
         const todasValidas = v.precio === '✅ Sí' && 
                             v.cantidad === '✅ Sí' && 
                             v.entrega === '✅ Sí' && 
                             v.moneda === '✅ Sí' && 
+                            v.transporte === '✅ Sí' &&
+                            v.vigencia === '✅ Sí' &&
                             v.stock.includes('✅') &&
-                            v.transporteOk !== false &&
-                            v.vigenciaOk !== false &&
                             v.margenOk !== false;
         
         const esObservado = v.precio === '❌ No' || 
                            v.cantidad === '❌ No' || 
                            v.entrega === '❌ No' || 
+                           v.moneda === '❌ No' ||
+                           v.transporte === '❌ No' ||
+                           v.vigencia === '❌ No' ||
                            v.estado === 'PC observado' ||
                            v.estado === 'Bloqueado';
         
@@ -3615,33 +3628,96 @@ function renderValidacion() {
         if (todasValidas && v.faltante <= 0) {
             resultado = '✅ Listo para despacho';
             badgeClass = 'badge-val-ok';
-            accionHtml = `<button class="btn btn-green btn-sm" onclick="enviarADespacho(${v.id})">🚚 Enviar a despacho</button>`;
+            accionHtml = `<button class="btn btn-green btn-sm" onclick="enviarADespacho(${v.id})" style="height:20px; padding:0 8px; font-size:8px; border-radius:4px; border:none; background:#16A34A; color:#fff; font-weight:800; cursor:pointer;">🚚 Despachar</button>`;
         } else if (esObservado) {
             resultado = '⚠️ Bloqueado por observación';
             badgeClass = 'badge-val-error';
-            accionHtml = `<button class="btn btn-danger btn-sm" onclick="solicitarCorreccion(${v.id})">📝 Solicitar corrección</button>`;
+            accionHtml = `<button class="btn btn-danger btn-sm" onclick="solicitarCorreccion(${v.id})" style="height:20px; padding:0 8px; font-size:8px; border-radius:4px; border:none; background:#DC2626; color:#fff; font-weight:800; cursor:pointer;">📝 Corregir</button>`;
         } else if (v.faltante > 0) {
             resultado = '🔄 Requiere compra';
             badgeClass = 'badge-val-warning';
-            accionHtml = `<button class="btn btn-warning btn-sm" onclick="generarOrdenCompra(${v.id})">🛒 Generar compra</button>`;
+            accionHtml = `<button class="btn btn-warning btn-sm" onclick="generarOrdenCompra(${v.id})" style="height:20px; padding:0 8px; font-size:8px; border-radius:4px; border:none; background:#F59E0B; color:#000; font-weight:800; cursor:pointer;">🛒 Comprar</button>`;
         } else {
             resultado = '⏳ Pendiente de validación';
             badgeClass = 'badge-val-warning';
-            accionHtml = `<button class="btn btn-blue btn-sm" onclick="validarPCSAP()">🔍 Validar</button>`;
+            accionHtml = `<button class="btn btn-blue btn-sm" onclick="validarPCSAP()" style="height:20px; padding:0 8px; font-size:8px; border-radius:4px; border:none; background:#2563EB; color:#fff; font-weight:800; cursor:pointer;">🔍 Validar</button>`;
         }
         
         return `
         <tr>
-            <td><b>${esc(v.pc)}</b></td>
-            <td class="left">${esc(v.cliente)}</td>
-            <td class="left">${esc(v.producto)}</td>
-            <td class="${v.precio === '✅ Sí' ? 'val-ok' : 'val-error'}">${v.precio}</td>
-            <td class="${v.cantidad === '✅ Sí' ? 'val-ok' : 'val-error'}">${v.cantidad}</td>
-            <td class="${v.entrega === '✅ Sí' ? 'val-ok' : 'val-error'}">${v.entrega}</td>
-            <td class="${v.moneda === '✅ Sí' ? 'val-ok' : 'val-error'}">${v.moneda}</td>
-            <td class="${v.stock.includes('✅') ? 'val-ok' : 'val-warning'}">${v.stock}</td>
-            <td><span class="badge-val ${badgeClass}">${resultado}</span></td>
-            <td>${accionHtml}</td>
+            <td style="padding:4px 6px; font-weight:900; font-size:10px;">${esc(v.pc)}</td>
+            <td class="left" style="padding:4px 6px; font-weight:800; font-size:10px;">${esc(v.cliente)}</td>
+            <td class="left" style="padding:4px 6px; font-size:10px;">${esc(v.producto)}</td>
+            <!-- 🔽 PRECIO - con emoji y badge -->
+            <td style="padding:4px 6px; text-align:center;">
+                <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
+                    <span style="font-size:14px;">💰</span>
+                    <span class="${v.precio === '✅ Sí' ? 'val-ok' : 'val-error'}" style="font-weight:900; font-size:10px; padding:2px 8px; border-radius:10px; background:${v.precio === '✅ Sí' ? '#D1FAE5' : '#FEE2E2'}; color:${v.precio === '✅ Sí' ? '#065F46' : '#991B1B'};">
+                        ${v.precio}
+                    </span>
+                </div>
+            </td>
+            <!-- 🔽 CANTIDAD - con emoji y badge -->
+            <td style="padding:4px 6px; text-align:center;">
+                <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
+                    <span style="font-size:14px;">🔢</span>
+                    <span class="${v.cantidad === '✅ Sí' ? 'val-ok' : 'val-error'}" style="font-weight:900; font-size:10px; padding:2px 8px; border-radius:10px; background:${v.cantidad === '✅ Sí' ? '#D1FAE5' : '#FEE2E2'}; color:${v.cantidad === '✅ Sí' ? '#065F46' : '#991B1B'};">
+                        ${v.cantidad}
+                    </span>
+                </div>
+            </td>
+            <!-- 🔽 ENTREGA - con emoji y badge -->
+            <td style="padding:4px 6px; text-align:center;">
+                <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
+                    <span style="font-size:14px;">📍</span>
+                    <span class="${v.entrega === '✅ Sí' ? 'val-ok' : 'val-error'}" style="font-weight:900; font-size:10px; padding:2px 8px; border-radius:10px; background:${v.entrega === '✅ Sí' ? '#D1FAE5' : '#FEE2E2'}; color:${v.entrega === '✅ Sí' ? '#065F46' : '#991B1B'};">
+                        ${v.entrega}
+                    </span>
+                </div>
+            </td>
+            <!-- 🔽 MONEDA - con emoji y badge -->
+            <td style="padding:4px 6px; text-align:center;">
+                <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
+                    <span style="font-size:14px;">💱</span>
+                    <span class="${v.moneda === '✅ Sí' ? 'val-ok' : 'val-error'}" style="font-weight:900; font-size:10px; padding:2px 8px; border-radius:10px; background:${v.moneda === '✅ Sí' ? '#D1FAE5' : '#FEE2E2'}; color:${v.moneda === '✅ Sí' ? '#065F46' : '#991B1B'};">
+                        ${v.moneda}
+                    </span>
+                </div>
+            </td>
+            <!-- 🔽 TRANSPORTE - con emoji y badge -->
+            <td style="padding:4px 6px; text-align:center;">
+                <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
+                    <span style="font-size:14px;">🚚</span>
+                    <span class="${v.transporte === '✅ Sí' ? 'val-ok' : 'val-error'}" style="font-weight:900; font-size:10px; padding:2px 8px; border-radius:10px; background:${v.transporte === '✅ Sí' ? '#D1FAE5' : '#FEE2E2'}; color:${v.transporte === '✅ Sí' ? '#065F46' : '#991B1B'};">
+                        ${v.transporte || '✅ Sí'}
+                    </span>
+                </div>
+            </td>
+            <!-- 🔽 VIGENCIA - con emoji y badge -->
+            <td style="padding:4px 6px; text-align:center;">
+                <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
+                    <span style="font-size:14px;">📅</span>
+                    <span class="${v.vigencia === '✅ Sí' ? 'val-ok' : 'val-error'}" style="font-weight:900; font-size:10px; padding:2px 8px; border-radius:10px; background:${v.vigencia === '✅ Sí' ? '#D1FAE5' : '#FEE2E2'}; color:${v.vigencia === '✅ Sí' ? '#065F46' : '#991B1B'};">
+                        ${v.vigencia || '✅ Sí'}
+                    </span>
+                </div>
+            </td>
+            <!-- 🔽 STOCK -->
+            <td style="padding:4px 6px; text-align:center;">
+                <span class="${v.stock.includes('✅') ? 'val-ok' : 'val-warning'}" style="font-weight:900; font-size:9px; padding:2px 8px; border-radius:10px; background:${v.stock.includes('✅') ? '#D1FAE5' : '#FEF3C7'}; color:${v.stock.includes('✅') ? '#065F46' : '#92400E'};">
+                    ${v.stock}
+                </span>
+            </td>
+            <!-- 🔽 RESULTADO -->
+            <td style="padding:4px 6px; text-align:center;">
+                <span class="badge-val ${badgeClass}" style="font-weight:800; font-size:9px; padding:2px 10px; border-radius:10px; background:${badgeClass === 'badge-val-ok' ? '#D1FAE5' : badgeClass === 'badge-val-error' ? '#FEE2E2' : '#FEF3C7'}; color:${badgeClass === 'badge-val-ok' ? '#065F46' : badgeClass === 'badge-val-error' ? '#991B1B' : '#92400E'};">
+                    ${resultado}
+                </span>
+            </td>
+            <!-- 🔽 ACCIÓN -->
+            <td style="padding:4px 6px; text-align:center;">
+                ${accionHtml}
+            </td>
         </tr>`;
     }).join('');
     
@@ -3651,68 +3727,109 @@ function renderValidacion() {
     }
 }
 
-
-// Función de validación actualizada - SIN MARGEN
+// Función de validación actualizada - SIN MARGEN (solo muestra toast)
 function validarPCSAP() {
-   
-    // Obtener valores de validación
+    console.log('🔍 Validando PC...');
+    
+    // Obtener valores de validación de los switches
     const validaciones = {
-        precio: document.getElementById('vPrecio').value === 'Sí',
-        producto: document.getElementById('vProducto').value === 'Sí',
-        entrega: document.getElementById('vEntrega').value === 'Sí',
-        transporte: document.getElementById('vTransporte').value === 'Sí',
-        cantidad: document.getElementById('vCantidad').value === 'Sí',
-        moneda: document.getElementById('vMoneda').value === 'Sí'
+        precio: document.getElementById('vPrecio')?.checked || false,
+        producto: document.getElementById('vProducto')?.checked || false,
+        entrega: document.getElementById('vEntrega')?.checked || false,
+        transporte: document.getElementById('vTransporte')?.checked || false,
+        cantidad: document.getElementById('vCantidad')?.checked || false,
+        moneda: document.getElementById('vMoneda')?.checked || false,
+        vigencia: document.getElementById('vVigencia')?.checked || false
     };
     
     // Contar cuántos están OK
     const total = Object.values(validaciones).length;
-    const okCount = Object.values(validaciones).filter(v => v).length;
+    const okCount = Object.values(validaciones).filter(v => v === true).length;
     const noCount = total - okCount;
     
-    // Actualizar chips con estados
+    // Verificar si hay items en la tabla
+    const itemsCount = document.querySelectorAll('#pcItemsBody tr').length;
+    if (itemsCount === 0) {
+        showToast('⚠️ Agrega al menos un producto al PC', 'warning');
+        return;
+    }
+    
+    // Verificar stock
+    let stockAlert = false;
+    let stockFaltante = 0;
+    document.querySelectorAll('#pcItemsBody tr').forEach(row => {
+        const inputs = row.querySelectorAll('input');
+        if (inputs.length >= 9) {
+            const cantidadPC = Number(inputs[5]?.value || 0);
+            const stock = Number(inputs[8]?.value || 0);
+            if (cantidadPC > stock) {
+                stockAlert = true;
+                stockFaltante += (cantidadPC - stock);
+            }
+        }
+    });
+    
+    // Construir lista de validaciones fallidas
     const labels = {
         precio: '💰 Precio',
         producto: '📦 Producto',
         entrega: '📍 Lugar Entrega',
         transporte: '🚚 Transporte',
         cantidad: '🔢 Cantidad',
-        moneda: '💵 Moneda'
+        moneda: '💵 Moneda',
+        vigencia: '📅 Vigencia'
     };
     
-    chips.innerHTML = Object.entries(validaciones).map(([key, ok]) => {
-        const label = labels[key] || key;
-        const color = ok ? '#10B981' : '#EF4444';
-        const emoji = ok ? '✅' : '❌';
-        return `<span style="background:${color}20; color:${color}; padding:1px 6px; border-radius:10px; font-size:8px; font-weight:800;">${emoji} ${label}</span>`;
-    }).join('');
-    
-    // Determinar resultado
-    setTimeout(() => {
-        if (noCount === 0) {
-            // Todo OK
-            semaphore.style.borderColor = '#10B981';
-            semaphore.style.background = '#D1FAE5';
-            icon.textContent = '✅';
-            title.textContent = '¡Validación exitosa!';
-            subtitle.textContent = `Los ${total} puntos de validación están correctos`;
-        } else if (noCount <= 2) {
-            // Algunos NO
-            semaphore.style.borderColor = '#F59E0B';
-            semaphore.style.background = '#FEF3C7';
-            icon.textContent = '⚠️';
-            title.textContent = 'Validación con observaciones';
-            subtitle.textContent = `${noCount} punto(s) marcado(s) como "No" - Revisar antes de guardar`;
-        } else {
-            // Muchos NO
-            semaphore.style.borderColor = '#EF4444';
-            semaphore.style.background = '#FEE2E2';
-            icon.textContent = '❌';
-            title.textContent = 'Validación fallida';
-            subtitle.textContent = `${noCount} punto(s) marcado(s) como "No" - El PC quedará observado`;
+    const detalles = [];
+    Object.entries(validaciones).forEach(([key, ok]) => {
+        if (!ok) {
+            detalles.push(labels[key] || key);
         }
-    }, 800);
+    });
+    
+    if (stockAlert) {
+        detalles.push(`📦 Stock insuficiente (faltan ${stockFaltante} unidades)`);
+    }
+    
+    // Generar mensaje según resultado
+    let mensaje = '';
+    let tipo = 'info';
+    
+    if (noCount === 0 && !stockAlert) {
+        mensaje = `✅ ¡Validación exitosa! Todos los ${total} puntos están correctos y hay stock suficiente.`;
+        tipo = 'success';
+    } else if (noCount > 0 && stockAlert) {
+        mensaje = `❌ Validación fallida: ${noCount} punto(s) incorrectos y stock insuficiente.\n🔴 ${detalles.join(', ')}`;
+        tipo = 'error';
+    } else if (noCount > 0) {
+        mensaje = `⚠️ Validación con observaciones: ${noCount} punto(s) marcado(s) como "No".\n🔴 ${detalles.join(', ')}`;
+        tipo = 'warning';
+    } else if (stockAlert) {
+        mensaje = `⚠️ Stock insuficiente: faltan ${stockFaltante} unidades para completar el PC.`;
+        tipo = 'warning';
+    }
+    
+    // Mostrar toast con el resultado
+    showToast(mensaje, tipo);
+    
+    // Mostrar resumen en consola
+    console.log(`📊 Resumen de validación:
+    - Total puntos: ${total}
+    - Correctos: ${okCount}
+    - Incorrectos: ${noCount}
+    - Stock alert: ${stockAlert ? '⚠️ Sí' : '✅ No'}
+    - Detalles: ${detalles.join(', ') || 'Todos OK'}`);
+    
+    return {
+        success: noCount === 0 && !stockAlert,
+        okCount: okCount,
+        noCount: noCount,
+        stockAlert: stockAlert,
+        detalles: detalles
+    };
 }
+
+
 // ============================================================
 // OBTENER ITEMS DEL PC - FUNCIÓN AUXILIAR
 // ============================================================
