@@ -6837,19 +6837,17 @@ function renderCotizacionFormContent(isEdit) {
             </div>
         </div>
         
- // ============================================================
-// 5. INFORMACIÓN ADICIONAL - INTERNO (después de productos)
-// ============================================================
+   
 <div class="create-panel" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;box-shadow:0 4px 12px rgba(15,23,42,.06);overflow:hidden;margin-bottom:10px;">
-    <h3 style="padding:6px 12px;border-bottom:1px solid #E5E7EB;font-size:12px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:6px;margin:0;">
+    <h3 style="padding:6px 12px;border-bottom:1px solid #E5E7EB;font-size:12px;font-weight:1000;color:#0F172A;background:#FAFBGC;display:flex;align-items:center;gap:6px;margin:0;">
         <span style="color:#EF233C;font-weight:1000;">5.</span> 
         <span style="color:#EF233C;font-weight:1000;">Información adicional</span>
         <span style="font-weight:400;font-size:8px;color:#64748B;margin-left:4px;">- interno</span>
     </h3>
     <div class="body" style="padding:8px 12px;">
         
-        <!-- FILA 1: Seguimiento | Motivo | Transporte | Parihuela (TODO EN UNA LÍNEA) -->
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:6px;">
+        <!-- FILA ÚNICA: Seguimiento | Motivo | Transporte | Parihuela | Nota interna -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:8px;">
             <!-- Seguimiento -->
             <div class="form-field">
                 <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Seguimiento</label>
@@ -6891,10 +6889,8 @@ function renderCotizacionFormContent(isEdit) {
                     <option value="Por confirmar">Por confirmar</option>
                 </select>
             </div>
-        </div>
-        
-        <!-- FILA 2: Nota interna (ocupa todo el ancho) -->
-        <div style="display:grid;grid-template-columns:1fr;gap:5px;">
+            
+            <!-- Nota interna -->
             <div class="form-field">
                 <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Nota interna</label>
                 <input id="fNotaInterna" placeholder="Interno: cliente, productos o coordinación" value="Interno: cliente, productos o coordinación" 
