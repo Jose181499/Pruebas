@@ -100,7 +100,7 @@
                         <input id="pcFecha" type="datetime-local" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 4px; font-size:10px;">
                     </div>
                     <div class="form-field">
-                        <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Numero De PC </label>
+                        <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">N° PC Pedido Compra </label>
                         <input id="pcNumero" placeholder="PC-20260713-0001" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; font-size:10px;">
                     </div>
                     <div class="form-field">
@@ -161,37 +161,34 @@
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px; flex-wrap:wrap; gap:4px;">
         <div class="section-title" style="font-size:10px; font-weight:900; color:#7F1D1D; margin:0;">3. Productos del PC</div>
         <div style="display:flex; gap:4px; flex-wrap:wrap;">
-            <!-- 🔽 NUEVO BOTÓN DE SELECCIÓN MÚLTIPLE -->
             <button class="btn btn-soft" onclick="openProductSelectorPC()" style="height:22px; padding:0 10px; font-size:9px; border-radius:4px; border:1px solid #CBD5E1; background:#8B5CF6; color:#fff; font-weight:800; cursor:pointer;">📋 + Agregar items</button>
             <button class="btn btn-blue" onclick="validarPCSAP()" style="height:22px; padding:0 10px; font-size:9px; border-radius:4px; border:none; background:#2563EB; color:#fff; font-weight:900; cursor:pointer; box-shadow:0 2px 6px rgba(37,99,235,0.25);">🔍 Validar PC</button>
         </div>
     </div>
-                <!-- MODIFICACIÓN: Aumenté el max-height para ver más filas -->
-                <div class="table-scroll" style="max-height:200px; overflow:auto;">
-                    <table class="master-table" style="font-size:9px; width:100%; border-collapse:collapse;">
-                        <thead>
-                            <tr>
-                                <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Item</th>
-                                <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Código / Producto </th>
-                                <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Descripción</th>
-                                <!-- NUEVOS CAMPOS: Modelo y Marca -->
-                                <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Modelo</th>
-                                <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Marca</th>
-
-                                
-                                <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:55px;">Cant. cot</th>
-                                <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:55px;">Cant. PC</th>
-                                <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:65px;">Precio cot</th>
-                                <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:65px;">Precio PC</th>
-                                <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Stock</th>
-                                <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Faltante</th>
-                                <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pcItemsBody"></tbody>
-                    </table>
-                </div>
-            </div>
+    <div class="table-scroll" style="max-height:200px; overflow:auto;">
+        <table class="master-table" style="font-size:9px; width:100%; border-collapse:collapse;">
+            <thead>
+                <tr>
+                    <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Item</th>
+                    <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Código / Producto</th>
+                    <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Descripción</th>
+                    <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Modelo</th>
+                    <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Marca</th>
+                    <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:55px;">Cant. Cot</th>
+                    <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:55px;">Cant. PC</th>
+                    <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:65px;">Precio Cot</th>
+                    <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:65px;">Precio PC</th>
+                    <!-- 🔽 NUEVA COLUMNA: Valor Total PC -->
+                    <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:70px;">Valor Total PC</th>
+                    <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Stock</th>
+                    <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Faltante</th>
+                    <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Acción</th>
+                </tr>
+            </thead>
+            <tbody id="pcItemsBody"></tbody>
+        </table>
+    </div>
+</div>
 
             <!-- BLOQUE 4: Validación comercial - VERSIÓN CON TOGGLES SWITCHES -->
             <div class="form-section" style="padding:4px 10px; border-radius:6px; border:1px solid #E2E8F0;">
@@ -291,8 +288,8 @@
        <!-- FOOTER CON BOTONES ACTUALIZADOS - USANDO CLASES CSS -->
 <div class="modal-foot" style="padding:4px 12px; display:flex; justify-content:flex-end; gap:5px; border-top:1px solid #E5E7EB; background:#F8FAFC; flex-shrink:0;">
     <button class="btn btn-secondary" onclick="closeModal('pedidoCompraModal')" style="height:28px; padding:0 14px; font-size:10px; border-radius:6px; border:1px solid #CBD5E1; background:#94A3B8; color:#fff; font-weight:900; cursor:pointer; transition:all 0.2s;">Cancelar</button>
-    <button class="btn-neon-yellow" onclick="savePedidoCompraSAP('observado')">⚠️ Crear Pc Observado</button>
-    <button class="btn-neon-green" onclick="savePedidoCompraSAP('auto')">✅ Crear Pc Conforme</button>
+    <button class="btn-neon-yellow" onclick="savePedidoCompraSAP('observado')">⚠️ Crear PC Observado</button>
+    <button class="btn-neon-green" onclick="savePedidoCompraSAP('auto')">✅ Crear PC Conforme</button>
 </div>
     </div>
 </div>

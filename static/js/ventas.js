@@ -1637,6 +1637,7 @@ function agregarItemPCTable(codigo, descripcion, marca, modelo, cantidad, precio
     
     const rowCount = tbody.children.length + 1;
     const faltante = Math.max(cantidad - stock, 0);
+    const valorTotal = cantidad * precio;
     
     const tr = document.createElement('tr');
     tr.id = `item-row-${rowCount}`;
@@ -1654,17 +1655,14 @@ function agregarItemPCTable(codigo, descripcion, marca, modelo, cantidad, precio
                    style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800;"
                    readonly>
         </td>
-        <!-- 🔽 MODELO PRIMERO -->
         <td style="padding:2px 3px;">
             <input value="${esc(modelo)}" 
                    style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A;">
         </td>
-        <!-- 🔽 MARCA DESPUÉS -->
         <td style="padding:2px 3px;">
             <input value="${esc(marca)}" 
                    style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A;">
         </td>
-        <!-- 🔽 COLUMNAS CON ANCHO REDUCIDO -->
         <td style="padding:2px 3px; width:55px;">
             <input type="number" value="${cantidad}" 
                    style="width:45px; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center;"
@@ -1673,7 +1671,7 @@ function agregarItemPCTable(codigo, descripcion, marca, modelo, cantidad, precio
         <td style="padding:2px 3px; width:55px;">
             <input type="number" value="${cantidad}" 
                    style="width:45px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900;"
-                   onchange="actualizarFaltanteDesdeInput(this)">
+                   onchange="actualizarValorTotalPCSAP(this)">
         </td>
         <td style="padding:2px 3px; width:65px;">
             <input type="number" step="0.01" value="${precio}" 
@@ -1682,7 +1680,12 @@ function agregarItemPCTable(codigo, descripcion, marca, modelo, cantidad, precio
         </td>
         <td style="padding:2px 3px; width:65px;">
             <input type="number" step="0.01" value="${precio}" 
-                   style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;">
+                   style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;"
+                   onchange="actualizarValorTotalPCSAP(this)">
+        </td>
+        <!-- 🔽 NUEVA CELDA: Valor Total PC -->
+        <td style="padding:2px 3px; width:70px; text-align:center; font-weight:900; color:#059669; font-size:9px;">
+            <span id="valor-total-${rowCount}">${valorTotal.toFixed(2)}</span>
         </td>
         <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B; font-weight:800;">${stock}</td>
         <td style="padding:2px 3px; text-align:center; font-size:8px; font-weight:900; color:${faltante > 0 ? '#DC2626' : '#16A34A'};">${faltante}</td>
@@ -5698,6 +5701,7 @@ async function cargarPCParaEditar(id) {
                 addPedidoItemSAP();
             } else {
                 // Dentro de cargarPCParaEditar, donde se crea el tr para cada item
+            // Dentro de cargarPCParaEditar
 items.forEach((item, idx) => {
     const codigo = item.codigo || '';
     const producto = item.producto || 'Producto sin nombre';
@@ -5709,6 +5713,7 @@ items.forEach((item, idx) => {
     const precioPC = parseFloat(item.precio_pc) || 0;
     const stock = parseFloat(item.stock) || 0;
     const faltante = Math.max(cantidadPC - stock, 0);
+    const valorTotal = cantidadPC * precioPC;
     
     const tr = document.createElement('tr');
     tr.id = `item-row-${idx + 1}`;
@@ -5726,17 +5731,14 @@ items.forEach((item, idx) => {
                    style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800;"
                    readonly>
         </td>
-        <!-- 🔽 MODELO PRIMERO -->
         <td style="padding:2px 3px;">
             <input value="${esc(modelo)}" 
                    style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A;">
         </td>
-        <!-- 🔽 MARCA DESPUÉS -->
         <td style="padding:2px 3px;">
             <input value="${esc(marca)}" 
                    style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A;">
         </td>
-        <!-- 🔽 COLUMNAS CON ANCHO REDUCIDO -->
         <td style="padding:2px 3px; width:55px;">
             <input type="number" value="${cantidadCotizada}" 
                    style="width:45px; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center;"
@@ -5745,7 +5747,7 @@ items.forEach((item, idx) => {
         <td style="padding:2px 3px; width:55px;">
             <input type="number" value="${cantidadPC}" 
                    style="width:45px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900;"
-                   onchange="actualizarFaltanteDesdeInput(this)">
+                   onchange="actualizarValorTotalPCSAP(this)">
         </td>
         <td style="padding:2px 3px; width:65px;">
             <input type="number" step="0.01" value="${precioCotizado}" 
@@ -5754,7 +5756,12 @@ items.forEach((item, idx) => {
         </td>
         <td style="padding:2px 3px; width:65px;">
             <input type="number" step="0.01" value="${precioPC}" 
-                   style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;">
+                   style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;"
+                   onchange="actualizarValorTotalPCSAP(this)">
+        </td>
+        <!-- 🔽 NUEVA CELDA: Valor Total PC -->
+        <td style="padding:2px 3px; width:70px; text-align:center; font-weight:900; color:#059669; font-size:9px;">
+            <span id="valor-total-${idx + 1}">${valorTotal.toFixed(2)}</span>
         </td>
         <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B; font-weight:800;">${stock}</td>
         <td style="padding:2px 3px; text-align:center; font-size:8px; font-weight:900; color:${faltante > 0 ? '#DC2626' : '#16A34A'};">${faltante}</td>
@@ -5900,7 +5907,6 @@ function loadPedidoCotizacionSAP() {
     }
 }
 
-
 function addPedidoItemSAP() {
     const tbody = document.getElementById('pcItemsBody');
     if (!tbody) return;
@@ -5922,17 +5928,14 @@ function addPedidoItemSAP() {
             <input type="text" placeholder="Descripción" 
                    style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none;">
         </td>
-        <!-- 🔽 MODELO PRIMERO -->
         <td style="padding:2px 3px;">
             <input type="text" placeholder="Modelo" 
                    style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700;">
         </td>
-        <!-- 🔽 MARCA DESPUÉS -->
         <td style="padding:2px 3px;">
             <input type="text" placeholder="Marca" 
                    style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700;">
         </td>
-        <!-- 🔽 COLUMNAS CON ANCHO REDUCIDO -->
         <td style="padding:2px 3px; width:55px;">
             <input type="number" value="0" 
                    style="width:45px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;">
@@ -5940,15 +5943,21 @@ function addPedidoItemSAP() {
         <td style="padding:2px 3px; width:55px;">
             <input type="number" value="1" 
                    style="width:45px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900;"
-                   onchange="actualizarFaltanteDesdeInput(this)">
+                   onchange="actualizarValorTotalPCSAP(this)">
         </td>
         <td style="padding:2px 3px; width:65px;">
             <input type="number" step="0.01" value="0" 
-                   style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;">
+                   style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;"
+                   onchange="actualizarValorTotalPCSAP(this)">
         </td>
         <td style="padding:2px 3px; width:65px;">
             <input type="number" step="0.01" value="0" 
-                   style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;">
+                   style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;"
+                   onchange="actualizarValorTotalPCSAP(this)">
+        </td>
+        <!-- 🔽 NUEVA CELDA: Valor Total PC -->
+        <td style="padding:2px 3px; width:70px; text-align:center; font-weight:900; color:#0F172A; font-size:9px;">
+            <span id="valor-total-${rowCount}">0.00</span>
         </td>
         <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B; font-weight:800;">0</td>
         <td style="padding:2px 3px; text-align:center; font-size:8px; font-weight:900; color:#EF4444;">0</td>
@@ -5965,6 +5974,35 @@ function addPedidoItemSAP() {
     tbody.appendChild(tr);
 }
 
+// Función para calcular y actualizar el Valor Total PC
+function actualizarValorTotalPCSAP(input) {
+    const row = input.closest('tr');
+    if (!row) return;
+    
+    const inputs = row.querySelectorAll('input');
+    // Índices: [0]=código, [1]=descripción, [2]=marca, [3]=modelo
+    // [4]=cant_cot, [5]=cant_pc, [6]=precio_cot, [7]=precio_pc, [8]=stock
+    const cantidadPC = Number(inputs[5]?.value || 0);
+    const precioPC = Number(inputs[7]?.value || 0);
+    const valorTotal = cantidadPC * precioPC;
+    
+    // Buscar el span del Valor Total en la columna (10ma columna, index 9)
+    const valueSpan = row.querySelector('td:nth-child(10) span');
+    if (valueSpan) {
+        valueSpan.textContent = valorTotal.toFixed(2);
+        // Cambiar color según el valor
+        if (valorTotal > 0) {
+            valueSpan.style.color = '#059669';
+            valueSpan.style.fontWeight = '900';
+        } else {
+            valueSpan.style.color = '#94A3B8';
+            valueSpan.style.fontWeight = '700';
+        }
+    }
+    
+    // También actualizar faltante
+    actualizarFaltanteDesdeInput(inputs[5] || input);
+}
 
 // Función para eliminar ítem
 function eliminarItemSAP(rowId) {
@@ -7051,76 +7089,81 @@ function seleccionarCotizacionSAP(cotizacionId) {
             }
             
             productos.forEach((p, i) => {
-                const cantidadCotizada = p.cantidad || 1;
-                const precioCotizado = p.valorVenta || 0;
-                const stock = p.stock || 0;
-                const faltante = Math.max(cantidadCotizada - stock, 0);
-                
-                // OBTENER MARCA Y MODELO DEL PRODUCTO
-                const marca = p.marca || '';
-                const modelo = p.modelo || '';
-                const codigo = p.codigo || '';
-                const descripcion = p.producto || p.descripcion || 'Sin descripción';
-                
-                const tr = document.createElement('tr');
-                tr.id = `item-row-${i + 1}`;
-                tr.style.borderBottom = '1px solid #E2E8F0';
-                
-                tr.innerHTML = `
-                    <td style="padding:2px 3px; text-align:center; font-weight:800; font-size:9px; background:#F8FAFC;">${i + 1}</td>
-                    <td style="padding:2px 3px;">
-                        <input value="${esc(codigo)}" 
-                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800; color:#1D4ED8; cursor:not-allowed;"
-                               readonly>
-                    </td>
-                    <td style="padding:2px 3px;">
-                        <input value="${esc(descripcion)}" 
-                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800; cursor:not-allowed;"
-                               readonly>
-                    </td>
-                    <td style="padding:2px 3px;">
-                        <input value="${esc(marca)}" 
-                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A; cursor:not-allowed;"
-                               readonly>
-                    </td>
-                    <td style="padding:2px 3px;">
-                        <input value="${esc(modelo)}" 
-                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A; cursor:not-allowed;"
-                               readonly>
-                    </td>
-                    <td style="padding:2px 3px;">
-                        <input type="number" value="${cantidadCotizada}" 
-                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center; cursor:not-allowed;"
-                               readonly>
-                    </td>
-                    <td style="padding:2px 3px;">
-                        <input type="number" value="${cantidadCotizada}" 
-                               style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900;"
-                               onchange="actualizarFaltanteDesdeInput(this)">
-                    </td>
-                    <td style="padding:2px 3px;">
-                        <input type="number" step="0.01" value="${precioCotizado}" 
-                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center; cursor:not-allowed;"
-                               readonly>
-                    </td>
-                    <td style="padding:2px 3px;">
-                        <input type="number" step="0.01" value="${precioCotizado}" 
-                               style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;">
-                    </td>
-                    <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B; font-weight:800;">${stock}</td>
-                    <td style="padding:2px 3px; text-align:center; font-size:8px; font-weight:900; color:${faltante > 0 ? '#DC2626' : '#16A34A'};">${faltante}</td>
-                    <td style="padding:2px 3px; text-align:center;">
-                        <button onclick="eliminarItemSAP('${tr.id}')" 
-                                style="background:transparent; border:none; color:#EF4444; cursor:pointer; font-size:12px; font-weight:900; padding:0 4px; border-radius:3px; transition:all 0.2s; width:22px; height:22px;"
-                                onmouseover="this.style.background='#FEE2E2'; this.style.color='#DC2626';"
-                                onmouseout="this.style.background='transparent'; this.style.color='#EF4444';">
-                            ✕
-                        </button>
-                    </td>
-                `;
-                
-                tbody.appendChild(tr);
-            });
+    const cantidadCotizada = p.cantidad || 1;
+    const precioCotizado = p.valorVenta || 0;
+    const stock = p.stock || 0;
+    const faltante = Math.max(cantidadCotizada - stock, 0);
+    const valorTotal = cantidadCotizada * precioCotizado;
+    
+    const marca = p.marca || '';
+    const modelo = p.modelo || '';
+    const codigo = p.codigo || '';
+    const descripcion = p.producto || p.descripcion || 'Sin descripción';
+    
+    const tr = document.createElement('tr');
+    tr.id = `item-row-${i + 1}`;
+    tr.style.borderBottom = '1px solid #E2E8F0';
+    
+    tr.innerHTML = `
+        <td style="padding:2px 3px; text-align:center; font-weight:800; font-size:9px; background:#F8FAFC;">${i + 1}</td>
+        <td style="padding:2px 3px;">
+            <input value="${esc(codigo)}" 
+                   style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800; color:#1D4ED8; cursor:not-allowed;"
+                   readonly>
+        </td>
+        <td style="padding:2px 3px;">
+            <input value="${esc(descripcion)}" 
+                   style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800; cursor:not-allowed;"
+                   readonly>
+        </td>
+        <td style="padding:2px 3px;">
+            <input value="${esc(modelo)}" 
+                   style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A; cursor:not-allowed;"
+                   readonly>
+        </td>
+        <td style="padding:2px 3px;">
+            <input value="${esc(marca)}" 
+                   style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A; cursor:not-allowed;"
+                   readonly>
+        </td>
+        <td style="padding:2px 3px; width:55px;">
+            <input type="number" value="${cantidadCotizada}" 
+                   style="width:45px; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center; cursor:not-allowed;"
+                   readonly>
+        </td>
+        <td style="padding:2px 3px; width:55px;">
+            <input type="number" value="${cantidadCotizada}" 
+                   style="width:45px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900;"
+                   onchange="actualizarValorTotalPCSAP(this)">
+        </td>
+        <td style="padding:2px 3px; width:65px;">
+            <input type="number" step="0.01" value="${precioCotizado}" 
+                   style="width:55px; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center; cursor:not-allowed;"
+                   readonly>
+        </td>
+        <td style="padding:2px 3px; width:65px;">
+            <input type="number" step="0.01" value="${precioCotizado}" 
+                   style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;"
+                   onchange="actualizarValorTotalPCSAP(this)">
+        </td>
+        <!-- 🔽 NUEVA CELDA: Valor Total PC -->
+        <td style="padding:2px 3px; width:70px; text-align:center; font-weight:900; color:#059669; font-size:9px;">
+            <span id="valor-total-${i + 1}">${valorTotal.toFixed(2)}</span>
+        </td>
+        <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B; font-weight:800;">${stock}</td>
+        <td style="padding:2px 3px; text-align:center; font-size:8px; font-weight:900; color:${faltante > 0 ? '#DC2626' : '#16A34A'};">${faltante}</td>
+        <td style="padding:2px 3px; text-align:center;">
+            <button onclick="eliminarItemSAP('${tr.id}')" 
+                    style="background:transparent; border:none; color:#EF4444; cursor:pointer; font-size:12px; font-weight:900; padding:0 4px; border-radius:3px; transition:all 0.2s; width:22px; height:22px;"
+                    onmouseover="this.style.background='#FEE2E2'; this.style.color='#DC2626';"
+                    onmouseout="this.style.background='transparent'; this.style.color='#EF4444';">
+                ✕
+            </button>
+        </td>
+    `;
+    
+    tbody.appendChild(tr);
+});
             
             showToast(`✅ Cotización ${data.numero_cotizacion} cargada con ${productos.length} productos`, 'success');
         })
