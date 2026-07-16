@@ -6589,7 +6589,7 @@ function renderCotizacionFormContent(isEdit) {
 <div style="display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 10px !important; width: 100% !important; margin-bottom: 10px !important;">
     
     <!-- ============================================================ -->
-    <!-- 1. DATOS DEL CLIENTE - COMPACTO Y SIMÉTRICO -->
+    <!-- 1. DATOS DEL CLIENTE - SIMÉTRICO CON PANEL 2 -->
     <!-- ============================================================ -->
     <div class="create-panel client-card" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:10px;box-shadow:0 2px 8px rgba(15,23,42,.04);overflow:hidden;display:flex;flex-direction:column;">
         <h3 style="padding:4px 10px;border-bottom:1px solid #E5E7EB;font-size:11px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:5px;margin:0;flex-shrink:0;">
@@ -6597,15 +6597,15 @@ function renderCotizacionFormContent(isEdit) {
             <span style="color:#EF233C;font-weight:1000;">Datos del Cliente</span>
         </h3>
         <div class="body" style="padding:5px 8px;flex:1;display:flex;flex-direction:column;gap:3px;">
-            <!-- Buscar por RUC + Botón -->
-            <div style="display:grid;grid-template-columns:1fr 65px;gap:4px;align-items:end;">
+            <!-- Fila 1: Buscar por RUC + Botón (igual que panel 2 tiene 3 campos) -->
+            <div style="display:grid;grid-template-columns:1fr 70px;gap:4px;">
                 <div class="form-field">
                     <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Buscar por RUC</label>
-                    <input id="fRucSearch" placeholder="Ingresa 11 dígitos" maxlength="11" oninput="autoLoadClientByRuc(this.value)" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
+                    <input id="fRucSearch" placeholder="Ingresa 11 dígitos" maxlength="11" oninput="autoLoadClientByRuc(this.value)" style="width:100%;height:20px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 4px;">
                 </div>
-                <button onclick="loadClient()" style="width:100%;height:22px;border-radius:5px;font-size:8px;padding:0 4px;background:#2563EB;color:#fff;border:0;font-weight:950;cursor:pointer;white-space:nowrap;">🔍 Buscar</button>
+                <button onclick="loadClient()" style="height:20px;border-radius:5px;font-size:8px;padding:0 4px;background:#2563EB;color:#fff;border:0;font-weight:950;cursor:pointer;white-space:nowrap;margin-top:13px;">🔍 Buscar</button>
             </div>
-            <!-- RUC | Razón Social -->
+            <!-- Fila 2: RUC + Razón Social (igual que panel 2) -->
             <div style="display:grid;grid-template-columns:1fr 1.8fr;gap:4px;">
                 <div class="form-field">
                     <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">RUC</label>
@@ -6616,12 +6616,12 @@ function renderCotizacionFormContent(isEdit) {
                     <input id="fRazon" readonly style="width:100%;height:20px;border:1px solid #E5E7EB;border-radius:5px;background:#F1F5F9;outline:none;color:#0F172A;font-size:9px;padding:0 4px;">
                 </div>
             </div>
-            <!-- Dirección Fiscal -->
+            <!-- Fila 3: Dirección Fiscal (igual que panel 2 tiene Nota Comercial) -->
             <div class="form-field">
                 <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Dirección Fiscal</label>
                 <input id="fDireccion" placeholder="Dirección fiscal" style="width:100%;height:20px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 4px;">
             </div>
-            <!-- Contacto | Teléfono | Email -->
+            <!-- Fila 4: Contacto + Teléfono + Email (3 columnas como panel 2) -->
             <div style="display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:4px;">
                 <div class="form-field">
                     <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Contacto</label>
@@ -6636,7 +6636,7 @@ function renderCotizacionFormContent(isEdit) {
                     <input id="fCorreo" placeholder="email@empresa.com" style="width:100%;height:20px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 4px;">
                 </div>
             </div>
-            <!-- N° Requerimiento | Fuente -->
+            <!-- Fila 5: N° Requerimiento + Fuente (2 columnas) -->
             <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:4px;">
                 <div class="form-field">
                     <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">N° Requerimiento</label>
@@ -6653,17 +6653,17 @@ function renderCotizacionFormContent(isEdit) {
                     </select>
                 </div>
             </div>
-            <!-- Guardar -->
+            <!-- Fila 6: Guardar (similar a Nota Comercial en panel 2) -->
             <div style="display:flex;flex-direction:column;align-items:center;gap:0px;margin-top:1px;">
-                <button onclick="saveClientFromQuote()" style="min-width:110px;height:22px;border-radius:6px;font-size:8px;font-weight:950;border:0;background:#16A34A;color:#fff;cursor:pointer;padding:0 8px;">💾 Guardar / Actualizar</button>
-                <span style="color:#64748B;font-size:6.5px;font-weight:850;line-height:1.2;">Se guardará en Maestros</span>
+                <button onclick="saveClientFromQuote()" style="min-width:110px;height:20px;border-radius:6px;font-size:8px;font-weight:950;border:0;background:#16A34A;color:#fff;cursor:pointer;padding:0 8px;">💾 Guardar / Actualizar</button>
+                <span style="color:#64748B;font-size:6px;font-weight:850;line-height:1.2;">Se guardará en Maestros</span>
             </div>
             <div id="clientConfirmBox" style="display:none;padding:2px 4px;border-radius:4px;font-size:8px;font-weight:900;text-align:center;border:1px solid transparent;"></div>
         </div>
     </div>
 
     <!-- ============================================================ -->
-    <!-- 2. CONDICIONES COMERCIALES - COMPACTO -->
+    <!-- 2. CONDICIONES COMERCIALES - REFERENCIA -->
     <!-- ============================================================ -->
     <div class="create-panel" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:10px;box-shadow:0 2px 8px rgba(15,23,42,.04);overflow:hidden;display:flex;flex-direction:column;">
         <h3 style="padding:4px 10px;border-bottom:1px solid #E5E7EB;font-size:11px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:5px;margin:0;flex-shrink:0;">
@@ -6671,7 +6671,7 @@ function renderCotizacionFormContent(isEdit) {
             <span style="color:#EF233C;font-weight:1000;">Condiciones Comerciales</span>
         </h3>
         <div class="body" style="padding:5px 8px;flex:1;display:flex;flex-direction:column;gap:3px;">
-            <!-- Asesor | Email | Teléfono -->
+            <!-- Fila 1: Asesor + Email + Teléfono -->
             <div style="display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:4px;">
                 <div class="form-field">
                     <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Asesor</label>
@@ -6686,7 +6686,7 @@ function renderCotizacionFormContent(isEdit) {
                     <input id="fTelefonoAsesor" value="${CONFIG.telefonoAsesorDefault}" style="width:100%;height:20px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 4px;">
                 </div>
             </div>
-            <!-- Moneda | Condición Pago | Tiempo Entrega -->
+            <!-- Fila 2: Moneda + Condición Pago + Tiempo Entrega -->
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;">
                 <div class="form-field">
                     <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Moneda</label>
@@ -6724,7 +6724,7 @@ function renderCotizacionFormContent(isEdit) {
                     <input id="fTiempoCustom" placeholder="Ej: 10 días" style="display:none;margin-top:1px;width:100%;height:18px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:8px;padding:0 4px;">
                 </div>
             </div>
-            <!-- Validez Oferta | Dirección Entrega -->
+            <!-- Fila 3: Validez Oferta + Dirección Entrega -->
             <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:4px;">
                 <div class="form-field">
                     <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Validez de Oferta</label>
@@ -6747,16 +6747,18 @@ function renderCotizacionFormContent(isEdit) {
                     <input id="fDireccionEntregaCustom" placeholder="Ej: Av. Los Alamos 123" style="display:none;margin-top:1px;width:100%;height:18px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:8px;padding:0 4px;">
                 </div>
             </div>
-            <!-- Nota Comercial -->
+            <!-- Fila 4: Nota Comercial -->
             <div class="form-field">
                 <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Nota Comercial</label>
                 <input id="fNotaComercial" placeholder="Comentarios comerciales..." style="width:100%;height:20px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 4px;">
             </div>
+            <!-- Espacio extra para que coincida con el panel 1 -->
+            <div style="height:0px;"></div>
         </div>
     </div>
 
     <!-- ============================================================ -->
-    <!-- 3. RESUMEN - COMPACTO -->
+    <!-- 3. RESUMEN - SIMÉTRICO -->
     <!-- ============================================================ -->
     <div class="create-panel summary-card" style="background:linear-gradient(180deg, #FFFFFF 0%, #FBFCFE 100%);border:1px solid #E5E7EB;border-radius:10px;box-shadow:0 2px 8px rgba(15,23,42,.04);overflow:hidden;display:flex;flex-direction:column;">
         <h3 style="padding:4px 10px;border-bottom:1px solid #E5E7EB;font-size:11px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:5px;margin:0;flex-shrink:0;">
@@ -6767,11 +6769,11 @@ function renderCotizacionFormContent(isEdit) {
             <div style="display:flex;flex-direction:row;flex-wrap:nowrap;gap:6px;width:100%;justify-content:space-between;">
                 <!-- COLUMNA IZQUIERDA -->
                 <div style="flex:1.5;min-width:0;padding:4px 6px;background:#FAFBFC;border-radius:5px;border:1px solid #E5E7EB;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding:1px 0;border-bottom:1px solid #F1F5F9;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-bottom:1px solid #F1F5F9;">
                         <span style="font-size:8px;color:#475569;font-weight:600;">Subtotal</span>
                         <span id="sumSubtotal" style="font-size:9px;font-weight:700;color:#0F172A;">S/ 0.00</span>
                     </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding:1px 0;border-bottom:1px solid #F1F5F9;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-bottom:1px solid #F1F5F9;">
                         <span style="font-size:8px;color:#475569;font-weight:600;">Descuento</span>
                         <span style="display:flex;gap:2px;align-items:center;">
                             <input id="fDiscountValue" type="number" value="0" step="0.01" style="width:32px;height:16px;border:1px solid #CBD5E1;border-radius:3px;padding:0 2px;text-align:right;font-weight:700;font-size:8px;background:white;">
@@ -6781,11 +6783,11 @@ function renderCotizacionFormContent(isEdit) {
                             </select>
                         </span>
                     </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding:1px 0;border-bottom:1px solid #F1F5F9;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-bottom:1px solid #F1F5F9;">
                         <span style="font-size:8px;color:#475569;font-weight:600;">Dscto aplicado</span>
                         <span id="sumDiscount" style="font-size:9px;font-weight:700;color:#DC2626;">-S/ 0.00</span>
                     </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding:1px 0;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;">
                         <span style="font-size:8px;color:#475569;font-weight:600;">IGV 18%</span>
                         <span id="sumIgv" style="font-size:9px;font-weight:700;color:#0F172A;">S/ 0.00</span>
                     </div>
