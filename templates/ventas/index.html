@@ -2477,13 +2477,7 @@
 .cotizacion-result-item:last-child {
     border-bottom: none;
 }
-
-
-/* ============================================================
-   BOTONES NEON FLUORESCENTES - MODAL PC (MÁS FUERTES)
-   ============================================================ */
-
-/* 💛 AMARILLO ÁCIDO FLUORESCENTE - MÁXIMA INTENSIDAD */
+/* 💛 AMARILLO NEON FUERTE - SIN ANIMACIÓN */
 .btn-neon-yellow {
     height: 28px;
     padding: 0 18px;
@@ -2494,47 +2488,31 @@
     color: #000000;
     font-weight: 900;
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 0 60px rgba(255, 255, 0, 1), 
-                0 0 120px rgba(255, 255, 0, 0.9), 
-                0 0 180px rgba(255, 255, 0, 0.5),
-                inset 0 0 40px rgba(255, 255, 200, 0.8);
-    text-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+    transition: all 0.15s ease;
+    box-shadow: 0 0 40px rgba(255, 255, 0, 0.8), 
+                0 0 80px rgba(255, 255, 0, 0.5), 
+                inset 0 0 20px rgba(255, 255, 200, 0.6);
+    text-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
     display: inline-flex;
     align-items: center;
     gap: 6px;
     font-family: inherit;
-    animation: neon-pulse-yellow 1s ease-in-out infinite;
     letter-spacing: 0.3px;
 }
 
 .btn-neon-yellow:hover {
     background: #FFFF33;
-    box-shadow: 0 0 80px rgba(255, 255, 0, 1), 
-                0 0 160px rgba(255, 255, 0, 1), 
-                0 0 240px rgba(255, 255, 0, 0.6),
-                inset 0 0 50px rgba(255, 255, 200, 0.9);
-    transform: scale(1.08) rotate(-1deg);
+    box-shadow: 0 0 60px rgba(255, 255, 0, 1), 
+                0 0 120px rgba(255, 255, 0, 0.8), 
+                inset 0 0 30px rgba(255, 255, 200, 0.8);
+    transform: scale(1.04);
 }
 
 .btn-neon-yellow:active {
-    transform: scale(0.93) rotate(1deg);
+    transform: scale(0.96);
 }
 
-@keyframes neon-pulse-yellow {
-    0%, 100% {
-        box-shadow: 0 0 50px rgba(255, 255, 0, 0.9), 
-                    0 0 100px rgba(255, 255, 0, 0.6), 
-                    inset 0 0 30px rgba(255, 255, 200, 0.6);
-    }
-    50% {
-        box-shadow: 0 0 80px rgba(255, 255, 0, 1), 
-                    0 0 160px rgba(255, 255, 0, 0.9), 
-                    0 0 220px rgba(255, 255, 0, 0.5),
-                    inset 0 0 50px rgba(255, 255, 200, 0.9);
-    }
-}
-/* 💚 VERDE ÁCIDO FLUORESCENTE - MÁXIMA INTENSIDAD */
+/* 💚 VERDE NEON FUERTE - SIN ANIMACIÓN */
 .btn-neon-green {
     height: 28px;
     padding: 0 18px;
@@ -2545,46 +2523,30 @@
     color: #000000;
     font-weight: 900;
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 0 60px rgba(0, 255, 0, 1), 
-                0 0 120px rgba(0, 255, 0, 0.9), 
-                0 0 180px rgba(0, 255, 0, 0.5),
-                inset 0 0 40px rgba(200, 255, 200, 0.8);
-    text-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+    transition: all 0.15s ease;
+    box-shadow: 0 0 40px rgba(0, 255, 0, 0.8), 
+                0 0 80px rgba(0, 255, 0, 0.5), 
+                inset 0 0 20px rgba(200, 255, 200, 0.6);
+    text-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
     display: inline-flex;
     align-items: center;
     gap: 6px;
     font-family: inherit;
-    animation: neon-pulse-green 1s ease-in-out infinite;
     letter-spacing: 0.3px;
 }
 
 .btn-neon-green:hover {
     background: #33FF33;
-    box-shadow: 0 0 80px rgba(0, 255, 0, 1), 
-                0 0 160px rgba(0, 255, 0, 1), 
-                0 0 240px rgba(0, 255, 0, 0.6),
-                inset 0 0 50px rgba(200, 255, 200, 0.9);
-    transform: scale(1.08) rotate(-1deg);
+    box-shadow: 0 0 60px rgba(0, 255, 0, 1), 
+                0 0 120px rgba(0, 255, 0, 0.8), 
+                inset 0 0 30px rgba(200, 255, 200, 0.8);
+    transform: scale(1.04);
 }
 
 .btn-neon-green:active {
-    transform: scale(0.93) rotate(1deg);
+    transform: scale(0.96);
 }
 
-@keyframes neon-pulse-green {
-    0%, 100% {
-        box-shadow: 0 0 50px rgba(0, 255, 0, 0.9), 
-                    0 0 100px rgba(0, 255, 0, 0.6), 
-                    inset 0 0 30px rgba(200, 255, 200, 0.6);
-    }
-    50% {
-        box-shadow: 0 0 80px rgba(0, 255, 0, 1), 
-                    0 0 160px rgba(0, 255, 0, 0.9), 
-                    0 0 220px rgba(0, 255, 0, 0.5),
-                    inset 0 0 50px rgba(200, 255, 200, 0.9);
-    }
-}
 /* ============================================================
    FIX PARA MODAL DE COTIZACIÓN - EVITA QUE EL CONTENIDO SE VAYA HACIA ABAJO
    ============================================================ */

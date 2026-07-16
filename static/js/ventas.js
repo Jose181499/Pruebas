@@ -8318,7 +8318,7 @@ window.setFieldValue = setFieldValue;
 // Funciones de validación PC
 window.updateValidationStatus = updateValidationStatus;
 window.updateValidationIcon = updateValidationIcon;
-window.updateValidationSemaphore = updateValidationSemaphore;
+
 
 // Funciones de selector de productos
 window.openProductSelector = openProductSelector;
