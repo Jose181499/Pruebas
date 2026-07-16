@@ -3930,7 +3930,7 @@ function openPedidoCompraModal(mode = 'cot') {
         </div>
         
         <div class="form-section">
-            <div class="section-title">2. Datos del Pedido de Compra Cliente</div>
+            <div class="section-title">2. Datos PC Pedido de Compra Cliente</div>
             <div class="ficha-grid">
                 <div class="form-field col-3">
                     <label>Fecha llegada</label>
@@ -4001,7 +4001,7 @@ function openPedidoCompraModal(mode = 'cot') {
                     <thead>
                         <tr>
                             <th>Item</th>
-                            <th>Código</th>
+                            <th>Código / Producto </th>
                             <th>Descripción</th>
                             <th>Cant. cotizada</th>
                             <th>Cant. PC</th>
