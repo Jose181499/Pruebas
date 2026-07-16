@@ -3370,8 +3370,7 @@ function updateValidationStatus() {
         }
     });
     
-    // Actualizar semáforo
-    updateValidationSemaphore(allValid, anyInvalid);
+
 }
 
 
