@@ -1075,12 +1075,12 @@ body.kcf-theme {
 
 .client-card input,
 .client-card select {
-    height: 22px !important;
-    font-size: 10px !important;
+    height: 18px !important;
+    font-size: 9.5px !important;
 }
 
 .client-card label {
-    font-size: 7.5px !important;
+    font-size: 7px !important;
 }
 
 /* ============================================================

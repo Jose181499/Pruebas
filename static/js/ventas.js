@@ -6597,54 +6597,54 @@ function renderCotizacionFormContent(isEdit) {
             <span style="color:#EF233C;font-weight:1000;">1.</span> 
             <span style="color:#EF233C;font-weight:1000;">Datos del Cliente</span>
         </h3>
-        <div class="body" style="padding:6px 8px;">
+        <div class="body" style="padding:5px 8px;">
     <!-- Buscar por RUC -->
-    <div style="display:grid;grid-template-columns:1fr 70px;gap:4px;align-items:end;margin-bottom:3px;">
+    <div style="display:grid;grid-template-columns:1fr 70px;gap:4px;align-items:end;margin-bottom:2px;">
         <div class="form-field">
-            <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Buscar por RUC</label>
-            <input id="fRucSearch" placeholder="Ingresa 11 dígitos" maxlength="11" oninput="autoLoadClientByRuc(this.value)" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 6px;">
+            <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Buscar por RUC</label>
+            <input id="fRucSearch" placeholder="Ingresa 11 dígitos" maxlength="11" oninput="autoLoadClientByRuc(this.value)" style="width:100%;height:19px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9.5px;padding:0 6px;">
         </div>
-        <button onclick="loadClient()" style="width:100%;height:24px;border-radius:5px;font-size:9px;padding:0 6px;background:#2563EB;color:#fff;border:0;font-weight:950;cursor:pointer;">🔍 Buscar</button>
+        <button onclick="loadClient()" style="width:100%;height:19px;border-radius:5px;font-size:8.5px;padding:0 6px;background:#2563EB;color:#fff;border:0;font-weight:950;cursor:pointer;">🔍 Buscar</button>
     </div>
     <!-- RUC | Razón Social -->
     <div style="display:grid;grid-template-columns:1fr 1.8fr;gap:4px;margin-bottom:2px;">
         <div class="form-field">
-            <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">RUC</label>
-            <input id="fRuc" readonly style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#F1F5F9;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
+            <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">RUC</label>
+            <input id="fRuc" readonly style="width:100%;height:18px;border:1px solid #E5E7EB;border-radius:5px;background:#F1F5F9;outline:none;color:#0F172A;font-size:9.5px;padding:0 5px;">
         </div>
         <div class="form-field">
-            <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Razón Social</label>
-            <input id="fRazon" readonly style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#F1F5F9;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
+            <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Razón Social</label>
+            <input id="fRazon" readonly style="width:100%;height:18px;border:1px solid #E5E7EB;border-radius:5px;background:#F1F5F9;outline:none;color:#0F172A;font-size:9.5px;padding:0 5px;">
         </div>
     </div>
-    <!-- 🔧 CAMBIO: Dirección Fiscal + Contacto + Teléfono + Email, todo en UNA sola fila de 4 columnas (antes eran 2 filas separadas) -->
+    <!-- Dirección Fiscal | Contacto | Teléfono | Email -->
     <div style="display:grid;grid-template-columns:1.4fr 1fr 0.9fr 1.2fr;gap:4px;margin-bottom:2px;">
         <div class="form-field">
-            <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Dirección Fiscal</label>
-            <input id="fDireccion" placeholder="Dirección fiscal" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
+            <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Dirección Fiscal</label>
+            <input id="fDireccion" placeholder="Dirección fiscal" style="width:100%;height:18px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9.5px;padding:0 5px;">
         </div>
         <div class="form-field">
-            <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Contacto</label>
-            <input id="fContacto" placeholder="Nombre" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
+            <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Contacto</label>
+            <input id="fContacto" placeholder="Nombre" style="width:100%;height:18px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9.5px;padding:0 5px;">
         </div>
         <div class="form-field">
-            <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Teléfono</label>
-            <input id="fTelefono" placeholder="Número" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
+            <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Teléfono</label>
+            <input id="fTelefono" placeholder="Número" style="width:100%;height:18px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9.5px;padding:0 5px;">
         </div>
         <div class="form-field">
-            <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Email</label>
-            <input id="fCorreo" placeholder="email@empresa.com" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
+            <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Email</label>
+            <input id="fCorreo" placeholder="email@empresa.com" style="width:100%;height:18px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9.5px;padding:0 5px;">
         </div>
     </div>
-    <!-- 🔧 CAMBIO: N° Requerimiento + Fuente + botón Guardar, todo en UNA sola fila (antes el botón estaba en su propio bloque aparte) -->
-    <div style="display:grid;grid-template-columns:1.3fr 0.9fr 1.1fr;gap:4px;align-items:end;margin-bottom:2px;">
+    <!-- N° Requerimiento | Fuente -->
+    <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:4px;margin-bottom:2px;">
         <div class="form-field">
-            <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">N° Requerimiento</label>
-            <input id="fReq" placeholder="Ingrese el requerimiento" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
+            <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">N° Requerimiento</label>
+            <input id="fReq" placeholder="Ingrese el requerimiento" style="width:100%;height:18px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9.5px;padding:0 5px;">
         </div>
         <div class="form-field">
-            <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Fuente</label>
-            <select id="fFuente" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
+            <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Fuente</label>
+            <select id="fFuente" style="width:100%;height:18px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9.5px;padding:0 3px;">
                 <option value="Correo">Correo</option>
                 <option value="WhatsApp">WhatsApp</option>
                 <option value="Llamada">Llamada</option>
@@ -6652,10 +6652,12 @@ function renderCotizacionFormContent(isEdit) {
                 <option value="Presencial">Presencial</option>
             </select>
         </div>
-        <button onclick="saveClientFromQuote()" style="width:100%;height:22px;border-radius:5px;font-size:9px;font-weight:950;border:0;background:#16A34A;color:#fff;cursor:pointer;">💾 Guardar / Actualizar</button>
     </div>
-    <!-- 🔧 CAMBIO: subtítulo movido a una línea propia diminuta, sin bloque aparte -->
-    <div style="text-align:center;color:#64748B;font-size:7px;font-weight:850;line-height:1;margin-bottom:1px;">Se guardará en Maestros</div>
+    <!-- Guardar (de vuelta en su propia fila, como antes) -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:1px;margin-top:2px;">
+        <button onclick="saveClientFromQuote()" style="min-width:120px;height:20px;border-radius:6px;font-size:8.5px;font-weight:950;border:0;background:#16A34A;color:#fff;cursor:pointer;">💾 Guardar / Actualizar</button>
+        <span style="color:#64748B;font-size:6.5px;font-weight:850;line-height:1;">Se guardará en Maestros</span>
+    </div>
     <div id="clientConfirmBox" style="display:none;margin-top:2px;padding:3px 6px;border-radius:4px;font-size:9px;font-weight:900;text-align:center;border:1px solid transparent;"></div>
 </div>
     </div>
