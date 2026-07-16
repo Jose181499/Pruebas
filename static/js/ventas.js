@@ -6587,70 +6587,67 @@ function renderCotizacionFormContent(isEdit) {
     return `
 
 
-        // ============================================================
-// FILA SUPERIOR: 3 SECCIONES EN HORIZONTAL - VERSIÓN COMPACTA
-// ============================================================
 <div style="display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 10px !important; width: 100% !important; margin-bottom: 10px !important;">
     
     <!-- ============================================================ -->
-    <!-- 1. DATOS DEL CLIENTE - COMPACTO -->
+    <!-- 1. DATOS DEL CLIENTE - COMPACTO (AJUSTADO) -->
     <!-- ============================================================ -->
-    <div class="create-panel client-card" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:10px;box-shadow:0 2px 8px rgba(15,23,42,.04);overflow:hidden;">
-        <h3 style="padding:4px 10px;border-bottom:1px solid #E5E7EB;font-size:11px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:5px;margin:0;">
+    <div class="create-panel client-card" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:10px;box-shadow:0 2px 8px rgba(15,23,42,.04);overflow:hidden;display:flex;flex-direction:column;height:100%;">
+        <h3 style="padding:4px 10px;border-bottom:1px solid #E5E7EB;font-size:11px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:5px;margin:0;flex-shrink:0;">
             <span style="color:#EF233C;font-weight:1000;">1.</span> 
             <span style="color:#EF233C;font-weight:1000;">Datos del Cliente</span>
         </h3>
-        <div class="body" style="padding:6px 8px;">
+        <div class="body" style="padding:6px 8px;flex:1;display:flex;flex-direction:column;justify-content:space-between;">
             <!-- Buscar por RUC -->
-            <div style="display:grid;grid-template-columns:1fr 70px;gap:4px;align-items:end;margin-bottom:3px;">
+            <div style="display:grid;grid-template-columns:1fr 60px;gap:3px;align-items:end;margin-bottom:2px;">
                 <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Buscar por RUC</label>
-                    <input id="fRucSearch" placeholder="Ingresa 11 dígitos" maxlength="11" oninput="autoLoadClientByRuc(this.value)" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 6px;">
+                    <label style="display:block;font-size:6.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Buscar por RUC</label>
+                    <input id="fRucSearch" placeholder="Ingresa 11 dígitos" maxlength="11" oninput="autoLoadClientByRuc(this.value)" style="width:100%;height:20px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
                 </div>
-                <button onclick="loadClient()" style="width:100%;height:24px;border-radius:5px;font-size:9px;padding:0 6px;background:#2563EB;color:#fff;border:0;font-weight:950;cursor:pointer;">🔍 Buscar</button>
+                <button onclick="loadClient()" style="width:100%;height:20px;border-radius:5px;font-size:8px;padding:0 4px;background:#2563EB;color:#fff;border:0;font-weight:950;cursor:pointer;">🔍 Buscar</button>
             </div>
             <!-- RUC | Razón Social -->
-            <div style="display:grid;grid-template-columns:1fr 1.8fr;gap:4px;margin-bottom:2px;">
+            <div style="display:grid;grid-template-columns:1fr 1.8fr;gap:3px;margin-bottom:2px;">
                 <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">RUC</label>
-                    <input id="fRuc" readonly style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#F1F5F9;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
+                    <label style="display:block;font-size:6.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">RUC</label>
+                    <input id="fRuc" readonly style="width:100%;height:20px;border:1px solid #E5E7EB;border-radius:5px;background:#F1F5F9;outline:none;color:#0F172A;font-size:9px;padding:0 4px;">
                 </div>
                 <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Razón Social</label>
-                    <input id="fRazon" readonly style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#F1F5F9;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
+                    <label style="display:block;font-size:6.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Razón Social</label>
+                    <input id="fRazon" readonly style="width:100%;height:20px;border:1px solid #E5E7EB;border-radius:5px;background:#F1F5F9;outline:none;color:#0F172A;font-size:9px;padding:0 4px;">
                 </div>
             </div>
             <!-- Dirección Fiscal -->
-            <div style="display:grid;grid-template-columns:1fr;gap:3px;margin-bottom:2px;">
+            <div style="display:grid;grid-template-columns:1fr;gap:2px;margin-bottom:2px;">
                 <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Dirección Fiscal</label>
-                    <input id="fDireccion" placeholder="Dirección fiscal" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
+                    <label style="display:block;font-size:6.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Dirección Fiscal</label>
+                    <input id="fDireccion" placeholder="Dirección fiscal" style="width:100%;height:20px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 4px;">
                 </div>
             </div>
             <!-- Contacto | Teléfono | Email -->
-            <div style="display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:4px;margin-bottom:2px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:3px;margin-bottom:2px;">
                 <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Contacto</label>
-                    <input id="fContacto" placeholder="Nombre" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
+                    <label style="display:block;font-size:6.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Contacto</label>
+                    <input id="fContacto" placeholder="Nombre" style="width:100%;height:20px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 4px;">
                 </div>
                 <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Teléfono</label>
-                    <input id="fTelefono" placeholder="Número" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
+                    <label style="display:block;font-size:6.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Teléfono</label>
+                    <input id="fTelefono" placeholder="Número" style="width:100%;height:20px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 4px;">
                 </div>
                 <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Email</label>
-                    <input id="fCorreo" placeholder="email@empresa.com" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
+                    <label style="display:block;font-size:6.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Email</label>
+                    <input id="fCorreo" placeholder="email@empresa.com" style="width:100%;height:20px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 4px;">
                 </div>
             </div>
             <!-- N° Requerimiento | Fuente -->
-            <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:4px;margin-bottom:2px;">
+            <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:3px;margin-bottom:2px;">
                 <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">N° Requerimiento</label>
-                    <input id="fReq" placeholder="Ingrese el requerimiento" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
+                    <label style="display:block;font-size:6.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">N° Requerimiento</label>
+                    <input id="fReq" placeholder="Ingrese el requerimiento" style="width:100%;height:20px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 4px;">
                 </div>
                 <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Fuente</label>
-                    <select id="fFuente" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
+                    <label style="display:block;font-size:6.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Fuente</label>
+                    <select id="fFuente" style="width:100%;height:20px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 3px;">
                         <option value="Correo">Correo</option>
                         <option value="WhatsApp">WhatsApp</option>
                         <option value="Llamada">Llamada</option>
@@ -6660,50 +6657,50 @@ function renderCotizacionFormContent(isEdit) {
                 </div>
             </div>
             <!-- Guardar -->
-            <div style="display:flex;flex-direction:column;align-items:center;gap:1px;margin-top:2px;">
-                <button onclick="saveClientFromQuote()" style="min-width:120px;height:24px;border-radius:6px;font-size:9px;font-weight:950;border:0;background:#16A34A;color:#fff;cursor:pointer;">💾 Guardar / Actualizar</button>
-                <span style="color:#64748B;font-size:7px;font-weight:850;line-height:1;">Se guardará en Maestros</span>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:1px;margin-top:1px;">
+                <button onclick="saveClientFromQuote()" style="min-width:100px;height:20px;border-radius:5px;font-size:8px;font-weight:950;border:0;background:#16A34A;color:#fff;cursor:pointer;padding:0 10px;">💾 Guardar / Actualizar</button>
+                <span style="color:#64748B;font-size:6px;font-weight:850;line-height:1;">Se guardará en Maestros</span>
             </div>
-            <div id="clientConfirmBox" style="display:none;margin-top:2px;padding:3px 6px;border-radius:4px;font-size:9px;font-weight:900;text-align:center;border:1px solid transparent;"></div>
+            <div id="clientConfirmBox" style="display:none;margin-top:2px;padding:2px 4px;border-radius:4px;font-size:8px;font-weight:900;text-align:center;border:1px solid transparent;"></div>
         </div>
     </div>
 
     <!-- ============================================================ -->
     <!-- 2. CONDICIONES COMERCIALES - COMPACTO -->
     <!-- ============================================================ -->
-    <div class="create-panel" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:10px;box-shadow:0 2px 8px rgba(15,23,42,.04);overflow:hidden;">
-        <h3 style="padding:4px 10px;border-bottom:1px solid #E5E7EB;font-size:11px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:5px;margin:0;">
+    <div class="create-panel" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:10px;box-shadow:0 2px 8px rgba(15,23,42,.04);overflow:hidden;display:flex;flex-direction:column;height:100%;">
+        <h3 style="padding:4px 10px;border-bottom:1px solid #E5E7EB;font-size:11px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:5px;margin:0;flex-shrink:0;">
             <span style="color:#EF233C;font-weight:1000;">2.</span> 
             <span style="color:#EF233C;font-weight:1000;">Condiciones Comerciales</span>
         </h3>
-        <div class="body" style="padding:6px 8px;">
+        <div class="body" style="padding:6px 8px;flex:1;display:flex;flex-direction:column;justify-content:space-between;">
             <!-- Asesor | Email | Teléfono -->
-            <div style="display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:4px;margin-bottom:2px;">
+            <div style="display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:3px;margin-bottom:2px;">
                 <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Asesor</label>
-                    <input id="fVendedor" value="${CONFIG.asesorDefault}" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
+                    <label style="display:block;font-size:6.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Asesor</label>
+                    <input id="fVendedor" value="${CONFIG.asesorDefault}" style="width:100%;height:20px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 4px;">
                 </div>
                 <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Email Asesor</label>
-                    <input id="fEmailAsesor" value="${CONFIG.emailAsesorDefault}" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
+                    <label style="display:block;font-size:6.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Email Asesor</label>
+                    <input id="fEmailAsesor" value="${CONFIG.emailAsesorDefault}" style="width:100%;height:20px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 4px;">
                 </div>
                 <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Teléfono Asesor</label>
-                    <input id="fTelefonoAsesor" value="${CONFIG.telefonoAsesorDefault}" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
+                    <label style="display:block;font-size:6.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Teléfono Asesor</label>
+                    <input id="fTelefonoAsesor" value="${CONFIG.telefonoAsesorDefault}" style="width:100%;height:20px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 4px;">
                 </div>
             </div>
             <!-- Moneda | Condición Pago | Tiempo Entrega -->
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:2px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;margin-bottom:2px;">
                 <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Moneda</label>
-                    <select id="fMoneda" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
+                    <label style="display:block;font-size:6.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Moneda</label>
+                    <select id="fMoneda" style="width:100%;height:20px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 3px;">
                         <option value="Soles (S/.)" selected>Soles (S/.)</option>
                         <option value="Dólares ($)">Dólares ($)</option>
                     </select>
                 </div>
                 <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Condición de Pago</label>
-                    <select id="fCondicion" onchange="toggleCustomField('fCondicion','fCondicionCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
+                    <label style="display:block;font-size:6.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Condición de Pago</label>
+                    <select id="fCondicion" onchange="toggleCustomField('fCondicion','fCondicionCustom')" style="width:100%;height:20px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 3px;">
                         <option value="Contado">Contado</option>
                         <option value="Credito 7 Dias">Credito 7 Dias</option>
                         <option value="Credito 15 Dias">Credito 15 Dias</option>
@@ -6714,11 +6711,11 @@ function renderCotizacionFormContent(isEdit) {
                         <option value="Credito 120 Dias">Credito 120 Dias</option>
                         <option value="Personalizado">✏️ Personalizado...</option>
                     </select>
-                    <input id="fCondicionCustom" placeholder="Ej: 50% anticipo" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
+                    <input id="fCondicionCustom" placeholder="Ej: 50% anticipo" style="display:none;margin-top:1px;width:100%;height:18px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:8px;padding:0 4px;">
                 </div>
                 <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Tiempo de Entrega</label>
-                    <select id="fTiempo" onchange="toggleCustomField('fTiempo','fTiempoCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
+                    <label style="display:block;font-size:6.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Tiempo de Entrega</label>
+                    <select id="fTiempo" onchange="toggleCustomField('fTiempo','fTiempoCustom')" style="width:100%;height:20px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 3px;">
                         <option value="Inmediata">Inmediata</option>
                         <option value="3 días hábiles">3 días hábiles</option>
                         <option value="5 días hábiles" selected>5 días hábiles</option>
@@ -6727,14 +6724,14 @@ function renderCotizacionFormContent(isEdit) {
                         <option value="15 días hábiles">15 días hábiles</option>
                         <option value="Personalizado">✏️ Personalizado...</option>
                     </select>
-                    <input id="fTiempoCustom" placeholder="Ej: 10 días" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
+                    <input id="fTiempoCustom" placeholder="Ej: 10 días" style="display:none;margin-top:1px;width:100%;height:18px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:8px;padding:0 4px;">
                 </div>
             </div>
             <!-- Validez Oferta | Dirección Entrega -->
-            <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:4px;margin-bottom:2px;">
+            <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:3px;margin-bottom:2px;">
                 <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Validez de Oferta</label>
-                    <select id="fValidez" onchange="toggleCustomField('fValidez','fValidezCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
+                    <label style="display:block;font-size:6.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Validez de Oferta</label>
+                    <select id="fValidez" onchange="toggleCustomField('fValidez','fValidezCustom')" style="width:100%;height:20px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 3px;">
                         <option value="7 días">7 días</option>
                         <option value="15 días" selected>15 días</option>
                         <option value="30 días">30 días</option>
@@ -6742,22 +6739,22 @@ function renderCotizacionFormContent(isEdit) {
                         <option value="60 días">60 días</option>
                         <option value="Personalizado">✏️ Personalizado...</option>
                     </select>
-                    <input id="fValidezCustom" placeholder="Ej: 20 días" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
+                    <input id="fValidezCustom" placeholder="Ej: 20 días" style="display:none;margin-top:1px;width:100%;height:18px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:8px;padding:0 4px;">
                 </div>
                 <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Dirección de Entrega</label>
-                    <select id="fDireccionEntrega" onchange="toggleCustomField('fDireccionEntrega','fDireccionEntregaCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
+                    <label style="display:block;font-size:6.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Dirección de Entrega</label>
+                    <select id="fDireccionEntrega" onchange="toggleCustomField('fDireccionEntrega','fDireccionEntregaCustom')" style="width:100%;height:20px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 3px;">
                         <option value="">Sin dirección</option>
                         <option value="Personalizado">✏️ Personalizado...</option>
                     </select>
-                    <input id="fDireccionEntregaCustom" placeholder="Ej: Av. Los Alamos 123" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
+                    <input id="fDireccionEntregaCustom" placeholder="Ej: Av. Los Alamos 123" style="display:none;margin-top:1px;width:100%;height:18px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:8px;padding:0 4px;">
                 </div>
             </div>
             <!-- Nota Comercial -->
-            <div style="display:grid;grid-template-columns:1fr;gap:3px;">
+            <div style="display:grid;grid-template-columns:1fr;gap:2px;">
                 <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Nota Comercial</label>
-                    <input id="fNotaComercial" placeholder="Comentarios comerciales..." style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
+                    <label style="display:block;font-size:6.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Nota Comercial</label>
+                    <input id="fNotaComercial" placeholder="Comentarios comerciales..." style="width:100%;height:20px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 4px;">
                 </div>
             </div>
         </div>
