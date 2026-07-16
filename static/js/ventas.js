@@ -6590,21 +6590,21 @@ function renderCotizacionFormContent(isEdit) {
 <div style="display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 10px !important; width: 100% !important; margin-bottom: 10px !important;">
     
     <!-- ============================================================ -->
-    <!-- 1. DATOS DEL CLIENTE - COMPACTO -->
+    <!-- 1. DATOS DEL CLIENTE - REDUCIDO al tamaño de Condiciones Comerciales -->
     <!-- ============================================================ -->
-    <div class="create-panel client-card" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:10px;box-shadow:0 2px 8px rgba(15,23,42,.04);overflow:hidden;">
-        <h3 style="padding:4px 10px;border-bottom:1px solid #E5E7EB;font-size:11px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:5px;margin:0;">
+    <div class="create-panel client-card" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:10px;box-shadow:0 2px 8px rgba(15,23,42,.04);overflow:hidden;display:flex;flex-direction:column;height:100%;">
+        <h3 style="padding:4px 10px;border-bottom:1px solid #E5E7EB;font-size:11px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:5px;margin:0;flex-shrink:0;">
             <span style="color:#EF233C;font-weight:1000;">1.</span> 
             <span style="color:#EF233C;font-weight:1000;">Datos del Cliente</span>
         </h3>
-        <div class="body" style="padding:6px 8px;">
+        <div class="body" style="padding:6px 8px;flex:1;display:flex;flex-direction:column;justify-content:space-between;">
             <!-- Buscar por RUC -->
-            <div style="display:grid;grid-template-columns:1fr 70px;gap:4px;align-items:end;margin-bottom:3px;">
+            <div style="display:grid;grid-template-columns:1fr 70px;gap:4px;align-items:end;margin-bottom:2px;">
                 <div class="form-field">
                     <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Buscar por RUC</label>
-                    <input id="fRucSearch" placeholder="Ingresa 11 dígitos" maxlength="11" oninput="autoLoadClientByRuc(this.value)" style="width:100%;height:24px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 6px;">
+                    <input id="fRucSearch" placeholder="Ingresa 11 dígitos" maxlength="11" oninput="autoLoadClientByRuc(this.value)" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
                 </div>
-                <button onclick="loadClient()" style="width:100%;height:24px;border-radius:5px;font-size:9px;padding:0 6px;background:#2563EB;color:#fff;border:0;font-weight:950;cursor:pointer;">🔍 Buscar</button>
+                <button onclick="loadClient()" style="width:100%;height:22px;border-radius:5px;font-size:9px;padding:0 6px;background:#2563EB;color:#fff;border:0;font-weight:950;cursor:pointer;">🔍 Buscar</button>
             </div>
             <!-- RUC | Razón Social -->
             <div style="display:grid;grid-template-columns:1fr 1.8fr;gap:4px;margin-bottom:2px;">
@@ -6658,7 +6658,7 @@ function renderCotizacionFormContent(isEdit) {
             </div>
             <!-- Guardar -->
             <div style="display:flex;flex-direction:column;align-items:center;gap:1px;margin-top:2px;">
-                <button onclick="saveClientFromQuote()" style="min-width:120px;height:24px;border-radius:6px;font-size:9px;font-weight:950;border:0;background:#16A34A;color:#fff;cursor:pointer;">💾 Guardar / Actualizar</button>
+                <button onclick="saveClientFromQuote()" style="min-width:120px;height:22px;border-radius:5px;font-size:9px;font-weight:950;border:0;background:#16A34A;color:#fff;cursor:pointer;">💾 Guardar / Actualizar</button>
                 <span style="color:#64748B;font-size:7px;font-weight:850;line-height:1;">Se guardará en Maestros</span>
             </div>
             <div id="clientConfirmBox" style="display:none;margin-top:2px;padding:3px 6px;border-radius:4px;font-size:9px;font-weight:900;text-align:center;border:1px solid transparent;"></div>
@@ -6666,14 +6666,14 @@ function renderCotizacionFormContent(isEdit) {
     </div>
 
     <!-- ============================================================ -->
-    <!-- 2. CONDICIONES COMERCIALES - COMPACTO -->
+    <!-- 2. CONDICIONES COMERCIALES - COMPACTO (se mantiene igual) -->
     <!-- ============================================================ -->
-    <div class="create-panel" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:10px;box-shadow:0 2px 8px rgba(15,23,42,.04);overflow:hidden;">
-        <h3 style="padding:4px 10px;border-bottom:1px solid #E5E7EB;font-size:11px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:5px;margin:0;">
+    <div class="create-panel" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:10px;box-shadow:0 2px 8px rgba(15,23,42,.04);overflow:hidden;display:flex;flex-direction:column;height:100%;">
+        <h3 style="padding:4px 10px;border-bottom:1px solid #E5E7EB;font-size:11px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:5px;margin:0;flex-shrink:0;">
             <span style="color:#EF233C;font-weight:1000;">2.</span> 
             <span style="color:#EF233C;font-weight:1000;">Condiciones Comerciales</span>
         </h3>
-        <div class="body" style="padding:6px 8px;">
+        <div class="body" style="padding:6px 8px;flex:1;display:flex;flex-direction:column;justify-content:space-between;">
             <!-- Asesor | Email | Teléfono -->
             <div style="display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:4px;margin-bottom:2px;">
                 <div class="form-field">
@@ -6759,6 +6759,7 @@ function renderCotizacionFormContent(isEdit) {
             </div>
         </div>
     </div>
+</div>
 
     <!-- ============================================================ -->
     <!-- 3. RESUMEN - COMPACTO -->
