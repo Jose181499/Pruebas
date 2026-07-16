@@ -3727,6 +3727,21 @@ function renderValidacion() {
     }
 }
 
+// Función para vista previa del PDF (abre en nueva pestaña)
+window.previewCotizacionPdf = function(id) {
+    console.log(`👁️ Abriendo vista previa PDF para cotización ID: ${id}`);
+    
+    try {
+        // Abrir el PDF en una nueva pestaña
+        const url = `/ventas/api/cotizaciones/${id}/pdf/preview`;
+        window.open(url, '_blank');
+        showToast('📄 Abriendo vista previa del PDF...', 'info');
+    } catch (error) {
+        console.error('❌ Error abriendo vista previa:', error);
+        showToast('❌ Error al abrir la vista previa: ' + error.message, 'error');
+    }
+};
+
 // Función de validación actualizada - SIN MARGEN (solo muestra toast)
 function validarPCSAP() {
     console.log('🔍 Validando PC...');
@@ -8078,6 +8093,12 @@ function showCotizacionMenu(event, id) {
         <button class="menu-edit" onclick="openCotizacionModal(${id});this.closest('.menu-pop').remove()">👁 Ver / Editar</button>
         <button class="menu-duplicate" onclick="duplicateCotizacion(${id});this.closest('.menu-pop').remove()">⧉ Duplicar</button>
         <button class="menu-email" onclick="sendCotizacionEmail(${id});this.closest('.menu-pop').remove()">✉ Email</button>
+        
+        <!-- 🔽 NUEVO: Vista Previa (no descarga) -->
+        <button class="menu-preview" onclick="previewCotizacionPdf(${id});this.closest('.menu-pop').remove()" style="color:#8B5CF6;font-weight:900;">
+            👁️ Vista Previa
+        </button>
+        
         <button class="menu-pdf" onclick="generateCotizacionPdf(${id});this.closest('.menu-pop').remove()">📄 Descargar PDF</button>
         <div class="menu-divider"></div>
     `;

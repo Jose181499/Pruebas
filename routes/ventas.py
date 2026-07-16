@@ -3151,3 +3151,350 @@ def api_pedido_compra_obtener(id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# Agregar esta función después de api_cotizaciones_generar_pdf
+
+@ventas_bp.route('/ventas/api/cotizaciones/<int:id>/pdf/preview', methods=['GET'])
+@login_required
+def api_cotizaciones_preview_pdf(id):
+    """Genera y muestra el PDF de una cotización en el navegador (vista previa)"""
+    try:
+        print(f"📄 Generando vista previa PDF para cotización ID: {id}")
+        
+        # Reutilizar la misma lógica que genera_pdf pero sin forzar descarga
+        from datetime import datetime
+        import tempfile
+        from flask import send_file, render_template_string
+        from weasyprint import HTML
+        
+        # 1. Obtener cabecera de la cotización
+        query_cabecera = """
+            SELECT 
+                c.id, c.numero_cotizacion, c.codigo_cotizacion,
+                c.cliente_id, c.fecha_creacion, c.estado,
+                c.subtotal, c.igv, c.total, c.notas,
+                c.forma_pago, c.tiempo_entrega, c.almacen, c.validez_oferta,
+                c.codigo_cotizacion, c.correlativo, c.condicion_pago,
+                c.direccion_entrega, c.requerimiento, c.nota_cotizacion,
+                c.descuento_porcentaje, c.descuento_monto, c.descuento_tipo,
+                c.contacto_cliente, c.telefono_cliente, c.email_cliente,
+                cl.id as cliente_id,
+                cl.razon_social as cliente_razon_social,
+                cl.numero_documento as cliente_ruc,
+                cl.nombre_comercial as cliente_nombre_comercial,
+                cl.codigo_cliente as cod_cliente,
+                cl.direccion_fiscal as cliente_direccion,
+                cl.telefono_contacto as cliente_telefono,
+                cl.nombre_contacto as cliente_contacto,
+                cl.email_contacto as cliente_email
+            FROM cotizaciones c
+            LEFT JOIN clientes cl ON cl.id = c.cliente_id::integer
+            WHERE c.id = %s
+        """
+        cabecera = db_query(query_cabecera, (id,))
+        
+        if not cabecera:
+            return jsonify({'success': False, 'error': 'Cotización no encontrada'}), 404
+        
+        c = cabecera[0]
+        
+        # 2. Obtener productos
+        query_productos = """
+            SELECT 
+                d.id, d.producto_id, d.cantidad,
+                d.precio_venta_unitario, d.subtotal_venta,
+                d.descuento_porcentaje, d.precio_venta_con_descuento,
+                d.subtotal_venta_con_descuento,
+                p.codigo, p.descripcion, p.descripcion_larga,
+                p.modelo, p.marca, p.unidad as um
+            FROM cotizacion_detalle d
+            LEFT JOIN productos p ON p.id = d.producto_id
+            WHERE d.cotizacion_id = %s
+        """
+        productos = db_query(query_productos, (id,))
+        
+        # 3. Preparar datos
+        cliente_razon_social = c.get('cliente_razon_social') or c.get('cliente_nombre_comercial') or 'Cliente'
+        cliente_ruc = c.get('cliente_ruc') or '---'
+        cliente_direccion = c.get('cliente_direccion') or c.get('direccion_entrega') or '---'
+        
+        subtotal = float(c.get('subtotal', 0))
+        igv = float(c.get('igv', 0))
+        total = float(c.get('total', 0))
+        descuento_monto = float(c.get('descuento_monto', 0))
+        
+        productos_list = []
+        for idx, p in enumerate(productos or [], 1):
+            precio_unitario = float(p.get('precio_venta_unitario', 0))
+            cantidad = float(p.get('cantidad', 1))
+            subtotal_producto = float(p.get('subtotal_venta', 0))
+            descuento_pct = float(p.get('descuento_porcentaje', 0))
+            subtotal_desc = float(p.get('subtotal_venta_con_descuento', subtotal_producto))
+            
+            productos_list.append({
+                'item': idx,
+                'codigo': p.get('codigo', '---'),
+                'descripcion': p.get('descripcion') or p.get('descripcion_larga') or 'Producto sin descripción',
+                'modelo': p.get('modelo', ''),
+                'marca': p.get('marca', ''),
+                'unidad': p.get('um', 'NIU'),
+                'cantidad': cantidad,
+                'precio_venta_unitario': precio_unitario,
+                'subtotal_venta': subtotal_producto,
+                'descuento_porcentaje': descuento_pct,
+                'subtotal_venta_desc': subtotal_desc
+            })
+        
+        hay_descuentos = any(p.get('descuento_porcentaje', 0) > 0 for p in productos_list) or descuento_monto > 0
+        
+        fecha_actual = datetime.now().strftime('%d/%m/%Y')
+        hora_actual = datetime.now().strftime('%H:%M')
+        
+        # Logo
+        import base64, os
+        logo_base64 = None
+        logo_path = 'logo-kcf.png'
+        if os.path.exists(logo_path):
+            try:
+                with open(logo_path, 'rb') as f:
+                    logo_base64 = base64.b64encode(f.read()).decode('utf-8')
+            except:
+                pass
+        
+        datos_pdf = {
+            'codigo_cotizacion': c.get('codigo_cotizacion') or c.get('numero_cotizacion', 'COT-000001'),
+            'fecha_actual': fecha_actual,
+            'hora_actual': hora_actual,
+            'logo_base64': logo_base64,
+            'cliente_razon_social': cliente_razon_social,
+            'cliente_ruc': cliente_ruc,
+            'cliente_direccion': cliente_direccion,
+            'cliente_contacto': c.get('cliente_contacto') or c.get('contacto_cliente') or '---',
+            'email_contacto_cliente': c.get('cliente_email') or c.get('email_cliente') or '---',
+            'telefono_contacto': c.get('cliente_telefono') or c.get('telefono_cliente') or '---',
+            'numero_requerimiento': c.get('requerimiento') or '---',
+            'asesor_comercial': 'Helen Blas Príncipe',
+            'email_contacto': 'ventas@kcfcorporacion.com',
+            'telefono_contacto_user': '999932051',
+            'condicion_pago': c.get('condicion_pago') or c.get('forma_pago') or 'Contado',
+            'tiempo_entrega': c.get('tiempo_entrega') or '5 días hábiles',
+            'direccion_entrega': c.get('direccion_entrega') or cliente_direccion,
+            'validez_oferta': c.get('validez_oferta') or '15 días',
+            'productos': productos_list,
+            'total_subtotal_venta': subtotal,
+            'total_descuento_subtotal': descuento_monto,
+            'total_subtotal_venta_desc': subtotal - descuento_monto,
+            'summary_igv': igv,
+            'summary_total_venta': total,
+            'hay_descuentos': hay_descuentos
+        }
+        
+        # 4. Template HTML (usar el mismo que ya tienes)
+        template_html = '''<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Cotización - KCF CORPORACION</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.2cm;
+        }
+        * { text-rendering: optimizeLegibility; margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Cambria', Cochin, Georgia, Times, 'Times New Roman', serif; font-size: 10px; color: #1a1a1a; line-height: 1.3; background: white; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; border-bottom: 2px solid #D32F2F; padding-bottom: 10px; }
+        .logo-section { flex: 1; }
+        .logo { max-width: 140px; }
+        .logo img { width: 100%; display: block; }
+        .empresa-info { flex: 2; text-align: center; }
+        .empresa-info h1 { color: #D32F2F; margin: 0 0 3px 0; font-size: 18px; font-weight: bold; }
+        .empresa-info .slogan { font-size: 9px; color: #666; letter-spacing: 1px; }
+        .cotizacion-info { flex: 1; text-align: right; background: #f8f9fa; padding: 6px 10px; border-radius: 6px; }
+        .numero-cotizacion { font-size: 11px; font-weight: bold; color: #D32F2F; }
+        .fecha, .hora { font-size: 8px; margin-top: 2px; color: #666; }
+        .layout-principal { display: flex; gap: 15px; margin-bottom: 12px; }
+        .seccion-cliente, .seccion-condiciones { flex: 1; background: #f8f9fa; padding: 8px 12px; border-radius: 6px; border: 1px solid #D32F2F; }
+        .seccion-cliente h3, .seccion-condiciones h3 { color: #D32F2F; border-bottom: 1px solid #D32F2F; padding-bottom: 3px; font-size: 10px; margin-top: 0; margin-bottom: 6px; font-weight: bold; }
+        .info-line, .condicion-line { display: flex; margin-bottom: 3px; font-size: 8.5px; }
+        .info-label, .condicion-label { width: 90px; font-weight: bold; }
+        .info-value, .condicion-value { flex: 1; }
+        .texto-introductorio { margin: 10px 0; padding: 8px 15px; background: #FFF8E1; border-left: 4px solid #D32F2F; font-size: 9px; line-height: 1.4; text-align: justify; }
+        .texto-introductorio .saludo { font-size: 10px; font-weight: bold; margin-bottom: 5px; }
+        .tabla-productos { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 8.2px; }
+        .tabla-productos th { background: #D32F2F; color: white; padding: 6px 4px; border: 1px solid #B71C1C; font-weight: bold; text-align: center; vertical-align: middle; }
+        .tabla-productos td { padding: 5px 4px; border: 1px solid #ddd; vertical-align: middle; }
+        .col-item { text-align: center; width: 35px; }
+        .col-codigo { text-align: left; width: 70px; }
+        .col-descripcion { text-align: left; }
+        .col-modelo { text-align: left; width: 60px; }
+        .col-marca { text-align: left; width: 65px; }
+        .col-unidad-medida { text-align: center; width: 55px; }
+        .col-cantidad { text-align: center; width: 45px; }
+        .col-valor-unitario { text-align: right; width: 85px; }
+        .col-valor-total { text-align: right; width: 90px; background: #FFF8E1; font-weight: bold; }
+        .numero-formateado { text-align: right; font-family: 'Courier New', monospace; font-weight: 500; }
+        .text-center { text-align: center; }
+        .seccion-totales { width: 280px; margin-left: auto; margin-right: 0; margin-top: 8px; margin-bottom: 12px; border: 1px solid #D32F2F; padding: 8px 12px; border-radius: 6px; background: #f8f9fa; }
+        .total-line { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-size: 9px; gap: 8px; }
+        .total-line span:first-child { white-space: nowrap; }
+        .total-line .numero-formateado { font-weight: 500; white-space: nowrap; }
+        .total-final { border-top: 2px solid #D32F2F; padding-top: 5px; margin-top: 5px; font-weight: bold; font-size: 11px; color: #D32F2F; }
+        .seccion-importante { margin: 8px 0; padding: 5px 10px; background: #FFF8E1; border: 1px solid #FFC107; border-radius: 4px; font-size: 7.5px; color: #856404; }
+        .seccion-importante strong { color: #D32F2F; }
+        .cuentas-bancarias { margin-top: 10px; padding: 8px 12px; background: #f8f9fa; border: 1px solid #D32F2F; border-radius: 6px; font-size: 7.5px; }
+        .cuentas-bancarias h3 { color: #D32F2F; border-bottom: 1px solid #D32F2F; padding-bottom: 3px; font-size: 9px; margin-top: 0; margin-bottom: 6px; }
+        .cuenta-line { margin-bottom: 2px; }
+        .seccion-aclaratoria { margin-top: 12px; padding: 8px 16px; background: #eef2f5; border-radius: 8px; font-size: 8.5px; text-align: left; border-left: 4px solid #D32F2F; border-right: 1px solid #ccc; font-style: normal; line-height: 1.4; }
+        .seccion-aclaratoria .titulo { font-weight: bold; font-size: 9px; margin-bottom: 4px; font-style: normal; color: #b85c00; text-align: left; }
+        .seccion-aclaratoria .web-link { color: #D32F2F; text-decoration: none; font-weight: bold; }
+        .seccion-contacto { margin-top: 14px; border-top: 2px solid #D32F2F; padding-top: 12px; text-align: left; font-size: 8.5px; }
+        .contacto-nombre { font-size: 10.5px; font-weight: bold; color: #D32F2F; margin-bottom: 4px; }
+        .contacto-line { margin-bottom: 2px; }
+        .web-link { color: #D32F2F; text-decoration: none; }
+        .fw-bold { font-weight: bold; }
+        .bg-warning { background: #FFF8E1; }
+        .seccion-totales, .cuentas-bancarias, .seccion-aclaratoria, .seccion-contacto { page-break-inside: avoid; break-inside: avoid; }
+        .tabla-productos { page-break-inside: avoid; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo-section">
+            {% if logo_base64 %}
+            <div class="logo">
+                <img src="data:image/png;base64,{{ logo_base64 }}" alt="KCF Logo">
+            </div>
+            {% endif %}
+        </div>
+        <div class="empresa-info">
+            <h1>KCF CORPORACION</h1>
+            <div class="slogan">Soluciones industriales y comerciales</div>
+        </div>
+        <div class="cotizacion-info">
+            <div class="numero-cotizacion"><strong>COTIZACIÓN N°:</strong> {{ codigo_cotizacion }}</div>
+            <div class="fecha"><strong>Fecha:</strong> {{ fecha_actual }}</div>
+            <div class="hora"><strong>Hora:</strong> {{ hora_actual|default('00:00') }}</div>
+        </div>
+    </div>
+    <div class="layout-principal">
+        <div class="seccion-cliente">
+            <h3>INFORMACIÓN DEL CLIENTE</h3>
+            <div class="info-line"><span class="info-label">Cliente:</span><span class="info-value">{{ cliente_razon_social }}</span></div>
+            <div class="info-line"><span class="info-label">RUC / DNI:</span><span class="info-value">{{ cliente_ruc }}</span></div>
+            <div class="info-line"><span class="info-label">Dirección:</span><span class="info-value">{{ cliente_direccion }}</span></div>
+            <div class="info-line"><span class="info-label">Teléfono:</span><span class="info-value">{{ telefono_contacto|default('-') }}</span></div>
+            <div class="info-line"><span class="info-label">Atención:</span><span class="info-value">{{ cliente_contacto|default('-') }}</span></div>
+            <div class="info-line"><span class="info-label">Correo:</span><span class="info-value">{{ email_contacto_cliente|default('-') }}</span></div>
+            <div class="info-line"><span class="info-label">N° Requerimiento:</span><span class="info-value">{{ numero_requerimiento|default('-') }}</span></div>
+        </div>
+        <div class="seccion-condiciones">
+            <h3>CONDICIONES COMERCIALES</h3>
+            <div class="condicion-line"><span class="condicion-label">Ejecutiva:</span><span class="condicion-value">{{ asesor_comercial }}</span></div>
+            <div class="condicion-line"><span class="condicion-label">E-mail:</span><span class="condicion-value">{{ email_contacto }}</span></div>
+            <div class="condicion-line"><span class="condicion-label">Teléfono:</span><span class="condicion-value">{{ telefono_contacto_user }}</span></div>
+            <div class="condicion-line"><span class="condicion-label">Condición Pago:</span><span class="condicion-value">{{ condicion_pago }}</span></div>
+            <div class="condicion-line"><span class="condicion-label">Tiempo Entrega:</span><span class="condicion-value">{{ tiempo_entrega }}</span></div>
+            <div class="condicion-line"><span class="condicion-label">Dirección Entrega:</span><span class="condicion-value">{{ direccion_entrega }}</span></div>
+            <div class="condicion-line"><span class="condicion-label">Validez Oferta:</span><span class="condicion-value">{{ validez_oferta }}</span></div>
+        </div>
+    </div>
+    <div class="texto-introductorio">
+        <div class="saludo">Estimado Cliente,</div>
+        La presente tiene como objeto poner a su consideración nuestra oferta detallada según su requerimiento, agradecemos por confiar en nuestros productos:
+    </div>
+    <table class="tabla-productos">
+        <thead>
+            <tr>
+                <th class="col-item">Item</th>
+                <th class="col-codigo">Código Producto</th>
+                <th class="col-descripcion">Descripción</th>
+                <th class="col-modelo">Modelo</th>
+                <th class="col-marca">Marca</th>
+                <th class="col-unidad-medida">Unidad Medida</th>
+                <th class="col-cantidad">Cantidad</th>
+                <th class="col-valor-unitario">Valor Venta Unit S/.</th>
+                <th class="col-valor-total">Valor Venta Total S/.</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if productos %}
+                {% for producto in productos %}
+                <tr>
+                    <td class="text-center">{{ producto.item }}</td>
+                    <td>{{ producto.codigo|default('-') }}</td>
+                    <td class="descripcion">{{ producto.descripcion }}</td>
+                    <td>{{ producto.modelo|default('-') }}</td>
+                    <td>{{ producto.marca|default('-') }}</td>
+                    <td class="text-center">{{ producto.unidad|default('Unid') }}</td>
+                    <td class="text-center">{{ "%.0f"|format(producto.cantidad|default(0)) }}</td>
+                    <td class="numero-formateado">{{ "%.2f"|format(producto.precio_venta_unitario|default(0)) }}</td>
+                    <td class="numero-formateado fw-bold bg-warning">{{ "%.2f"|format(producto.subtotal_venta_desc|default(producto.subtotal_venta|default(0))) }}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="9" class="text-center" style="padding: 15px;">No hay productos registrados en esta cotización</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+    <div class="seccion-importante">
+        <strong>Importante:</strong> Las imágenes son referenciales, colores, acabados o especificaciones técnicas deben ser verificadas en la descripción del producto.
+    </div>
+    <div class="seccion-totales">
+        <div class="total-line"><span>Subtotal (S/):</span><span class="numero-formateado">S/ {{ "%.2f"|format(total_subtotal_venta|default(0)) }}</span></div>
+        {% if hay_descuentos %}
+        <div class="total-line"><span>Descuentos aplicados (S/):</span><span class="numero-formateado">- S/ {{ "%.2f"|format(total_descuento_subtotal|default(0)) }}</span></div>
+        {% endif %}
+        <div class="total-line"><span>Subtotal con descuento (S/):</span><span class="numero-formateado">S/ {{ "%.2f"|format(total_subtotal_venta_desc|default(0)) }}</span></div>
+        <div class="total-line"><span>IGV (18%):</span><span class="numero-formateado">S/ {{ "%.2f"|format(summary_igv|default(0)) }}</span></div>
+        <div class="total-line total-final"><span><strong>TOTAL A PAGAR:</strong></span><span class="numero-formateado"><strong>S/ {{ "%.2f"|format(summary_total_venta|default(0)) }}</strong></span></div>
+    </div>
+    <div class="cuentas-bancarias">
+        <h3>CUENTAS BANCARIAS</h3>
+        <div class="cuenta-line"><strong>BCP SOLES:</strong> 191-1889375-0-94 | N. 1911889375094</div>
+        <div class="cuenta-line"><strong>BCP DÓLARES:</strong> 191-1881449-1-53 | N. 1911881449153</div>
+        <div class="cuenta-line"><strong>BBVA SOLES:</strong> 0011-0335-01-00019126 | N. 00110335100019126</div>
+        <div class="cuenta-line"><strong>BBVA DÓLARES:</strong> 0011-0335-01-00019134 | N. 00110335100019134</div>
+    </div>
+    <div class="seccion-aclaratoria">
+        <div class="titulo">📌 Nota Aclaratoria</div>
+        La validez de esta oferta está sujeta a la disponibilidad de inventario.<br>
+        <strong>Este producto cuenta con el 10% de descuento aplicado directamente en el valor de venta.</strong><br>
+        Para más información visítanos en 
+        <a href="https://kcfcorporacion.com" class="web-link">www.kcfcorporacion.com</a>
+    </div>
+    <div class="seccion-contacto">
+        <div class="contacto-nombre">Cordialmente,</div>
+        <div class="contacto-nombre">HELLEN BLAS PRINCIPE</div>
+        <div class="contacto-line">Ejecutiva Comercial</div>
+        <div class="contacto-line">KCF CORPORACIÓN</div>
+        <div class="contacto-line">📞 (+51) 999932051</div>
+        <div class="contacto-line">✉ Ventas@kcfcorporacion.com</div>
+        <div class="contacto-line">🌐 www.kcfcorporacion.com</div>
+    </div>
+</body>
+</html>'''
+        
+        html_content = render_template_string(template_html, **datos_pdf)
+        
+        # 5. Generar PDF en memoria
+        import io
+        pdf_buffer = io.BytesIO()
+        HTML(string=html_content).write_pdf(pdf_buffer)
+        pdf_buffer.seek(0)
+        
+        nombre_archivo = f"cotizacion_{c.get('codigo_cotizacion', 'sin_numero')}_{datetime.now().strftime('%Y%m%d')}.pdf"
+        
+        # 6. Devolver el PDF para mostrar en el navegador (NO descarga)
+        return send_file(
+            pdf_buffer,
+            as_attachment=False,  # ← CRUCIAL: False para vista previa
+            download_name=nombre_archivo,
+            mimetype='application/pdf'
+        )
+        
+    except Exception as e:
+        print(f"❌ Error generando vista previa PDF: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
