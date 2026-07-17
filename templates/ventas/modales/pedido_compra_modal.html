@@ -59,8 +59,8 @@
         </div>
     </div>
 
-    <!-- Línea 2: RUC + Cliente + Condición pago + Vendedor + Monto - TODOS READONLY -->
-    <div style="display:grid; grid-template-columns:1fr 2fr 1.2fr 1fr 1fr; gap:4px;">
+    <!-- Línea 2: RUC + Cliente + Condición pago + Vendedor + Monto Sin IGV + Monto Con IGV - TODOS READONLY -->
+    <div style="display:grid; grid-template-columns:1fr 1.8fr 1.2fr 1fr 1fr 1fr; gap:4px;">
         <div class="form-field">
             <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">RUC</label>
             <input id="pcRuc" readonly 
@@ -84,6 +84,11 @@
         <div class="form-field">
             <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Monto Cotización (Sin IGV)</label>
             <input id="pcMonto" type="number" step="0.01" value="0" readonly 
+                   style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; background:#F1F5F9; font-weight:800; font-size:10px; color:#64748B; cursor:not-allowed;">
+        </div>
+        <div class="form-field">
+            <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Monto Cotización (Con IGV)</label>
+            <input id="pcMontoConIgv" type="number" step="0.01" value="0" readonly 
                    style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; background:#F1F5F9; font-weight:800; font-size:10px; color:#64748B; cursor:not-allowed;">
         </div>
     </div>

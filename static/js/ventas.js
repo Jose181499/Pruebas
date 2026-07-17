@@ -4265,6 +4265,7 @@ function loadPedidoCotizacion() {
     document.getElementById('pcMoneda').value = cotizacion.moneda || 'Soles (S/)';
     document.getElementById('pcEntrega').value = cotizacion.direccion_entrega || '';
     document.getElementById('pcMonto').value = cotizacion.total || cotizacion.monto || 0;
+      document.getElementById('pcMontoConIgv').value = (cotizacion.total || cotizacion.monto || 0) * 1.18; 
     
     // Cargar productos de la cotización
     const productos = cotizacion.productos || [];
@@ -5781,6 +5782,7 @@ async function cargarPCParaEditar(id) {
         setValue('pcFecha', formatDateForInput(pc.fecha));
         setValue('pcCliente', pc.cliente);
         setValue('pcRuc', pc.ruc);
+         setValue('pcMontoConIgv', (pc.monto || 0) * 1.18); 
         setValue('pcMonto', pc.monto || 0);
         setValue('pcEntrega', pc.lugar_entrega || pc.entrega);
         setValue('pcObs', pc.observaciones);
@@ -6018,6 +6020,7 @@ function loadPedidoCotizacionSAP() {
     document.getElementById('pcCliente').value = cotizacion.razon || '';
     document.getElementById('pcRuc').value = cotizacion.ruc || '';
     document.getElementById('pcMonto').value = cotizacion.total || cotizacion.monto || 0;
+      document.getElementById('pcMontoConIgv').value = (cotizacion.total || cotizacion.monto || 0) * 1.18; 
     
     // Cargar productos
     const productos = cotizacion.productos || [];
@@ -7141,6 +7144,7 @@ function seleccionarCotizacionSAP(cotizacionId) {
             setReadonlyValue('pcCotFecha', data.fecha_creacion ? formatFecha(data.fecha_creacion) : '');
             setReadonlyValue('pcCliente', data.cliente_razon_social || '');
             setReadonlyValue('pcRuc', data.cliente_ruc || '');
+             setReadonlyValue('pcMontoConIgv', (data.total || 0) * 1.18); 
             setReadonlyValue('pcMonto', data.total || 0);
             setReadonlyValue('pcCondicionPago', data.condicion_pago || 'Contado');
             setReadonlyValue('pcVendedor', data.vendedor || 'Helen Blas Príncipe');
@@ -7336,6 +7340,7 @@ function clearPedidoModalSAP() {
     setReadonlyValue('pcCliente', '');
     setReadonlyValue('pcRuc', '');
     setReadonlyValue('pcMonto', '0');
+     setReadonlyValue('pcMontoConIgv', '0');
     setReadonlyValue('pcCondicionPago', '');
     setReadonlyValue('pcVendedor', '');
     setEditableValue('pcEntrega', '');
