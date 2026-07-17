@@ -129,14 +129,14 @@
                             </div>
                             <div class="form-field">
                                 <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Moneda</label>
-                               <select id="pcMoneda" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 4px; font-size:10px; font-weight:800;"></select>
+                                <select id="pcMoneda" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 4px; font-size:10px; font-weight:800;" onchange="actualizarResumenPC()">
                                     <option value="Soles (S/)">Soles (S/)</option>
                                     <option value="Dólares ($)">Dólares ($)</option>
                                 </select>
                             </div>
                             <div class="form-field">
                                 <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Monto PC Pedido Compra</label>
-                                <input id="pcMontoPC" type="number" step="0.01" placeholder="0.00" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; font-weight:800; font-size:10px;">
+                                <input id="pcMontoPC" type="number" step="0.01" placeholder="0.00" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; font-weight:800; font-size:10px;" readonly>
                             </div>
                         </div>
 
@@ -338,7 +338,21 @@
                     </div>
                 </div>
                 
-            <!-- MODAL SELECCIÓN MÚLTIPLE DE PRODUCTOS PARA PC -->
+            </div> <!-- FIN DEL CONTENEDOR PRINCIPAL -->
+
+        </div> <!-- FIN DEL MODAL-BODY -->
+
+        <!-- FOOTER CON BOTONES -->
+        <div class="modal-foot" style="padding:4px 12px; display:flex; justify-content:flex-end; gap:5px; border-top:1px solid #E5E7EB; background:#F8FAFC; flex-shrink:0;">
+            <button class="btn btn-secondary" onclick="closeModal('pedidoCompraModal')" style="height:28px; padding:0 14px; font-size:10px; border-radius:6px; border:1px solid #CBD5E1; background:#94A3B8; color:#fff; font-weight:900; cursor:pointer; transition:all 0.2s;">Cancelar</button>
+            <button class="btn-neon-yellow" onclick="savePedidoCompraSAP('observado')">⚠️ Crear PC Observado</button>
+            <button class="btn-neon-green" onclick="savePedidoCompraSAP('auto')">✅ Crear PC Conforme</button>
+        </div>
+        
+    </div> <!-- FIN DEL MODAL-BOX -->
+</div> <!-- FIN DEL MODAL-BG -->
+
+<!-- MODAL SELECCIÓN MÚLTIPLE DE PRODUCTOS PARA PC -->
 <div class="modal-bg" id="productSelectorPcModal">
     <div class="modal-box" style="width:min(900px,96vw); max-height:85vh;">
         <div class="modal-head">
@@ -387,17 +401,7 @@
         </div>
     </div>
 </div>
-            
-        </div>
 
-        <!-- FOOTER CON BOTONES -->
-        <div class="modal-foot" style="padding:4px 12px; display:flex; justify-content:flex-end; gap:5px; border-top:1px solid #E5E7EB; background:#F8FAFC; flex-shrink:0;">
-            <button class="btn btn-secondary" onclick="closeModal('pedidoCompraModal')" style="height:28px; padding:0 14px; font-size:10px; border-radius:6px; border:1px solid #CBD5E1; background:#94A3B8; color:#fff; font-weight:900; cursor:pointer; transition:all 0.2s;">Cancelar</button>
-            <button class="btn-neon-yellow" onclick="savePedidoCompraSAP('observado')">⚠️ Crear PC Observado</button>
-            <button class="btn-neon-green" onclick="savePedidoCompraSAP('auto')">✅ Crear PC Conforme</button>
-        </div>
-    </div>
-</div>
 <style>
 /* Estilos para los switches toggle */
 .switch input:checked + .slider {
@@ -423,6 +427,75 @@
 /* Animación suave para el resumen */
 #pcResumenSubtotal, #pcResumenValorVenta, #pcResumenIgv, #pcResumenTotal {
     transition: all 0.3s ease;
+}
+
+/* Botones Neon */
+.btn-neon-yellow {
+    height: 28px;
+    padding: 0 18px;
+    font-size: 10px;
+    border-radius: 6px;
+    border: 2px solid #FF0040;
+    background: #FF0040;
+    color: #FFFFFF;
+    font-weight: 900;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow: 0 0 40px rgba(255, 0, 64, 0.8), 
+                0 0 80px rgba(255, 0, 64, 0.5), 
+                inset 0 0 20px rgba(255, 100, 150, 0.6);
+    text-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+    letter-spacing: 0.3px;
+}
+
+.btn-neon-yellow:hover {
+    background: #FF1A4A;
+    box-shadow: 0 0 60px rgba(255, 0, 64, 1), 
+                0 0 120px rgba(255, 0, 64, 0.8), 
+                inset 0 0 30px rgba(255, 100, 150, 0.8);
+    transform: scale(1.04);
+}
+
+.btn-neon-yellow:active {
+    transform: scale(0.96);
+}
+
+.btn-neon-green {
+    height: 28px;
+    padding: 0 18px;
+    font-size: 10px;
+    border-radius: 6px;
+    border: 2px solid #00FF44;
+    background: #00FF00;
+    color: #000000;
+    font-weight: 900;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow: 0 0 40px rgba(0, 255, 0, 0.8), 
+                0 0 80px rgba(0, 255, 0, 0.5), 
+                inset 0 0 20px rgba(200, 255, 200, 0.6);
+    text-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+    letter-spacing: 0.3px;
+}
+
+.btn-neon-green:hover {
+    background: #33FF33;
+    box-shadow: 0 0 60px rgba(0, 255, 0, 1), 
+                0 0 120px rgba(0, 255, 0, 0.8), 
+                inset 0 0 30px rgba(200, 255, 200, 0.8);
+    transform: scale(1.04);
+}
+
+.btn-neon-green:active {
+    transform: scale(0.96);
 }
 </style>
 
@@ -708,6 +781,55 @@ function addPedidoItemSAP() {
 }
 
 // ============================================================
+// FUNCIÓN DE ACTUALIZACIÓN DE VALOR TOTAL DE FILA
+// ============================================================
+
+function actualizarValorTotalPCSAP(input) {
+    const row = input.closest('tr');
+    if (!row) return;
+    
+    const inputs = row.querySelectorAll('input');
+    const cantidadPC = Number(inputs[5]?.value || 0);
+    const precioPC = Number(inputs[7]?.value || 0);
+    const valorTotal = cantidadPC * precioPC;
+    
+    const valueSpan = row.querySelector('td:nth-child(10) span');
+    if (valueSpan) {
+        valueSpan.textContent = valorTotal.toFixed(2);
+        valueSpan.style.color = valorTotal > 0 ? '#059669' : '#94A3B8';
+    }
+    
+    // Actualizar faltante
+    const stock = Number(inputs[8]?.value || 0);
+    const faltanteCell = row.querySelector('td:nth-child(12)');
+    if (faltanteCell) {
+        const faltante = Math.max(cantidadPC - stock, 0);
+        faltanteCell.textContent = faltante;
+        faltanteCell.style.color = faltante > 0 ? '#DC2626' : '#16A34A';
+    }
+}
+
+// ============================================================
+// FUNCIÓN PARA REORDENAR ITEMS
+// ============================================================
+
+function reordenarItemsSAP() {
+    const rows = document.querySelectorAll('#pcItemsBody tr');
+    rows.forEach((row, index) => {
+        const numCell = row.querySelector('td:first-child');
+        if (numCell) {
+            numCell.textContent = index + 1;
+        }
+        const newId = `item-row-${index + 1}`;
+        row.id = newId;
+        const deleteBtn = row.querySelector('td:last-child button');
+        if (deleteBtn) {
+            deleteBtn.setAttribute('onclick', `eliminarItemSAPConResumen('${newId}')`);
+        }
+    });
+}
+
+// ============================================================
 // SOBRESCRIBIR addSelectedProductsPc PARA ACTUALIZAR RESUMEN
 // ============================================================
 
@@ -764,48 +886,6 @@ window.addSelectedProductsPc = function() {
 };
 
 // ============================================================
-// SOBRESCRIBIR seleccionarCotizacionSAP PARA ACTUALIZAR RESUMEN
-// ============================================================
-
-// Guardar referencia a la función original
-const _originalSeleccionarCotizacionSAP = window.seleccionarCotizacionSAP;
-
-// Sobrescribir seleccionarCotizacionSAP
-window.seleccionarCotizacionSAP = function(cotizacionId) {
-    // Llamar a la función original
-    if (typeof _originalSeleccionarCotizacionSAP === 'function') {
-        _originalSeleccionarCotizacionSAP(cotizacionId);
-    }
-    
-    // Después de cargar los productos, actualizar el resumen
-    setTimeout(() => {
-        actualizarResumenPC();
-        console.log('✅ Resumen actualizado después de cargar cotización');
-    }, 300);
-};
-
-// ============================================================
-// SOBRESCRIBIR openPedidoCompraModalSAP PARA INICIALIZAR RESUMEN
-// ============================================================
-
-// Guardar referencia a la función original
-const _originalOpenPedidoCompraModalSAP = window.openPedidoCompraModalSAP;
-
-// Sobrescribir openPedidoCompraModalSAP
-window.openPedidoCompraModalSAP = function(mode, id) {
-    // Llamar a la función original
-    if (typeof _originalOpenPedidoCompraModalSAP === 'function') {
-        _originalOpenPedidoCompraModalSAP(mode, id);
-    }
-    
-    // Después de abrir el modal, inicializar el resumen
-    setTimeout(() => {
-        actualizarResumenPC();
-        console.log('✅ Resumen inicializado al abrir modal');
-    }, 300);
-};
-
-// ============================================================
 // EVENTO PARA CAMBIO DE MONEDA
 // ============================================================
 
@@ -814,35 +894,6 @@ document.addEventListener('change', function(e) {
         actualizarResumenPC();
     }
 });
-
-// ============================================================
-// FUNCIÓN DE ACTUALIZACIÓN DE VALOR TOTAL DE FILA
-// ============================================================
-
-function actualizarValorTotalPCSAP(input) {
-    const row = input.closest('tr');
-    if (!row) return;
-    
-    const inputs = row.querySelectorAll('input');
-    const cantidadPC = Number(inputs[5]?.value || 0);
-    const precioPC = Number(inputs[7]?.value || 0);
-    const valorTotal = cantidadPC * precioPC;
-    
-    const valueSpan = row.querySelector('td:nth-child(10) span');
-    if (valueSpan) {
-        valueSpan.textContent = valorTotal.toFixed(2);
-        valueSpan.style.color = valorTotal > 0 ? '#059669' : '#94A3B8';
-    }
-    
-    // Actualizar faltante
-    const stock = Number(inputs[8]?.value || 0);
-    const faltanteCell = row.querySelector('td:nth-child(12)');
-    if (faltanteCell) {
-        const faltante = Math.max(cantidadPC - stock, 0);
-        faltanteCell.textContent = faltante;
-        faltanteCell.style.color = faltante > 0 ? '#DC2626' : '#16A34A';
-    }
-}
 
 console.log('✅ Funciones de resumen lateral del PC cargadas correctamente (versión completa)');
 </script>
