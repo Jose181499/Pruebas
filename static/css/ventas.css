@@ -1073,6 +1073,8 @@ body.kcf-theme {
     border-color: #BFDBFE !important;
 }
 
+
+/* interfiere en el tamaño de los inputs
 .client-card input,
 .client-card select {
     height: 18px !important;
@@ -1082,6 +1084,7 @@ body.kcf-theme {
 .client-card label {
     font-size: 7px !important;
 }
+*/
 
 /* ============================================================
    SUMMARY CARD
@@ -1867,6 +1870,8 @@ body.kcf-theme {
     padding: 5px 8px !important;
 }
 
+
+/* prueba de estilos para inputs (eliminar el estilo de comentario si se desea aplicar otra vez)
 #cotizacionModal .client-card input,
 #cotizacionModal .client-card select {
     height: 18px !important;
@@ -1882,6 +1887,8 @@ body.kcf-theme {
     line-height: 1 !important;
     margin-bottom: 1px !important;
 }
+
+*/
 
 #cotizacionModal .summary-card .body {
     padding: 10px 14px !important;
@@ -2589,4 +2596,58 @@ body.kcf-theme {
     border: 2px solid #44FF77 !important;
     box-shadow: 0 0 25px rgba(0, 255, 65, 0.5);
     text-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+
+/* ============================================================
+   IGUALAR DATOS DEL CLIENTE A CONDICIONES COMERCIALES
+   ============================================================ */
+
+#cotizacionModal .client-card .body {
+    padding: 6px 8px !important;
+}
+
+#cotizacionModal .client-card .form-field {
+    margin: 0 !important;
+    min-width: 0 !important;
+}
+
+#cotizacionModal .client-card .form-field label {
+    display: block !important;
+    font-size: 7.5px !important;
+    line-height: 1 !important;
+    font-weight: 950 !important;
+    margin: 0 0 1px 0 !important;
+    text-transform: uppercase !important;
+}
+
+#cotizacionModal .client-card .form-field input,
+#cotizacionModal .client-card .form-field select {
+    width: 100% !important;
+    height: 22px !important;
+    min-height: 22px !important;
+    max-height: 22px !important;
+    padding: 0 5px !important;
+    border-radius: 5px !important;
+    font-size: 10px !important;
+    line-height: 22px !important;
+    box-sizing: border-box !important;
+}
+
+#cotizacionModal .client-card .form-field select {
+    padding: 0 3px !important;
+}
+
+#cotizacionModal .client-card #fRucSearch {
+    height: 22px !important;
+    min-height: 22px !important;
+    max-height: 22px !important;
+}
+
+#cotizacionModal .client-card button[onclick="loadClient()"] {
+    height: 22px !important;
+    min-height: 22px !important;
+    max-height: 22px !important;
+    font-size: 8.5px !important;
+    padding: 0 6px !important;
+    box-sizing: border-box !important;
 }
