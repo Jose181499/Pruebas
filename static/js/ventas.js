@@ -7262,7 +7262,7 @@ function renderCotizacionFormContent(isEdit) {
                             <tr>
                                 <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:35px;">Item</th>
                                 <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:80px;">Código Producto</th>
-                                <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;">Producto / Descripción</th>
+                                <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;"> Descripción</th>
                                 <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:80px;">Modelo</th>
                                 <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:75px;">Marca</th>
                                 <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:55px;">Unidad</th>
@@ -7300,12 +7300,19 @@ function renderCotizacionFormContent(isEdit) {
                        style="width:100%;height:28px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 8px;">
             </div>
             
-            <!-- Motivo -->
-            <div class="form-field">
-                <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Motivo</label>
-                <input id="fMotivo" value="Solicitud única del cliente" 
-                       style="width:100%;height:28px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 8px;">
-            </div>
+        <!-- Motivo -->
+<div class="form-field">
+    <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Motivo</label>
+    <select id="fMotivo" 
+            style="width:100%;height:28px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
+        <option value="Proyecto nuevo">Proyecto nuevo</option>
+        <option value="Recompra">Recompra</option>
+        <option value="Licitación">Licitación</option>
+        <option value="Reposición / stock">Reposición / stock</option>
+        <option value="Fecha / Hora de precio">Fecha / Hora de precio</option>
+        <option value="Solicitud única del cliente" selected>Solicitud única del cliente</option>
+    </select>
+</div>
             
             <!-- Transporte -->
             <div class="form-field">
