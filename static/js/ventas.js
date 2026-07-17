@@ -3158,68 +3158,40 @@ function deletePedidoCompra(id) {
         return;
     }
     
-    // Verificar si ya está anulado
-    if (pedido.estado === 'Anulado') {
-        showToast('⚠️ Este PC ya está anulado', 'warning');
-        return;
-    }
-    
     const numero = pedido.numero || 'PC-XXXXXX';
     const cliente = pedido.cliente || 'Cliente';
     const estado = pedido.estado || 'Desconocido';
     
-    // Verificar si el PC se puede anular según el estado
-    const estadosNoAnulables = ['PC conforme', 'Listo para despacho', 'Despachado'];
-    const esNoAnulable = estadosNoAnulables.some(e => estado.includes(e));
-    
-    let mensajeAdicional = '';
-    let botonTexto = '🗑️ Sí, anular';
-    
-    if (esNoAnulable) {
-        mensajeAdicional = `<br><br>⚠️ <b>Este PC está en estado "${estado}"</b> y podría tener restricciones para ser anulado.`;
-        botonTexto = '⚠️ Anular de todas formas';
+    // Verificar si está anulado (requisito del backend)
+    if (estado !== 'Anulado') {
+        showConfirmModal(
+            '⛔ No se puede eliminar',
+            `El PC <b>${numero}</b> está en estado <b>"${estado}"</b>.<br><br>⚠️ Solo se pueden eliminar PCs que estén en estado <b>"Anulado"</b>.`,
+            '💡 Primero anula el PC y luego podrás eliminarlo permanentemente.',
+            function() {
+                // No hacer nada, solo cerrar el modal
+            },
+            'OK, entender'
+        );
+        return;
     }
     
     showConfirmModal(
-        '🗑️ ¿Anular PC?',
-        `Estás a punto de anular el PC <b>${numero}</b> del cliente <b>${cliente}</b>.<br>Estado actual: <b>${estado}</b>${mensajeAdicional}`,
-        '⚠️ Esta acción cambiará el estado a "Anulado" y no podrá recuperarse.',
+        '🗑️ ¿Eliminar PC permanentemente?',
+        `Estás a punto de <b>ELIMINAR FÍSICAMENTE</b> el PC <b>${numero}</b> del cliente <b>${cliente}</b>.<br>Estado actual: <b>${estado}</b>`,
+        '⚠️ ⚠️ ⚠️ ¡ATENCIÓN! Esta acción es IRREVERSIBLE. El registro será eliminado de la base de datos permanentemente.',
         async function() {
             try {
-                console.log(`🗑️ Intentando anular PC ID: ${id}, estado actual: ${estado}`);
-                showToast('⏳ Anulando PC...', 'info');
+                console.log(`🗑️ Eliminando físicamente PC ID: ${id}`);
+                showToast('⏳ Eliminando PC...', 'info');
                 
-                // Obtener los datos completos del PC
-                const responseGet = await apiFetch(`/ventas/api/pedido-compra/${id}`);
-                
-                if (!responseGet.success) {
-                    showToast('❌ Error al obtener datos del PC', 'error');
-                    return;
-                }
-                
-                const pcData = responseGet.data;
-                
-                // Verificar que el PC no esté ya anulado (doble verificación)
-                if (pcData.estado === 'Anulado') {
-                    showToast('⚠️ El PC ya está anulado', 'warning');
-                    return;
-                }
-                
-                // Crear una copia de los datos con estado actualizado
-                const dataToUpdate = {
-                    ...pcData,
-                    estado: 'Anulado',
-                    id: id
-                };
-                
-                // Enviar actualización
-                const response = await apiFetch('/ventas/api/pedido-compra/guardar', {
-                    method: 'POST',
-                    body: JSON.stringify(dataToUpdate)
+                // 🔽 USAR EL NUEVO ENDPOINT DELETE
+                const response = await apiFetch(`/ventas/api/pedido-compra/${id}`, {
+                    method: 'DELETE'
                 });
                 
                 if (response.success) {
-                    showToast('✅ PC anulado correctamente', 'success');
+                    showToast('✅ PC eliminado permanentemente', 'success');
                     
                     // Recargar datos
                     await loadPedidos();
@@ -3233,32 +3205,26 @@ function deletePedidoCompra(id) {
                     renderPedidos();
                     
                 } else {
-                    // Mostrar mensaje de error específico
-                    const errorMsg = response.error || 'No se pudo anular el PC';
-                    console.error('❌ Error del servidor:', errorMsg);
-                    
-                    if (errorMsg.includes('estado') || errorMsg.includes('conforme')) {
-                        showToast('❌ No se puede anular un PC en estado "Conforme" o "Listo para despacho". Contacta a un administrador.', 'error');
-                    } else {
-                        showToast('❌ Error: ' + errorMsg, 'error');
-                    }
+                    showToast('❌ Error: ' + (response.error || 'No se pudo eliminar el PC'), 'error');
                 }
             } catch (error) {
-                console.error('❌ Error anulando PC:', error);
+                console.error('❌ Error eliminando PC:', error);
                 
-                // Mostrar mensaje más descriptivo
-                if (error.message.includes('405')) {
-                    showToast('❌ El servidor no permite eliminar PCs. Contacta a soporte.', 'error');
-                } else if (error.message.includes('404')) {
-                    showToast('❌ El PC no existe en el servidor', 'error');
+                // Mostrar mensaje más descriptivo según el error
+                if (error.message.includes('404')) {
+                    showToast('❌ El PC ya no existe en el servidor', 'error');
+                } else if (error.message.includes('400')) {
+                    showToast('❌ Solo se pueden eliminar PCs en estado "Anulado"', 'error');
                 } else {
-                    showToast('❌ Error al anular el PC: ' + error.message, 'error');
+                    showToast('❌ Error al eliminar el PC: ' + error.message, 'error');
                 }
             }
         },
-        botonTexto
+        '🗑️ Sí, eliminar permanentemente'
     );
 }
+
+
 
 function generateGuiaPdf(id) {
     showToast('PDF de guía generado', 'success');
@@ -8460,21 +8426,21 @@ function showPedidoMenu(event, id) {
         <button onclick="createFacturaFromPedido(${id});this.closest('.menu-pop').remove()">🧾 Crear factura</button>
     `;
     
-    // Solo mostrar "Eliminar" si NO está anulado
-    if (!esAnulado) {
+    // Mostrar "Eliminar" solo si está anulado
+    if (esAnulado) {
         menuHtml += `
-            <button class="danger" onclick="deletePedidoCompra(${id});this.closest('.menu-pop').remove()">🗑 Eliminar</button>
+            <button class="danger" onclick="deletePedidoCompra(${id});this.closest('.menu-pop').remove()">🗑 Eliminar permanentemente</button>
         `;
     } else {
+        // Mostrar "Anular" para PCs que no están anulados
         menuHtml += `
-            <button class="danger" style="opacity:0.5;cursor:not-allowed;" disabled>⛔ Ya anulado</button>
+            <button class="danger" onclick="anularPedidoCompra(${id});this.closest('.menu-pop').remove()">⛔ Anular PC</button>
         `;
     }
     
     pop.innerHTML = menuHtml;
     document.body.appendChild(pop);
 }
-
 
 function showGuiaMenu(event, id) {
     event.stopPropagation();

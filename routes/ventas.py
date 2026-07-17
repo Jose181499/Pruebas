@@ -3498,3 +3498,47 @@ def api_cotizaciones_preview_pdf(id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+    
+@ventas_bp.route('/ventas/api/pedido-compra/<int:id>', methods=['DELETE'])
+@login_required
+def api_pedido_compra_eliminar(id):
+    """Elimina físicamente un pedido de compra de la base de datos"""
+    try:
+        print(f"🗑️ Eliminando físicamente PC ID: {id}")
+        
+        # Verificar que el PC existe
+        query_check = "SELECT id, numero, estado FROM pedido_compra_pc WHERE id = %s"
+        result_check = db_query(query_check, (id,))
+        
+        if not result_check:
+            return jsonify({'success': False, 'error': 'PC no encontrado'}), 404
+        
+        pc = result_check[0]
+        estado = pc.get('estado')
+        
+        # Opcional: Permitir eliminar solo si está anulado
+        # Si quieres permitir eliminar cualquier PC, comenta esta validación
+        if estado != 'Anulado':
+            return jsonify({
+                'success': False, 
+                'error': f'Solo se pueden eliminar PCs en estado "Anulado". Estado actual: {estado}'
+            }), 400
+        
+        # Eliminar el PC
+        query_delete = "DELETE FROM pedido_compra_pc WHERE id = %s RETURNING id"
+        result_delete = db_query(query_delete, (id,))
+        
+        if result_delete:
+            return jsonify({
+                'success': True, 
+                'message': f'PC eliminado correctamente',
+                'data': {'id': id}
+            })
+        
+        return jsonify({'success': False, 'error': 'No se pudo eliminar el PC'}), 400
+        
+    except Exception as e:
+        print(f"❌ Error en api_pedido_compra_eliminar: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500

@@ -2014,15 +2014,12 @@ body.kcf-theme {
     margin-bottom: 10px;
 }
 
-#cotizacionModal .modal-foot {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 14px;
-    padding: 7px 12px;
-    border-top: 1px solid var(--ventas-line);
-    background: #F8FAFC;
-    flex-wrap: nowrap;
+#cotizacionModal .modal-foot{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:6px 12px;
 }
 
 /* ============================================================
@@ -2032,9 +2029,9 @@ body.kcf-theme {
 #cotizacionModal .cotizacion-footer-flow {
     display: flex;
     align-items: center;
-    gap: 6px;
-    flex: 0 0 auto;
-    overflow: visible;
+    gap: 4px;
+    flex: 0 1 auto;
+    min-width: 0;
 }
 
 #cotizacionModal .flow-title {
@@ -2093,8 +2090,8 @@ body.kcf-theme {
 #cotizacionModal .cotizacion-footer-buttons {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    gap: 7px;
+    
+    gap: 8px;
     flex-shrink: 0;
 }
 
