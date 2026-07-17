@@ -3145,9 +3145,42 @@ function createFacturaFromPedido(id) {
 }
 
 function deletePedidoCompra(id) {
-    if (confirm('¿Estás seguro de eliminar este PC?')) {
-        showToast('PC eliminado', 'success');
-    }
+    // Buscar el PC para mostrar info
+    const pedido = pedidosData.find(p => p.id === id);
+    const numero = pedido?.numero || 'PC-XXXXXX';
+    const cliente = pedido?.cliente || 'Cliente';
+    const estado = pedido?.estado || 'Desconocido';
+    
+    showConfirmModal(
+        '🗑️ ¿Eliminar PC?',
+        `Estás a punto de eliminar el PC <b>${numero}</b> del cliente <b>${cliente}</b>.<br>Estado actual: <b>${estado}</b>`,
+        '⚠️ Esta acción cambiará el estado a "Anulado" y no podrá recuperarse.',
+        async function() {
+            try {
+                console.log(`🗑️ Eliminando PC ID: ${id}`);
+                showToast('⏳ Anulando PC...', 'info');
+                
+                const response = await apiFetch(`/ventas/api/pedido-compra/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.success) {
+                    showToast('✅ PC anulado correctamente', 'success');
+                    await loadPedidos();
+                    // También recargar validación si está visible
+                    if (currentModule === 'validacion') {
+                        renderValidacion();
+                    }
+                } else {
+                    showToast('❌ Error: ' + (response.error || 'No se pudo eliminar'), 'error');
+                }
+            } catch (error) {
+                console.error('❌ Error eliminando PC:', error);
+                showToast('❌ Error al eliminar el PC: ' + error.message, 'error');
+            }
+        },
+        '🗑️ Sí, eliminar'
+    );
 }
 
 function generateGuiaPdf(id) {
@@ -7190,31 +7223,7 @@ function renderCotizacionFormContent(isEdit) {
     </div>
 </div>
 
-        <!-- ============================================================ -->
-        <!-- STEPBAR - FLUJO DE ESTADOS -->
-        <!-- ============================================================ -->
-        <div style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px;box-shadow:0 2px 8px rgba(15,23,42,.04);overflow-x:auto;flex-wrap:nowrap;min-height:30px;">
-            <span style="font-weight:900;color:#64748B;margin-right:6px;font-size:9px;flex-shrink:0;text-transform:uppercase;letter-spacing:0.3px;">Flujo:</span>
-            <div class="step status-draft" style="display:flex;align-items:center;gap:4px;white-space:nowrap;font-weight:800;color:#FF0000;font-size:9px;flex-shrink:0;">
-                <span style="width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:#FF0000;color:#FFFFFF;font-size:8px;font-weight:1000;box-shadow:0 0 12px rgba(255,0,0,0.4);">1</span> Borrador
-            </div>
-            <span style="height:1px;width:12px;background:#E5E7EB;border-radius:99px;flex-shrink:0;"></span>
-            <div class="step inactive" style="display:flex;align-items:center;gap:4px;white-space:nowrap;font-weight:700;color:#94A3B8;font-size:9px;flex-shrink:0;">
-                <span style="width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:#E2E8F0;color:#94A3B8;font-size:8px;font-weight:1000;">2</span> En revisión
-            </div>
-            <span style="height:1px;width:12px;background:#E5E7EB;border-radius:99px;flex-shrink:0;"></span>
-            <div class="step inactive" style="display:flex;align-items:center;gap:4px;white-space:nowrap;font-weight:700;color:#94A3B8;font-size:9px;flex-shrink:0;">
-                <span style="width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:#E2E8F0;color:#94A3B8;font-size:8px;font-weight:1000;">3</span> Validado 
-            </div>
-            <span style="height:1px;width:12px;background:#E5E7EB;border-radius:99px;flex-shrink:0;"></span>
-            <div class="step inactive" style="display:flex;align-items:center;gap:4px;white-space:nowrap;font-weight:700;color:#94A3B8;font-size:9px;flex-shrink:0;">
-                <span style="width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:#E2E8F0;color:#94A3B8;font-size:8px;font-weight:1000;">4</span> Generada Nueva Cotizacion
-            </div>
-            <span style="height:1px;width:12px;background:#E5E7EB;border-radius:99px;flex-shrink:0;"></span>
-            <div class="step inactive" style="display:flex;align-items:center;gap:4px;white-space:nowrap;font-weight:700;color:#94A3B8;font-size:9px;flex-shrink:0;">
-                <span style="width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:#E2E8F0;color:#94A3B8;font-size:8px;font-weight:1000;">5</span> Aceptada
-            </div>
-        </div>
+        
     `;
 }
 // ============================================================
@@ -8859,7 +8868,7 @@ window.setFieldValue = setFieldValue;
 window.getFieldValue = getFieldValue;
 window.toggleCustomField = toggleCustomField;
 window.setEditableValue = setEditableValue;
-
+window.deletePedidoCompra = deletePedidoCompra;
 // ============================================================
 // 14. FUNCIONES DE FORMATO
 // ============================================================

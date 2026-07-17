@@ -2032,11 +2032,9 @@ body.kcf-theme {
 #cotizacionModal .cotizacion-footer-flow {
     display: flex;
     align-items: center;
-    gap: 5px;
-    min-width: 0;
-    overflow-x: auto;
-    white-space: nowrap;
-    flex: 1 1 auto;
+    gap: 6px;
+    flex: 0 0 auto;
+    overflow: visible;
 }
 
 #cotizacionModal .flow-title {
@@ -2056,7 +2054,8 @@ body.kcf-theme {
     font-size: 9px;
     font-weight: 700;
     color: #94A3B8;
-    flex-shrink: 0;
+    flex: 0 0 auto;          /* ← importante */
+    white-space: nowrap;      /* ← importante */
 }
 
 #cotizacionModal .flow-number {
@@ -2084,11 +2083,11 @@ body.kcf-theme {
 }
 
 #cotizacionModal .flow-line {
-    width: 12px;
+    width: 14px;
     height: 1px;
     background: #CBD5E1;
     border-radius: 99px;
-    flex-shrink: 0;
+    flex: 0 0 14px;
 }
 
 #cotizacionModal .cotizacion-footer-buttons {
