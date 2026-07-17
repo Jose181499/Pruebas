@@ -918,6 +918,28 @@ window.addSelectedProductsPc = function() {
 };
 
 // ============================================================
+// SOBRESCRIBIR seleccionarCotizacionSAP PARA ACTUALIZAR RESUMEN
+// ============================================================
+
+// Guardar referencia a la función original
+const _originalSeleccionarCotizacionSAP = window.seleccionarCotizacionSAP;
+
+// Sobrescribir seleccionarCotizacionSAP
+window.seleccionarCotizacionSAP = function(cotizacionId) {
+    // Llamar a la función original
+    if (typeof _originalSeleccionarCotizacionSAP === 'function') {
+        _originalSeleccionarCotizacionSAP(cotizacionId);
+    }
+    
+    // Después de cargar los productos, actualizar el resumen
+    // ESPERAR UN POCO MÁS PARA QUE EL DOM SE ACTUALICE
+    setTimeout(() => {
+        actualizarResumenPC();
+        console.log('✅ Resumen actualizado después de cargar cotización');
+    }, 500);
+};
+
+// ============================================================
 // SOBRESCRIBIR openPedidoCompraModalSAP PARA INICIALIZAR RESUMEN
 // ============================================================
 

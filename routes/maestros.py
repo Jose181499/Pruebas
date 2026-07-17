@@ -123,9 +123,13 @@ def api_clientes_guardar():
                 tipo_documento, numero_documento, razon_social,
                 nombre_comercial, direccion_fiscal,
                 telefono_contacto, nombre_contacto, email_contacto,
+                condicion_pago, dias_credito, limite_credito,
+                descuento, estado, ambito, observaciones,
                 activo, created_at, updated_at
             ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW()
+                %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s, %s,
+                %s, NOW(), NOW()
             )
             RETURNING id, codigo_cliente, numero_documento
         """
@@ -139,7 +143,14 @@ def api_clientes_guardar():
             data.get('telefono_contacto') or data.get('telefono'),
             data.get('nombre_contacto') or data.get('contacto'),
             data.get('email_contacto') or data.get('email'),
-            True
+            data.get('condicion_pago', 'Contado'),        # 🔧 NUEVO
+            int(data.get('dias_credito', 0) or 0),          # 🔧 NUEVO
+            data.get('limite_credito', ''),                 # 🔧 NUEVO
+            data.get('descuento', ''),                      # 🔧 NUEVO
+            data.get('estado', 'Activo'),                   # 🔧 NUEVO (reemplaza el "True" hardcodeado)
+            data.get('ambito', 'COMPARTIDO'),                # 🔧 NUEVO
+            data.get('observaciones', ''),                   # 🔧 NUEVO
+            True  # activo (booleano interno, se mantiene aparte de "estado")
         )
         
         cur.execute(query, params)
