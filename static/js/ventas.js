@@ -3135,7 +3135,68 @@ window.loadGuiaFromCotizacion = function(numeroCotizacion) {
 
 
 function validatePedidoCompra(id) {
-    showToast('PC validado por Hellen', 'success');
+    // Buscar el PC para mostrar info
+    const pedido = pedidosData.find(p => p.id === id);
+    if (!pedido) {
+        showToast('❌ PC no encontrado', 'error');
+        return;
+    }
+    
+    const numero = pedido.numero || 'PC-XXXXXX';
+    const cliente = pedido.cliente || 'Cliente';
+    const estado = pedido.estado || 'Desconocido';
+    
+    // Verificar si ya está validado
+    if (estado === 'Validado por Hellen' || estado === 'Validado') {
+        showToast('⚠️ Este PC ya está validado', 'warning');
+        return;
+    }
+    
+    // Verificar si está anulado
+    if (estado === 'Anulado') {
+        showToast('⚠️ No se puede validar un PC anulado', 'warning');
+        return;
+    }
+    
+    showConfirmModal(
+        '✅ ¿Validar PC?',
+        `Estás a punto de marcar el PC <b>${numero}</b> del cliente <b>${cliente}</b> como <b>"Validado por Hellen"</b>.<br><br>Estado actual: <b>${estado}</b>`,
+        '⚠️ Esta acción confirma que el PC ha sido revisado y validado por Hellen. El PC quedará listo para continuar con el proceso.',
+        async function() {
+            try {
+                console.log(`✅ Validando PC ID: ${id}`);
+                showToast('⏳ Validando PC...', 'info');
+                
+                // Cambiar estado a "Validado por Hellen"
+                const response = await apiFetch(`/ventas/api/pedido-compra/${id}/toggle`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ estado: 'Validado por Hellen' })
+                });
+                
+                if (response.success) {
+                    showToast('✅ PC validado por Hellen correctamente', 'success');
+                    
+                    // Recargar datos
+                    await loadPedidos();
+                    
+                    // Actualizar validación si está visible
+                    if (currentModule === 'validacion') {
+                        renderValidacion();
+                    }
+                    
+                    // Forzar actualización de la tabla
+                    renderPedidos();
+                    
+                } else {
+                    showToast('❌ Error: ' + (response.error || 'No se pudo validar el PC'), 'error');
+                }
+            } catch (error) {
+                console.error('❌ Error validando PC:', error);
+                showToast('❌ Error al validar el PC: ' + error.message, 'error');
+            }
+        },
+        '✅ Sí, validar'
+    );
 }
 
 function createDespachoFromPedido(id) {
@@ -8424,9 +8485,11 @@ function showPedidoMenu(event, id) {
     event.stopPropagation();
     document.querySelectorAll('.menu-pop').forEach(el => el.remove());
     
-    // Buscar el PC para ver su estado (solo para mostrar información)
+    // Buscar el PC para ver su estado
     const pedido = pedidosData.find(p => p.id === id);
     const estado = pedido?.estado || 'Desconocido';
+    const esAnulado = estado === 'Anulado';
+    const esValidado = estado === 'Validado por Hellen' || estado === 'Validado';
     
     const pop = document.createElement('div');
     pop.className = 'menu-pop';
@@ -8435,10 +8498,26 @@ function showPedidoMenu(event, id) {
     pop.style.left = left + 'px';
     pop.style.top = top + 'px';
     
-    // 🔽 MENÚ COMPLETO CON ELIMINAR PARA TODOS
     let menuHtml = `
         <button onclick="openPedidoCompraModalSAP('editar', ${id});this.closest('.menu-pop').remove()">👁 Ver / Editar</button>
-        <button onclick="validatePedidoCompra(${id});this.closest('.menu-pop').remove()">✅ Validacion</button>
+    `;
+    
+    // Solo mostrar "Validación" si NO está validado
+    if (!esValidado && !esAnulado) {
+        menuHtml += `
+            <button onclick="validatePedidoCompra(${id});this.closest('.menu-pop').remove()">✅ Validar PC</button>
+        `;
+    } else if (esValidado) {
+        menuHtml += `
+            <button disabled style="opacity:0.5;cursor:not-allowed;">✅ Ya validado</button>
+        `;
+    } else if (esAnulado) {
+        menuHtml += `
+            <button disabled style="opacity:0.5;cursor:not-allowed;">⛔ Anulado</button>
+        `;
+    }
+    
+    menuHtml += `
         <button onclick="createDespachoFromPedido(${id});this.closest('.menu-pop').remove()">🚚 Crear despacho</button>
         <button onclick="createGuiaFromPedido(${id});this.closest('.menu-pop').remove()">📦 Crear guía</button>
         <button onclick="createFacturaFromPedido(${id});this.closest('.menu-pop').remove()">🧾 Crear factura</button>
@@ -8451,6 +8530,8 @@ function showPedidoMenu(event, id) {
     pop.innerHTML = menuHtml;
     document.body.appendChild(pop);
 }
+
+
 function showGuiaMenu(event, id) {
     event.stopPropagation();
     document.querySelectorAll('.menu-pop').forEach(el => el.remove());
