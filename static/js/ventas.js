@@ -6227,6 +6227,33 @@ items.forEach((item, idx) => {
             }
         }
         
+
+
+
+        // ============================================================
+        // MOSTRAR ESTADO ACTUAL
+        // ============================================================
+        const docEstado = document.getElementById('docEstado');
+        if (docEstado && pc.estado) {
+            docEstado.textContent = pc.estado;
+            if (pc.estado === 'PC observado' || pc.estado === 'Bloqueado') {
+                docEstado.style.color = '#DC2626';
+            } else if (pc.estado === 'Listo para despacho') {
+                docEstado.style.color = '#16A34A';
+            } else {
+                docEstado.style.color = '#F59E0B';
+            }
+        }
+        
+        showToast('✅ PC cargado para editar', 'success');
+        
+    } catch (error) {
+        console.error('❌ Error cargando PC:', error);
+        showToast('❌ Error al cargar el PC: ' + error.message, 'error');
+    }
+}
+
+
   // ============================================================
 // FUNCIÓN PARA ACTUALIZAR FALTANTE - DEBE ESTAR ANTES DE addPedidoItemSAP
 // ============================================================
@@ -6316,30 +6343,6 @@ function addPedidoItemSAP() {
     `;
     
     tbody.appendChild(tr);
-}
-
-
-        // ============================================================
-        // MOSTRAR ESTADO ACTUAL
-        // ============================================================
-        const docEstado = document.getElementById('docEstado');
-        if (docEstado && pc.estado) {
-            docEstado.textContent = pc.estado;
-            if (pc.estado === 'PC observado' || pc.estado === 'Bloqueado') {
-                docEstado.style.color = '#DC2626';
-            } else if (pc.estado === 'Listo para despacho') {
-                docEstado.style.color = '#16A34A';
-            } else {
-                docEstado.style.color = '#F59E0B';
-            }
-        }
-        
-        showToast('✅ PC cargado para editar', 'success');
-        
-    } catch (error) {
-        console.error('❌ Error cargando PC:', error);
-        showToast('❌ Error al cargar el PC: ' + error.message, 'error');
-    }
 }
 
 
