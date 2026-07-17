@@ -367,10 +367,9 @@
 
         </div> <!-- FIN DEL MODAL-BODY -->
 
-        <!-- FOOTER CON BOTONES -->
-      <div class="modal-foot"
+        <div class="modal-foot"
      style="
-        padding:8px 12px;
+        padding:6px 12px;
         display:flex;
         justify-content:flex-end;
         align-items:center;
@@ -378,28 +377,44 @@
         border-top:1px solid #E5E7EB;
         background:#F8FAFC;
         flex-shrink:0;
-        
      ">
 
     <button class="btn btn-secondary"
         onclick="closeModal('pedidoCompraModal')"
         style="
-            height:34px;
+            height:32px;
             padding:0 16px;
             font-size:12px;
             border-radius:6px;
+            background:#94A3B8;
+            color:#fff;
+            border:1px solid #CBD5E1;
             font-weight:700;
         ">
         Cancelar
     </button>
 
     <button class="btn-neon-yellow"
-        style="height:34px;padding:0 18px;font-size:12px;">
+        onclick="savePedidoCompraSAP('observado')"
+        style="
+            height:36px;
+            padding:0 18px;
+            font-size:12px;
+            border-radius:8px;
+            font-weight:800;
+        ">
         ⚠️ Crear PC Observado
     </button>
 
     <button class="btn-neon-green"
-        style="height:34px;padding:0 18px;font-size:12px;">
+        onclick="savePedidoCompraSAP('auto')"
+        style="
+            height:36px;
+            padding:0 18px;
+            font-size:12px;
+            border-radius:8px;
+            font-weight:800;
+        ">
         ✅ Crear PC Conforme
     </button>
 
