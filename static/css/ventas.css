@@ -2501,3 +2501,20 @@ body.kcf-theme {
 .resumen-validacion .item.warning .numero { color: #92400E; }
 
 
+
+/* Estados PC - Solo 2 opciones */
+.badge.b-draft {
+    background: #FF0000 !important;
+    color: #FFFFFF !important;
+    border: 2px solid #FF4444 !important;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+    text-shadow: 0 0 10px rgba(255,255,255,0.3);
+}
+
+.badge.b-ok {
+    background: #00FF41 !important;
+    color: #000000 !important;
+    border: 2px solid #44FF77 !important;
+    box-shadow: 0 0 25px rgba(0, 255, 65, 0.5);
+    text-shadow: 0 0 10px rgba(0,0,0,0.2);
+}

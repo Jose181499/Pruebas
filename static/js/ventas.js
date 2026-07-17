@@ -579,13 +579,12 @@ function renderPedidos() {
     const q = document.getElementById('pcSearch')?.value?.toLowerCase() || '';
     const st = document.getElementById('pcStatus')?.value || '';
     
-    // 🔽 FILTRO POR FECHAS - NUEVO
+    // 🔽 FILTRO POR FECHAS
     const fechaInicio = document.getElementById('pcFechaInicio')?.value || '';
     const fechaFin = document.getElementById('pcFechaFin')?.value || '';
     
     console.log(`📊 Renderizando pedidos: ${pedidosData?.length || 0} registros`);
     
-    // Si no hay datos, mostrar mensaje
     if (!pedidosData || pedidosData.length === 0) {
         const tbody = document.getElementById('pcRows');
         if (tbody) {
@@ -633,7 +632,6 @@ function renderPedidos() {
                     matchFecha = fechaStr <= fechaFin;
                 }
             } else {
-                // Si no se puede parsear la fecha, mostrar el registro si no hay filtros
                 if (fechaInicio || fechaFin) {
                     matchFecha = false;
                 }
@@ -657,25 +655,37 @@ function renderPedidos() {
         return;
     }
     
-    tbody.innerHTML = list.map((r, i) => `
+    tbody.innerHTML = list.map((r, i) => {
+        // Calcular montos
+        const montoSinIgv = parseFloat(r.monto) || 0;
+        const montoConIgv = montoSinIgv * 1.18;
+        
+        // Determinar estado (solo 2 opciones)
+        const estado = r.estado || 'Pendiente';
+        const esObservado = estado === 'PC observado' || estado === 'Bloqueado' || estado === 'Observado';
+        const estadoBadge = esObservado 
+            ? '<span class="badge b-draft">🔴 PC observado</span>' 
+            : '<span class="badge b-ok">🟢 PC conforme</span>';
+        
+        return `
         <tr>
             <td>${i + 1}</td>
             <td class="date-cell">${formatearFecha(r.fecha || r.created_at)}</td>
-            <td>${r.medio || r.correo_origen || '-'}</td>
-            <td>${badgeStatus(r.estado)}</td>
+            <td>${estadoBadge}</td>
             <td><b>${r.numero || '-'}</b></td>
-            <td class="left">${r.cliente || '-'}</td>
+            <td>${r.pc_oc || r.n_pedido || '-'}</td>
             <td>${r.cotizacion_numero || '-'}</td>
-            <td><b>${money(r.monto)}</b></td>
-            <td>${r.entrega || r.lugar_entrega || '-'}</td>
-            <td>${r.req_compra || (r.estado === 'PC observado' ? 'Bloqueado' : 'Sí')}</td>
-            <td>${r.guia || '-'}</td>
-            <td>${r.factura || '-'}</td>
+            <td class="left"><b>${r.cliente || '-'}</b></td>
+            <td class="left">${r.entrega || r.lugar_entrega || '-'}</td>
+            <td>${r.ruc || '-'}</td>
+            <td class="left">${r.descripcion || r.observaciones || '-'}</td>
+            <td><b>${money(montoSinIgv)}</b></td>
+            <td><b>${money(montoConIgv)}</b></td>
             <td>
                 <button class="kebab" onclick="showPedidoMenu(event, ${r.id})">⋮</button>
             </td>
-        </tr>
-    `).join('');
+        </tr>`;
+    }).join('');
     
     // Actualizar contador
     const countEl = document.getElementById('pcCount');
@@ -683,7 +693,6 @@ function renderPedidos() {
         countEl.textContent = `Mostrando ${list.length} de ${pedidosData.length} pedidos`;
     }
 }
-
 
 // ============================================================
 // VISTAS DE COTIZACIONES - PRINCIPAL / COMPLETA
@@ -3128,7 +3137,52 @@ function renderCotizacionFooter(esEdicion = false) {
         `;
     }
     
-    footer.innerHTML = botonesHtml;
+    const flujoHtml = `
+        <div class="cotizacion-footer-flow">
+            <span class="flow-title">Flujo:</span>
+
+            <div class="flow-step flow-active">
+                <span class="flow-number">1</span>
+                <span>Borrador</span>
+            </div>
+
+            <span class="flow-line"></span>
+
+            <div class="flow-step">
+                <span class="flow-number">2</span>
+                <span>En revisión</span>
+            </div>
+
+            <span class="flow-line"></span>
+
+            <div class="flow-step">
+                <span class="flow-number">3</span>
+                <span>Validado</span>
+            </div>
+
+            <span class="flow-line"></span>
+
+            <div class="flow-step">
+                <span class="flow-number">4</span>
+                <span>Generada Nueva Cotización</span>
+            </div>
+
+            <span class="flow-line"></span>
+
+            <div class="flow-step">
+                <span class="flow-number">5</span>
+                <span>Aceptada</span>
+            </div>
+        </div>
+    `;
+
+footer.innerHTML = `
+    ${flujoHtml}
+
+    <div class="cotizacion-footer-buttons">
+        ${botonesHtml}
+    </div>
+`;
 }
 
 // ============================================================
