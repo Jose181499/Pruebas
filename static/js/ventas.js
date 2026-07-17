@@ -734,7 +734,7 @@ function renderPedidos() {
                 <td class="date-cell">${formatearFecha(r.fecha || r.created_at)}</td>
                 <td>${estadoBadge}</td>
                 <td><b>${r.numero || '-'}</b></td>
-                <td>${r.pc_oc || r.n_pedido || '-'}</td>
+                
                 <td>${r.cotizacion_numero || '-'}</td>
                 <td class="left"><b>${r.cliente || '-'}</b></td>
                 <td class="left">${r.entrega || r.lugar_entrega || '-'}</td>
@@ -821,7 +821,6 @@ function renderPedidos() {
             <td class="date-cell">${formatearFecha(r.fecha || r.created_at)}</td>
             <td>${estadoBadge}</td>
             <td><b>${r.numero || '-'}</b></td>
-            <td>${r.pc_oc || r.n_pedido || '-'}</td>
             <td>${r.cotizacion_numero || '-'}</td>
             <td class="left"><b>${r.cliente || '-'}</b></td>
             <td>${r.ruc || '-'}</td>
