@@ -726,7 +726,7 @@ function renderPedidos() {
             const montoConIgv = montoSinIgv * 1.18;
             
             const estado = r.estado || 'Pendiente';
-            const esObservado = estado === 'PC observado' || estado === 'Bloqueado' || estado === 'Observado';
+            const esObservado = estado === 'PC observado' || estado === 'Bloqueadof' || estado === 'Observado';
             const estadoBadge = esObservado 
                 ? '<span class="badge b-draft">🔴 PC observado</span>' 
                 : '<span class="badge b-ok">🟢 PC conforme</span>';
@@ -793,11 +793,17 @@ function renderPedidos() {
         const montoConIgv = montoSinIgv * 1.18;
         
         const estado = r.estado || 'Pendiente';
+        const esAnulado = estado === 'Anulado';
         const esObservado = estado === 'PC observado' || estado === 'Bloqueado' || estado === 'Observado';
         const estadoBadge = esObservado 
             ? '<span class="badge b-draft">🔴 PC observado</span>' 
             : '<span class="badge b-ok">🟢 PC conforme</span>';
-        
+        // El menú solo debe mostrar "Eliminar" si NO está anulado
+        const menuHtml = esAnulado 
+    ? `<button class="kebab" onclick="showPedidoMenu(event, ${r.id})" disabled style="opacity:0.5;cursor:not-allowed;">⋮</button>`
+    : `<button class="kebab" onclick="showPedidoMenu(event, ${r.id})">⋮</button>`;
+
+
         // Construir string de validaciones
         const validaciones = [];
         if (r.valida_precios !== undefined) validaciones.push(`Precio: ${r.valida_precios ? '✅' : '❌'}`);
@@ -3152,6 +3158,12 @@ function deletePedidoCompra(id) {
         return;
     }
     
+    // Verificar si ya está anulado
+    if (pedido.estado === 'Anulado') {
+        showToast('⚠️ Este PC ya está anulado', 'warning');
+        return;
+    }
+    
     const numero = pedido.numero || 'PC-XXXXXX';
     const cliente = pedido.cliente || 'Cliente';
     const estado = pedido.estado || 'Desconocido';
@@ -3187,7 +3199,7 @@ function deletePedidoCompra(id) {
                 
                 const pcData = responseGet.data;
                 
-                // Verificar que el PC no esté ya anulado
+                // Verificar que el PC no esté ya anulado (doble verificación)
                 if (pcData.estado === 'Anulado') {
                     showToast('⚠️ El PC ya está anulado', 'warning');
                     return;
@@ -8428,6 +8440,11 @@ function showPedidoMenu(event, id) {
     event.stopPropagation();
     document.querySelectorAll('.menu-pop').forEach(el => el.remove());
     
+    // Buscar el PC para ver su estado
+    const pedido = pedidosData.find(p => p.id === id);
+    const estado = pedido?.estado || '';
+    const esAnulado = estado === 'Anulado';
+    
     const pop = document.createElement('div');
     pop.className = 'menu-pop';
     const left = Math.max(10, event.clientX - 250);
@@ -8435,16 +8452,29 @@ function showPedidoMenu(event, id) {
     pop.style.left = left + 'px';
     pop.style.top = top + 'px';
     
-    pop.innerHTML = `
+    let menuHtml = `
         <button onclick="openPedidoCompraModalSAP('editar', ${id});this.closest('.menu-pop').remove()">👁 Ver / Editar</button>
         <button onclick="validatePedidoCompra(${id});this.closest('.menu-pop').remove()">✅ Validacion</button>
         <button onclick="createDespachoFromPedido(${id});this.closest('.menu-pop').remove()">🚚 Crear despacho</button>
         <button onclick="createGuiaFromPedido(${id});this.closest('.menu-pop').remove()">📦 Crear guía</button>
         <button onclick="createFacturaFromPedido(${id});this.closest('.menu-pop').remove()">🧾 Crear factura</button>
-        <button class="danger" onclick="deletePedidoCompra(${id});this.closest('.menu-pop').remove()">🗑 Eliminar</button>
     `;
+    
+    // Solo mostrar "Eliminar" si NO está anulado
+    if (!esAnulado) {
+        menuHtml += `
+            <button class="danger" onclick="deletePedidoCompra(${id});this.closest('.menu-pop').remove()">🗑 Eliminar</button>
+        `;
+    } else {
+        menuHtml += `
+            <button class="danger" style="opacity:0.5;cursor:not-allowed;" disabled>⛔ Ya anulado</button>
+        `;
+    }
+    
+    pop.innerHTML = menuHtml;
     document.body.appendChild(pop);
 }
+
 
 function showGuiaMenu(event, id) {
     event.stopPropagation();
