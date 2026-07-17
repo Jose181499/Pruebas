@@ -8699,7 +8699,6 @@ function updateValidationIcon(elementId, isValid) {
 
 
 
-
 function inicializarSwitchesValidacion() {
     console.log('🔄 Inicializando switches de validación...');
     
@@ -8711,6 +8710,9 @@ function inicializarSwitchesValidacion() {
     validations.forEach(id => {
         const checkbox = document.getElementById(id);
         if (checkbox) {
+            // 🔽 FORZAR A QUE ESTÉN DESMARCADOS (NO VÁLIDO)
+            checkbox.checked = false;
+            
             // Remover listeners anteriores para evitar duplicados
             checkbox.removeEventListener('change', updateValidationStatus);
             checkbox.addEventListener('change', updateValidationStatus);
@@ -8718,13 +8720,9 @@ function inicializarSwitchesValidacion() {
             // Actualizar el label inicial
             const label = document.getElementById(id + 'Label');
             if (label) {
-                if (checkbox.checked) {
-                    label.textContent = '✅ Válido';
-                    label.style.color = '#16A34A';
-                } else {
-                    label.textContent = '❌ No válido';
-                    label.style.color = '#DC2626';
-                }
+                // 🔽 SIEMPRE MOSTRAR "NO VÁLIDO"
+                label.textContent = '❌ No válido';
+                label.style.color = '#DC2626';
             }
         }
     });
@@ -8732,10 +8730,9 @@ function inicializarSwitchesValidacion() {
     // Actualizar estado inicial del semáforo
     setTimeout(() => {
         updateValidationStatus();
-        console.log('✅ Switches de validación inicializados');
+        console.log('✅ Switches de validación inicializados en "NO VÁLIDO"');
     }, 100);
 }
-
 
 // ============================================================
 // FUNCIONES PARA CAMPOS PERSONALIZADOS
