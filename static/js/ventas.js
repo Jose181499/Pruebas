@@ -3647,9 +3647,6 @@ function updateValidationStatus() {
         'vTransporte', 'vCantidad', 'vMoneda', 'vVigencia'
     ];
     
-    let allValid = true;
-    let anyInvalid = false;
-    
     validations.forEach(id => {
         const checkbox = document.getElementById(id);
         const label = document.getElementById(id + 'Label');
@@ -3661,16 +3658,85 @@ function updateValidationStatus() {
             } else {
                 label.textContent = '❌ No válido';
                 label.style.color = '#DC2626';
-                allValid = false;
-                anyInvalid = true;
             }
         }
     });
     
-
+    // 🔽 Asegurar que se llama a esta función
+    if (typeof updateValidationSemaphore === 'function') {
+        updateValidationSemaphore();
+    }
 }
 
-
+/**
+ * Actualiza el semáforo de validación en el modal de PC
+ */
+function updateValidationSemaphore() {
+    const semaphore = document.getElementById('validationSemaphore');
+    const icon = document.getElementById('validationIcon');
+    const title = document.getElementById('validationTitle');
+    const subtitle = document.getElementById('validationSubtitle');
+    const chips = document.getElementById('validationChips');
+    
+    if (!semaphore) return;
+    
+    // Obtener valores de validación
+    const validations = ['vPrecio', 'vProducto', 'vEntrega', 'vTransporte', 'vCantidad', 'vMoneda', 'vVigencia'];
+    let allValid = true;
+    let invalidCount = 0;
+    const invalidItems = [];
+    
+    validations.forEach(id => {
+        const checkbox = document.getElementById(id);
+        if (checkbox) {
+            if (!checkbox.checked) {
+                allValid = false;
+                invalidCount++;
+                const label = document.getElementById(id + 'Label');
+                const text = label ? label.textContent : id;
+                invalidItems.push(text.replace('❌ ', ''));
+            }
+        }
+    });
+    
+    // Actualizar el semáforo
+    if (allValid) {
+        semaphore.style.borderColor = '#16A34A';
+        semaphore.style.background = '#DCFCE7';
+        if (icon) icon.textContent = '✅';
+        if (title) {
+            title.textContent = '✅ Todas las validaciones OK';
+            title.style.color = '#065F46';
+        }
+        if (subtitle) {
+            subtitle.textContent = 'El PC está conforme para proceder';
+            subtitle.style.color = '#065F46';
+        }
+    } else if (invalidCount > 0) {
+        semaphore.style.borderColor = '#DC2626';
+        semaphore.style.background = '#FEE2E2';
+        if (icon) icon.textContent = '❌';
+        if (title) {
+            title.textContent = `⚠️ ${invalidCount} validación(es) pendiente(s)`;
+            title.style.color = '#991B1B';
+        }
+        if (subtitle) {
+            subtitle.textContent = `Faltan: ${invalidItems.join(', ')}`;
+            subtitle.style.color = '#991B1B';
+        }
+    }
+    
+    // Actualizar chips
+    if (chips) {
+        chips.innerHTML = validations.map(id => {
+            const checkbox = document.getElementById(id);
+            const label = document.getElementById(id + 'Label');
+            const isOk = checkbox && checkbox.checked;
+            const text = label ? label.textContent : id;
+            return `<span class="validation-chip ${isOk ? 'chip-ok' : 'chip-error'}">${text}</span>`;
+        }).join('');
+    }
+}
 
 // Función para obtener valores de validación (para usar al guardar)
 function getValidationValues() {

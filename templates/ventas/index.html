@@ -3068,134 +3068,171 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- PRIMERO: Cargar ventas.js -->
 <script src="{{ url_for('static', filename='js/ventas.js') }}"></script>
+
+<!-- SEGUNDO: Ejecutar el código de inicialización -->
 <script>
-    // ============================================================
-    // FUNCIONALIDAD DE TABS - VERSIÓN COMPLETA
-    // ============================================================
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('🔄 Inicializando módulo Ventas desde index.html');
+    (function() {
+        'use strict';
         
-        const tabs = document.querySelectorAll('.tab-btn');
-        const sections = {
-            cotizaciones: document.getElementById('cotizaciones'),
-            pedido_compra: document.getElementById('pedido_compra'),
-             validacion: document.getElementById('validacion'),
-            despachar: document.getElementById('despachar'),
-            guias: document.getElementById('guias'),
-            comprobantes: document.getElementById('comprobantes'),
-            notas_credito: document.getElementById('notas_credito'),
-            devoluciones: document.getElementById('devoluciones')
-        };
+        console.log('🚀 Iniciando módulo Ventas desde index.html');
         
-        // Función para cambiar de tab
-        function switchTab(tabId) {
-            console.log(`🔄 Cambiando a tab: ${tabId}`);
+        // Esperar a que el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔄 DOM Content Loaded - Inicializando');
             
-            // Actualizar URL sin recargar
-            const url = new URL(window.location);
-            url.searchParams.set('tab', tabId);
-            window.history.pushState({}, '', url);
+            const tabs = document.querySelectorAll('.tab-btn');
+            const sections = {
+                cotizaciones: document.getElementById('cotizaciones'),
+                pedido_compra: document.getElementById('pedido_compra'),
+                validacion: document.getElementById('validacion'),
+                despachar: document.getElementById('despachar'),
+                guias: document.getElementById('guias'),
+                comprobantes: document.getElementById('comprobantes'),
+                notas_credito: document.getElementById('notas_credito'),
+                devoluciones: document.getElementById('devoluciones')
+            };
             
-            // Actualizar tabs
+            // Función para cargar módulo con verificación
+            function cargarModulo(tabId) {
+                console.log(`📊 Cargando módulo: ${tabId}`);
+                
+                // Verificar si initVentas está disponible
+                if (typeof window.initVentas === 'function') {
+                    console.log('✅ initVentas disponible, cargando...');
+                    window.initVentas(tabId);
+                    return;
+                }
+                
+                console.warn('⚠️ initVentas no disponible, esperando...');
+                
+                // Esperar a que esté disponible (con reintentos)
+                let attempts = 0;
+                const maxAttempts = 20;
+                const checkInterval = setInterval(() => {
+                    attempts++;
+                    if (typeof window.initVentas === 'function') {
+                        clearInterval(checkInterval);
+                        console.log('✅ initVentas ahora disponible');
+                        window.initVentas(tabId);
+                    } else if (attempts >= maxAttempts) {
+                        clearInterval(checkInterval);
+                        console.error('❌ initVentas no disponible después de', maxAttempts, 'intentos');
+                        // Intentar carga directa de datos
+                        cargarDirecto(tabId);
+                    }
+                }, 200);
+            }
+            
+            // Fallback: carga directa de datos
+            function cargarDirecto(tabId) {
+                console.log(`🔄 Carga directa para: ${tabId}`);
+                
+                // Verificar funciones disponibles
+                if (typeof window.loadCotizaciones === 'function') {
+                    window.loadCotizaciones();
+                }
+                
+                if (tabId === 'pedido_compra' && typeof window.loadPedidos === 'function') {
+                    window.loadPedidos();
+                } else if (tabId === 'despachar' && typeof window.loadDespachos === 'function') {
+                    window.loadDespachos();
+                } else if (tabId === 'guias' && typeof window.loadGuias === 'function') {
+                    window.loadGuias();
+                } else if (tabId === 'comprobantes' && typeof window.loadComprobantes === 'function') {
+                    window.loadComprobantes();
+                } else if (tabId === 'notas_credito' && typeof window.loadNotas === 'function') {
+                    window.loadNotas();
+                } else if (tabId === 'devoluciones' && typeof window.loadDevoluciones === 'function') {
+                    window.loadDevoluciones();
+                }
+            }
+            
+            // Función para cambiar de tab
+            function switchTab(tabId) {
+                console.log(`🔄 Cambiando a tab: ${tabId}`);
+                
+                // Actualizar URL
+                const url = new URL(window.location);
+                url.searchParams.set('tab', tabId);
+                window.history.pushState({}, '', url);
+                
+                // Actualizar tabs
+                tabs.forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.tab === tabId) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                // Actualizar secciones
+                Object.keys(sections).forEach(key => {
+                    if (sections[key]) {
+                        sections[key].classList.remove('active');
+                    }
+                });
+                if (sections[tabId]) {
+                    sections[tabId].classList.add('active');
+                    console.log(`✅ Sección activada: ${tabId}`);
+                } else {
+                    console.warn(`⚠️ Sección no encontrada: ${tabId}`);
+                }
+                
+                // Cargar datos del módulo
+                cargarModulo(tabId);
+            }
+            
+            // Event listeners para tabs
+            tabs.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const tabId = this.dataset.tab;
+                    if (tabId) {
+                        switchTab(tabId);
+                    }
+                });
+            });
+            
+            // Navegación back/forward
+            window.addEventListener('popstate', function() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const tab = urlParams.get('tab') || 'cotizaciones';
+                switchTab(tab);
+            });
+            
+            // ============================================================
+            // INICIALIZAR CON EL TAB DE LA URL
+            // ============================================================
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialTab = urlParams.get('tab') || 'cotizaciones';
+            
+            console.log(`📋 Tab inicial: ${initialTab}`);
+            
+            // Activar el tab correcto
             tabs.forEach(btn => {
                 btn.classList.remove('active');
-                if (btn.dataset.tab === tabId) {
+                if (btn.dataset.tab === initialTab) {
                     btn.classList.add('active');
                 }
             });
             
-            // Actualizar secciones
+            // Mostrar la sección correcta
             Object.keys(sections).forEach(key => {
                 if (sections[key]) {
                     sections[key].classList.remove('active');
                 }
             });
-            if (sections[tabId]) {
-                sections[tabId].classList.add('active');
-                console.log(`✅ Sección activada: ${tabId}`);
-            } else {
-                console.warn(`⚠️ Sección no encontrada: ${tabId}`);
+            if (sections[initialTab]) {
+                sections[initialTab].classList.add('active');
             }
             
-            // Cargar datos del módulo correspondiente
-            if (typeof initVentas === 'function') {
-                initVentas(tabId);
-            } else if (typeof loadCotizaciones === 'function') {
-                // Fallback: cargar directamente
-                switch(tabId) {
-                    case 'cotizaciones': loadCotizaciones(); break;
-                    case 'pedido_compra': loadPedidos(); break;
-                    case 'despachar': loadDespachos(); break;
-                    case 'guias': loadGuias(); break;
-                    case 'comprobantes': loadComprobantes(); break;
-                    case 'notas_credito': loadNotas(); break;
-                    case 'devoluciones': loadDevoluciones(); break;
-                }
-            }
-        }
-        
-        // Event listeners para tabs
-        tabs.forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const tabId = this.dataset.tab;
-                if (tabId) {
-                    switchTab(tabId);
-                }
-            });
+            // Inicializar con un retraso para asegurar que todo esté listo
+            setTimeout(() => {
+                cargarModulo(initialTab);
+            }, 300);
         });
-        
-        // Manejar navegación con botones back/forward
-        window.addEventListener('popstate', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const tab = urlParams.get('tab') || 'cotizaciones';
-            switchTab(tab);
-        });
-        
-        // ============================================================
-        // INICIALIZAR CON EL TAB DE LA URL
-        // ============================================================
-        const urlParams = new URLSearchParams(window.location.search);
-        const initialTab = urlParams.get('tab') || 'cotizaciones';
-        
-        console.log(`📋 Tab inicial: ${initialTab}`);
-        
-        // Activar el tab correcto
-        tabs.forEach(btn => {
-            btn.classList.remove('active');
-            if (btn.dataset.tab === initialTab) {
-                btn.classList.add('active');
-            }
-        });
-        
-        // Mostrar la sección correcta
-        Object.keys(sections).forEach(key => {
-            if (sections[key]) {
-                sections[key].classList.remove('active');
-            }
-        });
-        if (sections[initialTab]) {
-            sections[initialTab].classList.add('active');
-        }
-        
-        // Inicializar ventas
-        if (typeof initVentas === 'function') {
-            initVentas(initialTab);
-        } else {
-            console.warn('⚠️ initVentas no está definida, usando carga directa');
-            // Cargar directamente
-            switch(initialTab) {
-                case 'cotizaciones': loadCotizaciones(); break;
-                case 'pedido_compra': loadPedidos(); break;
-                case 'despachar': loadDespachos(); break;
-                case 'guias': loadGuias(); break;
-                case 'comprobantes': loadComprobantes(); break;
-                case 'notas_credito': loadNotas(); break;
-                case 'devoluciones': loadDevoluciones(); break;
-            }
-        }
-    });
+    })();
 </script>
 {% endblock %}
 
