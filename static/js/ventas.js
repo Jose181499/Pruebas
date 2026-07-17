@@ -5633,7 +5633,7 @@ function openPedidoCompraModalSAP(mode = 'cot', id = null) {
             note.textContent = '';
         } else {
             note.className = 'danger-note';
-            note.textContent = '⚠️ Modo directo: no hay cotización asociada. Todos los datos deben ingresarse manualmente.';
+            note.textContent = '';
         }
     }
     
