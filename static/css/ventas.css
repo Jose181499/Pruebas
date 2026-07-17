@@ -2035,7 +2035,7 @@ body.kcf-theme {
 }
 
 #cotizacionModal .flow-title {
-    font-size: 9px;
+    font-size: 8px;
     font-weight: 900;
     color: #64748B;
     text-transform: uppercase;
@@ -2051,8 +2051,8 @@ body.kcf-theme {
     font-size: 9px;
     font-weight: 700;
     color: #94A3B8;
-    flex: 0 0 auto;          /* ← importante */
-    white-space: nowrap;      /* ← importante */
+    flex: 0 0 auto;          
+    white-space: nowrap;      
 }
 
 #cotizacionModal .flow-number {
@@ -2090,8 +2090,8 @@ body.kcf-theme {
 #cotizacionModal .cotizacion-footer-buttons {
     display: flex;
     align-items: center;
-    
     gap: 8px;
+    margin-left: auto;
     flex-shrink: 0;
 }
 

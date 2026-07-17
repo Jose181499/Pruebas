@@ -3162,31 +3162,45 @@ function deletePedidoCompra(id) {
     const cliente = pedido.cliente || 'Cliente';
     const estado = pedido.estado || 'Desconocido';
     
-    // Verificar si está anulado (requisito del backend)
-    if (estado !== 'Anulado') {
-        showConfirmModal(
-            '⛔ No se puede eliminar',
-            `El PC <b>${numero}</b> está en estado <b>"${estado}"</b>.<br><br>⚠️ Solo se pueden eliminar PCs que estén en estado <b>"Anulado"</b>.`,
-            '💡 Primero anula el PC y luego podrás eliminarlo permanentemente.',
-            function() {
-                // No hacer nada, solo cerrar el modal
-            },
-            'OK, entender'
-        );
-        return;
-    }
+    // Verificar si el estado es 'Anulado' para mostrar mensaje diferente
+    const esAnulado = estado === 'Anulado';
+    const mensajeAdicional = esAnulado 
+        ? 'El PC ya está anulado y será eliminado permanentemente.'
+        : `⚠️ El PC está en estado "${estado}". Primero será anulado y luego eliminado permanentemente.`;
     
     showConfirmModal(
         '🗑️ ¿Eliminar PC permanentemente?',
-        `Estás a punto de <b>ELIMINAR FÍSICAMENTE</b> el PC <b>${numero}</b> del cliente <b>${cliente}</b>.<br>Estado actual: <b>${estado}</b>`,
+        `Estás a punto de <b>ELIMINAR FÍSICAMENTE</b> el PC <b>${numero}</b> del cliente <b>${cliente}</b>.<br><br>${mensajeAdicional}`,
         '⚠️ ⚠️ ⚠️ ¡ATENCIÓN! Esta acción es IRREVERSIBLE. El registro será eliminado de la base de datos permanentemente.',
         async function() {
             try {
-                console.log(`🗑️ Eliminando físicamente PC ID: ${id}`);
-                showToast('⏳ Eliminando PC...', 'info');
+                console.log(`🗑️ Eliminando físicamente PC ID: ${id}, estado actual: ${estado}`);
+                showToast('⏳ Procesando eliminación...', 'info');
                 
-                // 🔽 USAR EL NUEVO ENDPOINT DELETE
-                const response = await apiFetch(`/ventas/api/pedido-compra/${id}`, {
+                let pcId = id;
+                
+                // Si NO está anulado, primero anularlo
+                if (estado !== 'Anulado') {
+                    console.log(`🔄 Anulando PC primero...`);
+                    
+                    const toggleResponse = await apiFetch(`/ventas/api/pedido-compra/${id}/toggle`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ estado: 'Anulado' })
+                    });
+                    
+                    if (!toggleResponse.success) {
+                        showToast('❌ Error al anular el PC: ' + (toggleResponse.error || 'No se pudo anular'), 'error');
+                        return;
+                    }
+                    
+                    showToast('✅ PC anulado, ahora eliminando...', 'info');
+                    
+                    // Esperar un momento para que la BD se actualice
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+                
+                // 🔽 ELIMINAR FÍSICAMENTE
+                const response = await apiFetch(`/ventas/api/pedido-compra/${pcId}`, {
                     method: 'DELETE'
                 });
                 
@@ -3205,7 +3219,13 @@ function deletePedidoCompra(id) {
                     renderPedidos();
                     
                 } else {
-                    showToast('❌ Error: ' + (response.error || 'No se pudo eliminar el PC'), 'error');
+                    // Si el DELETE falla, mostrar el error específico
+                    const errorMsg = response.error || 'No se pudo eliminar';
+                    if (errorMsg.includes('Anulado')) {
+                        showToast('❌ Solo se pueden eliminar PCs anulados. Intenta nuevamente.', 'error');
+                    } else {
+                        showToast('❌ Error: ' + errorMsg, 'error');
+                    }
                 }
             } catch (error) {
                 console.error('❌ Error eliminando PC:', error);
@@ -3223,7 +3243,6 @@ function deletePedidoCompra(id) {
         '🗑️ Sí, eliminar permanentemente'
     );
 }
-
 
 
 function generateGuiaPdf(id) {
@@ -8401,15 +8420,13 @@ function showCotizacionMenu(event, id) {
     createMenuWithClose(event, menuHtml);
 }
 
-
 function showPedidoMenu(event, id) {
     event.stopPropagation();
     document.querySelectorAll('.menu-pop').forEach(el => el.remove());
     
-    // Buscar el PC para ver su estado
+    // Buscar el PC para ver su estado (solo para mostrar información)
     const pedido = pedidosData.find(p => p.id === id);
-    const estado = pedido?.estado || '';
-    const esAnulado = estado === 'Anulado';
+    const estado = pedido?.estado || 'Desconocido';
     
     const pop = document.createElement('div');
     pop.className = 'menu-pop';
@@ -8418,30 +8435,22 @@ function showPedidoMenu(event, id) {
     pop.style.left = left + 'px';
     pop.style.top = top + 'px';
     
+    // 🔽 MENÚ COMPLETO CON ELIMINAR PARA TODOS
     let menuHtml = `
         <button onclick="openPedidoCompraModalSAP('editar', ${id});this.closest('.menu-pop').remove()">👁 Ver / Editar</button>
         <button onclick="validatePedidoCompra(${id});this.closest('.menu-pop').remove()">✅ Validacion</button>
         <button onclick="createDespachoFromPedido(${id});this.closest('.menu-pop').remove()">🚚 Crear despacho</button>
         <button onclick="createGuiaFromPedido(${id});this.closest('.menu-pop').remove()">📦 Crear guía</button>
         <button onclick="createFacturaFromPedido(${id});this.closest('.menu-pop').remove()">🧾 Crear factura</button>
+        <div style="height:1px;background:#E5E7EB;margin:4px 0;"></div>
+        <button class="danger" onclick="deletePedidoCompra(${id});this.closest('.menu-pop').remove()">
+            🗑 Eliminar permanentemente ${estado !== 'Anulado' ? '(Se anulará primero)' : ''}
+        </button>
     `;
-    
-    // Mostrar "Eliminar" solo si está anulado
-    if (esAnulado) {
-        menuHtml += `
-            <button class="danger" onclick="deletePedidoCompra(${id});this.closest('.menu-pop').remove()">🗑 Eliminar permanentemente</button>
-        `;
-    } else {
-        // Mostrar "Anular" para PCs que no están anulados
-        menuHtml += `
-            <button class="danger" onclick="anularPedidoCompra(${id});this.closest('.menu-pop').remove()">⛔ Anular PC</button>
-        `;
-    }
     
     pop.innerHTML = menuHtml;
     document.body.appendChild(pop);
 }
-
 function showGuiaMenu(event, id) {
     event.stopPropagation();
     document.querySelectorAll('.menu-pop').forEach(el => el.remove());
