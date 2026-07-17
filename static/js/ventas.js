@@ -3152,16 +3152,18 @@ function deletePedidoCompra(id) {
     const estado = pedido?.estado || 'Desconocido';
     
     showConfirmModal(
-        '🗑️ ¿Eliminar PC?',
-        `Estás a punto de eliminar el PC <b>${numero}</b> del cliente <b>${cliente}</b>.<br>Estado actual: <b>${estado}</b>`,
+        '🗑️ ¿Anular PC?',
+        `Estás a punto de anular el PC <b>${numero}</b> del cliente <b>${cliente}</b>.<br>Estado actual: <b>${estado}</b>`,
         '⚠️ Esta acción cambiará el estado a "Anulado" y no podrá recuperarse.',
         async function() {
             try {
-                console.log(`🗑️ Eliminando PC ID: ${id}`);
+                console.log(`🗑️ Anulando PC ID: ${id}`);
                 showToast('⏳ Anulando PC...', 'info');
                 
-                const response = await apiFetch(`/ventas/api/pedido-compra/${id}`, {
-                    method: 'DELETE'
+                // Usar PUT para cambiar estado a "Anulado"
+                const response = await apiFetch(`/ventas/api/pedido-compra/${id}/toggle`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ estado: 'Anulado' })
                 });
                 
                 if (response.success) {
@@ -3172,14 +3174,14 @@ function deletePedidoCompra(id) {
                         renderValidacion();
                     }
                 } else {
-                    showToast('❌ Error: ' + (response.error || 'No se pudo eliminar'), 'error');
+                    showToast('❌ Error: ' + (response.error || 'No se pudo anular'), 'error');
                 }
             } catch (error) {
-                console.error('❌ Error eliminando PC:', error);
-                showToast('❌ Error al eliminar el PC: ' + error.message, 'error');
+                console.error('❌ Error anulando PC:', error);
+                showToast('❌ Error al anular el PC: ' + error.message, 'error');
             }
         },
-        '🗑️ Sí, eliminar'
+        '🗑️ Sí, anular'
     );
 }
 
