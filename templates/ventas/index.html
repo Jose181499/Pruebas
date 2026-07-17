@@ -2676,7 +2676,7 @@
             </div>
             <div class="search-box" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                 <input id="pcSearch" placeholder="Buscar por PC / Cliente / RUC / Cotización / Producto..." style="flex:1; min-width:150px;" oninput="renderPedidos()">
-                <!-- 🔽 FILTRO DE FECHAS - NUEVO -->
+                <!-- Filtro de fechas -->
                 <div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
                     <input type="date" id="pcFechaInicio" style="height:38px; border-radius:12px; border:1px solid #E5E7EB; padding:0 10px; font-weight:800; background:#fff; color:#0F172A; outline:none; font-size:11px; width:140px;" title="Fecha inicio" onchange="renderPedidos()">
                     <span style="font-weight:900; color:#64748B; font-size:12px;">→</span>
@@ -2695,27 +2695,22 @@
             </div>
         </div>
         <div class="table-scroll">
-    <table class="master-table" id="pedidosTable">
-        <thead>
-            <tr>
-                <th>Item</th>
-                <th>Fecha / Hora</th>
-                <th>Estado</th>
-                <th>PC Pedido de Compra</th>
-                <th>N° Pedido de Compra</th>
-                <th>N° Cotización</th>
-                <th>Cliente</th>
-                <th>Lugar de Entrega</th>
-                <th>RUC</th>
-                <th>Descripción</th>
-                <th>Monto (Sin IGV)</th>
-                <th>Monto (Con IGV)</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody id="pcRows"></tbody>
-    </table>
-</div>
+            <table class="master-table" id="pedidosTable">
+                <thead id="pedidosTableHead">
+                    <!-- El encabezado se renderiza desde JavaScript -->
+                </thead>
+                <tbody id="pcRows"></tbody>
+            </table>
+        </div>
+        <!-- BOTONES DE VISTA PARA PC -->
+        <div style="display: flex; justify-content: flex-start; gap: 8px; padding: 8px 12px; border-top: 1px solid #E5E7EB; background: #FAFBFC; border-radius: 0 0 12px 12px;">
+            <button class="btn btn-view btn-primary-view active" onclick="setPedidoView('principal')" id="pcViewPrincipalBtn" style="background: #EF233C; color: #fff; border: none; padding: 6px 16px; border-radius: 8px; font-weight: 900; font-size: 11px; cursor: pointer; transition: all 0.2s;">
+                📋 Principal
+            </button>
+            <button class="btn btn-view btn-secondary-view" onclick="setPedidoView('completa')" id="pcViewCompletaBtn" style="background: #F1F5F9; color: #475569; border: 1px solid #E5E7EB; padding: 6px 16px; border-radius: 8px; font-weight: 900; font-size: 11px; cursor: pointer; transition: all 0.2s;">
+                📄 Completa
+            </button>
+        </div>
         <div class="footer-table">
             <span id="pcCount">Mostrando 0 de 0 pedidos</span>
             <span><b>Regla:</b> primero validar, luego comprar o despachar.</span>

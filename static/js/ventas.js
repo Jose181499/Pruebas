@@ -579,7 +579,7 @@ function renderPedidos() {
     const q = document.getElementById('pcSearch')?.value?.toLowerCase() || '';
     const st = document.getElementById('pcStatus')?.value || '';
     
-    // 🔽 FILTRO POR FECHAS
+    // Filtro por fechas
     const fechaInicio = document.getElementById('pcFechaInicio')?.value || '';
     const fechaFin = document.getElementById('pcFechaFin')?.value || '';
     
@@ -587,8 +587,54 @@ function renderPedidos() {
     
     if (!pedidosData || pedidosData.length === 0) {
         const tbody = document.getElementById('pcRows');
+        const thead = document.getElementById('pedidosTableHead');
+        if (thead) {
+            if (pedidoViewMode === 'principal') {
+                thead.innerHTML = `
+                    <tr>
+                        <th>Item</th>
+                        <th>Fecha / Hora</th>
+                        <th>Estado</th>
+                        <th>PC Pedido de Compra</th>
+                        <th>N° Pedido de Compra</th>
+                        <th>N° Cotización</th>
+                        <th>Cliente</th>
+                        <th>Lugar de Entrega</th>
+                        <th>RUC</th>
+                        <th>Descripción</th>
+                        <th>Monto (Sin IGV)</th>
+                        <th>Monto (Con IGV)</th>
+                        <th>Acciones</th>
+                    </tr>
+                `;
+            } else {
+                thead.innerHTML = `
+                    <tr>
+                        <th>Item</th>
+                        <th>Fecha / Hora</th>
+                        <th>Estado</th>
+                        <th>PC Pedido de Compra</th>
+                        <th>N° Pedido de Compra</th>
+                        <th>N° Cotización</th>
+                        <th>Cliente</th>
+                        <th>RUC</th>
+                        <th>Lugar de Entrega</th>
+                        <th>Descripción</th>
+                        <th>Monto (Sin IGV)</th>
+                        <th>Monto (Con IGV)</th>
+                        <th>Cond. Pago</th>
+                        <th>Vendedor</th>
+                        <th>Medio</th>
+                        <th>Req. Compra</th>
+                        <th>Observaciones</th>
+                        <th>Validaciones</th>
+                        <th>Acciones</th>
+                    </tr>
+                `;
+            }
+        }
         if (tbody) {
-            tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;color:#94A3B8;padding:40px;">
+            tbody.innerHTML = `<tr><td colspan="19" style="text-align:center;color:#94A3B8;padding:40px;">
                 📭 No hay PC del cliente registrados. 
                 <br><small>Crea un PC desde cotización o directo.</small>
             </td></tr>`;
@@ -601,7 +647,7 @@ function renderPedidos() {
         const matchText = !q || searchStr.includes(q);
         const matchStatus = !st || r.estado === st;
         
-        // 🔽 FILTRO POR FECHAS
+        // Filtro por fechas
         let matchFecha = true;
         if (fechaInicio || fechaFin) {
             let fechaPC = r.fecha || r.created_at || '';
@@ -642,13 +688,100 @@ function renderPedidos() {
     });
     
     const tbody = document.getElementById('pcRows');
-    if (!tbody) {
-        console.warn('⚠️ tbody #pcRows no encontrado');
+    const thead = document.getElementById('pedidosTableHead');
+    if (!tbody || !thead) return;
+    
+    // ============================================================
+    // VISTA PRINCIPAL - Columnas resumidas
+    // ============================================================
+    if (pedidoViewMode === 'principal') {
+        thead.innerHTML = `
+            <tr>
+                <th>Item</th>
+                <th>Fecha / Hora</th>
+                <th>Estado</th>
+                <th>PC Pedido de Compra</th>
+                <th>N° Pedido de Compra</th>
+                <th>N° Cotización</th>
+                <th>Cliente</th>
+                <th>Lugar de Entrega</th>
+                <th>RUC</th>
+                <th>Descripción</th>
+                <th>Monto (Sin IGV)</th>
+                <th>Monto (Con IGV)</th>
+                <th>Acciones</th>
+            </tr>
+        `;
+        
+        if (list.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;color:#94A3B8;padding:40px;">
+                📭 No hay PC del cliente que coincidan con los filtros.
+                ${pedidosData.length > 0 ? `(${pedidosData.length} registros cargados)` : ''}
+            </td></tr>`;
+            return;
+        }
+        
+        tbody.innerHTML = list.map((r, i) => {
+            const montoSinIgv = parseFloat(r.monto) || 0;
+            const montoConIgv = montoSinIgv * 1.18;
+            
+            const estado = r.estado || 'Pendiente';
+            const esObservado = estado === 'PC observado' || estado === 'Bloqueado' || estado === 'Observado';
+            const estadoBadge = esObservado 
+                ? '<span class="badge b-draft">🔴 PC observado</span>' 
+                : '<span class="badge b-ok">🟢 PC conforme</span>';
+            
+            return `
+            <tr>
+                <td>${i + 1}</td>
+                <td class="date-cell">${formatearFecha(r.fecha || r.created_at)}</td>
+                <td>${estadoBadge}</td>
+                <td><b>${r.numero || '-'}</b></td>
+                <td>${r.pc_oc || r.n_pedido || '-'}</td>
+                <td>${r.cotizacion_numero || '-'}</td>
+                <td class="left"><b>${r.cliente || '-'}</b></td>
+                <td class="left">${r.entrega || r.lugar_entrega || '-'}</td>
+                <td>${r.ruc || '-'}</td>
+                <td class="left">${r.descripcion || r.observaciones || '-'}</td>
+                <td><b>${money(montoSinIgv)}</b></td>
+                <td><b>${money(montoConIgv)}</b></td>
+                <td>
+                    <button class="kebab" onclick="showPedidoMenu(event, ${r.id})">⋮</button>
+                </td>
+            </tr>`;
+        }).join('');
         return;
     }
     
+    // ============================================================
+    // VISTA COMPLETA - Todas las columnas
+    // ============================================================
+    thead.innerHTML = `
+        <tr>
+            <th>Item</th>
+            <th>Fecha / Hora</th>
+            <th>Estado</th>
+            <th>PC Pedido de Compra</th>
+            <th>N° Pedido de Compra</th>
+            <th>N° Cotización</th>
+            <th>Cliente</th>
+            <th>RUC</th>
+            <th>Lugar de Entrega</th>
+            <th>Descripción</th>
+            <th>Monto (Sin IGV)</th>
+            <th>Monto (Con IGV)</th>
+            <th>Cond. Pago</th>
+            <th>Vendedor</th>
+            <th>Medio</th>
+            <th>Req. Compra</th>
+            <th>Observaciones</th>
+            <th>Validaciones</th>
+            <th>Acciones</th>
+        </tr>
+    `;
+    
     if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;color:#94A3B8;padding:40px;">
+        tbody.innerHTML = `<tr><td colspan="19" style="text-align:center;color:#94A3B8;padding:40px;">
             📭 No hay PC del cliente que coincidan con los filtros.
             ${pedidosData.length > 0 ? `(${pedidosData.length} registros cargados)` : ''}
         </td></tr>`;
@@ -656,16 +789,29 @@ function renderPedidos() {
     }
     
     tbody.innerHTML = list.map((r, i) => {
-        // Calcular montos
         const montoSinIgv = parseFloat(r.monto) || 0;
         const montoConIgv = montoSinIgv * 1.18;
         
-        // Determinar estado (solo 2 opciones)
         const estado = r.estado || 'Pendiente';
         const esObservado = estado === 'PC observado' || estado === 'Bloqueado' || estado === 'Observado';
         const estadoBadge = esObservado 
             ? '<span class="badge b-draft">🔴 PC observado</span>' 
             : '<span class="badge b-ok">🟢 PC conforme</span>';
+        
+        // Construir string de validaciones
+        const validaciones = [];
+        if (r.valida_precios !== undefined) validaciones.push(`Precio: ${r.valida_precios ? '✅' : '❌'}`);
+        if (r.valida_cantidades !== undefined) validaciones.push(`Cantidad: ${r.valida_cantidades ? '✅' : '❌'}`);
+        if (r.valida_stock !== undefined) validaciones.push(`Stock: ${r.valida_stock ? '✅' : '❌'}`);
+        if (r.valida_entrega !== undefined) validaciones.push(`Entrega: ${r.valida_entrega ? '✅' : '❌'}`);
+        if (r.valida_montos !== undefined) validaciones.push(`Montos: ${r.valida_montos ? '✅' : '❌'}`);
+        if (r.valida_transporte !== undefined) validaciones.push(`Transporte: ${r.valida_transporte ? '✅' : '❌'}`);
+        if (r.valida_vigencia !== undefined) validaciones.push(`Vigencia: ${r.valida_vigencia ? '✅' : '❌'}`);
+        if (r.valida_margen !== undefined) validaciones.push(`Margen: ${r.valida_margen ? '✅' : '❌'}`);
+        
+        const validacionesHtml = validaciones.length > 0 
+            ? validaciones.join('<br>') 
+            : 'Sin validaciones';
         
         return `
         <tr>
@@ -676,11 +822,17 @@ function renderPedidos() {
             <td>${r.pc_oc || r.n_pedido || '-'}</td>
             <td>${r.cotizacion_numero || '-'}</td>
             <td class="left"><b>${r.cliente || '-'}</b></td>
-            <td class="left">${r.entrega || r.lugar_entrega || '-'}</td>
             <td>${r.ruc || '-'}</td>
+            <td class="left">${r.entrega || r.lugar_entrega || '-'}</td>
             <td class="left">${r.descripcion || r.observaciones || '-'}</td>
             <td><b>${money(montoSinIgv)}</b></td>
             <td><b>${money(montoConIgv)}</b></td>
+            <td>${r.condicion_pago || '-'}</td>
+            <td>${r.vendedor || '-'}</td>
+            <td>${r.medio || '-'}</td>
+            <td>${r.req_compra || '-'}</td>
+            <td class="left" style="font-size:9px;">${r.observaciones || '-'}</td>
+            <td style="font-size:8px; text-align:left;">${validacionesHtml}</td>
             <td>
                 <button class="kebab" onclick="showPedidoMenu(event, ${r.id})">⋮</button>
             </td>
@@ -692,6 +844,42 @@ function renderPedidos() {
     if (countEl) {
         countEl.textContent = `Mostrando ${list.length} de ${pedidosData.length} pedidos`;
     }
+}
+
+// Inicializar la vista de PC
+let pedidoViewMode = 'principal';
+
+function setPedidoView(mode) {
+    pedidoViewMode = mode;
+    
+    const principalBtn = document.getElementById('pcViewPrincipalBtn');
+    const completaBtn = document.getElementById('pcViewCompletaBtn');
+    
+    if (principalBtn && completaBtn) {
+        if (mode === 'principal') {
+            principalBtn.className = 'btn btn-view btn-primary-view active';
+            principalBtn.style.background = '#EF233C';
+            principalBtn.style.color = '#fff';
+            principalBtn.style.border = 'none';
+            
+            completaBtn.className = 'btn btn-view btn-secondary-view';
+            completaBtn.style.background = '#F1F5F9';
+            completaBtn.style.color = '#475569';
+            completaBtn.style.border = '1px solid #E5E7EB';
+        } else {
+            principalBtn.className = 'btn btn-view btn-secondary-view';
+            principalBtn.style.background = '#F1F5F9';
+            principalBtn.style.color = '#475569';
+            principalBtn.style.border = '1px solid #E5E7EB';
+            
+            completaBtn.className = 'btn btn-view btn-secondary-view active';
+            completaBtn.style.background = '#EF233C';
+            completaBtn.style.color = '#fff';
+            completaBtn.style.border = 'none';
+        }
+    }
+    
+    renderPedidos();
 }
 
 // ============================================================
@@ -965,6 +1153,48 @@ if (cotizacionViewMode === 'principal') {
             </td>
         </tr>`;
     }).join('');
+}
+
+
+// ============================================================
+// VISTAS DE PEDIDOS - PRINCIPAL / COMPLETA
+// ============================================================
+
+let pedidoViewMode = 'principal'; // 'principal' o 'completa'
+
+function setPedidoView(mode) {
+    pedidoViewMode = mode;
+    
+    // Actualizar clases de los botones
+    const principalBtn = document.getElementById('pcViewPrincipalBtn');
+    const completaBtn = document.getElementById('pcViewCompletaBtn');
+    
+    if (principalBtn && completaBtn) {
+        if (mode === 'principal') {
+            principalBtn.className = 'btn btn-view btn-primary-view active';
+            principalBtn.style.background = '#EF233C';
+            principalBtn.style.color = '#fff';
+            principalBtn.style.border = 'none';
+            
+            completaBtn.className = 'btn btn-view btn-secondary-view';
+            completaBtn.style.background = '#F1F5F9';
+            completaBtn.style.color = '#475569';
+            completaBtn.style.border = '1px solid #E5E7EB';
+        } else {
+            principalBtn.className = 'btn btn-view btn-secondary-view';
+            principalBtn.style.background = '#F1F5F9';
+            principalBtn.style.color = '#475569';
+            principalBtn.style.border = '1px solid #E5E7EB';
+            
+            completaBtn.className = 'btn btn-view btn-secondary-view active';
+            completaBtn.style.background = '#EF233C';
+            completaBtn.style.color = '#fff';
+            completaBtn.style.border = 'none';
+        }
+    }
+    
+    // Renderizar la tabla con la vista seleccionada
+    renderPedidos();
 }
 
 function renderDespachos() {
@@ -8570,6 +8800,7 @@ window.filterProductSelectorPc = filterProductSelectorPc;
 window.addSelectedProductsPc = addSelectedProductsPc;
 window.toggleAllProductCheckboxesPc = toggleAllProductCheckboxesPc;
 window.agregarItemPCTable = agregarItemPCTable;
+window.setPedidoView = setPedidoView;
 
 // Funciones de modal de éxito
 window.showSuccessModal = showSuccessModal;
