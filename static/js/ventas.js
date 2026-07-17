@@ -846,41 +846,7 @@ function renderPedidos() {
     }
 }
 
-// Inicializar la vista de PC
-let pedidoViewMode = 'principal';
 
-function setPedidoView(mode) {
-    pedidoViewMode = mode;
-    
-    const principalBtn = document.getElementById('pcViewPrincipalBtn');
-    const completaBtn = document.getElementById('pcViewCompletaBtn');
-    
-    if (principalBtn && completaBtn) {
-        if (mode === 'principal') {
-            principalBtn.className = 'btn btn-view btn-primary-view active';
-            principalBtn.style.background = '#EF233C';
-            principalBtn.style.color = '#fff';
-            principalBtn.style.border = 'none';
-            
-            completaBtn.className = 'btn btn-view btn-secondary-view';
-            completaBtn.style.background = '#F1F5F9';
-            completaBtn.style.color = '#475569';
-            completaBtn.style.border = '1px solid #E5E7EB';
-        } else {
-            principalBtn.className = 'btn btn-view btn-secondary-view';
-            principalBtn.style.background = '#F1F5F9';
-            principalBtn.style.color = '#475569';
-            principalBtn.style.border = '1px solid #E5E7EB';
-            
-            completaBtn.className = 'btn btn-view btn-secondary-view active';
-            completaBtn.style.background = '#EF233C';
-            completaBtn.style.color = '#fff';
-            completaBtn.style.border = 'none';
-        }
-    }
-    
-    renderPedidos();
-}
 
 // ============================================================
 // VISTAS DE COTIZACIONES - PRINCIPAL / COMPLETA
@@ -3672,13 +3638,16 @@ function updateValidationStatus() {
  * Actualiza el semáforo de validación en el modal de PC
  */
 function updateValidationSemaphore() {
+    console.log('🔄 Actualizando semáforo de validación...');
+    
+    // Si no hay elementos del semáforo en el HTML, no hacer nada
     const semaphore = document.getElementById('validationSemaphore');
+    if (!semaphore) return;
+    
     const icon = document.getElementById('validationIcon');
     const title = document.getElementById('validationTitle');
     const subtitle = document.getElementById('validationSubtitle');
     const chips = document.getElementById('validationChips');
-    
-    if (!semaphore) return;
     
     // Obtener valores de validación
     const validations = ['vPrecio', 'vProducto', 'vEntrega', 'vTransporte', 'vCantidad', 'vMoneda', 'vVigencia'];
@@ -3693,8 +3662,8 @@ function updateValidationSemaphore() {
                 allValid = false;
                 invalidCount++;
                 const label = document.getElementById(id + 'Label');
-                const text = label ? label.textContent : id;
-                invalidItems.push(text.replace('❌ ', ''));
+                const text = label ? label.textContent.replace('❌ ', '') : id;
+                invalidItems.push(text);
             }
         }
     });
@@ -3724,17 +3693,6 @@ function updateValidationSemaphore() {
             subtitle.textContent = `Faltan: ${invalidItems.join(', ')}`;
             subtitle.style.color = '#991B1B';
         }
-    }
-    
-    // Actualizar chips
-    if (chips) {
-        chips.innerHTML = validations.map(id => {
-            const checkbox = document.getElementById(id);
-            const label = document.getElementById(id + 'Label');
-            const isOk = checkbox && checkbox.checked;
-            const text = label ? label.textContent : id;
-            return `<span class="validation-chip ${isOk ? 'chip-ok' : 'chip-error'}">${text}</span>`;
-        }).join('');
     }
 }
 
@@ -8783,31 +8741,84 @@ document.addEventListener('DOMContentLoaded', function() {
         console.warn('⚠️ initVentas no está disponible');
     }
 });
-
 // ============================================================
-// EXPORTAR FUNCIONES AL WINDOW
-// ============================================================
-// ============================================================
-// EXPORTAR FUNCIONES QUE FALTAN AL WINDOW
+// EXPORTAR TODAS LAS FUNCIONES AL WINDOW
 // ============================================================
 
-// Funciones del modal de cotización
-window.renderCotizacionFormContent = renderCotizacionFormContent;
-window.inicializarEventosCotizacion = inicializarEventosCotizacion;
-window.cargarCotizacionParaEditar = cargarCotizacionParaEditar;
-window.validateByHellen = validateByHellen;
+console.log('📦 Exportando funciones al window...');
 
-// Funciones de campos personalizados
-window.toggleCustomField = toggleCustomField;
-window.getFieldValue = getFieldValue;
-window.setFieldValue = setFieldValue;
+// ============================================================
+// 1. FUNCIONES PRINCIPALES (¡LAS MÁS IMPORTANTES!)
+// ============================================================
+window.initVentas = initVentas;
+window.loadCotizaciones = loadCotizaciones;
+window.loadPedidos = loadPedidos;
+window.loadDespachos = loadDespachos;
+window.loadGuias = loadGuias;
+window.loadComprobantes = loadComprobantes;
+window.loadNotas = loadNotas;
+window.loadDevoluciones = loadDevoluciones;
 
-// Funciones de validación PC
+// ============================================================
+// 2. FUNCIONES DE RENDER
+// ============================================================
+window.renderCotizaciones = renderCotizaciones;
+window.renderPedidos = renderPedidos;
+window.renderDespachos = renderDespachos;
+window.renderGuias = renderGuias;
+window.renderComprobantes = renderComprobantes;
+window.renderNotas = renderNotas;
+window.renderDevoluciones = renderDevoluciones;
+window.renderValidacion = renderValidacion;
+
+// ============================================================
+// 3. FUNCIONES DE VISTA
+// ============================================================
+window.setCotizacionView = setCotizacionView;
+window.setPedidoView = setPedidoView;
+
+// ============================================================
+// 4. FUNCIONES DE VALIDACIÓN
+// ============================================================
 window.updateValidationStatus = updateValidationStatus;
+window.updateValidationSemaphore = updateValidationSemaphore;  // <--- ESTA FALTABA
 window.updateValidationIcon = updateValidationIcon;
+window.inicializarSwitchesValidacion = inicializarSwitchesValidacion;
+window.validarPCSAP = validarPCSAP;
+window.solicitarCorreccion = solicitarCorreccion;
+window.generarOrdenCompra = generarOrdenCompra;
+window.enviarADespacho = enviarADespacho;
 
+// ============================================================
+// 5. FUNCIONES DE MODALES PRINCIPALES
+// ============================================================
+window.openCotizacionModal = openCotizacionModal;
+window.openPedidoCompraModalSAP = openPedidoCompraModalSAP;
+window.openPedidoCompraModal = openPedidoCompraModal;  // Versión antigua
+window.openDespachoModal = openDespachoModal;
+window.openGuiaModal = openGuiaModal;
+window.openComprobanteModal = openComprobanteModal;
+window.openNotaCreditoModal = openNotaCreditoModal;
+window.openDevolucionModal = openDevolucionModal;
 
-// Funciones de selector de productos
+// ============================================================
+// 6. FUNCIONES DE COTIZACIÓN
+// ============================================================
+window.generateCotizacionPdf = generateCotizacionPdf;
+window.previewCotizacionPdf = previewCotizacionPdf;
+window.createDocFromCotizacion = createDocFromCotizacion;
+window.duplicateCotizacion = duplicateCotizacion;
+window.deleteCotizacion = deleteCotizacion;
+window.marcarCotizacionAccepted = marcarCotizacionAccepted;
+window.marcarDespachado = marcarDespachado;
+window.validateByHellen = validateByHellen;
+window.sendCotizacionToReview = sendCotizacionToReview;
+window.generateCotizacionPdfAndSend = generateCotizacionPdfAndSend;
+window.saveCotizacionDraft = saveCotizacionDraft;
+
+// ============================================================
+// 7. FUNCIONES DE SELECTOR DE PRODUCTOS
+// ============================================================
 window.openProductSelector = openProductSelector;
 window.renderProductSelector = renderProductSelector;
 window.toggleProductSelection = toggleProductSelection;
@@ -8817,7 +8828,22 @@ window.filterProductSelector = filterProductSelector;
 window.addSelectedProducts = addSelectedProducts;
 window.toggleAllProductCheckboxes = toggleAllProductCheckboxes;
 
-// Funciones de PC SAP
+// ============================================================
+// 8. FUNCIONES DE SELECTOR DE PRODUCTOS PC
+// ============================================================
+window.openProductSelectorPC = openProductSelectorPC;
+window.renderProductSelectorPc = renderProductSelectorPc;
+window.toggleProductSelectionPc = toggleProductSelectionPc;
+window.selectAllProductsPc = selectAllProductsPc;
+window.deselectAllProductsPc = deselectAllProductsPc;
+window.filterProductSelectorPc = filterProductSelectorPc;
+window.addSelectedProductsPc = addSelectedProductsPc;
+window.toggleAllProductCheckboxesPc = toggleAllProductCheckboxesPc;
+window.agregarItemPCTable = agregarItemPCTable;
+
+// ============================================================
+// 9. FUNCIONES DE PC SAP
+// ============================================================
 window.openPedidoCompraModalSAP = openPedidoCompraModalSAP;
 window.clearPedidoModalSAP = clearPedidoModalSAP;
 window.addPedidoItemSAP = addPedidoItemSAP;
@@ -8829,56 +8855,60 @@ window.seleccionarCotizacionSAP = seleccionarCotizacionSAP;
 window.loadPedidoCotizacionSAP = loadPedidoCotizacionSAP;
 window.actualizarFaltanteSAP = actualizarFaltanteSAP;
 window.actualizarPrecioPCSAP = actualizarPrecioPCSAP;
+window.actualizarValorTotalPCSAP = actualizarValorTotalPCSAP;
+window.actualizarFaltanteDesdeInput = actualizarFaltanteDesdeInput;
 
-// Funciones de validación
-window.solicitarCorreccion = solicitarCorreccion;
-window.generarOrdenCompra = generarOrdenCompra;
-window.enviarADespacho = enviarADespacho;
-window.renderValidacion = renderValidacion;
-
-// Funciones de creación desde cotización
+// ============================================================
+// 10. FUNCIONES DE CREACIÓN DESDE COTIZACIÓN
+// ============================================================
 window.openGuiaModalWithData = openGuiaModalWithData;
 window.openComprobanteModalWithData = openComprobanteModalWithData;
 window.openDespachoModalWithData = openDespachoModalWithData;
 window.loadGuiaFromCotizacion = loadGuiaFromCotizacion;
 
-// Funciones de menús
+// ============================================================
+// 11. FUNCIONES DE MENÚS
+// ============================================================
+window.showCotizacionMenu = showCotizacionMenu;
+window.showPedidoMenu = showPedidoMenu;
+window.showGuiaMenu = showGuiaMenu;
+window.showComprobanteMenu = showComprobanteMenu;
+window.showNotaMenu = showNotaMenu;
+window.showDevolucionMenu = showDevolucionMenu;
 window.createMenuWithClose = createMenuWithClose;
 
-// Funciones de PC (versión antigua)
-window.openPedidoCompraModal = openPedidoCompraModal;
-window.loadPedidoCotizacion = loadPedidoCotizacion;
-window.addPedidoItem = addPedidoItem;
-
-// Funciones de productos
+// ============================================================
+// 12. FUNCIONES DE PRODUCTOS Y CLIENTES
+// ============================================================
 window.cargarProductosMaestros = cargarProductosMaestros;
 window.cargarClientesMaestros = cargarClientesMaestros;
 window.cargarDatalistProductos = cargarDatalistProductos;
 window.productTableHtml = productTableHtml;
+
+// ============================================================
+// 13. FUNCIONES DE UTILIDAD
+// ============================================================
+window.closeModal = closeModal;
+window.clearDateFilter = clearDateFilter;
+window.clearPcDateFilter = clearPcDateFilter;
+window.exportData = exportData;
+window.showSuccessModal = showSuccessModal;
+window.showConfirmModal = showConfirmModal;
+window.setFieldValue = setFieldValue;
+window.getFieldValue = getFieldValue;
+window.toggleCustomField = toggleCustomField;
 window.setEditableValue = setEditableValue;
 
-window.openProductSelectorPC = openProductSelectorPC;
-window.renderProductSelectorPc = renderProductSelectorPc;
-window.toggleProductSelectionPc = toggleProductSelectionPc;
-window.selectAllProductsPc = selectAllProductsPc;
-window.deselectAllProductsPc = deselectAllProductsPc;
-window.filterProductSelectorPc = filterProductSelectorPc;
-window.addSelectedProductsPc = addSelectedProductsPc;
-window.toggleAllProductCheckboxesPc = toggleAllProductCheckboxesPc;
-window.agregarItemPCTable = agregarItemPCTable;
-window.setPedidoView = setPedidoView;
-
-// Funciones de modal de éxito
-window.showSuccessModal = showSuccessModal;
-
-// Funciones de formato
-window.formatFecha = formatFecha;
-window.formatearFecha = formatearFecha; // si existe esta función
+// ============================================================
+// 14. FUNCIONES DE FORMATO
+// ============================================================
 window.money = money;
 window.badgeStatus = badgeStatus;
-window.options = options;
-window.sd = sd;
+window.formatFecha = formatFecha;
+window.formatearFecha = formatearFecha;
 window.esc = esc;
+window.sd = sd;
+window.options = options;
 window.today = today;
 window.now = now;
 

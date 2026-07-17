@@ -2016,87 +2016,11 @@ body.kcf-theme {
 
 #cotizacionModal .modal-foot {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 14px;
-    padding: 7px 12px;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 10px 16px;
     border-top: 1px solid var(--ventas-line);
     background: #F8FAFC;
-    flex-wrap: nowrap;
-}
-
-/* ============================================================
-   FLUJO Y BOTONES EN LA MISMA FILA
-   ============================================================ */
-
-#cotizacionModal .cotizacion-footer-flow {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    min-width: 0;
-    overflow-x: auto;
-    white-space: nowrap;
-    flex: 1 1 auto;
-}
-
-#cotizacionModal .flow-title {
-    font-size: 9px;
-    font-weight: 900;
-    color: #64748B;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    margin-right: 4px;
-    flex-shrink: 0;
-}
-
-#cotizacionModal .flow-step {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 9px;
-    font-weight: 700;
-    color: #94A3B8;
-    flex-shrink: 0;
-}
-
-#cotizacionModal .flow-number {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-    background: #E2E8F0;
-    color: #94A3B8;
-    font-size: 8px;
-    font-weight: 1000;
-    flex-shrink: 0;
-}
-
-#cotizacionModal .flow-step.flow-active {
-    color: #FF0000;
-    font-weight: 900;
-}
-
-#cotizacionModal .flow-step.flow-active .flow-number {
-    background: #FF0000;
-    color: #FFFFFF;
-    box-shadow: 0 0 12px rgba(255, 0, 0, 0.4);
-}
-
-#cotizacionModal .flow-line {
-    width: 12px;
-    height: 1px;
-    background: #CBD5E1;
-    border-radius: 99px;
-    flex-shrink: 0;
-}
-
-#cotizacionModal .cotizacion-footer-buttons {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 7px;
-    flex-shrink: 0;
 }
 
 #cotizacionModal .modal-foot .btn {
