@@ -2058,8 +2058,14 @@ body.kcf-theme {
     font-size: 9px;
     font-weight: 700;
     color: #94A3B8;
-    flex: 0 0 auto;          
-    white-space: nowrap;      
+    flex: 0 0 auto;
+    white-space: nowrap;
+    /* 🔧 NUEVO: resetea lo que style.css le mete de "INTEGRACIÓN ERP" */
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+    min-height: auto;
 }
 
 #cotizacionModal .flow-number {
@@ -2073,6 +2079,9 @@ body.kcf-theme {
     font-size: 8px;
     font-weight: 1000;
     flex-shrink: 0;
+    /* 🔧 NUEVO: por si el 28px de style.css lo pisa en algún navegador */
+    min-width: 18px;
+    min-height: 18px;
 }
 
 #cotizacionModal .flow-step.flow-active {

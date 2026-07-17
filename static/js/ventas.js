@@ -7301,18 +7301,17 @@ function renderCotizacionFormContent(isEdit) {
             </div>
             
         <!-- Motivo -->
-<div class="form-field">
-    <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Motivo</label>
-    <select id="fMotivo" 
+    <div class="form-field">
+         <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Motivo</label>
+         <select id="fMotivo" 
             style="width:100%;height:28px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
-        <option value="Proyecto nuevo">Proyecto nuevo</option>
-        <option value="Recompra">Recompra</option>
-        <option value="Licitación">Licitación</option>
-        <option value="Reposición / stock">Reposición / stock</option>
-        <option value="Fecha / Hora de precio">Fecha / Hora de precio</option>
-        <option value="Solicitud única del cliente" selected>Solicitud única del cliente</option>
-    </select>
-</div>
+         <option value="Proyecto nuevo">Proyecto nuevo</option>
+         <option value="Recompra">Recompra</option>
+            <option value="Licitación">Licitación</option>
+            <option value="Reposición / stock">Reposición / stock</option>
+         <option value="Solicitud única del cliente" selected>Solicitud única del cliente</option>
+         </select>
+        </div>
             
             <!-- Transporte -->
             <div class="form-field">
@@ -7356,6 +7355,76 @@ function renderCotizacionFormContent(isEdit) {
         
     `;
 }
+
+
+
+// Función para mostrar/ocultar campos de pago según condición
+function togglePagoCampos() {
+    const condicionSelect = document.getElementById('pcCondicion');
+    const container = document.getElementById('pagoCamposContainer');
+    
+    if (!condicionSelect || !container) return;
+    
+    // Mostrar solo cuando la condición es "Contado"
+    if (condicionSelect.value === 'Contado') {
+        container.style.display = 'block';
+        container.style.animation = 'fadeIn 0.3s ease';
+    } else {
+        container.style.display = 'none';
+        // Limpiar campos al ocultar
+        document.getElementById('pcNumOperacion').value = '';
+        document.getElementById('pcBanco').value = '';
+        document.getElementById('pcCuentaOCCI').value = '';
+    }
+}
+
+// Función para obtener los datos de pago (para usar al guardar)
+function getPagoData() {
+    const condicion = document.getElementById('pcCondicion')?.value || '';
+    if (condicion !== 'Contado') {
+        return {
+            num_operacion: '',
+            banco: '',
+            cuenta_occi: ''
+        };
+    }
+    
+    return {
+        num_operacion: document.getElementById('pcNumOperacion')?.value || '',
+        banco: document.getElementById('pcBanco')?.value || '',
+        cuenta_occi: document.getElementById('pcCuentaOCCI')?.value || ''
+    };
+}
+
+// Función para establecer datos de pago al editar (si vienen de la BD)
+function setPagoData(data) {
+    if (!data) return;
+    
+    const condicion = document.getElementById('pcCondicion')?.value || '';
+    if (condicion === 'Contado') {
+        document.getElementById('pcNumOperacion').value = data.num_operacion || '';
+        document.getElementById('pcBanco').value = data.banco || '';
+        document.getElementById('pcCuentaOCCI').value = data.cuenta_occi || '';
+    }
+}
+
+// Inicializar al cargar el modal
+function inicializarPagoCampos() {
+    // Esperar a que el DOM esté listo
+    setTimeout(() => {
+        togglePagoCampos();
+    }, 100);
+}
+
+// Agregar animación fadeIn
+const stylePago = document.createElement('style');
+stylePago.textContent = `
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+`;
+document.head.appendChild(stylePago);
 // ============================================================
 // FUNCIÓN PARA ABRIR MODAL DE COTIZACIÓN - EXPORTADA AL WINDOW
 // ============================================================
@@ -7901,9 +7970,6 @@ function setEditableValue(id, value) {
 }
 
 
-/**
- * Muestra/oculta el campo personalizado para Condición de Pago
- */
 function toggleCustomPcCondicion() {
     const select = document.getElementById('pcCondicion');
     const customInput = document.getElementById('pcCondicionCustom');
@@ -7917,6 +7983,9 @@ function toggleCustomPcCondicion() {
         customInput.style.display = 'none';
         customInput.value = '';
     }
+    
+    // 🔽 También llamar a togglePagoCampos
+    togglePagoCampos();
 }
 
 /**
