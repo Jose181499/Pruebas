@@ -595,7 +595,6 @@ function renderPedidos() {
                         <th>Item</th>
                         <th>Fecha / Hora</th>
                         <th>Estado</th>
-                        <th>PC Pedido de Compra</th>
                         <th>N° Pedido de Compra</th>
                         <th>N° Cotización</th>
                         <th>Cliente</th>
@@ -613,8 +612,7 @@ function renderPedidos() {
                         <th>Item</th>
                         <th>Fecha / Hora</th>
                         <th>Estado</th>
-                        <th>PC Pedido de Compra</th>
-                        <th>N° Pedido de Compra</th>
+                        <th> N° Pedido de Compra</th>
                         <th>N° Cotización</th>
                         <th>Cliente</th>
                         <th>RUC</th>
@@ -700,8 +698,7 @@ function renderPedidos() {
                 <th>Item</th>
                 <th>Fecha / Hora</th>
                 <th>Estado</th>
-                <th>PC Pedido de Compra</th>
-                <th>N° Pedido de Compra</th>
+                <th> N° Pedido de Compra</th>
                 <th>N° Cotización</th>
                 <th>Cliente</th>
                 <th>Lugar de Entrega</th>
@@ -761,8 +758,7 @@ function renderPedidos() {
             <th>Item</th>
             <th>Fecha / Hora</th>
             <th>Estado</th>
-            <th>PC Pedido de Compra</th>
-            <th>N° Pedido de Compra</th>
+            <th>N° Pedido de Compra  </th>
             <th>N° Cotización</th>
             <th>Cliente</th>
             <th>RUC</th>
