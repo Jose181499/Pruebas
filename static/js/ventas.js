@@ -7508,9 +7508,8 @@ function seleccionarCotizacionSAP(cotizacionId) {
     tr.innerHTML = `
         <td style="padding:2px 3px; text-align:center; font-weight:800; font-size:9px; background:#F8FAFC;">${i + 1}</td>
         <td style="padding:2px 3px;">
-            <input value="${esc(codigo)}" 
-                   style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800; color:#1D4ED8; cursor:not-allowed;"
-                   readonly>
+          <input value="${esc(codigo)}" 
+       style="width:100%; border:none; background:#F1F5F9; font-size:8px; padding:0 2px; outline:none; font-weight:800; color:#1D4ED8; cursor:not-allowed; max-width:70px;" readonly>
         </td>
         <td style="padding:2px 3px;">
             <input value="${esc(descripcion)}" 
