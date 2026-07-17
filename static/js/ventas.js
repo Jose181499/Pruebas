@@ -3147,41 +3147,104 @@ function createFacturaFromPedido(id) {
 function deletePedidoCompra(id) {
     // Buscar el PC para mostrar info
     const pedido = pedidosData.find(p => p.id === id);
-    const numero = pedido?.numero || 'PC-XXXXXX';
-    const cliente = pedido?.cliente || 'Cliente';
-    const estado = pedido?.estado || 'Desconocido';
+    if (!pedido) {
+        showToast('❌ PC no encontrado', 'error');
+        return;
+    }
+    
+    const numero = pedido.numero || 'PC-XXXXXX';
+    const cliente = pedido.cliente || 'Cliente';
+    const estado = pedido.estado || 'Desconocido';
+    
+    // Verificar si el PC se puede anular según el estado
+    const estadosNoAnulables = ['PC conforme', 'Listo para despacho', 'Despachado'];
+    const esNoAnulable = estadosNoAnulables.some(e => estado.includes(e));
+    
+    let mensajeAdicional = '';
+    let botonTexto = '🗑️ Sí, anular';
+    
+    if (esNoAnulable) {
+        mensajeAdicional = `<br><br>⚠️ <b>Este PC está en estado "${estado}"</b> y podría tener restricciones para ser anulado.`;
+        botonTexto = '⚠️ Anular de todas formas';
+    }
     
     showConfirmModal(
         '🗑️ ¿Anular PC?',
-        `Estás a punto de anular el PC <b>${numero}</b> del cliente <b>${cliente}</b>.<br>Estado actual: <b>${estado}</b>`,
+        `Estás a punto de anular el PC <b>${numero}</b> del cliente <b>${cliente}</b>.<br>Estado actual: <b>${estado}</b>${mensajeAdicional}`,
         '⚠️ Esta acción cambiará el estado a "Anulado" y no podrá recuperarse.',
         async function() {
             try {
-                console.log(`🗑️ Anulando PC ID: ${id}`);
+                console.log(`🗑️ Intentando anular PC ID: ${id}, estado actual: ${estado}`);
                 showToast('⏳ Anulando PC...', 'info');
                 
-                // Usar PUT para cambiar estado a "Anulado"
-                const response = await apiFetch(`/ventas/api/pedido-compra/${id}/toggle`, {
-                    method: 'PUT',
-                    body: JSON.stringify({ estado: 'Anulado' })
+                // Obtener los datos completos del PC
+                const responseGet = await apiFetch(`/ventas/api/pedido-compra/${id}`);
+                
+                if (!responseGet.success) {
+                    showToast('❌ Error al obtener datos del PC', 'error');
+                    return;
+                }
+                
+                const pcData = responseGet.data;
+                
+                // Verificar que el PC no esté ya anulado
+                if (pcData.estado === 'Anulado') {
+                    showToast('⚠️ El PC ya está anulado', 'warning');
+                    return;
+                }
+                
+                // Crear una copia de los datos con estado actualizado
+                const dataToUpdate = {
+                    ...pcData,
+                    estado: 'Anulado',
+                    id: id
+                };
+                
+                // Enviar actualización
+                const response = await apiFetch('/ventas/api/pedido-compra/guardar', {
+                    method: 'POST',
+                    body: JSON.stringify(dataToUpdate)
                 });
                 
                 if (response.success) {
                     showToast('✅ PC anulado correctamente', 'success');
+                    
+                    // Recargar datos
                     await loadPedidos();
-                    // También recargar validación si está visible
+                    
+                    // Actualizar validación si está visible
                     if (currentModule === 'validacion') {
                         renderValidacion();
                     }
+                    
+                    // Forzar actualización de la tabla
+                    renderPedidos();
+                    
                 } else {
-                    showToast('❌ Error: ' + (response.error || 'No se pudo anular'), 'error');
+                    // Mostrar mensaje de error específico
+                    const errorMsg = response.error || 'No se pudo anular el PC';
+                    console.error('❌ Error del servidor:', errorMsg);
+                    
+                    if (errorMsg.includes('estado') || errorMsg.includes('conforme')) {
+                        showToast('❌ No se puede anular un PC en estado "Conforme" o "Listo para despacho". Contacta a un administrador.', 'error');
+                    } else {
+                        showToast('❌ Error: ' + errorMsg, 'error');
+                    }
                 }
             } catch (error) {
                 console.error('❌ Error anulando PC:', error);
-                showToast('❌ Error al anular el PC: ' + error.message, 'error');
+                
+                // Mostrar mensaje más descriptivo
+                if (error.message.includes('405')) {
+                    showToast('❌ El servidor no permite eliminar PCs. Contacta a soporte.', 'error');
+                } else if (error.message.includes('404')) {
+                    showToast('❌ El PC no existe en el servidor', 'error');
+                } else {
+                    showToast('❌ Error al anular el PC: ' + error.message, 'error');
+                }
             }
         },
-        '🗑️ Sí, anular'
+        botonTexto
     );
 }
 
