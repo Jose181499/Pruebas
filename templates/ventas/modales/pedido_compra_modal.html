@@ -136,7 +136,7 @@
                             </div>
                             <div class="form-field">
                                 <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Monto PC Pedido Compra</label>
-                                <input id="pcMontoPC" type="number" step="0.01" placeholder="0.00" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; font-weight:800; font-size:10px;" oninput="actualizarResumenPC()">
+                                <input id="pcMontoPC" type="number" step="0.01" placeholder="0.00" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; font-weight:800; font-size:10px;">
                             </div>
                         </div>
 
@@ -338,7 +338,55 @@
                     </div>
                 </div>
                 
-            </div><!-- fin grid principal -->
+            <!-- MODAL SELECCIÓN MÚLTIPLE DE PRODUCTOS PARA PC -->
+<div class="modal-bg" id="productSelectorPcModal">
+    <div class="modal-box" style="width:min(900px,96vw); max-height:85vh;">
+        <div class="modal-head">
+            <div class="modal-title">📋 Seleccionar productos para PC</div>
+            <button class="btn btn-secondary" style="background:transparent;color:#fff;border-color:#fff;padding:6px 14px;min-height:34px;border-radius:14px" onclick="closeModal('productSelectorPcModal')">✕ Cerrar</button>
+        </div>
+        <div class="modal-body" style="padding:12px 16px;">
+            <!-- Buscador -->
+            <div style="display:flex; gap:10px; margin-bottom:12px; align-items:center; flex-wrap:wrap;">
+                <input id="productSelectorPcSearch" placeholder="Buscar producto por código o descripción..." style="flex:1; height:36px; border:1px solid #E5E7EB; border-radius:8px; padding:0 12px; font-size:13px; outline:none; min-width:200px;">
+                <button class="btn btn-blue" onclick="filterProductSelectorPc()" style="height:36px; padding:0 20px;">🔍 Buscar</button>
+                <button class="btn btn-green" onclick="selectAllProductsPc()" style="height:36px; padding:0 16px; background:#16A34A; color:#fff; border:none; border-radius:8px; font-weight:800; cursor:pointer;">✅ Seleccionar todos</button>
+                <button class="btn btn-secondary" onclick="deselectAllProductsPc()" style="height:36px; padding:0 16px; background:#F1F5F9; color:#0F172A; border:1px solid #E5E7EB; border-radius:8px; font-weight:800; cursor:pointer;">⬜ Deseleccionar todos</button>
+            </div>
+            
+            <!-- Tabla de productos -->
+            <div style="border:1px solid #E5E7EB; border-radius:10px; overflow:auto; max-height:50vh;">
+                <table class="master-table" style="font-size:11px;">
+                    <thead>
+                        <tr>
+                            <th style="width:40px;"><input type="checkbox" id="selectAllPcCheckbox" onchange="toggleAllProductCheckboxesPc(this.checked)"></th>
+                            <th style="width:70px;">Código</th>
+                            <th>Producto</th>
+                            <th style="width:80px;">Marca</th>
+                            <th style="width:70px;">Modelo</th>
+                            <th style="width:70px;">Unidad</th>
+                            <th style="width:70px;">Stock</th>
+                            <th style="width:90px;">Precio</th>
+                            <th style="width:80px;">Cantidad</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productSelectorPcRows"></tbody>
+                </table>
+            </div>
+            
+            <!-- Resumen selección -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding:10px 14px; background:#F8FAFC; border-radius:8px; border:1px solid #E5E7EB; flex-wrap:wrap; gap:8px;">
+                <span style="font-weight:850; color:#0F172A;">Seleccionados: <span id="selectedPcCount">0</span> productos</span>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="btn btn-secondary" onclick="closeModal('productSelectorPcModal')" style="height:34px; padding:0 20px; background:#F1F5F9; color:#0F172A; border:1px solid #E5E7EB; border-radius:8px; font-weight:800; cursor:pointer;">Cancelar</button>
+                    <button class="btn btn-green" onclick="addSelectedProductsPc()" style="height:34px; padding:0 28px; background:#16A34A; color:#fff; border:none; border-radius:10px; font-weight:900; font-size:13px; cursor:pointer;">
+                        ✅ Agregar seleccionados
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
             
         </div>
 
@@ -380,103 +428,120 @@
 
 <script>
 // ============================================================
-// FUNCIONES PARA EL RESUMEN LATERAL DEL PC
+// FUNCIONES PARA EL RESUMEN LATERAL DEL PC - CORREGIDO
 // ============================================================
+
+// Variable para evitar loops infinitos
+let _actualizandoResumen = false;
 
 /**
  * Actualiza el resumen lateral del PC basado en los productos de la tabla
- * Esta función debe ser llamada cuando se agregan, eliminan o modifican productos
  */
 function actualizarResumenPC() {
-    console.log('🔄 Actualizando resumen lateral del PC...');
+    // Evitar loops
+    if (_actualizandoResumen) return;
+    _actualizandoResumen = true;
     
-    // Obtener la moneda seleccionada
-    const monedaSelect = document.getElementById('pcMoneda');
-    const moneda = monedaSelect ? monedaSelect.value : 'Soles (S/)';
-    const simbolo = moneda.includes('Soles') ? 'S/' : '$';
-    
-    // Actualizar el símbolo de moneda en el resumen
-    const monedaResumen = document.getElementById('pcResumenMoneda');
-    if (monedaResumen) monedaResumen.textContent = simbolo;
-    
-    // Sumar los valores totales de cada producto en la tabla
-    let subtotal = 0;
-    const rows = document.querySelectorAll('#pcItemsBody tr');
-    let productCount = 0;
-    
-    rows.forEach(row => {
-        // Buscar el campo de cantidad PC (columna 7, index 6)
-        const inputs = row.querySelectorAll('input');
-        if (inputs.length >= 8) {
+    try {
+        console.log('🔄 Actualizando resumen lateral del PC...');
+        
+        // Obtener la moneda seleccionada
+        const monedaSelect = document.getElementById('pcMoneda');
+        const moneda = monedaSelect ? monedaSelect.value : 'Soles (S/)';
+        const simbolo = moneda && moneda.includes('Soles') ? 'S/' : '$';
+        
+        // Actualizar el símbolo de moneda en el resumen
+        const monedaResumen = document.getElementById('pcResumenMoneda');
+        if (monedaResumen) monedaResumen.textContent = simbolo;
+        
+        // Sumar los valores totales de cada producto en la tabla
+        let subtotal = 0;
+        const rows = document.querySelectorAll('#pcItemsBody tr');
+        let productCount = 0;
+        
+        rows.forEach(row => {
+            const inputs = row.querySelectorAll('input');
             // Indices: [0]=codigo, [1]=descripcion, [2]=marca, [3]=modelo
             // [4]=cant_cot, [5]=cant_pc, [6]=precio_cot, [7]=precio_pc, [8]=stock
-            const cantidad = parseFloat(inputs[5]?.value) || 0;
-            const precio = parseFloat(inputs[7]?.value) || 0;
-            const valorTotal = cantidad * precio;
-            
-            // Actualizar el span de valor total en la fila
-            const valueSpan = row.querySelector('td:nth-child(10) span');
-            if (valueSpan) {
-                valueSpan.textContent = valorTotal.toFixed(2);
-                valueSpan.style.color = valorTotal > 0 ? '#059669' : '#94A3B8';
+            if (inputs.length >= 8) {
+                const cantidad = parseFloat(inputs[5]?.value) || 0;
+                const precio = parseFloat(inputs[7]?.value) || 0;
+                const valorTotal = cantidad * precio;
+                
+                // Actualizar el span de valor total en la fila (columna 10, index 9)
+                const valueSpan = row.querySelector('td:nth-child(10) span');
+                if (valueSpan) {
+                    valueSpan.textContent = valorTotal.toFixed(2);
+                    valueSpan.style.color = valorTotal > 0 ? '#059669' : '#94A3B8';
+                }
+                
+                subtotal += valorTotal;
+                if (cantidad > 0 || precio > 0) productCount++;
             }
-            
-            subtotal += valorTotal;
-            productCount++;
+        });
+        
+        // Calcular IGV y total
+        const igv = subtotal * 0.18;
+        const total = subtotal + igv;
+        
+        // Función para formatear números
+        const formatNum = (num) => `${simbolo} ${num.toFixed(2)}`;
+        
+        // Actualizar los campos del resumen
+        const subtotalEl = document.getElementById('pcResumenSubtotal');
+        const valorVentaEl = document.getElementById('pcResumenValorVenta');
+        const igvEl = document.getElementById('pcResumenIgv');
+        const totalEl = document.getElementById('pcResumenTotal');
+        const productosEl = document.getElementById('pcResumenProductos');
+        
+        if (subtotalEl) subtotalEl.textContent = formatNum(subtotal);
+        if (valorVentaEl) valorVentaEl.textContent = formatNum(subtotal);
+        if (igvEl) igvEl.textContent = formatNum(igv);
+        if (totalEl) totalEl.textContent = formatNum(total);
+        if (productosEl) productosEl.textContent = productCount;
+        
+        // 🔽 ACTUALIZAR EL CAMPO DE MONTO PC - SIN DISPARAR EVENTO INPUT
+        const montoPCInput = document.getElementById('pcMontoPC');
+        if (montoPCInput) {
+            // Guardar el valor actual para comparar
+            const currentValue = montoPCInput.value;
+            const newValue = subtotal.toFixed(2);
+            if (currentValue !== newValue) {
+                montoPCInput.value = newValue;
+                // No disparar evento input para evitar loop
+            }
         }
-    });
-    
-    // Calcular IGV y total
-    const igv = subtotal * 0.18;
-    const total = subtotal + igv;
-    
-    // Función para formatear números
-    const formatNum = (num) => `${simbolo} ${num.toFixed(2)}`;
-    
-    // Actualizar los campos del resumen
-    const subtotalEl = document.getElementById('pcResumenSubtotal');
-    const valorVentaEl = document.getElementById('pcResumenValorVenta');
-    const igvEl = document.getElementById('pcResumenIgv');
-    const totalEl = document.getElementById('pcResumenTotal');
-    const productosEl = document.getElementById('pcResumenProductos');
-    
-    if (subtotalEl) subtotalEl.textContent = formatNum(subtotal);
-    if (valorVentaEl) valorVentaEl.textContent = formatNum(subtotal);
-    if (igvEl) igvEl.textContent = formatNum(igv);
-    if (totalEl) totalEl.textContent = formatNum(total);
-    if (productosEl) productosEl.textContent = productCount;
-    
-    // También actualizar el campo de Monto PC con el subtotal
-    const montoPCInput = document.getElementById('pcMontoPC');
-    if (montoPCInput) {
-        montoPCInput.value = subtotal.toFixed(2);
+        
+        console.log(`✅ Resumen actualizado: Subtotal=${subtotal.toFixed(2)}, IGV=${igv.toFixed(2)}, Total=${total.toFixed(2)}, Productos=${productCount}`);
+        
+    } catch (error) {
+        console.error('❌ Error actualizando resumen:', error);
+    } finally {
+        _actualizandoResumen = false;
     }
-    
-    console.log(`✅ Resumen actualizado: Subtotal=${subtotal.toFixed(2)}, IGV=${igv.toFixed(2)}, Total=${total.toFixed(2)}, Productos=${productCount}`);
 }
 
 /**
- * Función para actualizar el resumen cuando se modifica un campo de cantidad o precio
- * Se llama desde los eventos onchange de los inputs
+ * Función para actualizar el resumen desde un input (con debounce)
  */
+let _timeoutResumen = null;
+
 function actualizarResumenDesdeInput(input) {
-    // Primero actualizar el valor total de la fila
+    // Actualizar el valor total de la fila
     actualizarValorTotalPCSAP(input);
-    // Luego actualizar el resumen general
-    actualizarResumenPC();
+    
+    // Debounce para evitar múltiples llamadas
+    if (_timeoutResumen) clearTimeout(_timeoutResumen);
+    _timeoutResumen = setTimeout(() => {
+        actualizarResumenPC();
+        _timeoutResumen = null;
+    }, 150);
 }
 
 /**
- * Sobrescribe la función agregarItemPCTable para actualizar el resumen automáticamente
- * @param {string} codigo - Código del producto
- * @param {string} descripcion - Descripción del producto
- * @param {string} marca - Marca del producto
- * @param {string} modelo - Modelo del producto
- * @param {number} cantidad - Cantidad
- * @param {number} precio - Precio unitario
- * @param {number} stock - Stock disponible
+ * Sobrescribe la función agregarItemPCTable
  */
-function agregarItemPCTableConResumen(codigo, descripcion, marca, modelo, cantidad, precio, stock) {
+function agregarItemPCTable(codigo, descripcion, marca, modelo, cantidad, precio, stock) {
     const tbody = document.getElementById('pcItemsBody');
     if (!tbody) return;
     
@@ -545,35 +610,27 @@ function agregarItemPCTableConResumen(codigo, descripcion, marca, modelo, cantid
     
     tbody.appendChild(tr);
     reordenarItemsSAP();
-    actualizarResumenPC();
+    
+    // Actualizar resumen después de agregar
+    setTimeout(() => actualizarResumenPC(), 50);
 }
 
 /**
- * Sobrescribe la función eliminarItemSAP para actualizar el resumen automáticamente
+ * Eliminar item con actualización de resumen
  */
 function eliminarItemSAPConResumen(rowId) {
     const row = document.getElementById(rowId);
     if (row) {
         row.remove();
         reordenarItemsSAP();
-        actualizarResumenPC();
+        setTimeout(() => actualizarResumenPC(), 50);
     }
 }
 
 /**
- * Función para recalcular el resumen cuando se selecciona una cotización
- * Esta función debe ser llamada después de cargar los productos de la cotización
+ * Versión corregida de addPedidoItemSAP
  */
-function recalcularResumenPCSAP() {
-    // Esperar un momento para que los inputs se hayan renderizado
-    setTimeout(() => {
-        actualizarResumenPC();
-        console.log('✅ Resumen recalculado después de cargar cotización');
-    }, 100);
-}
-
-// Sobrescribir la función addPedidoItemSAP para usar la versión con resumen
-function addPedidoItemSAPConResumen() {
+function addPedidoItemSAP() {
     const tbody = document.getElementById('pcItemsBody');
     if (!tbody) return;
     
@@ -587,8 +644,7 @@ function addPedidoItemSAPConResumen() {
         <td style="padding:2px 3px; text-align:center; font-weight:800; font-size:9px; background:#F8FAFC;">${rowCount}</td>
         <td style="padding:2px 3px;">
             <input type="text" placeholder="Código" 
-                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:800;"
-                   onchange="buscarProductoPorCodigo(this)">
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:800;">
         </td>
         <td style="padding:2px 3px;">
             <input type="text" placeholder="Descripción" 
@@ -637,45 +693,14 @@ function addPedidoItemSAPConResumen() {
     `;
     
     tbody.appendChild(tr);
-    actualizarResumenPC();
+    // No actualizar resumen aquí, se actualizará cuando el usuario modifique valores
 }
 
-// Reemplazar la función addPedidoItemSAP con la nueva versión
-window.addPedidoItemSAP = addPedidoItemSAPConResumen;
+// Exportar funciones al window
+window.actualizarResumenPC = actualizarResumenPC;
+window.actualizarResumenDesdeInput = actualizarResumenDesdeInput;
+window.eliminarItemSAPConResumen = eliminarItemSAPConResumen;
+window.addPedidoItemSAP = addPedidoItemSAP;
 
-// También sobrescribir la función agregarItemPCTable
-window.agregarItemPCTable = agregarItemPCTableConResumen;
-
-// Sobrescribir la función de selección de cotización para actualizar el resumen
-const originalSeleccionarCotizacionSAP = window.seleccionarCotizacionSAP;
-window.seleccionarCotizacionSAP = function(cotizacionId) {
-    // Llamar a la función original
-    originalSeleccionarCotizacionSAP(cotizacionId);
-    
-    // Después de cargar los productos, actualizar el resumen
-    setTimeout(() => {
-        actualizarResumenPC();
-    }, 300);
-};
-
-// Inicializar el resumen cuando se abre el modal
-const originalOpenPedidoCompraModalSAP = window.openPedidoCompraModalSAP;
-window.openPedidoCompraModalSAP = function(mode, id) {
-    // Llamar a la función original
-    originalOpenPedidoCompraModalSAP(mode, id);
-    
-    // Después de abrir el modal, inicializar el resumen
-    setTimeout(() => {
-        actualizarResumenPC();
-    }, 200);
-};
-
-// Escuchar cambios en la moneda
-document.addEventListener('change', function(e) {
-    if (e.target.id === 'pcMoneda') {
-        actualizarResumenPC();
-    }
-});
-
-console.log('✅ Funciones de resumen lateral del PC cargadas correctamente');
+console.log('✅ Funciones de resumen lateral del PC cargadas correctamente (corregido)');
 </script>
