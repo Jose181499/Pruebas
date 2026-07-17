@@ -6227,7 +6227,10 @@ items.forEach((item, idx) => {
             }
         }
         
-        function actualizarFaltanteDesdeInput(input) {
+  // ============================================================
+// FUNCIÓN PARA ACTUALIZAR FALTANTE - DEBE ESTAR ANTES DE addPedidoItemSAP
+// ============================================================
+function actualizarFaltanteDesdeInput(input) {
     const row = input.closest('tr');
     if (!row) return;
     
@@ -6236,7 +6239,7 @@ items.forEach((item, idx) => {
     // [4]=cant_cot, [5]=cant_pc, [6]=precio_cot, [7]=precio_pc, [8]=stock
     const cantidadPC = Number(inputs[5]?.value || 0);
     const stock = Number(inputs[8]?.value || 0);
-    const faltanteCell = row.querySelector('td:nth-child(11)'); // 11va columna
+    const faltanteCell = row.querySelector('td:nth-child(11)');
     const faltante = Math.max(cantidadPC - stock, 0);
     
     if (faltanteCell) {
@@ -6245,6 +6248,75 @@ items.forEach((item, idx) => {
     }
 }
 
+// ============================================================
+// FUNCIÓN PARA AGREGAR ITEM SAP - AHORA actualizarFaltanteDesdeInput YA EXISTE
+// ============================================================
+function addPedidoItemSAP() {
+    const tbody = document.getElementById('pcItemsBody');
+    if (!tbody) return;
+    
+    const rowCount = tbody.children.length + 1;
+    
+    const tr = document.createElement('tr');
+    tr.id = `item-row-${rowCount}`;
+    tr.style.borderBottom = '1px solid #E2E8F0';
+    
+    tr.innerHTML = `
+        <td style="padding:2px 3px; text-align:center; font-weight:800; font-size:9px; background:#F8FAFC;">${rowCount}</td>
+        <td style="padding:2px 3px;">
+            <input type="text" placeholder="Código" 
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:800;"
+                   onchange="buscarProductoPorCodigo(this)">
+        </td>
+        <td style="padding:2px 3px;">
+            <input type="text" placeholder="Descripción" 
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none;">
+        </td>
+        <td style="padding:2px 3px;">
+            <input type="text" placeholder="Modelo" 
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700;">
+        </td>
+        <td style="padding:2px 3px;">
+            <input type="text" placeholder="Marca" 
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700;">
+        </td>
+        <td style="padding:2px 3px; width:55px;">
+            <input type="number" value="0" 
+                   style="width:45px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;">
+        </td>
+        <td style="padding:2px 3px; width:55px;">
+            <input type="number" value="1" 
+                   style="width:45px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900;"
+                   onchange="actualizarValorTotalPCSAP(this)">
+        </td>
+        <td style="padding:2px 3px; width:65px;">
+            <input type="number" step="0.01" value="0" 
+                   style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;"
+                   onchange="actualizarValorTotalPCSAP(this)">
+        </td>
+        <td style="padding:2px 3px; width:65px;">
+            <input type="number" step="0.01" value="0" 
+                   style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;"
+                   onchange="actualizarValorTotalPCSAP(this)">
+        </td>
+        <!-- Valor Total PC -->
+        <td style="padding:2px 3px; width:70px; text-align:center; font-weight:900; color:#0F172A; font-size:9px;">
+            <span id="valor-total-${rowCount}">0.00</span>
+        </td>
+        <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B; font-weight:800;">0</td>
+        <td style="padding:2px 3px; text-align:center; font-size:8px; font-weight:900; color:#EF4444;">0</td>
+        <td style="padding:2px 3px; text-align:center;">
+            <button onclick="eliminarItemSAP('${tr.id}')" 
+                    style="background:transparent; border:none; color:#EF4444; cursor:pointer; font-size:12px; font-weight:900; padding:0 4px; border-radius:3px; transition:all 0.2s; width:22px; height:22px;"
+                    onmouseover="this.style.background='#FEE2E2'; this.style.color='#DC2626';"
+                    onmouseout="this.style.background='transparent'; this.style.color='#EF4444';">
+                ✕
+            </button>
+        </td>
+    `;
+    
+    tbody.appendChild(tr);
+}
 
 
         // ============================================================
@@ -6355,72 +6427,7 @@ function loadPedidoCotizacionSAP() {
     }
 }
 
-function addPedidoItemSAP() {
-    const tbody = document.getElementById('pcItemsBody');
-    if (!tbody) return;
-    
-    const rowCount = tbody.children.length + 1;
-    
-    const tr = document.createElement('tr');
-    tr.id = `item-row-${rowCount}`;
-    tr.style.borderBottom = '1px solid #E2E8F0';
-    
-    tr.innerHTML = `
-        <td style="padding:2px 3px; text-align:center; font-weight:800; font-size:9px; background:#F8FAFC;">${rowCount}</td>
-        <td style="padding:2px 3px;">
-            <input type="text" placeholder="Código" 
-                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:800;"
-                   onchange="buscarProductoPorCodigo(this)">
-        </td>
-        <td style="padding:2px 3px;">
-            <input type="text" placeholder="Descripción" 
-                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none;">
-        </td>
-        <td style="padding:2px 3px;">
-            <input type="text" placeholder="Modelo" 
-                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700;">
-        </td>
-        <td style="padding:2px 3px;">
-            <input type="text" placeholder="Marca" 
-                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700;">
-        </td>
-        <td style="padding:2px 3px; width:55px;">
-            <input type="number" value="0" 
-                   style="width:45px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;">
-        </td>
-        <td style="padding:2px 3px; width:55px;">
-            <input type="number" value="1" 
-                   style="width:45px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900;"
-                   onchange="actualizarValorTotalPCSAP(this)">
-        </td>
-        <td style="padding:2px 3px; width:65px;">
-            <input type="number" step="0.01" value="0" 
-                   style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;"
-                   onchange="actualizarValorTotalPCSAP(this)">
-        </td>
-        <td style="padding:2px 3px; width:65px;">
-            <input type="number" step="0.01" value="0" 
-                   style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;"
-                   onchange="actualizarValorTotalPCSAP(this)">
-        </td>
-        <!-- 🔽 NUEVA CELDA: Valor Total PC -->
-        <td style="padding:2px 3px; width:70px; text-align:center; font-weight:900; color:#0F172A; font-size:9px;">
-            <span id="valor-total-${rowCount}">0.00</span>
-        </td>
-        <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B; font-weight:800;">0</td>
-        <td style="padding:2px 3px; text-align:center; font-size:8px; font-weight:900; color:#EF4444;">0</td>
-        <td style="padding:2px 3px; text-align:center;">
-            <button onclick="eliminarItemSAP('${tr.id}')" 
-                    style="background:transparent; border:none; color:#EF4444; cursor:pointer; font-size:12px; font-weight:900; padding:0 4px; border-radius:3px; transition:all 0.2s; width:22px; height:22px;"
-                    onmouseover="this.style.background='#FEE2E2'; this.style.color='#DC2626';"
-                    onmouseout="this.style.background='transparent'; this.style.color='#EF4444';">
-                ✕
-            </button>
-        </td>
-    `;
-    
-    tbody.appendChild(tr);
-}
+
 
 // Función para calcular y actualizar el Valor Total PC
 function actualizarValorTotalPCSAP(input) {
