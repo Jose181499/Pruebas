@@ -129,7 +129,7 @@
                             </div>
                             <div class="form-field">
                                 <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Moneda</label>
-                                <select id="pcMoneda" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 4px; font-size:10px; font-weight:800;" onchange="actualizarResumenPC()">
+                                <select id="pcMoneda" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 4px; font-size:10px; font-weight:800;"></select>
                                     <option value="Soles (S/)">Soles (S/)</option>
                                     <option value="Dólares ($)">Dólares ($)</option>
                                 </select>
@@ -428,14 +428,16 @@
 
 <script>
 // ============================================================
-// FUNCIONES PARA EL RESUMEN LATERAL DEL PC - CORREGIDO
+// FUNCIONES PARA EL RESUMEN LATERAL DEL PC - VERSIÓN COMPLETA
 // ============================================================
 
 // Variable para evitar loops infinitos
 let _actualizandoResumen = false;
+let _timeoutResumen = null;
 
 /**
  * Actualiza el resumen lateral del PC basado en los productos de la tabla
+ * Esta es la función PRINCIPAL que debe llamarse siempre
  */
 function actualizarResumenPC() {
     // Evitar loops
@@ -500,15 +502,12 @@ function actualizarResumenPC() {
         if (totalEl) totalEl.textContent = formatNum(total);
         if (productosEl) productosEl.textContent = productCount;
         
-        // 🔽 ACTUALIZAR EL CAMPO DE MONTO PC - SIN DISPARAR EVENTO INPUT
+        // ACTUALIZAR EL CAMPO DE MONTO PC
         const montoPCInput = document.getElementById('pcMontoPC');
         if (montoPCInput) {
-            // Guardar el valor actual para comparar
-            const currentValue = montoPCInput.value;
-            const newValue = subtotal.toFixed(2);
-            if (currentValue !== newValue) {
-                montoPCInput.value = newValue;
-                // No disparar evento input para evitar loop
+            const currentValue = parseFloat(montoPCInput.value) || 0;
+            if (Math.abs(currentValue - subtotal) > 0.01) {
+                montoPCInput.value = subtotal.toFixed(2);
             }
         }
         
@@ -524,8 +523,6 @@ function actualizarResumenPC() {
 /**
  * Función para actualizar el resumen desde un input (con debounce)
  */
-let _timeoutResumen = null;
-
 function actualizarResumenDesdeInput(input) {
     // Actualizar el valor total de la fila
     actualizarValorTotalPCSAP(input);
@@ -535,11 +532,26 @@ function actualizarResumenDesdeInput(input) {
     _timeoutResumen = setTimeout(() => {
         actualizarResumenPC();
         _timeoutResumen = null;
-    }, 150);
+    }, 100);
 }
 
 /**
- * Sobrescribe la función agregarItemPCTable
+ * ACTUALIZACIÓN MANUAL DEL RESUMEN - Para usar desde fuera
+ */
+function actualizarResumenManual() {
+    if (_timeoutResumen) clearTimeout(_timeoutResumen);
+    _timeoutResumen = setTimeout(() => {
+        actualizarResumenPC();
+        _timeoutResumen = null;
+    }, 50);
+}
+
+// ============================================================
+// FUNCIONES DE TABLA CON RESUMEN AUTOMÁTICO
+// ============================================================
+
+/**
+ * Agrega un item a la tabla del PC con actualización de resumen
  */
 function agregarItemPCTable(codigo, descripcion, marca, modelo, cantidad, precio, stock) {
     const tbody = document.getElementById('pcItemsBody');
@@ -611,8 +623,8 @@ function agregarItemPCTable(codigo, descripcion, marca, modelo, cantidad, precio
     tbody.appendChild(tr);
     reordenarItemsSAP();
     
-    // Actualizar resumen después de agregar
-    setTimeout(() => actualizarResumenPC(), 50);
+    // ACTUALIZAR RESUMEN INMEDIATAMENTE
+    actualizarResumenManual();
 }
 
 /**
@@ -623,12 +635,12 @@ function eliminarItemSAPConResumen(rowId) {
     if (row) {
         row.remove();
         reordenarItemsSAP();
-        setTimeout(() => actualizarResumenPC(), 50);
+        actualizarResumenManual();
     }
 }
 
 /**
- * Versión corregida de addPedidoItemSAP
+ * Versión corregida de addPedidoItemSAP (para agregar filas vacías)
  */
 function addPedidoItemSAP() {
     const tbody = document.getElementById('pcItemsBody');
@@ -693,14 +705,144 @@ function addPedidoItemSAP() {
     `;
     
     tbody.appendChild(tr);
-    // No actualizar resumen aquí, se actualizará cuando el usuario modifique valores
 }
 
-// Exportar funciones al window
-window.actualizarResumenPC = actualizarResumenPC;
-window.actualizarResumenDesdeInput = actualizarResumenDesdeInput;
-window.eliminarItemSAPConResumen = eliminarItemSAPConResumen;
-window.addPedidoItemSAP = addPedidoItemSAP;
+// ============================================================
+// SOBRESCRIBIR addSelectedProductsPc PARA ACTUALIZAR RESUMEN
+// ============================================================
 
-console.log('✅ Funciones de resumen lateral del PC cargadas correctamente (corregido)');
+// Guardar referencia a la función original
+const _originalAddSelectedProductsPc = window.addSelectedProductsPc;
+
+// Sobrescribir addSelectedProductsPc
+window.addSelectedProductsPc = function() {
+    if (selectedPcProductIds.size === 0) {
+        showToast('⚠️ Selecciona al menos un producto', 'warning');
+        return;
+    }
+    
+    let addedCount = 0;
+    let notFoundCount = 0;
+    
+    selectedPcProductIds.forEach(idKey => {
+        let product = PRODUCTOS_MAESTROS.find(p => p.id == idKey || p.codigo == idKey);
+        
+        if (!product) {
+            notFoundCount++;
+            return;
+        }
+        
+        const qtyInput = document.querySelector(`.product-select-pc-qty[data-id="${idKey}"]`);
+        const cantidad = parseInt(qtyInput?.value || 1);
+        
+        const codigo = product.codigo || '';
+        const descripcion = product.producto || product.descripcion || 'Sin descripción';
+        const marca = product.marca || '';
+        const modelo = product.modelo || '';
+        const precio = parseFloat(product.valorVenta) || 0;
+        const stock = parseInt(product.stock) || 0;
+        
+        // Usar la función que actualiza el resumen automáticamente
+        agregarItemPCTable(codigo, descripcion, marca, modelo, cantidad, precio, stock);
+        
+        addedCount++;
+    });
+    
+    // Cerrar modal
+    closeModal('productSelectorPcModal');
+    
+    // Mostrar mensaje
+    if (addedCount > 0) {
+        showToast(`✅ ${addedCount} productos agregados correctamente`, 'success');
+    }
+    if (notFoundCount > 0) {
+        showToast(`⚠️ ${notFoundCount} productos no encontrados`, 'warning');
+    }
+    
+    // ACTUALIZAR RESUMEN FINAL (por si acaso)
+    setTimeout(actualizarResumenPC, 200);
+};
+
+// ============================================================
+// SOBRESCRIBIR seleccionarCotizacionSAP PARA ACTUALIZAR RESUMEN
+// ============================================================
+
+// Guardar referencia a la función original
+const _originalSeleccionarCotizacionSAP = window.seleccionarCotizacionSAP;
+
+// Sobrescribir seleccionarCotizacionSAP
+window.seleccionarCotizacionSAP = function(cotizacionId) {
+    // Llamar a la función original
+    if (typeof _originalSeleccionarCotizacionSAP === 'function') {
+        _originalSeleccionarCotizacionSAP(cotizacionId);
+    }
+    
+    // Después de cargar los productos, actualizar el resumen
+    setTimeout(() => {
+        actualizarResumenPC();
+        console.log('✅ Resumen actualizado después de cargar cotización');
+    }, 300);
+};
+
+// ============================================================
+// SOBRESCRIBIR openPedidoCompraModalSAP PARA INICIALIZAR RESUMEN
+// ============================================================
+
+// Guardar referencia a la función original
+const _originalOpenPedidoCompraModalSAP = window.openPedidoCompraModalSAP;
+
+// Sobrescribir openPedidoCompraModalSAP
+window.openPedidoCompraModalSAP = function(mode, id) {
+    // Llamar a la función original
+    if (typeof _originalOpenPedidoCompraModalSAP === 'function') {
+        _originalOpenPedidoCompraModalSAP(mode, id);
+    }
+    
+    // Después de abrir el modal, inicializar el resumen
+    setTimeout(() => {
+        actualizarResumenPC();
+        console.log('✅ Resumen inicializado al abrir modal');
+    }, 300);
+};
+
+// ============================================================
+// EVENTO PARA CAMBIO DE MONEDA
+// ============================================================
+
+document.addEventListener('change', function(e) {
+    if (e.target.id === 'pcMoneda') {
+        actualizarResumenPC();
+    }
+});
+
+// ============================================================
+// FUNCIÓN DE ACTUALIZACIÓN DE VALOR TOTAL DE FILA
+// ============================================================
+
+function actualizarValorTotalPCSAP(input) {
+    const row = input.closest('tr');
+    if (!row) return;
+    
+    const inputs = row.querySelectorAll('input');
+    const cantidadPC = Number(inputs[5]?.value || 0);
+    const precioPC = Number(inputs[7]?.value || 0);
+    const valorTotal = cantidadPC * precioPC;
+    
+    const valueSpan = row.querySelector('td:nth-child(10) span');
+    if (valueSpan) {
+        valueSpan.textContent = valorTotal.toFixed(2);
+        valueSpan.style.color = valorTotal > 0 ? '#059669' : '#94A3B8';
+    }
+    
+    // Actualizar faltante
+    const stock = Number(inputs[8]?.value || 0);
+    const faltanteCell = row.querySelector('td:nth-child(12)');
+    if (faltanteCell) {
+        const faltante = Math.max(cantidadPC - stock, 0);
+        faltanteCell.textContent = faltante;
+        faltanteCell.style.color = faltante > 0 ? '#DC2626' : '#16A34A';
+    }
+}
+
+console.log('✅ Funciones de resumen lateral del PC cargadas correctamente (versión completa)');
 </script>
