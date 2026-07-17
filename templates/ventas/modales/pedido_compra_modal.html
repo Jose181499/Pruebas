@@ -1,8 +1,8 @@
-<!-- MODAL PEDIDO COMPRA - VERSIÓN CON RESUMEN LATERAL -->
+<!-- MODAL PEDIDO COMPRA - CON RESUMEN LATERAL FUNCIONAL -->
 <div class="modal-bg" id="pedidoCompraModal">
     <div class="modal-box" style="width:min(1400px,98vw); max-height:100vh; display:flex; flex-direction:column; border-radius:12px;">
         
-        <!-- HEADER COMPACTO -->
+        <!-- HEADER -->
         <div class="modal-head" style="padding:6px 14px; min-height:34px; flex-shrink:0; background:#0F172A;">
             <div>
                 <div class="modal-title" id="pedidoCompraModalTitle" style="font-size:15px; font-weight:700; color:#fff; margin:0;">Crear PC Cliente</div>
@@ -11,7 +11,7 @@
             <button class="btn btn-secondary" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2);padding:3px 12px;min-height:26px;border-radius:20px;font-size:11px;cursor:pointer;" onclick="closeModal('pedidoCompraModal')">✕ Cerrar</button>
         </div>
         
-        <!-- BODY REORGANIZADO CON DOS COLUMNAS -->
+        <!-- BODY - DOS COLUMNAS -->
         <div class="modal-body" id="pedidoCompraForm" style="padding:6px 12px; overflow-y:auto; flex:1; background:#F8FAFC;">
             
             <!-- Nota de modo -->
@@ -24,14 +24,13 @@
                 
                 <!-- COLUMNA IZQUIERDA - Formulario -->
                 <div>
-                    <!-- BLOQUE 1: Cotización relacionada - MODO SOLO LECTURA -->
+                    <!-- BLOQUE 1: Cotización relacionada -->
                     <div class="form-section" id="cotBlock" style="padding:4px 10px; margin-bottom:4px; border-radius:6px; border:1px solid #E2E8F0;">
                         <div class="section-title" style="font-size:10px; font-weight:900; color:#7F1D1D; margin-bottom:2px;">
                             1. Cotización relacionada
                             <span style="font-weight:400; font-size:8px; color:#64748B; margin-left:8px;">🔒 Solo lectura</span>
                         </div>
                         
-                        <!-- Línea 1: Buscador + N° cotización + Fecha -->
                         <div style="display:grid; grid-template-columns:2fr 1fr 1fr; gap:4px; margin-bottom:3px;">
                             <div class="form-field" style="position:relative;">
                                 <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Buscar cotización</label>
@@ -61,7 +60,6 @@
                             </div>
                         </div>
 
-                        <!-- Línea 2: RUC + Cliente + Condición pago + Vendedor + Monto Sin IGV + Monto Con IGV - TODOS READONLY -->
                         <div style="display:grid; grid-template-columns:1fr 1.8fr 1.2fr 1fr 1fr 1fr; gap:4px;">
                             <div class="form-field">
                                 <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">RUC</label>
@@ -96,18 +94,17 @@
                         </div>
                     </div>
 
-                    <!-- BLOQUE 2: Datos del Pedido de Compra (más compacto) -->
+                    <!-- BLOQUE 2: Datos del Pedido de Compra -->
                     <div class="form-section" style="padding:4px 10px; margin-bottom:4px; border-radius:6px; border:1px solid #E2E8F0;">
                         <div class="section-title" style="font-size:10px; font-weight:900; color:#7F1D1D; margin-bottom:2px;">2. Datos PC Pedido Compra</div>
                         
-                        <!-- Línea 1: Fecha recepción + N° PC + Contacto + Condición pago + Moneda + Monto -->
                         <div style="display:grid; grid-template-columns:1.2fr 1.2fr 1fr 1fr 0.8fr 1fr; gap:4px; margin-bottom:3px;">
                             <div class="form-field">
                                 <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Fecha recepción</label>
                                 <input id="pcFecha" type="datetime-local" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 4px; font-size:10px;">
                             </div>
                             <div class="form-field">
-                                <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">N° PC Pedido Compra </label>
+                                <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">N° PC Pedido Compra</label>
                                 <input id="pcNumero" placeholder="PC-20260713-0001" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; font-size:10px;">
                             </div>
                             <div class="form-field">
@@ -132,18 +129,17 @@
                             </div>
                             <div class="form-field">
                                 <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Moneda</label>
-                                <select id="pcMoneda" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 4px; font-size:10px; font-weight:800;">
-                                    <option>Soles (S/)</option>
-                                    <option>Dólares ($)</option>
+                                <select id="pcMoneda" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 4px; font-size:10px; font-weight:800;" onchange="actualizarResumenPC()">
+                                    <option value="Soles (S/)">Soles (S/)</option>
+                                    <option value="Dólares ($)">Dólares ($)</option>
                                 </select>
                             </div>
                             <div class="form-field">
-                                <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Monto PC Pedido Compra </label>
+                                <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Monto PC Pedido Compra</label>
                                 <input id="pcMontoPC" type="number" step="0.01" placeholder="0.00" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; font-weight:800; font-size:10px;" oninput="actualizarResumenPC()">
                             </div>
                         </div>
 
-                        <!-- Campos de pago (solo para Contado) -->
                         <div id="pagoCamposContainer" style="display:none; margin-top:6px; padding:8px 10px; background:#F0FFF4; border:1px solid #86EFAC; border-radius:6px;">
                             <div style="display:grid; grid-template-columns:1.2fr 1fr 1.2fr; gap:8px; align-items:end;">
                                 <div class="form-field">
@@ -172,7 +168,6 @@
                             </div>
                         </div>
 
-                        <!-- Línea 2: Lugar entrega + Observación -->
                         <div style="display:grid; grid-template-columns:2fr 1fr; gap:4px; margin-top:6px;">
                             <div class="form-field">
                                 <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">
@@ -355,7 +350,6 @@
         </div>
     </div>
 </div>
-
 <style>
 /* Estilos para los switches toggle */
 .switch input:checked + .slider {
@@ -385,37 +379,16 @@
 </style>
 
 <script>
-// Función para actualizar el estado de validación
-function updateValidationStatus() {
-    const validations = ['vPrecio', 'vProducto', 'vEntrega', 'vTransporte', 'vCantidad', 'vMoneda', 'vVigencia'];
-    validations.forEach(id => {
-        const checkbox = document.getElementById(id);
-        const label = document.getElementById(id + 'Label');
-        if (checkbox.checked) {
-            label.textContent = '✅ Válido';
-            label.style.color = '#16A34A';
-        } else {
-            label.textContent = '❌ No válido';
-            label.style.color = '#DC2626';
-        }
-    });
-    updateValidationSemaphore();
-}
+// ============================================================
+// FUNCIONES PARA EL RESUMEN LATERAL DEL PC
+// ============================================================
 
-function getValidationValues() {
-    const validations = ['vPrecio', 'vProducto', 'vEntrega', 'vTransporte', 'vCantidad', 'vMoneda', 'vVigencia'];
-    const result = {};
-    validations.forEach(id => {
-        result[id] = document.getElementById(id).checked ? 'Sí' : 'No';
-    });
-    return result;
-}
-
-// Función para actualizar el resumen de la PC
+/**
+ * Actualiza el resumen lateral del PC basado en los productos de la tabla
+ * Esta función debe ser llamada cuando se agregan, eliminan o modifican productos
+ */
 function actualizarResumenPC() {
-    // Obtener el monto ingresado en el campo "Monto PC Pedido Compra"
-    const montoInput = document.getElementById('pcMontoPC');
-    const monto = parseFloat(montoInput.value) || 0;
+    console.log('🔄 Actualizando resumen lateral del PC...');
     
     // Obtener la moneda seleccionada
     const monedaSelect = document.getElementById('pcMoneda');
@@ -423,102 +396,286 @@ function actualizarResumenPC() {
     const simbolo = moneda.includes('Soles') ? 'S/' : '$';
     
     // Actualizar el símbolo de moneda en el resumen
-    document.getElementById('pcResumenMoneda').textContent = simbolo;
+    const monedaResumen = document.getElementById('pcResumenMoneda');
+    if (monedaResumen) monedaResumen.textContent = simbolo;
     
-    // Calcular IGV (18%)
-    const igv = monto * 0.18;
-    const total = monto + igv;
+    // Sumar los valores totales de cada producto en la tabla
+    let subtotal = 0;
+    const rows = document.querySelectorAll('#pcItemsBody tr');
+    let productCount = 0;
     
-    // Formatear números con 2 decimales
+    rows.forEach(row => {
+        // Buscar el campo de cantidad PC (columna 7, index 6)
+        const inputs = row.querySelectorAll('input');
+        if (inputs.length >= 8) {
+            // Indices: [0]=codigo, [1]=descripcion, [2]=marca, [3]=modelo
+            // [4]=cant_cot, [5]=cant_pc, [6]=precio_cot, [7]=precio_pc, [8]=stock
+            const cantidad = parseFloat(inputs[5]?.value) || 0;
+            const precio = parseFloat(inputs[7]?.value) || 0;
+            const valorTotal = cantidad * precio;
+            
+            // Actualizar el span de valor total en la fila
+            const valueSpan = row.querySelector('td:nth-child(10) span');
+            if (valueSpan) {
+                valueSpan.textContent = valorTotal.toFixed(2);
+                valueSpan.style.color = valorTotal > 0 ? '#059669' : '#94A3B8';
+            }
+            
+            subtotal += valorTotal;
+            productCount++;
+        }
+    });
+    
+    // Calcular IGV y total
+    const igv = subtotal * 0.18;
+    const total = subtotal + igv;
+    
+    // Función para formatear números
     const formatNum = (num) => `${simbolo} ${num.toFixed(2)}`;
     
     // Actualizar los campos del resumen
-    document.getElementById('pcResumenSubtotal').textContent = formatNum(monto);
-    document.getElementById('pcResumenValorVenta').textContent = formatNum(monto);
-    document.getElementById('pcResumenIgv').textContent = formatNum(igv);
-    document.getElementById('pcResumenTotal').textContent = formatNum(total);
-}
-
-// Función para actualizar la cantidad de productos en el resumen
-function actualizarContadorProductos() {
-    const tbody = document.getElementById('pcItemsBody');
-    const rows = tbody ? tbody.querySelectorAll('tr') : [];
-    let count = 0;
-    rows.forEach(row => {
-        // Contar solo filas que no sean de encabezado y tengan datos
-        if (row.cells.length > 1 && row.style.display !== 'none') {
-            count++;
-        }
-    });
-    document.getElementById('pcResumenProductos').textContent = count;
-}
-
-// Función extendida para actualizar resumen y contador
-function actualizarResumenYContador() {
-    actualizarResumenPC();
-    actualizarContadorProductos();
-}
-
-// Función para recalcular cuando se agregan/eliminan productos
-function recalcularResumenPC() {
-    // Esta función debería sumar los valores totales de los productos en la tabla
-    // y actualizar el campo pcMontoPC automáticamente
-    const tbody = document.getElementById('pcItemsBody');
-    const rows = tbody ? tbody.querySelectorAll('tr') : [];
-    let totalPC = 0;
+    const subtotalEl = document.getElementById('pcResumenSubtotal');
+    const valorVentaEl = document.getElementById('pcResumenValorVenta');
+    const igvEl = document.getElementById('pcResumenIgv');
+    const totalEl = document.getElementById('pcResumenTotal');
+    const productosEl = document.getElementById('pcResumenProductos');
     
-    rows.forEach(row => {
-        const precioPCCell = row.querySelector('input[id^="precioPC_"]');
-        const cantPCCell = row.querySelector('input[id^="cantPC_"]');
-        if (precioPCCell && cantPCCell) {
-            const precio = parseFloat(precioPCCell.value) || 0;
-            const cant = parseFloat(cantPCCell.value) || 0;
-            totalPC += precio * cant;
-        }
-    });
+    if (subtotalEl) subtotalEl.textContent = formatNum(subtotal);
+    if (valorVentaEl) valorVentaEl.textContent = formatNum(subtotal);
+    if (igvEl) igvEl.textContent = formatNum(igv);
+    if (totalEl) totalEl.textContent = formatNum(total);
+    if (productosEl) productosEl.textContent = productCount;
     
-    // Actualizar el campo de monto PC
+    // También actualizar el campo de Monto PC con el subtotal
     const montoPCInput = document.getElementById('pcMontoPC');
     if (montoPCInput) {
-        montoPCInput.value = totalPC.toFixed(2);
-        // Disparar el evento input para actualizar el resumen
-        montoPCInput.dispatchEvent(new Event('input'));
+        montoPCInput.value = subtotal.toFixed(2);
+    }
+    
+    console.log(`✅ Resumen actualizado: Subtotal=${subtotal.toFixed(2)}, IGV=${igv.toFixed(2)}, Total=${total.toFixed(2)}, Productos=${productCount}`);
+}
+
+/**
+ * Función para actualizar el resumen cuando se modifica un campo de cantidad o precio
+ * Se llama desde los eventos onchange de los inputs
+ */
+function actualizarResumenDesdeInput(input) {
+    // Primero actualizar el valor total de la fila
+    actualizarValorTotalPCSAP(input);
+    // Luego actualizar el resumen general
+    actualizarResumenPC();
+}
+
+/**
+ * Sobrescribe la función agregarItemPCTable para actualizar el resumen automáticamente
+ * @param {string} codigo - Código del producto
+ * @param {string} descripcion - Descripción del producto
+ * @param {string} marca - Marca del producto
+ * @param {string} modelo - Modelo del producto
+ * @param {number} cantidad - Cantidad
+ * @param {number} precio - Precio unitario
+ * @param {number} stock - Stock disponible
+ */
+function agregarItemPCTableConResumen(codigo, descripcion, marca, modelo, cantidad, precio, stock) {
+    const tbody = document.getElementById('pcItemsBody');
+    if (!tbody) return;
+    
+    const rowCount = tbody.children.length + 1;
+    const faltante = Math.max(cantidad - stock, 0);
+    const valorTotal = cantidad * precio;
+    
+    const tr = document.createElement('tr');
+    tr.id = `item-row-${rowCount}`;
+    tr.style.borderBottom = '1px solid #E2E8F0';
+    
+    tr.innerHTML = `
+        <td style="padding:2px 3px; text-align:center; font-weight:800; font-size:9px; background:#F8FAFC;">${rowCount}</td>
+        <td style="padding:2px 3px;">
+            <input value="${esc(codigo)}" 
+                   style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800; color:#1D4ED8;"
+                   readonly>
+        </td>
+        <td style="padding:2px 3px;">
+            <input value="${esc(descripcion)}" 
+                   style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800;"
+                   readonly>
+        </td>
+        <td style="padding:2px 3px;">
+            <input value="${esc(modelo)}" 
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A;">
+        </td>
+        <td style="padding:2px 3px;">
+            <input value="${esc(marca)}" 
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A;">
+        </td>
+        <td style="padding:2px 3px; width:55px;">
+            <input type="number" value="${cantidad}" 
+                   style="width:45px; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center;"
+                   readonly>
+        </td>
+        <td style="padding:2px 3px; width:55px;">
+            <input type="number" value="${cantidad}" 
+                   style="width:45px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900;"
+                   onchange="actualizarResumenDesdeInput(this)">
+        </td>
+        <td style="padding:2px 3px; width:65px;">
+            <input type="number" step="0.01" value="${precio}" 
+                   style="width:55px; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center;"
+                   readonly>
+        </td>
+        <td style="padding:2px 3px; width:65px;">
+            <input type="number" step="0.01" value="${precio}" 
+                   style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;"
+                   onchange="actualizarResumenDesdeInput(this)">
+        </td>
+        <td style="padding:2px 3px; width:70px; text-align:center; font-weight:900; color:#059669; font-size:9px;">
+            <span id="valor-total-${rowCount}">${valorTotal.toFixed(2)}</span>
+        </td>
+        <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B; font-weight:800;">${stock}</td>
+        <td style="padding:2px 3px; text-align:center; font-size:8px; font-weight:900; color:${faltante > 0 ? '#DC2626' : '#16A34A'};">${faltante}</td>
+        <td style="padding:2px 3px; text-align:center;">
+            <button onclick="eliminarItemSAPConResumen('${tr.id}')" 
+                    style="background:transparent; border:none; color:#EF4444; cursor:pointer; font-size:12px; font-weight:900; padding:0 4px; border-radius:3px; transition:all 0.2s; width:22px; height:22px;"
+                    onmouseover="this.style.background='#FEE2E2'; this.style.color='#DC2626';"
+                    onmouseout="this.style.background='transparent'; this.style.color='#EF4444';">
+                ✕
+            </button>
+        </td>
+    `;
+    
+    tbody.appendChild(tr);
+    reordenarItemsSAP();
+    actualizarResumenPC();
+}
+
+/**
+ * Sobrescribe la función eliminarItemSAP para actualizar el resumen automáticamente
+ */
+function eliminarItemSAPConResumen(rowId) {
+    const row = document.getElementById(rowId);
+    if (row) {
+        row.remove();
+        reordenarItemsSAP();
+        actualizarResumenPC();
     }
 }
 
-// Inicializar al cargar
-document.addEventListener('DOMContentLoaded', function() {
-    updateValidationStatus();
+/**
+ * Función para recalcular el resumen cuando se selecciona una cotización
+ * Esta función debe ser llamada después de cargar los productos de la cotización
+ */
+function recalcularResumenPCSAP() {
+    // Esperar un momento para que los inputs se hayan renderizado
+    setTimeout(() => {
+        actualizarResumenPC();
+        console.log('✅ Resumen recalculado después de cargar cotización');
+    }, 100);
+}
+
+// Sobrescribir la función addPedidoItemSAP para usar la versión con resumen
+function addPedidoItemSAPConResumen() {
+    const tbody = document.getElementById('pcItemsBody');
+    if (!tbody) return;
+    
+    const rowCount = tbody.children.length + 1;
+    
+    const tr = document.createElement('tr');
+    tr.id = `item-row-${rowCount}`;
+    tr.style.borderBottom = '1px solid #E2E8F0';
+    
+    tr.innerHTML = `
+        <td style="padding:2px 3px; text-align:center; font-weight:800; font-size:9px; background:#F8FAFC;">${rowCount}</td>
+        <td style="padding:2px 3px;">
+            <input type="text" placeholder="Código" 
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:800;"
+                   onchange="buscarProductoPorCodigo(this)">
+        </td>
+        <td style="padding:2px 3px;">
+            <input type="text" placeholder="Descripción" 
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none;">
+        </td>
+        <td style="padding:2px 3px;">
+            <input type="text" placeholder="Modelo" 
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700;">
+        </td>
+        <td style="padding:2px 3px;">
+            <input type="text" placeholder="Marca" 
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:700;">
+        </td>
+        <td style="padding:2px 3px; width:55px;">
+            <input type="number" value="0" 
+                   style="width:45px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;">
+        </td>
+        <td style="padding:2px 3px; width:55px;">
+            <input type="number" value="1" 
+                   style="width:45px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900;"
+                   onchange="actualizarResumenDesdeInput(this)">
+        </td>
+        <td style="padding:2px 3px; width:65px;">
+            <input type="number" step="0.01" value="0" 
+                   style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;"
+                   onchange="actualizarResumenDesdeInput(this)">
+        </td>
+        <td style="padding:2px 3px; width:65px;">
+            <input type="number" step="0.01" value="0" 
+                   style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;"
+                   onchange="actualizarResumenDesdeInput(this)">
+        </td>
+        <td style="padding:2px 3px; width:70px; text-align:center; font-weight:900; color:#94A3B8; font-size:9px;">
+            <span id="valor-total-${rowCount}">0.00</span>
+        </td>
+        <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B; font-weight:800;">0</td>
+        <td style="padding:2px 3px; text-align:center; font-size:8px; font-weight:900; color:#EF4444;">0</td>
+        <td style="padding:2px 3px; text-align:center;">
+            <button onclick="eliminarItemSAPConResumen('${tr.id}')" 
+                    style="background:transparent; border:none; color:#EF4444; cursor:pointer; font-size:12px; font-weight:900; padding:0 4px; border-radius:3px; transition:all 0.2s; width:22px; height:22px;"
+                    onmouseover="this.style.background='#FEE2E2'; this.style.color='#DC2626';"
+                    onmouseout="this.style.background='transparent'; this.style.color='#EF4444';">
+                ✕
+            </button>
+        </td>
+    `;
+    
+    tbody.appendChild(tr);
     actualizarResumenPC();
-    actualizarContadorProductos();
+}
+
+// Reemplazar la función addPedidoItemSAP con la nueva versión
+window.addPedidoItemSAP = addPedidoItemSAPConResumen;
+
+// También sobrescribir la función agregarItemPCTable
+window.agregarItemPCTable = agregarItemPCTableConResumen;
+
+// Sobrescribir la función de selección de cotización para actualizar el resumen
+const originalSeleccionarCotizacionSAP = window.seleccionarCotizacionSAP;
+window.seleccionarCotizacionSAP = function(cotizacionId) {
+    // Llamar a la función original
+    originalSeleccionarCotizacionSAP(cotizacionId);
     
-    // Escuchar cambios en el monto PC
-    const montoInput = document.getElementById('pcMontoPC');
-    if (montoInput) {
-        montoInput.addEventListener('input', actualizarResumenPC);
-    }
+    // Después de cargar los productos, actualizar el resumen
+    setTimeout(() => {
+        actualizarResumenPC();
+    }, 300);
+};
+
+// Inicializar el resumen cuando se abre el modal
+const originalOpenPedidoCompraModalSAP = window.openPedidoCompraModalSAP;
+window.openPedidoCompraModalSAP = function(mode, id) {
+    // Llamar a la función original
+    originalOpenPedidoCompraModalSAP(mode, id);
     
-    // Escuchar cambios en la moneda
-    const monedaSelect = document.getElementById('pcMoneda');
-    if (monedaSelect) {
-        monedaSelect.addEventListener('change', actualizarResumenPC);
+    // Después de abrir el modal, inicializar el resumen
+    setTimeout(() => {
+        actualizarResumenPC();
+    }, 200);
+};
+
+// Escuchar cambios en la moneda
+document.addEventListener('change', function(e) {
+    if (e.target.id === 'pcMoneda') {
+        actualizarResumenPC();
     }
 });
 
-// Sobrescribir funciones existentes de agregar/eliminar productos para actualizar resumen
-const originalAddProduct = window.addProductToPC || function() {};
-window.addProductToPC = function(product) {
-    originalAddProduct(product);
-    actualizarResumenYContador();
-    recalcularResumenPC();
-};
-
-// Función para eliminar producto con actualización
-function eliminarProductoPC(row) {
-    if (row && row.parentNode) {
-        row.parentNode.removeChild(row);
-        actualizarResumenYContador();
-        recalcularResumenPC();
-    }
-}
+console.log('✅ Funciones de resumen lateral del PC cargadas correctamente');
 </script>
