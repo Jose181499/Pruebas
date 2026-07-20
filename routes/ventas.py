@@ -610,14 +610,10 @@ def obtener_pc_db():
         print(f"❌ Error en obtener_pc_db: {e}")
         return []
 
-
-# ventas.py - Modificar la función guardar_pc_db
 def guardar_pc_db(data):
     """Guarda o actualiza un pedido de compra"""
     try:
         print("📝 Guardando PC en BD...")
-        print(f"📦 Datos recibidos: {data.keys()}")
-        print(f"📋 ID recibido: {data.get('id')}")
         
         items_json = json.dumps(data.get('items', []))
         
@@ -652,7 +648,7 @@ def guardar_pc_db(data):
         pc_id = data.get('id')
         
         # ============================================================
-        # SI HAY ID, ACTUALIZAR (EDITAR)
+        # SI HAY ID, ACTUALIZAR
         # ============================================================
         if pc_id:
             print(f"🔄 Actualizando PC ID: {pc_id}")
@@ -698,16 +694,16 @@ def guardar_pc_db(data):
                 data.get('numero'),
                 data.get('fecha') or datetime.now().isoformat(),
                 estado,
-                data.get('cliente'),
-                data.get('ruc'),
+                data.get('cliente') or '',
+                data.get('ruc') or '',
                 float(data.get('monto', 0)),
-                data.get('cotizacion_id'),
-                data.get('cotizacion_numero'),
-                data.get('correo_origen') or data.get('medio'),
+                data.get('cotizacion_id'),  # Puede ser None
+                data.get('cotizacion_numero') or '',
+                data.get('correo_origen') or data.get('medio') or '',
                 data.get('fecha_recepcion') or data.get('fecha'),
                 data.get('fecha_despacho'),
                 data.get('archivo_oc'),
-                data.get('observaciones'),
+                data.get('observaciones') or '',
                 valida_precios,
                 valida_cantidades,
                 valida_stock,
@@ -717,12 +713,12 @@ def guardar_pc_db(data):
                 valida_margen,
                 valida_vigencia,
                 data.get('responsable') or data.get('vendedor') or 'Hellen',
-                data.get('lugar_entrega') or data.get('entrega'),
-                data.get('condicion_atencion') or data.get('condicion_pago'),
+                data.get('lugar_entrega') or data.get('entrega') or '',
+                data.get('condicion_atencion') or data.get('condicion_pago') or '',
                 items_json,
                 data.get('medio') or data.get('correo_origen') or 'Correo',
-                data.get('entrega') or data.get('lugar_entrega'),
-                data.get('condicion_pago') or data.get('condicion_atencion'),
+                data.get('entrega') or data.get('lugar_entrega') or '',
+                data.get('condicion_pago') or data.get('condicion_atencion') or '',
                 data.get('vendedor') or data.get('responsable') or 'Helen Blas Príncipe',
                 req_compra,
                 pc_id
@@ -733,9 +729,14 @@ def guardar_pc_db(data):
             return result[0] if result else None
         
         # ============================================================
-        # SI NO HAY ID, INSERTAR (NUEVO)
+        # SI NO HAY ID, INSERTAR
         # ============================================================
         print("➕ Insertando nuevo PC...")
+        
+        # Asegurar que todos los valores sean válidos (no None)
+        cotizacion_id = data.get('cotizacion_id')
+        if cotizacion_id is None or cotizacion_id == '':
+            cotizacion_id = None
         
         query = """
             INSERT INTO pedido_compra_pc (
@@ -762,16 +763,16 @@ def guardar_pc_db(data):
             data.get('numero'),
             data.get('fecha') or datetime.now().isoformat(),
             estado,
-            data.get('cliente'),
-            data.get('ruc'),
+            data.get('cliente') or '',
+            data.get('ruc') or '',
             float(data.get('monto', 0)),
-            data.get('cotizacion_id'),
-            data.get('cotizacion_numero'),
-            data.get('correo_origen') or data.get('medio'),
+            cotizacion_id,  # Puede ser None
+            data.get('cotizacion_numero') or '',
+            data.get('correo_origen') or data.get('medio') or '',
             data.get('fecha_recepcion') or data.get('fecha'),
             data.get('fecha_despacho'),
             data.get('archivo_oc'),
-            data.get('observaciones'),
+            data.get('observaciones') or '',
             valida_precios,
             valida_cantidades,
             valida_stock,
@@ -781,13 +782,13 @@ def guardar_pc_db(data):
             valida_margen,
             valida_vigencia,
             data.get('responsable') or data.get('vendedor') or 'Hellen',
-            data.get('lugar_entrega') or data.get('entrega'),
-            data.get('condicion_atencion') or data.get('condicion_pago'),
-            data.get('creado_por'),
+            data.get('lugar_entrega') or data.get('entrega') or '',
+            data.get('condicion_atencion') or data.get('condicion_pago') or '',
+            data.get('creado_por') or 8,
             items_json,
             data.get('medio') or data.get('correo_origen') or 'Correo',
-            data.get('entrega') or data.get('lugar_entrega'),
-            data.get('condicion_pago') or data.get('condicion_atencion'),
+            data.get('entrega') or data.get('lugar_entrega') or '',
+            data.get('condicion_pago') or data.get('condicion_atencion') or '',
             data.get('vendedor') or data.get('responsable') or 'Helen Blas Príncipe',
             req_compra
         )
@@ -1609,6 +1610,7 @@ def api_pedido_compra_listar():
         return jsonify({'success': True, 'data': data})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
 @ventas_bp.route('/ventas/api/pedido-compra/guardar', methods=['POST'])
 @login_required
 def api_pedido_compra_guardar():
@@ -1624,6 +1626,7 @@ def api_pedido_compra_guardar():
         print(f"  - Cliente: {data.get('cliente')}")
         print(f"  - Estado: {data.get('estado')}")
         print(f"  - Items: {len(data.get('items', []))}")
+        print(f"  - Cotización ID: {data.get('cotizacion_id')}")
         print("=" * 80)
         
         # ============================================================
@@ -1631,7 +1634,6 @@ def api_pedido_compra_guardar():
         # ============================================================
         pc_id = data.get('id')
         if pc_id:
-            # Verificar que el PC existe
             check_query = "SELECT id, numero FROM pedido_compra_pc WHERE id = %s"
             check_result = db_query(check_query, (pc_id,))
             
@@ -1645,6 +1647,22 @@ def api_pedido_compra_guardar():
         # ============================================================
         cotizacion_id = data.get('cotizacion_id')
         cotizacion_numero = data.get('cotizacion_numero')
+        
+        # Si no hay cotizacion_id pero hay cotizacion_numero, buscar el ID
+        if not cotizacion_id and cotizacion_numero and cotizacion_numero != 'SIN COTIZACIÓN':
+            try:
+                cot_query = """
+                    SELECT id FROM cotizaciones 
+                    WHERE numero_cotizacion = %s OR codigo_cotizacion = %s
+                    LIMIT 1
+                """
+                cot_result = db_query(cot_query, (cotizacion_numero, cotizacion_numero))
+                if cot_result:
+                    cotizacion_id = cot_result[0]['id']
+                    data['cotizacion_id'] = cotizacion_id
+                    print(f"✅ Cotización encontrada por número: {cotizacion_numero} -> ID: {cotizacion_id}")
+            except Exception as e:
+                print(f"⚠️ Error buscando cotización por número: {e}")
         
         if cotizacion_id and not pc_id:  # Solo si es nuevo
             cot_query = """
@@ -1720,6 +1738,8 @@ def api_pedido_compra_guardar():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
 # ============================================================
 # DESPACHOS - API
 # ============================================================
@@ -1733,6 +1753,7 @@ def api_despachos_listar():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
 @ventas_bp.route('/ventas/api/despachos/guardar', methods=['POST'])
 @login_required
 def api_despachos_guardar():
@@ -1741,15 +1762,73 @@ def api_despachos_guardar():
         usuario_id = session.get('usuario_id', 8)
         data['creado_por'] = usuario_id
         
+        print("=" * 80)
+        print("🚚 API DESPACHOS GUARDAR")
+        print(f"  - PC ID: {data.get('pc_id')}")
+        print(f"  - PC Número: {data.get('pc_numero')}")
+        print(f"  - Cliente: {data.get('cliente')}")
+        print(f"  - Estado: {data.get('estado')}")
+        print("=" * 80)
+        
+        # Generar número si no tiene
         if not data.get('numero'):
+            from datetime import datetime
             data['numero'] = f"DESP-{datetime.now().strftime('%Y%m%d')}-{str(datetime.now().timestamp()).split('.')[0][-4:]}"
         
-        result = guardar_despacho_db(data)
+        # Fecha si no tiene
+        if not data.get('fecha'):
+            from datetime import datetime
+            data['fecha'] = datetime.now().isoformat()
+        
+        # ============================================================
+        # GUARDAR DESPACHO
+        # ============================================================
+        query = """
+            INSERT INTO despachos (
+                numero, fecha, fecha_despacho, estado,
+                pc_id, pc_numero, cotizacion_id, cotizacion_numero,
+                cliente, ruc, comprobante, guia, origen, destino,
+                transportista, observaciones, responsable,
+                creado_por
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s
+            ) RETURNING id, numero
+        """
+        
+        params = (
+            data.get('numero'),
+            data.get('fecha'),
+            data.get('fecha_despacho'),
+            data.get('estado', 'Pendiente despacho'),
+            data.get('pc_id'),
+            data.get('pc_numero'),
+            data.get('cotizacion_id'),
+            data.get('cotizacion_numero'),
+            data.get('cliente') or '',
+            data.get('ruc') or '',
+            data.get('comprobante'),
+            data.get('guia'),
+            data.get('origen', 'ALM-SMP'),
+            data.get('destino') or '',
+            data.get('transportista'),
+            data.get('observaciones') or '',
+            data.get('responsable') or 'Hellen',
+            data.get('creado_por') or 8
+        )
+        
+        result = db_query(query, params)
+        print(f"✅ Resultado: {result}")
+        
         if result:
             return jsonify({'success': True, 'message': 'Despacho guardado', 'data': result})
+        
         return jsonify({'success': False, 'error': 'No se pudo guardar'}), 400
             
     except Exception as e:
+        print(f"❌ Error en api_despachos_guardar: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # ============================================================

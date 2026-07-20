@@ -4456,37 +4456,105 @@ function generarOrdenCompra(id) {
 }
 
 function enviarADespacho(id) {
+    // Buscar el PC para mostrar info
+    const pedido = pedidosData.find(p => p.id === id);
+    if (!pedido) {
+        showToast('❌ PC no encontrado', 'error');
+        return;
+    }
+    
+    const numero = pedido.numero || 'PC-XXXXXX';
+    const cliente = pedido.cliente || 'Cliente';
+    
     showConfirmModal(
         '🚚 Enviar a despacho',
-        `El PC está conforme y listo para ser despachado.`,
-        '⚠️ Esta acción moverá el PC a la cola de despacho.',
+        `Estás a punto de enviar el PC <b>${numero}</b> del cliente <b>${cliente}</b> a la cola de despacho.`,
+        '⚠️ Esta acción creará un registro de despacho y moverá el PC a "Listo para despacho".',
         async function() {
             try {
-                const response = await apiFetch(`/ventas/api/pedido-compra/${id}/toggle`, {
+                showToast('⏳ Procesando envío a despacho...', 'info');
+                
+                // ============================================================
+                // PASO 1: Cambiar el estado del PC a "Listo para despacho"
+                // ============================================================
+                const toggleResponse = await apiFetch(`/ventas/api/pedido-compra/${id}/toggle`, {
                     method: 'PUT',
                     body: JSON.stringify({ estado: 'Listo para despacho' })
                 });
-                if (response.success) {
-                    showToast('✅ PC enviado a despacho', 'success');
+                
+                if (!toggleResponse.success) {
+                    showToast('❌ Error al actualizar PC: ' + (toggleResponse.error || 'Desconocido'), 'error');
+                    return;
+                }
+                
+                console.log('✅ PC actualizado a "Listo para despacho"');
+                
+                // ============================================================
+                // PASO 2: Crear el despacho automáticamente
+                // ============================================================
+                const despachoData = {
+                    pc_id: id,
+                    pc_numero: pedido.numero,
+                    cliente: pedido.cliente,
+                    ruc: pedido.ruc,
+                    cotizacion_id: pedido.cotizacion_id,
+                    cotizacion_numero: pedido.cotizacion_numero,
+                    fecha_despacho: new Date().toISOString().split('T')[0],
+                    origen: 'ALM-SMP',
+                    destino: pedido.lugar_entrega || pedido.entrega || '',
+                    estado: 'Pendiente despacho',
+                    observaciones: `Despacho automático desde PC ${pedido.numero}`,
+                    responsable: 'Hellen',
+                    numero: `DESP-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}-${String(Date.now()).slice(-4)}`
+                };
+                
+                console.log('📦 Creando despacho con datos:', despachoData);
+                
+                const despachoResponse = await fetch('/ventas/api/despachos/guardar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(despachoData)
+                });
+                
+                const despachoResult = await despachoResponse.json();
+                console.log('📦 Respuesta creación despacho:', despachoResult);
+                
+                if (despachoResult.success) {
+                    showToast('✅ PC enviado a despacho y despacho creado', 'success');
+                    
+                    // Recargar datos
                     await loadPedidos();
+                    await loadDespachos();
                     renderValidacion();
+                    
                     // Cambiar a la pestaña de despacho después de un momento
                     setTimeout(() => {
                         const tabBtn = document.querySelector('.tab-btn[data-tab="despachar"]');
-                        if (tabBtn) tabBtn.click();
+                        if (tabBtn) {
+                            tabBtn.click();
+                            // Esperar a que se cargue el tab y luego renderizar
+                            setTimeout(() => {
+                                if (typeof renderDespachos === 'function') {
+                                    renderDespachos();
+                                }
+                            }, 300);
+                        }
                     }, 1000);
+                    
                 } else {
-                    showToast('❌ Error: ' + (response.error || 'No se pudo procesar'), 'error');
+                    showToast('❌ Error al crear despacho: ' + (despachoResult.error || 'Desconocido'), 'error');
                 }
+                
             } catch (error) {
-                console.error('Error:', error);
-                showToast('❌ Error al enviar a despacho', 'error');
+                console.error('❌ Error en enviarADespacho:', error);
+                showToast('❌ Error al enviar a despacho: ' + error.message, 'error');
             }
         },
-        '🚚 Enviar a despacho'
+        '🚚 Sí, enviar a despacho'
     );
 }
-
 // ============================================================
 // LIMPIAR FILTROS DE FECHA - PC
 // ============================================================
