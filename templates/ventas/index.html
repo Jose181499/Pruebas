@@ -2675,6 +2675,86 @@
     transform: scale(1.02) !important;
 }
 
+/* ============================================================ */
+/* ELIMINAR COMPLETAMENTE EL ESPACIO BLANCO DEL FOOTER */
+/* ============================================================ */
+
+/* Reset total del footer */
+#pedidoCompraModal .modal-foot {
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: 0 !important;
+    max-height: 28px !important;
+    height: 28px !important;
+    border-top: 1px solid #E5E7EB !important;
+    background: #F8FAFC !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+    overflow: hidden !important;
+}
+
+/* Botones EXTREMADAMENTE compactos */
+#pedidoCompraModal .modal-foot .btn,
+#pedidoCompraModal .modal-foot .btn-secondary,
+#pedidoCompraModal .modal-foot .btn-neon-yellow,
+#pedidoCompraModal .modal-foot .btn-neon-green {
+    height: 22px !important;
+    padding: 0 12px !important;
+    font-size: 8.5px !important;
+    border-radius: 4px !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    border: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+}
+
+/* Botón Cancelar */
+#pedidoCompraModal .modal-foot .btn-secondary {
+    background: #94A3B8 !important;
+    color: #fff !important;
+}
+
+#pedidoCompraModal .modal-foot .btn-secondary:hover {
+    background: #64748B !important;
+}
+
+/* Botón PC Observado - Neon Yellow */
+#pedidoCompraModal .modal-foot .btn-neon-yellow {
+    border: 1.5px solid #FF0040 !important;
+    background: #FF0040 !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 0 15px rgba(255, 0, 64, 0.4) !important;
+}
+
+#pedidoCompraModal .modal-foot .btn-neon-yellow:hover {
+    background: #FF1A4A !important;
+    box-shadow: 0 0 25px rgba(255, 0, 64, 0.7) !important;
+    transform: scale(1.02) !important;
+}
+
+/* Botón PC Conforme - Neon Green */
+#pedidoCompraModal .modal-foot .btn-neon-green {
+    border: 1.5px solid #00FF44 !important;
+    background: #00FF00 !important;
+    color: #000000 !important;
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.4) !important;
+}
+
+#pedidoCompraModal .modal-foot .btn-neon-green:hover {
+    background: #33FF33 !important;
+    box-shadow: 0 0 25px rgba(0, 255, 0, 0.7) !important;
+    transform: scale(1.02) !important;
+}
+
 </style>
 {% endblock %}
 
