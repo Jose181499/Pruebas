@@ -35,8 +35,7 @@
                 ✅ Recomendado: jalar la cotización, crear PC espejo y validar contra el documento real del cliente.
             </div>
             
-            <!-- ✅ CAMBIO PRINCIPAL: Reducir el ancho de la columna derecha de 240px a 180px -->
-            <div style="display:grid; grid-template-columns:1fr 180px; gap:14px; align-items:start;">
+            <div style="display:grid; grid-template-columns:1fr 240px; gap:14px; align-items:start;">
                 
                 <!-- COLUMNA IZQUIERDA - Formulario -->
                 <div>
@@ -321,39 +320,39 @@
                     </div>
                 </div>
                 
-                <!-- COLUMNA DERECHA - RESUMEN (ahora más angosta) -->
-                <div style="display:flex; flex-direction:column; gap:6px;">
-                    <div style="background:linear-gradient(135deg, #f0f2f6 0%, #f1f1f2 100%); border-radius:10px; padding:8px 10px; box-shadow:0 4px 16px rgba(15,23,42,0.12); border:1px solid rgba(255,255,255,0.05);">
-                        <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:6px;">
-                            <span style="font-size:14px;">🧾</span>
-                            <span style="font-size:10px; font-weight:800; color:#94A3B8; text-transform:uppercase; letter-spacing:0.3px;">Resumen PC</span>
-                            <span style="margin-left:auto; font-size:7px; color:#64748B; background:rgba(255,255,255,0.05); padding:1px 6px; border-radius:8px;" id="pcResumenMoneda">S/</span>
+                <!-- COLUMNA DERECHA - RESUMEN -->
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <div style="background:linear-gradient(135deg, #f0f2f6 0%, #f1f1f2 100%); border-radius:12px; padding:10px 12px; box-shadow:0 8px 32px rgba(15,23,42,0.15); border:1px solid rgba(255,255,255,0.05);">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:8px;">
+                            <span style="font-size:16px;">🧾</span>
+                            <span style="font-size:11px; font-weight:800; color:#94A3B8; text-transform:uppercase; letter-spacing:0.5px;">Resumen PC</span>
+                            <span style="margin-left:auto; font-size:8px; color:#64748B; background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:10px;" id="pcResumenMoneda">S/</span>
                         </div>
                         
-                        <div style="display:flex; justify-content:space-between; align-items:center; padding:2px 0;">
-                            <span style="font-size:9px; font-weight:600; color:#94A3B8;">Subtotal</span>
-                            <span style="font-size:11px; font-weight:800; color:#E2E8F0;" id="pcResumenSubtotal">S/ 0.00</span>
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 0;">
+                            <span style="font-size:10px; font-weight:600; color:#94A3B8;">Subtotal</span>
+                            <span style="font-size:12px; font-weight:800; color:#E2E8F0;" id="pcResumenSubtotal">S/ 0.00</span>
                         </div>
                         
-                        <div style="display:flex; justify-content:space-between; align-items:center; padding:2px 0;">
-                            <span style="font-size:9px; font-weight:600; color:#94A3B8;">Valor venta</span>
-                            <span style="font-size:11px; font-weight:800; color:#E2E8F0;" id="pcResumenValorVenta">S/ 0.00</span>
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 0;">
+                            <span style="font-size:10px; font-weight:600; color:#94A3B8;">Valor venta</span>
+                            <span style="font-size:12px; font-weight:800; color:#E2E8F0;" id="pcResumenValorVenta">S/ 0.00</span>
                         </div>
                         
-                        <div style="display:flex; justify-content:space-between; align-items:center; padding:2px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
-                            <span style="font-size:9px; font-weight:600; color:#94A3B8;">IGV 18%</span>
-                            <span style="font-size:11px; font-weight:800; color:#E2E8F0;" id="pcResumenIgv">S/ 0.00</span>
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+                            <span style="font-size:10px; font-weight:600; color:#94A3B8;">IGV 18%</span>
+                            <span style="font-size:12px; font-weight:800; color:#E2E8F0;" id="pcResumenIgv">S/ 0.00</span>
                         </div>
                         
-                        <div style="display:flex; justify-content:space-between; align-items:center; padding-top:6px; margin-top:2px;">
-                            <span style="font-size:11px; font-weight:900; color:#F1F5F9; text-transform:uppercase; letter-spacing:0.2px;">Total</span>
-                            <span style="font-size:14px; font-weight:900; color:#FCD34D; background:rgba(252,211,77,0.1); padding:2px 10px; border-radius:6px;" id="pcResumenTotal">S/ 0.00</span>
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding-top:8px; margin-top:4px;">
+                            <span style="font-size:13px; font-weight:900; color:#F1F5F9; text-transform:uppercase; letter-spacing:0.3px;">Total</span>
+                            <span style="font-size:16px; font-weight:900; color:#FCD34D; background:rgba(252,211,77,0.1); padding:4px 14px; border-radius:8px;" id="pcResumenTotal">S/ 0.00</span>
                         </div>
                     </div>
                     
-                    <div style="background:#F1F5F9; border-radius:8px; padding:6px 10px; border:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center;">
-                        <span style="font-size:8px; font-weight:700; color:#475569;">📦 Productos</span>
-                        <span style="font-size:12px; font-weight:900; color:#0F172A;" id="pcResumenProductos">0</span>
+                    <div style="background:#F1F5F9; border-radius:10px; padding:8px 12px; border:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:9px; font-weight:700; color:#475569;">📦 Productos</span>
+                        <span style="font-size:14px; font-weight:900; color:#0F172A;" id="pcResumenProductos">0</span>
                     </div>
                 </div>
                 
@@ -372,17 +371,17 @@
                 border-top:1px solid #E5E7EB;
                 background:#F8FAFC;
                 flex-shrink:0;
-                min-height:36px;
+                min-height:40px;
                 flex-wrap:wrap;
              ">
 
             <button class="btn btn-secondary"
                 onclick="closeModal('pedidoCompraModal')"
                 style="
-                    height:28px;
-                    padding:0 12px;
-                    font-size:10px;
-                    border-radius:5px;
+                    height:30px;
+                    padding:0 14px;
+                    font-size:11px;
+                    border-radius:6px;
                     background:#94A3B8;
                     color:#fff;
                     border:1px solid #CBD5E1;
@@ -395,47 +394,48 @@
             <button class="btn-neon-yellow"
                 onclick="savePedidoCompraSAP('observado')"
                 style="
-                    height:28px;
-                    padding:0 12px;
-                    font-size:9px;
-                    border-radius:5px;
+                    height:30px;
+                    padding:0 14px;
+                    font-size:10px;
+                    border-radius:6px;
                     border:2px solid #FF0040;
                     background:#FF0040;
                     color:#FFFFFF;
                     font-weight:900;
                     cursor:pointer;
-                    box-shadow:0 0 20px rgba(255,0,64,0.5);
+                    box-shadow:0 0 30px rgba(255,0,64,0.6);
                     display:inline-flex;
                     align-items:center;
-                    gap:3px;
+                    gap:4px;
                 ">
-                ⚠️ PC Observado
+                ⚠️ Crear PC Observado
             </button>
 
             <button class="btn-neon-green"
                 onclick="savePedidoCompraSAP('auto')"
                 style="
-                    height:28px;
-                    padding:0 12px;
-                    font-size:9px;
-                    border-radius:5px;
+                    height:30px;
+                    padding:0 14px;
+                    font-size:10px;
+                    border-radius:6px;
                     border:2px solid #00FF44;
                     background:#00FF00;
                     color:#000000;
                     font-weight:900;
                     cursor:pointer;
-                    box-shadow:0 0 20px rgba(0,255,0,0.5);
+                    box-shadow:0 0 30px rgba(0,255,0,0.6);
                     display:inline-flex;
                     align-items:center;
-                    gap:3px;
+                    gap:4px;
                 ">
-                ✅ PC Conforme
+                ✅ Crear PC Conforme
             </button>
 
         </div>
         
     </div> <!-- FIN DEL MODAL-BOX -->
 </div> <!-- FIN DEL MODAL-BG -->
+
 <style>
 /* Estilos para los switches toggle */
 .switch input:checked + .slider {
