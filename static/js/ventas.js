@@ -494,8 +494,30 @@ async function loadDespachos() {
     console.log('🔄 Cargando despachos...');
     try {
         const data = await apiFetch('/ventas/api/despachos/listar');
+        console.log('📦 Datos de despachos recibidos:', data);
+        
         if (data.success) {
-            despachosData = data.data || [];
+            // ============================================================
+            // 🔽 NORMALIZAR FECHAS EN LOS DATOS RECIBIDOS
+            // ============================================================
+            despachosData = (data.data || []).map(d => {
+                // Si la fecha viene en formato ISO, convertirla a string legible
+                if (d.fecha_despacho && typeof d.fecha_despacho === 'string' && d.fecha_despacho.includes('T')) {
+                    try {
+                        const fecha = new Date(d.fecha_despacho);
+                        if (!isNaN(fecha.getTime())) {
+                            const dia = String(fecha.getDate()).padStart(2, '0');
+                            const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+                            const anio = fecha.getFullYear();
+                            d.fecha_despacho = `${dia}/${mes}/${anio}`;
+                        }
+                    } catch (e) {
+                        // Mantener el valor original
+                    }
+                }
+                return d;
+            });
+            
             console.log(`✅ ${despachosData.length} despachos cargados`);
             renderDespachos();
         } else {
@@ -503,9 +525,10 @@ async function loadDespachos() {
         }
     } catch (error) {
         console.error('Error cargando despachos:', error);
-        showToast('Error al cargar despachos', 'error');
+        showToast('Error al cargar despachos: ' + error.message, 'error');
     }
 }
+
 
 async function loadGuias() {
     console.log('🔄 Cargando guías...');
@@ -1169,7 +1192,7 @@ function renderDespachos() {
     const st = document.getElementById('despachoStatus')?.value || '';
     
     const list = despachosData.filter(r => {
-        const searchStr = `${r.numero || ''} ${r.cliente || ''} ${r.pc_numero || ''}`.toLowerCase();
+        const searchStr = `${r.numero || ''} ${r.cliente || ''} ${r.pc_numero || ''} ${r.destino || ''}`.toLowerCase();
         const matchText = !q || searchStr.includes(q);
         const matchStatus = !st || r.estado === st;
         return matchText && matchStatus;
@@ -1183,10 +1206,16 @@ function renderDespachos() {
         return;
     }
     
-    tbody.innerHTML = list.map((r, i) => `
+    tbody.innerHTML = list.map((r, i) => {
+        // ============================================================
+        // 🔽 FORMATEAR FECHA CORRECTAMENTE
+        // ============================================================
+        const fechaFormateada = formatearFechaDespacho(r.fecha_despacho || r.fecha || r.created_at);
+        
+        return `
         <tr>
             <td>${i + 1}</td>
-            <td>${sd(r.fecha_despacho)}</td>
+            <td class="date-cell">${fechaFormateada}</td>
             <td>${badgeStatus(r.estado)}</td>
             <td><b>${sd(r.numero)}</b></td>
             <td>${sd(r.pc_numero)}</td>
@@ -1195,10 +1224,74 @@ function renderDespachos() {
             <td>${sd(r.guia)}</td>
             <td>${sd(r.destino)}</td>
             <td>
-                ${r.estado !== 'Despachado' ? `<button class="btn btn-sm btn-green" onclick="marcarDespachado(${r.id})">🚚 Despachar</button>` : '<span class="badge b-ok">✅ Listo</span>'}
+                ${r.estado !== 'Despachado' && r.estado !== 'Entregado' ? 
+                    `<button class="btn btn-sm btn-green" onclick="marcarDespachado(${r.id})" style="padding:4px 10px; font-size:10px; border-radius:6px; border:none; background:#16A34A; color:#fff; font-weight:800; cursor:pointer;">🚚 Despachar</button>` : 
+                    `<span class="badge b-ok">✅ ${r.estado || 'Completado'}</span>`
+                }
             </td>
-        </tr>
-    `).join('');
+        </tr>`;
+    }).join('');
+}
+
+// ============================================================
+// 🔽 FUNCIÓN PARA FORMATEAR FECHA DE DESPACHO
+// ============================================================
+function formatearFechaDespacho(fechaStr) {
+    if (!fechaStr) return '-';
+    
+    try {
+        let fecha;
+        
+        // Si es string, intentar parsear
+        if (typeof fechaStr === 'string') {
+            // Si viene con formato ISO (Mon, 20 Jul 2026 00:00:00 GMT)
+            if (fechaStr.includes('GMT') || fechaStr.includes('UTC')) {
+                fecha = new Date(fechaStr);
+            }
+            // Si viene con formato ISO (2026-07-20T00:00:00.000Z)
+            else if (fechaStr.includes('T')) {
+                fecha = new Date(fechaStr);
+            }
+            // Si viene con formato YYYY-MM-DD
+            else if (fechaStr.includes('-') && fechaStr.length === 10) {
+                fecha = new Date(fechaStr + 'T00:00:00');
+            }
+            // Si viene con formato DD/MM/YYYY
+            else if (fechaStr.includes('/')) {
+                const partes = fechaStr.split('/');
+                if (partes.length === 3) {
+                    fecha = new Date(partes[2], partes[1] - 1, partes[0]);
+                } else {
+                    fecha = new Date(fechaStr);
+                }
+            }
+            else {
+                fecha = new Date(fechaStr);
+            }
+        } else if (fechaStr instanceof Date) {
+            fecha = fechaStr;
+        } else {
+            // Si es timestamp (número)
+            fecha = new Date(fechaStr);
+        }
+        
+        // Verificar si la fecha es válida
+        if (isNaN(fecha.getTime())) {
+            return String(fechaStr);
+        }
+        
+        // Formatear: 20/07/2026 14:30
+        const dia = String(fecha.getDate()).padStart(2, '0');
+        const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+        const anio = fecha.getFullYear();
+        const horas = String(fecha.getHours()).padStart(2, '0');
+        const minutos = String(fecha.getMinutes()).padStart(2, '0');
+        
+        return `${dia}/${mes}/${anio} ${horas}:${minutos}`;
+        
+    } catch (e) {
+        return String(fechaStr);
+    }
 }
 
 function renderGuias() {

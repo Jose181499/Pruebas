@@ -1743,14 +1743,84 @@ def api_pedido_compra_guardar():
 # ============================================================
 # DESPACHOS - API
 # ============================================================
-
 @ventas_bp.route('/ventas/api/despachos/listar', methods=['GET'])
 @login_required
 def api_despachos_listar():
     try:
-        data = obtener_despachos_db()
-        return jsonify({'success': True, 'data': data})
+        query = """
+            SELECT 
+                id, numero, fecha, fecha_despacho, estado,
+                pc_id, pc_numero, cotizacion_id, cotizacion_numero,
+                cliente, ruc, comprobante, guia, origen, destino,
+                transportista, observaciones, responsable,
+                created_at, updated_at
+            FROM despachos
+            ORDER BY id DESC
+        """
+        data = db_query(query)
+        
+        # ============================================================
+        # 🔽 FORMATEAR FECHAS EN EL BACKEND
+        # ============================================================
+        formatted_data = []
+        for row in data:
+            # Formatear fecha_despacho
+            fecha_despacho = row.get('fecha_despacho')
+            if fecha_despacho:
+                try:
+                    if isinstance(fecha_despacho, str) and fecha_despacho:
+                        # Si es string ISO, convertir a formato DD/MM/YYYY
+                        if 'T' in fecha_despacho:
+                            from datetime import datetime
+                            dt = datetime.fromisoformat(fecha_despacho.replace('Z', '+00:00'))
+                            fecha_despacho = dt.strftime('%d/%m/%Y')
+                        elif '-' in fecha_despacho and len(fecha_despacho) == 10:
+                            # YYYY-MM-DD
+                            from datetime import datetime
+                            dt = datetime.strptime(fecha_despacho, '%Y-%m-%d')
+                            fecha_despacho = dt.strftime('%d/%m/%Y')
+                except:
+                    pass
+            
+            # Formatear created_at
+            created_at = row.get('created_at')
+            if created_at:
+                try:
+                    if isinstance(created_at, str) and 'T' in created_at:
+                        from datetime import datetime
+                        dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                        created_at = dt.strftime('%d/%m/%Y %H:%M')
+                except:
+                    pass
+            
+            formatted_data.append({
+                'id': row.get('id'),
+                'numero': row.get('numero'),
+                'fecha': row.get('fecha'),
+                'fecha_despacho': fecha_despacho,
+                'estado': row.get('estado'),
+                'pc_id': row.get('pc_id'),
+                'pc_numero': row.get('pc_numero'),
+                'cotizacion_id': row.get('cotizacion_id'),
+                'cotizacion_numero': row.get('cotizacion_numero'),
+                'cliente': row.get('cliente'),
+                'ruc': row.get('ruc'),
+                'comprobante': row.get('comprobante'),
+                'guia': row.get('guia'),
+                'origen': row.get('origen'),
+                'destino': row.get('destino'),
+                'transportista': row.get('transportista'),
+                'observaciones': row.get('observaciones'),
+                'responsable': row.get('responsable'),
+                'created_at': created_at,
+                'updated_at': row.get('updated_at')
+            })
+        
+        return jsonify({'success': True, 'data': formatted_data})
     except Exception as e:
+        print(f"❌ Error en api_despachos_listar: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -1781,6 +1851,23 @@ def api_despachos_guardar():
             data['fecha'] = datetime.now().isoformat()
         
         # ============================================================
+        # 🔽 FORMATEAR fecha_despacho para la BD
+        # ============================================================
+        fecha_despacho = data.get('fecha_despacho')
+        if fecha_despacho:
+            try:
+                # Si viene en formato DD/MM/YYYY, convertir a YYYY-MM-DD
+                if '/' in fecha_despacho:
+                    partes = fecha_despacho.split('/')
+                    if len(partes) == 3:
+                        fecha_despacho = f"{partes[2]}-{partes[1]}-{partes[0]}"
+                # Si viene en formato ISO, tomar solo la fecha
+                elif 'T' in fecha_despacho:
+                    fecha_despacho = fecha_despacho.split('T')[0]
+            except:
+                pass
+        
+        # ============================================================
         # GUARDAR DESPACHO
         # ============================================================
         query = """
@@ -1799,7 +1886,7 @@ def api_despachos_guardar():
         params = (
             data.get('numero'),
             data.get('fecha'),
-            data.get('fecha_despacho'),
+            fecha_despacho,
             data.get('estado', 'Pendiente despacho'),
             data.get('pc_id'),
             data.get('pc_numero'),
