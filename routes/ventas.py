@@ -3151,28 +3151,45 @@ def api_pedido_compra_obtener(id):
                 # Si es una lista de listas (formato antiguo), convertir a objetos
                 if isinstance(raw_items, list) and len(raw_items) > 0:
                     if isinstance(raw_items[0], list):
-                        # Formato: [[codigo, descripcion, cant_cot, cant_pc, precio_cot, precio_pc, stock], ...]
+                        # Formato: [[codigo, descripcion, marca, modelo, cant_cot, cant_pc, precio_cot, precio_pc, stock], ...]
                         for item in raw_items:
-                            if len(item) >= 7:
+                            if len(item) >= 9:
                                 items.append({
                                     'codigo': item[0] or '',
                                     'producto': item[1] or '',
+                                    'marca': item[2] or '',
+                                    'modelo': item[3] or '',
+                                    'cantidad_cotizada': float(item[4] or 0),
+                                    'cantidad_pc': float(item[5] or 1),
+                                    'precio_cotizado': float(item[6] or 0),
+                                    'precio_pc': float(item[7] or 0),
+                                    'stock': float(item[8] or 0)
+                                })
+                            elif len(item) >= 7:
+                                # Formato sin marca y modelo: [codigo, descripcion, cant_cot, cant_pc, precio_cot, precio_pc, stock]
+                                items.append({
+                                    'codigo': item[0] or '',
+                                    'producto': item[1] or '',
+                                    'marca': '',
+                                    'modelo': '',
                                     'cantidad_cotizada': float(item[2] or 0),
                                     'cantidad_pc': float(item[3] or 1),
                                     'precio_cotizado': float(item[4] or 0),
                                     'precio_pc': float(item[5] or 0),
                                     'stock': float(item[6] or 0)
                                 })
-                            elif len(item) >= 2:
+                            else:
                                 # Mínimo: codigo y descripcion
                                 items.append({
                                     'codigo': item[0] or '',
                                     'producto': item[1] or '',
-                                    'cantidad_cotizada': float(item[2] or 0) if len(item) > 2 else 0,
-                                    'cantidad_pc': float(item[3] or 1) if len(item) > 3 else 1,
-                                    'precio_cotizado': float(item[4] or 0) if len(item) > 4 else 0,
-                                    'precio_pc': float(item[5] or 0) if len(item) > 5 else 0,
-                                    'stock': float(item[6] or 0) if len(item) > 6 else 0
+                                    'marca': '',
+                                    'modelo': '',
+                                    'cantidad_cotizada': 0,
+                                    'cantidad_pc': 1,
+                                    'precio_cotizado': 0,
+                                    'precio_pc': 0,
+                                    'stock': 0
                                 })
                     else:
                         # Ya es una lista de objetos
@@ -3181,7 +3198,9 @@ def api_pedido_compra_obtener(id):
                                 items.append({
                                     'codigo': item.get('codigo', ''),
                                     'producto': item.get('producto', item.get('descripcion', '')),
-                                    'cantidad_cotizada': float(item.get('cantidad_cotizada', item.get('cantidad', 0))),
+                                    'marca': item.get('marca', ''),
+                                    'modelo': item.get('modelo', ''),
+                                    'cantidad_cotizada': float(item.get('cantidad_cotizada', item.get('cantidad_cot', 0))),
                                     'cantidad_pc': float(item.get('cantidad_pc', item.get('cantidad', 1))),
                                     'precio_cotizado': float(item.get('precio_cotizado', item.get('precio_cot', 0))),
                                     'precio_pc': float(item.get('precio_pc', item.get('precio', 0))),
@@ -3201,7 +3220,6 @@ def api_pedido_compra_obtener(id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 # Agregar esta función después de api_cotizaciones_generar_pdf
 
