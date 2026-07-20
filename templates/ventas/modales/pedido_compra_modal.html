@@ -205,121 +205,46 @@
                     </div>
 
                     <!-- BLOQUE 3: Ítems del PC -->
-                    <div class="form-section" style="padding:4px 10px; margin-bottom:4px; border-radius:6px; border:1px solid #E2E8F0;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px; flex-wrap:wrap; gap:4px;">
-                            <div class="section-title" style="font-size:10px; font-weight:900; color:#7F1D1D; margin:0;">3. Productos PC</div>
-                            <div style="display:flex; gap:4px; flex-wrap:wrap;">
-                                <button class="btn btn-soft" onclick="openProductSelectorPC()" style="height:22px; padding:0 10px; font-size:9px; border-radius:4px; border:1px solid #CBD5E1; background:#8B5CF6; color:#fff; font-weight:800; cursor:pointer;">📋 + Agregar items</button>
-                            </div>
-                        </div>
-                         <div class="table-scroll"
-                         style="
-                      height:42vh;
-                        min-height:320px;
-                         overflow:auto;
-                            ">
-                            <table class="master-table" style="font-size:9px; width:100%; border-collapse:collapse;">
-                                <thead>
-                                    <tr>
-                                        <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Item</th>
-                                        <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:70px;">Código Producto</th>
-                                        <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Descripción</th>
-                                        <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Modelo</th>
-                                        <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Marca</th>
-                                        <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:55px;">Cant. Cot</th>
-                                        <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:55px;">Cant. PC</th>
-                                        <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:65px;">Precio Cot</th>
-                                        <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:65px;">Precio PC</th>
-                                        <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:70px;">Valor Total PC</th>
-                                        <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Stock</th>
-                                        <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Faltante</th>
-                                        <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Acción</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="pcItemsBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- BLOQUE 4: Validación comercial -->
-                    <div class="form-section" style="padding:4px 10px; border-radius:6px; border:1px solid #E2E8F0;">
-                        <div class="section-title" style="font-size:10px; font-weight:900; color:#7F1D1D; margin-bottom:4px;">4. Validación comercial <span style="font-weight:400; font-size:8px; color:#64748B;">(Marcar ✅ para validar)</span></div>
-                        
-                        <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:6px;">
-                            <div class="check-card" style="padding:4px 6px; border-radius:6px; border:1px solid #E2E8F0; background:#F8FAFC; display:flex; flex-direction:column; align-items:center;">
-                                <label style="font-size:7.5px; font-weight:900; color:#334155; margin-bottom:3px;">💰 Precio</label>
-                                <label class="switch" style="position:relative; display:inline-block; width:34px; height:18px;">
-                                    <input type="checkbox" id="vPrecio" onchange="updateValidationStatus()" style="opacity:0; width:0; height:0;">
-                                    <span class="slider" style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#ccc; transition:.3s; border-radius:18px; display:block;">
-                                        <span class="slider-thumb" style="position:absolute; content:''; height:14px; width:14px; left:2px; bottom:2px; background:white; transition:.3s; border-radius:50%;"></span>
-                                    </span>
-                                </label>
-                                <span id="vPrecioLabel" style="font-size:7px; font-weight:700; margin-top:2px;">❌ NO VÁLIDO</span>
-                            </div>
-                            <div class="check-card" style="padding:4px 6px; border-radius:6px; border:1px solid #E2E8F0; background:#F8FAFC; display:flex; flex-direction:column; align-items:center;">
-                                <label style="font-size:7.5px; font-weight:900; color:#334155; margin-bottom:3px;">📦 Producto</label>
-                                <label class="switch" style="position:relative; display:inline-block; width:34px; height:18px;">
-                                    <input type="checkbox" id="vProducto" onchange="updateValidationStatus()" style="opacity:0; width:0; height:0;">
-                                    <span class="slider" style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#ccc; transition:.3s; border-radius:18px; display:block;">
-                                        <span class="slider-thumb" style="position:absolute; content:''; height:14px; width:14px; left:2px; bottom:2px; background:white; transition:.3s; border-radius:50%;"></span>
-                                    </span>
-                                </label>
-                                <span id="vProductoLabel" style="font-size:7px; font-weight:700; margin-top:2px;">❌ NO VÁLIDO</span>
-                            </div>
-                            <div class="check-card" style="padding:4px 6px; border-radius:6px; border:1px solid #E2E8F0; background:#F8FAFC; display:flex; flex-direction:column; align-items:center;">
-                                <label style="font-size:7.5px; font-weight:900; color:#334155; margin-bottom:3px;">📍 Entrega</label>
-                                <label class="switch" style="position:relative; display:inline-block; width:34px; height:18px;">
-                                    <input type="checkbox" id="vEntrega" onchange="updateValidationStatus()" style="opacity:0; width:0; height:0;">
-                                    <span class="slider" style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#ccc; transition:.3s; border-radius:18px; display:block;">
-                                        <span class="slider-thumb" style="position:absolute; content:''; height:14px; width:14px; left:2px; bottom:2px; background:white; transition:.3s; border-radius:50%;"></span>
-                                    </span>
-                                </label>
-                                <span id="vEntregaLabel" style="font-size:7px; font-weight:700; margin-top:2px;">❌ NO VÁLIDO</span>
-                            </div>
-                            <div class="check-card" style="padding:4px 6px; border-radius:6px; border:1px solid #E2E8F0; background:#F8FAFC; display:flex; flex-direction:column; align-items:center;">
-                                <label style="font-size:7.5px; font-weight:900; color:#334155; margin-bottom:3px;">🚚 Transporte</label>
-                                <label class="switch" style="position:relative; display:inline-block; width:34px; height:18px;">
-                                    <input type="checkbox" id="vTransporte" onchange="updateValidationStatus()" style="opacity:0; width:0; height:0;">
-                                    <span class="slider" style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#ccc; transition:.3s; border-radius:18px; display:block;">
-                                        <span class="slider-thumb" style="position:absolute; content:''; height:14px; width:14px; left:2px; bottom:2px; background:white; transition:.3s; border-radius:50%;"></span>
-                                    </span>
-                                </label>
-                                <span id="vTransporteLabel" style="font-size:7px; font-weight:700; margin-top:2px;">❌ NO VÁLIDO</span>
-                            </div>
-                            <div class="check-card" style="padding:4px 6px; border-radius:6px; border:1px solid #E2E8F0; background:#F8FAFC; display:flex; flex-direction:column; align-items:center;">
-                                <label style="font-size:7.5px; font-weight:900; color:#334155; margin-bottom:3px;">🔢 Cantidad</label>
-                                <label class="switch" style="position:relative; display:inline-block; width:34px; height:18px;">
-                                    <input type="checkbox" id="vCantidad" onchange="updateValidationStatus()" style="opacity:0; width:0; height:0;">
-                                    <span class="slider" style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#ccc; transition:.3s; border-radius:18px; display:block;">
-                                        <span class="slider-thumb" style="position:absolute; content:''; height:14px; width:14px; left:2px; bottom:2px; background:white; transition:.3s; border-radius:50%;"></span>
-                                    </span>
-                                </label>
-                                <span id="vCantidadLabel" style="font-size:7px; font-weight:700; margin-top:2px;">❌ NO VÁLIDO</span>
-                            </div>
-                            <div class="check-card" style="padding:4px 6px; border-radius:6px; border:1px solid #E2E8F0; background:#F8FAFC; display:flex; flex-direction:column; align-items:center;">
-                                <label style="font-size:7.5px; font-weight:900; color:#334155; margin-bottom:3px;">💱 Moneda</label>
-                                <label class="switch" style="position:relative; display:inline-block; width:34px; height:18px;">
-                                    <input type="checkbox" id="vMoneda" onchange="updateValidationStatus()" style="opacity:0; width:0; height:0;">
-                                    <span class="slider" style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#ccc; transition:.3s; border-radius:18px; display:block;">
-                                        <span class="slider-thumb" style="position:absolute; content:''; height:14px; width:14px; left:2px; bottom:2px; background:white; transition:.3s; border-radius:50%;"></span>
-                                    </span>
-                                </label>
-                                <span id="vMonedaLabel" style="font-size:7px; font-weight:700; margin-top:2px;">❌ NO VÁLIDO</span>
-                            </div>
-                            <div class="check-card" style="padding:4px 6px; border-radius:6px; border:1px solid #E2E8F0; background:#F8FAFC; display:flex; flex-direction:column; align-items:center;">
-                                <label style="font-size:7.5px; font-weight:900; color:#334155; margin-bottom:3px;">📅 Vigencia</label>
-                                <label class="switch" style="position:relative; display:inline-block; width:34px; height:18px;">
-                                    <input type="checkbox" id="vVigencia" onchange="updateValidationStatus()" style="opacity:0; width:0; height:0;">
-                                    <span class="slider" style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#ccc; transition:.3s; border-radius:18px; display:block;">
-                                        <span class="slider-thumb" style="position:absolute; content:''; height:14px; width:14px; left:2px; bottom:2px; background:white; transition:.3s; border-radius:50%;"></span>
-                                    </span>
-                                </label>
-                                <span id="vVigenciaLabel" style="font-size:7px; font-weight:700; margin-top:2px;">❌ NO VÁLIDO</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
+<div class="form-section" style="padding:4px 10px; margin-bottom:4px; border-radius:6px; border:1px solid #E2E8F0; display:flex; flex-direction:column; flex:1; min-height:0;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px; flex-wrap:wrap; gap:4px; flex-shrink:0;">
+        <div class="section-title" style="font-size:10px; font-weight:900; color:#7F1D1D; margin:0;">3. Productos PC</div>
+        <div style="display:flex; gap:4px; flex-wrap:wrap;">
+            <button class="btn btn-soft" onclick="openProductSelectorPC()" style="height:22px; padding:0 10px; font-size:9px; border-radius:4px; border:1px solid #CBD5E1; background:#8B5CF6; color:#fff; font-weight:800; cursor:pointer;">📋 + Agregar items</button>
+        </div>
+    </div>
+    
+    <div class="table-scroll"
+         style="
+            flex:1;
+            min-height:200px;
+            max-height: calc(100vh - 480px);
+            overflow:auto;
+            border:1px solid #E2E8F0;
+            border-radius:6px;
+         ">
+        <!-- ✅ LA TABLA VA AQUÍ DENTRO -->
+        <table class="master-table" style="font-size:9px; width:100%; border-collapse:collapse;">
+            <thead>
+                <tr>
+                    <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Item</th>
+                    <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:70px;">Código Producto</th>
+                    <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Descripción</th>
+                    <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Modelo</th>
+                    <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Marca</th>
+                    <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:55px;">Cant. Cot</th>
+                    <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:55px;">Cant. PC</th>
+                    <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:65px;">Precio Cot</th>
+                    <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:65px;">Precio PC</th>
+                    <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:70px;">Valor Total PC</th>
+                    <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Stock</th>
+                    <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Faltante</th>
+                    <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Acción</th>
+                </tr>
+            </thead>
+            <tbody id="pcItemsBody"></tbody>
+        </table>
+    </div>
+</div>
                 <!-- COLUMNA DERECHA - TABLITA DE RESUMEN -->
                 <div style="display:flex; flex-direction:column; gap:8px;">
                     <!-- Tarjeta de resumen -->

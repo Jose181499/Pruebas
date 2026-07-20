@@ -7281,7 +7281,7 @@ function renderCotizacionFormContent(isEdit) {
         </div>
         
    
-<div class="create-panel" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;box-shadow:0 4px 12px rgba(15,23,42,.06);overflow:hidden;margin-bottom:10px; max-width: 100%;">
+<div class="create-panel" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;box-shadow:0 4px 12px rgba(15,23,42,.06);overflow:hidden;margin-bottom:10px; max-width: 100%; flex: 1;">
     <h3 style="padding:6px 12px;border-bottom:1px solid #E5E7EB;font-size:12px;font-weight:1000;color:#0F172A;background:#FAFBGC;display:flex;align-items:center;gap:6px;margin:0;">
         <span style="color:#EF233C;font-weight:1000;">5.</span> 
         <span style="color:#EF233C;font-weight:1000;">Información adicional</span>
