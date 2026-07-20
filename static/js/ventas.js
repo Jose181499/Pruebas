@@ -2577,25 +2577,56 @@ async function marcarDespachado(id) {
                 showToast('✅ Despacho marcado como Despachado', 'success');
                 
                 // ============================================================
-                // PASO 2: Crear Guía de Remisión automáticamente
+                // PASO 2: Obtener items del PC asociado
+                // ============================================================
+                let items = [];
+                
+                // Buscar el PC asociado al despacho
+                if (despacho.pc_id) {
+                    try {
+                        const pcResponse = await apiFetch(`/ventas/api/pedido-compra/${despacho.pc_id}`);
+                        if (pcResponse.success && pcResponse.data) {
+                            items = pcResponse.data.items || [];
+                            console.log('📦 Items obtenidos del PC:', items);
+                        }
+                    } catch (e) {
+                        console.warn('⚠️ No se pudieron obtener items del PC:', e);
+                    }
+                }
+                
+                // Si no hay items del PC, intentar usar los del despacho
+                if (items.length === 0 && despacho.items) {
+                    items = despacho.items;
+                }
+                
+                // ============================================================
+                // PASO 3: Crear Guía de Remisión
                 // ============================================================
                 const ahora = new Date();
+                const year = ahora.getFullYear();
+                const month = String(ahora.getMonth() + 1).padStart(2, '0');
+                const day = String(ahora.getDate()).padStart(2, '0');
                 
-                // Datos para la guía
                 const guiaData = {
                     estado: 'Borrador',
                     serie: 'T001',
-                    numero: `G-${ahora.getFullYear()}${String(ahora.getMonth()+1).padStart(2,'0')}${String(ahora.getDate()).padStart(2,'0')}-${String(ahora.getTime()).slice(-4)}`,
+                    numero: `G-${year}${month}${day}-${String(ahora.getTime()).slice(-4)}`,
                     cotizacion_numero: despacho.cotizacion_numero || '',
                     cliente: despacho.cliente || '',
                     ruc: despacho.ruc || '',
                     origen: despacho.origen || 'ALM-SMP',
                     destino: despacho.destino || '',
-                    motivo: 'VENTA',
+                    motivo_traslado: 'VENTA',
                     observaciones: `Guía generada automáticamente desde despacho ${despacho.numero}`,
-                    fecha_traslado: ahora.toISOString().split('T')[0],
-                    // Items: intentar obtener del PC o despacho
-                    items: despacho.items || []
+                    fecha_traslado: `${year}-${month}-${day}`,
+                    items: items.map(item => ({
+                        codigo: item.codigo || '',
+                        producto: item.producto || item.descripcion || '',
+                        cantidad: item.cantidad_pc || item.cantidad || 1,
+                        um: item.um || 'NIU',
+                        marca: item.marca || '',
+                        modelo: item.modelo || ''
+                    }))
                 };
                 
                 console.log('📦 Creando guía automática:', guiaData);
@@ -2619,7 +2650,7 @@ async function marcarDespachado(id) {
                     await loadGuias();
                     
                     // ============================================================
-                    // PASO 3: Preguntar si quiere ver la guía
+                    // PASO 4: Preguntar si quiere ver la guía
                     // ============================================================
                     setTimeout(() => {
                         showConfirmModal(
@@ -2656,7 +2687,6 @@ async function marcarDespachado(id) {
         '🚚 Sí, despachar'
     );
 }
-
 
 // En ventas.js - Reemplaza la función duplicateCotizacion
 async function duplicateCotizacion(id) {

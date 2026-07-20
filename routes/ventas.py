@@ -1352,23 +1352,36 @@ def api_guias_guardar():
         print(f"  - Items: {len(data.get('items', []))}")
         print("=" * 80)
         
+        # ============================================================
+        # 🔽 IMPORTAR datetime DENTRO DE LA FUNCIÓN SI ES NECESARIO
+        # ============================================================
+        from datetime import datetime, date
+        
         items_json = data.get('items', [])
+        
+        # Generar número si no tiene
+        numero = data.get('numero')
+        if not numero:
+            now = datetime.now()
+            count_data = db_query("SELECT COUNT(*) as total FROM guias_remision")
+            count = count_data[0]['total'] + 1 if count_data else 1
+            numero = str(count)
         
         # ============================================================
         # DATOS PARA LA GUÍA
         # ============================================================
         guia_data = {
             'serie': data.get('serie', 'T001'),
-            'numero': data.get('numero'),
-            'fecha_emision': datetime.now().date().isoformat(),
-            'fecha_traslado': data.get('fecha_traslado') or datetime.now().date().isoformat(),
+            'numero': numero,
+            'fecha_emision': date.today().isoformat(),
+            'fecha_traslado': data.get('fecha_traslado') or date.today().isoformat(),
             'ruc_remitente': data.get('ruc_remitente') or session.get('empresa_ruc', '20602095704'),
             'remitente_nombre': data.get('remitente_nombre') or session.get('empresa_nombre', 'KCF CORPORACION SAC'),
             'remitente_direccion': data.get('remitente_direccion') or 'Av. Principal 123, Lima',
             'remitente_ubigeo': data.get('remitente_ubigeo') or '150101',
-            'ruc_destinatario': data.get('ruc') or '',
-            'destinatario_nombre': data.get('cliente') or '',
-            'destinatario_direccion': data.get('destino') or '',
+            'ruc_destinatario': data.get('ruc') or data.get('ruc_destinatario') or '',
+            'destinatario_nombre': data.get('cliente') or data.get('destinatario_nombre') or '',
+            'destinatario_direccion': data.get('destino') or data.get('destinatario_direccion') or '',
             'destinatario_ubigeo': data.get('destinatario_ubigeo') or '',
             'modalidad_transporte': data.get('modalidad_transporte', 'PRIVADO'),
             'placa_vehiculo': data.get('placa_vehiculo') or '',
@@ -1378,21 +1391,15 @@ def api_guias_guardar():
             'transportista_ruc': data.get('transportista_ruc') or '',
             'transportista_nombre': data.get('transportista_nombre') or '',
             'motivo_traslado': data.get('motivo_traslado', 'VENTA'),
-            'documento_asociado': data.get('cotizacion_numero') or data.get('cotizacion') or '',
+            'documento_asociado': data.get('cotizacion_numero') or data.get('cotizacion') or data.get('documento_asociado') or '',
             'peso_total': float(data.get('peso_total', 0)),
-            'items_json': json.dumps(items_json),
+            'items_json': json.dumps(items_json) if items_json else '[]',
             'observaciones': data.get('observaciones', ''),
             'estado_sunat': data.get('estado', 'BORRADOR'),
             'creado_por': usuario_id
         }
         
-        # Generar número si no tiene
-        if not guia_data['numero']:
-            from datetime import datetime
-            now = datetime.now()
-            count_data = db_query("SELECT COUNT(*) as total FROM guias_remision")
-            count = count_data[0]['total'] + 1 if count_data else 1
-            guia_data['numero'] = str(count)
+        print(f"📦 Datos a guardar: {guia_data}")
         
         # ============================================================
         # INSERTAR GUÍA
