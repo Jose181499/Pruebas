@@ -67,6 +67,12 @@ let PRODUCTOS_MAESTROS = [];
 let CLIENTES_MAESTROS = [];
 
 // ============================================================
+// VARIABLES PARA PC (PEDIDO COMPRA)
+// ============================================================
+let modalMode = 'cot';  // 'cot' | 'directo' | 'editar'  ← DECLARAR AQUÍ
+let cotizacionSeleccionada = null;  // ← DECLARAR AQUÍ
+
+// ============================================================
 // UTILIDADES
 // ============================================================
 function esc(v) {
@@ -6075,9 +6081,13 @@ function clearDateFilter() {
     showToast('🧹 Filtros de fecha limpiados', 'info');
 }
 
-
 function openPedidoCompraModalSAP(mode = 'cot', id = null) {
     console.log('📋 Abriendo modal PC:', { mode, id });
+    
+    // ============================================================
+    // ACTUALIZAR LA VARIABLE GLOBAL modalMode
+    // ============================================================
+    modalMode = mode;  // ← ESTO ES LO QUE FALTABA
     
     const modal = document.getElementById('pedidoCompraModal');
     if (!modal) {
@@ -6747,155 +6757,6 @@ function reordenarItemsSAP() {
     });
 }
 
-async function savePedidoCompraSAP(force) {
-    console.log('🔄 savePedidoCompraSAP ejecutándose...', { force });
-    
-    try {
-        // Validar que se haya seleccionado una cotización en modo 'cot'
-        if (modalMode === 'cot' && !cotizacionSeleccionada) {
-            const searchInput = document.getElementById('pcCotSearch');
-            const valor = searchInput?.value?.trim() || '';
-            if (!valor) {
-                showToast('⚠️ Debes buscar y seleccionar una cotización primero', 'warning');
-                searchInput?.focus();
-                return;
-            }
-            // Si hay texto pero no se seleccionó, intentar buscar automáticamente
-            const results = cotizacionesData.filter(c => {
-                const searchStr = `${c.numero || ''} ${c.razon || ''} ${c.ruc || ''}`.toLowerCase();
-                return searchStr.includes(valor.toLowerCase());
-            });
-            if (results.length === 0) {
-                showToast('⚠️ No se encontró la cotización. Verifica el texto ingresado.', 'warning');
-                return;
-            } else if (results.length === 1) {
-                // Auto-seleccionar si solo hay un resultado
-                seleccionarCotizacionSAP(results[0].id);
-                // Reintentar guardar después de un momento
-                setTimeout(() => savePedidoCompraSAP(force), 300);
-                return;
-            } else {
-                showToast('⚠️ Se encontraron varias cotizaciones. Selecciona una de la lista.', 'warning');
-                buscarCotizacionSAP(valor);
-                return;
-            }
-        }
-        
-        // Leer validaciones
-        const val = ['vPrecio', 'vCantidad', 'vProducto', 'vEntrega', 'vMoneda', 'vTransporte', 'vVigencia', 'vMargen']
-            .map(id => document.getElementById(id)?.value || 'Sí');
-        
-        console.log('📋 Validaciones:', val);
-        
-        const observed = force === 'observado' || val.some(v => v === 'No');
-        
-        // ============================================================
-        // LEER ITEMS DE LA TABLA CON MARCA Y MODELO
-        // ============================================================
-        const trs = document.querySelectorAll('#pcItemsBody tr');
-        const items = Array.from(trs).map(r => {
-            const inputs = r.querySelectorAll('input');
-            // 🔽 AHORA INCLUYE MARCA Y MODELO
-            return {
-                codigo: inputs[0]?.value || '',
-                producto: inputs[1]?.value || '',
-                marca: inputs[2]?.value || '',        // NUEVO
-                modelo: inputs[3]?.value || '',        // NUEVO
-                cantidad_cotizada: Number(inputs[4]?.value || 0),
-                cantidad_pc: Number(inputs[5]?.value || 1),
-                precio_cotizado: Number(inputs[6]?.value || 0),
-                precio_pc: Number(inputs[7]?.value || 0),
-                stock: Number(inputs[8]?.value || 0)
-            };
-        });
-        
-        console.log('📦 Items del PC (con marca y modelo):', items);
-        
-        // Verificar stock
-        const stockFalta = items.some(i => Number(i.cantidad_pc) > Number(i.stock));
-        const estado = observed ? 'PC observado' : (stockFalta ? 'PC conforme' : 'Listo para despacho');
-        
-        // ============================================================
-        // PREPARAR DATOS PARA ENVIAR A LA API
-        // ============================================================
-        const pcData = {
-            id: editingId || null,
-            numero: document.getElementById('pcNumero')?.value || 'PC-' + Date.now(),
-            fecha: document.getElementById('pcFecha')?.value?.replace('T', ' ') || new Date().toISOString(),
-            medio: document.getElementById('pcMedio')?.value || 'Correo',
-            estado: estado,
-            cliente: document.getElementById('pcCliente')?.value || '',
-            ruc: document.getElementById('pcRuc')?.value || '',
-            cotizacion_id: cotizacionSeleccionada?.id || null,
-            cotizacion_numero: document.getElementById('pcCotNumero')?.value || 'SIN COTIZACIÓN',
-            monto: Number(document.getElementById('pcMonto')?.value || 0),
-            entrega: document.getElementById('pcEntrega')?.value || '',
-            lugar_entrega: document.getElementById('pcEntrega')?.value || '',
-            condicion_pago: document.getElementById('pcCondicionPago')?.value || '',
-            vendedor: document.getElementById('pcVendedor')?.value || 'Helen Blas Príncipe',
-            responsable: 'Hellen',
-            observaciones: document.getElementById('pcObs')?.value || '',
-            // 🔽 ITEMS CON MARCA Y MODELO
-            items: items,
-            // 🔽 VALIDACIONES
-            valida_precios: val[0] === 'Sí',
-            valida_cantidades: val[1] === 'Sí',
-            valida_stock: val[2] === 'Sí',
-            valida_entrega: val[3] === 'Sí',
-            valida_montos: val[4] === 'Sí',
-            valida_transporte: val[5] === 'Sí',
-            valida_vigencia: val[6] === 'Sí',
-            valida_margen: val[7] === 'Sí',
-            // 🔽 REQUISITO DE COMPRA
-            req_compra: observed ? 'Bloqueado' : (stockFalta ? 'Sí' : 'No')
-        };
-        
-        console.log('📦 Datos a enviar a la API:', pcData);
-        
-        // ============================================================
-        // ENVIAR A LA API
-        // ============================================================
-        showToast('⏳ Guardando PC...', 'info');
-        
-        const response = await fetch('/ventas/api/pedido-compra/guardar', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(pcData)
-        });
-        
-        const result = await response.json();
-        console.log('📦 Respuesta del servidor:', result);
-        
-        if (result.success) {
-            showToast(`✅ PC guardado como: ${estado}`, 'success');
-            
-            // Cerrar modal
-            closeModal('pedidoCompraModal');
-            
-            // Limpiar selección
-            cotizacionSeleccionada = null;
-            
-            // Recargar la lista de pedidos
-            if (typeof loadPedidos === 'function') {
-                await loadPedidos();
-            }
-            
-            // También recargar cotizaciones si es necesario
-            if (typeof loadCotizaciones === 'function') {
-                await loadCotizaciones();
-            }
-            
-        } else {
-            showToast('❌ Error: ' + (result.error || 'No se pudo guardar'), 'error');
-        }
-        
-    } catch (error) {
-        console.error('❌ Error en savePedidoCompraSAP:', error);
-        showToast('❌ Error al guardar el PC: ' + error.message, 'error');
-    }
-}
 
 // ============================================================
 // MODAL DE CONFIRMACIÓN UNIVERSAL (MEJORADO)
@@ -8194,11 +8055,15 @@ function setPcCondicionValue(value) {
     }
 }
 
+
+
 async function savePedidoCompraSAP(force) {
-    console.log('🔄 savePedidoCompraSAP ejecutándose...', { force });
+    console.log('🔄 savePedidoCompraSAP ejecutándose...', { force, modalMode });
     
     try {
-        // Validar que se haya seleccionado una cotización en modo 'cot'
+        // ============================================================
+        // VALIDAR QUE SE HAYA SELECCIONADO UNA COTIZACIÓN EN MODO 'cot'
+        // ============================================================
         if (modalMode === 'cot' && !cotizacionSeleccionada) {
             const searchInput = document.getElementById('pcCotSearch');
             const valor = searchInput?.value?.trim() || '';
@@ -8228,16 +8093,28 @@ async function savePedidoCompraSAP(force) {
             }
         }
         
-        // Leer validaciones
+        // ============================================================
+        // LEER VALIDACIONES DE LOS SWITCHES
+        // ============================================================
         const val = ['vPrecio', 'vCantidad', 'vProducto', 'vEntrega', 'vMoneda', 'vTransporte', 'vVigencia', 'vMargen']
-            .map(id => document.getElementById(id)?.value || 'Sí');
+            .map(id => {
+                const el = document.getElementById(id);
+                // Si es un checkbox (switch), obtener su estado checked
+                if (el && el.type === 'checkbox') {
+                    return el.checked ? 'Sí' : 'No';
+                }
+                // Si es un select, obtener su valor
+                return el?.value || 'Sí';
+            });
         
         console.log('📋 Validaciones:', val);
         
         // ⚠️ IMPORTANTE: OBSERVADO SOLO POR VALIDACIONES, NO POR STOCK
         const observed = force === 'observado' || val.some(v => v === 'No');
         
-        // Leer items de la tabla
+        // ============================================================
+        // LEER ITEMS DE LA TABLA
+        // ============================================================
         const trs = document.querySelectorAll('#pcItemsBody tr');
         const items = [];
         trs.forEach(row => {
@@ -8274,12 +8151,22 @@ async function savePedidoCompraSAP(force) {
         
         console.log('📦 Items del PC:', items);
         
-        // ⚠️ NO BLOQUEAR POR STOCK
-        // const stockFalta = items.some(i => Number(i.cantidad_pc) > Number(i.stock));
-        
-        // Estado: solo depende de las validaciones NO relacionadas con stock
+        // ============================================================
+        // DETERMINAR ESTADO - SIN BLOQUEAR POR STOCK
+        // ============================================================
+        // NO BLOQUEAR POR STOCK
         const estado = observed ? 'PC observado' : 'PC conforme';
-        const req_compra = observed ? 'Bloqueado' : 'Sí';  // "Sí" aunque no haya stock
+        const req_compra = observed ? 'Bloqueado' : 'Sí';
+        
+        // ============================================================
+        // OBTENER VALOR DE CONDICIÓN DE PAGO (con soporte para personalizado)
+        // ============================================================
+        const condicionSelect = document.getElementById('pcCondicion');
+        const condicionCustom = document.getElementById('pcCondicionCustom');
+        let condicionPago = condicionSelect?.value || 'Contado';
+        if (condicionPago === 'Personalizado' && condicionCustom) {
+            condicionPago = condicionCustom.value.trim() || 'Personalizado';
+        }
         
         // ============================================================
         // PREPARAR DATOS PARA ENVIAR A LA API
@@ -8297,7 +8184,7 @@ async function savePedidoCompraSAP(force) {
             monto: Number(document.getElementById('pcMonto')?.value || 0),
             entrega: document.getElementById('pcEntrega')?.value || '',
             lugar_entrega: document.getElementById('pcEntrega')?.value || '',
-            condicion_pago: document.getElementById('pcCondicionPago')?.value || '',
+            condicion_pago: condicionPago,
             vendedor: document.getElementById('pcVendedor')?.value || 'Helen Blas Príncipe',
             responsable: 'Hellen',
             observaciones: document.getElementById('pcObs')?.value || '',
