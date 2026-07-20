@@ -7187,17 +7187,17 @@ function renderCotizacionFormContent(isEdit) {
 <div class="create-panel summary-card" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.05);overflow:hidden;max-width:500px;font-family:'Segoe UI',Roboto,sans-serif;">
     
     <!-- Título "3. Resumen" -->
-    <div style="padding:10px 16px;border-bottom:1px solid #E5E7EB;background:#FAFAFA;display:flex;align-items:center;gap:6px;">
-        <span style="color:#D32F2F;font-weight:700;font-size:14px;">3.</span>
-        <span style="color:#D32F2F;font-weight:700;font-size:14px;">Resumen</span>
+    <div style="padding:5px 10px;border-bottom:1px solid #E5E7EB;background:#FAFAFA;display:flex;align-items:center;gap:6px;">
+        <span style="color:#D32F2F;font-weight:700;font-size:10px;">3.</span>
+        <span style="color:#D32F2F;font-weight:700;font-size:10px;">Resumen</span>
     </div>
     
     <!-- Cuerpo del resumen -->
-    <div style="padding:14px 16px 16px 16px;">
+    <div style="padding:6px 10px 8px 10px;">
         
         <!-- FILA: Subtotal + Descuento (input) -->
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #F0F0F0;">
-            <span style="font-size:13px;color:#444;font-weight:500;">Subtotal</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-bottom:1px solid #F0F0F0;">
+            <span style="font-size:9.5px;color:#444;font-weight:500;">Subtotal</span>
             <span id="sumSubtotal" style="font-size:14px;font-weight:600;color:#1E1E1E;">S/ 0.00</span>
         </div>
         
