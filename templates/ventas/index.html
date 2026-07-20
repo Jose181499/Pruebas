@@ -2577,126 +2577,36 @@
 }
 
 /* ============================================================ */
-/* FOOTER DEL MODAL DE PC - SIN BLOQUE BLANCO */
+/* FIX FINAL - FOOTER DEL MODAL DE PC PEGADO AL BORDE */
 /* ============================================================ */
 
-/* Eliminar completamente el padding y el fondo del footer */
+#pedidoCompraModal .modal-box {
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: 94vh !important;
+    max-height: 94vh !important;
+    justify-content: space-between !important;
+}
+
 #pedidoCompraModal .modal-foot {
     padding: 2px 10px !important;
-    display: flex !important;
-    justify-content: flex-end !important;
-    align-items: center !important;
-    gap: 6px !important;
-    border-top: 1px solid #E5E7EB !important;
-    background: #F8FAFC !important;
-    flex-shrink: 0 !important;
-    min-height: 28px !important;
-    max-height: 30px !important;
-    height: 28px !important;
-    margin: 0 !important;
-}
-
-/* Botones EXTREMADAMENTE compactos */
-#pedidoCompraModal .modal-foot .btn {
-    height: 20px !important;
-    padding: 0 10px !important;
-    font-size: 8.5px !important;
-    border-radius: 4px !important;
-    font-weight: 800 !important;
-    cursor: pointer !important;
-    transition: all 0.2s ease !important;
-    border: none !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 3px !important;
-    line-height: 1 !important;
-}
-
-/* Botón Cancelar */
-#pedidoCompraModal .modal-foot .btn-secondary {
-    background: #94A3B8 !important;
-    color: #fff !important;
-    padding: 0 10px !important;
-    height: 20px !important;
-    border-radius: 4px !important;
-}
-
-#pedidoCompraModal .modal-foot .btn-secondary:hover {
-    background: #64748B !important;
-}
-
-/* Botón PC Observado - Neon Yellow EXTREMADAMENTE compacto */
-#pedidoCompraModal .modal-foot .btn-neon-yellow {
-    height: 20px !important;
-    padding: 0 10px !important;
-    font-size: 8px !important;
-    border-radius: 4px !important;
-    border: 1.5px solid #FF0040 !important;
-    background: #FF0040 !important;
-    color: #FFFFFF !important;
-    font-weight: 900 !important;
-    cursor: pointer !important;
-    transition: all 0.15s ease !important;
-    box-shadow: 0 0 15px rgba(255, 0, 64, 0.4) !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 3px !important;
-    line-height: 1 !important;
-}
-
-#pedidoCompraModal .modal-foot .btn-neon-yellow:hover {
-    background: #FF1A4A !important;
-    box-shadow: 0 0 25px rgba(255, 0, 64, 0.7) !important;
-    transform: scale(1.02) !important;
-}
-
-/* Botón PC Conforme - Neon Green EXTREMADAMENTE compacto */
-#pedidoCompraModal .modal-foot .btn-neon-green {
-    height: 20px !important;
-    padding: 0 10px !important;
-    font-size: 8px !important;
-    border-radius: 4px !important;
-    border: 1.5px solid #00FF44 !important;
-    background: #00FF00 !important;
-    color: #000000 !important;
-    font-weight: 900 !important;
-    cursor: pointer !important;
-    transition: all 0.15s ease !important;
-    box-shadow: 0 0 15px rgba(0, 255, 0, 0.4) !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 3px !important;
-    line-height: 1 !important;
-}
-
-#pedidoCompraModal .modal-foot .btn-neon-green:hover {
-    background: #33FF33 !important;
-    box-shadow: 0 0 25px rgba(0, 255, 0, 0.7) !important;
-    transform: scale(1.02) !important;
-}
-
-/* ============================================================ */
-/* ELIMINAR COMPLETAMENTE EL ESPACIO BLANCO DEL FOOTER */
-/* ============================================================ */
-
-/* Reset total del footer */
-#pedidoCompraModal .modal-foot {
-    padding: 0 !important;
     margin: 0 !important;
     min-height: 0 !important;
     max-height: 28px !important;
-    height: 28px !important;
-    border-top: 1px solid #E5E7EB !important;
+    height: auto !important;
     background: #F8FAFC !important;
+    border-top: 1px solid #E5E7EB !important;
     display: flex !important;
     justify-content: flex-end !important;
     align-items: center !important;
     gap: 6px !important;
     flex-shrink: 0 !important;
-    overflow: hidden !important;
+    margin-top: auto !important;
 }
 
-/* Botones EXTREMADAMENTE compactos */
+#pedidoCompraModal .modal-foot button,
 #pedidoCompraModal .modal-foot .btn,
 #pedidoCompraModal .modal-foot .btn-secondary,
 #pedidoCompraModal .modal-foot .btn-neon-yellow,
@@ -2705,19 +2615,17 @@
     padding: 0 12px !important;
     font-size: 8.5px !important;
     border-radius: 4px !important;
-    font-weight: 800 !important;
-    cursor: pointer !important;
-    transition: all 0.15s ease !important;
-    border: none !important;
+    margin: 0 !important;
+    min-height: 0 !important;
+    max-height: 24px !important;
+    line-height: 1 !important;
     display: inline-flex !important;
     align-items: center !important;
     gap: 3px !important;
-    line-height: 1 !important;
-    margin: 0 !important;
+    border: none !important;
     flex-shrink: 0 !important;
 }
 
-/* Botón Cancelar */
 #pedidoCompraModal .modal-foot .btn-secondary {
     background: #94A3B8 !important;
     color: #fff !important;
@@ -2727,9 +2635,8 @@
     background: #64748B !important;
 }
 
-/* Botón PC Observado - Neon Yellow */
 #pedidoCompraModal .modal-foot .btn-neon-yellow {
-    border: 1.5px solid #FF0040 !important;
+    border: 1px solid #FF0040 !important;
     background: #FF0040 !important;
     color: #FFFFFF !important;
     box-shadow: 0 0 15px rgba(255, 0, 64, 0.4) !important;
@@ -2741,9 +2648,8 @@
     transform: scale(1.02) !important;
 }
 
-/* Botón PC Conforme - Neon Green */
 #pedidoCompraModal .modal-foot .btn-neon-green {
-    border: 1.5px solid #00FF44 !important;
+    border: 1px solid #00FF44 !important;
     background: #00FF00 !important;
     color: #000000 !important;
     box-shadow: 0 0 15px rgba(0, 255, 0, 0.4) !important;
@@ -2754,7 +2660,6 @@
     box-shadow: 0 0 25px rgba(0, 255, 0, 0.7) !important;
     transform: scale(1.02) !important;
 }
-
 </style>
 {% endblock %}
 
