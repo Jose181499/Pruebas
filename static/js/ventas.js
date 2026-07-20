@@ -519,16 +519,24 @@ async function loadGuias() {
     console.log('🔄 Cargando guías...');
     try {
         const data = await apiFetch('/ventas/api/guias/listar');
+        console.log('📦 Datos de guías:', data);
+        
         if (data.success) {
             guiasData = data.data || [];
             console.log(`✅ ${guiasData.length} guías cargadas`);
+            
+            // 🔽 Verificar si hay guías nuevas
+            guiasData.forEach(g => {
+                console.log(`📦 Guía ${g.numero}: estado ${g.estado}, cliente ${g.cliente}`);
+            });
+            
             renderGuias();
         } else {
             showToast('Error al cargar guías', 'error');
         }
     } catch (error) {
         console.error('Error cargando guías:', error);
-        showToast('Error al cargar guías', 'error');
+        showToast('Error al cargar guías: ' + error.message, 'error');
     }
 }
 
@@ -2534,36 +2542,121 @@ async function deleteCotizacion(id) {
     );
 }
 
-// En ventas.js - Reemplaza la función marcarDespachado
 async function marcarDespachado(id) {
     const despacho = despachosData.find(d => d.id === id);
-    const numero = despacho?.numero || 'DESP-XXXXXX';
-    const cliente = despacho?.cliente || 'Cliente';
+    if (!despacho) {
+        showToast('❌ Despacho no encontrado', 'error');
+        return;
+    }
+    
+    const numero = despacho.numero || 'DESP-XXXXXX';
+    const cliente = despacho.cliente || 'Cliente';
     
     showConfirmModal(
         '🚚 ¿Marcar como despachado?',
-        `Estás a punto de marcar como <b>"Despachado"</b> el despacho <b>${numero}</b> del cliente <b>${cliente}</b>.`,
+        `Estás a punto de marcar como <b>"Despachado"</b> el despacho <b>${numero}</b> del cliente <b>${cliente}</b>.<br><br>
+        <span style="color:#2563EB;">📦 Se creará automáticamente una Guía de Remisión en estado "Borrador" para que puedas completarla.</span>`,
         '⚠️ Esta acción es irreversible. Una vez despachado, no se podrá revertir.',
         async function() {
             try {
+                showToast('⏳ Procesando despacho...', 'info');
+                
+                // ============================================================
+                // PASO 1: Cambiar estado del despacho a "Despachado"
+                // ============================================================
                 const response = await apiFetch(`/ventas/api/despachos/${id}/toggle`, {
                     method: 'PUT',
                     body: JSON.stringify({ estado: 'Despachado' })
                 });
-                if (response.success) {
-                    showToast('✅ Despacho marcado como completado', 'success');
-                    await loadDespachos();
-                } else {
-                    showToast('❌ Error: ' + (response.error || 'No se pudo actualizar'), 'error');
+                
+                if (!response.success) {
+                    showToast('❌ Error al marcar despacho: ' + (response.error || 'Desconocido'), 'error');
+                    return;
                 }
+                
+                showToast('✅ Despacho marcado como Despachado', 'success');
+                
+                // ============================================================
+                // PASO 2: Crear Guía de Remisión automáticamente
+                // ============================================================
+                const ahora = new Date();
+                
+                // Datos para la guía
+                const guiaData = {
+                    estado: 'Borrador',
+                    serie: 'T001',
+                    numero: `G-${ahora.getFullYear()}${String(ahora.getMonth()+1).padStart(2,'0')}${String(ahora.getDate()).padStart(2,'0')}-${String(ahora.getTime()).slice(-4)}`,
+                    cotizacion_numero: despacho.cotizacion_numero || '',
+                    cliente: despacho.cliente || '',
+                    ruc: despacho.ruc || '',
+                    origen: despacho.origen || 'ALM-SMP',
+                    destino: despacho.destino || '',
+                    motivo: 'VENTA',
+                    observaciones: `Guía generada automáticamente desde despacho ${despacho.numero}`,
+                    fecha_traslado: ahora.toISOString().split('T')[0],
+                    // Items: intentar obtener del PC o despacho
+                    items: despacho.items || []
+                };
+                
+                console.log('📦 Creando guía automática:', guiaData);
+                
+                const guiaResponse = await fetch('/ventas/api/guias/guardar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(guiaData)
+                });
+                
+                const guiaResult = await guiaResponse.json();
+                console.log('📦 Respuesta creación guía:', guiaResult);
+                
+                if (guiaResult.success) {
+                    showToast('✅ Guía de Remisión creada en estado "Borrador"', 'success');
+                    
+                    // Recargar datos
+                    await loadDespachos();
+                    await loadGuias();
+                    
+                    // ============================================================
+                    // PASO 3: Preguntar si quiere ver la guía
+                    // ============================================================
+                    setTimeout(() => {
+                        showConfirmModal(
+                            '📦 ¿Ver la guía creada?',
+                            `Se ha creado la Guía de Remisión <b>${guiaData.numero}</b> en estado "Borrador".<br><br>
+                            Puedes editarla para completar los datos faltantes antes de emitirla.`,
+                            '⚠️ La guía está en borrador. Debes revisarla y completarla antes de emitirla.',
+                            function() {
+                                // Cambiar a la pestaña de Guías
+                                const tabBtn = document.querySelector('.tab-btn[data-tab="guias"]');
+                                if (tabBtn) {
+                                    tabBtn.click();
+                                    setTimeout(() => {
+                                        // Abrir la guía en modo edición
+                                        if (guiaResult.data && guiaResult.data.id) {
+                                            openGuiaModal(guiaResult.data.id);
+                                        }
+                                    }, 500);
+                                }
+                            },
+                            '📦 Ver guía ahora'
+                        );
+                    }, 500);
+                    
+                } else {
+                    showToast('⚠️ Despacho marcado, pero error al crear guía: ' + (guiaResult.error || 'Desconocido'), 'warning');
+                }
+                
             } catch (error) {
                 console.error('❌ Error:', error);
-                showToast('❌ Error al marcar despacho', 'error');
+                showToast('❌ Error al procesar: ' + error.message, 'error');
             }
         },
         '🚚 Sí, despachar'
     );
 }
+
 
 // En ventas.js - Reemplaza la función duplicateCotizacion
 async function duplicateCotizacion(id) {

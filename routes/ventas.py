@@ -1344,8 +1344,19 @@ def api_guias_guardar():
         data = request.get_json()
         usuario_id = session.get('usuario_id', 8)
         
+        print("=" * 80)
+        print("📦 API GUIAS GUARDAR")
+        print(f"  - Número: {data.get('numero')}")
+        print(f"  - Cliente: {data.get('cliente')}")
+        print(f"  - Estado: {data.get('estado')}")
+        print(f"  - Items: {len(data.get('items', []))}")
+        print("=" * 80)
+        
         items_json = data.get('items', [])
         
+        # ============================================================
+        # DATOS PARA LA GUÍA
+        # ============================================================
         guia_data = {
             'serie': data.get('serie', 'T001'),
             'numero': data.get('numero'),
@@ -1353,11 +1364,11 @@ def api_guias_guardar():
             'fecha_traslado': data.get('fecha_traslado') or datetime.now().date().isoformat(),
             'ruc_remitente': data.get('ruc_remitente') or session.get('empresa_ruc', '20602095704'),
             'remitente_nombre': data.get('remitente_nombre') or session.get('empresa_nombre', 'KCF CORPORACION SAC'),
-            'remitente_direccion': data.get('remitente_direccion') or '',
-            'remitente_ubigeo': data.get('remitente_ubigeo') or '',
-            'ruc_destinatario': data.get('ruc'),
-            'destinatario_nombre': data.get('cliente'),
-            'destinatario_direccion': data.get('destino'),
+            'remitente_direccion': data.get('remitente_direccion') or 'Av. Principal 123, Lima',
+            'remitente_ubigeo': data.get('remitente_ubigeo') or '150101',
+            'ruc_destinatario': data.get('ruc') or '',
+            'destinatario_nombre': data.get('cliente') or '',
+            'destinatario_direccion': data.get('destino') or '',
             'destinatario_ubigeo': data.get('destinatario_ubigeo') or '',
             'modalidad_transporte': data.get('modalidad_transporte', 'PRIVADO'),
             'placa_vehiculo': data.get('placa_vehiculo') or '',
@@ -1367,7 +1378,7 @@ def api_guias_guardar():
             'transportista_ruc': data.get('transportista_ruc') or '',
             'transportista_nombre': data.get('transportista_nombre') or '',
             'motivo_traslado': data.get('motivo_traslado', 'VENTA'),
-            'documento_asociado': data.get('cotizacion_numero') or data.get('cotizacion'),
+            'documento_asociado': data.get('cotizacion_numero') or data.get('cotizacion') or '',
             'peso_total': float(data.get('peso_total', 0)),
             'items_json': json.dumps(items_json),
             'observaciones': data.get('observaciones', ''),
@@ -1375,23 +1386,82 @@ def api_guias_guardar():
             'creado_por': usuario_id
         }
         
+        # Generar número si no tiene
         if not guia_data['numero']:
+            from datetime import datetime
+            now = datetime.now()
             count_data = db_query("SELECT COUNT(*) as total FROM guias_remision")
             count = count_data[0]['total'] + 1 if count_data else 1
             guia_data['numero'] = str(count)
         
-        if data.get('id'):
-            result = actualizar_guia_db(data['id'], guia_data)
-            if result:
-                return jsonify({'success': True, 'message': 'Guía actualizada'})
-            return jsonify({'success': False, 'error': 'No se pudo actualizar'}), 400
+        # ============================================================
+        # INSERTAR GUÍA
+        # ============================================================
+        query = """
+            INSERT INTO guias_remision (
+                serie, numero, fecha_emision, fecha_traslado,
+                ruc_remitente, remitente_nombre, remitente_direccion,
+                remitente_ubigeo, ruc_destinatario, destinatario_nombre,
+                destinatario_direccion, destinatario_ubigeo,
+                modalidad_transporte, placa_vehiculo, conductor_dni,
+                conductor_nombre, licencia_conductor, transportista_ruc,
+                transportista_nombre, motivo_traslado, documento_asociado,
+                peso_total, items_json, observaciones, estado_sunat,
+                creado_por
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            ) RETURNING id, numero
+        """
         
-        result = guardar_guia_db(guia_data)
+        params = (
+            guia_data['serie'],
+            guia_data['numero'],
+            guia_data['fecha_emision'],
+            guia_data['fecha_traslado'],
+            guia_data['ruc_remitente'],
+            guia_data['remitente_nombre'],
+            guia_data['remitente_direccion'],
+            guia_data['remitente_ubigeo'],
+            guia_data['ruc_destinatario'],
+            guia_data['destinatario_nombre'],
+            guia_data['destinatario_direccion'],
+            guia_data['destinatario_ubigeo'],
+            guia_data['modalidad_transporte'],
+            guia_data['placa_vehiculo'],
+            guia_data['conductor_dni'],
+            guia_data['conductor_nombre'],
+            guia_data['licencia_conductor'],
+            guia_data['transportista_ruc'],
+            guia_data['transportista_nombre'],
+            guia_data['motivo_traslado'],
+            guia_data['documento_asociado'],
+            guia_data['peso_total'],
+            guia_data['items_json'],
+            guia_data['observaciones'],
+            guia_data['estado_sunat'],
+            guia_data['creado_por']
+        )
+        
+        result = db_query(query, params)
+        print(f"✅ Resultado: {result}")
+        
         if result:
-            return jsonify({'success': True, 'message': 'Guía creada', 'data': {'id': result['id']}})
-        return jsonify({'success': False, 'error': 'No se pudo crear'}), 400
+            return jsonify({
+                'success': True, 
+                'message': 'Guía creada correctamente', 
+                'data': {
+                    'id': result['id'],
+                    'numero': result['numero']
+                }
+            })
+        
+        return jsonify({'success': False, 'error': 'No se pudo crear la guía'}), 400
             
     except Exception as e:
+        print(f"❌ Error en api_guias_guardar: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @ventas_bp.route('/ventas/api/guias/<int:id>', methods=['GET'])
@@ -3930,3 +4000,36 @@ def api_pedido_compra_eliminar(id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
+def obtener_despacho_por_id_db(despacho_id):
+    """Obtiene un despacho con sus items desde el PC asociado"""
+    try:
+        query = """
+            SELECT 
+                d.id, d.numero, d.fecha, d.fecha_despacho, d.estado,
+                d.pc_id, d.pc_numero, d.cotizacion_id, d.cotizacion_numero,
+                d.cliente, d.ruc, d.comprobante, d.guia, d.origen, d.destino,
+                d.transportista, d.observaciones, d.responsable,
+                p.items_json as pc_items
+            FROM despachos d
+            LEFT JOIN pedido_compra_pc p ON p.id = d.pc_id
+            WHERE d.id = %s
+        """
+        result = db_query(query, (despacho_id,))
+        
+        if result:
+            despacho = result[0]
+            # Obtener items del PC si existen
+            if despacho.get('pc_items'):
+                try:
+                    despacho['items'] = json.loads(despacho['pc_items'])
+                except:
+                    despacho['items'] = []
+            else:
+                despacho['items'] = []
+            return despacho
+        
+        return None
+    except Exception as e:
+        print(f"❌ Error en obtener_despacho_por_id_db: {e}")
+        return None
