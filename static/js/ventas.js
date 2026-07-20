@@ -7205,7 +7205,7 @@ function renderCotizacionFormContent(isEdit) {
         <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #F0F0F0;">
             <span style="font-size:13px;color:#444;font-weight:500;">Descuento</span>
             <div style="display:flex;align-items:center;gap:4px;">
-                <input id="fDiscountValue" type="number" value="0" step="0.01" style="width:44px;height:22px;border:1px solid #CCC;border-radius:4px;padding:0 4px;text-align:right;font-weight:600;font-size:12px;background:#FFF;">
+                <input id="fDiscountValue" type="number" value="0" step="0.01" style="width:52px;height:22px;border:1px solid #CCC;border-radius:4px;padding:0 4px;text-align:right;font-weight:600;font-size:12px;background:#FFF;">
                 <select id="fDiscountType" style="height:22px;border-radius:4px;border:1px solid #CCC;font-weight:600;font-size:11px;background:#FFF;padding:0 4px;" onchange="calcQuote()">
                     <option value="%">%</option>
                     <option value="S/">S/</option>

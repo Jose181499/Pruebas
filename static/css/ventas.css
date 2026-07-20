@@ -2660,3 +2660,488 @@ body.kcf-theme {
     padding: 0 6px !important;
     box-sizing: border-box !important;
 }
+
+/* ============================================================ */
+/* MODAL DE PC - ESTILOS COMPACTOS Y MEJORADOS */
+/* ============================================================ */
+
+/* Modal box más compacto */
+#pedidoCompraModal .modal-box {
+    width: min(1550px, 99vw) !important;
+    height: 96vh !important;
+    max-height: 96vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* HEADER más compacto */
+#pedidoCompraModal .modal-head {
+    padding: 6px 14px !important;
+    min-height: 34px !important;
+    flex-shrink: 0 !important;
+    background: #0F172A !important;
+}
+
+#pedidoCompraModal .modal-head .modal-title {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: #fff !important;
+    margin: 0 !important;
+}
+
+#pedidoCompraModal .modal-head #modalSub {
+    color: #94A3B8 !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    margin: 0 !important;
+}
+
+/* BODY - Grid de dos columnas */
+#pedidoCompraModal .modal-body {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    padding: 8px 12px !important;
+    background: #F8FAFC !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* CONTENEDOR PRINCIPAL - Grid 2 columnas */
+#pedidoCompraModal .modal-body > div {
+    display: grid !important;
+    grid-template-columns: 1fr 310px !important;
+    gap: 14px !important;
+    align-items: start !important;
+    flex: 1 !important;
+}
+
+/* ============================================================ */
+/* BLOQUE DE COTIZACIÓN - MÁS COMPACTO */
+/* ============================================================ */
+#pedidoCompraModal .form-section {
+    border: 1px solid #E2E8F0 !important;
+    border-radius: 6px !important;
+    background: #FFFFFF !important;
+    margin-bottom: 6px !important;
+    overflow: hidden !important;
+}
+
+#pedidoCompraModal .form-section .section-title {
+    font-size: 10px !important;
+    font-weight: 900 !important;
+    color: #7F1D1D !important;
+    padding: 4px 10px !important;
+    margin: 0 !important;
+    background: #FAFBFC !important;
+    border-bottom: 1px solid #E2E8F0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+}
+
+#pedidoCompraModal .form-section .section-title::before {
+    content: "" !important;
+    width: 3px !important;
+    height: 14px !important;
+    border-radius: 99px !important;
+    background: #EF233C !important;
+    display: inline-block !important;
+}
+
+/* Campos del formulario */
+#pedidoCompraModal .form-field {
+    margin: 0 !important;
+    min-width: 0 !important;
+}
+
+#pedidoCompraModal .form-field label {
+    display: block !important;
+    font-size: 8px !important;
+    font-weight: 900 !important;
+    color: #334155 !important;
+    margin-bottom: 1px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.2px !important;
+}
+
+#pedidoCompraModal .form-field input,
+#pedidoCompraModal .form-field select {
+    width: 100% !important;
+    height: 24px !important;
+    min-height: 24px !important;
+    border-radius: 5px !important;
+    border: 1px solid #CBD5E1 !important;
+    padding: 0 6px !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    background: #FFFFFF !important;
+    color: #0F172A !important;
+    outline: none !important;
+    box-sizing: border-box !important;
+}
+
+#pedidoCompraModal .form-field input:focus,
+#pedidoCompraModal .form-field select:focus {
+    border-color: #EF233C !important;
+    box-shadow: 0 0 0 3px rgba(239, 35, 60, 0.10) !important;
+}
+
+#pedidoCompraModal .form-field input[readonly] {
+    background: #F1F5F9 !important;
+    color: #64748B !important;
+    cursor: not-allowed !important;
+}
+
+/* Buscador de cotización */
+#pedidoCompraModal #cotBlock .form-field {
+    position: relative !important;
+}
+
+#pedidoCompraModal #pcCotSearch {
+    height: 24px !important;
+    min-height: 24px !important;
+    padding-right: 28px !important;
+    font-size: 10px !important;
+}
+
+/* ============================================================ */
+/* TABLA DE PRODUCTOS - COMPACTA */
+/* ============================================================ */
+#pedidoCompraModal .table-scroll {
+    height: 42vh !important;
+    min-height: 320px !important;
+    max-height: 420px !important;
+    overflow: auto !important;
+    padding: 0 !important;
+}
+
+#pedidoCompraModal .table-scroll .master-table {
+    font-size: 9px !important;
+    width: 100% !important;
+    border-collapse: collapse !important;
+}
+
+#pedidoCompraModal .table-scroll .master-table thead th {
+    padding: 3px 4px !important;
+    font-size: 8px !important;
+    background: #FFF1F2 !important;
+    color: #7F1D1D !important;
+    border: 1px solid #FCA5A5 !important;
+    text-align: center !important;
+    font-weight: 1000 !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+}
+
+#pedidoCompraModal .table-scroll .master-table td {
+    padding: 4px 4px !important;
+    font-size: 9px !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    border: 1px solid #E2E8F0 !important;
+}
+
+#pedidoCompraModal .table-scroll .master-table td.left {
+    text-align: left !important;
+}
+
+#pedidoCompraModal .table-scroll .master-table input {
+    width: 100% !important;
+    border: none !important;
+    background: transparent !important;
+    font-size: 9px !important;
+    padding: 0 !important;
+    outline: none !important;
+    text-align: center !important;
+}
+
+#pedidoCompraModal .table-scroll .master-table input:focus {
+    background: #F8FAFC !important;
+    border: 1px solid #EF233C !important;
+    border-radius: 3px !important;
+}
+
+/* ============================================================ */
+/* VALIDACIÓN - COMPACTA */
+/* ============================================================ */
+#pedidoCompraModal .pc-check-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 6px !important;
+    padding: 8px 10px !important;
+}
+
+#pedidoCompraModal .pc-check-card {
+    border: 1px solid #E2E8F0 !important;
+    background: #F8FAFC !important;
+    border-radius: 6px !important;
+    padding: 4px 6px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+#pedidoCompraModal .pc-check-card label {
+    font-size: 7.5px !important;
+    font-weight: 900 !important;
+    color: #334155 !important;
+    margin-bottom: 2px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+#pedidoCompraModal .pc-check-card select {
+    width: 100% !important;
+    height: 22px !important;
+    border-radius: 4px !important;
+    border: 1px solid #CBD5E1 !important;
+    font-size: 9px !important;
+    font-weight: 900 !important;
+    padding: 0 4px !important;
+    background: #FFFFFF !important;
+}
+
+/* ============================================================ */
+/* RESUMEN LATERAL - MÁS COMPACTO */
+/* ============================================================ */
+#pedidoCompraModal .summary-card {
+    background: linear-gradient(135deg, #f0f2f6 0%, #f1f1f2 100%) !important;
+    border-radius: 8px !important;
+    padding: 12px 14px !important;
+    box-shadow: 0 4px 20px rgba(15,23,42,0.12) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+    height: fit-content !important;
+}
+
+#pedidoCompraModal .summary-card .summary-header {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin-bottom: 8px !important;
+    border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+    padding-bottom: 6px !important;
+}
+
+#pedidoCompraModal .summary-card .summary-header .emoji {
+    font-size: 14px !important;
+}
+
+#pedidoCompraModal .summary-card .summary-header .title {
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    color: #94A3B8 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+#pedidoCompraModal .summary-card .summary-header .moneda {
+    margin-left: auto !important;
+    font-size: 8px !important;
+    color: #64748B !important;
+    background: rgba(255,255,255,0.05) !important;
+    padding: 2px 8px !important;
+    border-radius: 10px !important;
+}
+
+/* Filas del resumen */
+#pedidoCompraModal .summary-card .row {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 4px 0 !important;
+}
+
+#pedidoCompraModal .summary-card .row .label {
+    font-size: 9.5px !important;
+    font-weight: 600 !important;
+    color: #94A3B8 !important;
+}
+
+#pedidoCompraModal .summary-card .row .value {
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    color: #E2E8F0 !important;
+}
+
+#pedidoCompraModal .summary-card .row.border-bottom {
+    border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+}
+
+/* TOTAL - Destacado */
+#pedidoCompraModal .summary-card .total-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding-top: 8px !important;
+    margin-top: 4px !important;
+    border-top: 2px solid #EF233C !important;
+}
+
+#pedidoCompraModal .summary-card .total-row .label {
+    font-size: 12px !important;
+    font-weight: 900 !important;
+    color: #F1F5F9 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.3px !important;
+}
+
+#pedidoCompraModal .summary-card .total-row .value {
+    font-size: 16px !important;
+    font-weight: 900 !important;
+    color: #FCD34D !important;
+    background: rgba(252, 211, 77, 0.1) !important;
+    padding: 4px 14px !important;
+    border-radius: 8px !important;
+}
+
+/* Productos count */
+#pedidoCompraModal .product-count {
+    background: #F1F5F9 !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+    border: 1px solid #E2E8F0 !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+#pedidoCompraModal .product-count .label {
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    color: #475569 !important;
+}
+
+#pedidoCompraModal .product-count .value {
+    font-size: 14px !important;
+    font-weight: 900 !important;
+    color: #0F172A !important;
+}
+
+/* ============================================================ */
+/* FOOTER - BOTONES EN UNA SOLA FILA Y COMPACTOS */
+/* ============================================================ */
+#pedidoCompraModal .modal-foot {
+    padding: 6px 12px !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    gap: 8px !important;
+    border-top: 1px solid #E5E7EB !important;
+    background: #F8FAFC !important;
+    flex-shrink: 0 !important;
+    min-height: 44px !important;
+}
+
+#pedidoCompraModal .modal-foot .btn {
+    height: 32px !important;
+    padding: 0 16px !important;
+    font-size: 11px !important;
+    border-radius: 6px !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    border: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+}
+
+#pedidoCompraModal .modal-foot .btn-secondary {
+    background: #94A3B8 !important;
+    color: #fff !important;
+}
+
+#pedidoCompraModal .modal-foot .btn-secondary:hover {
+    background: #64748B !important;
+}
+
+/* Botones Neon - Estilo original pero más compactos */
+#pedidoCompraModal .modal-foot .btn-neon-yellow {
+    height: 32px !important;
+    padding: 0 18px !important;
+    font-size: 10px !important;
+    border-radius: 6px !important;
+    border: 2px solid #FF0040 !important;
+    background: #FF0040 !important;
+    color: #FFFFFF !important;
+    font-weight: 900 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    box-shadow: 0 0 30px rgba(255, 0, 64, 0.6), inset 0 0 15px rgba(255, 100, 150, 0.4) !important;
+    text-shadow: 0 0 15px rgba(0, 0, 0, 0.3) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+}
+
+#pedidoCompraModal .modal-foot .btn-neon-yellow:hover {
+    background: #FF1A4A !important;
+    box-shadow: 0 0 50px rgba(255, 0, 64, 0.9), inset 0 0 25px rgba(255, 100, 150, 0.6) !important;
+    transform: scale(1.03) !important;
+}
+
+#pedidoCompraModal .modal-foot .btn-neon-green {
+    height: 32px !important;
+    padding: 0 18px !important;
+    font-size: 10px !important;
+    border-radius: 6px !important;
+    border: 2px solid #00FF44 !important;
+    background: #00FF00 !important;
+    color: #000000 !important;
+    font-weight: 900 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    box-shadow: 0 0 30px rgba(0, 255, 0, 0.6), inset 0 0 15px rgba(200, 255, 200, 0.4) !important;
+    text-shadow: 0 0 15px rgba(0, 0, 0, 0.15) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+}
+
+#pedidoCompraModal .modal-foot .btn-neon-green:hover {
+    background: #33FF33 !important;
+    box-shadow: 0 0 50px rgba(0, 255, 0, 0.9), inset 0 0 25px rgba(200, 255, 200, 0.6) !important;
+    transform: scale(1.03) !important;
+}
+
+/* ============================================================ */
+/* RESPONSIVE - PC MODAL */
+/* ============================================================ */
+@media (max-width: 1280px) {
+    #pedidoCompraModal .modal-body > div {
+        grid-template-columns: 1fr !important;
+    }
+    
+    #pedidoCompraModal .summary-card {
+        max-width: 100% !important;
+    }
+    
+    #pedidoCompraModal .pc-check-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+}
+
+@media (max-width: 768px) {
+    #pedidoCompraModal .modal-box {
+        width: 98vw !important;
+        height: 98vh !important;
+    }
+    
+    #pedidoCompraModal .pc-check-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    #pedidoCompraModal .modal-foot {
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        gap: 6px !important;
+    }
+    
+    #pedidoCompraModal .modal-foot .btn {
+        height: 28px !important;
+        padding: 0 12px !important;
+        font-size: 9px !important;
+    }
+}
