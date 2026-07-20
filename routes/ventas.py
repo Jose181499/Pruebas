@@ -1848,9 +1848,7 @@ def api_despachos_guardar():
         print("🚚 API DESPACHOS GUARDAR")
         print(f"  - PC ID: {data.get('pc_id')}")
         print(f"  - PC Número: {data.get('pc_numero')}")
-        print(f"  - Cliente: {data.get('cliente')}")
-        print(f"  - Estado: {data.get('estado')}")
-        print(f"  - Fecha despacho: {data.get('fecha_despacho')}")
+        print(f"  - Fecha despacho recibida: {data.get('fecha_despacho')}")
         print("=" * 80)
         
         # Generar número si no tiene
@@ -1865,70 +1863,50 @@ def api_despachos_guardar():
             data['fecha'] = datetime.now().isoformat()
         
         # ============================================================
-        # 🔽 PROCESAR fecha_despacho - mantener la hora
+        # 🔽 PROCESAR FECHA DESPACHO - CON HORA
         # ============================================================
+        from datetime import datetime
         fecha_despacho = data.get('fecha_despacho')
         
         if fecha_despacho:
             try:
-                # Si viene en formato ISO (2026-07-20T14:30:00.000Z), mantenerlo
-                if 'T' in fecha_despacho:
-                    # Ya está en formato ISO, usarlo directamente
+                # Si viene en formato ISO con hora: 2026-07-20 14:30:45
+                if isinstance(fecha_despacho, str) and ' ' in fecha_despacho:
+                    # Ya tiene hora, convertir a datetime
+                    dt = datetime.strptime(fecha_despacho, '%Y-%m-%d %H:%M:%S')
+                    fecha_despacho = dt.isoformat()
+                    print(f"📅 Fecha con hora convertida: {fecha_despacho}")
+                # Si viene en formato ISO: 2026-07-20T14:30:45.000Z
+                elif isinstance(fecha_despacho, str) and 'T' in fecha_despacho:
+                    # Ya está en ISO, mantener
                     pass
-                # Si viene en formato DD/MM/YYYY HH:MM
-                elif '/' in fecha_despacho and ':' in fecha_despacho:
-                    partes = fecha_despacho.split(' ')
-                    fecha_parts = partes[0].split('/')
-                    hora_parts = partes[1].split(':')
-                    if len(fecha_parts) == 3 and len(hora_parts) >= 2:
-                        from datetime import datetime
-                        dt = datetime(
-                            int(fecha_parts[2]),  # año
-                            int(fecha_parts[1]),  # mes
-                            int(fecha_parts[0]),  # día
-                            int(hora_parts[0]),   # hora
-                            int(hora_parts[1])    # minuto
-                        )
-                        fecha_despacho = dt.isoformat()
-                # Si viene solo en formato DD/MM/YYYY
-                elif '/' in fecha_despacho:
-                    partes = fecha_despacho.split('/')
-                    if len(partes) == 3:
-                        from datetime import datetime
-                        ahora = datetime.now()
-                        dt = datetime(
-                            int(partes[2]),  # año
-                            int(partes[1]),  # mes
-                            int(partes[0]),  # día
-                            ahora.hour,
-                            ahora.minute,
-                            ahora.second
-                        )
-                        fecha_despacho = dt.isoformat()
-                # Si viene en formato YYYY-MM-DD
-                elif '-' in fecha_despacho and len(fecha_despacho) == 10:
-                    from datetime import datetime
+                # Si viene solo con fecha: 2026-07-20
+                elif isinstance(fecha_despacho, str) and '-' in fecha_despacho and len(fecha_despacho) == 10:
+                    # Agregar hora actual
                     ahora = datetime.now()
-                    partes = fecha_despacho.split('-')
                     dt = datetime(
-                        int(partes[0]),  # año
-                        int(partes[1]),  # mes
-                        int(partes[2]),  # día
+                        int(fecha_despacho.split('-')[0]),
+                        int(fecha_despacho.split('-')[1]),
+                        int(fecha_despacho.split('-')[2]),
                         ahora.hour,
                         ahora.minute,
                         ahora.second
                     )
                     fecha_despacho = dt.isoformat()
+                    print(f"📅 Fecha sin hora, se agregó hora actual: {fecha_despacho}")
+                else:
+                    # Si no se puede parsear, usar ahora
+                    fecha_despacho = datetime.now().isoformat()
+                    print(f"📅 Usando fecha actual: {fecha_despacho}")
             except Exception as e:
                 print(f"⚠️ Error procesando fecha: {e}")
-                from datetime import datetime
                 fecha_despacho = datetime.now().isoformat()
         else:
             # Si no hay fecha, usar ahora
-            from datetime import datetime
             fecha_despacho = datetime.now().isoformat()
+            print(f"📅 No había fecha, usando ahora: {fecha_despacho}")
         
-        print(f"📅 Fecha despacho final: {fecha_despacho}")
+        print(f"📅 Fecha despacho FINAL a guardar: {fecha_despacho}")
         
         # ============================================================
         # GUARDAR DESPACHO
@@ -1949,7 +1927,7 @@ def api_despachos_guardar():
         params = (
             data.get('numero'),
             data.get('fecha'),
-            fecha_despacho,
+            fecha_despacho,  # 🔽 AHORA CON HORA
             data.get('estado', 'Pendiente despacho'),
             data.get('pc_id'),
             data.get('pc_numero'),

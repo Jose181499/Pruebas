@@ -494,31 +494,17 @@ async function loadDespachos() {
     console.log('🔄 Cargando despachos...');
     try {
         const data = await apiFetch('/ventas/api/despachos/listar');
-        console.log('📦 Datos de despachos recibidos:', data);
+        console.log('📦 Datos de despachos:', data);
         
         if (data.success) {
-            // ============================================================
-            // 🔽 NORMALIZAR FECHAS EN LOS DATOS RECIBIDOS
-            // ============================================================
-            despachosData = (data.data || []).map(d => {
-                // Si la fecha viene en formato ISO, convertirla a string legible
-                if (d.fecha_despacho && typeof d.fecha_despacho === 'string' && d.fecha_despacho.includes('T')) {
-                    try {
-                        const fecha = new Date(d.fecha_despacho);
-                        if (!isNaN(fecha.getTime())) {
-                            const dia = String(fecha.getDate()).padStart(2, '0');
-                            const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-                            const anio = fecha.getFullYear();
-                            d.fecha_despacho = `${dia}/${mes}/${anio}`;
-                        }
-                    } catch (e) {
-                        // Mantener el valor original
-                    }
-                }
-                return d;
+            despachosData = data.data || [];
+            console.log(`✅ ${despachosData.length} despachos cargados`);
+            
+            // 🔽 Verificar las fechas para debug
+            despachosData.forEach(d => {
+                console.log(`📅 Despacho ${d.numero}: fecha_despacho = ${d.fecha_despacho}`);
             });
             
-            console.log(`✅ ${despachosData.length} despachos cargados`);
             renderDespachos();
         } else {
             showToast('Error al cargar despachos', 'error');
@@ -528,7 +514,6 @@ async function loadDespachos() {
         showToast('Error al cargar despachos: ' + error.message, 'error');
     }
 }
-
 
 async function loadGuias() {
     console.log('🔄 Cargando guías...');
@@ -1208,14 +1193,42 @@ function renderDespachos() {
     
     tbody.innerHTML = list.map((r, i) => {
         // ============================================================
-        // 🔽 FORMATEAR FECHA CORRECTAMENTE CON HORA
+        // 🔽 FORMATEAR FECHA CON HORA
         // ============================================================
-        const fechaFormateada = formatearFechaDespacho(r.fecha_despacho || r.fecha || r.created_at);
+        let fechaDisplay = '-';
+        const fechaRaw = r.fecha_despacho || r.fecha || r.created_at;
+        
+        if (fechaRaw) {
+            try {
+                let fecha = new Date(fechaRaw);
+                
+                // Si la fecha es válida
+                if (!isNaN(fecha.getTime())) {
+                    const dia = String(fecha.getDate()).padStart(2, '0');
+                    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+                    const anio = fecha.getFullYear();
+                    const horas = String(fecha.getHours()).padStart(2, '0');
+                    const minutos = String(fecha.getMinutes()).padStart(2, '0');
+                    
+                    // Si la hora es 00:00, significa que no se guardó la hora
+                    if (horas === '00' && minutos === '00') {
+                        fechaDisplay = `${dia}/${mes}/${anio}`;
+                    } else {
+                        fechaDisplay = `${dia}/${mes}/${anio} ${horas}:${minutos}`;
+                    }
+                } else {
+                    // Si no es una fecha válida, mostrar el string original
+                    fechaDisplay = String(fechaRaw);
+                }
+            } catch (e) {
+                fechaDisplay = String(fechaRaw);
+            }
+        }
         
         return `
         <tr>
             <td>${i + 1}</td>
-            <td class="date-cell">${fechaFormateada}</td>
+            <td class="date-cell">${fechaDisplay}</td>
             <td>${badgeStatus(r.estado)}</td>
             <td><b>${sd(r.numero)}</b></td>
             <td>${sd(r.pc_numero)}</td>
@@ -4627,7 +4640,6 @@ function generarOrdenCompra(id) {
 }
 
 function enviarADespacho(id) {
-    // Buscar el PC para mostrar info
     const pedido = pedidosData.find(p => p.id === id);
     if (!pedido) {
         showToast('❌ PC no encontrado', 'error');
@@ -4645,9 +4657,7 @@ function enviarADespacho(id) {
             try {
                 showToast('⏳ Procesando envío a despacho...', 'info');
                 
-                // ============================================================
-                // PASO 1: Cambiar el estado del PC a "Listo para despacho"
-                // ============================================================
+                // PASO 1: Cambiar el estado del PC
                 const toggleResponse = await apiFetch(`/ventas/api/pedido-compra/${id}/toggle`, {
                     method: 'PUT',
                     body: JSON.stringify({ estado: 'Listo para despacho' })
@@ -4661,22 +4671,26 @@ function enviarADespacho(id) {
                 console.log('✅ PC actualizado a "Listo para despacho"');
                 
                 // ============================================================
-                // PASO 2: Crear el despacho automáticamente CON HORA ACTUAL
+                // PASO 2: Crear el despacho CON HORA EXPLÍCITA
                 // ============================================================
                 const ahora = new Date();
                 
-                // 🔽 Formato ISO completo con hora actual
-                const fechaHoraISO = ahora.toISOString(); // 2026-07-20T14:30:45.123Z
+                // 🔽 FORMATO ISO COMPLETO CON HORA - EJ: 2026-07-20T14:30:45
+                const year = ahora.getFullYear();
+                const month = String(ahora.getMonth() + 1).padStart(2, '0');
+                const day = String(ahora.getDate()).padStart(2, '0');
+                const hours = String(ahora.getHours()).padStart(2, '0');
+                const minutes = String(ahora.getMinutes()).padStart(2, '0');
+                const seconds = String(ahora.getSeconds()).padStart(2, '0');
                 
-                // 🔽 Formato para mostrar (DD/MM/YYYY HH:MM)
-                const dia = String(ahora.getDate()).padStart(2, '0');
-                const mes = String(ahora.getMonth() + 1).padStart(2, '0');
-                const anio = ahora.getFullYear();
-                const horas = String(ahora.getHours()).padStart(2, '0');
-                const minutos = String(ahora.getMinutes()).padStart(2, '0');
-                const fechaHoraDisplay = `${dia}/${mes}/${anio} ${horas}:${minutos}`;
+                // 🔽 FORMATO ISO COMPLETO: 2026-07-20 14:30:45
+                const fechaHoraISO = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
                 
-                console.log(`📅 Fecha/Hora: ${fechaHoraDisplay} (ISO: ${fechaHoraISO})`);
+                // 🔽 FORMATO PARA MOSTRAR: 20/07/2026 14:30
+                const fechaHoraDisplay = `${day}/${month}/${year} ${hours}:${minutes}`;
+                
+                console.log(`📅 Fecha/Hora ISO: ${fechaHoraISO}`);
+                console.log(`📅 Fecha/Hora Display: ${fechaHoraDisplay}`);
                 
                 const despachoData = {
                     pc_id: id,
@@ -4685,17 +4699,16 @@ function enviarADespacho(id) {
                     ruc: pedido.ruc,
                     cotizacion_id: pedido.cotizacion_id,
                     cotizacion_numero: pedido.cotizacion_numero,
-                    fecha_despacho: fechaHoraISO,  // 🔽 Enviar ISO completo con hora
-                    fecha_despacho_display: fechaHoraDisplay,  // Para mostrar
+                    fecha_despacho: fechaHoraISO,  // 🔽 ISO CON HORA
                     origen: 'ALM-SMP',
                     destino: pedido.lugar_entrega || pedido.entrega || '',
                     estado: 'Pendiente despacho',
                     observaciones: `Despacho automático desde PC ${pedido.numero}`,
                     responsable: 'Hellen',
-                    numero: `DESP-${ahora.getFullYear()}${String(ahora.getMonth()+1).padStart(2,'0')}${String(ahora.getDate()).padStart(2,'0')}-${String(ahora.getTime()).slice(-4)}`
+                    numero: `DESP-${year}${month}${day}-${String(ahora.getTime()).slice(-4)}`
                 };
                 
-                console.log('📦 Creando despacho con datos:', despachoData);
+                console.log('📦 Enviando despacho:', despachoData);
                 
                 const despachoResponse = await fetch('/ventas/api/despachos/guardar', {
                     method: 'POST',
@@ -4706,17 +4719,15 @@ function enviarADespacho(id) {
                 });
                 
                 const despachoResult = await despachoResponse.json();
-                console.log('📦 Respuesta creación despacho:', despachoResult);
+                console.log('📦 Respuesta:', despachoResult);
                 
                 if (despachoResult.success) {
-                    showToast('✅ PC enviado a despacho y despacho creado', 'success');
+                    showToast('✅ PC enviado a despacho', 'success');
                     
-                    // Recargar datos
                     await loadPedidos();
                     await loadDespachos();
                     renderValidacion();
                     
-                    // Cambiar a la pestaña de despacho después de un momento
                     setTimeout(() => {
                         const tabBtn = document.querySelector('.tab-btn[data-tab="despachar"]');
                         if (tabBtn) {
@@ -4734,7 +4745,7 @@ function enviarADespacho(id) {
                 }
                 
             } catch (error) {
-                console.error('❌ Error en enviarADespacho:', error);
+                console.error('❌ Error:', error);
                 showToast('❌ Error al enviar a despacho: ' + error.message, 'error');
             }
         },
