@@ -2541,7 +2541,6 @@ async function deleteCotizacion(id) {
         '🗑️ Sí, eliminar'
     );
 }
-
 async function marcarDespachado(id) {
     const despacho = despachosData.find(d => d.id === id);
     if (!despacho) {
@@ -2554,16 +2553,13 @@ async function marcarDespachado(id) {
     
     showConfirmModal(
         '🚚 ¿Marcar como despachado?',
-        `Estás a punto de marcar como <b>"Despachado"</b> el despacho <b>${numero}</b> del cliente <b>${cliente}</b>.<br><br>
-        <span style="color:#2563EB;">📦 Se creará automáticamente una Guía de Remisión en estado "Borrador" para que puedas completarla.</span>`,
-        '⚠️ Esta acción es irreversible. Una vez despachado, no se podrá revertir.',
+        `Estás a punto de marcar como <b>"Despachado"</b> el despacho <b>${numero}</b> del cliente <b>${cliente}</b>.`,
+        '⚠️ Esta acción es irreversible.',
         async function() {
             try {
                 showToast('⏳ Procesando despacho...', 'info');
                 
-                // ============================================================
-                // PASO 1: Cambiar estado del despacho a "Despachado"
-                // ============================================================
+                // PASO 1: Cambiar estado del despacho
                 const response = await apiFetch(`/ventas/api/despachos/${id}/toggle`, {
                     method: 'PUT',
                     body: JSON.stringify({ estado: 'Despachado' })
@@ -2576,12 +2572,8 @@ async function marcarDespachado(id) {
                 
                 showToast('✅ Despacho marcado como Despachado', 'success');
                 
-                // ============================================================
-                // PASO 2: Obtener items del PC asociado
-                // ============================================================
+                // PASO 2: Obtener items del PC
                 let items = [];
-                
-                // Buscar el PC asociado al despacho
                 if (despacho.pc_id) {
                     try {
                         const pcResponse = await apiFetch(`/ventas/api/pedido-compra/${despacho.pc_id}`);
@@ -2594,23 +2586,24 @@ async function marcarDespachado(id) {
                     }
                 }
                 
-                // Si no hay items del PC, intentar usar los del despacho
                 if (items.length === 0 && despacho.items) {
                     items = despacho.items;
                 }
                 
-                // ============================================================
+                console.log('📦 Items finales para guía:', items);
+                
                 // PASO 3: Crear Guía de Remisión
-                // ============================================================
                 const ahora = new Date();
                 const year = ahora.getFullYear();
                 const month = String(ahora.getMonth() + 1).padStart(2, '0');
                 const day = String(ahora.getDate()).padStart(2, '0');
                 
+                const numeroGuia = `G-${year}${month}${day}-${String(ahora.getTime()).slice(-4)}`;
+                
                 const guiaData = {
                     estado: 'Borrador',
                     serie: 'T001',
-                    numero: `G-${year}${month}${day}-${String(ahora.getTime()).slice(-4)}`,
+                    numero: numeroGuia,
                     cotizacion_numero: despacho.cotizacion_numero || '',
                     cliente: despacho.cliente || '',
                     ruc: despacho.ruc || '',
@@ -2619,17 +2612,37 @@ async function marcarDespachado(id) {
                     motivo_traslado: 'VENTA',
                     observaciones: `Guía generada automáticamente desde despacho ${despacho.numero}`,
                     fecha_traslado: `${year}-${month}-${day}`,
-                    items: items.map(item => ({
-                        codigo: item.codigo || '',
-                        producto: item.producto || item.descripcion || '',
-                        cantidad: item.cantidad_pc || item.cantidad || 1,
-                        um: item.um || 'NIU',
-                        marca: item.marca || '',
-                        modelo: item.modelo || ''
-                    }))
+                    items: items.map(item => {
+                        // Normalizar item para la guía
+                        let codigo = item.codigo || '';
+                        let producto = item.producto || item.descripcion || '';
+                        let cantidad = item.cantidad_pc || item.cantidad || 1;
+                        let um = item.um || 'NIU';
+                        let marca = item.marca || '';
+                        let modelo = item.modelo || '';
+                        
+                        // Si el item es un array [codigo, descripcion, cantidad, ...]
+                        if (Array.isArray(item)) {
+                            codigo = item[0] || '';
+                            producto = item[1] || '';
+                            cantidad = item[3] || item[2] || 1;
+                            um = 'NIU';
+                            marca = '';
+                            modelo = '';
+                        }
+                        
+                        return {
+                            codigo: codigo,
+                            producto: producto,
+                            cantidad: cantidad,
+                            um: um,
+                            marca: marca,
+                            modelo: modelo
+                        };
+                    })
                 };
                 
-                console.log('📦 Creando guía automática:', guiaData);
+                console.log('📦 Creando guía automática:', JSON.stringify(guiaData, null, 2));
                 
                 const guiaResponse = await fetch('/ventas/api/guias/guardar', {
                     method: 'POST',
@@ -2645,26 +2658,19 @@ async function marcarDespachado(id) {
                 if (guiaResult.success) {
                     showToast('✅ Guía de Remisión creada en estado "Borrador"', 'success');
                     
-                    // Recargar datos
                     await loadDespachos();
                     await loadGuias();
                     
-                    // ============================================================
-                    // PASO 4: Preguntar si quiere ver la guía
-                    // ============================================================
                     setTimeout(() => {
                         showConfirmModal(
                             '📦 ¿Ver la guía creada?',
-                            `Se ha creado la Guía de Remisión <b>${guiaData.numero}</b> en estado "Borrador".<br><br>
-                            Puedes editarla para completar los datos faltantes antes de emitirla.`,
+                            `Se ha creado la Guía de Remisión <b>${guiaData.serie}-${guiaData.numero}</b> en estado "Borrador".`,
                             '⚠️ La guía está en borrador. Debes revisarla y completarla antes de emitirla.',
                             function() {
-                                // Cambiar a la pestaña de Guías
                                 const tabBtn = document.querySelector('.tab-btn[data-tab="guias"]');
                                 if (tabBtn) {
                                     tabBtn.click();
                                     setTimeout(() => {
-                                        // Abrir la guía en modo edición
                                         if (guiaResult.data && guiaResult.data.id) {
                                             openGuiaModal(guiaResult.data.id);
                                         }

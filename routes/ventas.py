@@ -1345,27 +1345,30 @@ def api_guias_guardar():
         usuario_id = session.get('usuario_id', 8)
         
         print("=" * 80)
-        print("📦 API GUIAS GUARDAR")
-        print(f"  - Número: {data.get('numero')}")
-        print(f"  - Cliente: {data.get('cliente')}")
-        print(f"  - Estado: {data.get('estado')}")
-        print(f"  - Items: {len(data.get('items', []))}")
+        print("📦 API GUIAS GUARDAR - INICIO")
+        print(f"  - Datos recibidos: {data}")
+        print(f"  - Usuario ID: {usuario_id}")
         print("=" * 80)
         
-        # ============================================================
-        # 🔽 IMPORTAR datetime DENTRO DE LA FUNCIÓN SI ES NECESARIO
-        # ============================================================
         from datetime import datetime, date
         
-        items_json = data.get('items', [])
+        # ============================================================
+        # VALIDAR DATOS OBLIGATORIOS
+        # ============================================================
+        if not data:
+            print("❌ No se recibieron datos")
+            return jsonify({'success': False, 'error': 'No se recibieron datos'}), 400
         
-        # Generar número si no tiene
+        # Obtener número
         numero = data.get('numero')
         if not numero:
             now = datetime.now()
-            count_data = db_query("SELECT COUNT(*) as total FROM guias_remision")
-            count = count_data[0]['total'] + 1 if count_data else 1
-            numero = str(count)
+            numero = f"G-{now.strftime('%Y%m%d')}-{str(now.timestamp()).split('.')[0][-4:]}"
+            print(f"📋 Número generado: {numero}")
+        
+        # Obtener items
+        items_json = data.get('items', [])
+        print(f"📦 Items: {len(items_json)} productos")
         
         # ============================================================
         # DATOS PARA LA GUÍA
@@ -1399,7 +1402,9 @@ def api_guias_guardar():
             'creado_por': usuario_id
         }
         
-        print(f"📦 Datos a guardar: {guia_data}")
+        print(f"📦 Datos a guardar:")
+        for key, value in guia_data.items():
+            print(f"  - {key}: {value}")
         
         # ============================================================
         # INSERTAR GUÍA
@@ -1450,6 +1455,9 @@ def api_guias_guardar():
             guia_data['creado_por']
         )
         
+        print(f"📝 Query: {query}")
+        print(f"📝 Parámetros: {params}")
+        
         result = db_query(query, params)
         print(f"✅ Resultado: {result}")
         
@@ -1470,6 +1478,7 @@ def api_guias_guardar():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @ventas_bp.route('/ventas/api/guias/<int:id>', methods=['GET'])
 @login_required
