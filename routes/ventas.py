@@ -614,14 +614,12 @@ def obtener_pc_db():
 # ventas.py - Modificar la función guardar_pc_db
 
 def guardar_pc_db(data):
-    """Guarda un nuevo pedido de compra con validación completa"""
     try:
         print("📝 Guardando PC en BD...")
-        print(f"📦 Datos recibidos: {data.keys()}")
         
         items_json = json.dumps(data.get('items', []))
         
-        # Nuevos campos para validación 360
+        # Validaciones (sin stock)
         valida_precios = data.get('valida_precios', False)
         valida_cantidades = data.get('valida_cantidades', False)
         valida_stock = data.get('valida_stock', False)
@@ -631,11 +629,12 @@ def guardar_pc_db(data):
         valida_margen = data.get('valida_margen', False)
         valida_vigencia = data.get('valida_vigencia', False)
         
-        # Calcular resultado de validación
+        # ⚠️ IMPORTANTE: NO VERIFICAR STOCK PARA BLOQUEAR
+        # Solo verificar las validaciones NO relacionadas con stock
         validacion_ok = all([
             valida_precios,
             valida_cantidades,
-            valida_stock,
+            # valida_stock,  # ← ELIMINADO: no bloquea por stock
             valida_entrega,
             valida_montos,
             valida_transporte,
@@ -643,19 +642,14 @@ def guardar_pc_db(data):
             valida_vigencia
         ])
         
-        # Estado final
+        # Estado sin considerar stock
         if not validacion_ok:
             estado = 'PC observado'
             req_compra = 'Bloqueado'
         else:
-            # Verificar stock
-            items = data.get('items', [])
-            falta_stock = any(
-                item.get('cantidad_pc', 0) > item.get('stock', 0) 
-                for item in items
-            )
-            estado = 'PC conforme' if not falta_stock else 'Requiere compra'
-            req_compra = 'Sí' if falta_stock else 'No'
+            # ✅ Siempre "PC conforme" si las demás validaciones OK
+            estado = 'PC conforme'
+            req_compra = 'Sí'  # ⚠️ Aunque no haya stock, se marca como "requiere compra"
         
         query = """
             INSERT INTO pedido_compra_pc (
@@ -694,7 +688,7 @@ def guardar_pc_db(data):
             data.get('observaciones'),
             valida_precios,
             valida_cantidades,
-            valida_stock,
+            valida_stock,  # ← Se guarda pero NO bloquea
             valida_entrega,
             valida_montos,
             valida_transporte,
@@ -712,14 +706,10 @@ def guardar_pc_db(data):
             req_compra
         )
         
-        print(f"📝 Parámetros: {params}")
         result = db_query(query, params)
-        print(f"✅ Resultado: {result}")
         return result[0] if result else None
     except Exception as e:
         print(f"❌ Error en guardar_pc_db: {e}")
-        import traceback
-        traceback.print_exc()
         raise
 
 # ============================================================
@@ -2864,8 +2854,7 @@ def api_cotizaciones_buscar():
 def api_pedido_compra_validar(id):
     """
     Valida un PC contra su cotización asociada.
-    Verifica los 8 puntos: precio, cantidad, producto, moneda, 
-    entrega, transporte, margen y stock.
+    ⚠️ EL STOCK NO BLOQUEA - SOLO INFORMATIVO
     """
     try:
         data = request.get_json()
@@ -2878,7 +2867,8 @@ def api_pedido_compra_validar(id):
                 cotizacion_id, cotizacion_numero,
                 valida_precios, valida_cantidades, valida_stock,
                 valida_entrega, valida_montos,
-                items_json, estado
+                valida_transporte, valida_margen, valida_vigencia,
+                items_json, estado, req_compra
             FROM pedido_compra_pc
             WHERE id = %s
         """
@@ -2898,7 +2888,7 @@ def api_pedido_compra_validar(id):
             SELECT 
                 c.id, c.numero_cotizacion, c.subtotal, c.total,
                 c.condicion_pago, c.direccion_entrega, c.tiempo_entrega,
-                c.transporte, c.margen,
+                c.transporte, c.margen, c.validez_oferta,
                 cl.razon_social as cliente_razon_social,
                 cl.numero_documento as cliente_ruc
             FROM cotizaciones c
@@ -2913,7 +2903,12 @@ def api_pedido_compra_validar(id):
         cotizacion = cot_result[0]
         
         # 3. Obtener items del PC
-        pc_items = json.loads(pc.get('items_json', '[]'))
+        pc_items = []
+        if pc.get('items_json'):
+            try:
+                pc_items = json.loads(pc['items_json'])
+            except:
+                pc_items = []
         
         # 4. Obtener items de la cotización
         query_items_cot = """
@@ -2928,10 +2923,11 @@ def api_pedido_compra_validar(id):
         cot_items = db_query(query_items_cot, (cotizacion_id,))
         
         # 5. Realizar validaciones
+        # ⚠️ STOCK NO BLOQUEA - solo informativo
         validaciones = {
             'precios': True,
             'cantidades': True,
-            'stock': True,
+            'stock': True,  # ← Se guarda pero NO bloquea
             'entrega': True,
             'moneda': True,
             'transporte': True,
@@ -2940,12 +2936,20 @@ def api_pedido_compra_validar(id):
         }
         
         detalles_validacion = []
+        stock_insuficiente = False
+        productos_faltantes = []
         
         # Validar cada item
         for pc_item in pc_items:
-            codigo = pc_item.get('codigo', '')
-            cantidad_pc = pc_item.get('cantidad_pc', 0)
-            precio_pc = pc_item.get('precio_pc', 0)
+            # Soporte para formato de lista o diccionario
+            if isinstance(pc_item, dict):
+                codigo = pc_item.get('codigo', '')
+                cantidad_pc = float(pc_item.get('cantidad_pc', pc_item.get('cantidad', 0)))
+                precio_pc = float(pc_item.get('precio_pc', pc_item.get('precio', 0)))
+            else:
+                codigo = pc_item[0] if len(pc_item) > 0 else ''
+                cantidad_pc = float(pc_item[3]) if len(pc_item) > 3 else 0
+                precio_pc = float(pc_item[5]) if len(pc_item) > 5 else 0
             
             # Buscar item correspondiente en cotización
             cot_item = next(
@@ -2954,9 +2958,9 @@ def api_pedido_compra_validar(id):
             )
             
             if cot_item:
-                cantidad_cot = cot_item.get('cantidad', 0)
-                precio_cot = cot_item.get('precio_venta_unitario', 0)
-                stock = cot_item.get('stock', 0)
+                cantidad_cot = float(cot_item.get('cantidad', 0))
+                precio_cot = float(cot_item.get('precio_venta_unitario', 0))
+                stock = float(cot_item.get('stock', 0))
                 
                 # Validar cantidad
                 if cantidad_pc != cantidad_cot:
@@ -2968,8 +2972,16 @@ def api_pedido_compra_validar(id):
                     if diff_pct > 5:
                         validaciones['precios'] = False
                 
-                # Validar stock
+                # ⚠️ STOCK: solo informativo, NO BLOQUEA
                 if cantidad_pc > stock:
+                    stock_insuficiente = True
+                    productos_faltantes.append({
+                        'codigo': codigo,
+                        'producto': cot_item.get('descripcion', ''),
+                        'stock': stock,
+                        'requerido': cantidad_pc,
+                        'faltante': cantidad_pc - stock
+                    })
                     validaciones['stock'] = False
                 
                 detalles_validacion.append({
@@ -2984,28 +2996,62 @@ def api_pedido_compra_validar(id):
                     'validaciones': {
                         'cantidad': cantidad_pc == cantidad_cot,
                         'precio': abs(precio_pc - precio_cot) / precio_cot * 100 <= 5 if precio_cot != 0 else True,
-                        'stock': cantidad_pc <= stock
+                        'stock': cantidad_pc <= stock  # ← SOLO INFORMATIVO
                     }
                 })
         
         # Validar entrega
-        if pc.get('lugar_entrega') != cotizacion.get('direccion_entrega'):
+        pc_entrega = pc.get('lugar_entrega') or pc.get('entrega') or ''
+        cot_entrega = cotizacion.get('direccion_entrega') or ''
+        if pc_entrega.strip().lower() != cot_entrega.strip().lower():
             validaciones['entrega'] = False
         
-        # Validar moneda (si hay campo)
-        # ... asumiendo que ambos tienen moneda
-        
         # Validar transporte
-        if pc.get('transporte') != cotizacion.get('transporte'):
+        pc_transporte = pc.get('transporte') or ''
+        cot_transporte = cotizacion.get('transporte') or ''
+        if pc_transporte.strip().lower() != cot_transporte.strip().lower():
             validaciones['transporte'] = False
         
-        # Validar margen (si hay campo)
-        # ... 
+        # Validar moneda (si hay campo)
+        pc_moneda = pc.get('moneda') or ''
+        cot_moneda = cotizacion.get('moneda') or 'Soles (S/)'
+        if pc_moneda and cot_moneda and pc_moneda.strip().lower() != cot_moneda.strip().lower():
+            validaciones['moneda'] = False
+        
+        # Validar vigencia
+        pc_vigencia = pc.get('vigencia') or ''
+        cot_vigencia = cotizacion.get('validez_oferta') or ''
+        if pc_vigencia and cot_vigencia and pc_vigencia.strip().lower() != cot_vigencia.strip().lower():
+            validaciones['vigencia'] = False
         
         # 6. Determinar resultado final
-        todas_validas = all(validaciones.values())
-        estado = 'PC conforme' if todas_validas else 'PC observado'
-        req_compra = 'No' if todas_validas else 'Bloqueado'
+        # ⚠️ STOCK NO BLOQUEA - solo informativo
+        validaciones_para_estado = {
+            'precios': validaciones['precios'],
+            'cantidades': validaciones['cantidades'],
+            'entrega': validaciones['entrega'],
+            'moneda': validaciones['moneda'],
+            'transporte': validaciones['transporte'],
+            'margen': validaciones['margen'],
+            'vigencia': validaciones['vigencia']
+            # 'stock' NO incluido para bloqueo
+        }
+        
+        todas_validas = all(validaciones_para_estado.values())
+        
+        if not todas_validas:
+            estado = 'PC observado'
+            req_compra = 'Bloqueado'
+            mensaje = 'PC con observaciones - requiere corrección'
+        else:
+            # ✅ Todas las validaciones OK (excepto stock)
+            estado = 'PC conforme'
+            if stock_insuficiente:
+                req_compra = 'Sí'  # Requiere compra por falta de stock
+                mensaje = 'PC conforme - requiere compra por falta de stock'
+            else:
+                req_compra = 'No'
+                mensaje = 'PC conforme - listo para despacho'
         
         # 7. Actualizar PC
         query_update = """
@@ -3023,7 +3069,7 @@ def api_pedido_compra_validar(id):
                 valida_vigencia = %s,
                 updated_at = NOW()
             WHERE id = %s
-            RETURNING id, estado
+            RETURNING id, estado, req_compra
         """
         
         result = db_query(query_update, (
@@ -3031,7 +3077,7 @@ def api_pedido_compra_validar(id):
             req_compra,
             validaciones['precios'],
             validaciones['cantidades'],
-            validaciones['stock'],
+            validaciones['stock'],  # ← Se guarda para referencia
             validaciones['entrega'],
             validaciones['moneda'],
             validaciones['transporte'],
@@ -3043,17 +3089,20 @@ def api_pedido_compra_validar(id):
         if result:
             return jsonify({
                 'success': True,
-                'message': f'PC validado: {estado}',
+                'message': mensaje,
                 'data': {
                     'id': result[0]['id'],
                     'estado': estado,
                     'req_compra': req_compra,
                     'validaciones': validaciones,
+                    'stock_insuficiente': stock_insuficiente,
+                    'productos_faltantes': productos_faltantes,
                     'detalles': detalles_validacion,
                     'resumen': {
                         'total_items': len(detalles_validacion),
                         'ok': todas_validas,
-                        'observaciones': [k for k, v in validaciones.items() if not v]
+                        'observaciones': [k for k, v in validaciones_para_estado.items() if not v],
+                        'stock_ok': not stock_insuficiente
                     }
                 }
             })
@@ -3065,6 +3114,7 @@ def api_pedido_compra_validar(id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @ventas_bp.route('/ventas/api/pedido-compra/<int:id>', methods=['GET'])
 @login_required

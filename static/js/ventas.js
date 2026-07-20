@@ -3736,14 +3736,9 @@ function updateValidationStatus() {
         updateValidationSemaphore();
     }
 }
-
-/**
- * Actualiza el semáforo de validación en el modal de PC
- */
 function updateValidationSemaphore() {
     console.log('🔄 Actualizando semáforo de validación...');
     
-    // Si no hay elementos del semáforo en el HTML, no hacer nada
     const semaphore = document.getElementById('validationSemaphore');
     if (!semaphore) return;
     
@@ -3752,7 +3747,7 @@ function updateValidationSemaphore() {
     const subtitle = document.getElementById('validationSubtitle');
     const chips = document.getElementById('validationChips');
     
-    // Obtener valores de validación
+    // ⚠️ VALIDACIONES QUE BLOQUEAN (STOCK NO INCLUIDO)
     const validations = ['vPrecio', 'vProducto', 'vEntrega', 'vTransporte', 'vCantidad', 'vMoneda', 'vVigencia'];
     let allValid = true;
     let invalidCount = 0;
@@ -3771,20 +3766,58 @@ function updateValidationSemaphore() {
         }
     });
     
-    // Actualizar el semáforo
+    // ⚠️ STOCK SOLO INFORMATIVO
+    let stockWarning = false;
+    let stockFaltante = 0;
+    document.querySelectorAll('#pcItemsBody tr').forEach(row => {
+        const inputs = row.querySelectorAll('input');
+        if (inputs.length >= 9) {
+            const cantidadPC = Number(inputs[5]?.value || 0);
+            const stock = Number(inputs[8]?.value || 0);
+            if (cantidadPC > stock) {
+                stockWarning = true;
+                stockFaltante += (cantidadPC - stock);
+            }
+        }
+    });
+    
+    // Actualizar semáforo
     if (allValid) {
-        semaphore.style.borderColor = '#16A34A';
-        semaphore.style.background = '#DCFCE7';
-        if (icon) icon.textContent = '✅';
-        if (title) {
-            title.textContent = '✅ Todas las validaciones OK';
-            title.style.color = '#065F46';
+        if (stockWarning) {
+            // ⚠️ Validaciones OK, pero stock insuficiente - ADVERTENCIA
+            semaphore.style.borderColor = '#F59E0B';
+            semaphore.style.background = '#FFFBEB';
+            if (icon) icon.textContent = '⚠️';
+            if (title) {
+                title.textContent = `⚠️ Validaciones OK - Stock insuficiente (faltan ${stockFaltante} unidades)`;
+                title.style.color = '#92400E';
+            }
+            if (subtitle) {
+                subtitle.textContent = 'Puedes continuar con el proceso, pero revisa el stock';
+                subtitle.style.color = '#92400E';
+            }
+            if (chips) {
+                chips.innerHTML = `<span style="background:#FEF3C7;color:#92400E;padding:2px 10px;border-radius:12px;font-size:9px;font-weight:800;">⚠️ Stock insuficiente</span>`;
+            }
+        } else {
+            // ✅ Todo OK
+            semaphore.style.borderColor = '#16A34A';
+            semaphore.style.background = '#DCFCE7';
+            if (icon) icon.textContent = '✅';
+            if (title) {
+                title.textContent = '✅ Todas las validaciones OK - Stock suficiente';
+                title.style.color = '#065F46';
+            }
+            if (subtitle) {
+                subtitle.textContent = 'El PC está conforme y listo para proceder';
+                subtitle.style.color = '#065F46';
+            }
+            if (chips) {
+                chips.innerHTML = `<span style="background:#D1FAE5;color:#065F46;padding:2px 10px;border-radius:12px;font-size:9px;font-weight:800;">✅ Todo OK</span>`;
+            }
         }
-        if (subtitle) {
-            subtitle.textContent = 'El PC está conforme para proceder';
-            subtitle.style.color = '#065F46';
-        }
-    } else if (invalidCount > 0) {
+    } else {
+        // ❌ Hay validaciones fallidas - BLOQUEA
         semaphore.style.borderColor = '#DC2626';
         semaphore.style.background = '#FEE2E2';
         if (icon) icon.textContent = '❌';
@@ -3795,6 +3828,9 @@ function updateValidationSemaphore() {
         if (subtitle) {
             subtitle.textContent = `Faltan: ${invalidItems.join(', ')}`;
             subtitle.style.color = '#991B1B';
+        }
+        if (chips) {
+            chips.innerHTML = `<span style="background:#FEE2E2;color:#991B1B;padding:2px 10px;border-radius:12px;font-size:9px;font-weight:800;">❌ ${invalidItems.join(', ')}</span>`;
         }
     }
 }
@@ -3841,7 +3877,6 @@ document.addEventListener('DOMContentLoaded', function() {
 // ============================================================
 // VALIDACIÓN PC VS COTIZACIÓN - FUNCIÓN COMPLETA Y CORREGIDA
 // ============================================================
-
 function renderValidacion() {
     const q = document.getElementById('valSearch')?.value?.toLowerCase() || '';
     const filtro = document.getElementById('valFiltro')?.value || '';
@@ -3881,9 +3916,18 @@ function renderValidacion() {
         // Si el PC no tiene items, usar datos básicos
         if (items.length === 0) {
             const estadoPC = p.estado || 'Pendiente';
+            // ⚠️ STOCK NO BLOQUEA - solo informativo
             const esObservado = estadoPC === 'PC observado' || 
                                estadoPC === 'Bloqueado' ||
                                !validaPrecios || !validaCantidades || !validaEntrega || !validaMoneda;
+            
+            // Determinar faltante de stock (informativo)
+            let faltante = 0;
+            let stockDisplay = '✅ Stock OK';
+            if (p.stock !== undefined && p.cantidad_pc !== undefined) {
+                faltante = Math.max(p.cantidad_pc - p.stock, 0);
+                stockDisplay = faltante > 0 ? `⚠️ Stock insuficiente (faltan ${faltante})` : '✅ Stock OK';
+            }
             
             validaciones.push({
                 pc: p.numero || p.pc || 'PC-XXXX',
@@ -3895,10 +3939,10 @@ function renderValidacion() {
                 moneda: validaMoneda ? '✅ Sí' : '❌ No',
                 transporte: validaTransporte ? '✅ Sí' : '❌ No',
                 vigencia: validaVigencia ? '✅ Sí' : '❌ No',
-                stock: validaStock ? '✅ OK' : '⚠️ Stock insuficiente',
+                stock: stockDisplay,
                 estado: estadoPC,
                 id: p.id,
-                req_compra: p.req_compra || (esObservado ? 'Bloqueado' : 'No'),
+                req_compra: p.req_compra || (esObservado ? 'Bloqueado' : 'Sí'),
                 precioOk: validaPrecios,
                 cantidadOk: validaCantidades,
                 entregaOk: validaEntrega,
@@ -3907,20 +3951,42 @@ function renderValidacion() {
                 vigenciaOk: validaVigencia,
                 stockOk: validaStock,
                 margenOk: validaMargen,
-                faltante: 0,
+                faltante: faltante,
                 esObservado: esObservado
             });
         } else {
             // Cada item es una fila de validación
             items.forEach((item, idx) => {
-                const codigo = item.codigo || item[0] || '';
-                const descripcion = item.producto || item.descripcion || item[1] || 'Sin descripción';
-                const cantidad_pc = parseFloat(item.cantidad_pc || item.cantidad || item[3] || 0);
-                const cantidad_cot = parseFloat(item.cantidad_cotizada || item.cantidad_cot || item[2] || 0);
-                const stock = parseFloat(item.stock || item[6] || 0);
-                const precio_pc = parseFloat(item.precio_pc || item.precio || item[4] || 0);
-                const precio_cot = parseFloat(item.precio_cotizado || item.precio_cot || item[5] || 0);
+                let codigo, descripcion, cantidad_pc, cantidad_cot, stock, precio_pc, precio_cot;
                 
+                // Soporte para formato de objeto o array
+                if (typeof item === 'object' && !Array.isArray(item)) {
+                    codigo = item.codigo || '';
+                    descripcion = item.producto || item.descripcion || 'Sin descripción';
+                    cantidad_pc = parseFloat(item.cantidad_pc || item.cantidad || 0);
+                    cantidad_cot = parseFloat(item.cantidad_cotizada || item.cantidad_cot || 0);
+                    stock = parseFloat(item.stock || 0);
+                    precio_pc = parseFloat(item.precio_pc || item.precio || 0);
+                    precio_cot = parseFloat(item.precio_cotizado || item.precio_cot || 0);
+                } else if (Array.isArray(item)) {
+                    codigo = item[0] || '';
+                    descripcion = item[1] || 'Sin descripción';
+                    cantidad_cot = parseFloat(item[2] || 0);
+                    cantidad_pc = parseFloat(item[3] || 1);
+                    precio_cot = parseFloat(item[4] || 0);
+                    precio_pc = parseFloat(item[5] || 0);
+                    stock = parseFloat(item[6] || 0);
+                } else {
+                    codigo = '';
+                    descripcion = 'Sin descripción';
+                    cantidad_pc = 1;
+                    cantidad_cot = 0;
+                    stock = 0;
+                    precio_pc = 0;
+                    precio_cot = 0;
+                }
+                
+                // ⚠️ STOCK NO BLOQUEA - solo informativo
                 const precioOk = validaPrecios && (precio_pc === 0 || precio_cot === 0 || Math.abs(precio_pc - precio_cot) / (precio_cot || 1) * 100 <= 5);
                 const cantidadOk = validaCantidades && (cantidad_pc === cantidad_cot);
                 const stockOk = validaStock && (cantidad_pc <= stock);
@@ -3931,11 +3997,13 @@ function renderValidacion() {
                 const margenOk = validaMargen;
                 
                 const estadoPC = p.estado || 'Pendiente';
+                // ⚠️ OBSERVADO SOLO POR VALIDACIONES, NO POR STOCK
                 const esObservado = estadoPC === 'PC observado' || 
                                    estadoPC === 'Bloqueado' ||
                                    !precioOk || !cantidadOk || !entregaOk || !monedaOk;
                 
                 const faltante = Math.max(cantidad_pc - stock, 0);
+                const stockDisplay = stockOk ? `✅ Stock: ${stock}` : `⚠️ Falta: ${faltante}`;
                 
                 validaciones.push({
                     pc: p.numero || p.pc || 'PC-XXXX',
@@ -3947,10 +4015,10 @@ function renderValidacion() {
                     moneda: monedaOk ? '✅ Sí' : '❌ No',
                     transporte: transporteOk ? '✅ Sí' : '❌ No',
                     vigencia: vigenciaOk ? '✅ Sí' : '❌ No',
-                    stock: stockOk ? `✅ Stock: ${stock}` : `⚠️ Falta: ${faltante}`,
+                    stock: stockDisplay,
                     estado: estadoPC,
                     id: p.id,
-                    req_compra: p.req_compra || (esObservado ? 'Bloqueado' : 'No'),
+                    req_compra: p.req_compra || (esObservado ? 'Bloqueado' : 'Sí'),
                     item_idx: idx,
                     precioOk: precioOk,
                     cantidadOk: cantidadOk,
@@ -3961,7 +4029,13 @@ function renderValidacion() {
                     stockOk: stockOk,
                     margenOk: margenOk,
                     faltante: faltante,
-                    esObservado: esObservado
+                    esObservado: esObservado,
+                    // Datos para mostrar stock
+                    stock_actual: stock,
+                    cantidad_pc: cantidad_pc,
+                    cantidad_cot: cantidad_cot,
+                    precio_pc: precio_pc,
+                    precio_cot: precio_cot
                 });
             });
         }
@@ -3976,15 +4050,17 @@ function renderValidacion() {
         );
     }
     
+    // ⚠️ FILTROS MODIFICADOS - STOCK NO BLOQUEA
     if (filtro === 'ok') {
+        // "Conforme" = TODAS las validaciones OK (incluyendo stock para información)
         data = data.filter(v => 
             v.precio === '✅ Sí' && 
             v.cantidad === '✅ Sí' && 
             v.entrega === '✅ Sí' && 
             v.moneda === '✅ Sí' && 
             v.transporte === '✅ Sí' &&
-            v.vigencia === '✅ Sí' &&
-            v.stock.includes('✅')
+            v.vigencia === '✅ Sí'
+            // ⚠️ STOCK NO INCLUIDO EN EL FILTRO "OK"
         );
     } else if (filtro === 'observado') {
         data = data.filter(v => 
@@ -3998,10 +4074,10 @@ function renderValidacion() {
             v.estado === 'Bloqueado'
         );
     } else if (filtro === 'compra') {
+        // "Requiere compra" = stock insuficiente (informativo)
         data = data.filter(v => 
             v.faltante > 0 || 
-            v.req_compra === 'Sí' ||
-            v.req_compra === 'Bloqueado'
+            v.req_compra === 'Sí'
         );
     }
     
@@ -4017,15 +4093,17 @@ function renderValidacion() {
         return;
     }
     
-    // 🔽 NUEVA TABLA CON LOS MISMOS CAMPOS QUE EL PC
+    // ============================================================
+    // RENDERIZAR TABLA - STOCK INFORMATIVO
+    // ============================================================
     tbody.innerHTML = data.map((v, i) => {
+        // ⚠️ TODAS VALIDAS SIN STOCK
         const todasValidas = v.precio === '✅ Sí' && 
                             v.cantidad === '✅ Sí' && 
                             v.entrega === '✅ Sí' && 
                             v.moneda === '✅ Sí' && 
                             v.transporte === '✅ Sí' &&
                             v.vigencia === '✅ Sí' &&
-                            v.stock.includes('✅') &&
                             v.margenOk !== false;
         
         const esObservado = v.precio === '❌ No' || 
@@ -4033,10 +4111,9 @@ function renderValidacion() {
                            v.entrega === '❌ No' || 
                            v.moneda === '❌ No' ||
                            v.transporte === '❌ No' ||
-                           v.vigencia === '❌ No' ||
-                           v.estado === 'PC observado' ||
-                           v.estado === 'Bloqueado';
+                           v.vigencia === '❌ No';
         
+        // Determinar resultado y acción
         let resultado = '';
         let badgeClass = '';
         let accionHtml = '';
@@ -4045,26 +4122,32 @@ function renderValidacion() {
             resultado = '✅ Listo para despacho';
             badgeClass = 'badge-val-ok';
             accionHtml = `<button class="btn btn-green btn-sm" onclick="enviarADespacho(${v.id})" style="height:20px; padding:0 8px; font-size:8px; border-radius:4px; border:none; background:#16A34A; color:#fff; font-weight:800; cursor:pointer;">🚚 Despachar</button>`;
+        } else if (todasValidas && v.faltante > 0) {
+            resultado = '🔄 Requiere compra (stock insuficiente)';
+            badgeClass = 'badge-val-warning';
+            accionHtml = `<button class="btn btn-warning btn-sm" onclick="generarOrdenCompra(${v.id})" style="height:20px; padding:0 8px; font-size:8px; border-radius:4px; border:none; background:#F59E0B; color:#000; font-weight:800; cursor:pointer;">🛒 Comprar</button>
+                          <button class="btn btn-green btn-sm" onclick="enviarADespacho(${v.id})" style="height:20px; padding:0 8px; font-size:8px; border-radius:4px; border:none; background:#16A34A; color:#fff; font-weight:800; cursor:pointer; margin-left:4px;">🚚 Despachar</button>`;
         } else if (esObservado) {
             resultado = '⚠️ Bloqueado por observación';
             badgeClass = 'badge-val-error';
             accionHtml = `<button class="btn btn-danger btn-sm" onclick="solicitarCorreccion(${v.id})" style="height:20px; padding:0 8px; font-size:8px; border-radius:4px; border:none; background:#DC2626; color:#fff; font-weight:800; cursor:pointer;">📝 Corregir</button>`;
-        } else if (v.faltante > 0) {
-            resultado = '🔄 Requiere compra';
-            badgeClass = 'badge-val-warning';
-            accionHtml = `<button class="btn btn-warning btn-sm" onclick="generarOrdenCompra(${v.id})" style="height:20px; padding:0 8px; font-size:8px; border-radius:4px; border:none; background:#F59E0B; color:#000; font-weight:800; cursor:pointer;">🛒 Comprar</button>`;
         } else {
             resultado = '⏳ Pendiente de validación';
             badgeClass = 'badge-val-warning';
             accionHtml = `<button class="btn btn-blue btn-sm" onclick="validarPCSAP()" style="height:20px; padding:0 8px; font-size:8px; border-radius:4px; border:none; background:#2563EB; color:#fff; font-weight:800; cursor:pointer;">🔍 Validar</button>`;
         }
         
+        // Determinar color de stock
+        const stockClass = v.faltante > 0 ? 'val-warning' : 'val-ok';
+        const stockBg = v.faltante > 0 ? '#FEF3C7' : '#D1FAE5';
+        const stockColor = v.faltante > 0 ? '#92400E' : '#065F46';
+        
         return `
         <tr>
             <td style="padding:4px 6px; font-weight:900; font-size:10px;">${esc(v.pc)}</td>
             <td class="left" style="padding:4px 6px; font-weight:800; font-size:10px;">${esc(v.cliente)}</td>
             <td class="left" style="padding:4px 6px; font-size:10px;">${esc(v.producto)}</td>
-            <!-- 🔽 PRECIO - con emoji y badge -->
+            <!-- PRECIO -->
             <td style="padding:4px 6px; text-align:center;">
                 <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
                     <span style="font-size:14px;">💰</span>
@@ -4073,7 +4156,7 @@ function renderValidacion() {
                     </span>
                 </div>
             </td>
-            <!-- 🔽 CANTIDAD - con emoji y badge -->
+            <!-- CANTIDAD -->
             <td style="padding:4px 6px; text-align:center;">
                 <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
                     <span style="font-size:14px;">🔢</span>
@@ -4082,7 +4165,7 @@ function renderValidacion() {
                     </span>
                 </div>
             </td>
-            <!-- 🔽 ENTREGA - con emoji y badge -->
+            <!-- ENTREGA -->
             <td style="padding:4px 6px; text-align:center;">
                 <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
                     <span style="font-size:14px;">📍</span>
@@ -4091,7 +4174,7 @@ function renderValidacion() {
                     </span>
                 </div>
             </td>
-            <!-- 🔽 MONEDA - con emoji y badge -->
+            <!-- MONEDA -->
             <td style="padding:4px 6px; text-align:center;">
                 <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
                     <span style="font-size:14px;">💱</span>
@@ -4100,7 +4183,7 @@ function renderValidacion() {
                     </span>
                 </div>
             </td>
-            <!-- 🔽 TRANSPORTE - con emoji y badge -->
+            <!-- TRANSPORTE -->
             <td style="padding:4px 6px; text-align:center;">
                 <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
                     <span style="font-size:14px;">🚚</span>
@@ -4109,7 +4192,7 @@ function renderValidacion() {
                     </span>
                 </div>
             </td>
-            <!-- 🔽 VIGENCIA - con emoji y badge -->
+            <!-- VIGENCIA -->
             <td style="padding:4px 6px; text-align:center;">
                 <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
                     <span style="font-size:14px;">📅</span>
@@ -4118,19 +4201,20 @@ function renderValidacion() {
                     </span>
                 </div>
             </td>
-            <!-- 🔽 STOCK -->
+            <!-- STOCK - INFORMATIVO, NO BLOQUEA -->
             <td style="padding:4px 6px; text-align:center;">
-                <span class="${v.stock.includes('✅') ? 'val-ok' : 'val-warning'}" style="font-weight:900; font-size:9px; padding:2px 8px; border-radius:10px; background:${v.stock.includes('✅') ? '#D1FAE5' : '#FEF3C7'}; color:${v.stock.includes('✅') ? '#065F46' : '#92400E'};">
+                <span class="stock-info" style="font-weight:900; font-size:9px; padding:2px 8px; border-radius:10px; background:${stockBg}; color:${stockColor};">
                     ${v.stock}
                 </span>
+                ${v.faltante > 0 ? `<div style="font-size:7px; color:#DC2626; margin-top:2px;">⚠️ Faltan ${v.faltante} unidades</div>` : ''}
             </td>
-            <!-- 🔽 RESULTADO -->
+            <!-- RESULTADO -->
             <td style="padding:4px 6px; text-align:center;">
                 <span class="badge-val ${badgeClass}" style="font-weight:800; font-size:9px; padding:2px 10px; border-radius:10px; background:${badgeClass === 'badge-val-ok' ? '#D1FAE5' : badgeClass === 'badge-val-error' ? '#FEE2E2' : '#FEF3C7'}; color:${badgeClass === 'badge-val-ok' ? '#065F46' : badgeClass === 'badge-val-error' ? '#991B1B' : '#92400E'};">
                     ${resultado}
                 </span>
             </td>
-            <!-- 🔽 ACCIÓN -->
+            <!-- ACCIÓN -->
             <td style="padding:4px 6px; text-align:center;">
                 ${accionHtml}
             </td>
@@ -8041,14 +8125,6 @@ function setPcCondicionValue(value) {
     }
 }
 
-// ============================================================
-// FUNCIÓN PARA GUARDAR PC (ACTUALIZADA)
-// ============================================================
-
-// ============================================================
-// FUNCIÓN PARA GUARDAR PC (VERSIÓN COMPLETA Y CORREGIDA)
-// ============================================================
-
 async function savePedidoCompraSAP(force) {
     console.log('🔄 savePedidoCompraSAP ejecutándose...', { force });
     
@@ -8089,31 +8165,58 @@ async function savePedidoCompraSAP(force) {
         
         console.log('📋 Validaciones:', val);
         
+        // ⚠️ IMPORTANTE: OBSERVADO SOLO POR VALIDACIONES, NO POR STOCK
         const observed = force === 'observado' || val.some(v => v === 'No');
         
         // Leer items de la tabla
         const trs = document.querySelectorAll('#pcItemsBody tr');
-        const items = Array.from(trs).map(r => {
-            const inputs = r.querySelectorAll('input');
-            return [
-                inputs[0]?.value || '',
-                inputs[1]?.value || '',
-                Number(inputs[2]?.value || 0),
-                Number(inputs[3]?.value || 1),
-                Number(inputs[4]?.value || 0),
-                Number(inputs[6]?.value || 0),
-                Number(inputs[7]?.value || 0)
-            ];
+        const items = [];
+        trs.forEach(row => {
+            const inputs = row.querySelectorAll('input');
+            // Índices: [0]=código, [1]=descripción, [2]=marca, [3]=modelo
+            // [4]=cant_cot, [5]=cant_pc, [6]=precio_cot, [7]=precio_pc, [8]=stock
+            if (inputs.length >= 9) {
+                items.push({
+                    codigo: inputs[0]?.value || '',
+                    producto: inputs[1]?.value || '',
+                    marca: inputs[2]?.value || '',
+                    modelo: inputs[3]?.value || '',
+                    cantidad_cotizada: Number(inputs[4]?.value || 0),
+                    cantidad_pc: Number(inputs[5]?.value || 1),
+                    precio_cotizado: Number(inputs[6]?.value || 0),
+                    precio_pc: Number(inputs[7]?.value || 0),
+                    stock: Number(inputs[8]?.value || 0)
+                });
+            } else if (inputs.length >= 8) {
+                // Fallback: formato sin marca y modelo
+                items.push({
+                    codigo: inputs[0]?.value || '',
+                    producto: inputs[1]?.value || '',
+                    marca: '',
+                    modelo: '',
+                    cantidad_cotizada: Number(inputs[2]?.value || 0),
+                    cantidad_pc: Number(inputs[3]?.value || 1),
+                    precio_cotizado: Number(inputs[4]?.value || 0),
+                    precio_pc: Number(inputs[5]?.value || 0),
+                    stock: Number(inputs[6]?.value || 0)
+                });
+            }
         });
         
         console.log('📦 Items del PC:', items);
         
-        const stockFalta = items.some(i => Number(i[3]) > Number(i[6]));
-        const estado = observed ? 'PC observado' : (stockFalta ? 'PC conforme' : 'Listo para despacho');
+        // ⚠️ NO BLOQUEAR POR STOCK
+        // const stockFalta = items.some(i => Number(i.cantidad_pc) > Number(i.stock));
         
-        // Preparar datos para enviar
+        // Estado: solo depende de las validaciones NO relacionadas con stock
+        const estado = observed ? 'PC observado' : 'PC conforme';
+        const req_compra = observed ? 'Bloqueado' : 'Sí';  // "Sí" aunque no haya stock
+        
+        // ============================================================
+        // PREPARAR DATOS PARA ENVIAR A LA API
+        // ============================================================
         const pcData = {
-            id: null, // Nuevo registro
+            id: editingId || null,
             numero: document.getElementById('pcNumero')?.value || 'PC-' + Date.now(),
             fecha: document.getElementById('pcFecha')?.value?.replace('T', ' ') || new Date().toISOString(),
             medio: document.getElementById('pcMedio')?.value || 'Correo',
@@ -8129,21 +8232,19 @@ async function savePedidoCompraSAP(force) {
             vendedor: document.getElementById('pcVendedor')?.value || 'Helen Blas Príncipe',
             responsable: 'Hellen',
             observaciones: document.getElementById('pcObs')?.value || '',
-            items: items.map(item => ({
-                codigo: item[0],
-                producto: item[1],
-                cantidad_cotizada: item[2],
-                cantidad_pc: item[3],
-                precio_cotizado: item[4],
-                precio_pc: item[5],
-                stock: item[6]
-            })),
+            items: items,
+            // ============================================================
+            // VALIDACIONES - STOCK NO BLOQUEA
+            // ============================================================
             valida_precios: val[0] === 'Sí',
             valida_cantidades: val[1] === 'Sí',
-            valida_stock: val[2] === 'Sí',
+            valida_stock: false,  // ← Siempre false para NO bloquear
             valida_entrega: val[3] === 'Sí',
             valida_montos: val[4] === 'Sí',
-            req_compra: observed ? 'Bloqueado' : (stockFalta ? 'Sí' : 'No')
+            valida_transporte: val[5] === 'Sí',
+            valida_margen: val[6] === 'Sí',
+            valida_vigencia: val[7] === 'Sí',
+            req_compra: req_compra
         };
         
         console.log('📦 Datos a enviar a la API:', pcData);
@@ -8165,7 +8266,17 @@ async function savePedidoCompraSAP(force) {
         console.log('📦 Respuesta del servidor:', result);
         
         if (result.success) {
-            showToast(`✅ PC guardado como: ${estado}`, 'success');
+            // Mensaje personalizado según estado
+            let mensaje = `✅ PC guardado como: ${estado}`;
+            if (estado === 'PC conforme') {
+                const stockFalta = items.some(i => Number(i.cantidad_pc) > Number(i.stock));
+                if (stockFalta) {
+                    mensaje += ' ⚠️ Stock insuficiente - requiere compra';
+                } else {
+                    mensaje += ' ✅ Stock OK - listo para despacho';
+                }
+            }
+            showToast(mensaje, 'success');
             
             // Cerrar modal
             closeModal('pedidoCompraModal');
@@ -8173,32 +8284,19 @@ async function savePedidoCompraSAP(force) {
             // Limpiar selección
             cotizacionSeleccionada = null;
             
-            // 🔽🔽🔽 IMPORTANTE: Recargar la lista de pedidos 🔽🔽🔽
-            console.log('🔄 Recargando lista de pedidos...');
-            
-            // Opción 1: Usar loadPedidos() si existe
+            // Recargar la lista de pedidos
             if (typeof loadPedidos === 'function') {
                 await loadPedidos();
-            }
-            
-            // Opción 2: Recargar manualmente (fallback)
-            try {
-                const listResponse = await fetch('/ventas/api/pedido-compra/listar');
-                const listResult = await listResponse.json();
-                if (listResult.success) {
-                    pedidosData = listResult.data || [];
-                    console.log(`✅ ${pedidosData.length} pedidos cargados`);
-                    if (typeof renderPedidos === 'function') {
-                        renderPedidos();
-                    }
-                }
-            } catch (e) {
-                console.warn('⚠️ Error recargando lista manual:', e);
             }
             
             // También recargar cotizaciones si es necesario
             if (typeof loadCotizaciones === 'function') {
                 await loadCotizaciones();
+            }
+            
+            // Recargar validación si está visible
+            if (currentModule === 'validacion' && typeof renderValidacion === 'function') {
+                renderValidacion();
             }
             
         } else {
