@@ -1208,7 +1208,7 @@ function renderDespachos() {
     
     tbody.innerHTML = list.map((r, i) => {
         // ============================================================
-        // 🔽 FORMATEAR FECHA CORRECTAMENTE
+        // 🔽 FORMATEAR FECHA CORRECTAMENTE CON HORA
         // ============================================================
         const fechaFormateada = formatearFechaDespacho(r.fecha_despacho || r.fecha || r.created_at);
         
@@ -1231,6 +1231,84 @@ function renderDespachos() {
             </td>
         </tr>`;
     }).join('');
+}
+
+// ============================================================
+// 🔽 FUNCIÓN PARA FORMATEAR FECHA DE DESPACHO (CON HORA)
+// ============================================================
+function formatearFechaDespacho(fechaStr) {
+    if (!fechaStr) return '-';
+    
+    try {
+        let fecha;
+        
+        // Si es string, intentar parsear
+        if (typeof fechaStr === 'string') {
+            // Si viene con formato ISO completo (2026-07-20T14:30:00.000Z)
+            if (fechaStr.includes('T')) {
+                fecha = new Date(fechaStr);
+            }
+            // Si viene con formato YYYY-MM-DD (sin hora)
+            else if (fechaStr.includes('-') && fechaStr.length === 10) {
+                fecha = new Date(fechaStr + 'T00:00:00');
+            }
+            // Si viene con formato DD/MM/YYYY HH:MM
+            else if (fechaStr.includes('/') && fechaStr.includes(':')) {
+                const partes = fechaStr.split(' ');
+                const fechaParts = partes[0].split('/');
+                const horaParts = partes[1].split(':');
+                if (fechaParts.length === 3 && horaParts.length >= 2) {
+                    fecha = new Date(
+                        parseInt(fechaParts[2]),
+                        parseInt(fechaParts[1]) - 1,
+                        parseInt(fechaParts[0]),
+                        parseInt(horaParts[0]),
+                        parseInt(horaParts[1])
+                    );
+                } else {
+                    fecha = new Date(fechaStr);
+                }
+            }
+            // Si viene solo con formato DD/MM/YYYY (sin hora)
+            else if (fechaStr.includes('/')) {
+                const partes = fechaStr.split('/');
+                if (partes.length === 3) {
+                    fecha = new Date(partes[2], partes[1] - 1, partes[0]);
+                } else {
+                    fecha = new Date(fechaStr);
+                }
+            }
+            else {
+                fecha = new Date(fechaStr);
+            }
+        } else if (fechaStr instanceof Date) {
+            fecha = fechaStr;
+        } else {
+            fecha = new Date(fechaStr);
+        }
+        
+        // Verificar si la fecha es válida
+        if (isNaN(fecha.getTime())) {
+            return String(fechaStr);
+        }
+        
+        // Formatear: 20/07/2026 14:30
+        const dia = String(fecha.getDate()).padStart(2, '0');
+        const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+        const anio = fecha.getFullYear();
+        const horas = String(fecha.getHours()).padStart(2, '0');
+        const minutos = String(fecha.getMinutes()).padStart(2, '0');
+        
+        // Si la hora es 00:00, mostrar solo la fecha
+        if (horas === '00' && minutos === '00') {
+            return `${dia}/${mes}/${anio}`;
+        }
+        
+        return `${dia}/${mes}/${anio} ${horas}:${minutos}`;
+        
+    } catch (e) {
+        return String(fechaStr);
+    }
 }
 
 // ============================================================
@@ -4583,8 +4661,23 @@ function enviarADespacho(id) {
                 console.log('✅ PC actualizado a "Listo para despacho"');
                 
                 // ============================================================
-                // PASO 2: Crear el despacho automáticamente
+                // PASO 2: Crear el despacho automáticamente CON HORA ACTUAL
                 // ============================================================
+                const ahora = new Date();
+                
+                // 🔽 Formato ISO completo con hora actual
+                const fechaHoraISO = ahora.toISOString(); // 2026-07-20T14:30:45.123Z
+                
+                // 🔽 Formato para mostrar (DD/MM/YYYY HH:MM)
+                const dia = String(ahora.getDate()).padStart(2, '0');
+                const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+                const anio = ahora.getFullYear();
+                const horas = String(ahora.getHours()).padStart(2, '0');
+                const minutos = String(ahora.getMinutes()).padStart(2, '0');
+                const fechaHoraDisplay = `${dia}/${mes}/${anio} ${horas}:${minutos}`;
+                
+                console.log(`📅 Fecha/Hora: ${fechaHoraDisplay} (ISO: ${fechaHoraISO})`);
+                
                 const despachoData = {
                     pc_id: id,
                     pc_numero: pedido.numero,
@@ -4592,13 +4685,14 @@ function enviarADespacho(id) {
                     ruc: pedido.ruc,
                     cotizacion_id: pedido.cotizacion_id,
                     cotizacion_numero: pedido.cotizacion_numero,
-                    fecha_despacho: new Date().toISOString().split('T')[0],
+                    fecha_despacho: fechaHoraISO,  // 🔽 Enviar ISO completo con hora
+                    fecha_despacho_display: fechaHoraDisplay,  // Para mostrar
                     origen: 'ALM-SMP',
                     destino: pedido.lugar_entrega || pedido.entrega || '',
                     estado: 'Pendiente despacho',
                     observaciones: `Despacho automático desde PC ${pedido.numero}`,
                     responsable: 'Hellen',
-                    numero: `DESP-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}-${String(Date.now()).slice(-4)}`
+                    numero: `DESP-${ahora.getFullYear()}${String(ahora.getMonth()+1).padStart(2,'0')}${String(ahora.getDate()).padStart(2,'0')}-${String(ahora.getTime()).slice(-4)}`
                 };
                 
                 console.log('📦 Creando despacho con datos:', despachoData);
@@ -4627,7 +4721,6 @@ function enviarADespacho(id) {
                         const tabBtn = document.querySelector('.tab-btn[data-tab="despachar"]');
                         if (tabBtn) {
                             tabBtn.click();
-                            // Esperar a que se cargue el tab y luego renderizar
                             setTimeout(() => {
                                 if (typeof renderDespachos === 'function') {
                                     renderDespachos();
@@ -4648,6 +4741,7 @@ function enviarADespacho(id) {
         '🚚 Sí, enviar a despacho'
     );
 }
+
 // ============================================================
 // LIMPIAR FILTROS DE FECHA - PC
 // ============================================================
