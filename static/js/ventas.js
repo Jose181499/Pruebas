@@ -67,12 +67,6 @@ let PRODUCTOS_MAESTROS = [];
 let CLIENTES_MAESTROS = [];
 
 // ============================================================
-// VARIABLES PARA PC (PEDIDO COMPRA)
-// ============================================================
-let modalMode = 'cot';  // 'cot' | 'directo' | 'editar'  ← DECLARAR AQUÍ
-let cotizacionSeleccionada = null;  // ← DECLARAR AQUÍ
-
-// ============================================================
 // UTILIDADES
 // ============================================================
 function esc(v) {
@@ -8055,7 +8049,10 @@ function setPcCondicionValue(value) {
     }
 }
 
-
+// ============================================================
+// VARIABLE GLOBAL PARA EL MODO DEL MODAL
+// ============================================================
+let modalMode = 'cot';  // 'cot' | 'directo' | 'editar'
 
 async function savePedidoCompraSAP(force) {
     console.log('🔄 savePedidoCompraSAP ejecutándose...', { force, modalMode });
