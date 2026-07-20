@@ -1210,14 +1210,9 @@ function renderDespachos() {
                     const horas = String(fecha.getHours()).padStart(2, '0');
                     const minutos = String(fecha.getMinutes()).padStart(2, '0');
                     
-                    // Si la hora es 00:00, significa que no se guardó la hora
-                    if (horas === '00' && minutos === '00') {
-                        fechaDisplay = `${dia}/${mes}/${anio}`;
-                    } else {
-                        fechaDisplay = `${dia}/${mes}/${anio} ${horas}:${minutos}`;
-                    }
+                    // Mostrar siempre con hora, aunque sea 00:00
+                    fechaDisplay = `${dia}/${mes}/${anio} ${horas}:${minutos}`;
                 } else {
-                    // Si no es una fecha válida, mostrar el string original
                     fechaDisplay = String(fechaRaw);
                 }
             } catch (e) {
