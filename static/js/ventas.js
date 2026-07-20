@@ -8055,7 +8055,7 @@ function setPcCondicionValue(value) {
 let modalMode = 'cot';  // 'cot' | 'directo' | 'editar'
 
 async function savePedidoCompraSAP(force) {
-    console.log('🔄 savePedidoCompraSAP ejecutándose...', { force, modalMode });
+    console.log('🔄 savePedidoCompraSAP ejecutándose...', { force, modalMode, editingId });
     
     try {
         // ============================================================
@@ -8078,9 +8078,7 @@ async function savePedidoCompraSAP(force) {
                 showToast('⚠️ No se encontró la cotización. Verifica el texto ingresado.', 'warning');
                 return;
             } else if (results.length === 1) {
-                // Auto-seleccionar si solo hay un resultado
                 seleccionarCotizacionSAP(results[0].id);
-                // Reintentar guardar después de un momento
                 setTimeout(() => savePedidoCompraSAP(force), 300);
                 return;
             } else {
@@ -8096,17 +8094,15 @@ async function savePedidoCompraSAP(force) {
         const val = ['vPrecio', 'vCantidad', 'vProducto', 'vEntrega', 'vMoneda', 'vTransporte', 'vVigencia', 'vMargen']
             .map(id => {
                 const el = document.getElementById(id);
-                // Si es un checkbox (switch), obtener su estado checked
                 if (el && el.type === 'checkbox') {
                     return el.checked ? 'Sí' : 'No';
                 }
-                // Si es un select, obtener su valor
                 return el?.value || 'Sí';
             });
         
         console.log('📋 Validaciones:', val);
         
-        // ⚠️ IMPORTANTE: OBSERVADO SOLO POR VALIDACIONES, NO POR STOCK
+        // OBSERVADO SOLO POR VALIDACIONES, NO POR STOCK
         const observed = force === 'observado' || val.some(v => v === 'No');
         
         // ============================================================
@@ -8116,8 +8112,6 @@ async function savePedidoCompraSAP(force) {
         const items = [];
         trs.forEach(row => {
             const inputs = row.querySelectorAll('input');
-            // Índices: [0]=código, [1]=descripción, [2]=marca, [3]=modelo
-            // [4]=cant_cot, [5]=cant_pc, [6]=precio_cot, [7]=precio_pc, [8]=stock
             if (inputs.length >= 9) {
                 items.push({
                     codigo: inputs[0]?.value || '',
@@ -8131,7 +8125,6 @@ async function savePedidoCompraSAP(force) {
                     stock: Number(inputs[8]?.value || 0)
                 });
             } else if (inputs.length >= 8) {
-                // Fallback: formato sin marca y modelo
                 items.push({
                     codigo: inputs[0]?.value || '',
                     producto: inputs[1]?.value || '',
@@ -8151,12 +8144,11 @@ async function savePedidoCompraSAP(force) {
         // ============================================================
         // DETERMINAR ESTADO - SIN BLOQUEAR POR STOCK
         // ============================================================
-        // NO BLOQUEAR POR STOCK
         const estado = observed ? 'PC observado' : 'PC conforme';
         const req_compra = observed ? 'Bloqueado' : 'Sí';
         
         // ============================================================
-        // OBTENER VALOR DE CONDICIÓN DE PAGO (con soporte para personalizado)
+        // OBTENER VALOR DE CONDICIÓN DE PAGO
         // ============================================================
         const condicionSelect = document.getElementById('pcCondicion');
         const condicionCustom = document.getElementById('pcCondicionCustom');
@@ -8166,11 +8158,35 @@ async function savePedidoCompraSAP(force) {
         }
         
         // ============================================================
+        // 🔽 IMPORTANTE: OBTENER EL NÚMERO DEL PC (NO GENERAR NUEVO SI ES EDICIÓN)
+        // ============================================================
+        let numeroPC = document.getElementById('pcNumero')?.value || '';
+        
+        // Si es modo edición y tenemos un ID, NO generar nuevo número
+        if (modalMode === 'editar' && editingId) {
+            // Buscar el PC existente para obtener su número original
+            const pedidoExistente = pedidosData.find(p => p.id === editingId);
+            if (pedidoExistente && pedidoExistente.numero) {
+                numeroPC = pedidoExistente.numero;
+                console.log(`📋 Usando número existente para edición: ${numeroPC}`);
+            } else {
+                // Si no se encuentra, mantener el que está en el input
+                console.warn('⚠️ No se encontró el PC en pedidosData, usando número del input');
+            }
+        } else if (!numeroPC) {
+            // Solo generar nuevo número si no hay y no es edición
+            numeroPC = 'PC-' + new Date().toISOString().slice(0, 10).replaceAll('-', '') + '-' + String(Date.now()).slice(-4);
+        }
+        
+        console.log(`📋 Número de PC final: ${numeroPC} | editingId: ${editingId} | modalMode: ${modalMode}`);
+        
+        // ============================================================
         // PREPARAR DATOS PARA ENVIAR A LA API
         // ============================================================
         const pcData = {
-            id: editingId || null,
-            numero: document.getElementById('pcNumero')?.value || 'PC-' + Date.now(),
+            // 🔽 IMPORTANTE: ENVIAR EL ID CORRECTO SI ES EDICIÓN
+            id: editingId || null,  // ← ESTO DEBE TENER EL ID REAL
+            numero: numeroPC,
             fecha: document.getElementById('pcFecha')?.value?.replace('T', ' ') || new Date().toISOString(),
             medio: document.getElementById('pcMedio')?.value || 'Correo',
             estado: estado,
@@ -8186,12 +8202,9 @@ async function savePedidoCompraSAP(force) {
             responsable: 'Hellen',
             observaciones: document.getElementById('pcObs')?.value || '',
             items: items,
-            // ============================================================
-            // VALIDACIONES - STOCK NO BLOQUEA
-            // ============================================================
             valida_precios: val[0] === 'Sí',
             valida_cantidades: val[1] === 'Sí',
-            valida_stock: false,  // ← Siempre false para NO bloquear
+            valida_stock: false,
             valida_entrega: val[3] === 'Sí',
             valida_montos: val[4] === 'Sí',
             valida_transporte: val[5] === 'Sí',
@@ -8201,6 +8214,7 @@ async function savePedidoCompraSAP(force) {
         };
         
         console.log('📦 Datos a enviar a la API:', pcData);
+        console.log(`📋 Enviando con id: ${pcData.id} (${pcData.id ? 'edición' : 'nuevo'})`);
         
         // ============================================================
         // ENVIAR A LA API
@@ -8219,7 +8233,6 @@ async function savePedidoCompraSAP(force) {
         console.log('📦 Respuesta del servidor:', result);
         
         if (result.success) {
-            // Mensaje personalizado según estado
             let mensaje = `✅ PC guardado como: ${estado}`;
             if (estado === 'PC conforme') {
                 const stockFalta = items.some(i => Number(i.cantidad_pc) > Number(i.stock));
@@ -8237,17 +8250,16 @@ async function savePedidoCompraSAP(force) {
             // Limpiar selección
             cotizacionSeleccionada = null;
             
-            // Recargar la lista de pedidos
+            // Resetear editingId después de guardar
+            editingId = null;
+            
+            // Recargar datos
             if (typeof loadPedidos === 'function') {
                 await loadPedidos();
             }
-            
-            // También recargar cotizaciones si es necesario
             if (typeof loadCotizaciones === 'function') {
                 await loadCotizaciones();
             }
-            
-            // Recargar validación si está visible
             if (currentModule === 'validacion' && typeof renderValidacion === 'function') {
                 renderValidacion();
             }
@@ -8261,7 +8273,6 @@ async function savePedidoCompraSAP(force) {
         showToast('❌ Error al guardar el PC: ' + error.message, 'error');
     }
 }
-
 
 function updateProductQty(idKey, value) {
     // La cantidad se guarda en el atributo data-qty del checkbox o se obtiene cuando se agrega

@@ -612,14 +612,16 @@ def obtener_pc_db():
 
 
 # ventas.py - Modificar la función guardar_pc_db
-
 def guardar_pc_db(data):
+    """Guarda o actualiza un pedido de compra"""
     try:
         print("📝 Guardando PC en BD...")
+        print(f"📦 Datos recibidos: {data.keys()}")
+        print(f"📋 ID recibido: {data.get('id')}")
         
         items_json = json.dumps(data.get('items', []))
         
-        # Validaciones (sin stock)
+        # Validaciones
         valida_precios = data.get('valida_precios', False)
         valida_cantidades = data.get('valida_cantidades', False)
         valida_stock = data.get('valida_stock', False)
@@ -629,12 +631,10 @@ def guardar_pc_db(data):
         valida_margen = data.get('valida_margen', False)
         valida_vigencia = data.get('valida_vigencia', False)
         
-        # ⚠️ IMPORTANTE: NO VERIFICAR STOCK PARA BLOQUEAR
-        # Solo verificar las validaciones NO relacionadas con stock
+        # NO BLOQUEAR POR STOCK
         validacion_ok = all([
             valida_precios,
             valida_cantidades,
-            # valida_stock,  # ← ELIMINADO: no bloquea por stock
             valida_entrega,
             valida_montos,
             valida_transporte,
@@ -642,14 +642,100 @@ def guardar_pc_db(data):
             valida_vigencia
         ])
         
-        # Estado sin considerar stock
         if not validacion_ok:
             estado = 'PC observado'
             req_compra = 'Bloqueado'
         else:
-            # ✅ Siempre "PC conforme" si las demás validaciones OK
-            estado = 'PC conforme'
-            req_compra = 'Sí'  # ⚠️ Aunque no haya stock, se marca como "requiere compra"
+            estado = data.get('estado', 'PC conforme')
+            req_compra = data.get('req_compra', 'Sí')
+        
+        pc_id = data.get('id')
+        
+        # ============================================================
+        # SI HAY ID, ACTUALIZAR (EDITAR)
+        # ============================================================
+        if pc_id:
+            print(f"🔄 Actualizando PC ID: {pc_id}")
+            
+            query = """
+                UPDATE pedido_compra_pc SET
+                    numero = %s,
+                    fecha = %s,
+                    estado = %s,
+                    cliente = %s,
+                    ruc = %s,
+                    monto = %s,
+                    cotizacion_id = %s,
+                    cotizacion_numero = %s,
+                    correo_origen = %s,
+                    fecha_recepcion = %s,
+                    fecha_despacho = %s,
+                    archivo_oc = %s,
+                    observaciones = %s,
+                    valida_precios = %s,
+                    valida_cantidades = %s,
+                    valida_stock = %s,
+                    valida_entrega = %s,
+                    valida_montos = %s,
+                    valida_transporte = %s,
+                    valida_margen = %s,
+                    valida_vigencia = %s,
+                    responsable = %s,
+                    lugar_entrega = %s,
+                    condicion_atencion = %s,
+                    items_json = %s,
+                    medio = %s,
+                    entrega = %s,
+                    condicion_pago = %s,
+                    vendedor = %s,
+                    req_compra = %s,
+                    updated_at = NOW()
+                WHERE id = %s
+                RETURNING id, numero
+            """
+            
+            params = (
+                data.get('numero'),
+                data.get('fecha') or datetime.now().isoformat(),
+                estado,
+                data.get('cliente'),
+                data.get('ruc'),
+                float(data.get('monto', 0)),
+                data.get('cotizacion_id'),
+                data.get('cotizacion_numero'),
+                data.get('correo_origen') or data.get('medio'),
+                data.get('fecha_recepcion') or data.get('fecha'),
+                data.get('fecha_despacho'),
+                data.get('archivo_oc'),
+                data.get('observaciones'),
+                valida_precios,
+                valida_cantidades,
+                valida_stock,
+                valida_entrega,
+                valida_montos,
+                valida_transporte,
+                valida_margen,
+                valida_vigencia,
+                data.get('responsable') or data.get('vendedor') or 'Hellen',
+                data.get('lugar_entrega') or data.get('entrega'),
+                data.get('condicion_atencion') or data.get('condicion_pago'),
+                items_json,
+                data.get('medio') or data.get('correo_origen') or 'Correo',
+                data.get('entrega') or data.get('lugar_entrega'),
+                data.get('condicion_pago') or data.get('condicion_atencion'),
+                data.get('vendedor') or data.get('responsable') or 'Helen Blas Príncipe',
+                req_compra,
+                pc_id
+            )
+            
+            result = db_query(query, params)
+            print(f"✅ Resultado UPDATE: {result}")
+            return result[0] if result else None
+        
+        # ============================================================
+        # SI NO HAY ID, INSERTAR (NUEVO)
+        # ============================================================
+        print("➕ Insertando nuevo PC...")
         
         query = """
             INSERT INTO pedido_compra_pc (
@@ -688,7 +774,7 @@ def guardar_pc_db(data):
             data.get('observaciones'),
             valida_precios,
             valida_cantidades,
-            valida_stock,  # ← Se guarda pero NO bloquea
+            valida_stock,
             valida_entrega,
             valida_montos,
             valida_transporte,
@@ -707,10 +793,15 @@ def guardar_pc_db(data):
         )
         
         result = db_query(query, params)
+        print(f"✅ Resultado INSERT: {result}")
         return result[0] if result else None
+        
     except Exception as e:
         print(f"❌ Error en guardar_pc_db: {e}")
+        import traceback
+        traceback.print_exc()
         raise
+
 
 # ============================================================
 # FUNCIONES DE AYUDA PARA DESPACHOS
@@ -1518,8 +1609,6 @@ def api_pedido_compra_listar():
         return jsonify({'success': True, 'data': data})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
-
-
 @ventas_bp.route('/ventas/api/pedido-compra/guardar', methods=['POST'])
 @login_required
 def api_pedido_compra_guardar():
@@ -1528,12 +1617,36 @@ def api_pedido_compra_guardar():
         usuario_id = session.get('usuario_id', 8)
         data['creado_por'] = usuario_id
         
-        # Verificar si viene de una cotización
+        print("=" * 80)
+        print("📦 API PEDIDO COMPRA GUARDAR")
+        print(f"  - ID: {data.get('id')}")
+        print(f"  - Número: {data.get('numero')}")
+        print(f"  - Cliente: {data.get('cliente')}")
+        print(f"  - Estado: {data.get('estado')}")
+        print(f"  - Items: {len(data.get('items', []))}")
+        print("=" * 80)
+        
+        # ============================================================
+        # SI HAY ID, ES EDICIÓN - VERIFICAR QUE EXISTA
+        # ============================================================
+        pc_id = data.get('id')
+        if pc_id:
+            # Verificar que el PC existe
+            check_query = "SELECT id, numero FROM pedido_compra_pc WHERE id = %s"
+            check_result = db_query(check_query, (pc_id,))
+            
+            if not check_result:
+                return jsonify({'success': False, 'error': f'PC con ID {pc_id} no encontrado'}), 404
+            
+            print(f"✅ PC existente encontrado: {check_result[0]['numero']}")
+        
+        # ============================================================
+        # SI VIENE DE UNA COTIZACIÓN, OBTENER DATOS ADICIONALES
+        # ============================================================
         cotizacion_id = data.get('cotizacion_id')
         cotizacion_numero = data.get('cotizacion_numero')
         
-        # Si tiene cotizacion_id, obtener más datos de la cotización
-        if cotizacion_id:
+        if cotizacion_id and not pc_id:  # Solo si es nuevo
             cot_query = """
                 SELECT 
                     c.id, c.numero_cotizacion, c.fecha_creacion,
@@ -1549,7 +1662,6 @@ def api_pedido_compra_guardar():
             cot_data = db_query(cot_query, (cotizacion_id,))
             if cot_data:
                 cot = cot_data[0]
-                # Si el PC no tiene estos datos, usar los de la cotización
                 if not data.get('cliente'):
                     data['cliente'] = cot.get('cliente_razon_social')
                 if not data.get('ruc'):
@@ -1562,25 +1674,27 @@ def api_pedido_compra_guardar():
                     data['lugar_entrega'] = cot.get('direccion_entrega')
                 if not data.get('condicion_pago'):
                     data['condicion_pago'] = cot.get('condicion_pago')
-                if not data.get('contacto'):
-                    data['contacto'] = cot.get('cliente_contacto')
         
-        # Si no tiene número, generar uno
-        if not data.get('numero'):
+        # ============================================================
+        # GENERAR NÚMERO SI ES NUEVO Y NO TIENE
+        # ============================================================
+        if not pc_id and not data.get('numero'):
             from datetime import datetime
             data['numero'] = f"PC-{datetime.now().strftime('%Y%m%d')}-{str(datetime.now().timestamp()).split('.')[0][-4:]}"
         
-        # Si no tiene fecha, usar ahora
+        # Fecha si no tiene
         if not data.get('fecha'):
             from datetime import datetime
             data['fecha'] = datetime.now().isoformat()
         
-        # Guardar el PC
+        # ============================================================
+        # GUARDAR EL PC (INSERT O UPDATE)
+        # ============================================================
         result = guardar_pc_db(data)
         
         if result:
-            # Si tiene cotizacion_id, actualizar el estado de la cotización
-            if cotizacion_id:
+            # Si tiene cotizacion_id y es NUEVO, actualizar estado de la cotización
+            if cotizacion_id and not pc_id:
                 try:
                     update_cot = """
                         UPDATE cotizaciones 
@@ -1606,7 +1720,6 @@ def api_pedido_compra_guardar():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
 # ============================================================
 # DESPACHOS - API
 # ============================================================
