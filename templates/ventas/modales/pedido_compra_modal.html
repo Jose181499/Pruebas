@@ -18,28 +18,24 @@
             <button class="btn btn-secondary" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2);padding:3px 12px;min-height:26px;border-radius:20px;font-size:11px;cursor:pointer;" onclick="closeModal('pedidoCompraModal')">✕ Cerrar</button>
         </div>
         
-            <div class="modal-body"
-     id="pedidoCompraForm"
-     style="
-        flex:0 1 auto; /* Cambia de flex:1 a flex:0 1 auto */
-        overflow-y:auto;
-        padding:8px 12px;
-        background:#F8FAFC;
-        display:flex;
-        flex-direction:column;
-        max-height: calc(96vh - 80px); /* Altura máxima para el scroll */
-     ">
+        <div class="modal-body"
+             id="pedidoCompraForm"
+             style="
+                flex:0 1 auto;
+                overflow-y:auto;
+                padding:8px 12px;
+                background:#F8FAFC;
+                display:flex;
+                flex-direction:column;
+                max-height: calc(96vh - 80px);
+             ">
             
             <!-- Nota de modo -->
             <div id="modeNote" class="mini-note" style="margin-bottom:4px; padding:4px 10px; font-size:9.5px; border-radius:6px; background:#EFF6FF; border:1px solid #BFDBFE; color:#1E3A8A; font-weight:800;">
                 ✅ Recomendado: jalar la cotización, crear PC espejo y validar contra el documento real del cliente.
             </div>
-                <div style="
-                  display:grid;
-                grid-template-columns:1fr 240px;
-                     gap:14px;
-                 align-items:start;
-                    ">
+            
+            <div style="display:grid; grid-template-columns:1fr 240px; gap:14px; align-items:start;">
                 
                 <!-- COLUMNA IZQUIERDA - Formulario -->
                 <div>
@@ -79,38 +75,39 @@
                             </div>
                         </div>
 
-                       <div style="display:grid; grid-template-columns:1fr 1.8fr 1.2fr 1fr 1fr 1fr; gap:4px;">
-    <div class="form-field">
-        <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">RUC</label>
-        <input id="pcRuc" readonly 
-               style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; background:#F1F5F9; font-weight:800; font-size:10px; color:#64748B; cursor:not-allowed;">
-    </div>
-    <div class="form-field">
-        <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Cliente</label>
-        <input id="pcCliente" readonly 
-               style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; background:#F1F5F9; font-weight:800; font-size:10px; color:#64748B; cursor:not-allowed;">
-    </div>
-    <div class="form-field">
-        <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Condición pago</label>
-        <input id="pcCondicionPago" readonly 
-               style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; background:#F1F5F9; font-weight:800; font-size:10px; color:#64748B; cursor:not-allowed;">
-    </div>
-    <div class="form-field">
-        <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Vendedor</label>
-        <input id="pcVendedor" readonly 
-               style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; background:#F1F5F9; font-weight:800; font-size:10px; color:#64748B; cursor:not-allowed;">
-    </div>
-    <div class="form-field">
-        <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Monto Cotización (Sin IGV)</label>
-        <input id="pcMonto" type="number" step="0.01" value="0" readonly 
-               style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; background:#F1F5F9; font-weight:800; font-size:10px; color:#64748B; cursor:not-allowed;">
-    </div>
-    <div class="form-field">
-        <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Monto Cotización (Con IGV)</label>
-        <input id="pcMontoConIgv" type="number" step="0.01" value="0" readonly 
-               style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; background:#F1F5F9; font-weight:800; font-size:10px; color:#64748B; cursor:not-allowed;">
-    </div>
-</div>
+                        <div style="display:grid; grid-template-columns:1fr 1.8fr 1.2fr 1fr 1fr 1fr; gap:4px;">
+                            <div class="form-field">
+                                <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">RUC</label>
+                                <input id="pcRuc" readonly 
+                                       style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; background:#F1F5F9; font-weight:800; font-size:10px; color:#64748B; cursor:not-allowed;">
+                            </div>
+                            <div class="form-field">
+                                <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Cliente</label>
+                                <input id="pcCliente" readonly 
+                                       style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; background:#F1F5F9; font-weight:800; font-size:10px; color:#64748B; cursor:not-allowed;">
+                            </div>
+                            <div class="form-field">
+                                <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Condición pago</label>
+                                <input id="pcCondicionPago" readonly 
+                                       style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; background:#F1F5F9; font-weight:800; font-size:10px; color:#64748B; cursor:not-allowed;">
+                            </div>
+                            <div class="form-field">
+                                <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Vendedor</label>
+                                <input id="pcVendedor" readonly 
+                                       style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; background:#F1F5F9; font-weight:800; font-size:10px; color:#64748B; cursor:not-allowed;">
+                            </div>
+                            <div class="form-field">
+                                <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Monto Cotización (Sin IGV)</label>
+                                <input id="pcMonto" type="number" step="0.01" value="0" readonly 
+                                       style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; background:#F1F5F9; font-weight:800; font-size:10px; color:#64748B; cursor:not-allowed;">
+                            </div>
+                            <div class="form-field">
+                                <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Monto Cotización (Con IGV)</label>
+                                <input id="pcMontoConIgv" type="number" step="0.01" value="0" readonly 
+                                       style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; background:#F1F5F9; font-weight:800; font-size:10px; color:#64748B; cursor:not-allowed;">
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- BLOQUE 2: Datos del Pedido de Compra -->
                     <div class="form-section" style="padding:4px 10px; margin-bottom:4px; border-radius:6px; border:1px solid #E2E8F0;">
@@ -204,32 +201,36 @@
                     </div>
 
                     <!-- BLOQUE 3: Ítems del PC -->
-                    <div class="form-section" style="padding:4px 10px; margin-bottom:4px; border-radius:6px; border:1px solid #E2E8F0;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px; flex-wrap:wrap; gap:4px;">
+                    <div class="form-section" style="padding:4px 10px; margin-bottom:4px; border-radius:6px; border:1px solid #E2E8F0; display:flex; flex-direction:column; flex:1; min-height:0;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px; flex-wrap:wrap; gap:4px; flex-shrink:0;">
                             <div class="section-title" style="font-size:10px; font-weight:900; color:#7F1D1D; margin:0;">3. Productos PC</div>
                             <div style="display:flex; gap:4px; flex-wrap:wrap;">
                                 <button class="btn btn-soft" onclick="openProductSelectorPC()" style="height:22px; padding:0 10px; font-size:9px; border-radius:4px; border:1px solid #CBD5E1; background:#8B5CF6; color:#fff; font-weight:800; cursor:pointer;">📋 + Agregar items</button>
                             </div>
                         </div>
-                         <div class="table-scroll"
-                         style="
-                      height:42vh;
-                        min-height:320px;
-                         overflow:auto;
-                            ">
+                        
+                        <div class="table-scroll"
+                             style="
+                                flex:1;
+                                min-height:200px;
+                                max-height: calc(100vh - 480px);
+                                overflow:auto;
+                                border:1px solid #E2E8F0;
+                                border-radius:6px;
+                             ">
                             <table class="master-table" style="font-size:9px; width:100%; border-collapse:collapse;">
                                 <thead>
                                     <tr>
                                         <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Item</th>
-                                        <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; ">Código Producto</th>
+                                        <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Código Producto</th>
                                         <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Descripción</th>
                                         <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Modelo</th>
                                         <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Marca</th>
-                                        <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; ">Cant. Cot</th>
-                                        <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; ">Cant. PC</th>
-                                        <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; ">Precio Cot</th>
-                                        <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; ">Precio PC</th>
-                                        <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; ">Valor Total PC</th>
+                                        <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Cant. Cot</th>
+                                        <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Cant. PC</th>
+                                        <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Precio Cot</th>
+                                        <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Precio PC</th>
+                                        <th style="padding:2px 3px; font-size:7px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Valor Total PC</th>
                                         <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Stock</th>
                                         <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Faltante</th>
                                         <th style="padding:2px 3px; font-size:8px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Acción</th>
@@ -319,43 +320,37 @@
                     </div>
                 </div>
                 
-                <!-- COLUMNA DERECHA - TABLITA DE RESUMEN -->
+                <!-- COLUMNA DERECHA - RESUMEN -->
                 <div style="display:flex; flex-direction:column; gap:8px;">
-                    <!-- Tarjeta de resumen -->
-                   <div style="background:linear-gradient(135deg, #f0f2f6 0%, #f1f1f2 100%); border-radius:12px; padding:10px 12px; box-shadow:0 8px 32px rgba(15,23,42,0.15); border:1px solid rgba(255,255,255,0.05); height:fit-content;">
-                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px;">
+                    <div style="background:linear-gradient(135deg, #f0f2f6 0%, #f1f1f2 100%); border-radius:12px; padding:10px 12px; box-shadow:0 8px 32px rgba(15,23,42,0.15); border:1px solid rgba(255,255,255,0.05);">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:8px;">
                             <span style="font-size:16px;">🧾</span>
                             <span style="font-size:11px; font-weight:800; color:#94A3B8; text-transform:uppercase; letter-spacing:0.5px;">Resumen PC</span>
                             <span style="margin-left:auto; font-size:8px; color:#64748B; background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:10px;" id="pcResumenMoneda">S/</span>
                         </div>
                         
-                        <!-- SUBTOTAL -->
-                        <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 0;">
                             <span style="font-size:10px; font-weight:600; color:#94A3B8;">Subtotal</span>
                             <span style="font-size:12px; font-weight:800; color:#E2E8F0;" id="pcResumenSubtotal">S/ 0.00</span>
                         </div>
                         
-                        <!-- VALOR VENTA -->
-                        <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 0;">
                             <span style="font-size:10px; font-weight:600; color:#94A3B8;">Valor venta</span>
                             <span style="font-size:12px; font-weight:800; color:#E2E8F0;" id="pcResumenValorVenta">S/ 0.00</span>
                         </div>
                         
-                        <!-- IGV 18% -->
-                        <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
                             <span style="font-size:10px; font-weight:600; color:#94A3B8;">IGV 18%</span>
                             <span style="font-size:12px; font-weight:800; color:#E2E8F0;" id="pcResumenIgv">S/ 0.00</span>
                         </div>
                         
-                        <!-- TOTAL - destacado -->
-                        <div style="display:flex; justify-content:space-between; align-items:center; padding-top:10px; margin-top:4px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding-top:8px; margin-top:4px;">
                             <span style="font-size:13px; font-weight:900; color:#F1F5F9; text-transform:uppercase; letter-spacing:0.3px;">Total</span>
                             <span style="font-size:16px; font-weight:900; color:#FCD34D; background:rgba(252,211,77,0.1); padding:4px 14px; border-radius:8px;" id="pcResumenTotal">S/ 0.00</span>
                         </div>
                     </div>
                     
-                    <!-- Indicador de cantidad de productos -->
-                    <div style="background:#F1F5F9; border-radius:10px; padding:10px 14px; border:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="background:#F1F5F9; border-radius:10px; padding:8px 12px; border:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center;">
                         <span style="font-size:9px; font-weight:700; color:#475569;">📦 Productos</span>
                         <span style="font-size:14px; font-weight:900; color:#0F172A;" id="pcResumenProductos">0</span>
                     </div>
@@ -365,111 +360,81 @@
 
         </div> <!-- FIN DEL MODAL-BODY -->
 
+        <!-- FOOTER -->
         <div class="modal-foot"
-     style="
-        padding:6px 12px;
-        display:flex;
-        justify-content:flex-end;
-        align-items:center;
-        gap:8px;
-        border-top:1px solid #E5E7EB;
-        background:#F8FAFC;
-        flex-shrink:0;
-     ">
+             style="
+                padding:4px 12px;
+                display:flex;
+                justify-content:flex-end;
+                align-items:center;
+                gap:8px;
+                border-top:1px solid #E5E7EB;
+                background:#F8FAFC;
+                flex-shrink:0;
+                min-height:40px;
+                flex-wrap:wrap;
+             ">
 
-    <button class="btn btn-secondary"
-        onclick="closeModal('pedidoCompraModal')"
-        style="
-            height:32px;
-            padding:0 16px;
-            font-size:12px;
-            border-radius:6px;
-            background:#94A3B8;
-            color:#fff;
-            border:1px solid #CBD5E1;
-            font-weight:700;
-        ">
-        Cancelar
-    </button>
+            <button class="btn btn-secondary"
+                onclick="closeModal('pedidoCompraModal')"
+                style="
+                    height:30px;
+                    padding:0 14px;
+                    font-size:11px;
+                    border-radius:6px;
+                    background:#94A3B8;
+                    color:#fff;
+                    border:1px solid #CBD5E1;
+                    font-weight:700;
+                    cursor:pointer;
+                ">
+                Cancelar
+            </button>
 
-    <button class="btn-neon-yellow"
-        onclick="savePedidoCompraSAP('observado')"
-        style="
-            height:36px;
-            padding:0 18px;
-            font-size:12px;
-            border-radius:8px;
-            font-weight:800;
-        ">
-        ⚠️ Crear PC Observado
-    </button>
+            <button class="btn-neon-yellow"
+                onclick="savePedidoCompraSAP('observado')"
+                style="
+                    height:30px;
+                    padding:0 14px;
+                    font-size:10px;
+                    border-radius:6px;
+                    border:2px solid #FF0040;
+                    background:#FF0040;
+                    color:#FFFFFF;
+                    font-weight:900;
+                    cursor:pointer;
+                    box-shadow:0 0 30px rgba(255,0,64,0.6);
+                    display:inline-flex;
+                    align-items:center;
+                    gap:4px;
+                ">
+                ⚠️ Crear PC Observado
+            </button>
 
-    <button class="btn-neon-green"
-        onclick="savePedidoCompraSAP('auto')"
-        style="
-            height:36px;
-            padding:0 18px;
-            font-size:12px;
-            border-radius:8px;
-            font-weight:800;
-        ">
-        ✅ Crear PC Conforme
-    </button>
+            <button class="btn-neon-green"
+                onclick="savePedidoCompraSAP('auto')"
+                style="
+                    height:30px;
+                    padding:0 14px;
+                    font-size:10px;
+                    border-radius:6px;
+                    border:2px solid #00FF44;
+                    background:#00FF00;
+                    color:#000000;
+                    font-weight:900;
+                    cursor:pointer;
+                    box-shadow:0 0 30px rgba(0,255,0,0.6);
+                    display:inline-flex;
+                    align-items:center;
+                    gap:4px;
+                ">
+                ✅ Crear PC Conforme
+            </button>
 
-</div>
+        </div>
         
     </div> <!-- FIN DEL MODAL-BOX -->
 </div> <!-- FIN DEL MODAL-BG -->
-
-<!-- MODAL SELECCIÓN MÚLTIPLE DE PRODUCTOS PARA PC -->
-<div class="modal-bg" id="productSelectorPcModal">
-    <div class="modal-box" style="width:min(900px,96vw); max-height:85vh;">
-        <div class="modal-head">
-            <div class="modal-title">📋 Seleccionar productos para PC</div>
-            <button class="btn btn-secondary" style="background:transparent;color:#fff;border-color:#fff;padding:6px 14px;min-height:34px;border-radius:14px" onclick="closeModal('productSelectorPcModal')">✕ Cerrar</button>
-        </div>
-        <div class="modal-body" style="padding:12px 16px;">
-            <!-- Buscador -->
-            <div style="display:flex; gap:10px; margin-bottom:12px; align-items:center; flex-wrap:wrap;">
-                <input id="productSelectorPcSearch" placeholder="Buscar producto por código o descripción..." style="flex:1; height:36px; border:1px solid #E5E7EB; border-radius:8px; padding:0 12px; font-size:13px; outline:none; min-width:200px;">
-                <button class="btn btn-blue" onclick="filterProductSelectorPc()" style="height:36px; padding:0 20px;">🔍 Buscar</button>
-                <button class="btn btn-green" onclick="selectAllProductsPc()" style="height:36px; padding:0 16px; background:#16A34A; color:#fff; border:none; border-radius:8px; font-weight:800; cursor:pointer;">✅ Seleccionar todos</button>
-                <button class="btn btn-secondary" onclick="deselectAllProductsPc()" style="height:36px; padding:0 16px; background:#F1F5F9; color:#0F172A; border:1px solid #E5E7EB; border-radius:8px; font-weight:800; cursor:pointer;">⬜ Deseleccionar todos</button>
-            </div>
-            
-            <!-- Tabla de productos -->
-            <div style="border:1px solid #E5E7EB; border-radius:10px; overflow:auto; max-height:50vh;">
-                <table class="master-table" style="font-size:11px;">
-                    <thead>
-                        <tr>
-                            <th style="width:40px;"><input type="checkbox" id="selectAllPcCheckbox" onchange="toggleAllProductCheckboxesPc(this.checked)"></th>
-                            <th style="width:70px;">Código</th>
-                            <th>Producto</th>
-                            <th style="width:80px;">Marca</th>
-                            <th style="width:70px;">Modelo</th>
-                            <th style="width:70px;">Unidad</th>
-                            <th style="width:70px;">Stock</th>
-                            <th style="width:90px;">Precio</th>
-                            <th style="width:80px;">Cantidad</th>
-                        </tr>
-                    </thead>
-                    <tbody id="productSelectorPcRows"></tbody>
-                </table>
-            </div>
-            
-            <!-- Resumen selección -->
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding:10px 14px; background:#F8FAFC; border-radius:8px; border:1px solid #E5E7EB; flex-wrap:wrap; gap:8px;">
-                <span style="font-weight:850; color:#0F172A;">Seleccionados: <span id="selectedPcCount">0</span> productos</span>
-                <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <button class="btn btn-secondary" onclick="closeModal('productSelectorPcModal')" style="height:34px; padding:0 20px; background:#F1F5F9; color:#0F172A; border:1px solid #E5E7EB; border-radius:8px; font-weight:800; cursor:pointer;">Cancelar</button>
-                    <button class="btn btn-green" onclick="addSelectedProductsPc()" style="height:34px; padding:0 28px; background:#16A34A; color:#fff; border:none; border-radius:10px; font-weight:900; font-size:13px; cursor:pointer;">
-                        ✅ Agregar seleccionados
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <style>
 /* Estilos para los switches toggle */
