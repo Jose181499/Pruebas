@@ -412,33 +412,24 @@ def debug_db_test():
     
 
 
-# ==========================================
-# EJECUTAR
-# ==========================================
 if __name__ == "__main__":
+    # Obtener puerto de Railway o usar 8080 por defecto
+    port = int(os.environ.get("PORT", 8080))
     host = "0.0.0.0"
-    port = 5000
+    debug = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
 
     print("=" * 60)
     print("🚀 SERVIDOR ERP MULTIEMPRESA INICIADO")
     print("=" * 60)
     print(f"📍 Servidor corriendo en:")
     print(f"   👉 http://localhost:{port}")
-    print(f"   👉 http://127.0.0.1:{port}")
+    print(f"   👉 http://0.0.0.0:{port}")
     print(f"\n📋 RUTAS PRINCIPALES:")
     print(f"   - Login:      http://localhost:{port}/login")
     print(f"   - Dashboard:  http://localhost:{port}/index")
     print(f"   - Maestros:   http://localhost:{port}/maestros")
-    print(f"\n📋 RUTAS API MAESTROS:")
-    print(f"   - Clientes:   /maestros/api/clientes/listar")
-    print(f"   - Clientes:   /maestros/api/clientes/guardar")
-    print(f"   - Clientes:   /maestros/api/clientes/<id>/toggle")
-    print(f"   - Proveedores:/maestros/api/proveedores/listar")
-    print(f"   - Proveedores:/maestros/api/proveedores/guardar")
-    print(f"   - Proveedores:/maestros/api/proveedores/<id>/toggle")
     print("=" * 60)
     print("✅ Servidor listo para recibir peticiones")
     print("=" * 60)
 
-    app.run(debug=os.environ.get("FLASK_DEBUG", "true").lower() == "true", 
-            host=host, port=port)
+    app.run(debug=debug, host=host, port=port)
