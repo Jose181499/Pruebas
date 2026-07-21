@@ -6377,6 +6377,7 @@ function renderProductSelector() {
             </td>
             <td style="font-weight:900; color:#0F172A;">${p.codigo || '-'}</td>
             <td style="text-align:left; font-weight:800;">${p.producto || p.descripcion || 'Sin nombre'}</td>
+            <td>${p.modelo || '-'}</td>
             <td>${p.marca || '-'}</td>
             <td>${p.um || 'NIU'}</td>
             <td>${p.stock || 0}</td>

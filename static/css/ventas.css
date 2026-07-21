@@ -2715,6 +2715,14 @@ body.kcf-theme {
     flex: 1 !important;
 }
 
+
+/* Sobrescribe SOLO para #pedidoCompraModal, sin tocar los otros modales */
+#pedidoCompraModal .modal-body > div {
+    grid-template-columns: 1.15fr 1.15fr 0.9fr !important;
+    gap: 10px !important;
+    flex: 0 !important;
+}
+
 /* ============================================================ */
 /* BLOQUE DE COTIZACIÓN - MÁS COMPACTO */
 /* ============================================================ */
