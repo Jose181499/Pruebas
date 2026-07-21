@@ -370,6 +370,92 @@ def api_listar_productos():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+@app.route("/debug/db-test")
+def debug_db_test():
+    """Prueba de conexión a la base de datos"""
+    try:
+        from database import get_connection
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT 1 as test")
+        result = cur.fetchone()
+        cur.close()
+        conn.close()
+        return jsonify({
+            "success": True,
+            "message": "✅ Conexión a base de datos exitosa",
+            "result": result[0] if result else None,
+            "database_url": DATABASE_URL.replace(":admin3561967kcf@", ":****@")  # Oculta la contraseña
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "database_url": DATABASE_URL.replace(":admin3561967kcf@", ":****@")
+        }), 500
+    
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if 'usuario_id' in session:
+        return redirect(url_for('index'))
+
+    if request.method == "POST":
+        usuario = request.form.get("usuario", "").strip()
+        password = request.form.get("password", "")
+        empresa = request.form.get("empresa", "KCF")
+
+        print(f"🔐 Intento de login: usuario={usuario}, empresa={empresa}")  # LOG
+
+        if not usuario or not password:
+            flash("Por favor, ingresa usuario y contraseña.", "error")
+            return render_template("login.html")
+
+        # Obtener email del usuario
+        email = usuario
+        if '@' not in usuario:
+            try:
+                user_result = db_query("""
+                    SELECT correo FROM usuarios 
+                    WHERE usuario_sistema = %s AND estado = 'activo'
+                    LIMIT 1
+                """, (usuario,))
+                print(f"📧 Resultado búsqueda email: {user_result}")  # LOG
+                if user_result and user_result[0].get('correo'):
+                    email = user_result[0]['correo']
+            except Exception as e:
+                app.logger.error(f"Error buscando email: {e}")
+                print(f"❌ Error buscando email: {e}")  # LOG
+
+        print(f"📧 Email usado para login: {email}")  # LOG
+
+        try:
+            resultado = verificar_usuario_supabase(email, password, empresa)
+            print(f"📡 Resultado de verificar_usuario_supabase: {resultado}")  # LOG
+        except Exception as e:
+            print(f"❌ Excepción en verificar_usuario_supabase: {e}")  # LOG
+            import traceback
+            traceback.print_exc()
+            flash(f"Error de autenticación: {str(e)}", "error")
+            return render_template("login.html")
+
+        if resultado and resultado.get('success'):
+            session.clear()
+            session["usuario_id"] = resultado["user_id"]
+            session["usuario"] = resultado["usuario_sistema"]
+            session["nombre_completo"] = resultado["nombres_apellidos"] or usuario
+            session["rol"] = resultado["rol"]
+            session["empresa"] = empresa
+            session["auth_user_id"] = resultado["auth_user_id"]
+            session.modified = True
+            
+            flash(f'✅ Bienvenido/a {session["nombre_completo"]}!', "success")
+            return redirect(url_for("index"))
+
+        flash(resultado.get('error', '❌ Usuario o contraseña incorrectos.'), "error")
+        return render_template("login.html")
+
+    return render_template("login.html")
 
 
 # ==========================================

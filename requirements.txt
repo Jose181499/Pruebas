@@ -10,5 +10,5 @@ gunicorn
 Flask-SQLAlchemy
 qrcode
 pillow
-supabase
+supabase==2.5.0
 flask_login

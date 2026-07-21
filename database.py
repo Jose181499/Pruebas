@@ -1492,31 +1492,54 @@ def registrar_auditoria(empresa_id, auth_user_id, tabla, registro_id, accion, da
         print(f"Error en registrar_auditoria: {e}")
         return False
 
-# =========================
-# 8. LOGIN CON SUPABASE AUTH
-# =========================
+
 def verificar_usuario_supabase(email: str, password: str, empresa_codigo: str = 'KCF'):
     try:
         import supabase
         import os
-        SUPABASE_URL = "https://tkfmwvsenvgpyexvdcat.supabase.co"
-        SUPABASE_KEY = "sb_secret_k56lhPYVINqZMj_BZexRbw_JzeBx8Hx"
+        
+        SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://tkfmwvsenvgpyexvdcat.supabase.co")
+        SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "sb_secret_k56lhPYVINqZMj_BZexRbw_JzeBx8Hx")
+        
+        print(f"🔐 Conectando a Supabase: {SUPABASE_URL}")  # LOG
+        print(f"🔑 Usando key: {SUPABASE_KEY[:10]}...")  # LOG
+        
         supabase_client = supabase.create_client(SUPABASE_URL, SUPABASE_KEY)
         
-        auth_response = supabase_client.auth.sign_in_with_password({"email": email, "password": password})
+        print(f"📧 Intentando login con email: {email}")  # LOG
+        
+        auth_response = supabase_client.auth.sign_in_with_password({
+            "email": email, 
+            "password": password
+        })
+        
         if not auth_response.user:
+            print("❌ No se recibió usuario de Supabase")  # LOG
             return {"success": False, "error": "Usuario o contraseña incorrectos"}
         
         auth_user = auth_response.user
+        print(f"✅ Usuario autenticado en Supabase: {auth_user.id}")  # LOG
+        
+        # Buscar usuario en tabla usuarios
         user_result = supabase_client.table('usuarios').select('*').eq('auth_user_id', auth_user.id).single().execute()
+        
         if not user_result.data:
+            print(f"❌ Usuario no encontrado en tabla usuarios: {auth_user.id}")  # LOG
             return {"success": False, "error": "Usuario no registrado en el sistema ERP"}
         
         user_data = user_result.data
-        empresa_result = supabase_client.table('erp_usuario_empresas').select('*, erp_empresas!inner(*), erp_roles!inner(*)').eq('auth_user_id', auth_user.id).eq('estado', 'activo').execute()
+        print(f"✅ Usuario encontrado en BD: {user_data.get('usuario_sistema')}")  # LOG
+        
+        # Buscar acceso a empresa
+        empresa_result = supabase_client.table('erp_usuario_empresas').select(
+            '*, erp_empresas!inner(*), erp_roles!inner(*)'
+        ).eq('auth_user_id', auth_user.id).eq('estado', 'activo').execute()
+        
         if not empresa_result.data:
+            print("❌ Usuario sin acceso a empresas")  # LOG
             return {"success": False, "error": "No tiene acceso a ninguna empresa"}
         
+        # Buscar empresa específica
         empresa_acceso = None
         for acceso in empresa_result.data:
             if acceso.get('erp_empresas', {}).get('codigo') == empresa_codigo:
@@ -1524,9 +1547,12 @@ def verificar_usuario_supabase(email: str, password: str, empresa_codigo: str = 
                 break
         
         if not empresa_acceso:
+            print(f"❌ Usuario sin acceso a empresa {empresa_codigo}")  # LOG
             return {"success": False, "error": f"No tiene acceso a la empresa {empresa_codigo}"}
         
         rol_data = empresa_acceso.get('erp_roles', {})
+        print(f"✅ Acceso a empresa {empresa_codigo} con rol {rol_data.get('codigo')}")  # LOG
+        
         return {
             "success": True,
             "user_id": user_data.get('id'),
@@ -1540,7 +1566,9 @@ def verificar_usuario_supabase(email: str, password: str, empresa_codigo: str = 
             "es_admin": rol_data.get('es_admin', False)
         }
     except Exception as e:
-        print(f"Error en verificar_usuario_supabase: {e}")
+        print(f"❌ Error en verificar_usuario_supabase: {e}")
+        import traceback
+        traceback.print_exc()
         return {"success": False, "error": str(e)}
 
 # database.py - Funciones para productos con tu estructura
@@ -3754,4 +3782,38 @@ def buscar_cliente_por_ruc(ruc: str):
         return result[0] if result else None
     except Exception as e:
         print(f"❌ Error en buscar_cliente_por_ruc: {e}")
+        return None
+
+def verificar_usuario_local(usuario: str, password: str):
+    """Verifica usuario usando solo la base de datos local (fallback)"""
+    try:
+        from werkzeug.security import check_password_hash
+        
+        rows = db_query("""
+            SELECT id, usuario_sistema, password, nombres_apellidos, rol, correo
+            FROM usuarios 
+            WHERE usuario_sistema = %s AND estado = 'activo'
+            LIMIT 1
+        """, (usuario,))
+        
+        if not rows:
+            return None
+        
+        u = rows[0]
+        # La columna puede llamarse 'password' o 'password_hash'
+        stored_password = u.get('password') or u.get('password_hash')
+        
+        if stored_password and check_password_hash(stored_password, password):
+            return {
+                "success": True,
+                "user_id": u["id"],
+                "auth_user_id": u.get("auth_user_id") or str(u["id"]),
+                "usuario_sistema": u["usuario_sistema"],
+                "nombres_apellidos": u["nombres_apellidos"],
+                "email": u.get("correo", ""),
+                "rol": u.get("rol", "usuario")
+            }
+        return None
+    except Exception as e:
+        print(f"❌ Error en verificar_usuario_local: {e}")
         return None
