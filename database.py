@@ -1492,19 +1492,20 @@ def registrar_auditoria(empresa_id, auth_user_id, tabla, registro_id, accion, da
         print(f"Error en registrar_auditoria: {e}")
         return False
 
-
 def verificar_usuario_supabase(email: str, password: str, empresa_codigo: str = 'KCF'):
     try:
         import supabase
         import os
         
         SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://tkfmwvsenvgpyexvdcat.supabase.co")
-        SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "sb_secret_k56lhPYVINqZMj_BZexRbw_JzeBx8Hx")
+        # 🔑 CLAVE CORRECTA
+        SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrZm13dnNlbnZncHlleHZkY2F0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMTIxMzMsImV4cCI6MjA5NDc4ODEzM30.PtvktiyFjVNcBCLHI_gJmirDH_vM6_7TQuGQDzcnw8A")
         
-        print(f"🔐 Conectando a Supabase: {SUPABASE_URL}")  # LOG
-        print(f"🔑 Usando key: {SUPABASE_KEY[:10]}...")  # LOG
+        print(f"🔐 Conectando a Supabase: {SUPABASE_URL}")
+        print(f"🔑 Usando key: {SUPABASE_KEY[:20]}...")  # Solo mostrar parte de la clave
         
         supabase_client = supabase.create_client(SUPABASE_URL, SUPABASE_KEY)
+        
         
         print(f"📧 Intentando login con email: {email}")  # LOG
         

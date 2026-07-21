@@ -2720,7 +2720,7 @@ body.kcf-theme {
 /* 🔧 CAMBIO: ahora apunta solo a la fila 1, no a cualquier div hijo de modal-body */
 #pedidoCompraModal .modal-body .pc-fila-top {
     display: grid !important;
-    grid-template-columns: 1.15fr 1.15fr 0.9fr !important;
+    grid-template-columns: 1.6fr 0.9fr !important;
     gap: 10px !important;
     align-items: start !important;
 }
