@@ -2696,8 +2696,10 @@ body.kcf-theme {
     margin: 0 !important;
 }
 
+/* === CSS anterior del modal completo (arregla todos los puntos) */
+
 /* BODY - Grid de dos columnas */
-#pedidoCompraModal .modal-body {
+/*#pedidoCompraModal .modal-body {
     flex: 1 !important;
     overflow-y: auto !important;
     padding: 8px 12px !important;
@@ -2707,22 +2709,40 @@ body.kcf-theme {
 }
 
 /* CONTENEDOR PRINCIPAL - Grid 2 columnas */
-#pedidoCompraModal .modal-body > div {
+ /* #pedidoCompraModal .modal-body > div {
     display: grid !important;
     grid-template-columns: 1fr 310px !important;
     gap: 14px !important;
     align-items: start !important;
     flex: 1 !important;
+} 
+/* ======================================================================= 
+
+/* BODY */
+#pedidoCompraModal .modal-body {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    padding: 8px 12px !important;
+    background: #F8FAFC !important;
+    display: flex !important;
+    flex-direction: column !important;
 }
 
-
-
-/* 🔧 CAMBIO: ahora apunta solo a la fila 1, no a cualquier div hijo de modal-body */
-#pedidoCompraModal .modal-body .pc-fila-top {
+/* SOLO la fila superior debe tener dos columnas */
+#pedidoCompraModal .modal-body > .pc-fila-top {
     display: grid !important;
     grid-template-columns: 1.6fr 0.9fr !important;
     gap: 10px !important;
     align-items: start !important;
+    width: 100% !important;
+    flex: 0 0 auto !important;
+}
+
+/* Los bloques 3 y 4 ocupan todo el ancho */
+#pedidoCompraModal .modal-body > .form-section {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    flex: 0 0 auto !important;
 }
 
 /* ============================================================ */
