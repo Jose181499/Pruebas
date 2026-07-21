@@ -30,10 +30,7 @@
                 max-height: calc(96vh - 80px);
              ">
             
-            <!-- Nota de modo -->
-            <div id="modeNote" class="mini-note" style="margin-bottom:4px; padding:4px 10px; font-size:9.5px; border-radius:6px; background:#EFF6FF; border:1px solid #BFDBFE; color:#1E3A8A; font-weight:800;">
-                ✅ Recomendado: jalar la cotización, crear PC espejo y validar contra el documento real del cliente.
-            </div>
+            
             
             <!-- FILA 1: Columna izquierda (Cotización + Datos PC apilados) + Resumen a la derecha -->
             <div class="pc-fila-top" style="display:grid; grid-template-columns:1.6fr 0.9fr; gap:10px; align-items:start; margin-bottom:6px;">
@@ -355,6 +352,80 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- FOOTER -->
+                    <div class="modal-foot"
+                        style="
+                            padding:4px 12px;
+                            display:flex;
+                            justify-content:flex-end;
+                            align-items:center;
+                            gap:8px;
+                            border-top:1px solid #E5E7EB;
+                            background:#F8FAFC;
+                            flex-shrink:0;
+                            min-height:40px;
+                            flex-wrap:wrap;
+                        ">
+
+                        <button class="btn btn-secondary"
+                            onclick="closeModal('pedidoCompraModal')"
+                            style="
+                                height:30px;
+                                padding:0 14px;
+                                font-size:11px;
+                                border-radius:6px;
+                                background:#94A3B8;
+                                color:#fff;
+                                border:1px solid #CBD5E1;
+                                font-weight:700;
+                                cursor:pointer;
+                            ">
+                            Cancelar
+                        </button>
+
+                        <button class="btn-neon-yellow"
+                            onclick="savePedidoCompraSAP('observado')"
+                            style="
+                                height:30px;
+                                padding:0 14px;
+                                font-size:10px;
+                                border-radius:6px;
+                                border:2px solid #FF0040;
+                                background:#FF0040;
+                                color:#FFFFFF;
+                                font-weight:900;
+                                cursor:pointer;
+                                box-shadow:0 0 30px rgba(255,0,64,0.6);
+                                display:inline-flex;
+                                align-items:center;
+                                gap:4px;
+                            ">
+                            ⚠️ Crear PC Observado
+                        </button>
+
+                        <button class="btn-neon-green"
+                            onclick="savePedidoCompraSAP('auto')"
+                            style="
+                                height:30px;
+                                padding:0 14px;
+                                font-size:10px;
+                                border-radius:6px;
+                                border:2px solid #00FF44;
+                                background:#00FF00;
+                                color:#000000;
+                                font-weight:900;
+                                cursor:pointer;
+                                box-shadow:0 0 30px rgba(0,255,0,0.6);
+                                display:inline-flex;
+                                align-items:center;
+                                gap:4px;
+                            ">
+                            ✅ Crear PC Conforme
+                        </button>
+
+                    </div>
+
                 </div>
                 
                 
@@ -363,78 +434,7 @@
 
         </div> <!-- FIN DEL MODAL-BODY -->
 
-        <!-- FOOTER -->
-        <div class="modal-foot"
-             style="
-                padding:4px 12px;
-                display:flex;
-                justify-content:flex-end;
-                align-items:center;
-                gap:8px;
-                border-top:1px solid #E5E7EB;
-                background:#F8FAFC;
-                flex-shrink:0;
-                min-height:40px;
-                flex-wrap:wrap;
-             ">
-
-            <button class="btn btn-secondary"
-                onclick="closeModal('pedidoCompraModal')"
-                style="
-                    height:30px;
-                    padding:0 14px;
-                    font-size:11px;
-                    border-radius:6px;
-                    background:#94A3B8;
-                    color:#fff;
-                    border:1px solid #CBD5E1;
-                    font-weight:700;
-                    cursor:pointer;
-                ">
-                Cancelar
-            </button>
-
-            <button class="btn-neon-yellow"
-                onclick="savePedidoCompraSAP('observado')"
-                style="
-                    height:30px;
-                    padding:0 14px;
-                    font-size:10px;
-                    border-radius:6px;
-                    border:2px solid #FF0040;
-                    background:#FF0040;
-                    color:#FFFFFF;
-                    font-weight:900;
-                    cursor:pointer;
-                    box-shadow:0 0 30px rgba(255,0,64,0.6);
-                    display:inline-flex;
-                    align-items:center;
-                    gap:4px;
-                ">
-                ⚠️ Crear PC Observado
-            </button>
-
-            <button class="btn-neon-green"
-                onclick="savePedidoCompraSAP('auto')"
-                style="
-                    height:30px;
-                    padding:0 14px;
-                    font-size:10px;
-                    border-radius:6px;
-                    border:2px solid #00FF44;
-                    background:#00FF00;
-                    color:#000000;
-                    font-weight:900;
-                    cursor:pointer;
-                    box-shadow:0 0 30px rgba(0,255,0,0.6);
-                    display:inline-flex;
-                    align-items:center;
-                    gap:4px;
-                ">
-                ✅ Crear PC Conforme
-            </button>
-
-        </div>
+        
         
     </div> <!-- FIN DEL MODAL-BOX -->
 </div> <!-- FIN DEL MODAL-BG -->
