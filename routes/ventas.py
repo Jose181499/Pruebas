@@ -10,6 +10,8 @@ ventas_bp = Blueprint('ventas', __name__)
 
 # routes/ventas.py
 
+# routes/ventas.py
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -22,6 +24,9 @@ def login_required(f):
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
+ 
+
+
 # ============================================================
 # FUNCIONES DE AYUDA PARA COTIZACIONES - VERSIÓN CORREGIDA
 # ============================================================
