@@ -1,31 +1,39 @@
-﻿from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
+﻿# routes/ventas.py - INICIO CORREGIDO
+
+import sys
+import os
+
+# Asegurar que la raíz del proyecto esté en el path de Python
+# Esto permite importar módulos desde la carpeta principal
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(PROJECT_ROOT)
+
+from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
 from functools import wraps
 from datetime import datetime
 import json
 
-# Importar desde database.py en lugar de config
+# Importar el generador de PDF desde la raíz del proyecto
+from pdf_generator import pdf_generator
+
+# Importar desde database.py
 from database import db_query, db_execute, db_tx, get_connection, buscar_cliente_por_ruc
 
 ventas_bp = Blueprint('ventas', __name__)
 
-# routes/ventas.py
-
-# routes/ventas.py
+# ============================================================
+# FUNCIÓN LOGIN REQUIRED
+# ============================================================
 
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'usuario' not in session:
-            # Si la petición es a la API (empieza con /ventas/api/)
             if request.path.startswith('/ventas/api/'):
-                # Devolver un error JSON con código 401 (No autorizado)
                 return jsonify({'error': 'Sesión expirada o no autorizado. Inicia sesión.'}), 401
-            # Si es una petición de página normal, redirigir al login
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
- 
-
 
 # ============================================================
 # FUNCIONES DE AYUDA PARA COTIZACIONES - VERSIÓN CORREGIDA
