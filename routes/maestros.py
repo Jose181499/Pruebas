@@ -23,6 +23,7 @@ def index():
 # ENDPOINTS CLIENTES
 # ==========================================
 
+
 @maestros_bp.route('/api/clientes/listar', methods=['GET'])
 # @login_required  # Temporalmente comentado para pruebas
 def api_clientes_listar():
@@ -47,6 +48,7 @@ def api_clientes_listar():
         """
         clientes = db_query(query_clientes)
         
+        # Si no hay clientes, devolver array vacío
         if not clientes:
             return jsonify({"success": True, "data": []})
         
@@ -56,8 +58,12 @@ def api_clientes_listar():
             
             if not cliente_id:
                 continue
-                
-            # Obtener contactos - Manejar errores de codificación
+            
+            # Inicializar arrays vacíos por defecto
+            cliente['contactos'] = []
+            cliente['puntos_entrega'] = []
+            
+            # Obtener contactos - SIEMPRE manejar errores
             try:
                 query_contactos = """
                     SELECT id, nombre_contacto as nombre, email, telefono, 
@@ -66,21 +72,15 @@ def api_clientes_listar():
                     WHERE cliente_id = %s AND activo = true
                     ORDER BY principal DESC, nombre_contacto
                 """
-                contactos = db_query(query_contactos, (str(cliente_id),))
-                # Asegurar que los strings sean válidos
+                contactos = db_query(query_contactos, (cliente_id,))
                 if contactos:
-                    for contacto in contactos:
-                        for key, value in contacto.items():
-                            if isinstance(value, bytes):
-                                contacto[key] = value.decode('utf-8', errors='ignore')
                     cliente['contactos'] = contactos
-                else:
-                    cliente['contactos'] = []
             except Exception as e:
-                logger.warning(f"Error obteniendo contactos para cliente {cliente_id}: {e}")
+                logger.error(f"Error en contactos para cliente {cliente_id}: {e}")
+                # Mantener array vacío
                 cliente['contactos'] = []
             
-            # Obtener puntos de entrega - similar
+            # Obtener puntos de entrega - SIEMPRE manejar errores
             try:
                 query_puntos = """
                     SELECT id, nombre_punto as punto, direccion, 
@@ -91,36 +91,31 @@ def api_clientes_listar():
                     WHERE cliente_id = %s AND activo = true
                     ORDER BY principal DESC, nombre_punto
                 """
-                puntos = db_query(query_puntos, (str(cliente_id),))
+                puntos = db_query(query_puntos, (cliente_id,))
                 if puntos:
-                    for punto in puntos:
-                        for key, value in punto.items():
-                            if isinstance(value, bytes):
-                                punto[key] = value.decode('utf-8', errors='ignore')
                     cliente['puntos_entrega'] = puntos
-                else:
-                    cliente['puntos_entrega'] = []
             except Exception as e:
-                logger.warning(f"Error obteniendo puntos para cliente {cliente_id}: {e}")
+                logger.error(f"Error en puntos para cliente {cliente_id}: {e}")
                 cliente['puntos_entrega'] = []
-            
-            # Asegurar valores por defecto
-            cliente['ruc'] = cliente.get('numero_documento')
-            cliente['condicion_pago'] = cliente.get('condicion_pago') or 'Contado'
-            cliente['dias_credito'] = cliente.get('dias_credito') or 0
-            cliente['limite_credito'] = cliente.get('limite_credito') or ''
-            cliente['descuento'] = cliente.get('descuento') or ''
-            cliente['estado'] = cliente.get('estado') or 'Activo'
-            cliente['ambito'] = cliente.get('ambito') or 'COMPARTIDO'
-            cliente['observaciones'] = cliente.get('observaciones') or ''
         
+        # Devolver JSON siempre
         return jsonify({"success": True, "data": clientes})
         
     except Exception as e:
-        print(f"❌ Error listando clientes: {e}")
+        # Error principal - devolver JSON con error
         import traceback
-        traceback.print_exc()
-        return jsonify({"success": False, "error": str(e)}), 500
+        error_msg = str(e)
+        logger.error(f"❌ Error listando clientes: {error_msg}")
+        logger.error(traceback.format_exc())
+        
+        # NUNCA devolver HTML, siempre JSON
+        return jsonify({
+            "success": False,
+            "error": error_msg,
+            "data": []
+        }), 500
+
+
 @maestros_bp.route('/api/clientes/test-simple', methods=['GET'])
 def api_clientes_test_simple():
     """Endpoint de prueba sin consultas complejas"""

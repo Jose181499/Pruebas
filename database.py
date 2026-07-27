@@ -43,51 +43,7 @@ def db_tx():
         raise
     finally:
         conn.close()
-
-def db_query(sql, params=None):
-    """Ejecuta una consulta SELECT o UPDATE y devuelve los resultados"""
-    conn = None
-    cur = None
-    try:
-        conn = get_connection()
-        # Forzar codificación UTF-8 en la conexión
-        conn.set_client_encoding('UTF8')
-        cur = conn.cursor(cursor_factory=RealDictCursor)
-        
-        # Si hay parámetros, asegurar que sean strings
-        if params:
-            # Convertir cualquier parámetro a string para evitar problemas de codificación
-            params = tuple(str(p) if p is not None else None for p in params)
-        
-        cur.execute(sql, params or ())
-        
-        if sql.strip().upper().startswith('SELECT'):
-            data = cur.fetchall()
-            # Convertir cualquier byte a string
-            data = [dict(row) for row in data]
-            return data
-        
-        conn.commit()
-        if 'RETURNING' in sql.upper():
-            data = cur.fetchall()
-            data = [dict(row) for row in data]
-            return data
-        
-        return []
-        
-    except Exception as e:
-        if conn:
-            conn.rollback()
-        print(f"❌ Error en db_query: {e}")
-        print(f"📝 SQL: {sql}")
-        print(f"📝 Params: {params}")
-        raise
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-            
+       
 def db_execute(sql, params=()):
     conn = None
     cur = None
