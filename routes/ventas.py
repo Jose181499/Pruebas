@@ -3743,7 +3743,10 @@ def api_pedido_compra_obtener(id):
         items = []
         if pc.get('items_json'):
             try:
-                raw_items = jeson.loads(pc['items_json'])
+                raw_val = pc['items_json']
+                # 🔧 CAMBIO: psycopg2 puede devolver jsonb ya parseado (lista/dict) o como string, según el driver
+                raw_items = json.loads(raw_val) if isinstance(raw_val, str) else raw_val
+                
                 # Si es una lista de listas (formato antiguo), convertir a objetos
                 if isinstance(raw_items, list) and len(raw_items) > 0:
                     if isinstance(raw_items[0], list):
