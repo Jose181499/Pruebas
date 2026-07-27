@@ -8701,6 +8701,21 @@ function setPcCondicionValue(value) {
 let modalMode = 'cot';  // 'cot' | 'directo' | 'editar'
 
 async function savePedidoCompraSAP(force) {
+    // 🔧 NUEVO: bloquea el guardado si la tabla de productos aún no cargó
+    const tbody = document.getElementById('pcItemsBody');
+    const filas = tbody ? Array.from(tbody.querySelectorAll('tr')) : [];
+    
+    // Verifica que al menos una fila tenga un código de producto real (no vacía)
+    const hayProductosReales = filas.some(row => {
+        const primerInput = row.querySelector('input');
+        return primerInput && primerInput.value.trim() !== '';
+    });
+    
+    if (filas.length === 0 || !hayProductosReales) {
+        showToast('⚠️ No hay productos cargados. Espera a que termine de cargar la cotización antes de guardar.', 'warning');
+        return;
+    }
+
     console.log('🔄 savePedidoCompraSAP ejecutándose...', { force, modalMode, editingId });
     
     try {
