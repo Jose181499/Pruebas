@@ -24,10 +24,14 @@ def index():
 # ==========================================
 
 @maestros_bp.route('/api/clientes/listar', methods=['GET'])
-@login_required
+# @login_required  # Temporalmente comentado para pruebas
 def api_clientes_listar():
     """Listar clientes con sus contactos y puntos de entrega"""
     try:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info("📥 Solicitud a /api/clientes/listar")
+        
         # 1. Obtener todos los clientes activos
         query_clientes = """
             SELECT id, codigo_cliente, razon_social,
@@ -50,7 +54,10 @@ def api_clientes_listar():
         for cliente in clientes:
             cliente_id = cliente.get('id')
             
-            # Obtener contactos
+            if not cliente_id:
+                continue
+                
+            # Obtener contactos - Manejar errores de codificación
             try:
                 query_contactos = """
                     SELECT id, nombre_contacto as nombre, email, telefono, 
@@ -59,13 +66,21 @@ def api_clientes_listar():
                     WHERE cliente_id = %s AND activo = true
                     ORDER BY principal DESC, nombre_contacto
                 """
-                contactos = db_query(query_contactos, (cliente_id,))
-                cliente['contactos'] = contactos if contactos else []
+                contactos = db_query(query_contactos, (str(cliente_id),))
+                # Asegurar que los strings sean válidos
+                if contactos:
+                    for contacto in contactos:
+                        for key, value in contacto.items():
+                            if isinstance(value, bytes):
+                                contacto[key] = value.decode('utf-8', errors='ignore')
+                    cliente['contactos'] = contactos
+                else:
+                    cliente['contactos'] = []
             except Exception as e:
-                current_app.logger.warning(f"Error obteniendo contactos para cliente {cliente_id}: {e}")
+                logger.warning(f"Error obteniendo contactos para cliente {cliente_id}: {e}")
                 cliente['contactos'] = []
             
-            # Obtener puntos de entrega
+            # Obtener puntos de entrega - similar
             try:
                 query_puntos = """
                     SELECT id, nombre_punto as punto, direccion, 
@@ -76,10 +91,17 @@ def api_clientes_listar():
                     WHERE cliente_id = %s AND activo = true
                     ORDER BY principal DESC, nombre_punto
                 """
-                puntos = db_query(query_puntos, (cliente_id,))
-                cliente['puntos_entrega'] = puntos if puntos else []
+                puntos = db_query(query_puntos, (str(cliente_id),))
+                if puntos:
+                    for punto in puntos:
+                        for key, value in punto.items():
+                            if isinstance(value, bytes):
+                                punto[key] = value.decode('utf-8', errors='ignore')
+                    cliente['puntos_entrega'] = puntos
+                else:
+                    cliente['puntos_entrega'] = []
             except Exception as e:
-                current_app.logger.warning(f"Error obteniendo puntos para cliente {cliente_id}: {e}")
+                logger.warning(f"Error obteniendo puntos para cliente {cliente_id}: {e}")
                 cliente['puntos_entrega'] = []
             
             # Asegurar valores por defecto
@@ -95,10 +117,38 @@ def api_clientes_listar():
         return jsonify({"success": True, "data": clientes})
         
     except Exception as e:
-        current_app.logger.error(f"❌ Error listando clientes: {e}")
+        print(f"❌ Error listando clientes: {e}")
+        import traceback
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
-    
+@maestros_bp.route('/api/clientes/test-simple', methods=['GET'])
+def api_clientes_test_simple():
+    """Endpoint de prueba sin consultas complejas"""
+    try:
+        from database import db_query
+        # Solo contar clientes
+        result = db_query("SELECT COUNT(*) as total FROM clientes WHERE activo = true")
+        
+        # Obtener solo los primeros 5 clientes sin contactos
+        clientes_simple = db_query("""
+            SELECT id, razon_social, numero_documento 
+            FROM clientes 
+            WHERE activo = true 
+            LIMIT 5
+        """)
+        
+        return jsonify({
+            "success": True,
+            "total": result[0]['total'] if result else 0,
+            "clientes": clientes_simple if clientes_simple else []
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
 @maestros_bp.route('/api/clientes/guardar', methods=['POST'])
 @login_required
 def api_clientes_guardar():

@@ -50,20 +50,27 @@ def db_query(sql, params=None):
     cur = None
     try:
         conn = get_connection()
+        # Forzar codificación UTF-8 en la conexión
+        conn.set_client_encoding('UTF8')
         cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Si hay parámetros, asegurar que sean strings
+        if params:
+            # Convertir cualquier parámetro a string para evitar problemas de codificación
+            params = tuple(str(p) if p is not None else None for p in params)
+        
         cur.execute(sql, params or ())
         
-        # Si es SELECT, fetchall
         if sql.strip().upper().startswith('SELECT'):
             data = cur.fetchall()
+            # Convertir cualquier byte a string
+            data = [dict(row) for row in data]
             return data
         
-        # Si es UPDATE/DELETE/INSERT, commit y fetch si hay RETURNING
         conn.commit()
-        
-        # Si hay RETURNING, obtener resultados
         if 'RETURNING' in sql.upper():
             data = cur.fetchall()
+            data = [dict(row) for row in data]
             return data
         
         return []
@@ -80,8 +87,7 @@ def db_query(sql, params=None):
             cur.close()
         if conn:
             conn.close()
-
-
+            
 def db_execute(sql, params=()):
     conn = None
     cur = None
