@@ -434,10 +434,9 @@ def test_db():
             'status': 'error',
             'message': f'❌ Error: {str(e)}'
         }), 500
-
 if __name__ == "__main__":
-    # Obtener puerto de Railway o usar 8080 por defecto
-    port = int(os.environ.get("PORT", 8080))
+    # ✅ Usar configuración estándar para Render
+    port = int(os.environ.get("PORT", 10000))  # Render usa 10000 por defecto
     host = "0.0.0.0"
     debug = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
 
@@ -446,13 +445,7 @@ if __name__ == "__main__":
     print("=" * 60)
     print(f"📍 Servidor corriendo en:")
     print(f"   👉 http://localhost:{port}")
-    print(f"   👉 http://0.0.0.0:{port}")
-    print(f"\n📋 RUTAS PRINCIPALES:")
-    print(f"   - Login:      http://localhost:{port}/login")
-    print(f"   - Dashboard:  http://localhost:{port}/index")
-    print(f"   - Maestros:   http://localhost:{port}/maestros")
+    print(f"   👉 https://pruebas-bntn.onrender.com")
     print("=" * 60)
-    print("✅ Servidor listo para recibir peticiones")
-    print("=" * 60)
-
+    
     app.run(debug=debug, host=host, port=port)
