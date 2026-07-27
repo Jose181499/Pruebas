@@ -3150,7 +3150,7 @@ def generar_pdf_guia_endpoint(guia_id):
         print(f"✅ Guía encontrada: {guia.get('serie')}-{guia.get('numero')}")
         
         # 2. Preparar datos para el PDFGenerator
-        from .pdf_generator import pdf_generator
+        from pdf_generator import pdf_generator
         
         datos_guia = {
             'tipo_documento': 'guia_remision',

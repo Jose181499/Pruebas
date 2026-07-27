@@ -1,4 +1,4 @@
-# pdf_generator.py - VERSIÓN MEJORADA
+# pdf_generator.py - VERSIÓN CORREGIDA
 
 import os
 from weasyprint import HTML
@@ -6,6 +6,7 @@ from datetime import datetime
 from flask import render_template_string
 import json
 import base64
+import re
 
 class PDFGenerator:
     def __init__(self):
@@ -28,8 +29,9 @@ class PDFGenerator:
                 print(f"Error al leer logo: {e}")
         return None
 
-    # pdf_generator.py - Modificar el método generar_pdf_universal
-
+    # ============================================================
+    # MÉTODO PRINCIPAL - GENERAR PDF UNIVERSAL
+    # ============================================================
     def generar_pdf_universal(self, datos):
         """Genera PDF basado en el tipo de documento - MÉTODO PRINCIPAL"""
         try:
@@ -37,21 +39,15 @@ class PDFGenerator:
             
             print(f"Generando PDF universal - Tipo detectado: {tipo_documento}")
             
-            # ============================================================
             # ORDEN DE COMPRA
-            # ============================================================
             if tipo_documento == 'orden_compra' or 'numero_orden' in datos:
                 return self._generar_orden_compra(datos)
             
-            # ============================================================
-            # GUÍA DE REMISIÓN - NUEVO
-            # ============================================================
-            elif tipo_documento == 'guia_remision' or 'serie' in datos and 'numero' in datos and 'destinatario_nombre' in datos:
+            # GUÍA DE REMISIÓN
+            elif tipo_documento == 'guia_remision' or ('serie' in datos and 'numero' in datos and 'destinatario_nombre' in datos):
                 return self._generar_guia_remision(datos)
             
-            # ============================================================
             # COTIZACIÓN (por defecto)
-            # ============================================================
             elif tipo_documento == 'cotizacion' or 'numero_cotizacion' in datos:
                 return self._generar_cotizacion(datos)
             else:
@@ -69,18 +65,18 @@ class PDFGenerator:
             traceback.print_exc()
             return None
 
-        
+    # ============================================================
+    # GENERAR COTIZACIÓN
+    # ============================================================
     def _generar_cotizacion(self, datos_cotizacion):
         """Genera PDF para cotización con formato KCF"""
         try:
             print("Iniciando generación de PDF de cotización...")
             print(f"Datos recibidos: {list(datos_cotizacion.keys())}")
             
-            # Mapear datos para el template
             datos_mapeados = self._mapear_datos_cotizacion(datos_cotizacion)
             print(f"Datos mapeados: {list(datos_mapeados.keys())}")
             
-            # Cargar template original
             template_path = os.path.join(self.templates_dir, 'cotizacion_comercial.html')
             if not os.path.exists(template_path):
                 print(f"Template no encontrado en {template_path}")
@@ -91,20 +87,16 @@ class PDFGenerator:
             
             print("Template de cotización cargado correctamente")
             
-            # Generar filas de productos
             filas_productos = self._generar_filas_productos(datos_mapeados.get('productos', []))
             datos_mapeados['filas_productos'] = filas_productos
             
-            # Reemplazar variables en el template sin Jinja2
             html_content = self._reemplazar_variables_template(template_content, datos_mapeados)
             
-            # Generar nombre de archivo
             fecha = datetime.now().strftime('%Y%m%d_%H%M%S')
             pdf_file = f"cotizacion_{datos_mapeados.get('numero_cotizacion', 'sin_numero')}_{fecha}.pdf"
             
             print(f"Generando PDF: {pdf_file}")
             
-            # Generar PDF
             base_url = f"file://{os.getcwd()}/"
             HTML(string=html_content, base_url=base_url).write_pdf(pdf_file)
             
@@ -121,7 +113,6 @@ class PDFGenerator:
         """Mapea los datos de la cotización al formato esperado por el template"""
         cliente = datos_cotizacion.get('cliente', {})
         
-        # Función auxiliar para extraer de notas
         def get_from_notas(prefijo):
             notas = datos_cotizacion.get('notas', '')
             for line in notas.split('\n'):
@@ -129,7 +120,6 @@ class PDFGenerator:
                     return line.replace(prefijo, '').strip()
             return ''
         
-        # Obtener logo en base64
         logo_base64 = self._obtener_logo_base64()
         logo_src = f"data:image/png;base64,{logo_base64}" if logo_base64 else ""
         
@@ -158,7 +148,6 @@ class PDFGenerator:
             'total': datos_cotizacion.get('total', 0)
         }
         
-        # Mapear productos
         for i, item in enumerate(datos_cotizacion.get('items', []), 1):
             producto = {
                 'item': i,
@@ -202,12 +191,10 @@ class PDFGenerator:
         """Reemplaza variables del template sin usar Jinja2"""
         html = template
         
-        # Reemplazar logo
         logo_src = datos.get('logo_src', '')
         if logo_src:
             html = html.replace('src="logo-kcf.png"', f'src="{logo_src}"')
         
-        # Reemplazar variables simples
         html = html.replace("{{ numero_cotizacion }}", str(datos.get('numero_cotizacion', '')))
         html = html.replace("{{ fecha_actual }}", str(datos.get('fecha_actual', '')))
         html = html.replace("{{ cliente_razon_social }}", str(datos.get('cliente_razon_social', '')))
@@ -225,7 +212,6 @@ class PDFGenerator:
         html = html.replace("{{ validez_oferta }}", str(datos.get('validez_oferta', '')))
         html = html.replace("{{ nota_cotizacion }}", str(datos.get('nota_cotizacion', '')))
         
-        # Reemplazar totales
         subtotal = datos.get('subtotal', 0)
         igv = datos.get('igv', 0)
         total = datos.get('total', 0)
@@ -235,11 +221,9 @@ class PDFGenerator:
         html = html.replace("{{ summary_igv|default(0)|formato_soles }}", f"{igv:.2f}")
         html = html.replace("{{ summary_total_venta|default(0)|formato_soles }}", f"{total:.2f}")
         
-        # Reemplazar filas de productos
         inicio_tbody = html.find('<tbody>')
         fin_tbody = html.find('</tbody>')
         if inicio_tbody >= 0 and fin_tbody > inicio_tbody:
-            # Encontrar y reemplazar las filas {% for ... %}
             inicio_for = html.find('{% for producto in productos %}', inicio_tbody)
             fin_for = html.find('{% endfor %}', inicio_for)
             if inicio_for >= 0 and fin_for > inicio_for:
@@ -247,23 +231,22 @@ class PDFGenerator:
                 parte_despues = html[fin_for + len('{% endfor %}'):]
                 html = parte_antes + datos.get('filas_productos', '') + parte_despues
         
-        # Remover condiciones Jinja2 no reemplazadas
-        import re
         html = re.sub(r'{%.*?%}', '', html, flags=re.DOTALL)
         html = re.sub(r'{{.*?}}', '', html, flags=re.DOTALL)
         
         return html
 
+    # ============================================================
+    # GENERAR ORDEN DE COMPRA
+    # ============================================================
     def _generar_orden_compra(self, datos_orden_compra):
         """Genera PDF para orden de compra con formato KCF"""
         try:
             print("Iniciando generación de PDF de orden de compra...")
             
-            # Asegurarse de que el directorio de templates existe
             if not os.path.exists(self.templates_dir):
                 os.makedirs(self.templates_dir)
             
-            # Cargar template HTML para PDF de orden de compra
             template_path = os.path.join(self.templates_dir, 'generar_orden_compra.html')
             
             if not os.path.exists(template_path):
@@ -274,16 +257,13 @@ class PDFGenerator:
             
             print("Template de orden de compra cargado correctamente")
             
-            # Renderizar template con datos
             html_content = render_template_string(template_content, **datos_orden_compra)
             
-            # Generar nombre de archivo
             fecha = datetime.now().strftime('%Y%m%d_%H%M%S')
             pdf_file = f"orden_compra_{datos_orden_compra.get('numero_orden', 'sin_numero')}_{fecha}.pdf"
             
             print(f"Generando PDF: {pdf_file}")
             
-            # Generar PDF
             base_url = f"file://{os.getcwd()}/"
             HTML(string=html_content, base_url=base_url).write_pdf(pdf_file)
             
@@ -426,12 +406,9 @@ class PDFGenerator:
             f.write(template_basico)
         print("Template básico de orden de compra creado")
 
-# Instancia global
-pdf_generator = PDFGenerator()
-
-
-# pdf_generator.py - Agregar este método a la clase PDFGenerator
-
+    # ============================================================
+    # GENERAR GUÍA DE REMISIÓN
+    # ============================================================
     def _generar_guia_remision(self, datos_guia):
         """
         Genera PDF para Guía de Remisión
@@ -440,10 +417,8 @@ pdf_generator = PDFGenerator()
             print("📄 Iniciando generación de PDF de Guía de Remisión...")
             print(f"Datos recibidos: {list(datos_guia.keys())}")
             
-            # Mapear datos para el template
             datos_mapeados = self._mapear_datos_guia(datos_guia)
             
-            # Cargar template
             template_path = os.path.join(self.templates_dir, 'guia_remision.html')
             if not os.path.exists(template_path):
                 self._crear_template_guia_basico(template_path)
@@ -451,20 +426,16 @@ pdf_generator = PDFGenerator()
             with open(template_path, 'r', encoding='utf-8') as f:
                 template_content = f.read()
             
-            # Generar filas de productos
             filas_productos = self._generar_filas_productos_guia(datos_mapeados.get('items', []))
             datos_mapeados['filas_productos'] = filas_productos
             
-            # Reemplazar variables en el template
             html_content = self._reemplazar_variables_template_guia(template_content, datos_mapeados)
             
-            # Generar nombre de archivo
             fecha = datetime.now().strftime('%Y%m%d_%H%M%S')
             pdf_file = f"guia_{datos_mapeados.get('serie', 'T001')}_{datos_mapeados.get('numero', 'sin_numero')}_{fecha}.pdf"
             
             print(f"Generando PDF: {pdf_file}")
             
-            # Generar PDF
             base_url = f"file://{os.getcwd()}/"
             HTML(string=html_content, base_url=base_url).write_pdf(pdf_file)
             
@@ -481,7 +452,6 @@ pdf_generator = PDFGenerator()
         """
         Mapea los datos de la guía al formato esperado por el template
         """
-        # Datos de la empresa
         EMPRESA = {
             'ruc': '20131369124',
             'nombre': 'KCF CORPORACION S.A.C.',
@@ -491,11 +461,9 @@ pdf_generator = PDFGenerator()
             'web': 'www.kcfcorporacion.com'
         }
         
-        # Obtener logo en base64
         logo_base64 = self._obtener_logo_base64()
         logo_src = f"data:image/png;base64,{logo_base64}" if logo_base64 else ""
         
-        # Procesar items
         items = datos_guia.get('items', [])
         if isinstance(items, str):
             try:
@@ -524,7 +492,6 @@ pdf_generator = PDFGenerator()
                     'br': ''
                 })
         
-        # Calcular peso total
         peso_total = float(datos_guia.get('peso_total', 0))
         if peso_total == 0 and items_formateados:
             peso_total = sum(float(item['cantidad']) * 0.5 for item in items_formateados)
@@ -652,12 +619,10 @@ pdf_generator = PDFGenerator()
         """Reemplaza variables del template de guía"""
         html = template
         
-        # Logo
         logo_src = datos.get('logo_src', '')
         if logo_src:
             html = html.replace('src="logo-kcf.png"', f'src="{logo_src}"')
         
-        # Reemplazar variables
         variables = [
             'ruc_remitente', 'remitente_nombre', 'remitente_direccion',
             'remitente_ubigeo', 'telefono', 'email', 'web',
@@ -675,15 +640,12 @@ pdf_generator = PDFGenerator()
             value = datos.get(var, '')
             html = html.replace(f"{{{{ {var} }}}}", str(value))
         
-        # Reemplazar peso
         peso = datos.get('peso_bruto_total', 0)
         html = html.replace("{{ '%.1f'|format(peso_bruto_total|float) if peso_bruto_total else '0.0' }}", f"{peso:.1f}")
         
-        # Reemplazar QR
         qr = datos.get('qr_base64', '')
         html = html.replace("{{ qr_base64 }}", qr)
         
-        # Reemplazar filas de productos
         inicio_tbody = html.find('<tbody>')
         fin_tbody = html.find('</tbody>')
         if inicio_tbody >= 0 and fin_tbody > inicio_tbody:
@@ -694,8 +656,6 @@ pdf_generator = PDFGenerator()
                 parte_despues = html[fin_for + len('{% endfor %}'):]
                 html = parte_antes + datos.get('filas_productos', '') + parte_despues
         
-        # Remover condiciones Jinja2 no reemplazadas
-        import re
         html = re.sub(r'{%.*?%}', '', html, flags=re.DOTALL)
         html = re.sub(r'{{.*?}}', '', html, flags=re.DOTALL)
         
@@ -861,3 +821,9 @@ pdf_generator = PDFGenerator()
         with open(template_path, 'w', encoding='utf-8') as f:
             f.write(template_basico)
         print("Template básico de guía creado")
+
+
+# ============================================================
+# INSTANCIA GLOBAL
+# ============================================================
+pdf_generator = PDFGenerator()
