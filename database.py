@@ -1,6 +1,11 @@
 import os
 import psycopg2
+import json
 import logging
+from psycopg2.extras import RealDictCursor
+from contextlib import contextmanager  # 👈 Agrega esta línea
+from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # Configurar logging PARA VER EL ERROR EXACTO
 logging.basicConfig(level=logging.DEBUG)
