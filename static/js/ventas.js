@@ -2947,43 +2947,27 @@ window.generateCotizacionPdf = async function(id) {
 };
 
 
-// ============================================================
-// GENERAR PDF DE GUÍA (ESTILO COTIZACIONES)
-// ============================================================
+// ventas.js
 
 window.generateGuiaPdf = async function(id) {
-    console.log(`📄 Generando PDF para guía ID: ${id}`);
-    
     try {
         showToast('⏳ Generando PDF de la guía...', 'info');
         
-        const response = await fetch(`/ventas/api/guias/${id}/pdf`, {
+        // 🔽 RUTA CORRECTA
+        const response = await fetch(`/ventas/ventas/api/guias/${id}/pdf`, {
             method: 'GET',
-            headers: {
-                'Accept': 'application/pdf'
-            }
+            headers: { 'Accept': 'application/pdf' }
         });
         
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || `HTTP ${response.status}`);
+            throw new Error(`HTTP ${response.status}`);
         }
         
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        
-        let filename = `guia_${id}.pdf`;
-        const contentDisposition = response.headers.get('Content-Disposition');
-        if (contentDisposition) {
-            const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-            if (match && match[1]) {
-                filename = match[1].replace(/['"]/g, '');
-            }
-        }
-        
-        a.download = filename;
+        a.download = `guia_${id}.pdf`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -2992,8 +2976,19 @@ window.generateGuiaPdf = async function(id) {
         showToast('✅ PDF de guía generado correctamente', 'success');
         
     } catch (error) {
-        console.error('❌ Error generando PDF de guía:', error);
+        console.error('❌ Error:', error);
         showToast('❌ Error al generar el PDF: ' + error.message, 'error');
+    }
+};
+
+window.previewGuiaPdf = function(id) {
+    try {
+        // 🔽 RUTA CORRECTA PARA VISTA PREVIA
+        const url = `/ventas/ventas/api/guias/${id}/pdf/preview`;
+        window.open(url, '_blank');
+        showToast('📄 Abriendo vista previa...', 'info');
+    } catch (error) {
+        showToast('❌ Error: ' + error.message, 'error');
     }
 };
 

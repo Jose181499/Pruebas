@@ -3113,39 +3113,168 @@ def api_cotizaciones_generar_pdf(id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+# routes.py - Agregar esta función al final
 
-@ventas_bp.route('/api/guias/<int:guia_id>/pdf', methods=['GET'])
+# ============================================================
+# GENERAR PDF DE GUÍA CON PDFGenerator
+# ============================================================
+
+@ventas_bp.route('/ventas/api/guias/<int:guia_id>/pdf', methods=['GET'])
+@login_required
 def generar_pdf_guia_endpoint(guia_id):
-    """
-    Genera el PDF de una Guía de Remisión y lo descarga
-    """
+    """Genera el PDF de una Guía de Remisión usando PDFGenerator"""
     try:
-        # Obtener la guía de la base de datos
-        guia = Guia.query.get(guia_id)
-        if not guia:
+        print(f"📄 Generando PDF para guía ID: {guia_id}")
+        
+        # 1. Obtener la guía
+        query = """
+            SELECT 
+                id, serie, numero, fecha_emision, fecha_traslado,
+                ruc_remitente, remitente_nombre, remitente_direccion,
+                remitente_ubigeo, ruc_destinatario, destinatario_nombre,
+                destinatario_direccion, destinatario_ubigeo,
+                modalidad_transporte, placa_vehiculo, conductor_dni,
+                conductor_nombre, licencia_conductor, transportista_ruc,
+                transportista_nombre, motivo_traslado, documento_asociado,
+                peso_total, items_json, observaciones, estado_sunat,
+                creado_por
+            FROM guias_remision
+            WHERE id = %s
+        """
+        guia_result = db_query(query, (guia_id,))
+        
+        if not guia_result:
             return jsonify({'error': 'Guía no encontrada'}), 404
         
-        # Preparar datos para el generador PDF
-        guia_data = preparar_datos_guia(guia)
+        guia = guia_result[0]
+        print(f"✅ Guía encontrada: {guia.get('serie')}-{guia.get('numero')}")
         
-        # Generar el PDF
-        pdf_file = generar_pdf_guia(guia_data)
+        # 2. Preparar datos para el PDFGenerator
+        from .pdf_generator import pdf_generator
         
-        # Nombre del archivo
-        filename = f"Guia_{guia.serie}_{guia.numero}.pdf"
+        datos_guia = {
+            'tipo_documento': 'guia_remision',
+            'serie': guia.get('serie', 'T001'),
+            'numero': guia.get('numero', ''),
+            'ruc_remitente': guia.get('ruc_remitente', '20131369124'),
+            'remitente_nombre': guia.get('remitente_nombre', 'KCF CORPORACION S.A.C.'),
+            'remitente_direccion': guia.get('remitente_direccion', 'Av. Industrial 123, Lima'),
+            'remitente_ubigeo': guia.get('remitente_ubigeo', '150101'),
+            'ruc_destinatario': guia.get('ruc_destinatario', ''),
+            'destinatario_nombre': guia.get('destinatario_nombre', ''),
+            'destinatario_direccion': guia.get('destinatario_direccion', ''),
+            'destinatario_ubigeo': guia.get('destinatario_ubigeo', ''),
+            'fecha_emision': guia.get('fecha_emision'),
+            'fecha_traslado': guia.get('fecha_traslado'),
+            'fecha_inicio_traslado': guia.get('fecha_traslado'),
+            'motivo_traslado': guia.get('motivo_traslado', '01'),
+            'modalidad_transporte': guia.get('modalidad_transporte', 'PRIVADO'),
+            'peso_total': float(guia.get('peso_total', 0)),
+            'numero_bultos': 1,
+            'transportista_nombre': guia.get('transportista_nombre', '---'),
+            'conductor_nombre': guia.get('conductor_nombre', '---'),
+            'conductor_dni': guia.get('conductor_dni', '---'),
+            'placa_vehiculo': guia.get('placa_vehiculo', '---'),
+            'licencia_conductor': guia.get('licencia_conductor', '---'),
+            'documento_asociado': guia.get('documento_asociado', ''),
+            'observaciones': guia.get('observaciones', ''),
+            'items': guia.get('items_json', '[]')
+        }
         
-        # Retornar el PDF como descarga
+        # 3. Generar el PDF
+        pdf_path = pdf_generator.generar_pdf_universal(datos_guia)
+        
+        if not pdf_path:
+            return jsonify({'error': 'Error al generar el PDF'}), 500
+        
+        # 4. Retornar el PDF
+        from flask import send_file
+        filename = f"Guia_{guia.get('serie', 'T001')}_{guia.get('numero', '0001')}.pdf"
+        
         return send_file(
-            pdf_file,
+            pdf_path,
             mimetype='application/pdf',
             as_attachment=True,
             download_name=filename
         )
         
     except Exception as e:
-        current_app.logger.error(f"Error generando PDF de guía: {e}")
+        print(f"❌ Error generando PDF de guía: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+
+@ventas_bp.route('/ventas/api/guias/<int:guia_id>/pdf/preview', methods=['GET'])
+@login_required
+def preview_pdf_guia(guia_id):
+    """Vista previa del PDF de guía"""
+    try:
+        # Misma lógica pero sin descarga
+        query = """
+            SELECT 
+                id, serie, numero, fecha_emision, fecha_traslado,
+                ruc_remitente, remitente_nombre, remitente_direccion,
+                remitente_ubigeo, ruc_destinatario, destinatario_nombre,
+                destinatario_direccion, destinatario_ubigeo,
+                modalidad_transporte, placa_vehiculo, conductor_dni,
+                conductor_nombre, licencia_conductor, transportista_ruc,
+                transportista_nombre, motivo_traslado, documento_asociado,
+                peso_total, items_json, observaciones, estado_sunat,
+                creado_por
+            FROM guias_remision
+            WHERE id = %s
+        """
+        guia_result = db_query(query, (guia_id,))
+        
+        if not guia_result:
+            return jsonify({'error': 'Guía no encontrada'}), 404
+        
+        guia = guia_result[0]
+        
+        from .pdf_generator import pdf_generator
+        
+        datos_guia = {
+            'tipo_documento': 'guia_remision',
+            'serie': guia.get('serie', 'T001'),
+            'numero': guia.get('numero', ''),
+            'ruc_remitente': guia.get('ruc_remitente', '20131369124'),
+            'remitente_nombre': guia.get('remitente_nombre', 'KCF CORPORACION S.A.C.'),
+            'remitente_direccion': guia.get('remitente_direccion', 'Av. Industrial 123, Lima'),
+            'ruc_destinatario': guia.get('ruc_destinatario', ''),
+            'destinatario_nombre': guia.get('destinatario_nombre', ''),
+            'destinatario_direccion': guia.get('destinatario_direccion', ''),
+            'fecha_emision': guia.get('fecha_emision'),
+            'fecha_traslado': guia.get('fecha_traslado'),
+            'motivo_traslado': guia.get('motivo_traslado', '01'),
+            'modalidad_transporte': guia.get('modalidad_transporte', 'PRIVADO'),
+            'peso_total': float(guia.get('peso_total', 0)),
+            'transportista_nombre': guia.get('transportista_nombre', '---'),
+            'conductor_nombre': guia.get('conductor_nombre', '---'),
+            'conductor_dni': guia.get('conductor_dni', '---'),
+            'placa_vehiculo': guia.get('placa_vehiculo', '---'),
+            'documento_asociado': guia.get('documento_asociado', ''),
+            'observaciones': guia.get('observaciones', ''),
+            'items': guia.get('items_json', '[]')
+        }
+        
+        pdf_path = pdf_generator.generar_pdf_universal(datos_guia)
+        
+        if not pdf_path:
+            return jsonify({'error': 'Error al generar el PDF'}), 500
+        
+        from flask import send_file
+        return send_file(
+            pdf_path,
+            mimetype='application/pdf',
+            as_attachment=False  # Vista previa
+        )
+        
+    except Exception as e:
+        print(f"❌ Error generando vista previa: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 @ventas_bp.route('/api/guias/<int:guia_id>/pdf/preview', methods=['GET'])
 def preview_pdf_guia(guia_id):
