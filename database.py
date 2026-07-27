@@ -3,51 +3,63 @@ import psycopg2
 import json
 import logging
 from psycopg2.extras import RealDictCursor
-from contextlib import contextmanager  # 👈 Agrega esta línea
+from contextlib import contextmanager
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
-# Configurar logging PARA VER EL ERROR EXACTO
-logging.basicConfig(level=logging.DEBUG)
+# Configurar logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # =========================
-# SUPABASE DATABASE URL
+# SUPABASE DATABASE URL - CONEXIÓN DIRECTA (NO POOLER)
 # =========================
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if not DATABASE_URL:
-    # ✅ USA LA URL DEL POOLER DE SUPABASE
-    DATABASE_URL = "postgresql://postgres:admin3561967kcf@aws-1-us-east-1.pooler.supabase.com:6543/postgres"
+    # ✅ USAR CONEXIÓN DIRECTA (puerto 5432) en lugar del pooler (6543)
+    DATABASE_URL = "postgresql://postgres:admin3561967kcf@db.tkfmwvsenvgpyexvdcat.supabase.co:5432/postgres"
 
-logger.info(f"📊 Conectando a Supabase Pooler...")
-logger.debug(f"🔗 URL (oculta): {DATABASE_URL[:30]}...")
+if DATABASE_URL.startswith("postgresql+psycopg2://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql+psycopg2://", "postgresql://", 1)
+
+logger.info(f"📊 Conectando a Supabase (conexión directa)...")
+logger.debug(f"🔗 Host: {DATABASE_URL.split('@')[1].split(':')[0] if '@' in DATABASE_URL else 'desconocido'}")
 
 # =========================
 # CONEXIÓN CON SSL
 # =========================
 def get_connection():
-    """Obtiene conexión a Supabase con SSL"""
+    """Obtiene conexión a Supabase con SSL - Conexión directa"""
     try:
-        logger.info("🔄 Intentando conectar...")
+        logger.info("🔄 Intentando conectar a Supabase (directo)...")
         
         conn = psycopg2.connect(
             DATABASE_URL,
             client_encoding="UTF8",
-            sslmode='require',  # ✅ Obligatorio para Supabase
-            connect_timeout=30
+            sslmode='require',  # ✅ Requerido por Supabase
+            connect_timeout=30,
+            keepalives=1,
+            keepalives_idle=30,
+            keepalives_interval=10,
+            keepalives_count=5
         )
         
         logger.info("✅ Conexión exitosa a Supabase")
         return conn
         
-    except Exception as e:
-        logger.error(f"❌ Error de conexión: {e}")
+    except psycopg2.OperationalError as e:
+        logger.error(f"❌ Error operacional: {e}")
         logger.error("🔍 Verifica:")
-        logger.error("   1. La URL en DATABASE_URL")
-        logger.error("   2. La contraseña de Supabase")
-        logger.error("   3. Que el pooler esté activo")
+        logger.error("   1. La contraseña de Supabase")
+        logger.error("   2. Que la base de datos esté activa")
+        logger.error("   3. La URL de conexión directa")
         raise
+    except Exception as e:
+        logger.error(f"❌ Error inesperado: {e}")
+        raise
+
+
 # =========================
 # TRANSACCIONES
 # =========================
