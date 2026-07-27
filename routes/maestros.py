@@ -115,33 +115,24 @@ def api_clientes_listar():
             "data": []
         }), 500
 
-
-@maestros_bp.route('/api/clientes/test-simple', methods=['GET'])
-def api_clientes_test_simple():
-    """Endpoint de prueba sin consultas complejas"""
+@maestros_bp.route('/api/clientes/test', methods=['GET'])
+def api_clientes_test():
+    """Endpoint de prueba para diagnosticar"""
     try:
         from database import db_query
-        # Solo contar clientes
-        result = db_query("SELECT COUNT(*) as total FROM clientes WHERE activo = true")
-        
-        # Obtener solo los primeros 5 clientes sin contactos
-        clientes_simple = db_query("""
-            SELECT id, razon_social, numero_documento 
-            FROM clientes 
-            WHERE activo = true 
-            LIMIT 5
-        """)
-        
+        # Probar consulta simple
+        result = db_query("SELECT 1 as test, NOW() as time")
         return jsonify({
             "success": True,
-            "total": result[0]['total'] if result else 0,
-            "clientes": clientes_simple if clientes_simple else []
+            "message": "Conexión a base de datos OK",
+            "test": result[0] if result else None
         })
     except Exception as e:
         return jsonify({
             "success": False,
             "error": str(e)
         }), 500
+
 
 
 @maestros_bp.route('/api/clientes/guardar', methods=['POST'])

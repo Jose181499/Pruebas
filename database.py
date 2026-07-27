@@ -43,7 +43,55 @@ def db_tx():
         raise
     finally:
         conn.close()
-       
+
+def db_query(sql, params=None):
+    """Ejecuta una consulta SELECT y devuelve los resultados como lista"""
+    conn = None
+    cur = None
+    try:
+        conn = get_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Asegurar que params sea una tupla
+        if params is None:
+            params = ()
+        elif not isinstance(params, (tuple, list)):
+            params = (params,)
+        
+        # Ejecutar consulta
+        cur.execute(sql, params)
+        
+        # Si es SELECT, devolver resultados
+        if sql.strip().upper().startswith('SELECT'):
+            results = cur.fetchall()
+            # Convertir a lista de diccionarios
+            return [dict(row) for row in results] if results else []
+        
+        # Si es INSERT/UPDATE con RETURNING
+        if 'RETURNING' in sql.upper():
+            results = cur.fetchall()
+            conn.commit()
+            return [dict(row) for row in results] if results else []
+        
+        # Para otros casos (INSERT, UPDATE, DELETE sin RETURNING)
+        conn.commit()
+        return []
+        
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print(f"❌ Error en db_query: {e}")
+        print(f"📝 SQL: {sql}")
+        print(f"📝 Params: {params}")
+        raise  # Re-lanzar para que el endpoint lo maneje
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+                
+
 def db_execute(sql, params=()):
     conn = None
     cur = None
