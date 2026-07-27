@@ -8,14 +8,20 @@ from database import db_query, db_execute, db_tx, get_connection, buscar_cliente
 
 ventas_bp = Blueprint('ventas', __name__)
 
+# routes/ventas.py
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'usuario' not in session:
-           return redirect(url_for('login'))
+            # Si la petición es a la API (empieza con /ventas/api/)
+            if request.path.startswith('/ventas/api/'):
+                # Devolver un error JSON con código 401 (No autorizado)
+                return jsonify({'error': 'Sesión expirada o no autorizado. Inicia sesión.'}), 401
+            # Si es una petición de página normal, redirigir al login
+            return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
-
 # ============================================================
 # FUNCIONES DE AYUDA PARA COTIZACIONES - VERSIÓN CORREGIDA
 # ============================================================

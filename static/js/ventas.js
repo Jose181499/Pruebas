@@ -2947,37 +2947,76 @@ window.generateCotizacionPdf = async function(id) {
 };
 
 
-// ventas.js
+// ventas.js - Función completa para generar PDF de guía
 
 window.generateGuiaPdf = async function(id) {
+    console.log(`📄 Generando PDF para guía ID: ${id}`);
+
     try {
         showToast('⏳ Generando PDF de la guía...', 'info');
-        
-        // 🔽 RUTA CORRECTA
-            const response = await fetch(`/ventas/api/guias/${id}/pdf`, {
+
+        const response = await fetch(`/ventas/api/guias/${id}/pdf`, {
             method: 'GET',
-            headers: { 'Accept': 'application/pdf' }
+            headers: {
+                'Accept': 'application/pdf'
+            }
         });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
+
+        // 🔍 Manejar específicamente el error 401 (No autorizado)
+        if (response.status === 401) {
+            showToast('⏳ Tu sesión ha expirado. Redirigiendo al login...', 'warning');
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 2000);
+            return;
         }
-        
+
+        // 🔍 Manejar específicamente el error 404 (No encontrado)
+        if (response.status === 404) {
+            showToast('❌ Guía no encontrada. Verifica el ID.', 'error');
+            return;
+        }
+
+        // Para cualquier otro error (500, etc.)
+        if (!response.ok) {
+            let errorMsg = `Error ${response.status}`;
+            try {
+                const errorData = await response.json();
+                errorMsg = errorData.error || errorData.message || errorMsg;
+            } catch (e) {
+                // Si no se puede parsear el error como JSON, usar el texto de estado
+                errorMsg = `Error ${response.status}: ${response.statusText}`;
+            }
+            throw new Error(errorMsg);
+        }
+
+        // Obtener el blob del PDF
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `guia_${id}.pdf`;
+
+        // Obtener nombre del archivo desde el header Content-Disposition
+        let filename = `guia_${id}.pdf`;
+        const contentDisposition = response.headers.get('Content-Disposition');
+        if (contentDisposition) {
+            const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+            if (match && match[1]) {
+                filename = match[1].replace(/['"]/g, '');
+            }
+        }
+
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
-        
+
         showToast('✅ PDF de guía generado correctamente', 'success');
-        
+
     } catch (error) {
-        console.error('❌ Error:', error);
-        showToast('❌ Error al generar el PDF: ' + error.message, 'error');
+        console.error('❌ Error generando PDF de guía:', error);
+        showToast(`❌ ${error.message}`, 'error');
     }
 };
 
