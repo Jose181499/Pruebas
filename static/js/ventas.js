@@ -95,66 +95,52 @@ function today() {
 
 function badgeStatus(s) {
     const estado = String(s || '').trim();
-    const estadoNormalizado = estado.toUpperCase();
+    const estadoLower = estado.toLowerCase();
     
-    // Mapeo exacto de estados a clases CSS
+    // Mapeo de estados (en minúsculas) a clases CSS
     const map = {
-        // 🔴 Borrador - Rojo
-        'BORRADOR': 'b-draft',
-        
-        // 🟡 En revisión - Amarillo
-        'EN REVISIÓN': 'b-review',
-        'EN REVISION': 'b-review',
-        'EN PROCESO': 'b-review',
-        'PROCESO': 'b-review',
-        
-        // 🔵 Validado por Hellen - Azul bajito
-        'VALIDADO POR HELLEN': 'b-validated',
-        'VALIDADO': 'b-validated',
-        'VALIDADA': 'b-validated',
-        
-        // 🟢 Generada - Verde fluorescente
-        'GENERADA': 'b-generated',
-        'GENERADO': 'b-generated',
-        
-        // 🔵 Aceptada por Cliente - AZUL FLUORESCENTE NEON
-        'ACEPTADA POR CLIENTE': 'b-accepted',
-        'ACEPTADA': 'b-accepted',
-        'ACEPTADO': 'b-accepted',
-        'ACEPTADO POR CLIENTE': 'b-accepted',
-        
-        // ⚪ Anulada - Plomo
-        'ANULADA': 'b-canceled',
-        'ANULADO': 'b-canceled',
-        'CANCELADA': 'b-canceled',
-        'CANCELADO': 'b-canceled',
-        
-        // ⚪ No concretada - Plomo
-        'NO CONCRETADA': 'b-lost',
-        'NO CONCRETADO': 'b-lost',
-        'PERDIDA': 'b-lost',
-        'PERDIDO': 'b-lost'
+        'borrador': 'b-draft',
+        'en revisión': 'b-review',
+        'en revision': 'b-review',
+        'en proceso': 'b-review',
+        'proceso': 'b-review',
+        'validado por hellen': 'b-validated',
+        'validado': 'b-validated',
+        'validada': 'b-validated',
+        'generada': 'b-generated',
+        'generado': 'b-generated',
+        'aceptada por cliente': 'b-accepted',
+        'aceptada': 'b-accepted',
+        'aceptado': 'b-accepted',
+        'aceptado por cliente': 'b-accepted',
+        'anulada': 'b-canceled',
+        'anulado': 'b-canceled',
+        'cancelada': 'b-canceled',
+        'cancelado': 'b-canceled',
+        'no concretada': 'b-lost',
+        'no concretado': 'b-lost',
+        'perdida': 'b-lost',
+        'perdido': 'b-lost'
     };
     
     // Buscar coincidencia exacta primero
-    let clase = map[estadoNormalizado];
+    let clase = map[estadoLower];
     
     // Si no hay coincidencia exacta, buscar por coincidencia parcial
     if (!clase) {
-        if (estado.toLowerCase().includes('borrador')) clase = 'b-draft';
-        else if (estado.toLowerCase().includes('revisión') || estado.toLowerCase().includes('revision') || estado.toLowerCase().includes('proceso')) clase = 'b-review';
-        else if (estado.toLowerCase().includes('validado') || estado.toLowerCase().includes('validada')) clase = 'b-validated';
-        else if (estado.toLowerCase().includes('generada') || estado.toLowerCase().includes('generado')) clase = 'b-generated';
-        else if (estado.toLowerCase().includes('aceptada') || estado.toLowerCase().includes('aceptado')) clase = 'b-accepted';
-        else if (estado.toLowerCase().includes('anulada') || estado.toLowerCase().includes('anulado') || estado.toLowerCase().includes('cancelada') || estado.toLowerCase().includes('cancelado')) clase = 'b-canceled';
-        else if (estado.toLowerCase().includes('no concretada') || estado.toLowerCase().includes('no concretado') || estado.toLowerCase().includes('perdida') || estado.toLowerCase().includes('perdido')) clase = 'b-lost';
+        if (estadoLower.includes('borrador')) clase = 'b-draft';
+        else if (estadoLower.includes('revisión') || estadoLower.includes('revision') || estadoLower.includes('proceso')) clase = 'b-review';
+        else if (estadoLower.includes('validado') || estadoLower.includes('validada')) clase = 'b-validated';
+        else if (estadoLower.includes('generada') || estadoLower.includes('generado')) clase = 'b-generated';
+        else if (estadoLower.includes('aceptada') || estadoLower.includes('aceptado')) clase = 'b-accepted';
+        else if (estadoLower.includes('anulada') || estadoLower.includes('anulado') || estadoLower.includes('cancelada') || estadoLower.includes('cancelado')) clase = 'b-canceled';
+        else if (estadoLower.includes('no concretada') || estadoLower.includes('no concretado') || estadoLower.includes('perdida') || estadoLower.includes('perdido')) clase = 'b-lost';
         else clase = 'b-gray';
     }
     
     // Renderizar el badge con la clase correspondiente
     return `<span class="badge ${clase}">${estado || 'Sin estado'}</span>`;
 }
-
 
 
 
