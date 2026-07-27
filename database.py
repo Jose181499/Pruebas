@@ -12,7 +12,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if not DATABASE_URL:
-    DATABASE_URL = "postgresql://postgres.tkfmwvsenvgpyexvdcat:admin3561967kcf@aws-1-us-east-1.pooler.supabase.com:6543/postgres"
+   DATABASE_URL = "postgresql://postgres:admin3561967kcf@aws-1-us-east-1.pooler.supabase.com:6543/postgres"
 
 if DATABASE_URL.startswith("postgresql+psycopg2://"):
     DATABASE_URL = DATABASE_URL.replace("postgresql+psycopg2://", "postgresql://", 1)

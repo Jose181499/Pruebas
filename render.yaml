@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: Pruebas
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn main:app
+    envVars:
+      - key: DATABASE_URL
+        value: postgresql://postgres:admin3561967kcf@aws-1-us-east-1.pooler.supabase.com:6543/postgres
+      - key: PYTHON_VERSION
+        value: 3.11.0
