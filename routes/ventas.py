@@ -3112,6 +3112,163 @@ def api_cotizaciones_generar_pdf(id):
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
+
+@ventas_bp.route('/api/guias/<int:guia_id>/pdf', methods=['GET'])
+def generar_pdf_guia_endpoint(guia_id):
+    """
+    Genera el PDF de una Guía de Remisión y lo descarga
+    """
+    try:
+        # Obtener la guía de la base de datos
+        guia = Guia.query.get(guia_id)
+        if not guia:
+            return jsonify({'error': 'Guía no encontrada'}), 404
+        
+        # Preparar datos para el generador PDF
+        guia_data = preparar_datos_guia(guia)
+        
+        # Generar el PDF
+        pdf_file = generar_pdf_guia(guia_data)
+        
+        # Nombre del archivo
+        filename = f"Guia_{guia.serie}_{guia.numero}.pdf"
+        
+        # Retornar el PDF como descarga
+        return send_file(
+            pdf_file,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=filename
+        )
+        
+    except Exception as e:
+        current_app.logger.error(f"Error generando PDF de guía: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@ventas_bp.route('/api/guias/<int:guia_id>/pdf/preview', methods=['GET'])
+def preview_pdf_guia(guia_id):
+    """
+    Vista previa del PDF (abre en el navegador)
+    """
+    try:
+        guia = Guia.query.get(guia_id)
+        if not guia:
+            return jsonify({'error': 'Guía no encontrada'}), 404
+        
+        guia_data = preparar_datos_guia(guia)
+        pdf_file = generar_pdf_guia(guia_data)
+        
+        return send_file(
+            pdf_file,
+            mimetype='application/pdf',
+            as_attachment=False
+        )
+        
+    except Exception as e:
+        current_app.logger.error(f"Error generando vista previa: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+def preparar_datos_guia(guia):
+    """
+    Convierte el objeto Guia en el formato que espera el generador PDF
+    """
+    # Datos de la empresa (ajusta según tu configuración)
+    EMPRESA = {
+        'ruc': '20131369124',
+        'nombre': 'KCF CORPORACION S.A.C.',
+        'direccion': 'Av. Industrial 123, Lima, Perú',
+        'telefono': '999 932 051',
+        'email': 'ventas@kcfcorporacion.com',
+        'web': 'www.kcfcorporacion.com'
+    }
+    
+    # Procesar items
+    items = []
+    if guia.items:
+        if isinstance(guia.items, str):
+            items = json.loads(guia.items)
+        else:
+            items = guia.items
+    
+    items_formateados = []
+    for idx, item in enumerate(items, 1):
+        if isinstance(item, dict):
+            items_formateados.append({
+                'item': idx,
+                'codigo': item.get('codigo', ''),
+                'descripcion': item.get('producto', item.get('descripcion', '')),
+                'unidad': item.get('um', 'NIU'),
+                'cantidad': float(item.get('cantidad', 1)),
+                'br': item.get('br', '')
+            })
+        elif isinstance(item, (list, tuple)):
+            items_formateados.append({
+                'item': idx,
+                'codigo': item[0] if len(item) > 0 else '',
+                'descripcion': item[1] if len(item) > 1 else '',
+                'unidad': 'NIU',
+                'cantidad': float(item[2] if len(item) > 2 else 1),
+                'br': ''
+            })
+    
+    # Calcular peso total
+    peso_total = float(guia.peso_total or 0)
+    if peso_total == 0 and items_formateados:
+        # Calcular estimado si no hay peso definido
+        peso_total = sum(float(item['cantidad']) * 0.5 for item in items_formateados)
+    
+    return {
+        # Remitente
+        'ruc_remitente': EMPRESA['ruc'],
+        'remitente_nombre': EMPRESA['nombre'],
+        'remitente_direccion': EMPRESA['direccion'],
+        'remitente_ubigeo': '150101',
+        'telefono': EMPRESA['telefono'],
+        'email': EMPRESA['email'],
+        'web': EMPRESA['web'],
+        
+        # Destinatario
+        'ruc_destinatario': guia.ruc_destinatario or guia.ruc or '',
+        'destinatario_nombre': guia.cliente_destinatario or guia.cliente or '',
+        'destinatario_direccion': guia.destino or '',
+        'destinatario_ubigeo': guia.ubigeo_destino or '150101',
+        
+        # Datos de la guía
+        'serie': guia.serie or 'T001',
+        'numero': guia.numero or '',
+        'fecha_emision': guia.fecha_emision or guia.fecha or datetime.now(),
+        'fecha_traslado': guia.fecha_traslado or datetime.now(),
+        'fecha_inicio_traslado': guia.fecha_inicio_traslado or datetime.now(),
+        
+        # Datos de traslado
+        'motivo_traslado': guia.motivo_traslado or '01',
+        'modalidad_transporte': guia.modalidad_transporte or 'PRIVADO',
+        'peso_bruto_total': float(peso_total),
+        'numero_bultos': guia.numero_bultos or 1,
+        'unidad_peso_bruto': guia.unidad_peso_bruto or 'KGM',
+        
+        # Datos de transporte
+        'transportista_nombre': guia.transportista_nombre or '---',
+        'conductor_nombre': guia.conductor_nombre or '---',
+        'conductor_dni': guia.conductor_dni or '---',
+        'placa_vehiculo': guia.placa_vehiculo or '---',
+        'licencia_conductor': guia.licencia_conductor or '---',
+        
+        # Referencias
+        'nro_cotizacion': guia.cotizacion_numero or guia.nro_cotizacion or '',
+        'pedido_compra_cliente': guia.pedido_compra_cliente or '',
+        'nro_factura': guia.nro_factura or '',
+        
+        # Items
+        'items': items_formateados,
+        
+        # Observaciones
+        'observaciones': guia.observaciones or '',
+    }
+
 # ============================================================
 # CLIENTES - BUSCAR POR RUC (para ventas)
 # ============================================================

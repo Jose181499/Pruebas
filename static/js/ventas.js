@@ -2947,6 +2947,69 @@ window.generateCotizacionPdf = async function(id) {
 };
 
 
+// ============================================================
+// GENERAR PDF DE GUÍA (ESTILO COTIZACIONES)
+// ============================================================
+
+window.generateGuiaPdf = async function(id) {
+    console.log(`📄 Generando PDF para guía ID: ${id}`);
+    
+    try {
+        showToast('⏳ Generando PDF de la guía...', 'info');
+        
+        const response = await fetch(`/ventas/api/guias/${id}/pdf`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/pdf'
+            }
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `HTTP ${response.status}`);
+        }
+        
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        
+        let filename = `guia_${id}.pdf`;
+        const contentDisposition = response.headers.get('Content-Disposition');
+        if (contentDisposition) {
+            const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+            if (match && match[1]) {
+                filename = match[1].replace(/['"]/g, '');
+            }
+        }
+        
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        showToast('✅ PDF de guía generado correctamente', 'success');
+        
+    } catch (error) {
+        console.error('❌ Error generando PDF de guía:', error);
+        showToast('❌ Error al generar el PDF: ' + error.message, 'error');
+    }
+};
+
+window.previewGuiaPdf = function(id) {
+    console.log(`👁️ Vista previa PDF guía ID: ${id}`);
+    
+    try {
+        const url = `/ventas/api/guias/${id}/pdf/preview`;
+        window.open(url, '_blank');
+        showToast('📄 Abriendo vista previa del PDF...', 'info');
+    } catch (error) {
+        console.error('❌ Error abriendo vista previa:', error);
+        showToast('❌ Error al abrir la vista previa: ' + error.message, 'error');
+    }
+};
+
 
 // En ventas.js - Reemplaza la función createDocFromCotizacion
 window.createDocFromCotizacion = async function(id, tipo) {
@@ -9207,7 +9270,6 @@ function showPedidoMenu(event, id) {
     document.body.appendChild(pop);
 }
 
-
 function showGuiaMenu(event, id) {
     event.stopPropagation();
     document.querySelectorAll('.menu-pop').forEach(el => el.remove());
@@ -9219,12 +9281,33 @@ function showGuiaMenu(event, id) {
     pop.style.left = left + 'px';
     pop.style.top = top + 'px';
     
-    pop.innerHTML = `
+    // Buscar la guía para ver su estado
+    const guia = guiasData.find(g => g.id === id);
+    const estado = guia?.estado || '';
+    const isEmitida = estado === 'Emitida' || estado === 'Entregada';
+    
+    let menuHtml = `
         <button onclick="openGuiaModal(${id});this.closest('.menu-pop').remove()">👁 Ver / Editar</button>
-        <button onclick="generateGuiaPdf(${id});this.closest('.menu-pop').remove()">▣ PDF</button>
-        <button onclick="markGuiaEmitida(${id});this.closest('.menu-pop').remove()">📄 Emitir</button>
+        <button onclick="previewGuiaPdf(${id});this.closest('.menu-pop').remove()" style="color:#8B5CF6;font-weight:900;">👁️ Vista Previa</button>
+        <button onclick="generateGuiaPdf(${id});this.closest('.menu-pop').remove()">📄 Descargar PDF</button>
+    `;
+    
+    if (!isEmitida) {
+        menuHtml += `
+            <button onclick="markGuiaEmitida(${id});this.closest('.menu-pop').remove()">📄 Emitir</button>
+        `;
+    } else {
+        menuHtml += `
+            <button disabled style="opacity:0.5;cursor:not-allowed;">✅ Ya emitida</button>
+        `;
+    }
+    
+    menuHtml += `
+        <div style="height:1px;background:#E5E7EB;margin:4px 0;"></div>
         <button class="danger" onclick="deleteGuia(${id});this.closest('.menu-pop').remove()">🗑 Eliminar</button>
     `;
+    
+    pop.innerHTML = menuHtml;
     document.body.appendChild(pop);
 }
 
