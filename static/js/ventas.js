@@ -2954,7 +2954,7 @@ window.generateGuiaPdf = async function(id) {
         showToast('⏳ Generando PDF de la guía...', 'info');
         
         // 🔽 RUTA CORRECTA
-        const response = await fetch(`/ventas/ventas/api/guias/${id}/pdf`, {
+            const response = await fetch(`/ventas/api/guias/${id}/pdf`, {
             method: 'GET',
             headers: { 'Accept': 'application/pdf' }
         });
@@ -2984,7 +2984,7 @@ window.generateGuiaPdf = async function(id) {
 window.previewGuiaPdf = function(id) {
     try {
         // 🔽 RUTA CORRECTA PARA VISTA PREVIA
-        const url = `/ventas/ventas/api/guias/${id}/pdf/preview`;
+         const url = `/ventas/api/guias/${id}/pdf/preview`;
         window.open(url, '_blank');
         showToast('📄 Abriendo vista previa...', 'info');
     } catch (error) {
