@@ -47,43 +47,188 @@ class PDFGenerator:
             traceback.print_exc()
             return None
 
-    def _generar_guia_remision(self, datos_guia):
-        """Genera PDF para Guía de Remisión"""
-        try:
-            print("📄 Generando PDF de Guía de Remisión...")
-            
-            datos_mapeados = self._mapear_datos_guia(datos_guia)
-            
-            # Crear template si no existe
-            template_path = os.path.join(self.templates_dir, 'guia_remision.html')
-            if not os.path.exists(template_path):
-                self._crear_template_guia_basico(template_path)
-            
-            with open(template_path, 'r', encoding='utf-8') as f:
-                template_content = f.read()
-            
-            # Generar filas de productos
-            filas_productos = self._generar_filas_productos_guia(datos_mapeados.get('items', []))
-            datos_mapeados['filas_productos'] = filas_productos
-            
-            html_content = self._reemplazar_variables_template_guia(template_content, datos_mapeados)
-            
-            fecha = datetime.now().strftime('%Y%m%d_%H%M%S')
-            pdf_file = f"guia_{datos_mapeados.get('serie', 'T001')}_{datos_mapeados.get('numero', 'sin_numero')}_{fecha}.pdf"
-            
-            print(f"Generando PDF: {pdf_file}")
-            
-            base_url = f"file://{os.getcwd()}/"
-            HTML(string=html_content, base_url=base_url).write_pdf(pdf_file)
-            
-            print("PDF de Guía de Remisión generado exitosamente")
-            return pdf_file
-            
-        except Exception as e:
-            print(f"Error generando PDF de guía: {e}")
-            import traceback
-            traceback.print_exc()
-            return None
+    # pdf_generator.py - Modificar _generar_guia_remision
+
+def _generar_guia_remision(self, datos_guia):
+    """Genera PDF para Guía de Remisión usando template en memoria"""
+    try:
+        print("📄 Iniciando generación de PDF de Guía de Remisión...")
+        
+        datos_mapeados = self._mapear_datos_guia(datos_guia)
+        
+        # ✅ USAR TEMPLATE EN MEMORIA (no desde archivo)
+        template_content = self._obtener_template_guia()  # ← Nueva función
+        
+        filas_productos = self._generar_filas_productos_guia(datos_mapeados.get('items', []))
+        datos_mapeados['filas_productos'] = filas_productos
+        
+        html_content = self._reemplazar_variables_template_guia(template_content, datos_mapeados)
+        
+        fecha = datetime.now().strftime('%Y%m%d_%H%M%S')
+        pdf_file = f"guia_{datos_mapeados.get('serie', 'T001')}_{datos_mapeados.get('numero', 'sin_numero')}_{fecha}.pdf"
+        
+        print(f"Generando PDF: {pdf_file}")
+        
+        base_url = f"file://{os.getcwd()}/"
+        HTML(string=html_content, base_url=base_url).write_pdf(pdf_file)
+        
+        print("PDF de Guía de Remisión generado exitosamente")
+        return pdf_file
+        
+    except Exception as e:
+        print(f"Error generando PDF de guía: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+def _obtener_template_guia(self):
+    """Retorna el template HTML de la guía como string (en memoria)"""
+    return """<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Guía de Remisión {{ serie }}-{{ numero }}</title>
+    <style>
+        @page { size: A4; margin: 1.2cm 1.5cm; }
+        body { font-family: 'Helvetica', Arial, sans-serif; font-size: 9.5px; color: #1a1a1a; line-height: 1.8; }
+        .header-superior { display: flex; justify-content: space-between; align-items: stretch; margin-bottom: 10px; gap: 15px; }
+        .empresa-izquierda { flex: 1; display: flex; align-items: center; gap: 12px; }
+        .empresa-izquierda .logo-container { flex-shrink: 0; width: 80px; height: 60px; display: flex; align-items: center; justify-content: center; }
+        .empresa-izquierda .logo-container img { max-height: 60px; max-width: 100px; object-fit: contain; }
+        .empresa-izquierda .info-texto { font-size: 8px; line-height: 1.4; }
+        .empresa-izquierda .info-texto .nombre { font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        .recuadro-derecha { flex-shrink: 0; border: 2px solid #000; border-radius: 12px; padding: 10px 20px; text-align: center; min-width: 200px; }
+        .recuadro-derecha .ruc { font-size: 10px; font-weight: bold; }
+        .recuadro-derecha .titulo { font-size: 11px; font-weight: bold; letter-spacing: 1px; margin: 2px 0; }
+        .recuadro-derecha .numero { font-size: 13px; font-weight: bold; }
+        .seccion { margin-bottom: 8px; }
+        .seccion-titulo { font-weight: bold; font-size: 9.5px; margin-bottom: 3px; text-transform: uppercase; border-bottom: 1px solid #000; padding-bottom: 2px; }
+        .info-destinatario, .datos-traslado, .datos-ruta, .datos-transporte, .referencias, .observaciones {
+            border: 1px solid #ccc; border-radius: 8px; padding: 6px 12px; margin-bottom: 6px; background: #f9f9f9;
+        }
+        .fila { display: flex; padding: 1px 0; align-items: baseline; }
+        .fila .label { font-weight: bold; min-width: 200px; flex-shrink: 0; }
+        .fila .value { flex: 1; text-align: left; padding-left: 5px; }
+        .products-table { width: 100%; border-collapse: collapse; margin: 4px 0; font-size: 8.5px; }
+        .products-table th { background: #333; color: white; padding: 4px 5px; text-align: center; border: 1px solid #000; }
+        .products-table td { padding: 3px 5px; border: 1px solid #ccc; text-align: center; }
+        .products-table td.descripcion { text-align: left; }
+        .qr-container { text-align: center; margin: 8px 0 5px 0; padding: 6px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; }
+        .qr-container img { width: 90px; height: 90px; }
+        .footer { margin-top: 12px; text-align: center; font-size: 7.5px; color: #555; border-top: 1px solid #ddd; padding-top: 6px; }
+    </style>
+</head>
+<body>
+    <div class="header-superior">
+        <div class="empresa-izquierda">
+            <div class="logo-container">
+                <img src="logo-kcf.png" alt="Logo" style="max-height:60px;">
+            </div>
+            <div class="info-texto">
+                <div class="nombre">{{ remitente_nombre }}</div>
+                <div class="direccion">{{ remitente_direccion }}</div>
+                <div class="contacto">
+                    <span>Telf: {{ telefono }}</span>
+                    <span>Email: {{ email }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="recuadro-derecha">
+            <div class="ruc">R.U.C. Nº {{ ruc_remitente }}</div>
+            <div class="titulo">GUIA DE REMISIÓN</div>
+            <div class="numero">{{ serie }}-{{ numero }}</div>
+        </div>
+    </div>
+    
+    <div class="seccion">
+        <div class="seccion-titulo">DESTINATARIO</div>
+        <div class="info-destinatario">
+            <div class="fila"><span class="label">R.U.C.:</span><span class="value">{{ ruc_destinatario }}</span></div>
+            <div class="fila"><span class="label">DENOMINACIÓN:</span><span class="value">{{ destinatario_nombre }}</span></div>
+        </div>
+    </div>
+    
+    <div class="seccion">
+        <div class="seccion-titulo">DATOS DEL TRASLADO</div>
+        <div class="datos-traslado">
+            <div class="fila"><span class="label">FECHA EMISIÓN:</span><span class="value">{{ fecha_emision }}</span></div>
+            <div class="fila"><span class="label">FECHA INICIO TRASLADO:</span><span class="value">{{ fecha_inicio_traslado }}</span></div>
+            <div class="fila"><span class="label">MOTIVO DE TRASLADO:</span><span class="value">{{ motivo_texto }}</span></div>
+            <div class="fila"><span class="label">MODALIDAD DE TRANSPORTE:</span><span class="value">{{ modalidad_texto }}</span></div>
+            <div class="fila"><span class="label">PESO BRUTO TOTAL (KGM):</span><span class="value">{{ '%.1f'|format(peso_bruto_total|float) if peso_bruto_total else '0.0' }}</span></div>
+            <div class="fila"><span class="label">NÚMERO DE BULTOS:</span><span class="value">{{ numero_bultos }}</span></div>
+        </div>
+    </div>
+    
+    <div class="seccion">
+        <div class="seccion-titulo">DATOS DE RUTA</div>
+        <div class="datos-ruta">
+            <div class="fila"><span class="label">PUNTO DE PARTIDA:</span><span class="value">{{ remitente_direccion }}</span></div>
+            <div class="fila"><span class="label">PUNTO DE LLEGADA:</span><span class="value">{{ destinatario_direccion }}</span></div>
+        </div>
+    </div>
+    
+    <div class="seccion">
+        <div class="seccion-titulo">DATOS DEL TRANSPORTE</div>
+        <div class="datos-transporte">
+            <div class="fila"><span class="label">TRANSPORTISTA:</span><span class="value">{{ transportista_nombre }}</span></div>
+            <div class="fila"><span class="label">CONDUCTOR:</span><span class="value">{{ conductor_nombre }}</span></div>
+            <div class="fila"><span class="label">DNI:</span><span class="value">{{ conductor_dni }}</span></div>
+            <div class="fila"><span class="label">PLACA:</span><span class="value">{{ placa_vehiculo }}</span></div>
+            <div class="fila"><span class="label">LICENCIA:</span><span class="value">{{ licencia_conductor }}</span></div>
+        </div>
+    </div>
+    
+    <div class="seccion">
+        <div class="seccion-titulo">PRODUCTOS</div>
+        <table class="products-table">
+            <thead>
+                <tr>
+                    <th style="width:8%">ITEM</th>
+                    <th style="width:12%">CODIGO</th>
+                    <th style="width:30%">PRODUCTO</th>
+                    <th style="width:10%">BR</th>
+                    <th style="width:10%">U/M</th>
+                    <th style="width:12%">CANTIDAD</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ item.item }}</td>
+                    <td>{{ item.codigo }}</td>
+                    <td class="descripcion">{{ item.descripcion }}</td>
+                    <td>{{ item.br }}</td>
+                    <td>{{ item.unidad }}</td>
+                    <td>{{ '%.1f'|format(item.cantidad|float) if item.cantidad else '0.0' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="seccion">
+        <div class="seccion-titulo">REFERENCIAS</div>
+        <div class="referencias">
+            <div class="fila"><span class="label">NRO DE COTIZACION:</span><span class="value">{{ nro_cotizacion }}</span></div>
+        </div>
+    </div>
+    
+    <div class="observaciones">
+        <div class="fila"><span class="label">OBSERVACIONES:</span><span class="value">{{ observaciones }}</span></div>
+    </div>
+    
+    <div class="qr-container">
+        <img src="{{ qr_base64 }}" alt="Código QR">
+        <div class="qr-text">Representación impresa de la GUIA DE REMISIÓN</div>
+    </div>
+    
+    <div class="footer">
+        <div>Pag. 1 de 1</div>
+        <div>Powered by KCF CORPORACION</div>
+    </div>
+</body>
+</html>"""
 
     def _mapear_datos_guia(self, datos_guia):
         """Mapea los datos de la guía al formato esperado"""
