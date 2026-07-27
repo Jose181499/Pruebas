@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify, session, current_app
 from utils import login_required
 from database import db_query
+from psycopg2.extras import RealDictCursor
 import traceback
 import psycopg2
 
@@ -527,7 +528,7 @@ def api_proveedores_listar():
 @maestros_bp.route('/api/proveedores/guardar', methods=['POST'])
 @login_required
 def api_proveedores_guardar():
-    """Guardar proveedor (CREAR)"""
+    """Guardar proveedor (CREAR) - incluye contacto y punto de recojo"""
     try:
         data = request.get_json()
         current_app.logger.info(f"📝 Datos recibidos para guardar proveedor: {data}")
@@ -538,35 +539,37 @@ def api_proveedores_guardar():
             return jsonify({"success": False, "error": "RUC obligatorio"})
 
         from database import DATABASE_URL
-        
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
 
-        # Obtener último código
-        cur.execute("SELECT codigo_proveedor FROM proveedores ORDER BY id DESC LIMIT 1")
-        last = cur.fetchone()
-        if last and last[0]:
-            try:
-                num = int(last[0].replace('PROV-', '')) + 1
-            except:
-                num = 1
-            codigo = f"PROV-{str(num).zfill(6)}"
+        # Generar código correlativo
+        cur.execute("SELECT codigo_proveedor FROM proveedores WHERE codigo_proveedor LIKE 'PROV-%' ORDER BY id DESC LIMIT 1")
+        ultimo = cur.fetchone()
+        if ultimo and ultimo[0]:
+            numero = int(ultimo[0].split('-')[1]) + 1
         else:
-            codigo = "PROV-000001"
+            numero = 1
+        codigo = f"PROV-{str(numero).zfill(4)}"
 
-        # 🔥 SIN created_at y updated_at (no existen en la tabla)
+        # 1) INSERT en tabla principal
         query = """
             INSERT INTO proveedores (
-                codigo_proveedor, razon_social, ruc,
-                razon_comercial, telefono, contacto, email,
-                direccion, activo, condicion_pago, tiempo_credito,
-                lugar_recojo, banco, numero_cuenta, cci
+                codigo_proveedor, razon_social, ruc, razon_comercial,
+                telefono, contacto, email, direccion, activo,
+                condicion_pago, tiempo_credito, lugar_recojo,
+                banco, numero_cuenta, cci,
+                estado, ambito, observaciones,
+                tipo, tipo_doc, tipo_cuenta, moneda, descuento,
+                fecha_creacion
             ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s,
+                %s, %s, %s,
+                %s, %s, %s, %s, %s,
+                NOW()
             )
             RETURNING id, codigo_proveedor
         """
-
         params = (
             codigo,
             data.get('razon_social'),
@@ -576,94 +579,117 @@ def api_proveedores_guardar():
             data.get('contacto'),
             data.get('email'),
             data.get('direccion'),
-            data.get('activo', True),
+            True,
             data.get('condicion_pago', 'Contado'),
-            data.get('tiempo_credito'),
-            data.get('lugar_recojo'),
+            data.get('lineaCredito'),          # 🔧 antes leía 'tiempo_credito'
+            data.get('puntoRecojo'),            # 🔧 antes leía 'lugar_recojo'
             data.get('banco'),
-            data.get('numero_cuenta'),
-            data.get('cci')
+            data.get('cuenta'),                 # 🔧 antes leía 'numero_cuenta'
+            data.get('cci'),
+            data.get('estado', 'Activo'),
+            data.get('ambito', 'COMPARTIDO'),
+            data.get('obs', ''),                # 🔧 antes leía 'observaciones'
+            data.get('tipo', 'Recurrente'),      # 🔧 NUEVO
+            data.get('tipoDoc', 'RUC'),          # 🔧 NUEVO
+            data.get('tipoCuenta', 'Cuenta corriente'),  # 🔧 NUEVO
+            data.get('moneda', 'Soles'),         # 🔧 NUEVO
+            data.get('descuento', '')            # 🔧 NUEVO
         )
-
         cur.execute(query, params)
         result = cur.fetchone()
+        proveedor_id = result[0]
+
+        # 2) INSERT contacto principal (solo si hay algo que guardar)
+        if data.get('contacto') or data.get('telefono') or data.get('email'):
+            cur.execute("""
+                INSERT INTO proveedores_contactos (
+                    proveedor_id, nombre_contacto, cargo, telefono, email,
+                    principal, activo, created_at, updated_at
+                ) VALUES (%s, %s, %s, %s, %s, TRUE, TRUE, NOW(), NOW())
+            """, (
+                proveedor_id,
+                data.get('contacto', ''),
+                data.get('cargo', ''),          # 🔧 NUEVO: ahora sí se guarda
+                data.get('telefono', ''),
+                data.get('email', '')
+            ))
+
+        # 3) INSERT punto de recojo/entrega (solo si hay algo que guardar)
+        if data.get('puntoRecojo') or data.get('direccionRecojo'):
+            cur.execute("""
+                INSERT INTO proveedores_puntos_entrega (
+                    proveedor_id, nombre_punto, direccion, telefono_contacto,
+                    responsable, horario_atencion, instrucciones,
+                    principal, activo, created_at, updated_at
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, TRUE, TRUE, NOW(), NOW())
+            """, (
+                proveedor_id,
+                data.get('puntoRecojo', ''),
+                data.get('direccionRecojo', ''),
+                data.get('telefonoRecojo', ''),
+                data.get('contactoRecojo', ''),
+                data.get('horarioRecojo', ''),
+                data.get('instruccionesRecojo', '')
+            ))
+
         conn.commit()
         cur.close()
         conn.close()
 
-        if result:
-            return jsonify({
-                "success": True,
-                "data": {'id': result[0], 'codigo_proveedor': result[1]},
-                "message": f"Proveedor creado con código {result[1]}"
-            })
+        return jsonify({
+            "success": True,
+            "data": {"id": proveedor_id, "codigo_proveedor": result[1]},
+            "message": f"Proveedor creado con código {result[1]}"
+        })
 
-        return jsonify({"success": False, "error": "No se pudo crear el proveedor"})
     except Exception as e:
-        current_app.logger.error(f"Error guardando proveedor: {e}")
+        current_app.logger.error(f"❌ Error guardando proveedor: {e}")
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
 @maestros_bp.route('/api/proveedores/<int:id>', methods=['GET'])
 @login_required
 def api_proveedores_obtener(id):
-    """Obtener un proveedor por ID con contactos y puntos de entrega"""
     try:
-        query = """
-            SELECT 
-                p.*,
-                COALESCE(
-                    (SELECT json_agg(
-                        json_build_object(
-                            'id', pc.id,
-                            'nombre_contacto', pc.nombre_contacto,
-                            'email', pc.email,
-                            'telefono', pc.telefono,
-                            'cargo', pc.cargo,
-                            'principal', pc.principal,
-                            'activo', pc.activo
-                        )
-                    ) FROM proveedores_contactos pc 
-                      WHERE pc.proveedor_id = p.id AND pc.activo = true),
-                    '[]'::json
-                ) as contactos,
-                COALESCE(
-                    (SELECT json_agg(
-                        json_build_object(
-                            'id', pe.id,
-                            'nombre_punto', pe.nombre_punto,
-                            'direccion', pe.direccion,
-                            'telefono_contacto', pe.telefono_contacto,
-                            'responsable', pe.responsable,
-                            'horario_atencion', pe.horario_atencion,
-                            'instrucciones', pe.instrucciones,
-                            'principal', pe.principal,
-                            'activo', pe.activo
-                        )
-                    ) FROM proveedores_puntos_entrega pe 
-                      WHERE pe.proveedor_id = p.id AND pe.activo = true),
-                    '[]'::json
-                ) as puntos_entrega
-            FROM proveedores p
-            WHERE p.id = %s
-        """
-        result = db_query(query, (id,))
-        if result and len(result) > 0:
-            proveedor = result[0]
-            # Asegurar valores por defecto
-            proveedor['condicion_pago'] = proveedor.get('condicion_pago') or 'Contado'
-            proveedor['tiempo_credito'] = proveedor.get('tiempo_credito') or ''
-            proveedor['estado'] = proveedor.get('estado') or 'Activo'
-            proveedor['ambito'] = proveedor.get('ambito') or 'COMPARTIDO'
-            proveedor['observaciones'] = proveedor.get('observaciones') or ''
-            proveedor['lugar_recojo'] = proveedor.get('lugar_recojo') or ''
-            proveedor['banco'] = proveedor.get('banco') or ''
-            proveedor['numero_cuenta'] = proveedor.get('numero_cuenta') or ''
-            proveedor['cci'] = proveedor.get('cci') or ''
-            return jsonify({"success": True, "data": proveedor})
-        return jsonify({"success": False, "error": "Proveedor no encontrado"}), 404
+        from database import DATABASE_URL
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        cur.execute("SELECT * FROM proveedores WHERE id = %s", (id,))
+        proveedor = cur.fetchone()
+        if not proveedor:
+            return jsonify({"success": False, "error": "Proveedor no encontrado"}), 404
+
+        proveedor = dict(proveedor)
+
+        cur.execute("SELECT * FROM proveedores_contactos WHERE proveedor_id = %s AND principal = TRUE LIMIT 1", (id,))
+        contacto = cur.fetchone()
+        cur.execute("SELECT * FROM proveedores_puntos_entrega WHERE proveedor_id = %s AND principal = TRUE LIMIT 1", (id,))
+        punto = cur.fetchone()
+
+        # 🔧 NUEVO: aplanar los datos de las 3 tablas al formato que espera fillProveedorForm()
+        if contacto:
+            proveedor['cargo'] = contacto.get('cargo', '')
+        if punto:
+            proveedor['puntoRecojo'] = punto.get('nombre_punto', '')
+            proveedor['direccionRecojo'] = punto.get('direccion', '')
+            proveedor['telefonoRecojo'] = punto.get('telefono_contacto', '')
+            proveedor['contactoRecojo'] = punto.get('responsable', '')
+            proveedor['horarioRecojo'] = punto.get('horario_atencion', '')
+            proveedor['instruccionesRecojo'] = punto.get('instrucciones', '')
+
+        proveedor['lineaCredito'] = proveedor.get('tiempo_credito', '')
+        proveedor['cuenta'] = proveedor.get('numero_cuenta', '')
+        proveedor['tipoDoc'] = proveedor.get('tipo_doc', 'RUC')
+        proveedor['tipoCuenta'] = proveedor.get('tipo_cuenta', 'Cuenta corriente')
+        proveedor['obs'] = proveedor.get('observaciones', '')
+
+        cur.close()
+        conn.close()
+        return jsonify({"success": True, "data": proveedor})
+
     except Exception as e:
-        current_app.logger.error(f"Error obteniendo proveedor: {e}")
+        current_app.logger.error(f"❌ Error obteniendo proveedor: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 @maestros_bp.route('/api/proveedores/<int:id>', methods=['DELETE'])
@@ -714,45 +740,25 @@ def api_proveedores_eliminar(id):
 @maestros_bp.route('/api/proveedores/<int:id>', methods=['PUT'])
 @login_required
 def api_proveedores_actualizar(id):
-    """Actualizar proveedor"""
+    """Actualizar proveedor (EDITAR) - incluye contacto y punto de recojo"""
     try:
         data = request.get_json()
-        current_app.logger.info(f"📝 Datos recibidos para actualizar proveedor {id}: {data}")
-
-        if not data.get('razon_social'):
-            return jsonify({"success": False, "error": "Razón social obligatoria"})
-        if not data.get('ruc'):
-            return jsonify({"success": False, "error": "RUC obligatorio"})
-
         from database import DATABASE_URL
-        
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
 
-        query = """
+        # 1) UPDATE tabla principal
+        cur.execute("""
             UPDATE proveedores SET
-                razon_social = %s,
-                ruc = %s,
-                razon_comercial = %s,
-                telefono = %s,
-                contacto = %s,
-                email = %s,
-                direccion = %s,
-                condicion_pago = %s,
-                tiempo_credito = %s,
-                lugar_recojo = %s,
-                banco = %s,
-                numero_cuenta = %s,
-                cci = %s,
-                estado = %s,
-                ambito = %s,
-                observaciones = %s,
-                activo = %s
+                razon_social = %s, ruc = %s, razon_comercial = %s,
+                telefono = %s, contacto = %s, email = %s, direccion = %s,
+                condicion_pago = %s, tiempo_credito = %s, lugar_recojo = %s,
+                banco = %s, numero_cuenta = %s, cci = %s,
+                estado = %s, ambito = %s, observaciones = %s,
+                tipo = %s, tipo_doc = %s, tipo_cuenta = %s,
+                moneda = %s, descuento = %s, activo = %s
             WHERE id = %s
-            RETURNING id, codigo_proveedor
-        """
-
-        params = (
+        """, (
             data.get('razon_social'),
             data.get('ruc'),
             data.get('razon_comercial', data.get('razon_social')),
@@ -761,34 +767,72 @@ def api_proveedores_actualizar(id):
             data.get('email'),
             data.get('direccion'),
             data.get('condicion_pago', 'Contado'),
-            data.get('tiempo_credito'),
-            data.get('lugar_recojo'),
+            data.get('lineaCredito'),           # 🔧 CAMBIO
+            data.get('puntoRecojo'),             # 🔧 CAMBIO
             data.get('banco'),
-            data.get('numero_cuenta'),
+            data.get('cuenta'),                  # 🔧 CAMBIO
             data.get('cci'),
             data.get('estado', 'Activo'),
             data.get('ambito', 'COMPARTIDO'),
-            data.get('observaciones', ''),
+            data.get('obs', ''),                 # 🔧 CAMBIO
+            data.get('tipo', 'Recurrente'),       # 🔧 NUEVO
+            data.get('tipoDoc', 'RUC'),           # 🔧 NUEVO
+            data.get('tipoCuenta', 'Cuenta corriente'),  # 🔧 NUEVO
+            data.get('moneda', 'Soles'),          # 🔧 NUEVO
+            data.get('descuento', ''),            # 🔧 NUEVO
             data.get('activo', True),
             id
-        )
+        ))
 
-        cur.execute(query, params)
-        result = cur.fetchone()
+        # 2) UPSERT contacto principal (actualiza si ya existe, si no, crea)
+        cur.execute("SELECT id FROM proveedores_contactos WHERE proveedor_id = %s AND principal = TRUE LIMIT 1", (id,))
+        contacto_existente = cur.fetchone()
+        if contacto_existente:
+            cur.execute("""
+                UPDATE proveedores_contactos
+                SET nombre_contacto = %s, cargo = %s, telefono = %s, email = %s, updated_at = NOW()
+                WHERE id = %s
+            """, (data.get('contacto', ''), data.get('cargo', ''), data.get('telefono', ''), data.get('email', ''), contacto_existente[0]))
+        elif data.get('contacto') or data.get('telefono') or data.get('email'):
+            cur.execute("""
+                INSERT INTO proveedores_contactos (proveedor_id, nombre_contacto, cargo, telefono, email, principal, activo, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, TRUE, TRUE, NOW(), NOW())
+            """, (id, data.get('contacto', ''), data.get('cargo', ''), data.get('telefono', ''), data.get('email', '')))
+
+        # 3) UPSERT punto de recojo (actualiza si ya existe, si no, crea)
+        cur.execute("SELECT id FROM proveedores_puntos_entrega WHERE proveedor_id = %s AND principal = TRUE LIMIT 1", (id,))
+        punto_existente = cur.fetchone()
+        if punto_existente:
+            cur.execute("""
+                UPDATE proveedores_puntos_entrega
+                SET nombre_punto = %s, direccion = %s, telefono_contacto = %s,
+                    responsable = %s, horario_atencion = %s, instrucciones = %s, updated_at = NOW()
+                WHERE id = %s
+            """, (
+                data.get('puntoRecojo', ''), data.get('direccionRecojo', ''), data.get('telefonoRecojo', ''),
+                data.get('contactoRecojo', ''), data.get('horarioRecojo', ''), data.get('instruccionesRecojo', ''),
+                punto_existente[0]
+            ))
+        elif data.get('puntoRecojo') or data.get('direccionRecojo'):
+            cur.execute("""
+                INSERT INTO proveedores_puntos_entrega (
+                    proveedor_id, nombre_punto, direccion, telefono_contacto,
+                    responsable, horario_atencion, instrucciones,
+                    principal, activo, created_at, updated_at
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, TRUE, TRUE, NOW(), NOW())
+            """, (
+                id, data.get('puntoRecojo', ''), data.get('direccionRecojo', ''), data.get('telefonoRecojo', ''),
+                data.get('contactoRecojo', ''), data.get('horarioRecojo', ''), data.get('instruccionesRecojo', '')
+            ))
+
         conn.commit()
         cur.close()
         conn.close()
 
-        if result:
-            return jsonify({
-                "success": True,
-                "data": {'id': result[0], 'codigo_proveedor': result[1]},
-                "message": "Proveedor actualizado correctamente"
-            })
+        return jsonify({"success": True, "message": "Proveedor actualizado correctamente"})
 
-        return jsonify({"success": False, "error": "No se pudo actualizar el proveedor"})
     except Exception as e:
-        current_app.logger.error(f"Error actualizando proveedor: {e}")
+        current_app.logger.error(f"❌ Error actualizando proveedor: {e}")
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 

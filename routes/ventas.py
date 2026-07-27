@@ -3553,7 +3553,7 @@ def api_pedido_compra_obtener(id):
         items = []
         if pc.get('items_json'):
             try:
-                raw_items = json.loads(pc['items_json'])
+                raw_items = jeson.loads(pc['items_json'])
                 # Si es una lista de listas (formato antiguo), convertir a objetos
                 if isinstance(raw_items, list) and len(raw_items) > 0:
                     if isinstance(raw_items[0], list):

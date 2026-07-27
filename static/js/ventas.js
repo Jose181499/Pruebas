@@ -92,44 +92,48 @@ function today() {
     return new Date().toISOString().slice(0,10);
 }
 
+
 function badgeStatus(s) {
+    const estadoNormalizado = String(s || '').toUpperCase().trim();
+    
     const map = {
         // 🔴 Rojo fluorescente NEON - Borrador
-        'Borrador': 'b-draft',
-        'Eliminada': 'b-draft',
+        'BORRADOR': 'b-draft',
+        'BORRADOR': 'b-draft',
         
-        // 🟡 Amarillo fluorescente NEON - En revisión
-        'En revisión': 'b-review',
-        'En revisión interna': 'b-review',
-        'En Proceso': 'b-review',
+        // 🟢 Verde fluorescente - Emitido / Pagado
+        'EMITIDO': 'b-ok',
+        'EMITIDA': 'b-ok',
+        'PAGADO': 'b-ok',
         
-        // 🔵 Azul bajito fluorescente - Validado por Hellen
-        'Validada': 'b-validated',
-        'Validada': 'b-validated',
+        // 🔵 Azul fluorescente - Enviado
+        'ENVIADO': 'b-sent',
+        'ENVIADA': 'b-sent',
         
-        // 🟢 Verde fluorescente NEON - Generada
-        'Generada': 'b-generated',
-        'Emitido': 'b-ok',
-        'Emitida': 'b-ok',
-        'Despachado': 'b-ok',
-        'Entregado': 'b-ok',
-        'Pagado': 'b-ok',
-        'Aprobada': 'b-ok',
-        'Procesada': 'b-ok',
-        
-        // 🔵 Azul chillon fluorescente NEON - Aceptada por Cliente
-        'Aceptada por Cliente': 'b-accepted',
-        'Aceptada': 'b-accepted',
-        'Aceptado': 'b-accepted',
-        
-        // ⚪ Plomo - Anulada/Cancelada
-        'Anulada': 'b-canceled',
-        'Rechazada': 'b-canceled',
-        'Cancelado': 'b-canceled',
-        'Cancelar': 'b-canceled',
+        // ⚪ Plomo - Anulado
+        'ANULADO': 'b-canceled',
+        'ANULADA': 'b-canceled',
     };
-    return `<span class="badge ${map[s] || 'b-gray'}">${s}</span>`;
+    
+    let clase = map[estadoNormalizado];
+    
+    if (!clase) {
+        const estadoLower = String(s || '').toLowerCase();
+        if (estadoLower.includes('borrador')) clase = 'b-draft';
+        else if (estadoLower.includes('emitido') || estadoLower.includes('emitida')) clase = 'b-ok';
+        else if (estadoLower.includes('enviado') || estadoLower.includes('enviada')) clase = 'b-sent';
+        else if (estadoLower.includes('pagado')) clase = 'b-ok';
+        else if (estadoLower.includes('anulado') || estadoLower.includes('anulada')) clase = 'b-canceled';
+        else clase = 'b-gray';
+    }
+    
+    return `<span class="badge ${clase}">${s}</span>`;
 }
+
+
+
+
+
 
 function options(arr, selected = '') {
     return arr.map(x => `<option value="${x}" ${x === selected ? 'selected' : ''}>${x}</option>`).join('');
@@ -144,7 +148,75 @@ function empresa() {
     return document.getElementById('empresaActiva')?.value || 'KCF';
 }
 
+// ============================================================
+// FUNCIÓN PARA FORMATEAR FECHA DE COMPROBANTE (CON HORA)
+// ============================================================
 
+function formatearFechaComprobante(fechaStr) {
+    if (!fechaStr) return '-';
+    
+    try {
+        let fecha;
+        
+        // Si es un objeto Date o string
+        if (fechaStr instanceof Date) {
+            fecha = fechaStr;
+        } else if (typeof fechaStr === 'string') {
+            // Si viene en formato RFC (Fri, 12 Jun 2026 00:00:00 GMT)
+            if (fechaStr.includes('GMT') || fechaStr.includes('UTC')) {
+                fecha = new Date(fechaStr);
+            }
+            // Si viene en formato ISO
+            else if (fechaStr.includes('T')) {
+                fecha = new Date(fechaStr);
+            }
+            // Si viene en formato YYYY-MM-DD
+            else if (fechaStr.includes('-') && fechaStr.length === 10) {
+                fecha = new Date(fechaStr + 'T00:00:00');
+            }
+            // Si viene en formato DD/MM/YYYY
+            else if (fechaStr.includes('/')) {
+                const partes = fechaStr.split('/');
+                if (partes.length === 3) {
+                    fecha = new Date(partes[2], partes[1] - 1, partes[0]);
+                } else {
+                    fecha = new Date(fechaStr);
+                }
+            }
+            // Si viene con formato "Fri, 12 Jun 2026 00:00:00 GMT"
+            else if (fechaStr.match(/^[A-Za-z]{3}, \d{2} [A-Za-z]{3} \d{4}/)) {
+                fecha = new Date(fechaStr);
+            }
+            else {
+                fecha = new Date(fechaStr);
+            }
+        } else {
+            fecha = new Date(fechaStr);
+        }
+        
+        // Verificar si la fecha es válida
+        if (isNaN(fecha.getTime())) {
+            return String(fechaStr);
+        }
+        
+        // Formatear: 12/06/2026 14:30
+        const dia = String(fecha.getDate()).padStart(2, '0');
+        const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+        const anio = fecha.getFullYear();
+        const horas = String(fecha.getHours()).padStart(2, '0');
+        const minutos = String(fecha.getMinutes()).padStart(2, '0');
+        
+        // Si la hora es 00:00, mostrar solo la fecha
+        if (horas === '00' && minutos === '00') {
+            return `${dia}/${mes}/${anio}`;
+        }
+        
+        return `${dia}/${mes}/${anio} ${horas}:${minutos}`;
+        
+    } catch (e) {
+        return String(fechaStr);
+    }
+}
 
 // ============================================================
 // TOAST NOTIFICATIONS
@@ -1388,6 +1460,77 @@ function formatearFechaDespacho(fechaStr) {
     }
 }
 
+
+// ============================================================
+// FUNCIÓN PARA FORMATEAR FECHA DE GUÍA (CON HORA)
+// ============================================================
+
+function formatearFechaGuia(fechaStr) {
+    if (!fechaStr) return '-';
+    
+    try {
+        let fecha;
+        
+        // Si es un objeto Date o string
+        if (fechaStr instanceof Date) {
+            fecha = fechaStr;
+        } else if (typeof fechaStr === 'string') {
+            // Si viene en formato RFC (Mon, 20 Jul 2026 00:00:00 GMT)
+            if (fechaStr.includes('GMT') || fechaStr.includes('UTC')) {
+                fecha = new Date(fechaStr);
+            }
+            // Si viene en formato ISO
+            else if (fechaStr.includes('T')) {
+                fecha = new Date(fechaStr);
+            }
+            // Si viene en formato YYYY-MM-DD
+            else if (fechaStr.includes('-') && fechaStr.length === 10) {
+                fecha = new Date(fechaStr + 'T00:00:00');
+            }
+            // Si viene en formato DD/MM/YYYY
+            else if (fechaStr.includes('/')) {
+                const partes = fechaStr.split('/');
+                if (partes.length === 3) {
+                    fecha = new Date(partes[2], partes[1] - 1, partes[0]);
+                } else {
+                    fecha = new Date(fechaStr);
+                }
+            }
+            // Si viene con formato "Mon, 20 Jul 2026 00:00:00 GMT"
+            else if (fechaStr.match(/^[A-Za-z]{3}, \d{2} [A-Za-z]{3} \d{4}/)) {
+                fecha = new Date(fechaStr);
+            }
+            else {
+                fecha = new Date(fechaStr);
+            }
+        } else {
+            fecha = new Date(fechaStr);
+        }
+        
+        // Verificar si la fecha es válida
+        if (isNaN(fecha.getTime())) {
+            return String(fechaStr);
+        }
+        
+        // Formatear: 20/07/2026 14:30
+        const dia = String(fecha.getDate()).padStart(2, '0');
+        const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+        const anio = fecha.getFullYear();
+        const horas = String(fecha.getHours()).padStart(2, '0');
+        const minutos = String(fecha.getMinutes()).padStart(2, '0');
+        
+        // Si la hora es 00:00, mostrar solo la fecha
+        if (horas === '00' && minutos === '00') {
+            return `${dia}/${mes}/${anio}`;
+        }
+        
+        return `${dia}/${mes}/${anio} ${horas}:${minutos}`;
+        
+    } catch (e) {
+        return String(fechaStr);
+    }
+}
+
 function renderGuias() {
     const q = document.getElementById('guiaSearch')?.value?.toLowerCase() || '';
     const st = document.getElementById('guiaStatus')?.value || '';
@@ -1410,7 +1553,7 @@ function renderGuias() {
     tbody.innerHTML = list.map((r, i) => `
         <tr>
             <td>${i + 1}</td>
-            <td class="date-cell">${String(r.fecha || '').replace(' ', '<br>')}</td>
+            <td class="date-cell">${formatearFechaGuia(r.fecha)}</td>
             <td>${badgeStatus(r.estado)}</td>
             <td><b>${sd(r.serie)}-${sd(r.numero)}</b></td>
             <td>${sd(r.ruc)}</td>
@@ -1425,7 +1568,6 @@ function renderGuias() {
         </tr>
     `).join('');
 }
-
 function renderComprobantes() {
     const q = document.getElementById('comprobanteSearch')?.value?.toLowerCase() || '';
     const st = document.getElementById('comprobanteStatus')?.value || '';
@@ -1448,7 +1590,7 @@ function renderComprobantes() {
     tbody.innerHTML = list.map((r, i) => `
         <tr>
             <td>${i + 1}</td>
-            <td class="date-cell">${String(r.fecha || '').replace(' ', '<br>')}</td>
+            <td class="date-cell">${formatearFechaComprobante(r.fecha)}</td>
             <td>${badgeStatus(r.estado)}</td>
             <td>${sd(r.tipo)}</td>
             <td><b>${sd(r.serie)}-${sd(r.numero)}</b></td>
@@ -3896,15 +4038,15 @@ async function cargarCotizacionParaEditar(id) {
         // ============================================================
         // LLENAR DATOS DEL CLIENTE
         // ============================================================
-        document.getElementById('fRuc').value = c.cliente_ruc || '';
-        document.getElementById('fRazon').value = c.cliente_razon_social || '';
-        document.getElementById('fCodCliente').value = c.cod_cliente || 'PENDIENTE';
-        document.getElementById('fComercial').value = c.cliente_nombre_comercial || '';
-        document.getElementById('fDireccion').value = c.cliente_direccion || c.direccion_entrega || '';
-        document.getElementById('fContacto').value = c.cliente_contacto || c.contacto_cliente || '';
-        document.getElementById('fTelefono').value = c.cliente_telefono || c.telefono_cliente || '';
-        document.getElementById('fCorreo').value = c.cliente_email || c.email_cliente || '';
-        
+        if (document.getElementById('fRuc')) document.getElementById('fRuc').value = c.cliente_ruc || '';
+        if (document.getElementById('fRazon')) document.getElementById('fRazon').value = c.cliente_razon_social || '';
+        if (document.getElementById('fCodCliente')) document.getElementById('fCodCliente').value = c.cod_cliente || 'PENDIENTE';
+        if (document.getElementById('fComercial')) document.getElementById('fComercial').value = c.cliente_nombre_comercial || '';
+        if (document.getElementById('fDireccion')) document.getElementById('fDireccion').value = c.cliente_direccion || c.direccion_entrega || '';
+        if (document.getElementById('fContacto')) document.getElementById('fContacto').value = c.cliente_contacto || c.contacto_cliente || '';
+        if (document.getElementById('fTelefono')) document.getElementById('fTelefono').value = c.cliente_telefono || c.telefono_cliente || '';
+        if (document.getElementById('fCorreo')) document.getElementById('fCorreo').value = c.cliente_email || c.email_cliente || '';
+                
         // ============================================================
 // LLENAR CONDICIONES COMERCIALES - con soporte para personalizado
 // ============================================================
@@ -3925,12 +4067,12 @@ if (c.direccion_entrega) {
 }
         
         // Nota interna
-        if (c.nota_cotizacion) {
+        if (c.nota_cotizacion && document.getElementById('fNotaInterna')) {
             document.getElementById('fNotaInterna').value = c.nota_cotizacion;
         }
         
         // Requerimiento
-        if (c.requerimiento) {
+        if (c.requerimiento && document.getElementById('fReq')) {
             document.getElementById('fReq').value = c.requerimiento;
         }
         
@@ -5443,7 +5585,10 @@ async function loadClient() {
             if (fNotaComercial) fNotaComercial.value = '';
             if (fTiempo) fTiempo.value = '5 días hábiles';
             if (fValidez) fValidez.value = '15 días';
-            if (fTipo) fTipo.value = '0';
+
+            //rompia el flujo de carga de cotizacion, lo comento por si se necesita luego
+            //if (fTipo) fTipo.value = '0';
+
             if (fReq) fReq.value = '';
             if (fFuente) fFuente.value = 'Correo';
             
@@ -6494,6 +6639,8 @@ function openPedidoCompraModalSAP(mode = 'cot', id = null) {
     // MODO EDICIÓN
     // ============================================================
     if (mode === 'editar' && id) {
+        editingId = id;   // 🔧 NUEVO — agrega esta línea, justo aquí
+        
         if (title) title.textContent = '✏️ Editar PC Cliente - Corregir datos';
         if (sub) sub.textContent = 'Revisa y corrige los datos del PC. Los campos de cotización son de solo lectura.';
         
@@ -6666,6 +6813,8 @@ async function cargarPCParaEditar(id) {
                 };
             });
         };
+
+        
         
         // NORMALIZAR ITEMS
         const itemsNormalizados = normalizarItems(pc.items || []);
@@ -8503,29 +8652,20 @@ async function savePedidoCompraSAP(force) {
         const items = [];
         trs.forEach(row => {
             const inputs = row.querySelectorAll('input');
-            if (inputs.length >= 9) {
+            if (inputs.length >= 8) {
+                // Stock viene de un <td> de texto plano, no de un input
+                const tds = row.querySelectorAll('td');
+                const stockCell = tds[9]; // ajustar índice exacto contando: Item,codigo,desc,modelo,marca,cant_cot,cant_pc,precio_cot,precio_pc,VALOR_TOTAL,STOCK,faltante,acciones
                 items.push({
                     codigo: inputs[0]?.value || '',
                     producto: inputs[1]?.value || '',
-                    marca: inputs[2]?.value || '',
-                    modelo: inputs[3]?.value || '',
+                    modelo: inputs[2]?.value || '',
+                    marca: inputs[3]?.value || '',
                     cantidad_cotizada: Number(inputs[4]?.value || 0),
                     cantidad_pc: Number(inputs[5]?.value || 1),
                     precio_cotizado: Number(inputs[6]?.value || 0),
                     precio_pc: Number(inputs[7]?.value || 0),
-                    stock: Number(inputs[8]?.value || 0)
-                });
-            } else if (inputs.length >= 8) {
-                items.push({
-                    codigo: inputs[0]?.value || '',
-                    producto: inputs[1]?.value || '',
-                    marca: '',
-                    modelo: '',
-                    cantidad_cotizada: Number(inputs[2]?.value || 0),
-                    cantidad_pc: Number(inputs[3]?.value || 1),
-                    precio_cotizado: Number(inputs[4]?.value || 0),
-                    precio_pc: Number(inputs[5]?.value || 0),
-                    stock: Number(inputs[6]?.value || 0)
+                    stock: Number(stockCell?.textContent?.trim() || 0)
                 });
             }
         });
