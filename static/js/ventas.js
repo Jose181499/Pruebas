@@ -99,24 +99,37 @@ function badgeStatus(s) {
     
     // Mapeo exacto de estados a clases CSS
     const map = {
+        // 🔴 Borrador - Rojo
         'BORRADOR': 'b-draft',
+        
+        // 🟡 En revisión - Amarillo
         'EN REVISIÓN': 'b-review',
         'EN REVISION': 'b-review',
         'EN PROCESO': 'b-review',
         'PROCESO': 'b-review',
+        
+        // 🔵 Validado por Hellen - Azul bajito
         'VALIDADO POR HELLEN': 'b-validated',
-        'VALIDADA': 'b-validated',
         'VALIDADO': 'b-validated',
+        'VALIDADA': 'b-validated',
+        
+        // 🟢 Generada - Verde fluorescente
         'GENERADA': 'b-generated',
         'GENERADO': 'b-generated',
+        
+        // 🔵 Aceptada por Cliente - AZUL FLUORESCENTE NEON
         'ACEPTADA POR CLIENTE': 'b-accepted',
         'ACEPTADA': 'b-accepted',
         'ACEPTADO': 'b-accepted',
         'ACEPTADO POR CLIENTE': 'b-accepted',
+        
+        // ⚪ Anulada - Plomo
         'ANULADA': 'b-canceled',
         'ANULADO': 'b-canceled',
         'CANCELADA': 'b-canceled',
         'CANCELADO': 'b-canceled',
+        
+        // ⚪ No concretada - Plomo
         'NO CONCRETADA': 'b-lost',
         'NO CONCRETADO': 'b-lost',
         'PERDIDA': 'b-lost',
