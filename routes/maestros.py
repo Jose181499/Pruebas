@@ -23,15 +23,22 @@ def index():
 # ENDPOINTS CLIENTES
 # ==========================================
 
-
 @maestros_bp.route('/api/clientes/listar', methods=['GET'])
 # @login_required  # Temporalmente comentado para pruebas
 def api_clientes_listar():
-    """Listar clientes con sus contactos y puntos de entrega"""
+    """Listar clientes con sus contactos y puntos de entrega - VERSIÓN DIRECTA"""
     try:
         import logging
         logger = logging.getLogger(__name__)
-        logger.info("📥 Solicitud a /api/clientes/listar")
+        logger.info("📥 Solicitud a /api/clientes/listar (versión directa)")
+        
+        from database import DATABASE_URL
+        import psycopg2
+        from psycopg2.extras import RealDictCursor
+        
+        # Conectar directamente a la base de datos
+        conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+        cur = conn.cursor(cursor_factory=RealDictCursor)
         
         # 1. Obtener todos los clientes activos
         query_clientes = """
@@ -46,10 +53,12 @@ def api_clientes_listar():
             WHERE activo = true
             ORDER BY razon_social
         """
-        clientes = db_query(query_clientes)
+        cur.execute(query_clientes)
+        clientes = cur.fetchall()
         
-        # Si no hay clientes, devolver array vacío
         if not clientes:
+            cur.close()
+            conn.close()
             return jsonify({"success": True, "data": []})
         
         # 2. Para cada cliente, obtener sus contactos y puntos de entrega
@@ -63,7 +72,7 @@ def api_clientes_listar():
             cliente['contactos'] = []
             cliente['puntos_entrega'] = []
             
-            # Obtener contactos - SIEMPRE manejar errores
+            # Obtener contactos
             try:
                 query_contactos = """
                     SELECT id, nombre_contacto as nombre, email, telefono, 
@@ -72,15 +81,15 @@ def api_clientes_listar():
                     WHERE cliente_id = %s AND activo = true
                     ORDER BY principal DESC, nombre_contacto
                 """
-                contactos = db_query(query_contactos, (cliente_id,))
+                cur.execute(query_contactos, (cliente_id,))
+                contactos = cur.fetchall()
                 if contactos:
                     cliente['contactos'] = contactos
             except Exception as e:
                 logger.error(f"Error en contactos para cliente {cliente_id}: {e}")
-                # Mantener array vacío
                 cliente['contactos'] = []
             
-            # Obtener puntos de entrega - SIEMPRE manejar errores
+            # Obtener puntos de entrega
             try:
                 query_puntos = """
                     SELECT id, nombre_punto as punto, direccion, 
@@ -91,29 +100,40 @@ def api_clientes_listar():
                     WHERE cliente_id = %s AND activo = true
                     ORDER BY principal DESC, nombre_punto
                 """
-                puntos = db_query(query_puntos, (cliente_id,))
+                cur.execute(query_puntos, (cliente_id,))
+                puntos = cur.fetchall()
                 if puntos:
                     cliente['puntos_entrega'] = puntos
             except Exception as e:
                 logger.error(f"Error en puntos para cliente {cliente_id}: {e}")
                 cliente['puntos_entrega'] = []
+            
+            # Asegurar valores por defecto
+            cliente['ruc'] = cliente.get('numero_documento')
+            cliente['condicion_pago'] = cliente.get('condicion_pago') or 'Contado'
+            cliente['dias_credito'] = cliente.get('dias_credito') or 0
+            cliente['limite_credito'] = cliente.get('limite_credito') or ''
+            cliente['descuento'] = cliente.get('descuento') or ''
+            cliente['estado'] = cliente.get('estado') or 'Activo'
+            cliente['ambito'] = cliente.get('ambito') or 'COMPARTIDO'
+            cliente['observaciones'] = cliente.get('observaciones') or ''
         
-        # Devolver JSON siempre
+        cur.close()
+        conn.close()
+        
         return jsonify({"success": True, "data": clientes})
         
     except Exception as e:
-        # Error principal - devolver JSON con error
         import traceback
         error_msg = str(e)
-        logger.error(f"❌ Error listando clientes: {error_msg}")
-        logger.error(traceback.format_exc())
-        
-        # NUNCA devolver HTML, siempre JSON
+        print(f"❌ Error listando clientes: {error_msg}")
+        print(traceback.format_exc())
         return jsonify({
             "success": False,
             "error": error_msg,
             "data": []
         }), 500
+
 
 @maestros_bp.route('/api/clientes/test', methods=['GET'])
 def api_clientes_test():
