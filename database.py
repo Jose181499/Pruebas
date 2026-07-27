@@ -1,10 +1,14 @@
 import os
 import psycopg2
 import json
+import logging
 from psycopg2.extras import RealDictCursor
 from contextlib import contextmanager
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+
+# Configurar logging
+logging.basicConfig(level=logging.INFO)
 
 # =========================
 # SUPABASE DATABASE URL
@@ -12,16 +16,57 @@ from werkzeug.security import generate_password_hash, check_password_hash
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if not DATABASE_URL:
-   DATABASE_URL = "postgresql://postgres:admin3561967kcf@aws-1-us-east-1.pooler.supabase.com:6543/postgres"
+    # ✅ URL CORRECTA - OBTENIDA DE LA CONFIGURACIÓN DE SUPABASE
+    DATABASE_URL = "postgresql://postgres:admin3561967kcf@db.tkfmwvsenvgpyexvdcat.supabase.co:5432/postgres"
 
 if DATABASE_URL.startswith("postgresql+psycopg2://"):
     DATABASE_URL = DATABASE_URL.replace("postgresql+psycopg2://", "postgresql://", 1)
 
+print(f"📊 Conectando a Supabase...")
+
 # =========================
-# CONEXIÓN
+# CONEXIÓN CON SSL OBLIGATORIO
 # =========================
 def get_connection():
-    return psycopg2.connect(DATABASE_URL, client_encoding="UTF8")
+    """Obtiene una conexión a la base de datos con SSL obligatorio"""
+    try:
+        conn = psycopg2.connect(
+            DATABASE_URL,
+            client_encoding="UTF8",
+            sslmode='require',  # ✅ REQUERIDO porque "Enforce SSL" está activado
+            connect_timeout=30,
+            keepalives=1,
+            keepalives_idle=30,
+            keepalives_interval=10,
+            keepalives_count=5
+        )
+        print("✅ Conexión exitosa a Supabase")
+        return conn
+    except psycopg2.OperationalError as e:
+        print(f"❌ Error operacional conectando a Supabase: {e}")
+        print("🔍 Verifica que la contraseña sea correcta y que el host sea accesible")
+        raise
+    except Exception as e:
+        print(f"❌ Error inesperado conectando a Supabase: {e}")
+        raise
+
+# =========================
+# VERIFICACIÓN DE CONEXIÓN (OPCIONAL)
+# =========================
+def test_connection():
+    """Prueba la conexión a la base de datos"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT version()")
+        version = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        print(f"✅ Base de datos conectada: {version[0][:50]}...")
+        return True
+    except Exception as e:
+        print(f"❌ Prueba de conexión falló: {e}")
+        return False
 
 # =========================
 # TRANSACCIONES

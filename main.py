@@ -411,6 +411,29 @@ def debug_db_test():
         }), 500
     
 
+@app.route('/api/test-db')
+def test_db():
+    """Endpoint para probar la conexión a la base de datos"""
+    try:
+        from database import get_connection
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT version()")
+        version = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'message': '✅ Conexión exitosa a Supabase',
+            'database': 'Supabase PostgreSQL',
+            'version': version[0] if version else 'unknown'
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': f'❌ Error: {str(e)}'
+        }), 500
 
 if __name__ == "__main__":
     # Obtener puerto de Railway o usar 8080 por defecto
