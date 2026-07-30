@@ -3856,10 +3856,85 @@ function deletePedidoCompra(id) {
     );
 }
 
+// ventas.js - Agregar después de la función generateGuiaPdf
 
-function generateGuiaPdf(id) {
-    showToast('PDF de guía generado', 'success');
-}
+// ============================================================
+// GENERAR PDF DE COMPROBANTE (FACTURA / BOLETA)
+// ============================================================
+
+window.generateComprobantePdf = async function(id) {
+    console.log(`📄 Generando PDF para comprobante ID: ${id}`);
+    
+    try {
+        showToast('⏳ Generando PDF del comprobante...', 'info');
+        
+        const response = await fetch(`/ventas/api/comprobantes/${id}/pdf`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/pdf'
+            }
+        });
+        
+        if (response.status === 401) {
+            showToast('⏳ Tu sesión ha expirado. Redirigiendo al login...', 'warning');
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 2000);
+            return;
+        }
+        
+        if (response.status === 404) {
+            showToast('❌ Comprobante no encontrado.', 'error');
+            return;
+        }
+        
+        if (!response.ok) {
+            let errorMsg = `Error ${response.status}`;
+            try {
+                const errorData = await response.json();
+                errorMsg = errorData.error || errorData.message || errorMsg;
+            } catch (e) {}
+            throw new Error(errorMsg);
+        }
+        
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        
+        let filename = `comprobante_${id}.pdf`;
+        const contentDisposition = response.headers.get('Content-Disposition');
+        if (contentDisposition) {
+            const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+            if (match && match[1]) {
+                filename = match[1].replace(/['"]/g, '');
+            }
+        }
+        
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        showToast('✅ PDF del comprobante generado correctamente', 'success');
+        
+    } catch (error) {
+        console.error('❌ Error generando PDF:', error);
+        showToast(`❌ ${error.message}`, 'error');
+    }
+};
+
+window.previewComprobantePdf = function(id) {
+    try {
+        const url = `/ventas/api/comprobantes/${id}/pdf/preview`;
+        window.open(url, '_blank');
+        showToast('📄 Abriendo vista previa del PDF...', 'info');
+    } catch (error) {
+        console.error('❌ Error abriendo vista previa:', error);
+        showToast('❌ Error al abrir la vista previa: ' + error.message, 'error');
+    }
+};
 
 function markGuiaEmitida(id) {
     showToast('Guía emitida correctamente', 'success');
@@ -9360,6 +9435,8 @@ function showGuiaMenu(event, id) {
     document.body.appendChild(pop);
 }
 
+// ventas.js - Actualizar la función showComprobanteMenu
+
 function showComprobanteMenu(event, id) {
     event.stopPropagation();
     document.querySelectorAll('.menu-pop').forEach(el => el.remove());
@@ -9373,8 +9450,10 @@ function showComprobanteMenu(event, id) {
     
     pop.innerHTML = `
         <button onclick="openComprobanteModal(${id});this.closest('.menu-pop').remove()">👁 Ver / Editar</button>
-        <button onclick="generateComprobantePdf(${id});this.closest('.menu-pop').remove()">▣ PDF</button>
+        <button onclick="previewComprobantePdf(${id});this.closest('.menu-pop').remove()" style="color:#8B5CF6;font-weight:900;">👁️ Vista Previa</button>
+        <button onclick="generateComprobantePdf(${id});this.closest('.menu-pop').remove()">📄 Descargar PDF</button>
         <button onclick="markComprobanteEmitido(${id});this.closest('.menu-pop').remove()">📄 Emitir</button>
+        <div style="height:1px;background:#E5E7EB;margin:4px 0;"></div>
         <button class="danger" onclick="deleteComprobante(${id});this.closest('.menu-pop').remove()">🗑 Eliminar</button>
     `;
     document.body.appendChild(pop);
@@ -9802,6 +9881,9 @@ window.showComprobanteMenu = showComprobanteMenu;
 window.showNotaMenu = showNotaMenu;
 window.showDevolucionMenu = showDevolucionMenu;
 window.createMenuWithClose = createMenuWithClose;
+
+window.generateComprobantePdf = generateComprobantePdf;
+window.previewComprobantePdf = previewComprobantePdf;
 
 // ============================================================
 // 12. FUNCIONES DE PRODUCTOS Y CLIENTES

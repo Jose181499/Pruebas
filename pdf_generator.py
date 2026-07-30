@@ -29,42 +29,46 @@ class PDFGenerator:
                 print(f"Error al leer logo: {e}")
         return None
 
-    # ============================================================
-    # MÉTODO PRINCIPAL - GENERAR PDF UNIVERSAL
-    # ============================================================
-    def generar_pdf_universal(self, datos):
-        """Genera PDF basado en el tipo de documento - MÉTODO PRINCIPAL"""
-        try:
-            tipo_documento = datos.get('tipo_documento', '')
-            
-            print(f"Generando PDF universal - Tipo detectado: {tipo_documento}")
-            
-            # GUÍA DE REMISIÓN - PRIMERO PARA DETECTAR BIEN
-            if tipo_documento == 'guia_remision' or ('serie' in datos and 'numero' in datos and 'destinatario_nombre' in datos):
-                return self._generar_guia_remision(datos)
-            
-            # ORDEN DE COMPRA
-            elif tipo_documento == 'orden_compra' or 'numero_orden' in datos:
-                return self._generar_orden_compra(datos)
-            
-            # COTIZACIÓN (por defecto)
-            elif tipo_documento == 'cotizacion' or 'numero_cotizacion' in datos:
-                return self._generar_cotizacion(datos)
-            else:
-                # Detección automática
-                if 'proveedor_razon_social' in datos:
-                    return self._generar_orden_compra(datos)
-                elif 'destinatario_nombre' in datos and 'serie' in datos:
-                    return self._generar_guia_remision(datos)
-                else:
-                    return self._generar_cotizacion(datos)
-                    
-        except Exception as e:
-            print(f"Error en generación universal de PDF: {e}")
-            import traceback
-            traceback.print_exc()
-            return None
 
+def generar_pdf_universal(self, datos):
+    """Genera PDF basado en el tipo de documento - MÉTODO PRINCIPAL"""
+    try:
+        tipo_documento = datos.get('tipo_documento', '')
+        
+        print(f"Generando PDF universal - Tipo detectado: {tipo_documento}")
+        
+        # GUÍA DE REMISIÓN
+        if tipo_documento == 'guia_remision' or ('serie' in datos and 'numero' in datos and 'destinatario_nombre' in datos):
+            return self._generar_guia_remision(datos)
+        
+        # FACTURA / BOLETA (COMPROBANTE)
+        elif tipo_documento in ['factura', 'boleta', 'comprobante'] or ('serie' in datos and 'numero' in datos and 'cliente' in datos and 'tipo' in datos):
+            return self._generar_comprobante(datos)
+        
+        # ORDEN DE COMPRA
+        elif tipo_documento == 'orden_compra' or 'numero_orden' in datos:
+            return self._generar_orden_compra(datos)
+        
+        # COTIZACIÓN (por defecto)
+        elif tipo_documento == 'cotizacion' or 'numero_cotizacion' in datos:
+            return self._generar_cotizacion(datos)
+        else:
+            # Detección automática
+            if 'proveedor_razon_social' in datos:
+                return self._generar_orden_compra(datos)
+            elif 'destinatario_nombre' in datos and 'serie' in datos:
+                return self._generar_guia_remision(datos)
+            elif 'cliente' in datos and 'tipo' in datos:
+                return self._generar_comprobante(datos)
+            else:
+                return self._generar_cotizacion(datos)
+                    
+    except Exception as e:
+        print(f"Error en generación universal de PDF: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+    
     # ============================================================
     # GENERAR GUÍA DE REMISIÓN
     # ============================================================
@@ -893,6 +897,294 @@ def _obtener_template_cotizacion(self):
         print("Template básico de orden de compra creado")
 
 
+# pdf_generator.py - Agregar después del método _generar_guia_remision
+
+# ============================================================
+# GENERAR FACTURA / BOLETA
+# ============================================================
+def _generar_comprobante(self, datos_comprobante):
+    """Genera PDF para Factura o Boleta usando template en memoria"""
+    try:
+        print("📄 Iniciando generación de PDF de comprobante...")
+        
+        datos_mapeados = self._mapear_datos_comprobante(datos_comprobante)
+        
+        # ✅ USAR TEMPLATE EN MEMORIA
+        template_content = self._obtener_template_comprobante()
+        
+        filas_productos = self._generar_filas_productos_comprobante(datos_mapeados.get('items', []))
+        datos_mapeados['filas_productos'] = filas_productos
+        
+        html_content = self._reemplazar_variables_template_comprobante(template_content, datos_mapeados)
+        
+        fecha = datetime.now().strftime('%Y%m%d_%H%M%S')
+        pdf_file = f"{datos_mapeados.get('tipo', 'factura')}_{datos_mapeados.get('serie', 'F001')}_{datos_mapeados.get('numero', 'sin_numero')}_{fecha}.pdf"
+        
+        print(f"Generando PDF: {pdf_file}")
+        
+        base_url = f"file://{os.getcwd()}/"
+        HTML(string=html_content, base_url=base_url).write_pdf(pdf_file)
+        
+        print("PDF de comprobante generado exitosamente")
+        return pdf_file
+        
+    except Exception as e:
+        print(f"Error generando PDF de comprobante: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+def _obtener_template_comprobante(self):
+    """Retorna el template HTML del comprobante como string (en memoria)"""
+    return """<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ tipo }} {{ serie }}-{{ numero }}</title>
+    <style>
+        @page { size: A4; margin: 1.2cm 1.5cm; }
+        body { font-family: 'Helvetica', Arial, sans-serif; font-size: 9.5px; color: #1a1a1a; line-height: 1.6; }
+        .header-superior { display: flex; justify-content: space-between; align-items: stretch; margin-bottom: 10px; gap: 15px; }
+        .empresa-izquierda { flex: 1; display: flex; align-items: center; gap: 12px; }
+        .empresa-izquierda .logo-container { flex-shrink: 0; width: 80px; height: 60px; display: flex; align-items: center; justify-content: center; }
+        .empresa-izquierda .logo-container img { max-height: 60px; max-width: 100px; object-fit: contain; }
+        .empresa-izquierda .info-texto { font-size: 8px; line-height: 1.4; }
+        .empresa-izquierda .info-texto .nombre { font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        .recuadro-derecha { flex-shrink: 0; border: 2px solid #000; border-radius: 12px; padding: 10px 20px; text-align: center; min-width: 200px; }
+        .recuadro-derecha .ruc { font-size: 10px; font-weight: bold; }
+        .recuadro-derecha .titulo { font-size: 14px; font-weight: bold; letter-spacing: 1px; margin: 2px 0; }
+        .recuadro-derecha .numero-doc { font-size: 13px; font-weight: bold; }
+        .seccion { margin-bottom: 8px; }
+        .seccion-titulo { font-weight: bold; font-size: 9.5px; margin-bottom: 3px; text-transform: uppercase; border-bottom: 1px solid #000; padding-bottom: 2px; }
+        .info-cliente { border: 1px solid #ccc; border-radius: 8px; padding: 6px 12px; margin-bottom: 6px; background: #f9f9f9; }
+        .fila { display: flex; padding: 1px 0; align-items: baseline; }
+        .fila .label { font-weight: bold; min-width: 120px; flex-shrink: 0; }
+        .fila .value { flex: 1; text-align: left; padding-left: 5px; }
+        .products-table { width: 100%; border-collapse: collapse; margin: 4px 0; font-size: 8.5px; }
+        .products-table th { background: #333; color: white; padding: 4px 5px; text-align: center; border: 1px solid #000; }
+        .products-table td { padding: 3px 5px; border: 1px solid #ccc; text-align: center; }
+        .products-table td.descripcion { text-align: left; }
+        .products-table td.numero { text-align: right; }
+        .totales { width: 280px; margin-left: auto; margin-top: 8px; border: 1px solid #333; border-radius: 8px; padding: 6px 12px; background: #f9f9f9; }
+        .total-line { display: flex; justify-content: space-between; padding: 2px 0; font-size: 9px; }
+        .total-final { border-top: 2px solid #000; padding-top: 4px; margin-top: 4px; font-weight: bold; font-size: 11px; }
+        .footer { margin-top: 12px; text-align: center; font-size: 7.5px; color: #555; border-top: 1px solid #ddd; padding-top: 6px; }
+        .observaciones { border: 1px solid #ccc; border-radius: 8px; padding: 6px 12px; margin-top: 6px; background: #f9f9f9; }
+    </style>
+</head>
+<body>
+    <div class="header-superior">
+        <div class="empresa-izquierda">
+            <div class="logo-container">
+                <img src="logo-kcf.png" alt="Logo" style="max-height:60px;">
+            </div>
+            <div class="info-texto">
+                <div class="nombre">{{ empresa_nombre }}</div>
+                <div class="direccion">{{ empresa_direccion }}</div>
+                <div class="contacto">
+                    <span>Telf: {{ empresa_telefono }}</span>
+                    <span>Email: {{ empresa_email }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="recuadro-derecha">
+            <div class="ruc">R.U.C. Nº {{ empresa_ruc }}</div>
+            <div class="titulo">{{ tipo }}</div>
+            <div class="numero-doc">{{ serie }}-{{ numero }}</div>
+        </div>
+    </div>
+    
+    <div class="seccion">
+        <div class="seccion-titulo">DATOS DEL CLIENTE</div>
+        <div class="info-cliente">
+            <div class="fila"><span class="label">R.U.C.:</span><span class="value">{{ cliente_ruc }}</span></div>
+            <div class="fila"><span class="label">RAZÓN SOCIAL:</span><span class="value">{{ cliente_nombre }}</span></div>
+            <div class="fila"><span class="label">DIRECCIÓN:</span><span class="value">{{ cliente_direccion }}</span></div>
+            <div class="fila"><span class="label">TELÉFONO:</span><span class="value">{{ cliente_telefono }}</span></div>
+            <div class="fila"><span class="label">EMAIL:</span><span class="value">{{ cliente_email }}</span></div>
+        </div>
+    </div>
+    
+    <div style="display: flex; gap: 20px; margin-bottom: 6px;">
+        <div><span style="font-weight:bold;">FECHA EMISIÓN:</span> {{ fecha_emision }}</div>
+        <div><span style="font-weight:bold;">MONEDA:</span> {{ moneda }}</div>
+        <div><span style="font-weight:bold;">COND. PAGO:</span> {{ condicion_pago }}</div>
+    </div>
+    
+    <div class="seccion">
+        <div class="seccion-titulo">PRODUCTOS</div>
+        <table class="products-table">
+            <thead>
+                <tr>
+                    <th style="width:5%">ITEM</th>
+                    <th style="width:12%">CÓDIGO</th>
+                    <th style="width:40%">DESCRIPCIÓN</th>
+                    <th style="width:8%">U/M</th>
+                    <th style="width:10%">CANT.</th>
+                    <th style="width:12%">P. UNIT</th>
+                    <th style="width:13%">TOTAL</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ item.item }}</td>
+                    <td>{{ item.codigo }}</td>
+                    <td class="descripcion">{{ item.descripcion }}</td>
+                    <td>{{ item.unidad }}</td>
+                    <td>{{ item.cantidad }}</td>
+                    <td class="numero">{{ item.precio_unitario }}</td>
+                    <td class="numero">{{ item.total }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="totales">
+        <div class="total-line"><span>SUBTOTAL:</span><span>S/ {{ subtotal }}</span></div>
+        <div class="total-line"><span>IGV (18%):</span><span>S/ {{ igv }}</span></div>
+        <div class="total-line total-final"><span>TOTAL A PAGAR:</span><span>S/ {{ total }}</span></div>
+    </div>
+    
+    {% if observaciones %}
+    <div class="observaciones">
+        <div class="fila"><span class="label">OBSERVACIONES:</span><span class="value">{{ observaciones }}</span></div>
+    </div>
+    {% endif %}
+    
+    <div class="footer">
+        <div>Pag. 1 de 1</div>
+        <div>Powered by KCF CORPORACION</div>
+    </div>
+</body>
+</html>"""
+
+def _mapear_datos_comprobante(self, datos_comprobante):
+    """Mapea los datos del comprobante al formato esperado"""
+    EMPRESA = {
+        'ruc': '20131369124',
+        'nombre': 'KCF CORPORACION S.A.C.',
+        'direccion': 'Av. Industrial 123, Lima, Perú',
+        'telefono': '999 932 051',
+        'email': 'ventas@kcfcorporacion.com'
+    }
+    
+    logo_base64 = self._obtener_logo_base64()
+    logo_src = f"data:image/png;base64,{logo_base64}" if logo_base64 else ""
+    
+    items = datos_comprobante.get('items', [])
+    if isinstance(items, str):
+        try:
+            items = json.loads(items)
+        except:
+            items = []
+    
+    items_formateados = []
+    for idx, item in enumerate(items, 1):
+        if isinstance(item, dict):
+            items_formateados.append({
+                'item': idx,
+                'codigo': item.get('codigo', ''),
+                'descripcion': item.get('producto', item.get('descripcion', '')),
+                'unidad': item.get('um', 'NIU'),
+                'cantidad': float(item.get('cantidad', 1)),
+                'precio_unitario': f"{float(item.get('precio', 0)):.2f}",
+                'total': f"{float(item.get('cantidad', 1)) * float(item.get('precio', 0)):.2f}"
+            })
+        elif isinstance(item, (list, tuple)):
+            items_formateados.append({
+                'item': idx,
+                'codigo': item[0] if len(item) > 0 else '',
+                'descripcion': item[1] if len(item) > 1 else '',
+                'unidad': 'NIU',
+                'cantidad': float(item[2] if len(item) > 2 else 1),
+                'precio_unitario': f"{float(item[3] if len(item) > 3 else 0):.2f}",
+                'total': f"{float(item[2] if len(item) > 2 else 1) * float(item[3] if len(item) > 3 else 0):.2f}"
+            })
+    
+    subtotal = float(datos_comprobante.get('subtotal', 0))
+    igv = float(datos_comprobante.get('igv', 0))
+    total = float(datos_comprobante.get('total', 0))
+    
+    return {
+        'logo_src': logo_src,
+        'empresa_ruc': EMPRESA['ruc'],
+        'empresa_nombre': EMPRESA['nombre'],
+        'empresa_direccion': EMPRESA['direccion'],
+        'empresa_telefono': EMPRESA['telefono'],
+        'empresa_email': EMPRESA['email'],
+        'tipo': datos_comprobante.get('tipo', 'FACTURA'),
+        'serie': datos_comprobante.get('serie', 'F001'),
+        'numero': datos_comprobante.get('numero', ''),
+        'fecha_emision': self._formatear_fecha(datos_comprobante.get('fecha_emision')),
+        'moneda': datos_comprobante.get('moneda', 'S/'),
+        'condicion_pago': datos_comprobante.get('condicion_pago', 'Contado'),
+        'cliente_ruc': datos_comprobante.get('ruc', ''),
+        'cliente_nombre': datos_comprobante.get('cliente', ''),
+        'cliente_direccion': datos_comprobante.get('direccion', ''),
+        'cliente_telefono': datos_comprobante.get('telefono', ''),
+        'cliente_email': datos_comprobante.get('email', ''),
+        'subtotal': f"{subtotal:.2f}",
+        'igv': f"{igv:.2f}",
+        'total': f"{total:.2f}",
+        'observaciones': datos_comprobante.get('observaciones', ''),
+        'items': items_formateados
+    }
+
+def _generar_filas_productos_comprobante(self, productos):
+    """Genera las filas HTML de la tabla de productos para comprobante"""
+    filas = ""
+    for prod in productos:
+        filas += f"""            <tr>
+                <td>{prod.get('item', '')}</td>
+                <td>{prod.get('codigo', '')}</td>
+                <td class="descripcion">{prod.get('descripcion', '')}</td>
+                <td>{prod.get('unidad', 'NIU')}</td>
+                <td>{prod.get('cantidad', 0)}</td>
+                <td class="numero">{prod.get('precio_unitario', '0.00')}</td>
+                <td class="numero">{prod.get('total', '0.00')}</td>
+            </tr>
+"""
+    return filas
+
+def _reemplazar_variables_template_comprobante(self, template, datos):
+    """Reemplaza variables del template de comprobante"""
+    html = template
+    
+    logo_src = datos.get('logo_src', '')
+    if logo_src:
+        html = html.replace('src="logo-kcf.png"', f'src="{logo_src}"')
+    
+    variables = [
+        'empresa_ruc', 'empresa_nombre', 'empresa_direccion',
+        'empresa_telefono', 'empresa_email',
+        'tipo', 'serie', 'numero', 'fecha_emision',
+        'moneda', 'condicion_pago', 'cliente_ruc', 'cliente_nombre',
+        'cliente_direccion', 'cliente_telefono', 'cliente_email',
+        'subtotal', 'igv', 'total', 'observaciones'
+    ]
+    
+    for var in variables:
+        value = datos.get(var, '')
+        html = html.replace(f"{{{{ {var} }}}}", str(value))
+    
+    # Reemplazar filas de productos
+    inicio_tbody = html.find('<tbody>')
+    fin_tbody = html.find('</tbody>')
+    if inicio_tbody >= 0 and fin_tbody > inicio_tbody:
+        inicio_for = html.find('{% for item in items %}', inicio_tbody)
+        fin_for = html.find('{% endfor %}', inicio_for)
+        if inicio_for >= 0 and fin_for > inicio_for:
+            parte_antes = html[:inicio_for]
+            parte_despues = html[fin_for + len('{% endfor %}'):]
+            html = parte_antes + datos.get('filas_productos', '') + parte_despues
+    
+    # Limpiar etiquetas Jinja residuales
+    html = re.sub(r'{%.*?%}', '', html, flags=re.DOTALL)
+    html = re.sub(r'{{.*?}}', '', html, flags=re.DOTALL)
+    
+    return html
 # ============================================================
 # INSTANCIA GLOBAL - ¡NECESARIA PARA LA IMPORTACIÓN!
 # ============================================================

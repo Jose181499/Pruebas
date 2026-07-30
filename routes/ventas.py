@@ -4242,3 +4242,160 @@ def obtener_despacho_por_id_db(despacho_id):
     except Exception as e:
         print(f"❌ Error en obtener_despacho_por_id_db: {e}")
         return None
+
+
+# ============================================================
+# GENERAR PDF DE COMPROBANTE (FACTURA / BOLETA)
+# ============================================================
+
+@ventas_bp.route('/ventas/api/comprobantes/<int:comp_id>/pdf', methods=['GET'])
+@login_required
+def generar_pdf_comprobante(comp_id):
+    """Genera el PDF de un comprobante (Factura o Boleta)"""
+    try:
+        print(f"📄 Generando PDF para comprobante ID: {comp_id}")
+        
+        # Obtener el comprobante
+        query = """
+            SELECT 
+                id, tipo_comprobante, serie, numero, fecha_emision,
+                moneda, cliente_tipo_doc, cliente_numero_doc,
+                cliente_nombre, cliente_direccion, cliente_email,
+                cliente_telefono, subtotal, igv, total,
+                items_json, observaciones, estado_sunat,
+                creado_por
+            FROM comprobantes
+            WHERE id = %s
+        """
+        comp_result = db_query(query, (comp_id,))
+        
+        if not comp_result:
+            return jsonify({'error': 'Comprobante no encontrado'}), 404
+        
+        comp = comp_result[0]
+        print(f"✅ Comprobante encontrado: {comp.get('serie')}-{comp.get('numero')}")
+        
+        # Preparar datos para el PDFGenerator
+        from pdf_generator import pdf_generator
+        
+        items = []
+        try:
+            if comp.get('items_json'):
+                items = json.loads(comp.get('items_json'))
+        except:
+            items = []
+        
+        datos_comprobante = {
+            'tipo_documento': 'comprobante',
+            'tipo': comp.get('tipo_comprobante', 'FACTURA'),
+            'serie': comp.get('serie', 'F001'),
+            'numero': comp.get('numero', ''),
+            'fecha_emision': comp.get('fecha_emision'),
+            'moneda': comp.get('moneda', 'S/'),
+            'condicion_pago': 'Contado',
+            'ruc': comp.get('cliente_numero_doc', ''),
+            'cliente': comp.get('cliente_nombre', ''),
+            'direccion': comp.get('cliente_direccion', ''),
+            'telefono': comp.get('cliente_telefono', ''),
+            'email': comp.get('cliente_email', ''),
+            'subtotal': float(comp.get('subtotal', 0)),
+            'igv': float(comp.get('igv', 0)),
+            'total': float(comp.get('total', 0)),
+            'observaciones': comp.get('observaciones', ''),
+            'items': items
+        }
+        
+        # Generar el PDF
+        pdf_path = pdf_generator.generar_pdf_universal(datos_comprobante)
+        
+        if not pdf_path:
+            return jsonify({'error': 'Error al generar el PDF'}), 500
+        
+        # Retornar el PDF
+        from flask import send_file
+        filename = f"{comp.get('tipo_comprobante', 'FACTURA')}_{comp.get('serie', 'F001')}_{comp.get('numero', '0001')}.pdf"
+        
+        return send_file(
+            pdf_path,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=filename
+        )
+        
+    except Exception as e:
+        print(f"❌ Error generando PDF de comprobante: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+@ventas_bp.route('/ventas/api/comprobantes/<int:comp_id>/pdf/preview', methods=['GET'])
+@login_required
+def preview_pdf_comprobante(comp_id):
+    """Vista previa del PDF de comprobante"""
+    try:
+        print(f"👁️ Vista previa PDF para comprobante ID: {comp_id}")
+        
+        query = """
+            SELECT 
+                id, tipo_comprobante, serie, numero, fecha_emision,
+                moneda, cliente_tipo_doc, cliente_numero_doc,
+                cliente_nombre, cliente_direccion, cliente_email,
+                cliente_telefono, subtotal, igv, total,
+                items_json, observaciones, estado_sunat
+            FROM comprobantes
+            WHERE id = %s
+        """
+        comp_result = db_query(query, (comp_id,))
+        
+        if not comp_result:
+            return jsonify({'error': 'Comprobante no encontrado'}), 404
+        
+        comp = comp_result[0]
+        
+        from pdf_generator import pdf_generator
+        
+        items = []
+        try:
+            if comp.get('items_json'):
+                items = json.loads(comp.get('items_json'))
+        except:
+            items = []
+        
+        datos_comprobante = {
+            'tipo_documento': 'comprobante',
+            'tipo': comp.get('tipo_comprobante', 'FACTURA'),
+            'serie': comp.get('serie', 'F001'),
+            'numero': comp.get('numero', ''),
+            'fecha_emision': comp.get('fecha_emision'),
+            'moneda': comp.get('moneda', 'S/'),
+            'condicion_pago': 'Contado',
+            'ruc': comp.get('cliente_numero_doc', ''),
+            'cliente': comp.get('cliente_nombre', ''),
+            'direccion': comp.get('cliente_direccion', ''),
+            'telefono': comp.get('cliente_telefono', ''),
+            'email': comp.get('cliente_email', ''),
+            'subtotal': float(comp.get('subtotal', 0)),
+            'igv': float(comp.get('igv', 0)),
+            'total': float(comp.get('total', 0)),
+            'observaciones': comp.get('observaciones', ''),
+            'items': items
+        }
+        
+        pdf_path = pdf_generator.generar_pdf_universal(datos_comprobante)
+        
+        if not pdf_path:
+            return jsonify({'error': 'Error al generar el PDF'}), 500
+        
+        from flask import send_file
+        return send_file(
+            pdf_path,
+            mimetype='application/pdf',
+            as_attachment=False
+        )
+        
+    except Exception as e:
+        print(f"❌ Error generando vista previa: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
