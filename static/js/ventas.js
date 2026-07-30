@@ -6141,6 +6141,7 @@ function openDespachoModal(id = null) {
 
 function openGuiaModal(id = null) {
     editingId = id;
+    console.log('🔎 openGuiaModal EJECUTADO con id =', id);
     const isEdit = id !== null;
     const title = isEdit ? 'Editar guía' : 'Nueva guía';
     document.getElementById('guiaModalTitle').textContent = title;
@@ -6216,21 +6217,7 @@ function openGuiaModal(id = null) {
             </div>
         </div>
     `;
-    /* funcion rota!!!
-    document.getElementById('guiaCotizacion')?.addEventListener('change', function() {
-        const num = this.value;
-        const q = cotizacionesData.find(x => x.numero === num);
-        if (q && q.productos && q.productos.length > 0) {
-            document.getElementById('guiaProducts').innerHTML = productTableHtml(q.productos);
-            document.getElementById('guiaCliente').value = q.razon || '';
-            document.getElementById('guiaRuc').value = q.ruc || '';
-            document.getElementById('guiaDestino').value = q.direccion_entrega || '';
-        } else {
-            document.getElementById('guiaProducts').innerHTML = `
-                <div style="padding:20px;text-align:center;color:#94A3B8;">No hay productos en esta cotización.</div>
-            `;
-        }
-    }); */
+    
     
     document.getElementById('guiaCotizacion')?.addEventListener('change', function() {
         const num = this.value;
