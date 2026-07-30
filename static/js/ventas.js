@@ -6158,7 +6158,7 @@ function openGuiaModal(id = null) {
             <div class="ficha-grid">
                 <div class="form-field col-4">
                     <label>Cotización vinculada</label>
-                    <select id="guiaCotizacion">${cotOptions || '<option value="">Sin cotización</option>'}</select>
+                    <select id="guiaCotizacion" onchange="loadGuiaFromCotizacion(this.value)">${cotOptions || '<option value="">Sin cotización</option>'}</select>
                 </div>
                 <div class="form-field col-4">
                     <label>Serie</label>
@@ -6216,7 +6216,7 @@ function openGuiaModal(id = null) {
             </div>
         </div>
     `;
-    
+    /* funcion rota!!!
     document.getElementById('guiaCotizacion')?.addEventListener('change', function() {
         const num = this.value;
         const q = cotizacionesData.find(x => x.numero === num);
@@ -6230,7 +6230,7 @@ function openGuiaModal(id = null) {
                 <div style="padding:20px;text-align:center;color:#94A3B8;">No hay productos en esta cotización.</div>
             `;
         }
-    });
+    }); */
     
     document.getElementById('guiaModal').classList.add('show');
 }
