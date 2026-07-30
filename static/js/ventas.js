@@ -6232,8 +6232,117 @@ function openGuiaModal(id = null) {
         }
     }); */
     
+    document.getElementById('guiaCotizacion')?.addEventListener('change', function() {
+        const num = this.value;
+        loadGuiaFromCotizacion(num);   // 🔽 usa la versión que sí trae datos frescos
+    });
+
+
     document.getElementById('guiaModal').classList.add('show');
+
+    if (isEdit) {
+        setTimeout(() => cargarGuiaParaEditar(id), 50);
+    }
 }
+
+// ============================================================
+// CARGAR GUÍA EXISTENTE PARA EDICIÓN
+// ============================================================
+async function cargarGuiaParaEditar(id) {
+    try {
+        console.log('📥 Cargando guía para editar ID:', id);
+        showToast('⏳ Cargando datos de la guía...', 'info');
+
+        const response = await apiFetch(`/ventas/api/guias/${id}`);
+        if (!response.success) {
+            showToast('Error al cargar guía: ' + (response.error || 'Desconocido'), 'error');
+            return;
+        }
+
+        const g = response.data;
+        console.log('📦 Datos de guía cargados:', g);
+
+        // Helper para setear <select> intentando coincidencia exacta o insensible a mayúsculas
+        const setSelectValue = (id, value) => {
+            const el = document.getElementById(id);
+            if (!el || value === undefined || value === null) return;
+            const val = String(value).trim();
+            let found = false;
+            for (const opt of el.options) {
+                if (opt.value === val) { opt.selected = true; found = true; break; }
+            }
+            if (!found) {
+                for (const opt of el.options) {
+                    if (opt.value.toLowerCase() === val.toLowerCase()) { opt.selected = true; found = true; break; }
+                }
+            }
+        };
+
+        const setValue = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) el.value = value ?? '';
+        };
+
+        // ============================================================
+        // CAMPOS BÁSICOS
+        // ============================================================
+        setValue('guiaSerie', g.serie);
+        setValue('guiaNumero', g.numero);
+        setSelectValue('guiaEstado', g.estado_sunat || g.estado);
+        setValue('guiaCliente', g.destinatario_nombre);
+        setValue('guiaRuc', g.ruc_destinatario);
+        setSelectValue('guiaOrigen', g.remitente_direccion);
+        setValue('guiaDestino', g.destinatario_direccion);
+        setSelectValue('guiaMotivo', g.motivo_traslado);
+        setValue('guiaObs', g.observaciones);
+
+        // Cotización vinculada (documento_asociado guarda el número de cotización)
+        if (g.documento_asociado) {
+            setSelectValue('guiaCotizacion', g.documento_asociado);
+        }
+
+        // ============================================================
+        // PRODUCTOS (items_json)
+        // ============================================================
+        let items = [];
+        try {
+            if (g.items_json) {
+                items = typeof g.items_json === 'string' ? JSON.parse(g.items_json) : g.items_json;
+            }
+        } catch (e) {
+            console.warn('⚠️ Error parseando items_json de la guía:', e);
+            items = [];
+        }
+
+        // Normalizar para productTableHtml (espera: codigo, producto/descripcion, marca, um, cantidad, stock)
+        const productosNormalizados = (items || []).map(it => ({
+            codigo: it.codigo || '',
+            producto: it.producto || it.descripcion || '',
+            marca: it.marca || '',
+            modelo: it.modelo || '',
+            um: it.um || 'NIU',
+            cantidad: it.cantidad || 1,
+            stock: it.stock || 0
+        }));
+
+        const productsContainer = document.getElementById('guiaProducts');
+        if (productsContainer) {
+            productsContainer.innerHTML = productosNormalizados.length > 0
+                ? productTableHtml(productosNormalizados)
+                : '<div style="padding:20px;text-align:center;color:#94A3B8;">No hay productos registrados en esta guía.</div>';
+        }
+
+        // Guardar referencia para que saveGuia() los use al actualizar
+        window._guiaProductos = productosNormalizados;
+
+        showToast('✅ Guía cargada correctamente', 'success');
+
+    } catch (error) {
+        console.error('❌ Error cargando guía para editar:', error);
+        showToast('Error al cargar la guía: ' + error.message, 'error');
+    }
+}
+
 
 function openComprobanteModal(id = null) {
     editingId = id;
