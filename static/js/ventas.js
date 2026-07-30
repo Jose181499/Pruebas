@@ -6495,6 +6495,68 @@ function openNotaCreditoModal(id = null) {
     `;
     
     document.getElementById('notaCreditoModal').classList.add('show');
+
+    if (isEdit) {
+        setTimeout(() => cargarNotaCreditoParaEditar(id), 50);
+    }
+}
+
+// ============================================================
+// CARGAR NOTA DE CRÉDITO EXISTENTE PARA EDICIÓN
+// ============================================================
+async function cargarNotaCreditoParaEditar(id) {
+    try {
+        console.log('📥 Cargando nota de crédito para editar ID:', id);
+        showToast('⏳ Cargando datos de la nota de crédito...', 'info');
+
+        const response = await apiFetch(`/ventas/api/notas-credito/${id}`);
+        if (!response.success) {
+            showToast('Error al cargar nota de crédito: ' + (response.error || 'Desconocido'), 'error');
+            return;
+        }
+
+        const n = response.data;
+        console.log('📦 Datos de nota de crédito cargados:', n);
+
+        const setSelectValue = (id, value) => {
+            const el = document.getElementById(id);
+            if (!el || value === undefined || value === null) return;
+            const val = String(value).trim();
+            let found = false;
+            for (const opt of el.options) {
+                if (opt.value === val) { opt.selected = true; found = true; break; }
+            }
+            if (!found) {
+                for (const opt of el.options) {
+                    if (opt.value.toLowerCase() === val.toLowerCase()) { opt.selected = true; found = true; break; }
+                }
+            }
+        };
+
+        const setValue = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) el.value = value ?? '';
+        };
+
+        setValue('notaSerie', n.serie);
+        setValue('notaNumero', n.numero);
+        setSelectValue('notaEstado', n.estado);
+        setValue('notaCliente', n.cliente_nombre);
+        setValue('notaRuc', n.cliente_numero_doc);
+        setValue('notaMonto', n.monto);
+        setSelectValue('notaMotivo', n.motivo);
+        setValue('notaObs', n.observaciones);
+
+        if (n.comprobante_asociado) {
+            setSelectValue('notaComprobante', n.comprobante_asociado);
+        }
+
+        showToast('✅ Nota de crédito cargada correctamente', 'success');
+
+    } catch (error) {
+        console.error('❌ Error cargando nota de crédito para editar:', error);
+        showToast('Error al cargar la nota de crédito: ' + error.message, 'error');
+    }
 }
 
 function openDevolucionModal(id = null) {

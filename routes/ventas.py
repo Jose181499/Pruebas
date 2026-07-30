@@ -2438,6 +2438,31 @@ def api_notas_credito_toggle(id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+@ventas_bp.route('/ventas/api/notas-credito/<int:id>', methods=['GET'])
+@login_required
+def api_notas_credito_obtener(id):
+    """Obtiene una nota de crédito específica por su ID"""
+    try:
+        query = """
+            SELECT 
+                id, serie, numero, fecha_emision, fecha_vencimiento,
+                cliente_tipo_doc, cliente_numero_doc, cliente_nombre,
+                cliente_direccion, cliente_email, cliente_telefono,
+                comprobante_asociado, motivo, monto, observaciones,
+                estado, creado_por, created_at, updated_at
+            FROM notas_credito
+            WHERE id = %s
+        """
+        result = db_query(query, (id,))
+        if not result:
+            return jsonify({'success': False, 'error': 'Nota de crédito no encontrada'}), 404
+
+        return jsonify({'success': True, 'data': result[0]})
+    except Exception as e:
+        print(f"❌ Error en api_notas_credito_obtener: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 # ============================================================
 # DEVOLUCIONES - ENDPOINTS ADICIONALES
 # ============================================================
