@@ -1,14 +1,11 @@
 ﻿# routes/pdf_generator.py
 
 import os
-import tempfile
-import traceback
+from weasyprint import HTML
+from datetime import datetime
 import json
 import base64
 import re
-
-from datetime import datetime
-from weasyprint import HTML
 
 class PDFGenerator:
     def __init__(self):
@@ -31,33 +28,15 @@ class PDFGenerator:
                 print(f"Error al leer logo: {e}")
         return None
 
-    def _convertir_float(self, valor, default=0.0):
-        """Convierte un valor a float sin fallar con None o cadenas vacías."""
-
-        if valor is None:
-            return default
-
-        if isinstance(valor, str):
-            valor = valor.strip().replace(',', '.')
-
-            if not valor:
-                return default
-
-        try:
-            return float(valor)
-        except (TypeError, ValueError):
-            print(f"⚠️ No se pudo convertir a float: {valor!r}")
-            return default
-
     def generar_pdf_universal(self, datos):
         """Genera PDF basado en el tipo de documento"""
         try:
             tipo_documento = datos.get('tipo_documento', '')
             print(f"Generando PDF universal - Tipo: {tipo_documento}")
             
-            if tipo_documento == 'guia_remision':
+            if tipo_documento == 'guia_remision' or ('serie' in datos and 'numero' in datos):
                 return self._generar_guia_remision(datos)
-            elif tipo_documento == 'orden_compra':
+            elif tipo_documento == 'orden_compra' or 'numero_orden' in datos:
                 return self._generar_orden_compra(datos)
             else:
                 return self._generar_cotizacion(datos)
@@ -71,94 +50,36 @@ class PDFGenerator:
     # pdf_generator.py - Modificar _generar_guia_remision
 
     def _generar_guia_remision(self, datos_guia):
-        """Genera el PDF de una Guía de Remisión."""
-
-        print("📄 Iniciando generación de PDF de Guía de Remisión...")
-
-        # 1. Mapear y normalizar datos
-        datos_mapeados = self._mapear_datos_guia(datos_guia)
-
-        print(f"✅ Datos mapeados")
-        print(f"   Serie: {datos_mapeados.get('serie')}")
-        print(f"   Número: {datos_mapeados.get('numero')}")
-        print(f"   Productos: {len(datos_mapeados.get('items', []))}")
-        print(f"   Peso: {datos_mapeados.get('peso_bruto_total')}")
-
-        # 2. Obtener plantilla
-        template_content = self._obtener_template_guia()
-
-        if not template_content:
-            raise RuntimeError(
-                'La plantilla HTML de la guía está vacía.'
-            )
-
-        # 3. Generar filas de productos
-        filas_productos = self._generar_filas_productos_guia(
-            datos_mapeados.get('items', [])
-        )
-
-        datos_mapeados['filas_productos'] = filas_productos
-
-        # 4. Reemplazar variables
-        html_content = self._reemplazar_variables_template_guia(
-            template_content,
-            datos_mapeados
-        )
-
-        if not html_content:
-            raise RuntimeError(
-                'El contenido HTML resultante está vacío.'
-            )
-
-        # 5. Crear nombre del archivo
-        fecha = datetime.now().strftime('%Y%m%d_%H%M%S')
-
-        serie = str(datos_mapeados.get('serie') or 'T001')
-        numero = str(datos_mapeados.get('numero') or 'sin_numero')
-
-        nombre_archivo = (
-            f"guia_{serie}_{numero}_{fecha}.pdf"
-        )
-
-        # Render permite escribir temporalmente en /tmp
-        pdf_file = os.path.join(
-            tempfile.gettempdir(),
-            nombre_archivo
-        )
-
-        print(f"📂 Ruta PDF: {pdf_file}")
-
-        # 6. Crear PDF
+        """Genera PDF para Guía de Remisión usando template en memoria"""
         try:
-            HTML(
-                string=html_content,
-                base_url=os.getcwd()
-            ).write_pdf(pdf_file)
-
-        except Exception as error:
-            print("❌ WeasyPrint no pudo generar el PDF")
-            print(f"❌ Tipo: {type(error).__name__}")
-            print(f"❌ Mensaje: {error}")
+            print("📄 Iniciando generación de PDF de Guía de Remisión...")
+            
+            datos_mapeados = self._mapear_datos_guia(datos_guia)
+            
+            # ✅ USAR TEMPLATE EN MEMORIA (no desde archivo)
+            template_content = self._obtener_template_guia()  # ← Nueva función
+            
+            filas_productos = self._generar_filas_productos_guia(datos_mapeados.get('items', []))
+            datos_mapeados['filas_productos'] = filas_productos
+            
+            html_content = self._reemplazar_variables_template_guia(template_content, datos_mapeados)
+            
+            fecha = datetime.now().strftime('%Y%m%d_%H%M%S')
+            pdf_file = f"guia_{datos_mapeados.get('serie', 'T001')}_{datos_mapeados.get('numero', 'sin_numero')}_{fecha}.pdf"
+            
+            print(f"Generando PDF: {pdf_file}")
+            
+            base_url = f"file://{os.getcwd()}/"
+            HTML(string=html_content, base_url=base_url).write_pdf(pdf_file)
+            
+            print("PDF de Guía de Remisión generado exitosamente")
+            return pdf_file
+            
+        except Exception as e:
+            print(f"Error generando PDF de guía: {e}")
+            import traceback
             traceback.print_exc()
-            raise
-
-        # 7. Verificar resultado
-        if not os.path.isfile(pdf_file):
-            raise FileNotFoundError(
-                f'WeasyPrint terminó, pero no existe el PDF: {pdf_file}'
-            )
-
-        tamaño = os.path.getsize(pdf_file)
-
-        if tamaño <= 0:
-            raise RuntimeError(
-                f'El PDF generado está vacío: {pdf_file}'
-            )
-
-        print(f"✅ PDF generado correctamente: {pdf_file}")
-        print(f"✅ Tamaño: {tamaño} bytes")
-
-        return pdf_file
+            return None
 
     def _obtener_template_guia(self):
         """Retorna el template HTML de la guía como string (en memoria)"""
@@ -310,8 +231,7 @@ class PDFGenerator:
         </html>"""
 
     def _mapear_datos_guia(self, datos_guia):
-        """Mapea los datos de la guía al formato esperado."""
-
+        """Mapea los datos de la guía al formato esperado"""
         EMPRESA = {
             'ruc': '20131369124',
             'nombre': 'KCF CORPORACION S.A.C.',
@@ -319,287 +239,74 @@ class PDFGenerator:
             'telefono': '999 932 051',
             'email': 'ventas@kcfcorporacion.com'
         }
-
+        
         logo_base64 = self._obtener_logo_base64()
-
-        logo_src = (
-            f"data:image/png;base64,{logo_base64}"
-            if logo_base64
-            else ""
-        )
-
-        # -----------------------------
-        # NORMALIZAR ITEMS
-        # -----------------------------
-        items_raw = datos_guia.get('items')
-
-        if items_raw is None:
-            items = []
-
-        elif isinstance(items_raw, str):
-            texto = items_raw.strip()
-
-            if not texto:
+        logo_src = f"data:image/png;base64,{logo_base64}" if logo_base64 else ""
+        
+        items = datos_guia.get('items', [])
+        if isinstance(items, str):
+            try:
+                items = json.loads(items)
+            except:
                 items = []
-            else:
-                try:
-                    items = json.loads(texto)
-                except json.JSONDecodeError as error:
-                    print(f"❌ items_json inválido: {error}")
-                    print(f"❌ Contenido: {texto}")
-                    items = []
-
-        elif isinstance(items_raw, list):
-            items = items_raw
-
-        elif isinstance(items_raw, tuple):
-            items = list(items_raw)
-
-        elif isinstance(items_raw, dict):
-            items = (
-                items_raw.get('items')
-                or items_raw.get('productos')
-                or items_raw.get('detalle')
-                or []
-            )
-
-        else:
-            print(
-                f"⚠️ Tipo no reconocido para items: "
-                f"{type(items_raw).__name__}"
-            )
-            items = []
-
-        if not isinstance(items, list):
-            print(
-                f"⚠️ Después de normalizar, items no es lista: "
-                f"{type(items).__name__}"
-            )
-            items = []
-
-        # -----------------------------
-        # FORMATEAR ITEMS
-        # -----------------------------
+        
         items_formateados = []
-
-        for idx, item in enumerate(items, start=1):
-
+        for idx, item in enumerate(items, 1):
             if isinstance(item, dict):
-                cantidad_raw = item.get('cantidad')
-
-                cantidad = self._convertir_float(
-                    cantidad_raw,
-                    default=1.0
-                )
-
                 items_formateados.append({
                     'item': idx,
-                    'codigo': (
-                        item.get('codigo')
-                        or item.get('codigo_producto')
-                        or item.get('sku')
-                        or ''
-                    ),
-                    'descripcion': (
-                        item.get('producto')
-                        or item.get('descripcion')
-                        or item.get('nombre')
-                        or ''
-                    ),
-                    'unidad': (
-                        item.get('um')
-                        or item.get('unidad')
-                        or item.get('unidad_medida')
-                        or 'NIU'
-                    ),
-                    'cantidad': cantidad,
-                    'br': item.get('br') or ''
+                    'codigo': item.get('codigo', ''),
+                    'descripcion': item.get('producto', item.get('descripcion', '')),
+                    'unidad': item.get('um', 'NIU'),
+                    'cantidad': float(item.get('cantidad', 1)),
+                    'br': item.get('br', '')
                 })
-
             elif isinstance(item, (list, tuple)):
-                cantidad_raw = (
-                    item[2]
-                    if len(item) > 2
-                    else 1
-                )
-
                 items_formateados.append({
                     'item': idx,
                     'codigo': item[0] if len(item) > 0 else '',
                     'descripcion': item[1] if len(item) > 1 else '',
-                    'unidad': (
-                        item[3]
-                        if len(item) > 3 and item[3]
-                        else 'NIU'
-                    ),
-                    'cantidad': self._convertir_float(
-                        cantidad_raw,
-                        default=1.0
-                    ),
+                    'unidad': 'NIU',
+                    'cantidad': float(item[2] if len(item) > 2 else 1),
                     'br': ''
                 })
-
-            else:
-                print(
-                    f"⚠️ Producto ignorado porque tiene formato inválido: "
-                    f"{item!r}"
-                )
-
-        # -----------------------------
-        # PESO TOTAL
-        # -----------------------------
-        peso_total = self._convertir_float(
-            datos_guia.get('peso_total'),
-            default=0.0
-        )
-
-        if peso_total <= 0 and items_formateados:
-            peso_total = sum(
-                item['cantidad'] * 0.5
-                for item in items_formateados
-            )
-
-        modalidad = str(
-            datos_guia.get('modalidad_transporte')
-            or 'PRIVADO'
-        ).upper()
-
+        
+        peso_total = float(datos_guia.get('peso_total', 0))
+        if peso_total == 0 and items_formateados:
+            peso_total = sum(float(item['cantidad']) * 0.5 for item in items_formateados)
+        
         return {
             'logo_src': logo_src,
-
-            'ruc_remitente': (
-                datos_guia.get('ruc_remitente')
-                or EMPRESA['ruc']
-            ),
-
-            'remitente_nombre': (
-                datos_guia.get('remitente_nombre')
-                or EMPRESA['nombre']
-            ),
-
-            'remitente_direccion': (
-                datos_guia.get('remitente_direccion')
-                or EMPRESA['direccion']
-            ),
-
-            'remitente_ubigeo': (
-                datos_guia.get('remitente_ubigeo')
-                or '150101'
-            ),
-
-            'telefono': (
-                datos_guia.get('telefono')
-                or EMPRESA['telefono']
-            ),
-
-            'email': (
-                datos_guia.get('email')
-                or EMPRESA['email']
-            ),
-
-            'ruc_destinatario': (
-                datos_guia.get('ruc_destinatario')
-                or datos_guia.get('ruc')
-                or ''
-            ),
-
-            'destinatario_nombre': (
-                datos_guia.get('destinatario_nombre')
-                or datos_guia.get('cliente')
-                or ''
-            ),
-
-            'destinatario_direccion': (
-                datos_guia.get('destinatario_direccion')
-                or datos_guia.get('destino')
-                or ''
-            ),
-
-            'destinatario_ubigeo': (
-                datos_guia.get('destinatario_ubigeo')
-                or ''
-            ),
-
-            'serie': datos_guia.get('serie') or 'T001',
-            'numero': datos_guia.get('numero') or '',
-
-            'fecha_emision': self._formatear_fecha(
-                datos_guia.get('fecha_emision')
-            ),
-
-            'fecha_traslado': self._formatear_fecha(
-                datos_guia.get('fecha_traslado')
-            ),
-
-            'fecha_inicio_traslado': self._formatear_fecha(
-                datos_guia.get('fecha_inicio_traslado')
-                or datos_guia.get('fecha_traslado')
-            ),
-
-            'motivo_traslado': (
-                datos_guia.get('motivo_traslado')
-                or '01'
-            ),
-
-            'motivo_texto': self._get_motivo_texto(
-                datos_guia.get('motivo_traslado') or '01'
-            ),
-
-            'modalidad_transporte': modalidad,
-
-            'modalidad_texto': (
-                'Transporte privado'
-                if modalidad == 'PRIVADO'
-                else 'Transporte público'
-            ),
-
-            'peso_bruto_total': peso_total,
-
-            'numero_bultos': (
-                datos_guia.get('numero_bultos')
-                or 1
-            ),
-
+            'ruc_remitente': datos_guia.get('ruc_remitente', EMPRESA['ruc']),
+            'remitente_nombre': datos_guia.get('remitente_nombre', EMPRESA['nombre']),
+            'remitente_direccion': datos_guia.get('remitente_direccion', EMPRESA['direccion']),
+            'remitente_ubigeo': datos_guia.get('remitente_ubigeo', '150101'),
+            'telefono': EMPRESA['telefono'],
+            'email': EMPRESA['email'],
+            'ruc_destinatario': datos_guia.get('ruc_destinatario', datos_guia.get('ruc', '')),
+            'destinatario_nombre': datos_guia.get('destinatario_nombre', datos_guia.get('cliente', '')),
+            'destinatario_direccion': datos_guia.get('destinatario_direccion', datos_guia.get('destino', '')),
+            'destinatario_ubigeo': datos_guia.get('destinatario_ubigeo', '150101'),
+            'serie': datos_guia.get('serie', 'T001'),
+            'numero': datos_guia.get('numero', ''),
+            'fecha_emision': self._formatear_fecha(datos_guia.get('fecha_emision')),
+            'fecha_traslado': self._formatear_fecha(datos_guia.get('fecha_traslado')),
+            'fecha_inicio_traslado': self._formatear_fecha(datos_guia.get('fecha_inicio_traslado')),
+            'motivo_traslado': datos_guia.get('motivo_traslado', '01'),
+            'motivo_texto': self._get_motivo_texto(datos_guia.get('motivo_traslado', '01')),
+            'modalidad_transporte': datos_guia.get('modalidad_transporte', 'PRIVADO'),
+            'modalidad_texto': 'Transporte privado' if datos_guia.get('modalidad_transporte') == 'PRIVADO' else 'Transporte público',
+            'peso_bruto_total': float(peso_total),
+            'numero_bultos': datos_guia.get('numero_bultos', 1),
             'unidad_peso_texto': 'KGM',
-
-            'transportista_nombre': (
-                datos_guia.get('transportista_nombre')
-                or '---'
-            ),
-
-            'conductor_nombre': (
-                datos_guia.get('conductor_nombre')
-                or '---'
-            ),
-
-            'conductor_dni': (
-                datos_guia.get('conductor_dni')
-                or '---'
-            ),
-
-            'placa_vehiculo': (
-                datos_guia.get('placa_vehiculo')
-                or '---'
-            ),
-
-            'licencia_conductor': (
-                datos_guia.get('licencia_conductor')
-                or '---'
-            ),
-
-            'nro_cotizacion': (
-                datos_guia.get('documento_asociado')
-                or datos_guia.get('cotizacion_numero')
-                or ''
-            ),
-
+            'transportista_nombre': datos_guia.get('transportista_nombre', '---'),
+            'conductor_nombre': datos_guia.get('conductor_nombre', '---'),
+            'conductor_dni': datos_guia.get('conductor_dni', '---'),
+            'placa_vehiculo': datos_guia.get('placa_vehiculo', '---'),
+            'licencia_conductor': datos_guia.get('licencia_conductor', '---'),
+            'nro_cotizacion': datos_guia.get('documento_asociado', datos_guia.get('cotizacion_numero', '')),
             'items': items_formateados,
-
-            'observaciones': (
-                datos_guia.get('observaciones')
-                or ''
-            ),
-
+            'observaciones': datos_guia.get('observaciones', ''),
             'qr_base64': self._generar_qr_guia(datos_guia)
         }
 

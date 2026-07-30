@@ -14,7 +14,7 @@ from datetime import datetime
 import json
 
 # Importar el generador de PDF desde la raíz del proyecto
-from .pdf_generator import pdf_generator
+from pdf_generator import pdf_generator
 
 # Importar desde database.py
 from database import db_query, db_execute, db_tx, get_connection, buscar_cliente_por_ruc
