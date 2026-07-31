@@ -6427,7 +6427,87 @@ function openComprobanteModal(id = null) {
     });
     
     document.getElementById('comprobanteModal').classList.add('show');
+    if (isEdit) {
+        setTimeout(() => cargarComprobanteParaEditar(id), 50);
+    }
 }
+
+
+// ============================================================
+// CARGAR COMPROBANTE EXISTENTE PARA EDICIÓN
+// ============================================================
+async function cargarComprobanteParaEditar(id) {
+    try {
+        console.log('📥 Cargando comprobante para editar ID:', id);
+        showToast('⏳ Cargando datos del comprobante...', 'info');
+
+        const response = await apiFetch(`/ventas/api/comprobantes/${id}`);
+        if (!response.success) {
+            showToast('Error al cargar comprobante: ' + (response.error || 'Desconocido'), 'error');
+            return;
+        }
+
+        const c = response.data;
+        console.log('📦 Datos de comprobante cargados:', c);
+
+        const setSelectValue = (id, value) => {
+            const el = document.getElementById(id);
+            if (!el || value === undefined || value === null) return;
+            const val = String(value).trim();
+            let found = false;
+            for (const opt of el.options) {
+                if (opt.value === val) { opt.selected = true; found = true; break; }
+            }
+            if (!found) {
+                for (const opt of el.options) {
+                    if (opt.value.toLowerCase() === val.toLowerCase()) { opt.selected = true; found = true; break; }
+                }
+            }
+        };
+
+        const setValue = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) el.value = value ?? '';
+        };
+
+        setSelectValue('compTipo', c.tipo_comprobante);
+        setValue('compSerie', c.serie);
+        setValue('compNumero', c.numero);
+        setSelectValue('compEstado', c.estado_sunat);
+        setValue('compCliente', c.cliente_nombre);
+        setValue('compRuc', c.cliente_numero_doc);
+        setValue('compMonto', c.total);
+        setValue('compObs', c.observaciones);
+
+        // Productos (items_json)
+        const items = Array.isArray(c.items_json) ? c.items_json : [];
+        const productosNormalizados = items.map(it => ({
+            codigo: it.codigo || '',
+            producto: it.producto || it.descripcion || '',
+            marca: it.marca || '',
+            modelo: it.modelo || '',
+            um: it.um || 'NIU',
+            cantidad: it.cantidad || 1,
+            stock: it.stock || 0
+        }));
+
+        const productsContainer = document.getElementById('compProducts');
+        if (productsContainer) {
+            productsContainer.innerHTML = productosNormalizados.length > 0
+                ? productTableHtml(productosNormalizados)
+                : '<div style="padding:20px;text-align:center;color:#94A3B8;">No hay productos registrados en este comprobante.</div>';
+        }
+
+        window._comprobanteProductos = productosNormalizados;
+
+        showToast('✅ Comprobante cargado correctamente', 'success');
+
+    } catch (error) {
+        console.error('❌ Error cargando comprobante para editar:', error);
+        showToast('Error al cargar el comprobante: ' + error.message, 'error');
+    }
+}
+
 
 function openNotaCreditoModal(id = null) {
     editingId = id;
