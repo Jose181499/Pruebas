@@ -1561,6 +1561,45 @@ def api_guias_eliminar(id):
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
+# ============================================================
+# GUÍAS - ELIMINACIÓN FÍSICA
+# ============================================================
+
+@ventas_bp.route('/ventas/api/guias/<int:id>/permanente', methods=['DELETE'])
+@login_required
+def api_guias_eliminar_permanente(id):
+    """Elimina físicamente una guía de la base de datos (solo si ya está anulada)"""
+    try:
+        print(f"🗑️ Eliminando físicamente guía ID: {id}")
+
+        query_check = "SELECT id, numero, estado_sunat FROM guias_remision WHERE id = %s"
+        result_check = db_query(query_check, (id,))
+
+        if not result_check:
+            return jsonify({'success': False, 'error': 'Guía no encontrada'}), 404
+
+        estado = (result_check[0].get('estado_sunat') or '').upper()
+        if estado not in ('ANULADA', 'ANULADO'):
+            return jsonify({
+                'success': False,
+                'error': f'Solo se pueden eliminar guías en estado "Anulada". Estado actual: {result_check[0].get("estado_sunat")}'
+            }), 400
+
+        query_delete = "DELETE FROM guias_remision WHERE id = %s RETURNING id"
+        result_delete = db_query(query_delete, (id,))
+
+        if result_delete:
+            return jsonify({'success': True, 'message': 'Guía eliminada correctamente', 'data': {'id': id}})
+
+        return jsonify({'success': False, 'error': 'No se pudo eliminar la guía'}), 400
+
+    except Exception as e:
+        print(f"❌ Error en api_guias_eliminar_permanente: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 # ============================================================
 # COMPROBANTES - API
 # ============================================================
@@ -1694,6 +1733,46 @@ def api_comprobantes_eliminar(id):
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
+
+# ============================================================
+# COMPROBANTES - ELIMINACIÓN FÍSICA
+# ============================================================
+
+@ventas_bp.route('/ventas/api/comprobantes/<int:id>/permanente', methods=['DELETE'])
+@login_required
+def api_comprobantes_eliminar_permanente(id):
+    """Elimina físicamente un comprobante de la base de datos (solo si ya está anulado)"""
+    try:
+        print(f"🗑️ Eliminando físicamente comprobante ID: {id}")
+
+        query_check = "SELECT id, numero, estado_sunat FROM comprobantes WHERE id = %s"
+        result_check = db_query(query_check, (id,))
+
+        if not result_check:
+            return jsonify({'success': False, 'error': 'Comprobante no encontrado'}), 404
+
+        estado = (result_check[0].get('estado_sunat') or '').upper()
+        if estado not in ('ANULADO', 'ANULADA'):
+            return jsonify({
+                'success': False,
+                'error': f'Solo se pueden eliminar comprobantes en estado "Anulado". Estado actual: {result_check[0].get("estado_sunat")}'
+            }), 400
+
+        query_delete = "DELETE FROM comprobantes WHERE id = %s RETURNING id"
+        result_delete = db_query(query_delete, (id,))
+
+        if result_delete:
+            return jsonify({'success': True, 'message': 'Comprobante eliminado correctamente', 'data': {'id': id}})
+
+        return jsonify({'success': False, 'error': 'No se pudo eliminar el comprobante'}), 400
+
+    except Exception as e:
+        print(f"❌ Error en api_comprobantes_eliminar_permanente: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 # ============================================================
 # NOTAS DE CRÉDITO - API
 # ============================================================
@@ -1741,6 +1820,45 @@ def api_notas_credito_guardar():
         return jsonify({'success': False, 'error': 'No se pudo crear'}), 400
             
     except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================================
+# NOTAS DE CRÉDITO - ELIMINACIÓN FÍSICA
+# ============================================================
+
+@ventas_bp.route('/ventas/api/notas-credito/<int:id>/permanente', methods=['DELETE'])
+@login_required
+def api_notas_credito_eliminar_permanente(id):
+    """Elimina físicamente una nota de crédito de la base de datos (solo si ya está anulada)"""
+    try:
+        print(f"🗑️ Eliminando físicamente nota de crédito ID: {id}")
+
+        query_check = "SELECT id, numero, estado FROM notas_credito WHERE id = %s"
+        result_check = db_query(query_check, (id,))
+
+        if not result_check:
+            return jsonify({'success': False, 'error': 'Nota de crédito no encontrada'}), 404
+
+        estado = (result_check[0].get('estado') or '').lower()
+        if estado != 'anulada':
+            return jsonify({
+                'success': False,
+                'error': f'Solo se pueden eliminar notas de crédito en estado "Anulada". Estado actual: {result_check[0].get("estado")}'
+            }), 400
+
+        query_delete = "DELETE FROM notas_credito WHERE id = %s RETURNING id"
+        result_delete = db_query(query_delete, (id,))
+
+        if result_delete:
+            return jsonify({'success': True, 'message': 'Nota de crédito eliminada correctamente', 'data': {'id': id}})
+
+        return jsonify({'success': False, 'error': 'No se pudo eliminar la nota de crédito'}), 400
+
+    except Exception as e:
+        print(f"❌ Error en api_notas_credito_eliminar_permanente: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # ============================================================

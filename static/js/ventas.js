@@ -3940,10 +3940,61 @@ function markGuiaEmitida(id) {
     showToast('Guía emitida correctamente', 'success');
 }
 
-function deleteGuia(id) {
-    if (confirm('¿Estás seguro de eliminar esta guía?')) {
-        showToast('Guía eliminada', 'success');
+// ============================================================
+// ELIMINAR GUÍA (con anulación previa + eliminación física)
+// ============================================================
+async function deleteGuia(id) {
+    const guia = guiasData.find(g => g.id === id);
+    if (!guia) {
+        showToast('❌ Guía no encontrada', 'error');
+        return;
     }
+
+    const numero = `${guia.serie || ''}-${guia.numero || ''}`;
+    const cliente = guia.cliente || 'Cliente';
+    const estadoActual = guia.estado || 'Desconocido';
+    const esAnulada = (estadoActual || '').toUpperCase().includes('ANULAD');
+
+    const mensajeAdicional = esAnulada
+        ? 'La guía ya está anulada y será eliminada permanentemente.'
+        : `⚠️ La guía está en estado "${estadoActual}". Primero será anulada y luego eliminada permanentemente.`;
+
+    showConfirmModal(
+        '🗑️ ¿Eliminar guía permanentemente?',
+        `Estás a punto de <b>ELIMINAR FÍSICAMENTE</b> la guía <b>${numero}</b> del cliente <b>${cliente}</b>.<br><br>${mensajeAdicional}`,
+        '⚠️ Esta acción es IRREVERSIBLE. El registro será eliminado de la base de datos permanentemente.',
+        async function() {
+            try {
+                showToast('⏳ Procesando eliminación...', 'info');
+
+                if (!esAnulada) {
+                    const toggleResponse = await apiFetch(`/ventas/api/guias/${id}/toggle`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ estado: 'Anulada' })
+                    });
+                    if (!toggleResponse.success) {
+                        showToast('❌ Error al anular la guía: ' + (toggleResponse.error || 'No se pudo anular'), 'error');
+                        return;
+                    }
+                    showToast('✅ Guía anulada, ahora eliminando...', 'info');
+                    await new Promise(resolve => setTimeout(resolve, 400));
+                }
+
+                const response = await apiFetch(`/ventas/api/guias/${id}/permanente`, { method: 'DELETE' });
+
+                if (response.success) {
+                    showToast('✅ Guía eliminada permanentemente', 'success');
+                    await loadGuias();
+                } else {
+                    showToast('❌ Error: ' + (response.error || 'No se pudo eliminar'), 'error');
+                }
+            } catch (error) {
+                console.error('❌ Error eliminando guía:', error);
+                showToast('❌ Error al eliminar la guía: ' + error.message, 'error');
+            }
+        },
+        '🗑️ Sí, eliminar permanentemente'
+    );
 }
 
 function generateComprobantePdf(id) {
@@ -3981,10 +4032,61 @@ function markComprobanteEmitido(id) {
     );
 }
 
-function deleteComprobante(id) {
-    if (confirm('¿Estás seguro de eliminar este comprobante?')) {
-        showToast('Comprobante eliminado', 'success');
+// ============================================================
+// ELIMINAR COMPROBANTE (con anulación previa + eliminación física)
+// ============================================================
+async function deleteComprobante(id) {
+    const comprobante = comprobantesData.find(c => c.id === id);
+    if (!comprobante) {
+        showToast('❌ Comprobante no encontrado', 'error');
+        return;
     }
+
+    const numero = `${comprobante.serie || ''}-${comprobante.numero || ''}`;
+    const cliente = comprobante.cliente || 'Cliente';
+    const estadoActual = comprobante.estado || 'Desconocido';
+    const esAnulado = (estadoActual || '').toUpperCase().includes('ANULAD');
+
+    const mensajeAdicional = esAnulado
+        ? 'El comprobante ya está anulado y será eliminado permanentemente.'
+        : `⚠️ El comprobante está en estado "${estadoActual}". Primero será anulado y luego eliminado permanentemente.`;
+
+    showConfirmModal(
+        '🗑️ ¿Eliminar comprobante permanentemente?',
+        `Estás a punto de <b>ELIMINAR FÍSICAMENTE</b> el comprobante <b>${numero}</b> del cliente <b>${cliente}</b>.<br><br>${mensajeAdicional}`,
+        '⚠️ Esta acción es IRREVERSIBLE. El registro será eliminado de la base de datos permanentemente.',
+        async function() {
+            try {
+                showToast('⏳ Procesando eliminación...', 'info');
+
+                if (!esAnulado) {
+                    const toggleResponse = await apiFetch(`/ventas/api/comprobantes/${id}/toggle`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ estado: 'Anulado' })
+                    });
+                    if (!toggleResponse.success) {
+                        showToast('❌ Error al anular el comprobante: ' + (toggleResponse.error || 'No se pudo anular'), 'error');
+                        return;
+                    }
+                    showToast('✅ Comprobante anulado, ahora eliminando...', 'info');
+                    await new Promise(resolve => setTimeout(resolve, 400));
+                }
+
+                const response = await apiFetch(`/ventas/api/comprobantes/${id}/permanente`, { method: 'DELETE' });
+
+                if (response.success) {
+                    showToast('✅ Comprobante eliminado permanentemente', 'success');
+                    await loadComprobantes();
+                } else {
+                    showToast('❌ Error: ' + (response.error || 'No se pudo eliminar'), 'error');
+                }
+            } catch (error) {
+                console.error('❌ Error eliminando comprobante:', error);
+                showToast('❌ Error al eliminar el comprobante: ' + error.message, 'error');
+            }
+        },
+        '🗑️ Sí, eliminar permanentemente'
+    );
 }
 
 function generateNotaPdf(id) {
@@ -3995,10 +4097,61 @@ function markNotaEmitida(id) {
     showToast('Nota de crédito emitida correctamente', 'success');
 }
 
-function deleteNota(id) {
-    if (confirm('¿Estás seguro de eliminar esta nota de crédito?')) {
-        showToast('Nota de crédito eliminada', 'success');
+// ============================================================
+// ELIMINAR NOTA DE CRÉDITO (con anulación previa + eliminación física)
+// ============================================================
+async function deleteNota(id) {
+    const nota = notasData.find(n => n.id === id);
+    if (!nota) {
+        showToast('❌ Nota de crédito no encontrada', 'error');
+        return;
     }
+
+    const numero = `${nota.serie || ''}-${nota.numero || ''}`;
+    const cliente = nota.cliente || 'Cliente';
+    const estadoActual = nota.estado || 'Desconocido';
+    const esAnulada = (estadoActual || '').toLowerCase() === 'anulada';
+
+    const mensajeAdicional = esAnulada
+        ? 'La nota de crédito ya está anulada y será eliminada permanentemente.'
+        : `⚠️ La nota de crédito está en estado "${estadoActual}". Primero será anulada y luego eliminada permanentemente.`;
+
+    showConfirmModal(
+        '🗑️ ¿Eliminar nota de crédito permanentemente?',
+        `Estás a punto de <b>ELIMINAR FÍSICAMENTE</b> la nota de crédito <b>${numero}</b> del cliente <b>${cliente}</b>.<br><br>${mensajeAdicional}`,
+        '⚠️ Esta acción es IRREVERSIBLE. El registro será eliminado de la base de datos permanentemente.',
+        async function() {
+            try {
+                showToast('⏳ Procesando eliminación...', 'info');
+
+                if (!esAnulada) {
+                    const toggleResponse = await apiFetch(`/ventas/api/notas-credito/${id}/toggle`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ estado: 'Anulada' })
+                    });
+                    if (!toggleResponse.success) {
+                        showToast('❌ Error al anular la nota de crédito: ' + (toggleResponse.error || 'No se pudo anular'), 'error');
+                        return;
+                    }
+                    showToast('✅ Nota de crédito anulada, ahora eliminando...', 'info');
+                    await new Promise(resolve => setTimeout(resolve, 400));
+                }
+
+                const response = await apiFetch(`/ventas/api/notas-credito/${id}/permanente`, { method: 'DELETE' });
+
+                if (response.success) {
+                    showToast('✅ Nota de crédito eliminada permanentemente', 'success');
+                    await loadNotas();
+                } else {
+                    showToast('❌ Error: ' + (response.error || 'No se pudo eliminar'), 'error');
+                }
+            } catch (error) {
+                console.error('❌ Error eliminando nota de crédito:', error);
+                showToast('❌ Error al eliminar la nota de crédito: ' + error.message, 'error');
+            }
+        },
+        '🗑️ Sí, eliminar permanentemente'
+    );
 }
 
 function approveDevolucion(id) {
@@ -10145,6 +10298,9 @@ window.getFieldValue = getFieldValue;
 window.toggleCustomField = toggleCustomField;
 window.setEditableValue = setEditableValue;
 window.deletePedidoCompra = deletePedidoCompra;
+window.deleteGuia = deleteGuia;
+window.deleteComprobante = deleteComprobante;
+window.deleteNota = deleteNota;
 // ============================================================
 // 14. FUNCIONES DE FORMATO
 // ============================================================
