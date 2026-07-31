@@ -6572,6 +6572,16 @@ function openComprobanteModal(id = null) {
             document.getElementById('compCliente').value = q.razon || '';
             document.getElementById('compRuc').value = q.ruc || '';
             document.getElementById('compMonto').value = q.monto || 0;
+
+            // 🔧 NUEVO: condición de pago desde la cotización
+            const condSelect = document.getElementById('compCondicion');
+            const condicionCotizacion = q.condicion || q.condicion_pago || q.forma_pago;
+            if (condSelect && condicionCotizacion) {
+                const opciones = Array.from(condSelect.options).map(o => o.value);
+                if (opciones.includes(condicionCotizacion)) {
+                    condSelect.value = condicionCotizacion;
+                }
+            }
         } else {
             document.getElementById('compProducts').innerHTML = `
                 <div style="padding:20px;text-align:center;color:#94A3B8;">No hay productos en esta cotización.</div>

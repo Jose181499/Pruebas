@@ -465,10 +465,10 @@ def guardar_comprobante_db(data):
                 cliente_nombre, cliente_direccion, cliente_email,
                 cliente_telefono, subtotal, igv, total,
                 items_json, observaciones, estado_sunat,
-                creado_por
+                condicion_pago, creado_por
             ) VALUES (
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s, %s, %s
+                %s, %s, %s, %s, %s, %s, %s, %s
             )
             RETURNING id, serie, numero
         """
@@ -490,6 +490,7 @@ def guardar_comprobante_db(data):
             data.get('items_json'),
             data.get('observaciones'),
             data.get('estado_sunat', 'BORRADOR'),
+            data.get('condicion_pago', 'Contado'),  # 🔧 NUEVO
             data.get('creado_por')
         )
         result = db_query(query, params)
@@ -525,7 +526,7 @@ def api_comprobantes_obtener(id):
                 cliente_nombre, cliente_direccion, cliente_email,
                 cliente_telefono, subtotal, igv, total,
                 items_json, observaciones, estado_sunat,
-                sunat_response, cdr_response, creado_por,
+                condicion_pago, sunat_response, cdr_response, creado_por,
                 created_at, updated_at
             FROM comprobantes
             WHERE id = %s
