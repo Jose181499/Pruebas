@@ -3684,6 +3684,56 @@ window.loadGuiaFromCotizacion = function(numeroCotizacion) {
         });
 };
 
+//=====================================
+// funcion para cargar Datos a Facturas
+//=====================================
+window.loadComprobanteFromCotizacion = function(numeroCotizacion) {
+    if (!numeroCotizacion) return;
+
+    const cotizacion = cotizacionesData.find(c => c.numero === numeroCotizacion);
+    if (!cotizacion) {
+        showToast('⚠️ Cotización no encontrada', 'warning');
+        return;
+    }
+
+    showToast('⏳ Cargando datos de cotización...', 'info');
+
+    apiFetch(`/ventas/api/cotizaciones/${cotizacion.id}/completa`)
+        .then(response => {
+            if (response.success) {
+                const data = response.data;
+
+                document.getElementById('compCliente').value = data.cliente_razon_social || '';
+                document.getElementById('compRuc').value = data.cliente_ruc || '';
+                document.getElementById('compMonto').value = data.total || 0;
+                document.getElementById('compObs').value = `Generado desde cotización ${numeroCotizacion}`;
+
+                // Condición de pago
+                const condSelect = document.getElementById('compCondicion');
+                if (condSelect && data.condicion_pago) {
+                    const opciones = Array.from(condSelect.options).map(o => o.value);
+                    if (opciones.includes(data.condicion_pago)) {
+                        condSelect.value = data.condicion_pago;
+                    }
+                }
+
+                // Productos
+                const productos = data.productos || [];
+                window._compProductos = productos;
+                document.getElementById('compProducts').innerHTML =
+                    productos.length > 0 ? productTableHtml(productos) :
+                    '<div style="padding:20px;text-align:center;color:#94A3B8;">No hay productos en esta cotización.</div>';
+
+                showToast('✅ Datos cargados desde cotización', 'success');
+            } else {
+                showToast('❌ Error al cargar datos: ' + (response.error || 'Desconocido'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error cargando cotización:', error);
+            showToast('❌ Error al cargar datos de la cotización', 'error');
+        });
+};
 
 function validatePedidoCompra(id) {
     // Buscar el PC para mostrar info
@@ -6503,7 +6553,7 @@ function openComprobanteModal(id = null) {
             <div class="ficha-grid">
                 <div class="form-field col-4">
                     <label>Cotización vinculada</label>
-                    <select id="compCotizacion">${cotOptions || '<option value="">Sin cotización</option>'}</select>
+                    <select id="compCotizacion" onchange="loadComprobanteFromCotizacion(this.value)" >${cotOptions || '<option value="">Sin cotización</option>'}</select>
                 </div>
                 <div class="form-field col-3">
                     <label>Tipo</label>
@@ -6563,7 +6613,7 @@ function openComprobanteModal(id = null) {
             </div>
         </div>
     `;
-    
+    /* funcion rota - se deja por si se necesita luego
     document.getElementById('compCotizacion')?.addEventListener('change', function() {
         const num = this.value;
         const q = cotizacionesData.find(x => x.numero === num);
@@ -6588,6 +6638,8 @@ function openComprobanteModal(id = null) {
             `;
         }
     });
+
+    */ 
     
     document.getElementById('comprobanteModal').classList.add('show');
     if (isEdit) {
