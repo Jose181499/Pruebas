@@ -468,7 +468,7 @@ def guardar_comprobante_db(data):
                 condicion_pago, documento_asociado, creado_por
             ) VALUES (
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s, %s, %s, %s
+                %s, %s, %s, %s, %s, %s, %s, %s, %s
             )
             RETURNING id, serie, numero
         """
@@ -1682,7 +1682,7 @@ def api_comprobantes_guardar():
                     cliente_email = %s, cliente_telefono = %s,
                     subtotal = %s, igv = %s, total = %s,
                     items_json = %s, observaciones = %s,
-                    estado_sunat = %s, updated_at = NOW()
+                    estado_sunat = %s, documento_asociado = %s, updated_at = NOW()
                 WHERE id = %s
                 RETURNING id, serie, numero
             """
