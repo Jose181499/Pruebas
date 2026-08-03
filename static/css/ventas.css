@@ -2416,6 +2416,15 @@ body.kcf-theme {
     border-color: #9CA3AF !important;
 }
 
+.b-emitted {
+    background: #001a00;
+    color: #39FF14;              /* verde fosforescente clásico */
+    font-weight: 900;
+    text-shadow: 0 0 4px #39FF14;
+    box-shadow: 0 0 8px rgba(57, 255, 20, 0.6), inset 0 0 4px rgba(57, 255, 20, 0.3);
+    border: 1px solid #39FF14;
+}
+
 
 /* ============================================================
    MÓDULO DE VALIDACIÓN PC VS COTIZACIÓN

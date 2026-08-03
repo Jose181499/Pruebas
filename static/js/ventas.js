@@ -109,6 +109,8 @@ function badgeStatus(s) {
         'validada': 'b-validated',
         'generada': 'b-generated',
         'generado': 'b-generated',
+        'emitida': 'b-emitted',        
+        'emitido': 'b-emitted',        
         'aceptada por cliente': 'b-accepted',
         'aceptada': 'b-accepted',
         'aceptado': 'b-accepted',
@@ -132,6 +134,7 @@ function badgeStatus(s) {
         else if (estadoLower.includes('revisión') || estadoLower.includes('revision') || estadoLower.includes('proceso')) clase = 'b-review';
         else if (estadoLower.includes('validado') || estadoLower.includes('validada')) clase = 'b-validated';
         else if (estadoLower.includes('generada') || estadoLower.includes('generado')) clase = 'b-generated';
+        else if (estadoLower.includes('emitida') || estadoLower.includes('emitido')) clase = 'b-emitted';
         else if (estadoLower.includes('aceptada') || estadoLower.includes('aceptado')) clase = 'b-accepted';
         else if (estadoLower.includes('anulada') || estadoLower.includes('anulado') || estadoLower.includes('cancelada') || estadoLower.includes('cancelado')) clase = 'b-canceled';
         else if (estadoLower.includes('no concretada') || estadoLower.includes('no concretado') || estadoLower.includes('perdida') || estadoLower.includes('perdido')) clase = 'b-lost';
@@ -2459,6 +2462,9 @@ async function saveComprobante(estado) {
         console.log('🔄 Guardando comprobante...', { estado });
         
         let productos = window._compProductos || [];
+        const montoTotal = parseFloat(document.getElementById('compMonto')?.value || 0);
+        const subtotalCalc = montoTotal / 1.18;
+        const igvCalc = montoTotal - subtotalCalc;
         
         const data = {
             id: editingId,
@@ -2469,7 +2475,10 @@ async function saveComprobante(estado) {
             cotizacion: document.getElementById('compCotizacion')?.value || '',
             cliente: document.getElementById('compCliente')?.value || '',
             ruc: document.getElementById('compRuc')?.value || '',
-            monto: parseFloat(document.getElementById('compMonto')?.value || 0),
+            monto: montoTotal,
+            total: montoTotal,          // 🔧 NUEVO — esto es lo que lee el backend
+            subtotal: subtotalCalc,     // 🔧 NUEVO
+            igv: igvCalc,               // 🔧 NUEVO
             condicion: document.getElementById('compCondicion')?.value || 'Contado',
             observaciones: document.getElementById('compObs')?.value || '',
             items: productos
