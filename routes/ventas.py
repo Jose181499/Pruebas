@@ -444,7 +444,7 @@ def obtener_comprobantes_db():
                 moneda, cliente_tipo_doc, cliente_numero_doc,
                 cliente_nombre, cliente_direccion, cliente_email,
                 cliente_telefono, subtotal, igv, total,
-                items_json, observaciones, estado_sunat,
+                items_json, observaciones, estado_sunat, documento_asociado, condicion_pago,
                 sunat_response, cdr_response, creado_por,
                 created_at, updated_at
             FROM comprobantes
@@ -465,7 +465,7 @@ def guardar_comprobante_db(data):
                 cliente_nombre, cliente_direccion, cliente_email,
                 cliente_telefono, subtotal, igv, total,
                 items_json, observaciones, estado_sunat,
-                condicion_pago, creado_por
+                condicion_pago, documento_asociado, creado_por
             ) VALUES (
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s, %s, %s, %s
@@ -490,7 +490,8 @@ def guardar_comprobante_db(data):
             data.get('items_json'),
             data.get('observaciones'),
             data.get('estado_sunat', 'BORRADOR'),
-            data.get('condicion_pago', 'Contado'),  # 🔧 NUEVO
+            data.get('condicion_pago', 'Contado'),
+            data.get('documento_asociado'),
             data.get('creado_por')
         )
         result = db_query(query, params)
@@ -1666,6 +1667,7 @@ def api_comprobantes_guardar():
             'items_json': json.dumps(items_json),
             'observaciones': data.get('observaciones', ''),
             'estado_sunat': data.get('estado', 'BORRADOR'),
+            'documento_asociado': data.get('cotizacion') or data.get('cotizacion_numero') or '',
             'creado_por': usuario_id
         }
         
@@ -1702,6 +1704,7 @@ def api_comprobantes_guardar():
                 comprobante_data['items_json'],
                 comprobante_data['observaciones'],
                 comprobante_data['estado_sunat'],
+                comprobante_data['documento_asociado'],
                 data['id']
             )
             result = db_query(query, params)
@@ -2019,7 +2022,51 @@ def api_despachos_listar():
             ORDER BY id DESC
         """
         data = db_query(query)
-        
+
+        # ============================================================
+        # 🔽 BUSCAR GUÍAS Y FACTURAS VINCULADAS POR "cotizacion_numero"
+        #     (NO por RUC ni por ID) - últimos 4 registros de cada una
+        # ============================================================
+        cotizacion_numeros = list({
+            row.get('cotizacion_numero') for row in data if row.get('cotizacion_numero')
+        })
+
+        guias_por_cotizacion = {}
+        comprobantes_por_cotizacion = {}
+
+        if cotizacion_numeros:
+            try:
+                guias_query = """
+                    SELECT documento_asociado, numero
+                    FROM guias_remision
+                    WHERE documento_asociado = ANY(%s)
+                    ORDER BY id DESC
+                """
+                guias_rows = db_query(guias_query, (cotizacion_numeros,))
+                for g in guias_rows:
+                    key = g.get('documento_asociado')
+                    guias_por_cotizacion.setdefault(key, [])
+                    if len(guias_por_cotizacion[key]) < 4:
+                        guias_por_cotizacion[key].append(g.get('numero'))
+            except Exception as e:
+                print(f"⚠️ Error buscando guías vinculadas por cotizacion_numero: {e}")
+
+            try:
+                comprobantes_query = """
+                    SELECT documento_asociado, serie, numero
+                    FROM comprobantes
+                    WHERE documento_asociado = ANY(%s)
+                    ORDER BY id DESC
+                """
+                comp_rows = db_query(comprobantes_query, (cotizacion_numeros,))
+                for c in comp_rows:
+                    key = c.get('documento_asociado')
+                    comprobantes_por_cotizacion.setdefault(key, [])
+                    if len(comprobantes_por_cotizacion[key]) < 4:
+                        comprobantes_por_cotizacion[key].append(f"{c.get('serie')}-{c.get('numero')}")
+            except Exception as e:
+                print(f"⚠️ Error buscando comprobantes vinculados por cotizacion_numero: {e}")
+
         # ============================================================
         # 🔽 FORMATEAR FECHAS CON HORA
         # ============================================================
@@ -2028,21 +2075,18 @@ def api_despachos_listar():
             # Formatear fecha_despacho
             fecha_despacho = row.get('fecha_despacho')
             fecha_despacho_formateada = None
-            
+
             if fecha_despacho:
                 try:
                     from datetime import datetime
-                    
+
                     if isinstance(fecha_despacho, str):
-                        # Si es ISO completo (2026-07-20T14:30:00.000Z)
                         if 'T' in fecha_despacho:
                             dt = datetime.fromisoformat(fecha_despacho.replace('Z', '+00:00'))
                             fecha_despacho_formateada = dt.strftime('%d/%m/%Y %H:%M')
-                        # Si es YYYY-MM-DD
                         elif '-' in fecha_despacho and len(fecha_despacho) == 10:
                             dt = datetime.strptime(fecha_despacho, '%Y-%m-%d')
                             fecha_despacho_formateada = dt.strftime('%d/%m/%Y')
-                        # Si ya está formateada
                         elif '/' in fecha_despacho:
                             fecha_despacho_formateada = fecha_despacho
                         else:
@@ -2054,8 +2098,7 @@ def api_despachos_listar():
                 except Exception as e:
                     print(f"⚠️ Error formateando fecha: {e}")
                     fecha_despacho_formateada = str(fecha_despacho)
-            
-            # Formatear created_at
+
             created_at = row.get('created_at')
             created_at_formateada = None
             if created_at:
@@ -2068,7 +2111,15 @@ def api_despachos_listar():
                         created_at_formateada = str(created_at)
                 except:
                     created_at_formateada = str(created_at)
-            
+
+            # 🔽 Resolver guía(s) y comprobante(s) vinculados por cotizacion_numero
+            cot_num = row.get('cotizacion_numero')
+            guias_vinculadas = guias_por_cotizacion.get(cot_num, [])
+            comprobantes_vinculados = comprobantes_por_cotizacion.get(cot_num, [])
+
+            guia_display = ', '.join(guias_vinculadas) if guias_vinculadas else row.get('guia')
+            comprobante_display = ', '.join(comprobantes_vinculados) if comprobantes_vinculados else row.get('comprobante')
+
             formatted_data.append({
                 'id': row.get('id'),
                 'numero': row.get('numero'),
@@ -2081,8 +2132,8 @@ def api_despachos_listar():
                 'cotizacion_numero': row.get('cotizacion_numero'),
                 'cliente': row.get('cliente'),
                 'ruc': row.get('ruc'),
-                'comprobante': row.get('comprobante'),
-                'guia': row.get('guia'),
+                'comprobante': comprobante_display,
+                'guia': guia_display,
                 'origen': row.get('origen'),
                 'destino': row.get('destino'),
                 'transportista': row.get('transportista'),
@@ -2091,7 +2142,7 @@ def api_despachos_listar():
                 'created_at': created_at_formateada,
                 'updated_at': row.get('updated_at')
             })
-        
+
         return jsonify({'success': True, 'data': formatted_data})
     except Exception as e:
         print(f"❌ Error en api_despachos_listar: {e}")

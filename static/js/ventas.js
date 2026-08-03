@@ -3531,6 +3531,7 @@ async function saveGuia(estado) {
     }
 }
 
+/* funcion rota 
 // ============================================================
 // FUNCIÓN PARA GUARDAR COMPROBANTE (MEJORADA)
 // ============================================================
@@ -3605,6 +3606,9 @@ async function saveComprobante(estado) {
         showToast('❌ Error al guardar el comprobante', 'error');
     }
 }
+*/
+// funcion totalmente rota
+
 
 // ============================================================
 // MENÚ DE COTIZACIONES (MEJORADO)
