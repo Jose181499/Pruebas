@@ -108,8 +108,13 @@ function badgeStatus(s) {
         'validada': 'b-validated',
         'generada': 'b-generated',
         'generado': 'b-generated',
-        'emitida': 'b-ok',        // 🔥 CAMBIADO: usa verde fluorescente
-        'emitido': 'b-ok',        // 🔥 CAMBIADO
+        'emitida': 'b-ok',
+        'emitido': 'b-ok',
+        'despachado': 'b-info',              // 🔥 AZUL fluorescente
+        'entregado': 'b-info',               // 🔥 AZUL fluorescente
+        'pendiente despacho': 'b-draft',     // 🔥 ROJO fluorescente
+        'pendiente': 'b-draft',              // 🔥 ROJO fluorescente
+        'en preparación': 'b-pending',       // AMARILLO
         'aceptada por cliente': 'b-accepted',
         'aceptada': 'b-accepted',
         'aceptado': 'b-accepted',
@@ -133,7 +138,10 @@ function badgeStatus(s) {
         else if (estadoLower.includes('revisión') || estadoLower.includes('revision') || estadoLower.includes('proceso')) clase = 'b-review';
         else if (estadoLower.includes('validado') || estadoLower.includes('validada')) clase = 'b-validated';
         else if (estadoLower.includes('generada') || estadoLower.includes('generado')) clase = 'b-generated';
-        else if (estadoLower.includes('emitida') || estadoLower.includes('emitido')) clase = 'b-ok';  // 🔥 CAMBIADO
+        else if (estadoLower.includes('emitida') || estadoLower.includes('emitido')) clase = 'b-ok';
+        else if (estadoLower.includes('despachado') || estadoLower.includes('entregado')) clase = 'b-info';  // 🔥 AZUL
+        else if (estadoLower.includes('pendiente despacho') || estadoLower.includes('pendiente')) clase = 'b-draft';  // 🔥 ROJO
+        else if (estadoLower.includes('en preparación')) clase = 'b-pending';  // AMARILLO
         else if (estadoLower.includes('aceptada') || estadoLower.includes('aceptado')) clase = 'b-accepted';
         else if (estadoLower.includes('anulada') || estadoLower.includes('anulado') || estadoLower.includes('cancelada') || estadoLower.includes('cancelado')) clase = 'b-canceled';
         else if (estadoLower.includes('no concretada') || estadoLower.includes('no concretado') || estadoLower.includes('perdida') || estadoLower.includes('perdido')) clase = 'b-lost';
@@ -143,7 +151,6 @@ function badgeStatus(s) {
     // Renderizar el badge con la clase correspondiente
     return `<span class="badge ${clase}">${estado || 'Sin estado'}</span>`;
 }
-
 
 
 function options(arr, selected = '') {
