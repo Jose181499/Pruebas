@@ -1274,11 +1274,53 @@ function renderDespachos() {
     const q = document.getElementById('despachoSearch')?.value?.toLowerCase() || '';
     const st = document.getElementById('despachoStatus')?.value || '';
     
+    // 🔽 FILTRO POR FECHAS
+    const fechaInicio = document.getElementById('despachoFechaInicio')?.value || '';
+    const fechaFin = document.getElementById('despachoFechaFin')?.value || '';
+    
     const list = despachosData.filter(r => {
         const searchStr = `${r.numero || ''} ${r.cliente || ''} ${r.pc_numero || ''} ${r.destino || ''}`.toLowerCase();
         const matchText = !q || searchStr.includes(q);
         const matchStatus = !st || r.estado === st;
-        return matchText && matchStatus;
+        
+        // 🔽 FILTRO POR FECHAS
+        let matchFecha = true;
+        if (fechaInicio || fechaFin) {
+            let fechaDespacho = r.fecha_despacho || r.fecha || r.created_at || '';
+            let fechaObj = null;
+            try {
+                if (typeof fechaDespacho === 'string') {
+                    fechaObj = new Date(fechaDespacho);
+                    if (fechaDespacho.includes('/')) {
+                        const partes = fechaDespacho.split(/[\/\s:]/);
+                        if (partes.length >= 3) {
+                            fechaObj = new Date(partes[2], partes[1] - 1, partes[0]);
+                        }
+                    }
+                } else if (fechaDespacho instanceof Date) {
+                    fechaObj = fechaDespacho;
+                }
+            } catch (e) {
+                fechaObj = null;
+            }
+            
+            if (fechaObj && !isNaN(fechaObj.getTime())) {
+                const fechaStr = fechaObj.toISOString().split('T')[0];
+                if (fechaInicio && fechaFin) {
+                    matchFecha = fechaStr >= fechaInicio && fechaStr <= fechaFin;
+                } else if (fechaInicio) {
+                    matchFecha = fechaStr >= fechaInicio;
+                } else if (fechaFin) {
+                    matchFecha = fechaStr <= fechaFin;
+                }
+            } else {
+                if (fechaInicio || fechaFin) {
+                    matchFecha = false;
+                }
+            }
+        }
+        
+        return matchText && matchStatus && matchFecha;
     });
     
     const tbody = document.getElementById('despachoRows');
@@ -1291,7 +1333,7 @@ function renderDespachos() {
     
     tbody.innerHTML = list.map((r, i) => {
         // ============================================================
-        // 🔽 FORMATEAR FECHA CON HORA
+        // FORMATEAR FECHA CON HORA
         // ============================================================
         let fechaDisplay = '-';
         const fechaRaw = r.fecha_despacho || r.fecha || r.created_at;
@@ -1299,16 +1341,12 @@ function renderDespachos() {
         if (fechaRaw) {
             try {
                 let fecha = new Date(fechaRaw);
-                
-                // Si la fecha es válida
                 if (!isNaN(fecha.getTime())) {
                     const dia = String(fecha.getDate()).padStart(2, '0');
                     const mes = String(fecha.getMonth() + 1).padStart(2, '0');
                     const anio = fecha.getFullYear();
                     const horas = String(fecha.getHours()).padStart(2, '0');
                     const minutos = String(fecha.getMinutes()).padStart(2, '0');
-                    
-                    // Mostrar siempre con hora, aunque sea 00:00
                     fechaDisplay = `${dia}/${mes}/${anio} ${horas}:${minutos}`;
                 } else {
                     fechaDisplay = String(fechaRaw);
@@ -1338,7 +1376,6 @@ function renderDespachos() {
         </tr>`;
     }).join('');
 }
-
 // ============================================================
 // 🔽 FUNCIÓN PARA FORMATEAR FECHA DE DESPACHO (CON HORA)
 // ============================================================
@@ -1549,15 +1586,58 @@ function formatearFechaGuia(fechaStr) {
     }
 }
 
+
 function renderGuias() {
     const q = document.getElementById('guiaSearch')?.value?.toLowerCase() || '';
     const st = document.getElementById('guiaStatus')?.value || '';
+    
+    // 🔽 FILTRO POR FECHAS
+    const fechaInicio = document.getElementById('guiaFechaInicio')?.value || '';
+    const fechaFin = document.getElementById('guiaFechaFin')?.value || '';
     
     const list = guiasData.filter(r => {
         const searchStr = `${r.numero || ''} ${r.serie || ''} ${r.cliente || ''} ${r.ruc || ''}`.toLowerCase();
         const matchText = !q || searchStr.includes(q);
         const matchStatus = !st || r.estado === st;
-        return matchText && matchStatus;
+        
+        // 🔽 FILTRO POR FECHAS
+        let matchFecha = true;
+        if (fechaInicio || fechaFin) {
+            let fechaGuia = r.fecha || r.created_at || '';
+            let fechaObj = null;
+            try {
+                if (typeof fechaGuia === 'string') {
+                    fechaObj = new Date(fechaGuia);
+                    if (fechaGuia.includes('/')) {
+                        const partes = fechaGuia.split(/[\/\s:]/);
+                        if (partes.length >= 3) {
+                            fechaObj = new Date(partes[2], partes[1] - 1, partes[0]);
+                        }
+                    }
+                } else if (fechaGuia instanceof Date) {
+                    fechaObj = fechaGuia;
+                }
+            } catch (e) {
+                fechaObj = null;
+            }
+            
+            if (fechaObj && !isNaN(fechaObj.getTime())) {
+                const fechaStr = fechaObj.toISOString().split('T')[0];
+                if (fechaInicio && fechaFin) {
+                    matchFecha = fechaStr >= fechaInicio && fechaStr <= fechaFin;
+                } else if (fechaInicio) {
+                    matchFecha = fechaStr >= fechaInicio;
+                } else if (fechaFin) {
+                    matchFecha = fechaStr <= fechaFin;
+                }
+            } else {
+                if (fechaInicio || fechaFin) {
+                    matchFecha = false;
+                }
+            }
+        }
+        
+        return matchText && matchStatus && matchFecha;
     });
     
     const tbody = document.getElementById('guiaRows');
@@ -1586,15 +1666,60 @@ function renderGuias() {
         </tr>
     `).join('');
 }
+
+
+
 function renderComprobantes() {
     const q = document.getElementById('comprobanteSearch')?.value?.toLowerCase() || '';
     const st = document.getElementById('comprobanteStatus')?.value || '';
+    
+    // 🔽 FILTRO POR FECHAS
+    const fechaInicio = document.getElementById('comprobanteFechaInicio')?.value || '';
+    const fechaFin = document.getElementById('comprobanteFechaFin')?.value || '';
     
     const list = comprobantesData.filter(r => {
         const searchStr = `${r.numero || ''} ${r.serie || ''} ${r.cliente || ''} ${r.ruc || ''}`.toLowerCase();
         const matchText = !q || searchStr.includes(q);
         const matchStatus = !st || r.estado === st;
-        return matchText && matchStatus;
+        
+        // 🔽 FILTRO POR FECHAS
+        let matchFecha = true;
+        if (fechaInicio || fechaFin) {
+            let fechaComp = r.fecha || r.created_at || '';
+            let fechaObj = null;
+            try {
+                if (typeof fechaComp === 'string') {
+                    fechaObj = new Date(fechaComp);
+                    if (fechaComp.includes('/')) {
+                        const partes = fechaComp.split(/[\/\s:]/);
+                        if (partes.length >= 3) {
+                            fechaObj = new Date(partes[2], partes[1] - 1, partes[0]);
+                        }
+                    }
+                } else if (fechaComp instanceof Date) {
+                    fechaObj = fechaComp;
+                }
+            } catch (e) {
+                fechaObj = null;
+            }
+            
+            if (fechaObj && !isNaN(fechaObj.getTime())) {
+                const fechaStr = fechaObj.toISOString().split('T')[0];
+                if (fechaInicio && fechaFin) {
+                    matchFecha = fechaStr >= fechaInicio && fechaStr <= fechaFin;
+                } else if (fechaInicio) {
+                    matchFecha = fechaStr >= fechaInicio;
+                } else if (fechaFin) {
+                    matchFecha = fechaStr <= fechaFin;
+                }
+            } else {
+                if (fechaInicio || fechaFin) {
+                    matchFecha = false;
+                }
+            }
+        }
+        
+        return matchText && matchStatus && matchFecha;
     });
     
     const tbody = document.getElementById('comprobanteRows');
@@ -1622,6 +1747,54 @@ function renderComprobantes() {
             </td>
         </tr>
     `).join('');
+}
+
+// ============================================================
+// LIMPIAR FILTROS DE FECHA - DESPACHOS
+// ============================================================
+function clearDespachoDateFilter() {
+    console.log('🧹 Limpiando filtros de fecha de Despachos...');
+    
+    const fechaInicio = document.getElementById('despachoFechaInicio');
+    const fechaFin = document.getElementById('despachoFechaFin');
+    
+    if (fechaInicio) fechaInicio.value = '';
+    if (fechaFin) fechaFin.value = '';
+    
+    renderDespachos();
+    showToast('🧹 Filtros de fecha limpiados', 'info');
+}
+
+// ============================================================
+// LIMPIAR FILTROS DE FECHA - GUÍAS
+// ============================================================
+function clearGuiaDateFilter() {
+    console.log('🧹 Limpiando filtros de fecha de Guías...');
+    
+    const fechaInicio = document.getElementById('guiaFechaInicio');
+    const fechaFin = document.getElementById('guiaFechaFin');
+    
+    if (fechaInicio) fechaInicio.value = '';
+    if (fechaFin) fechaFin.value = '';
+    
+    renderGuias();
+    showToast('🧹 Filtros de fecha limpiados', 'info');
+}
+
+// ============================================================
+// LIMPIAR FILTROS DE FECHA - COMPROBANTES
+// ============================================================
+function clearComprobanteDateFilter() {
+    console.log('🧹 Limpiando filtros de fecha de Comprobantes...');
+    
+    const fechaInicio = document.getElementById('comprobanteFechaInicio');
+    const fechaFin = document.getElementById('comprobanteFechaFin');
+    
+    if (fechaInicio) fechaInicio.value = '';
+    if (fechaFin) fechaFin.value = '';
+    
+    renderComprobantes();
+    showToast('🧹 Filtros de fecha limpiados', 'info');
 }
 
 function renderNotas() {
@@ -10148,7 +10321,6 @@ window.initVentas = async function(tab) {
 // ============================================================
 // EVENT LISTENERS
 // ============================================================
-
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🔄 ventas.js: DOMContentLoaded');
     
@@ -10208,7 +10380,94 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Inicializar con el tab de la URL
+    // ============================================================
+    // EVENTOS PARA FILTROS DE FECHA - DESPACHOS
+    // ============================================================
+    const despachoFechaInicio = document.getElementById('despachoFechaInicio');
+    const despachoFechaFin = document.getElementById('despachoFechaFin');
+    
+    if (despachoFechaInicio) {
+        despachoFechaInicio.addEventListener('change', function() {
+            renderDespachos();
+        });
+    }
+    if (despachoFechaFin) {
+        despachoFechaFin.addEventListener('change', function() {
+            renderDespachos();
+        });
+    }
+    
+    // ============================================================
+    // EVENTOS PARA FILTROS DE FECHA - GUÍAS
+    // ============================================================
+    const guiaFechaInicio = document.getElementById('guiaFechaInicio');
+    const guiaFechaFin = document.getElementById('guiaFechaFin');
+    
+    if (guiaFechaInicio) {
+        guiaFechaInicio.addEventListener('change', function() {
+            renderGuias();
+        });
+    }
+    if (guiaFechaFin) {
+        guiaFechaFin.addEventListener('change', function() {
+            renderGuias();
+        });
+    }
+    
+    // ============================================================
+    // EVENTOS PARA FILTROS DE FECHA - COMPROBANTES (FACTURAS)
+    // ============================================================
+    const comprobanteFechaInicio = document.getElementById('comprobanteFechaInicio');
+    const comprobanteFechaFin = document.getElementById('comprobanteFechaFin');
+    
+    if (comprobanteFechaInicio) {
+        comprobanteFechaInicio.addEventListener('change', function() {
+            renderComprobantes();
+        });
+    }
+    if (comprobanteFechaFin) {
+        comprobanteFechaFin.addEventListener('change', function() {
+            renderComprobantes();
+        });
+    }
+    
+    // ============================================================
+    // EVENTOS PARA FILTROS DE FECHA - NOTAS DE CRÉDITO (opcional)
+    // ============================================================
+    const notaFechaInicio = document.getElementById('notaFechaInicio');
+    const notaFechaFin = document.getElementById('notaFechaFin');
+    
+    if (notaFechaInicio) {
+        notaFechaInicio.addEventListener('change', function() {
+            renderNotas();
+        });
+    }
+    if (notaFechaFin) {
+        notaFechaFin.addEventListener('change', function() {
+            renderNotas();
+        });
+    }
+    
+    // ============================================================
+    // EVENTOS PARA FILTROS DE FECHA - DEVOLUCIONES (opcional)
+    // ============================================================
+    const devolucionFechaInicio = document.getElementById('devolucionFechaInicio');
+    const devolucionFechaFin = document.getElementById('devolucionFechaFin');
+    
+    if (devolucionFechaInicio) {
+        devolucionFechaInicio.addEventListener('change', function() {
+            renderDevoluciones();
+        });
+    }
+    if (devolucionFechaFin) {
+        devolucionFechaFin.addEventListener('change', function() {
+            renderDevoluciones();
+        });
+    }
+    
+    // ============================================================
+    // INICIALIZAR CON EL TAB DE LA URL
+    // ============================================================
     const urlParams = new URLSearchParams(window.location.search);
     const tab = urlParams.get('tab') || 'cotizaciones';
     
@@ -10266,6 +10525,11 @@ window.solicitarCorreccion = solicitarCorreccion;
 window.generarOrdenCompra = generarOrdenCompra;
 window.enviarADespacho = enviarADespacho;
 
+
+
+window.clearDespachoDateFilter = clearDespachoDateFilter;
+window.clearGuiaDateFilter = clearGuiaDateFilter;
+window.clearComprobanteDateFilter = clearComprobanteDateFilter;
 // ============================================================
 // 5. FUNCIONES DE MODALES PRINCIPALES
 // ============================================================

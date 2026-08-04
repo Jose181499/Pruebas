@@ -2865,8 +2865,15 @@
                 <div class="master-title">🚚 Despachar</div>
                 <div class="master-subtitle">Pendientes de despacho e historial</div>
             </div>
-            <div class="search-box">
-                <input id="despachoSearch" placeholder="Buscar por despacho / cliente / PC...">
+            <div class="search-box" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <input id="despachoSearch" placeholder="Buscar por despacho / cliente / PC..." style="flex:1; min-width:150px;">
+                <!-- Filtro de fechas -->
+                <div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
+                    <input type="date" id="despachoFechaInicio" style="height:38px; border-radius:12px; border:1px solid #E5E7EB; padding:0 10px; font-weight:800; background:#fff; color:#0F172A; outline:none; font-size:11px; width:140px;" title="Fecha inicio">
+                    <span style="font-weight:900; color:#64748B; font-size:12px;">→</span>
+                    <input type="date" id="despachoFechaFin" style="height:38px; border-radius:12px; border:1px solid #E5E7EB; padding:0 10px; font-weight:800; background:#fff; color:#0F172A; outline:none; font-size:11px; width:140px;" title="Fecha fin">
+                    <button class="btn btn-secondary" onclick="clearDespachoDateFilter()" style="height:38px; padding:0 12px; font-size:11px;" title="Limpiar filtros">✕</button>
+                </div>
             </div>
             <div class="clean-actions">
                 <select id="despachoStatus">
@@ -2884,7 +2891,7 @@
                 <thead>
                     <tr>
                         <th>Item</th>
-                        <th>Fecha / Hora</th>  <!-- 🔽 CAMBIADO: antes decía "Fecha despacho" -->
+                        <th>Fecha / Hora</th>
                         <th>Estado</th>
                         <th>Despacho</th>
                         <th>PC</th>
@@ -2901,6 +2908,7 @@
     </div>
 </div>
 
+
 <!-- ============================================================ -->
 <!-- GUÍAS -->
 <!-- ============================================================ -->
@@ -2911,8 +2919,15 @@
                 <div class="master-title">📦 Guías de Remisión</div>
                 <div class="master-subtitle">Documentos de traslado de mercadería</div>
             </div>
-            <div class="search-box">
-                <input id="guiaSearch" placeholder="Buscar por guía / cliente / RUC...">
+            <div class="search-box" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <input id="guiaSearch" placeholder="Buscar por guía / cliente / RUC..." style="flex:1; min-width:150px;">
+                <!-- Filtro de fechas -->
+                <div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
+                    <input type="date" id="guiaFechaInicio" style="height:38px; border-radius:12px; border:1px solid #E5E7EB; padding:0 10px; font-weight:800; background:#fff; color:#0F172A; outline:none; font-size:11px; width:140px;" title="Fecha inicio">
+                    <span style="font-weight:900; color:#64748B; font-size:12px;">→</span>
+                    <input type="date" id="guiaFechaFin" style="height:38px; border-radius:12px; border:1px solid #E5E7EB; padding:0 10px; font-weight:800; background:#fff; color:#0F172A; outline:none; font-size:11px; width:140px;" title="Fecha fin">
+                    <button class="btn btn-secondary" onclick="clearGuiaDateFilter()" style="height:38px; padding:0 12px; font-size:11px;" title="Limpiar filtros">✕</button>
+                </div>
             </div>
             <div class="clean-actions">
                 <select id="guiaStatus">
@@ -2950,6 +2965,7 @@
     </div>
 </div>
 
+
 <!-- ============================================================ -->
 <!-- COMPROBANTES -->
 <!-- ============================================================ -->
@@ -2960,8 +2976,15 @@
                 <div class="master-title">🧾 Facturas y Boletas</div>
                 <div class="master-subtitle">Comprobantes emitidos a clientes</div>
             </div>
-            <div class="search-box">
-                <input id="comprobanteSearch" placeholder="Buscar por documento / cliente / RUC...">
+            <div class="search-box" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <input id="comprobanteSearch" placeholder="Buscar por documento / cliente / RUC..." style="flex:1; min-width:150px;">
+                <!-- Filtro de fechas -->
+                <div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
+                    <input type="date" id="comprobanteFechaInicio" style="height:38px; border-radius:12px; border:1px solid #E5E7EB; padding:0 10px; font-weight:800; background:#fff; color:#0F172A; outline:none; font-size:11px; width:140px;" title="Fecha inicio">
+                    <span style="font-weight:900; color:#64748B; font-size:12px;">→</span>
+                    <input type="date" id="comprobanteFechaFin" style="height:38px; border-radius:12px; border:1px solid #E5E7EB; padding:0 10px; font-weight:800; background:#fff; color:#0F172A; outline:none; font-size:11px; width:140px;" title="Fecha fin">
+                    <button class="btn btn-secondary" onclick="clearComprobanteDateFilter()" style="height:38px; padding:0 12px; font-size:11px;" title="Limpiar filtros">✕</button>
+                </div>
             </div>
             <div class="clean-actions">
                 <select id="comprobanteStatus">
