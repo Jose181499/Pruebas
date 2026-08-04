@@ -92,7 +92,6 @@ function today() {
     return new Date().toISOString().slice(0,10);
 }
 
-
 function badgeStatus(s) {
     const estado = String(s || '').trim();
     const estadoLower = estado.toLowerCase();
@@ -109,8 +108,8 @@ function badgeStatus(s) {
         'validada': 'b-validated',
         'generada': 'b-generated',
         'generado': 'b-generated',
-        'emitida': 'b-emitted',        
-        'emitido': 'b-emitted',        
+        'emitida': 'b-ok',        // 🔥 CAMBIADO: usa verde fluorescente
+        'emitido': 'b-ok',        // 🔥 CAMBIADO
         'aceptada por cliente': 'b-accepted',
         'aceptada': 'b-accepted',
         'aceptado': 'b-accepted',
@@ -134,7 +133,7 @@ function badgeStatus(s) {
         else if (estadoLower.includes('revisión') || estadoLower.includes('revision') || estadoLower.includes('proceso')) clase = 'b-review';
         else if (estadoLower.includes('validado') || estadoLower.includes('validada')) clase = 'b-validated';
         else if (estadoLower.includes('generada') || estadoLower.includes('generado')) clase = 'b-generated';
-        else if (estadoLower.includes('emitida') || estadoLower.includes('emitido')) clase = 'b-emitted';
+        else if (estadoLower.includes('emitida') || estadoLower.includes('emitido')) clase = 'b-ok';  // 🔥 CAMBIADO
         else if (estadoLower.includes('aceptada') || estadoLower.includes('aceptado')) clase = 'b-accepted';
         else if (estadoLower.includes('anulada') || estadoLower.includes('anulado') || estadoLower.includes('cancelada') || estadoLower.includes('cancelado')) clase = 'b-canceled';
         else if (estadoLower.includes('no concretada') || estadoLower.includes('no concretado') || estadoLower.includes('perdida') || estadoLower.includes('perdido')) clase = 'b-lost';
