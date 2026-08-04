@@ -1527,8 +1527,8 @@ def api_guias_guardar():
                 'success': True, 
                 'message': 'Guía creada correctamente', 
                 'data': {
-                    'id': result['id'],
-                    'numero': result['numero']
+                    'id': result[0]['id'],
+                    'numero': result[0]['numero']
                 }
             })
         

@@ -2023,6 +2023,11 @@ async function guardarCotizacion(estado) {
     descuento_monto: descuento,
     igv: igv,
     total: total,
+    seguimiento: document.getElementById('fSeguimiento')?.value || 'Helen Blas Príncipe',
+    motivo: document.getElementById('fMotivo')?.value || 'Solicitud única del cliente',
+    transporte: document.getElementById('fTransporte')?.value || 'Seleccione',
+    parihuela: document.getElementById('fParihuela')?.value || 'Seleccione',
+    nota_interna: document.getElementById('fNotaInterna')?.value?.trim() || '', 
     productos: quoteProducts.map(p => ({
         codigo: p.codigo,
         producto: p.producto || p.descripcion,
@@ -2032,12 +2037,7 @@ async function guardarCotizacion(estado) {
         um: p.um || 'NIU',
         cantidad: p.cantidad || 1,
         valorVenta: p.valorVenta || 0,
-        stock: p.stock || 0,
-          seguimiento: document.getElementById('fSeguimiento')?.value || 'Helen Blas Príncipe',
-    motivo: document.getElementById('fMotivo')?.value || 'Solicitud única del cliente',
-    transporte: document.getElementById('fTransporte')?.value || 'Seleccione',
-    parihuela: document.getElementById('fParihuela')?.value || 'Seleccione',
-    nota_interna: document.getElementById('fNotaInterna')?.value?.trim() 
+        stock: p.stock || 0
     }))
 };
         
