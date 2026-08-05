@@ -344,6 +344,214 @@ function renderRecepciones() {
     `).join('');
 }
 
+
+
+// ============================================================
+// FUNCIONES DE EDICIÓN - SOLICITUDES
+// ============================================================
+
+function editSolicitud(id) {
+    const solicitud = solicitudesData.find(s => s.id === id);
+    if (!solicitud) {
+        showToast('❌ Solicitud no encontrada', 'error');
+        return;
+    }
+    
+    // Abrir el modal
+    document.getElementById('solicitudModal').classList.add('show');
+    
+    // Llenar los campos con los datos de la solicitud
+    document.getElementById('solNumero').value = solicitud.numero || '';
+    document.getElementById('solFecha').value = solicitud.fecha ? solicitud.fecha.split('T')[0] : '';
+    document.getElementById('solProducto').value = solicitud.producto || '';
+    document.getElementById('solCantidad').value = solicitud.cantidad || 1;
+    document.getElementById('solUnidad').value = solicitud.unidad || 'UND';
+    document.getElementById('solArea').value = solicitud.area || '';
+    document.getElementById('solSolicitante').value = solicitud.solicitante || '';
+    document.getElementById('solUrgencia').value = solicitud.urgencia || 'Media';
+    document.getElementById('solJustificacion').value = solicitud.justificacion || '';
+    
+    // Guardar el ID en un campo oculto para saber que estamos editando
+    // Usamos un data attribute en el botón guardar
+    const saveBtn = document.querySelector('#solicitudModal .btn-primary');
+    if (saveBtn) {
+        saveBtn.dataset.editId = id;
+        saveBtn.textContent = '💾 Actualizar solicitud';
+    }
+    
+    // Cambiar el título del modal
+    document.getElementById('solicitudModalTitle').textContent = `✏️ Editar solicitud: ${solicitud.numero}`;
+    
+    showToast(`📝 Editando solicitud: ${solicitud.numero}`, 'info');
+}
+
+// ============================================================
+// FUNCIONES DE EDICIÓN - COMPARATIVOS
+// ============================================================
+
+function editComparativo(id) {
+    const comparativo = comparativosData.find(c => c.id === id);
+    if (!comparativo) {
+        showToast('❌ Comparativo no encontrado', 'error');
+        return;
+    }
+    
+    document.getElementById('comparativoModal').classList.add('show');
+    
+    document.getElementById('compNumero').value = comparativo.numero || '';
+    document.getElementById('compFecha').value = comparativo.fecha ? comparativo.fecha.split('T')[0] : '';
+    document.getElementById('compProducto').value = comparativo.producto || '';
+    
+    // Cargar proveedores en la tabla
+    const tbody = document.getElementById('comparativoItemsBody');
+    tbody.innerHTML = '';
+    
+    if (comparativo.proveedores && comparativo.proveedores.length > 0) {
+        comparativo.proveedores.forEach((p, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${index + 1}</td>
+                <td><input style="width:100%;border:none;background:transparent;padding:4px;" value="${p.nombre || ''}" placeholder="Nombre proveedor"></td>
+                <td><input style="width:100%;border:none;background:transparent;padding:4px;" value="${p.ruc || ''}" placeholder="RUC"></td>
+                <td><input type="number" step="0.01" style="width:100%;border:none;background:transparent;padding:4px;text-align:right;" value="${p.precio || 0}" placeholder="0.00"></td>
+                <td><input style="width:100%;border:none;background:transparent;padding:4px;" value="${p.plazo || ''}" placeholder="días"></td>
+                <td><input style="width:100%;border:none;background:transparent;padding:4px;" value="${p.condPago || 'Contado'}" placeholder="Contado/Crédito"></td>
+                <td><button onclick="this.closest('tr').remove();" style="background:transparent;border:none;color:#DC2626;cursor:pointer;font-size:16px;">✕</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } else {
+        // Agregar una fila vacía
+        addComparativoRow();
+    }
+    
+    const saveBtn = document.querySelector('#comparativoModal .btn-primary');
+    if (saveBtn) {
+        saveBtn.dataset.editId = id;
+        saveBtn.textContent = '💾 Actualizar comparativo';
+    }
+    
+    document.getElementById('comparativoModalTitle').textContent = `✏️ Editar comparativo: ${comparativo.numero}`;
+    showToast(`📝 Editando comparativo: ${comparativo.numero}`, 'info');
+}
+
+// ============================================================
+// FUNCIONES DE EDICIÓN - ÓRDENES DE COMPRA
+// ============================================================
+
+function editOrden(id) {
+    const orden = ordenesData.find(o => o.id === id);
+    if (!orden) {
+        showToast('❌ Orden no encontrada', 'error');
+        return;
+    }
+    
+    document.getElementById('ordenCompraModal').classList.add('show');
+    
+    document.getElementById('ordNumero').value = orden.numero || '';
+    document.getElementById('ordFecha').value = orden.fecha ? orden.fecha.split('T')[0] : '';
+    document.getElementById('ordProveedor').value = orden.proveedor || '';
+    document.getElementById('ordRuc').value = orden.ruc || '';
+    document.getElementById('ordCondPago').value = orden.condicion_pago || 'Contado';
+    document.getElementById('ordMoneda').value = orden.moneda || 'Soles (S/)';
+    
+    // Cargar items
+    const tbody = document.getElementById('ordenItemsBody');
+    tbody.innerHTML = '';
+    
+    if (orden.items && orden.items.length > 0) {
+        orden.items.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${index + 1}</td>
+                <td><input style="width:100%;border:none;background:transparent;padding:4px;" value="${item.producto || ''}" placeholder="Descripción del producto"></td>
+                <td><input type="number" style="width:70px;border:none;background:transparent;padding:4px;text-align:center;" value="${item.cantidad || 1}" onchange="calcularTotalOrden(this)"></td>
+                <td><input type="number" step="0.01" style="width:100px;border:none;background:transparent;padding:4px;text-align:right;" value="${item.precioUnitario || 0}" onchange="calcularTotalOrden(this)"></td>
+                <td style="font-weight:900;">S/ ${((item.cantidad || 0) * (item.precioUnitario || 0)).toFixed(2)}</td>
+                <td><button onclick="this.closest('tr').remove();calcularTotalOrdenGeneral();" style="background:transparent;border:none;color:#DC2626;cursor:pointer;font-size:16px;">✕</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } else {
+        addOrdenItemRow();
+    }
+    
+    calcularTotalOrdenGeneral();
+    
+    const saveBtn = document.querySelector('#ordenCompraModal .btn-primary');
+    if (saveBtn) {
+        saveBtn.dataset.editId = id;
+        saveBtn.textContent = '💾 Actualizar orden';
+    }
+    
+    document.getElementById('ordenCompraModalTitle').textContent = `✏️ Editar orden: ${orden.numero}`;
+    showToast(`📝 Editando orden: ${orden.numero}`, 'info');
+}
+
+// ============================================================
+// FUNCIONES DE EDICIÓN - COMPROBANTES PROVEEDOR
+// ============================================================
+
+function editComprobanteProveedor(id) {
+    const comprobante = comprobantesProveedorData.find(c => c.id === id);
+    if (!comprobante) {
+        showToast('❌ Comprobante no encontrado', 'error');
+        return;
+    }
+    
+    document.getElementById('comprobanteProveedorModal').classList.add('show');
+    
+    document.getElementById('cpTipo').value = comprobante.tipo || 'Factura';
+    document.getElementById('cpNumero').value = comprobante.numero || '';
+    document.getElementById('cpFecha').value = comprobante.fecha ? comprobante.fecha.split('T')[0] : '';
+    document.getElementById('cpMonto').value = comprobante.monto || 0;
+    document.getElementById('cpRuc').value = comprobante.ruc || '';
+    document.getElementById('cpProveedor').value = comprobante.proveedor || '';
+    document.getElementById('cpOrden').value = comprobante.orden || '';
+    document.getElementById('cpObs').value = comprobante.obs || '';
+    
+    const saveBtn = document.querySelector('#comprobanteProveedorModal .btn-primary');
+    if (saveBtn) {
+        saveBtn.dataset.editId = id;
+        saveBtn.textContent = '💾 Actualizar comprobante';
+    }
+    
+    document.getElementById('compProvModalTitle').textContent = `✏️ Editar comprobante: ${comprobante.numero}`;
+    showToast(`📝 Editando comprobante: ${comprobante.numero}`, 'info');
+}
+
+// ============================================================
+// FUNCIONES DE EDICIÓN - RECEPCIONES
+// ============================================================
+
+function editRecepcion(id) {
+    const recepcion = recepcionesData.find(r => r.id === id);
+    if (!recepcion) {
+        showToast('❌ Recepción no encontrada', 'error');
+        return;
+    }
+    
+    document.getElementById('recepcionModal').classList.add('show');
+    
+    document.getElementById('recNumero').value = recepcion.numero || '';
+    document.getElementById('recFecha').value = recepcion.fecha ? recepcion.fecha.split('T')[0] : '';
+    document.getElementById('recOrden').value = recepcion.orden || '';
+    document.getElementById('recProveedor').value = recepcion.proveedor || '';
+    document.getElementById('recProducto').value = recepcion.producto || '';
+    document.getElementById('recCantidad').value = recepcion.cantidad || 1;
+    document.getElementById('recUnidad').value = recepcion.unidad || 'UND';
+    document.getElementById('recEstadoMercaderia').value = recepcion.estadoMercaderia || 'Buen estado';
+    document.getElementById('recObs').value = recepcion.obs || '';
+    
+    const saveBtn = document.querySelector('#recepcionModal .btn-primary');
+    if (saveBtn) {
+        saveBtn.dataset.editId = id;
+        saveBtn.textContent = '💾 Actualizar recepción';
+    }
+    
+    document.getElementById('recepcionModalTitle').textContent = `✏️ Editar recepción: ${recepcion.numero}`;
+    showToast(`📝 Editando recepción: ${recepcion.numero}`, 'info');
+}
 // ============================================================
 // FUNCIONES DE KPI
 // ============================================================
@@ -600,9 +808,11 @@ function openSolicitudModal() {
     document.getElementById('solNumero').value = `SOL-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${String(solicitudesData.length + 1).padStart(4,'0')}`;
 }
 
+
 function saveSolicitud(estado) {
+    const editId = document.querySelector('#solicitudModal .btn-primary')?.dataset?.editId;
+    
     const data = {
-        id: solicitudesData.length + 1,
         numero: document.getElementById('solNumero').value,
         fecha: document.getElementById('solFecha').value,
         estado: estado,
@@ -615,10 +825,32 @@ function saveSolicitud(estado) {
         justificacion: document.getElementById('solJustificacion').value
     };
     
-    solicitudesData.push(data);
+    if (editId) {
+        // Editar existente
+        const index = solicitudesData.findIndex(s => s.id === parseInt(editId));
+        if (index !== -1) {
+            solicitudesData[index] = { ...solicitudesData[index], ...data };
+            showToast(`✅ Solicitud ${data.numero} actualizada`, 'success');
+        }
+    } else {
+        // Crear nueva
+        data.id = solicitudesData.length + 1;
+        solicitudesData.push(data);
+        showToast(`✅ Solicitud ${data.numero} guardada como "${estado}"`, 'success');
+    }
+    
+    // Limpiar el data attribute
+    const saveBtn = document.querySelector('#solicitudModal .btn-primary');
+    if (saveBtn) {
+        delete saveBtn.dataset.editId;
+        saveBtn.textContent = '📤 Enviar a aprobación';
+    }
+    
+    // Restaurar título
+    document.getElementById('solicitudModalTitle').textContent = '📋 Nueva solicitud de compra';
+    
     closeModal('solicitudModal');
     renderSolicitudes();
-    showToast(`✅ Solicitud ${data.numero} guardada como "${estado}"`, 'success');
 }
 
 // ============================================================
