@@ -1,4 +1,24 @@
+// ============================================================
+// COMPRAS - Módulo Principal
+// ============================================================
 
+// ============================================================
+// DATOS - DECLARADOS EN EL ÁMBITO GLOBAL
+// ============================================================
+
+// ✅ Asegurar que las variables existan en window (ámbito global)
+window.solicitudesData = [];
+window.comparativosData = [];
+window.ordenesData = [];
+window.comprobantesProveedorData = [];
+window.recepcionesData = [];
+
+// También como variables locales (por si acaso)
+let solicitudesData = window.solicitudesData;
+let comparativosData = window.comparativosData;
+let ordenesData = window.ordenesData;
+let comprobantesProveedorData = window.comprobantesProveedorData;
+let recepcionesData = window.recepcionesData;
 
 // ============================================================
 // FUNCIONES DE RENDERIZADO
