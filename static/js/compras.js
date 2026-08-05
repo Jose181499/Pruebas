@@ -3,22 +3,28 @@
 // ============================================================
 
 // ============================================================
-// DATOS - DECLARADOS EN EL ÁMBITO GLOBAL
+// DATOS - SINCronizados con window
 // ============================================================
 
-// ✅ Asegurar que las variables existan en window (ámbito global)
-window.solicitudesData = [];
-window.comparativosData = [];
-window.ordenesData = [];
-window.comprobantesProveedorData = [];
-window.recepcionesData = [];
+// Si window.ordenesData ya existe, usarlo, si no, crearlo
+if (typeof window.solicitudesData === 'undefined') window.solicitudesData = [];
+if (typeof window.comparativosData === 'undefined') window.comparativosData = [];
+if (typeof window.ordenesData === 'undefined') window.ordenesData = [];
+if (typeof window.comprobantesProveedorData === 'undefined') window.comprobantesProveedorData = [];
+if (typeof window.recepcionesData === 'undefined') window.recepcionesData = [];
 
-// También como variables locales (por si acaso)
+// Crear referencias locales que apunten a window
 let solicitudesData = window.solicitudesData;
 let comparativosData = window.comparativosData;
 let ordenesData = window.ordenesData;
 let comprobantesProveedorData = window.comprobantesProveedorData;
 let recepcionesData = window.recepcionesData;
+
+// ============================================================
+// FUNCIONES DE RENDERIZADO
+// ============================================================
+
+// ... el resto de tu código
 
 // ============================================================
 // FUNCIONES DE RENDERIZADO

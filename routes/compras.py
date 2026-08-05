@@ -209,8 +209,12 @@ def guardar_comparativo_db(data):
 # FUNCIONES DE AYUDA PARA ÓRDENES DE COMPRA
 # ============================================================
 
+# ============================================================
+# FUNCIONES DE AYUDA PARA ÓRDENES DE COMPRA (CORREGIDO)
+# ============================================================
+
 def obtener_ordenes_db():
-    """Obtiene todas las órdenes de compra"""
+    """Obtiene todas las órdenes de compra usando tu estructura real"""
     try:
         query = """
             SELECT 
@@ -226,8 +230,10 @@ def obtener_ordenes_db():
             ORDER BY id DESC
         """
         results = db_query(query)
+        
+        # Obtener items para cada orden
         for row in results:
-            # Intentar obtener items de otra tabla si existe
+            row['items'] = []
             if row.get('id'):
                 try:
                     items_query = """
@@ -237,20 +243,80 @@ def obtener_ordenes_db():
                     """
                     items = db_query(items_query, (row['id'],))
                     row['items'] = items if items else []
-                except:
+                except Exception as e:
+                    print(f"⚠️ Error obteniendo items para orden {row['id']}: {e}")
                     row['items'] = []
-            else:
-                row['items'] = []
+        
         return results
     except Exception as e:
         print(f"❌ Error en obtener_ordenes_db: {e}")
+        import traceback
+        traceback.print_exc()
         return []
 
+
 def guardar_orden_db(data):
-    """Guarda una nueva orden de compra"""
+    """Guarda una nueva orden de compra (usando tu estructura real)"""
     try:
         from datetime import datetime
         
+        # Si es actualización, usar UPDATE
+        if data.get('id'):
+            query = """
+                UPDATE ordenes_compra SET
+                    codigo_orden = %s,
+                    correlativo = %s,
+                    proveedor_id = %s,
+                    usuario_id = %s,
+                    estado = %s,
+                    subtotal = %s,
+                    igv = %s,
+                    total = %s,
+                    condicion_pago = %s,
+                    tiempo_entrega = %s,
+                    fecha_requerida = %s,
+                    lugar_entrega = %s,
+                    num_cotizacion = %s,
+                    nota_compra = %s,
+                    notas = %s,
+                    descuento_porcentaje = %s,
+                    descuento_monto = %s,
+                    descuento_tipo = %s,
+                    contacto_proveedor = %s,
+                    telefono_proveedor = %s,
+                    email_proveedor = %s,
+                    updated_at = NOW()
+                WHERE id = %s
+                RETURNING id, numero_orden
+            """
+            params = (
+                data.get('codigo_orden') or data.get('numero_orden'),
+                data.get('correlativo') or '00001',
+                data.get('proveedor_id'),
+                data.get('usuario_id') or session.get('usuario_id', 8),
+                data.get('estado', 'pendiente'),
+                float(data.get('subtotal', 0)),
+                float(data.get('igv', 0)),
+                float(data.get('total', 0)),
+                data.get('condicion_pago', 'Contado'),
+                data.get('tiempo_entrega', '5 días hábiles'),
+                data.get('fecha_requerida'),
+                data.get('lugar_entrega'),
+                data.get('num_cotizacion'),
+                data.get('nota_compra'),
+                data.get('notas'),
+                float(data.get('descuento_porcentaje', 0)),
+                float(data.get('descuento_monto', 0)),
+                data.get('descuento_tipo', 'porcentaje'),
+                data.get('contacto_proveedor'),
+                data.get('telefono_proveedor'),
+                data.get('email_proveedor'),
+                data['id']
+            )
+            result = db_query(query, params)
+            return result[0] if result else None
+        
+        # Si es nuevo, INSERT
         query = """
             INSERT INTO ordenes_compra (
                 numero_orden, codigo_orden, correlativo,
@@ -293,10 +359,11 @@ def guardar_orden_db(data):
         )
         
         result = db_query(query, params)
+        orden_id = result[0]['id'] if result else None
         
         # Guardar items si existen
         items = data.get('items', [])
-        if items and result:
+        if items and orden_id:
             for item in items:
                 try:
                     item_query = """
@@ -306,7 +373,7 @@ def guardar_orden_db(data):
                         ) VALUES (%s, %s, %s, %s, %s)
                     """
                     db_query(item_query, (
-                        result[0]['id'],
+                        orden_id,
                         item.get('producto'),
                         float(item.get('cantidad', 1)),
                         float(item.get('precio_unitario', 0)),
@@ -318,47 +385,42 @@ def guardar_orden_db(data):
         return result[0] if result else None
     except Exception as e:
         print(f"❌ Error en guardar_orden_db: {e}")
+        import traceback
+        traceback.print_exc()
         raise
 
-def guardar_orden_db(data):
-    """Guarda una nueva orden de compra"""
+
+def actualizar_orden_db(orden_id, data):
+    """Actualiza una orden de compra existente"""
     try:
-        items_json = json.dumps(data.get('items', []))
-        
         query = """
-            INSERT INTO ordenes_compra (
-                numero_orden, fecha, estado,
-                proveedor, ruc, condicion_pago, moneda,
-                subtotal, igv, total,
-                items_json, observaciones,
-                creado_por
-            ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-            )
+            UPDATE ordenes_compra SET
+                estado = %s,
+                condicion_pago = %s,
+                tiempo_entrega = %s,
+                fecha_requerida = %s,
+                lugar_entrega = %s,
+                nota_compra = %s,
+                notas = %s,
+                updated_at = NOW()
+            WHERE id = %s
             RETURNING id, numero_orden
         """
         params = (
-            data.get('numero_orden'),
-            data.get('fecha') or datetime.now().isoformat(),
-            data.get('estado', 'Borrador'),
-            data.get('proveedor'),
-            data.get('ruc'),
+            data.get('estado', 'pendiente'),
             data.get('condicion_pago', 'Contado'),
-            data.get('moneda', 'Soles (S/)'),
-            float(data.get('subtotal', 0)),
-            float(data.get('igv', 0)),
-            float(data.get('total', 0)),
-            items_json,
-            data.get('observaciones', ''),
-            data.get('creado_por') or session.get('usuario_id', 8)
+            data.get('tiempo_entrega', '5 días hábiles'),
+            data.get('fecha_requerida'),
+            data.get('lugar_entrega'),
+            data.get('nota_compra'),
+            data.get('notas'),
+            orden_id
         )
         result = db_query(query, params)
         return result[0] if result else None
     except Exception as e:
-        print(f"❌ Error en guardar_orden_db: {e}")
+        print(f"❌ Error en actualizar_orden_db: {e}")
         raise
-
-
 # ============================================================
 # FUNCIONES DE AYUDA PARA COMPROBANTES DE PROVEEDOR
 # ============================================================
@@ -716,26 +778,41 @@ def api_ordenes_listar():
         
         formatted_data = []
         for row in data:
+            # Obtener nombre del proveedor si existe
+            proveedor_nombre = None
+            if row.get('proveedor_id'):
+                try:
+                    prov_query = "SELECT razon_social FROM proveedores WHERE id = %s"
+                    prov_result = db_query(prov_query, (row['proveedor_id'],))
+                    if prov_result:
+                        proveedor_nombre = prov_result[0].get('razon_social')
+                except:
+                    pass
+            
             formatted_data.append({
                 'id': row.get('id'),
                 'numero': row.get('numero_orden'),
-                'fecha': row.get('fecha'),
+                'fecha': row.get('fecha_creacion'),
                 'estado': row.get('estado'),
-                'proveedor': row.get('proveedor'),
-                'ruc': row.get('ruc'),
+                'proveedor': proveedor_nombre or row.get('contacto_proveedor') or f"Proveedor ID: {row.get('proveedor_id')}",
+                'ruc': row.get('contacto_proveedor') and 'RUC no disponible',
                 'condicion_pago': row.get('condicion_pago'),
-                'moneda': row.get('moneda', 'Soles (S/)'),
+                'moneda': 'Soles (S/)',
                 'subtotal': float(row.get('subtotal', 0)),
                 'igv': float(row.get('igv', 0)),
                 'total': float(row.get('total', 0)),
                 'items': row.get('items', []),
-                'observaciones': row.get('observaciones', '')
+                'nota_compra': row.get('nota_compra', ''),
+                'notas': row.get('notas', '')
             })
         
         return jsonify({'success': True, 'data': formatted_data})
     except Exception as e:
         print(f"❌ Error en api_ordenes_listar: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @compras_bp.route('/compras/api/ordenes/guardar', methods=['POST'])
 @login_required
