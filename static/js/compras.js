@@ -834,9 +834,15 @@ function showToast(message, type = 'info') {
 // ============================================================
 // FUNCIÓN DE INICIALIZACIÓN PRINCIPAL
 // ============================================================
+// ============================================================
+// FUNCIÓN DE INICIALIZACIÓN PRINCIPAL (CORREGIDA)
+// ============================================================
 
-function initCompras(tabId) {
+async function initCompras(tabId) {
     console.log(`🔄 initCompras llamado con tab: ${tabId}`);
+    
+    // ✅ CARGAR DATOS DESDE LA API
+    await cargarDatosCompras();
     
     // Renderizar según el tab activo
     switch(tabId) {
@@ -859,6 +865,68 @@ function initCompras(tabId) {
             renderSolicitudes();
     }
 }
+
+// ============================================================
+// FUNCIÓN PARA CARGAR DATOS DESDE LA API
+// ============================================================
+
+async function cargarDatosCompras() {
+    console.log('📡 Cargando datos de compras desde la API...');
+    
+    try {
+        // 1. Cargar solicitudes
+        const solicitudesResp = await fetch('/compras/api/solicitudes/listar');
+        const solicitudesDataResp = await solicitudesResp.json();
+        if (solicitudesDataResp.success) {
+            window.solicitudesData = solicitudesDataResp.data || [];
+            solicitudesData = window.solicitudesData;
+            console.log(`✅ Solicitudes cargadas: ${solicitudesData.length}`);
+        }
+        
+        // 2. Cargar comparativos
+        const comparativosResp = await fetch('/compras/api/comparativos/listar');
+        const comparativosDataResp = await comparativosResp.json();
+        if (comparativosDataResp.success) {
+            window.comparativosData = comparativosDataResp.data || [];
+            comparativosData = window.comparativosData;
+            console.log(`✅ Comparativos cargados: ${comparativosData.length}`);
+        }
+        
+        // 3. Cargar órdenes
+        const ordenesResp = await fetch('/compras/api/ordenes/listar');
+        const ordenesDataResp = await ordenesResp.json();
+        if (ordenesDataResp.success) {
+            window.ordenesData = ordenesDataResp.data || [];
+            ordenesData = window.ordenesData;
+            console.log(`✅ Órdenes cargadas: ${ordenesData.length}`);
+        }
+        
+        // 4. Cargar comprobantes de proveedor
+        const compResp = await fetch('/compras/api/comprobantes-proveedor/listar');
+        const compDataResp = await compResp.json();
+        if (compDataResp.success) {
+            window.comprobantesProveedorData = compDataResp.data || [];
+            comprobantesProveedorData = window.comprobantesProveedorData;
+            console.log(`✅ Comprobantes cargados: ${comprobantesProveedorData.length}`);
+        }
+        
+        // 5. Cargar recepciones
+        const recepcionesResp = await fetch('/compras/api/recepciones/listar');
+        const recepcionesDataResp = await recepcionesResp.json();
+        if (recepcionesDataResp.success) {
+            window.recepcionesData = recepcionesDataResp.data || [];
+            recepcionesData = window.recepcionesData;
+            console.log(`✅ Recepciones cargadas: ${recepcionesData.length}`);
+        }
+        
+        console.log('✅ Todos los datos cargados correctamente');
+        
+    } catch (error) {
+        console.error('❌ Error cargando datos:', error);
+        showToast('Error al cargar datos de compras', 'error');
+    }
+}
+
 
 // Exponer funciones globalmente
 window.initCompras = initCompras;
