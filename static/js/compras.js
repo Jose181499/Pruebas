@@ -109,7 +109,7 @@ function renderComparativos() {
     }
     
     tbody.innerHTML = filtered.map((c, index) => {
-        const mejorPrecio = c.proveedores.reduce((min, p) => p.precio < min.precio ? p : min);
+       const mejorPrecio = c.proveedores.reduce((min, p) => p.precio < min.precio ? p : min, { precio: Infinity });
         return `
         <tr>
             <td>${index + 1}</td>
