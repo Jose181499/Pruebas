@@ -1,14 +1,14 @@
 /* ============================================================
-   COMPRAS - ESTILOS PRINCIPALES
+   COMPRAS - ESTILOS PRINCIPALES (COLOR ROJO COMO VENTAS)
    ============================================================ */
 
-/* Color principal: Verde (estilo compras) */
+/* Color principal: Rojo (mismo que Ventas) */
 :root {
-    --compras-primary: #059669;
-    --compras-primary-dark: #047857;
-    --compras-primary-light: #34D399;
-    --compras-bg: #F0FDF4;
-    --compras-border: #86EFAC;
+    --compras-primary: #EF233C;
+    --compras-primary-dark: #D91A30;
+    --compras-primary-light: #FCA5A5;
+    --compras-bg: #FFF1F2;
+    --compras-border: #FCA5A5;
 }
 
 /* ============================================================ */
@@ -125,11 +125,11 @@
     background: #F1F5F9;
 }
 .modal-foot .btn-primary {
-    background: #059669;
+    background: #EF233C;
     color: #fff;
 }
 .modal-foot .btn-primary:hover {
-    background: #047857;
+    background: #D91A30;
 }
 
 /* Fichas dentro de modales */
@@ -143,9 +143,9 @@
 
 .ficha-section-title {
     padding: 10px 14px;
-    background: #F8FAFC;
+    background: #FFF1F2;
     border-bottom: 1px solid #E2E8F0;
-    color: #059669;
+    color: #EF233C;
     font-size: 13px;
     font-weight: 1000;
     display: flex;
@@ -209,8 +209,8 @@
 .ficha-grid .form-field input:focus,
 .ficha-grid .form-field select:focus,
 .ficha-grid .form-field textarea:focus {
-    border-color: #059669;
-    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.10);
+    border-color: #EF233C;
+    box-shadow: 0 0 0 3px rgba(239, 35, 60, 0.10);
 }
 
 .ficha-grid .col-2 { grid-column: span 2; }

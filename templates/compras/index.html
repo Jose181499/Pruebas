@@ -16,7 +16,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/compras.css') }}">
 <style>
     /* ============================================================
-       ESTILOS CRÍTICOS PARA COMPRAS (COPIA DE VENTAS CON COLORES)
+       ESTILOS CRÍTICOS PARA COMPRAS - COLOR ROJO (ESTILO VENTAS)
        ============================================================ */
     
     /* Asegurar que las secciones se oculten/muestren correctamente */
@@ -34,9 +34,9 @@
         font-size: 12px;
     }
     .master-table thead th {
-        background: #F0FDF4 !important;
-        color: #065F46 !important;
-        border: 1px solid #86EFAC !important;
+        background: #FFF1F2 !important;
+        color: #7F1D1D !important;
+        border: 1px solid #FCA5A5 !important;
         padding: 8px 6px;
         font-weight: 900;
         text-align: center;
@@ -51,13 +51,13 @@
         vertical-align: middle;
     }
     .master-table tr:nth-child(even) td {
-        background: #F0FDF4;
+        background: #FFF5F6;
     }
     .master-table tr:hover td {
-        background: #ECFDF5;
+        background: #FFFDFE;
     }
     
-    /* Badges de estado - COLORES COMPRAS */
+    /* Badges de estado - COLORES ROJOS */
     .badge {
         display: inline-flex;
         align-items: center;
@@ -76,6 +76,8 @@
     .b-received { background: #B6FF7A; color: #0B5D1E; border-color: #7CFF3A; }
     .b-canceled { background: #FFE4E6; color: #BE123C; border-color: #FDA4AF; }
     .b-ok { background: #DCFCE7; color: #166534; border-color: #86EFAC; }
+    .b-gray { background: #F1F5F9; color: #475569; }
+    .b-info { background: #DBEAFE; color: #1D4ED8; border-color: #93C5FD; }
     
     /* Kebab button */
     .kebab {
@@ -91,10 +93,10 @@
     }
     .kebab:hover {
         background: #E2E8F0;
-        color: #059669;
+        color: #EF233C;
     }
     
-    /* Menu Pop - Fondo blanco con botones de color COMPRAS */
+    /* Menu Pop - Fondo blanco con botones de color ROJO */
     .menu-pop {
         position: fixed;
         z-index: 999;
@@ -126,7 +128,7 @@
         background: #F8FAFC;
     }
     
-    /* Colores para menú COMPRAS */
+    /* Colores para menú COMPRAS - ROJOS */
     .menu-pop .menu-approve { color: #059669; font-weight: 900; }
     .menu-pop .menu-approve:hover { background: #D1FAE5; color: #047857; }
     .menu-pop .menu-order { color: #7C3AED; font-weight: 900; }
@@ -165,14 +167,14 @@
         width: 4px;
         height: 36px;
         border-radius: 999px;
-        background: #059669;
+        background: #EF233C;  /* ROJO */
     }
     
     .master-title {
         display: inline-block;
         font-size: 18px;
         font-weight: 1000;
-        color: #059669;
+        color: #EF233C;  /* ROJO */
         letter-spacing: -.02em;
         padding-bottom: 4px;
     }
@@ -207,8 +209,8 @@
         outline: none;
     }
     .search-box input:focus {
-        border-color: #059669;
-        box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.10);
+        border-color: #EF233C;
+        box-shadow: 0 0 0 3px rgba(239, 35, 60, 0.10);
     }
     
     .clean-actions {
@@ -241,8 +243,8 @@
     }
     .btn:hover { transform: translateY(-1px); }
     
-    .btn-primary { background: #059669; color: #fff; }
-    .btn-primary:hover { background: #047857; }
+    .btn-primary { background: #EF233C; color: #fff; }
+    .btn-primary:hover { background: #D91A30; }
     
     .btn-secondary { background: #fff; color: #0F172A; border: 1px solid #E5E7EB; }
     .btn-secondary:hover { background: #F8FAFC; }
@@ -295,7 +297,7 @@
         flex-shrink: 0;
     }
     .tab-btn:hover { background: #F1F5F9; }
-    .tab-btn.active { background: #059669; color: #fff; }
+    .tab-btn.active { background: #EF233C; color: #fff; }
     
     /* KPI Cards */
     .status-board {
@@ -325,7 +327,7 @@
         font-weight: 1000;
         border: 2px solid transparent;
     }
-    .dot-total { background: #059669 !important; color: #FFFFFF !important; border-color: #34D399 !important; }
+    .dot-total { background: #EF233C !important; color: #FFFFFF !important; border-color: #FCA5A5 !important; box-shadow: 0 0 20px rgba(239,35,60,0.4); }
     .dot-draft { background: #F59E0B !important; color: #FFFFFF !important; border-color: #FBBF24 !important; }
     .dot-pending { background: #3B82F6 !important; color: #FFFFFF !important; border-color: #60A5FA !important; }
     .dot-approved { background: #10B981 !important; color: #FFFFFF !important; border-color: #34D399 !important; }
