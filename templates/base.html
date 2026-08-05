@@ -427,14 +427,14 @@
         </div>
         {% endif %}
 
-        <!-- TABS - SOLO PARA PRODUCTOS -->
-        {% if active_tab in ['nuevo', 'base-datos', 'comparativo'] %}
-        <div class="tabs">
-            <a href="/productos/nuevo" class="tab-btn {% if active_tab == 'nuevo' %}active{% endif %}">Nuevo producto</a>
-            <a href="/productos/base-datos" class="tab-btn {% if active_tab == 'base-datos' %}active{% endif %}">Base de datos: Producto</a>
-            <a href="/productos/comparativo" class="tab-btn {% if active_tab == 'comparativo' %}active{% endif %}">Comparativo costos</a>
-        </div>
-        {% endif %}
+       <!-- TABS - SOLO PARA PRODUCTOS (NO para Compras) -->
+{% if '/productos' in request.path and active_tab in ['nuevo', 'base-datos', 'comparativo'] %}
+<div class="tabs">
+    <a href="/productos/nuevo" class="tab-btn {% if active_tab == 'nuevo' %}active{% endif %}">Nuevo producto</a>
+    <a href="/productos/base-datos" class="tab-btn {% if active_tab == 'base-datos' %}active{% endif %}">Base de datos: Producto</a>
+    <a href="/productos/comparativo" class="tab-btn {% if active_tab == 'comparativo' %}active{% endif %}">Comparativo costos</a>
+</div>
+{% endif %}
 
         <!-- TABS - PARA DASHBOARD (sin tabs) -->
         {% if active_tab is none or active_tab == '' %}

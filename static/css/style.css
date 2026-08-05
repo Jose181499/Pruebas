@@ -31,7 +31,7 @@ button,input,select{font:inherit}
 .sidebar{
   background:var(--empresa-sidebar);
   border-right:1px solid var(--line);
-  padding:8px 8px;
+  padding:0px 8px;
   overflow:auto;
 }
 .logo{
@@ -823,7 +823,7 @@ td{
 
 /* V35 - CORRELATIVOS EN UNA SOLA PANTALLA */
 .main{
-  padding:10px 14px 14px;
+  padding:0px 14px 14px;
 }
 .main-inner{
   max-width:1500px;
