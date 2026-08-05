@@ -29,7 +29,6 @@ let recepcionesData = window.recepcionesData;
 // ============================================================
 // FUNCIONES DE RENDERIZADO
 // ============================================================
-
 function renderSolicitudes() {
     const tbody = document.getElementById('solicitudRows');
     if (!tbody) return;
@@ -38,11 +37,19 @@ function renderSolicitudes() {
     const statusFilter = document.getElementById('solicitudStatus')?.value || '';
     
     let filtered = (solicitudesData || []).filter(s => {
+        // Filtro de búsqueda
         const matchSearch = (s.numero || '').toLowerCase().includes(search) ||
                            (s.producto || '').toLowerCase().includes(search) ||
-                           (s.solicitante || '').toLowerCase().includes(search);
+                           (s.solicitante || '').toLowerCase().includes(search) ||
+                           (s.area || '').toLowerCase().includes(search);
+        
+        // Filtro de estado
         const matchStatus = statusFilter === '' || s.estado === statusFilter;
-        return matchSearch && matchStatus;
+        
+        // Filtro de fechas
+        const matchFecha = filtrarPorFecha(s, 'solicitudFechaInicio', 'solicitudFechaFin');
+        
+        return matchSearch && matchStatus && matchFecha;
     });
     
     const countEl = document.getElementById('solicitudCount');
@@ -58,7 +65,7 @@ function renderSolicitudes() {
     tbody.innerHTML = filtered.map((s, index) => `
         <tr>
             <td>${index + 1}</td>
-            <td class="date-cell">${formatearFecha(s.fecha)}</td>  <!-- ✅ FORMATEADO -->
+            <td class="date-cell">${formatearFecha(s.fecha)}</td>
             <td><span class="badge ${getEstadoClass(s.estado)}">${s.estado || 'Borrador'}</span></td>
             <td><span class="code-pill">${s.numero || '-'}</span></td>
             <td class="left">${s.producto || '-'}</td>
@@ -134,11 +141,18 @@ function renderComparativos() {
     const statusFilter = document.getElementById('comparativoStatus')?.value || '';
     
     let filtered = (comparativosData || []).filter(c => {
+        // Filtro de búsqueda
         const matchSearch = (c.numero || '').toLowerCase().includes(search) ||
                            (c.producto || '').toLowerCase().includes(search) ||
                            (c.proveedores || []).some(p => (p.nombre || '').toLowerCase().includes(search));
+        
+        // Filtro de estado
         const matchStatus = statusFilter === '' || c.estado === statusFilter;
-        return matchSearch && matchStatus;
+        
+        // Filtro de fechas
+        const matchFecha = filtrarPorFecha(c, 'comparativoFechaInicio', 'comparativoFechaFin');
+        
+        return matchSearch && matchStatus && matchFecha;
     });
     
     const countEl = document.getElementById('comparativoCount');
@@ -161,7 +175,7 @@ function renderComparativos() {
             return `
             <tr>
                 <td>${index + 1}</td>
-                <td class="date-cell">${formatearFecha(c.fecha)}</td>  <!-- ✅ FORMATEADO -->
+                <td class="date-cell">${formatearFecha(c.fecha)}</td>
                 <td><span class="badge ${getEstadoClass(c.estado)}">${c.estado || 'Borrador'}</span></td>
                 <td><span class="code-pill">${c.numero || '-'}</span></td>
                 <td class="left">${c.producto || '-'}</td>
@@ -181,7 +195,7 @@ function renderComparativos() {
         return `
         <tr>
             <td>${index + 1}</td>
-            <td class="date-cell">${formatearFecha(c.fecha)}</td>  <!-- ✅ FORMATEADO -->
+            <td class="date-cell">${formatearFecha(c.fecha)}</td>
             <td><span class="badge ${getEstadoClass(c.estado)}">${c.estado || 'Borrador'}</span></td>
             <td><span class="code-pill">${c.numero || '-'}</span></td>
             <td class="left">${c.producto || '-'}</td>
@@ -209,11 +223,18 @@ function renderOrdenes() {
     const statusFilter = document.getElementById('ordenStatus')?.value || '';
     
     let filtered = (ordenesData || []).filter(o => {
+        // Filtro de búsqueda
         const matchSearch = (o.numero || '').toLowerCase().includes(search) ||
                            (o.proveedor || '').toLowerCase().includes(search) ||
                            (o.ruc || '').includes(search);
+        
+        // Filtro de estado
         const matchStatus = statusFilter === '' || o.estado === statusFilter;
-        return matchSearch && matchStatus;
+        
+        // Filtro de fechas
+        const matchFecha = filtrarPorFecha(o, 'ordenFechaInicio', 'ordenFechaFin');
+        
+        return matchSearch && matchStatus && matchFecha;
     });
     
     const countEl = document.getElementById('ordenCount');
@@ -229,7 +250,7 @@ function renderOrdenes() {
     tbody.innerHTML = filtered.map((o, index) => `
         <tr>
             <td>${index + 1}</td>
-            <td class="date-cell">${formatearFecha(o.fecha || o.fecha_creacion)}</td>  <!-- ✅ FORMATEADO -->
+            <td class="date-cell">${formatearFecha(o.fecha || o.fecha_creacion)}</td>
             <td><span class="badge ${getEstadoClass(o.estado)}">${o.estado || 'Borrador'}</span></td>
             <td><span class="code-pill">${o.numero || '-'}</span></td>
             <td class="left">${o.proveedor || '-'}</td>
@@ -259,11 +280,18 @@ function renderComprobantesProveedor() {
     const statusFilter = document.getElementById('compProvStatus')?.value || '';
     
     let filtered = (comprobantesProveedorData || []).filter(c => {
+        // Filtro de búsqueda
         const matchSearch = (c.numero || '').toLowerCase().includes(search) ||
                            (c.proveedor || '').toLowerCase().includes(search) ||
                            (c.ruc || '').includes(search);
+        
+        // Filtro de estado
         const matchStatus = statusFilter === '' || c.estado === statusFilter;
-        return matchSearch && matchStatus;
+        
+        // Filtro de fechas
+        const matchFecha = filtrarPorFecha(c, 'compProvFechaInicio', 'compProvFechaFin');
+        
+        return matchSearch && matchStatus && matchFecha;
     });
     
     const countEl = document.getElementById('compProvCount');
@@ -277,7 +305,7 @@ function renderComprobantesProveedor() {
     tbody.innerHTML = filtered.map((c, index) => `
         <tr>
             <td>${index + 1}</td>
-            <td class="date-cell">${formatearFecha(c.fecha)}</td>  <!-- ✅ FORMATEADO -->
+            <td class="date-cell">${formatearFecha(c.fecha)}</td>
             <td><span class="badge ${getEstadoClass(c.estado)}">${c.estado || 'Pendiente'}</span></td>
             <td>${c.tipo || 'Factura'}</td>
             <td><span class="code-pill">${c.numero || '-'}</span></td>
@@ -305,11 +333,19 @@ function renderRecepciones() {
     const statusFilter = document.getElementById('recepcionStatus')?.value || '';
     
     let filtered = (recepcionesData || []).filter(r => {
+        // Filtro de búsqueda
         const matchSearch = (r.numero || '').toLowerCase().includes(search) ||
                            (r.proveedor || '').toLowerCase().includes(search) ||
-                           (r.producto || '').toLowerCase().includes(search);
+                           (r.producto || '').toLowerCase().includes(search) ||
+                           (r.orden || '').toLowerCase().includes(search);
+        
+        // Filtro de estado
         const matchStatus = statusFilter === '' || r.estado === statusFilter;
-        return matchSearch && matchStatus;
+        
+        // Filtro de fechas
+        const matchFecha = filtrarPorFecha(r, 'recepcionFechaInicio', 'recepcionFechaFin');
+        
+        return matchSearch && matchStatus && matchFecha;
     });
     
     const countEl = document.getElementById('recepcionCount');
@@ -323,7 +359,7 @@ function renderRecepciones() {
     tbody.innerHTML = filtered.map((r, index) => `
         <tr>
             <td>${index + 1}</td>
-            <td class="date-cell">${formatearFecha(r.fecha)}</td>  <!-- ✅ FORMATEADO -->
+            <td class="date-cell">${formatearFecha(r.fecha)}</td>
             <td><span class="badge ${getEstadoClass(r.estado)}">${r.estado || 'Pendiente'}</span></td>
             <td><span class="code-pill">${r.numero || '-'}</span></td>
             <td><span class="code-pill">${r.orden || '-'}</span></td>
@@ -343,8 +379,6 @@ function renderRecepciones() {
         </tr>
     `).join('');
 }
-
-
 
 // ============================================================
 // FUNCIONES DE EDICIÓN - SOLICITUDES
@@ -853,6 +887,68 @@ function saveSolicitud(estado) {
     renderSolicitudes();
 }
 
+
+// ============================================================
+// FUNCIONES PARA FILTRAR POR FECHA
+// ============================================================
+
+function filtrarPorFecha(item, fechaInicioId, fechaFinId) {
+    const fechaInicio = document.getElementById(fechaInicioId)?.value;
+    const fechaFin = document.getElementById(fechaFinId)?.value;
+    
+    if (!fechaInicio && !fechaFin) return true;
+    
+    const fechaItem = item.fecha ? new Date(item.fecha) : null;
+    if (!fechaItem) return true;
+    
+    if (fechaInicio) {
+        const inicio = new Date(fechaInicio);
+        inicio.setHours(0, 0, 0, 0);
+        if (fechaItem < inicio) return false;
+    }
+    
+    if (fechaFin) {
+        const fin = new Date(fechaFin);
+        fin.setHours(23, 59, 59, 999);
+        if (fechaItem > fin) return false;
+    }
+    
+    return true;
+}
+
+// ============================================================
+// LIMPIAR FILTROS DE FECHA
+// ============================================================
+
+function clearSolicitudDateFilter() {
+    document.getElementById('solicitudFechaInicio').value = '';
+    document.getElementById('solicitudFechaFin').value = '';
+    renderSolicitudes();
+}
+
+function clearComparativoDateFilter() {
+    document.getElementById('comparativoFechaInicio').value = '';
+    document.getElementById('comparativoFechaFin').value = '';
+    renderComparativos();
+}
+
+function clearOrdenDateFilter() {
+    document.getElementById('ordenFechaInicio').value = '';
+    document.getElementById('ordenFechaFin').value = '';
+    renderOrdenes();
+}
+
+function clearCompProvDateFilter() {
+    document.getElementById('compProvFechaInicio').value = '';
+    document.getElementById('compProvFechaFin').value = '';
+    renderComprobantesProveedor();
+}
+
+function clearRecepcionDateFilter() {
+    document.getElementById('recepcionFechaInicio').value = '';
+    document.getElementById('recepcionFechaFin').value = '';
+    renderRecepciones();
+}
 // ============================================================
 // FUNCIONES DE EXPORTACIÓN
 // ============================================================

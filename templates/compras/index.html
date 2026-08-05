@@ -167,14 +167,14 @@
         width: 4px;
         height: 36px;
         border-radius: 999px;
-        background: #EF233C;  /* ROJO */
+        background: #EF233C;
     }
     
     .master-title {
         display: inline-block;
         font-size: 18px;
         font-weight: 1000;
-        color: #EF233C;  /* ROJO */
+        color: #EF233C;
         letter-spacing: -.02em;
         padding-bottom: 4px;
     }
@@ -188,6 +188,10 @@
     
     .search-box {
         position: relative;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
     }
     .search-box::before {
         content: "🔎";
@@ -196,8 +200,9 @@
         top: 9px;
         font-size: 13px;
         opacity: .65;
+        z-index: 1;
     }
-    .search-box input {
+    .search-box input[type="text"] {
         width: 100%;
         height: 38px;
         border-radius: 12px;
@@ -207,10 +212,50 @@
         background: #fff;
         color: #0F172A;
         outline: none;
+        flex: 1;
+        min-width: 150px;
     }
-    .search-box input:focus {
+    .search-box input[type="text"]:focus {
         border-color: #EF233C;
         box-shadow: 0 0 0 3px rgba(239, 35, 60, 0.10);
+    }
+    .search-box input[type="date"] {
+        height: 38px;
+        border-radius: 12px;
+        border: 1px solid #E5E7EB;
+        padding: 0 10px;
+        font-weight: 800;
+        background: #fff;
+        color: #0F172A;
+        outline: none;
+        font-size: 11px;
+        width: 140px;
+    }
+    .search-box input[type="date"]:focus {
+        border-color: #EF233C;
+        box-shadow: 0 0 0 3px rgba(239, 35, 60, 0.10);
+    }
+    .search-box .date-sep {
+        font-weight: 900;
+        color: #64748B;
+        font-size: 12px;
+    }
+    .search-box .btn-clear-date {
+        height: 38px;
+        padding: 0 12px;
+        font-size: 11px;
+        border-radius: 12px;
+        border: 1px solid #E5E7EB;
+        background: #fff;
+        color: #0F172A;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .search-box .btn-clear-date:hover {
+        background: #FEE2E2;
+        border-color: #FCA5A5;
+        color: #DC2626;
     }
     
     .clean-actions {
@@ -365,6 +410,7 @@
         .master-table { font-size: 10px; min-width: 700px; }
         .master-table thead th { font-size: 9px; padding: 4px; }
         .master-table td { font-size: 9px; padding: 4px; }
+        .search-box input[type="date"] { width: 100px; }
     }
 </style>
 {% endblock %}
@@ -383,9 +429,7 @@
 <!-- SOLICITUD DE COMPRA -->
 <!-- ============================================================ -->
 <div id="solicitud_compra" class="section active">
-    <div class="status-board" id="solicitudKPI">
-        <!-- KPIs desde JavaScript -->
-    </div>
+    <div class="status-board" id="solicitudKPI"></div>
     <div class="panel">
         <div class="clean-header">
             <div class="master-title-wrap">
@@ -394,6 +438,10 @@
             </div>
             <div class="search-box">
                 <input id="solicitudSearch" placeholder="Buscar por N° solicitud / producto / área...">
+                <input type="date" id="solicitudFechaInicio" title="Fecha inicio">
+                <span class="date-sep">→</span>
+                <input type="date" id="solicitudFechaFin" title="Fecha fin">
+                <button class="btn-clear-date" onclick="clearSolicitudDateFilter()" title="Limpiar filtros">✕</button>
             </div>
             <div class="clean-actions">
                 <select id="solicitudStatus">
@@ -436,9 +484,7 @@
 <!-- COMPARATIVO DE PROVEEDORES -->
 <!-- ============================================================ -->
 <div id="comparativo" class="section">
-    <div class="status-board" id="comparativoKPI">
-        <!-- KPIs desde JavaScript -->
-    </div>
+    <div class="status-board" id="comparativoKPI"></div>
     <div class="panel">
         <div class="clean-header">
             <div class="master-title-wrap">
@@ -447,6 +493,10 @@
             </div>
             <div class="search-box">
                 <input id="comparativoSearch" placeholder="Buscar por N° comparativo / proveedor / producto...">
+                <input type="date" id="comparativoFechaInicio" title="Fecha inicio">
+                <span class="date-sep">→</span>
+                <input type="date" id="comparativoFechaFin" title="Fecha fin">
+                <button class="btn-clear-date" onclick="clearComparativoDateFilter()" title="Limpiar filtros">✕</button>
             </div>
             <div class="clean-actions">
                 <select id="comparativoStatus">
@@ -488,9 +538,7 @@
 <!-- ORDEN DE COMPRA -->
 <!-- ============================================================ -->
 <div id="orden_compra" class="section">
-    <div class="status-board" id="ordenKPI">
-        <!-- KPIs desde JavaScript -->
-    </div>
+    <div class="status-board" id="ordenKPI"></div>
     <div class="panel">
         <div class="clean-header">
             <div class="master-title-wrap">
@@ -499,6 +547,10 @@
             </div>
             <div class="search-box">
                 <input id="ordenSearch" placeholder="Buscar por N° orden / proveedor / producto...">
+                <input type="date" id="ordenFechaInicio" title="Fecha inicio">
+                <span class="date-sep">→</span>
+                <input type="date" id="ordenFechaFin" title="Fecha fin">
+                <button class="btn-clear-date" onclick="clearOrdenDateFilter()" title="Limpiar filtros">✕</button>
             </div>
             <div class="clean-actions">
                 <select id="ordenStatus">
@@ -550,6 +602,10 @@
             </div>
             <div class="search-box">
                 <input id="compProvSearch" placeholder="Buscar por comprobante / proveedor / RUC...">
+                <input type="date" id="compProvFechaInicio" title="Fecha inicio">
+                <span class="date-sep">→</span>
+                <input type="date" id="compProvFechaFin" title="Fecha fin">
+                <button class="btn-clear-date" onclick="clearCompProvDateFilter()" title="Limpiar filtros">✕</button>
             </div>
             <div class="clean-actions">
                 <select id="compProvStatus">
@@ -599,6 +655,10 @@
             </div>
             <div class="search-box">
                 <input id="recepcionSearch" placeholder="Buscar por N° recepción / orden / producto...">
+                <input type="date" id="recepcionFechaInicio" title="Fecha inicio">
+                <span class="date-sep">→</span>
+                <input type="date" id="recepcionFechaFin" title="Fecha fin">
+                <button class="btn-clear-date" onclick="clearRecepcionDateFilter()" title="Limpiar filtros">✕</button>
             </div>
             <div class="clean-actions">
                 <select id="recepcionStatus">

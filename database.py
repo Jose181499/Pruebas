@@ -3834,3 +3834,296 @@ def verificar_usuario_local(usuario: str, password: str):
     except Exception as e:
         print(f"❌ Error en verificar_usuario_local: {e}")
         return None
+
+
+# ============================================================
+# FUNCIONES PARA EL MÓDULO DE COMPRAS
+# ============================================================
+
+# ============================================================
+# 1. SOLICITUDES DE COMPRA
+# ============================================================
+
+def obtener_solicitudes_db():
+    """Obtiene todas las solicitudes de compra"""
+    try:
+        query = """
+            SELECT 
+                id, numero_solicitud, fecha, estado,
+                producto, cantidad, unidad, area, solicitante,
+                urgencia, justificacion,
+                created_at, updated_at
+            FROM solicitudes_compra
+            ORDER BY id DESC
+        """
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_solicitudes_db: {e}")
+        return []
+
+def obtener_solicitud_por_id(solicitud_id):
+    """Obtiene una solicitud de compra por su ID"""
+    try:
+        query = """
+            SELECT 
+                id, numero_solicitud, fecha, estado,
+                producto, cantidad, unidad, area, solicitante,
+                urgencia, justificacion,
+                created_at, updated_at
+            FROM solicitudes_compra
+            WHERE id = %s
+        """
+        result = db_query(query, (solicitud_id,))
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en obtener_solicitud_por_id: {e}")
+        return None
+
+def guardar_solicitud_db(data):
+    """Guarda una nueva solicitud de compra"""
+    try:
+        query = """
+            INSERT INTO solicitudes_compra (
+                numero_solicitud, fecha, estado,
+                producto, cantidad, unidad, area, solicitante,
+                urgencia, justificacion,
+                creado_por
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            )
+            RETURNING id, numero_solicitud
+        """
+        params = (
+            data.get('numero_solicitud'),
+            data.get('fecha') or datetime.now().isoformat(),
+            data.get('estado', 'Borrador'),
+            data.get('producto'),
+            float(data.get('cantidad', 1)),
+            data.get('unidad', 'UND'),
+            data.get('area'),
+            data.get('solicitante'),
+            data.get('urgencia', 'Media'),
+            data.get('justificacion', ''),
+            data.get('creado_por')
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en guardar_solicitud_db: {e}")
+        raise
+
+def actualizar_solicitud_db(solicitud_id, data):
+    """Actualiza una solicitud de compra existente"""
+    try:
+        query = """
+            UPDATE solicitudes_compra SET
+                producto = %s,
+                cantidad = %s,
+                unidad = %s,
+                area = %s,
+                solicitante = %s,
+                urgencia = %s,
+                justificacion = %s,
+                estado = %s,
+                updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, numero_solicitud
+        """
+        params = (
+            data.get('producto'),
+            float(data.get('cantidad', 1)),
+            data.get('unidad', 'UND'),
+            data.get('area'),
+            data.get('solicitante'),
+            data.get('urgencia', 'Media'),
+            data.get('justificacion', ''),
+            data.get('estado', 'Borrador'),
+            solicitud_id
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en actualizar_solicitud_db: {e}")
+        raise
+
+def eliminar_solicitud_db(solicitud_id):
+    """Elimina una solicitud de compra"""
+    try:
+        query = "DELETE FROM solicitudes_compra WHERE id = %s RETURNING id"
+        result = db_query(query, (solicitud_id,))
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en eliminar_solicitud_db: {e}")
+        raise
+
+
+# ============================================================
+# 2. COMPARATIVOS DE PROVEEDORES
+# ============================================================
+
+def obtener_comparativos_db():
+    """Obtiene todos los comparativos de proveedores"""
+    try:
+        query = """
+            SELECT 
+                id, numero_comparativo, fecha, estado,
+                producto, proveedores_json,
+                created_at, updated_at
+            FROM comparativos_proveedores
+            ORDER BY id DESC
+        """
+        results = db_query(query)
+        for row in results:
+            if row.get('proveedores_json'):
+                try:
+                    import json
+                    row['proveedores'] = json.loads(row['proveedores_json'])
+                except:
+                    row['proveedores'] = []
+            else:
+                row['proveedores'] = []
+        return results
+    except Exception as e:
+        print(f"❌ Error en obtener_comparativos_db: {e}")
+        return []
+
+def guardar_comparativo_db(data):
+    """Guarda un nuevo comparativo de proveedores"""
+    try:
+        import json
+        proveedores_json = json.dumps(data.get('proveedores', []))
+        
+        query = """
+            INSERT INTO comparativos_proveedores (
+                numero_comparativo, fecha, estado,
+                producto, proveedores_json,
+                creado_por
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s
+            )
+            RETURNING id, numero_comparativo
+        """
+        params = (
+            data.get('numero_comparativo'),
+            data.get('fecha') or datetime.now().isoformat(),
+            data.get('estado', 'Borrador'),
+            data.get('producto'),
+            proveedores_json,
+            data.get('creado_por')
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en guardar_comparativo_db: {e}")
+        raise
+
+
+# ============================================================
+# 3. COMPROBANTES DE PROVEEDOR
+# ============================================================
+
+def obtener_comprobantes_proveedor_db():
+    """Obtiene todos los comprobantes de proveedor"""
+    try:
+        query = """
+            SELECT 
+                id, tipo, numero, fecha, monto,
+                ruc_proveedor, proveedor_nombre,
+                orden_compra, estado, observaciones,
+                created_at, updated_at
+            FROM comprobantes_proveedor
+            ORDER BY id DESC
+        """
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_comprobantes_proveedor_db: {e}")
+        return []
+
+def guardar_comprobante_proveedor_db(data):
+    """Guarda un nuevo comprobante de proveedor"""
+    try:
+        query = """
+            INSERT INTO comprobantes_proveedor (
+                tipo, numero, fecha, monto,
+                ruc_proveedor, proveedor_nombre,
+                orden_compra, estado, observaciones,
+                creado_por
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            )
+            RETURNING id, numero
+        """
+        params = (
+            data.get('tipo', 'Factura'),
+            data.get('numero'),
+            data.get('fecha') or datetime.now().isoformat(),
+            float(data.get('monto', 0)),
+            data.get('ruc'),
+            data.get('proveedor'),
+            data.get('orden_compra'),
+            data.get('estado', 'Pendiente'),
+            data.get('observaciones', ''),
+            data.get('creado_por')
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en guardar_comprobante_proveedor_db: {e}")
+        raise
+
+
+# ============================================================
+# 4. RECEPCIONES DE MERCADERÍA
+# ============================================================
+
+def obtener_recepciones_db():
+    """Obtiene todas las recepciones de mercadería"""
+    try:
+        query = """
+            SELECT 
+                id, numero_recepcion, fecha, estado,
+                orden_compra, proveedor_nombre,
+                producto, cantidad, unidad,
+                estado_mercaderia, observaciones,
+                created_at, updated_at
+            FROM recepciones_mercaderia
+            ORDER BY id DESC
+        """
+        return db_query(query)
+    except Exception as e:
+        print(f"❌ Error en obtener_recepciones_db: {e}")
+        return []
+
+def guardar_recepcion_db(data):
+    """Guarda una nueva recepción de mercadería"""
+    try:
+        query = """
+            INSERT INTO recepciones_mercaderia (
+                numero_recepcion, fecha, estado,
+                orden_compra, proveedor_nombre,
+                producto, cantidad, unidad,
+                estado_mercaderia, observaciones,
+                creado_por
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            )
+            RETURNING id, numero_recepcion
+        """
+        params = (
+            data.get('numero_recepcion'),
+            data.get('fecha') or datetime.now().isoformat(),
+            data.get('estado', 'Pendiente'),
+            data.get('orden_compra'),
+            data.get('proveedor'),
+            data.get('producto'),
+            float(data.get('cantidad', 1)),
+            data.get('unidad', 'UND'),
+            data.get('estado_mercaderia', 'Buen estado'),
+            data.get('observaciones', ''),
+            data.get('creado_por')
+        )
+        result = db_query(query, params)
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en guardar_recepcion_db: {e}")
+        raise
