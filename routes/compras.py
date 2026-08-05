@@ -205,24 +205,38 @@ def guardar_comparativo_db(data):
 # FUNCIONES DE AYUDA PARA ÓRDENES DE COMPRA
 # ============================================================
 
+# ============================================================
+# FUNCIONES DE AYUDA PARA ÓRDENES DE COMPRA
+# ============================================================
+
 def obtener_ordenes_db():
     """Obtiene todas las órdenes de compra"""
     try:
         query = """
             SELECT 
-                id, numero_orden, fecha, estado,
-                proveedor, ruc, condicion_pago, moneda,
-                subtotal, igv, total,
-                items_json, observaciones,
+                id, numero_orden, codigo_orden, correlativo,
+                proveedor_id, usuario_id, fecha_creacion, estado,
+                subtotal, igv, total, condicion_pago, tiempo_entrega,
+                fecha_requerida, lugar_entrega, num_cotizacion,
+                nota_compra, notas,
+                descuento_porcentaje, descuento_monto, descuento_tipo,
+                contacto_proveedor, telefono_proveedor, email_proveedor,
                 created_at, updated_at
             FROM ordenes_compra
             ORDER BY id DESC
         """
         results = db_query(query)
         for row in results:
-            if row.get('items_json'):
+            # Intentar obtener items de otra tabla si existe
+            if row.get('id'):
                 try:
-                    row['items'] = json.loads(row['items_json'])
+                    items_query = """
+                        SELECT producto, cantidad, precio_unitario, total
+                        FROM ordenes_compra_items
+                        WHERE orden_compra_id = %s
+                    """
+                    items = db_query(items_query, (row['id'],))
+                    row['items'] = items if items else []
                 except:
                     row['items'] = []
             else:
@@ -231,6 +245,80 @@ def obtener_ordenes_db():
     except Exception as e:
         print(f"❌ Error en obtener_ordenes_db: {e}")
         return []
+
+def guardar_orden_db(data):
+    """Guarda una nueva orden de compra"""
+    try:
+        from datetime import datetime
+        
+        query = """
+            INSERT INTO ordenes_compra (
+                numero_orden, codigo_orden, correlativo,
+                proveedor_id, usuario_id, estado,
+                subtotal, igv, total, condicion_pago, tiempo_entrega,
+                fecha_requerida, lugar_entrega, num_cotizacion,
+                nota_compra, notas,
+                descuento_porcentaje, descuento_monto, descuento_tipo,
+                contacto_proveedor, telefono_proveedor, email_proveedor
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s
+            )
+            RETURNING id, numero_orden
+        """
+        
+        params = (
+            data.get('numero_orden'),
+            data.get('codigo_orden') or data.get('numero_orden'),
+            data.get('correlativo') or '00001',
+            data.get('proveedor_id'),
+            data.get('usuario_id') or session.get('usuario_id', 8),
+            data.get('estado', 'pendiente'),
+            float(data.get('subtotal', 0)),
+            float(data.get('igv', 0)),
+            float(data.get('total', 0)),
+            data.get('condicion_pago', 'Contado'),
+            data.get('tiempo_entrega', '5 días hábiles'),
+            data.get('fecha_requerida'),
+            data.get('lugar_entrega'),
+            data.get('num_cotizacion'),
+            data.get('nota_compra'),
+            data.get('notas'),
+            float(data.get('descuento_porcentaje', 0)),
+            float(data.get('descuento_monto', 0)),
+            data.get('descuento_tipo', 'porcentaje'),
+            data.get('contacto_proveedor'),
+            data.get('telefono_proveedor'),
+            data.get('email_proveedor')
+        )
+        
+        result = db_query(query, params)
+        
+        # Guardar items si existen
+        items = data.get('items', [])
+        if items and result:
+            for item in items:
+                try:
+                    item_query = """
+                        INSERT INTO ordenes_compra_items (
+                            orden_compra_id, producto, cantidad, 
+                            precio_unitario, total
+                        ) VALUES (%s, %s, %s, %s, %s)
+                    """
+                    db_query(item_query, (
+                        result[0]['id'],
+                        item.get('producto'),
+                        float(item.get('cantidad', 1)),
+                        float(item.get('precio_unitario', 0)),
+                        float(item.get('total', 0))
+                    ))
+                except Exception as e:
+                    print(f"⚠️ Error guardando item: {e}")
+        
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Error en guardar_orden_db: {e}")
+        raise
 
 def guardar_orden_db(data):
     """Guarda una nueva orden de compra"""
