@@ -1,0 +1,63 @@
+<!-- MODAL COMPARATIVO DE PROVEEDORES -->
+<div class="modal-bg" id="comparativoModal">
+    <div class="modal-box" style="width:min(1100px,96vw); max-height:85vh;">
+        <div class="modal-head">
+            <div class="modal-title" id="comparativoModalTitle">📊 Nuevo comparativo de proveedores</div>
+            <button class="btn btn-secondary" style="background:transparent;color:#fff;border-color:#fff;padding:6px 14px;min-height:34px;border-radius:14px" onclick="closeModal('comparativoModal')">✕ Cerrar</button>
+        </div>
+        <div class="modal-body" id="comparativoForm">
+            <div class="ficha-section">
+                <div class="ficha-section-title">Datos del comparativo</div>
+                <div class="ficha-grid">
+                    <div class="form-field col-3">
+                        <label>N° Comparativo</label>
+                        <input id="compNumero" placeholder="CMP-20260713-0001">
+                    </div>
+                    <div class="form-field col-3">
+                        <label>Fecha</label>
+                        <input id="compFecha" type="date">
+                    </div>
+                    <div class="form-field col-6">
+                        <label>Producto</label>
+                        <input id="compProducto" placeholder="Descripción del producto a cotizar">
+                    </div>
+                </div>
+            </div>
+            <div class="ficha-section">
+                <div class="ficha-section-title">Proveedores</div>
+                <div class="table-scroll">
+                    <table class="master-table" style="font-size:11px;">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Proveedor</th>
+                                <th>RUC</th>
+                                <th>Precio</th>
+                                <th>Plazo entrega</th>
+                                <th>Cond. Pago</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparativoItemsBody">
+                            <tr>
+                                <td>1</td>
+                                <td><input style="width:100%;border:none;background:transparent;padding:4px;" placeholder="Nombre proveedor"></td>
+                                <td><input style="width:100%;border:none;background:transparent;padding:4px;" placeholder="RUC"></td>
+                                <td><input type="number" step="0.01" style="width:100%;border:none;background:transparent;padding:4px;text-align:right;" placeholder="0.00"></td>
+                                <td><input style="width:100%;border:none;background:transparent;padding:4px;" placeholder="días"></td>
+                                <td><input style="width:100%;border:none;background:transparent;padding:4px;" placeholder="Contado/Crédito"></td>
+                                <td><button onclick="this.closest('tr').remove();" style="background:transparent;border:none;color:#DC2626;cursor:pointer;font-size:16px;">✕</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btn btn-soft" onclick="addComparativoRow()" style="margin:8px 12px;">+ Agregar proveedor</button>
+            </div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-secondary" onclick="closeModal('comparativoModal')">Cancelar</button>
+            <button class="btn btn-soft" onclick="saveComparativo('Borrador')">💾 Guardar borrador</button>
+            <button class="btn btn-primary" onclick="saveComparativo('En evaluación')">📤 Enviar a evaluación</button>
+        </div>
+    </div>
+</div>

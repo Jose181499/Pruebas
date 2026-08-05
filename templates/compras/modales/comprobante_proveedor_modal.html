@@ -1,0 +1,57 @@
+<!-- MODAL COMPROBANTE PROVEEDOR -->
+<div class="modal-bg" id="comprobanteProveedorModal">
+    <div class="modal-box" style="width:min(900px,96vw); max-height:85vh;">
+        <div class="modal-head">
+            <div class="modal-title" id="compProvModalTitle">🧾 Registrar comprobante de proveedor</div>
+            <button class="btn btn-secondary" style="background:transparent;color:#fff;border-color:#fff;padding:6px 14px;min-height:34px;border-radius:14px" onclick="closeModal('comprobanteProveedorModal')">✕ Cerrar</button>
+        </div>
+        <div class="modal-body" id="compProvForm">
+            <div class="ficha-section">
+                <div class="ficha-section-title">Datos del comprobante</div>
+                <div class="ficha-grid">
+                    <div class="form-field col-3">
+                        <label>Tipo</label>
+                        <select id="cpTipo">
+                            <option value="Factura">Factura</option>
+                            <option value="Boleta">Boleta</option>
+                            <option value="Nota de crédito">Nota de crédito</option>
+                        </select>
+                    </div>
+                    <div class="form-field col-3">
+                        <label>N° Comprobante</label>
+                        <input id="cpNumero" placeholder="F001-00000001">
+                    </div>
+                    <div class="form-field col-3">
+                        <label>Fecha</label>
+                        <input id="cpFecha" type="date">
+                    </div>
+                    <div class="form-field col-3">
+                        <label>Monto</label>
+                        <input id="cpMonto" type="number" step="0.01" placeholder="0.00">
+                    </div>
+                    <div class="form-field col-4">
+                        <label>RUC Proveedor</label>
+                        <input id="cpRuc" placeholder="RUC del proveedor">
+                    </div>
+                    <div class="form-field col-8">
+                        <label>Proveedor</label>
+                        <input id="cpProveedor" placeholder="Nombre del proveedor">
+                    </div>
+                    <div class="form-field col-6">
+                        <label>Orden de compra relacionada</label>
+                        <input id="cpOrden" placeholder="OC-20260713-0001">
+                    </div>
+                    <div class="form-field col-6">
+                        <label>Observación</label>
+                        <input id="cpObs" placeholder="Comentario adicional...">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-secondary" onclick="closeModal('comprobanteProveedorModal')">Cancelar</button>
+            <button class="btn btn-soft" onclick="saveComprobanteProveedor('Pendiente')">💾 Guardar pendiente</button>
+            <button class="btn btn-primary" onclick="saveComprobanteProveedor('Registrado')">✅ Registrar comprobante</button>
+        </div>
+    </div>
+</div>

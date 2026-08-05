@@ -3992,16 +3992,182 @@ function validatePedidoCompra(id) {
     );
 }
 
-function createDespachoFromPedido(id) {
-    showToast('Despacho creado desde PC', 'success');
+
+//==========================================================
+//Crear el despacho desde el PC
+//==========================================================
+async function createDespachoFromPedido(id) {
+    try {
+        showToast('⏳ Creando despacho desde el PC...', 'info');
+
+        const response = await apiFetch(`/ventas/api/pedido-compra/${id}`);
+        if (!response.success) {
+            showToast('❌ No se pudo obtener el PC: ' + (response.error || 'Desconocido'), 'error');
+            return;
+        }
+        const pc = response.data;
+
+        const payload = {
+            pc_id: pc.id,
+            pc_numero: pc.numero || '',
+            cotizacion_id: pc.cotizacion_id || null,
+            cotizacion_numero: pc.cotizacion_numero || '',
+            cliente: pc.cliente || '',
+            ruc: pc.ruc || '',
+            destino: pc.lugar_entrega || pc.entrega || '',
+            origen: 'ALM-SMP',
+            estado: 'Pendiente despacho',
+            responsable: pc.responsable || 'Hellen',
+            observaciones: `Generado automáticamente desde PC ${pc.numero || ''}`
+        };
+
+        const result = await apiFetch('/ventas/api/despachos/guardar', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+
+        if (result.success) {
+            showToast(`✅ Despacho ${result.data.numero} creado desde PC ${pc.numero}`, 'success');
+            if (typeof loadDespachos === 'function') loadDespachos();
+        } else {
+            showToast('❌ Error al crear el despacho: ' + (result.error || 'Desconocido'), 'error');
+        }
+
+    } catch (error) {
+        console.error('❌ Error en createDespachoFromPedido:', error);
+        showToast('❌ Error al crear el despacho: ' + error.message, 'error');
+    }
 }
 
-function createGuiaFromPedido(id) {
-    showToast('Guía creada desde PC', 'success');
+//==========================================================
+//Crear la Guia desde el PC
+//==========================================================
+async function createGuiaFromPedido(id) {
+    try {
+        showToast('⏳ Creando guía desde el PC...', 'info');
+
+        // 1) Traer los datos completos del PC (mismo endpoint que ya usamos para editar)
+        const response = await apiFetch(`/ventas/api/pedido-compra/${id}`);
+        if (!response.success) {
+            showToast('❌ No se pudo obtener el PC: ' + (response.error || 'Desconocido'), 'error');
+            return;
+        }
+        const pc = response.data;
+
+        const items = (pc.items || []).map(it => ({
+            codigo: it.codigo || '',
+            producto: it.producto || '',
+            descripcion: it.producto || '',
+            marca: it.marca || '',
+            modelo: it.modelo || '',
+            cantidad: it.cantidad_pc || it.cantidad_cotizada || 1,
+            um: 'NIU'
+        }));
+
+        if (items.length === 0) {
+            showToast('⚠️ Este PC no tiene productos, no se puede crear la guía', 'warning');
+            return;
+        }
+
+        // 2) Armar el payload con las mismas claves que espera /ventas/api/guias/guardar
+        const payload = {
+            ruc: pc.ruc || '',
+            cliente: pc.cliente || '',
+            destino: pc.lugar_entrega || pc.entrega || '',
+            motivo_traslado: 'VENTA',
+            cotizacion_numero: pc.cotizacion_numero || pc.numero || '',
+            peso_total: 0,
+            items: items,
+            observaciones: `Generado automáticamente desde PC ${pc.numero || ''}`,
+            estado: 'BORRADOR'
+        };
+
+        // 3) Guardar de verdad
+        const result = await apiFetch('/ventas/api/guias/guardar', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+
+        if (result.success) {
+            showToast(`✅ Guía ${result.data.numero} creada desde PC ${pc.numero}`, 'success');
+            if (typeof loadGuias === 'function') loadGuias();
+        } else {
+            showToast('❌ Error al crear la guía: ' + (result.error || 'Desconocido'), 'error');
+        }
+
+    } catch (error) {
+        console.error('❌ Error en createGuiaFromPedido:', error);
+        showToast('❌ Error al crear la guía: ' + error.message, 'error');
+    }
 }
 
-function createFacturaFromPedido(id) {
-    showToast('Factura creada desde PC', 'success');
+//==========================================================
+//Crear la factura desde el PC
+//==========================================================
+async function createFacturaFromPedido(id) {
+    try {
+        showToast('⏳ Creando factura desde el PC...', 'info');
+
+        const response = await apiFetch(`/ventas/api/pedido-compra/${id}`);
+        if (!response.success) {
+            showToast('❌ No se pudo obtener el PC: ' + (response.error || 'Desconocido'), 'error');
+            return;
+        }
+        const pc = response.data;
+
+        const items = (pc.items || []).map(it => ({
+            codigo: it.codigo || '',
+            producto: it.producto || '',
+            descripcion: it.producto || '',
+            marca: it.marca || '',
+            modelo: it.modelo || '',
+            cantidad: it.cantidad_pc || it.cantidad_cotizada || 1,
+            valorVenta: it.precio_pc || it.precio_cotizado || 0,
+            um: 'NIU'
+        }));
+
+        if (items.length === 0) {
+            showToast('⚠️ Este PC no tiene productos, no se puede crear la factura', 'warning');
+            return;
+        }
+
+        const subtotal = items.reduce((s, it) => s + (Number(it.cantidad) * Number(it.valorVenta)), 0);
+        const igv = subtotal * 0.18;
+        const total = subtotal + igv;
+
+        const payload = {
+            tipo: 'FACTURA',
+            serie: 'F001',
+            moneda: 'PEN',
+            cliente_tipo_doc: 'RUC',
+            ruc: pc.ruc || '',
+            cliente: pc.cliente || '',
+            direccion: pc.lugar_entrega || pc.entrega || '',
+            subtotal: subtotal,
+            igv: igv,
+            total: total,
+            items: items,
+            observaciones: `Generado automáticamente desde PC ${pc.numero || ''}`,
+            estado: 'BORRADOR',
+            cotizacion: pc.cotizacion_numero || ''
+        };
+
+        const result = await apiFetch('/ventas/api/comprobantes/guardar', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+
+        if (result.success) {
+            showToast(`✅ Factura creada desde PC ${pc.numero}`, 'success');
+            if (typeof loadComprobantes === 'function') loadComprobantes();
+        } else {
+            showToast('❌ Error al crear la factura: ' + (result.error || 'Desconocido'), 'error');
+        }
+
+    } catch (error) {
+        console.error('❌ Error en createFacturaFromPedido:', error);
+        showToast('❌ Error al crear la factura: ' + error.message, 'error');
+    }
 }
 
 function deletePedidoCompra(id) {

@@ -63,6 +63,8 @@ from routes.herramientas import herramientas_bp
 from routes.papelera import papelera_bp
 from routes.configuracion import configuracion_bp
 from routes.maestros import maestros_bp  # ← Este ya tiene sus propios endpoints
+from routes.compras import compras_bp
+
 
 # ==========================================
 # APP CONFIGURACIÓN
@@ -98,7 +100,8 @@ app.register_blueprint(reportes_bp)
 app.register_blueprint(herramientas_bp)
 app.register_blueprint(papelera_bp)
 app.register_blueprint(configuracion_bp)
-app.register_blueprint(maestros_bp)  # ← Este maneja /maestros/*
+app.register_blueprint(maestros_bp)  
+app.register_blueprint(compras_bp)
 
 # ==========================================
 # HELPERS
