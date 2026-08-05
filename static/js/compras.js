@@ -37,19 +37,17 @@ function renderSolicitudes() {
     const search = document.getElementById('solicitudSearch')?.value.toLowerCase() || '';
     const statusFilter = document.getElementById('solicitudStatus')?.value || '';
     
-    let filtered = solicitudesData.filter(s => {
-        const matchSearch = s.numero.toLowerCase().includes(search) ||
-                           s.producto.toLowerCase().includes(search) ||
-                           s.solicitante.toLowerCase().includes(search);
+    let filtered = (solicitudesData || []).filter(s => {
+        const matchSearch = (s.numero || '').toLowerCase().includes(search) ||
+                           (s.producto || '').toLowerCase().includes(search) ||
+                           (s.solicitante || '').toLowerCase().includes(search);
         const matchStatus = statusFilter === '' || s.estado === statusFilter;
         return matchSearch && matchStatus;
     });
     
-    // Actualizar contador
     const countEl = document.getElementById('solicitudCount');
-    if (countEl) countEl.textContent = `Mostrando ${filtered.length} de ${solicitudesData.length} solicitudes`;
+    if (countEl) countEl.textContent = `Mostrando ${filtered.length} de ${(solicitudesData || []).length} solicitudes`;
     
-    // Actualizar KPIs
     renderSolicitudKPI();
     
     if (filtered.length === 0) {
@@ -60,13 +58,13 @@ function renderSolicitudes() {
     tbody.innerHTML = filtered.map((s, index) => `
         <tr>
             <td>${index + 1}</td>
-            <td class="date-cell">${s.fecha}</td>
-            <td><span class="badge ${getEstadoClass(s.estado)}">${s.estado}</span></td>
-            <td><span class="code-pill">${s.numero}</span></td>
-            <td class="left">${s.producto}</td>
-            <td>${s.cantidad} ${s.unidad}</td>
-            <td>${s.area} / ${s.solicitante}</td>
-            <td><span class="badge ${s.urgencia === 'Alta' || s.urgencia === 'Urgente' ? 'b-pending' : 'b-ok'}">${s.urgencia}</span></td>
+            <td class="date-cell">${formatearFecha(s.fecha)}</td>  <!-- ✅ FORMATEADO -->
+            <td><span class="badge ${getEstadoClass(s.estado)}">${s.estado || 'Borrador'}</span></td>
+            <td><span class="code-pill">${s.numero || '-'}</span></td>
+            <td class="left">${s.producto || '-'}</td>
+            <td>${s.cantidad || 0} ${s.unidad || 'UND'}</td>
+            <td>${s.area || '-'} / ${s.solicitante || '-'}</td>
+            <td><span class="badge ${s.urgencia === 'Alta' || s.urgencia === 'Urgente' ? 'b-pending' : 'b-ok'}">${s.urgencia || 'Media'}</span></td>
             <td>
                 <button class="kebab" onclick="toggleMenu(event, 'solicitud-${s.id}')">⋯</button>
                 <div class="menu-pop" id="menu-solicitud-${s.id}" style="display:none;">
@@ -81,6 +79,53 @@ function renderSolicitudes() {
     `).join('');
 }
 
+
+// ============================================================
+// FUNCIÓN PARA FORMATEAR FECHAS
+// ============================================================
+
+function formatearFecha(fecha) {
+    if (!fecha) return '-';
+    
+    try {
+        // Si es string ISO, convertir a Date
+        const date = new Date(fecha);
+        
+        // Verificar si es una fecha válida
+        if (isNaN(date.getTime())) return fecha;
+        
+        // Formatear: DD/MM/YYYY HH:MM
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        
+        return `${day}/${month}/${year} ${hours}:${minutes}`;
+    } catch (e) {
+        return fecha;
+    }
+}
+
+// Versión solo fecha (sin hora)
+function formatearFechaCorta(fecha) {
+    if (!fecha) return '-';
+    
+    try {
+        const date = new Date(fecha);
+        if (isNaN(date.getTime())) return fecha;
+        
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        
+        return `${day}/${month}/${year}`;
+    } catch (e) {
+        return fecha;
+    }
+}
+
+
 function renderComparativos() {
     const tbody = document.getElementById('comparativoRows');
     if (!tbody) return;
@@ -88,19 +133,17 @@ function renderComparativos() {
     const search = document.getElementById('comparativoSearch')?.value.toLowerCase() || '';
     const statusFilter = document.getElementById('comparativoStatus')?.value || '';
     
-    let filtered = comparativosData.filter(c => {
-        const matchSearch = c.numero.toLowerCase().includes(search) ||
-                           c.producto.toLowerCase().includes(search) ||
-                           c.proveedores.some(p => p.nombre.toLowerCase().includes(search));
+    let filtered = (comparativosData || []).filter(c => {
+        const matchSearch = (c.numero || '').toLowerCase().includes(search) ||
+                           (c.producto || '').toLowerCase().includes(search) ||
+                           (c.proveedores || []).some(p => (p.nombre || '').toLowerCase().includes(search));
         const matchStatus = statusFilter === '' || c.estado === statusFilter;
         return matchSearch && matchStatus;
     });
     
-    // Actualizar contador
     const countEl = document.getElementById('comparativoCount');
-    if (countEl) countEl.textContent = `Mostrando ${filtered.length} de ${comparativosData.length} comparativos`;
+    if (countEl) countEl.textContent = `Mostrando ${filtered.length} de ${(comparativosData || []).length} comparativos`;
     
-    // Actualizar KPIs
     renderComparativoKPI();
     
     if (filtered.length === 0) {
@@ -109,17 +152,42 @@ function renderComparativos() {
     }
     
     tbody.innerHTML = filtered.map((c, index) => {
-       const mejorPrecio = c.proveedores.reduce((min, p) => p.precio < min.precio ? p : min, { precio: Infinity });
+        const mejorPrecio = (c.proveedores || []).reduce((min, p) => {
+            if (!min || min.precio === undefined) return p;
+            return (p.precio || 0) < (min.precio || 0) ? p : min;
+        }, null);
+        
+        if (!mejorPrecio) {
+            return `
+            <tr>
+                <td>${index + 1}</td>
+                <td class="date-cell">${formatearFecha(c.fecha)}</td>  <!-- ✅ FORMATEADO -->
+                <td><span class="badge ${getEstadoClass(c.estado)}">${c.estado || 'Borrador'}</span></td>
+                <td><span class="code-pill">${c.numero || '-'}</span></td>
+                <td class="left">${c.producto || '-'}</td>
+                <td class="left" colspan="3">Sin proveedores registrados</td>
+                <td>
+                    <button class="kebab" onclick="toggleMenu(event, 'comparativo-${c.id}')">⋯</button>
+                    <div class="menu-pop" id="menu-comparativo-${c.id}" style="display:none;">
+                        <button onclick="editComparativo(${c.id})">✏️ Editar</button>
+                        <button onclick="selectProveedor(${c.id})">✅ Seleccionar proveedor</button>
+                        <div class="menu-divider"></div>
+                        <button class="danger" onclick="deleteComparativo(${c.id})">🗑 Eliminar</button>
+                    </div>
+                </td>
+            </tr>`;
+        }
+        
         return `
         <tr>
             <td>${index + 1}</td>
-            <td class="date-cell">${c.fecha}</td>
-            <td><span class="badge ${getEstadoClass(c.estado)}">${c.estado}</span></td>
-            <td><span class="code-pill">${c.numero}</span></td>
-            <td class="left">${c.producto}</td>
-            <td class="left">${mejorPrecio.nombre}</td>
-            <td><b>S/${mejorPrecio.precio.toFixed(2)}</b></td>
-            <td>${mejorPrecio.plazo}</td>
+            <td class="date-cell">${formatearFecha(c.fecha)}</td>  <!-- ✅ FORMATEADO -->
+            <td><span class="badge ${getEstadoClass(c.estado)}">${c.estado || 'Borrador'}</span></td>
+            <td><span class="code-pill">${c.numero || '-'}</span></td>
+            <td class="left">${c.producto || '-'}</td>
+            <td class="left">${mejorPrecio.nombre || '-'}</td>
+            <td><b>S/${(mejorPrecio.precio || 0).toFixed(2)}</b></td>
+            <td>${mejorPrecio.plazo || '-'}</td>
             <td>
                 <button class="kebab" onclick="toggleMenu(event, 'comparativo-${c.id}')">⋯</button>
                 <div class="menu-pop" id="menu-comparativo-${c.id}" style="display:none;">
@@ -129,8 +197,8 @@ function renderComparativos() {
                     <button class="danger" onclick="deleteComparativo(${c.id})">🗑 Eliminar</button>
                 </div>
             </td>
-        </tr>
-    `}).join('');
+        </tr>`;
+    }).join('');
 }
 
 function renderOrdenes() {
@@ -140,19 +208,17 @@ function renderOrdenes() {
     const search = document.getElementById('ordenSearch')?.value.toLowerCase() || '';
     const statusFilter = document.getElementById('ordenStatus')?.value || '';
     
-    let filtered = ordenesData.filter(o => {
-        const matchSearch = o.numero.toLowerCase().includes(search) ||
-                           o.proveedor.toLowerCase().includes(search) ||
-                           o.ruc.includes(search);
+    let filtered = (ordenesData || []).filter(o => {
+        const matchSearch = (o.numero || '').toLowerCase().includes(search) ||
+                           (o.proveedor || '').toLowerCase().includes(search) ||
+                           (o.ruc || '').includes(search);
         const matchStatus = statusFilter === '' || o.estado === statusFilter;
         return matchSearch && matchStatus;
     });
     
-    // Actualizar contador
     const countEl = document.getElementById('ordenCount');
-    if (countEl) countEl.textContent = `Mostrando ${filtered.length} de ${ordenesData.length} órdenes`;
+    if (countEl) countEl.textContent = `Mostrando ${filtered.length} de ${(ordenesData || []).length} órdenes`;
     
-    // Actualizar KPIs
     renderOrdenKPI();
     
     if (filtered.length === 0) {
@@ -163,14 +229,14 @@ function renderOrdenes() {
     tbody.innerHTML = filtered.map((o, index) => `
         <tr>
             <td>${index + 1}</td>
-            <td class="date-cell">${o.fecha}</td>
-            <td><span class="badge ${getEstadoClass(o.estado)}">${o.estado}</span></td>
-            <td><span class="code-pill">${o.numero}</span></td>
-            <td class="left">${o.proveedor}</td>
-            <td>${o.ruc}</td>
-            <td class="left">${o.items.map(i => i.producto).join(', ')}</td>
-            <td><b>${o.moneda} ${o.total.toFixed(2)}</b></td>
-            <td>${o.condPago}</td>
+            <td class="date-cell">${formatearFecha(o.fecha || o.fecha_creacion)}</td>  <!-- ✅ FORMATEADO -->
+            <td><span class="badge ${getEstadoClass(o.estado)}">${o.estado || 'Borrador'}</span></td>
+            <td><span class="code-pill">${o.numero || '-'}</span></td>
+            <td class="left">${o.proveedor || '-'}</td>
+            <td>${o.ruc || '-'}</td>
+            <td class="left">${(o.items || []).map(i => i.producto).join(', ') || '-'}</td>
+            <td><b>${o.moneda || 'S/'} ${(o.total || 0).toFixed(2)}</b></td>
+            <td>${o.condicion_pago || '-'}</td>
             <td>
                 <button class="kebab" onclick="toggleMenu(event, 'orden-${o.id}')">⋯</button>
                 <div class="menu-pop" id="menu-orden-${o.id}" style="display:none;">
@@ -192,17 +258,16 @@ function renderComprobantesProveedor() {
     const search = document.getElementById('compProvSearch')?.value.toLowerCase() || '';
     const statusFilter = document.getElementById('compProvStatus')?.value || '';
     
-    let filtered = comprobantesProveedorData.filter(c => {
-        const matchSearch = c.numero.toLowerCase().includes(search) ||
-                           c.proveedor.toLowerCase().includes(search) ||
-                           c.ruc.includes(search);
+    let filtered = (comprobantesProveedorData || []).filter(c => {
+        const matchSearch = (c.numero || '').toLowerCase().includes(search) ||
+                           (c.proveedor || '').toLowerCase().includes(search) ||
+                           (c.ruc || '').includes(search);
         const matchStatus = statusFilter === '' || c.estado === statusFilter;
         return matchSearch && matchStatus;
     });
     
-    // Actualizar contador
     const countEl = document.getElementById('compProvCount');
-    if (countEl) countEl.textContent = `Mostrando ${filtered.length} de ${comprobantesProveedorData.length} comprobantes`;
+    if (countEl) countEl.textContent = `Mostrando ${filtered.length} de ${(comprobantesProveedorData || []).length} comprobantes`;
     
     if (filtered.length === 0) {
         tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:20px;color:#94A3B8;">No hay comprobantes de proveedor</td></tr>`;
@@ -212,13 +277,13 @@ function renderComprobantesProveedor() {
     tbody.innerHTML = filtered.map((c, index) => `
         <tr>
             <td>${index + 1}</td>
-            <td class="date-cell">${c.fecha}</td>
-            <td><span class="badge ${getEstadoClass(c.estado)}">${c.estado}</span></td>
-            <td>${c.tipo}</td>
-            <td><span class="code-pill">${c.numero}</span></td>
-            <td>${c.ruc}</td>
-            <td class="left">${c.proveedor}</td>
-            <td><b>S/${c.monto.toFixed(2)}</b></td>
+            <td class="date-cell">${formatearFecha(c.fecha)}</td>  <!-- ✅ FORMATEADO -->
+            <td><span class="badge ${getEstadoClass(c.estado)}">${c.estado || 'Pendiente'}</span></td>
+            <td>${c.tipo || 'Factura'}</td>
+            <td><span class="code-pill">${c.numero || '-'}</span></td>
+            <td>${c.ruc || '-'}</td>
+            <td class="left">${c.proveedor || '-'}</td>
+            <td><b>S/${(c.monto || 0).toFixed(2)}</b></td>
             <td>
                 <button class="kebab" onclick="toggleMenu(event, 'comp-prov-${c.id}')">⋯</button>
                 <div class="menu-pop" id="menu-comp-prov-${c.id}" style="display:none;">
@@ -239,17 +304,16 @@ function renderRecepciones() {
     const search = document.getElementById('recepcionSearch')?.value.toLowerCase() || '';
     const statusFilter = document.getElementById('recepcionStatus')?.value || '';
     
-    let filtered = recepcionesData.filter(r => {
-        const matchSearch = r.numero.toLowerCase().includes(search) ||
-                           r.proveedor.toLowerCase().includes(search) ||
-                           r.producto.toLowerCase().includes(search);
+    let filtered = (recepcionesData || []).filter(r => {
+        const matchSearch = (r.numero || '').toLowerCase().includes(search) ||
+                           (r.proveedor || '').toLowerCase().includes(search) ||
+                           (r.producto || '').toLowerCase().includes(search);
         const matchStatus = statusFilter === '' || r.estado === statusFilter;
         return matchSearch && matchStatus;
     });
     
-    // Actualizar contador
     const countEl = document.getElementById('recepcionCount');
-    if (countEl) countEl.textContent = `Mostrando ${filtered.length} de ${recepcionesData.length} recepciones`;
+    if (countEl) countEl.textContent = `Mostrando ${filtered.length} de ${(recepcionesData || []).length} recepciones`;
     
     if (filtered.length === 0) {
         tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:20px;color:#94A3B8;">No hay recepciones</td></tr>`;
@@ -259,13 +323,13 @@ function renderRecepciones() {
     tbody.innerHTML = filtered.map((r, index) => `
         <tr>
             <td>${index + 1}</td>
-            <td class="date-cell">${r.fecha}</td>
-            <td><span class="badge ${getEstadoClass(r.estado)}">${r.estado}</span></td>
-            <td><span class="code-pill">${r.numero}</span></td>
-            <td><span class="code-pill">${r.orden}</span></td>
-            <td class="left">${r.proveedor}</td>
-            <td class="left">${r.producto}</td>
-            <td>${r.cantidad} ${r.unidad}</td>
+            <td class="date-cell">${formatearFecha(r.fecha)}</td>  <!-- ✅ FORMATEADO -->
+            <td><span class="badge ${getEstadoClass(r.estado)}">${r.estado || 'Pendiente'}</span></td>
+            <td><span class="code-pill">${r.numero || '-'}</span></td>
+            <td><span class="code-pill">${r.orden || '-'}</span></td>
+            <td class="left">${r.proveedor || '-'}</td>
+            <td class="left">${r.producto || '-'}</td>
+            <td>${r.cantidad || 0} ${r.unidad || 'UND'}</td>
             <td>
                 <button class="kebab" onclick="toggleMenu(event, 'recepcion-${r.id}')">⋯</button>
                 <div class="menu-pop" id="menu-recepcion-${r.id}" style="display:none;">
