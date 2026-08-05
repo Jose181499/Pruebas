@@ -109,7 +109,8 @@
                 </div>
 
                 
-                <!-- COMPRAS -->
+               
+<!-- COMPRAS -->
 <div class="menu-group" data-modulo="compras">
     <div class="menu-header-wrapper">
         <a href="/compras?tab=solicitud_compra" class="menu-header" style="text-decoration:none;flex:1;">
@@ -119,12 +120,14 @@
     </div>
     <div class="menu-children">
         <a href="/compras?tab=solicitud_compra" class="child-btn" data-screen="solicitud_compra" style="text-decoration:none;">📋 Solicitud de compra</a>
-        <a href="/compras?tab=comparativo" class="child-btn" data-screen="comparativo" style="text-decoration:none;">📊 Comparativo de proveedores</a>
+        <a href="/compras?tab=comparativo" class="child-btn" data-screen="comparativo" style="text-decoration:none;">📊 Comparativo</a>
         <a href="/compras?tab=orden_compra" class="child-btn" data-screen="orden_compra" style="text-decoration:none;">📄 Orden de compra</a>
-        <a href="/compras?tab=comprobante_proveedor" class="child-btn" data-screen="comprobante_proveedor" style="text-decoration:none;">🧾 Comprobantes proveedor</a>
-        <a href="/compras?tab=recepcion" class="child-btn" data-screen="recepcion" style="text-decoration:none;">📦 Recepción de mercadería</a>
+        <a href="/compras?tab=comprobante_proveedor" class="child-btn" data-screen="comprobante_proveedor" style="text-decoration:none;">🧾 Comprobantes</a>
+        <a href="/compras?tab=recepcion" class="child-btn" data-screen="recepcion" style="text-decoration:none;">📦 Recepción</a>
     </div>
 </div>
+
+
                 <!-- INVENTARIO -->
                 <div class="menu-group" data-modulo="inventario">
                     <div class="menu-header-wrapper">
@@ -300,7 +303,7 @@
     <span>/</span>
     <span class="crumb-btn active-crumb">
         {% if 'solicitud_compra' in request.args.get('tab', '') %}Solicitud de compra
-        {% elif 'comparativo' in request.args.get('tab', '') %}Comparativo de proveedores
+        {% elif 'comparativo' in request.args.get('tab', '') %}Comparativo
         {% elif 'orden_compra' in request.args.get('tab', '') %}Orden de compra
         {% elif 'comprobante_proveedor' in request.args.get('tab', '') %}Comprobantes proveedor
         {% elif 'recepcion' in request.args.get('tab', '') %}Recepción de mercadería
@@ -590,90 +593,6 @@
                 });
             });
         }
-
-        // ============================================================
-        // RESALTAR MÓDULO ACTIVO EN EL SIDEBAR
-        // ============================================================
-
-        function highlightActiveModule() {
-            const currentPath = window.location.pathname;
-            
-            // Remover todas las clases activas
-            document.querySelectorAll('.menu-group .menu-header, .child-btn').forEach(el => {
-                el.classList.remove('active');
-            });
-            
-            // Cerrar todos los grupos primero
-            document.querySelectorAll('.menu-group').forEach(g => {
-                g.classList.remove('open');
-            });
-            
-            let moduloEncontrado = false;
-            
-            // Mapeo de rutas a módulos
-            const moduloMap = {
-                'dashboard': ['/', '/index'],
-                'configuracion': ['/empresas', '/usuarios', '/correlativos', '/parametros', '/integracion', '/config'],
-                'maestros': ['/maestros'],
-                'productos': ['/productos'],
-                'ventas': ['/ventas'],
-                'compras': ['/compras'],
-                'inventario': ['/inventario'],
-                'finanzas': ['/finanzas'],
-                'reportes': ['/reportes'],
-                'herramientas': ['/herramientas'],
-                'papelera': ['/papelera']
-            };
-            
-            // Encontrar el módulo activo
-            let moduloActivo = null;
-            for (const [modulo, rutas] of Object.entries(moduloMap)) {
-                if (rutas.some(ruta => currentPath.startsWith(ruta) || currentPath === ruta)) {
-                    moduloActivo = modulo;
-                    break;
-                }
-            }
-            
-            // Si no se encuentra, usar dashboard por defecto
-            if (!moduloActivo) {
-                moduloActivo = 'dashboard';
-            }
-            
-            console.log('📍 Módulo activo:', moduloActivo);
-            
-            // Resaltar el grupo correspondiente
-            document.querySelectorAll('.menu-group').forEach(group => {
-                const modulo = group.dataset.modulo;
-                if (modulo === moduloActivo) {
-                    group.classList.add('open');
-                    const header = group.querySelector('.menu-header');
-                    if (header) header.classList.add('active');
-                    moduloEncontrado = true;
-                }
-            });
-            
-            // Si no se encontró, abrir dashboard por defecto
-            if (!moduloEncontrado) {
-                const dashboardGroup = document.querySelector('.menu-group[data-modulo="dashboard"]');
-                if (dashboardGroup) {
-                    dashboardGroup.classList.add('open');
-                    const header = dashboardGroup.querySelector('.menu-header');
-                    if (header) header.classList.add('active');
-                }
-            }
-            
-            // Resaltar child específico
-            document.querySelectorAll('.child-btn').forEach(child => {
-                const href = child.getAttribute('href');
-                if (href && (currentPath === href || currentPath.startsWith(href.split('?')[0]))) {
-                    child.classList.add('active');
-                    // Asegurar que el grupo padre esté abierto
-                    const group = child.closest('.menu-group');
-                    if (group) group.classList.add('open');
-                }
-            });
-        }
-
 
 
         //=============================================================
@@ -1268,6 +1187,91 @@
                 }
             }
         }
+
+
+
+        // =============================================
+// 6. MÓDULO COMPRAS - NUEVO
+// =============================================
+else if (currentPath.includes('/compras')) {
+    // Obtener el parámetro tab de la URL
+    const urlParams = new URLSearchParams(currentSearch);
+    let tab = urlParams.get('tab') || 'solicitud_compra';
+    
+    console.log(`📋 Módulo Compras - tab: ${tab}`);
+    
+    // Encontrar el grupo de Compras y abrirlo
+    const groups = document.querySelectorAll('.menu-group');
+    for (const group of groups) {
+        const header = group.querySelector('.menu-header');
+        if (header && header.textContent.includes('5 ─ Compras')) {
+            // Resaltar el header
+            if (header) header.classList.add('active');
+            // Abrir el grupo
+            group.classList.add('open');
+            break;
+        }
+    }
+    
+    // Mapeo de módulos para buscar en el sidebar
+    const moduleMap = {
+        'solicitud_compra': 'Solicitud de compra',
+        'comparativo': 'Comparativo',
+        'orden_compra': 'Orden de compra',
+        'comprobante_proveedor': 'Comprobantes',
+        'recepcion': 'Recepción'
+    };
+    
+    // RESALTAR CHILD EN SIDEBAR SEGÚN TAB
+    let childResaltado = false;
+    
+    // 1. Buscar por data-screen
+    let child = document.querySelector(`.child-btn[data-screen="${tab}"]`);
+    if (child) {
+        child.classList.add('active');
+        childResaltado = true;
+        console.log(`✅ Child de Compras resaltado por data-screen: ${child.textContent.trim()}`);
+    }
+    
+    // 2. Si no se encuentra, buscar por href con tab=
+    if (!childResaltado) {
+        child = document.querySelector(`.child-btn[href*="tab=${tab}"]`);
+        if (child) {
+            child.classList.add('active');
+            childResaltado = true;
+            console.log(`✅ Child de Compras resaltado por href: ${child.textContent.trim()}`);
+        }
+    }
+    
+    // 3. Si no se encuentra, buscar por texto
+    if (!childResaltado) {
+        const textToFind = moduleMap[tab] || tab;
+        document.querySelectorAll('.child-btn').forEach(btn => {
+            const btnText = btn.textContent.trim();
+            if (btnText === textToFind || btnText.includes(textToFind)) {
+                btn.classList.add('active');
+                childResaltado = true;
+                console.log(`✅ Child de Compras resaltado por texto: ${btn.textContent.trim()}`);
+            }
+        });
+    }
+    
+    // 4. Fallback: resaltar el primer child (Solicitud de compra)
+    if (!childResaltado) {
+        const groups2 = document.querySelectorAll('.menu-group');
+        for (const group of groups2) {
+            const header = group.querySelector('.menu-header');
+            if (header && header.textContent.includes('5 ─ Compras')) {
+                const firstChild = group.querySelector('.child-btn');
+                if (firstChild) {
+                    firstChild.classList.add('active');
+                    console.log(`✅ Fallback - Child de Compras resaltado: ${firstChild.textContent.trim()}`);
+                }
+                break;
+            }
+        }
+    }
+}
             // =============================================
             // 4. DASHBOARD (por defecto)
             // =============================================
