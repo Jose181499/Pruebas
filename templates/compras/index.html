@@ -19,7 +19,6 @@
        ESTILOS CRÍTICOS PARA COMPRAS - COLOR ROJO (ESTILO VENTAS)
        ============================================================ */
     
-    /* Asegurar que las secciones se oculten/muestren correctamente */
     .section {
         display: none !important;
     }
@@ -27,7 +26,6 @@
         display: block !important;
     }
     
-    /* Estilos para la tabla */
     .master-table {
         width: 100%;
         border-collapse: collapse;
@@ -57,7 +55,6 @@
         background: #FFFDFE;
     }
     
-    /* Badges de estado - COLORES ROJOS */
     .badge {
         display: inline-flex;
         align-items: center;
@@ -79,7 +76,6 @@
     .b-gray { background: #F1F5F9; color: #475569; }
     .b-info { background: #DBEAFE; color: #1D4ED8; border-color: #93C5FD; }
     
-    /* Kebab button */
     .kebab {
         width: 34px;
         height: 34px;
@@ -96,7 +92,6 @@
         color: #EF233C;
     }
     
-    /* Menu Pop - Fondo blanco con botones de color ROJO */
     .menu-pop {
         position: fixed;
         z-index: 999;
@@ -128,7 +123,6 @@
         background: #F8FAFC;
     }
     
-    /* Colores para menú COMPRAS - ROJOS */
     .menu-pop .menu-approve { color: #059669; font-weight: 900; }
     .menu-pop .menu-approve:hover { background: #D1FAE5; color: #047857; }
     .menu-pop .menu-order { color: #7C3AED; font-weight: 900; }
@@ -143,7 +137,6 @@
     .menu-pop .menu-edit:hover { background: #F3F4F6; color: #1F2937; }
     .menu-pop .menu-divider { height: 1px; background: #E5E7EB; margin: 4px 0; }
     
-    /* Clean header */
     .clean-header {
         display: grid;
         grid-template-columns: 250px minmax(280px, 1fr) auto;
@@ -186,77 +179,152 @@
         font-weight: 750;
     }
     
+    /* ============================================================
+       SEARCH BOX MEJORADO CON FILTRO DE FECHAS
+       ============================================================ */
     .search-box {
-        position: relative;
         display: flex;
         gap: 8px;
         align-items: center;
         flex-wrap: wrap;
+        flex: 1;
+        position: relative;
     }
-    .search-box::before {
-        content: "🔎";
+    
+    .search-box .search-input-wrapper {
+        position: relative;
+        flex: 1;
+        min-width: 150px;
+    }
+    
+    .search-box .search-input-wrapper .search-icon {
         position: absolute;
         left: 12px;
-        top: 9px;
+        top: 50%;
+        transform: translateY(-50%);
         font-size: 13px;
-        opacity: .65;
+        opacity: 0.65;
+        pointer-events: none;
         z-index: 1;
     }
-    .search-box input[type="text"] {
+    
+    .search-box .search-input-wrapper input {
         width: 100%;
         height: 38px;
         border-radius: 12px;
         border: 1px solid #E5E7EB;
-        padding-left: 34px;
+        padding: 0 12px 0 34px;
         font-weight: 800;
         background: #fff;
         color: #0F172A;
         outline: none;
-        flex: 1;
-        min-width: 150px;
-    }
-    .search-box input[type="text"]:focus {
-        border-color: #EF233C;
-        box-shadow: 0 0 0 3px rgba(239, 35, 60, 0.10);
-    }
-    .search-box input[type="date"] {
-        height: 38px;
-        border-radius: 12px;
-        border: 1px solid #E5E7EB;
-        padding: 0 10px;
-        font-weight: 800;
-        background: #fff;
-        color: #0F172A;
-        outline: none;
-        font-size: 11px;
-        width: 140px;
-    }
-    .search-box input[type="date"]:focus {
-        border-color: #EF233C;
-        box-shadow: 0 0 0 3px rgba(239, 35, 60, 0.10);
-    }
-    .search-box .date-sep {
-        font-weight: 900;
-        color: #64748B;
         font-size: 12px;
     }
-    .search-box .btn-clear-date {
-        height: 38px;
-        padding: 0 12px;
-        font-size: 11px;
+    .search-box .search-input-wrapper input:focus {
+        border-color: #EF233C;
+        box-shadow: 0 0 0 3px rgba(239, 35, 60, 0.10);
+    }
+    
+    /* Wrapper de filtro de fechas */
+    .date-filter-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        background: #F8FAFC;
+        padding: 2px 8px 2px 10px;
         border-radius: 12px;
         border: 1px solid #E5E7EB;
-        background: #fff;
-        color: #0F172A;
-        font-weight: 800;
-        cursor: pointer;
-        transition: all 0.2s;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        height: 38px;
+        flex-shrink: 0;
     }
-    .search-box .btn-clear-date:hover {
+    
+    .date-filter-wrapper:hover {
+        border-color: #CBD5E1;
+    }
+    
+    .date-filter-wrapper:focus-within {
+        border-color: #EF233C;
+        box-shadow: 0 0 0 3px rgba(239, 35, 60, 0.10);
+    }
+    
+    .date-filter-wrapper .date-icon {
+        font-size: 14px;
+        color: #64748B;
+        line-height: 1;
+    }
+    
+    .date-filter-wrapper input[type="date"] {
+        height: 32px;
+        border: none;
+        background: transparent;
+        padding: 0 4px;
+        font-weight: 700;
+        color: #0F172A;
+        outline: none;
+        font-size: 12px;
+        width: 120px;
+        cursor: pointer;
+        font-family: inherit;
+    }
+    
+    .date-filter-wrapper input[type="date"]::-webkit-calendar-picker-indicator {
+        opacity: 0.5;
+        cursor: pointer;
+        padding: 2px;
+    }
+    .date-filter-wrapper input[type="date"]::-webkit-calendar-picker-indicator:hover {
+        opacity: 1;
+    }
+    .date-filter-wrapper input[type="date"]::-webkit-datetime-edit {
+        color: #0F172A;
+        font-weight: 700;
+    }
+    .date-filter-wrapper input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+        padding: 0;
+    }
+    .date-filter-wrapper input[type="date"]::-webkit-datetime-edit-text {
+        color: #94A3B8;
+        padding: 0 2px;
+    }
+    .date-filter-wrapper input[type="date"]::-webkit-datetime-edit-month-field,
+    .date-filter-wrapper input[type="date"]::-webkit-datetime-edit-day-field,
+    .date-filter-wrapper input[type="date"]::-webkit-datetime-edit-year-field {
+        color: #0F172A;
+        font-weight: 700;
+    }
+    
+    .date-filter-wrapper .date-sep {
+        font-weight: 900;
+        color: #94A3B8;
+        font-size: 12px;
+        padding: 0 2px;
+        flex-shrink: 0;
+    }
+    
+    .date-filter-wrapper .btn-clear-date {
+        height: 28px;
+        width: 28px;
+        border: none;
+        background: transparent;
+        color: #94A3B8;
+        font-size: 14px;
+        cursor: pointer;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        padding: 0;
+        flex-shrink: 0;
+    }
+    
+    .date-filter-wrapper .btn-clear-date:hover {
         background: #FEE2E2;
-        border-color: #FCA5A5;
         color: #DC2626;
     }
+    
+    /* ============================================================ */
     
     .clean-actions {
         display: flex;
@@ -270,6 +338,12 @@
         border-radius: 12px;
         padding: 0 10px;
         background: #fff;
+        font-weight: 700;
+        font-size: 12px;
+    }
+    .clean-actions select:focus {
+        border-color: #EF233C;
+        outline: none;
     }
     
     .btn {
@@ -285,6 +359,7 @@
         white-space: nowrap;
         cursor: pointer;
         transition: all 0.2s;
+        font-size: 12px;
     }
     .btn:hover { transform: translateY(-1px); }
     
@@ -305,7 +380,6 @@
     .btn-soft { background: #F8FAFC; color: #334155; border: 1px solid #E5E7EB; }
     .btn-soft:hover { background: #F1F5F9; }
     
-    /* Panel */
     .panel {
         background: #fff;
         border: 1px solid #E5E7EB;
@@ -315,7 +389,6 @@
         margin-bottom: 8px;
     }
     
-    /* Tabs */
     .tabs {
         display: flex;
         gap: 6px;
@@ -344,7 +417,6 @@
     .tab-btn:hover { background: #F1F5F9; }
     .tab-btn.active { background: #EF233C; color: #fff; }
     
-    /* KPI Cards */
     .status-board {
         display: grid;
         grid-template-columns: repeat(5, minmax(150px, 1fr));
@@ -381,10 +453,8 @@
     .status-card small { display: block; font-size: 10px; color: #64748B; font-weight: 950; margin-bottom: 1px; }
     .status-card b { display: block; font-size: 14px; color: #0F172A; line-height: 1.05; }
     
-    /* Scroll de tabla */
     .table-scroll { overflow: auto; max-height: 52vh; padding: 0 12px 8px; }
     
-    /* Footer */
     .footer-table {
         display: flex;
         justify-content: space-between;
@@ -394,9 +464,9 @@
         font-weight: 850;
         border-top: 1px solid #E5E7EB;
         background: #FAFBFC;
+        font-size: 12px;
     }
     
-    /* Responsive */
     @media (max-width: 1380px) {
         .clean-header { grid-template-columns: 1fr; }
         .status-board { grid-template-columns: repeat(3, 1fr); }
@@ -410,7 +480,15 @@
         .master-table { font-size: 10px; min-width: 700px; }
         .master-table thead th { font-size: 9px; padding: 4px; }
         .master-table td { font-size: 9px; padding: 4px; }
-        .search-box input[type="date"] { width: 100px; }
+        .date-filter-wrapper input[type="date"] { width: 80px; font-size: 10px; }
+        .date-filter-wrapper { padding: 2px 6px; }
+        .date-filter-wrapper .date-sep { font-size: 10px; }
+        .search-box .search-input-wrapper { min-width: 120px; }
+    }
+    @media (max-width: 480px) {
+        .date-filter-wrapper input[type="date"] { width: 65px; }
+        .clean-actions { flex-wrap: wrap; }
+        .clean-actions select { min-width: 100px; }
     }
 </style>
 {% endblock %}
@@ -437,11 +515,17 @@
                 <div class="master-subtitle">Solicitudes internas de compra</div>
             </div>
             <div class="search-box">
-                <input id="solicitudSearch" placeholder="Buscar por N° solicitud / producto / área...">
-                <input type="date" id="solicitudFechaInicio" title="Fecha inicio">
-                <span class="date-sep">→</span>
-                <input type="date" id="solicitudFechaFin" title="Fecha fin">
-                <button class="btn-clear-date" onclick="clearSolicitudDateFilter()" title="Limpiar filtros">✕</button>
+                <div class="search-input-wrapper">
+                    <span class="search-icon">🔎</span>
+                    <input id="solicitudSearch" placeholder="Buscar por N° solicitud / producto / área...">
+                </div>
+                <div class="date-filter-wrapper">
+                    <span class="date-icon">📅</span>
+                    <input type="date" id="solicitudFechaInicio" title="Fecha inicio">
+                    <span class="date-sep">→</span>
+                    <input type="date" id="solicitudFechaFin" title="Fecha fin">
+                    <button class="btn-clear-date" onclick="clearSolicitudDateFilter()" title="Limpiar filtros">✕</button>
+                </div>
             </div>
             <div class="clean-actions">
                 <select id="solicitudStatus">
@@ -492,11 +576,17 @@
                 <div class="master-subtitle">Cotizaciones de proveedores</div>
             </div>
             <div class="search-box">
-                <input id="comparativoSearch" placeholder="Buscar por N° comparativo / proveedor / producto...">
-                <input type="date" id="comparativoFechaInicio" title="Fecha inicio">
-                <span class="date-sep">→</span>
-                <input type="date" id="comparativoFechaFin" title="Fecha fin">
-                <button class="btn-clear-date" onclick="clearComparativoDateFilter()" title="Limpiar filtros">✕</button>
+                <div class="search-input-wrapper">
+                    <span class="search-icon">🔎</span>
+                    <input id="comparativoSearch" placeholder="Buscar por N° comparativo / proveedor / producto...">
+                </div>
+                <div class="date-filter-wrapper">
+                    <span class="date-icon">📅</span>
+                    <input type="date" id="comparativoFechaInicio" title="Fecha inicio">
+                    <span class="date-sep">→</span>
+                    <input type="date" id="comparativoFechaFin" title="Fecha fin">
+                    <button class="btn-clear-date" onclick="clearComparativoDateFilter()" title="Limpiar filtros">✕</button>
+                </div>
             </div>
             <div class="clean-actions">
                 <select id="comparativoStatus">
@@ -546,11 +636,17 @@
                 <div class="master-subtitle">Órdenes emitidas a proveedores</div>
             </div>
             <div class="search-box">
-                <input id="ordenSearch" placeholder="Buscar por N° orden / proveedor / producto...">
-                <input type="date" id="ordenFechaInicio" title="Fecha inicio">
-                <span class="date-sep">→</span>
-                <input type="date" id="ordenFechaFin" title="Fecha fin">
-                <button class="btn-clear-date" onclick="clearOrdenDateFilter()" title="Limpiar filtros">✕</button>
+                <div class="search-input-wrapper">
+                    <span class="search-icon">🔎</span>
+                    <input id="ordenSearch" placeholder="Buscar por N° orden / proveedor / producto...">
+                </div>
+                <div class="date-filter-wrapper">
+                    <span class="date-icon">📅</span>
+                    <input type="date" id="ordenFechaInicio" title="Fecha inicio">
+                    <span class="date-sep">→</span>
+                    <input type="date" id="ordenFechaFin" title="Fecha fin">
+                    <button class="btn-clear-date" onclick="clearOrdenDateFilter()" title="Limpiar filtros">✕</button>
+                </div>
             </div>
             <div class="clean-actions">
                 <select id="ordenStatus">
@@ -601,11 +697,17 @@
                 <div class="master-subtitle">Facturas y boletas de proveedores</div>
             </div>
             <div class="search-box">
-                <input id="compProvSearch" placeholder="Buscar por comprobante / proveedor / RUC...">
-                <input type="date" id="compProvFechaInicio" title="Fecha inicio">
-                <span class="date-sep">→</span>
-                <input type="date" id="compProvFechaFin" title="Fecha fin">
-                <button class="btn-clear-date" onclick="clearCompProvDateFilter()" title="Limpiar filtros">✕</button>
+                <div class="search-input-wrapper">
+                    <span class="search-icon">🔎</span>
+                    <input id="compProvSearch" placeholder="Buscar por comprobante / proveedor / RUC...">
+                </div>
+                <div class="date-filter-wrapper">
+                    <span class="date-icon">📅</span>
+                    <input type="date" id="compProvFechaInicio" title="Fecha inicio">
+                    <span class="date-sep">→</span>
+                    <input type="date" id="compProvFechaFin" title="Fecha fin">
+                    <button class="btn-clear-date" onclick="clearCompProvDateFilter()" title="Limpiar filtros">✕</button>
+                </div>
             </div>
             <div class="clean-actions">
                 <select id="compProvStatus">
@@ -654,11 +756,17 @@
                 <div class="master-subtitle">Ingreso de productos a almacén</div>
             </div>
             <div class="search-box">
-                <input id="recepcionSearch" placeholder="Buscar por N° recepción / orden / producto...">
-                <input type="date" id="recepcionFechaInicio" title="Fecha inicio">
-                <span class="date-sep">→</span>
-                <input type="date" id="recepcionFechaFin" title="Fecha fin">
-                <button class="btn-clear-date" onclick="clearRecepcionDateFilter()" title="Limpiar filtros">✕</button>
+                <div class="search-input-wrapper">
+                    <span class="search-icon">🔎</span>
+                    <input id="recepcionSearch" placeholder="Buscar por N° recepción / orden / producto...">
+                </div>
+                <div class="date-filter-wrapper">
+                    <span class="date-icon">📅</span>
+                    <input type="date" id="recepcionFechaInicio" title="Fecha inicio">
+                    <span class="date-sep">→</span>
+                    <input type="date" id="recepcionFechaFin" title="Fecha fin">
+                    <button class="btn-clear-date" onclick="clearRecepcionDateFilter()" title="Limpiar filtros">✕</button>
+                </div>
             </div>
             <div class="clean-actions">
                 <select id="recepcionStatus">
@@ -709,10 +817,8 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- PRIMERO: Cargar compras.js -->
 <script src="{{ url_for('static', filename='js/compras.js') }}"></script>
 
-<!-- SEGUNDO: Ejecutar el código de inicialización -->
 <script>
     (function() {
         'use strict';
