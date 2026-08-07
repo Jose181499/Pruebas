@@ -225,6 +225,16 @@
     .cc-table tr:last-child td { border-bottom: 0; }
     .cc-table td:last-child, .cc-table th:last-child { border-right: 0; }
     .cc-col-item{width:44px}.cc-col-code{width:100px}.cc-col-desc{width:140px;text-align:left}.cc-col-brand{width:74px}.cc-col-model{width:68px}.cc-col-provider{width:88px}.cc-col-qty{width:58px}.cc-col-money{width:88px}.cc-col-date{width:94px}.cc-col-days{width:68px}.cc-col-type{width:80px}.cc-col-place{width:90px}.cc-col-comment{width:90px}.cc-col-status{width:96px}
+    .cc-col-action{width:56px}
+    .cc-btn-delete{
+      width:26px;height:26px;border-radius:50%;border:1px solid var(--danger);
+      background:var(--danger-soft);color:var(--danger);font-weight:900;
+      cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
+      font-size:13px;line-height:1;transition:background .15s,transform .1s;
+    }
+.cc-btn-delete:hover{background:var(--danger);color:#fff;transform:scale(1.08);}
+.cc-table tbody tr:not(.cc-empty-row){cursor:pointer;}
+    
     .cc-t-code { color: var(--empresa); font-weight: 900; transition: color .3s; }
     .cc-t-green { color: var(--ok); font-size: 15px; font-weight: 900; }
     .cc-t-red   { color: var(--danger); font-size: 15px; font-weight: 900; }
@@ -321,13 +331,13 @@
         <div class="cc-product-card">
           <div class="cc-product-photo">🚧</div>
           <div class="cc-product-info">
-            <div class="cc-info-cell"><div class="cc-info-label">Código producto</div><div class="cc-info-value">PRO-000126</div></div>
-            <div class="cc-info-cell"><div class="cc-info-label">Descripción producto</div><div class="cc-info-value">Cono de seguridad 90 cm<br>con base de PVC</div></div>
-            <div class="cc-info-cell"><div class="cc-info-label">Modelo</div><div class="cc-info-value">CS-90</div></div>
-            <div class="cc-info-cell"><div class="cc-info-label">Marca</div><div class="cc-info-value">KCF Safety</div></div>
-            <div class="cc-info-cell"><div class="cc-info-label">Categoría principal</div><div class="cc-info-value">Seguridad Industrial</div></div>
-            <div class="cc-info-cell"><div class="cc-info-label">Transporte referencial</div><div class="cc-info-value">Motorizado</div></div>
-            <div class="cc-info-cell"><div class="cc-info-label">Valor venta referencial</div><div class="cc-info-value price">S/ 45.00</div></div>
+            <div class="cc-info-cell"><div class="cc-info-label">Código producto</div><div class="cc-info-value" id="ccInfoCodigo">—</div></div>
+            <div class="cc-info-cell"><div class="cc-info-label">Descripción producto</div><div class="cc-info-value" id="ccInfoDesc">—</div></div>
+            <div class="cc-info-cell"><div class="cc-info-label">Modelo</div><div class="cc-info-value" id="ccInfoModelo">—</div></div>
+            <div class="cc-info-cell"><div class="cc-info-label">Marca</div><div class="cc-info-value" id="ccInfoMarca">—</div></div>
+            <div class="cc-info-cell"><div class="cc-info-label">Categoría principal</div><div class="cc-info-value" id="ccInfoCategoria">—</div></div>
+            <div class="cc-info-cell"><div class="cc-info-label">Transporte referencial</div><div class="cc-info-value" id="ccInfoTransporte">—</div></div>
+            <div class="cc-info-cell"><div class="cc-info-label">Valor venta referencial</div><div class="cc-info-value price" id="ccInfoPrecio">S/ 0.00</div></div>
           </div>
         </div>
 
@@ -359,6 +369,7 @@
                   <th class="cc-col-money">Costo de<br>transporte</th>
                   <th class="cc-col-comment">Comentario</th>
                   <th class="cc-col-status">Estatus</th>
+                  <th class="cc-col-action">Acción</th>
                 </tr>
               </thead>
               <tbody id="ccTbody"></tbody>
@@ -464,7 +475,7 @@
     if (!tbody) return;
 
     if (ccProveedores.length === 0) {
-      tbody.innerHTML = `<tr class="cc-empty-row"><td colspan="19">
+      tbody.innerHTML = `<tr class="cc-empty-row"><td colspan="20">
         <span class="cc-empty-icon">📦</span>
         No hay productos cargados todavía.<br>
         Usa el botón <b>"Buscar productos"</b> para seleccionar los que quieras comparar.
@@ -478,7 +489,7 @@
       const rowClass   = p.estatus === 'Ganador' ? 'cc-row-winner' : p.estatus === 'Evaluar' ? 'cc-row-soft' : 'cc-row-lost';
       const chipClass  = p.estatus === 'Ganador' ? 'cc-chip-winner' : p.estatus === 'Evaluar' ? 'cc-chip-eval' : 'cc-chip-lost';
       const costoClass = idx === 0 ? 'cc-t-green' : idx === 1 ? 'cc-t-orange' : 'cc-t-red';
-      return `<tr class="${rowClass}">
+      return `<tr class="${rowClass}" onclick="ccMostrarDatosProducto(${idx})>
         <td>${idx + 1}</td>
         <td class="cc-t-code">${p.codigo}</td>
         <td class="cc-col-desc" style="text-align:left">${p.desc}</td>
@@ -498,8 +509,29 @@
         <td>${ccSoles(p.transporte)}</td>
         <td>${p.comentario}</td>
         <td><span class="cc-chip ${chipClass}">${p.estatus === 'Ganador' ? '🏆 ' : ''}${p.estatus}</span></td>
+        <td><button class="cc-btn-delete" onclick="event.stopPropagation(); ccEliminarProducto(${idx})" title="Quitar de la tabla">✕</button></td>
       </tr>`;
     }).join('');
+  };
+
+
+  window.ccMostrarDatosProducto = function (idx) {
+  const p = ccProveedores[idx];
+  if (!p) return;
+  document.getElementById('ccInfoCodigo').textContent = p.codigo || '—';
+  document.getElementById('ccInfoDesc').innerHTML = p.desc || '—';
+  document.getElementById('ccInfoModelo').textContent = p.modelo || '—';
+  document.getElementById('ccInfoMarca').textContent = p.marca || '—';
+  document.getElementById('ccInfoCategoria').textContent = p.categoria || '—';
+  document.getElementById('ccInfoTransporte').textContent = p.tipo || '—';
+  document.getElementById('ccInfoPrecio').textContent = ccSoles(p.venta);
+  };
+
+  window.ccResetProductoInfo = function () {
+  ['ccInfoCodigo','ccInfoDesc','ccInfoModelo','ccInfoMarca','ccInfoCategoria','ccInfoTransporte'].forEach(id => {
+    document.getElementById(id).textContent = '—';
+  });
+  document.getElementById('ccInfoPrecio').textContent = 'S/ 0.00';
   };
 
   /* ── CALCULAR GANADOR ──────────────────────────────────── */
@@ -519,6 +551,13 @@
     mostrarNotificacion('success', '🏆 Ganador calculado', 'Proveedor sugerido: ' + ganador.proveedor + ' — ' + ccSoles(ganador.costo) + '/und.');
   };
 
+//Eliminar producto de la tabla
+  window.ccEliminarProducto = function (idx) {
+  ccProveedores.splice(idx, 1);
+  ccRenderTabla();
+  mostrarNotificacion('info', 'Producto quitado', 'Se eliminó el producto de la tabla.');
+};
+
   /* ── ACCIONES ──────────────────────────────────────────── */
   window.ccCargarDatos = function () {
     mostrarNotificacion('info', 'Datos cargados', 'Información del producto cargada desde la base de datos.');
@@ -527,6 +566,14 @@
     mostrarNotificacion('info', 'Agregar proveedor', 'Aquí se abriría el formulario para agregar un proveedor al comparativo.');
   };
   window.ccNuevoComparativo = function () {
+    ccProveedores = [];
+    ccRenderTabla();
+    ccResetProductoInfo();
+    document.getElementById('ccProveedoresCount').textContent = '0';
+    document.getElementById('ccMejorCosto').textContent = 'S/ 0.00';
+    document.getElementById('ccMenorTiempo').textContent = '0 días';
+    document.getElementById('ccProveedorGanador').textContent = '—';
+    document.getElementById('ccLugarGanador').textContent = '—';
     mostrarNotificacion('success', 'Nuevo comparativo', 'Comparativo creado correctamente.');
   };
 
@@ -668,6 +715,7 @@
         desc: prod.descripcion || '',
         marca: prod.marca || '',
         modelo: prod.modelo || '',
+        categoria: prod.categoria || '',
         proveedor: '',
         cantidad: 1,
         costoHist: Number(prod.costo_unitario) || 0,
