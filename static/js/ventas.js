@@ -7092,7 +7092,7 @@ function openNotaCreditoModal(id = null) {
     if (!formContainer) return;
     
     const compOptions = comprobantesData.map(c => 
-        `<option value="${c.serie}-${c.numero}">${c.serie}-${c.numero} - ${c.cliente || 'Sin cliente'}</option>`
+        `<option value="${c.serie}-${c.numero}" data-comp-id="${c.id}">${c.serie}-${c.numero} - ${c.cliente_nombre || 'Sin cliente'}</option>`
     ).join('');
     
     formContainer.innerHTML = `
@@ -7101,7 +7101,10 @@ function openNotaCreditoModal(id = null) {
             <div class="ficha-grid">
                 <div class="form-field col-4">
                     <label>Comprobante afectado</label>
-                    <select id="notaComprobante">${compOptions || '<option value="">Sin comprobantes</option>'}</select>
+                    <select id="notaComprobante" onchange="cargarDatosComprobanteAfectado(this.value)">
+                        <option value="">-- Seleccione un comprobante --</option>
+                        ${compOptions || '<option value="" disabled>Sin comprobantes</option>'}
+                    </select>
                 </div>
                 <div class="form-field col-3">
                     <label>Serie</label>
@@ -7153,6 +7156,33 @@ function openNotaCreditoModal(id = null) {
         setTimeout(() => cargarNotaCreditoParaEditar(id), 50);
     }
 }
+
+
+
+function cargarDatosComprobanteAfectado(valorSeleccionado) {
+    if (!valorSeleccionado) return;
+
+    const comp = comprobantesData.find(c => `${c.serie}-${c.numero}` === valorSeleccionado);
+
+    if (!comp) {
+        console.warn('⚠️ No se encontró el comprobante seleccionado:', valorSeleccionado);
+        showToast('No se encontraron datos para el comprobante seleccionado', 'warning');
+        return;
+    }
+
+    const setValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.value = value ?? '';
+    };
+
+    setValue('notaCliente', comp.cliente_nombre);
+    setValue('notaRuc', comp.cliente_numero_doc);
+    setValue('notaMonto', comp.total);
+
+    showToast(`✅ Datos de ${comp.serie}-${comp.numero} cargados`, 'success');
+}
+window.cargarDatosComprobanteAfectado = cargarDatosComprobanteAfectado;
+
 
 // ============================================================
 // CARGAR NOTA DE CRÉDITO EXISTENTE PARA EDICIÓN

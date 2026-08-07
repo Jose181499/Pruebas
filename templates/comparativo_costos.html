@@ -259,6 +259,38 @@
     @media (max-width: 980px)  { .cc-product-card { grid-template-columns: 1fr; } }
     @media (max-width: 640px)  { .cc-summary { grid-template-columns: 1fr; } .cc-actions-row { flex-direction: column; align-items: stretch; } }
 
+    /* ============================================================
+    TABLA VACÍA + BARRA SUPERIOR DE TABLA
+    ============================================================ */
+    .cc-table-bar { display: flex; align-items: center; justify-content: flex-end; margin-bottom: 10px; }
+    .cc-empty-row td { padding: 46px 20px !important; text-align: center; color: var(--muted); font-weight: 700; background: #fff; }
+    .cc-empty-row .cc-empty-icon { font-size: 34px; display: block; margin-bottom: 8px; }
+
+    /* ============================================================
+    MODAL - BUSCAR PRODUCTOS (mismo patrón que el modal de PC)
+    ============================================================ */
+    .cc-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,.55); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
+    .cc-modal-overlay.show { display: flex; }
+    .cc-modal { background: #fff; border-radius: 16px; width: 100%; max-width: 720px; max-height: 82vh; display: flex; flex-direction: column; box-shadow: 0 24px 60px rgba(0,0,0,.25); overflow: hidden; }
+    .cc-modal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--line); }
+    .cc-modal-head h3 { margin: 0; font-size: 16px; font-weight: 900; color: var(--text); }
+    .cc-modal-close { border: 0; background: transparent; font-size: 20px; cursor: pointer; color: var(--muted); line-height: 1; padding: 4px; }
+    .cc-modal-close:hover { color: var(--text); }
+    .cc-modal-search { padding: 14px 22px; border-bottom: 1px solid var(--line); }
+    .cc-modal-search .cc-search-wrap { height: 40px; }
+    .cc-modal-body { flex: 1; overflow-y: auto; padding: 6px 0; }
+    .cc-modal-item { display: flex; align-items: center; gap: 12px; padding: 11px 22px; border-bottom: 1px solid #F1F5F9; cursor: pointer; transition: background .12s; }
+    .cc-modal-item:hover { background: var(--bg); }
+    .cc-modal-item input[type="checkbox"] { width: 17px; height: 17px; flex-shrink: 0; accent-color: var(--empresa); cursor: pointer; }
+    .cc-modal-item-info { flex: 1; min-width: 0; }
+    .cc-modal-item-code { font-weight: 900; color: var(--empresa); font-size: 12px; }
+    .cc-modal-item-desc { font-weight: 700; color: var(--text); font-size: 12.5px; margin-top: 1px; }
+    .cc-modal-item-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .cc-modal-empty, .cc-modal-loading { text-align: center; padding: 40px 20px; color: var(--muted); font-weight: 700; }
+    .cc-modal-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 22px; border-top: 1px solid var(--line); background: var(--bg); }
+    .cc-modal-count { font-size: 12.5px; font-weight: 800; color: var(--muted); }
+    .cc-modal-count b { color: var(--empresa); }
+
 </style>
 {% endblock %}
 
@@ -297,6 +329,10 @@
             <div class="cc-info-cell"><div class="cc-info-label">Transporte referencial</div><div class="cc-info-value">Motorizado</div></div>
             <div class="cc-info-cell"><div class="cc-info-label">Valor venta referencial</div><div class="cc-info-value price">S/ 45.00</div></div>
           </div>
+        </div>
+
+        <div class="cc-table-bar">
+          <button class="btn primary" onclick="ccAbrirModalProductos()"><i class="bi bi-search"></i> Buscar productos</button>
         </div>
 
         <div class="cc-table-wrap">
@@ -343,6 +379,34 @@
           El sistema mantiene el historial de cotizaciones por proveedor, incluyendo costo y fecha/hora, para que puedas recotizar más rápido en el futuro.
         </div>
       </div>
+
+      <!-- ============================================================
+           MODAL - BUSCAR PRODUCTOS (checkbox multi-selección desde BD)
+           ============================================================ -->
+      <div class="cc-modal-overlay" id="ccModalProductos">
+        <div class="cc-modal">
+          <div class="cc-modal-head">
+            <h3><i class="bi bi-box-seam"></i> Buscar productos</h3>
+            <button class="cc-modal-close" onclick="ccCerrarModalProductos()">&times;</button>
+          </div>
+          <div class="cc-modal-search">
+            <div class="cc-search-wrap">
+              <i class="bi bi-search"></i>
+              <input id="ccModalSearchInput" placeholder="Buscar por código, descripción, marca o modelo..." oninput="ccBuscarProductosDebounced(this.value)">
+            </div>
+          </div>
+          <div class="cc-modal-body" id="ccModalBody">
+            <div class="cc-modal-loading">Cargando productos...</div>
+          </div>
+          <div class="cc-modal-foot">
+            <span class="cc-modal-count"><b id="ccModalSelCount">0</b> producto(s) seleccionado(s)</span>
+            <div style="display:flex; gap:8px;">
+              <button class="btn" onclick="ccCerrarModalProductos()">Cancelar</button>
+              <button class="btn primary" onclick="ccCargarSeleccionados()"><i class="bi bi-check2"></i> Cargar seleccionados</button>
+            </div>
+          </div>
+        </div>
+      </div>
 {% endblock %}
 
 {% block extra_js %}
@@ -386,12 +450,9 @@
 
 
   /* ── DATOS ─────────────────────────────────────────────── */
-  const ccProveedores = [
-    { codigo:'PRO-000126', desc:'Cono de seguridad 90 cm con base de PVC', marca:'KCF Safety', modelo:'CS-90', proveedor:'GOALSA',    cantidad:50, costoHist:19.50, fechaCosto:'10/06/2026 09:45 a.m.', costo:18.20, precioHist:26.00, fechaPrecio:'10/06/2026 09:45 a.m.', venta:45.00, tiempo:2, tipo:'Motorizado', lugar:'Recojo',                    transporte:25.00, comentario:'Stock disponible inmediato', estatus:'Ganador'  },
-    { codigo:'PRO-000126', desc:'Cono de seguridad 90 cm con base de PVC', marca:'KCF Safety', modelo:'CS-90', proveedor:'TAILOY SAC', cantidad:50, costoHist:19.00, fechaCosto:'10/06/2026 10:25 a.m.', costo:18.80, precioHist:24.00, fechaPrecio:'10/06/2026 10:25 a.m.', venta:45.00, tiempo:3, tipo:'Motorizado', lugar:'Entrega en almacén SMP', transporte:20.00, comentario:'Buen servicio postventa',  estatus:'Evaluar'  },
-    { codigo:'PRO-000126', desc:'Cono de seguridad 90 cm con base de PVC', marca:'KCF Safety', modelo:'CS-90', proveedor:'COBIRAM',   cantidad:50, costoHist:20.30, fechaCosto:'10/06/2026 09:30 a.m.', costo:19.50, precioHist:25.50, fechaPrecio:'10/06/2026 09:30 a.m.', venta:45.00, tiempo:5, tipo:'Motorizado', lugar:'Entrega en almacén Lima',transporte:30.00, comentario:'Entrega en almacén Lima',  estatus:'Perdedor' },
-    { codigo:'PRO-000126', desc:'Cono de seguridad 90 cm con base de PVC', marca:'KCF Safety', modelo:'CS-90', proveedor:'PLAZA VEA', cantidad:50, costoHist:20.50, fechaCosto:'10/06/2026 11:10 a.m.', costo:20.10, precioHist:26.00, fechaPrecio:'10/06/2026 11:10 a.m.', venta:45.00, tiempo:7, tipo:'Agencia',    lugar:'Entrega en almacén Lima',transporte:40.00, comentario:'Mayor tiempo de entrega',  estatus:'Perdedor' }
-  ];
+  // La tabla empieza vacía. Se llena solo con productos reales
+  // seleccionados desde el modal "Buscar productos" (BD: tabla productos).
+  let ccProveedores = [];
 
   function ccSoles(num) {
     return 'S/ ' + Number(num).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -401,6 +462,16 @@
   window.ccRenderTabla = function () {
     const tbody = document.getElementById('ccTbody');
     if (!tbody) return;
+
+    if (ccProveedores.length === 0) {
+      tbody.innerHTML = `<tr class="cc-empty-row"><td colspan="19">
+        <span class="cc-empty-icon">📦</span>
+        No hay productos cargados todavía.<br>
+        Usa el botón <b>"Buscar productos"</b> para seleccionar los que quieras comparar.
+      </td></tr>`;
+      return;
+    }
+
     tbody.innerHTML = ccProveedores.map((p, idx) => {
       const costoTotal = p.cantidad * p.costo;
       const ventaTotal = p.cantidad * p.venta;
@@ -433,6 +504,10 @@
 
   /* ── CALCULAR GANADOR ──────────────────────────────────── */
   window.ccCalcularGanador = function () {
+    if (ccProveedores.length === 0) {
+      mostrarNotificacion('warning', 'Sin productos', 'Primero busca y carga productos en la tabla.');
+      return;
+    }
     const ganador = [...ccProveedores].sort((a, b) =>
       (a.costo * a.cantidad + a.transporte) - (b.costo * b.cantidad + b.transporte)
     )[0];
@@ -457,6 +532,10 @@
 
   /* ── EXPORTAR CSV ──────────────────────────────────────── */
   window.ccExportarCSV = function () {
+    if (ccProveedores.length === 0) {
+      mostrarNotificacion('warning', 'Sin productos', 'No hay datos en la tabla para exportar.');
+      return;
+    }
     const headers = ['Item','Codigo producto','Descripcion producto','Marca','Modelo','Proveedor','Cantidad',
       'Costo historico','Valor costo unitario','Costo total','Precio historico','Valor venta unitario',
       'Valor venta total','Tiempo entrega','Tipo entrega','Lugar entrega','Costo transporte','Comentario','Estatus'];
@@ -475,7 +554,149 @@
     mostrarNotificacion('success', 'Exportado', 'Archivo CSV descargado correctamente.');
   };
 
-  /* Render inicial de la tabla */
+  /* ============================================================
+     MODAL - BUSCAR PRODUCTOS (datos reales desde BD: productos)
+     ============================================================ */
+  let ccProductosEncontrados = [];   // último resultado de búsqueda
+  let ccSeleccionados = {};          // { id: productoObj } de items marcados
+  let ccDebounceTimer = null;
+
+  window.ccAbrirModalProductos = function () {
+    document.getElementById('ccModalProductos').classList.add('show');
+    document.getElementById('ccModalSearchInput').value = '';
+    ccSeleccionados = {};
+    ccActualizarContadorModal();
+    ccBuscarProductos('');
+    setTimeout(() => document.getElementById('ccModalSearchInput')?.focus(), 50);
+  };
+
+  window.ccCerrarModalProductos = function () {
+    document.getElementById('ccModalProductos').classList.remove('show');
+  };
+
+  // Cerrar al hacer click fuera del modal
+  document.addEventListener('click', function (e) {
+    if (e.target && e.target.id === 'ccModalProductos') {
+      ccCerrarModalProductos();
+    }
+  });
+
+  window.ccBuscarProductosDebounced = function (valor) {
+    clearTimeout(ccDebounceTimer);
+    ccDebounceTimer = setTimeout(() => ccBuscarProductos(valor), 300);
+  };
+
+  async function ccBuscarProductos(q) {
+    const body = document.getElementById('ccModalBody');
+    body.innerHTML = '<div class="cc-modal-loading">Buscando productos...</div>';
+    try {
+      const resp = await fetch('/productos/api/productos?q=' + encodeURIComponent(q || ''));
+      const json = await resp.json();
+
+      if (!json.success) {
+        body.innerHTML = `<div class="cc-modal-empty">❌ Error al cargar productos: ${json.error || 'Desconocido'}</div>`;
+        return;
+      }
+
+      ccProductosEncontrados = json.data || [];
+      ccRenderListaModal();
+    } catch (err) {
+      console.error('❌ Error buscando productos:', err);
+      body.innerHTML = '<div class="cc-modal-empty">❌ Error de conexión al buscar productos.</div>';
+    }
+  }
+
+  function ccRenderListaModal() {
+    const body = document.getElementById('ccModalBody');
+
+    if (ccProductosEncontrados.length === 0) {
+      body.innerHTML = '<div class="cc-modal-empty">🔍 No se encontraron productos.</div>';
+      return;
+    }
+
+    body.innerHTML = ccProductosEncontrados.map(p => {
+      const checked = ccSeleccionados[p.id] ? 'checked' : '';
+      const meta = [p.marca, p.modelo, p.categoria].filter(Boolean).join(' · ');
+      return `
+        <label class="cc-modal-item">
+          <input type="checkbox" ${checked} onchange="ccToggleSeleccion(${p.id}, this.checked)">
+          <div class="cc-modal-item-info">
+            <div class="cc-modal-item-code">${p.codigo || ''}</div>
+            <div class="cc-modal-item-desc">${p.descripcion || 'Sin descripción'}</div>
+            <div class="cc-modal-item-meta">${meta || '—'}</div>
+          </div>
+        </label>
+      `;
+    }).join('');
+  }
+
+  window.ccToggleSeleccion = function (id, marcado) {
+    if (marcado) {
+      const producto = ccProductosEncontrados.find(p => p.id === id);
+      if (producto) ccSeleccionados[id] = producto;
+    } else {
+      delete ccSeleccionados[id];
+    }
+    ccActualizarContadorModal();
+  };
+
+  function ccActualizarContadorModal() {
+    const count = Object.keys(ccSeleccionados).length;
+    const el = document.getElementById('ccModalSelCount');
+    if (el) el.textContent = count;
+  }
+
+  window.ccCargarSeleccionados = function () {
+    const seleccionados = Object.values(ccSeleccionados);
+
+    if (seleccionados.length === 0) {
+      mostrarNotificacion('warning', 'Nada seleccionado', 'Marca al menos un producto para cargarlo en la tabla.');
+      return;
+    }
+
+    let agregados = 0;
+    let repetidos = 0;
+
+    seleccionados.forEach(prod => {
+      const yaExiste = ccProveedores.some(row => row.codigo === prod.codigo);
+      if (yaExiste) {
+        repetidos++;
+        return;
+      }
+      ccProveedores.push({
+        codigo: prod.codigo || '',
+        desc: prod.descripcion || '',
+        marca: prod.marca || '',
+        modelo: prod.modelo || '',
+        proveedor: '',
+        cantidad: 1,
+        costoHist: Number(prod.costo_unitario) || 0,
+        fechaCosto: '—',
+        costo: Number(prod.costo_unitario) || 0,
+        precioHist: Number(prod.precio_unitario) || 0,
+        fechaPrecio: '—',
+        venta: Number(prod.precio_unitario) || 0,
+        tiempo: Number(prod.tiempo_entrega) || 0,
+        tipo: prod.transporte || '—',
+        lugar: '—',
+        transporte: 0,
+        comentario: '',
+        estatus: 'Por evaluar'
+      });
+      agregados++;
+    });
+
+    ccRenderTabla();
+    ccCerrarModalProductos();
+
+    if (agregados > 0) {
+      mostrarNotificacion('success', 'Productos cargados', `${agregados} producto(s) agregado(s) a la tabla` + (repetidos ? ` (${repetidos} ya estaban).` : '.'));
+    } else {
+      mostrarNotificacion('info', 'Sin cambios', 'Los productos seleccionados ya estaban en la tabla.');
+    }
+  };
+
+  /* Render inicial de la tabla (vacía hasta que se carguen productos) */
   document.addEventListener('DOMContentLoaded', function () {
     ccRenderTabla();
   });
