@@ -4370,63 +4370,11 @@ window.bdPorPagina = 20;
         {% block extra_js %}{% endblock %}
 
         <script>
-// ============================================================
-// 🔥 FORZAR INICIALIZACIÓN DE CONFIGURACIÓN
-// ============================================================
 
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 FORZANDO INICIALIZACIÓN DE CONFIGURACIÓN...');
-    
-    // Verificar si estamos en una página de configuración
-    var path = window.location.pathname;
-    var isConfigPage = path.includes('/empresas') || 
-                       path.includes('/usuarios') || 
-                       path.includes('/correlativos') || 
-                       path.includes('/parametros') || 
-                       path.includes('/integracion') ||
-                       path === '/configuracion';
-    
-    if (isConfigPage) {
-        console.log('✅ Página de configuración detectada');
-        
-        // Esperar a que el DOM esté listo
-        setTimeout(function() {
-            // Cargar empresas
-            if (typeof loadEmpresas === 'function') {
-                console.log('🔄 Cargando empresas...');
-                loadEmpresas();
-            } else {
-                console.warn('⚠️ loadEmpresas no definida');
-            }
-            
-            // Cargar usuarios
-            if (typeof loadUsuarios === 'function') {
-                console.log('🔄 Cargando usuarios...');
-                loadUsuarios();
-            } else {
-                console.warn('⚠️ loadUsuarios no definida');
-            }
-            
-            // Cargar correlativos
-            if (typeof loadCorrelativos === 'function') {
-                console.log('🔄 Cargando correlativos...');
-                loadCorrelativos();
-            } else {
-                console.warn('⚠️ loadCorrelativos no definida');
-            }
-            
-            // Cargar parámetros
-            if (typeof loadParametros === 'function') {
-                console.log('🔄 Cargando parámetros...');
-                loadParametros();
-            } else {
-                console.warn('⚠️ loadParametros no definida');
-            }
-            
-            console.log('✅ Inicialización de configuración completada');
-        }, 500);
-    }
-});
+
+
+
+
 
 // ============================================================
 // 🔥 FORZAR CAMBIO DE TEMA AL CAMBIAR EMPRESA
