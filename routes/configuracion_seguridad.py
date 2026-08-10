@@ -1181,7 +1181,7 @@ def update_usuario_permisos(usuario_id):
     """Actualizar los permisos de un usuario en una empresa"""
     try:
         data = request.get_json()
-        print(f"📝 Datos recibidos: {data}")  # Log para depurar
+        print(f"📝 Datos recibidos: {data}")
         
         empresa_id = data.get('empresa_id')
         permisos = data.get('permisos', [])
@@ -1192,7 +1192,7 @@ def update_usuario_permisos(usuario_id):
         if not empresa_id:
             return jsonify({'success': False, 'error': 'empresa_id es requerido'}), 400
         
-        # ✅ OBTENER EL auth_user_id DESDE LA TABLA usuarios
+        # Obtener el auth_user_id desde la tabla usuarios
         usuario = db_query("""
             SELECT auth_user_id FROM usuarios WHERE id = %s AND estado = 'activo'
         """, (usuario_id,))
@@ -1205,7 +1205,7 @@ def update_usuario_permisos(usuario_id):
         auth_user_id = usuario[0]['auth_user_id']
         print(f"✅ auth_user_id: {auth_user_id}")
         
-        # ✅ VERIFICAR QUE LA EMPRESA EXISTE
+        # Verificar que la empresa existe
         empresa = db_query("""
             SELECT id FROM erp_empresas WHERE id = %s AND estado = 'activo'
         """, (empresa_id,))
@@ -1218,20 +1218,86 @@ def update_usuario_permisos(usuario_id):
         with db_tx() as conn:
             cur = conn.cursor()
             
+            # ✅ OBTENER LOS SUBMÓDULOS CON SUS IDs UUID
+            # Primero, obtener todos los submódulos para mapear IDs
+            submodulos = db_query("SELECT id, codigo FROM erp_submodulos WHERE estado = 'activo'")
+            print(f"📋 Submódulos disponibles: {submodulos}")
+            
+            # Crear un mapa de código -> id (UUID)
+            submodulo_map = {}
+            for s in submodulos:
+                submodulo_map[s['codigo']] = s['id']
+            print(f"📋 Mapa de submódulos: {submodulo_map}")
+            
             # Eliminar permisos existentes para este usuario y empresa
             cur.execute("""
                 DELETE FROM erp_usuario_permisos 
                 WHERE auth_user_id = %s AND empresa_id = %s
             """, (auth_user_id, empresa_id))
-            print(f"🗑️ Permisos anteriores eliminados para auth_user_id: {auth_user_id}, empresa_id: {empresa_id}")
+            print(f"🗑️ Permisos anteriores eliminados")
             
-            # Insertar nuevos permisos
+            # Insertar nuevos permisos con IDs UUID
             for permiso in permisos:
                 submodulo_id = permiso.get('submodulo_id')
                 if not submodulo_id:
                     continue
                 
-                print(f"📝 Insertando permiso: submodulo_id={submodulo_id}")
+                # ✅ CONVERTIR EL ID NUMÉRICO A UUID USANDO EL MAPA
+                # Buscar el submódulo por código usando el ID numérico
+                # Los IDs numéricos son 1, 2, 3... que corresponden a los códigos
+                codigos_por_id = {
+                    1: 'EMPRESAS',
+                    2: 'USUARIOS_PERMISOS',
+                    3: 'CORRELATIVOS',
+                    4: 'PARAMETROS',
+                    5: 'INTEGRACION',
+                    6: 'CLIENTES',
+                    7: 'PROVEEDORES',
+                    8: 'ALMACENES',
+                    9: 'CATEGORIAS',
+                    10: 'MARCAS',
+                    11: 'UNIDADES_MEDIDA',
+                    12: 'PRODUCTOS_LISTADO',
+                    13: 'PRODUCTOS_FICHA',
+                    14: 'COTIZACIONES',
+                    15: 'COMPROBANTES_CLIENTE',
+                    16: 'GUIAS_CLIENTE',
+                    17: 'NOTAS_CREDITO',
+                    18: 'SOLICITUD_COMPRA',
+                    19: 'COMPARATIVO_PROVEEDORES',
+                    20: 'ORDEN_COMPRA',
+                    21: 'COMPROBANTES_PROVEEDOR',
+                    22: 'RECEPCION_MERCADERIA',
+                    23: 'ESTADO_STOCK',
+                    24: 'KARDEX',
+                    25: 'ENTRADAS_SALIDAS',
+                    26: 'TRANSFERENCIAS',
+                    27: 'CUENTAS_COBRAR',
+                    28: 'CUENTAS_PAGAR',
+                    29: 'CAJA_BANCOS',
+                    30: 'FLUJO_CAJA',
+                    31: 'REPORTE_VENTAS',
+                    32: 'REPORTE_COMPRAS',
+                    33: 'REPORTE_INVENTARIO',
+                    34: 'REPORTE_FINANZAS',
+                    35: 'SUNAT'
+                }
+                
+                codigo = codigos_por_id.get(submodulo_id)
+                print(f"🔍 Buscando código para ID {submodulo_id}: {codigo}")
+                
+                if not codigo:
+                    print(f"❌ No se encontró código para ID {submodulo_id}")
+                    continue
+                
+                uuid_submodulo_id = submodulo_map.get(codigo)
+                print(f"🔍 UUID para código {codigo}: {uuid_submodulo_id}")
+                
+                if not uuid_submodulo_id:
+                    print(f"❌ No se encontró UUID para código {codigo}")
+                    continue
+                
+                print(f"📝 Insertando permiso: submodulo_id={uuid_submodulo_id}")
                 
                 cur.execute("""
                     INSERT INTO erp_usuario_permisos (
@@ -1244,7 +1310,7 @@ def update_usuario_permisos(usuario_id):
                 """, (
                     auth_user_id,
                     empresa_id,
-                    submodulo_id,
+                    uuid_submodulo_id,  # ✅ AHORA ES UUID
                     permiso.get('puede_ver', False),
                     permiso.get('puede_crear', False),
                     permiso.get('puede_editar', False),
@@ -1268,6 +1334,7 @@ def update_usuario_permisos(usuario_id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 # ============================================================
 # 7. AUDITORÍA
