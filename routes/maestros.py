@@ -51,7 +51,7 @@ def api_clientes_listar():
                    created_at, updated_at
             FROM clientes
             WHERE activo = true
-            ORDER BY razon_social
+            ORDER BY id DESC
         """
         cur.execute(query_clientes)
         clientes = cur.fetchall()
@@ -558,7 +558,7 @@ def api_proveedores_listar():
                 ) as puntos_entrega
             FROM proveedores p
             WHERE p.activo = true
-            ORDER BY p.razon_social
+            ORDER BY id DESC
         """
         proveedores = db_query(query)
         
