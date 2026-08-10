@@ -1,5 +1,5 @@
 /* ============================================================
-   INVENTARIO.JS - Módulo de Inventario (Frontend completo + Filtros)
+   INVENTARIO.JS - Módulo de Inventario (Frontend completo + Filtros con Fecha/Hora)
    ============================================================ */
 
 (function() {
@@ -85,7 +85,7 @@
     }
 
     // ============================================================
-    // 5. FILTRADO (BÚSQUEDA + FECHAS + ESTADO)
+    // 5. FILTRADO (BÚSQUEDA + FECHAS/HORA + ESTADO)
     // ============================================================
     window.filtrarDatos = function(tabId) {
         const tbodyId = getTbodyId(tabId);
@@ -95,7 +95,7 @@
         const searchInput = document.getElementById(`${tabId}Search`);
         const textoBusqueda = searchInput ? searchInput.value.toLowerCase() : '';
 
-        // 2. Fechas
+        // 2. Fechas (solo día, se ignora la hora para el filtro)
         let fechaInicio = null, fechaFin = null;
         const fechaInicioInput = document.getElementById(`${tabId}FechaIicio`);
         const fechaFinInput = document.getElementById(`${tabId}FechaFin`);
@@ -121,8 +121,10 @@
             const coincideTexto = !textoBusqueda || JSON.stringify(item).toLowerCase().includes(textoBusqueda);
             
             let coincideFecha = true;
-            if (item.fecha) {
-                const fechaItem = new Date(item.fecha);
+            if (item.fecha_hora) {
+                const fechaItem = new Date(item.fecha_hora);
+                // Solo comparar la fecha (día), ignorar la hora
+                fechaItem.setHours(0, 0, 0, 0);
                 if (fechaInicio && fechaItem < fechaInicio) coincideFecha = false;
                 if (fechaFin && fechaItem > fechaFin) coincideFecha = false;
             }
@@ -179,7 +181,7 @@
     };
 
     // ============================================================
-    // 8. RENDERIZADO DE TABLAS
+    // 8. RENDERIZADO DE TABLAS (CON FECHA Y HORA)
     // ============================================================
     function renderizarTabla(tabId, data) {
         const tbodyId = getTbodyId(tabId);
@@ -193,18 +195,19 @@
             data.forEach((item) => {
                 html += `<tr>`;
                 if (tabId === 'estado_stock') {
+                    // Estado de stock no tiene fecha, solo mostramos el último movimiento
                     html += `
                         <td><b>${item.codigo || 'PROD-001'}</b></td>
                         <td>${item.producto || 'Producto genérico'}</td>
                         <td><b>${item.stock_actual || 0}</b></td>
                         <td>${item.stock_minimo || 5}</td>
                         <td>${item.ubicacion || 'Almacén Principal'}</td>
-                        <td>${item.ultimo_movimiento || '2026-07-13'}</td>
+                        <td>${item.ultimo_movimiento || '2026-07-13 10:30'}</td>
                         <td>${getAccionesHTML(item.id, 'stock')}</td>
                     `;
                 } else if (tabId === 'kardex') {
                     html += `
-                        <td>${item.fecha || '2026-07-13'}</td>
+                        <td>${item.fecha_hora || '2026-07-13 10:30'}</td>
                         <td><b>${item.numero || 'KARDEX-001'}</b></td>
                         <td>${item.producto || 'Producto'}</td>
                         <td><span class="badge ${item.tipo === 'Entrada' ? 'b-approved' : 'b-canceled'}">${item.tipo || 'Movimiento'}</span></td>
@@ -214,7 +217,7 @@
                     `;
                 } else if (tabId === 'entradas_salidas') {
                     html += `
-                        <td>${item.fecha || '2026-07-13'}</td>
+                        <td>${item.fecha_hora || '2026-07-13 10:30'}</td>
                         <td><b>${item.documento || 'DOC-001'}</b></td>
                         <td><span class="badge ${item.tipo === 'Entrada' ? 'b-approved' : 'b-canceled'}">${item.tipo || 'Movimiento'}</span></td>
                         <td>${item.producto || 'Producto'}</td>
@@ -225,7 +228,7 @@
                 } else if (tabId === 'transferencias') {
                     html += `
                         <td><b>${item.numero || 'TRF-001'}</b></td>
-                        <td>${item.fecha || '2026-07-13'}</td>
+                        <td>${item.fecha_hora || '2026-07-13 10:30'}</td>
                         <td>${item.origen || 'Almacén A'}</td>
                         <td>${item.destino || 'Almacén B'}</td>
                         <td>${item.producto || 'Producto'}</td>
@@ -371,34 +374,34 @@
     }
 
     // ============================================================
-    // 12. MOCK DATA (Simulación)
+    // 12. MOCK DATA (Con Fecha y Hora)
     // ============================================================
     function getMockStockData() {
         return [
-            { id: 1, codigo: 'PROD-001', producto: 'Laptop Lenovo ThinkPad', stock_actual: 45, stock_minimo: 10, ubicacion: 'Estante A3', ultimo_movimiento: '2026-07-10' },
-            { id: 2, codigo: 'PROD-002', producto: 'Monitor Samsung 24"', stock_actual: 12, stock_minimo: 5, ubicacion: 'Estante B1', ultimo_movimiento: '2026-07-11' },
-            { id: 3, codigo: 'PROD-003', producto: 'Teclado Mecánico RGB', stock_actual: 0, stock_minimo: 20, ubicacion: 'Estante C2', ultimo_movimiento: '2026-07-05' },
+            { id: 1, codigo: 'PROD-001', producto: 'Laptop Lenovo ThinkPad', stock_actual: 45, stock_minimo: 10, ubicacion: 'Estante A3', ultimo_movimiento: '2026-07-10 14:30' },
+            { id: 2, codigo: 'PROD-002', producto: 'Monitor Samsung 24"', stock_actual: 12, stock_minimo: 5, ubicacion: 'Estante B1', ultimo_movimiento: '2026-07-11 09:15' },
+            { id: 3, codigo: 'PROD-003', producto: 'Teclado Mecánico RGB', stock_actual: 0, stock_minimo: 20, ubicacion: 'Estante C2', ultimo_movimiento: '2026-07-05 16:45' },
         ];
     }
     function getMockKardexData() {
         return [
-            { id: 101, fecha: '2026-07-10', numero: 'MOV-001', producto: 'Laptop Lenovo', tipo: 'Entrada', cantidad: 10, responsable: 'Juan Pérez' },
-            { id: 102, fecha: '2026-07-11', numero: 'MOV-002', producto: 'Monitor Samsung', tipo: 'Salida', cantidad: 2, responsable: 'María García' },
-            { id: 103, fecha: '2026-07-12', numero: 'MOV-003', producto: 'Teclado Mecánico', tipo: 'Salida', cantidad: 5, responsable: 'Carlos López' },
+            { id: 101, fecha_hora: '2026-07-10 10:00', numero: 'MOV-001', producto: 'Laptop Lenovo', tipo: 'Entrada', cantidad: 10, responsable: 'Juan Pérez' },
+            { id: 102, fecha_hora: '2026-07-11 15:30', numero: 'MOV-002', producto: 'Monitor Samsung', tipo: 'Salida', cantidad: 2, responsable: 'María García' },
+            { id: 103, fecha_hora: '2026-07-12 08:45', numero: 'MOV-003', producto: 'Teclado Mecánico', tipo: 'Salida', cantidad: 5, responsable: 'Carlos López' },
         ];
     }
     function getMockMovimientosData() {
         return [
-            { id: 201, fecha: '2026-07-09', documento: 'OC-001', tipo: 'Entrada', producto: 'Laptop Lenovo', cantidad: 8, motivo: 'Compra' },
-            { id: 202, fecha: '2026-07-10', documento: 'FAC-002', tipo: 'Salida', producto: 'Monitor Samsung', cantidad: 1, motivo: 'Venta' },
-            { id: 203, fecha: '2026-07-11', documento: 'AJ-001', tipo: 'Salida', producto: 'Teclado Mecánico', cantidad: 3, motivo: 'Ajuste' },
+            { id: 201, fecha_hora: '2026-07-09 11:20', documento: 'OC-001', tipo: 'Entrada', producto: 'Laptop Lenovo', cantidad: 8, motivo: 'Compra' },
+            { id: 202, fecha_hora: '2026-07-10 14:00', documento: 'FAC-002', tipo: 'Salida', producto: 'Monitor Samsung', cantidad: 1, motivo: 'Venta' },
+            { id: 203, fecha_hora: '2026-07-11 09:10', documento: 'AJ-001', tipo: 'Salida', producto: 'Teclado Mecánico', cantidad: 3, motivo: 'Ajuste' },
         ];
     }
     function getMockTransferenciasData() {
         return [
-            { id: 301, numero: 'TRF-001', fecha: '2026-07-08', origen: 'Almacén Principal', destino: 'Tienda 1', producto: 'Laptop Lenovo', cantidad: 5, estado: 'Completada' },
-            { id: 302, numero: 'TRF-002', fecha: '2026-07-10', origen: 'Almacén Principal', destino: 'Almacén Secundario', producto: 'Monitor Samsung', cantidad: 3, estado: 'En tránsito' },
-            { id: 303, numero: 'TRF-003', fecha: '2026-07-12', origen: 'Tienda 1', destino: 'Tienda 2', producto: 'Teclado Mecánico', cantidad: 2, estado: 'Pendiente' },
+            { id: 301, numero: 'TRF-001', fecha_hora: '2026-07-08 13:00', origen: 'Almacén Principal', destino: 'Tienda 1', producto: 'Laptop Lenovo', cantidad: 5, estado: 'Completada' },
+            { id: 302, numero: 'TRF-002', fecha_hora: '2026-07-10 16:20', origen: 'Almacén Principal', destino: 'Almacén Secundario', producto: 'Monitor Samsung', cantidad: 3, estado: 'En tránsito' },
+            { id: 303, numero: 'TRF-003', fecha_hora: '2026-07-12 10:00', origen: 'Tienda 1', destino: 'Tienda 2', producto: 'Teclado Mecánico', cantidad: 2, estado: 'Pendiente' },
         ];
     }
 
