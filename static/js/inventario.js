@@ -34,11 +34,56 @@
         cargarDatosSeccion(tabId);
     }
 
-    // Exponer la función al global (para que el HTML la llame)
+    // ✅ EXPONER LA FUNCIÓN AL GLOBAL (para que el HTML y los botones la llamen)
     window.initInventario = initInventario;
 
     // ============================================================
-    // 3. CARGA DE DATOS POR SECCIÓN (AJAX)
+    // 3. FUNCIÓN PARA CAMBIAR DE TAB (Conecta los botones de arriba)
+    // ============================================================
+    window.switchInventarioTab = function(tabId) {
+        console.log(`🔄 Cambiando a tab de inventario: ${tabId}`);
+
+        // 1. Cambiar la URL en el navegador (sin recargar la página)
+        const url = new URL(window.location);
+        url.searchParams.set('tab', tabId);
+        window.history.pushState({}, '', url);
+
+        // 2. Actualizar clases activas de los botones (tabs superiores)
+        document.querySelectorAll('#tabsRowInv .tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.tab === tabId) {
+                btn.classList.add('active');
+            }
+        });
+
+        // 3. Actualizar clases activas de las secciones (los divs ocultos)
+        // ✅ CORRECCIÓN: Usar los IDs correctos de inventario
+        const sections = {
+            'estado_stock': document.getElementById('estado_stock'),
+            'kardex': document.getElementById('kardex'),
+            'entradas_salidas': document.getElementById('entradas_salidas'),
+            'transferencias': document.getElementById('transferencias')
+        };
+
+        Object.keys(sections).forEach(key => {
+            if (sections[key]) {
+                sections[key].classList.remove('active');
+            }
+        });
+        if (sections[tabId]) {
+            sections[tabId].classList.add('active');
+        }
+
+        // 4. Cargar los datos de la nueva pestaña
+        if (typeof initInventario === 'function') {
+            initInventario(tabId);
+        } else {
+            console.error('❌ initInventario no está definida');
+        }
+    };
+
+    // ============================================================
+    // 4. CARGA DE DATOS POR SECCIÓN (AJAX)
     // ============================================================
     function cargarDatosSeccion(tabId) {
         // 1. Mostrar loader visual (opcional)
@@ -88,7 +133,7 @@
     }
 
     // ============================================================
-    // 4. RENDERIZADO DE TABLAS
+    // 5. RENDERIZADO DE TABLAS
     // ============================================================
     function renderizarTabla(tabId, data) {
         const tbodyId = getTbodyId(tabId);
@@ -155,7 +200,7 @@
     }
 
     // ============================================================
-    // 5. FUNCIONES DE ACCIONES Y MENÚS (Kebab)
+    // 6. FUNCIONES DE ACCIONES Y MENÚS (Kebab)
     // ============================================================
     function getAccionesHTML(id, tipo) {
         // Botón de kebab que abre el menú contextual
@@ -274,7 +319,7 @@
     }
 
     // ============================================================
-    // 6. FUNCIONES PARA ABRIR MODALES (Botones principales)
+    // 7. FUNCIONES PARA ABRIR MODALES (Botones principales)
     // ============================================================
     window.openStockModal = function() {
         document.getElementById('stockModal').classList.add('active');
@@ -300,7 +345,7 @@
     };
 
     // ============================================================
-    // 7. FUNCIONES DE GUARDADO (Simuladas)
+    // 8. FUNCIONES DE GUARDADO (Simuladas)
     // ============================================================
     window.saveAjusteStock = function() {
         const producto = document.getElementById('stkProducto').value;
@@ -355,7 +400,7 @@
     };
 
     // ============================================================
-    // 8. FUNCIONES UTILITARIAS
+    // 9. FUNCIONES UTILITARIAS
     // ============================================================
     function getTbodyId(tabId) {
         const map = {
@@ -418,7 +463,7 @@
     };
 
     // ============================================================
-    // 9. DATOS DE EJEMPLO (MOCK) - REEMPLAZAR CON BACKEND REAL
+    // 10. DATOS DE EJEMPLO (MOCK) - REEMPLAZAR CON BACKEND REAL
     // ============================================================
     function getMockStockData() {
         return [

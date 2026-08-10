@@ -23,12 +23,12 @@
 {% endblock %}
 
 {% block content %}
-<!-- TABS -->
+<!-- TABS (con eventos onclick agregados) -->
 <div class="tabs" id="tabsRowInv">
-    <button class="tab-btn active" data-tab="estado_stock">📊 Estado de stock</button>
-    <button class="tab-btn" data-tab="kardex">📈 Kardex</button>
-    <button class="tab-btn" data-tab="entradas_salidas">📥📤 Entradas y salidas</button>
-    <button class="tab-btn" data-tab="transferencias">🔄 Transferencias</button>
+    <button class="tab-btn active" data-tab="estado_stock" onclick="switchInventarioTab('estado_stock')">📊 Estado de stock</button>
+    <button class="tab-btn" data-tab="kardex" onclick="switchInventarioTab('kardex')">📈 Kardex</button>
+    <button class="tab-btn" data-tab="entradas_salidas" onclick="switchInventarioTab('entradas_salidas')">📥📤 Entradas y salidas</button>
+    <button class="tab-btn" data-tab="transferencias" onclick="switchInventarioTab('transferencias')">🔄 Transferencias</button>
 </div>
 
 <!-- ============================================================ -->
@@ -220,11 +220,39 @@
 {% include "inventario/modales/transferencia_modal.html" %}
 
 {% endblock %}
-
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/inventario.js') }}"></script>
-<!-- Script similar al de compras para activar tabs y cargar initInventario -->
+
+<!-- ============================================================ -->
+<!-- SCRIPT PARA FORZAR APERTURA DEL SIDEBAR Y CARGA DE DATOS -->
+<!-- ============================================================ -->
 <script>
-    // Copia aquí la lógica de los tabs que tienes en el index.html de compras
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 Iniciando módulo Inventario desde el HTML...');
+        
+        // 1. Abrir el menú lateral de Inventario si está cerrado
+        const grupos = document.querySelectorAll('.menu-group');
+        grupos.forEach(grupo => {
+            const header = grupo.querySelector('.menu-header');
+            if (header && header.textContent.includes('6 ─ Inventario')) {
+                // Forzar la apertura del grupo
+                grupo.classList.add('open');
+                console.log('✅ Menú lateral de Inventario desplegado automáticamente');
+            }
+        });
+
+        // 2. Inicializar el módulo con la pestaña de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialTab = urlParams.get('tab') || 'estado_stock';
+        
+        // Esperar un momento a que cargue todo el DOM y luego iniciar
+        setTimeout(() => {
+            if (typeof initInventario === 'function') {
+                initInventario(initialTab);
+            } else {
+                console.error('❌ initInventario no está disponible. Revisa que inventario.js esté cargado.');
+            }
+        }, 300);
+    });
 </script>
 {% endblock %}
