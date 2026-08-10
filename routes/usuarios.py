@@ -19,47 +19,49 @@ def usuarios_page():
 # ============================================================
 # ENDPOINTS API PARA USUARIOS
 # ============================================================
-
 @usuarios_bp.route('/api/config/usuarios', methods=['GET'])
 def get_usuarios():
     """Obtener todos los usuarios con sus empresas y roles"""
     try:
+        # ✅ CONSULTA SQL CON ORDEN PERSONALIZADO
         usuarios = db_query("""
             SELECT 
                 u.id,
-                u.auth_user_id,
                 u.usuario_sistema,
-                u.nombres_apellidos,
+                u.nombre_completo,
+                u.email,
                 u.area,
-                u.correo,
-                u.celular,
                 u.estado,
                 u.created_at,
-                u.updated_at,
                 (
                     SELECT json_agg(
                         json_build_object(
-                            'id', ue.id,
-                            'empresa_id', ue.empresa_id,
+                            'empresa_id', e.id,
                             'empresa_codigo', e.codigo,
                             'empresa_nombre', e.nombre_comercial,
-                            'es_principal', ue.es_empresa_principal,
-                            'estado', ue.estado,
-                            'rol_id', ue.rol_id,
-                            'rol_codigo', r.codigo,
-                            'rol_nombre', r.nombre,
-                            'rol_es_admin', r.es_admin
+                            'rol_codigo', ur.rol_codigo,
+                            'rol_nombre', r.nombre
                         )
                     )
-                    FROM erp_usuario_empresas ue
-                    LEFT JOIN erp_empresas e ON e.id = ue.empresa_id
-                    LEFT JOIN erp_roles r ON r.id = ue.rol_id
-                    WHERE ue.auth_user_id = u.auth_user_id
-                    AND ue.estado = 'activo'
+                    FROM erp_usuarios_empresas ue
+                    JOIN erp_empresas e ON e.id = ue.empresa_id
+                    JOIN erp_usuarios_empresas_roles uer ON uer.usuario_empresa_id = ue.id
+                    JOIN erp_roles r ON r.codigo = uer.rol_codigo
+                    WHERE ue.usuario_id = u.id AND ue.estado = 'activo'
                 ) as empresas_acceso
-            FROM usuarios u
+            FROM erp_usuarios u
             WHERE u.estado = 'activo'
-            ORDER BY u.usuario_sistema
+            ORDER BY 
+                CASE 
+                    WHEN u.nombre_completo = 'ANTONY GAMONAL' THEN 1
+                    WHEN u.nombre_completo = 'ERIKA DE LA CRUZ' THEN 2
+                    WHEN u.nombre_completo = 'HELLEN BLAS PRINCIPE' THEN 3
+                    WHEN u.nombre_completo = 'ESTRELLA SANTOS' THEN 4
+                    WHEN u.nombre_completo = 'LUIS' THEN 5
+                    WHEN u.nombre_completo = 'DESPACHO' THEN 6
+                    ELSE 999
+                END ASC,
+                u.nombre_completo ASC
         """)
         
         return jsonify({
@@ -71,7 +73,6 @@ def get_usuarios():
     except Exception as e:
         print(f"❌ Error en get_usuarios: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 @usuarios_bp.route('/api/config/usuarios/<usuario_id>', methods=['GET'])
 def get_usuario(usuario_id):
