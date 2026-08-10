@@ -952,7 +952,7 @@
             <div class="grid">
                 <div class="field" id="field-proveedor">
                     <label>Proveedor asociado <span class="req">*</span></label>
-                    <select id="proveedorProducto" name="proveedor_id" >
+                    <select id="proveedorProducto" name="proveedor_id" required >
                         <option value="">Seleccione un proveedor</option>
                     </select>
                 </div>
@@ -1157,8 +1157,9 @@
             { id: 'marcaProducto', nombre: 'Marca', fieldId: 'field-marca' },
             { id: 'unidadMedida', nombre: 'Unidad de medida', fieldId: 'field-unidad' },
             { id: 'categoriaProducto', nombre: 'Categoría', fieldId: 'field-categoria' },
-            { id: 'transporteReferencial', nombre: 'Transporte', fieldId: 'field-transporte' },
-            { id: 'proveedorproducto', nombre: 'Proveedor asociado', fieldId: 'field-proveedor'}
+            { id: 'proveedorproducto', nombre: 'Proveedor asociado', fieldId: 'field-proveedor'},
+            { id: 'transporteReferencial', nombre: 'Transporte', fieldId: 'field-transporte' }
+            
         ];
         
         var errores = [];

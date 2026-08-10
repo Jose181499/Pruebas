@@ -1685,7 +1685,7 @@ else if (currentPath.includes('/inventario')) {
             }
         }
 
-         function renderEmpresas(filter=""){
+      function renderEmpresas(filter=""){
     const tbody = document.getElementById("tbodyEmpresas");
     if (!tbody) {
         console.warn('⚠️ tbodyEmpresas no encontrado - omitiendo renderizado');
@@ -1701,8 +1701,19 @@ else if (currentPath.includes('/inventario')) {
     }
     
     tbody.innerHTML = list.map(function(e) {
-        // ✅ FIX: Usar forma segura sin optional chaining
         var cuenta = (e.cuentas_bancarias && e.cuentas_bancarias.length > 0) ? e.cuentas_bancarias[0] : {};
+        
+        // ✅ Lógica para generar el enlace a la dirección fiscal
+        var direccionHtml = e.direccion_fiscal || '-';
+        // Si la dirección parece un link de Google Maps (contiene 'http' o 'www'), lo convertimos en un enlace
+        if (direccionHtml.includes('http://') || direccionHtml.includes('https://')) {
+            direccionHtml = `<a href="${direccionHtml}" target="_blank" style="color:#2563EB;font-weight:700;text-decoration:underline;">📍 Ver mapa</a>`;
+        } else if (direccionHtml.length > 5) {
+            // Si es un texto normal (ej: "Av. Ejemplo 123"), lo envolvemos en un link de Google Maps automático
+            var direccionCodificada = encodeURIComponent(direccionHtml);
+            direccionHtml = `<a href="https://www.google.com/maps/search/?api=1&query=${direccionCodificada}" target="_blank" style="color:#2563EB;font-weight:700;text-decoration:underline;">📍 ${direccionHtml}</a>`;
+        }
+
         return `
         <tr>
             <td>${badge(e.codigo)}</td>
@@ -1713,7 +1724,7 @@ else if (currentPath.includes('/inventario')) {
             <td>${cuenta.tipo_cuenta || '-'}</td>
             <td>${cuenta.numero_cuenta || '-'}</td>
             <td>${cuenta.cci || '<span class="badge badge-danger" style="font-size:10px;padding:2px 6px;border-radius:4px;background:#FEE2E2;color:#DC2626;">Completar CCI</span>'}</td>
-            <td class="left">${e.direccion_fiscal || '-'}</td>
+            <td class="left" style="max-width:200px;">${direccionHtml}</td>
             <td style="text-align:center;padding:4px 6px;">
                 <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
                     <span class="badge ${e.estado === 'activo' ? 'badge-ok' : 'badge-gray'}" style="font-size:9px;padding:1px 6px;border-radius:10px;font-weight:600;">
@@ -1757,8 +1768,7 @@ else if (currentPath.includes('/inventario')) {
             </td>
         </tr>`;
     }).join("");
-}   
-
+}
 
         // Editar empresa
         function editarEmpresa(id) {
