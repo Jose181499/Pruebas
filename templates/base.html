@@ -4369,21 +4369,23 @@ window.bdPorPagina = 20;
         </script>
         {% block extra_js %}{% endblock %}
 
+
+
+        
         <script>
 
 
-
-
-
-
+       
 // ============================================================
-// 🔥 FORZAR CAMBIO DE TEMA AL CAMBIAR EMPRESA
+// 🔥 INICIALIZACIÓN PRINCIPAL - UN SOLO EVENTO
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 DOM listo, iniciando aplicación...');
+    
+    // 1. Configurar cambio de empresa
     var empresaSelect = document.getElementById('empresaActiva');
     if (empresaSelect) {
-        // Eliminar eventos antiguos y agregar nuevo
         var newSelect = empresaSelect.cloneNode(true);
         empresaSelect.parentNode.replaceChild(newSelect, empresaSelect);
         
@@ -4391,7 +4393,6 @@ document.addEventListener('DOMContentLoaded', function() {
             var empresa = e.target.value;
             console.log('🔄 Cambiando empresa a:', empresa);
             
-            // Aplicar tema
             var root = document.documentElement;
             root.setAttribute('data-empresa', empresa);
             
@@ -4415,24 +4416,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (logo) logo.textContent = "KCF";
             }
             
-            // Recargar datos
-            if (typeof loadEmpresas === 'function') loadEmpresas();
             if (typeof loadUsuarios === 'function') loadUsuarios();
-            if (typeof loadCorrelativos === 'function') loadCorrelativos();
-            
-            if (typeof toast === 'function') {
-                toast('Empresa cambiada a ' + empresa);
-            }
+            if (typeof toast === 'function') toast('Empresa cambiada a ' + empresa);
         });
-        
-        console.log('✅ Evento de cambio de empresa configurado');
+    }
+    
+    // 2. INICIAR DASHBOARD - ESTO ES LO QUE FALTABA
+    if (typeof initDashboard === 'function') {
+        console.log('✅ Ejecutando initDashboard...');
+        initDashboard().catch(function(error) {
+            console.error('❌ Error en initDashboard:', error);
+        });
+    } else {
+        console.error('❌ initDashboard NO está definida');
+        // Fallback de emergencia
+        if (typeof cargarSubmodulos === 'function') {
+            cargarSubmodulos().then(function() {
+                if (typeof loadUsuarios === 'function') loadUsuarios();
+            });
+        }
     }
 });
 
-console.log('✅ Script de forzado de inicialización cargado');
+console.log('✅ Script de inicialización cargado correctamente');
 </script>
-        </body>
-        </html>
-
 
 
