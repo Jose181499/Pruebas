@@ -2495,6 +2495,7 @@ function renderClientesCompleta(list) {
         { key: 'email_contacto', label: 'Email', width: '160px' },
         { key: 'contactos', label: 'Contactos', width: '200px' },
         { key: 'puntos_entrega', label: 'Puntos de Entrega', width: '220px' },
+        { key: 'instrucciones', label: 'Instrucciones', width: '150px'},
         { key: 'estado', label: 'Estado', width: '90px' },
         { key: 'activo', label: 'Activo', width: '70px' },
         { key: 'observaciones', label: 'Observaciones', width: '150px' },
@@ -2545,6 +2546,17 @@ function renderClientesCompleta(list) {
                             <br><small>${p.direccion || ''} ${p.telefono_contacto ? '| Tel: ' + p.telefono_contacto : ''}</small>
                         </div>`
                     ).join('');
+                } else {
+                    value = '-';
+                }
+            } else if (f.key === 'instrucciones') {
+                if (r.puntos_entrega && r.puntos_entrega.length > 0) {
+                    const textos = r.puntos_entrega
+                        .filter(p => p.instrucciones)
+                        .map(p => `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;">
+                            <strong>${p.nombre_punto || p.punto || '-'}:</strong> ${p.instrucciones}
+                        </div>`);
+                    value = textos.length ? textos.join('') : '-';
                 } else {
                     value = '-';
                 }

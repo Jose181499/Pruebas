@@ -212,13 +212,44 @@ def api_clientes_guardar():
         
         cur.execute(query, params)
         result = cur.fetchone()
+        cliente_id = result[0]
+
+        # 🆕 Guardar contactos
+        for c in data.get('contactos', []):
+            if not (c.get('nombre') or c.get('telefono') or c.get('email')):
+                continue
+            cur.execute("""
+                INSERT INTO clientes_contactos (
+                    cliente_id, nombre_contacto, cargo, telefono, email,
+                    principal, activo, created_at, updated_at
+                ) VALUES (%s, %s, %s, %s, %s, %s, TRUE, NOW(), NOW())
+            """, (
+                cliente_id, c.get('nombre', ''), c.get('cargo', ''),
+                c.get('telefono', ''), c.get('email', ''), bool(c.get('principal', False))
+            ))
+
+        # 🆕 Guardar puntos de entrega (incluye instrucciones)
+        for p in data.get('puntos_entrega', []):
+            if not (p.get('punto') or p.get('direccion')):
+                continue
+            cur.execute("""
+                INSERT INTO clientes_puntos_entrega (
+                    cliente_id, nombre_punto, direccion, telefono_contacto,
+                    responsable, principal, instrucciones, activo, created_at, updated_at
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, TRUE, NOW(), NOW())
+            """, (
+                cliente_id, p.get('punto', ''), p.get('direccion', ''),
+                p.get('telefono', ''), p.get('contacto', ''),
+                bool(p.get('principal', False)), p.get('instrucciones', '')
+            ))
+
         conn.commit()
         cur.close()
         conn.close()
 
         if result:
             cliente = {
-                'id': result[0],
+                'id': cliente_id,
                 'codigo_cliente': result[1],
                 'numero_documento': result[2]
             }
@@ -376,6 +407,38 @@ def api_clientes_actualizar(id):
 
         cur.execute(query, params)
         result = cur.fetchone()
+
+        # 🆕 Reemplazar puntos de entrega (borra y vuelve a insertar, incluye instrucciones)
+        cur.execute("DELETE FROM clientes_puntos_entrega WHERE cliente_id = %s", (id,))
+        for p in data.get('puntos_entrega', []):
+            if not (p.get('punto') or p.get('direccion')):
+                continue
+            cur.execute("""
+                INSERT INTO clientes_puntos_entrega (
+                    cliente_id, nombre_punto, direccion, telefono_contacto,
+                    responsable, principal, instrucciones, activo, created_at, updated_at
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, TRUE, NOW(), NOW())
+            """, (
+                id, p.get('punto', ''), p.get('direccion', ''),
+                p.get('telefono', ''), p.get('contacto', ''),
+                bool(p.get('principal', False)), p.get('instrucciones', '')
+            ))
+
+        # 🆕 Reemplazar contactos
+        cur.execute("DELETE FROM clientes_contactos WHERE cliente_id = %s", (id,))
+        for c in data.get('contactos', []):
+            if not (c.get('nombre') or c.get('telefono') or c.get('email')):
+                continue
+            cur.execute("""
+                INSERT INTO clientes_contactos (
+                    cliente_id, nombre_contacto, cargo, telefono, email,
+                    principal, activo, created_at, updated_at
+                ) VALUES (%s, %s, %s, %s, %s, %s, TRUE, NOW(), NOW())
+            """, (
+                id, c.get('nombre', ''), c.get('cargo', ''),
+                c.get('telefono', ''), c.get('email', ''), bool(c.get('principal', False))
+            ))
+
         conn.commit()
         cur.close()
         conn.close()
