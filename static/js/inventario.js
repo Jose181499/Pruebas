@@ -1,5 +1,5 @@
 /* ============================================================
-   INVENTARIO.JS - Módulo de Inventario (Frontend completo)
+   INVENTARIO.JS - Módulo de Inventario (Frontend completo + Filtros)
    ============================================================ */
 
 (function() {
@@ -10,146 +10,188 @@
     // ============================================================
     const MODULE_NAME = 'Inventario';
 
-    // Mapeo de secciones y sus endpoints simulados (para el ejemplo)
-    const API_ENDPOINTS = {
-        estado_stock: '/inventario/api/estado_stock',
-        kardex: '/inventario/api/kardex',
-        entradas_salidas: '/inventario/api/entradas_salidas',
-        transferencias: '/inventario/api/transferencias'
-    };
-
     // ============================================================
-    // 2. INICIALIZACIÓN PRINCIPAL
+    // 2. INICIALIZACIÓN PRINCIPAL (CON FILTROS INCLUIDOS)
     // ============================================================
     function initInventario(tabId) {
         console.log(`📦 [${MODULE_NAME}] Inicializando módulo con tab: ${tabId}`);
         
-        // Si no se pasa tabId, usar el primero o el de la URL
         if (!tabId) {
             const urlParams = new URLSearchParams(window.location.search);
             tabId = urlParams.get('tab') || 'estado_stock';
         }
 
-        // Cargar los datos de la sección activa
+        // Cargar datos y activar filtros
         cargarDatosSeccion(tabId);
+        configurarFiltros(tabId);
     }
 
-    // ✅ EXPONER LA FUNCIÓN AL GLOBAL (para que el HTML y los botones la llamen)
+    // ✅ EXPONER AL GLOBAL
     window.initInventario = initInventario;
 
     // ============================================================
-    // 3. FUNCIÓN PARA CAMBIAR DE TAB (Conecta los botones de arriba)
+    // 3. CAMBIAR DE TAB
     // ============================================================
     window.switchInventarioTab = function(tabId) {
         console.log(`🔄 Cambiando a tab de inventario: ${tabId}`);
 
-        // 1. Cambiar la URL en el navegador (sin recargar la página)
         const url = new URL(window.location);
         url.searchParams.set('tab', tabId);
         window.history.pushState({}, '', url);
 
-        // 2. Actualizar clases activas de los botones (tabs superiores)
         document.querySelectorAll('#tabsRowInv .tab-btn').forEach(btn => {
             btn.classList.remove('active');
-            if (btn.dataset.tab === tabId) {
-                btn.classList.add('active');
-            }
+            if (btn.dataset.tab === tabId) btn.classList.add('active');
         });
 
-        // 3. Actualizar clases activas de las secciones (los divs ocultos)
-        // ✅ CORRECCIÓN: Usar los IDs correctos de inventario
         const sections = {
             'estado_stock': document.getElementById('estado_stock'),
             'kardex': document.getElementById('kardex'),
             'entradas_salidas': document.getElementById('entradas_salidas'),
             'transferencias': document.getElementById('transferencias')
         };
-
         Object.keys(sections).forEach(key => {
-            if (sections[key]) {
-                sections[key].classList.remove('active');
-            }
+            if (sections[key]) sections[key].classList.remove('active');
         });
-        if (sections[tabId]) {
-            sections[tabId].classList.add('active');
-        }
+        if (sections[tabId]) sections[tabId].classList.add('active');
 
-        // 4. Cargar los datos de la nueva pestaña
-        if (typeof initInventario === 'function') {
-            initInventario(tabId);
-        } else {
-            console.error('❌ initInventario no está definida');
-        }
+        if (typeof initInventario === 'function') initInventario(tabId);
     };
 
     // ============================================================
-    // 4. CARGA DE DATOS POR SECCIÓN (AJAX)
+    // 4. CARGA DE DATOS
     // ============================================================
     function cargarDatosSeccion(tabId) {
-        // 1. Mostrar loader visual (opcional)
         const tbodyId = getTbodyId(tabId);
-        if (tbodyId) {
-            document.getElementById(tbodyId).innerHTML = `
-                <tr><td colspan="10" style="padding:20px;color:#94A3B8;font-weight:900;">
-                    ⏳ Cargando datos...
-                </td></tr>
-            `;
-        }
+        if (!tbodyId) return;
 
-        // 2. Simular petición AJAX al backend
-        // NOTA: Cambia esto por un fetch real cuando tengas el backend listo
+        document.getElementById(tbodyId).innerHTML = `
+            <tr><td colspan="10" style="padding:20px;color:#94A3B8;font-weight:900;">⏳ Cargando datos...</td></tr>
+        `;
+
         setTimeout(() => {
-            // Simulamos datos de respuesta según el tab
             let data = [];
             let countLabel = '';
+            if (tabId === 'estado_stock') { data = getMockStockData(); countLabel = 'productos'; }
+            else if (tabId === 'kardex') { data = getMockKardexData(); countLabel = 'movimientos'; }
+            else if (tabId === 'entradas_salidas') { data = getMockMovimientosData(); countLabel = 'movimientos'; }
+            else if (tabId === 'transferencias') { data = getMockTransferenciasData(); countLabel = 'transferencias'; }
 
-            if (tabId === 'estado_stock') {
-                data = getMockStockData();
-                countLabel = 'productos';
-            } else if (tabId === 'kardex') {
-                data = getMockKardexData();
-                countLabel = 'movimientos';
-            } else if (tabId === 'entradas_salidas') {
-                data = getMockMovimientosData();
-                countLabel = 'movimientos';
-            } else if (tabId === 'transferencias') {
-                data = getMockTransferenciasData();
-                countLabel = 'transferencias';
-            }
-
-            // 3. Renderizar la tabla con los datos
             renderizarTabla(tabId, data);
             
-            // 4. Actualizar contador del footer
             const countSpan = document.getElementById(`${tabId}Count`);
-            if (countSpan) {
-                countSpan.textContent = `Mostrando ${data.length} de ${data.length} ${countLabel}`;
-            }
-
-            // 5. Actualizar KPIs (si los tienes definidos en el HTML)
-            actualizarKPIs(tabId, data);
-
-        }, 400); // Simulación de latencia
+            if (countSpan) countSpan.textContent = `Mostrando ${data.length} de ${data.length} ${countLabel}`;
+        }, 400);
     }
 
     // ============================================================
-    // 5. RENDERIZADO DE TABLAS
+    // 5. FILTRADO (BÚSQUEDA + FECHAS + ESTADO)
+    // ============================================================
+    window.filtrarDatos = function(tabId) {
+        const tbodyId = getTbodyId(tabId);
+        if (!tbodyId) return;
+
+        // 1. Búsqueda por texto
+        const searchInput = document.getElementById(`${tabId}Search`);
+        const textoBusqueda = searchInput ? searchInput.value.toLowerCase() : '';
+
+        // 2. Fechas
+        let fechaInicio = null, fechaFin = null;
+        const fechaInicioInput = document.getElementById(`${tabId}FechaIicio`);
+        const fechaFinInput = document.getElementById(`${tabId}FechaFin`);
+        if (fechaInicioInput && fechaInicioInput.value) fechaInicio = new Date(fechaInicioInput.value);
+        if (fechaFinInput && fechaFinInput.value) {
+            fechaFin = new Date(fechaFinInput.value);
+            fechaFin.setHours(23, 59, 59, 999);
+        }
+
+        // 3. Estado / Tipo
+        const statusSelect = document.getElementById(`${tabId}Tipo`) || document.getElementById(`${tabId}Status`);
+        const statusFiltro = statusSelect ? statusSelect.value.toLowerCase() : '';
+
+        // 4. Obtener datos originales
+        let datosOriginales = [];
+        if (tabId === 'estado_stock') datosOriginales = getMockStockData();
+        else if (tabId === 'kardex') datosOriginales = getMockKardexData();
+        else if (tabId === 'entradas_salidas') datosOriginales = getMockMovimientosData();
+        else if (tabId === 'transferencias') datosOriginales = getMockTransferenciasData();
+
+        // 5. Aplicar filtros
+        const datosFiltrados = datosOriginales.filter(item => {
+            const coincideTexto = !textoBusqueda || JSON.stringify(item).toLowerCase().includes(textoBusqueda);
+            
+            let coincideFecha = true;
+            if (item.fecha) {
+                const fechaItem = new Date(item.fecha);
+                if (fechaInicio && fechaItem < fechaInicio) coincideFecha = false;
+                if (fechaFin && fechaItem > fechaFin) coincideFecha = false;
+            }
+            
+            let coincideEstado = true;
+            if (statusFiltro) {
+                const estadoItem = (item.estado || item.tipo || '').toLowerCase();
+                if (!estadoItem.includes(statusFiltro)) coincideEstado = false;
+            }
+            return coincideTexto && coincideFecha && coincideEstado;
+        });
+
+        renderizarTabla(tabId, datosFiltrados);
+        const countSpan = document.getElementById(`${tabId}Count`);
+        if (countSpan) countSpan.textContent = `Mostrando ${datosFiltrados.length} de ${datosOriginales.length} registros`;
+    };
+
+    // ============================================================
+    // 6. CONFIGURAR FILTROS (Event Listeners)
+    // ============================================================
+    function configurarFiltros(tabId) {
+        const searchInput = document.getElementById(`${tabId}Search`);
+        if (searchInput) {
+            let timeoutId;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => window.filtrarDatos(tabId), 300);
+            });
+        }
+        const fechaInicio = document.getElementById(`${tabId}FechaIicio`);
+        const fechaFin = document.getElementById(`${tabId}FechaFin`);
+        if (fechaInicio) fechaInicio.addEventListener('change', () => window.filtrarDatos(tabId));
+        if (fechaFin) fechaFin.addEventListener('change', () => window.filtrarDatos(tabId));
+
+        const statusSelect = document.getElementById(`${tabId}Tipo`) || document.getElementById(`${tabId}Status`);
+        if (statusSelect) statusSelect.addEventListener('change', () => window.filtrarDatos(tabId));
+    }
+
+    // ============================================================
+    // 7. LIMPIAR FILTROS
+    // ============================================================
+    window.clearDateFilter = function(tabId) {
+        const fechaInicio = document.getElementById(`${tabId}FechaIicio`);
+        const fechaFin = document.getElementById(`${tabId}FechaFin`);
+        const searchInput = document.getElementById(`${tabId}Search`);
+        const statusSelect = document.getElementById(`${tabId}Tipo`) || document.getElementById(`${tabId}Status`);
+
+        if (fechaInicio) fechaInicio.value = '';
+        if (fechaFin) fechaFin.value = '';
+        if (searchInput) searchInput.value = '';
+        if (statusSelect) statusSelect.value = '';
+
+        window.filtrarDatos(tabId);
+    };
+
+    // ============================================================
+    // 8. RENDERIZADO DE TABLAS
     // ============================================================
     function renderizarTabla(tabId, data) {
         const tbodyId = getTbodyId(tabId);
         if (!tbodyId) return;
-
         const tbody = document.getElementById(tbodyId);
         let html = '';
 
         if (!data || data.length === 0) {
-            html = `<tr><td colspan="10" style="padding:20px;color:#94A3B8;font-weight:900;">
-                📭 No se encontraron registros.
-            </td></tr>`;
+            html = `<tr><td colspan="10" style="padding:20px;color:#94A3B8;font-weight:900;">📭 No se encontraron registros.</td></tr>`;
         } else {
-            data.forEach((item, index) => {
+            data.forEach((item) => {
                 html += `<tr>`;
-                // Generamos las celdas según la sección
                 if (tabId === 'estado_stock') {
                     html += `
                         <td><b>${item.codigo || 'PROD-001'}</b></td>
@@ -195,37 +237,26 @@
                 html += `</tr>`;
             });
         }
-
         tbody.innerHTML = html;
     }
 
     // ============================================================
-    // 6. FUNCIONES DE ACCIONES Y MENÚS (Kebab)
+    // 9. ACCIONES Y KEBAB
     // ============================================================
     function getAccionesHTML(id, tipo) {
-        // Botón de kebab que abre el menú contextual
-        return `
-            <button class="kebab" onclick="toggleMenu(event, '${id}', '${tipo}')">⋮</button>
-        `;
+        return `<button class="kebab" onclick="toggleMenu(event, '${id}', '${tipo}')">⋮</button>`;
     }
 
     window.toggleMenu = function(event, id, tipo) {
-        // Prevenir que el clic se propague
         event.stopPropagation();
-
-        // Cerrar cualquier otro menú abierto
         const existingMenu = document.querySelector('.menu-pop');
-        if (existingMenu) {
-            existingMenu.remove();
-        }
+        if (existingMenu) existingMenu.remove();
 
-        // Crear el menú flotante
         const menu = document.createElement('div');
         menu.className = 'menu-pop';
         menu.style.top = (event.clientY + 10) + 'px';
         menu.style.left = (event.clientX - 20) + 'px';
 
-        // Opciones según el tipo
         let opciones = '';
         if (tipo === 'stock') {
             opciones = `
@@ -249,77 +280,50 @@
                 <button class="danger" onclick="accionTransferencia('eliminar', '${id}')">🗑️ Eliminar</button>
             `;
         }
-
         menu.innerHTML = opciones;
         document.body.appendChild(menu);
 
-        // Cerrar al hacer clic fuera
         setTimeout(() => {
             document.addEventListener('click', function closeMenu(e) {
-                if (!menu.contains(e.target)) {
-                    menu.remove();
-                    document.removeEventListener('click', closeMenu);
-                }
+                if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('click', closeMenu); }
             });
         }, 100);
     };
 
-    // Funciones de acciones (abrir modales, etc.)
+    function closeAllMenus() { document.querySelectorAll('.menu-pop').forEach(m => m.remove()); }
+
     window.accionStock = function(accion, id) {
         closeAllMenus();
         if (accion === 'ajustar') {
-            // Abrir modal de ajuste
             document.getElementById('stockModal').classList.add('active');
             document.getElementById('stkProducto').value = 'Producto ID ' + id;
-        } else if (accion === 'detalle') {
-            alert(`📊 Ver detalle de stock del ID: ${id}`);
-        } else if (accion === 'eliminar') {
-            if (confirm('¿Estás seguro de eliminar este producto?')) {
-                alert(`🗑️ Producto ${id} eliminado (simulado)`);
-            }
-        }
+        } else if (accion === 'detalle') alert(`📊 Ver detalle de stock del ID: ${id}`);
+        else if (accion === 'eliminar' && confirm('¿Estás seguro de eliminar este producto?')) alert(`🗑️ Producto ${id} eliminado (simulado)`);
     };
 
     window.accionMovimiento = function(accion, id) {
         closeAllMenus();
         if (accion === 'ver') {
-            // Abrir modal de kardex
             document.getElementById('kardexModal').classList.add('active');
             document.getElementById('kdxNumero').value = 'MOV-' + id;
-        } else if (accion === 'pdf') {
-            alert(`📄 Generando PDF del movimiento ${id}`);
-        } else if (accion === 'eliminar') {
-            if (confirm('¿Eliminar este movimiento del kardex?')) {
-                alert(`🗑️ Movimiento ${id} eliminado (simulado)`);
-            }
-        }
+        } else if (accion === 'pdf') alert(`📄 Generando PDF del movimiento ${id}`);
+        else if (accion === 'eliminar' && confirm('¿Eliminar este movimiento del kardex?')) alert(`🗑️ Movimiento ${id} eliminado (simulado)`);
     };
 
     window.accionTransferencia = function(accion, id) {
         closeAllMenus();
-        if (accion === 'editar') {
-            document.getElementById('transferenciaModal').classList.add('active');
-        } else if (accion === 'completar') {
+        if (accion === 'editar') document.getElementById('transferenciaModal').classList.add('active');
+        else if (accion === 'completar') {
             if (confirm('¿Marcar esta transferencia como completada?')) {
                 alert(`✅ Transferencia ${id} completada (simulado)`);
-                // Recargar datos
                 const activeTab = document.querySelector('.tab-btn.active');
-                if (activeTab) cargarDatosSeccion(activeTab.dataset.tab);
+                if (activeTab) window.filtrarDatos(activeTab.dataset.tab);
             }
-        } else if (accion === 'eliminar') {
-            if (confirm('¿Eliminar esta transferencia?')) {
-                alert(`🗑️ Transferencia ${id} eliminada (simulado)`);
-            }
-        }
+        } else if (accion === 'eliminar' && confirm('¿Eliminar esta transferencia?')) alert(`🗑️ Transferencia ${id} eliminada (simulado)`);
     };
 
-    function closeAllMenus() {
-        const menus = document.querySelectorAll('.menu-pop');
-        menus.forEach(m => m.remove());
-    }
-
     // ============================================================
-    // 7. FUNCIONES PARA ABRIR MODALES (Botones principales)
+    // 10. MODALES
     // ============================================================
     window.openStockModal = function() {
         document.getElementById('stockModal').classList.add('active');
@@ -329,141 +333,45 @@
     };
 
     window.openEntradaModal = function() {
-        document.getElementById('entradaSalidaModal').classList.add('active');
+        const modal = document.getElementById('entradaSalidaModal');
+        if (modal) modal.classList.add('active');
         document.getElementById('movTipo').value = 'Entrada';
         document.getElementById('entradaSalidaModalTitle').textContent = '📥 Nueva entrada de mercadería';
     };
 
     window.openSalidaModal = function() {
-        document.getElementById('entradaSalidaModal').classList.add('active');
+        const modal = document.getElementById('entradaSalidaModal');
+        if (modal) modal.classList.add('active');
         document.getElementById('movTipo').value = 'Salida';
         document.getElementById('entradaSalidaModalTitle').textContent = '📤 Nueva salida de mercadería';
     };
 
     window.openTransferenciaModal = function() {
-        document.getElementById('transferenciaModal').classList.add('active');
+        const modal = document.getElementById('transferenciaModal');
+        if (modal) {
+            modal.classList.add('active');
+        } else {
+            console.error('❌ Error crítico: No se encontró el elemento con ID "transferenciaModal"');
+        }
     };
-
-    // ============================================================
-    // 8. FUNCIONES DE GUARDADO (Simuladas)
-    // ============================================================
-    window.saveAjusteStock = function() {
-        const producto = document.getElementById('stkProducto').value;
-        const nuevoStock = document.getElementById('stkNuevo').value;
-        const motivo = document.getElementById('stkMotivo').value;
-
-        if (!producto) {
-            alert('❌ Debes ingresar un producto.');
-            return;
-        }
-
-        // Simular envío al backend
-        console.log('📤 Guardando ajuste:', { producto, nuevoStock, motivo });
-        alert(`✅ Ajuste de stock guardado correctamente.\nProducto: ${producto}\nNuevo stock: ${nuevoStock}`);
-        
-        closeModal('stockModal');
-        recargarSeccionActiva();
-    };
-
-    window.saveMovimiento = function(estado) {
-        const tipo = document.getElementById('movTipo').value;
-        const producto = document.getElementById('movProducto').value;
-        const cantidad = document.getElementById('movCantidad').value;
-
-        if (!producto) {
-            alert('❌ Debes ingresar el producto.');
-            return;
-        }
-
-        console.log('📤 Guardando movimiento:', { tipo, producto, cantidad, estado });
-        alert(`✅ ${tipo} registrada con estado "${estado}".\nProducto: ${producto}\nCantidad: ${cantidad}`);
-        
-        closeModal('entradaSalidaModal');
-        recargarSeccionActiva();
-    };
-
-    window.saveTransferencia = function(estado) {
-        const origen = document.getElementById('tfrOrigen').value;
-        const destino = document.getElementById('tfrDestino').value;
-        const producto = document.getElementById('tfrProducto').value;
-
-        if (!producto) {
-            alert('❌ Debes ingresar el producto a transferir.');
-            return;
-        }
-
-        console.log('📤 Guardando transferencia:', { origen, destino, producto, estado });
-        alert(`✅ Transferencia guardada con estado "${estado}".\nDe: ${origen}\nA: ${destino}`);
-        
-        closeModal('transferenciaModal');
-        recargarSeccionActiva();
-    };
-
-    // ============================================================
-    // 9. FUNCIONES UTILITARIAS
-    // ============================================================
-    function getTbodyId(tabId) {
-        const map = {
-            'estado_stock': 'stockRows',
-            'kardex': 'kardexRows',
-            'entradas_salidas': 'movRows',
-            'transferencias': 'transRows'
-        };
-        return map[tabId] || null;
-    }
-
-    function actualizarKPIs(tabId, data) {
-        // Si tienes un panel de KPIs (status-board) lo actualizas aquí
-        const kpiContainer = document.getElementById(tabId + 'KPI');
-        if (kpiContainer && data) {
-            // Ejemplo básico: mostrar un contador
-            kpiContainer.innerHTML = `
-                <div class="status-card">
-                    <div class="status-dot dot-total">${data.length}</div>
-                    <div><small>Total registros</small><b>${data.length}</b></div>
-                </div>
-            `;
-        }
-    }
-
-    function recargarSeccionActiva() {
-        const activeTab = document.querySelector('.tab-btn.active');
-        if (activeTab) {
-            cargarDatosSeccion(activeTab.dataset.tab);
-        }
-    }
 
     window.closeModal = function(id) {
         const modal = document.getElementById(id);
-        if (modal) {
-            modal.classList.remove('active');
-        }
+        if (modal) modal.classList.remove('active');
     };
 
-    window.exportData = function(tabId) {
-        alert(`📥 Exportando datos de la sección: ${tabId} (Simulado)`);
-    };
-
-    window.clearSolicitudDateFilter = function() {
-        // Para compatibilidad con el estilo de compras, solo un placeholder
-        console.log('🧹 Limpiando filtros de fecha');
-    };
-
-    // Función para cambiar el color del modal de entrada/salida (estilo visual)
-    window.cambiarColorMov = function() {
-        const tipo = document.getElementById('movTipo').value;
-        const title = document.getElementById('entradaSalidaModalTitle');
-        if (tipo === 'Entrada') {
-            title.textContent = '📥 Nueva entrada de mercadería';
-            document.getElementById('entradaSalidaModal').querySelector('.btn-primary').style.background = '#059669'; // Verde
-        } else {
-            title.textContent = '📤 Nueva salida de mercadería';
-            document.getElementById('entradaSalidaModal').querySelector('.btn-primary').style.background = '#EF233C'; // Rojo
-        }
-    };
+    window.exportData = function(tabId) { alert(`📥 Exportando datos de la sección: ${tabId} (Simulado)`); };
 
     // ============================================================
-    // 10. DATOS DE EJEMPLO (MOCK) - REEMPLAZAR CON BACKEND REAL
+    // 11. UTILITARIAS
+    // ============================================================
+    function getTbodyId(tabId) {
+        const map = { 'estado_stock': 'stockRows', 'kardex': 'kardexRows', 'entradas_salidas': 'movRows', 'transferencias': 'transRows' };
+        return map[tabId] || null;
+    }
+
+    // ============================================================
+    // 12. MOCK DATA (Simulación)
     // ============================================================
     function getMockStockData() {
         return [
@@ -472,7 +380,6 @@
             { id: 3, codigo: 'PROD-003', producto: 'Teclado Mecánico RGB', stock_actual: 0, stock_minimo: 20, ubicacion: 'Estante C2', ultimo_movimiento: '2026-07-05' },
         ];
     }
-
     function getMockKardexData() {
         return [
             { id: 101, fecha: '2026-07-10', numero: 'MOV-001', producto: 'Laptop Lenovo', tipo: 'Entrada', cantidad: 10, responsable: 'Juan Pérez' },
@@ -480,7 +387,6 @@
             { id: 103, fecha: '2026-07-12', numero: 'MOV-003', producto: 'Teclado Mecánico', tipo: 'Salida', cantidad: 5, responsable: 'Carlos López' },
         ];
     }
-
     function getMockMovimientosData() {
         return [
             { id: 201, fecha: '2026-07-09', documento: 'OC-001', tipo: 'Entrada', producto: 'Laptop Lenovo', cantidad: 8, motivo: 'Compra' },
@@ -488,7 +394,6 @@
             { id: 203, fecha: '2026-07-11', documento: 'AJ-001', tipo: 'Salida', producto: 'Teclado Mecánico', cantidad: 3, motivo: 'Ajuste' },
         ];
     }
-
     function getMockTransferenciasData() {
         return [
             { id: 301, numero: 'TRF-001', fecha: '2026-07-08', origen: 'Almacén Principal', destino: 'Tienda 1', producto: 'Laptop Lenovo', cantidad: 5, estado: 'Completada' },

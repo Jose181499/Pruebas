@@ -46,6 +46,14 @@
                     <span class="search-icon">🔎</span>
                     <input id="stockSearch" placeholder="Buscar por producto / código / ubicación...">
                 </div>
+                <!-- Filtro de fecha para Estado de Stock -->
+                <div class="date-filter-wrapper">
+                    <span class="date-icon">📅</span>
+                    <input type="date" id="stockFechaIicio" title="Fecha inicio">
+                    <span class="date-sep">→</span>
+                    <input type="date" id="stockFechaFin" title="Fecha fin">
+                    <button class="btn-clear-date" onclick="clearDateFilter('stock')" title="Limpiar filtros">✕</button>
+                </div>
             </div>
             <div class="clean-actions">
                 <button class="btn btn-secondary" onclick="exportData('estado_stock')">📥 Exportar</button>
@@ -91,9 +99,10 @@
                 </div>
                 <div class="date-filter-wrapper">
                     <span class="date-icon">📅</span>
-                    <input type="date" id="kardexFechaInicio" title="Fecha inicio">
+                    <input type="date" id="kardexFechaIicio" title="Fecha inicio">
                     <span class="date-sep">→</span>
                     <input type="date" id="kardexFechaFin" title="Fecha fin">
+                    <button class="btn-clear-date" onclick="clearDateFilter('kardex')" title="Limpiar filtros">✕</button>
                 </div>
             </div>
             <div class="clean-actions">
@@ -142,6 +151,13 @@
                     <span class="search-icon">🔎</span>
                     <input id="movSearch" placeholder="Buscar por motivo o producto...">
                 </div>
+                <div class="date-filter-wrapper">
+                    <span class="date-icon">📅</span>
+                    <input type="date" id="movFechaIicio" title="Fecha inicio">
+                    <span class="date-sep">→</span>
+                    <input type="date" id="movFechaFin" title="Fecha fin">
+                    <button class="btn-clear-date" onclick="clearDateFilter('mov')" title="Limpiar filtros">✕</button>
+                </div>
             </div>
             <div class="clean-actions">
                 <button class="btn btn-primary btn-create" onclick="openEntradaModal()">+ Entrada</button>
@@ -185,6 +201,13 @@
                     <span class="search-icon">🔎</span>
                     <input id="transSearch" placeholder="Buscar por N° transferencia o producto...">
                 </div>
+                <div class="date-filter-wrapper">
+                    <span class="date-icon">📅</span>
+                    <input type="date" id="transFechaIicio" title="Fecha inicio">
+                    <span class="date-sep">→</span>
+                    <input type="date" id="transFechaFin" title="Fecha fin">
+                    <button class="btn-clear-date" onclick="clearDateFilter('trans')" title="Limpiar filtros">✕</button>
+                </div>
             </div>
             <div class="clean-actions">
                 <button class="btn btn-primary btn-create" onclick="openTransferenciaModal()">+ Nueva transferencia</button>
@@ -220,6 +243,7 @@
 {% include "inventario/modales/transferencia_modal.html" %}
 
 {% endblock %}
+
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/inventario.js') }}"></script>
 
