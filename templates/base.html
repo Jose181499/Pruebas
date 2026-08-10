@@ -1967,7 +1967,7 @@ function checkEye(tienePermiso, user, module, userId, empresaId) {
 
 
 // ============================================================
-// TOGGLE PERMISO - SIN RECARGAR TODA LA TABLA
+// TOGGLE PERMISO - SIN RECARGAR LA TABLA
 // ============================================================
 async function togglePermiso(event) {
     const checkbox = event.target;
@@ -2094,9 +2094,8 @@ async function togglePermiso(event) {
         
         if (result) {
             toast(`✅ ${tienePermiso ? 'Habilitado' : 'Deshabilitado'} ${submodulo.nombre} para ${user}`);
-            // ✅ ACTUALIZAR SOLO EL CHECKBOX, NO RECARGAR TODA LA TABLA
-            // Mantener el checkbox en su estado actual
-            console.log('✅ Permiso guardado, checkbox mantiene su estado');
+            // ✅ ELIMINADO: await loadUsuarios();
+            // El checkbox ya cambió visualmente, no necesitamos recargar
         } else {
             checkbox.checked = !tienePermiso;
             toast('❌ Error al guardar permiso');
