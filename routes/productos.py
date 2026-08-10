@@ -147,7 +147,7 @@ def productos_editar(producto_id):
                 costo_unitario, precio_unitario, stock, stock_minimo,
                 estado, presentacion_proveedor, presentacion_venta,
                 venta_minima, codigo_barras, origen, tiempo_entrega,
-                abastecimiento, activo
+                abastecimiento, activo, proveedor_id
             FROM productos
             WHERE id = %s AND activo = TRUE
         """, (producto_id,))
@@ -194,31 +194,33 @@ def get_productos():
         
         query = """
             SELECT 
-                id, codigo, descripcion, descripcion_larga,
-                modelo, marca, familia as categoria,
-                categoria_derivada as subcategoria,
-                unidad, peso, volumen, observaciones, transporte,
-                costo_unitario, precio_unitario, stock, stock_minimo,
-                estado, presentacion_proveedor, presentacion_venta,
-                venta_minima, codigo_barras, origen, tiempo_entrega,
-                abastecimiento, activo, fecha_creacion, updated_at
-            FROM productos
-            WHERE activo = TRUE
+                p.id, p.codigo, p.descripcion, p.descripcion_larga,
+                p.modelo, p.marca, p.familia as categoria,
+                p.categoria_derivada as subcategoria,
+                p.unidad, p.peso, p.volumen, p.observaciones, p.transporte,
+                p.costo_unitario, p.precio_unitario, p.stock, p.stock_minimo,
+                p.estado, p.presentacion_proveedor, p.presentacion_venta,
+                p.venta_minima, p.codigo_barras, p.origen, p.tiempo_entrega,
+                p.abastecimiento, p.activo, p.fecha_creacion, p.updated_at,
+                p.proveedor_id, pv.razon_social as proveedor_nombre
+            FROM productos p
+            LEFT JOIN proveedores pv ON pv.id = p.proveedor_id
+            WHERE p.activo = TRUE
         """
         params = []
         condiciones = []
         
         if busqueda:
-            condiciones.append("(codigo ILIKE %s OR descripcion ILIKE %s OR modelo ILIKE %s OR marca ILIKE %s)")
+            condiciones.append("(p.codigo ILIKE %s OR p.descripcion ILIKE %s OR p.modelo ILIKE %s OR p.marca ILIKE %s)")
             params.extend([f'%{busqueda}%'] * 4)
         if categoria:
-            condiciones.append("familia = %s")
+            condiciones.append("p.familia = %s")
             params.append(categoria)
         if marca:
-            condiciones.append("marca = %s")
+            condiciones.append("p.marca = %s")
             params.append(marca)
         if modelo:
-            condiciones.append("modelo = %s")
+            condiciones.append("p.modelo = %s")
             params.append(modelo)
         
         if condiciones:
@@ -245,16 +247,18 @@ def get_producto(producto_id):
     try:
         producto = db_query("""
             SELECT 
-                id, codigo, descripcion, descripcion_larga,
-                modelo, marca, familia as categoria,
-                categoria_derivada as subcategoria,
-                unidad, peso, volumen, observaciones, transporte,
-                costo_unitario, precio_unitario, stock, stock_minimo,
-                estado, presentacion_proveedor, presentacion_venta,
-                venta_minima, codigo_barras, origen, tiempo_entrega,
-                abastecimiento, activo, fecha_creacion, updated_at
-            FROM productos
-            WHERE id = %s AND activo = TRUE
+                p.id, p.codigo, p.descripcion, p.descripcion_larga,
+                p.modelo, p.marca, p.familia as categoria,
+                p.categoria_derivada as subcategoria,
+                p.unidad, p.peso, p.volumen, p.observaciones, p.transporte,
+                p.costo_unitario, p.precio_unitario, p.stock, p.stock_minimo,
+                p.estado, p.presentacion_proveedor, p.presentacion_venta,
+                p.venta_minima, p.codigo_barras, p.origen, p.tiempo_entrega,
+                p.abastecimiento, p.activo, p.fecha_creacion, p.updated_at,
+                p.proveedor_id, pv.razon_social as proveedor_nombre
+            FROM productos p
+            LEFT JOIN proveedores pv ON pv.id = p.proveedor_id
+            WHERE p.id = %s AND p.activo = TRUE
         """, (producto_id,))
         
         if not producto:
@@ -267,7 +271,6 @@ def get_producto(producto_id):
         
     except Exception as e:
         print(f"❌ Error en get_producto: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
 
 @productos_bp.route('/api/productos', methods=['POST'])
 @login_required
@@ -302,6 +305,10 @@ def create_producto():
             codigo = generar_codigo_con_lock(cur)
             print(f"🆕 Código generado de forma segura: {codigo}")
             
+            proveedor_id = data.get('proveedor_id') or None
+            if proveedor_id == '':
+                proveedor_id = None
+
             cur.execute("""
                 INSERT INTO productos (
                     codigo, descripcion, descripcion_larga,
@@ -313,6 +320,7 @@ def create_producto():
                     presentacion_proveedor, presentacion_venta,
                     venta_minima, codigo_barras,
                     origen, tiempo_entrega, abastecimiento,
+                    proveedor_id,
                     activo
                 ) VALUES (
                     %s, %s, %s,
@@ -324,11 +332,12 @@ def create_producto():
                     %s, %s,
                     %s, %s,
                     %s, %s, %s,
+                    %s,
                     TRUE
                 )
                 RETURNING id, codigo
             """, (
-                codigo,  # 🔧 CAMBIO: antes era data.get('codigo')
+                codigo,
                 data.get('descripcion'),
                 data.get('descripcion_larga', ''),
                 data.get('modelo'),
@@ -351,7 +360,8 @@ def create_producto():
                 data.get('codigo_barras', ''),
                 data.get('origen', ''),
                 data.get('tiempo_entrega', ''),
-                data.get('abastecimiento', '')
+                data.get('abastecimiento', ''),
+                proveedor_id
             ))
             
             resultado = cur.fetchone()
@@ -387,6 +397,10 @@ def update_producto(producto_id):
         # ✅ MANTENER EL CÓDIGO EXISTENTE (no actualizar)
         codigo_existente = existente[0]['codigo']
         
+        proveedor_id = data.get('proveedor_id') or None
+        if proveedor_id == '':
+            proveedor_id = None
+
         db_execute("""
             UPDATE productos SET
                 descripcion = %s, descripcion_larga = %s,
@@ -399,6 +413,7 @@ def update_producto(producto_id):
                 presentacion_proveedor = %s, presentacion_venta = %s,
                 venta_minima = %s, codigo_barras = %s,
                 origen = %s, tiempo_entrega = %s, abastecimiento = %s,
+                proveedor_id = %s,
                 updated_at = NOW()
             WHERE id = %s
         """, (
@@ -425,6 +440,7 @@ def update_producto(producto_id):
             data.get('origen', ''),
             data.get('tiempo_entrega', ''),
             data.get('abastecimiento', ''),
+            proveedor_id,
             producto_id
         ))
         

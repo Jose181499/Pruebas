@@ -951,6 +951,14 @@
             </div>
             <div class="grid">
                 <div class="field">
+                    <label>Proveedor asociado <span class="optional">(opcional)</span></label>
+                    <select id="proveedorProducto" name="proveedor_id">
+                        <option value="">Seleccione un proveedor</option>
+                    </select>
+                </div>
+            </div>
+            <div class="grid">
+                <div class="field">
                     <label>Origen <span class="optional">(opcional)</span></label>
                     <select name="origen">
                         <option value="">Seleccione</option>
@@ -1632,6 +1640,29 @@
         }
     }
 
+    function cargarProveedoresProducto() {
+        var select = document.getElementById('proveedorProducto');
+        if (!select) return;
+        var proveedorActual = "{{ producto.proveedor_id if producto and producto.proveedor_id else '' }}";
+
+        fetch('/maestros/api/proveedores/listar')
+            .then(function(r) { return r.json(); })
+            .then(function(json) {
+                if (!json.success) return;
+                json.data.forEach(function(p) {
+                    var opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = p.razon_social + (p.ruc ? ' — ' + p.ruc : '');
+                    if (String(p.id) === String(proveedorActual)) opt.selected = true;
+                    select.appendChild(opt);
+                });
+            })
+            .catch(function(err) {
+                console.error('❌ Error cargando proveedores:', err);
+            });
+    }
+    
+
     
     
     
@@ -1645,6 +1676,7 @@
         
         calcularMargen();
         actualizarEstadoChips();
+        cargarProveedoresProducto();
         
         var uploadArea = document.getElementById('uploadArea');
         var fileInput = document.getElementById('fotoProducto');
@@ -1756,6 +1788,7 @@
     window.calcularMargen = calcularMargen;
     window.actualizarEstadoChips = actualizarEstadoChips;
     window.personalizar = personalizar;
+    window.cargarProveedoresProducto = cargarProveedoresProducto;
     window.limpiarErrores = limpiarErrores;
     window.cerrarNotificacionIndependiente = cerrarNotificacionIndependiente;
 </script>
