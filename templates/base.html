@@ -2038,7 +2038,7 @@ else if (currentPath.includes('/inventario')) {
         }
         
         // ============================================================
-// RENDER USUARIOS (CON ORDEN PERSONALIZADO)
+// RENDER USUARIOS (CON ORDEN PERSONALIZADO Y MANEJO DE NULLS)
 // ============================================================
 async function renderUsuarios(filter=""){
     const empresaFiltro = document.getElementById("filterEmpresaUsuarios")?.value || "TODAS";
@@ -2054,7 +2054,7 @@ async function renderUsuarios(filter=""){
     });
 
     // ============================================================
-    // ✅ ORDEN PERSONALIZADO EXACTO (Admin, Erika, Hellen, Estrella, Luis, Despacho)
+    // ✅ ORDEN PERSONALIZADO CON SEGURIDAD CONTRA UNDEFINED/NULL
     // ============================================================
     const ordenPersonalizado = [
         'ANTONY GAMONAL',      // admin
@@ -2066,23 +2066,17 @@ async function renderUsuarios(filter=""){
     ];
 
     lista.sort((a, b) => {
-        const nombreA = (a.nombre_completo || '').toUpperCase().trim();
-        const nombreB = (b.nombre_completo || '').toUpperCase().trim();
+        // ✅ Usar usuario_sistema como fallback si nombre_completo es null/undefined
+        const nombreA = (a.nombre_completo || a.usuario_sistema || '').toUpperCase().trim();
+        const nombreB = (b.nombre_completo || b.usuario_sistema || '').toUpperCase().trim();
         
-        // Buscar índices en la lista personalizada
         const idxA = ordenPersonalizado.indexOf(nombreA);
         const idxB = ordenPersonalizado.indexOf(nombreB);
         
-        // Si ambos están en la lista personalizada, respetar ese orden exacto
         if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-        
-        // Si solo A está en la lista, A va primero
         if (idxA !== -1) return -1;
-        
-        // Si solo B está en la lista, B va primero
         if (idxB !== -1) return 1;
         
-        // Si ninguno está en la lista, orden alfabético normal
         return nombreA.localeCompare(nombreB);
     });
     // ============================================================
