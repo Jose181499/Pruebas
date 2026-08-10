@@ -4,27 +4,25 @@ from database import db_query, db_execute, db_tx
 from psycopg2.extras import RealDictCursor
 
 # ============================================================
-# BLUEPRINT - UN SOLO Blueprint para todo
+# BLUEPRINT
 # ============================================================
 usuarios_bp = Blueprint('usuarios', __name__)
 
 # ============================================================
-# RUTA PARA LA PÁGINA HTML
+# PÁGINA HTML
 # ============================================================
 @usuarios_bp.route('/usuarios')
 def usuarios_page():
-    """Página de usuarios"""
     return render_template('usuarios.html')
 
 # ============================================================
-# ENDPOINTS API PARA USUARIOS
-
-
+# OBTENER USUARIOS (CON ORDEN PERSONALIZADO)
+# ============================================================
 @usuarios_bp.route('/api/config/usuarios', methods=['GET'])
 def get_usuarios():
     """Obtener todos los usuarios con sus empresas y roles"""
     try:
-        # ✅ CORREGIDO: FROM usuarios (sin erp_)
+        # ✅ CONSULTA CON NOMBRES DE TABLAS CORRECTOS
         usuarios = db_query("""
             SELECT 
                 u.id,
@@ -35,22 +33,22 @@ def get_usuarios():
                 u.estado,
                 u.created_at,
                 (
-                    SELECT json_agg(
+                    SELECT COALESCE(json_agg(
                         json_build_object(
                             'empresa_id', e.id,
                             'empresa_codigo', e.codigo,
                             'empresa_nombre', e.nombre_comercial,
-                            'rol_codigo', ur.rol_codigo,
+                            'rol_codigo', uer.rol_codigo,
                             'rol_nombre', r.nombre
                         )
-                    )
-                    FROM erp_usuarios_empresas ue
-                    JOIN erp_empresas e ON e.id = ue.empresa_id
-                    JOIN erp_usuarios_empresas_roles uer ON uer.usuario_empresa_id = ue.id
-                    JOIN erp_roles r ON r.codigo = uer.rol_codigo
+                    ), '[]'::json)
+                    FROM usuarios_empresas ue
+                    JOIN empresas e ON e.id = ue.empresa_id
+                    LEFT JOIN usuarios_empresas_roles uer ON uer.usuario_empresa_id = ue.id
+                    LEFT JOIN roles r ON r.codigo = uer.rol_codigo
                     WHERE ue.usuario_id = u.id AND ue.estado = 'activo'
                 ) as empresas_acceso
-            FROM usuarios u  -- ✅ AQUÍ ESTABA EL ERROR (era erp_usuarios)
+            FROM usuarios u
             WHERE u.estado = 'activo'
             ORDER BY 
                 CASE 
@@ -75,10 +73,11 @@ def get_usuarios():
         print(f"❌ Error en get_usuarios: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
+# ============================================================
+# OBTENER UN USUARIO
+# ============================================================
 @usuarios_bp.route('/api/config/usuarios/<usuario_id>', methods=['GET'])
 def get_usuario(usuario_id):
-    """Obtener un usuario específico"""
     try:
         usuario = db_query("""
             SELECT 
@@ -99,27 +98,21 @@ def get_usuario(usuario_id):
         if not usuario:
             return jsonify({'success': False, 'error': 'Usuario no encontrado'}), 404
         
-        return jsonify({
-            'success': True,
-            'data': usuario[0]
-        })
-        
+        return jsonify({'success': True, 'data': usuario[0]})
     except Exception as e:
         print(f"❌ Error en get_usuario: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
+# ============================================================
+# CREAR USUARIO
+# ============================================================
 @usuarios_bp.route('/api/config/usuarios', methods=['POST'])
 def create_usuario():
-    """Crear un nuevo usuario con sus asignaciones de empresa y rol"""
     try:
         data = request.get_json()
         
-        if not data.get('auth_user_id'):
-            return jsonify({'success': False, 'error': 'auth_user_id es requerido'}), 400
-        
-        if not data.get('usuario_sistema'):
-            return jsonify({'success': False, 'error': 'usuario_sistema es requerido'}), 400
+        if not data.get('auth_user_id') or not data.get('usuario_sistema'):
+            return jsonify({'success': False, 'error': 'auth_user_id y usuario_sistema son requeridos'}), 400
         
         with db_tx() as conn:
             cur = conn.cursor(cursor_factory=RealDictCursor)
@@ -165,21 +158,20 @@ def create_usuario():
                 'data': {'id': usuario_id},
                 'message': 'Usuario creado exitosamente'
             })
-            
     except Exception as e:
         print(f"❌ Error en create_usuario: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
+# ============================================================
+# ACTUALIZAR USUARIO
+# ============================================================
 @usuarios_bp.route('/api/config/usuarios/<usuario_id>', methods=['PUT'])
 def update_usuario(usuario_id):
-    """Actualizar un usuario existente"""
     try:
         data = request.get_json()
         
         with db_tx() as conn:
             cur = conn.cursor()
-            
             cur.execute("""
                 UPDATE usuarios SET
                     usuario_sistema = %s,
@@ -204,15 +196,15 @@ def update_usuario(usuario_id):
                 'success': True,
                 'message': 'Usuario actualizado exitosamente'
             })
-            
     except Exception as e:
         print(f"❌ Error en update_usuario: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
+# ============================================================
+# ELIMINAR USUARIO
+# ============================================================
 @usuarios_bp.route('/api/config/usuarios/<usuario_id>', methods=['DELETE'])
 def delete_usuario(usuario_id):
-    """Eliminar usuario (borrado lógico)"""
     try:
         db_execute("""
             UPDATE usuarios SET estado = 'inactivo', updated_at = NOW()
@@ -223,15 +215,15 @@ def delete_usuario(usuario_id):
             'success': True,
             'message': 'Usuario desactivado exitosamente'
         })
-        
     except Exception as e:
         print(f"❌ Error en delete_usuario: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
+# ============================================================
+# OBTENER ROLES
+# ============================================================
 @usuarios_bp.route('/api/config/roles', methods=['GET'])
 def get_roles():
-    """Obtener todos los roles"""
     try:
         roles = db_query("""
             SELECT 
@@ -243,17 +235,13 @@ def get_roles():
                 r.estado,
                 r.created_at,
                 r.updated_at
-            FROM erp_roles r
+            FROM roles r
             WHERE r.estado = 'activo'
             ORDER BY r.nombre
         """)
         
         if roles:
-            return jsonify({
-                'success': True,
-                'data': roles,
-                'total': len(roles)
-            })
+            return jsonify({'success': True, 'data': roles, 'total': len(roles)})
         else:
             return jsonify({
                 'success': True,
@@ -265,7 +253,6 @@ def get_roles():
                 'total': 3,
                 'message': 'Usando roles por defecto'
             })
-        
     except Exception as e:
         print(f"❌ Error en get_roles: {e}")
         return jsonify({
@@ -277,4 +264,4 @@ def get_roles():
             ],
             'total': 3,
             'message': 'Usando roles por defecto'
-        }), 200 
+        }), 200
