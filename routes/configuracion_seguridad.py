@@ -1176,41 +1176,62 @@ def get_usuario_permisos(usuario_id):
         print(f"❌ Error en get_usuario_permisos: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
 @config_seguridad_bp.route('/usuarios/<usuario_id>/permisos', methods=['POST'])
 def update_usuario_permisos(usuario_id):
     """Actualizar los permisos de un usuario en una empresa"""
     try:
         data = request.get_json()
+        print(f"📝 Datos recibidos: {data}")  # Log para depurar
+        
         empresa_id = data.get('empresa_id')
         permisos = data.get('permisos', [])
+        
+        print(f"📋 empresa_id: {empresa_id}")
+        print(f"📋 permisos: {permisos}")
         
         if not empresa_id:
             return jsonify({'success': False, 'error': 'empresa_id es requerido'}), 400
         
+        # ✅ OBTENER EL auth_user_id DESDE LA TABLA usuarios
         usuario = db_query("""
-            SELECT auth_user_id FROM usuarios WHERE id = %s
+            SELECT auth_user_id FROM usuarios WHERE id = %s AND estado = 'activo'
         """, (usuario_id,))
+        
+        print(f"🔍 Usuario encontrado: {usuario}")
         
         if not usuario:
             return jsonify({'success': False, 'error': 'Usuario no encontrado'}), 404
         
         auth_user_id = usuario[0]['auth_user_id']
+        print(f"✅ auth_user_id: {auth_user_id}")
+        
+        # ✅ VERIFICAR QUE LA EMPRESA EXISTE
+        empresa = db_query("""
+            SELECT id FROM erp_empresas WHERE id = %s AND estado = 'activo'
+        """, (empresa_id,))
+        
+        print(f"🔍 Empresa encontrada: {empresa}")
+        
+        if not empresa:
+            return jsonify({'success': False, 'error': f'Empresa {empresa_id} no encontrada'}), 404
         
         with db_tx() as conn:
             cur = conn.cursor()
             
-            # Eliminar permisos existentes
+            # Eliminar permisos existentes para este usuario y empresa
             cur.execute("""
                 DELETE FROM erp_usuario_permisos 
                 WHERE auth_user_id = %s AND empresa_id = %s
             """, (auth_user_id, empresa_id))
+            print(f"🗑️ Permisos anteriores eliminados para auth_user_id: {auth_user_id}, empresa_id: {empresa_id}")
             
             # Insertar nuevos permisos
             for permiso in permisos:
                 submodulo_id = permiso.get('submodulo_id')
                 if not submodulo_id:
                     continue
+                
+                print(f"📝 Insertando permiso: submodulo_id={submodulo_id}")
                 
                 cur.execute("""
                     INSERT INTO erp_usuario_permisos (
@@ -1234,6 +1255,8 @@ def update_usuario_permisos(usuario_id):
                     permiso.get('puede_subir_evidencia', False),
                     permiso.get('observacion', '')
                 ))
+            
+            print(f"✅ {len(permisos)} permisos guardados correctamente")
         
         return jsonify({
             'success': True,
@@ -1242,8 +1265,9 @@ def update_usuario_permisos(usuario_id):
         
     except Exception as e:
         print(f"❌ Error en update_usuario_permisos: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 # ============================================================
 # 7. AUDITORÍA
