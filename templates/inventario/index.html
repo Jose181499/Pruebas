@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Inventario - ERP Multiempresa{% endblock %}
+
+{% block breadcrumb %}
+<a href="/" class="crumb-btn">Inicio</a>
+<span>/</span>
+<span class="crumb-btn active-crumb">Inventario</span>
+{% endblock %}
+
+{% block page_title %}Inventario{% endblock %}
+
+{% block subtitle %}Control de stock, Kardex, movimientos y transferencias.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/inventario.css') }}">
+<style>
+    /* Puedes copiar los estilos genéricos de compras.css o usar los mismos */
+    .section { display: none !important; }
+    .section.active { display: block !important; }
+    /* ... resto de estilos (tabs, master-table, badges, etc) ... */
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- TABS -->
+<div class="tabs" id="tabsRowInv">
+    <button class="tab-btn active" data-tab="estado_stock">📊 Estado de stock</button>
+    <button class="tab-btn" data-tab="kardex">📈 Kardex</button>
+    <button class="tab-btn" data-tab="entradas_salidas">📥📤 Entradas y salidas</button>
+    <button class="tab-btn" data-tab="transferencias">🔄 Transferencias</button>
+</div>
+
+<!-- ============================================================ -->
+<!-- ESTADO DE STOCK -->
+<!-- ============================================================ -->
+<div id="estado_stock" class="section active">
+    <div class="panel">
+        <div class="clean-header">
+            <div class="master-title-wrap">
+                <div class="master-title">📊 Estado de stock</div>
+                <div class="master-subtitle">Resumen de existencias actuales</div>
+            </div>
+            <div class="search-box">
+                <div class="search-input-wrapper">
+                    <span class="search-icon">🔎</span>
+                    <input id="stockSearch" placeholder="Buscar por producto / código / ubicación...">
+                </div>
+            </div>
+            <div class="clean-actions">
+                <button class="btn btn-secondary" onclick="exportData('estado_stock')">📥 Exportar</button>
+                <button class="btn btn-primary btn-create" onclick="openStockModal()">+ Ajustar stock</button>
+            </div>
+        </div>
+        <div class="table-scroll">
+            <table class="master-table">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Producto</th>
+                        <th>Stock actual</th>
+                        <th>Stock mínimo</th>
+                        <th>Ubicación</th>
+                        <th>Último movimiento</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="stockRows"></tbody>
+            </table>
+        </div>
+        <div class="footer-table">
+            <span id="stockCount">Mostrando 0 de 0 productos</span>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- KARDEX -->
+<!-- ============================================================ -->
+<div id="kardex" class="section">
+    <div class="panel">
+        <div class="clean-header">
+            <div class="master-title-wrap">
+                <div class="master-title">📈 Kardex</div>
+                <div class="master-subtitle">Historial de movimientos por producto</div>
+            </div>
+            <div class="search-box">
+                <div class="search-input-wrapper">
+                    <span class="search-icon">🔎</span>
+                    <input id="kardexSearch" placeholder="Buscar por producto o N° movimiento...">
+                </div>
+                <div class="date-filter-wrapper">
+                    <span class="date-icon">📅</span>
+                    <input type="date" id="kardexFechaInicio" title="Fecha inicio">
+                    <span class="date-sep">→</span>
+                    <input type="date" id="kardexFechaFin" title="Fecha fin">
+                </div>
+            </div>
+            <div class="clean-actions">
+                <select id="kardexTipo">
+                    <option value="">Todos</option>
+                    <option value="Entrada">Entrada</option>
+                    <option value="Salida">Salida</option>
+                    <option value="Ajuste">Ajuste</option>
+                </select>
+            </div>
+        </div>
+        <div class="table-scroll">
+            <table class="master-table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>N° Movimiento</th>
+                        <th>Producto</th>
+                        <th>Tipo</th>
+                        <th>Cantidad</th>
+                        <th>Responsable</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="kardexRows"></tbody>
+            </table>
+        </div>
+        <div class="footer-table">
+            <span id="kardexCount">Mostrando 0 de 0 movimientos</span>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ENTRADAS Y SALIDAS -->
+<!-- ============================================================ -->
+<div id="entradas_salidas" class="section">
+    <div class="panel">
+        <div class="clean-header">
+            <div class="master-title-wrap">
+                <div class="master-title">📥📤 Entradas y salidas</div>
+                <div class="master-subtitle">Registro de ingresos y egresos de almacén</div>
+            </div>
+            <div class="search-box">
+                <div class="search-input-wrapper">
+                    <span class="search-icon">🔎</span>
+                    <input id="movSearch" placeholder="Buscar por motivo o producto...">
+                </div>
+            </div>
+            <div class="clean-actions">
+                <button class="btn btn-primary btn-create" onclick="openEntradaModal()">+ Entrada</button>
+                <button class="btn btn-secondary" style="border-color:#EF233C; color:#EF233C;" onclick="openSalidaModal()">- Salida</button>
+            </div>
+        </div>
+        <div class="table-scroll">
+            <table class="master-table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Documento</th>
+                        <th>Tipo</th>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Motivo</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="movRows"></tbody>
+            </table>
+        </div>
+        <div class="footer-table">
+            <span id="movCount">Mostrando 0 de 0 movimientos</span>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- TRANSFERENCIAS -->
+<!-- ============================================================ -->
+<div id="transferencias" class="section">
+    <div class="panel">
+        <div class="clean-header">
+            <div class="master-title-wrap">
+                <div class="master-title">🔄 Transferencias</div>
+                <div class="master-subtitle">Traslados de productos entre almacenes</div>
+            </div>
+            <div class="search-box">
+                <div class="search-input-wrapper">
+                    <span class="search-icon">🔎</span>
+                    <input id="transSearch" placeholder="Buscar por N° transferencia o producto...">
+                </div>
+            </div>
+            <div class="clean-actions">
+                <button class="btn btn-primary btn-create" onclick="openTransferenciaModal()">+ Nueva transferencia</button>
+            </div>
+        </div>
+        <div class="table-scroll">
+            <table class="master-table">
+                <thead>
+                    <tr>
+                        <th>N° Transferencia</th>
+                        <th>Fecha</th>
+                        <th>Origen</th>
+                        <th>Destino</th>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="transRows"></tbody>
+            </table>
+        </div>
+        <div class="footer-table">
+            <span id="transCount">Mostrando 0 de 0 transferencias</span>
+        </div>
+    </div>
+</div>
+
+<!-- MODALES -->
+{% include "inventario/modales/estado_stock_modal.html" %}
+{% include "inventario/modales/kardex_modal.html" %}
+{% include "inventario/modales/entrada_salida_modal.html" %}
+{% include "inventario/modales/transferencia_modal.html" %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/inventario.js') }}"></script>
+<!-- Script similar al de compras para activar tabs y cargar initInventario -->
+<script>
+    // Copia aquí la lógica de los tabs que tienes en el index.html de compras
+</script>
+{% endblock %}

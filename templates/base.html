@@ -129,20 +129,21 @@
 
 
                 <!-- INVENTARIO -->
-                <div class="menu-group" data-modulo="inventario">
-                    <div class="menu-header-wrapper">
-                        <a href="/inventario" class="menu-header" style="text-decoration:none;flex:1;">
-                            <div class="menu-left"><span>6 ─ Inventario</span></div>
-                        </a>
-                        <span class="caret-toggle">›</span>
-                    </div>
-                    <div class="menu-children">
-                        <a href="/inventario" class="child-btn" style="text-decoration:none;">Estado de stock</a>
-                        <a href="/inventario" class="child-btn" style="text-decoration:none;">Kardex</a>
-                        <a href="/inventario" class="child-btn" style="text-decoration:none;">Entradas y salidas</a>
-                        <a href="/inventario" class="child-btn" style="text-decoration:none;">Transferencias</a>
-                    </div>
-                </div>
+<div class="menu-group" data-modulo="inventario">
+    <div class="menu-header-wrapper">
+        <a href="/inventario" class="menu-header" style="text-decoration:none;flex:1;">
+            <div class="menu-left"><span>6 ─ Inventario</span></div>
+        </a>
+        <span class="caret-toggle">›</span>
+    </div>
+    <div class="menu-children">
+        <!-- ✅ AGREGA LOS PARÁMETROS ?tab= -->
+        <a href="/inventario?tab=estado_stock" class="child-btn" data-screen="estado_stock" style="text-decoration:none;">Estado de stock</a>
+        <a href="/inventario?tab=kardex" class="child-btn" data-screen="kardex" style="text-decoration:none;">Kardex</a>
+        <a href="/inventario?tab=entradas_salidas" class="child-btn" data-screen="entradas_salidas" style="text-decoration:none;">Entradas y salidas</a>
+        <a href="/inventario?tab=transferencias" class="child-btn" data-screen="transferencias" style="text-decoration:none;">Transferencias</a>
+    </div>
+</div>
 
                 <!-- FINANZAS -->
                 <div class="menu-group" data-modulo="finanzas">
@@ -310,14 +311,23 @@
         {% else %}Compras
         {% endif %}
     </span>
-            <!-- ========================================== -->
-            <!-- INVENTARIO                                 -->
-            <!-- ========================================== -->
-            {% elif '/inventario' in request.path %}
-                <a href="/inventario" class="crumb-btn" style="text-decoration:none;">Inventario</a>
-                <span>/</span>
-                <span class="crumb-btn active-crumb">Inventario</span>
-            
+
+        <!-- ========================================== -->
+<!-- INVENTARIO                                 -->
+<!-- ========================================== -->
+{% elif '/inventario' in request.path %}
+    <a href="/inventario" class="crumb-btn" style="text-decoration:none;">Inventario</a>
+    <span>/</span>
+    <span class="crumb-btn active-crumb">
+        {% if 'estado_stock' in request.args.get('tab', '') %}Estado de stock
+        {% elif 'kardex' in request.args.get('tab', '') %}Kardex
+        {% elif 'entradas_salidas' in request.args.get('tab', '') %}Entradas y salidas
+        {% elif 'transferencias' in request.args.get('tab', '') %}Transferencias
+        {% else %}Inventario
+        {% endif %}
+    </span>
+
+
             <!-- ========================================== -->
             <!-- FINANZAS                                   -->
             <!-- ========================================== -->
