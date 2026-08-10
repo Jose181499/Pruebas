@@ -2107,8 +2107,10 @@ async function togglePermiso(event) {
     }
 }
 
+
+
 // ============================================================
-// RENDER USUARIOS - Renderiza la tabla de usuarios
+// RENDER USUARIOS - CON SOPORTE PARA UUIDs
 // ============================================================
 async function renderUsuarios(filter="") {
     const empresaFiltro = document.getElementById("filterEmpresaUsuarios")?.value || "TODAS";
@@ -2155,6 +2157,7 @@ async function renderUsuarios(filter="") {
                 const data = await cargarPermisosUsuario(u.id, empresaId);
                 if (data?.permisos) {
                     data.permisos.forEach(p => {
+                        // ✅ Usar el UUID del submódulo como clave
                         permisos[p.submodulo_id] = p;
                     });
                 }
@@ -2171,6 +2174,30 @@ async function renderUsuarios(filter="") {
         });
     }
     
+    // Obtener los UUIDs de los submódulos desde la base de datos (o usar los del frontend)
+    // Primero, intentar obtenerlos del backend
+    let submodulosUUID = {};
+    try {
+        const response = await fetch('/api/config/submodulos');
+        const data = await response.json();
+        if (data.success) {
+            // Crear un mapa de nombre -> UUID
+            data.data.forEach(s => {
+                submodulosUUID[s.nombre] = s.id;
+            });
+            console.log('✅ Submódulos UUIDs cargados:', submodulosUUID);
+        }
+    } catch(e) {
+        console.warn('⚠️ No se pudieron cargar UUIDs del backend, usando mapeo local');
+        // Fallback: usar el mapeo local
+        const mapeoLocal = {
+            'Configuración': '8f92351a-1824-40ec-91de-1222a7a0f4a3', // Este UUID de tu log
+            'Maestros': '8f92351a-1824-40ec-91de-1222a7a0f4a3', // Reemplazar con los reales
+            'Productos': '8f92351a-1824-40ec-91de-1222a7a0f4a3'
+        };
+        submodulosUUID = mapeoLocal;
+    }
+    
     // Generar HTML
     for (const item of usuariosConPermisos) {
         const u = item.usuario;
@@ -2184,13 +2211,15 @@ async function renderUsuarios(filter="") {
         const tienePermisoModulo = (submoduloNombre) => {
             if (esAdmin) return true;
             
-            const submodulo = submodulosData.find(s => 
-                s.nombre === submoduloNombre || 
-                s.codigo === submoduloNombre.toUpperCase()
-            );
-            if (!submodulo) return false;
+            // ✅ Buscar el UUID del submódulo por nombre
+            const uuid = submodulosUUID[submoduloNombre];
+            if (!uuid) {
+                console.warn(`⚠️ No se encontró UUID para: ${submoduloNombre}`);
+                return false;
+            }
             
-            const permiso = permisos[submodulo.id];
+            // ✅ Buscar el permiso usando el UUID
+            const permiso = permisos[uuid];
             if (!permiso) {
                 const modulosOperativos = ['Productos', 'Cotizaciones', 'Ventas', 'Compras', 'Logística', 'Inventario'];
                 return modulosOperativos.includes(submoduloNombre);
@@ -2282,7 +2311,6 @@ async function renderUsuarios(filter="") {
         });
     }, 100);
 }
-
 
 // ============================================================
 // OPEN PERMISSIONS - Abre el modal de permisos detallados

@@ -95,7 +95,7 @@ def api_clientes_listar():
                     SELECT id, nombre_punto as punto, direccion, 
                            telefono_contacto as telefono,
                            responsable as contacto, principal, activo,
-                           condicion_pago, tiempo_credito
+                           condicion_pago, tiempo_credito, instrucciones
                     FROM clientes_puntos_entrega
                     WHERE cliente_id = %s AND activo = true
                     ORDER BY principal DESC, nombre_punto
@@ -280,7 +280,7 @@ def api_clientes_obtener(id):
             query_puntos = """
                 SELECT id, nombre_punto as punto, direccion, telefono_contacto as telefono,
                        responsable as contacto, principal, activo,
-                       condicion_pago, tiempo_credito
+                       condicion_pago, tiempo_credito, instrucciones
                 FROM clientes_puntos_entrega
                 WHERE cliente_id = %s AND activo = true
                 ORDER BY principal DESC, nombre_punto
