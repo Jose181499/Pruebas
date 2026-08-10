@@ -2036,123 +2036,159 @@ else if (currentPath.includes('/inventario')) {
                 toast('❌ Error al guardar permiso');
             }
         }
+        
         // ============================================================
-        // RENDER USUARIOS
-        // ============================================================
-        async function renderUsuarios(filter=""){
-            const empresaFiltro = document.getElementById("filterEmpresaUsuarios")?.value || "TODAS";
-            const nivelFiltro = document.getElementById("filterNivelUsuarios")?.value || "TODOS";
-            const q = String(filter || document.getElementById("searchUsuarios")?.value || "").toLowerCase();
+// RENDER USUARIOS (CON ORDEN PERSONALIZADO)
+// ============================================================
+async function renderUsuarios(filter=""){
+    const empresaFiltro = document.getElementById("filterEmpresaUsuarios")?.value || "TODAS";
+    const nivelFiltro = document.getElementById("filterNivelUsuarios")?.value || "TODOS";
+    const q = String(filter || document.getElementById("searchUsuarios")?.value || "").toLowerCase();
 
-            const lista = usuariosData.filter(u => {
-                const empresas = u.empresas_acceso || [];
-                const tieneEmpresa = empresaFiltro === "TODAS" || empresas.some(e => e.empresa_codigo === empresaFiltro);
-                const tieneNivel = nivelFiltro === "TODOS" || empresas.some(e => e.rol_codigo === nivelFiltro);
-                const texto = JSON.stringify(u).toLowerCase().includes(q);
-                return tieneEmpresa && tieneNivel && texto;
-            });
+    const lista = usuariosData.filter(u => {
+        const empresas = u.empresas_acceso || [];
+        const tieneEmpresa = empresaFiltro === "TODAS" || empresas.some(e => e.empresa_codigo === empresaFiltro);
+        const tieneNivel = nivelFiltro === "TODOS" || empresas.some(e => e.rol_codigo === nivelFiltro);
+        const texto = JSON.stringify(u).toLowerCase().includes(q);
+        return tieneEmpresa && tieneNivel && texto;
+    });
 
-            const tbody = document.getElementById("tbodyUsuarios");
-            if(!tbody) return;
+    // ============================================================
+    // ✅ ORDEN PERSONALIZADO EXACTO (Admin, Erika, Hellen, Estrella, Luis, Despacho)
+    // ============================================================
+    const ordenPersonalizado = [
+        'ANTONY GAMONAL',      // admin
+        'ERIKA DE LA CRUZ',    // erika
+        'HELLEN BLAS PRINCIPE',// hellen
+        'ESTRELLA SANTOS',     // estrella
+        'LUIS',                // luis
+        'DESPACHO'             // despacho
+    ];
 
-            const empresaActiva = document.getElementById('empresaActiva').value;
-            let htmlRows = [];
-            
-            for (let i = 0; i < lista.length; i++) {
-                const u = lista[i];
-                const empresas = u.empresas_acceso || [];
-                const roles = empresas.map(e => e.rol_codigo || '');
-                const esAdmin = roles.includes('GERENCIA_TOTAL');
-                
-                const empresaUsuario = empresas.find(e => e.empresa_codigo === empresaActiva);
-                const empresaId = empresaUsuario?.empresa_id || null;
-                
-                let permisos = {};
-                if (empresaId) {
-                    const data = await cargarPermisosUsuario(u.id, empresaId);
-                    if (data?.permisos) {
-                        data.permisos.forEach(p => {
-                            permisos[p.submodulo_id] = p;
-                        });
-                    }
-                }
-                
-                const tienePermisoModulo = (submoduloNombre) => {
-                    if (esAdmin) return true;
-                    
-                    const submodulo = submodulosData.find(s => 
-                        s.nombre === submoduloNombre || 
-                        s.codigo === submoduloNombre.toUpperCase()
-                    );
-                    if (!submodulo) return false;
-                    
-                    const permiso = permisos[submodulo.id];
-                    if (!permiso) {
-                        const modulosOperativos = ['Productos', 'Cotizaciones', 'Ventas', 'Compras', 'Logística', 'Inventario'];
-                        return modulosOperativos.includes(submoduloNombre);
-                    }
-                    return permiso.puede_ver || false;
-                };
-                
-                const empresasHtml = empresas.map(e => badge(e.empresa_codigo || '')).join('');
-                const rolesHtml = roles.map(r => `<span class="badge ${r === 'GERENCIA_TOTAL' ? 'badge-info' : 'badge-gray'}">${r}</span>`).join(' ');
-                
-                const row = `
-                <tr>
-                    <td class="left"><b>${u.usuario_sistema}</b></td>
-                    <td class="left">${u.area || '-'}</td>
-                    <td>${empresasHtml}</td>
-                    <td>${rolesHtml}</td>
-                    <td>${checkEye(tienePermisoModulo('Configuración'), u.usuario_sistema, 'Configuración', u.id, empresaId)}</td>
-                    <td>${checkEye(tienePermisoModulo('Maestros'), u.usuario_sistema, 'Maestros', u.id, empresaId)}</td>
-                    <td>${checkEye(tienePermisoModulo('Productos'), u.usuario_sistema, 'Productos', u.id, empresaId)}</td>
-                    <td>${checkEye(tienePermisoModulo('Cotizaciones'), u.usuario_sistema, 'Cotizaciones', u.id, empresaId)}</td>
-                    <td>${checkEye(tienePermisoModulo('Ventas'), u.usuario_sistema, 'Ventas', u.id, empresaId)}</td>
-                    <td>${checkEye(tienePermisoModulo('Compras'), u.usuario_sistema, 'Compras', u.id, empresaId)}</td>
-                    <td>${checkEye(tienePermisoModulo('Logística'), u.usuario_sistema, 'Logística', u.id, empresaId)}</td>
-                    <td>${checkEye(tienePermisoModulo('Inventario'), u.usuario_sistema, 'Inventario', u.id, empresaId)}</td>
-                    <td>${checkEye(tienePermisoModulo('CxC'), u.usuario_sistema, 'CxC', u.id, empresaId)}</td>
-                    <td>${checkEye(tienePermisoModulo('CxP'), u.usuario_sistema, 'CxP', u.id, empresaId)}</td>
-                    <td>${checkEye(tienePermisoModulo('Caja'), u.usuario_sistema, 'Caja', u.id, empresaId)}</td>
-                    <td>${checkEye(tienePermisoModulo('Reportes'), u.usuario_sistema, 'Reportes', u.id, empresaId)}</td>
-                    <td>${checkEye(tienePermisoModulo('SUNAT'), u.usuario_sistema, 'SUNAT', u.id, empresaId)}</td>
-                </tr>`;
-                
-                htmlRows.push(row);
-            }
+    lista.sort((a, b) => {
+        const nombreA = (a.nombre_completo || '').toUpperCase().trim();
+        const nombreB = (b.nombre_completo || '').toUpperCase().trim();
+        
+        // Buscar índices en la lista personalizada
+        const idxA = ordenPersonalizado.indexOf(nombreA);
+        const idxB = ordenPersonalizado.indexOf(nombreB);
+        
+        // Si ambos están en la lista personalizada, respetar ese orden exacto
+        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+        
+        // Si solo A está en la lista, A va primero
+        if (idxA !== -1) return -1;
+        
+        // Si solo B está en la lista, B va primero
+        if (idxB !== -1) return 1;
+        
+        // Si ninguno está en la lista, orden alfabético normal
+        return nombreA.localeCompare(nombreB);
+    });
+    // ============================================================
 
-            if (htmlRows.length > 0) {
-                tbody.innerHTML = htmlRows.join('');
-            } else {
-                tbody.innerHTML = `<tr><td colspan="17" style="text-align:center;color:#94A3B8;padding:20px;">📭 No hay usuarios que coincidan con los filtros</td></tr>`;
-            }
+    const tbody = document.getElementById("tbodyUsuarios");
+    if(!tbody) return;
 
-            document.getElementById("usuariosVisibles").textContent = lista.length;
-            document.getElementById("empresaFiltroLabel").textContent = empresaFiltro === "TODAS" ? "Todas" : empresaFiltro;
-            document.getElementById("usuariosTotal").textContent = lista.filter(u => {
-                const empresas = u.empresas_acceso || [];
-                return empresas.some(e => e.rol_codigo === 'GERENCIA_TOTAL');
-            }).length;
-            document.getElementById("usuariosOperativos").textContent = lista.filter(u => {
-                const empresas = u.empresas_acceso || [];
-                return empresas.some(e => e.rol_codigo === 'OPERATIVO_COMERCIAL_LOGISTICA');
-            }).length;
-
-            document.querySelectorAll('.perm-checkbox').forEach(checkbox => {
-                checkbox.addEventListener('change', togglePermiso);
-            });
-
-            document.querySelectorAll(".eye").forEach(el => {
-                el.addEventListener("click", function() {
-                    openPermissions(
-                        this.dataset.user, 
-                        this.dataset.module,
-                        this.dataset.userId,
-                        this.dataset.empresaId
-                    );
+    const empresaActiva = document.getElementById('empresaActiva').value;
+    let htmlRows = [];
+    
+    for (let i = 0; i < lista.length; i++) {
+        const u = lista[i];
+        const empresas = u.empresas_acceso || [];
+        const roles = empresas.map(e => e.rol_codigo || '');
+        const esAdmin = roles.includes('GERENCIA_TOTAL');
+        
+        const empresaUsuario = empresas.find(e => e.empresa_codigo === empresaActiva);
+        const empresaId = empresaUsuario?.empresa_id || null;
+        
+        let permisos = {};
+        if (empresaId) {
+            const data = await cargarPermisosUsuario(u.id, empresaId);
+            if (data?.permisos) {
+                data.permisos.forEach(p => {
+                    permisos[p.submodulo_id] = p;
                 });
-            });
+            }
         }
+        
+        const tienePermisoModulo = (submoduloNombre) => {
+            if (esAdmin) return true;
+            
+            const submodulo = submodulosData.find(s => 
+                s.nombre === submoduloNombre || 
+                s.codigo === submoduloNombre.toUpperCase()
+            );
+            if (!submodulo) return false;
+            
+            const permiso = permisos[submodulo.id];
+            if (!permiso) {
+                const modulosOperativos = ['Productos', 'Cotizaciones', 'Ventas', 'Compras', 'Logística', 'Inventario'];
+                return modulosOperativos.includes(submoduloNombre);
+            }
+            return permiso.puede_ver || false;
+        };
+        
+        const empresasHtml = empresas.map(e => badge(e.empresa_codigo || '')).join('');
+        const rolesHtml = roles.map(r => `<span class="badge ${r === 'GERENCIA_TOTAL' ? 'badge-info' : 'badge-gray'}">${r}</span>`).join(' ');
+        
+        const row = `
+        <tr>
+            <td class="left"><b>${u.usuario_sistema}</b></td>
+            <td class="left">${u.area || '-'}</td>
+            <td>${empresasHtml}</td>
+            <td>${rolesHtml}</td>
+            <td>${checkEye(tienePermisoModulo('Configuración'), u.usuario_sistema, 'Configuración', u.id, empresaId)}</td>
+            <td>${checkEye(tienePermisoModulo('Maestros'), u.usuario_sistema, 'Maestros', u.id, empresaId)}</td>
+            <td>${checkEye(tienePermisoModulo('Productos'), u.usuario_sistema, 'Productos', u.id, empresaId)}</td>
+            <td>${checkEye(tienePermisoModulo('Cotizaciones'), u.usuario_sistema, 'Cotizaciones', u.id, empresaId)}</td>
+            <td>${checkEye(tienePermisoModulo('Ventas'), u.usuario_sistema, 'Ventas', u.id, empresaId)}</td>
+            <td>${checkEye(tienePermisoModulo('Compras'), u.usuario_sistema, 'Compras', u.id, empresaId)}</td>
+            <td>${checkEye(tienePermisoModulo('Logística'), u.usuario_sistema, 'Logística', u.id, empresaId)}</td>
+            <td>${checkEye(tienePermisoModulo('Inventario'), u.usuario_sistema, 'Inventario', u.id, empresaId)}</td>
+            <td>${checkEye(tienePermisoModulo('CxC'), u.usuario_sistema, 'CxC', u.id, empresaId)}</td>
+            <td>${checkEye(tienePermisoModulo('CxP'), u.usuario_sistema, 'CxP', u.id, empresaId)}</td>
+            <td>${checkEye(tienePermisoModulo('Caja'), u.usuario_sistema, 'Caja', u.id, empresaId)}</td>
+            <td>${checkEye(tienePermisoModulo('Reportes'), u.usuario_sistema, 'Reportes', u.id, empresaId)}</td>
+            <td>${checkEye(tienePermisoModulo('SUNAT'), u.usuario_sistema, 'SUNAT', u.id, empresaId)}</td>
+        </tr>`;
+        
+        htmlRows.push(row);
+    }
+
+    if (htmlRows.length > 0) {
+        tbody.innerHTML = htmlRows.join('');
+    } else {
+        tbody.innerHTML = `<tr><td colspan="17" style="text-align:center;color:#94A3B8;padding:20px;">📭 No hay usuarios que coincidan con los filtros</td></tr>`;
+    }
+
+    document.getElementById("usuariosVisibles").textContent = lista.length;
+    document.getElementById("empresaFiltroLabel").textContent = empresaFiltro === "TODAS" ? "Todas" : empresaFiltro;
+    document.getElementById("usuariosTotal").textContent = lista.filter(u => {
+        const empresas = u.empresas_acceso || [];
+        return empresas.some(e => e.rol_codigo === 'GERENCIA_TOTAL');
+    }).length;
+    document.getElementById("usuariosOperativos").textContent = lista.filter(u => {
+        const empresas = u.empresas_acceso || [];
+        return empresas.some(e => e.rol_codigo === 'OPERATIVO_COMERCIAL_LOGISTICA');
+    }).length;
+
+    document.querySelectorAll('.perm-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', togglePermiso);
+    });
+
+    document.querySelectorAll(".eye").forEach(el => {
+        el.addEventListener("click", function() {
+            openPermissions(
+                this.dataset.user, 
+                this.dataset.module,
+                this.dataset.userId,
+                this.dataset.empresaId
+            );
+        });
+    });
+}
+
 
         // ============================================================
         // OPEN PERMISSIONS

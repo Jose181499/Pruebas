@@ -489,7 +489,7 @@
       const rowClass   = p.estatus === 'Ganador' ? 'cc-row-winner' : p.estatus === 'Evaluar' ? 'cc-row-soft' : 'cc-row-lost';
       const chipClass  = p.estatus === 'Ganador' ? 'cc-chip-winner' : p.estatus === 'Evaluar' ? 'cc-chip-eval' : 'cc-chip-lost';
       const costoClass = idx === 0 ? 'cc-t-green' : idx === 1 ? 'cc-t-orange' : 'cc-t-red';
-      return `<tr class="${rowClass}" onclick="ccMostrarDatosProducto(${idx}")>
+      return `<tr class="${rowClass}" onclick="ccMostrarDatosProducto(${idx})">
         <td>${idx + 1}</td>
         <td class="cc-t-code">${p.codigo}</td>
         <td class="cc-col-desc" style="text-align:left">${p.desc}</td>
