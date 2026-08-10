@@ -128,21 +128,13 @@
 </div>
 
 
-                <!-- INVENTARIO -->
-<div class="menu-group" data-modulo="inventario">
-    <div class="menu-header-wrapper">
-        <a href="/inventario" class="menu-header" style="text-decoration:none;flex:1;">
-            <div class="menu-left"><span>6 ─ Inventario</span></div>
-        </a>
-        <span class="caret-toggle">›</span>
-    </div>
-    <div class="menu-children">
-        <!-- ✅ AGREGA LOS PARÁMETROS ?tab= -->
-        <a href="/inventario?tab=estado_stock" class="child-btn" data-screen="estado_stock" style="text-decoration:none;">Estado de stock</a>
-        <a href="/inventario?tab=kardex" class="child-btn" data-screen="kardex" style="text-decoration:none;">Kardex</a>
-        <a href="/inventario?tab=entradas_salidas" class="child-btn" data-screen="entradas_salidas" style="text-decoration:none;">Entradas y salidas</a>
-        <a href="/inventario?tab=transferencias" class="child-btn" data-screen="transferencias" style="text-decoration:none;">Transferencias</a>
-    </div>
+ <!-- INVENTARIO (en base.html) -->
+<div class="menu-children">
+    <!-- Agrega data-screen="estado_stock" a cada uno -->
+    <a href="/inventario?tab=estado_stock" class="child-btn" data-screen="estado_stock" style="text-decoration:none;">Estado de stock</a>
+    <a href="/inventario?tab=kardex" class="child-btn" data-screen="kardex" style="text-decoration:none;">Kardex</a>
+    <a href="/inventario?tab=entradas_salidas" class="child-btn" data-screen="entradas_salidas" style="text-decoration:none;">Entradas y salidas</a>
+    <a href="/inventario?tab=transferencias" class="child-btn" data-screen="transferencias" style="text-decoration:none;">Transferencias</a>
 </div>
 
                 <!-- FINANZAS -->
@@ -1276,6 +1268,79 @@ else if (currentPath.includes('/compras')) {
                 if (firstChild) {
                     firstChild.classList.add('active');
                     console.log(`✅ Fallback - Child de Compras resaltado: ${firstChild.textContent.trim()}`);
+                }
+                break;
+            }
+        }
+    }
+}
+
+
+// =============================================
+// 7. MÓDULO INVENTARIO - CORREGIDO
+// =============================================
+else if (currentPath.includes('/inventario')) {
+    // Obtener el parámetro tab de la URL
+    const urlParams = new URLSearchParams(currentSearch);
+    let tab = urlParams.get('tab') || 'estado_stock';
+    
+    console.log(`📋 Módulo Inventario - tab: ${tab}`);
+    
+    // Encontrar el grupo de Inventario y abrirlo
+    const groups = document.querySelectorAll('.menu-group');
+    for (const group of groups) {
+        const header = group.querySelector('.menu-header');
+        if (header && header.textContent.includes('6 ─ Inventario')) {
+            if (header) header.classList.add('active');
+            group.classList.add('open');
+            break;
+        }
+    }
+    
+    // MAPEO CORRECTO: El texto del menú vs el parámetro tab
+    // En el HTML tienes: "Entradas y salidas", pero el tab es 'entradas_salidas'
+    const moduleMap = {
+        'estado_stock': 'Estado de stock',
+        'kardex': 'Kardex',
+        'entradas_salidas': 'Entradas y salidas',
+        'transferencias': 'Transferencias'
+    };
+    
+    // RESALTAR CHILD EN SIDEBAR SEGÚN TAB
+    let childResaltado = false;
+    const textToFind = moduleMap[tab] || tab;
+    
+    // 1. Buscar por texto exacto (más seguro que data-screen)
+    document.querySelectorAll('.child-btn').forEach(btn => {
+        const btnText = btn.textContent.trim();
+        // Si el texto del botón coincide exactamente con el mapeo
+        if (btnText === textToFind) {
+            btn.classList.add('active');
+            childResaltado = true;
+            console.log(`✅ Child de Inventario resaltado por texto: ${btnText}`);
+        }
+    });
+    
+    // 2. Fallback: Buscar por data-screen si lo anterior falló
+    if (!childResaltado) {
+        let child = document.querySelector(`.child-btn[data-screen="${tab}"]`);
+        if (child) {
+            child.classList.add('active');
+            childResaltado = true;
+            console.log(`✅ Child de Inventario resaltado por data-screen: ${child.textContent.trim()}`);
+        }
+    }
+    
+    // 3. Fallback final: resaltar el primer child (Estado de stock)
+    if (!childResaltado) {
+        const groups2 = document.querySelectorAll('.menu-group');
+        for (const group of groups2) {
+            const header = group.querySelector('.menu-header');
+            if (header && header.textContent.includes('6 ─ Inventario')) {
+                const firstChild = group.querySelector('.child-btn');
+                if (firstChild) {
+                    firstChild.classList.add('active');
+                    console.log(`✅ Fallback - Child de Inventario resaltado: ${firstChild.textContent.trim()}`);
                 }
                 break;
             }
