@@ -2038,7 +2038,7 @@ else if (currentPath.includes('/inventario')) {
         }
         
         // ============================================================
-// RENDER USUARIOS (CON ORDEN PERSONALIZADO Y MANEJO DE NULLS)
+// RENDER USUARIOS (CON ORDEN FORZADO DESDE JS)
 // ============================================================
 async function renderUsuarios(filter=""){
     const empresaFiltro = document.getElementById("filterEmpresaUsuarios")?.value || "TODAS";
@@ -2053,22 +2053,19 @@ async function renderUsuarios(filter=""){
         return tieneEmpresa && tieneNivel && texto;
     });
 
-    // ============================================================
-    // ✅ ORDEN PERSONALIZADO CON SEGURIDAD CONTRA UNDEFINED/NULL
-    // ============================================================
+    // 🔥 ORDEN FORZADO EN EL NAVEGADOR (NO DEPENDE DE CACHÉ)
     const ordenPersonalizado = [
-        'ANTONY GAMONAL',      // admin
-        'ERIKA DE LA CRUZ',    // erika
-        'HELLEN BLAS PRINCIPE',// hellen
-        'ESTRELLA SANTOS',     // estrella
-        'LUIS',                // luis
-        'DESPACHO'             // despacho
+        'ANTONY GAMONAL',
+        'ERIKA DE LA CRUZ',
+        'HELLEN BLAS PRINCIPE',
+        'ESTRELLA SANTOS',
+        'LUIS',
+        'DESPACHO'
     ];
 
     lista.sort((a, b) => {
-        // ✅ Usar usuario_sistema como fallback si nombre_completo es null/undefined
-        const nombreA = (a.nombre_completo || a.usuario_sistema || '').toUpperCase().trim();
-        const nombreB = (b.nombre_completo || b.usuario_sistema || '').toUpperCase().trim();
+        const nombreA = (a.nombres_apellidos || a.usuario_sistema || '').toUpperCase().trim();
+        const nombreB = (b.nombres_apellidos || b.usuario_sistema || '').toUpperCase().trim();
         
         const idxA = ordenPersonalizado.indexOf(nombreA);
         const idxB = ordenPersonalizado.indexOf(nombreB);
@@ -2076,10 +2073,9 @@ async function renderUsuarios(filter=""){
         if (idxA !== -1 && idxB !== -1) return idxA - idxB;
         if (idxA !== -1) return -1;
         if (idxB !== -1) return 1;
-        
         return nombreA.localeCompare(nombreB);
     });
-    // ============================================================
+    // 🔥 FIN DEL ORDEN FORZADO
 
     const tbody = document.getElementById("tbodyUsuarios");
     if(!tbody) return;
@@ -2089,6 +2085,7 @@ async function renderUsuarios(filter=""){
     
     for (let i = 0; i < lista.length; i++) {
         const u = lista[i];
+        // ... el resto de tu código para generar las filas ...
         const empresas = u.empresas_acceso || [];
         const roles = empresas.map(e => e.rol_codigo || '');
         const esAdmin = roles.includes('GERENCIA_TOTAL');
@@ -2182,6 +2179,7 @@ async function renderUsuarios(filter=""){
         });
     });
 }
+
 
 
         // ============================================================
