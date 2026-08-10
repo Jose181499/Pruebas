@@ -18,12 +18,13 @@ def usuarios_page():
 
 # ============================================================
 # ENDPOINTS API PARA USUARIOS
-# ============================================================
+
+
 @usuarios_bp.route('/api/config/usuarios', methods=['GET'])
 def get_usuarios():
     """Obtener todos los usuarios con sus empresas y roles"""
     try:
-        # ✅ CONSULTA SQL CON ORDEN PERSONALIZADO
+        # ✅ CORREGIDO: FROM usuarios (sin erp_)
         usuarios = db_query("""
             SELECT 
                 u.id,
@@ -49,7 +50,7 @@ def get_usuarios():
                     JOIN erp_roles r ON r.codigo = uer.rol_codigo
                     WHERE ue.usuario_id = u.id AND ue.estado = 'activo'
                 ) as empresas_acceso
-            FROM erp_usuarios u
+            FROM usuarios u  -- ✅ AQUÍ ESTABA EL ERROR (era erp_usuarios)
             WHERE u.estado = 'activo'
             ORDER BY 
                 CASE 
@@ -73,6 +74,7 @@ def get_usuarios():
     except Exception as e:
         print(f"❌ Error en get_usuarios: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @usuarios_bp.route('/api/config/usuarios/<usuario_id>', methods=['GET'])
 def get_usuario(usuario_id):
