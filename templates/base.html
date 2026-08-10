@@ -1989,7 +1989,7 @@ async function cargarUUIDsPorCodigo() {
 }
 
 // ============================================================
-// TOGGLE PERMISO - CON CÓDIGOS
+// TOGGLE PERMISO - CON IDs NUMÉRICOS (CORREGIDO)
 // ============================================================
 async function togglePermiso(event) {
     const checkbox = event.target;
@@ -2032,51 +2032,73 @@ async function togglePermiso(event) {
         return;
     }
     
-    // ✅ MAPA DE NOMBRES DE MÓDULOS A CÓDIGOS
-    const moduleToCode = {
-        'Configuración': 'EMPRESAS',
-        'Usuarios y permisos': 'USUARIOS_PERMISOS',
-        'Correlativos': 'CORRELATIVOS',
-        'Parámetros': 'PARAMETROS',
-        'Integración ERP': 'INTEGRACION',
-        'Maestros': 'CLIENTES',
-        'Productos': 'PRODUCTOS_LISTADO',
-        'Cotizaciones': 'COTIZACIONES',
-        'Ventas': 'COMPROBANTES_CLIENTE',
-        'Compras': 'SOLICITUD_COMPRA',
-        'Logística': 'RECEPCION_MERCADERIA',
-        'Inventario': 'ESTADO_STOCK',
-        'CxC': 'CUENTAS_COBRAR',
-        'CxP': 'CUENTAS_PAGAR',
-        'Caja': 'CAJA_BANCOS',
-        'Reportes': 'REPORTE_VENTAS',
-        'SUNAT': 'SUNAT'
+    // ✅ MAPA DE NOMBRES DE MÓDULOS A IDs NUMÉRICOS (los que usa el backend)
+    const moduleToId = {
+        'Configuración': 1,
+        'Usuarios y permisos': 2,
+        'Correlativos': 3,
+        'Parámetros': 4,
+        'Integración ERP': 5,
+        'Maestros': 6,
+        'Productos': 12,
+        'Cotizaciones': 14,
+        'Ventas': 15,
+        'Compras': 18,
+        'Logística': 22,
+        'Inventario': 23,
+        'CxC': 27,
+        'CxP': 28,
+        'Caja': 29,
+        'Reportes': 31,
+        'SUNAT': 35
     };
     
-    // ✅ Obtener el código del módulo
-    const codigo = moduleToCode[module];
-    if (!codigo) {
-        console.error('❌ No se encontró código para:', module);
+    // ✅ Obtener el ID numérico del módulo
+    const submoduloId = moduleToId[module];
+    if (!submoduloId) {
+        console.error('❌ No se encontró ID para:', module);
         toast(`❌ Módulo "${module}" no encontrado`);
         checkbox.checked = !tienePermiso;
         return;
     }
     
-    // ✅ Obtener el UUID del código
-    const uuid = UUID_MAP_BY_CODE[codigo];
-    if (!uuid) {
-        console.error('❌ No se encontró UUID para código:', codigo);
-        toast(`❌ UUID no encontrado para ${module}`);
-        checkbox.checked = !tienePermiso;
-        return;
-    }
+    console.log('✅ ID numérico encontrado:', submoduloId, 'para', module);
     
-    console.log('✅ UUID encontrado:', uuid, 'para', module, 'código:', codigo);
-    
+    // Obtener permisos existentes para ver si ya tiene este permiso
     const permisosExistentes = await cargarPermisosUsuario(userIdNum, empresaIdStr);
     let permisosList = [];
     
+    // ✅ Buscar el UUID real del submódulo usando el mapa UUID_MAP_BY_CODE
+    // Pero el backend espera el ID numérico, no el UUID
+    // Sin embargo, al guardar, el backend convierte el ID numérico a UUID automáticamente
+    
     if (permisosExistentes?.permisos && permisosExistentes.permisos.length > 0) {
+        // Buscar si ya existe un permiso para este módulo
+        // Para eso, necesitamos saber qué UUID corresponde a este ID numérico
+        // Usamos el mapa de códigos para obtener el UUID
+        const moduleToCode = {
+            'Configuración': 'EMPRESAS',
+            'Usuarios y permisos': 'USUARIOS_PERMISOS',
+            'Correlativos': 'CORRELATIVOS',
+            'Parámetros': 'PARAMETROS',
+            'Integración ERP': 'INTEGRACION',
+            'Maestros': 'CLIENTES',
+            'Productos': 'PRODUCTOS_LISTADO',
+            'Cotizaciones': 'COTIZACIONES',
+            'Ventas': 'COMPROBANTES_CLIENTE',
+            'Compras': 'SOLICITUD_COMPRA',
+            'Logística': 'RECEPCION_MERCADERIA',
+            'Inventario': 'ESTADO_STOCK',
+            'CxC': 'CUENTAS_COBRAR',
+            'CxP': 'CUENTAS_PAGAR',
+            'Caja': 'CAJA_BANCOS',
+            'Reportes': 'REPORTE_VENTAS',
+            'SUNAT': 'SUNAT'
+        };
+        
+        const codigo = moduleToCode[module];
+        const uuid = UUID_MAP_BY_CODE[codigo];
+        
         let encontrado = false;
         for (const p of permisosExistentes.permisos) {
             if (p.submodulo_id === uuid) {
@@ -2094,7 +2116,7 @@ async function togglePermiso(event) {
             }
         }
         
-        if (!encontrado) {
+        if (!encontrado && uuid) {
             permisosExistentes.permisos.push({
                 submodulo_id: uuid,
                 puede_ver: tienePermiso,
@@ -2110,18 +2132,48 @@ async function togglePermiso(event) {
         }
         permisosList = permisosExistentes.permisos;
     } else {
-        permisosList = [{
-            submodulo_id: uuid,
-            puede_ver: tienePermiso,
-            puede_crear: tienePermiso,
-            puede_editar: tienePermiso,
-            puede_aprobar: false,
-            puede_anular: false,
-            puede_eliminar: false,
-            puede_exportar: false,
-            puede_subir_evidencia: false,
-            observacion: `Permiso ${tienePermiso ? 'habilitado' : 'deshabilitado'}`
-        }];
+        // No hay permisos existentes, crear uno nuevo con el UUID
+        const moduleToCode = {
+            'Configuración': 'EMPRESAS',
+            'Usuarios y permisos': 'USUARIOS_PERMISOS',
+            'Correlativos': 'CORRELATIVOS',
+            'Parámetros': 'PARAMETROS',
+            'Integración ERP': 'INTEGRACION',
+            'Maestros': 'CLIENTES',
+            'Productos': 'PRODUCTOS_LISTADO',
+            'Cotizaciones': 'COTIZACIONES',
+            'Ventas': 'COMPROBANTES_CLIENTE',
+            'Compras': 'SOLICITUD_COMPRA',
+            'Logística': 'RECEPCION_MERCADERIA',
+            'Inventario': 'ESTADO_STOCK',
+            'CxC': 'CUENTAS_COBRAR',
+            'CxP': 'CUENTAS_PAGAR',
+            'Caja': 'CAJA_BANCOS',
+            'Reportes': 'REPORTE_VENTAS',
+            'SUNAT': 'SUNAT'
+        };
+        
+        const codigo = moduleToCode[module];
+        const uuid = UUID_MAP_BY_CODE[codigo];
+        
+        if (uuid) {
+            permisosList = [{
+                submodulo_id: uuid,
+                puede_ver: tienePermiso,
+                puede_crear: tienePermiso,
+                puede_editar: tienePermiso,
+                puede_aprobar: false,
+                puede_anular: false,
+                puede_eliminar: false,
+                puede_exportar: false,
+                puede_subir_evidencia: false,
+                observacion: `Permiso ${tienePermiso ? 'habilitado' : 'deshabilitado'}`
+            }];
+        } else {
+            toast('❌ Error: No se encontró UUID para el módulo');
+            checkbox.checked = !tienePermiso;
+            return;
+        }
     }
     
     try {
@@ -2140,7 +2192,6 @@ async function togglePermiso(event) {
         toast('❌ Error al guardar permiso');
     }
 }
-
 // ============================================================
 // RENDER USUARIOS - CON CÓDIGOS
 // ============================================================
@@ -2236,31 +2287,48 @@ async function renderUsuarios(filter="") {
         const empresas = u.empresas_acceso || [];
         const roles = empresas.map(e => e.rol_codigo || '');
         
-        const tienePermisoModulo = (submoduloNombre) => {
-            if (esAdmin) return true;
-            
-            // ✅ Obtener el código del módulo
-            const codigo = moduleToCode[submoduloNombre];
-            if (!codigo) {
-                console.warn(`⚠️ No se encontró código para: ${submoduloNombre}`);
-                return false;
-            }
-            
-            // ✅ Obtener el UUID del código
-            const uuid = UUID_MAP_BY_CODE[codigo];
-            if (!uuid) {
-                console.warn(`⚠️ No se encontró UUID para código: ${codigo}`);
-                return false;
-            }
-            
-            // ✅ Buscar el permiso usando el UUID
-            const permiso = permisos[uuid];
-            if (!permiso) {
-                const modulosOperativos = ['Productos', 'Cotizaciones', 'Ventas', 'Compras', 'Logística', 'Inventario'];
-                return modulosOperativos.includes(submoduloNombre);
-            }
-            return permiso.puede_ver || false;
-        };
+        // Dentro de renderUsuarios, la función tienePermisoModulo:
+const tienePermisoModulo = (submoduloNombre) => {
+    if (esAdmin) return true;
+    
+    // ✅ MAPA DE NOMBRES A CÓDIGOS
+    const moduleToCode = {
+        'Configuración': 'EMPRESAS',
+        'Usuarios y permisos': 'USUARIOS_PERMISOS',
+        'Correlativos': 'CORRELATIVOS',
+        'Parámetros': 'PARAMETROS',
+        'Integración ERP': 'INTEGRACION',
+        'Maestros': 'CLIENTES',
+        'Productos': 'PRODUCTOS_LISTADO',
+        'Cotizaciones': 'COTIZACIONES',
+        'Ventas': 'COMPROBANTES_CLIENTE',
+        'Compras': 'SOLICITUD_COMPRA',
+        'Logística': 'RECEPCION_MERCADERIA',
+        'Inventario': 'ESTADO_STOCK',
+        'CxC': 'CUENTAS_COBRAR',
+        'CxP': 'CUENTAS_PAGAR',
+        'Caja': 'CAJA_BANCOS',
+        'Reportes': 'REPORTE_VENTAS',
+        'SUNAT': 'SUNAT'
+    };
+    
+    const codigo = moduleToCode[submoduloNombre];
+    if (!codigo) return false;
+    
+    const uuid = UUID_MAP_BY_CODE[codigo];
+    if (!uuid) {
+        console.warn(`⚠️ No se encontró UUID para código: ${codigo}`);
+        return false;
+    }
+    
+    const permiso = permisos[uuid];
+    if (!permiso) {
+        const modulosOperativos = ['Productos', 'Cotizaciones', 'Ventas', 'Compras', 'Logística', 'Inventario'];
+        return modulosOperativos.includes(submoduloNombre);
+    }
+    return permiso.puede_ver || false;
+};
+
         
         const empresasHtml = empresas.map(e => badge(e.empresa_codigo || '')).join('');
         const rolesHtml = roles.map(r => `<span class="badge ${r === 'GERENCIA_TOTAL' ? 'badge-info' : 'badge-gray'}">${r}</span>`).join(' ');
