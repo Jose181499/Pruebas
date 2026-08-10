@@ -1988,8 +1988,9 @@ async function cargarUUIDsPorCodigo() {
     return {};
 }
 
+
 // ============================================================
-// TOGGLE PERMISO - CON IDs NUMÉRICOS (CORREGIDO)
+// TOGGLE PERMISO - VERSIÓN DEFINITIVA CON ID NUMÉRICO
 // ============================================================
 async function togglePermiso(event) {
     const checkbox = event.target;
@@ -2032,7 +2033,7 @@ async function togglePermiso(event) {
         return;
     }
     
-    // ✅ MAPA DE NOMBRES DE MÓDULOS A IDs NUMÉRICOS (los que usa el backend)
+    // ✅ MAPA DE NOMBRES DE MÓDULOS A IDs NUMÉRICOS
     const moduleToId = {
         'Configuración': 1,
         'Usuarios y permisos': 2,
@@ -2064,43 +2065,38 @@ async function togglePermiso(event) {
     
     console.log('✅ ID numérico encontrado:', submoduloId, 'para', module);
     
-    // Obtener permisos existentes para ver si ya tiene este permiso
+    // Obtener permisos existentes
     const permisosExistentes = await cargarPermisosUsuario(userIdNum, empresaIdStr);
     let permisosList = [];
     
-    // ✅ Buscar el UUID real del submódulo usando el mapa UUID_MAP_BY_CODE
-    // Pero el backend espera el ID numérico, no el UUID
-    // Sin embargo, al guardar, el backend convierte el ID numérico a UUID automáticamente
+    // ✅ Buscar si ya existe un permiso para este módulo usando el UUID
+    const moduleToCode = {
+        'Configuración': 'EMPRESAS',
+        'Usuarios y permisos': 'USUARIOS_PERMISOS',
+        'Correlativos': 'CORRELATIVOS',
+        'Parámetros': 'PARAMETROS',
+        'Integración ERP': 'INTEGRACION',
+        'Maestros': 'CLIENTES',
+        'Productos': 'PRODUCTOS_LISTADO',
+        'Cotizaciones': 'COTIZACIONES',
+        'Ventas': 'COMPROBANTES_CLIENTE',
+        'Compras': 'SOLICITUD_COMPRA',
+        'Logística': 'RECEPCION_MERCADERIA',
+        'Inventario': 'ESTADO_STOCK',
+        'CxC': 'CUENTAS_COBRAR',
+        'CxP': 'CUENTAS_PAGAR',
+        'Caja': 'CAJA_BANCOS',
+        'Reportes': 'REPORTE_VENTAS',
+        'SUNAT': 'SUNAT'
+    };
+    
+    const codigo = moduleToCode[module];
+    const uuid = UUID_MAP_BY_CODE[codigo];
     
     if (permisosExistentes?.permisos && permisosExistentes.permisos.length > 0) {
-        // Buscar si ya existe un permiso para este módulo
-        // Para eso, necesitamos saber qué UUID corresponde a este ID numérico
-        // Usamos el mapa de códigos para obtener el UUID
-        const moduleToCode = {
-            'Configuración': 'EMPRESAS',
-            'Usuarios y permisos': 'USUARIOS_PERMISOS',
-            'Correlativos': 'CORRELATIVOS',
-            'Parámetros': 'PARAMETROS',
-            'Integración ERP': 'INTEGRACION',
-            'Maestros': 'CLIENTES',
-            'Productos': 'PRODUCTOS_LISTADO',
-            'Cotizaciones': 'COTIZACIONES',
-            'Ventas': 'COMPROBANTES_CLIENTE',
-            'Compras': 'SOLICITUD_COMPRA',
-            'Logística': 'RECEPCION_MERCADERIA',
-            'Inventario': 'ESTADO_STOCK',
-            'CxC': 'CUENTAS_COBRAR',
-            'CxP': 'CUENTAS_PAGAR',
-            'Caja': 'CAJA_BANCOS',
-            'Reportes': 'REPORTE_VENTAS',
-            'SUNAT': 'SUNAT'
-        };
-        
-        const codigo = moduleToCode[module];
-        const uuid = UUID_MAP_BY_CODE[codigo];
-        
         let encontrado = false;
         for (const p of permisosExistentes.permisos) {
+            // ✅ Si encontramos el permiso por UUID, lo actualizamos
             if (p.submodulo_id === uuid) {
                 p.puede_ver = tienePermiso;
                 p.puede_crear = tienePermiso;
@@ -2117,6 +2113,7 @@ async function togglePermiso(event) {
         }
         
         if (!encontrado && uuid) {
+            // ✅ Si no existe, lo creamos con el UUID
             permisosExistentes.permisos.push({
                 submodulo_id: uuid,
                 puede_ver: tienePermiso,
@@ -2132,30 +2129,7 @@ async function togglePermiso(event) {
         }
         permisosList = permisosExistentes.permisos;
     } else {
-        // No hay permisos existentes, crear uno nuevo con el UUID
-        const moduleToCode = {
-            'Configuración': 'EMPRESAS',
-            'Usuarios y permisos': 'USUARIOS_PERMISOS',
-            'Correlativos': 'CORRELATIVOS',
-            'Parámetros': 'PARAMETROS',
-            'Integración ERP': 'INTEGRACION',
-            'Maestros': 'CLIENTES',
-            'Productos': 'PRODUCTOS_LISTADO',
-            'Cotizaciones': 'COTIZACIONES',
-            'Ventas': 'COMPROBANTES_CLIENTE',
-            'Compras': 'SOLICITUD_COMPRA',
-            'Logística': 'RECEPCION_MERCADERIA',
-            'Inventario': 'ESTADO_STOCK',
-            'CxC': 'CUENTAS_COBRAR',
-            'CxP': 'CUENTAS_PAGAR',
-            'Caja': 'CAJA_BANCOS',
-            'Reportes': 'REPORTE_VENTAS',
-            'SUNAT': 'SUNAT'
-        };
-        
-        const codigo = moduleToCode[module];
-        const uuid = UUID_MAP_BY_CODE[codigo];
-        
+        // ✅ No hay permisos existentes, crear uno nuevo con el UUID
         if (uuid) {
             permisosList = [{
                 submodulo_id: uuid,
@@ -2192,6 +2166,7 @@ async function togglePermiso(event) {
         toast('❌ Error al guardar permiso');
     }
 }
+
 // ============================================================
 // RENDER USUARIOS - CON CÓDIGOS
 // ============================================================
