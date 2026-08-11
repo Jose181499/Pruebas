@@ -2075,7 +2075,24 @@ async function guardarCotizacion(estado) {
 
 
 
+// ============================================================
+// GUARDAR COMO BORRADOR
+// ============================================================
 function saveCotizacionDraft() {
+    // Verificar que hay productos en la cotización
+    if (quoteProducts.length === 0) {
+        showToast('⚠️ Agrega al menos un producto a la cotización', 'warning');
+        return;
+    }
+    
+    // Verificar que hay un cliente seleccionado
+    const ruc = document.getElementById('fRuc')?.value?.trim() || '';
+    if (!ruc) {
+        showToast('⚠️ Primero busca un cliente por RUC', 'warning');
+        return;
+    }
+    
+    // Guardar como Borrador
     guardarCotizacion('Borrador');
 }
 
@@ -4626,6 +4643,7 @@ function getUsuarioRol() {
     return 'vendedor';
 }
 
+
 // ============================================================
 // RENDERIZAR BOTONES DEL FOOTER SEGÚN ROL
 // ============================================================
@@ -4642,34 +4660,40 @@ function renderCotizacionFooter(esEdicion = false) {
     
     if (isAdminOrHellen) {
         // ============================================================
-        // MODO ADMIN / HELLEN - Botones: Cancelar, Validado por Hellen, Revisión, Generar
+        // MODO ADMIN / HELLEN - Botones: Cancelar, Borrador, Validado, Revisión, Generar
         // ============================================================
         botonesHtml = `
             <!-- Cancelar - Gris -->
             <button class="btn btn-secondary" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #9CA3AF;background:#6B7280;color:#fff;font-weight:800;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='#4B5563'" onmouseout="this.style.background='#6B7280'" onclick="closeModal('cotizacionModal')">Cancelar</button>
             
+            <!-- 💾 Guardar Borrador - Amarillo -->
+            <button class="btn btn-warning" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #F59E0B;background:#F59E0B;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(245,158,11,0.3);" onmouseover="this.style.background='#D97706';this.style.boxShadow='0 0 25px rgba(245,158,11,0.5)'" onmouseout="this.style.background='#F59E0B';this.style.boxShadow='0 0 15px rgba(245,158,11,0.3)'" onclick="saveCotizacionDraft()">💾 Guardar Borrador</button>
+            
             <!-- Validado por Hellen - Verde Oscuro -->
             <button class="btn btn-blue" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #15803D;background:#166534;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(22,101,52,0.3);" onmouseover="this.style.background='#15803D';this.style.boxShadow='0 0 25px rgba(22,101,52,0.5)'" onmouseout="this.style.background='#166534';this.style.boxShadow='0 0 15px rgba(22,101,52,0.3)'" onclick="validateByHellen()">✅ Validado por Hellen</button>
             
             <!-- Revisión - Azul (para enviar a revisión) -->
-            <button class="btn btn-blue" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #0d6efd;background:#0d6efd;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(13,110,253,0.3);" onmouseover="this.style.background='#0b5ed7';this.style.boxShadow='0 0 25px rgba(13,110,253,0.5)'" onmouseout="this.style.background='#0d6efd';this.style.boxShadow='0 0 15px rgba(13,110,253,0.3)'" onclick="sendCotizacionToReview()">📤 Revisión</button>
+            <button class="btn btn-blue" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #0d6efd;background:#0d6efd;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(13,110,253,0.3);" onmouseover="this.style.background='#0b5ed7';this.style.boxShadow='0 0 25px rgba(13,110,253,0.5)'" onmouseout="this.style.background='#0d6efd';this.style.boxShadow='0 0 15px rgba(13,110,253,0.3)'" onclick="sendCotizacionToReview()">📤 Solicitar Revisión</button>
             
             <!-- Generar - Verde Fluorescente NEON -->
             <button class="btn btn-green" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #00FF41;background:#00FF41;color:#000;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 25px rgba(0,255,65,0.5);" onmouseover="this.style.background='#44FF77';this.style.boxShadow='0 0 35px rgba(0,255,65,0.7)'" onmouseout="this.style.background='#00FF41';this.style.boxShadow='0 0 25px rgba(0,255,65,0.5)'" onclick="generateCotizacionPdfAndSend()">📄 Generar</button>
         `;
     } else {
         // ============================================================
-        // MODO VENDEDOR - Botones: Cancelar, Solicitar revisión, Validado, Generar
+        // MODO VENDEDOR - Botones: Cancelar, Borrador, Solicitar revisión, Validado, Generar
         // ============================================================
         botonesHtml = `
             <!-- Cancelar - Gris -->
             <button class="btn btn-secondary" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #9CA3AF;background:#6B7280;color:#fff;font-weight:800;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='#4B5563'" onmouseout="this.style.background='#6B7280'" onclick="closeModal('cotizacionModal')">Cancelar</button>
             
+            <!-- 💾 Guardar Borrador - Amarillo -->
+            <button class="btn btn-warning" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #F59E0B;background:#F59E0B;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(245,158,11,0.3);" onmouseover="this.style.background='#D97706';this.style.boxShadow='0 0 25px rgba(245,158,11,0.5)'" onmouseout="this.style.background='#F59E0B';this.style.boxShadow='0 0 15px rgba(245,158,11,0.3)'" onclick="saveCotizacionDraft()">💾 Guardar Borrador</button>
+            
             <!-- Solicitar revisión - Amarillo Fluorescente -->
             <button class="btn btn-warning" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #FFDD00;background:#FFDD00;color:#000;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 25px rgba(255,221,0,0.5);" onmouseover="this.style.background='#FFE733';this.style.boxShadow='0 0 35px rgba(255,221,0,0.7)'" onmouseout="this.style.background='#FFDD00';this.style.boxShadow='0 0 25px rgba(255,221,0,0.5)'" onclick="sendCotizacionToReview()">⭐ Solicitar revisión</button>
             
             <!-- Validado por Hellen - Verde Oscuro -->
-            <button class="btn btn-blue" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #15803D;background:#166534;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(22,101,52,0.3);" onmouseover="this.style.background='#15803D';this.style.boxShadow='0 0 25px rgba(22,101,52,0.5)'" onmouseout="this.style.background='#166534';this.style.boxShadow='0 0 15px rgba(22,101,52,0.3)'" onclick="validateByHellen()">✅ Validado </button>
+            <button class="btn btn-blue" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #15803D;background:#166534;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(22,101,52,0.3);" onmouseover="this.style.background='#15803D';this.style.boxShadow='0 0 25px rgba(22,101,52,0.5)'" onmouseout="this.style.background='#166534';this.style.boxShadow='0 0 15px rgba(22,101,52,0.3)'" onclick="validateByHellen()">✅ Validado</button>
             
             <!-- Generar - Verde Fluorescente NEON -->
             <button class="btn btn-green" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #00FF41;background:#00FF41;color:#000;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 25px rgba(0,255,65,0.5);" onmouseover="this.style.background='#44FF77';this.style.boxShadow='0 0 35px rgba(0,255,65,0.7)'" onmouseout="this.style.background='#00FF41';this.style.boxShadow='0 0 25px rgba(0,255,65,0.5)'" onclick="generateCotizacionPdfAndSend()">📄 Generar Nueva Cotizacion</button>
@@ -4715,13 +4739,13 @@ function renderCotizacionFooter(esEdicion = false) {
         </div>
     `;
 
-footer.innerHTML = `
-    ${flujoHtml}
+    footer.innerHTML = `
+        ${flujoHtml}
 
-    <div class="cotizacion-footer-buttons">
-        ${botonesHtml}
-    </div>
-`;
+        <div class="cotizacion-footer-buttons">
+            ${botonesHtml}
+        </div>
+    `;
 }
 
 // ============================================================
