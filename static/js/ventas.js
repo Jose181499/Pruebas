@@ -9505,8 +9505,6 @@ function inicializarEventosCotizacion(isEdit) {
 }
 
 
-
-
 // ============================================================
 // RENDERIZAR CONTENIDO DEL FORMULARIO DE COTIZACIÓN - VERSIÓN COMPLETA
 // ============================================================
@@ -9585,9 +9583,9 @@ function renderCotizacionFormContent(isEdit) {
     <!-- RUC | Razón Social -->
     <div style="display:grid;grid-template-columns:1fr 1.8fr;gap:4px;margin-bottom:2px;">
         <div class="form-field">
-    <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">RUC <span style="color:#DC2626;font-weight:900;">*</span></label>
-    <input id="fRuc" readonly style="width:100%;height:18px;border:1px solid #E5E7EB;border-radius:5px;background:#F1F5F9;outline:none;color:#0F172A;font-size:9.5px;padding:0 5px;border-left:3px solid #DC2626;">
-</div>
+            <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">RUC <span style="color:#DC2626;font-weight:900;">*</span></label>
+            <input id="fRuc" readonly style="width:100%;height:18px;border:1px solid #E5E7EB;border-radius:5px;background:#F1F5F9;outline:none;color:#0F172A;font-size:9.5px;padding:0 5px;border-left:3px solid #DC2626;">
+        </div>
         <div class="form-field">
             <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Razón Social</label>
             <input id="fRazon" readonly style="width:100%;height:18px;border:1px solid #E5E7EB;border-radius:5px;background:#F1F5F9;outline:none;color:#0F172A;font-size:9.5px;padding:0 5px;">
@@ -9645,6 +9643,7 @@ function renderCotizacionFormContent(isEdit) {
         <h3 style="padding:4px 10px;border-bottom:1px solid #E5E7EB;font-size:11px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:5px;margin:0;">
             <span style="color:#EF233C;font-weight:1000;">2.</span> 
             <span style="color:#EF233C;font-weight:1000;">Condiciones Comerciales</span>
+            <span style="font-size:8px;color:#DC2626;font-weight:700;margin-left:auto;">* Campos obligatorios</span>
         </h3>
         <div class="body" style="padding:6px 8px;">
             <!-- Asesor | Email | Teléfono -->
@@ -9671,37 +9670,36 @@ function renderCotizacionFormContent(isEdit) {
                         <option value="Dólares ($)">Dólares ($)</option>
                     </select>
                 </div>
-              <div class="form-field">
-    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Condición de Pago <span style="color:#DC2626;font-weight:900;">*</span></label>
-    <select id="fCondicion" onchange="toggleCustomField('fCondicion','fCondicionCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;border-left:3px solid #DC2626;">
-        <option value="Contado">Contado</option>
-        <option value="Credito 7 Dias">Credito 7 Dias</option>
-        <option value="Credito 15 Dias">Credito 15 Dias</option>
-        <option value="Credito 30 Dias">Credito 30 Dias</option>
-        <option value="Credito 45 Dias">Credito 45 Dias</option>
-        <option value="Credito 60 Dias">Credito 60 Dias</option>
-        <option value="Credito 90 Dias">Credito 90 Dias</option>
-        <option value="Credito 120 Dias">Credito 120 Dias</option>
-        <option value="Personalizado" selected>✏️ Personalizado...</option>
-    </select>
-    <input id="fCondicionCustom" placeholder="Ej: 50% anticipo, 50% contra entrega" style="display:block;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;border-left:3px solid #DC2626;" value="Personalizado">
-</div>
+                <div class="form-field">
+                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Condición de Pago <span style="color:#DC2626;font-weight:900;">*</span></label>
+                    <select id="fCondicion" onchange="toggleCustomField('fCondicion','fCondicionCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;border-left:3px solid #DC2626;">
+                        <option value="Contado">Contado</option>
+                        <option value="Credito 7 Dias">Credito 7 Dias</option>
+                        <option value="Credito 15 Dias">Credito 15 Dias</option>
+                        <option value="Credito 30 Dias">Credito 30 Dias</option>
+                        <option value="Credito 45 Dias">Credito 45 Dias</option>
+                        <option value="Credito 60 Dias">Credito 60 Dias</option>
+                        <option value="Credito 90 Dias">Credito 90 Dias</option>
+                        <option value="Credito 120 Dias">Credito 120 Dias</option>
+                        <option value="Personalizado" selected>✏️ Personalizado...</option>
+                    </select>
+                    <input id="fCondicionCustom" placeholder="Ej: 50% anticipo, 50% contra entrega" style="display:block;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;border-left:3px solid #DC2626;" value="Personalizado">
                 </div>
-               <div class="form-field">
-    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Tiempo de Entrega <span style="color:#DC2626;font-weight:900;">*</span></label>
-    <select id="fTiempo" onchange="toggleCustomField('fTiempo','fTiempoCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;border-left:3px solid #DC2626;">
-        <option value="Inmediata">Inmediata</option>
-        <option value="1 día hábil">1 día hábil</option>
-        <option value="2 días hábiles">2 días hábiles</option>
-        <option value="3 días hábiles">3 días hábiles</option>
-        <option value="5 días hábiles" selected>5 días hábiles</option>
-        <option value="7 días hábiles">7 días hábiles</option>
-        <option value="10 días hábiles">10 días hábiles</option>
-        <option value="15 días hábiles">15 días hábiles</option>
-        <option value="Personalizado">✏️ Personalizado...</option>
-    </select>
-    <input id="fTiempoCustom" placeholder="Ej: 10 días" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;border-left:3px solid #DC2626;">
-</div>
+                <div class="form-field">
+                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Tiempo de Entrega <span style="color:#DC2626;font-weight:900;">*</span></label>
+                    <select id="fTiempo" onchange="toggleCustomField('fTiempo','fTiempoCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;border-left:3px solid #DC2626;">
+                        <option value="Inmediata">Inmediata</option>
+                        <option value="1 día hábil">1 día hábil</option>
+                        <option value="2 días hábiles">2 días hábiles</option>
+                        <option value="3 días hábiles">3 días hábiles</option>
+                        <option value="5 días hábiles" selected>5 días hábiles</option>
+                        <option value="7 días hábiles">7 días hábiles</option>
+                        <option value="10 días hábiles">10 días hábiles</option>
+                        <option value="15 días hábiles">15 días hábiles</option>
+                        <option value="Personalizado">✏️ Personalizado...</option>
+                    </select>
+                    <input id="fTiempoCustom" placeholder="Ej: 10 días" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;border-left:3px solid #DC2626;">
+                </div>
             </div>
             <!-- Validez Oferta | Dirección Entrega -->
             <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:4px;margin-bottom:2px;">
@@ -9736,107 +9734,111 @@ function renderCotizacionFormContent(isEdit) {
         </div>
     </div>
 
-<!-- ============================================================ -->
-<!-- 3. RESUMEN - ESTILO IMAGEN -->
-<!-- ============================================================ -->
-<div class="create-panel summary-card" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.05);overflow:hidden;max-width:500px;font-family:'Segoe UI',Roboto,sans-serif;">
-    
-    <!-- Título "3. Resumen" -->
-    <div style="padding:5px 10px;border-bottom:1px solid #E5E7EB;background:#FAFAFA;display:flex;align-items:center;gap:5px;">
-        <span style="color:#D32F2F;font-weight:700;font-size:10px;">3.</span>
-        <span style="color:#D32F2F;font-weight:700;font-size:10px;">Resumen</span>
-    </div>
-    
-    <!-- Cuerpo del resumen -->
-    <div style="padding:6px 10px 8px 10px;">
+    <!-- ============================================================ -->
+    <!-- 3. RESUMEN - ESTILO IMAGEN -->
+    <!-- ============================================================ -->
+    <div class="create-panel summary-card" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.05);overflow:hidden;max-width:500px;font-family:'Segoe UI',Roboto,sans-serif;">
         
-        <!-- FILA: Subtotal -->
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-bottom:1px solid #F0F0F0;">
-            <span style="font-size:9.5px;color:#444;font-weight:500;">Subtotal</span>
-            <span id="sumSubtotal" style="font-size:10px;font-weight:600;color:#1E1E1E;">S/ 0.00</span>
+        <!-- Título "3. Resumen" -->
+        <div style="padding:5px 10px;border-bottom:1px solid #E5E7EB;background:#FAFAFA;display:flex;align-items:center;gap:5px;">
+            <span style="color:#D32F2F;font-weight:700;font-size:10px;">3.</span>
+            <span style="color:#D32F2F;font-weight:700;font-size:10px;">Resumen</span>
         </div>
         
-        <!-- FILA: Descuento + input + select -->
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-bottom:1px solid #F0F0F0;">
-            <span style="font-size:9.5px;color:#444;font-weight:500;">Descuento</span>
-            <div style="display:flex;align-items:center;gap:3px;">
-                <input id="fDiscountValue" type="number" value="0" step="0.01" style="width:50px;height:18px;border:1px solid #CCC;border-radius:4px;padding:0 3px;text-align:right;font-weight:600;font-size:9.5px;background:#FFF;">
-                <select id="fDiscountType" style="height:18px;border-radius:4px;border:1px solid #CCC;font-weight:600;font-size:9px;background:#FFF;padding:0 3px;" onchange="calcQuote()">
-                    <option value="%">%</option>
-                    <option value="S/">S/</option>
-                </select>
+        <!-- Cuerpo del resumen -->
+        <div style="padding:6px 10px 8px 10px;">
+            
+            <!-- FILA: Subtotal -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-bottom:1px solid #F0F0F0;">
+                <span style="font-size:9.5px;color:#444;font-weight:500;">Subtotal</span>
+                <span id="sumSubtotal" style="font-size:10px;font-weight:600;color:#1E1E1E;">S/ 0.00</span>
             </div>
+            
+            <!-- FILA: Descuento + input + select -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-bottom:1px solid #F0F0F0;">
+                <span style="font-size:9.5px;color:#444;font-weight:500;">Descuento</span>
+                <div style="display:flex;align-items:center;gap:3px;">
+                    <input id="fDiscountValue" type="number" value="0" step="0.01" style="width:50px;height:18px;border:1px solid #CCC;border-radius:4px;padding:0 3px;text-align:right;font-weight:600;font-size:9.5px;background:#FFF;">
+                    <select id="fDiscountType" style="height:18px;border-radius:4px;border:1px solid #CCC;font-weight:600;font-size:9px;background:#FFF;padding:0 3px;" onchange="calcQuote()">
+                        <option value="%">%</option>
+                        <option value="S/">S/</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- FILA: Dscto aplicado -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-bottom:1px solid #F0F0F0;">
+                <span style="font-size:9.5px;color:#444;font-weight:500;">Dscto aplicado</span>
+                <span id="sumDiscount" style="font-size:10px;font-weight:600;color:#D32F2F;">-S/ 0.00</span>
+            </div>
+            
+            <!-- FILA: IGV 18% -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-bottom:1px solid #F0F0F0;">
+                <span style="font-size:9.5px;color:#444;font-weight:500;">IGV 18%</span>
+                <span id="sumIgv" style="font-size:10px;font-weight:600;color:#1E1E1E;">S/ 0.00</span>
+            </div>
+            
+            <!-- FILA: Valor venta -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-bottom:1px solid #F0F0F0;">
+                <span style="font-size:9.5px;color:#444;font-weight:500;">Valor venta</span>
+                <span id="sumValorVenta" style="font-size:10px;font-weight:600;color:#1E1E1E;">S/ 0.00</span>
+            </div>
+            
+            <!-- TOTAL -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0 0 0;margin-top:2px;border-top:2px solid #D32F2F;">
+                <span style="font-size:11px;font-weight:700;color:#1E1E1E;">TOTAL A PAGAR </span>
+                <span id="sumTotal" style="font-size:15px;font-weight:800;color:#D32F2F;">S/ 0.00</span>
+            </div>
+            
         </div>
-        
-        <!-- FILA: Dscto aplicado -->
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-bottom:1px solid #F0F0F0;">
-            <span style="font-size:9.5px;color:#444;font-weight:500;">Dscto aplicado</span>
-            <span id="sumDiscount" style="font-size:10px;font-weight:600;color:#D32F2F;">-S/ 0.00</span>
+    </div>
+
+</div> <!-- 🔴 CIERRE DEL GRID DE 3 COLUMNAS -->
+
+<!-- ============================================================ -->
+<!-- FILA INFERIOR: 4. PRODUCTOS COTIZADOS (OCUPA TODO EL ANCHO) -->
+<!-- ============================================================ -->
+<div class="create-panel product-wide" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;box-shadow:0 4px 12px rgba(15,23,42,.06);overflow:hidden;margin-bottom:10px;">
+    <h3 style="padding:8px 14px;border-bottom:1px solid #E5E7EB;font-size:13px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:8px;margin:0;flex-wrap:wrap;">
+        <span style="color:#EF233C;font-weight:1000;">4.</span> 
+        <span style="color:#EF233C;font-weight:1000;">Productos Cotizados</span>
+        <span style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap;">
+            <input id="quickProductSearch" placeholder="Buscar producto por código..." style="width:200px;height:30px;border:1px solid #CBD5E1;border-radius:8px;padding:0 10px;font-size:11px;font-weight:850;outline:none;">
+
+            <button onclick="openProductSelector()" style="height:30px;padding:0 12px;font-size:11px;border-radius:8px;font-weight:1000;background:#8B5CF6;color:#fff;border:0;cursor:pointer;">📋 Seleccionar Producto </button>
+        </span>
+    </h3>
+    <div class="body" style="padding:0;">
+        <div style="overflow:auto;max-height:220px;">
+            <table style="width:100%;border-collapse:collapse;font-size:10px;min-width:1100px;">
+                <thead>
+                    <tr>
+                        <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:35px;">Item</th>
+                        <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:80px;">Código Producto</th>
+                        <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;"> Descripción</th>
+                        <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:80px;">Modelo</th>
+                        <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:75px;">Marca</th>
+                        <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:55px;">Unidad</th>
+                        <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:50px;">Cant</th>
+                        <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:90px;">Valor Venta Unitario S/.</th>
+                        <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:100px;">Valor total S/.</th>
+                        <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:55px;">Stock</th>
+                        <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:70px;">Entrega</th>
+                        <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:40px;">Acciones </th>
+                    </tr>
+                </thead>
+                <tbody id="quoteProductRows">
+                    <tr><td colspan="12" style="text-align:center;color:#94A3B8;padding:20px;font-size:11px;">📭 Agregue productos a la cotización</td></tr>
+                </tbody>
+            </table>
         </div>
-        
-        <!-- FILA: IGV 18% -->
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-bottom:1px solid #F0F0F0;">
-            <span style="font-size:9.5px;color:#444;font-weight:500;">IGV 18%</span>
-            <span id="sumIgv" style="font-size:10px;font-weight:600;color:#1E1E1E;">S/ 0.00</span>
-        </div>
-        
-        <!-- FILA: Valor venta -->
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-bottom:1px solid #F0F0F0;">
-            <span style="font-size:9.5px;color:#444;font-weight:500;">Valor venta</span>
-            <span id="sumValorVenta" style="font-size:10px;font-weight:600;color:#1E1E1E;">S/ 0.00</span>
-        </div>
-        
-        <!-- TOTAL -->
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0 0 0;margin-top:2px;border-top:2px solid #D32F2F;">
-            <span style="font-size:11px;font-weight:700;color:#1E1E1E;">TOTAL A PAGAR </span>
-            <span id="sumTotal" style="font-size:15px;font-weight:800;color:#D32F2F;">S/ 0.00</span>
-        </div>
-        
     </div>
 </div>
 
-        <!-- ============================================================ -->
-        <!-- FILA INFERIOR: 4. PRODUCTOS COTIZADOS (OCUPA TODO EL ANCHO) -->
-        <!-- ============================================================ -->
-        <div class="create-panel product-wide" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;box-shadow:0 4px 12px rgba(15,23,42,.06);overflow:hidden;margin-bottom:10px;">
-            <h3 style="padding:8px 14px;border-bottom:1px solid #E5E7EB;font-size:13px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:8px;margin:0;flex-wrap:wrap;">
-                <span style="color:#EF233C;font-weight:1000;">4.</span> 
-                <span style="color:#EF233C;font-weight:1000;">Productos Cotizados</span>
-                <span style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap;">
-                    <input id="quickProductSearch" placeholder="Buscar producto por código..." style="width:200px;height:30px;border:1px solid #CBD5E1;border-radius:8px;padding:0 10px;font-size:11px;font-weight:850;outline:none;">
-
-                    <button onclick="openProductSelector()" style="height:30px;padding:0 12px;font-size:11px;border-radius:8px;font-weight:1000;background:#8B5CF6;color:#fff;border:0;cursor:pointer;">📋 Seleccionar Producto </button>
-                </span>
-            </h3>
-            <div class="body" style="padding:0;">
-                <div style="overflow:auto;max-height:220px;">
-                    <table style="width:100%;border-collapse:collapse;font-size:10px;min-width:1100px;">
-                        <thead>
-                            <tr>
-                                <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:35px;">Item</th>
-                                <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:80px;">Código Producto</th>
-                                <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;"> Descripción</th>
-                                <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:80px;">Modelo</th>
-                                <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:75px;">Marca</th>
-                                <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:55px;">Unidad</th>
-                                <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:50px;">Cant</th>
-                                <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:90px;">Valor Venta Unitario S/.</th>
-                                <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:100px;">Valor total S/.</th>
-                                <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:55px;">Stock</th>
-                                <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:70px;">Entrega</th>
-                                <th style="padding:5px 6px;font-size:9px;background:#FFF1F2;color:#7F1D1D;border:1px solid #FCA5A5;text-align:center;font-weight:1000;width:40px;">Acciones </th>
-                            </tr>
-                        </thead>
-                        <tbody id="quoteProductRows">
-                            <tr><td colspan="12" style="text-align:center;color:#94A3B8;padding:20px;font-size:11px;">📭 Agregue productos a la cotización</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        
-   
-<div class="create-panel" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;box-shadow:0 4px 12px rgba(15,23,42,.06);overflow:hidden;margin-bottom:10px; max-width: 100%; flex: 1;; grid-column: 1 / -1;">
+<!-- ============================================================ -->
+<!-- 5. INFORMACIÓN ADICIONAL -->
+<!-- ============================================================ -->
+<div class="create-panel" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;box-shadow:0 4px 12px rgba(15,23,42,.06);overflow:hidden;margin-bottom:10px; max-width: 100%; flex: 1; grid-column: 1 / -1;">
     <h3 style="padding:6px 12px;border-bottom:1px solid #E5E7EB;font-size:12px;font-weight:1000;color:#0F172A;background:#FAFBGC;display:flex;align-items:center;gap:6px;margin:0;">
         <span style="color:#EF233C;font-weight:1000;">5.</span> 
         <span style="color:#EF233C;font-weight:1000;">Información adicional</span>
@@ -9853,18 +9855,18 @@ function renderCotizacionFormContent(isEdit) {
                        style="width:100%;height:28px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 8px;">
             </div>
             
-        <!-- Motivo -->
-    <div class="form-field">
-         <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Motivo</label>
-         <select id="fMotivo" 
-            style="width:100%;height:28px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
-         <option value="Proyecto nuevo">Proyecto nuevo</option>
-         <option value="Recompra">Recompra</option>
-            <option value="Licitación">Licitación</option>
-            <option value="Reposición / stock">Reposición / stock</option>
-         <option value="Solicitud única del cliente" selected>Solicitud única del cliente</option>
-         </select>
-        </div>
+            <!-- Motivo -->
+            <div class="form-field">
+                <label style="display:block;font-size:8.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Motivo</label>
+                <select id="fMotivo" 
+                        style="width:100%;height:28px;border:1px solid #E5E7EB;border-radius:6px;background:#FFFFFF;outline:none;color:#0F172A;font-size:11px;padding:0 4px;">
+                    <option value="Proyecto nuevo">Proyecto nuevo</option>
+                    <option value="Recompra">Recompra</option>
+                    <option value="Licitación">Licitación</option>
+                    <option value="Reposición / stock">Reposición / stock</option>
+                    <option value="Solicitud única del cliente" selected>Solicitud única del cliente</option>
+                </select>
+            </div>
             
             <!-- Transporte -->
             <div class="form-field">
@@ -9908,8 +9910,6 @@ function renderCotizacionFormContent(isEdit) {
         
     `;
 }
-
-
 
 // Función para mostrar/ocultar campos de pago según condición
 function togglePagoCampos() {
