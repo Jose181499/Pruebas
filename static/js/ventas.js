@@ -10342,8 +10342,7 @@ function clearPedidoModalSAP() {
     // 7. CAMPOS DE FECHA Y NÚMERO (EDITABLES)
     // ============================================================
     setEditableValue('pcFecha', fechaStr);
-    setEditableValue('pcNumero', 'PC-' + new Date().toISOString().slice(0, 10).replaceAll('-', '') + '-' + String(Date.now()).slice(-4));
-    
+  setEditableValue('pcNumero', ''); // Dejar vacío para que el usuario escriba
     // ============================================================
     // 8. RESTAURAR SELECTS
     // ============================================================
