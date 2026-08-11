@@ -2283,10 +2283,10 @@ body.kcf-theme {
 }
 
 /* ============================================================
-   ESTADOS DE COTIZACIÓN - COLORES FLUORESCENTES
+   ESTADOS DE COTIZACIÓN - COLORES SÓLIDOS SIN DESENFOQUE
    ============================================================ */
 
-/* Badges de estado */
+/* Badges de estado - Versión limpia sin sombras */
 .badge {
     display: inline-flex;
     align-items: center;
@@ -2298,131 +2298,157 @@ body.kcf-theme {
     white-space: nowrap;
     border: 2px solid transparent;
     min-width: 90px;
-    text-shadow: 0 0 8px rgba(255,255,255,0.5);
 }
 
-/* 🔴 Borrador - Rojo fluorescente NEON */
+/* 🔴 Borrador - Rojo sólido */
 .b-draft { 
     background: #FF0000 !important;
     color: #FFFFFF !important;
-    border-color: #FF4444 !important;
-    box-shadow: 0 0 20px rgba(255, 0, 0, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.2);
-    text-shadow: 0 0 10px rgba(255,255,255,0.8);
+    border-color: #CC0000 !important;
 }
 
-/* 🟡 En revisión - Amarillo fluorescente NEON */
+/* 🟡 En revisión - Amarillo sólido */
 .b-review { 
     background: #FFDD00 !important;
     color: #000000 !important;
-    border-color: #FFEE44 !important;
-    box-shadow: 0 0 25px rgba(255, 221, 0, 0.7), inset 0 0 15px rgba(255, 255, 255, 0.3);
-    text-shadow: 0 0 10px rgba(0,0,0,0.2);
+    border-color: #CCAA00 !important;
 }
 
-/* 🔵 Validado por Hellen - Azul bajito fluorescente */
+/* 🔵 Validado por Hellen - Azul sólido */
 .b-validated { 
     background: #4FC3F7 !important;
     color: #01579B !important;
-    border-color: #81D4FA !important;
-    box-shadow: 0 0 20px rgba(79, 195, 247, 0.5), inset 0 0 15px rgba(255, 255, 255, 0.2);
-    text-shadow: 0 0 10px rgba(255,255,255,0.5);
+    border-color: #29B6F6 !important;
 }
 
-/* 🟢 Generada - Verde fluorescente NEON */
+/* 🟢 Generada - Verde sólido */
 .b-generated { 
-    background: #00FF41 !important;
-    color: #000000 !important;
-    border-color: #44FF77 !important;
-    box-shadow: 0 0 25px rgba(0, 255, 65, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.3);
-    text-shadow: 0 0 10px rgba(0,0,0,0.2);
+    background: #00CC44 !important;
+    color: #FFFFFF !important;
+    border-color: #009933 !important;
 }
 
-/* 🔵 Aceptada por Cliente - Azul fluorescente NEON */
+/* 🔵 Aceptada por Cliente - Azul sólido */
 .b-accepted { 
     background: #0066FF !important;
     color: #FFFFFF !important;
-    border-color: #4488FF !important;
-    box-shadow: 0 0 30px rgba(0, 102, 255, 0.7), inset 0 0 20px rgba(255, 255, 255, 0.15);
-    text-shadow: 0 0 15px rgba(255,255,255,0.7);
+    border-color: #0044CC !important;
 }
 
 /* ⚪ Cancelado / Anulado - Plomo */
 .b-canceled { 
     background: #6B7280 !important;
     color: #FFFFFF !important;
-    border-color: #9CA3AF !important;
-    box-shadow: none;
+    border-color: #4B5563 !important;
 }
 
-/* 🟢 Validado - Verde (para otros módulos) */
+/* 🟢 Validado - Verde sólido */
 .b-valid { 
     background: #00CC44 !important;
     color: #FFFFFF !important;
-    border-color: #44FF77 !important;
-    box-shadow: 0 0 15px rgba(0, 204, 68, 0.5);
+    border-color: #009933 !important;
 }
 
-/* 📤 Enviado - Morado fluorescente */
+/* 📤 Enviado - Morado sólido */
 .b-sent { 
-    background: #9B00FF !important;
+    background: #7C3AED !important;
     color: #FFFFFF !important;
-    border-color: #BB44FF !important;
-    box-shadow: 0 0 20px rgba(155, 0, 255, 0.5);
+    border-color: #6D28D9 !important;
 }
 
 /* ❌ Rechazado - Rojo oscuro */
 .b-rejected { 
     background: #CC0000 !important;
     color: #FFFFFF !important;
-    border-color: #FF4444 !important;
-    box-shadow: 0 0 15px rgba(204, 0, 0, 0.5);
+    border-color: #990000 !important;
 }
 
 /* ✅ OK - Verde */
 .b-ok { 
     background: #00CC44 !important;
     color: #FFFFFF !important;
-    border-color: #44FF77 !important;
-    box-shadow: 0 0 15px rgba(0, 204, 68, 0.5);
+    border-color: #009933 !important;
 }
 
 /* ℹ️ Info - Azul */
 .b-info { 
     background: #0066FF !important;
     color: #FFFFFF !important;
-    border-color: #4488FF !important;
-    box-shadow: 0 0 15px rgba(0, 102, 255, 0.5);
+    border-color: #0044CC !important;
 }
 
 /* ⚪ Plomo (default) */
 .b-gray { 
     background: #6B7280 !important;
     color: #FFFFFF !important;
-    border-color: #9CA3AF !important;
+    border-color: #4B5563 !important;
 }
 
 /* 🟡 Pendiente - Amarillo */
 .b-pending { 
     background: #FFCC00 !important;
     color: #000000 !important;
-    border-color: #FFEE44 !important;
-    box-shadow: 0 0 15px rgba(255, 204, 0, 0.5);
+    border-color: #CC9900 !important;
 }
 
 /* ❌ Perdido - Plomo */
 .b-lost { 
     background: #6B7280 !important;
     color: #FFFFFF !important;
-    border-color: #9CA3AF !important;
+    border-color: #4B5563 !important;
 }
 
+/* 📄 Emitido - Verde oscuro */
 .b-emitted {
-    background: #001a00;
-    color: #39FF14;              /* verde fosforescente clásico */
-    font-weight: 900;
-    text-shadow: 0 0 4px #39FF14;
-    box-shadow: 0 0 8px rgba(57, 255, 20, 0.6), inset 0 0 4px rgba(57, 255, 20, 0.3);
-    border: 1px solid #39FF14;
+    background: #065F46 !important;
+    color: #FFFFFF !important;
+    border-color: #047857 !important;
+}
+
+/* ============================================================
+   KPI DOTS - SIN DESENFOQUE
+   ============================================================ */
+
+/* 🔵 Total KPI - Azul sólido */
+.dot-total { 
+    background: #0066FF !important; 
+    color: #FFFFFF !important; 
+    border-color: #0044CC !important;
+}
+
+/* 🔴 Borrador KPI - Rojo sólido */
+.dot-draft { 
+    background: #FF0000 !important; 
+    color: #FFFFFF !important; 
+    border-color: #CC0000 !important;
+}
+
+/* 🟡 En revisión KPI - Amarillo sólido */
+.dot-review { 
+    background: #FFDD00 !important; 
+    color: #000000 !important; 
+    border-color: #CCAA00 !important;
+}
+
+/* 🟢 Generadas KPI - Verde sólido */
+.dot-send { 
+    background: #00CC44 !important; 
+    color: #FFFFFF !important; 
+    border-color: #009933 !important;
+}
+
+/* 🔵 Aceptadas KPI - Azul sólido */
+.dot-ok { 
+    background: #0066FF !important; 
+    color: #FFFFFF !important; 
+    border-color: #0044CC !important;
+}
+
+/* ⚪ Total KPI - Plomo sólido */
+.dot-total-plomo { 
+    background: #6B7280 !important;
+    color: #FFFFFF !important;
+    border-color: #4B5563 !important;
 }
 
 
