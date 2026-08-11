@@ -704,6 +704,24 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* Forzar Modelo, Marca y Unidad de medida en una sola fila */
+        .np-layout .grid.two {
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 6px 10px !important;
+        }
+
+        @media (max-width: 900px) {
+            .np-layout .grid.two {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .np-layout .grid.two {
+                grid-template-columns: 1fr !important;
+            }
+        }
 </style>
 {% endblock %}
 
