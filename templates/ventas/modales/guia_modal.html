@@ -1,4 +1,4 @@
-<!-- MODAL GUÍA DE REMISIÓN - VERSIÓN COMPLETA CON TRANSPORTISTAS -->
+<!-- MODAL GUÍA DE REMISIÓN - VERSIÓN COMPLETA CON TRANSPORTISTAS Y SELECTOR DE PRODUCTOS -->
 <div class="modal-bg" id="guiaModal">
     <div class="modal-box" style="width:min(1400px,98vw); max-height:95vh; display:flex; flex-direction:column;">
         
@@ -171,13 +171,13 @@
                             <div class="form-field">
                                 <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Seleccionar Conductor</label>
                                 <div style="display:flex; gap:4px; align-items:center;">
-    <select id="guiaSelectConductor" style="flex:1; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;" onchange="cargarConductorGuia(this.value)">
-        <option value="">-- Seleccione --</option>
-        <option value="personalizar" style="font-weight:600;color:#2563EB;">✏️ Personalizar</option>
-    </select>
-    <button onclick="limpiarConductorGuia()" style="height:20px; border-radius:4px; font-size:8px; padding:0 6px; background:#EF4444; color:#fff; border:0; font-weight:900; cursor:pointer; white-space:nowrap;" title="Limpiar campos del conductor">✕</button>
-    <button onclick="openNuevoConductorGuia()" style="height:20px; border-radius:4px; font-size:8px; padding:0 8px; background:#2563EB; color:#fff; border:0; font-weight:900; cursor:pointer; white-space:nowrap;">➕ Nuevo</button>
-</div>
+                                    <select id="guiaSelectConductor" style="flex:1; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;" onchange="cargarConductorGuia(this.value)">
+                                        <option value="">-- Seleccione --</option>
+                                        <option value="personalizar" style="font-weight:600;color:#2563EB;">✏️ Personalizar</option>
+                                    </select>
+                                    <button onclick="limpiarConductorGuia()" style="height:20px; border-radius:4px; font-size:8px; padding:0 6px; background:#EF4444; color:#fff; border:0; font-weight:900; cursor:pointer; white-space:nowrap;" title="Limpiar campos del conductor">✕</button>
+                                    <button onclick="openNuevoConductorGuia()" style="height:20px; border-radius:4px; font-size:8px; padding:0 8px; background:#2563EB; color:#fff; border:0; font-weight:900; cursor:pointer; white-space:nowrap;">➕ Nuevo</button>
+                                </div>
                             </div>
                         </div>
                         <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:4px; margin-bottom:2px;">
@@ -318,10 +318,10 @@
                 <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#0D9488; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
                     <span><i class="bi bi-box-seam-fill"></i> Productos a Trasladar</span>
                     <div style="display:flex; gap:4px; align-items:center;">
-    <span id="guiaProductosCount" style="font-size:8px; color:#64748B; font-weight:700;">0 productos</span>
-    <button onclick="openProductSelectorGuia()" style="height:20px; border-radius:4px; font-size:8px; padding:0 10px; background:#8B5CF6; color:#fff; border:0; font-weight:900; cursor:pointer;">📋 Seleccionar Productos</button>
-    <button onclick="agregarFilaProductoGuia()" style="height:20px; border-radius:4px; font-size:8px; padding:0 8px; background:#0D9488; color:#fff; border:0; font-weight:900; cursor:pointer;">+ Manual</button>
-</div>
+                        <span id="guiaProductosCount" style="font-size:8px; color:#64748B; font-weight:700;">0 productos</span>
+                        <button onclick="openProductSelectorGuia()" style="height:20px; border-radius:4px; font-size:8px; padding:0 10px; background:#8B5CF6; color:#fff; border:0; font-weight:900; cursor:pointer;">📋 Seleccionar Productos</button>
+                        <button onclick="agregarFilaProductoGuia()" style="height:20px; border-radius:4px; font-size:8px; padding:0 8px; background:#0D9488; color:#fff; border:0; font-weight:900; cursor:pointer;">+ Manual</button>
+                    </div>
                 </div>
                 <div style="padding:0; overflow:auto; max-height:180px;">
                     <table style="width:100%; border-collapse:collapse; font-size:8px;">
@@ -359,7 +359,9 @@
     </div>
 </div>
 
-<!-- MODAL NUEVO CONDUCTOR (desde guías) -->
+<!-- ============================================================ -->
+<!-- MODAL NUEVO CONDUCTOR (fuera del modal de guía) -->
+<!-- ============================================================ -->
 <div class="modal-bg" id="nuevoConductorGuiaModal">
     <div class="modal-box" style="width:min(500px,96vw); max-height:80vh;">
         <div class="modal-head" style="padding:8px 14px; min-height:34px; background:#0F172A;">
@@ -399,8 +401,11 @@
             <button class="btn btn-primary" onclick="guardarNuevoConductorGuia()" style="height:26px; padding:0 14px; font-size:10px; border-radius:4px; background:#2563EB; color:#fff; border:0; font-weight:900; cursor:pointer;">💾 Guardar Conductor</button>
         </div>
     </div>
+</div>
 
-    <!-- MODAL SELECCIÓN DE PRODUCTOS PARA GUÍA -->
+<!-- ============================================================ -->
+<!-- MODAL SELECCIÓN DE PRODUCTOS PARA GUÍA (fuera del modal de guía) -->
+<!-- ============================================================ -->
 <div class="modal-bg" id="productSelectorGuiaModal" style="z-index: 999999;">
     <div class="modal-box" style="width:min(900px,96vw); max-height:85vh;">
         <div class="modal-head" style="padding:8px 14px; min-height:34px; background:#0F172A;">
@@ -450,5 +455,4 @@
             </div>
         </div>
     </div>
-</div>
 </div>
