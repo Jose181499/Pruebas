@@ -5283,6 +5283,23 @@ function cargarConductorGuia(id) {
 }
 
 // ============================================================
+// LIMPIAR CONDUCTOR EN GUÍA
+// ============================================================
+
+function limpiarConductorGuia() {
+    // Limpiar el select
+    const select = document.getElementById('guiaSelectConductor');
+    if (select) select.value = '';
+    
+    // Limpiar todos los campos del conductor
+    document.getElementById('guiaPlaca').value = '';
+    document.getElementById('guiaConductorDNI').value = '';
+    document.getElementById('guiaConductorNombre').value = '';
+    document.getElementById('guiaLicencia').value = '';
+    
+    showToast('🧹 Campos del conductor limpiados', 'info');
+}
+// ============================================================
 // NUEVO CONDUCTOR DESDE GUÍA
 // ============================================================
 

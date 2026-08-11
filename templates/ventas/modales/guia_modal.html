@@ -171,12 +171,13 @@
                             <div class="form-field">
                                 <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Seleccionar Conductor</label>
                                 <div style="display:flex; gap:4px; align-items:center;">
-                                    <select id="guiaSelectConductor" style="flex:1; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;" onchange="cargarConductorGuia(this.value)">
-                                        <option value="">-- Seleccione --</option>
-                                        <option value="personalizar" style="font-weight:600;color:#2563EB;">✏️ Personalizar</option>
-                                    </select>
-                                    <button onclick="openNuevoConductorGuia()" style="height:20px; border-radius:4px; font-size:8px; padding:0 8px; background:#2563EB; color:#fff; border:0; font-weight:900; cursor:pointer; white-space:nowrap;">➕ Nuevo</button>
-                                </div>
+    <select id="guiaSelectConductor" style="flex:1; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;" onchange="cargarConductorGuia(this.value)">
+        <option value="">-- Seleccione --</option>
+        <option value="personalizar" style="font-weight:600;color:#2563EB;">✏️ Personalizar</option>
+    </select>
+    <button onclick="limpiarConductorGuia()" style="height:20px; border-radius:4px; font-size:8px; padding:0 6px; background:#EF4444; color:#fff; border:0; font-weight:900; cursor:pointer; white-space:nowrap;" title="Limpiar campos del conductor">✕</button>
+    <button onclick="openNuevoConductorGuia()" style="height:20px; border-radius:4px; font-size:8px; padding:0 8px; background:#2563EB; color:#fff; border:0; font-weight:900; cursor:pointer; white-space:nowrap;">➕ Nuevo</button>
+</div>
                             </div>
                         </div>
                         <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:4px; margin-bottom:2px;">
