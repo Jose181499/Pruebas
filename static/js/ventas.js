@@ -2378,7 +2378,6 @@ function addSelectedProductsPc() {
     }
 }
 
-
 function agregarItemPCTable(codigo, descripcion, marca, modelo, cantidad, precio, stock) {
     const tbody = document.getElementById('pcItemsBody');
     if (!tbody) return;
@@ -2419,7 +2418,7 @@ function agregarItemPCTable(codigo, descripcion, marca, modelo, cantidad, precio
         <td style="padding:2px 3px; width:55px;">
             <input type="number" value="${cantidad}" 
                    style="width:45px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900;"
-                   onchange="actualizarValorTotalPCSAP(this)">
+                   onchange="actualizarResumenDesdeInput(this)">
         </td>
         <td style="padding:2px 3px; width:65px;">
             <input type="number" step="0.01" value="${precio}" 
@@ -2429,27 +2428,20 @@ function agregarItemPCTable(codigo, descripcion, marca, modelo, cantidad, precio
         <td style="padding:2px 3px; width:65px;">
             <input type="number" step="0.01" value="${precio}" 
                    style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;"
-                   onchange="actualizarValorTotalPCSAP(this)">
+                   onchange="actualizarResumenDesdeInput(this)">
         </td>
-        <!-- 🔽 NUEVA CELDA: Valor Total PC -->
         <td style="padding:2px 3px; width:70px; text-align:center; font-weight:900; color:#059669; font-size:9px;">
             <span id="valor-total-${rowCount}">${valorTotal.toFixed(2)}</span>
         </td>
         <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B; font-weight:800;">${stock}</td>
         <td style="padding:2px 3px; text-align:center; font-size:8px; font-weight:900; color:${faltante > 0 ? '#DC2626' : '#16A34A'};">${faltante}</td>
-        <td style="padding:2px 3px; text-align:center;">
-            <button onclick="eliminarItemSAP('${tr.id}')" 
-                    style="background:transparent; border:none; color:#EF4444; cursor:pointer; font-size:12px; font-weight:900; padding:0 4px; border-radius:3px; transition:all 0.2s; width:22px; height:22px;"
-                    onmouseover="this.style.background='#FEE2E2'; this.style.color='#DC2626';"
-                    onmouseout="this.style.background='transparent'; this.style.color='#EF4444';">
-                ✕
-            </button>
-        </td>
     `;
     
     tbody.appendChild(tr);
     reordenarItemsSAP();
+    actualizarResumenManual();
 }
+
 
 /**
  * Alterna todos los checkboxes del selector de PC
@@ -8694,6 +8686,7 @@ function openPedidoCompraModalSAP(mode = 'cot', id = null) {
     }, 200);
 }
 
+
 async function cargarPCParaEditar(id) {
     try {
         console.log('📥 Cargando PC para editar ID:', id);
@@ -8763,8 +8756,6 @@ async function cargarPCParaEditar(id) {
             });
         };
 
-        
-        
         // NORMALIZAR ITEMS
         const itemsNormalizados = normalizarItems(pc.items || []);
         console.log('📦 Items normalizados:', itemsNormalizados);
@@ -8857,7 +8848,7 @@ async function cargarPCParaEditar(id) {
         }
         
         // ============================================================
-        // CARGAR PRODUCTOS (ITEMS) EN LA TABLA
+        // CARGAR PRODUCTOS (ITEMS) EN LA TABLA - SIN BOTÓN ELIMINAR
         // ============================================================
         const tbody = document.getElementById('pcItemsBody');
         if (tbody) {
@@ -8933,14 +8924,6 @@ async function cargarPCParaEditar(id) {
                         </td>
                         <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B; font-weight:800;">${stock}</td>
                         <td style="padding:2px 3px; text-align:center; font-size:8px; font-weight:900; color:${faltante > 0 ? '#DC2626' : '#16A34A'};">${faltante}</td>
-                        <td style="padding:2px 3px; text-align:center;">
-                            <button onclick="eliminarItemSAP('${tr.id}')" 
-                                    style="background:transparent; border:none; color:#EF4444; cursor:pointer; font-size:12px; font-weight:900; padding:0 4px; border-radius:3px; transition:all 0.2s; width:22px; height:22px;"
-                                    onmouseover="this.style.background='#FEE2E2'; this.style.color='#DC2626';"
-                                    onmouseout="this.style.background='transparent'; this.style.color='#EF4444';">
-                                ✕
-                            </button>
-                        </td>
                     `;
                     
                     tbody.appendChild(tr);
@@ -9003,6 +8986,8 @@ async function cargarPCParaEditar(id) {
     }
 }
 
+
+
   // ============================================================
 // FUNCIÓN PARA ACTUALIZAR FALTANTE - DEBE ESTAR ANTES DE addPedidoItemSAP
 // ============================================================
@@ -9041,8 +9026,7 @@ function addPedidoItemSAP() {
         <td style="padding:2px 3px; text-align:center; font-weight:800; font-size:9px; background:#F8FAFC;">${rowCount}</td>
         <td style="padding:2px 3px;">
             <input type="text" placeholder="Código" 
-                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:800;"
-                   onchange="buscarProductoPorCodigo(this)">
+                   style="width:100%; border:none; background:transparent; font-size:9px; padding:0; outline:none; font-weight:800;">
         </td>
         <td style="padding:2px 3px;">
             <input type="text" placeholder="Descripción" 
@@ -9062,38 +9046,25 @@ function addPedidoItemSAP() {
         </td>
         <td style="padding:2px 3px; width:55px;">
             <input type="number" value="1" 
-                   style="width:45px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900;"
-                   onchange="actualizarValorTotalPCSAP(this)">
+                   style="width:45px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900;">
         </td>
         <td style="padding:2px 3px; width:65px;">
             <input type="number" step="0.01" value="0" 
-                   style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;"
-                   onchange="actualizarValorTotalPCSAP(this)">
+                   style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center;">
         </td>
         <td style="padding:2px 3px; width:65px;">
             <input type="number" step="0.01" value="0" 
-                   style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;"
-                   onchange="actualizarValorTotalPCSAP(this)">
+                   style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;">
         </td>
-        <!-- Valor Total PC -->
-        <td style="padding:2px 3px; width:70px; text-align:center; font-weight:900; color:#0F172A; font-size:9px;">
+        <td style="padding:2px 3px; width:70px; text-align:center; font-weight:900; color:#94A3B8; font-size:9px;">
             <span id="valor-total-${rowCount}">0.00</span>
         </td>
         <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B; font-weight:800;">0</td>
         <td style="padding:2px 3px; text-align:center; font-size:8px; font-weight:900; color:#EF4444;">0</td>
-        <td style="padding:2px 3px; text-align:center;">
-            <button onclick="eliminarItemSAP('${tr.id}')" 
-                    style="background:transparent; border:none; color:#EF4444; cursor:pointer; font-size:12px; font-weight:900; padding:0 4px; border-radius:3px; transition:all 0.2s; width:22px; height:22px;"
-                    onmouseover="this.style.background='#FEE2E2'; this.style.color='#DC2626';"
-                    onmouseout="this.style.background='transparent'; this.style.color='#EF4444';">
-                ✕
-            </button>
-        </td>
     `;
     
     tbody.appendChild(tr);
 }
-
 
 // ============================================================
 // FUNCIÓN PARA MOSTRAR EL MODAL (separada para claridad)
