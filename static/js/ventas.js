@@ -5101,6 +5101,605 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 500);
 });
 
+
+
+
+// ============================================================
+// FUNCIONES PARA GUÍA DE REMISIÓN COMPLETA
+// ============================================================
+
+// Variable para almacenar productos de la guía
+let guiaProductos = [];
+
+// ============================================================
+// UBIGEOS PARA GUÍA
+// ============================================================
+
+// Datos de ubigeos completos (solo algunos para ejemplo, usa los que ya tienes)
+const UBIGEO_DATA = {
+    "LIMA": {"LIMA": ["LIMA", "ANCON", "ATE", "BARRANCO", "BREÑA", "CARABAYLLO", "CHACLACAYO", "CHORRILLOS", "COMAS", "EL AGUSTINO", "INDEPENDENCIA", "JESUS MARIA", "LA MOLINA", "LA VICTORIA", "LINCE", "LOS OLIVOS", "LURIGANCHO", "MAGDALENA DEL MAR", "MIRAFLORES", "PACHACAMAC", "PUEBLO LIBRE", "PUENTE PIEDRA", "RIMAC", "SAN BARTOLO", "SAN BORJA", "SAN ISIDRO", "SAN JUAN DE LURIGANCHO", "SAN JUAN DE MIRAFLORES", "SAN LUIS", "SAN MARTIN DE PORRES", "SAN MIGUEL", "SANTA ANITA", "SANTIAGO DE SURCO", "SURCO", "SURQUILLO", "VILLA EL SALVADOR", "VILLA MARIA DEL TRIUNFO"]},
+    "CALLAO": {"CALLAO": ["CALLAO", "BELLAVISTA", "CARMEN DE LA LEGUA REYNOSO", "LA PERLA", "LA PUNTA", "VENTANILLA"]},
+    "AREQUIPA": {"AREQUIPA": ["AREQUIPA", "ALTO SELVA ALEGRE", "CAYMA", "CERRO COLORADO", "JACOBO HUNTER", "JOSE LUIS BUSTAMANTE Y RIVERO", "MARIANO MELGAR", "MIRAFLORES", "PAUCARPATA", "SABANDIA", "SACHACA", "SOCABAYA", "TIABAYA", "YANAHUARA", "YURA"]},
+    "CUSCO": {"CUSCO": ["CUSCO", "CCORCA", "POROY", "SAN JERONIMO", "SAN SEBASTIAN", "SANTIAGO", "WANCHAQ"]},
+    "PIURA": {"PIURA": ["PIURA", "CASTILLA", "CATACAOS", "LA ARENA", "LA UNION", "TAMBO GRANDE"]},
+    "TUMBES": {"TUMBES": ["TUMBES", "CORRALES", "LA CRUZ", "SAN JACINTO"]},
+    "LA LIBERTAD": {"TRUJILLO": ["TRUJILLO", "EL PORVENIR", "HUANCHACO", "LA ESPERANZA", "LAREDO", "MOCHE", "SALAVERRY", "VICTOR LARCO HERRERA"]},
+    "JUNIN": {"HUANCAYO": ["HUANCAYO", "CHILCA", "EL TAMBO", "SAN AGUSTIN", "SAN JERONIMO DE TUNAN"]},
+    "SAN MARTIN": {"TARAPOTO": ["TARAPOTO", "LA BANDA DE SHILCAYO", "MORALES"]}
+};
+
+function llenarDepartamentosGuia(selectId) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    select.innerHTML = '<option value="">Seleccione</option>';
+    Object.keys(UBIGEO_DATA).sort().forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d;
+        opt.textContent = d;
+        select.appendChild(opt);
+    });
+}
+
+function llenarProvinciasGuia(depto, provSelectId, distSelectId) {
+    const provSelect = document.getElementById(provSelectId);
+    const distSelect = document.getElementById(distSelectId);
+    if (!provSelect || !distSelect) return;
+    if (!depto || !UBIGEO_DATA[depto]) {
+        provSelect.innerHTML = '<option value="">Primero Departamento</option>';
+        provSelect.disabled = true;
+        distSelect.innerHTML = '<option value="">Primero Provincia</option>';
+        distSelect.disabled = true;
+        return;
+    }
+    provSelect.innerHTML = '<option value="">Seleccione</option>';
+    Object.keys(UBIGEO_DATA[depto]).forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p;
+        opt.textContent = p;
+        provSelect.appendChild(opt);
+    });
+    provSelect.disabled = false;
+    distSelect.innerHTML = '<option value="">Primero Provincia</option>';
+    distSelect.disabled = true;
+}
+
+function llenarDistritosGuia(depto, prov, distSelectId, hiddenId, textSpanId) {
+    const distSelect = document.getElementById(distSelectId);
+    if (!distSelect) return;
+    if (!depto || !prov || !UBIGEO_DATA[depto] || !UBIGEO_DATA[depto][prov]) {
+        distSelect.innerHTML = '<option value="">Primero Provincia</option>';
+        distSelect.disabled = true;
+        document.getElementById(hiddenId).value = '';
+        document.getElementById(textSpanId).textContent = 'Ninguno';
+        return;
+    }
+    distSelect.innerHTML = '<option value="">Seleccione</option>';
+    UBIGEO_DATA[depto][prov].forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d;
+        opt.textContent = d;
+        distSelect.appendChild(opt);
+    });
+    distSelect.disabled = false;
+}
+
+function configurarUbigeoGuia(baseId) {
+    const depto = document.getElementById(`guiaDepto${baseId}`);
+    const prov = document.getElementById(`guiaProv${baseId}`);
+    const dist = document.getElementById(`guiaDist${baseId}`);
+    const hidden = document.getElementById(`guiaUbigeo${baseId}`);
+    const textSpan = document.getElementById(`guiaUbigeo${baseId}Texto`);
+    
+    if (!depto || !prov || !dist || !hidden || !textSpan) return;
+    
+    depto.addEventListener('change', function() {
+        llenarProvinciasGuia(this.value, `guiaProv${baseId}`, `guiaDist${baseId}`);
+        hidden.value = '';
+        textSpan.textContent = 'Ninguno';
+    });
+    
+    prov.addEventListener('change', function() {
+        llenarDistritosGuia(depto.value, this.value, `guiaDist${baseId}`, hidden.id, textSpan.id);
+        if (this.value && dist.value) {
+            const cod = `${depto.value.substring(0,2)}${this.value.substring(0,2)}${dist.value.substring(0,2)}`.toUpperCase();
+            hidden.value = cod;
+            textSpan.textContent = `${depto.value} - ${this.value} - ${dist.value}`;
+        }
+    });
+    
+    dist.addEventListener('change', function() {
+        if (depto.value && prov.value && this.value) {
+            const cod = `${depto.value.substring(0,2)}${prov.value.substring(0,2)}${this.value.substring(0,2)}`.toUpperCase();
+            hidden.value = cod;
+            textSpan.textContent = `${depto.value} - ${prov.value} - ${this.value}`;
+        } else {
+            hidden.value = '';
+            textSpan.textContent = 'Ninguno';
+        }
+    });
+}
+
+// ============================================================
+// CARGAR CONDUCTORES PARA GUÍA
+// ============================================================
+
+async function cargarConductoresGuia() {
+    try {
+        const response = await fetch('/ventas/api/transportistas/listar');
+        const result = await response.json();
+        if (result.success && result.data) {
+            const select = document.getElementById('guiaSelectConductor');
+            if (select) {
+                select.innerHTML = '<option value="">-- Seleccione --</option>';
+                result.data.forEach(t => {
+                    const option = document.createElement('option');
+                    option.value = t.id;
+                    let texto = t.nombre_completo || '';
+                    if (t.placa) texto += ` - ${t.placa}`;
+                    option.textContent = texto;
+                    select.appendChild(option);
+                });
+                // Agregar opción personalizar
+                const opt = document.createElement('option');
+                opt.value = 'personalizar';
+                opt.textContent = '✏️ Personalizar';
+                opt.style.fontWeight = '600';
+                opt.style.color = '#2563EB';
+                select.appendChild(opt);
+            }
+        }
+    } catch (error) {
+        console.error('Error cargando conductores:', error);
+    }
+}
+
+function cargarConductorGuia(id) {
+    if (!id) return;
+    if (id === 'personalizar') {
+        document.getElementById('guiaPlaca').value = '';
+        document.getElementById('guiaConductorDNI').value = '';
+        document.getElementById('guiaConductorNombre').value = '';
+        document.getElementById('guiaLicencia').value = '';
+        showToast('✏️ Modo Personalizar: complete los campos manualmente', 'info');
+        return;
+    }
+    fetch(`/ventas/api/transportistas/${id}`)
+        .then(r => r.json())
+        .then(result => {
+            if (result.success && result.data) {
+                const t = result.data;
+                if (t.placa) document.getElementById('guiaPlaca').value = t.placa;
+                if (t.dni) document.getElementById('guiaConductorDNI').value = t.dni;
+                if (t.nombre_completo) document.getElementById('guiaConductorNombre').value = t.nombre_completo;
+                if (t.licencia) document.getElementById('guiaLicencia').value = t.licencia;
+                showToast(`✅ Datos de ${t.nombre_completo} cargados`, 'success');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+// ============================================================
+// NUEVO CONDUCTOR DESDE GUÍA
+// ============================================================
+
+function openNuevoConductorGuia() {
+    document.getElementById('nuevoConductorGuiaModal').classList.add('show');
+    // Limpiar campos
+    ['nuevoConductorGuiaDNI','nuevoConductorGuiaNombre','nuevoConductorGuiaPlaca','nuevoConductorGuiaLicencia','nuevoConductorGuiaTelefono','nuevoConductorGuiaRUC'].forEach(id => {
+        document.getElementById(id).value = '';
+    });
+}
+
+async function guardarNuevoConductorGuia() {
+    const dni = document.getElementById('nuevoConductorGuiaDNI').value.trim();
+    const nombre = document.getElementById('nuevoConductorGuiaNombre').value.trim();
+    const placa = document.getElementById('nuevoConductorGuiaPlaca').value.trim().toUpperCase();
+    const licencia = document.getElementById('nuevoConductorGuiaLicencia').value.trim();
+    const telefono = document.getElementById('nuevoConductorGuiaTelefono').value.trim();
+    const ruc = document.getElementById('nuevoConductorGuiaRUC').value.trim();
+    
+    if (!dni || dni.length < 8) { showToast('⚠️ DNI válido (8 dígitos)', 'warning'); return; }
+    if (!nombre) { showToast('⚠️ Nombre completo requerido', 'warning'); return; }
+    if (!placa) { showToast('⚠️ Placa requerida', 'warning'); return; }
+    
+    try {
+        const response = await fetch('/ventas/api/transportistas/guardar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                nombre_completo: nombre,
+                dni: dni,
+                placa: placa,
+                licencia: licencia,
+                telefono: telefono,
+                ruc_empresa: ruc
+            })
+        });
+        const result = await response.json();
+        if (result.success) {
+            showToast('✅ Conductor guardado correctamente', 'success');
+            closeModal('nuevoConductorGuiaModal');
+            await cargarConductoresGuia();
+            const select = document.getElementById('guiaSelectConductor');
+            select.value = result.data.id;
+            select.dispatchEvent(new Event('change'));
+        } else {
+            showToast('❌ Error: ' + (result.error || 'No se pudo guardar'), 'error');
+        }
+    } catch (error) {
+        showToast('❌ Error de conexión', 'error');
+    }
+}
+
+// ============================================================
+// BUSCAR CLIENTE PARA GUÍA
+// ============================================================
+
+async function buscarClienteParaGuia() {
+    const input = document.getElementById('guiaBuscarCliente');
+    const ruc = input.value.trim();
+    if (!ruc || ruc.length !== 11) {
+        showToast('⚠️ Ingrese RUC de 11 dígitos', 'warning');
+        return;
+    }
+    showToast('🔍 Buscando cliente...', 'info');
+    try {
+        // Buscar en BD
+        const response = await fetch(`/maestros/api/clientes/buscar?q=${ruc}`);
+        const data = await response.json();
+        if (data.success && data.data && data.data.length > 0) {
+            const c = data.data[0];
+            document.getElementById('guiaRuc').value = c.numero_documento || c.ruc || '';
+            document.getElementById('guiaCliente').value = c.razon_social || '';
+            document.getElementById('guiaDestino').value = c.direccion_fiscal || '';
+            if (c.ubigeo) {
+                // Intentar preseleccionar ubigeo
+            }
+            showToast('✅ Cliente encontrado en sistema', 'success');
+            return;
+        }
+        // Si no, consultar SUNAT
+        const sunatResponse = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
+        const sunatData = await sunatResponse.json();
+        if (sunatData.success) {
+            document.getElementById('guiaRuc').value = ruc;
+            document.getElementById('guiaCliente').value = sunatData.razon_social || '';
+            document.getElementById('guiaDestino').value = sunatData.direccion || '';
+            showToast('🌞 Datos cargados desde SUNAT', 'info');
+        } else {
+            showToast('❌ No se encontró el RUC', 'error');
+        }
+    } catch (error) {
+        showToast('❌ Error al consultar', 'error');
+    }
+}
+
+// ============================================================
+// BUSCAR TRANSPORTISTA PARA GUÍA
+// ============================================================
+
+async function buscarTransportistaGuia() {
+    const ruc = document.getElementById('guiaTransportistaRUC').value.trim();
+    if (!ruc || ruc.length !== 11) {
+        showToast('⚠️ Ingrese RUC de 11 dígitos', 'warning');
+        return;
+    }
+    try {
+        const response = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
+        const data = await response.json();
+        if (data.success) {
+            document.getElementById('guiaTransportistaNombre').value = data.razon_social || '';
+            document.getElementById('guiaTransportistaDireccion').value = data.direccion || '';
+            showToast('✅ Transportista cargado', 'success');
+        } else {
+            showToast('❌ No se encontró el RUC', 'error');
+        }
+    } catch (error) {
+        showToast('❌ Error al consultar', 'error');
+    }
+}
+
+// ============================================================
+// TOGGLE TRANSPORTISTA
+// ============================================================
+
+function toggleTransportistaGuia() {
+    const modalidad = document.getElementById('guiaModalidadTransporte').value;
+    const card = document.getElementById('guiaTransportistaCard');
+    const msg = document.getElementById('guiaMsgTransportePrivado');
+    const ruc = document.getElementById('guiaTransportistaRUC');
+    const nombre = document.getElementById('guiaTransportistaNombre');
+    const direccion = document.getElementById('guiaTransportistaDireccion');
+    
+    if (modalidad === 'PRIVADO') {
+        card.style.opacity = '0.5';
+        msg.style.display = 'block';
+        ruc.disabled = true;
+        nombre.disabled = true;
+        direccion.disabled = true;
+        ruc.style.background = '#F1F5F9';
+        nombre.style.background = '#F1F5F9';
+        direccion.style.background = '#F1F5F9';
+    } else {
+        card.style.opacity = '1';
+        msg.style.display = 'none';
+        ruc.disabled = false;
+        nombre.disabled = false;
+        direccion.disabled = false;
+        ruc.style.background = '#FFFFFF';
+        nombre.style.background = '#FFFFFF';
+        direccion.style.background = '#FFFFFF';
+    }
+}
+
+// ============================================================
+// PRODUCTOS DE GUÍA
+// ============================================================
+
+function agregarFilaProductoGuia() {
+    const tbody = document.getElementById('guiaProductosBody');
+    if (!tbody) return;
+    const count = tbody.children.length + 1;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td style="padding:2px 4px; text-align:center; font-weight:800; background:#F8FAFC;">${count}</td>
+        <td style="padding:2px 4px;"><input class="guia-producto-codigo" placeholder="Código" style="width:100%; border:1px solid #E5E7EB; border-radius:3px; font-size:8px; padding:2px 4px;"></td>
+        <td style="padding:2px 4px;"><input class="guia-producto-desc" placeholder="Descripción" style="width:100%; border:1px solid #E5E7EB; border-radius:3px; font-size:8px; padding:2px 4px;" onchange="actualizarPesoTotalGuia()"></td>
+        <td style="padding:2px 4px;">
+            <select class="guia-producto-unidad" style="width:100%; border:1px solid #E5E7EB; border-radius:3px; font-size:8px; padding:2px 4px;">
+                <option value="NIU">NIU</option>
+                <option value="KGM">KGM</option>
+                <option value="LTR">LTR</option>
+                <option value="MTR">MTR</option>
+                <option value="ZZ">ZZ</option>
+            </select>
+        </td>
+        <td style="padding:2px 4px;"><input class="guia-producto-cant" type="number" value="1" min="0.01" step="0.01" style="width:100%; border:1px solid #E5E7EB; border-radius:3px; font-size:8px; padding:2px 4px; text-align:center;" onchange="actualizarPesoTotalGuia()"></td>
+        <td style="padding:2px 4px;"><input class="guia-producto-peso" type="number" value="0.50" step="0.01" style="width:100%; border:1px solid #E5E7EB; border-radius:3px; font-size:8px; padding:2px 4px; text-align:center;" onchange="actualizarPesoTotalGuia()"></td>
+        <td style="padding:2px 4px; text-align:center;">
+            <button onclick="this.closest('tr').remove(); actualizarPesoTotalGuia();" style="background:transparent; border:none; color:#DC2626; cursor:pointer; font-size:10px;">✕</button>
+        </td>
+    `;
+    tbody.appendChild(tr);
+    actualizarPesoTotalGuia();
+    actualizarContadorProductosGuia();
+}
+
+function actualizarPesoTotalGuia() {
+    let total = 0;
+    let count = 0;
+    document.querySelectorAll('#guiaProductosBody tr').forEach(row => {
+        const cant = parseFloat(row.querySelector('.guia-producto-cant')?.value || 0);
+        const peso = parseFloat(row.querySelector('.guia-producto-peso')?.value || 0);
+        if (cant > 0 && peso > 0) {
+            total += cant * peso;
+            count++;
+        }
+    });
+    document.getElementById('guiaPesoTotalDisplay').textContent = total.toFixed(2);
+    document.getElementById('guiaProductosCount').textContent = count + ' productos';
+    document.getElementById('guiaTotalProductosCount').textContent = count;
+    // Actualizar campo de peso
+    document.getElementById('guiaPeso').value = total.toFixed(2);
+}
+
+function actualizarContadorProductosGuia() {
+    const count = document.querySelectorAll('#guiaProductosBody tr').length;
+    document.getElementById('guiaProductosCount').textContent = count + ' productos';
+    document.getElementById('guiaTotalProductosCount').textContent = count;
+}
+
+// ============================================================
+// RECOLECTAR DATOS DE GUÍA
+// ============================================================
+
+function recolectarDatosGuia() {
+    const items = [];
+    document.querySelectorAll('#guiaProductosBody tr').forEach((row, idx) => {
+        const codigo = row.querySelector('.guia-producto-codigo')?.value || '';
+        const descripcion = row.querySelector('.guia-producto-desc')?.value || '';
+        const unidad = row.querySelector('.guia-producto-unidad')?.value || 'NIU';
+        const cantidad = parseFloat(row.querySelector('.guia-producto-cant')?.value || 0);
+        const peso_unitario = parseFloat(row.querySelector('.guia-producto-peso')?.value || 0);
+        if (descripcion && cantidad > 0) {
+            items.push({
+                item: idx + 1,
+                codigo: codigo || `ITEM-${idx+1}`,
+                descripcion: descripcion,
+                unidad: unidad,
+                cantidad: cantidad,
+                peso_unitario: peso_unitario
+            });
+        }
+    });
+    
+    return {
+        serie: "T001",
+        fecha_emision: document.getElementById('guiaFechaEmision').value || new Date().toISOString().split('T')[0],
+        fecha_traslado: document.getElementById('guiaFechaEmision').value || new Date().toISOString().split('T')[0],
+        fecha_inicio_traslado: document.getElementById('guiaFechaInicio').value || new Date().toISOString().split('T')[0],
+        motivo_traslado: document.getElementById('guiaMotivo').value || '',
+        modalidad_transporte: document.getElementById('guiaModalidadTransporte').value || 'PRIVADO',
+        peso_bruto_total: parseFloat(document.getElementById('guiaPeso').value) || 0,
+        unidad_peso_bruto: document.getElementById('guiaUnidadPeso').value || 'KGM',
+        numero_bultos: parseInt(document.getElementById('guiaBultos').value) || 1,
+        orden_compra_cliente: document.getElementById('guiaOrdenCompra').value || '',
+        documento_asociado: document.getElementById('guiaCotizacion').value || '',
+        factura: document.getElementById('guiaFactura').value || '',
+        observaciones: document.getElementById('guiaObservaciones').value || '',
+        remitente: {
+            ruc: document.getElementById('guiaRucRemitente').value || '20602095704',
+            nombre: document.getElementById('guiaRemitenteNombre').value || 'KCF CORPORACION SAC',
+            direccion: document.getElementById('guiaOrigen').value || '',
+            ubigeo: document.getElementById('guiaUbigeoOrigen').value || ''
+        },
+        destinatario: {
+            ruc: document.getElementById('guiaRuc').value || '',
+            nombre: document.getElementById('guiaCliente').value || '',
+            direccion: document.getElementById('guiaDestino').value || '',
+            ubigeo: document.getElementById('guiaUbigeoDestino').value || ''
+        },
+        vehiculo: {
+            placa: document.getElementById('guiaPlaca').value || '',
+            conductor_dni: document.getElementById('guiaConductorDNI').value || '',
+            conductor_nombre: document.getElementById('guiaConductorNombre').value || '',
+            licencia_conducir: document.getElementById('guiaLicencia').value || ''
+        },
+        transportista: document.getElementById('guiaModalidadTransporte').value === 'PUBLICO' ? {
+            ruc: document.getElementById('guiaTransportistaRUC').value || '',
+            nombre: document.getElementById('guiaTransportistaNombre').value || '',
+            direccion: document.getElementById('guiaTransportistaDireccion').value || ''
+        } : null,
+        items: items
+    };
+}
+
+function validarGuia(data) {
+    if (!data.destinatario.ruc) { showToast('⚠️ RUC del destinatario requerido', 'warning'); return false; }
+    if (!data.destinatario.nombre) { showToast('⚠️ Razón social requerida', 'warning'); return false; }
+    if (!data.vehiculo.placa) { showToast('⚠️ Placa del vehículo requerida', 'warning'); return false; }
+    if (!data.motivo_traslado) { showToast('⚠️ Motivo de traslado requerido', 'warning'); return false; }
+    if (!data.fecha_inicio_traslado) { showToast('⚠️ Fecha de inicio requerida', 'warning'); return false; }
+    if (!data.unidad_peso_bruto) { showToast('⚠️ Unidad de peso requerida', 'warning'); return false; }
+    if (data.peso_bruto_total <= 0) { showToast('⚠️ Peso bruto mayor a 0', 'warning'); return false; }
+    if (data.numero_bultos <= 0) { showToast('⚠️ N° bultos mayor a 0', 'warning'); return false; }
+    if (data.items.length === 0) { showToast('⚠️ Agregue al menos un producto', 'warning'); return false; }
+    return true;
+}
+
+// ============================================================
+// ENVIAR GUÍA
+// ============================================================
+
+async function enviarGuiaSunat() {
+    const data = recolectarDatosGuia();
+    if (!validarGuia(data)) return;
+    
+    showToast('⏳ Enviando guía a SUNAT...', 'info');
+    try {
+        const response = await fetch('/guias/api/enviar-sunat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (result.success) {
+            showToast(`✅ Guía enviada: ${result.numero_guia}`, 'success');
+            closeModal('guiaModal');
+            if (typeof loadGuias === 'function') loadGuias();
+        } else {
+            showToast('❌ Error: ' + (result.error || 'No se pudo enviar'), 'error');
+        }
+    } catch (error) {
+        showToast('❌ Error de conexión', 'error');
+    }
+}
+
+// Sobrescribir la función saveGuia existente para usar la nueva lógica
+const _originalSaveGuia = window.saveGuia;
+window.saveGuia = function(estado) {
+    const data = recolectarDatosGuia();
+    if (!validarGuia(data)) return;
+    
+    showToast('⏳ Guardando borrador...', 'info');
+    fetch('/guias/api/guardar-borrador', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(r => r.json())
+    .then(result => {
+        if (result.success) {
+            showToast(`✅ Borrador guardado: ${result.numero_guia}`, 'success');
+            closeModal('guiaModal');
+            if (typeof loadGuias === 'function') loadGuias();
+        } else {
+            showToast('❌ Error: ' + (result.error || 'No se pudo guardar'), 'error');
+        }
+    })
+    .catch(error => {
+        showToast('❌ Error de conexión', 'error');
+    });
+};
+
+// ============================================================
+// INICIALIZAR MODAL DE GUÍA
+// ============================================================
+
+// Sobrescribir openGuiaModal
+const _originalOpenGuiaModal = window.openGuiaModal;
+window.openGuiaModal = function(id = null) {
+    editingId = id;
+    const isEdit = id !== null;
+    document.getElementById('guiaModalTitle').textContent = isEdit ? '📦 Editar Guía de Remisión' : '📦 Nueva Guía de Remisión';
+    
+    // Inicializar fechas
+    const hoy = new Date().toISOString().split('T')[0];
+    document.getElementById('guiaFechaEmision').value = hoy;
+    document.getElementById('guiaFechaInicio').value = hoy;
+    
+    // Inicializar ubigeos
+    llenarDepartamentosGuia('guiaDeptoOrigen');
+    llenarDepartamentosGuia('guiaDeptoDestino');
+    configurarUbigeoGuia('Origen');
+    configurarUbigeoGuia('Destino');
+    
+    // Preseleccionar Lima - Lima - San Martin de Porres
+    setTimeout(() => {
+        const depto = document.getElementById('guiaDeptoOrigen');
+        if (depto) {
+            depto.value = 'LIMA';
+            depto.dispatchEvent(new Event('change'));
+            setTimeout(() => {
+                const prov = document.getElementById('guiaProvOrigen');
+                if (prov) {
+                    prov.value = 'LIMA';
+                    prov.dispatchEvent(new Event('change'));
+                    setTimeout(() => {
+                        const dist = document.getElementById('guiaDistOrigen');
+                        if (dist) {
+                            dist.value = 'SAN MARTIN DE PORRES';
+                            dist.dispatchEvent(new Event('change'));
+                        }
+                    }, 50);
+                }
+            }, 50);
+        }
+    }, 100);
+    
+    // Limpiar productos
+    document.getElementById('guiaProductosBody').innerHTML = '';
+    // Agregar un producto por defecto
+    agregarFilaProductoGuia();
+    
+    // Cargar conductores
+    cargarConductoresGuia();
+    toggleTransportistaGuia();
+    
+    // Mostrar modal
+    document.getElementById('guiaModal').classList.add('show');
+    
+    // Si es edición, cargar datos
+    if (isEdit) {
+        setTimeout(() => cargarGuiaParaEditar(id), 200);
+    }
+};
+
+// Función para cargar guía existente
+async function cargarGuiaParaEditar(id) {
+    try {
+        const response = await apiFetch(`/ventas/api/guias/${id}`);
+        if (response.success) {
+            const g = response.data;
+            // Cargar datos en el formulario...
+            console.log('📦 Guía cargada:', g);
+        }
+    } catch (error) {
+        console.error('Error cargando guía:', error);
+    }
+}
+
+
 // ============================================================
 // VALIDACIÓN PC VS COTIZACIÓN - FUNCIÓN COMPLETA Y CORREGIDA
 // ============================================================

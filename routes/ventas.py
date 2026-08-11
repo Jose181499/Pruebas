@@ -4822,3 +4822,158 @@ def preview_pdf_comprobante(comp_id):
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
+
+# ============================================================
+# TRANSPORTISTAS - API (integrado en ventas)
+# ============================================================
+
+@ventas_bp.route('/ventas/api/transportistas/listar', methods=['GET'])
+@login_required
+def api_transportistas_listar():
+    """Listar todos los transportistas para usar en ventas"""
+    try:
+        query = """
+            SELECT 
+                id, nombre_completo, dni, placa, licencia, telefono,
+                direccion, ruc_empresa, nombre_empresa
+            FROM transportistas
+            WHERE activo = true
+            ORDER BY nombre_completo
+        """
+        result = db_query(query)
+        return jsonify({'success': True, 'data': result})
+    except Exception as e:
+        print(f"❌ Error en api_transportistas_listar: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ventas_bp.route('/ventas/api/transportistas/<int:id>', methods=['GET'])
+@login_required
+def api_transportistas_obtener(id):
+    """Obtener un transportista por ID"""
+    try:
+        query = """
+            SELECT 
+                id, nombre_completo, dni, placa, licencia, telefono,
+                direccion, ruc_empresa, nombre_empresa
+            FROM transportistas
+            WHERE id = %s AND activo = true
+        """
+        result = db_query(query, (id,))
+        if result:
+            return jsonify({'success': True, 'data': result[0]})
+        return jsonify({'success': False, 'error': 'Transportista no encontrado'}), 404
+    except Exception as e:
+        print(f"❌ Error en api_transportistas_obtener: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ventas_bp.route('/ventas/api/transportistas/guardar', methods=['POST'])
+@login_required
+def api_transportistas_guardar():
+    """Guardar un nuevo transportista desde ventas"""
+    try:
+        data = request.get_json()
+        usuario_id = session.get('usuario_id', 8)
+        
+        print(f"📦 Guardando transportista desde ventas: {data}")
+        
+        query = """
+            INSERT INTO transportistas (
+                nombre_completo, dni, placa, licencia, telefono,
+                direccion, ruc_empresa, nombre_empresa, creado_por
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s
+            ) RETURNING id
+        """
+        params = (
+            data.get('nombre_completo', '').strip(),
+            data.get('dni', '').strip(),
+            data.get('placa', '').strip().upper(),
+            data.get('licencia', '').strip(),
+            data.get('telefono', '').strip(),
+            data.get('direccion', '').strip(),
+            data.get('ruc_empresa', '').strip(),
+            data.get('nombre_empresa', '').strip(),
+            usuario_id
+        )
+        
+        result = db_query(query, params)
+        print(f"✅ Resultado: {result}")
+        
+        if result:
+            return jsonify({
+                'success': True,
+                'message': 'Transportista guardado correctamente',
+                'data': {'id': result[0]['id']}
+            })
+        return jsonify({'success': False, 'error': 'No se pudo guardar'}), 400
+        
+    except Exception as e:
+        print(f"❌ Error en api_transportistas_guardar: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ventas_bp.route('/ventas/api/transportistas/buscar', methods=['GET'])
+@login_required
+def api_transportistas_buscar():
+    """Buscar transportistas por texto (nombre, dni, placa, ruc)"""
+    try:
+        q = request.args.get('q', '').strip()
+        if not q or len(q) < 2:
+            return jsonify({'success': True, 'data': []})
+        
+        search_pattern = f'%{q}%'
+        query = """
+            SELECT 
+                id, nombre_completo, dni, placa, licencia, telefono,
+                direccion, ruc_empresa, nombre_empresa
+            FROM transportistas
+            WHERE activo = true
+            AND (
+                LOWER(nombre_completo) LIKE LOWER(%s) OR
+                LOWER(dni) LIKE LOWER(%s) OR
+                LOWER(placa) LIKE LOWER(%s) OR
+                LOWER(ruc_empresa) LIKE LOWER(%s) OR
+                LOWER(telefono) LIKE LOWER(%s)
+            )
+            ORDER BY nombre_completo
+            LIMIT 20
+        """
+        result = db_query(query, (search_pattern, search_pattern, search_pattern, search_pattern, search_pattern))
+        return jsonify({'success': True, 'data': result})
+        
+    except Exception as e:
+        print(f"❌ Error en api_transportistas_buscar: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ventas_bp.route('/ventas/api/transportistas/<int:id>/toggle', methods=['PUT'])
+@login_required
+def api_transportistas_toggle(id):
+    """Activar/Desactivar un transportista"""
+    try:
+        data = request.get_json()
+        activo = data.get('activo', True)
+        
+        query = """
+            UPDATE transportistas 
+            SET activo = %s, updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, activo
+        """
+        result = db_query(query, (activo, id))
+        
+        if result:
+            return jsonify({
+                'success': True,
+                'message': f'Transportista {"activado" if activo else "desactivado"} correctamente',
+                'data': result[0]
+            })
+        return jsonify({'success': False, 'error': 'Transportista no encontrado'}), 404
+        
+    except Exception as e:
+        print(f"❌ Error en api_transportistas_toggle: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
