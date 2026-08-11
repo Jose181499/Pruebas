@@ -60,32 +60,7 @@
         background: #FFFDFE;
     }
     
-    /* Badges de estado */
-    .badge {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 3px 10px;
-        border-radius: 999px;
-        font-size: 10px;
-        font-weight: 900;
-        white-space: nowrap;
-        border: 1px solid transparent;
-    }
-    .b-draft { background: #FEF3C7; color: #B45309; border-color: #FDE68A; }
-    .b-review { background: #DBEAFE; color: #1D4ED8; border-color: #93C5FD; }
-    .b-valid { background: #DCFCE7; color: #166534; border-color: #86EFAC; }
-    .b-sent { background: #EDE9FE; color: #6D28D9; border-color: #C4B5FD; }
-    .b-accepted { background: #B6FF7A; color: #0B5D1E; border-color: #7CFF3A; }
-    .b-rejected { background: #FFE4E6; color: #BE123C; border-color: #FDA4AF; }
-    .b-ok { background: #DCFCE7; color: #166534; border-color: #86EFAC; }
-    .b-info { background: #DBEAFE; color: #1D4ED8; border-color: #93C5FD; }
-    .b-gray { background: #F1F5F9; color: #475569; }
-    .b-pending { background: #FEF3C7; color: #B45309; border-color: #FDE68A; }
-    .b-generated { background: #EDE9FE; color: #6D28D9; border-color: #C4B5FD; }
-    .b-validated { background: #DBEAFE; color: #1D4ED8; border-color: #93C5FD; }
-    .b-lost { background: #F1F5F9; color: #475569; border-color: #CBD5E1; }
-    
+   
     /* Code pill */
     .code-pill {
         display: inline-flex;
@@ -462,61 +437,141 @@
     }
     
    
-/* KPI Cards - Dots con colores fluorescentes */
-.status-dot {
-    width: 26px;
-    height: 26px;
-    border-radius: 8px;
-    display: grid;
-    place-items: center;
-    font-size: 11px;
-    font-weight: 1000;
+/* ============================================================
+   ESTADOS DE COTIZACIÓN - COLORES SÓLIDOS SIN DESENFOQUE
+   ============================================================ */
+
+/* Badges de estado - Versión limpia sin sombras */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 14px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 900;
+    white-space: nowrap;
     border: 2px solid transparent;
+    min-width: 90px;
 }
 
-/* 🔵 Total - Azul fluorescente NEON */
-.dot-total { 
-    background: #0066FF !important; 
-    color: #FFFFFF !important; 
-    border-color: #4488FF !important;
-    box-shadow: 0 0 20px rgba(0, 102, 255, 0.5);
-    text-shadow: 0 0 10px rgba(255,255,255,0.3);
+/* 🔴 Borrador - Rojo sólido */
+.b-draft { 
+    background: #DC2626 !important;
+    color: #FFFFFF !important;
+    border-color: #991B1B !important;
 }
 
-/* 🔴 Borrador - Rojo fluorescente NEON */
-.dot-draft { 
-    background: #FF0000 !important; 
-    color: #FFFFFF !important; 
-    border-color: #FF4444 !important;
-    box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
-    text-shadow: 0 0 10px rgba(255,255,255,0.3);
+/* 🟡 En revisión - Amarillo sólido */
+.b-review { 
+    background: #F59E0B !important;
+    color: #FFFFFF !important;
+    border-color: #B45309 !important;
 }
 
-/* 🟡 En revisión - Amarillo fluorescente NEON */
-.dot-review { 
-    background: #FFDD00 !important; 
-    color: #000000 !important; 
-    border-color: #FFEE44 !important;
-    box-shadow: 0 0 25px rgba(255, 221, 0, 0.6);
-    text-shadow: 0 0 10px rgba(0,0,0,0.2);
+/* 🔵 Validado por Hellen - Azul sólido */
+.b-validated { 
+    background: #2563EB !important;
+    color: #FFFFFF !important;
+    border-color: #1D4ED8 !important;
 }
 
-/* 🟢 Generadas - Verde fluorescente NEON */
-.dot-send { 
-    background: #00FF41 !important; 
-    color: #000000 !important; 
-    border-color: #44FF77 !important;
-    box-shadow: 0 0 25px rgba(0, 255, 65, 0.5);
-    text-shadow: 0 0 10px rgba(0,0,0,0.2);
+/* 🟢 Generada - Verde sólido */
+.b-generated { 
+    background: #16A34A !important;
+    color: #FFFFFF !important;
+    border-color: #15803D !important;
 }
 
-/* 🔵 Aceptadas - Azul fluorescente NEON (más brillante) */
-.dot-ok { 
-    background: #0066FF !important; 
-    color: #FFFFFF !important; 
-    border-color: #4488FF !important;
-    box-shadow: 0 0 30px rgba(0, 102, 255, 0.7);
-    text-shadow: 0 0 15px rgba(255,255,255,0.5);
+/* 🔵 Aceptada por Cliente - Azul sólido */
+.b-accepted { 
+    background: #2563EB !important;
+    color: #FFFFFF !important;
+    border-color: #1D4ED8 !important;
+}
+
+/* ⚪ Cancelado / Anulado - Plomo */
+.b-canceled { 
+    background: #6B7280 !important;
+    color: #FFFFFF !important;
+    border-color: #4B5563 !important;
+}
+
+/* 🟢 Validado - Verde sólido (para otros módulos) */
+.b-valid { 
+    background: #16A34A !important;
+    color: #FFFFFF !important;
+    border-color: #15803D !important;
+}
+
+/* 📤 Enviado - Morado sólido */
+.b-sent { 
+    background: #7C3AED !important;
+    color: #FFFFFF !important;
+    border-color: #6D28D9 !important;
+}
+
+/* ❌ Rechazado - Rojo oscuro */
+.b-rejected { 
+    background: #DC2626 !important;
+    color: #FFFFFF !important;
+    border-color: #991B1B !important;
+}
+
+/* ✅ OK - Verde */
+.b-ok { 
+    background: #16A34A !important;
+    color: #FFFFFF !important;
+    border-color: #15803D !important;
+}
+
+/* ℹ️ Info - Azul */
+.b-info { 
+    background: #2563EB !important;
+    color: #FFFFFF !important;
+    border-color: #1D4ED8 !important;
+}
+
+/* ⚪ Plomo (default) */
+.b-gray { 
+    background: #6B7280 !important;
+    color: #FFFFFF !important;
+    border-color: #4B5563 !important;
+}
+
+/* 🟡 Pendiente - Amarillo */
+.b-pending { 
+    background: #F59E0B !important;
+    color: #FFFFFF !important;
+    border-color: #B45309 !important;
+}
+
+/* ❌ Perdido - Plomo */
+.b-lost { 
+    background: #6B7280 !important;
+    color: #FFFFFF !important;
+    border-color: #4B5563 !important;
+}
+
+/* 📄 Emitido - Verde oscuro */
+.b-emitted {
+    background: #065F46 !important;
+    color: #FFFFFF !important;
+    border-color: #047857 !important;
+}
+
+/* 🚚 Despachado - Azul */
+.b-despatched {
+    background: #2563EB !important;
+    color: #FFFFFF !important;
+    border-color: #1D4ED8 !important;
+}
+
+/* 📦 Entregado - Verde */
+.b-delivered {
+    background: #16A34A !important;
+    color: #FFFFFF !important;
+    border-color: #15803D !important;
 }
 
     .status-card small {

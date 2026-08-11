@@ -2281,7 +2281,6 @@ body.kcf-theme {
     color: #991B1B;
     border-color: #FCA5A5;
 }
-
 /* ============================================================
    ESTADOS DE COTIZACIÓN - COLORES SÓLIDOS SIN DESENFOQUE
    ============================================================ */
@@ -2302,37 +2301,37 @@ body.kcf-theme {
 
 /* 🔴 Borrador - Rojo sólido */
 .b-draft { 
-    background: #FF0000 !important;
+    background: #DC2626 !important;
     color: #FFFFFF !important;
-    border-color: #CC0000 !important;
+    border-color: #991B1B !important;
 }
 
 /* 🟡 En revisión - Amarillo sólido */
 .b-review { 
-    background: #FFDD00 !important;
-    color: #000000 !important;
-    border-color: #CCAA00 !important;
+    background: #F59E0B !important;
+    color: #FFFFFF !important;
+    border-color: #B45309 !important;
 }
 
 /* 🔵 Validado por Hellen - Azul sólido */
 .b-validated { 
-    background: #4FC3F7 !important;
-    color: #01579B !important;
-    border-color: #29B6F6 !important;
+    background: #2563EB !important;
+    color: #FFFFFF !important;
+    border-color: #1D4ED8 !important;
 }
 
 /* 🟢 Generada - Verde sólido */
 .b-generated { 
-    background: #00CC44 !important;
+    background: #16A34A !important;
     color: #FFFFFF !important;
-    border-color: #009933 !important;
+    border-color: #15803D !important;
 }
 
 /* 🔵 Aceptada por Cliente - Azul sólido */
 .b-accepted { 
-    background: #0066FF !important;
+    background: #2563EB !important;
     color: #FFFFFF !important;
-    border-color: #0044CC !important;
+    border-color: #1D4ED8 !important;
 }
 
 /* ⚪ Cancelado / Anulado - Plomo */
@@ -2342,11 +2341,11 @@ body.kcf-theme {
     border-color: #4B5563 !important;
 }
 
-/* 🟢 Validado - Verde sólido */
+/* 🟢 Validado - Verde sólido (para otros módulos) */
 .b-valid { 
-    background: #00CC44 !important;
+    background: #16A34A !important;
     color: #FFFFFF !important;
-    border-color: #009933 !important;
+    border-color: #15803D !important;
 }
 
 /* 📤 Enviado - Morado sólido */
@@ -2358,23 +2357,23 @@ body.kcf-theme {
 
 /* ❌ Rechazado - Rojo oscuro */
 .b-rejected { 
-    background: #CC0000 !important;
+    background: #DC2626 !important;
     color: #FFFFFF !important;
-    border-color: #990000 !important;
+    border-color: #991B1B !important;
 }
 
 /* ✅ OK - Verde */
 .b-ok { 
-    background: #00CC44 !important;
+    background: #16A34A !important;
     color: #FFFFFF !important;
-    border-color: #009933 !important;
+    border-color: #15803D !important;
 }
 
 /* ℹ️ Info - Azul */
 .b-info { 
-    background: #0066FF !important;
+    background: #2563EB !important;
     color: #FFFFFF !important;
-    border-color: #0044CC !important;
+    border-color: #1D4ED8 !important;
 }
 
 /* ⚪ Plomo (default) */
@@ -2386,9 +2385,9 @@ body.kcf-theme {
 
 /* 🟡 Pendiente - Amarillo */
 .b-pending { 
-    background: #FFCC00 !important;
-    color: #000000 !important;
-    border-color: #CC9900 !important;
+    background: #F59E0B !important;
+    color: #FFFFFF !important;
+    border-color: #B45309 !important;
 }
 
 /* ❌ Perdido - Plomo */
@@ -2405,43 +2404,57 @@ body.kcf-theme {
     border-color: #047857 !important;
 }
 
+/* 🚚 Despachado - Azul */
+.b-despatched {
+    background: #2563EB !important;
+    color: #FFFFFF !important;
+    border-color: #1D4ED8 !important;
+}
+
+/* 📦 Entregado - Verde */
+.b-delivered {
+    background: #16A34A !important;
+    color: #FFFFFF !important;
+    border-color: #15803D !important;
+}
+
 /* ============================================================
    KPI DOTS - SIN DESENFOQUE
    ============================================================ */
 
 /* 🔵 Total KPI - Azul sólido */
 .dot-total { 
-    background: #0066FF !important; 
+    background: #2563EB !important; 
     color: #FFFFFF !important; 
-    border-color: #0044CC !important;
+    border-color: #1D4ED8 !important;
 }
 
 /* 🔴 Borrador KPI - Rojo sólido */
 .dot-draft { 
-    background: #FF0000 !important; 
+    background: #DC2626 !important; 
     color: #FFFFFF !important; 
-    border-color: #CC0000 !important;
+    border-color: #991B1B !important;
 }
 
 /* 🟡 En revisión KPI - Amarillo sólido */
 .dot-review { 
-    background: #FFDD00 !important; 
-    color: #000000 !important; 
-    border-color: #CCAA00 !important;
+    background: #F59E0B !important; 
+    color: #FFFFFF !important; 
+    border-color: #B45309 !important;
 }
 
 /* 🟢 Generadas KPI - Verde sólido */
 .dot-send { 
-    background: #00CC44 !important; 
+    background: #16A34A !important; 
     color: #FFFFFF !important; 
-    border-color: #009933 !important;
+    border-color: #15803D !important;
 }
 
 /* 🔵 Aceptadas KPI - Azul sólido */
 .dot-ok { 
-    background: #0066FF !important; 
+    background: #2563EB !important; 
     color: #FFFFFF !important; 
-    border-color: #0044CC !important;
+    border-color: #1D4ED8 !important;
 }
 
 /* ⚪ Total KPI - Plomo sólido */
@@ -2625,22 +2638,7 @@ body.kcf-theme {
 
 
 
-/* Estados PC - Solo 2 opciones */
-.badge.b-draft {
-    background: #FF0000 !important;
-    color: #FFFFFF !important;
-    border: 2px solid #FF4444 !important;
-    box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
-    text-shadow: 0 0 10px rgba(255,255,255,0.3);
-}
 
-.badge.b-ok {
-    background: #00FF41 !important;
-    color: #000000 !important;
-    border: 2px solid #44FF77 !important;
-    box-shadow: 0 0 25px rgba(0, 255, 65, 0.5);
-    text-shadow: 0 0 10px rgba(0,0,0,0.2);
-}
 
 /* ============================================================
    IGUALAR DATOS DEL CLIENTE A CONDICIONES COMERCIALES
