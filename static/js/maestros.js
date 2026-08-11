@@ -1180,7 +1180,7 @@ function mostrarAlertaClienteCreado(info) {
     document.body.appendChild(alerta);
     setTimeout(() => { if (alerta.parentNode) alerta.remove(); }, 6000);
 }
-
+window.mostrarAlertaClienteCreado = mostrarAlertaClienteCreado;
 
 
 // ============================================================
@@ -1244,21 +1244,25 @@ async function saveClient() {
                 'success'
             );
 
-            // Solo mostrar la alerta detallada si es un cliente NUEVO
-            if (!clientEditId) {
-                mostrarAlertaClienteCreado({
-                    id: result.data?.id,
-                    ruc: data.numero_documento,
-                    razon_social: data.razon_social,
-                    nombre_comercial: data.nombre_comercial,
-                    codigo_cliente: result.data?.codigo_cliente
-                });
-            }
-
             closeClientModal();
-
             await loadModuleData('clientes', true);
             renderModule('clientes');
+
+            // Solo mostrar la alerta detallada si es un cliente NUEVO
+            // (va después y en try/catch propio, para que si falla NO afecte el refresco de tabla)
+            if (!clientEditId) {
+                try {
+                    mostrarAlertaClienteCreado({
+                        id: result.data?.id,
+                        ruc: data.numero_documento,
+                        razon_social: data.razon_social,
+                        nombre_comercial: data.nombre_comercial,
+                        codigo_cliente: result.data?.codigo_cliente
+                    });
+                } catch (alertErr) {
+                    console.error('⚠️ Error mostrando alerta de cliente creado:', alertErr);
+                }
+            }
 
         } else {
             showToast(
