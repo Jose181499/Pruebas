@@ -1140,6 +1140,48 @@ function personalizarDiasCredito(selectId, sufijo = '') {
     showToast(`✅ Se agregó "${limpio}${sufijo ? ' ' + sufijo : ''}"`, 'success');
 }
 
+// ============================================================
+// ALERTA DE CLIENTE CREADO
+// ============================================================
+function mostrarAlertaClienteCreado(info) {
+    const existing = document.getElementById('alertaClienteCreado');
+    if (existing) existing.remove();
+
+    const alerta = document.createElement('div');
+    alerta.id = 'alertaClienteCreado';
+    alerta.style.cssText = `
+        position: fixed;
+        top: 30px;
+        right: 30px;
+        background: white;
+        border-radius: 16px;
+        padding: 20px 26px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        z-index: 999999;
+        max-width: 380px;
+        border-left: 6px solid #10B981;
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+    `;
+
+    alerta.innerHTML = `
+        <div style="font-size:32px;line-height:1;">🎉</div>
+        <div style="flex:1;">
+            <div style="font-weight:800;font-size:15px;color:#0f172a;margin-bottom:4px;">Cliente creado</div>
+            <div style="color:#64748B;font-size:12.5px;margin-bottom:4px;">${info.razon_social || ''}</div>
+            <div style="background:#f1f5f9;padding:4px 10px;border-radius:6px;display:inline-block;font-family:monospace;font-weight:700;font-size:12.5px;color:#0f172a;">
+                ${info.codigo_cliente || 'ID: ' + info.id}
+            </div>
+        </div>
+        <button onclick="this.parentElement.remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#94a3b8;">✕</button>
+    `;
+
+    document.body.appendChild(alerta);
+    setTimeout(() => { if (alerta.parentNode) alerta.remove(); }, 6000);
+}
+
+
 
 // ============================================================
 // GUARDAR CLIENTE
