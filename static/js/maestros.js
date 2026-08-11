@@ -129,6 +129,7 @@ const DS = {};
 const sheetMode = {};
 let currentModule = 'clientes';
 let clientEditId = null;
+let ultimoClienteCreadoId = null;
 let contactCtr = 0;
 let pointCtr = 0;
 let provEditId = null;
@@ -560,6 +561,8 @@ function renderTable(m, list) {
                 cells += `<td>${email ? `<a href="mailto:${esc(email)}" style="color:#3B82F6;text-decoration:none;">${esc(email)}</a>` : '-'}</td>`;
             } else if (f === 'uso') {
                 cells += `<td style="text-align:center;">${r[f] || 0}</td>`;
+            } else if (f === 'codigo_cliente' && m === 'clientes' && r.id === ultimoClienteCreadoId) {
+                cells += `<td class="left">${sd(r[f])} <span style="display:inline-block;background:#F7FEE7;color:#3F6212;border:1px solid #A3E635;border-radius:20px;padding:1px 9px;font-size:10px;font-weight:800;margin-left:6px;vertical-align:middle;">Nuevo</span></td>`;
             } else {
                 cells += `<td class="left">${sd(r[f])}</td>`;
             }
@@ -1243,6 +1246,10 @@ async function saveClient() {
                 result.message || '✅ Cliente guardado correctamente',
                 'success'
             );
+
+            if (!clientEditId) {
+                ultimoClienteCreadoId = result.data?.id ?? null;
+            }
 
             closeClientModal();
             await loadModuleData('clientes', true);

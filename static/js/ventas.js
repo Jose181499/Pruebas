@@ -1879,13 +1879,94 @@ async function guardarCotizacion(estado) {
     try {
         console.log('🔄 Iniciando guardado de cotización...');
         
+        // ============================================================
+        // 🔽 VALIDAR CAMPOS OBLIGATORIOS
+        // ============================================================
         const ruc = document.getElementById('fRuc')?.value?.trim() || '';
-        console.log('📋 RUC:', ruc);
+        const condicionPagoSelect = document.getElementById('fCondicion')?.value || '';
+        const condicionCustom = document.getElementById('fCondicionCustom')?.value?.trim() || '';
+        const tiempoEntregaSelect = document.getElementById('fTiempo')?.value || '';
+        const tiempoCustom = document.getElementById('fTiempoCustom')?.value?.trim() || '';
         
-        if (!ruc) {
-            showToast('⚠️ Primero busca un cliente por RUC', 'warning');
+        // Validar RUC
+        if (!ruc || ruc.length < 11) {
+            showToast('⚠️ El RUC es obligatorio. Debe tener 11 dígitos.', 'warning');
+            const el = document.getElementById('fRuc');
+            if (el) {
+                el.focus();
+                el.style.borderColor = '#DC2626';
+                el.style.boxShadow = '0 0 0 3px rgba(220,38,38,0.2)';
+                setTimeout(() => {
+                    el.style.borderColor = '';
+                    el.style.boxShadow = '';
+                }, 3000);
+            }
             return;
         }
+        
+        // Validar Condición de Pago
+        const condicionFinal = condicionPagoSelect === 'Personalizado' ? condicionCustom : condicionPagoSelect;
+        if (!condicionFinal || condicionFinal === 'Personalizado' || condicionFinal === '') {
+            showToast('⚠️ La Condición de Pago es obligatoria. Selecciona una opción o escribe un valor personalizado.', 'warning');
+            if (condicionPagoSelect === 'Personalizado') {
+                const el = document.getElementById('fCondicionCustom');
+                if (el) {
+                    el.focus();
+                    el.style.borderColor = '#DC2626';
+                    el.style.boxShadow = '0 0 0 3px rgba(220,38,38,0.2)';
+                    setTimeout(() => {
+                        el.style.borderColor = '';
+                        el.style.boxShadow = '';
+                    }, 3000);
+                }
+            } else {
+                const el = document.getElementById('fCondicion');
+                if (el) {
+                    el.focus();
+                    el.style.borderColor = '#DC2626';
+                    el.style.boxShadow = '0 0 0 3px rgba(220,38,38,0.2)';
+                    setTimeout(() => {
+                        el.style.borderColor = '';
+                        el.style.boxShadow = '';
+                    }, 3000);
+                }
+            }
+            return;
+        }
+        
+        // Validar Tiempo de Entrega
+        const tiempoFinal = tiempoEntregaSelect === 'Personalizado' ? tiempoCustom : tiempoEntregaSelect;
+        if (!tiempoFinal || tiempoFinal === 'Personalizado' || tiempoFinal === '') {
+            showToast('⚠️ El Tiempo de Entrega es obligatorio. Selecciona una opción o escribe un valor personalizado.', 'warning');
+            if (tiempoEntregaSelect === 'Personalizado') {
+                const el = document.getElementById('fTiempoCustom');
+                if (el) {
+                    el.focus();
+                    el.style.borderColor = '#DC2626';
+                    el.style.boxShadow = '0 0 0 3px rgba(220,38,38,0.2)';
+                    setTimeout(() => {
+                        el.style.borderColor = '';
+                        el.style.boxShadow = '';
+                    }, 3000);
+                }
+            } else {
+                const el = document.getElementById('fTiempo');
+                if (el) {
+                    el.focus();
+                    el.style.borderColor = '#DC2626';
+                    el.style.boxShadow = '0 0 0 3px rgba(220,38,38,0.2)';
+                    setTimeout(() => {
+                        el.style.borderColor = '';
+                        el.style.boxShadow = '';
+                    }, 3000);
+                }
+            }
+            return;
+        }
+        
+        console.log('📋 RUC:', ruc);
+        console.log('📋 Condición de Pago:', condicionFinal);
+        console.log('📋 Tiempo de Entrega:', tiempoFinal);
         
         // ============================================================
         // 1. BUSCAR EL CLIENTE POR RUC
@@ -1943,7 +2024,7 @@ async function guardarCotizacion(estado) {
                 nombre_contacto: document.getElementById('fContacto')?.value?.trim() || '',
                 telefono_contacto: document.getElementById('fTelefono')?.value?.trim() || '',
                 email_contacto: document.getElementById('fCorreo')?.value?.trim() || '',
-                condicion_pago: document.getElementById('fCondicion')?.value || 'Contado',
+                condicion_pago: condicionFinal,
                 estado: 'Activo'
             };
             
@@ -1999,53 +2080,54 @@ async function guardarCotizacion(estado) {
         // ============================================================
         // 3. PREPARAR DATOS - USAMOS EL ESTADO DIRECTAMENTE
         // ============================================================
-        // Ahora 'Borrador' es válido en la base de datos
         
         const data = {
-    id: editingId,
-    estado: estado || 'Borrador',
-    cliente_id: clienteId,
-    ruc: ruc,
-    razon: document.getElementById('fRazon')?.value?.trim() || '',
-    razon_comercial: document.getElementById('fComercial')?.value?.trim() || '',
-    direccion: document.getElementById('fDireccion')?.value?.trim() || '',
-    contacto: document.getElementById('fContacto')?.value?.trim() || '',
-    telefono: document.getElementById('fTelefono')?.value?.trim() || '',
-    email: document.getElementById('fCorreo')?.value?.trim() || '',
-     vendedor: document.getElementById('fVendedor')?.value || 'Helen Blas Príncipe',
-    condicion_pago: getFieldValue('fCondicion', 'fCondicionCustom') || 'Contado',
-    tiempo_entrega: getFieldValue('fTiempo', 'fTiempoCustom') || '5 días hábiles',
-    validez: getFieldValue('fValidez', 'fValidezCustom') || '15 días',
-    direccion_entrega: getFieldValue('fDireccionEntrega', 'fDireccionEntregaCustom') || '',
-    descuento_valor: descuentoValor,
-    descuento_tipo: descuentoTipo,
-    subtotal: subtotal,
-    descuento_monto: descuento,
-    igv: igv,
-    total: total,
-    seguimiento: document.getElementById('fSeguimiento')?.value || 'Helen Blas Príncipe',
-    motivo: document.getElementById('fMotivo')?.value || 'Solicitud única del cliente',
-    transporte: document.getElementById('fTransporte')?.value || 'Seleccione',
-    parihuela: document.getElementById('fParihuela')?.value || 'Seleccione',
-    nota_interna: document.getElementById('fNotaInterna')?.value?.trim() || '', 
-    productos: quoteProducts.map(p => ({
-        codigo: p.codigo,
-        producto: p.producto || p.descripcion,
-        descripcion: p.descripcion || '',
-        modelo: p.modelo || '',
-        marca: p.marca || '',
-        um: p.um || 'NIU',
-        cantidad: p.cantidad || 1,
-        valorVenta: p.valorVenta || 0,
-        stock: p.stock || 0
-    }))
-};
+            id: editingId,
+            estado: estado || 'Borrador',
+            cliente_id: clienteId,
+            ruc: ruc,
+            razon: document.getElementById('fRazon')?.value?.trim() || '',
+            razon_comercial: document.getElementById('fComercial')?.value?.trim() || '',
+            direccion: document.getElementById('fDireccion')?.value?.trim() || '',
+            contacto: document.getElementById('fContacto')?.value?.trim() || '',
+            telefono: document.getElementById('fTelefono')?.value?.trim() || '',
+            email: document.getElementById('fCorreo')?.value?.trim() || '',
+            vendedor: document.getElementById('fVendedor')?.value || 'Helen Blas Príncipe',
+            condicion_pago: condicionFinal,
+            tiempo_entrega: tiempoFinal,
+            validez: getFieldValue('fValidez', 'fValidezCustom') || '15 días',
+            direccion_entrega: getFieldValue('fDireccionEntrega', 'fDireccionEntregaCustom') || '',
+            descuento_valor: descuentoValor,
+            descuento_tipo: descuentoTipo,
+            subtotal: subtotal,
+            descuento_monto: descuento,
+            igv: igv,
+            total: total,
+            seguimiento: document.getElementById('fSeguimiento')?.value || 'Helen Blas Príncipe',
+            motivo: document.getElementById('fMotivo')?.value || 'Solicitud única del cliente',
+            transporte: document.getElementById('fTransporte')?.value || 'Seleccione',
+            parihuela: document.getElementById('fParihuela')?.value || 'Seleccione',
+            nota_interna: document.getElementById('fNotaInterna')?.value?.trim() || '', 
+            productos: quoteProducts.map(p => ({
+                codigo: p.codigo,
+                producto: p.producto || p.descripcion,
+                descripcion: p.descripcion || '',
+                modelo: p.modelo || '',
+                marca: p.marca || '',
+                um: p.um || 'NIU',
+                cantidad: p.cantidad || 1,
+                valorVenta: p.valorVenta || 0,
+                stock: p.stock || 0
+            }))
+        };
         
         console.log('📦 Enviando cotización:');
         console.log('  - cliente_id:', data.cliente_id);
         console.log('  - estado:', data.estado);
         console.log('  - total:', data.total);
         console.log('  - productos:', data.productos.length);
+        console.log('  - condicion_pago:', data.condicion_pago);
+        console.log('  - tiempo_entrega:', data.tiempo_entrega);
         
         // ============================================================
         // 4. ENVIAR A LA API
@@ -9503,9 +9585,9 @@ function renderCotizacionFormContent(isEdit) {
     <!-- RUC | Razón Social -->
     <div style="display:grid;grid-template-columns:1fr 1.8fr;gap:4px;margin-bottom:2px;">
         <div class="form-field">
-            <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">RUC</label>
-            <input id="fRuc" readonly style="width:100%;height:18px;border:1px solid #E5E7EB;border-radius:5px;background:#F1F5F9;outline:none;color:#0F172A;font-size:9.5px;padding:0 5px;">
-        </div>
+    <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">RUC <span style="color:#DC2626;font-weight:900;">*</span></label>
+    <input id="fRuc" readonly style="width:100%;height:18px;border:1px solid #E5E7EB;border-radius:5px;background:#F1F5F9;outline:none;color:#0F172A;font-size:9.5px;padding:0 5px;border-left:3px solid #DC2626;">
+</div>
         <div class="form-field">
             <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Razón Social</label>
             <input id="fRazon" readonly style="width:100%;height:18px;border:1px solid #E5E7EB;border-radius:5px;background:#F1F5F9;outline:none;color:#0F172A;font-size:9.5px;padding:0 5px;">
@@ -9589,36 +9671,37 @@ function renderCotizacionFormContent(isEdit) {
                         <option value="Dólares ($)">Dólares ($)</option>
                     </select>
                 </div>
-                <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Condición de Pago</label>
-                    <select id="fCondicion" onchange="toggleCustomField('fCondicion','fCondicionCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
-    <option value="Contado">Contado</option>
-    <option value="Credito 7 Dias">Credito 7 Dias</option>
-    <option value="Credito 15 Dias">Credito 15 Dias</option>
-    <option value="Credito 30 Dias">Credito 30 Dias</option>
-    <option value="Credito 45 Dias">Credito 45 Dias</option>
-    <option value="Credito 60 Dias">Credito 60 Dias</option>
-    <option value="Credito 90 Dias">Credito 90 Dias</option>
-    <option value="Credito 120 Dias">Credito 120 Dias</option>
-    <option value="Personalizado" selected>✏️ Personalizado...</option>
-</select>
-<input id="fCondicionCustom" placeholder="Ej: 50% anticipo, 50% contra entrega" style="display:block;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;" value="Personalizado">
+              <div class="form-field">
+    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Condición de Pago <span style="color:#DC2626;font-weight:900;">*</span></label>
+    <select id="fCondicion" onchange="toggleCustomField('fCondicion','fCondicionCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;border-left:3px solid #DC2626;">
+        <option value="Contado">Contado</option>
+        <option value="Credito 7 Dias">Credito 7 Dias</option>
+        <option value="Credito 15 Dias">Credito 15 Dias</option>
+        <option value="Credito 30 Dias">Credito 30 Dias</option>
+        <option value="Credito 45 Dias">Credito 45 Dias</option>
+        <option value="Credito 60 Dias">Credito 60 Dias</option>
+        <option value="Credito 90 Dias">Credito 90 Dias</option>
+        <option value="Credito 120 Dias">Credito 120 Dias</option>
+        <option value="Personalizado" selected>✏️ Personalizado...</option>
+    </select>
+    <input id="fCondicionCustom" placeholder="Ej: 50% anticipo, 50% contra entrega" style="display:block;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;border-left:3px solid #DC2626;" value="Personalizado">
+</div>
                 </div>
-                <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Tiempo de Entrega</label>
-                    <select id="fTiempo" onchange="toggleCustomField('fTiempo','fTiempoCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
-    <option value="Inmediata">Inmediata</option>
-    <option value="1 día hábil">1 día hábil</option>
-    <option value="2 días hábiles">2 días hábiles</option>
-    <option value="3 días hábiles">3 días hábiles</option>
-    <option value="5 días hábiles" selected>5 días hábiles</option>
-    <option value="7 días hábiles">7 días hábiles</option>
-    <option value="10 días hábiles">10 días hábiles</option>
-    <option value="15 días hábiles">15 días hábiles</option>
-    <option value="Personalizado">✏️ Personalizado...</option>
-</select>
-                    <input id="fTiempoCustom" placeholder="Ej: 10 días" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
-                </div>
+               <div class="form-field">
+    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Tiempo de Entrega <span style="color:#DC2626;font-weight:900;">*</span></label>
+    <select id="fTiempo" onchange="toggleCustomField('fTiempo','fTiempoCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;border-left:3px solid #DC2626;">
+        <option value="Inmediata">Inmediata</option>
+        <option value="1 día hábil">1 día hábil</option>
+        <option value="2 días hábiles">2 días hábiles</option>
+        <option value="3 días hábiles">3 días hábiles</option>
+        <option value="5 días hábiles" selected>5 días hábiles</option>
+        <option value="7 días hábiles">7 días hábiles</option>
+        <option value="10 días hábiles">10 días hábiles</option>
+        <option value="15 días hábiles">15 días hábiles</option>
+        <option value="Personalizado">✏️ Personalizado...</option>
+    </select>
+    <input id="fTiempoCustom" placeholder="Ej: 10 días" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;border-left:3px solid #DC2626;">
+</div>
             </div>
             <!-- Validez Oferta | Dirección Entrega -->
             <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:4px;margin-bottom:2px;">
