@@ -9582,107 +9582,76 @@ function renderCotizacionFormContent(isEdit) {
             </div>
             <!-- Moneda | Condición Pago | Tiempo Entrega -->
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:2px;">
-             <div class="create-panel" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:10px;box-shadow:0 2px 8px rgba(15,23,42,.04);overflow:hidden;">
-    <h3 style="padding:4px 10px;border-bottom:1px solid #E5E7EB;font-size:11px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:5px;margin:0;">
-        <span style="color:#EF233C;font-weight:1000;">2.</span> 
-        <span style="color:#EF233C;font-weight:1000;">Condiciones Comerciales</span>
-    </h3>
-    <div class="body" style="padding:6px 8px;">
-        <!-- Asesor | Email | Teléfono -->
-        <div style="display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:4px;margin-bottom:2px;">
-            <div class="form-field">
-                <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Asesor</label>
-                <input id="fVendedor" value="${CONFIG.asesorDefault}" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
+                <div class="form-field">
+                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Moneda</label>
+                    <select id="fMoneda" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
+                        <option value="Soles (S/.)" selected>Soles (S/.)</option>
+                        <option value="Dólares ($)">Dólares ($)</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Condición de Pago</label>
+                    <select id="fCondicion" onchange="toggleCustomField('fCondicion','fCondicionCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
+    <option value="Contado">Contado</option>
+    <option value="Credito 7 Dias">Credito 7 Dias</option>
+    <option value="Credito 15 Dias">Credito 15 Dias</option>
+    <option value="Credito 30 Dias">Credito 30 Dias</option>
+    <option value="Credito 45 Dias">Credito 45 Dias</option>
+    <option value="Credito 60 Dias">Credito 60 Dias</option>
+    <option value="Credito 90 Dias">Credito 90 Dias</option>
+    <option value="Credito 120 Dias">Credito 120 Dias</option>
+    <option value="Personalizado" selected>✏️ Personalizado...</option>
+</select>
+<input id="fCondicionCustom" placeholder="Ej: 50% anticipo, 50% contra entrega" style="display:block;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;" value="Personalizado">
+                </div>
+                <div class="form-field">
+                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Tiempo de Entrega</label>
+                    <select id="fTiempo" onchange="toggleCustomField('fTiempo','fTiempoCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
+    <option value="Inmediata">Inmediata</option>
+    <option value="1 día hábil">1 día hábil</option>
+    <option value="2 días hábiles">2 días hábiles</option>
+    <option value="3 días hábiles">3 días hábiles</option>
+    <option value="5 días hábiles" selected>5 días hábiles</option>
+    <option value="7 días hábiles">7 días hábiles</option>
+    <option value="10 días hábiles">10 días hábiles</option>
+    <option value="15 días hábiles">15 días hábiles</option>
+    <option value="Personalizado">✏️ Personalizado...</option>
+</select>
+                    <input id="fTiempoCustom" placeholder="Ej: 10 días" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
+                </div>
             </div>
-            <div class="form-field">
-                <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Email Asesor</label>
-                <input id="fEmailAsesor" value="${CONFIG.emailAsesorDefault}" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
+            <!-- Validez Oferta | Dirección Entrega -->
+            <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:4px;margin-bottom:2px;">
+                <div class="form-field">
+                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Validez de Oferta</label>
+                    <select id="fValidez" onchange="toggleCustomField('fValidez','fValidezCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
+                        <option value="7 días">7 días</option>
+                        <option value="15 días" selected>15 días</option>
+                        <option value="30 días">30 días</option>
+                        <option value="45 días">45 días</option>
+                        <option value="60 días">60 días</option>
+                        <option value="Personalizado">✏️ Personalizado...</option>
+                    </select>
+                    <input id="fValidezCustom" placeholder="Ej: 20 días" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
+                </div>
+                <div class="form-field">
+                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Dirección de Entrega</label>
+                    <select id="fDireccionEntrega" onchange="toggleCustomField('fDireccionEntrega','fDireccionEntregaCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
+                        <option value="">Sin dirección</option>
+                        <option value="Personalizado">✏️ Personalizado...</option>
+                    </select>
+                    <input id="fDireccionEntregaCustom" placeholder="Ej: Av. Los Alamos 123" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
+                </div>
             </div>
-            <div class="form-field">
-                <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Teléfono Asesor</label>
-                <input id="fTelefonoAsesor" value="${CONFIG.telefonoAsesorDefault}" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
-            </div>
-        </div>
-        
-        <!-- Moneda | Condición Pago | Tiempo Entrega -->
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:2px;">
-            <!-- Moneda -->
-            <div class="form-field">
-                <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Moneda</label>
-                <select id="fMoneda" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
-                    <option value="Soles (S/.)" selected>Soles (S/.)</option>
-                    <option value="Dólares ($)">Dólares ($)</option>
-                </select>
-            </div>
-            
-            <!-- Condición de Pago - CON PERSONALIZADO SELECCIONADO POR DEFECTO -->
-            <div class="form-field">
-                <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Condición de Pago</label>
-                <select id="fCondicion" onchange="toggleCustomField('fCondicion','fCondicionCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
-                    <option value="Contado">Contado</option>
-                    <option value="Credito 7 Dias">Credito 7 Dias</option>
-                    <option value="Credito 15 Dias">Credito 15 Dias</option>
-                    <option value="Credito 30 Dias">Credito 30 Dias</option>
-                    <option value="Credito 45 Dias">Credito 45 Dias</option>
-                    <option value="Credito 60 Dias">Credito 60 Dias</option>
-                    <option value="Credito 90 Dias">Credito 90 Dias</option>
-                    <option value="Credito 120 Dias">Credito 120 Dias</option>
-                    <option value="Personalizado" selected>✏️ Personalizado...</option>
-                </select>
-                <input id="fCondicionCustom" placeholder="Ej: 50% anticipo, 50% contra entrega" style="display:block;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;" value="Personalizado">
-            </div>
-            
-            <!-- Tiempo de Entrega - CON NUEVAS OPCIONES -->
-            <div class="form-field">
-                <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Tiempo de Entrega</label>
-                <select id="fTiempo" onchange="toggleCustomField('fTiempo','fTiempoCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
-                    <option value="Inmediata">Inmediata</option>
-                    <option value="1 día hábil">1 día hábil</option>
-                    <option value="2 días hábiles">2 días hábiles</option>
-                    <option value="3 días hábiles">3 días hábiles</option>
-                    <option value="5 días hábiles" selected>5 días hábiles</option>
-                    <option value="7 días hábiles">7 días hábiles</option>
-                    <option value="10 días hábiles">10 días hábiles</option>
-                    <option value="15 días hábiles">15 días hábiles</option>
-                    <option value="Personalizado">✏️ Personalizado...</option>
-                </select>
-                <input id="fTiempoCustom" placeholder="Ej: 10 días" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
-            </div>
-        </div>
-        
-        <!-- Validez Oferta | Dirección Entrega -->
-        <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:4px;margin-bottom:2px;">
-            <div class="form-field">
-                <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Validez de Oferta</label>
-                <select id="fValidez" onchange="toggleCustomField('fValidez','fValidezCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
-                    <option value="7 días">7 días</option>
-                    <option value="15 días" selected>15 días</option>
-                    <option value="30 días">30 días</option>
-                    <option value="45 días">45 días</option>
-                    <option value="60 días">60 días</option>
-                    <option value="Personalizado">✏️ Personalizado...</option>
-                </select>
-                <input id="fValidezCustom" placeholder="Ej: 20 días" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
-            </div>
-            <div class="form-field">
-                <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Dirección de Entrega</label>
-                <select id="fDireccionEntrega" onchange="toggleCustomField('fDireccionEntrega','fDireccionEntregaCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
-                    <option value="">Sin dirección</option>
-                    <option value="Personalizado">✏️ Personalizado...</option>
-                </select>
-                <input id="fDireccionEntregaCustom" placeholder="Ej: Av. Los Alamos 123" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
-            </div>
-        </div>
-        
-        <!-- Nota Comercial -->
-        <div style="display:grid;grid-template-columns:1fr;gap:3px;">
-            <div class="form-field">
-                <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Nota Comercial</label>
-                <input id="fNotaComercial" placeholder="Comentarios comerciales..." style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
+            <!-- Nota Comercial -->
+            <div style="display:grid;grid-template-columns:1fr;gap:3px;">
+                <div class="form-field">
+                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Nota Comercial</label>
+                    <input id="fNotaComercial" placeholder="Comentarios comerciales..." style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
+                </div>
             </div>
         </div>
     </div>
-</div>
 
 <!-- ============================================================ -->
 <!-- 3. RESUMEN - ESTILO IMAGEN -->
