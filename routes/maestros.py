@@ -221,8 +221,8 @@ def api_clientes_guardar():
             cur.execute("""
                 INSERT INTO clientes_contactos (
                     cliente_id, nombre_contacto, cargo, telefono, email,
-                    principal, activo, created_at, updated_at
-                ) VALUES (%s, %s, %s, %s, %s, %s, TRUE, NOW(), NOW())
+                    principal, activo
+                ) VALUES (%s, %s, %s, %s, %s, %s, TRUE)
             """, (
                 cliente_id, c.get('nombre', ''), c.get('cargo', ''),
                 c.get('telefono', ''), c.get('email', ''), bool(c.get('principal', False))
@@ -425,6 +425,23 @@ def api_clientes_actualizar(id):
             ))
 
         # 🆕 Reemplazar contactos
+        # 🆕 Reemplazar puntos de entrega (borra y vuelve a insertar, incluye instrucciones)
+        cur.execute("DELETE FROM clientes_puntos_entrega WHERE cliente_id = %s", (id,))
+        for p in data.get('puntos_entrega', []):
+            if not (p.get('punto') or p.get('direccion')):
+                continue
+            cur.execute("""
+                INSERT INTO clientes_puntos_entrega (
+                    cliente_id, nombre_punto, direccion, telefono_contacto,
+                    responsable, principal, instrucciones, activo
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, TRUE)
+            """, (
+                id, p.get('punto', ''), p.get('direccion', ''),
+                p.get('telefono', ''), p.get('contacto', ''),
+                bool(p.get('principal', False)), p.get('instrucciones', '')
+            ))
+
+        # 🆕 Reemplazar contactos
         cur.execute("DELETE FROM clientes_contactos WHERE cliente_id = %s", (id,))
         for c in data.get('contactos', []):
             if not (c.get('nombre') or c.get('telefono') or c.get('email')):
@@ -432,8 +449,8 @@ def api_clientes_actualizar(id):
             cur.execute("""
                 INSERT INTO clientes_contactos (
                     cliente_id, nombre_contacto, cargo, telefono, email,
-                    principal, activo, created_at, updated_at
-                ) VALUES (%s, %s, %s, %s, %s, %s, TRUE, NOW(), NOW())
+                    principal, activo
+                ) VALUES (%s, %s, %s, %s, %s, %s, TRUE)
             """, (
                 id, c.get('nombre', ''), c.get('cargo', ''),
                 c.get('telefono', ''), c.get('email', ''), bool(c.get('principal', False))
