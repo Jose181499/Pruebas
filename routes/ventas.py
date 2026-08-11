@@ -4823,31 +4823,168 @@ def preview_pdf_comprobante(comp_id):
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-function cargarConductorGuia(id) {
-    if (!id) return;
-    if (id === 'personalizar') {
-        document.getElementById('guiaPlaca').value = '';
-        document.getElementById('guiaConductorDNI').value = '';
-        document.getElementById('guiaConductorNombre').value = '';
-        document.getElementById('guiaLicencia').value = '';
-        showToast('✏️ Modo Personalizar: complete los campos manualmente', 'info');
-        return;
-    }
-    fetch(`/ventas/api/transportistas/${id}`)
-        .then(r => r.json())
-        .then(result => {
-            if (result.success && result.data) {
-                const t = result.data;
-                if (t.placa) document.getElementById('guiaPlaca').value = t.placa;
-                if (t.dni) document.getElementById('guiaConductorDNI').value = t.dni;
-                if (t.nombre_completo) document.getElementById('guiaConductorNombre').value = t.nombre_completo;
-                if (t.licencia) document.getElementById('guiaLicencia').value = t.licencia;
-                if (t.telefono) document.getElementById('nuevoConductorGuiaTelefono').value = t.telefono;
-                showToast(`✅ Datos de ${t.nombre_completo} cargados`, 'success');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('❌ Error al cargar conductor', 'error');
-        });
-}
+# ============================================================
+# TRANSPORTISTAS - API (integrado en ventas)
+# ============================================================
+
+@ventas_bp.route('/ventas/api/transportistas/listar', methods=['GET'])
+@login_required
+def api_transportistas_listar():
+    """Listar todos los transportistas para usar en ventas"""
+    try:
+        print("🔍 Listando transportistas...")
+        
+        query = """
+            SELECT 
+                id, nombre_completo, dni, placa, 
+                medidas, licencia, telefono, peso_carga, tipo,
+                activo, created_at, updated_at
+            FROM transportistas
+            WHERE activo = true
+            ORDER BY nombre_completo
+        """
+        result = db_query(query)
+        print(f"✅ {len(result)} transportistas encontrados")
+        
+        # Formatear los datos para el frontend
+        formatted_data = []
+        for row in result:
+            formatted_data.append({
+                'id': row.get('id'),
+                'nombre_completo': row.get('nombre_completo') or '',
+                'dni': row.get('dni') or '',
+                'placa': row.get('placa') or '',
+                'medidas': row.get('medidas') or '',
+                'licencia': row.get('licencia') or '',
+                'telefono': row.get('telefono') or '',
+                'peso_carga': row.get('peso_carga') or '',
+                'tipo': row.get('tipo') or 'conductor',
+                'activo': row.get('activo', True)
+            })
+        
+        return jsonify({'success': True, 'data': formatted_data})
+        
+    except Exception as e:
+        print(f"❌ Error en api_transportistas_listar: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ventas_bp.route('/ventas/api/transportistas/<int:id>', methods=['GET'])
+@login_required
+def api_transportistas_obtener(id):
+    """Obtener un transportista por ID"""
+    try:
+        query = """
+            SELECT 
+                id, nombre_completo, dni, placa, 
+                medidas, licencia, telefono, peso_carga, tipo,
+                activo
+            FROM transportistas
+            WHERE id = %s AND activo = true
+        """
+        result = db_query(query, (id,))
+        if result:
+            row = result[0]
+            return jsonify({
+                'success': True, 
+                'data': {
+                    'id': row.get('id'),
+                    'nombre_completo': row.get('nombre_completo') or '',
+                    'dni': row.get('dni') or '',
+                    'placa': row.get('placa') or '',
+                    'medidas': row.get('medidas') or '',
+                    'licencia': row.get('licencia') or '',
+                    'telefono': row.get('telefono') or '',
+                    'peso_carga': row.get('peso_carga') or '',
+                    'tipo': row.get('tipo') or 'conductor'
+                }
+            })
+        return jsonify({'success': False, 'error': 'Transportista no encontrado'}), 404
+    except Exception as e:
+        print(f"❌ Error en api_transportistas_obtener: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ventas_bp.route('/ventas/api/transportistas/guardar', methods=['POST'])
+@login_required
+def api_transportistas_guardar():
+    """Guardar un nuevo transportista desde ventas"""
+    try:
+        data = request.get_json()
+        usuario_id = session.get('usuario_id', 8)
+        
+        print(f"📦 Guardando transportista desde ventas: {data}")
+        
+        query = """
+            INSERT INTO transportistas (
+                nombre_completo, dni, placa, 
+                medidas, licencia, telefono, peso_carga, tipo,
+                activo, creado_por
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            ) RETURNING id
+        """
+        params = (
+            data.get('nombre_completo', '').strip(),
+            data.get('dni', '').strip(),
+            data.get('placa', '').strip().upper(),
+            data.get('medidas', '').strip(),
+            data.get('licencia', '').strip(),
+            data.get('telefono', '').strip(),
+            data.get('peso_carga', '').strip(),
+            data.get('tipo', 'conductor'),
+            True,
+            usuario_id
+        )
+        
+        result = db_query(query, params)
+        print(f"✅ Resultado: {result}")
+        
+        if result:
+            return jsonify({
+                'success': True,
+                'message': 'Transportista guardado correctamente',
+                'data': {'id': result[0]['id']}
+            })
+        return jsonify({'success': False, 'error': 'No se pudo guardar'}), 400
+        
+    except Exception as e:
+        print(f"❌ Error en api_transportistas_guardar: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ventas_bp.route('/ventas/api/transportistas/buscar', methods=['GET'])
+@login_required
+def api_transportistas_buscar():
+    """Buscar transportistas por texto (nombre, dni, placa)"""
+    try:
+        q = request.args.get('q', '').strip()
+        if not q or len(q) < 2:
+            return jsonify({'success': True, 'data': []})
+        
+        search_pattern = f'%{q}%'
+        query = """
+            SELECT 
+                id, nombre_completo, dni, placa, 
+                medidas, licencia, telefono, peso_carga, tipo
+            FROM transportistas
+            WHERE activo = true
+            AND (
+                LOWER(nombre_completo) LIKE LOWER(%s) OR
+                LOWER(dni) LIKE LOWER(%s) OR
+                LOWER(placa) LIKE LOWER(%s) OR
+                LOWER(telefono) LIKE LOWER(%s)
+            )
+            ORDER BY nombre_completo
+            LIMIT 20
+        """
+        result = db_query(query, (search_pattern, search_pattern, search_pattern, search_pattern))
+        return jsonify({'success': True, 'data': result})
+        
+    except Exception as e:
+        print(f"❌ Error en api_transportistas_buscar: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500

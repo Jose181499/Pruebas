@@ -5272,10 +5272,14 @@ function cargarConductorGuia(id) {
                 if (t.dni) document.getElementById('guiaConductorDNI').value = t.dni;
                 if (t.nombre_completo) document.getElementById('guiaConductorNombre').value = t.nombre_completo;
                 if (t.licencia) document.getElementById('guiaLicencia').value = t.licencia;
+                if (t.telefono) document.getElementById('nuevoConductorGuiaTelefono').value = t.telefono;
                 showToast(`✅ Datos de ${t.nombre_completo} cargados`, 'success');
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('❌ Error al cargar conductor', 'error');
+        });
 }
 
 // ============================================================
