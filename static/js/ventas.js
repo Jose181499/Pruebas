@@ -4923,7 +4923,7 @@ function updateQuoteStatusBar(estado) {
 // INICIALIZACIÓN DE SWITCHES TOGGLE PARA VALIDACIÓN PC
 // ============================================================
 
-// Función para actualizar el estado de validación
+
 function updateValidationStatus() {
     console.log('🔄 Actualizando estado de validación...');
     
@@ -4940,18 +4940,29 @@ function updateValidationStatus() {
             if (checkbox.checked) {
                 label.textContent = '✅ Válido';
                 label.style.color = '#16A34A';
+                // Actualizar el span del switch (si existe)
+                const slider = checkbox.closest('.switch')?.querySelector('.slider');
+                if (slider) {
+                    slider.style.background = '#22C55E';
+                }
             } else {
                 label.textContent = '❌ No válido';
                 label.style.color = '#DC2626';
+                const slider = checkbox.closest('.switch')?.querySelector('.slider');
+                if (slider) {
+                    slider.style.background = '#EF4444';
+                }
             }
         }
     });
     
-    // 🔽 Asegurar que se llama a esta función
     if (typeof updateValidationSemaphore === 'function') {
         updateValidationSemaphore();
     }
 }
+
+
+
 function updateValidationSemaphore() {
     console.log('🔄 Actualizando semáforo de validación...');
     
@@ -9640,12 +9651,15 @@ function setPcCondicionValue(value) {
 // ============================================================
 let modalMode = 'cot';  // 'cot' | 'directo' | 'editar'
 
+// ============================================================
+// GUARDAR PC - CON VALIDACIÓN DE SWITCHES
+// ============================================================
 async function savePedidoCompraSAP(force) {
-    // 🔧 NUEVO: bloquea el guardado si la tabla de productos aún no cargó
+    // 🔽 NUEVO: Verificar que la tabla de productos tenga datos
     const tbody = document.getElementById('pcItemsBody');
     const filas = tbody ? Array.from(tbody.querySelectorAll('tr')) : [];
     
-    // Verifica que al menos una fila tenga un código de producto real (no vacía)
+    // Verifica que al menos una fila tenga un código de producto real
     const hayProductosReales = filas.some(row => {
         const primerInput = row.querySelector('input');
         return primerInput && primerInput.value.trim() !== '';
@@ -9660,8 +9674,49 @@ async function savePedidoCompraSAP(force) {
     
     try {
         // ============================================================
-        // VALIDAR QUE SE HAYA SELECCIONADO UNA COTIZACIÓN EN MODO 'cot'
+        // 🔽 NUEVO: VALIDAR SWITCHES ANTES DE GUARDAR
         // ============================================================
+        const validationSwitches = [
+            { id: 'vPrecio', label: 'Precio' },
+            { id: 'vCantidad', label: 'Cantidad' },
+            { id: 'vProducto', label: 'Producto' },
+            { id: 'vEntrega', label: 'Lugar de Entrega' },
+            { id: 'vMoneda', label: 'Moneda' },
+            { id: 'vTransporte', label: 'Transporte' },
+            { id: 'vVigencia', label: 'Vigencia' }
+        ];
+        
+        const invalidSwitches = [];
+        const validSwitches = [];
+        
+        validationSwitches.forEach(({ id, label }) => {
+            const checkbox = document.getElementById(id);
+            if (checkbox) {
+                if (checkbox.checked) {
+                    validSwitches.push(label);
+                } else {
+                    invalidSwitches.push(label);
+                }
+            }
+        });
+        
+        console.log('📋 Switches válidos:', validSwitches);
+        console.log('📋 Switches inválidos:', invalidSwitches);
+        
+        // ============================================================
+        // 🔽 SI ES "PC CONFORME" Y HAY SWITCHES INVÁLIDOS, BLOQUEAR
+        // ============================================================
+        if (force !== 'observado' && invalidSwitches.length > 0) {
+            // Mostrar modal de advertencia
+            showValidationWarningModal(invalidSwitches);
+            return;
+        }
+        
+        // ============================================================
+        // CONTINUAR CON EL GUARDADO NORMAL
+        // ============================================================
+        
+        // VALIDAR QUE SE HAYA SELECCIONADO UNA COTIZACIÓN EN MODO 'cot'
         if (modalMode === 'cot' && !cotizacionSeleccionada) {
             const searchInput = document.getElementById('pcCotSearch');
             const valor = searchInput?.value?.trim() || '';
@@ -9689,10 +9744,8 @@ async function savePedidoCompraSAP(force) {
             }
         }
         
-        // ============================================================
         // LEER VALIDACIONES DE LOS SWITCHES
-        // ============================================================
-        const val = ['vPrecio', 'vCantidad', 'vProducto', 'vEntrega', 'vMoneda', 'vTransporte', 'vVigencia', 'vMargen']
+        const val = ['vPrecio', 'vCantidad', 'vProducto', 'vEntrega', 'vMoneda', 'vTransporte', 'vVigencia']
             .map(id => {
                 const el = document.getElementById(id);
                 if (el && el.type === 'checkbox') {
@@ -9706,17 +9759,14 @@ async function savePedidoCompraSAP(force) {
         // OBSERVADO SOLO POR VALIDACIONES, NO POR STOCK
         const observed = force === 'observado' || val.some(v => v === 'No');
         
-        // ============================================================
         // LEER ITEMS DE LA TABLA
-        // ============================================================
         const trs = document.querySelectorAll('#pcItemsBody tr');
         const items = [];
         trs.forEach(row => {
             const inputs = row.querySelectorAll('input');
             if (inputs.length >= 8) {
-                // Stock viene de un <td> de texto plano, no de un input
                 const tds = row.querySelectorAll('td');
-                const stockCell = tds[9]; // ajustar índice exacto contando: Item,codigo,desc,modelo,marca,cant_cot,cant_pc,precio_cot,precio_pc,VALOR_TOTAL,STOCK,faltante,acciones
+                const stockCell = tds[9];
                 items.push({
                     codigo: inputs[0]?.value || '',
                     producto: inputs[1]?.value || '',
@@ -9733,15 +9783,11 @@ async function savePedidoCompraSAP(force) {
         
         console.log('📦 Items del PC:', items);
         
-        // ============================================================
         // DETERMINAR ESTADO - SIN BLOQUEAR POR STOCK
-        // ============================================================
         const estado = observed ? 'PC observado' : 'PC conforme';
         const req_compra = observed ? 'Bloqueado' : 'Sí';
         
-        // ============================================================
         // OBTENER VALOR DE CONDICIÓN DE PAGO
-        // ============================================================
         const condicionSelect = document.getElementById('pcCondicion');
         const condicionCustom = document.getElementById('pcCondicionCustom');
         let condicionPago = condicionSelect?.value || 'Contado';
@@ -9749,35 +9795,23 @@ async function savePedidoCompraSAP(force) {
             condicionPago = condicionCustom.value.trim() || 'Personalizado';
         }
         
-        // ============================================================
-        // 🔽 IMPORTANTE: OBTENER EL NÚMERO DEL PC (NO GENERAR NUEVO SI ES EDICIÓN)
-        // ============================================================
+        // OBTENER EL NÚMERO DEL PC
         let numeroPC = document.getElementById('pcNumero')?.value || '';
         
-        // Si es modo edición y tenemos un ID, NO generar nuevo número
         if (modalMode === 'editar' && editingId) {
-            // Buscar el PC existente para obtener su número original
             const pedidoExistente = pedidosData.find(p => p.id === editingId);
             if (pedidoExistente && pedidoExistente.numero) {
                 numeroPC = pedidoExistente.numero;
-                console.log(`📋 Usando número existente para edición: ${numeroPC}`);
-            } else {
-                // Si no se encuentra, mantener el que está en el input
-                console.warn('⚠️ No se encontró el PC en pedidosData, usando número del input');
             }
         } else if (!numeroPC) {
-            // Solo generar nuevo número si no hay y no es edición
             numeroPC = 'PC-' + new Date().toISOString().slice(0, 10).replaceAll('-', '') + '-' + String(Date.now()).slice(-4);
         }
         
         console.log(`📋 Número de PC final: ${numeroPC} | editingId: ${editingId} | modalMode: ${modalMode}`);
         
-        // ============================================================
         // PREPARAR DATOS PARA ENVIAR A LA API
-        // ============================================================
         const pcData = {
-            // 🔽 IMPORTANTE: ENVIAR EL ID CORRECTO SI ES EDICIÓN
-            id: editingId || null,  // ← ESTO DEBE TENER EL ID REAL
+            id: editingId || null,
             numero: numeroPC,
             fecha: document.getElementById('pcFecha')?.value?.replace('T', ' ') || new Date().toISOString(),
             medio: document.getElementById('pcMedio')?.value || 'Correo',
@@ -9800,17 +9834,13 @@ async function savePedidoCompraSAP(force) {
             valida_entrega: val[3] === 'Sí',
             valida_montos: val[4] === 'Sí',
             valida_transporte: val[5] === 'Sí',
-            valida_margen: val[6] === 'Sí',
-            valida_vigencia: val[7] === 'Sí',
+            valida_vigencia: val[6] === 'Sí',
             req_compra: req_compra
         };
         
         console.log('📦 Datos a enviar a la API:', pcData);
-        console.log(`📋 Enviando con id: ${pcData.id} (${pcData.id ? 'edición' : 'nuevo'})`);
         
-        // ============================================================
         // ENVIAR A LA API
-        // ============================================================
         showToast('⏳ Guardando PC...', 'info');
         
         const response = await fetch('/ventas/api/pedido-compra/guardar', {
@@ -9836,16 +9866,10 @@ async function savePedidoCompraSAP(force) {
             }
             showToast(mensaje, 'success');
             
-            // Cerrar modal
             closeModal('pedidoCompraModal');
-            
-            // Limpiar selección
             cotizacionSeleccionada = null;
-            
-            // Resetear editingId después de guardar
             editingId = null;
             
-            // Recargar datos
             if (typeof loadPedidos === 'function') {
                 await loadPedidos();
             }
@@ -9865,6 +9889,119 @@ async function savePedidoCompraSAP(force) {
         showToast('❌ Error al guardar el PC: ' + error.message, 'error');
     }
 }
+
+
+// ============================================================
+// MODAL DE ADVERTENCIA DE VALIDACIÓN
+// ============================================================
+function showValidationWarningModal(invalidSwitches) {
+    // Remover modales existentes
+    document.querySelectorAll('.validation-warning-overlay').forEach(el => el.remove());
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'validation-warning-overlay';
+    overlay.style.cssText = `
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        z-index: 999999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.3s ease;
+    `;
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        background: #FFFFFF;
+        border-radius: 20px;
+        max-width: 520px;
+        width: 95%;
+        padding: 32px 28px 24px;
+        box-shadow: 0 30px 80px rgba(0,0,0,0.35);
+        animation: modalSlideUp 0.3s ease;
+        text-align: center;
+    `;
+    
+    // Generar lista de items pendientes
+    const listaItems = invalidSwitches.map(item => 
+        `<li style="color: #DC2626; font-weight: 800; padding: 4px 0; text-align: left; list-style: none; border-bottom: 1px solid #FEE2E2;">
+            ❌ ${item}
+        </li>`
+    ).join('');
+    
+    modal.innerHTML = `
+        <div style="font-size: 48px; margin-bottom: 12px;">⚠️</div>
+        <h2 style="font-size: 22px; font-weight: 900; color: #0F172A; margin-bottom: 8px;">Validaciones pendientes</h2>
+        <p style="font-size: 15px; color: #475569; line-height: 1.5; margin-bottom: 12px;">
+            Para crear un <b>"PC Conforme"</b> debes marcar todas las validaciones como <b>"Válido"</b>.
+        </p>
+        <div style="background: #FEF2F2; border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; border-left: 4px solid #DC2626; text-align: left;">
+            <span style="font-size: 13px; font-weight: 700; color: #991B1B; display: block; margin-bottom: 8px;">📋 Te falta marcar:</span>
+            <ul style="margin: 0; padding: 0; list-style: none;">
+                ${listaItems}
+            </ul>
+        </div>
+        <div style="background: #EFF6FF; border-radius: 12px; padding: 10px 14px; margin-bottom: 20px; border-left: 4px solid #2563EB; text-align: left;">
+            <span style="font-size: 12px; font-weight: 700; color: #1E3A8A;">
+                💡 Si no deseas validar todos los puntos, puedes crear un <b>"PC Observado"</b> usando el botón naranja.
+            </span>
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <button class="warning-close-btn" style="
+                padding: 12px 28px;
+                border-radius: 12px;
+                border: 1px solid #E5E7EB;
+                background: #FFFFFF;
+                color: #0F172A;
+                font-weight: 800;
+                font-size: 14px;
+                cursor: pointer;
+                transition: all 0.2s;
+            ">Cerrar y revisar</button>
+            <button class="warning-observado-btn" style="
+                padding: 12px 28px;
+                border-radius: 12px;
+                border: 1px solid #FF8C00;
+                background: #FF8C00;
+                color: #FFFFFF;
+                font-weight: 800;
+                font-size: 14px;
+                cursor: pointer;
+                transition: all 0.2s;
+                box-shadow: 0 4px 14px rgba(255, 140, 0, 0.35);
+            ">⚠️ Crear PC Observado</button>
+        </div>
+    `;
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    // Event listeners
+    modal.querySelector('.warning-close-btn').addEventListener('click', function() {
+        overlay.remove();
+        // Enfocar el primer switch inválido
+        const firstInvalid = document.querySelector('.switch input[type="checkbox"]:not(:checked)');
+        if (firstInvalid) {
+            firstInvalid.focus();
+            firstInvalid.closest('.check-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+    
+    modal.querySelector('.warning-observado-btn').addEventListener('click', function() {
+        overlay.remove();
+        // Guardar como PC Observado
+        savePedidoCompraSAP('observado');
+    });
+    
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            overlay.remove();
+        }
+    });
+}
+
 
 function updateProductQty(idKey, value) {
     // La cantidad se guarda en el atributo data-qty del checkbox o se obtiene cuando se agrega
