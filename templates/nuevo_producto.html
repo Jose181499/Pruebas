@@ -853,8 +853,6 @@
                         <button type="button" class="btn btn-sm primary" onclick="personalizar('marcaProducto','Marca personalizada')" style="padding:2px 8px;font-size:12px;height:28px;"><i class="bi bi-pencil"></i></button>
                     </div>
                 </div>
-            </div>
-            <div class="grid">
                 <div class="field" id="field-unidad">
                     <label>Unidad de medida <span class="req">*</span></label>
                     <select id="unidadMedida" name="unidad" required>
@@ -886,6 +884,9 @@
                         <option value="BAR" {% if producto and producto.unidad == 'BAR' %}selected{% endif %}>BAR - Bar</option>
                     </select>
                 </div>
+            </div>
+            <div class="grid">
+                
                 <div class="field" id="field-categoria">
                     <label>Categoría <span class="req">*</span></label>
                     <div style="display:flex;gap:4px;">
@@ -918,12 +919,13 @@
                     <input id="subcategoriaProducto" name="subcategoria" placeholder="Ej. Señalización" 
                            value="{{ producto.subcategoria or producto.categoria_derivada or '' }}" />
                 </div>
-            </div>
-            <div class="grid">
                 <div class="field"><label>Presentación proveedor <span class="optional">(opcional)</span></label>
                     <input name="presentacion_proveedor" placeholder="Ej. Caja x 12" 
                            value="{{ producto.presentacion_proveedor if producto else '' }}" />
                 </div>
+            </div>
+            <div class="grid">
+                
                 <div class="field"><label>Presentación venta <span class="optional">(opcional)</span></label>
                     <input name="presentacion_venta" placeholder="Ej. 1 unidad" 
                            value="{{ producto.presentacion_venta if producto else '' }}" />
@@ -934,12 +936,13 @@
                         <span>Und.</span>
                     </div>
                 </div>
-            </div>
-            <div class="grid">
                 <div class="field"><label>Código de barras <span class="optional">(opcional)</span></label>
                     <input name="codigo_barras" placeholder="Ej. 7701234567890" 
                            value="{{ producto.codigo_barras if producto else '' }}" />
                 </div>
+            </div>
+            <div class="grid">
+                
                 <div class="field"><label>Peso (kg) <span class="optional">(opcional)</span></label>
                     <input name="peso" type="number" step="0.01" placeholder="0.50" 
                            value="{{ producto.peso if producto else '' }}" />
@@ -948,8 +951,6 @@
                     <input name="volumen" type="number" step="0.001" placeholder="0.001" 
                            value="{{ producto.volumen if producto else '' }}" />
                 </div>
-            </div>
-            <div class="grid">
                 <div class="field" id="field-proveedor">
                     <label>Proveedor asociado <span class="req">*</span></label>
                     <select id="proveedorProducto" name="proveedor_id" required >
@@ -957,6 +958,7 @@
                     </select>
                 </div>
             </div>
+            
             <div class="grid">
                 <div class="field">
                     <label>Origen <span class="optional">(opcional)</span></label>
