@@ -4666,8 +4666,8 @@ function renderCotizacionFooter(esEdicion = false) {
             <!-- Cancelar - Gris -->
             <button class="btn btn-secondary" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #9CA3AF;background:#6B7280;color:#fff;font-weight:800;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='#4B5563'" onmouseout="this.style.background='#6B7280'" onclick="closeModal('cotizacionModal')">Cancelar</button>
             
-            <!-- 💾 Guardar Borrador - Amarillo -->
-            <button class="btn btn-warning" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #F59E0B;background:#F59E0B;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(245,158,11,0.3);" onmouseover="this.style.background='#D97706';this.style.boxShadow='0 0 25px rgba(245,158,11,0.5)'" onmouseout="this.style.background='#F59E0B';this.style.boxShadow='0 0 15px rgba(245,158,11,0.3)'" onclick="saveCotizacionDraft()">💾 Guardar Borrador</button>
+            <!-- 💾 Guardar Borrador - ROJO -->
+            <button class="btn btn-danger" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #DC2626;background:#DC2626;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(220,38,38,0.3);" onmouseover="this.style.background='#B91C1C';this.style.boxShadow='0 0 25px rgba(220,38,38,0.5)'" onmouseout="this.style.background='#DC2626';this.style.boxShadow='0 0 15px rgba(220,38,38,0.3)'" onclick="saveCotizacionDraft()">💾 Guardar Borrador</button>
             
             <!-- Validado por Hellen - Verde Oscuro -->
             <button class="btn btn-blue" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #15803D;background:#166534;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(22,101,52,0.3);" onmouseover="this.style.background='#15803D';this.style.boxShadow='0 0 25px rgba(22,101,52,0.5)'" onmouseout="this.style.background='#166534';this.style.boxShadow='0 0 15px rgba(22,101,52,0.3)'" onclick="validateByHellen()">✅ Validado por Hellen</button>
@@ -4680,14 +4680,14 @@ function renderCotizacionFooter(esEdicion = false) {
         `;
     } else {
         // ============================================================
-        // MODO VENDEDOR - Botones: Cancelar, Borrador, Solicitar revisión, Validado, Generar
+        // MODO VENDEDOR - Botones: Cancelar, Borrador (ROJO), Solicitar revisión, Validado, Generar
         // ============================================================
         botonesHtml = `
             <!-- Cancelar - Gris -->
             <button class="btn btn-secondary" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #9CA3AF;background:#6B7280;color:#fff;font-weight:800;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='#4B5563'" onmouseout="this.style.background='#6B7280'" onclick="closeModal('cotizacionModal')">Cancelar</button>
             
-            <!-- 💾 Guardar Borrador - Amarillo -->
-            <button class="btn btn-warning" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #F59E0B;background:#F59E0B;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(245,158,11,0.3);" onmouseover="this.style.background='#D97706';this.style.boxShadow='0 0 25px rgba(245,158,11,0.5)'" onmouseout="this.style.background='#F59E0B';this.style.boxShadow='0 0 15px rgba(245,158,11,0.3)'" onclick="saveCotizacionDraft()">💾 Guardar Borrador</button>
+            <!-- 💾 Guardar Borrador - ROJO -->
+            <button class="btn btn-danger" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #DC2626;background:#DC2626;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(220,38,38,0.3);" onmouseover="this.style.background='#B91C1C';this.style.boxShadow='0 0 25px rgba(220,38,38,0.5)'" onmouseout="this.style.background='#DC2626';this.style.boxShadow='0 0 15px rgba(220,38,38,0.3)'" onclick="saveCotizacionDraft()">💾 Guardar Borrador</button>
             
             <!-- Solicitar revisión - Amarillo Fluorescente -->
             <button class="btn btn-warning" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #FFDD00;background:#FFDD00;color:#000;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 25px rgba(255,221,0,0.5);" onmouseover="this.style.background='#FFE733';this.style.boxShadow='0 0 35px rgba(255,221,0,0.7)'" onmouseout="this.style.background='#FFDD00';this.style.boxShadow='0 0 25px rgba(255,221,0,0.5)'" onclick="sendCotizacionToReview()">⭐ Solicitar revisión</button>
