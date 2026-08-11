@@ -378,9 +378,7 @@
             
         }
 
-        .grid.three-cols {
-            grid-template-columns: 1fr 1fr 1fr !important;
-        }
+        
         
         .grid.full {
             gap: 6px 10px !important;
@@ -812,7 +810,7 @@
                            value="{{ producto.descripcion if producto else '' }}" />
                 </div>
             </div>
-            <div class="grid two three-cols">
+            <div class="grid two ">
                 <div class="field" id="field-modelo">
                     <label>Modelo <span class="req">*</span></label>
                     <input id="modeloProducto" name="modelo" placeholder="Ej. M100" required 
