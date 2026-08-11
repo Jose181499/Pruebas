@@ -1047,6 +1047,7 @@ def api_cotizaciones_listar():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
 @ventas_bp.route('/ventas/api/cotizaciones/guardar', methods=['POST'])
 @login_required
 def api_cotizaciones_guardar():
@@ -1056,7 +1057,7 @@ def api_cotizaciones_guardar():
         
         print("=" * 80)
         print("📦 API COTIZACIONES GUARDAR")
-        print(f"  - id: {data.get('id')}")  # 🔽 NUEVO - Para saber si es edición
+        print(f"  - id: {data.get('id')}")
         print(f"  - cliente_id: {data.get('cliente_id')}")
         print(f"  - usuario_id: {usuario_id}")
         print(f"  - estado: {data.get('estado')}")
@@ -1096,14 +1097,14 @@ def api_cotizaciones_guardar():
         print(f"📊 Totales: subtotal={subtotal}, igv={igv}, total={total}")
         
         # ============================================================
-        # 🔽 NUEVO: OBTENER NÚMERO DE COTIZACIÓN (RESPETAR EXISTENTE)
+        # OBTENER NÚMERO DE COTIZACIÓN (RESPETAR EXISTENTE)
         # ============================================================
         numero = None
         codigo = None
         correlativo = None
         
         if es_edicion:
-            # 🔽 SI ES EDICIÓN, OBTENER EL NÚMERO EXISTENTE DE LA BD
+            # SI ES EDICIÓN, OBTENER EL NÚMERO EXISTENTE DE LA BD
             query_existente = """
                 SELECT numero_cotizacion, codigo_cotizacion, correlativo
                 FROM cotizaciones 
@@ -1125,7 +1126,7 @@ def api_cotizaciones_guardar():
                 correlativo = count
                 print(f"📋 Fallback - Generando nuevo número: {numero}")
         else:
-            # 🔽 NUEVA COTIZACIÓN - Generar número
+            # NUEVA COTIZACIÓN - Generar número
             count_data = db_query("SELECT COUNT(*) as total FROM cotizaciones")
             count = count_data[0]['total'] + 1 if count_data else 1
             numero = f"COT-{str(count).zfill(6)}"
@@ -1141,7 +1142,7 @@ def api_cotizaciones_guardar():
         
         if es_edicion:
             # ============================================================
-            # 🔽 ACTUALIZAR COTIZACIÓN EXISTENTE (MANTENIENDO NÚMERO)
+            # ACTUALIZAR COTIZACIÓN EXISTENTE (MANTENIENDO NÚMERO)
             # ============================================================
             print(f"🔄 Actualizando cotización ID: {cotizacion_id}")
             
@@ -1166,8 +1167,7 @@ def api_cotizaciones_guardar():
                     descuento_tipo = %s,
                     contacto_cliente = %s,
                     telefono_cliente = %s,
-                    email_cliente = %s,
-                    updated_at = NOW()
+                    email_cliente = %s
                 WHERE id = %s
                 RETURNING id, numero_cotizacion
             """
@@ -1199,7 +1199,7 @@ def api_cotizaciones_guardar():
             result_update = db_query(query_update, params_update)
             
             if result_update:
-                # 🔽 ELIMINAR DETALLES ANTIGUOS Y VOLVER A INSERTAR
+                # ELIMINAR DETALLES ANTIGUOS Y VOLVER A INSERTAR
                 with db_tx() as conn:
                     from psycopg2.extras import RealDictCursor
                     cur = conn.cursor(cursor_factory=RealDictCursor)
@@ -1296,7 +1296,7 @@ def api_cotizaciones_guardar():
         
         else:
             # ============================================================
-            # 🔽 INSERTAR NUEVA COTIZACIÓN
+            # INSERTAR NUEVA COTIZACIÓN
             # ============================================================
             print("➕ Insertando nueva cotización...")
             
@@ -1453,7 +1453,7 @@ def api_cotizaciones_guardar():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-    
+
 @ventas_bp.route('/ventas/api/cotizaciones/<int:id>', methods=['GET'])
 @login_required
 def api_cotizaciones_obtener(id):
