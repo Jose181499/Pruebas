@@ -1049,7 +1049,7 @@ function getPoints() {
     telefono: b.querySelector('[data-pf="telefono"]')?.value.trim() || '',
     instrucciones: b.querySelector('[data-pf="instrucciones"]')?.value.trim() || '',
     principal: !!b.querySelector('[data-pf="principal"]')?.checked
-  })).filter(p => p.punto || p.direccion);
+  })).filter(p => p.punto || p.direccion || p.instrucciones);
 }
 
 // ============================================================
@@ -1140,70 +1140,102 @@ function personalizarDiasCredito(selectId, sufijo = '') {
     showToast(`✅ Se agregó "${limpio}${sufijo ? ' ' + sufijo : ''}"`, 'success');
 }
 
+
 // ============================================================
 // GUARDAR CLIENTE
 // ============================================================
 async function saveClient() {
-  const contacts = getContacts();
-  const points = getPoints();
-  const p = contacts.find(c => c.principal) || contacts[0] || {};
-  
-  const data = {
-    tipo_documento: document.getElementById('cli_tipoDoc')?.value || 'RUC',
-    numero_documento: document.getElementById('cli_numero')?.value?.trim() || '',
-    razon_social: document.getElementById('cli_nombre')?.value?.trim() || '',
-    nombre_comercial: document.getElementById('cli_nombreComercial')?.value?.trim() || '',
-    direccion_fiscal: document.getElementById('cli_direccionFiscal')?.value?.trim() || '',
-    contacto: p.nombre || '',
-    telefono: p.telefono || '',
-    email: p.email || '',
-    condicion_pago: document.getElementById('cli_condicion')?.value || 'Contado',
-    dias_credito: document.getElementById('cli_diasCredito')?.value || '0',
-    limite_credito: document.getElementById('cli_limiteCredito')?.value?.trim() || '',
-    descuento: document.getElementById('cli_descuento')?.value?.trim() || '',
-    estado: document.getElementById('cli_estado')?.value || 'Activo',
-    observaciones: document.getElementById('cli_obs')?.value?.trim() || '',
-    contactos: contacts,
-    puntos_entrega: points,
-    ambito: document.getElementById('cli_ambito')?.value || 'COMPARTIDO'
-  };
-  
-  if (!data.razon_social) {
-    showToast('⚠️ La razón social es obligatoria', 'warning');
-    return;
-  }
-  if (!data.numero_documento) {
-    showToast('⚠️ El número de documento es obligatorio', 'warning');
-    return;
-  }
-  
-  try {
-    const url = clientEditId 
-      ? `/maestros/api/clientes/${clientEditId}` 
-      : '/maestros/api/clientes/guardar';
-    const method = clientEditId ? 'PUT' : 'POST';
-    
-    const response = await fetch(url, {
-      method: method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    
-    const result = await response.json();
-    
-    if (result.success) {
-      showToast(result.message || '✅ Cliente guardado correctamente', 'success');
-      closeClientModal();
-      await loadModuleData('clientes', true);
-      renderModule('clientes');
-    } else {
-      showToast('❌ ' + (result.error || 'Error al guardar'), 'error');
+    const contacts = getContacts();
+    const points = getPoints();
+    const p = contacts.find(c => c.principal) || contacts[0] || {};
+
+    const data = {
+        tipo_documento: document.getElementById('cli_tipoDoc')?.value || 'RUC',
+        numero_documento: document.getElementById('cli_numero')?.value?.trim() || '',
+        razon_social: document.getElementById('cli_nombre')?.value?.trim() || '',
+        nombre_comercial: document.getElementById('cli_nombreComercial')?.value?.trim() || '',
+        direccion_fiscal: document.getElementById('cli_direccionFiscal')?.value?.trim() || '',
+        contacto: p.nombre || '',
+        telefono: p.telefono || '',
+        email: p.email || '',
+        condicion_pago: document.getElementById('cli_condicion')?.value || 'Contado',
+        dias_credito: document.getElementById('cli_diasCredito')?.value || '0',
+        limite_credito: document.getElementById('cli_limiteCredito')?.value?.trim() || '',
+        descuento: document.getElementById('cli_descuento')?.value?.trim() || '',
+        estado: document.getElementById('cli_estado')?.value || 'Activo',
+        observaciones: document.getElementById('cli_obs')?.value?.trim() || '',
+        contactos: contacts,
+        puntos_entrega: points,
+        ambito: document.getElementById('cli_ambito')?.value || 'COMPARTIDO'
+    };
+
+    if (!data.razon_social) {
+        showToast('⚠️ La razón social es obligatoria', 'warning');
+        return;
     }
-  } catch (error) {
-    console.error('Error guardando cliente:', error);
-    showToast('❌ Error al guardar el cliente', 'error');
-  }
+
+    if (!data.numero_documento) {
+        showToast('⚠️ El número de documento es obligatorio', 'warning');
+        return;
+    }
+
+    try {
+        const url = clientEditId
+            ? `/maestros/api/clientes/${clientEditId}`
+            : '/maestros/api/clientes/guardar';
+
+        const method = clientEditId ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showToast(
+                result.message || '✅ Cliente guardado correctamente',
+                'success'
+            );
+
+            // Solo mostrar la alerta detallada si es un cliente NUEVO
+            if (!clientEditId) {
+                mostrarAlertaClienteCreado({
+                    id: result.data?.id,
+                    ruc: data.numero_documento,
+                    razon_social: data.razon_social,
+                    nombre_comercial: data.nombre_comercial,
+                    codigo_cliente: result.data?.codigo_cliente
+                });
+            }
+
+            closeClientModal();
+
+            await loadModuleData('clientes', true);
+            renderModule('clientes');
+
+        } else {
+            showToast(
+                '❌ ' + (result.error || 'Error al guardar'),
+                'error'
+            );
+        }
+
+    } catch (error) {
+        console.error('Error al guardar cliente:', error);
+
+        showToast(
+            '❌ Error de conexión al guardar el cliente',
+            'error'
+        );
+    }
 }
+
+
 
 // ============================================================
 // MODAL PROVEEDOR
