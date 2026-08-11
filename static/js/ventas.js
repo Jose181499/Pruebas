@@ -5352,6 +5352,278 @@ async function guardarNuevoConductorGuia() {
     }
 }
 
+
+// ============================================================
+// SELECTOR DE PRODUCTOS PARA GUÍA
+// ============================================================
+
+let productSelectorGuiaData = [];
+let selectedGuiaProductIds = new Set();
+
+function openProductSelectorGuia() {
+    // Si no hay productos maestros, cargarlos primero
+    if (PRODUCTOS_MAESTROS.length === 0) {
+        showToast('⏳ Cargando productos...', 'info');
+        cargarProductosMaestros().then(() => {
+            setTimeout(() => openProductSelectorGuia(), 300);
+        });
+        return;
+    }
+    
+    // Resetear selecciones
+    selectedGuiaProductIds = new Set();
+    productSelectorGuiaData = [...PRODUCTOS_MAESTROS];
+    
+    // Renderizar tabla
+    renderProductSelectorGuia();
+    
+    // Mostrar modal
+    document.getElementById('productSelectorGuiaModal').classList.add('show');
+    
+    // Enfocar buscador
+    setTimeout(() => {
+        document.getElementById('productSelectorGuiaSearch')?.focus();
+    }, 300);
+}
+
+function renderProductSelectorGuia() {
+    const tbody = document.getElementById('productSelectorGuiaRows');
+    const search = document.getElementById('productSelectorGuiaSearch')?.value?.toLowerCase() || '';
+    
+    // Filtrar productos
+    let filtered = productSelectorGuiaData;
+    if (search) {
+        filtered = productSelectorGuiaData.filter(p => 
+            (p.codigo && p.codigo.toLowerCase().includes(search)) ||
+            (p.producto && p.producto.toLowerCase().includes(search)) ||
+            (p.descripcion && p.descripcion.toLowerCase().includes(search)) ||
+            (p.marca && p.marca.toLowerCase().includes(search)) ||
+            (p.modelo && p.modelo.toLowerCase().includes(search))
+        );
+    }
+    
+    if (!tbody) return;
+    
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#94A3B8;padding:20px;font-size:11px;">📭 No se encontraron productos</td></tr>`;
+        document.getElementById('selectedGuiaCount').textContent = selectedGuiaProductIds.size;
+        return;
+    }
+    
+    tbody.innerHTML = filtered.map((p, index) => {
+        const idKey = p.id || p.codigo;
+        const isChecked = selectedGuiaProductIds.has(idKey);
+        const valorVenta = parseFloat(p.valorVenta) || 0;
+        
+        return `
+        <tr>
+            <td style="text-align:center; padding:4px 6px;">
+                <input type="checkbox" class="product-select-guia-checkbox" 
+                       data-id="${idKey}" 
+                       ${isChecked ? 'checked' : ''}
+                       onchange="toggleProductSelectionGuia('${idKey}', this.checked)"
+                       style="width:14px; height:14px; accent-color:#2563EB; cursor:pointer;">
+            </td>
+            <td style="font-weight:900; color:#0F172A; padding:4px 6px; font-size:10px;">${p.codigo || '-'}</td>
+            <td style="text-align:left; font-weight:800; padding:4px 6px; font-size:10px;">${p.producto || p.descripcion || 'Sin nombre'}</td>
+            <td style="padding:4px 6px; font-size:10px;">${p.marca || '-'}</td>
+            <td style="padding:4px 6px; font-size:10px;">${p.modelo || '-'}</td>
+            <td style="text-align:center; padding:4px 6px; font-size:10px;">${p.um || 'NIU'}</td>
+            <td style="text-align:center; padding:4px 6px; font-size:10px;">${p.stock || 0}</td>
+            <td style="text-align:center; padding:4px 6px;">
+                <input type="number" class="product-select-guia-qty" 
+                       data-id="${idKey}"
+                       value="1" 
+                       min="1" 
+                       style="width:55px; height:24px; border:1px solid #E5E7EB; border-radius:4px; text-align:center; font-size:10px; font-weight:700;">
+            </td>
+        </tr>
+    `}).join('');
+    
+    document.getElementById('selectedGuiaCount').textContent = selectedGuiaProductIds.size;
+    
+    // Actualizar el checkbox "Seleccionar todos"
+    const totalCheckboxes = document.querySelectorAll('.product-select-guia-checkbox').length;
+    const checkedCheckboxes = document.querySelectorAll('.product-select-guia-checkbox:checked').length;
+    const selectAllCheckbox = document.getElementById('selectAllGuiaCheckbox');
+    if (selectAllCheckbox) {
+        if (totalCheckboxes > 0 && checkedCheckboxes === totalCheckboxes) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedCheckboxes > 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        }
+    }
+}
+
+function toggleProductSelectionGuia(idKey, checked) {
+    if (checked) {
+        selectedGuiaProductIds.add(idKey);
+    } else {
+        selectedGuiaProductIds.delete(idKey);
+    }
+    document.getElementById('selectedGuiaCount').textContent = selectedGuiaProductIds.size;
+    
+    // Actualizar el checkbox "Seleccionar todos"
+    const totalCheckboxes = document.querySelectorAll('.product-select-guia-checkbox').length;
+    const checkedCheckboxes = document.querySelectorAll('.product-select-guia-checkbox:checked').length;
+    const selectAllCheckbox = document.getElementById('selectAllGuiaCheckbox');
+    if (selectAllCheckbox) {
+        if (totalCheckboxes > 0 && checkedCheckboxes === totalCheckboxes) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedCheckboxes > 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        }
+    }
+}
+
+function selectAllProductsGuia() {
+    document.querySelectorAll('.product-select-guia-checkbox').forEach(cb => {
+        cb.checked = true;
+        const idKey = cb.dataset.id;
+        selectedGuiaProductIds.add(idKey);
+    });
+    document.getElementById('selectedGuiaCount').textContent = selectedGuiaProductIds.size;
+    const selectAllCheckbox = document.getElementById('selectAllGuiaCheckbox');
+    if (selectAllCheckbox) selectAllCheckbox.checked = true;
+}
+
+function deselectAllProductsGuia() {
+    document.querySelectorAll('.product-select-guia-checkbox').forEach(cb => {
+        cb.checked = false;
+        const idKey = cb.dataset.id;
+        selectedGuiaProductIds.delete(idKey);
+    });
+    document.getElementById('selectedGuiaCount').textContent = selectedGuiaProductIds.size;
+    const selectAllCheckbox = document.getElementById('selectAllGuiaCheckbox');
+    if (selectAllCheckbox) selectAllCheckbox.checked = false;
+}
+
+function toggleAllProductCheckboxesGuia(checked) {
+    document.querySelectorAll('.product-select-guia-checkbox').forEach(cb => {
+        cb.checked = checked;
+        const idKey = cb.dataset.id;
+        if (checked) {
+            selectedGuiaProductIds.add(idKey);
+        } else {
+            selectedGuiaProductIds.delete(idKey);
+        }
+    });
+    document.getElementById('selectedGuiaCount').textContent = selectedGuiaProductIds.size;
+}
+
+function addSelectedProductsGuia() {
+    if (selectedGuiaProductIds.size === 0) {
+        showToast('⚠️ Selecciona al menos un producto', 'warning');
+        return;
+    }
+    
+    let addedCount = 0;
+    let notFoundCount = 0;
+    
+    selectedGuiaProductIds.forEach(idKey => {
+        // Buscar el producto por id o codigo
+        let product = PRODUCTOS_MAESTROS.find(p => p.id == idKey || p.codigo == idKey);
+        
+        if (!product) {
+            notFoundCount++;
+            return;
+        }
+        
+        // Obtener la cantidad del input correspondiente
+        const qtyInput = document.querySelector(`.product-select-guia-qty[data-id="${idKey}"]`);
+        const cantidad = parseInt(qtyInput?.value || 1);
+        
+        // Obtener datos del producto
+        const codigo = product.codigo || '';
+        const descripcion = product.producto || product.descripcion || 'Sin descripción';
+        const unidad = product.um || 'NIU';
+        const peso_unitario = 0.50; // Peso estimado por defecto
+        
+        // Verificar si ya existe en la tabla (por código)
+        let existe = false;
+        document.querySelectorAll('#guiaProductosBody tr').forEach(row => {
+            const codigoInput = row.querySelector('.guia-producto-codigo');
+            if (codigoInput && codigoInput.value === codigo) {
+                existe = true;
+                // Sumar cantidad
+                const cantInput = row.querySelector('.guia-producto-cant');
+                if (cantInput) {
+                    const current = parseFloat(cantInput.value) || 0;
+                    cantInput.value = current + cantidad;
+                    cantInput.dispatchEvent(new Event('change'));
+                }
+            }
+        });
+        
+        if (!existe) {
+            // Agregar nuevo producto a la tabla
+            const tbody = document.getElementById('guiaProductosBody');
+            if (!tbody) return;
+            
+            const count = tbody.children.length + 1;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="padding:2px 4px; text-align:center; font-weight:800; background:#F8FAFC; font-size:9px;">${count}</td>
+                <td style="padding:2px 4px;"><input class="guia-producto-codigo" value="${esc(codigo)}" style="width:100%; border:1px solid #E5E7EB; border-radius:3px; font-size:8px; padding:2px 4px; background:#F1F5F9;" readonly></td>
+                <td style="padding:2px 4px;"><input class="guia-producto-desc" value="${esc(descripcion)}" style="width:100%; border:1px solid #E5E7EB; border-radius:3px; font-size:8px; padding:2px 4px; background:#F1F5F9;" readonly onchange="actualizarPesoTotalGuia()"></td>
+                <td style="padding:2px 4px;">
+                    <select class="guia-producto-unidad" style="width:100%; border:1px solid #E5E7EB; border-radius:3px; font-size:8px; padding:2px 4px; background:#F1F5F9;">
+                        <option value="NIU" ${unidad === 'NIU' ? 'selected' : ''}>NIU</option>
+                        <option value="KGM" ${unidad === 'KGM' ? 'selected' : ''}>KGM</option>
+                        <option value="LTR" ${unidad === 'LTR' ? 'selected' : ''}>LTR</option>
+                        <option value="MTR" ${unidad === 'MTR' ? 'selected' : ''}>MTR</option>
+                        <option value="ZZ" ${unidad === 'ZZ' ? 'selected' : ''}>ZZ</option>
+                    </select>
+                </td>
+                <td style="padding:2px 4px;"><input class="guia-producto-cant" type="number" value="${cantidad}" min="0.01" step="0.01" style="width:100%; border:1px solid #E5E7EB; border-radius:3px; font-size:8px; padding:2px 4px; text-align:center; font-weight:900;" onchange="actualizarPesoTotalGuia()"></td>
+                <td style="padding:2px 4px;"><input class="guia-producto-peso" type="number" value="${peso_unitario}" step="0.01" style="width:100%; border:1px solid #E5E7EB; border-radius:3px; font-size:8px; padding:2px 4px; text-align:center;" onchange="actualizarPesoTotalGuia()"></td>
+                <td style="padding:2px 4px; text-align:center;">
+                    <button onclick="this.closest('tr').remove(); actualizarPesoTotalGuia(); actualizarContadorProductosGuia();" style="background:transparent; border:none; color:#DC2626; cursor:pointer; font-size:10px;">✕</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        }
+        
+        addedCount++;
+    });
+    
+    // Cerrar modal
+    closeModal('productSelectorGuiaModal');
+    
+    // Actualizar contadores y peso
+    actualizarPesoTotalGuia();
+    actualizarContadorProductosGuia();
+    reordenarItemsGuia();
+    
+    // Mostrar mensaje
+    if (addedCount > 0) {
+        showToast(`✅ ${addedCount} productos agregados correctamente`, 'success');
+    }
+    if (notFoundCount > 0) {
+        showToast(`⚠️ ${notFoundCount} productos no encontrados`, 'warning');
+    }
+}
+
+function reordenarItemsGuia() {
+    const rows = document.querySelectorAll('#guiaProductosBody tr');
+    rows.forEach((row, index) => {
+        const numCell = row.querySelector('td:first-child');
+        if (numCell) {
+            numCell.textContent = index + 1;
+        }
+    });
+}
+
 // ============================================================
 // BUSCAR CLIENTE PARA GUÍA
 // ============================================================
