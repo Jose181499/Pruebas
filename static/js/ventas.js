@@ -10543,30 +10543,85 @@ function setPcCondicionValue(value) {
 // ============================================================
 let modalMode = 'cot';  // 'cot' | 'directo' | 'editar'
 
-// ============================================================
-// GUARDAR PC - CON VALIDACIÓN DE SWITCHES
-// ============================================================
-async function savePedidoCompraSAP(force) {
-    // 🔽 NUEVO: Verificar que la tabla de productos tenga datos
-    const tbody = document.getElementById('pcItemsBody');
-    const filas = tbody ? Array.from(tbody.querySelectorAll('tr')) : [];
-    
-    // Verifica que al menos una fila tenga un código de producto real
-    const hayProductosReales = filas.some(row => {
-        const primerInput = row.querySelector('input');
-        return primerInput && primerInput.value.trim() !== '';
-    });
-    
-    if (filas.length === 0 || !hayProductosReales) {
-        showToast('⚠️ No hay productos cargados. Espera a que termine de cargar la cotización antes de guardar.', 'warning');
-        return;
-    }
 
+// ============================================================
+// GUARDAR PC - CON VALIDACIÓN DE CAMPOS OBLIGATORIOS
+// ============================================================
+
+async function savePedidoCompraSAP(force) {
     console.log('🔄 savePedidoCompraSAP ejecutándose...', { force, modalMode, editingId });
     
     try {
         // ============================================================
-        // 🔽 NUEVO: VALIDAR SWITCHES ANTES DE GUARDAR
+        // 🔽 VALIDAR CAMPOS OBLIGATORIOS DE LA SECCIÓN 2
+        // ============================================================
+        const pcFecha = document.getElementById('pcFecha')?.value || '';
+        const pcNumero = document.getElementById('pcNumero')?.value?.trim() || '';
+        const pcContacto = document.getElementById('pcContacto')?.value?.trim() || '';
+        const pcCondicion = document.getElementById('pcCondicion')?.value || '';
+        const pcMoneda = document.getElementById('pcMoneda')?.value || '';
+        const pcMontoPC = document.getElementById('pcMontoPC')?.value || '';
+        const pcEntrega = document.getElementById('pcEntrega')?.value?.trim() || '';
+        
+        // Array de campos obligatorios con sus nombres para mostrar
+        const camposObligatorios = [
+            { id: 'pcFecha', valor: pcFecha, nombre: 'Fecha recepción' },
+            { id: 'pcNumero', valor: pcNumero, nombre: 'N° PC Pedido Compra' },
+            { id: 'pcContacto', valor: pcContacto, nombre: 'Comprador' },
+            { id: 'pcCondicion', valor: pcCondicion, nombre: 'Condición de pago' },
+            { id: 'pcMoneda', valor: pcMoneda, nombre: 'Moneda' },
+            { id: 'pcMontoPC', valor: pcMontoPC, nombre: 'Monto PC' },
+            { id: 'pcEntrega', valor: pcEntrega, nombre: 'Lugar entrega' }
+        ];
+        
+        // Verificar campos faltantes
+        const camposFaltantes = camposObligatorios.filter(campo => !campo.valor || campo.valor === '' || campo.valor === '0' || campo.valor === '0.00');
+        
+        if (camposFaltantes.length > 0) {
+            const nombresFaltantes = camposFaltantes.map(c => c.nombre).join(', ');
+            showToast(`⚠️ Campos obligatorios faltantes: ${nombresFaltantes}`, 'warning');
+            
+            // Resaltar los campos faltantes
+            camposFaltantes.forEach(campo => {
+                const el = document.getElementById(campo.id);
+                if (el) {
+                    el.style.borderColor = '#DC2626';
+                    el.style.boxShadow = '0 0 0 2px rgba(220,38,38,0.2)';
+                    setTimeout(() => {
+                        el.style.borderColor = '';
+                        el.style.boxShadow = '';
+                    }, 3000);
+                }
+            });
+            
+            // Enfocar el primer campo faltante
+            const primerCampo = document.getElementById(camposFaltantes[0].id);
+            if (primerCampo) {
+                primerCampo.focus();
+                primerCampo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return;
+        }
+        
+        // ============================================================
+        // 🔽 VALIDAR QUE LA TABLA DE PRODUCTOS TENGA DATOS
+        // ============================================================
+        const tbody = document.getElementById('pcItemsBody');
+        const filas = tbody ? Array.from(tbody.querySelectorAll('tr')) : [];
+        
+        // Verifica que al menos una fila tenga un código de producto real
+        const hayProductosReales = filas.some(row => {
+            const primerInput = row.querySelector('input');
+            return primerInput && primerInput.value.trim() !== '';
+        });
+        
+        if (filas.length === 0 || !hayProductosReales) {
+            showToast('⚠️ No hay productos cargados. Agrega al menos un producto.', 'warning');
+            return;
+        }
+        
+        // ============================================================
+        // 🔽 VALIDAR SWITCHES ANTES DE GUARDAR
         // ============================================================
         const validationSwitches = [
             { id: 'vPrecio', label: 'Precio' },
@@ -10599,7 +10654,6 @@ async function savePedidoCompraSAP(force) {
         // 🔽 SI ES "PC CONFORME" Y HAY SWITCHES INVÁLIDOS, BLOQUEAR
         // ============================================================
         if (force !== 'observado' && invalidSwitches.length > 0) {
-            // Mostrar modal de advertencia
             showValidationWarningModal(invalidSwitches);
             return;
         }
@@ -10712,7 +10766,7 @@ async function savePedidoCompraSAP(force) {
             ruc: document.getElementById('pcRuc')?.value || '',
             cotizacion_id: cotizacionSeleccionada?.id || null,
             cotizacion_numero: document.getElementById('pcCotNumero')?.value || 'SIN COTIZACIÓN',
-            monto: Number(document.getElementById('pcMonto')?.value || 0),
+            monto: Number(document.getElementById('pcMontoPC')?.value || 0),
             entrega: document.getElementById('pcEntrega')?.value || '',
             lugar_entrega: document.getElementById('pcEntrega')?.value || '',
             condicion_pago: condicionPago,
@@ -10781,7 +10835,6 @@ async function savePedidoCompraSAP(force) {
         showToast('❌ Error al guardar el PC: ' + error.message, 'error');
     }
 }
-
 
 // ============================================================
 // MODAL DE ADVERTENCIA DE VALIDACIÓN
