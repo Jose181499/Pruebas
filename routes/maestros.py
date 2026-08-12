@@ -197,21 +197,21 @@ def api_clientes_guardar():
             data.get('telefono_contacto') or data.get('telefono'),
             data.get('nombre_contacto') or data.get('contacto'),
             data.get('email_contacto') or data.get('email'),
-            data.get('condicion_pago', 'Contado'),        # 🔧 NUEVO
-            int(data.get('dias_credito', 0) or 0),          # 🔧 NUEVO
-            data.get('limite_credito', ''),                 # 🔧 NUEVO
-            data.get('descuento', ''),                      # 🔧 NUEVO
-            data.get('estado', 'Activo'),                   # 🔧 NUEVO (reemplaza el "True" hardcodeado)
-            data.get('ambito', 'COMPARTIDO'),                # 🔧 NUEVO
-            data.get('observaciones', ''),                   # 🔧 NUEVO
-            True  # activo (booleano interno, se mantiene aparte de "estado")
+            data.get('condicion_pago', 'Contado'),
+            int(data.get('dias_credito', 0) or 0),
+            data.get('limite_credito', ''),
+            data.get('descuento', ''),
+            data.get('estado', 'Activo'),
+            data.get('ambito', 'COMPARTIDO'),
+            data.get('observaciones', ''),
+            True
         )
         
         cur.execute(query, params)
         result = cur.fetchone()
         cliente_id = result[0]
 
-        # 🆕 Guardar contactos
+        # Guardar contactos
         for c in data.get('contactos', []):
             if not (c.get('nombre') or c.get('telefono') or c.get('email')):
                 continue
@@ -225,19 +225,25 @@ def api_clientes_guardar():
                 c.get('telefono', ''), c.get('email', ''), bool(c.get('principal', False))
             ))
 
-        # 🆕 Guardar puntos de entrega (incluye instrucciones)
+        # ✅ Guardar puntos de entrega CON google_maps
         for p in data.get('puntos_entrega', []):
             if not (p.get('punto') or p.get('direccion') or p.get('instrucciones')):
                 continue
             cur.execute("""
                 INSERT INTO clientes_puntos_entrega (
                     cliente_id, nombre_punto, direccion, telefono_contacto,
-                    responsable, principal, instrucciones, activo
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, TRUE)
+                    responsable, principal, instrucciones,
+                    google_maps
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """, (
-                cliente_id, p.get('punto', ''), p.get('direccion', ''),
-                p.get('telefono', ''), p.get('contacto', ''),
-                bool(p.get('principal', False)), p.get('instrucciones', '')
+                cliente_id, 
+                p.get('punto', ''), 
+                p.get('direccion', ''),
+                p.get('telefono', ''), 
+                p.get('contacto', ''),
+                bool(p.get('principal', False)), 
+                p.get('instrucciones', ''),
+                p.get('googleMaps', '')  # ✅ google_maps
             ))
 
         conn.commit()
@@ -264,6 +270,7 @@ def api_clientes_guardar():
         current_app.logger.error(f"❌ Error guardando cliente: {e}")
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 @maestros_bp.route('/api/clientes/<int:id>', methods=['GET'])
 @login_required
@@ -405,7 +412,7 @@ def api_clientes_actualizar(id):
         cur.execute(query, params)
         result = cur.fetchone()
 
-        # Reemplazar puntos de entrega (borra y vuelve a insertar, incluye instrucciones)
+        # ✅ Reemplazar puntos de entrega CON google_maps
         cur.execute("DELETE FROM clientes_puntos_entrega WHERE cliente_id = %s", (id,))
         for p in data.get('puntos_entrega', []):
             if not (p.get('punto') or p.get('direccion') or p.get('instrucciones')):
@@ -413,15 +420,21 @@ def api_clientes_actualizar(id):
             cur.execute("""
                 INSERT INTO clientes_puntos_entrega (
                     cliente_id, nombre_punto, direccion, telefono_contacto,
-                    responsable, principal, instrucciones, activo
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, TRUE)
+                    responsable, principal, instrucciones,
+                    google_maps
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """, (
-                id, p.get('punto', ''), p.get('direccion', ''),
-                p.get('telefono', ''), p.get('contacto', ''),
-                bool(p.get('principal', False)), p.get('instrucciones', '')
+                id,
+                p.get('punto', ''), 
+                p.get('direccion', ''),
+                p.get('telefono', ''), 
+                p.get('contacto', ''),
+                bool(p.get('principal', False)), 
+                p.get('instrucciones', ''),
+                p.get('googleMaps', '')  # ✅ google_maps
             ))
 
-        # 🆕 Reemplazar contactos
+        # Reemplazar contactos
         cur.execute("DELETE FROM clientes_contactos WHERE cliente_id = %s", (id,))
         for c in data.get('contactos', []):
             if not (c.get('nombre') or c.get('telefono') or c.get('email')):
@@ -459,6 +472,7 @@ def api_clientes_actualizar(id):
         current_app.logger.error(f"❌ Error actualizando cliente: {e}")
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 @maestros_bp.route('/api/clientes/<int:id>', methods=['DELETE'])
 @login_required
