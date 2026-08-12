@@ -10200,10 +10200,46 @@ function seleccionarCotizacionSAP(cotizacionId) {
             setReadonlyValue('pcCotFecha', data.fecha_creacion ? formatFecha(data.fecha_creacion) : '');
             setReadonlyValue('pcCliente', data.cliente_razon_social || '');
             setReadonlyValue('pcRuc', data.cliente_ruc || '');
-             setReadonlyValue('pcMontoConIgv', (data.total || 0) * 1.18); 
+            setReadonlyValue('pcMontoConIgv', (data.total || 0) * 1.18);
             setReadonlyValue('pcMonto', data.total || 0);
             setReadonlyValue('pcCondicionPago', data.condicion_pago || 'Contado');
             setReadonlyValue('pcVendedor', data.vendedor || 'Helen Blas Príncipe');
+            
+            // ============================================================
+            // 🔽 ACTUALIZAR CONDICIÓN DE PAGO EN EL SELECT
+            // ============================================================
+            const condSelect = document.getElementById('pcCondicion');
+            if (condSelect && data.condicion_pago) {
+                // Buscar si el valor existe en las opciones
+                let found = false;
+                for (let opt of condSelect.options) {
+                    if (opt.value === data.condicion_pago) {
+                        opt.selected = true;
+                        found = true;
+                        break;
+                    }
+                }
+                // Si no está en las opciones, seleccionar "Personalizado"
+                if (!found) {
+                    condSelect.value = 'Personalizado';
+                    const customInput = document.getElementById('pcCondicionCustom');
+                    if (customInput) {
+                        customInput.value = data.condicion_pago;
+                        customInput.style.display = 'block';
+                    }
+                }
+            }
+            
+            // ============================================================
+            // 🔽 FORZAR ACTUALIZACIÓN DE CAMPOS DE PAGO (Contado)
+            // ============================================================
+            // Esto muestra/oculta los campos de pago según la condición
+            togglePagoCampos();
+            
+            // También actualizar el semáforo de validación
+            setTimeout(() => {
+                updateValidationSemaphore();
+            }, 100);
             
             if (data.direccion_entrega) {
                 setEditableValue('pcEntrega', data.direccion_entrega);
@@ -10228,80 +10264,85 @@ function seleccionarCotizacionSAP(cotizacionId) {
             }
             
             productos.forEach((p, i) => {
-    const cantidadCotizada = p.cantidad || 1;
-    const precioCotizado = p.valorVenta || 0;
-    const stock = p.stock || 0;
-    const faltante = Math.max(cantidadCotizada - stock, 0);
-    const valorTotal = cantidadCotizada * precioCotizado;
-    
-    const marca = p.marca || '';
-    const modelo = p.modelo || '';
-    const codigo = p.codigo || '';
-    const descripcion = p.producto || p.descripcion || 'Sin descripción';
-    
-    const tr = document.createElement('tr');
-    tr.id = `item-row-${i + 1}`;
-    tr.style.borderBottom = '1px solid #E2E8F0';
-    
-    tr.innerHTML = `
-        <td style="padding:2px 3px; text-align:center; font-weight:800; font-size:9px; background:#F8FAFC;">${i + 1}</td>
-        <td style="padding:2px 3px;">
-          <input value="${esc(codigo)}" 
-       style="width:100%; border:none; background:#F1F5F9; font-size:8px; padding:0 2px; outline:none; font-weight:800; color:#1D4ED8; cursor:not-allowed; max-width:70px;" readonly>
-        </td>
-        <td style="padding:2px 3px;">
-            <input value="${esc(descripcion)}" 
-                   style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800; cursor:not-allowed;"
-                   readonly>
-        </td>
-        <td style="padding:2px 3px;">
-            <input value="${esc(modelo)}" 
-                   style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A; cursor:not-allowed;"
-                   readonly>
-        </td>
-        <td style="padding:2px 3px;">
-            <input value="${esc(marca)}" 
-                   style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A; cursor:not-allowed;"
-                   readonly>
-        </td>
-        <td style="padding:2px 3px; width:55px;">
-            <input type="number" value="${cantidadCotizada}" 
-                   style="width:45px; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center; cursor:not-allowed;"
-                   readonly>
-        </td>
-        <td style="padding:2px 3px; width:55px;">
-            <input type="number" value="${cantidadCotizada}" 
-                   style="width:45px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900;"
-                   onchange="actualizarValorTotalPCSAP(this)">
-        </td>
-        <td style="padding:2px 3px; width:65px;">
-            <input type="number" step="0.01" value="${precioCotizado}" 
-                   style="width:55px; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center; cursor:not-allowed;"
-                   readonly>
-        </td>
-        <td style="padding:2px 3px; width:65px;">
-            <input type="number" step="0.01" value="${precioCotizado}" 
-                   style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;"
-                   onchange="actualizarValorTotalPCSAP(this)">
-        </td>
-        <!-- 🔽 NUEVA CELDA: Valor Total PC -->
-        <td style="padding:2px 3px; width:70px; text-align:center; font-weight:900; color:#059669; font-size:9px;">
-            <span id="valor-total-${i + 1}">${valorTotal.toFixed(2)}</span>
-        </td>
-        <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B; font-weight:800;">${stock}</td>
-        <td style="padding:2px 3px; text-align:center; font-size:8px; font-weight:900; color:${faltante > 0 ? '#DC2626' : '#16A34A'};">${faltante}</td>
-        <td style="padding:2px 3px; text-align:center;">
-            <button onclick="eliminarItemSAP('${tr.id}')" 
-                    style="background:transparent; border:none; color:#EF4444; cursor:pointer; font-size:12px; font-weight:900; padding:0 4px; border-radius:3px; transition:all 0.2s; width:22px; height:22px;"
-                    onmouseover="this.style.background='#FEE2E2'; this.style.color='#DC2626';"
-                    onmouseout="this.style.background='transparent'; this.style.color='#EF4444';">
-                ✕
-            </button>
-        </td>
-    `;
-    
-    tbody.appendChild(tr);
-});
+                const cantidadCotizada = p.cantidad || 1;
+                const precioCotizado = p.valorVenta || 0;
+                const stock = p.stock || 0;
+                const faltante = Math.max(cantidadCotizada - stock, 0);
+                const valorTotal = cantidadCotizada * precioCotizado;
+                
+                const marca = p.marca || '';
+                const modelo = p.modelo || '';
+                const codigo = p.codigo || '';
+                const descripcion = p.producto || p.descripcion || 'Sin descripción';
+                
+                const tr = document.createElement('tr');
+                tr.id = `item-row-${i + 1}`;
+                tr.style.borderBottom = '1px solid #E2E8F0';
+                
+                tr.innerHTML = `
+                    <td style="padding:2px 3px; text-align:center; font-weight:800; font-size:9px; background:#F8FAFC;">${i + 1}</td>
+                    <td style="padding:2px 3px;">
+                        <input value="${esc(codigo)}" 
+                               style="width:100%; border:none; background:#F1F5F9; font-size:8px; padding:0 2px; outline:none; font-weight:800; color:#1D4ED8; cursor:not-allowed; max-width:70px;" readonly>
+                    </td>
+                    <td style="padding:2px 3px;">
+                        <input value="${esc(descripcion)}" 
+                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800; cursor:not-allowed;" readonly>
+                    </td>
+                    <td style="padding:2px 3px;">
+                        <input value="${esc(modelo)}" 
+                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A; cursor:not-allowed;" readonly>
+                    </td>
+                    <td style="padding:2px 3px;">
+                        <input value="${esc(marca)}" 
+                               style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A; cursor:not-allowed;" readonly>
+                    </td>
+                    <td style="padding:2px 3px; width:55px;">
+                        <input type="number" value="${cantidadCotizada}" 
+                               style="width:45px; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center; cursor:not-allowed;" readonly>
+                    </td>
+                    <td style="padding:2px 3px; width:55px;">
+                        <input type="number" value="${cantidadCotizada}" 
+                               style="width:45px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900;"
+                               onchange="actualizarValorTotalPCSAP(this)">
+                    </td>
+                    <td style="padding:2px 3px; width:65px;">
+                        <input type="number" step="0.01" value="${precioCotizado}" 
+                               style="width:55px; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; text-align:center; cursor:not-allowed;" readonly>
+                    </td>
+                    <td style="padding:2px 3px; width:65px;">
+                        <input type="number" step="0.01" value="${precioCotizado}" 
+                               style="width:55px; border:none; background:transparent; font-size:9px; padding:0; outline:none; text-align:center; font-weight:900; color:#0F172A;"
+                               onchange="actualizarValorTotalPCSAP(this)">
+                    </td>
+                    <td style="padding:2px 3px; width:70px; text-align:center; font-weight:900; color:#059669; font-size:9px;">
+                        <span id="valor-total-${i + 1}">${valorTotal.toFixed(2)}</span>
+                    </td>
+                    <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B; font-weight:800;">${stock}</td>
+                    <td style="padding:2px 3px; text-align:center; font-size:8px; font-weight:900; color:${faltante > 0 ? '#DC2626' : '#16A34A'};">${faltante}</td>
+                    <td style="padding:2px 3px; text-align:center;">
+                        <button onclick="eliminarItemSAP('${tr.id}')" 
+                                style="background:transparent; border:none; color:#EF4444; cursor:pointer; font-size:12px; font-weight:900; padding:0 4px; border-radius:3px; transition:all 0.2s; width:22px; height:22px;"
+                                onmouseover="this.style.background='#FEE2E2'; this.style.color='#DC2626';"
+                                onmouseout="this.style.background='transparent'; this.style.color='#EF4444';">
+                            ✕
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+            
+            // ============================================================
+            // 🔽 ACTUALIZAR EL RESUMEN LATERAL
+            // ============================================================
+            setTimeout(() => {
+                if (typeof actualizarResumenPC === 'function') {
+                    actualizarResumenPC();
+                }
+                // También actualizar el semáforo de validación
+                updateValidationSemaphore();
+            }, 200);
             
             showToast(`✅ Cotización ${data.numero_cotizacion} cargada con ${productos.length} productos`, 'success');
         })
