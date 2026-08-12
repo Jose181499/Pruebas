@@ -2177,15 +2177,6 @@ let usuariosRendered = false;
 let usuariosCacheHTML = '';
 
 async function renderUsuarios(filter="", forceRefresh = false) {
-    // Si no es forceRefresh y ya hay datos renderizados, usar cache
-    if (!forceRefresh && usuariosRendered && usuariosCacheHTML) {
-        const tbody = document.getElementById("tbodyUsuarios");
-        if (tbody && tbody.innerHTML === usuariosCacheHTML) {
-            console.log('📦 Usando cache de usuarios');
-            return;
-        }
-    }
-    
     const empresaFiltro = document.getElementById("filterEmpresaUsuarios")?.value || "TODAS";
     const nivelFiltro = document.getElementById("filterNivelUsuarios")?.value || "TODOS";
     const q = String(filter || document.getElementById("searchUsuarios")?.value || "").toLowerCase();
@@ -2225,7 +2216,7 @@ async function renderUsuarios(filter="", forceRefresh = false) {
         const esAdmin = empresas.some(e => e.rol_codigo === 'GERENCIA_TOTAL');
         
         let permisos = {};
-        if (empresaId && !esAdmin) {
+        if (empresaId) {
             try {
                 const data = await cargarPermisosUsuario(u.id, empresaId);
                 if (data?.permisos) {
@@ -2246,25 +2237,25 @@ async function renderUsuarios(filter="", forceRefresh = false) {
         });
     }
     
-    // MAPA DE NOMBRES DE MÓDULOS A CÓDIGOS
-    const moduleToCode = {
-        'Configuración': 'EMPRESAS',
-        'Usuarios y permisos': 'USUARIOS_PERMISOS',
-        'Correlativos': 'CORRELATIVOS',
-        'Parámetros': 'PARAMETROS',
-        'Integración ERP': 'INTEGRACION',
-        'Maestros': 'CLIENTES',
-        'Productos': 'PRODUCTOS_LISTADO',
-        'Cotizaciones': 'COTIZACIONES',
-        'Ventas': 'COMPROBANTES_CLIENTE',
-        'Compras': 'SOLICITUD_COMPRA',
-        'Logística': 'RECEPCION_MERCADERIA',
-        'Inventario': 'ESTADO_STOCK',
-        'CxC': 'CUENTAS_COBRAR',
-        'CxP': 'CUENTAS_PAGAR',
-        'Caja': 'CAJA_BANCOS',
-        'Reportes': 'REPORTE_VENTAS',
-        'SUNAT': 'SUNAT'
+    // MAPA DE NOMBRES DE MÓDULOS A IDs (para convertir nombres a IDs)
+    const moduleToId = {
+        'Configuración': 1,
+        'Usuarios y permisos': 2,
+        'Correlativos': 3,
+        'Parámetros': 4,
+        'Integración ERP': 5,
+        'Maestros': 6,
+        'Productos': 12,
+        'Cotizaciones': 14,
+        'Ventas': 15,
+        'Compras': 18,
+        'Logística': 22,
+        'Inventario': 23,
+        'CxC': 27,
+        'CxP': 28,
+        'Caja': 29,
+        'Reportes': 31,
+        'SUNAT': 35
     };
     
     // Generar HTML
@@ -2277,23 +2268,27 @@ async function renderUsuarios(filter="", forceRefresh = false) {
         const empresas = u.empresas_acceso || [];
         const roles = empresas.map(e => e.rol_codigo || '');
         
+        // ✅ FUNCIÓN CORREGIDA - Sin valores por defecto
         const tienePermisoModulo = (submoduloNombre) => {
             if (esAdmin) return true;
             
-            const codigo = moduleToCode[submoduloNombre];
-            if (!codigo) return false;
-            
-            const uuid = UUID_MAP_BY_CODE[codigo];
-            if (!uuid) {
+            // Buscar el submódulo por nombre
+            const submodulo = submodulosData.find(s => s.nombre === submoduloNombre);
+            if (!submodulo) {
                 return false;
             }
             
-            const permiso = permisos[uuid];
-            if (!permiso) {
-                const modulosOperativos = ['Productos', 'Cotizaciones', 'Ventas', 'Compras', 'Logística', 'Inventario'];
-                return modulosOperativos.includes(submoduloNombre);
+            // Usar el ID real del submódulo
+            const submoduloId = submodulo.id;
+            const permiso = permisos[submoduloId];
+            
+            // ✅ SOLO devolver true si hay un permiso guardado con puede_ver = true
+            if (permiso) {
+                return permiso.puede_ver || false;
             }
-            return permiso.puede_ver || false;
+            
+            // ❌ Ya no hay valor por defecto - devolvemos false
+            return false;
         };
         
         const empresasHtml = empresas.map(e => badge(e.empresa_codigo || '')).join('');
@@ -2329,12 +2324,8 @@ async function renderUsuarios(filter="", forceRefresh = false) {
 
     if (htmlRows.length > 0) {
         tbody.innerHTML = htmlRows.join('');
-        usuariosCacheHTML = tbody.innerHTML;
-        usuariosRendered = true;
     } else {
         tbody.innerHTML = `<tr><td colspan="17" style="text-align:center;color:#94A3B8;padding:20px;">📭 No hay usuarios</td></tr>`;
-        usuariosCacheHTML = '';
-        usuariosRendered = true;
     }
 
     // Actualizar contadores
@@ -2358,7 +2349,7 @@ async function renderUsuarios(filter="", forceRefresh = false) {
         }).length;
     }
 
-    // CONFIGURAR EVENTOS DESPUÉS DE RENDERIZAR
+    // Configurar eventos
     setTimeout(() => {
         document.querySelectorAll('.perm-checkbox').forEach(checkbox => {
             const newCheckbox = checkbox.cloneNode(true);
@@ -2384,6 +2375,9 @@ async function renderUsuarios(filter="", forceRefresh = false) {
         });
     }, 100);
 }
+
+
+
 
 // Sobrescribir la función para que no recargue toda la tabla
 async function togglePermiso(event) {
