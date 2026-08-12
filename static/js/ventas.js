@@ -76,42 +76,20 @@ let CLIENTES_MAESTROS = [];
 // ============================================================
 const NUEVO_BADGE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 horas
 
-function setUltimoRegistroCreado(modulo, valor) {
-    if (valor === null || valor === undefined) return;
+function esRegistroNuevo(fecha) {
+    if (!fecha) return false;
     try {
-        localStorage.setItem(`ventas_nuevo_${modulo}`, JSON.stringify({ valor, ts: Date.now() }));
+        const f = new Date(fecha);
+        if (isNaN(f.getTime())) return false;
+        return (Date.now() - f.getTime()) < NUEVO_BADGE_DURATION_MS;
     } catch (e) {
-        console.warn('⚠️ No se pudo guardar el badge "Nuevo" en localStorage:', e);
+        return false;
     }
 }
 
-function getUltimoRegistroCreado(modulo) {
-    try {
-        const raw = localStorage.getItem(`ventas_nuevo_${modulo}`);
-        if (!raw) return null;
-        const { valor, ts } = JSON.parse(raw);
-        if (Date.now() - ts > NUEVO_BADGE_DURATION_MS) {
-            localStorage.removeItem(`ventas_nuevo_${modulo}`);
-            return null;
-        }
-        return valor;
-    } catch (e) {
-        return null;
-    }
-}
-
-
-
-// Genera el badge "Nuevo" si el registro coincide con el último creado (por id o por número)
-function badgeNuevo(modulo, row) {
-    const marcado = getUltimoRegistroCreado(modulo);
-    if (marcado === null || marcado === undefined) return '';
-    const coincideId = row.id !== undefined && row.id === marcado;
-    const coincideNumero = row.numero !== undefined && row.numero === marcado;
-    if (coincideId || coincideNumero) {
-        return ' <span style="display:inline-block;background:#F7FEE7;color:#3F6212;border:1px solid #A3E635;border-radius:20px;padding:1px 9px;font-size:10px;font-weight:800;margin-left:6px;vertical-align:middle;">Nuevo</span>';
-    }
-    return '';
+function badgeNuevo(row, fechaField) {
+    if (!esRegistroNuevo(row[fechaField])) return '';
+    return ' <span style="display:inline-block;background:#F7FEE7;color:#3F6212;border:1px solid #A3E635;border-radius:20px;padding:1px 9px;font-size:10px;font-weight:800;margin-left:6px;vertical-align:middle;">Nuevo</span>';
 }
 
 function getDescripcionPrincipal(r) {
@@ -902,8 +880,7 @@ function renderPedidos() {
                 <td>${i + 1}</td>
                 <td class="date-cell">${formatearFecha(r.fecha || r.created_at)}</td>
                 <td>${estadoBadge}</td>
-                <td><b>${r.numero || '-'}</b>${badgeNuevo('pedido_compra', r)}</td>
-                
+                <td><b>${r.numero || '-'}</b>${badgeNuevo(r, 'created_at')}</td>
                 <td>${r.cotizacion_numero || '-'}</td>
                 <td class="left"><b>${r.cliente || '-'}</b></td>
                 <td class="left">${r.entrega || r.lugar_entrega || '-'}</td>
@@ -1198,7 +1175,7 @@ if (cotizacionViewMode === 'principal') {
             <td><b>${i + 1}</b></td>
             <td class="date-cell">${formatFecha(r.fecha)}</td>
             <td>${badgeStatus(r.estado)}</td>
-            <td class="quote-number-cell"><b>${sd(r.numero)}</b>${badgeNuevo('cotizaciones', r)}</td>
+            <td class="quote-number-cell"><b>${sd(r.numero)}</b>${badgeNuevo(r, 'fecha')}</td>
             <td>${sd(r.ruc)}</td>
             <td><span class="code-pill">${sd(r.cod_cliente)}</span></td>
             <td class="left"><b>${sd(r.razon)}</b></td>
@@ -1395,9 +1372,6 @@ function renderDespachos() {
     }
     
     tbody.innerHTML = list.map((r, i) => {
-        // ============================================================
-        // FORMATEAR FECHA CON HORA
-        // ============================================================
         let fechaDisplay = '-';
         const fechaRaw = r.fecha_despacho || r.fecha || r.created_at;
         
@@ -1424,7 +1398,7 @@ function renderDespachos() {
             <td>${i + 1}</td>
             <td class="date-cell">${fechaDisplay}</td>
             <td>${badgeStatus(r.estado)}</td>
-            <td><b>${sd(r.numero)}</b>${badgeNuevo('despachar', r)}</td>
+            <td><b>${sd(r.numero)}</b>${badgeNuevo(r, 'fecha')}</td>
             <td>${sd(r.pc_numero)}</td>
             <td class="left">${sd(r.cliente)}</td>
             <td>${sd(r.comprobante)}</td>
@@ -1716,7 +1690,7 @@ function renderGuias() {
             <td>${i + 1}</td>
             <td class="date-cell">${formatearFechaGuia(r.fecha)}</td>
             <td>${badgeStatus(r.estado)}</td>
-            <td><b>${sd(r.serie)}-${sd(r.numero)}</b>${badgeNuevo('guias', r)}</td>
+            <td><b>${sd(r.serie)}-${sd(r.numero)}</b>${badgeNuevo(r, 'fecha')}</td>
             <td>${sd(r.ruc)}</td>
             <td class="left">${sd(r.cliente)}</td>
             <td>${sd(r.cotizacion)}</td>
@@ -1799,7 +1773,7 @@ function renderComprobantes() {
             <td class="date-cell">${formatearFechaComprobante(r.fecha)}</td>
             <td>${badgeStatus(r.estado)}</td>
             <td>${sd(r.tipo)}</td>
-            <td><b>${sd(r.serie)}-${sd(r.numero)}</b>${badgeNuevo('comprobantes', r)}</td>
+            <td><b>${sd(r.serie)}-${sd(r.numero)}</b>${badgeNuevo(r, 'fecha')}</td>
             <td>${sd(r.ruc)}</td>
             <td class="left">${sd(r.cliente)}</td>
             <td>${sd(r.cotizacion)}</td>
@@ -1885,7 +1859,7 @@ function renderNotas() {
             <td class="date-cell">${String(r.fecha || '').replace(' ', '<br>')}</td>
             <td>${badgeStatus(r.estado)}</td>
             <td>${sd(r.tipo)}</td>
-            <td><b>${sd(r.serie)}-${sd(r.numero)}</b>${badgeNuevo('notas_credito', r)}</td>
+            <td><b>${sd(r.serie)}-${sd(r.numero)}</b>${badgeNuevo(r, 'fecha')}</td>
             <td>${sd(r.ruc)}</td>
             <td class="left">${sd(r.cliente)}</td>
             <td>${sd(r.comprobante)}</td>
@@ -1922,7 +1896,7 @@ function renderDevoluciones() {
             <td>${i + 1}</td>
             <td class="date-cell">${String(r.fecha || '').replace(' ', '<br>')}</td>
             <td>${badgeStatus(r.estado)}</td>
-            <td><b>${sd(r.numero)}</b>${badgeNuevo('devoluciones', r)}</td>
+            <td><b>${sd(r.numero)}</b>${badgeNuevo(r, 'fecha')}</td>
             <td>${sd(r.ruc)}</td>
             <td class="left">${sd(r.cliente)}</td>
             <td>${sd(r.comprobante_numero)}</td>
@@ -2960,9 +2934,7 @@ async function saveDespacho(estado) {
         
         if (response.success) {
 
-            if (!editingId) {
-                setUltimoRegistroCreado('despachar', response.data?.id ?? data.numero ?? null);
-            }
+            
 
             showToast(`Despacho guardado como: ${estado}`, 'success');
             closeModal('despachoModal');
@@ -3027,9 +2999,7 @@ async function saveGuia(estado) {
         
         if (response.success) {
 
-            if (!editingId) {
-                setUltimoRegistroCreado('guias', response.data?.id ?? response.data?.numero ?? null);
-            }
+            
 
             showToast(`✅ Guía guardada como: ${estado}`, 'success');
             closeModal('guiaModal');
@@ -3083,9 +3053,7 @@ async function saveComprobante(estado) {
         
         if (response.success) {
 
-            if (!editingId) {
-                setUltimoRegistroCreado('comprobantes', response.data?.id ?? data.numero ?? null);
-            }
+            
 
             showToast(`✅ Comprobante guardado como: ${estado}`, 'success');
             closeModal('comprobanteModal');
@@ -3123,10 +3091,7 @@ async function saveNotaCredito(estado) {
         
         if (response.success) {
 
-            if (!editingId) {
-                setUltimoRegistroCreado('notas_credito', response.data?.id ?? data.numero ?? null);
-            }
-
+           
             showToast(`Nota de crédito guardada como: ${estado}`, 'success');
             closeModal('notaCreditoModal');
             await loadNotas();
@@ -3160,9 +3125,7 @@ async function saveDevolucion(estado) {
         
         if (response.success) {
 
-            if (!editingId) {
-                setUltimoRegistroCreado('devoluciones', response.data?.id ?? data.numero ?? null);
-            }
+            
 
             showToast(`Devolución guardada como: ${estado}`, 'success');
             closeModal('devolucionModal');
@@ -11584,9 +11547,7 @@ async function savePedidoCompraSAP(force) {
         
         if (result.success) {
 
-            if (!editingId) {
-                setUltimoRegistroCreado('pedido_compra', result.data?.id ?? numeroPC ?? null);
-            }
+            
 
             let mensaje = `✅ PC guardado como: ${estado}`;
             if (estado === 'PC conforme') {
@@ -12770,7 +12731,7 @@ window.deleteComprobante = deleteComprobante;
 window.deleteNota = deleteNota;
 window.getDescripcionPrincipal = getDescripcionPrincipal;
 window.badgeNuevo = badgeNuevo;
-window.setUltimoRegistroCreado = setUltimoRegistroCreado;
+
 window.getUltimoRegistroCreado = getUltimoRegistroCreado;
 // ============================================================
 // 14. FUNCIONES DE FORMATO

@@ -144,30 +144,22 @@ let umEditId = null;
 // ============================================================
 // BADGE "NUEVO" CON EXPIRACIÓN DE 24 HORAS (persistido en localStorage)
 // ============================================================
-const NUEVO_BADGE_DURATION_MS_MAESTROS = 24 * 60 * 60 * 1000; // 24 horas
+const NUEVO_BADGE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 horas
 
-function setUltimoRegistroCreadoMaestros(modulo, valor) {
-    if (valor === null || valor === undefined) return;
+function esRegistroNuevo(fecha) {
+    if (!fecha) return false;
     try {
-        localStorage.setItem(`maestros_nuevo_${modulo}`, JSON.stringify({ valor, ts: Date.now() }));
+        const f = new Date(fecha);
+        if (isNaN(f.getTime())) return false;
+        return (Date.now() - f.getTime()) < NUEVO_BADGE_DURATION_MS;
     } catch (e) {
-        console.warn('⚠️ No se pudo guardar el badge "Nuevo" en localStorage:', e);
+        return false;
     }
 }
 
-function getUltimoRegistroCreadoMaestros(modulo) {
-    try {
-        const raw = localStorage.getItem(`maestros_nuevo_${modulo}`);
-        if (!raw) return null;
-        const { valor, ts } = JSON.parse(raw);
-        if (Date.now() - ts > NUEVO_BADGE_DURATION_MS_MAESTROS) {
-            localStorage.removeItem(`maestros_nuevo_${modulo}`);
-            return null;
-        }
-        return valor;
-    } catch (e) {
-        return null;
-    }
+function badgeNuevo(row, fechaField) {
+    if (!esRegistroNuevo(row[fechaField])) return '';
+    return ' <span style="display:inline-block;background:#F7FEE7;color:#3F6212;border:1px solid #A3E635;border-radius:20px;padding:1px 9px;font-size:10px;font-weight:800;margin-left:6px;vertical-align:middle;">Nuevo</span>';
 }
 
 // ============================================================
@@ -580,11 +572,11 @@ function renderTable(m, list) {
     headers.forEach(h => { headersHtml += `<th>${h}</th>`; });
     headersHtml += `<th style="width:160px; min-width:160px; max-width; 160px; white-space:nowrap">Acciones</th>`;
     
-    const rows = list.map((r, i) => {
-        let cells = `<td><b>${i + 1}</b></td><td>${bAmbito(r.ambito || 'COMPARTIDO')}</td>`;
+   const rows = list.map((r, i) => {
+        let cells = `<td><b>${i + 1}</b>${badgeNuevo(r, 'created_at')}</td><td>${bAmbito(r.ambito || 'COMPARTIDO')}</td>`;
         
         displayFields.forEach(f => {
-            if (f === 'activo' || f === 'estado') { // 🔧 CAMBIO: se agregó "|| f === 'estado'"
+            if (f === 'activo' || f === 'estado') {
                 cells += `<td>${bEstado(r[f])}</td>`;
             } else if (f === 'decimales') {
                 cells += `<td>${r[f] ? '✅ Sí' : '❌ No'}</td>`;
@@ -593,14 +585,12 @@ function renderTable(m, list) {
                 cells += `<td>${email ? `<a href="mailto:${esc(email)}" style="color:#3B82F6;text-decoration:none;">${esc(email)}</a>` : '-'}</td>`;
             } else if (f === 'uso') {
                 cells += `<td style="text-align:center;">${r[f] || 0}</td>`;
-            } else if (f === config.codeField && r.id === getUltimoRegistroCreadoMaestros(m)) {
-                cells += `<td class="left">${sd(r[f])} <span style="display:inline-block;background:#F7FEE7;color:#3F6212;border:1px solid #A3E635;border-radius:20px;padding:1px 9px;font-size:10px;font-weight:800;margin-left:6px;vertical-align:middle;">Nuevo</span></td>`;
             } else {
+                // Ya no lleva badge aquí, es normal para todos los campos incluido el código
                 cells += `<td class="left">${sd(r[f])}</td>`;
             }
         });
         
-        // ✅ BOTÓN TACHO DE BASURA - USA TOGGLE (Activar/Inactivar)
         const isActive = getEstado(r.activo) === 'Activo';
         const estadoDisplay = isActive ? 'Desactivar' : 'Activar';
         const estadoClass = isActive ? 'action-delete' : 'action-activate';
@@ -1279,9 +1269,7 @@ async function saveClient() {
                 'success'
             );
 
-            if (!clientEditId) {
-                setUltimoRegistroCreadoMaestros('clientes', result.data?.id ?? null);
-            }
+            
 
             closeClientModal();
             await loadModuleData('clientes', true);
@@ -1473,9 +1461,7 @@ async function saveProveedor() {
         const result = await response.json();
         if (result.success) {
             
-            if (!provEditId) {
-                setUltimoRegistroCreadoMaestros('proveedores', result.data?.id ?? null);
-            }
+            
 
             showToast(result.message || '✅ Proveedor guardado correctamente', 'success');
             closeProveedorModal();
@@ -1638,9 +1624,7 @@ async function saveAlmacen() {
         const result = await response.json();
         if (result.success) {
 
-            if (!almEditId) {
-                setUltimoRegistroCreadoMaestros('almacenes', result.data?.id ?? null);
-            }
+            
 
             showToast(result.message || '✅ Almacén guardado correctamente', 'success');
             closeAlmacenModal();
@@ -1764,9 +1748,7 @@ async function saveCategoria() {
         const result = await response.json();
         if (result.success) {
 
-            if (!catEditId) {
-                setUltimoRegistroCreadoMaestros('categorias', result.data?.id ?? null);
-            }
+            
 
             showToast(result.message || '✅ Categoría guardada correctamente', 'success');
             closeCategoriaModal();
@@ -1918,9 +1900,7 @@ async function saveMarca() {
         const result = await response.json();
         if (result.success) {
 
-            if (!marcaEditId) {
-                setUltimoRegistroCreadoMaestros('marcas', result.data?.id ?? null);
-            }
+            
 
             showToast(result.message || '✅ Marca guardada correctamente', 'success');
             closeMarcaModal();
@@ -2072,9 +2052,7 @@ async function saveUm() {
         const result = await response.json();
         if (result.success) {
 
-            if (!umEditId) {
-                setUltimoRegistroCreadoMaestros('um', result.data?.id ?? null);
-            }
+            
             
             showToast(result.message || '✅ Unidad guardada correctamente', 'success');
             closeUmModal();
