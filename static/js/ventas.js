@@ -9936,23 +9936,39 @@ function renderCotizacionFormContent(isEdit) {
     `;
 }
 
-// Función para mostrar/ocultar campos de pago según condición
+// ============================================================
+// MOSTRAR/OCULTAR CAMPOS DE PAGO (Contado)
+// ============================================================
+
 function togglePagoCampos() {
     const condicionSelect = document.getElementById('pcCondicion');
     const container = document.getElementById('pagoCamposContainer');
     
-    if (!condicionSelect || !container) return;
+    console.log('🔄 togglePagoCampos ejecutándose');
+    console.log('  - condicionSelect:', condicionSelect);
+    console.log('  - container:', container);
+    console.log('  - valor seleccionado:', condicionSelect ? condicionSelect.value : 'no existe');
+    
+    if (!condicionSelect || !container) {
+        console.warn('⚠️ togglePagoCampos: Elementos no encontrados');
+        return;
+    }
     
     // Mostrar solo cuando la condición es "Contado"
     if (condicionSelect.value === 'Contado') {
         container.style.display = 'block';
         container.style.animation = 'fadeIn 0.3s ease';
+        console.log('✅ Mostrando campos de pago (Contado)');
     } else {
         container.style.display = 'none';
         // Limpiar campos al ocultar
-        document.getElementById('pcNumOperacion').value = '';
-        document.getElementById('pcBanco').value = '';
-        document.getElementById('pcCuentaOCCI').value = '';
+        const numOp = document.getElementById('pcNumOperacion');
+        const banco = document.getElementById('pcBanco');
+        const cuenta = document.getElementById('pcCuentaOCCI');
+        if (numOp) numOp.value = '';
+        if (banco) banco.value = '';
+        if (cuenta) cuenta.value = '';
+        console.log('⬜ Ocultando campos de pago');
     }
 }
 
@@ -10342,6 +10358,8 @@ function seleccionarCotizacionSAP(cotizacionId) {
                 }
                 // También actualizar el semáforo de validación
                 updateValidationSemaphore();
+                // Forzar toggle de pago nuevamente por si acaso
+                togglePagoCampos();
             }, 200);
             
             showToast(`✅ Cotización ${data.numero_cotizacion} cargada con ${productos.length} productos`, 'success');
@@ -10351,7 +10369,6 @@ function seleccionarCotizacionSAP(cotizacionId) {
             showToast('❌ Error al cargar los productos de la cotización', 'error');
         });
 }
-
 
 
 // Funciones auxiliares para la tabla de productos
@@ -11993,6 +12010,7 @@ window.deselectAllProducts = deselectAllProducts;
 window.filterProductSelector = filterProductSelector;
 window.addSelectedProducts = addSelectedProducts;
 window.toggleAllProductCheckboxes = toggleAllProductCheckboxes;
+window.togglePagoCampos = togglePagoCampos;
 
 // ============================================================
 // 8. FUNCIONES DE SELECTOR DE PRODUCTOS PC
