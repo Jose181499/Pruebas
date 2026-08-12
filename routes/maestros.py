@@ -366,6 +366,7 @@ def api_clientes_actualizar(id):
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
         
+        # 1. Actualizar datos principales del cliente
         query = """
             UPDATE clientes SET
                 tipo_documento = %s,
@@ -412,29 +413,7 @@ def api_clientes_actualizar(id):
         cur.execute(query, params)
         result = cur.fetchone()
 
-        # ✅ Reemplazar puntos de entrega CON google_maps
-        cur.execute("DELETE FROM clientes_puntos_entrega WHERE cliente_id = %s", (id,))
-        for p in data.get('puntos_entrega', []):
-            if not (p.get('punto') or p.get('direccion') or p.get('instrucciones')):
-                continue
-            cur.execute("""
-                INSERT INTO clientes_puntos_entrega (
-                    cliente_id, nombre_punto, direccion, telefono_contacto,
-                    responsable, principal, instrucciones,
-                    google_maps
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-                id,
-                p.get('punto', ''), 
-                p.get('direccion', ''),
-                p.get('telefono', ''), 
-                p.get('contacto', ''),
-                bool(p.get('principal', False)), 
-                p.get('instrucciones', ''),
-                p.get('googleMaps', '')  # ✅ google_maps
-            ))
-
-        # Reemplazar contactos
+        # 2. Reemplazar contactos (borrar y volver a insertar)
         cur.execute("DELETE FROM clientes_contactos WHERE cliente_id = %s", (id,))
         for c in data.get('contactos', []):
             if not (c.get('nombre') or c.get('telefono') or c.get('email')):
@@ -445,8 +424,35 @@ def api_clientes_actualizar(id):
                     principal, activo
                 ) VALUES (%s, %s, %s, %s, %s, %s, TRUE)
             """, (
-                id, c.get('nombre', ''), c.get('cargo', ''),
-                c.get('telefono', ''), c.get('email', ''), bool(c.get('principal', False))
+                id,
+                c.get('nombre', ''),
+                c.get('cargo', ''),
+                c.get('telefono', ''),
+                c.get('email', ''),
+                bool(c.get('principal', False))
+            ))
+
+        # 3. Reemplazar puntos de entrega CON google_maps
+        cur.execute("DELETE FROM clientes_puntos_entrega WHERE cliente_id = %s", (id,))
+        for p in data.get('puntos_entrega', []):
+            if not (p.get('punto') or p.get('direccion') or p.get('instrucciones')):
+                continue
+            cur.execute("""
+                INSERT INTO clientes_puntos_entrega (
+                    cliente_id, nombre_punto, direccion, telefono_contacto,
+                    responsable, principal, instrucciones,
+                    google_maps, horario
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                id,
+                p.get('punto', ''),
+                p.get('direccion', ''),
+                p.get('telefono', ''),
+                p.get('contacto', ''),
+                bool(p.get('principal', False)),
+                p.get('instrucciones', ''),
+                p.get('googleMaps', ''),  # ✅ google_maps
+                p.get('horario', '')      # ✅ horario (opcional)
             ))
 
         conn.commit()
