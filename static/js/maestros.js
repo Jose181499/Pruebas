@@ -2575,8 +2575,9 @@ async function cargarClientesCompletos() {
     }
 }
 
+
 // ============================================================
-// VISTA COMPLETA - USA LOS MISMOS DATOS QUE EL MODAL
+// VISTA COMPLETA - TODOS LOS CAMPOS DEL CLIENTE (CORREGIDA)
 // ============================================================
 
 function renderClientesCompleta(list) {
@@ -2587,13 +2588,7 @@ function renderClientesCompleta(list) {
         </div>`;
     }
     
-    // ✅ VERIFICAR QUE LOS DATOS TENGAN PUNTOS_CON_ENTREGA
-    console.log('📊 Datos completos de clientes:', list.map(c => ({
-        id: c.id,
-        nombre: c.razon_social,
-        puntos_entrega: c.puntos_entrega
-    })));
-    
+    // ✅ SOLO CAMPOS QUE EXISTEN EN LA BASE DE DATOS
     const allFields = [
         { key: 'id', label: 'ID', width: '50px' },
         { key: 'codigo_cliente', label: 'Código / Cliente', width: '100px' },
@@ -2610,10 +2605,11 @@ function renderClientesCompleta(list) {
         { key: 'nombre_contacto', label: 'Contacto Principal', width: '130px' },
         { key: 'telefono_contacto', label: 'Teléfono Principal', width: '110px' },
         { key: 'email_contacto', label: 'Email Principal', width: '160px' },
+        // ✅ CONTACTOS (desde clientes_contactos)
         { key: 'contactos', label: 'Contactos', width: '200px' },
+        // ✅ PUNTOS DE ENTREGA (desde clientes_puntos_entrega) - YA INCLUYE INSTRUCCIONES
         { key: 'puntos_entrega', label: 'Puntos de Entrega', width: '220px' },
-        // ✅ INSTRUCCIONES - IGUAL QUE EN fillClientForm
-        { key: 'instrucciones', label: 'Instrucciones', width: '150px' },
+        // ✅ ESTADO
         { key: 'estado', label: 'Estado', width: '90px' },
         { key: 'activo', label: 'Activo', width: '70px' },
         { key: 'observaciones', label: 'Observaciones', width: '150px' },
@@ -2643,6 +2639,7 @@ function renderClientesCompleta(list) {
             } else if (f.key === 'ambito') {
                 value = bAmbito(value);
             } else if (f.key === 'contactos') {
+                // ✅ Mostrar contactos de clientes_contactos
                 if (r.contactos && r.contactos.length > 0) {
                     value = r.contactos.map(c => 
                         `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;text-align:left;">
@@ -2656,6 +2653,7 @@ function renderClientesCompleta(list) {
                     value = '-';
                 }
             } else if (f.key === 'puntos_entrega') {
+                // ✅ Mostrar puntos de entrega de clientes_puntos_entrega CON INSTRUCCIONES
                 if (r.puntos_entrega && r.puntos_entrega.length > 0) {
                     value = r.puntos_entrega.map(p => 
                         `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;text-align:left;">
@@ -2665,18 +2663,6 @@ function renderClientesCompleta(list) {
                             ${p.instrucciones ? `<br><span style="color:#2563EB;">📝 ${p.instrucciones}</span>` : ''}
                         </div>`
                     ).join('');
-                } else {
-                    value = '-';
-                }
-            } else if (f.key === 'instrucciones') {
-                // ✅ IGUAL QUE EN fillClientForm - usa p.instrucciones
-                if (r.puntos_entrega && r.puntos_entrega.length > 0) {
-                    const textos = r.puntos_entrega
-                        .filter(p => p.instrucciones)
-                        .map(p => `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;text-align:left;">
-                            <strong>${p.nombre_punto || p.punto || '-'}:</strong> ${p.instrucciones}
-                        </div>`);
-                    value = textos.length ? textos.join('') : '-';
                 } else {
                     value = '-';
                 }
@@ -2696,6 +2682,7 @@ function renderClientesCompleta(list) {
             cells += `<td style="text-align:center;">${value}</td>`;
         });
         
+        // ✅ BOTÓN TACHO DE BASURA - USA TOGGLE
         const isActive = r.estado === 'Activo' || r.estado === 'activo' || r.activo === true;
         const estadoDisplay = isActive ? 'Desactivar' : 'Activar';
         const estadoClass = isActive ? 'action-delete' : 'action-activate';
@@ -2723,6 +2710,7 @@ function renderClientesCompleta(list) {
         </table>
     </div>`;
 }
+
 
 // ============================================================
 // VISTA COMPLETA - TODOS LOS CAMPOS DEL PROVEEDOR
