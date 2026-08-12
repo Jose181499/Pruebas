@@ -562,7 +562,7 @@ function renderTable(m, list) {
                 cells += `<td>${email ? `<a href="mailto:${esc(email)}" style="color:#3B82F6;text-decoration:none;">${esc(email)}</a>` : '-'}</td>`;
             } else if (f === 'uso') {
                 cells += `<td style="text-align:center;">${r[f] || 0}</td>`;
-            } else if (f === 'codigo_cliente' && m === 'clientes' && r.id === ultimoClienteCreadoId) {
+            } else if (f === config.codeField && r.id === ultimoRegistroCreado[m]) {
                 cells += `<td class="left">${sd(r[f])} <span style="display:inline-block;background:#F7FEE7;color:#3F6212;border:1px solid #A3E635;border-radius:20px;padding:1px 9px;font-size:10px;font-weight:800;margin-left:6px;vertical-align:middle;">Nuevo</span></td>`;
             } else {
                 cells += `<td class="left">${sd(r[f])}</td>`;
@@ -1249,7 +1249,7 @@ async function saveClient() {
             );
 
             if (!clientEditId) {
-                ultimoClienteCreadoId = result.data?.id ?? null;
+                ultimoRegistroCreado.clientes = result.data?.id ?? null;
             }
 
             closeClientModal();
@@ -1441,6 +1441,11 @@ async function saveProveedor() {
         });
         const result = await response.json();
         if (result.success) {
+            
+            if (!provEditId) {
+                ultimoRegistroCreado.proveedores = result.data?.id ?? null;
+            }
+
             showToast(result.message || '✅ Proveedor guardado correctamente', 'success');
             closeProveedorModal();
             await loadModuleData('proveedores', true);
@@ -1601,6 +1606,11 @@ async function saveAlmacen() {
         });
         const result = await response.json();
         if (result.success) {
+
+            if (!almEditId) {
+                ultimoRegistroCreado.almacenes = result.data?.id ?? null;
+            }
+
             showToast(result.message || '✅ Almacén guardado correctamente', 'success');
             closeAlmacenModal();
             await loadModuleData('almacenes', true);
@@ -1722,6 +1732,11 @@ async function saveCategoria() {
         });
         const result = await response.json();
         if (result.success) {
+
+            if (!catEditId) {
+                ultimoRegistroCreado.categorias = result.data?.id ?? null;
+            }
+
             showToast(result.message || '✅ Categoría guardada correctamente', 'success');
             closeCategoriaModal();
             await loadModuleData('categorias', true);
@@ -1871,6 +1886,11 @@ async function saveMarca() {
         });
         const result = await response.json();
         if (result.success) {
+
+            if (!marcaEditId) {
+                ultimoRegistroCreado.marcas = result.data?.id ?? null;
+            }
+
             showToast(result.message || '✅ Marca guardada correctamente', 'success');
             closeMarcaModal();
             await loadModuleData('marcas', true);
@@ -2020,6 +2040,11 @@ async function saveUm() {
         });
         const result = await response.json();
         if (result.success) {
+
+            if (!umEditId) {
+                ultimoRegistroCreado.um = result.data?.id ?? null;
+            }
+            
             showToast(result.message || '✅ Unidad guardada correctamente', 'success');
             closeUmModal();
             await loadModuleData('um', true);

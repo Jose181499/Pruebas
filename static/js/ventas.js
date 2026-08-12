@@ -65,10 +65,31 @@ let editingId = null;
 let quoteProducts = [];
 let PRODUCTOS_MAESTROS = [];
 let CLIENTES_MAESTROS = [];
+let ultimoRegistroCreado = {
+    cotizaciones: null,
+    pedido_compra: null,
+    despachar: null,
+    guias: null,
+    comprobantes: null,
+    notas_credito: null,
+    devoluciones: null
+};
 
 // ============================================================
 // UTILIDADES
 // ============================================================
+
+// Genera el badge "Nuevo" si el registro coincide con el último creado (por id o por número)
+function badgeNuevo(modulo, row) {
+    const marcado = ultimoRegistroCreado[modulo];
+    if (marcado === null || marcado === undefined) return '';
+    const coincideId = row.id !== undefined && row.id === marcado;
+    const coincideNumero = row.numero !== undefined && row.numero === marcado;
+    if (coincideId || coincideNumero) {
+        return ' <span style="display:inline-block;background:#F7FEE7;color:#3F6212;border:1px solid #A3E635;border-radius:20px;padding:1px 9px;font-size:10px;font-weight:800;margin-left:6px;vertical-align:middle;">Nuevo</span>';
+    }
+    return '';
+}
 
 function getDescripcionPrincipal(r) {
     // Si ya tiene descripción o nota, se respeta tal cual
@@ -1891,9 +1912,6 @@ function renderDevoluciones() {
     `).join('');
 }
 
-// ============================================================
-// FUNCIONES DE GUARDADO (CON API REAL)
-// ============================================================
 async function guardarCotizacion(estado) {
     try {
         console.log('🔄 Iniciando guardado de cotización...');
@@ -1907,12 +1925,14 @@ async function guardarCotizacion(estado) {
         const tiempoEntregaSelect = document.getElementById('fTiempo')?.value || '';
         const tiempoCustom = document.getElementById('fTiempoCustom')?.value?.trim() || '';
         
+        // Recopilar campos faltantes
+        const camposFaltantes = [];
+        
         // Validar RUC
         if (!ruc || ruc.length < 11) {
-            showToast('⚠️ El RUC es obligatorio. Debe tener 11 dígitos.', 'warning');
+            camposFaltantes.push('RUC (11 dígitos)');
             const el = document.getElementById('fRuc');
             if (el) {
-                el.focus();
                 el.style.borderColor = '#DC2626';
                 el.style.boxShadow = '0 0 0 3px rgba(220,38,38,0.2)';
                 setTimeout(() => {
@@ -1920,17 +1940,15 @@ async function guardarCotizacion(estado) {
                     el.style.boxShadow = '';
                 }, 3000);
             }
-            return;
         }
         
         // Validar Condición de Pago
         const condicionFinal = condicionPagoSelect === 'Personalizado' ? condicionCustom : condicionPagoSelect;
         if (!condicionFinal || condicionFinal === 'Personalizado' || condicionFinal === '') {
-            showToast('⚠️ La Condición de Pago es obligatoria. Selecciona una opción o escribe un valor personalizado.', 'warning');
+            camposFaltantes.push('Condición de Pago');
             if (condicionPagoSelect === 'Personalizado') {
                 const el = document.getElementById('fCondicionCustom');
                 if (el) {
-                    el.focus();
                     el.style.borderColor = '#DC2626';
                     el.style.boxShadow = '0 0 0 3px rgba(220,38,38,0.2)';
                     setTimeout(() => {
@@ -1941,7 +1959,6 @@ async function guardarCotizacion(estado) {
             } else {
                 const el = document.getElementById('fCondicion');
                 if (el) {
-                    el.focus();
                     el.style.borderColor = '#DC2626';
                     el.style.boxShadow = '0 0 0 3px rgba(220,38,38,0.2)';
                     setTimeout(() => {
@@ -1950,17 +1967,15 @@ async function guardarCotizacion(estado) {
                     }, 3000);
                 }
             }
-            return;
         }
         
         // Validar Tiempo de Entrega
         const tiempoFinal = tiempoEntregaSelect === 'Personalizado' ? tiempoCustom : tiempoEntregaSelect;
         if (!tiempoFinal || tiempoFinal === 'Personalizado' || tiempoFinal === '') {
-            showToast('⚠️ El Tiempo de Entrega es obligatorio. Selecciona una opción o escribe un valor personalizado.', 'warning');
+            camposFaltantes.push('Tiempo de Entrega');
             if (tiempoEntregaSelect === 'Personalizado') {
                 const el = document.getElementById('fTiempoCustom');
                 if (el) {
-                    el.focus();
                     el.style.borderColor = '#DC2626';
                     el.style.boxShadow = '0 0 0 3px rgba(220,38,38,0.2)';
                     setTimeout(() => {
@@ -1971,7 +1986,6 @@ async function guardarCotizacion(estado) {
             } else {
                 const el = document.getElementById('fTiempo');
                 if (el) {
-                    el.focus();
                     el.style.borderColor = '#DC2626';
                     el.style.boxShadow = '0 0 0 3px rgba(220,38,38,0.2)';
                     setTimeout(() => {
@@ -1980,6 +1994,14 @@ async function guardarCotizacion(estado) {
                     }, 3000);
                 }
             }
+        }
+        
+        // ============================================================
+        // 🔽 SI HAY CAMPOS FALTANTES, MOSTRAR MODAL GRANDE
+        // ============================================================
+        if (camposFaltantes.length > 0) {
+            // Mostrar modal de advertencia grande en el centro
+            showValidationWarningModal(camposFaltantes);
             return;
         }
         
@@ -2019,7 +2041,6 @@ async function guardarCotizacion(estado) {
                     clienteData = data.data[0];
                     console.log('✅ Cliente encontrado en BD con ID:', clienteId);
                     
-                    // Actualizar CLIENTES_MAESTROS
                     if (!CLIENTES_MAESTROS.find(c => c.id === clienteId)) {
                         CLIENTES_MAESTROS.push(clienteData);
                     }
@@ -2097,7 +2118,7 @@ async function guardarCotizacion(estado) {
         const total = valorVenta + igv;
         
         // ============================================================
-        // 3. PREPARAR DATOS - USAMOS EL ESTADO DIRECTAMENTE
+        // 3. PREPARAR DATOS
         // ============================================================
         
         const data = {
@@ -2173,6 +2194,7 @@ async function guardarCotizacion(estado) {
         showToast('❌ Error al guardar la cotización: ' + error.message, 'error');
     }
 }
+
 
 
 
@@ -2633,6 +2655,11 @@ async function savePedidoCompra(estado) {
         });
         
         if (response.success) {
+
+            if (!editingId) {
+                ultimoRegistroCreado.pedido_compra = result.data?.id ?? numeroPC ?? null;
+            }
+        
             const mensaje = hasObservations ? 'guardado con observaciones' : 'guardado correctamente';
             showToast(`✅ PC ${mensaje}`, 'success');
             closeModal('pedidoCompraModal');
@@ -7505,7 +7532,6 @@ function calcQuote() {
     set('sumTiempoEntrega', tiempoEntrega);
 }
 
-
 async function loadClient() {
     const rucInput = document.getElementById('fRucSearch');
     const ruc = rucInput?.value?.replace(/\D/g, '').trim() || '';
@@ -7537,13 +7563,15 @@ async function loadClient() {
         if (bdData.success && bdData.data && bdData.data.length > 0) {
             const cliente = bdData.data[0];
             
+            // ============================================================
             // 1. DATOS DEL CLIENTE
+            // ============================================================
             const fRuc = document.getElementById('fRuc');
             const fRazon = document.getElementById('fRazon');
             const fDireccion = document.getElementById('fDireccion');
             const fContacto = document.getElementById('fContacto');
             const fTelefono = document.getElementById('fTelefono');
-            const fCorreo = document.getElementById('fCorreo'); // 🔽 NUEVO
+            const fCorreo = document.getElementById('fCorreo');
             const fReq = document.getElementById('fReq');
             const fFuente = document.getElementById('fFuente');
             
@@ -7552,30 +7580,40 @@ async function loadClient() {
             if (fDireccion) fDireccion.value = cliente.direccion_fiscal || '';
             if (fContacto) fContacto.value = cliente.nombre_contacto || '';
             if (fTelefono) fTelefono.value = cliente.telefono_contacto || '';
-            if (fCorreo) fCorreo.value = cliente.email_contacto || ''; // 🔽 NUEVO
+            if (fCorreo) fCorreo.value = cliente.email_contacto || '';
             
+            // ============================================================
             // 2. CONDICIONES COMERCIALES
+            // ============================================================
             const fVendedor = document.getElementById('fVendedor');
             const fEmailAsesor = document.getElementById('fEmailAsesor');
             const fTelefonoAsesor = document.getElementById('fTelefonoAsesor');
             const fMoneda = document.getElementById('fMoneda');
-            const fCondicion = document.getElementById('fCondicion');
-            const fTiempo = document.getElementById('fTiempo');
             const fValidez = document.getElementById('fValidez');
             const fDireccionEntrega = document.getElementById('fDireccionEntrega');
             const fDescuentoEspecial = document.getElementById('fDescuentoEspecial');
             const fNotaComercial = document.getElementById('fNotaComercial');
+            const fTiempo = document.getElementById('fTiempo');
+            const fCondicion = document.getElementById('fCondicion');
             
             if (fVendedor) fVendedor.value = CONFIG.asesorDefault;
             if (fEmailAsesor) fEmailAsesor.value = CONFIG.emailAsesorDefault;
             if (fTelefonoAsesor) fTelefonoAsesor.value = CONFIG.telefonoAsesorDefault;
             if (fMoneda) fMoneda.value = 'Soles (S/.)';
             
-            if (cliente.condicion_pago && fCondicion) {
-                setFieldValue('fCondicion', 'fCondicionCustom', cliente.condicion_pago);
-            }
+            // 🔽 NUEVO: NO AUTOCARGAR CONDICIÓN DE PAGO - se deja en "Personalizado" o en su valor por defecto
+            // if (cliente.condicion_pago && fCondicion) {
+            //     setFieldValue('fCondicion', 'fCondicionCustom', cliente.condicion_pago);
+            // }
+            // ❌ ELIMINADO: Ya NO se autocompleta la condición de pago
+
+            // 🔽 NUEVO: NO AUTOCARGAR TIEMPO DE ENTREGA - se deja en su valor por defecto
+            // if (fTiempo) fTiempo.value = '5 días hábiles';
+            // ❌ ELIMINADO: Ya NO se autocompleta el tiempo de entrega
+
+            // ✅ Los siguientes campos SÍ se autocompletan:
             
-            // Dirección de entrega
+            // Dirección de entrega (si el cliente tiene puntos de entrega)
             let direccionEntrega = '';
             if (cliente.puntos_entrega && cliente.puntos_entrega.length > 0) {
                 const principal = cliente.puntos_entrega.find(p => p.principal === true);
@@ -7592,14 +7630,13 @@ async function loadClient() {
                 setFieldValue('fDireccionEntrega', 'fDireccionEntregaCustom', direccionEntrega);
             }
             
+            // Validez (por defecto 15 días)
+            if (fValidez) fValidez.value = '15 días';
+            
+            // Descuento y nota comercial (se dejan en blanco o 0)
             if (fDescuentoEspecial) fDescuentoEspecial.value = 0;
             if (fNotaComercial) fNotaComercial.value = '';
-            if (fTiempo) fTiempo.value = '5 días hábiles';
-            if (fValidez) fValidez.value = '15 días';
-
-            //rompia el flujo de carga de cotizacion, lo comento por si se necesita luego
-            //if (fTipo) fTipo.value = '0';
-
+            
             if (fReq) fReq.value = '';
             if (fFuente) fFuente.value = 'Correo';
             
@@ -7618,7 +7655,9 @@ async function loadClient() {
             return;
         }
         
+        // ============================================================
         // SI NO ESTÁ EN BD, CONSULTAR SUNAT
+        // ============================================================
         console.log('🌞 Cliente no encontrado en BD, consultando SUNAT...');
         
         const sunatResponse = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
@@ -7630,12 +7669,14 @@ async function loadClient() {
             const fRuc = document.getElementById('fRuc');
             const fRazon = document.getElementById('fRazon');
             const fDireccion = document.getElementById('fDireccion');
-            const fCorreo = document.getElementById('fCorreo'); // 🔽 NUEVO
+            const fCorreo = document.getElementById('fCorreo');
             
             if (fRuc) fRuc.value = sunatData.ruc || ruc;
             if (fRazon) fRazon.value = sunatData.razon_social || '';
             if (fDireccion) fDireccion.value = sunatData.direccion || '';
-            if (fCorreo) fCorreo.value = sunatData.email || ''; // 🔽 NUEVO
+            if (fCorreo) fCorreo.value = sunatData.email || '';
+            
+            // ❌ ELIMINADO: No se autocompleta ni condición de pago ni tiempo de entrega desde SUNAT
             
             const confirmBox = document.getElementById('clientConfirmBox');
             if (confirmBox) {
@@ -11269,10 +11310,12 @@ async function savePedidoCompraSAP(force) {
     }
 }
 
+
+
 // ============================================================
-// MODAL DE ADVERTENCIA DE VALIDACIÓN
+// MODAL DE ADVERTENCIA DE VALIDACIÓN PARA CAMPOS OBLIGATORIOS
 // ============================================================
-function showValidationWarningModal(invalidSwitches) {
+function showValidationWarningModal(camposFaltantes) {
     // Remover modales existentes
     document.querySelectorAll('.validation-warning-overlay').forEach(el => el.remove());
     
@@ -11281,96 +11324,107 @@ function showValidationWarningModal(invalidSwitches) {
     overlay.style.cssText = `
         position: fixed;
         inset: 0;
-        background: rgba(0, 0, 0, 0.6);
+        background: rgba(0, 0, 0, 0.7);
         backdrop-filter: blur(8px);
         z-index: 999999;
         display: flex;
         align-items: center;
         justify-content: center;
         animation: fadeIn 0.3s ease;
+        padding: 20px;
     `;
     
     const modal = document.createElement('div');
     modal.style.cssText = `
         background: #FFFFFF;
-        border-radius: 20px;
-        max-width: 520px;
-        width: 95%;
-        padding: 32px 28px 24px;
-        box-shadow: 0 30px 80px rgba(0,0,0,0.35);
+        border-radius: 24px;
+        max-width: 560px;
+        width: 100%;
+        padding: 40px 32px 32px;
+        box-shadow: 0 30px 80px rgba(0,0,0,0.4);
         animation: modalSlideUp 0.3s ease;
         text-align: center;
     `;
     
     // Generar lista de items pendientes
-    const listaItems = invalidSwitches.map(item => 
-        `<li style="color: #DC2626; font-weight: 800; padding: 4px 0; text-align: left; list-style: none; border-bottom: 1px solid #FEE2E2;">
-            ❌ ${item}
+    const listaItems = camposFaltantes.map(item => 
+        `<li style="color: #DC2626; font-weight: 800; padding: 8px 0; text-align: left; list-style: none; border-bottom: 1px solid #FEE2E2; font-size: 15px; display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 20px;">❌</span>
+            ${item}
         </li>`
     ).join('');
     
     modal.innerHTML = `
-        <div style="font-size: 48px; margin-bottom: 12px;">⚠️</div>
-        <h2 style="font-size: 22px; font-weight: 900; color: #0F172A; margin-bottom: 8px;">Validaciones pendientes</h2>
-        <p style="font-size: 15px; color: #475569; line-height: 1.5; margin-bottom: 12px;">
-            Para crear un <b>"PC Conforme"</b> debes marcar todas las validaciones como <b>"Válido"</b>.
+        <div style="font-size: 56px; margin-bottom: 16px;">⚠️</div>
+        <h2 style="font-size: 24px; font-weight: 900; color: #0F172A; margin-bottom: 8px;">Campos obligatorios faltantes</h2>
+        <p style="font-size: 16px; color: #475569; line-height: 1.6; margin-bottom: 20px;">
+            Para continuar, completa los siguientes campos obligatorios:
         </p>
-        <div style="background: #FEF2F2; border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; border-left: 4px solid #DC2626; text-align: left;">
-            <span style="font-size: 13px; font-weight: 700; color: #991B1B; display: block; margin-bottom: 8px;">📋 Te falta marcar:</span>
+        <div style="background: #FEF2F2; border-radius: 16px; padding: 16px 20px; margin-bottom: 24px; border-left: 4px solid #DC2626; text-align: left;">
             <ul style="margin: 0; padding: 0; list-style: none;">
                 ${listaItems}
             </ul>
         </div>
-        <div style="background: #EFF6FF; border-radius: 12px; padding: 10px 14px; margin-bottom: 20px; border-left: 4px solid #2563EB; text-align: left;">
-            <span style="font-size: 12px; font-weight: 700; color: #1E3A8A;">
-                💡 Si no deseas validar todos los puntos, puedes crear un <b>"PC Observado"</b> usando el botón naranja.
+        <div style="background: #EFF6FF; border-radius: 12px; padding: 12px 16px; margin-bottom: 24px; border-left: 4px solid #2563EB; text-align: left;">
+            <span style="font-size: 13px; font-weight: 700; color: #1E3A8A; display: flex; align-items: center; gap: 8px;">
+                💡 Los campos marcados con <span style="color:#DC2626;font-weight:900;">*</span> son obligatorios.
             </span>
         </div>
-        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-            <button class="warning-close-btn" style="
-                padding: 12px 28px;
-                border-radius: 12px;
-                border: 1px solid #E5E7EB;
-                background: #FFFFFF;
-                color: #0F172A;
-                font-weight: 800;
-                font-size: 14px;
-                cursor: pointer;
-                transition: all 0.2s;
-            ">Cerrar y revisar</button>
-            <button class="warning-observado-btn" style="
-                padding: 12px 28px;
-                border-radius: 12px;
-                border: 1px solid #FF8C00;
-                background: #FF8C00;
-                color: #FFFFFF;
-                font-weight: 800;
-                font-size: 14px;
-                cursor: pointer;
-                transition: all 0.2s;
-                box-shadow: 0 4px 14px rgba(255, 140, 0, 0.35);
-            ">⚠️ Crear PC Observado</button>
-        </div>
+        <button class="warning-close-btn" style="
+            padding: 14px 48px;
+            border-radius: 14px;
+            border: none;
+            background: #EF233C;
+            color: #FFFFFF;
+            font-weight: 900;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 14px rgba(239, 35, 60, 0.4);
+            width: 100%;
+        " onmouseover="this.style.background='#D91A30';this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(239,35,60,0.5)'" 
+           onmouseout="this.style.background='#EF233C';this.style.transform='translateY(0)';this.style.boxShadow='0 4px 14px rgba(239,35,60,0.4)'">
+            ✅ Entendido, ir a completar
+        </button>
     `;
     
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
     
-    // Event listeners
+    // Animaciones CSS
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes modalSlideUp {
+            from { opacity: 0; transform: translateY(40px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Event listener para cerrar
     modal.querySelector('.warning-close-btn').addEventListener('click', function() {
         overlay.remove();
-        // Enfocar el primer switch inválido
-        const firstInvalid = document.querySelector('.switch input[type="checkbox"]:not(:checked)');
-        if (firstInvalid) {
-            firstInvalid.focus();
-            firstInvalid.closest('.check-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Enfocar el primer campo faltante
+        const primerosCampos = {
+            'RUC': 'fRuc',
+            'Condición de Pago': 'fCondicion',
+            'Tiempo de Entrega': 'fTiempo'
+        };
+        for (const campo of camposFaltantes) {
+            const id = primerosCampos[campo];
+            if (id) {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.focus();
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    break;
+                }
+            }
         }
-    });
-    
-    modal.querySelector('.warning-observado-btn').addEventListener('click', function() {
-        overlay.remove();
-        // Guardar como PC Observado
-        savePedidoCompraSAP('observado');
     });
     
     overlay.addEventListener('click', function(e) {
@@ -11379,7 +11433,6 @@ function showValidationWarningModal(invalidSwitches) {
         }
     });
 }
-
 
 function updateProductQty(idKey, value) {
     // La cantidad se guarda en el atributo data-qty del checkbox o se obtiene cuando se agrega
@@ -12383,6 +12436,7 @@ window.deleteGuia = deleteGuia;
 window.deleteComprobante = deleteComprobante;
 window.deleteNota = deleteNota;
 window.getDescripcionPrincipal = getDescripcionPrincipal;
+window.badgeNuevo = badgeNuevo;
 // ============================================================
 // 14. FUNCIONES DE FORMATO
 // ============================================================
