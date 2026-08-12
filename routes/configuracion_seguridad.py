@@ -1195,8 +1195,87 @@ def get_usuario_permisos(usuario_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+# ============================================================
+# PERMISOS DE USUARIO - VERSIÓN ÚNICA Y CORREGIDA
+# ============================================================
+
+@config_seguridad_bp.route('/usuarios/<usuario_id>/permisos', methods=['GET'])
+def obtener_permisos_usuario(usuario_id):
+    """Obtener los permisos de un usuario en una empresa específica"""
+    try:
+        empresa_id = request.args.get('empresa_id')
+        
+        if not empresa_id:
+            return jsonify({'success': False, 'error': 'empresa_id es requerido'}), 400
+        
+        usuario = db_query("""
+            SELECT auth_user_id FROM usuarios WHERE id = %s
+        """, (usuario_id,))
+        
+        if not usuario:
+            return jsonify({'success': False, 'error': 'Usuario no encontrado'}), 404
+        
+        auth_user_id = usuario[0]['auth_user_id']
+        
+        permisos = db_query("""
+            SELECT 
+                up.id,
+                up.auth_user_id,
+                up.empresa_id,
+                up.submodulo_id,
+                s.codigo as submodulo_codigo,
+                s.nombre as submodulo_nombre,
+                m.codigo as modulo_codigo,
+                m.nombre as modulo_nombre,
+                up.puede_ver,
+                up.puede_crear,
+                up.puede_editar,
+                up.puede_aprobar,
+                up.puede_anular,
+                up.puede_eliminar,
+                up.puede_exportar,
+                up.puede_subir_evidencia,
+                up.observacion,
+                up.created_at,
+                up.updated_at
+            FROM erp_usuario_permisos up
+            JOIN erp_submodulos s ON s.id = up.submodulo_id
+            JOIN erp_modulos m ON m.id = s.modulo_id
+            WHERE up.auth_user_id = %s
+            AND up.empresa_id = %s
+            ORDER BY m.orden, s.orden
+        """, (auth_user_id, empresa_id))
+        
+        submodulos = db_query("""
+            SELECT 
+                s.id,
+                s.codigo,
+                s.nombre,
+                m.codigo as modulo_codigo,
+                m.nombre as modulo_nombre
+            FROM erp_submodulos s
+            JOIN erp_modulos m ON m.id = s.modulo_id
+            WHERE s.estado = 'activo'
+            ORDER BY m.orden, s.orden
+        """)
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'permisos': permisos,
+                'submodulos': submodulos
+            }
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en obtener_permisos_usuario: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @config_seguridad_bp.route('/usuarios/<usuario_id>/permisos', methods=['POST'])
-def update_usuario_permisos(usuario_id):
+def actualizar_permisos_usuario(usuario_id):
     """Actualizar los permisos de un usuario en una empresa"""
     try:
         data = request.get_json()
@@ -1208,7 +1287,6 @@ def update_usuario_permisos(usuario_id):
         if not empresa_id:
             return jsonify({'success': False, 'error': 'empresa_id es requerido'}), 400
         
-        # Obtener el auth_user_id del usuario
         usuario = db_query("""
             SELECT auth_user_id FROM usuarios WHERE id = %s AND estado = 'activo'
         """, (usuario_id,))
@@ -1223,7 +1301,7 @@ def update_usuario_permisos(usuario_id):
         with db_tx() as conn:
             cur = conn.cursor()
             
-            # Eliminar permisos existentes para esta empresa
+            # Eliminar permisos existentes
             cur.execute("""
                 DELETE FROM erp_usuario_permisos 
                 WHERE auth_user_id = %s AND empresa_id = %s
@@ -1240,23 +1318,19 @@ def update_usuario_permisos(usuario_id):
                 print(f"📌 Permiso {idx}: submodulo_id = {submodulo_id} (tipo: {type(submodulo_id)})")
                 
                 # ✅ CONVERTIR A UUID SI ES NECESARIO
-                # Si es un número (int), buscar el UUID correspondiente
                 if isinstance(submodulo_id, int) or (isinstance(submodulo_id, str) and submodulo_id.isdigit()):
-                    # Buscar el UUID real del submódulo por su ID numérico
                     uuid_result = db_query(
                         "SELECT id FROM erp_submodulos WHERE id = %s", 
                         (int(submodulo_id),)
                     )
                     if uuid_result:
-                        submodulo_id = uuid_result[0]['id']  # Este es el UUID real
+                        submodulo_id = uuid_result[0]['id']
                         print(f"   ✅ Convertido a UUID: {submodulo_id}")
                     else:
                         print(f"   ❌ No se encontró submódulo con ID: {submodulo_id}")
                         continue
                 
-                # Si es un string que parece UUID, usarlo directamente
                 elif isinstance(submodulo_id, str) and '-' in submodulo_id:
-                    # Verificar que existe
                     uuid_result = db_query(
                         "SELECT id FROM erp_submodulos WHERE id = %s", 
                         (submodulo_id,)
@@ -1297,99 +1371,10 @@ def update_usuario_permisos(usuario_id):
         })
         
     except Exception as e:
-        print(f"❌ Error en update_usuario_permisos: {e}")
+        print(f"❌ Error en actualizar_permisos_usuario: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
-
-# En configuracion_seguridad.py - reemplazar el método POST de permisos
-
-
-@config_seguridad_bp.route('/usuarios/<usuario_id>/permisos', methods=['POST'])
-def update_usuario_permisos(usuario_id):
-    """Actualizar los permisos de un usuario en una empresa"""
-    try:
-        data = request.get_json()
-        empresa_id = data.get('empresa_id')
-        permisos = data.get('permisos', [])
-        
-        if not empresa_id:
-            return jsonify({'success': False, 'error': 'empresa_id es requerido'}), 400
-        
-        usuario = db_query("""
-            SELECT auth_user_id FROM usuarios WHERE id = %s AND estado = 'activo'
-        """, (usuario_id,))
-        
-        if not usuario:
-            return jsonify({'success': False, 'error': 'Usuario no encontrado'}), 404
-        
-        auth_user_id = usuario[0]['auth_user_id']
-        
-        with db_tx() as conn:
-            cur = conn.cursor()
-            
-            # Eliminar permisos existentes
-            cur.execute("""
-                DELETE FROM erp_usuario_permisos 
-                WHERE auth_user_id = %s AND empresa_id = %s
-            """, (auth_user_id, empresa_id))
-            
-            # Insertar nuevos permisos
-            for permiso in permisos:
-                submodulo_id = permiso.get('submodulo_id')
-                if not submodulo_id:
-                    continue
-                
-                # ✅ CONVERTIR UUID A NÚMERO SI ES NECESARIO
-                # Si es un UUID string, buscar el ID numérico correspondiente
-                if isinstance(submodulo_id, str) and '-' in submodulo_id:
-                    # Buscar el submódulo por UUID
-                    submodulo_result = db_query(
-                        "SELECT id FROM erp_submodulos WHERE id = %s", 
-                        (submodulo_id,)
-                    )
-                    if submodulo_result:
-                        # Usar el ID numérico que ya tenemos
-                        submodulo_id = submodulo_result[0]['id']
-                    else:
-                        continue
-                
-                # Si es un número, usarlo directamente
-                cur.execute("""
-                    INSERT INTO erp_usuario_permisos (
-                        auth_user_id, empresa_id, submodulo_id,
-                        puede_ver, puede_crear, puede_editar,
-                        puede_aprobar, puede_anular, puede_eliminar,
-                        puede_exportar, puede_subir_evidencia,
-                        observacion
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """, (
-                    auth_user_id,
-                    empresa_id,
-                    submodulo_id,  # Ahora es numérico
-                    permiso.get('puede_ver', False),
-                    permiso.get('puede_crear', False),
-                    permiso.get('puede_editar', False),
-                    permiso.get('puede_aprobar', False),
-                    permiso.get('puede_anular', False),
-                    permiso.get('puede_eliminar', False),
-                    permiso.get('puede_exportar', False),
-                    permiso.get('puede_subir_evidencia', False),
-                    permiso.get('observacion', '')
-                ))
-        
-        return jsonify({
-            'success': True,
-            'message': 'Permisos actualizados exitosamente'
-        })
-        
-    except Exception as e:
-        print(f"❌ Error en update_usuario_permisos: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'success': False, 'error': str(e)}), 500
-
 # ============================================================
 # 7. AUDITORÍA
 # ============================================================
