@@ -1919,7 +1919,7 @@ async function saveMarca() {
         if (result.success) {
 
             if (!marcaEditId) {
-                ultimoRegistroCreado.marcas = result.data?.id ?? null;
+                setUltimoRegistroCreadoMaestros('marcas', result.data?.id ?? null);
             }
 
             showToast(result.message || '✅ Marca guardada correctamente', 'success');
@@ -2073,7 +2073,7 @@ async function saveUm() {
         if (result.success) {
 
             if (!umEditId) {
-                ultimoRegistroCreado.um = result.data?.id ?? null;
+                setUltimoRegistroCreadoMaestros('um', result.data?.id ?? null);
             }
             
             showToast(result.message || '✅ Unidad guardada correctamente', 'success');
