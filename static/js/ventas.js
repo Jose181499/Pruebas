@@ -879,7 +879,7 @@ function renderPedidos() {
                 <td>${i + 1}</td>
                 <td class="date-cell">${formatearFecha(r.fecha || r.created_at)}</td>
                 <td>${estadoBadge}</td>
-                <td><b>${r.numero || '-'}</b></td>
+                <td><b>${r.numero || '-'}</b>${badgeNuevo('pedido_compra', r)}</td>
                 
                 <td>${r.cotizacion_numero || '-'}</td>
                 <td class="left"><b>${r.cliente || '-'}</b></td>
@@ -1401,7 +1401,7 @@ function renderDespachos() {
             <td>${i + 1}</td>
             <td class="date-cell">${fechaDisplay}</td>
             <td>${badgeStatus(r.estado)}</td>
-            <td><b>${sd(r.numero)}</b></td>
+            <td><b>${sd(r.numero)}</b>${badgeNuevo('despachar', r)}</td>
             <td>${sd(r.pc_numero)}</td>
             <td class="left">${sd(r.cliente)}</td>
             <td>${sd(r.comprobante)}</td>
@@ -1693,7 +1693,7 @@ function renderGuias() {
             <td>${i + 1}</td>
             <td class="date-cell">${formatearFechaGuia(r.fecha)}</td>
             <td>${badgeStatus(r.estado)}</td>
-            <td><b>${sd(r.serie)}-${sd(r.numero)}</b></td>
+            <td><b>${sd(r.serie)}-${sd(r.numero)}</b>${badgeNuevo('guias', r)}</td>
             <td>${sd(r.ruc)}</td>
             <td class="left">${sd(r.cliente)}</td>
             <td>${sd(r.cotizacion)}</td>
@@ -1776,7 +1776,7 @@ function renderComprobantes() {
             <td class="date-cell">${formatearFechaComprobante(r.fecha)}</td>
             <td>${badgeStatus(r.estado)}</td>
             <td>${sd(r.tipo)}</td>
-            <td><b>${sd(r.serie)}-${sd(r.numero)}</b></td>
+            <td><b>${sd(r.serie)}-${sd(r.numero)}</b>${badgeNuevo('comprobantes', r)}</td>
             <td>${sd(r.ruc)}</td>
             <td class="left">${sd(r.cliente)}</td>
             <td>${sd(r.cotizacion)}</td>
@@ -1862,7 +1862,7 @@ function renderNotas() {
             <td class="date-cell">${String(r.fecha || '').replace(' ', '<br>')}</td>
             <td>${badgeStatus(r.estado)}</td>
             <td>${sd(r.tipo)}</td>
-            <td><b>${sd(r.serie)}-${sd(r.numero)}</b></td>
+            <td><b>${sd(r.serie)}-${sd(r.numero)}</b>${badgeNuevo('notas_credito', r)}</td>
             <td>${sd(r.ruc)}</td>
             <td class="left">${sd(r.cliente)}</td>
             <td>${sd(r.comprobante)}</td>
@@ -1899,7 +1899,7 @@ function renderDevoluciones() {
             <td>${i + 1}</td>
             <td class="date-cell">${String(r.fecha || '').replace(' ', '<br>')}</td>
             <td>${badgeStatus(r.estado)}</td>
-            <td><b>${sd(r.numero)}</b></td>
+            <td><b>${sd(r.numero)}</b>${badgeNuevo('devoluciones', r)}</td>
             <td>${sd(r.ruc)}</td>
             <td class="left">${sd(r.cliente)}</td>
             <td>${sd(r.comprobante_numero)}</td>
