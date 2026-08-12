@@ -1733,43 +1733,38 @@ async function cargarSubmodulos() {
         }
 
 
-
-        async function loadUsuarios(){
-            try {
-                // ✅ VERIFICAR QUE LOS ELEMENTOS EXISTEN
-                // Buscar en la página actual si hay elementos de usuarios
-                const dashUsuarios = document.getElementById('dashUsuarios');
-                const tbodyUsuarios = document.getElementById('tbodyUsuarios');
-                const filterEmpresa = document.getElementById('filterEmpresaUsuarios');
-                
-                // Si no hay NINGÚN elemento de usuarios en la página, omitir
-                if (!dashUsuarios && !tbodyUsuarios && !filterEmpresa) {
-                    console.warn('⚠️ Elementos de usuarios no encontrados en la página actual');
-                    return;
-                }
-                
-                const data = await fetchAPI('/api/config/usuarios');
-                
-                if (data.success) {
-                    usuariosData = data.data || [];
-                    
-                    // Solo actualizar si los elementos existen
-                    if (dashUsuarios) {
-                        dashUsuarios.textContent = usuariosData.length;
-                    }
-                    
-                    // Si existe la tabla de usuarios, renderizar
-                    if (tbodyUsuarios) {
-                        await renderUsuarios();
-                    }
-                } else {
-                    toast('Error al cargar usuarios: ' + (data.error || 'Error desconocido'));
-                }
-            } catch(e) {
-                console.error('Error cargando usuarios:', e);
-                toast('Error al cargar usuarios');
-            }
+async function loadUsuarios(forceRefresh = false){
+    try {
+        const dashUsuarios = document.getElementById('dashUsuarios');
+        const tbodyUsuarios = document.getElementById('tbodyUsuarios');
+        const filterEmpresa = document.getElementById('filterEmpresaUsuarios');
+        
+        if (!dashUsuarios && !tbodyUsuarios && !filterEmpresa) {
+            console.warn('⚠️ Elementos de usuarios no encontrados en la página actual');
+            return;
         }
+        
+        const data = await fetchAPI('/api/config/usuarios');
+        
+        if (data.success) {
+            usuariosData = data.data || [];
+            if (dashUsuarios) {
+                dashUsuarios.textContent = usuariosData.length;
+            }
+            if (tbodyUsuarios) {
+                // Solo renderizar si es necesario
+                if (forceRefresh || !usuariosRendered) {
+                    await renderUsuarios('', forceRefresh);
+                }
+            }
+        } else {
+            toast('Error al cargar usuarios: ' + (data.error || 'Error desconocido'));
+        }
+    } catch(e) {
+        console.error('Error cargando usuarios:', e);
+        toast('Error al cargar usuarios');
+    }
+}
 
 
 // ============================================================
@@ -2176,9 +2171,21 @@ async function togglePermiso(event) {
 }
 
 // ============================================================
-// RENDER USUARIOS - VERSIÓN CORREGIDA
+// RENDER USUARIOS - VERSIÓN CORREGIDA (CON CACHE)
 // ============================================================
-async function renderUsuarios(filter="") {
+let usuariosRendered = false;
+let usuariosCacheHTML = '';
+
+async function renderUsuarios(filter="", forceRefresh = false) {
+    // Si no es forceRefresh y ya hay datos renderizados, usar cache
+    if (!forceRefresh && usuariosRendered && usuariosCacheHTML) {
+        const tbody = document.getElementById("tbodyUsuarios");
+        if (tbody && tbody.innerHTML === usuariosCacheHTML) {
+            console.log('📦 Usando cache de usuarios');
+            return;
+        }
+    }
+    
     const empresaFiltro = document.getElementById("filterEmpresaUsuarios")?.value || "TODAS";
     const nivelFiltro = document.getElementById("filterNivelUsuarios")?.value || "TODOS";
     const q = String(filter || document.getElementById("searchUsuarios")?.value || "").toLowerCase();
@@ -2239,7 +2246,7 @@ async function renderUsuarios(filter="") {
         });
     }
     
-    // ✅ MAPA DE NOMBRES DE MÓDULOS A CÓDIGOS
+    // MAPA DE NOMBRES DE MÓDULOS A CÓDIGOS
     const moduleToCode = {
         'Configuración': 'EMPRESAS',
         'Usuarios y permisos': 'USUARIOS_PERMISOS',
@@ -2278,7 +2285,6 @@ async function renderUsuarios(filter="") {
             
             const uuid = UUID_MAP_BY_CODE[codigo];
             if (!uuid) {
-                console.warn(`⚠️ No se encontró UUID para código: ${codigo}`);
                 return false;
             }
             
@@ -2323,8 +2329,12 @@ async function renderUsuarios(filter="") {
 
     if (htmlRows.length > 0) {
         tbody.innerHTML = htmlRows.join('');
+        usuariosCacheHTML = tbody.innerHTML;
+        usuariosRendered = true;
     } else {
         tbody.innerHTML = `<tr><td colspan="17" style="text-align:center;color:#94A3B8;padding:20px;">📭 No hay usuarios</td></tr>`;
+        usuariosCacheHTML = '';
+        usuariosRendered = true;
     }
 
     // Actualizar contadores
@@ -2348,7 +2358,7 @@ async function renderUsuarios(filter="") {
         }).length;
     }
 
-    // ✅ CONFIGURAR EVENTOS DESPUÉS DE RENDERIZAR
+    // CONFIGURAR EVENTOS DESPUÉS DE RENDERIZAR
     setTimeout(() => {
         document.querySelectorAll('.perm-checkbox').forEach(checkbox => {
             const newCheckbox = checkbox.cloneNode(true);
@@ -2373,6 +2383,163 @@ async function renderUsuarios(filter="") {
             });
         });
     }, 100);
+}
+
+// Sobrescribir la función para que no recargue toda la tabla
+async function togglePermiso(event) {
+    const checkbox = event.target;
+    const userId = checkbox.dataset.userId;
+    const module = checkbox.dataset.module;
+    const empresaId = checkbox.dataset.empresaId;
+    const user = checkbox.dataset.user;
+    const tienePermiso = checkbox.checked;
+    
+    console.log('🔄 Toggle permiso:', { userId, module, empresaId, user, tienePermiso });
+    
+    if (!userId || !empresaId || userId === 'null' || empresaId === 'null') {
+        toast('❌ Faltan datos');
+        checkbox.checked = !tienePermiso;
+        return;
+    }
+    
+    const userIdNum = parseInt(userId);
+    if (isNaN(userIdNum)) {
+        toast('❌ ID de usuario inválido');
+        checkbox.checked = !tienePermiso;
+        return;
+    }
+    
+    const empresaIdStr = String(empresaId);
+    
+    const u = usuariosData.find(item => item.id === userIdNum);
+    if (!u) {
+        toast('❌ Usuario no encontrado');
+        checkbox.checked = !tienePermiso;
+        return;
+    }
+    
+    const empresa = u.empresas_acceso?.find(e => e.empresa_id === empresaIdStr);
+    const esAdmin = empresa?.rol_codigo === 'GERENCIA_TOTAL';
+    
+    if (esAdmin) {
+        toast('👑 Usuario GERENCIA_TOTAL tiene acceso total');
+        checkbox.checked = true;
+        return;
+    }
+    
+    const moduleToCode = {
+        'Configuración': 'EMPRESAS',
+        'Usuarios y permisos': 'USUARIOS_PERMISOS',
+        'Correlativos': 'CORRELATIVOS',
+        'Parámetros': 'PARAMETROS',
+        'Integración ERP': 'INTEGRACION',
+        'Maestros': 'CLIENTES',
+        'Productos': 'PRODUCTOS_LISTADO',
+        'Cotizaciones': 'COTIZACIONES',
+        'Ventas': 'COMPROBANTES_CLIENTE',
+        'Compras': 'SOLICITUD_COMPRA',
+        'Logística': 'RECEPCION_MERCADERIA',
+        'Inventario': 'ESTADO_STOCK',
+        'CxC': 'CUENTAS_COBRAR',
+        'CxP': 'CUENTAS_PAGAR',
+        'Caja': 'CAJA_BANCOS',
+        'Reportes': 'REPORTE_VENTAS',
+        'SUNAT': 'SUNAT'
+    };
+    
+    const codigo = moduleToCode[module];
+    if (!codigo) {
+        toast(`❌ Módulo "${module}" no encontrado`);
+        checkbox.checked = !tienePermiso;
+        return;
+    }
+    
+    let uuid = UUID_MAP_BY_CODE[codigo];
+    if (!uuid) {
+        await cargarUUIDsPorCodigo();
+        uuid = UUID_MAP_BY_CODE[codigo];
+        if (!uuid) {
+            toast(`❌ No se encontró UUID para "${module}"`);
+            checkbox.checked = !tienePermiso;
+            return;
+        }
+    }
+    
+    // Obtener permisos existentes
+    const permisosExistentes = await cargarPermisosUsuario(userIdNum, empresaIdStr);
+    let permisosList = [];
+    
+    if (permisosExistentes?.permisos && permisosExistentes.permisos.length > 0) {
+        let encontrado = false;
+        for (const p of permisosExistentes.permisos) {
+            if (p.submodulo_id === uuid) {
+                p.puede_ver = tienePermiso;
+                p.puede_crear = tienePermiso;
+                p.puede_editar = tienePermiso;
+                p.puede_aprobar = false;
+                p.puede_anular = false;
+                p.puede_eliminar = false;
+                p.puede_exportar = false;
+                p.puede_subir_evidencia = false;
+                p.observacion = `Permiso ${tienePermiso ? 'habilitado' : 'deshabilitado'}`;
+                encontrado = true;
+                break;
+            }
+        }
+        
+        if (!encontrado && uuid) {
+            permisosExistentes.permisos.push({
+                submodulo_id: uuid,
+                puede_ver: tienePermiso,
+                puede_crear: tienePermiso,
+                puede_editar: tienePermiso,
+                puede_aprobar: false,
+                puede_anular: false,
+                puede_eliminar: false,
+                puede_exportar: false,
+                puede_subir_evidencia: false,
+                observacion: `Permiso ${tienePermiso ? 'habilitado' : 'deshabilitado'}`
+            });
+        }
+        permisosList = permisosExistentes.permisos;
+    } else {
+        if (uuid) {
+            permisosList = [{
+                submodulo_id: uuid,
+                puede_ver: tienePermiso,
+                puede_crear: tienePermiso,
+                puede_editar: tienePermiso,
+                puede_aprobar: false,
+                puede_anular: false,
+                puede_eliminar: false,
+                puede_exportar: false,
+                puede_subir_evidencia: false,
+                observacion: `Permiso ${tienePermiso ? 'habilitado' : 'deshabilitado'}`
+            }];
+        } else {
+            toast('❌ Error: No se encontró UUID para el módulo');
+            checkbox.checked = !tienePermiso;
+            return;
+        }
+    }
+    
+    try {
+        const result = await guardarPermisosUsuario(userIdNum, empresaIdStr, permisosList);
+        
+        if (result) {
+            toast(`✅ ${tienePermiso ? 'Habilitado' : 'Deshabilitado'} ${module} para ${user}`);
+            checkbox.checked = tienePermiso;
+            // NO recargar toda la tabla - solo actualizar el checkbox localmente
+            // usuariosCacheHTML se actualizará en la próxima recarga completa
+        } else {
+            checkbox.checked = !tienePermiso;
+            toast('❌ Error al guardar permiso');
+        }
+    } catch(e) {
+        console.error('❌ Error:', e);
+        checkbox.checked = !tienePermiso;
+        toast('❌ Error al guardar permiso');
+    }
 }
 
 

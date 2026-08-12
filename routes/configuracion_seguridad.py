@@ -1184,12 +1184,15 @@ def update_usuario_permisos(usuario_id):
     """Actualizar los permisos de un usuario en una empresa"""
     try:
         data = request.get_json()
+        print(f"📝 Datos recibidos: {data}")
+        
         empresa_id = data.get('empresa_id')
         permisos = data.get('permisos', [])
         
         if not empresa_id:
             return jsonify({'success': False, 'error': 'empresa_id es requerido'}), 400
         
+        # Obtener el auth_user_id del usuario
         usuario = db_query("""
             SELECT auth_user_id FROM usuarios WHERE id = %s AND estado = 'activo'
         """, (usuario_id,))
@@ -1198,6 +1201,8 @@ def update_usuario_permisos(usuario_id):
             return jsonify({'success': False, 'error': 'Usuario no encontrado'}), 404
         
         auth_user_id = usuario[0]['auth_user_id']
+        print(f"👤 Usuario: {auth_user_id}, Empresa: {empresa_id}")
+        print(f"📋 Permisos a guardar: {len(permisos)}")
         
         with db_tx() as conn:
             cur = conn.cursor()
@@ -1207,16 +1212,19 @@ def update_usuario_permisos(usuario_id):
                 DELETE FROM erp_usuario_permisos 
                 WHERE auth_user_id = %s AND empresa_id = %s
             """, (auth_user_id, empresa_id))
+            print(f"🗑️ Permisos eliminados para {auth_user_id} en empresa {empresa_id}")
             
             # Insertar nuevos permisos
             for permiso in permisos:
                 submodulo_id = permiso.get('submodulo_id')
                 if not submodulo_id:
+                    print(f"⚠️ Saltando permiso sin submodulo_id")
                     continue
                 
-                # Si es un ID numérico, convertirlo a UUID
+                print(f"📌 Procesando submodulo_id: {submodulo_id} (tipo: {type(submodulo_id)})")
+                
+                # Si es un ID numérico (int o string), convertirlo a UUID
                 if isinstance(submodulo_id, int) or (isinstance(submodulo_id, str) and submodulo_id.isdigit()):
-                    # Buscar el UUID correspondiente
                     codigos_por_id = {
                         '1': 'EMPRESAS', '2': 'USUARIOS_PERMISOS', '3': 'CORRELATIVOS',
                         '4': 'PARAMETROS', '5': 'INTEGRACION', '6': 'CLIENTES',
@@ -1238,11 +1246,15 @@ def update_usuario_permisos(usuario_id):
                         uuid_result = db_query("SELECT id FROM erp_submodulos WHERE codigo = %s", (codigo,))
                         if uuid_result:
                             submodulo_id = uuid_result[0]['id']
+                            print(f"✅ Convertido a UUID: {submodulo_id}")
                         else:
+                            print(f"⚠️ No se encontró UUID para código: {codigo}")
                             continue
                     else:
+                        print(f"⚠️ No se encontró código para ID: {submodulo_id}")
                         continue
                 
+                # Insertar el permiso
                 cur.execute("""
                     INSERT INTO erp_usuario_permisos (
                         auth_user_id, empresa_id, submodulo_id,
@@ -1265,6 +1277,7 @@ def update_usuario_permisos(usuario_id):
                     permiso.get('puede_subir_evidencia', False),
                     permiso.get('observacion', '')
                 ))
+                print(f"✅ Permiso insertado para submodulo: {submodulo_id}")
         
         return jsonify({
             'success': True,
@@ -1276,7 +1289,6 @@ def update_usuario_permisos(usuario_id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 # ============================================================
 # 7. AUDITORÍA
