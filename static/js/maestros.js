@@ -2550,12 +2550,33 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// ============================================================
-// VISTA COMPLETA - TODOS LOS CAMPOS DEL CLIENTE
-// ============================================================
+
 
 // ============================================================
-// VISTA COMPLETA - TODOS LOS CAMPOS DEL CLIENTE (CORREGIDA)
+// OBTENER CLIENTES CON DATOS COMPLETOS (como en el modal)
+// ============================================================
+
+async function cargarClientesCompletos() {
+    try {
+        // ✅ USA EL MISMO ENDPOINT QUE EL MODAL DE EDICIÓN
+        const response = await fetch('/maestros/api/clientes/listar');
+        const data = await response.json();
+        
+        if (data.success) {
+            // ✅ GUARDA LOS DATOS COMPLETOS EN DS
+            DS['clientes'] = data.data;
+            dataCache['clientes'] = data.data;
+            return data.data;
+        }
+        return [];
+    } catch (error) {
+        console.error('❌ Error cargando clientes completos:', error);
+        return [];
+    }
+}
+
+// ============================================================
+// VISTA COMPLETA - USA LOS MISMOS DATOS QUE EL MODAL
 // ============================================================
 
 function renderClientesCompleta(list) {
@@ -2566,7 +2587,13 @@ function renderClientesCompleta(list) {
         </div>`;
     }
     
-    // ✅ SOLO CAMPOS QUE EXISTEN EN LA BASE DE DATOS
+    // ✅ VERIFICAR QUE LOS DATOS TENGAN PUNTOS_CON_ENTREGA
+    console.log('📊 Datos completos de clientes:', list.map(c => ({
+        id: c.id,
+        nombre: c.razon_social,
+        puntos_entrega: c.puntos_entrega
+    })));
+    
     const allFields = [
         { key: 'id', label: 'ID', width: '50px' },
         { key: 'codigo_cliente', label: 'Código / Cliente', width: '100px' },
@@ -2583,11 +2610,9 @@ function renderClientesCompleta(list) {
         { key: 'nombre_contacto', label: 'Contacto Principal', width: '130px' },
         { key: 'telefono_contacto', label: 'Teléfono Principal', width: '110px' },
         { key: 'email_contacto', label: 'Email Principal', width: '160px' },
-        // ✅ CONTACTOS (desde clientes_contactos)
         { key: 'contactos', label: 'Contactos', width: '200px' },
-        // ✅ PUNTOS DE ENTREGA (desde clientes_puntos_entrega)
         { key: 'puntos_entrega', label: 'Puntos de Entrega', width: '220px' },
-        // ✅ INSTRUCCIONES (desde clientes_puntos_entrega)
+        // ✅ INSTRUCCIONES - IGUAL QUE EN fillClientForm
         { key: 'instrucciones', label: 'Instrucciones', width: '150px' },
         { key: 'estado', label: 'Estado', width: '90px' },
         { key: 'activo', label: 'Activo', width: '70px' },
@@ -2618,7 +2643,6 @@ function renderClientesCompleta(list) {
             } else if (f.key === 'ambito') {
                 value = bAmbito(value);
             } else if (f.key === 'contactos') {
-                // ✅ Mostrar contactos de clientes_contactos
                 if (r.contactos && r.contactos.length > 0) {
                     value = r.contactos.map(c => 
                         `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;text-align:left;">
@@ -2632,30 +2656,30 @@ function renderClientesCompleta(list) {
                     value = '-';
                 }
             } else if (f.key === 'puntos_entrega') {
-                // ✅ Mostrar puntos de entrega de clientes_puntos_entrega
                 if (r.puntos_entrega && r.puntos_entrega.length > 0) {
                     value = r.puntos_entrega.map(p => 
                         `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;text-align:left;">
                             <strong>${p.nombre_punto || p.punto || '-'}</strong>
                             ${p.principal ? ' ⭐' : ''}
                             <br><small>${p.direccion || ''} ${p.telefono_contacto || p.telefono ? '| Tel: ' + (p.telefono_contacto || p.telefono) : ''}</small>
+                            ${p.instrucciones ? `<br><span style="color:#2563EB;">📝 ${p.instrucciones}</span>` : ''}
                         </div>`
                     ).join('');
                 } else {
                     value = '-';
                 }
-                // ✅ ESTO ESTÁ BIEN - usa la clave 'instrucciones' directamente
-} else if (f.key === 'instrucciones') {
-    if (r.puntos_entrega && r.puntos_entrega.length > 0) {
-        const textos = r.puntos_entrega
-            .filter(p => p.instrucciones)
-            .map(p => `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;text-align:left;">
-                <strong>${p.nombre_punto || p.punto || '-'}:</strong> ${p.instrucciones}
-            </div>`);
-        value = textos.length ? textos.join('') : '-';
-    } else {
-        value = '-';
-    }
+            } else if (f.key === 'instrucciones') {
+                // ✅ IGUAL QUE EN fillClientForm - usa p.instrucciones
+                if (r.puntos_entrega && r.puntos_entrega.length > 0) {
+                    const textos = r.puntos_entrega
+                        .filter(p => p.instrucciones)
+                        .map(p => `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;text-align:left;">
+                            <strong>${p.nombre_punto || p.punto || '-'}:</strong> ${p.instrucciones}
+                        </div>`);
+                    value = textos.length ? textos.join('') : '-';
+                } else {
+                    value = '-';
+                }
             } else if (f.key === 'limite_credito' || f.key === 'descuento') {
                 if (value && !isNaN(value)) {
                     value = `S/ ${parseFloat(value).toFixed(2)}`;
@@ -2672,7 +2696,6 @@ function renderClientesCompleta(list) {
             cells += `<td style="text-align:center;">${value}</td>`;
         });
         
-        // ✅ BOTÓN TACHO DE BASURA - USA TOGGLE
         const isActive = r.estado === 'Activo' || r.estado === 'activo' || r.activo === true;
         const estadoDisplay = isActive ? 'Desactivar' : 'Activar';
         const estadoClass = isActive ? 'action-delete' : 'action-activate';
@@ -2700,7 +2723,6 @@ function renderClientesCompleta(list) {
         </table>
     </div>`;
 }
-
 
 // ============================================================
 // VISTA COMPLETA - TODOS LOS CAMPOS DEL PROVEEDOR
