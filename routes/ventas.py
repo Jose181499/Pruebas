@@ -84,7 +84,15 @@ def obtener_cotizaciones_db():
                 cl.telefono_contacto as cliente_telefono,
                 cl.nombre_contacto as cliente_contacto,
                 cl.email_contacto as cliente_email,
-                cl.codigo_cliente as cod_cliente
+                cl.codigo_cliente as cod_cliente,
+                (
+                    SELECT p.descripcion
+                    FROM cotizacion_detalle d
+                    LEFT JOIN productos p ON p.id = d.producto_id
+                    WHERE d.cotizacion_id = c.id
+                    ORDER BY d.id ASC
+                    LIMIT 1
+                ) AS primer_producto_descripcion
             FROM cotizaciones c
             LEFT JOIN clientes cl ON cl.id = c.cliente_id::integer
             WHERE c.estado != 'Anulada'
@@ -1003,16 +1011,15 @@ def api_cotizaciones_listar():
         data = obtener_cotizaciones_db()
         print(f"📊 Cotizaciones encontradas: {len(data)}")
         
-        formatted_data = []
-        for row in data:
-            formatted_data.append({
+        formatted_data.append({
                 'id': row.get('id'),
                 'numero': row.get('numero_cotizacion') or row.get('codigo_cotizacion'),
                 'fecha': row.get('fecha_creacion'),
                 'estado': row.get('estado'),
                 'ruc': row.get('cliente_ruc') or str(row.get('cliente_id', '')),
                 'razon': row.get('cliente_razon_social') or row.get('cliente_nombre_comercial') or f"Cliente {row.get('cliente_id', '')}",
-                'descripcion': row.get('nota_cotizacion') or row.get('notas') or 'Sin descripción',
+                'descripcion': row.get('nota_cotizacion') or row.get('notas') or '',
+                'primer_producto': row.get('primer_producto_descripcion') or '',
                 'monto': float(row.get('total', 0)),
                 'subtotal': float(row.get('subtotal', 0)),
                 'igv': float(row.get('igv', 0)),
@@ -1602,6 +1609,16 @@ def api_guias_guardar():
         from datetime import datetime, date
         
         # ============================================================
+        # ORIGEN FIJO - DATOS DEL REMITENTE
+        # ============================================================
+        ORIGEN_FIJO = {
+            'ruc': '20602095704',
+            'nombre': 'KCF CORPORACION SAC',
+            'direccion': 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES',
+            'ubigeo': '150139'
+        }
+        
+        # ============================================================
         # VALIDAR DATOS OBLIGATORIOS
         # ============================================================
         if not data:
@@ -1620,17 +1637,19 @@ def api_guias_guardar():
         print(f"📦 Items: {len(items_json)} productos")
         
         # ============================================================
-        # DATOS PARA LA GUÍA
+        # DATOS PARA LA GUÍA - CON ORIGEN FIJO
         # ============================================================
         guia_data = {
             'serie': data.get('serie', 'T001'),
             'numero': numero,
             'fecha_emision': date.today().isoformat(),
             'fecha_traslado': data.get('fecha_traslado') or date.today().isoformat(),
-            'ruc_remitente': data.get('ruc_remitente') or session.get('empresa_ruc', '20602095704'),
-            'remitente_nombre': data.get('remitente_nombre') or session.get('empresa_nombre', 'KCF CORPORACION SAC'),
-            'remitente_direccion': data.get('remitente_direccion') or 'Av. Principal 123, Lima',
-            'remitente_ubigeo': data.get('remitente_ubigeo') or '150101',
+            # 🔽 ORIGEN FIJO
+            'ruc_remitente': ORIGEN_FIJO['ruc'],
+            'remitente_nombre': ORIGEN_FIJO['nombre'],
+            'remitente_direccion': ORIGEN_FIJO['direccion'],
+            'remitente_ubigeo': ORIGEN_FIJO['ubigeo'],
+            # 🔽 DESTINATARIO (del cliente)
             'ruc_destinatario': data.get('ruc') or data.get('ruc_destinatario') or '',
             'destinatario_nombre': data.get('cliente') or data.get('destinatario_nombre') or '',
             'destinatario_direccion': data.get('destino') or data.get('destinatario_direccion') or '',
@@ -1727,7 +1746,6 @@ def api_guias_guardar():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 @ventas_bp.route('/ventas/api/guias/<int:id>', methods=['GET'])
 @login_required

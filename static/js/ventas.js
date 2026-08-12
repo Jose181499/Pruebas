@@ -75,20 +75,11 @@ function getDescripcionPrincipal(r) {
     if (r.descripcion && r.descripcion.trim() !== '') return r.descripcion;
     if (r.nota_cotizacion && r.nota_cotizacion.trim() !== '') return r.nota_cotizacion;
 
-    // Solo autocompletar con el primer producto si el estado es Generada o Aceptada
-    const estado = (r.estado || '').toLowerCase().trim();
-    const esGeneradaOAceptada = 
-        estado.includes('generada') || 
-        estado.includes('generado') ||
-        estado.includes('aceptada') || 
-        estado.includes('aceptado');
-
-    if (esGeneradaOAceptada) {
-        const productos = r.productos || r.items || [];
-        if (productos.length > 0) {
-            const primerProducto = productos[0];
-            return primerProducto.producto || primerProducto.descripcion || 'Sin descripción';
-        }
+    // Autocompletar con el primer producto sin importar el estado
+    const productos = r.productos || r.items || [];
+    if (productos.length > 0) {
+        const primerProducto = productos[0];
+        return primerProducto.producto || primerProducto.descripcion || 'Sin descripción';
     }
 
     return 'Sin descripción';
@@ -5886,6 +5877,19 @@ function actualizarContadorProductosGuia() {
 // ============================================================
 
 function recolectarDatosGuia() {
+    // ============================================================
+    // ORIGEN FIJO - DATOS DEL REMITENTE
+    // ============================================================
+    const ORIGEN_FIJO = {
+        ruc: '20602095704',
+        nombre: 'KCF CORPORACION SAC',
+        direccion: 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES',
+        ubigeo: '150139',
+        departamento: 'LIMA',
+        provincia: 'LIMA',
+        distrito: 'SAN MARTIN DE PORRES'
+    };
+    
     const items = [];
     document.querySelectorAll('#guiaProductosBody tr').forEach((row, idx) => {
         const codigo = row.querySelector('.guia-producto-codigo')?.value || '';
@@ -5919,17 +5923,29 @@ function recolectarDatosGuia() {
         documento_asociado: document.getElementById('guiaCotizacion').value || '',
         factura: document.getElementById('guiaFactura').value || '',
         observaciones: document.getElementById('guiaObservaciones').value || '',
+        // ============================================================
+        // REMITENTE - DATOS FIJOS
+        // ============================================================
         remitente: {
-            ruc: document.getElementById('guiaRucRemitente').value || '20602095704',
-            nombre: document.getElementById('guiaRemitenteNombre').value || 'KCF CORPORACION SAC',
-            direccion: document.getElementById('guiaOrigen').value || '',
-            ubigeo: document.getElementById('guiaUbigeoOrigen').value || ''
+            ruc: ORIGEN_FIJO.ruc,
+            nombre: ORIGEN_FIJO.nombre,
+            direccion: ORIGEN_FIJO.direccion,
+            ubigeo: ORIGEN_FIJO.ubigeo,
+            departamento: ORIGEN_FIJO.departamento,
+            provincia: ORIGEN_FIJO.provincia,
+            distrito: ORIGEN_FIJO.distrito
         },
+        // ============================================================
+        // DESTINATARIO - DATOS DEL CLIENTE
+        // ============================================================
         destinatario: {
             ruc: document.getElementById('guiaRuc').value || '',
             nombre: document.getElementById('guiaCliente').value || '',
             direccion: document.getElementById('guiaDestino').value || '',
-            ubigeo: document.getElementById('guiaUbigeoDestino').value || ''
+            ubigeo: document.getElementById('guiaUbigeoDestino').value || '',
+            departamento: document.getElementById('guiaDeptoDestino').value || '',
+            provincia: document.getElementById('guiaProvDestino').value || '',
+            distrito: document.getElementById('guiaDistDestino').value || ''
         },
         vehiculo: {
             placa: document.getElementById('guiaPlaca').value || '',
@@ -5945,6 +5961,7 @@ function recolectarDatosGuia() {
         items: items
     };
 }
+
 
 function validarGuia(data) {
     if (!data.destinatario.ruc) { showToast('⚠️ RUC del destinatario requerido', 'warning'); return false; }
@@ -6077,17 +6094,175 @@ window.openGuiaModal = function(id = null) {
     }
 };
 
-// Función para cargar guía existente
+
 async function cargarGuiaParaEditar(id) {
     try {
+        console.log('📥 Cargando guía para editar ID:', id);
+        showToast('⏳ Cargando datos de la guía...', 'info');
+
         const response = await apiFetch(`/ventas/api/guias/${id}`);
-        if (response.success) {
-            const g = response.data;
-            // Cargar datos en el formulario...
-            console.log('📦 Guía cargada:', g);
+        if (!response.success) {
+            showToast('Error al cargar guía: ' + (response.error || 'Desconocido'), 'error');
+            return;
         }
+
+        const g = response.data;
+        console.log('📦 Datos de guía cargados:', g);
+
+        // ============================================================
+        // ORIGEN FIJO - SIEMPRE SOBREESCRIBIR
+        // ============================================================
+        const ORIGEN_FIJO = {
+            ruc: '20602095704',
+            nombre: 'KCF CORPORACION SAC',
+            direccion: 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES',
+            ubigeo: '150139',
+            departamento: 'LIMA',
+            provincia: 'LIMA',
+            distrito: 'SAN MARTIN DE PORRES'
+        };
+
+        // Helper para setear <select>
+        const setSelectValue = (id, value) => {
+            const el = document.getElementById(id);
+            if (!el || value === undefined || value === null) return;
+            const val = String(value).trim();
+            let found = false;
+            for (const opt of el.options) {
+                if (opt.value === val) { opt.selected = true; found = true; break; }
+            }
+            if (!found) {
+                for (const opt of el.options) {
+                    if (opt.value.toLowerCase() === val.toLowerCase()) { opt.selected = true; found = true; break; }
+                }
+            }
+        };
+
+        const setValue = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) el.value = value ?? '';
+        };
+
+        // ============================================================
+        // CAMPOS BÁSICOS
+        // ============================================================
+        setValue('guiaSerie', g.serie);
+        setValue('guiaNumero', g.numero);
+        setSelectValue('guiaEstado', g.estado_sunat || g.estado);
+        setValue('guiaCliente', g.destinatario_nombre);
+        setValue('guiaRuc', g.ruc_destinatario);
+        setSelectValue('guiaOrigen', ORIGEN_FIJO.direccion);
+        setValue('guiaDestino', g.destinatario_direccion);
+        setSelectValue('guiaMotivo', g.motivo_traslado);
+        setValue('guiaObs', g.observaciones);
+
+        // ============================================================
+        // SOBREESCRIBIR ORIGEN CON DATOS FIJOS
+        // ============================================================
+        const origenInput = document.getElementById('guiaOrigen');
+        if (origenInput) {
+            origenInput.value = ORIGEN_FIJO.direccion;
+            origenInput.readOnly = true;
+            origenInput.style.background = '#F1F5F9';
+            origenInput.style.color = '#64748B';
+            origenInput.style.cursor = 'not-allowed';
+        }
+
+        // RUC Remitente
+        const rucRemitente = document.getElementById('guiaRucRemitente');
+        if (rucRemitente) {
+            rucRemitente.value = ORIGEN_FIJO.ruc;
+            rucRemitente.readOnly = true;
+            rucRemitente.style.background = '#F1F5F9';
+            rucRemitente.style.color = '#64748B';
+        }
+
+        // Nombre Remitente
+        const nombreRemitente = document.getElementById('guiaRemitenteNombre');
+        if (nombreRemitente) {
+            nombreRemitente.value = ORIGEN_FIJO.nombre;
+            nombreRemitente.readOnly = true;
+            nombreRemitente.style.background = '#F1F5F9';
+            nombreRemitente.style.color = '#64748B';
+        }
+
+        // Ubigeo Origen
+        const deptoOrigen = document.getElementById('guiaDeptoOrigen');
+        if (deptoOrigen) {
+            deptoOrigen.value = ORIGEN_FIJO.departamento;
+            deptoOrigen.disabled = true;
+            deptoOrigen.style.background = '#F1F5F9';
+            deptoOrigen.style.cursor = 'not-allowed';
+        }
+
+        const provOrigen = document.getElementById('guiaProvOrigen');
+        if (provOrigen) {
+            provOrigen.value = ORIGEN_FIJO.provincia;
+            provOrigen.disabled = true;
+            provOrigen.style.background = '#F1F5F9';
+            provOrigen.style.cursor = 'not-allowed';
+        }
+
+        const distOrigen = document.getElementById('guiaDistOrigen');
+        if (distOrigen) {
+            distOrigen.value = ORIGEN_FIJO.distrito;
+            distOrigen.disabled = true;
+            distOrigen.style.background = '#F1F5F9';
+            distOrigen.style.cursor = 'not-allowed';
+        }
+
+        const ubigeoHidden = document.getElementById('guiaUbigeoOrigen');
+        if (ubigeoHidden) {
+            ubigeoHidden.value = ORIGEN_FIJO.ubigeo;
+        }
+
+        const ubigeoTexto = document.getElementById('guiaUbigeoOrigenTexto');
+        if (ubigeoTexto) {
+            ubigeoTexto.textContent = `${ORIGEN_FIJO.departamento} - ${ORIGEN_FIJO.provincia} - ${ORIGEN_FIJO.distrito}`;
+        }
+
+        // Cotización vinculada
+        if (g.documento_asociado) {
+            setSelectValue('guiaCotizacion', g.documento_asociado);
+        }
+
+        // ============================================================
+        // PRODUCTOS (items_json)
+        // ============================================================
+        let items = [];
+        try {
+            if (g.items_json) {
+                items = typeof g.items_json === 'string' ? JSON.parse(g.items_json) : g.items_json;
+            }
+        } catch (e) {
+            console.warn('⚠️ Error parseando items_json de la guía:', e);
+            items = [];
+        }
+
+        const productosNormalizados = (items || []).map(it => ({
+            codigo: it.codigo || '',
+            producto: it.producto || it.descripcion || '',
+            marca: it.marca || '',
+            modelo: it.modelo || '',
+            um: it.um || 'NIU',
+            cantidad: it.cantidad || 1,
+            stock: it.stock || 0
+        }));
+
+        const productsContainer = document.getElementById('guiaProducts');
+        if (productsContainer) {
+            productsContainer.innerHTML = productosNormalizados.length > 0
+                ? productTableHtml(productosNormalizados)
+                : '<div style="padding:20px;text-align:center;color:#94A3B8;">No hay productos registrados en esta guía.</div>';
+        }
+
+        window._guiaProductos = productosNormalizados;
+
+        showToast('✅ Guía cargada correctamente', 'success');
+
     } catch (error) {
-        console.error('Error cargando guía:', error);
+        console.error('❌ Error cargando guía para editar:', error);
+        showToast('Error al cargar la guía: ' + error.message, 'error');
     }
 }
 
@@ -7728,94 +7903,144 @@ function openDespachoModal(id = null) {
 
 function openGuiaModal(id = null) {
     editingId = id;
-    console.log('🔎 openGuiaModal EJECUTADO con id =', id);
     const isEdit = id !== null;
-    const title = isEdit ? 'Editar guía' : 'Nueva guía';
-    document.getElementById('guiaModalTitle').textContent = title;
+    document.getElementById('guiaModalTitle').textContent = isEdit ? '📦 Editar Guía de Remisión' : '📦 Nueva Guía de Remisión';
     
     const formContainer = document.getElementById('guiaForm');
     if (!formContainer) return;
     
-    const cotOptions = cotizacionesData.map(q => 
-        `<option value="${q.numero}">${q.numero} - ${q.razon || 'Sin cliente'}</option>`
-    ).join('');
+    // ============================================================
+    // ORIGEN FIJO - DATOS DEL REMITENTE
+    // ============================================================
+    const ORIGEN_FIJO = {
+        ruc: '20602095704',
+        nombre: 'KCF CORPORACION SAC',
+        direccion: 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES',
+        ubigeo: '150139',
+        departamento: 'LIMA',
+        provincia: 'LIMA',
+        distrito: 'SAN MARTIN DE PORRES'
+    };
     
-    formContainer.innerHTML = `
-        <div class="ficha-section">
-            <div class="ficha-section-title">📦 Datos de la guía</div>
-            <div class="ficha-grid">
-                <div class="form-field col-4">
-                    <label>Cotización vinculada</label>
-                    <select id="guiaCotizacion" onchange="loadGuiaFromCotizacion(this.value)">${cotOptions || '<option value="">Sin cotización</option>'}</select>
-                </div>
-                <div class="form-field col-4">
-                    <label>Serie</label>
-                    <input id="guiaSerie" value="T001">
-                </div>
-                <div class="form-field col-4">
-                    <label>Número</label>
-                    <input id="guiaNumero" value="${String(Date.now()).slice(-8)}">
-                </div>
-                <div class="form-field col-4">
-                    <label>Estado</label>
-                    <select id="guiaEstado">
-                        ${options(ESTADOS_GUIA, 'Borrador')}
-                    </select>
-                </div>
-                <div class="form-field col-4">
-                    <label>Cliente</label>
-                    <input id="guiaCliente" placeholder="Razón social">
-                </div>
-                <div class="form-field col-4">
-                    <label>RUC</label>
-                    <input id="guiaRuc" placeholder="12345678901">
-                </div>
-                <div class="form-field col-4">
-                    <label>Origen</label>
-                    <select id="guiaOrigen">
-                        <option>ALM-SMP</option>
-                        <option>OF-BRE</option>
-                        <option>Almacén Central</option>
-                    </select>
-                </div>
-                <div class="form-field col-4">
-                    <label>Destino</label>
-                    <input id="guiaDestino" placeholder="Dirección de entrega">
-                </div>
-                <div class="form-field col-4">
-                    <label>Motivo traslado</label>
-                    <select id="guiaMotivo">
-                        <option>Venta</option>
-                        <option>Compra</option>
-                        <option>Traslado interno</option>
-                        <option>Devolución</option>
-                    </select>
-                </div>
-                <div class="form-field col-12">
-                    <label>Observaciones</label>
-                    <textarea id="guiaObs" placeholder="Observaciones de la guía"></textarea>
-                </div>
-            </div>
-        </div>
-        <div class="ficha-section">
-            <div class="ficha-section-title">📦 Productos</div>
-            <div id="guiaProducts">
-                <div style="padding:20px;text-align:center;color:#94A3B8;">Seleccione una cotización para ver los productos.</div>
-            </div>
-        </div>
-    `;
+    // Inicializar fechas
+    const hoy = new Date().toISOString().split('T')[0];
+    document.getElementById('guiaFechaEmision').value = hoy;
+    document.getElementById('guiaFechaInicio').value = hoy;
     
+    // ============================================================
+    // CONFIGURAR UBIGEOS DE ORIGEN (FIJOS)
+    // ============================================================
+    const deptoOrigen = document.getElementById('guiaDeptoOrigen');
+    const provOrigen = document.getElementById('guiaProvOrigen');
+    const distOrigen = document.getElementById('guiaDistOrigen');
+    const ubigeoHidden = document.getElementById('guiaUbigeoOrigen');
+    const ubigeoTexto = document.getElementById('guiaUbigeoOrigenTexto');
+    const origenInput = document.getElementById('guiaOrigen');
     
-    document.getElementById('guiaCotizacion')?.addEventListener('change', function() {
-        const num = this.value;
-        loadGuiaFromCotizacion(num);   // 🔽 usa la versión que sí trae datos frescos
-    });
-
-
+    // Establecer dirección fija
+    if (origenInput) {
+        origenInput.value = ORIGEN_FIJO.direccion;
+        origenInput.readOnly = true;
+        origenInput.style.background = '#F1F5F9';
+        origenInput.style.color = '#64748B';
+        origenInput.style.cursor = 'not-allowed';
+    }
+    
+    // Establecer RUC fijo
+    const rucRemitente = document.getElementById('guiaRucRemitente');
+    if (rucRemitente) {
+        rucRemitente.value = ORIGEN_FIJO.ruc;
+        rucRemitente.readOnly = true;
+        rucRemitente.style.background = '#F1F5F9';
+        rucRemitente.style.color = '#64748B';
+    }
+    
+    // Establecer nombre remitente fijo
+    const nombreRemitente = document.getElementById('guiaRemitenteNombre');
+    if (nombreRemitente) {
+        nombreRemitente.value = ORIGEN_FIJO.nombre;
+        nombreRemitente.readOnly = true;
+        nombreRemitente.style.background = '#F1F5F9';
+        nombreRemitente.style.color = '#64748B';
+    }
+    
+    // Ubigeo - Departamento
+    if (deptoOrigen) {
+        deptoOrigen.value = ORIGEN_FIJO.departamento;
+        deptoOrigen.disabled = true;
+        deptoOrigen.style.background = '#F1F5F9';
+        deptoOrigen.style.cursor = 'not-allowed';
+    }
+    
+    // Ubigeo - Provincia
+    if (provOrigen) {
+        provOrigen.value = ORIGEN_FIJO.provincia;
+        provOrigen.disabled = true;
+        provOrigen.style.background = '#F1F5F9';
+        provOrigen.style.cursor = 'not-allowed';
+    }
+    
+    // Ubigeo - Distrito
+    if (distOrigen) {
+        distOrigen.value = ORIGEN_FIJO.distrito;
+        distOrigen.disabled = true;
+        distOrigen.style.background = '#F1F5F9';
+        distOrigen.style.cursor = 'not-allowed';
+    }
+    
+    // Ubigeo oculto
+    if (ubigeoHidden) {
+        ubigeoHidden.value = ORIGEN_FIJO.ubigeo;
+    }
+    
+    // Texto de ubigeo
+    if (ubigeoTexto) {
+        ubigeoTexto.textContent = `${ORIGEN_FIJO.departamento} - ${ORIGEN_FIJO.provincia} - ${ORIGEN_FIJO.distrito}`;
+    }
+    
+    // ============================================================
+    // CONFIGURAR UBIGEOS DE DESTINO (EDITABLES)
+    // ============================================================
+    llenarDepartamentosGuia('guiaDeptoDestino');
+    configurarUbigeoGuia('Destino');
+    
+    // Preseleccionar Lima para destino también
+    setTimeout(() => {
+        const deptoDestino = document.getElementById('guiaDeptoDestino');
+        if (deptoDestino) {
+            deptoDestino.value = 'LIMA';
+            deptoDestino.dispatchEvent(new Event('change'));
+            setTimeout(() => {
+                const provDestino = document.getElementById('guiaProvDestino');
+                if (provDestino) {
+                    provDestino.value = 'LIMA';
+                    provDestino.dispatchEvent(new Event('change'));
+                    setTimeout(() => {
+                        const distDestino = document.getElementById('guiaDistDestino');
+                        if (distDestino) {
+                            distDestino.value = 'SAN MARTIN DE PORRES';
+                            distDestino.dispatchEvent(new Event('change'));
+                        }
+                    }, 50);
+                }
+            }, 50);
+        }
+    }, 100);
+    
+    // Limpiar productos
+    document.getElementById('guiaProductosBody').innerHTML = '';
+    agregarFilaProductoGuia();
+    
+    // Cargar conductores
+    cargarConductoresGuia();
+    toggleTransportistaGuia();
+    
+    // Mostrar modal
     document.getElementById('guiaModal').classList.add('show');
-
+    
+    // Si es edición, cargar datos
     if (isEdit) {
-        setTimeout(() => cargarGuiaParaEditar(id), 50);
+        setTimeout(() => cargarGuiaParaEditar(id), 200);
     }
 }
 

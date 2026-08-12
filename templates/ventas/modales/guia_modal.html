@@ -19,59 +19,61 @@
             <!-- ============================================================ -->
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
                 
+               
                 <!-- REMITENTE -->
-                <div class="ficha-section" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden;">
-                    <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#2563EB; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
-                        <span><i class="bi bi-building"></i> Remitente (Origen)</span>
-                        <small style="color:#64748B; font-weight:700; font-size:8px;">🔒 Fijo</small>
-                    </div>
-                    <div style="padding:6px 10px;">
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:2px;">
-                            <div class="form-field">
-                                <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">RUC</label>
-                                <input id="guiaRucRemitente" value="20602095704" readonly style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#F1F5F9; font-size:9px; padding:0 6px; color:#64748B; cursor:not-allowed;">
-                            </div>
-                            <div class="form-field">
-                                <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Cód. Anexo</label>
-                                <input id="guiaRemitenteAnexo" value="0001" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
-                            </div>
-                        </div>
-                        <div class="form-field" style="margin-bottom:2px;">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Razón Social</label>
-                            <input id="guiaRemitenteNombre" value="KCF CORPORACION SAC" readonly style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#F1F5F9; font-size:9px; padding:0 6px; color:#64748B; cursor:not-allowed;">
-                        </div>
-                        <div class="form-field" style="margin-bottom:2px;">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Dirección de Partida <span class="text-danger">*</span></label>
-                            <input id="guiaOrigen" placeholder="Dirección del almacén" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
-                        </div>
-                        <!-- Ubigeo Remitente -->
-                        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-top:2px;">
-                            <div class="form-field">
-                                <label style="font-size:6.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Departamento</label>
-                                <select class="ubigeo-select" id="guiaDeptoOrigen" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;">
-                                    <option value="">Seleccione</option>
-                                </select>
-                            </div>
-                            <div class="form-field">
-                                <label style="font-size:6.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Provincia</label>
-                                <select class="ubigeo-select" id="guiaProvOrigen" disabled style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;">
-                                    <option value="">Primero Departamento</option>
-                                </select>
-                            </div>
-                            <div class="form-field">
-                                <label style="font-size:6.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Distrito</label>
-                                <select class="ubigeo-select" id="guiaDistOrigen" disabled style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;">
-                                    <option value="">Primero Provincia</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div style="font-size:7px; color:#64748B; margin-top:2px;">
-                            <i class="bi bi-geo-alt-fill" style="color:#2563EB;"></i> Ubigeo: <span id="guiaUbigeoOrigenTexto">Ninguno</span>
-                            <input type="hidden" id="guiaUbigeoOrigen" value="">
-                        </div>
-                    </div>
-                </div>
-                
+<div class="ficha-section" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden;">
+    <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#2563EB; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
+        <span><i class="bi bi-building"></i> Remitente (Origen)</span>
+        <small style="color:#64748B; font-weight:700; font-size:8px;">🔒 Fijo</small>
+    </div>
+    <div style="padding:6px 10px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:2px;">
+            <div class="form-field">
+                <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">RUC</label>
+                <input id="guiaRucRemitente" value="20602095704" readonly style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#F1F5F9; font-size:9px; padding:0 6px; color:#64748B; cursor:not-allowed;">
+            </div>
+            <div class="form-field">
+                <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Cód. Anexo</label>
+                <input id="guiaRemitenteAnexo" value="0001" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
+            </div>
+        </div>
+        <div class="form-field" style="margin-bottom:2px;">
+            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Razón Social</label>
+            <input id="guiaRemitenteNombre" value="KCF CORPORACION SAC" readonly style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#F1F5F9; font-size:9px; padding:0 6px; color:#64748B; cursor:not-allowed;">
+        </div>
+        <div class="form-field" style="margin-bottom:2px;">
+            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Dirección de Partida <span class="text-danger">*</span></label>
+            <!-- 🔽 AQUÍ ES DONDE SE PONE LA DIRECCIÓN FIJA -->
+            <input id="guiaOrigen" value="JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES" readonly style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#F1F5F9; font-size:9px; padding:0 6px; color:#64748B; cursor:not-allowed;">
+        </div>
+        <!-- Ubigeo Remitente - PRESELECCIONADO -->
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-top:2px;">
+            <div class="form-field">
+                <label style="font-size:6.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Departamento</label>
+                <select class="ubigeo-select" id="guiaDeptoOrigen" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#F1F5F9; cursor:not-allowed;">
+                    <option value="LIMA" selected>LIMA</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label style="font-size:6.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Provincia</label>
+                <select class="ubigeo-select" id="guiaProvOrigen" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#F1F5F9; cursor:not-allowed;">
+                    <option value="LIMA" selected>LIMA</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label style="font-size:6.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Distrito</label>
+                <select class="ubigeo-select" id="guiaDistOrigen" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#F1F5F9; cursor:not-allowed;">
+                    <option value="SAN MARTIN DE PORRES" selected>SAN MARTIN DE PORRES</option>
+                </select>
+            </div>
+        </div>
+        <div style="font-size:7px; color:#64748B; margin-top:2px;">
+            <i class="bi bi-geo-alt-fill" style="color:#2563EB;"></i> Ubigeo: <span id="guiaUbigeoOrigenTexto">LIMA - LIMA - SAN MARTIN DE PORRES</span>
+            <input type="hidden" id="guiaUbigeoOrigen" value="150139">
+        </div>
+    </div>
+</div>
+
                 <!-- DESTINATARIO -->
                 <div class="ficha-section" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden;">
                     <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#059669; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
