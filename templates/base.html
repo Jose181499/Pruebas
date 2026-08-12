@@ -2207,6 +2207,27 @@ async function renderUsuarios(filter="", forceRefresh = false) {
     const empresaActiva = document.getElementById('empresaActiva')?.value || 'KCF';
     let htmlRows = [];
     
+    // Mapeo de nombres a códigos
+    const moduleToCode = {
+        'Configuración': 'EMPRESAS',
+        'Usuarios y permisos': 'USUARIOS_PERMISOS',
+        'Correlativos': 'CORRELATIVOS',
+        'Parámetros': 'PARAMETROS',
+        'Integración ERP': 'INTEGRACION',
+        'Maestros': 'CLIENTES',
+        'Productos': 'PRODUCTOS_LISTADO',
+        'Cotizaciones': 'COTIZACIONES',
+        'Ventas': 'COMPROBANTES_CLIENTE',
+        'Compras': 'SOLICITUD_COMPRA',
+        'Logística': 'RECEPCION_MERCADERIA',
+        'Inventario': 'ESTADO_STOCK',
+        'CxC': 'CUENTAS_COBRAR',
+        'CxP': 'CUENTAS_PAGAR',
+        'Caja': 'CAJA_BANCOS',
+        'Reportes': 'REPORTE_VENTAS',
+        'SUNAT': 'SUNAT'
+    };
+    
     // Cargar permisos para cada usuario
     const usuariosConPermisos = [];
     for (const u of lista) {
@@ -2237,27 +2258,6 @@ async function renderUsuarios(filter="", forceRefresh = false) {
         });
     }
     
-    // MAPA DE NOMBRES DE MÓDULOS A IDs (para convertir nombres a IDs)
-    const moduleToId = {
-        'Configuración': 1,
-        'Usuarios y permisos': 2,
-        'Correlativos': 3,
-        'Parámetros': 4,
-        'Integración ERP': 5,
-        'Maestros': 6,
-        'Productos': 12,
-        'Cotizaciones': 14,
-        'Ventas': 15,
-        'Compras': 18,
-        'Logística': 22,
-        'Inventario': 23,
-        'CxC': 27,
-        'CxP': 28,
-        'Caja': 29,
-        'Reportes': 31,
-        'SUNAT': 35
-    };
-    
     // Generar HTML
     for (const item of usuariosConPermisos) {
         const u = item.usuario;
@@ -2268,26 +2268,25 @@ async function renderUsuarios(filter="", forceRefresh = false) {
         const empresas = u.empresas_acceso || [];
         const roles = empresas.map(e => e.rol_codigo || '');
         
-        // ✅ FUNCIÓN CORREGIDA - Sin valores por defecto
+        // ✅ FUNCIÓN CORREGIDA - Usa UUIDs en lugar de IDs numéricos
         const tienePermisoModulo = (submoduloNombre) => {
             if (esAdmin) return true;
             
-            // Buscar el submódulo por nombre
-            const submodulo = submodulosData.find(s => s.nombre === submoduloNombre);
-            if (!submodulo) {
+            const codigo = moduleToCode[submoduloNombre];
+            if (!codigo) return false;
+            
+            // Obtener el UUID real del submódulo
+            const uuid = UUID_MAP_BY_CODE[codigo];
+            if (!uuid) {
+                console.warn(`⚠️ No se encontró UUID para: ${submoduloNombre}`);
                 return false;
             }
             
-            // Usar el ID real del submódulo
-            const submoduloId = submodulo.id;
-            const permiso = permisos[submoduloId];
-            
-            // ✅ SOLO devolver true si hay un permiso guardado con puede_ver = true
+            const permiso = permisos[uuid];
             if (permiso) {
                 return permiso.puede_ver || false;
             }
             
-            // ❌ Ya no hay valor por defecto - devolvemos false
             return false;
         };
         
@@ -2375,8 +2374,6 @@ async function renderUsuarios(filter="", forceRefresh = false) {
         });
     }, 100);
 }
-
-
 
 
 // Sobrescribir la función para que no recargue toda la tabla
