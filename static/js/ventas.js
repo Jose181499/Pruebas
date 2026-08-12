@@ -1175,7 +1175,7 @@ if (cotizacionViewMode === 'principal') {
             <td><b>${i + 1}</b></td>
             <td class="date-cell">${formatFecha(r.fecha)}</td>
             <td>${badgeStatus(r.estado)}</td>
-            <td class="quote-number-cell"><b>${sd(r.numero)}</b></td>
+            <td class="quote-number-cell"><b>${sd(r.numero)}</b>${badgeNuevo('cotizaciones', r)}</td>
             <td>${sd(r.ruc)}</td>
             <td><span class="code-pill">${sd(r.cod_cliente)}</span></td>
             <td class="left"><b>${sd(r.razon)}</b></td>
@@ -2825,7 +2825,32 @@ function toggleAllProductCheckboxesPc(checked) {
     document.getElementById('selectedPcCount').textContent = selectedPcProductIds.size;
 }
 
-
+function actualizarResumenDesdeMontoPC(input) {
+    if (_timeoutResumen) clearTimeout(_timeoutResumen);
+    _timeoutResumen = setTimeout(() => {
+        const valor = parseFloat(input.value) || 0;
+        const simbolo = document.getElementById('pcResumenMoneda')?.textContent || 'S/';
+        const formatNum = (num) => `${simbolo} ${num.toFixed(2)}`;
+        
+        // Calcular IGV y total a partir del monto ingresado
+        const igv = valor * 0.18;
+        const total = valor + igv;
+        
+        // Actualizar solo los campos del resumen (NO el subtotal que viene de la tabla)
+        const subtotalEl = document.getElementById('pcResumenSubtotal');
+        const valorVentaEl = document.getElementById('pcResumenValorVenta');
+        const igvEl = document.getElementById('pcResumenIgv');
+        const totalEl = document.getElementById('pcResumenTotal');
+        
+        if (subtotalEl) subtotalEl.textContent = formatNum(valor);
+        if (valorVentaEl) valorVentaEl.textContent = formatNum(valor);
+        if (igvEl) igvEl.textContent = formatNum(igv);
+        if (totalEl) totalEl.textContent = formatNum(total);
+        
+        console.log(`✅ Resumen actualizado desde Monto PC: ${valor}`);
+        _timeoutResumen = null;
+    }, 100);
+}
 // ============================================================
 // FUNCIONES DE GUARDADO PARA PC, DESPACHO, GUÍAS, ETC.
 // ============================================================
@@ -2899,9 +2924,7 @@ async function savePedidoCompra(estado) {
         
         if (response.success) {
 
-            if (!editingId) {
-                ultimoRegistroCreado.pedido_compra = result.data?.id ?? numeroPC ?? null;
-            }
+            
         
             const mensaje = hasObservations ? 'guardado con observaciones' : 'guardado correctamente';
             showToast(`✅ PC ${mensaje}`, 'success');
@@ -2938,6 +2961,11 @@ async function saveDespacho(estado) {
         });
         
         if (response.success) {
+
+            if (!editingId) {
+                ultimoRegistroCreado.despachar = response.data?.id ?? data.numero ?? null;
+            }
+
             showToast(`Despacho guardado como: ${estado}`, 'success');
             closeModal('despachoModal');
             await loadDespachos();
@@ -3000,6 +3028,11 @@ async function saveGuia(estado) {
         });
         
         if (response.success) {
+
+            if (!editingId) {
+                ultimoRegistroCreado.guias = result.numero_guia ?? null;
+            }
+
             showToast(`✅ Guía guardada como: ${estado}`, 'success');
             closeModal('guiaModal');
             await loadGuias();
@@ -3051,6 +3084,11 @@ async function saveComprobante(estado) {
         });
         
         if (response.success) {
+
+            if (!editingId) {
+                ultimoRegistroCreado.comprobantes = response.data?.id ?? data.numero ?? null;
+            }
+
             showToast(`✅ Comprobante guardado como: ${estado}`, 'success');
             closeModal('comprobanteModal');
             await loadComprobantes();
@@ -3086,6 +3124,11 @@ async function saveNotaCredito(estado) {
         });
         
         if (response.success) {
+
+            if (!editingId) {
+                ultimoRegistroCreado.notas_credito = response.data?.id ?? data.numero ?? null;
+            }
+
             showToast(`Nota de crédito guardada como: ${estado}`, 'success');
             closeModal('notaCreditoModal');
             await loadNotas();
@@ -3118,6 +3161,11 @@ async function saveDevolucion(estado) {
         });
         
         if (response.success) {
+
+            if (!editingId) {
+                ultimoRegistroCreado.devoluciones = response.data?.id ?? data.numero ?? null;
+            }
+
             showToast(`Devolución guardada como: ${estado}`, 'success');
             closeModal('devolucionModal');
             await loadDevoluciones();
@@ -10725,7 +10773,6 @@ function buscarCotizacionSAP(query) {
     }, 300);
 }
 
-
 function seleccionarCotizacionSAP(cotizacionId) {
     // Buscar la cotización en los datos básicos
     const cotizacion = cotizacionesData.find(c => c.id === cotizacionId);
@@ -10795,7 +10842,6 @@ function seleccionarCotizacionSAP(cotizacionId) {
             // ============================================================
             const condSelect = document.getElementById('pcCondicion');
             if (condSelect && data.condicion_pago) {
-                // Buscar si el valor existe en las opciones
                 let found = false;
                 for (let opt of condSelect.options) {
                     if (opt.value === data.condicion_pago) {
@@ -10804,7 +10850,6 @@ function seleccionarCotizacionSAP(cotizacionId) {
                         break;
                     }
                 }
-                // Si no está en las opciones, seleccionar "Personalizado"
                 if (!found) {
                     condSelect.value = 'Personalizado';
                     const customInput = document.getElementById('pcCondicionCustom');
@@ -10818,7 +10863,6 @@ function seleccionarCotizacionSAP(cotizacionId) {
             // ============================================================
             // 🔽 FORZAR ACTUALIZACIÓN DE CAMPOS DE PAGO (Contado)
             // ============================================================
-            // Esto muestra/oculta los campos de pago según la condición
             togglePagoCampos();
             
             // También actualizar el semáforo de validación
@@ -10831,7 +10875,7 @@ function seleccionarCotizacionSAP(cotizacionId) {
             }
             
             // ============================================================
-            // CARGAR PRODUCTOS EN LA TABLA CON MARCA Y MODELO
+            // CARGAR PRODUCTOS EN LA TABLA - SIN BOTÓN ELIMINAR
             // ============================================================
             const tbody = document.getElementById('pcItemsBody');
             if (!tbody) return;
@@ -10905,14 +10949,7 @@ function seleccionarCotizacionSAP(cotizacionId) {
                     </td>
                     <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B; font-weight:800;">${stock}</td>
                     <td style="padding:2px 3px; text-align:center; font-size:8px; font-weight:900; color:${faltante > 0 ? '#DC2626' : '#16A34A'};">${faltante}</td>
-                    <td style="padding:2px 3px; text-align:center;">
-                        <button onclick="eliminarItemSAP('${tr.id}')" 
-                                style="background:transparent; border:none; color:#EF4444; cursor:pointer; font-size:12px; font-weight:900; padding:0 4px; border-radius:3px; transition:all 0.2s; width:22px; height:22px;"
-                                onmouseover="this.style.background='#FEE2E2'; this.style.color='#DC2626';"
-                                onmouseout="this.style.background='transparent'; this.style.color='#EF4444';">
-                            ✕
-                        </button>
-                    </td>
+                    <!-- ⚠️ LA COLUMNA DE LA "X" HA SIDO ELIMINADA -->
                 `;
                 
                 tbody.appendChild(tr);
@@ -10925,9 +10962,7 @@ function seleccionarCotizacionSAP(cotizacionId) {
                 if (typeof actualizarResumenPC === 'function') {
                     actualizarResumenPC();
                 }
-                // También actualizar el semáforo de validación
                 updateValidationSemaphore();
-                // Forzar toggle de pago nuevamente por si acaso
                 togglePagoCampos();
             }, 200);
             
@@ -10938,7 +10973,6 @@ function seleccionarCotizacionSAP(cotizacionId) {
             showToast('❌ Error al cargar los productos de la cotización', 'error');
         });
 }
-
 
 // Funciones auxiliares para la tabla de productos
 function actualizarFaltanteSAP(input, index) {
@@ -11510,6 +11544,11 @@ async function savePedidoCompraSAP(force) {
         console.log('📦 Respuesta del servidor:', result);
         
         if (result.success) {
+
+            if (!editingId) {
+                ultimoRegistroCreado.pedido_compra = result.data?.id ?? numeroPC ?? null;
+            }
+
             let mensaje = `✅ PC guardado como: ${estado}`;
             if (estado === 'PC conforme') {
                 const stockFalta = items.some(i => Number(i.cantidad_pc) > Number(i.stock));
