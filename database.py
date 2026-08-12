@@ -4127,3 +4127,297 @@ def guardar_recepcion_db(data):
     except Exception as e:
         print(f"❌ Error en guardar_recepcion_db: {e}")
         raise
+
+    # ============================================================
+# FUNCIONES PARA CLIENTES CON CONTACTOS Y PUNTOS (MAESTROS)
+# ============================================================
+
+def obtener_cliente_con_detalles(cliente_id):
+    """
+    Obtiene un cliente completo con sus contactos y puntos de entrega
+    """
+    try:
+        # 1. Obtener datos del cliente
+        query_cliente = """
+            SELECT 
+                id, codigo_cliente, razon_social,
+                numero_documento, tipo_documento,
+                nombre_comercial, telefono_contacto, nombre_contacto,
+                email_contacto, direccion_fiscal, activo,
+                condicion_pago, dias_credito, limite_credito, descuento,
+                estado, ambito, observaciones,
+                created_at, updated_at
+            FROM clientes
+            WHERE id = %s
+        """
+        cliente = db_query(query_cliente, (cliente_id,))
+        
+        if not cliente:
+            return None
+        
+        cliente = cliente[0]
+        
+        # 2. Obtener contactos
+        query_contactos = """
+            SELECT id, nombre_contacto as nombre, email, telefono, 
+                   cargo, principal, activo
+            FROM clientes_contactos
+            WHERE cliente_id = %s AND activo = true
+            ORDER BY principal DESC, nombre_contacto
+        """
+        cliente['contactos'] = db_query(query_contactos, (cliente_id,)) or []
+        
+        # 3. Obtener puntos de entrega
+        query_puntos = """
+            SELECT id, nombre_punto as punto, direccion, 
+                   telefono_contacto as telefono,
+                   responsable as contacto, principal, activo,
+                   condicion_pago, tiempo_credito, instrucciones
+            FROM clientes_puntos_entrega
+            WHERE cliente_id = %s AND activo = true
+            ORDER BY principal DESC, nombre_punto
+        """
+        cliente['puntos_entrega'] = db_query(query_puntos, (cliente_id,)) or []
+        
+        # 4. Asegurar valores por defecto
+        cliente['condicion_pago'] = cliente.get('condicion_pago') or 'Contado'
+        cliente['dias_credito'] = cliente.get('dias_credito') or 0
+        cliente['limite_credito'] = cliente.get('limite_credito') or ''
+        cliente['descuento'] = cliente.get('descuento') or ''
+        cliente['estado'] = cliente.get('estado') or 'Activo'
+        cliente['ambito'] = cliente.get('ambito') or 'COMPARTIDO'
+        cliente['observaciones'] = cliente.get('observaciones') or ''
+        cliente['ruc'] = cliente.get('numero_documento')
+        
+        return cliente
+    except Exception as e:
+        print(f"❌ Error en obtener_cliente_con_detalles: {e}")
+        return None
+
+
+def obtener_clientes_con_detalles():
+    """
+    Obtiene todos los clientes con sus contactos y puntos de entrega
+    """
+    try:
+        # 1. Obtener todos los clientes activos
+        query_clientes = """
+            SELECT id, codigo_cliente, razon_social,
+                   numero_documento, tipo_documento,
+                   nombre_comercial, telefono_contacto, nombre_contacto,
+                   email_contacto, direccion_fiscal, activo,
+                   condicion_pago, dias_credito, limite_credito, descuento,
+                   estado, ambito, observaciones,
+                   created_at, updated_at
+            FROM clientes
+            WHERE activo = true
+            ORDER BY id DESC
+        """
+        clientes = db_query(query_clientes)
+        
+        if not clientes:
+            return []
+        
+        # 2. Para cada cliente, obtener sus contactos y puntos de entrega
+        for cliente in clientes:
+            cliente_id = cliente.get('id')
+            
+            # Obtener contactos
+            query_contactos = """
+                SELECT id, nombre_contacto as nombre, email, telefono, 
+                       cargo, principal, activo
+                FROM clientes_contactos
+                WHERE cliente_id = %s AND activo = true
+                ORDER BY principal DESC, nombre_contacto
+            """
+            cliente['contactos'] = db_query(query_contactos, (cliente_id,)) or []
+            
+            # Obtener puntos de entrega
+            query_puntos = """
+                SELECT id, nombre_punto as punto, direccion, 
+                       telefono_contacto as telefono,
+                       responsable as contacto, principal, activo,
+                       condicion_pago, tiempo_credito, instrucciones
+                FROM clientes_puntos_entrega
+                WHERE cliente_id = %s AND activo = true
+                ORDER BY principal DESC, nombre_punto
+            """
+            cliente['puntos_entrega'] = db_query(query_puntos, (cliente_id,)) or []
+            
+            # Asegurar valores por defecto
+            cliente['ruc'] = cliente.get('numero_documento')
+            cliente['condicion_pago'] = cliente.get('condicion_pago') or 'Contado'
+            cliente['dias_credito'] = cliente.get('dias_credito') or 0
+            cliente['limite_credito'] = cliente.get('limite_credito') or ''
+            cliente['descuento'] = cliente.get('descuento') or ''
+            cliente['estado'] = cliente.get('estado') or 'Activo'
+            cliente['ambito'] = cliente.get('ambito') or 'COMPARTIDO'
+            cliente['observaciones'] = cliente.get('observaciones') or ''
+        
+        return clientes
+    except Exception as e:
+        print(f"❌ Error en obtener_clientes_con_detalles: {e}")
+        return []
+
+
+def obtener_proveedor_con_detalles(proveedor_id):
+    """
+    Obtiene un proveedor completo con su contacto y punto de entrega
+    """
+    try:
+        # 1. Obtener datos del proveedor
+        query_proveedor = """
+            SELECT 
+                id, codigo_proveedor, razon_social, ruc,
+                razon_comercial, telefono, contacto, email,
+                direccion, activo, condicion_pago, tiempo_credito,
+                lugar_recojo, banco, numero_cuenta, cci,
+                tipo, tipo_doc, tipo_cuenta, moneda, descuento,
+                estado, ambito, observaciones,
+                fecha_creacion
+            FROM proveedores
+            WHERE id = %s AND activo = true
+        """
+        proveedor = db_query(query_proveedor, (proveedor_id,))
+        
+        if not proveedor:
+            return None
+        
+        proveedor = proveedor[0]
+        
+        # 2. Obtener contacto principal
+        query_contacto = """
+            SELECT id, nombre_contacto, cargo, telefono, email,
+                   principal, activo
+            FROM proveedores_contactos
+            WHERE proveedor_id = %s AND principal = true AND activo = true
+            LIMIT 1
+        """
+        contacto = db_query(query_contacto, (proveedor_id,))
+        if contacto:
+            contacto = contacto[0]
+            proveedor['cargo'] = contacto.get('cargo', '')
+            proveedor['contacto_nombre'] = contacto.get('nombre_contacto', '')
+        
+        # 3. Obtener punto de entrega principal
+        query_punto = """
+            SELECT id, nombre_punto, direccion, telefono_contacto,
+                   responsable, horario_atencion, instrucciones,
+                   principal, activo
+            FROM proveedores_puntos_entrega
+            WHERE proveedor_id = %s AND principal = true AND activo = true
+            LIMIT 1
+        """
+        punto = db_query(query_punto, (proveedor_id,))
+        if punto:
+            punto = punto[0]
+            proveedor['puntoRecojo'] = punto.get('nombre_punto', '')
+            proveedor['direccionRecojo'] = punto.get('direccion', '')
+            proveedor['telefonoRecojo'] = punto.get('telefono_contacto', '')
+            proveedor['contactoRecojo'] = punto.get('responsable', '')
+            proveedor['horarioRecojo'] = punto.get('horario_atencion', '')
+            proveedor['instruccionesRecojo'] = punto.get('instrucciones', '')
+        
+        # Asegurar valores por defecto
+        proveedor['lineaCredito'] = proveedor.get('tiempo_credito', '')
+        proveedor['cuenta'] = proveedor.get('numero_cuenta', '')
+        proveedor['tipoDoc'] = proveedor.get('tipo_doc', 'RUC')
+        proveedor['tipoCuenta'] = proveedor.get('tipo_cuenta', 'Cuenta corriente')
+        proveedor['obs'] = proveedor.get('observaciones', '')
+        
+        return proveedor
+    except Exception as e:
+        print(f"❌ Error en obtener_proveedor_con_detalles: {e}")
+        return None
+
+
+def obtener_proveedores_con_detalles():
+    """
+    Obtiene todos los proveedores con sus contactos y puntos de entrega
+    """
+    try:
+        query = """
+            SELECT 
+                p.id, p.codigo_proveedor, p.razon_social, p.ruc,
+                p.razon_comercial, p.telefono, p.contacto, p.email,
+                p.direccion, p.activo, p.condicion_pago, p.tiempo_credito,
+                p.lugar_recojo, p.banco, p.numero_cuenta, p.cci,
+                p.tipo, p.tipo_doc, p.tipo_cuenta, p.moneda, p.descuento,
+                p.estado, p.ambito, p.observaciones,
+                p.fecha_creacion,
+                (
+                    SELECT json_agg(
+                        json_build_object(
+                            'id', pc.id,
+                            'nombre_contacto', pc.nombre_contacto,
+                            'cargo', pc.cargo,
+                            'telefono', pc.telefono,
+                            'email', pc.email,
+                            'principal', pc.principal,
+                            'activo', pc.activo
+                        )
+                    ) FROM proveedores_contactos pc 
+                    WHERE pc.proveedor_id = p.id AND pc.activo = true
+                ) as contactos,
+                (
+                    SELECT json_agg(
+                        json_build_object(
+                            'id', pe.id,
+                            'nombre_punto', pe.nombre_punto,
+                            'direccion', pe.direccion,
+                            'telefono_contacto', pe.telefono_contacto,
+                            'responsable', pe.responsable,
+                            'horario_atencion', pe.horario_atencion,
+                            'instrucciones', pe.instrucciones,
+                            'principal', pe.principal,
+                            'activo', pe.activo
+                        )
+                    ) FROM proveedores_puntos_entrega pe 
+                    WHERE pe.proveedor_id = p.id AND pe.activo = true
+                ) as puntos_entrega
+            FROM proveedores p
+            WHERE p.activo = true
+            ORDER BY p.id DESC
+        """
+        proveedores = db_query(query)
+        
+        # Asegurar valores por defecto
+        for prov in proveedores:
+            prov['lineaCredito'] = prov.get('tiempo_credito', '')
+            prov['cuenta'] = prov.get('numero_cuenta', '')
+            prov['tipoDoc'] = prov.get('tipo_doc', 'RUC')
+            prov['tipoCuenta'] = prov.get('tipo_cuenta', 'Cuenta corriente')
+            prov['obs'] = prov.get('observaciones', '')
+            prov['estado'] = prov.get('estado') or 'Activo'
+            prov['ambito'] = prov.get('ambito') or 'COMPARTIDO'
+            
+            # Si no hay contactos, usar el contacto principal
+            if not prov.get('contactos') or len(prov['contactos']) == 0:
+                if prov.get('contacto'):
+                    prov['contactos'] = [{
+                        'nombre_contacto': prov.get('contacto', ''),
+                        'cargo': '',
+                        'telefono': prov.get('telefono', ''),
+                        'email': prov.get('email', ''),
+                        'principal': True,
+                        'activo': True
+                    }]
+            
+            # Si no hay puntos, crear uno con lugar_recojo
+            if not prov.get('puntos_entrega') or len(prov['puntos_entrega']) == 0:
+                if prov.get('lugar_recojo'):
+                    prov['puntos_entrega'] = [{
+                        'nombre_punto': prov.get('lugar_recojo', 'Principal'),
+                        'direccion': prov.get('direccion', ''),
+                        'telefono_contacto': prov.get('telefono', ''),
+                        'responsable': prov.get('contacto', ''),
+                        'horario_atencion': '',
+                        'instrucciones': '',
+                        'principal': True,
+                        'activo': True
+                    }]
+        
+        return proveedores
+    except Exception as e:
+        print(f"❌ Error en obtener_proveedores_con_detalles: {e}")
+        return []

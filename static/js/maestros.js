@@ -2554,6 +2554,10 @@ document.addEventListener('DOMContentLoaded', function() {
 // VISTA COMPLETA - TODOS LOS CAMPOS DEL CLIENTE
 // ============================================================
 
+// ============================================================
+// VISTA COMPLETA - TODOS LOS CAMPOS DEL CLIENTE (CORREGIDA)
+// ============================================================
+
 function renderClientesCompleta(list) {
     if (!list || !list.length) {
         return `<div class="empty-state">
@@ -2562,6 +2566,7 @@ function renderClientesCompleta(list) {
         </div>`;
     }
     
+    // ✅ SOLO CAMPOS QUE EXISTEN EN LA BASE DE DATOS
     const allFields = [
         { key: 'id', label: 'ID', width: '50px' },
         { key: 'codigo_cliente', label: 'Código / Cliente', width: '100px' },
@@ -2575,12 +2580,15 @@ function renderClientesCompleta(list) {
         { key: 'dias_credito', label: 'Días Crédito', width: '80px' },
         { key: 'limite_credito', label: 'Límite Crédito', width: '100px' },
         { key: 'descuento', label: 'Descuento', width: '80px' },
-        { key: 'nombre_contacto', label: 'Contacto', width: '130px' },
-        { key: 'telefono_contacto', label: 'Teléfono', width: '110px' },
-        { key: 'email_contacto', label: 'Email', width: '160px' },
+        { key: 'nombre_contacto', label: 'Contacto Principal', width: '130px' },
+        { key: 'telefono_contacto', label: 'Teléfono Principal', width: '110px' },
+        { key: 'email_contacto', label: 'Email Principal', width: '160px' },
+        // ✅ CONTACTOS (desde clientes_contactos)
         { key: 'contactos', label: 'Contactos', width: '200px' },
+        // ✅ PUNTOS DE ENTREGA (desde clientes_puntos_entrega)
         { key: 'puntos_entrega', label: 'Puntos de Entrega', width: '220px' },
-        { key: 'instrucciones', label: 'Instrucciones', width: '150px'},
+        // ✅ INSTRUCCIONES (desde clientes_puntos_entrega)
+        { key: 'instrucciones_resumen', label: 'Instrucciones', width: '150px' },
         { key: 'estado', label: 'Estado', width: '90px' },
         { key: 'activo', label: 'Activo', width: '70px' },
         { key: 'observaciones', label: 'Observaciones', width: '150px' },
@@ -2590,19 +2598,19 @@ function renderClientesCompleta(list) {
     
     let headersHtml = '<th style="width:40px;">Item</th>';
     allFields.forEach(f => {
-        headersHtml += `<th style="width:${f.width || 'auto'};">${f.label}</th>`;
+        headersHtml += `<th style="width:${f.width || 'auto'};text-align:center;">${f.label}</th>`;
     });
-    headersHtml += '<th style="width:160px; min-width:160px; max-width; 160px; white-space:nowrap;" >Acciones</th>';
+    headersHtml += '<th style="width:160px; min-width:160px; text-align:center;">Acciones</th>';
     
     const rows = list.map((r, i) => {
-        let cells = `<td><b>${i + 1}</b></td>`;
+        let cells = `<td style="text-align:center;"><b>${i + 1}</b></td>`;
         allFields.forEach(f => {
             let value = r[f.key];
             
             if (value === undefined || value === null || value === '') {
                 value = '-';
             } else if (f.key === 'estado') {
-                value = bEstado(value); // 🔧 CAMBIO: antes tenía su propia lógica if/else con solo Activo/Inactivo, ahora usa bEstado() para soportar Observado/Bloqueado también
+                value = bEstado(value);
             } else if (f.key === 'activo') {
                 value = value === true || value === 'true' 
                     ? '<span class="badge b-ok">✅ Sí</span>' 
@@ -2610,9 +2618,10 @@ function renderClientesCompleta(list) {
             } else if (f.key === 'ambito') {
                 value = bAmbito(value);
             } else if (f.key === 'contactos') {
+                // ✅ Mostrar contactos de clientes_contactos
                 if (r.contactos && r.contactos.length > 0) {
                     value = r.contactos.map(c => 
-                        `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;">
+                        `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;text-align:left;">
                             <strong>${c.nombre_contacto || c.nombre || '-'}</strong>
                             ${c.cargo ? `<span style="color:#64748B;"> (${c.cargo})</span>` : ''}
                             ${c.principal ? ' ⭐' : ''}
@@ -2623,22 +2632,24 @@ function renderClientesCompleta(list) {
                     value = '-';
                 }
             } else if (f.key === 'puntos_entrega') {
+                // ✅ Mostrar puntos de entrega de clientes_puntos_entrega
                 if (r.puntos_entrega && r.puntos_entrega.length > 0) {
                     value = r.puntos_entrega.map(p => 
-                        `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;">
+                        `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;text-align:left;">
                             <strong>${p.nombre_punto || p.punto || '-'}</strong>
                             ${p.principal ? ' ⭐' : ''}
-                            <br><small>${p.direccion || ''} ${p.telefono_contacto ? '| Tel: ' + p.telefono_contacto : ''}</small>
+                            <br><small>${p.direccion || ''} ${p.telefono_contacto || p.telefono ? '| Tel: ' + (p.telefono_contacto || p.telefono) : ''}</small>
                         </div>`
                     ).join('');
                 } else {
                     value = '-';
                 }
-            } else if (f.key === 'instrucciones') {
+            } else if (f.key === 'instrucciones_resumen') {
+                // ✅ Mostrar instrucciones desde puntos_entrega
                 if (r.puntos_entrega && r.puntos_entrega.length > 0) {
                     const textos = r.puntos_entrega
                         .filter(p => p.instrucciones)
-                        .map(p => `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;">
+                        .map(p => `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;text-align:left;">
                             <strong>${p.nombre_punto || p.punto || '-'}:</strong> ${p.instrucciones}
                         </div>`);
                     value = textos.length ? textos.join('') : '-';
@@ -2658,7 +2669,7 @@ function renderClientesCompleta(list) {
                 value = tipos[value] || value || '-';
             }
             
-            cells += `<td>${value}</td>`;
+            cells += `<td style="text-align:center;">${value}</td>`;
         });
         
         // ✅ BOTÓN TACHO DE BASURA - USA TOGGLE
@@ -2667,7 +2678,7 @@ function renderClientesCompleta(list) {
         const estadoClass = isActive ? 'action-delete' : 'action-activate';
         
         cells += `
-            <td>
+            <td style="text-align:center;">
                 <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">
                     <button class="action-btn action-view" data-view="clientes|${r.id}" title="Ver">👁️</button>
                     <button class="action-btn action-edit" data-edit="clientes|${r.id}" title="Editar">✏️</button>
