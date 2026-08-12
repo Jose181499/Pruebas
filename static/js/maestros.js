@@ -129,6 +129,7 @@ const DS = {};
 const sheetMode = {};
 let currentModule = 'clientes';
 let clientEditId = null;
+let ultimoClienteCreadoId = null;
 let ultimoRegistroCreado = {};
 let contactCtr = 0;
 let pointCtr = 0;
