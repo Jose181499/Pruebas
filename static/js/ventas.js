@@ -1912,23 +1912,24 @@ function renderDevoluciones() {
     `).join('');
 }
 
+
 async function guardarCotizacion(estado) {
     try {
         console.log('🔄 Iniciando guardado de cotización...');
         
         // ============================================================
-        // 🔽 VALIDAR CAMPOS OBLIGATORIOS
+        // 🔽 VALIDAR CAMPOS OBLIGATORIOS - VERSIÓN CORREGIDA
         // ============================================================
         const ruc = document.getElementById('fRuc')?.value?.trim() || '';
         const condicionPagoSelect = document.getElementById('fCondicion')?.value || '';
         const condicionCustom = document.getElementById('fCondicionCustom')?.value?.trim() || '';
         const tiempoEntregaSelect = document.getElementById('fTiempo')?.value || '';
         const tiempoCustom = document.getElementById('fTiempoCustom')?.value?.trim() || '';
-        
+
         // Recopilar campos faltantes
         const camposFaltantes = [];
-        
-        // Validar RUC
+
+        // 1. Validar RUC
         if (!ruc || ruc.length < 11) {
             camposFaltantes.push('RUC (11 dígitos)');
             const el = document.getElementById('fRuc');
@@ -1941,12 +1942,15 @@ async function guardarCotizacion(estado) {
                 }, 3000);
             }
         }
-        
-        // Validar Condición de Pago
-        const condicionFinal = condicionPagoSelect === 'Personalizado' ? condicionCustom : condicionPagoSelect;
-        if (!condicionFinal || condicionFinal === 'Personalizado' || condicionFinal === '') {
-            camposFaltantes.push('Condición de Pago');
-            if (condicionPagoSelect === 'Personalizado') {
+
+        // 2. Validar Condición de Pago
+        let condicionFinal = '';
+        if (condicionPagoSelect === 'Personalizado') {
+            // Si está en Personalizado, usar el valor del input custom
+            condicionFinal = condicionCustom;
+            // Si el input custom está vacío, es un error
+            if (!condicionFinal) {
+                camposFaltantes.push('Condición de Pago (escribe un valor personalizado)');
                 const el = document.getElementById('fCondicionCustom');
                 if (el) {
                     el.style.borderColor = '#DC2626';
@@ -1956,7 +1960,13 @@ async function guardarCotizacion(estado) {
                         el.style.boxShadow = '';
                     }, 3000);
                 }
-            } else {
+            }
+        } else {
+            // Si no está en Personalizado, usar el valor del select
+            condicionFinal = condicionPagoSelect;
+            // Si el select está vacío o es "Personalizado" (sin custom), es un error
+            if (!condicionFinal || condicionFinal === 'Personalizado') {
+                camposFaltantes.push('Condición de Pago');
                 const el = document.getElementById('fCondicion');
                 if (el) {
                     el.style.borderColor = '#DC2626';
@@ -1968,12 +1978,15 @@ async function guardarCotizacion(estado) {
                 }
             }
         }
-        
-        // Validar Tiempo de Entrega
-        const tiempoFinal = tiempoEntregaSelect === 'Personalizado' ? tiempoCustom : tiempoEntregaSelect;
-        if (!tiempoFinal || tiempoFinal === 'Personalizado' || tiempoFinal === '') {
-            camposFaltantes.push('Tiempo de Entrega');
-            if (tiempoEntregaSelect === 'Personalizado') {
+
+        // 3. Validar Tiempo de Entrega
+        let tiempoFinal = '';
+        if (tiempoEntregaSelect === 'Personalizado') {
+            // Si está en Personalizado, usar el valor del input custom
+            tiempoFinal = tiempoCustom;
+            // Si el input custom está vacío, es un error
+            if (!tiempoFinal) {
+                camposFaltantes.push('Tiempo de Entrega (escribe un valor personalizado)');
                 const el = document.getElementById('fTiempoCustom');
                 if (el) {
                     el.style.borderColor = '#DC2626';
@@ -1983,7 +1996,13 @@ async function guardarCotizacion(estado) {
                         el.style.boxShadow = '';
                     }, 3000);
                 }
-            } else {
+            }
+        } else {
+            // Si no está en Personalizado, usar el valor del select
+            tiempoFinal = tiempoEntregaSelect;
+            // Si el select está vacío o es "Personalizado" (sin custom), es un error
+            if (!tiempoFinal || tiempoFinal === 'Personalizado') {
+                camposFaltantes.push('Tiempo de Entrega');
                 const el = document.getElementById('fTiempo');
                 if (el) {
                     el.style.borderColor = '#DC2626';
@@ -1995,26 +2014,34 @@ async function guardarCotizacion(estado) {
                 }
             }
         }
-        
+
+        console.log('🔍 Validación:');
+        console.log('  - condicionPagoSelect:', condicionPagoSelect);
+        console.log('  - condicionCustom:', condicionCustom);
+        console.log('  - condicionFinal:', condicionFinal);
+        console.log('  - tiempoEntregaSelect:', tiempoEntregaSelect);
+        console.log('  - tiempoCustom:', tiempoCustom);
+        console.log('  - tiempoFinal:', tiempoFinal);
+        console.log('  - camposFaltantes:', camposFaltantes);
+
         // ============================================================
         // 🔽 SI HAY CAMPOS FALTANTES, MOSTRAR MODAL GRANDE
         // ============================================================
         if (camposFaltantes.length > 0) {
-            // Mostrar modal de advertencia grande en el centro
             showValidationWarningModal(camposFaltantes);
             return;
         }
-        
+
         console.log('📋 RUC:', ruc);
         console.log('📋 Condición de Pago:', condicionFinal);
         console.log('📋 Tiempo de Entrega:', tiempoFinal);
-        
+
         // ============================================================
         // 1. BUSCAR EL CLIENTE POR RUC
         // ============================================================
         let clienteId = null;
         let clienteData = null;
-        
+
         // Buscar en CLIENTES_MAESTROS
         if (CLIENTES_MAESTROS && CLIENTES_MAESTROS.length > 0) {
             const cliente = CLIENTES_MAESTROS.find(c => 
@@ -2027,7 +2054,7 @@ async function guardarCotizacion(estado) {
                 console.log('✅ Cliente encontrado en CLIENTES_MAESTROS con ID:', clienteId);
             }
         }
-        
+
         // Si no está en memoria, buscar en la base de datos
         if (!clienteId) {
             console.log('🔍 Buscando cliente en BD por RUC:', ruc);
@@ -2035,12 +2062,12 @@ async function guardarCotizacion(estado) {
                 const resp = await fetch(`/maestros/api/clientes/buscar?q=${ruc}`);
                 const data = await resp.json();
                 console.log('📦 Respuesta búsqueda:', data);
-                
+
                 if (data.success && data.data && data.data.length > 0) {
                     clienteId = data.data[0].id;
                     clienteData = data.data[0];
                     console.log('✅ Cliente encontrado en BD con ID:', clienteId);
-                    
+
                     if (!CLIENTES_MAESTROS.find(c => c.id === clienteId)) {
                         CLIENTES_MAESTROS.push(clienteData);
                     }
@@ -2049,11 +2076,11 @@ async function guardarCotizacion(estado) {
                 console.warn('⚠️ Error buscando cliente:', e);
             }
         }
-        
+
         // Si no existe, CREAR el cliente
         if (!clienteId) {
             console.log('🆕 Cliente no encontrado, creando nuevo...');
-            
+
             const nuevoCliente = {
                 ruc: ruc,
                 tipo_documento: 'RUC',
@@ -2067,9 +2094,9 @@ async function guardarCotizacion(estado) {
                 condicion_pago: condicionFinal,
                 estado: 'Activo'
             };
-            
+
             console.log('📦 Datos nuevo cliente:', nuevoCliente);
-            
+
             try {
                 const resp = await fetch('/maestros/api/clientes/guardar', {
                     method: 'POST',
@@ -2078,7 +2105,7 @@ async function guardarCotizacion(estado) {
                 });
                 const result = await resp.json();
                 console.log('📦 Respuesta creación cliente:', result);
-                
+
                 if (result.success && result.data && result.data.id) {
                     clienteId = result.data.id;
                     clienteData = result.data;
@@ -2095,18 +2122,18 @@ async function guardarCotizacion(estado) {
                 return;
             }
         }
-        
+
         if (!clienteId) {
             showToast('⚠️ No se pudo identificar o crear el cliente', 'error');
             return;
         }
-        
+
         console.log('🎯 Cliente ID final:', clienteId);
-        
+
         // ============================================================
         // 2. CALCULAR TOTALES
         // ============================================================
-        
+
         const subtotal = quoteProducts.reduce((s, p) => s + (Number(p.cantidad || 0) * Number(p.valorVenta || 0)), 0);
         const descuentoValor = parseFloat(document.getElementById('fDiscountValue')?.value || 0);
         const descuentoTipo = document.getElementById('fDiscountType')?.value || '%';
@@ -2116,11 +2143,11 @@ async function guardarCotizacion(estado) {
         const valorVenta = subtotal - descuento;
         const igv = valorVenta * 0.18;
         const total = valorVenta + igv;
-        
+
         // ============================================================
         // 3. PREPARAR DATOS
         // ============================================================
-        
+
         const data = {
             id: editingId,
             estado: estado || 'Borrador',
@@ -2160,7 +2187,7 @@ async function guardarCotizacion(estado) {
                 stock: p.stock || 0
             }))
         };
-        
+
         console.log('📦 Enviando cotización:');
         console.log('  - cliente_id:', data.cliente_id);
         console.log('  - estado:', data.estado);
@@ -2168,18 +2195,18 @@ async function guardarCotizacion(estado) {
         console.log('  - productos:', data.productos.length);
         console.log('  - condicion_pago:', data.condicion_pago);
         console.log('  - tiempo_entrega:', data.tiempo_entrega);
-        
+
         // ============================================================
         // 4. ENVIAR A LA API
         // ============================================================
-        
+
         const response = await apiFetch('/ventas/api/cotizaciones/guardar', {
             method: 'POST',
             body: JSON.stringify(data)
         });
-        
+
         console.log('📦 Respuesta API:', response);
-        
+
         if (response.success) {
             const mensaje = estado === 'Borrador' ? 'guardada como borrador' : 'creada correctamente';
             showToast(`✅ Cotización ${mensaje}`, 'success');
@@ -2194,8 +2221,6 @@ async function guardarCotizacion(estado) {
         showToast('❌ Error al guardar la cotización: ' + error.message, 'error');
     }
 }
-
-
 
 
 // ============================================================
@@ -7532,6 +7557,7 @@ function calcQuote() {
     set('sumTiempoEntrega', tiempoEntrega);
 }
 
+
 async function loadClient() {
     const rucInput = document.getElementById('fRucSearch');
     const ruc = rucInput?.value?.replace(/\D/g, '').trim() || '';
@@ -7583,7 +7609,7 @@ async function loadClient() {
             if (fCorreo) fCorreo.value = cliente.email_contacto || '';
             
             // ============================================================
-            // 2. CONDICIONES COMERCIALES
+            // 2. CONDICIONES COMERCIALES - NO SE AUTOCARGA NADA
             // ============================================================
             const fVendedor = document.getElementById('fVendedor');
             const fEmailAsesor = document.getElementById('fEmailAsesor');
@@ -7593,24 +7619,15 @@ async function loadClient() {
             const fDireccionEntrega = document.getElementById('fDireccionEntrega');
             const fDescuentoEspecial = document.getElementById('fDescuentoEspecial');
             const fNotaComercial = document.getElementById('fNotaComercial');
-            const fTiempo = document.getElementById('fTiempo');
-            const fCondicion = document.getElementById('fCondicion');
             
             if (fVendedor) fVendedor.value = CONFIG.asesorDefault;
             if (fEmailAsesor) fEmailAsesor.value = CONFIG.emailAsesorDefault;
             if (fTelefonoAsesor) fTelefonoAsesor.value = CONFIG.telefonoAsesorDefault;
             if (fMoneda) fMoneda.value = 'Soles (S/.)';
             
-            // 🔽 NUEVO: NO AUTOCARGAR CONDICIÓN DE PAGO - se deja en "Personalizado" o en su valor por defecto
-            // if (cliente.condicion_pago && fCondicion) {
-            //     setFieldValue('fCondicion', 'fCondicionCustom', cliente.condicion_pago);
-            // }
-            // ❌ ELIMINADO: Ya NO se autocompleta la condición de pago
-
-            // 🔽 NUEVO: NO AUTOCARGAR TIEMPO DE ENTREGA - se deja en su valor por defecto
-            // if (fTiempo) fTiempo.value = '5 días hábiles';
-            // ❌ ELIMINADO: Ya NO se autocompleta el tiempo de entrega
-
+            // ❌ ELIMINADO: No se autocompleta Condición de Pago
+            // ❌ ELIMINADO: No se autocompleta Tiempo de Entrega
+            
             // ✅ Los siguientes campos SÍ se autocompletan:
             
             // Dirección de entrega (si el cliente tiene puntos de entrega)
@@ -11346,19 +11363,33 @@ function showValidationWarningModal(camposFaltantes) {
         text-align: center;
     `;
     
-    // Generar lista de items pendientes
-    const listaItems = camposFaltantes.map(item => 
-        `<li style="color: #DC2626; font-weight: 800; padding: 8px 0; text-align: left; list-style: none; border-bottom: 1px solid #FEE2E2; font-size: 15px; display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 20px;">❌</span>
+    // Generar lista de items pendientes con íconos
+    const listaItems = camposFaltantes.map(item => {
+        // Asignar ícono según el tipo de campo
+        let icono = '❌';
+        if (item.includes('RUC')) icono = '📋';
+        else if (item.includes('Condición')) icono = '💳';
+        else if (item.includes('Tiempo')) icono = '⏰';
+        
+        return `<li style="color: #DC2626; font-weight: 800; padding: 10px 0; text-align: left; list-style: none; border-bottom: 1px solid #FEE2E2; font-size: 15px; display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 22px;">${icono}</span>
             ${item}
-        </li>`
-    ).join('');
+        </li>`;
+    }).join('');
+    
+    // Determinar el mensaje según la cantidad de campos faltantes
+    let mensajeIntro = '';
+    if (camposFaltantes.length === 1) {
+        mensajeIntro = 'Para continuar, completa el siguiente campo obligatorio:';
+    } else {
+        mensajeIntro = `Para continuar, completa los siguientes ${camposFaltantes.length} campos obligatorios:`;
+    }
     
     modal.innerHTML = `
         <div style="font-size: 56px; margin-bottom: 16px;">⚠️</div>
-        <h2 style="font-size: 24px; font-weight: 900; color: #0F172A; margin-bottom: 8px;">Campos obligatorios faltantes</h2>
+        <h2 style="font-size: 24px; font-weight: 900; color: #0F172A; margin-bottom: 8px;">¡Campos obligatorios faltantes!</h2>
         <p style="font-size: 16px; color: #475569; line-height: 1.6; margin-bottom: 20px;">
-            Para continuar, completa los siguientes campos obligatorios:
+            ${mensajeIntro}
         </p>
         <div style="background: #FEF2F2; border-radius: 16px; padding: 16px 20px; margin-bottom: 24px; border-left: 4px solid #DC2626; text-align: left;">
             <ul style="margin: 0; padding: 0; list-style: none;">
@@ -11405,17 +11436,23 @@ function showValidationWarningModal(camposFaltantes) {
     `;
     document.head.appendChild(style);
     
-    // Event listener para cerrar
+    // Event listener para cerrar y enfocar el primer campo faltante
     modal.querySelector('.warning-close-btn').addEventListener('click', function() {
         overlay.remove();
         // Enfocar el primer campo faltante
-        const primerosCampos = {
+        const mapaCampos = {
             'RUC': 'fRuc',
             'Condición de Pago': 'fCondicion',
             'Tiempo de Entrega': 'fTiempo'
         };
         for (const campo of camposFaltantes) {
-            const id = primerosCampos[campo];
+            let id = null;
+            for (const [key, value] of Object.entries(mapaCampos)) {
+                if (campo.includes(key)) {
+                    id = value;
+                    break;
+                }
+            }
             if (id) {
                 const el = document.getElementById(id);
                 if (el) {
