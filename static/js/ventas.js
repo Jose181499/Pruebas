@@ -2825,32 +2825,7 @@ function toggleAllProductCheckboxesPc(checked) {
     document.getElementById('selectedPcCount').textContent = selectedPcProductIds.size;
 }
 
-function actualizarResumenDesdeMontoPC(input) {
-    if (_timeoutResumen) clearTimeout(_timeoutResumen);
-    _timeoutResumen = setTimeout(() => {
-        const valor = parseFloat(input.value) || 0;
-        const simbolo = document.getElementById('pcResumenMoneda')?.textContent || 'S/';
-        const formatNum = (num) => `${simbolo} ${num.toFixed(2)}`;
-        
-        // Calcular IGV y total a partir del monto ingresado
-        const igv = valor * 0.18;
-        const total = valor + igv;
-        
-        // Actualizar solo los campos del resumen (NO el subtotal que viene de la tabla)
-        const subtotalEl = document.getElementById('pcResumenSubtotal');
-        const valorVentaEl = document.getElementById('pcResumenValorVenta');
-        const igvEl = document.getElementById('pcResumenIgv');
-        const totalEl = document.getElementById('pcResumenTotal');
-        
-        if (subtotalEl) subtotalEl.textContent = formatNum(valor);
-        if (valorVentaEl) valorVentaEl.textContent = formatNum(valor);
-        if (igvEl) igvEl.textContent = formatNum(igv);
-        if (totalEl) totalEl.textContent = formatNum(total);
-        
-        console.log(`✅ Resumen actualizado desde Monto PC: ${valor}`);
-        _timeoutResumen = null;
-    }, 100);
-}
+
 // ============================================================
 // FUNCIONES DE GUARDADO PARA PC, DESPACHO, GUÍAS, ETC.
 // ============================================================
@@ -5713,6 +5688,47 @@ function cargarConductorGuia(id) {
             showToast('❌ Error al cargar conductor', 'error');
         });
 }
+
+function actualizarResumenDesdeMontoPC(input) {
+    if (_timeoutResumen) clearTimeout(_timeoutResumen);
+    
+    // 1. Obtener el Monto Cotización (Sin IGV) - Es el valor de referencia
+    const montoCotizacionSinIgv = parseFloat(document.getElementById('pcMonto')?.value) || 0;
+    
+    // 2. Obtener el valor que el usuario está escribiendo en Monto PC
+    const valorPC = parseFloat(input.value) || 0;
+    const simbolo = document.getElementById('pcResumenMoneda')?.textContent || 'S/';
+    const formatNum = (num) => `${simbolo} ${num.toFixed(2)}`;
+    
+    // ============================================================
+    // 🔥 CALCULAR LA DIFERENCIA SIN IGV (Comparando contra la Cotización)
+    // ============================================================
+    const diferenciaSinIgv = valorPC - montoCotizacionSinIgv;
+    const diffElement = document.getElementById('pcDiferenciaSinIgv');
+    if (diffElement) {
+        diffElement.textContent = formatNum(diferenciaSinIgv);
+        // Cambiar color del texto según sea positivo, negativo o cero
+        if (diferenciaSinIgv > 0) diffElement.style.color = '#DC2626'; // Rojo si es mayor
+        else if (diferenciaSinIgv < 0) diffElement.style.color = '#2563EB'; // Azul si es menor
+        else diffElement.style.color = '#6B7280'; // Gris si es igual
+    }
+    // ============================================================
+    
+    // Debounce para el resumen lateral
+    _timeoutResumen = setTimeout(() => {
+        const igv = valorPC * 0.18;
+        const total = valorPC + igv;
+        
+        document.getElementById('pcResumenSubtotal').textContent = formatNum(valorPC);
+        document.getElementById('pcResumenValorVenta').textContent = formatNum(valorPC);
+        document.getElementById('pcResumenIgv').textContent = formatNum(igv);
+        document.getElementById('pcResumenTotal').textContent = formatNum(total);
+        
+        console.log(`✅ Resumen actualizado: Cotización S/${montoCotizacionSinIgv.toFixed(2)} | PC S/${valorPC.toFixed(2)} | Diferencia: ${diferenciaSinIgv.toFixed(2)}`);
+        _timeoutResumen = null;
+    }, 100);
+}
+
 
 // ============================================================
 // LIMPIAR CONDUCTOR EN GUÍA
