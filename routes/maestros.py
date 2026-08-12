@@ -230,13 +230,13 @@ def api_clientes_guardar():
 
         # 🆕 Guardar puntos de entrega (incluye instrucciones)
         for p in data.get('puntos_entrega', []):
-            if not (p.get('punto') or p.get('direccion')):
+            if not (p.get('punto') or p.get('direccion') or p.get('instrucciones')):
                 continue
             cur.execute("""
                 INSERT INTO clientes_puntos_entrega (
                     cliente_id, nombre_punto, direccion, telefono_contacto,
-                    responsable, principal, instrucciones, activo, created_at, updated_at
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, TRUE, NOW(), NOW())
+                    responsable, principal, instrucciones, activo
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, TRUE)
             """, (
                 cliente_id, p.get('punto', ''), p.get('direccion', ''),
                 p.get('telefono', ''), p.get('contacto', ''),
@@ -411,13 +411,13 @@ def api_clientes_actualizar(id):
         # Reemplazar puntos de entrega (borra y vuelve a insertar, incluye instrucciones)
         cur.execute("DELETE FROM clientes_puntos_entrega WHERE cliente_id = %s", (id,))
         for p in data.get('puntos_entrega', []):
-            if not (p.get('punto') or p.get('direccion')):
+            if not (p.get('punto') or p.get('direccion') or p.get('instrucciones')):
                 continue
             cur.execute("""
                 INSERT INTO clientes_puntos_entrega (
                     cliente_id, nombre_punto, direccion, telefono_contacto,
-                    responsable, principal, instrucciones, activo, created_at, updated_at
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, TRUE, NOW(), NOW())
+                    responsable, principal, instrucciones, activo
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, TRUE)
             """, (
                 id, p.get('punto', ''), p.get('direccion', ''),
                 p.get('telefono', ''), p.get('contacto', ''),

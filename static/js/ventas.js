@@ -69,6 +69,31 @@ let CLIENTES_MAESTROS = [];
 // ============================================================
 // UTILIDADES
 // ============================================================
+
+function getDescripcionPrincipal(r) {
+    // Si ya tiene descripción o nota, se respeta tal cual
+    if (r.descripcion && r.descripcion.trim() !== '') return r.descripcion;
+    if (r.nota_cotizacion && r.nota_cotizacion.trim() !== '') return r.nota_cotizacion;
+
+    // Solo autocompletar con el primer producto si el estado es Generada o Aceptada
+    const estado = (r.estado || '').toLowerCase().trim();
+    const esGeneradaOAceptada = 
+        estado.includes('generada') || 
+        estado.includes('generado') ||
+        estado.includes('aceptada') || 
+        estado.includes('aceptado');
+
+    if (esGeneradaOAceptada) {
+        const productos = r.productos || r.items || [];
+        if (productos.length > 0) {
+            const primerProducto = productos[0];
+            return primerProducto.producto || primerProducto.descripcion || 'Sin descripción';
+        }
+    }
+
+    return 'Sin descripción';
+}
+
 function esc(v) {
     return String(v ?? '').replace(/[&<>"']/g, m => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;',
@@ -1139,7 +1164,7 @@ if (cotizacionViewMode === 'principal') {
             <td>${sd(r.ruc)}</td>
             <td><span class="code-pill">${sd(r.cod_cliente)}</span></td>
             <td class="left"><b>${sd(r.razon)}</b></td>
-            <td class="left">${sd(r.descripcion || r.nota_cotizacion || 'Sin descripción')}</td>
+            <td class="left">${sd(getDescripcionPrincipal(r))}</td>
             <td><b>${money(totalSinIgv)}</b></td>
             <td><b>${money(totalConIgv)}</b></td>
             <td>${sd(r.condicion || r.condicion_pago || r.forma_pago)}</td>
@@ -12005,6 +12030,7 @@ window.deletePedidoCompra = deletePedidoCompra;
 window.deleteGuia = deleteGuia;
 window.deleteComprobante = deleteComprobante;
 window.deleteNota = deleteNota;
+window.getDescripcionPrincipal = getDescripcionPrincipal;
 // ============================================================
 // 14. FUNCIONES DE FORMATO
 // ============================================================
