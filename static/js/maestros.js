@@ -2588,7 +2588,7 @@ function renderClientesCompleta(list) {
         // ✅ PUNTOS DE ENTREGA (desde clientes_puntos_entrega)
         { key: 'puntos_entrega', label: 'Puntos de Entrega', width: '220px' },
         // ✅ INSTRUCCIONES (desde clientes_puntos_entrega)
-        { key: 'instrucciones_resumen', label: 'Instrucciones', width: '150px' },
+        { key: 'instrucciones', label: 'Instrucciones', width: '150px' },
         { key: 'estado', label: 'Estado', width: '90px' },
         { key: 'activo', label: 'Activo', width: '70px' },
         { key: 'observaciones', label: 'Observaciones', width: '150px' },
@@ -2644,18 +2644,18 @@ function renderClientesCompleta(list) {
                 } else {
                     value = '-';
                 }
-            } else if (f.key === 'instrucciones_resumen') {
-                // ✅ Mostrar instrucciones desde puntos_entrega
-                if (r.puntos_entrega && r.puntos_entrega.length > 0) {
-                    const textos = r.puntos_entrega
-                        .filter(p => p.instrucciones)
-                        .map(p => `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;text-align:left;">
-                            <strong>${p.nombre_punto || p.punto || '-'}:</strong> ${p.instrucciones}
-                        </div>`);
-                    value = textos.length ? textos.join('') : '-';
-                } else {
-                    value = '-';
-                }
+                // ✅ ESTO ESTÁ BIEN - usa la clave 'instrucciones' directamente
+} else if (f.key === 'instrucciones') {
+    if (r.puntos_entrega && r.puntos_entrega.length > 0) {
+        const textos = r.puntos_entrega
+            .filter(p => p.instrucciones)
+            .map(p => `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;text-align:left;">
+                <strong>${p.nombre_punto || p.punto || '-'}:</strong> ${p.instrucciones}
+            </div>`);
+        value = textos.length ? textos.join('') : '-';
+    } else {
+        value = '-';
+    }
             } else if (f.key === 'limite_credito' || f.key === 'descuento') {
                 if (value && !isNaN(value)) {
                     value = `S/ ${parseFloat(value).toFixed(2)}`;
