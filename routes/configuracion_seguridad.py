@@ -1103,6 +1103,9 @@ def get_submodulos():
         print(f"❌ Error en get_submodulos: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+# ============================================================
+# PERMISOS DE USUARIO - VERSIÓN CORREGIDA (ACEPTA NÚMEROS)
+# ============================================================
 
 @config_seguridad_bp.route('/usuarios/<usuario_id>/permisos', methods=['GET'])
 def get_usuario_permisos(usuario_id):
@@ -1151,11 +1154,18 @@ def get_usuario_permisos(usuario_id):
             ORDER BY m.orden, s.orden
         """, (auth_user_id, empresa_id))
         
-        # ✅ CONVERTIR submodulo_id a número para que coincida con el frontend
+        # ✅ Devolver el submodulo_id como número (para que coincida con el frontend)
         for p in permisos:
             if p.get('submodulo_id'):
-                # Ya es numérico, lo dejamos igual
-                pass
+                # Intentar obtener el ID numérico
+                try:
+                    # Buscar el submódulo por UUID
+                    sub = db_query("SELECT id FROM erp_submodulos WHERE id = %s", (p['submodulo_id'],))
+                    if sub:
+                        # Ya es el ID, lo dejamos igual
+                        pass
+                except:
+                    pass
         
         submodulos = db_query("""
             SELECT 
@@ -1180,7 +1190,118 @@ def get_usuario_permisos(usuario_id):
         
     except Exception as e:
         print(f"❌ Error en get_usuario_permisos: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@config_seguridad_bp.route('/usuarios/<usuario_id>/permisos', methods=['POST'])
+def update_usuario_permisos(usuario_id):
+    """Actualizar los permisos de un usuario en una empresa"""
+    try:
+        data = request.get_json()
+        print(f"📝 Datos recibidos en POST: {data}")
+        
+        empresa_id = data.get('empresa_id')
+        permisos = data.get('permisos', [])
+        
+        if not empresa_id:
+            return jsonify({'success': False, 'error': 'empresa_id es requerido'}), 400
+        
+        # Obtener el auth_user_id del usuario
+        usuario = db_query("""
+            SELECT auth_user_id FROM usuarios WHERE id = %s AND estado = 'activo'
+        """, (usuario_id,))
+        
+        if not usuario:
+            return jsonify({'success': False, 'error': 'Usuario no encontrado'}), 404
+        
+        auth_user_id = usuario[0]['auth_user_id']
+        print(f"👤 Usuario: {auth_user_id}, Empresa: {empresa_id}")
+        print(f"📋 Permisos a guardar: {len(permisos)}")
+        
+        with db_tx() as conn:
+            cur = conn.cursor()
+            
+            # Eliminar permisos existentes para esta empresa
+            cur.execute("""
+                DELETE FROM erp_usuario_permisos 
+                WHERE auth_user_id = %s AND empresa_id = %s
+            """, (auth_user_id, empresa_id))
+            print(f"🗑️ Permisos eliminados para {auth_user_id} en empresa {empresa_id}")
+            
+            # Insertar nuevos permisos
+            for idx, permiso in enumerate(permisos):
+                submodulo_id = permiso.get('submodulo_id')
+                if not submodulo_id:
+                    print(f"⚠️ Permiso {idx}: sin submodulo_id, saltando")
+                    continue
+                
+                print(f"📌 Permiso {idx}: submodulo_id = {submodulo_id} (tipo: {type(submodulo_id)})")
+                
+                # ✅ CONVERTIR A UUID SI ES NECESARIO
+                # Si es un número (int), buscar el UUID correspondiente
+                if isinstance(submodulo_id, int) or (isinstance(submodulo_id, str) and submodulo_id.isdigit()):
+                    # Buscar el UUID real del submódulo por su ID numérico
+                    uuid_result = db_query(
+                        "SELECT id FROM erp_submodulos WHERE id = %s", 
+                        (int(submodulo_id),)
+                    )
+                    if uuid_result:
+                        submodulo_id = uuid_result[0]['id']  # Este es el UUID real
+                        print(f"   ✅ Convertido a UUID: {submodulo_id}")
+                    else:
+                        print(f"   ❌ No se encontró submódulo con ID: {submodulo_id}")
+                        continue
+                
+                # Si es un string que parece UUID, usarlo directamente
+                elif isinstance(submodulo_id, str) and '-' in submodulo_id:
+                    # Verificar que existe
+                    uuid_result = db_query(
+                        "SELECT id FROM erp_submodulos WHERE id = %s", 
+                        (submodulo_id,)
+                    )
+                    if not uuid_result:
+                        print(f"   ❌ No se encontró submódulo con UUID: {submodulo_id}")
+                        continue
+                    print(f"   ✅ UUID válido: {submodulo_id}")
+                
+                # Insertar el permiso
+                cur.execute("""
+                    INSERT INTO erp_usuario_permisos (
+                        auth_user_id, empresa_id, submodulo_id,
+                        puede_ver, puede_crear, puede_editar,
+                        puede_aprobar, puede_anular, puede_eliminar,
+                        puede_exportar, puede_subir_evidencia,
+                        observacion
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (
+                    auth_user_id,
+                    empresa_id,
+                    submodulo_id,
+                    permiso.get('puede_ver', False),
+                    permiso.get('puede_crear', False),
+                    permiso.get('puede_editar', False),
+                    permiso.get('puede_aprobar', False),
+                    permiso.get('puede_anular', False),
+                    permiso.get('puede_eliminar', False),
+                    permiso.get('puede_exportar', False),
+                    permiso.get('puede_subir_evidencia', False),
+                    permiso.get('observacion', '')
+                ))
+                print(f"   ✅ Permiso insertado para submodulo: {submodulo_id}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Permisos actualizados exitosamente'
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en update_usuario_permisos: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 # En configuracion_seguridad.py - reemplazar el método POST de permisos
 
