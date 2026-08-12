@@ -75,7 +75,10 @@ function getDescripcionPrincipal(r) {
     if (r.descripcion && r.descripcion.trim() !== '') return r.descripcion;
     if (r.nota_cotizacion && r.nota_cotizacion.trim() !== '') return r.nota_cotizacion;
 
-    // Autocompletar con el primer producto sin importar el estado
+    // Autocompletar con el primer producto de la cotización (viene del listado)
+    if (r.primer_producto && r.primer_producto.trim() !== '') return r.primer_producto;
+
+    // Fallback: si el objeto trae el array completo de productos (ej. cotización cargada completa)
     const productos = r.productos || r.items || [];
     if (productos.length > 0) {
         const primerProducto = productos[0];
@@ -2987,6 +2990,7 @@ async function deleteCotizacion(id) {
         '🗑️ Sí, eliminar'
     );
 }
+
 async function marcarDespachado(id) {
     const despacho = despachosData.find(d => d.id === id);
     if (!despacho) {
@@ -3018,27 +3022,64 @@ async function marcarDespachado(id) {
                 
                 showToast('✅ Despacho marcado como Despachado', 'success');
                 
-                // PASO 2: Obtener items del PC
+                // ============================================================
+                // OBTENER LOS ITEMS DEL DESPACHO
+                // ============================================================
                 let items = [];
-                if (despacho.pc_id) {
+                
+                // Primero intentar obtener los items del despacho
+                if (despacho.items && despacho.items.length > 0) {
+                    items = despacho.items;
+                }
+                
+                // Si no hay items en el despacho, buscar en el PC
+                if (items.length === 0 && despacho.pc_id) {
                     try {
                         const pcResponse = await apiFetch(`/ventas/api/pedido-compra/${despacho.pc_id}`);
                         if (pcResponse.success && pcResponse.data) {
-                            items = pcResponse.data.items || [];
-                            console.log('📦 Items obtenidos del PC:', items);
+                            const pcItems = pcResponse.data.items || [];
+                            // Normalizar items del PC
+                            items = pcItems.map(item => {
+                                if (typeof item === 'object' && !Array.isArray(item)) {
+                                    return {
+                                        codigo: item.codigo || '',
+                                        producto: item.producto || item.descripcion || 'Sin descripción',
+                                        marca: item.marca || '',
+                                        modelo: item.modelo || '',
+                                        cantidad: parseFloat(item.cantidad_pc || item.cantidad || 1),
+                                        um: item.um || 'NIU',
+                                        stock: parseInt(item.stock || 0)
+                                    };
+                                }
+                                if (Array.isArray(item)) {
+                                    return {
+                                        codigo: item[0] || '',
+                                        producto: item[1] || 'Sin descripción',
+                                        marca: item[2] || '',
+                                        modelo: item[3] || '',
+                                        cantidad: parseFloat(item[5] || item[3] || 1),
+                                        um: 'NIU',
+                                        stock: parseInt(item[8] || 0)
+                                    };
+                                }
+                                return null;
+                            }).filter(item => item !== null);
                         }
                     } catch (e) {
                         console.warn('⚠️ No se pudieron obtener items del PC:', e);
                     }
                 }
                 
-                if (items.length === 0 && despacho.items) {
-                    items = despacho.items;
-                }
-                
                 console.log('📦 Items finales para guía:', items);
                 
-                // PASO 3: Crear Guía de Remisión
+                if (items.length === 0) {
+                    showToast('⚠️ No hay productos para crear la guía', 'warning');
+                    return;
+                }
+                
+                // ============================================================
+                // CREAR GUÍA DE REMISIÓN CON LOS ITEMS
+                // ============================================================
                 const ahora = new Date();
                 const year = ahora.getFullYear();
                 const month = String(ahora.getMonth() + 1).padStart(2, '0');
@@ -3053,42 +3094,24 @@ async function marcarDespachado(id) {
                     cotizacion_numero: despacho.cotizacion_numero || '',
                     cliente: despacho.cliente || '',
                     ruc: despacho.ruc || '',
-                    origen: despacho.origen || 'ALM-SMP',
+                    origen: despacho.origen || 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES',
                     destino: despacho.destino || '',
                     motivo_traslado: 'VENTA',
                     observaciones: `Guía generada automáticamente desde despacho ${despacho.numero}`,
                     fecha_traslado: `${year}-${month}-${day}`,
-                    items: items.map(item => {
-                        // Normalizar item para la guía
-                        let codigo = item.codigo || '';
-                        let producto = item.producto || item.descripcion || '';
-                        let cantidad = item.cantidad_pc || item.cantidad || 1;
-                        let um = item.um || 'NIU';
-                        let marca = item.marca || '';
-                        let modelo = item.modelo || '';
-                        
-                        // Si el item es un array [codigo, descripcion, cantidad, ...]
-                        if (Array.isArray(item)) {
-                            codigo = item[0] || '';
-                            producto = item[1] || '';
-                            cantidad = item[3] || item[2] || 1;
-                            um = 'NIU';
-                            marca = '';
-                            modelo = '';
-                        }
-                        
-                        return {
-                            codigo: codigo,
-                            producto: producto,
-                            cantidad: cantidad,
-                            um: um,
-                            marca: marca,
-                            modelo: modelo
-                        };
-                    })
+                    // 🔽 USAR LOS ITEMS DEL DESPACHO
+                    items: items.map(item => ({
+                        codigo: item.codigo || '',
+                        producto: item.producto || 'Sin descripción',
+                        marca: item.marca || '',
+                        modelo: item.modelo || '',
+                        cantidad: parseFloat(item.cantidad || 1),
+                        um: item.um || 'NIU',
+                        stock: parseInt(item.stock || 0)
+                    }))
                 };
                 
-                console.log('📦 Creando guía automática:', JSON.stringify(guiaData, null, 2));
+                console.log('📦 Creando guía con items:', guiaData);
                 
                 const guiaResponse = await fetch('/ventas/api/guias/guardar', {
                     method: 'POST',
@@ -3102,7 +3125,7 @@ async function marcarDespachado(id) {
                 console.log('📦 Respuesta creación guía:', guiaResult);
                 
                 if (guiaResult.success) {
-                    showToast('✅ Guía de Remisión creada en estado "Borrador"', 'success');
+                    showToast(`✅ Guía de Remisión creada con ${items.length} productos`, 'success');
                     
                     await loadDespachos();
                     await loadGuias();
@@ -3110,7 +3133,7 @@ async function marcarDespachado(id) {
                     setTimeout(() => {
                         showConfirmModal(
                             '📦 ¿Ver la guía creada?',
-                            `Se ha creado la Guía de Remisión <b>${guiaData.serie}-${guiaData.numero}</b> en estado "Borrador".`,
+                            `Se ha creado la Guía de Remisión <b>${guiaData.serie}-${guiaData.numero}</b> con ${items.length} productos en estado "Borrador".`,
                             '⚠️ La guía está en borrador. Debes revisarla y completarla antes de emitirla.',
                             function() {
                                 const tabBtn = document.querySelector('.tab-btn[data-tab="guias"]');
@@ -3139,6 +3162,7 @@ async function marcarDespachado(id) {
         '🚚 Sí, despachar'
     );
 }
+
 
 // En ventas.js - Reemplaza la función duplicateCotizacion
 async function duplicateCotizacion(id) {
@@ -6848,7 +6872,7 @@ function generarOrdenCompra(id) {
     );
 }
 
-function enviarADespacho(id) {
+async function enviarADespacho(id) {
     const pedido = pedidosData.find(p => p.id === id);
     if (!pedido) {
         showToast('❌ PC no encontrado', 'error');
@@ -6880,11 +6904,59 @@ function enviarADespacho(id) {
                 console.log('✅ PC actualizado a "Listo para despacho"');
                 
                 // ============================================================
-                // PASO 2: Crear el despacho CON HORA EXPLÍCITA
+                // OBTENER LOS ITEMS DEL PC (PRODUCTOS)
+                // ============================================================
+                let items = pedido.items || [];
+                
+                // Si items está vacío pero hay items_json, parsearlo
+                if (items.length === 0 && pedido.items_json) {
+                    try {
+                        if (typeof pedido.items_json === 'string') {
+                            items = JSON.parse(pedido.items_json);
+                        } else if (Array.isArray(pedido.items_json)) {
+                            items = pedido.items_json;
+                        }
+                    } catch(e) {
+                        console.warn('⚠️ Error parseando items_json:', e);
+                        items = [];
+                    }
+                }
+                
+                // Normalizar items para el despacho
+                const itemsNormalizados = items.map(item => {
+                    // Si es un objeto con propiedades
+                    if (typeof item === 'object' && !Array.isArray(item)) {
+                        return {
+                            codigo: item.codigo || '',
+                            producto: item.producto || item.descripcion || 'Sin descripción',
+                            marca: item.marca || '',
+                            modelo: item.modelo || '',
+                            cantidad: parseFloat(item.cantidad_pc || item.cantidad || 1),
+                            um: item.um || 'NIU',
+                            stock: parseInt(item.stock || 0)
+                        };
+                    }
+                    // Si es un array
+                    if (Array.isArray(item)) {
+                        return {
+                            codigo: item[0] || '',
+                            producto: item[1] || 'Sin descripción',
+                            marca: item[2] || '',
+                            modelo: item[3] || '',
+                            cantidad: parseFloat(item[5] || item[3] || 1),
+                            um: 'NIU',
+                            stock: parseInt(item[8] || 0)
+                        };
+                    }
+                    return null;
+                }).filter(item => item !== null);
+                
+                console.log('📦 Items normalizados para despacho:', itemsNormalizados);
+                
+                // ============================================================
+                // CREAR EL DESPACHO CON LOS ITEMS
                 // ============================================================
                 const ahora = new Date();
-                
-                // 🔽 FORMATO ISO COMPLETO CON HORA - EJ: 2026-07-20T14:30:45
                 const year = ahora.getFullYear();
                 const month = String(ahora.getMonth() + 1).padStart(2, '0');
                 const day = String(ahora.getDate()).padStart(2, '0');
@@ -6892,14 +6964,7 @@ function enviarADespacho(id) {
                 const minutes = String(ahora.getMinutes()).padStart(2, '0');
                 const seconds = String(ahora.getSeconds()).padStart(2, '0');
                 
-                // 🔽 FORMATO ISO COMPLETO: 2026-07-20 14:30:45
                 const fechaHoraISO = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-                
-                // 🔽 FORMATO PARA MOSTRAR: 20/07/2026 14:30
-                const fechaHoraDisplay = `${day}/${month}/${year} ${hours}:${minutes}`;
-                
-                console.log(`📅 Fecha/Hora ISO: ${fechaHoraISO}`);
-                console.log(`📅 Fecha/Hora Display: ${fechaHoraDisplay}`);
                 
                 const despachoData = {
                     pc_id: id,
@@ -6908,16 +6973,18 @@ function enviarADespacho(id) {
                     ruc: pedido.ruc,
                     cotizacion_id: pedido.cotizacion_id,
                     cotizacion_numero: pedido.cotizacion_numero,
-                    fecha_despacho: fechaHoraISO,  // 🔽 ISO CON HORA
+                    fecha_despacho: fechaHoraISO,
                     origen: 'ALM-SMP',
                     destino: pedido.lugar_entrega || pedido.entrega || '',
                     estado: 'Pendiente despacho',
                     observaciones: `Despacho automático desde PC ${pedido.numero}`,
                     responsable: 'Hellen',
-                    numero: `DESP-${year}${month}${day}-${String(ahora.getTime()).slice(-4)}`
+                    numero: `DESP-${year}${month}${day}-${String(ahora.getTime()).slice(-4)}`,
+                    // 🔽 INCLUIR LOS ITEMS EN EL DESPACHO
+                    items: itemsNormalizados
                 };
                 
-                console.log('📦 Enviando despacho:', despachoData);
+                console.log('📦 Enviando despacho con items:', despachoData);
                 
                 const despachoResponse = await fetch('/ventas/api/despachos/guardar', {
                     method: 'POST',
@@ -6931,12 +6998,13 @@ function enviarADespacho(id) {
                 console.log('📦 Respuesta:', despachoResult);
                 
                 if (despachoResult.success) {
-                    showToast('✅ PC enviado a despacho', 'success');
+                    showToast('✅ PC enviado a despacho con sus productos', 'success');
                     
                     await loadPedidos();
                     await loadDespachos();
                     renderValidacion();
                     
+                    // Cambiar a la pestaña de despachos
                     setTimeout(() => {
                         const tabBtn = document.querySelector('.tab-btn[data-tab="despachar"]');
                         if (tabBtn) {

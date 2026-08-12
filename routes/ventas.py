@@ -873,11 +873,8 @@ def guardar_pc_db(data):
         raise
 
 
-# ============================================================
-# FUNCIONES DE AYUDA PARA DESPACHOS
-# ============================================================
 def obtener_despachos_db():
-    """Obtiene todos los despachos"""
+    """Obtiene todos los despachos con sus items"""
     try:
         query = """
             SELECT 
@@ -885,14 +882,27 @@ def obtener_despachos_db():
                 pc_id, pc_numero, cotizacion_id, cotizacion_numero,
                 cliente, ruc, comprobante, guia, origen, destino,
                 transportista, observaciones, responsable,
-                created_at, updated_at
+                items_json, created_at, updated_at
             FROM despachos
             ORDER BY id DESC
         """
-        return db_query(query)
+        results = db_query(query)
+        
+        # Parsear items_json para cada despacho
+        for row in results:
+            if row.get('items_json'):
+                try:
+                    row['items'] = json.loads(row['items_json'])
+                except:
+                    row['items'] = []
+            else:
+                row['items'] = []
+        
+        return results
     except Exception as e:
         print(f"❌ Error en obtener_despachos_db: {e}")
         return []
+
 
 def guardar_despacho_db(data):
     """Guarda un nuevo despacho"""
@@ -1011,7 +1021,9 @@ def api_cotizaciones_listar():
         data = obtener_cotizaciones_db()
         print(f"📊 Cotizaciones encontradas: {len(data)}")
         
-        formatted_data.append({
+        formatted_data = []
+        for row in data:
+            formatted_data.append({
                 'id': row.get('id'),
                 'numero': row.get('numero_cotizacion') or row.get('codigo_cotizacion'),
                 'fecha': row.get('fecha_creacion'),
@@ -1027,7 +1039,7 @@ def api_cotizaciones_listar():
                 'vendedor': row.get('vendedor') or str(row.get('usuario_id', '')),
                 'vencimiento': row.get('validez_oferta'),
                 'cod_cliente': str(row.get('cliente_id', '')),
-                'direccion_entrega': row.get('direccion_entrega'),  # ✅ ESTO DEBE ESTAR
+                'direccion_entrega': row.get('direccion_entrega'),
                 'requerimiento': row.get('requerimiento'),
                 'nota': row.get('nota_cotizacion'),
                 'descuento_porcentaje': float(row.get('descuento_porcentaje', 0)),
@@ -2363,13 +2375,12 @@ def api_despachos_guardar():
     try:
         data = request.get_json()
         usuario_id = session.get('usuario_id', 8)
-        data['creado_por'] = usuario_id
         
         print("=" * 80)
         print("🚚 API DESPACHOS GUARDAR")
         print(f"  - PC ID: {data.get('pc_id')}")
         print(f"  - PC Número: {data.get('pc_numero')}")
-        print(f"  - Fecha despacho recibida: {data.get('fecha_despacho')}")
+        print(f"  - Items recibidos: {len(data.get('items', []))}")
         print("=" * 80)
         
         # Generar número si no tiene
@@ -2384,26 +2395,19 @@ def api_despachos_guardar():
             data['fecha'] = datetime.now().isoformat()
         
         # ============================================================
-        # 🔽 PROCESAR FECHA DESPACHO - CON HORA
+        # PROCESAR FECHA DESPACHO CON HORA
         # ============================================================
         from datetime import datetime
         fecha_despacho = data.get('fecha_despacho')
         
         if fecha_despacho:
             try:
-                # Si viene en formato ISO con hora: 2026-07-20 14:30:45
                 if isinstance(fecha_despacho, str) and ' ' in fecha_despacho:
-                    # Ya tiene hora, convertir a datetime
                     dt = datetime.strptime(fecha_despacho, '%Y-%m-%d %H:%M:%S')
                     fecha_despacho = dt.isoformat()
-                    print(f"📅 Fecha con hora convertida: {fecha_despacho}")
-                # Si viene en formato ISO: 2026-07-20T14:30:45.000Z
                 elif isinstance(fecha_despacho, str) and 'T' in fecha_despacho:
-                    # Ya está en ISO, mantener
                     pass
-                # Si viene solo con fecha: 2026-07-20
                 elif isinstance(fecha_despacho, str) and '-' in fecha_despacho and len(fecha_despacho) == 10:
-                    # Agregar hora actual
                     ahora = datetime.now()
                     dt = datetime(
                         int(fecha_despacho.split('-')[0]),
@@ -2414,23 +2418,23 @@ def api_despachos_guardar():
                         ahora.second
                     )
                     fecha_despacho = dt.isoformat()
-                    print(f"📅 Fecha sin hora, se agregó hora actual: {fecha_despacho}")
                 else:
-                    # Si no se puede parsear, usar ahora
                     fecha_despacho = datetime.now().isoformat()
-                    print(f"📅 Usando fecha actual: {fecha_despacho}")
             except Exception as e:
                 print(f"⚠️ Error procesando fecha: {e}")
                 fecha_despacho = datetime.now().isoformat()
         else:
-            # Si no hay fecha, usar ahora
             fecha_despacho = datetime.now().isoformat()
-            print(f"📅 No había fecha, usando ahora: {fecha_despacho}")
         
-        print(f"📅 Fecha despacho FINAL a guardar: {fecha_despacho}")
+        print(f"📅 Fecha despacho FINAL: {fecha_despacho}")
         
         # ============================================================
-        # GUARDAR DESPACHO
+        # GUARDAR ITEMS COMO JSON
+        # ============================================================
+        items_json = json.dumps(data.get('items', []))
+        
+        # ============================================================
+        # GUARDAR DESPACHO CON ITEMS
         # ============================================================
         query = """
             INSERT INTO despachos (
@@ -2438,17 +2442,17 @@ def api_despachos_guardar():
                 pc_id, pc_numero, cotizacion_id, cotizacion_numero,
                 cliente, ruc, comprobante, guia, origen, destino,
                 transportista, observaciones, responsable,
-                creado_por
+                items_json, creado_por
             ) VALUES (
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s, %s
+                %s, %s, %s, %s, %s, %s, %s
             ) RETURNING id, numero
         """
         
         params = (
             data.get('numero'),
             data.get('fecha'),
-            fecha_despacho,  # 🔽 AHORA CON HORA
+            fecha_despacho,
             data.get('estado', 'Pendiente despacho'),
             data.get('pc_id'),
             data.get('pc_numero'),
@@ -2463,6 +2467,7 @@ def api_despachos_guardar():
             data.get('transportista'),
             data.get('observaciones') or '',
             data.get('responsable') or 'Hellen',
+            items_json,  # 🔽 GUARDAR ITEMS
             data.get('creado_por') or 8
         )
         
@@ -2479,6 +2484,7 @@ def api_despachos_guardar():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 # ============================================================
 # DEVOLUCIONES - API
