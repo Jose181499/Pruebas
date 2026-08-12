@@ -2579,6 +2579,9 @@ async function cargarClientesCompletos() {
 // ============================================================
 // VISTA COMPLETA - TODOS LOS CAMPOS DEL CLIENTE (CORREGIDA)
 // ============================================================
+// ============================================================
+// VISTA COMPLETA - TODOS LOS CAMPOS DEL CLIENTE (CON GOOGLE MAPS)
+// ============================================================
 
 function renderClientesCompleta(list) {
     if (!list || !list.length) {
@@ -2588,7 +2591,6 @@ function renderClientesCompleta(list) {
         </div>`;
     }
     
-    // ✅ SOLO CAMPOS QUE EXISTEN EN LA BASE DE DATOS
     const allFields = [
         { key: 'id', label: 'ID', width: '50px' },
         { key: 'codigo_cliente', label: 'Código / Cliente', width: '100px' },
@@ -2605,11 +2607,9 @@ function renderClientesCompleta(list) {
         { key: 'nombre_contacto', label: 'Contacto Principal', width: '130px' },
         { key: 'telefono_contacto', label: 'Teléfono Principal', width: '110px' },
         { key: 'email_contacto', label: 'Email Principal', width: '160px' },
-        // ✅ CONTACTOS (desde clientes_contactos)
         { key: 'contactos', label: 'Contactos', width: '200px' },
-        // ✅ PUNTOS DE ENTREGA (desde clientes_puntos_entrega) - YA INCLUYE INSTRUCCIONES
-        { key: 'puntos_entrega', label: 'Puntos de Entrega', width: '220px' },
-        // ✅ ESTADO
+        // ✅ PUNTOS DE ENTREGA CON GOOGLE MAPS
+        { key: 'puntos_entrega', label: 'Puntos de Entrega', width: '280px' },
         { key: 'estado', label: 'Estado', width: '90px' },
         { key: 'activo', label: 'Activo', width: '70px' },
         { key: 'observaciones', label: 'Observaciones', width: '150px' },
@@ -2639,7 +2639,6 @@ function renderClientesCompleta(list) {
             } else if (f.key === 'ambito') {
                 value = bAmbito(value);
             } else if (f.key === 'contactos') {
-                // ✅ Mostrar contactos de clientes_contactos
                 if (r.contactos && r.contactos.length > 0) {
                     value = r.contactos.map(c => 
                         `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;text-align:left;">
@@ -2653,16 +2652,28 @@ function renderClientesCompleta(list) {
                     value = '-';
                 }
             } else if (f.key === 'puntos_entrega') {
-                // ✅ Mostrar puntos de entrega de clientes_puntos_entrega CON INSTRUCCIONES
+                // ✅ Mostrar puntos de entrega CON GOOGLE MAPS
                 if (r.puntos_entrega && r.puntos_entrega.length > 0) {
-                    value = r.puntos_entrega.map(p => 
-                        `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;text-align:left;">
+                    value = r.puntos_entrega.map(p => {
+                        let html = `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;text-align:left;">
                             <strong>${p.nombre_punto || p.punto || '-'}</strong>
                             ${p.principal ? ' ⭐' : ''}
-                            <br><small>${p.direccion || ''} ${p.telefono_contacto || p.telefono ? '| Tel: ' + (p.telefono_contacto || p.telefono) : ''}</small>
-                            ${p.instrucciones ? `<br><span style="color:#2563EB;">📝 ${p.instrucciones}</span>` : ''}
-                        </div>`
-                    ).join('');
+                            <br><small>${p.direccion || ''} ${p.telefono_contacto || p.telefono ? '| Tel: ' + (p.telefono_contacto || p.telefono) : ''}</small>`;
+                        
+                        // ✅ Mostrar Google Maps como link clickeable
+                        const mapsLink = p.google_maps || p.googleMaps;
+                        if (mapsLink) {
+                            html += `<br><a href="${mapsLink}" target="_blank" style="color:#2563EB;text-decoration:underline;font-size:10px;">📍 Ver en Google Maps</a>`;
+                        }
+                        
+                        // ✅ Mostrar instrucciones
+                        if (p.instrucciones) {
+                            html += `<br><span style="color:#2563EB;">📝 ${p.instrucciones}</span>`;
+                        }
+                        
+                        html += `</div>`;
+                        return html;
+                    }).join('');
                 } else {
                     value = '-';
                 }
@@ -2682,7 +2693,6 @@ function renderClientesCompleta(list) {
             cells += `<td style="text-align:center;">${value}</td>`;
         });
         
-        // ✅ BOTÓN TACHO DE BASURA - USA TOGGLE
         const isActive = r.estado === 'Activo' || r.estado === 'activo' || r.activo === true;
         const estadoDisplay = isActive ? 'Desactivar' : 'Activar';
         const estadoClass = isActive ? 'action-delete' : 'action-activate';
@@ -2702,9 +2712,9 @@ function renderClientesCompleta(list) {
     
     return `<div class="table-scroll" style="max-height:60vh;">
         <div style="padding:8px 12px;background:#FFF8F0;border-bottom:1px solid #E5E7EB;font-size:11px;color:#64748B;">
-            📋 Vista completa - Todos los campos del cliente (incluye contactos y puntos de entrega)
+            📋 Vista completa - Todos los campos del cliente (incluye contactos, puntos de entrega y Google Maps)
         </div>
-        <table class="master-table" style="min-width:2500px;">
+        <table class="master-table" style="min-width:2600px;">
             <thead><tr>${headersHtml}</tr></thead>
             <tbody>${rows}</tbody>
         </table>

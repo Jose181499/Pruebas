@@ -23,24 +23,22 @@ def index():
 # ENDPOINTS CLIENTES
 # ==========================================
 
+
 @maestros_bp.route('/api/clientes/listar', methods=['GET'])
-# @login_required  # Temporalmente comentado para pruebas
 def api_clientes_listar():
-    """Listar clientes con sus contactos y puntos de entrega - VERSIÓN DIRECTA"""
+    """Listar clientes con sus contactos y puntos de entrega"""
     try:
         import logging
         logger = logging.getLogger(__name__)
-        logger.info("📥 Solicitud a /api/clientes/listar (versión directa)")
+        logger.info("📥 Solicitud a /api/clientes/listar")
         
         from database import DATABASE_URL
         import psycopg2
         from psycopg2.extras import RealDictCursor
         
-        # Conectar directamente a la base de datos
         conn = psycopg2.connect(DATABASE_URL, sslmode='require')
         cur = conn.cursor(cursor_factory=RealDictCursor)
         
-        # 1. Obtener todos los clientes activos
         query_clientes = """
             SELECT id, codigo_cliente, razon_social,
                    numero_documento, tipo_documento,
@@ -61,14 +59,12 @@ def api_clientes_listar():
             conn.close()
             return jsonify({"success": True, "data": []})
         
-        # 2. Para cada cliente, obtener sus contactos y puntos de entrega
         for cliente in clientes:
             cliente_id = cliente.get('id')
             
             if not cliente_id:
                 continue
             
-            # Inicializar arrays vacíos por defecto
             cliente['contactos'] = []
             cliente['puntos_entrega'] = []
             
@@ -89,13 +85,15 @@ def api_clientes_listar():
                 logger.error(f"Error en contactos para cliente {cliente_id}: {e}")
                 cliente['contactos'] = []
             
-            # Obtener puntos de entrega
+            # ✅ Obtener puntos de entrega CON google_maps
             try:
                 query_puntos = """
                     SELECT id, nombre_punto as punto, direccion, 
                            telefono_contacto as telefono,
                            responsable as contacto, principal, activo,
-                           condicion_pago, tiempo_credito, instrucciones
+                           condicion_pago, tiempo_credito,
+                           instrucciones,
+                           google_maps  -- ✅ AGREGADO
                     FROM clientes_puntos_entrega
                     WHERE cliente_id = %s AND activo = true
                     ORDER BY principal DESC, nombre_punto
@@ -108,7 +106,6 @@ def api_clientes_listar():
                 logger.error(f"Error en puntos para cliente {cliente_id}: {e}")
                 cliente['puntos_entrega'] = []
             
-            # Asegurar valores por defecto
             cliente['ruc'] = cliente.get('numero_documento')
             cliente['condicion_pago'] = cliente.get('condicion_pago') or 'Contado'
             cliente['dias_credito'] = cliente.get('dias_credito') or 0
