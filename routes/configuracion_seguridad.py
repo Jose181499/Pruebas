@@ -1274,6 +1274,7 @@ def obtener_permisos_usuario(usuario_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+
 @config_seguridad_bp.route('/usuarios/<usuario_id>/permisos', methods=['POST'])
 def actualizar_permisos_usuario(usuario_id):
     """Actualizar los permisos de un usuario en una empresa"""
@@ -1295,8 +1296,22 @@ def actualizar_permisos_usuario(usuario_id):
             return jsonify({'success': False, 'error': 'Usuario no encontrado'}), 404
         
         auth_user_id = usuario[0]['auth_user_id']
-        print(f"👤 Usuario: {auth_user_id}, Empresa: {empresa_id}")
-        print(f"📋 Permisos a guardar: {len(permisos)}")
+        
+        # Mapeo de IDs numéricos a códigos (según el frontend)
+        codigos_por_id = {
+            '1': 'EMPRESAS', '2': 'USUARIOS_PERMISOS', '3': 'CORRELATIVOS',
+            '4': 'PARAMETROS', '5': 'INTEGRACION', '6': 'CLIENTES',
+            '7': 'PROVEEDORES', '8': 'ALMACENES', '9': 'CATEGORIAS',
+            '10': 'MARCAS', '11': 'UNIDADES_MEDIDA', '12': 'PRODUCTOS_LISTADO',
+            '13': 'PRODUCTOS_FICHA', '14': 'COTIZACIONES', '15': 'COMPROBANTES_CLIENTE',
+            '16': 'GUIAS_CLIENTE', '17': 'NOTAS_CREDITO', '18': 'SOLICITUD_COMPRA',
+            '19': 'COMPARATIVO_PROVEEDORES', '20': 'ORDEN_COMPRA', '21': 'COMPROBANTES_PROVEEDOR',
+            '22': 'RECEPCION_MERCADERIA', '23': 'ESTADO_STOCK', '24': 'KARDEX',
+            '25': 'ENTRADAS_SALIDAS', '26': 'TRANSFERENCIAS', '27': 'CUENTAS_COBRAR',
+            '28': 'CUENTAS_PAGAR', '29': 'CAJA_BANCOS', '30': 'FLUJO_CAJA',
+            '31': 'REPORTE_VENTAS', '32': 'REPORTE_COMPRAS', '33': 'REPORTE_INVENTARIO',
+            '34': 'REPORTE_FINANZAS', '35': 'SUNAT'
+        }
         
         with db_tx() as conn:
             cur = conn.cursor()
@@ -1306,39 +1321,41 @@ def actualizar_permisos_usuario(usuario_id):
                 DELETE FROM erp_usuario_permisos 
                 WHERE auth_user_id = %s AND empresa_id = %s
             """, (auth_user_id, empresa_id))
-            print(f"🗑️ Permisos eliminados para {auth_user_id} en empresa {empresa_id}")
             
             # Insertar nuevos permisos
             for idx, permiso in enumerate(permisos):
                 submodulo_id = permiso.get('submodulo_id')
                 if not submodulo_id:
-                    print(f"⚠️ Permiso {idx}: sin submodulo_id, saltando")
                     continue
                 
-                print(f"📌 Permiso {idx}: submodulo_id = {submodulo_id} (tipo: {type(submodulo_id)})")
-                
-                # ✅ CONVERTIR A UUID SI ES NECESARIO
+                # Si es un número, buscar por código
                 if isinstance(submodulo_id, int) or (isinstance(submodulo_id, str) and submodulo_id.isdigit()):
-                    uuid_result = db_query(
-                        "SELECT id FROM erp_submodulos WHERE id = %s", 
-                        (int(submodulo_id),)
-                    )
-                    if uuid_result:
-                        submodulo_id = uuid_result[0]['id']
-                        print(f"   ✅ Convertido a UUID: {submodulo_id}")
+                    codigo = codigos_por_id.get(str(submodulo_id))
+                    if codigo:
+                        # Buscar el UUID por el código
+                        uuid_result = db_query(
+                            "SELECT id FROM erp_submodulos WHERE codigo = %s", 
+                            (codigo,)
+                        )
+                        if uuid_result:
+                            submodulo_id = uuid_result[0]['id']
+                            print(f"   ✅ Convertido a UUID: {submodulo_id}")
+                        else:
+                            print(f"   ❌ No se encontró submódulo con código: {codigo}")
+                            continue
                     else:
-                        print(f"   ❌ No se encontró submódulo con ID: {submodulo_id}")
+                        print(f"   ❌ No se encontró código para ID: {submodulo_id}")
                         continue
                 
+                # Si es un string que parece UUID, verificar que existe
                 elif isinstance(submodulo_id, str) and '-' in submodulo_id:
                     uuid_result = db_query(
-                        "SELECT id FROM erp_submodulos WHERE id = %s", 
+                        "SELECT id FROM erp_submodulos WHERE id = %s::uuid", 
                         (submodulo_id,)
                     )
                     if not uuid_result:
                         print(f"   ❌ No se encontró submódulo con UUID: {submodulo_id}")
                         continue
-                    print(f"   ✅ UUID válido: {submodulo_id}")
                 
                 # Insertar el permiso
                 cur.execute("""
@@ -1363,7 +1380,6 @@ def actualizar_permisos_usuario(usuario_id):
                     permiso.get('puede_subir_evidencia', False),
                     permiso.get('observacion', '')
                 ))
-                print(f"   ✅ Permiso insertado para submodulo: {submodulo_id}")
         
         return jsonify({
             'success': True,
@@ -1375,6 +1391,8 @@ def actualizar_permisos_usuario(usuario_id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
 # ============================================================
 # 7. AUDITORÍA
 # ============================================================
