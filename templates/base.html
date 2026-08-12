@@ -1512,88 +1512,8 @@ else if (currentPath.includes('/inventario')) {
             }
         }
 
-// ============================================================
-// CARGAR PERMISOS DE USUARIO
-// ============================================================
-async function cargarPermisosUsuario(userId, empresaId) {
-    console.log('📋 Cargando permisos para usuario:', userId, 'empresa:', empresaId);
-    
-    if (!userId || !empresaId) {
-        console.warn('⚠️ userId o empresaId faltantes');
-        return { permisos: [] };
-    }
-    
-    const empresaIdStr = String(empresaId);
-    
-    try {
-        const response = await fetch(`/api/config/usuarios/${userId}/permisos?empresa_id=${empresaIdStr}`);
-        if (response.ok) {
-            const data = await response.json();
-            if (data.success) {
-                console.log('✅ Permisos cargados desde backend');
-                return data.data || { permisos: [] };
-            }
-        }
-    } catch(e) {
-        console.log('⚠️ Backend no disponible, usando localStorage');
-    }
-    
-    // Fallback a localStorage
-    const key = `permisos_${userId}_${empresaIdStr}`;
-    try {
-        const stored = localStorage.getItem(key);
-        if (stored) {
-            console.log('✅ Permisos cargados desde localStorage');
-            return JSON.parse(stored);
-        }
-    } catch(e) {}
-    
-    return { permisos: [] };
-}
 
 
-// ============================================================
-// GUARDAR PERMISOS DE USUARIO
-// ============================================================
-async function guardarPermisosUsuario(userId, empresaId, permisosList) {
-    console.log('💾 Guardando permisos para usuario:', userId, 'empresa:', empresaId);
-    
-    const empresaIdStr = String(empresaId);
-    
-    try {
-        const response = await fetch(`/api/config/usuarios/${userId}/permisos`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                empresa_id: empresaIdStr,
-                permisos: permisosList
-            })
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            if (data.success) {
-                console.log('✅ Permisos guardados en backend');
-                return true;
-            } else {
-                console.error('❌ Error en backend:', data.error);
-            }
-        }
-    } catch(e) {
-        console.log('⚠️ Backend no disponible, guardando en localStorage');
-    }
-    
-    // Fallback a localStorage
-    const key = `permisos_${userId}_${empresaIdStr}`;
-    try {
-        localStorage.setItem(key, JSON.stringify({ permisos: permisosList }));
-        console.log('✅ Permisos guardados en localStorage');
-        return true;
-    } catch(e) {
-        console.error('❌ Error guardando en localStorage:', e);
-        return false;
-    }
-}
 
 
 
@@ -1966,12 +1886,23 @@ function checkEye(tienePermiso, user, module, userId, empresaId) {
         };
 
 // ============================================================
-// MAPA DE CÓDIGOS A UUIDs - CREADO DESDE LA BASE DE DATOS
+// MAPA DE CÓDIGOS A UUIDs - VERSIÓN CORREGIDA
 // ============================================================
 let UUID_MAP_BY_CODE = {};
 
 async function cargarUUIDsPorCodigo() {
     try {
+        // Primero usar los datos locales de submodulosData
+        if (submodulosData && submodulosData.length > 0) {
+            UUID_MAP_BY_CODE = {};
+            submodulosData.forEach(s => {
+                UUID_MAP_BY_CODE[s.codigo] = s.id;
+            });
+            console.log('✅ UUID_MAP_BY_CODE cargado desde submodulosData:', UUID_MAP_BY_CODE);
+            return UUID_MAP_BY_CODE;
+        }
+        
+        // Si no hay datos locales, hacer fetch
         const response = await fetch('/api/config/submodulos');
         const data = await response.json();
         if (data.success) {
@@ -1979,7 +1910,7 @@ async function cargarUUIDsPorCodigo() {
             data.data.forEach(s => {
                 UUID_MAP_BY_CODE[s.codigo] = s.id;
             });
-            console.log('✅ UUID_MAP_BY_CODE cargado:', UUID_MAP_BY_CODE);
+            console.log('✅ UUID_MAP_BY_CODE cargado desde API:', UUID_MAP_BY_CODE);
             return UUID_MAP_BY_CODE;
         }
     } catch(e) {
@@ -1990,7 +1921,99 @@ async function cargarUUIDsPorCodigo() {
 
 
 // ============================================================
-// TOGGLE PERMISO - VERSIÓN DEFINITIVA CON ID NUMÉRICO
+// CARGAR PERMISOS DE USUARIO - VERSIÓN CORREGIDA
+// ============================================================
+async function cargarPermisosUsuario(userId, empresaId) {
+    console.log('📋 Cargando permisos para usuario:', userId, 'empresa:', empresaId);
+    
+    if (!userId || !empresaId) {
+        console.warn('⚠️ userId o empresaId faltantes');
+        return { permisos: [] };
+    }
+    
+    const empresaIdStr = String(empresaId);
+    
+    try {
+        const response = await fetch(`/api/config/usuarios/${userId}/permisos?empresa_id=${empresaIdStr}`);
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+                console.log('✅ Permisos cargados desde backend');
+                // Guardar en localStorage como caché
+                try {
+                    const key = `permisos_${userId}_${empresaIdStr}`;
+                    localStorage.setItem(key, JSON.stringify(data.data || { permisos: [] }));
+                } catch(e) {}
+                return data.data || { permisos: [] };
+            }
+        }
+    } catch(e) {
+        console.log('⚠️ Backend no disponible, usando localStorage');
+    }
+    
+    // Fallback a localStorage
+    const key = `permisos_${userId}_${empresaIdStr}`;
+    try {
+        const stored = localStorage.getItem(key);
+        if (stored) {
+            console.log('✅ Permisos cargados desde localStorage');
+            return JSON.parse(stored);
+        }
+    } catch(e) {}
+    
+    return { permisos: [] };
+}
+
+// ============================================================
+// GUARDAR PERMISOS DE USUARIO - VERSIÓN CORREGIDA
+// ============================================================
+async function guardarPermisosUsuario(userId, empresaId, permisosList) {
+    console.log('💾 Guardando permisos para usuario:', userId, 'empresa:', empresaId);
+    
+    const empresaIdStr = String(empresaId);
+    
+    try {
+        const response = await fetch(`/api/config/usuarios/${userId}/permisos`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                empresa_id: empresaIdStr,
+                permisos: permisosList
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+                console.log('✅ Permisos guardados en backend');
+                // Actualizar localStorage
+                try {
+                    const key = `permisos_${userId}_${empresaIdStr}`;
+                    localStorage.setItem(key, JSON.stringify({ permisos: permisosList }));
+                } catch(e) {}
+                return true;
+            } else {
+                console.error('❌ Error en backend:', data.error);
+            }
+        }
+    } catch(e) {
+        console.log('⚠️ Backend no disponible, guardando en localStorage');
+    }
+    
+    // Fallback a localStorage
+    try {
+        const key = `permisos_${userId}_${empresaIdStr}`;
+        localStorage.setItem(key, JSON.stringify({ permisos: permisosList }));
+        console.log('✅ Permisos guardados en localStorage');
+        return true;
+    } catch(e) {
+        console.error('❌ Error guardando en localStorage:', e);
+        return false;
+    }
+}
+
+// ============================================================
+// TOGGLE PERMISO - VERSIÓN CORREGIDA
 // ============================================================
 async function togglePermiso(event) {
     const checkbox = event.target;
@@ -2033,43 +2056,7 @@ async function togglePermiso(event) {
         return;
     }
     
-    // ✅ MAPA DE NOMBRES DE MÓDULOS A IDs NUMÉRICOS
-    const moduleToId = {
-        'Configuración': 1,
-        'Usuarios y permisos': 2,
-        'Correlativos': 3,
-        'Parámetros': 4,
-        'Integración ERP': 5,
-        'Maestros': 6,
-        'Productos': 12,
-        'Cotizaciones': 14,
-        'Ventas': 15,
-        'Compras': 18,
-        'Logística': 22,
-        'Inventario': 23,
-        'CxC': 27,
-        'CxP': 28,
-        'Caja': 29,
-        'Reportes': 31,
-        'SUNAT': 35
-    };
-    
-    // ✅ Obtener el ID numérico del módulo
-    const submoduloId = moduleToId[module];
-    if (!submoduloId) {
-        console.error('❌ No se encontró ID para:', module);
-        toast(`❌ Módulo "${module}" no encontrado`);
-        checkbox.checked = !tienePermiso;
-        return;
-    }
-    
-    console.log('✅ ID numérico encontrado:', submoduloId, 'para', module);
-    
-    // Obtener permisos existentes
-    const permisosExistentes = await cargarPermisosUsuario(userIdNum, empresaIdStr);
-    let permisosList = [];
-    
-    // ✅ Buscar si ya existe un permiso para este módulo usando el UUID
+    // ✅ MAPA DE NOMBRES DE MÓDULOS A CÓDIGOS
     const moduleToCode = {
         'Configuración': 'EMPRESAS',
         'Usuarios y permisos': 'USUARIOS_PERMISOS',
@@ -2091,12 +2078,33 @@ async function togglePermiso(event) {
     };
     
     const codigo = moduleToCode[module];
-    const uuid = UUID_MAP_BY_CODE[codigo];
+    if (!codigo) {
+        console.error('❌ No se encontró código para:', module);
+        toast(`❌ Módulo "${module}" no encontrado`);
+        checkbox.checked = !tienePermiso;
+        return;
+    }
+    
+    // Obtener UUID del submódulo
+    let uuid = UUID_MAP_BY_CODE[codigo];
+    if (!uuid) {
+        // Intentar cargar los UUIDs nuevamente
+        await cargarUUIDsPorCodigo();
+        uuid = UUID_MAP_BY_CODE[codigo];
+        if (!uuid) {
+            toast(`❌ No se encontró UUID para "${module}"`);
+            checkbox.checked = !tienePermiso;
+            return;
+        }
+    }
+    
+    // Obtener permisos existentes
+    const permisosExistentes = await cargarPermisosUsuario(userIdNum, empresaIdStr);
+    let permisosList = [];
     
     if (permisosExistentes?.permisos && permisosExistentes.permisos.length > 0) {
         let encontrado = false;
         for (const p of permisosExistentes.permisos) {
-            // ✅ Si encontramos el permiso por UUID, lo actualizamos
             if (p.submodulo_id === uuid) {
                 p.puede_ver = tienePermiso;
                 p.puede_crear = tienePermiso;
@@ -2113,7 +2121,6 @@ async function togglePermiso(event) {
         }
         
         if (!encontrado && uuid) {
-            // ✅ Si no existe, lo creamos con el UUID
             permisosExistentes.permisos.push({
                 submodulo_id: uuid,
                 puede_ver: tienePermiso,
@@ -2129,7 +2136,6 @@ async function togglePermiso(event) {
         }
         permisosList = permisosExistentes.permisos;
     } else {
-        // ✅ No hay permisos existentes, crear uno nuevo con el UUID
         if (uuid) {
             permisosList = [{
                 submodulo_id: uuid,
@@ -2156,6 +2162,8 @@ async function togglePermiso(event) {
         if (result) {
             toast(`✅ ${tienePermiso ? 'Habilitado' : 'Deshabilitado'} ${module} para ${user}`);
             checkbox.checked = tienePermiso;
+            // Recargar la tabla para actualizar los checkboxes
+            await renderUsuarios();
         } else {
             checkbox.checked = !tienePermiso;
             toast('❌ Error al guardar permiso');
@@ -2168,7 +2176,7 @@ async function togglePermiso(event) {
 }
 
 // ============================================================
-// RENDER USUARIOS - CON CÓDIGOS
+// RENDER USUARIOS - VERSIÓN CORREGIDA
 // ============================================================
 async function renderUsuarios(filter="") {
     const empresaFiltro = document.getElementById("filterEmpresaUsuarios")?.value || "TODAS";
@@ -2262,48 +2270,25 @@ async function renderUsuarios(filter="") {
         const empresas = u.empresas_acceso || [];
         const roles = empresas.map(e => e.rol_codigo || '');
         
-        // Dentro de renderUsuarios, la función tienePermisoModulo:
-const tienePermisoModulo = (submoduloNombre) => {
-    if (esAdmin) return true;
-    
-    // ✅ MAPA DE NOMBRES A CÓDIGOS
-    const moduleToCode = {
-        'Configuración': 'EMPRESAS',
-        'Usuarios y permisos': 'USUARIOS_PERMISOS',
-        'Correlativos': 'CORRELATIVOS',
-        'Parámetros': 'PARAMETROS',
-        'Integración ERP': 'INTEGRACION',
-        'Maestros': 'CLIENTES',
-        'Productos': 'PRODUCTOS_LISTADO',
-        'Cotizaciones': 'COTIZACIONES',
-        'Ventas': 'COMPROBANTES_CLIENTE',
-        'Compras': 'SOLICITUD_COMPRA',
-        'Logística': 'RECEPCION_MERCADERIA',
-        'Inventario': 'ESTADO_STOCK',
-        'CxC': 'CUENTAS_COBRAR',
-        'CxP': 'CUENTAS_PAGAR',
-        'Caja': 'CAJA_BANCOS',
-        'Reportes': 'REPORTE_VENTAS',
-        'SUNAT': 'SUNAT'
-    };
-    
-    const codigo = moduleToCode[submoduloNombre];
-    if (!codigo) return false;
-    
-    const uuid = UUID_MAP_BY_CODE[codigo];
-    if (!uuid) {
-        console.warn(`⚠️ No se encontró UUID para código: ${codigo}`);
-        return false;
-    }
-    
-    const permiso = permisos[uuid];
-    if (!permiso) {
-        const modulosOperativos = ['Productos', 'Cotizaciones', 'Ventas', 'Compras', 'Logística', 'Inventario'];
-        return modulosOperativos.includes(submoduloNombre);
-    }
-    return permiso.puede_ver || false;
-};
-
+        const tienePermisoModulo = (submoduloNombre) => {
+            if (esAdmin) return true;
+            
+            const codigo = moduleToCode[submoduloNombre];
+            if (!codigo) return false;
+            
+            const uuid = UUID_MAP_BY_CODE[codigo];
+            if (!uuid) {
+                console.warn(`⚠️ No se encontró UUID para código: ${codigo}`);
+                return false;
+            }
+            
+            const permiso = permisos[uuid];
+            if (!permiso) {
+                const modulosOperativos = ['Productos', 'Cotizaciones', 'Ventas', 'Compras', 'Logística', 'Inventario'];
+                return modulosOperativos.includes(submoduloNombre);
+            }
+            return permiso.puede_ver || false;
+        };
         
         const empresasHtml = empresas.map(e => badge(e.empresa_codigo || '')).join('');
         const rolesHtml = roles.map(r => `<span class="badge ${r === 'GERENCIA_TOTAL' ? 'badge-info' : 'badge-gray'}">${r}</span>`).join(' ');
@@ -2389,6 +2374,7 @@ const tienePermisoModulo = (submoduloNombre) => {
         });
     }, 100);
 }
+
 
 // ============================================================
 // INICIALIZAR UUID_MAP_BY_CODE AL CARGAR

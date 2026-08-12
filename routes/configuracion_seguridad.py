@@ -1176,6 +1176,9 @@ def get_usuario_permisos(usuario_id):
         print(f"❌ Error en get_usuario_permisos: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
+# En configuracion_seguridad.py - reemplazar el método POST de permisos
+
 @config_seguridad_bp.route('/usuarios/<usuario_id>/permisos', methods=['POST'])
 def update_usuario_permisos(usuario_id):
     """Actualizar los permisos de un usuario en una empresa"""
@@ -1199,27 +1202,7 @@ def update_usuario_permisos(usuario_id):
         with db_tx() as conn:
             cur = conn.cursor()
             
-            # ✅ OBTENER LOS SUBMÓDULOS CON SUS IDs UUID
-            submodulos = db_query("SELECT id, codigo FROM erp_submodulos WHERE estado = 'activo'")
-            submodulo_map = {s['codigo']: s['id'] for s in submodulos}
-            
-            # ✅ MAPEO DE IDS NUMÉRICOS A CÓDIGOS
-            codigos_por_id = {
-                1: 'EMPRESAS', 2: 'USUARIOS_PERMISOS', 3: 'CORRELATIVOS',
-                4: 'PARAMETROS', 5: 'INTEGRACION', 6: 'CLIENTES',
-                7: 'PROVEEDORES', 8: 'ALMACENES', 9: 'CATEGORIAS',
-                10: 'MARCAS', 11: 'UNIDADES_MEDIDA', 12: 'PRODUCTOS_LISTADO',
-                13: 'PRODUCTOS_FICHA', 14: 'COTIZACIONES', 15: 'COMPROBANTES_CLIENTE',
-                16: 'GUIAS_CLIENTE', 17: 'NOTAS_CREDITO', 18: 'SOLICITUD_COMPRA',
-                19: 'COMPARATIVO_PROVEEDORES', 20: 'ORDEN_COMPRA', 21: 'COMPROBANTES_PROVEEDOR',
-                22: 'RECEPCION_MERCADERIA', 23: 'ESTADO_STOCK', 24: 'KARDEX',
-                25: 'ENTRADAS_SALIDAS', 26: 'TRANSFERENCIAS', 27: 'CUENTAS_COBRAR',
-                28: 'CUENTAS_PAGAR', 29: 'CAJA_BANCOS', 30: 'FLUJO_CAJA',
-                31: 'REPORTE_VENTAS', 32: 'REPORTE_COMPRAS', 33: 'REPORTE_INVENTARIO',
-                34: 'REPORTE_FINANZAS', 35: 'SUNAT'
-            }
-            
-            # Eliminar permisos existentes
+            # Eliminar permisos existentes para esta empresa
             cur.execute("""
                 DELETE FROM erp_usuario_permisos 
                 WHERE auth_user_id = %s AND empresa_id = %s
@@ -1227,17 +1210,38 @@ def update_usuario_permisos(usuario_id):
             
             # Insertar nuevos permisos
             for permiso in permisos:
-                submodulo_id_num = permiso.get('submodulo_id')
-                if not submodulo_id_num:
+                submodulo_id = permiso.get('submodulo_id')
+                if not submodulo_id:
                     continue
                 
-                codigo = codigos_por_id.get(submodulo_id_num)
-                if not codigo:
-                    continue
-                
-                uuid_submodulo_id = submodulo_map.get(codigo)
-                if not uuid_submodulo_id:
-                    continue
+                # Si es un ID numérico, convertirlo a UUID
+                if isinstance(submodulo_id, int) or (isinstance(submodulo_id, str) and submodulo_id.isdigit()):
+                    # Buscar el UUID correspondiente
+                    codigos_por_id = {
+                        '1': 'EMPRESAS', '2': 'USUARIOS_PERMISOS', '3': 'CORRELATIVOS',
+                        '4': 'PARAMETROS', '5': 'INTEGRACION', '6': 'CLIENTES',
+                        '7': 'PROVEEDORES', '8': 'ALMACENES', '9': 'CATEGORIAS',
+                        '10': 'MARCAS', '11': 'UNIDADES_MEDIDA', '12': 'PRODUCTOS_LISTADO',
+                        '13': 'PRODUCTOS_FICHA', '14': 'COTIZACIONES', '15': 'COMPROBANTES_CLIENTE',
+                        '16': 'GUIAS_CLIENTE', '17': 'NOTAS_CREDITO', '18': 'SOLICITUD_COMPRA',
+                        '19': 'COMPARATIVO_PROVEEDORES', '20': 'ORDEN_COMPRA', '21': 'COMPROBANTES_PROVEEDOR',
+                        '22': 'RECEPCION_MERCADERIA', '23': 'ESTADO_STOCK', '24': 'KARDEX',
+                        '25': 'ENTRADAS_SALIDAS', '26': 'TRANSFERENCIAS', '27': 'CUENTAS_COBRAR',
+                        '28': 'CUENTAS_PAGAR', '29': 'CAJA_BANCOS', '30': 'FLUJO_CAJA',
+                        '31': 'REPORTE_VENTAS', '32': 'REPORTE_COMPRAS', '33': 'REPORTE_INVENTARIO',
+                        '34': 'REPORTE_FINANZAS', '35': 'SUNAT'
+                    }
+                    
+                    codigo = codigos_por_id.get(str(submodulo_id))
+                    if codigo:
+                        # Buscar el UUID real del submódulo
+                        uuid_result = db_query("SELECT id FROM erp_submodulos WHERE codigo = %s", (codigo,))
+                        if uuid_result:
+                            submodulo_id = uuid_result[0]['id']
+                        else:
+                            continue
+                    else:
+                        continue
                 
                 cur.execute("""
                     INSERT INTO erp_usuario_permisos (
@@ -1250,7 +1254,7 @@ def update_usuario_permisos(usuario_id):
                 """, (
                     auth_user_id,
                     empresa_id,
-                    uuid_submodulo_id,
+                    submodulo_id,
                     permiso.get('puede_ver', False),
                     permiso.get('puede_crear', False),
                     permiso.get('puede_editar', False),
@@ -1272,6 +1276,7 @@ def update_usuario_permisos(usuario_id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 # ============================================================
 # 7. AUDITORÍA
