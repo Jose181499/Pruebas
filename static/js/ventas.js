@@ -2223,9 +2223,6 @@ async function guardarCotizacion(estado) {
 }
 
 
-// ============================================================
-// GUARDAR COMO BORRADOR
-// ============================================================
 function saveCotizacionDraft() {
     // Verificar que hay productos en la cotización
     if (quoteProducts.length === 0) {
@@ -2240,16 +2237,21 @@ function saveCotizacionDraft() {
         return;
     }
     
+    // ============================================================
+    // 🔽 VALIDAR CAMPOS OBLIGATORIOS ANTES DE GUARDAR
+    // ============================================================
+    const camposFaltantes = validarCamposObligatoriosCotizacion();
+    
+    if (camposFaltantes.length > 0) {
+        showValidationWarningModal(camposFaltantes);
+        return;
+    }
+    
     // Guardar como Borrador
     guardarCotizacion('Borrador');
 }
 
 function sendCotizacionToReview() {
-    guardarCotizacion('En revisión');
-}
-
-// Reemplazar la función generateCotizacionPdfAndSend con esta versión mejorada
-function generateCotizacionPdfAndSend() {
     // Verificar que hay productos en la cotización
     if (quoteProducts.length === 0) {
         showToast('⚠️ Agrega al menos un producto a la cotización', 'warning');
@@ -2263,7 +2265,223 @@ function generateCotizacionPdfAndSend() {
         return;
     }
     
-    // Mostrar modal de confirmación
+    // ============================================================
+    // 🔽 VALIDAR CAMPOS OBLIGATORIOS ANTES DE ENVIAR A REVISIÓN
+    // ============================================================
+    const camposFaltantes = validarCamposObligatoriosCotizacion();
+    
+    if (camposFaltantes.length > 0) {
+        showValidationWarningModal(camposFaltantes);
+        return;
+    }
+    
+    guardarCotizacion('En revisión');
+}
+
+// ============================================================
+// FUNCIÓN AUXILIAR PARA VALIDAR CAMPOS OBLIGATORIOS DE COTIZACIÓN
+// ============================================================
+function validarCamposObligatoriosCotizacion() {
+    const camposFaltantes = [];
+    
+    const ruc = document.getElementById('fRuc')?.value?.trim() || '';
+    const condicionPagoSelect = document.getElementById('fCondicion')?.value || '';
+    const condicionCustom = document.getElementById('fCondicionCustom')?.value?.trim() || '';
+    const tiempoEntregaSelect = document.getElementById('fTiempo')?.value || '';
+    const tiempoCustom = document.getElementById('fTiempoCustom')?.value?.trim() || '';
+
+    // 1. Validar RUC
+    if (!ruc || ruc.length < 11) {
+        camposFaltantes.push('RUC (11 dígitos)');
+        const el = document.getElementById('fRuc');
+        if (el) {
+            el.style.borderColor = '#DC2626';
+            el.style.boxShadow = '0 0 0 3px rgba(220,38,38,0.2)';
+            setTimeout(() => {
+                el.style.borderColor = '';
+                el.style.boxShadow = '';
+            }, 3000);
+        }
+    }
+
+    // 2. Validar Condición de Pago
+    if (condicionPagoSelect === 'Personalizado') {
+        if (!condicionCustom) {
+            camposFaltantes.push('Condición de Pago (escribe un valor personalizado)');
+            const el = document.getElementById('fCondicionCustom');
+            if (el) {
+                el.style.borderColor = '#DC2626';
+                el.style.boxShadow = '0 0 0 3px rgba(220,38,38,0.2)';
+                setTimeout(() => {
+                    el.style.borderColor = '';
+                    el.style.boxShadow = '';
+                }, 3000);
+            }
+        }
+    } else {
+        if (!condicionPagoSelect || condicionPagoSelect === 'Personalizado') {
+            camposFaltantes.push('Condición de Pago');
+            const el = document.getElementById('fCondicion');
+            if (el) {
+                el.style.borderColor = '#DC2626';
+                el.style.boxShadow = '0 0 0 3px rgba(220,38,38,0.2)';
+                setTimeout(() => {
+                    el.style.borderColor = '';
+                    el.style.boxShadow = '';
+                }, 3000);
+            }
+        }
+    }
+
+    // 3. Validar Tiempo de Entrega
+    if (tiempoEntregaSelect === 'Personalizado') {
+        if (!tiempoCustom) {
+            camposFaltantes.push('Tiempo de Entrega (escribe un valor personalizado)');
+            const el = document.getElementById('fTiempoCustom');
+            if (el) {
+                el.style.borderColor = '#DC2626';
+                el.style.boxShadow = '0 0 0 3px rgba(220,38,38,0.2)';
+                setTimeout(() => {
+                    el.style.borderColor = '';
+                    el.style.boxShadow = '';
+                }, 3000);
+            }
+        }
+    } else {
+        if (!tiempoEntregaSelect || tiempoEntregaSelect === 'Personalizado') {
+            camposFaltantes.push('Tiempo de Entrega');
+            const el = document.getElementById('fTiempo');
+            if (el) {
+                el.style.borderColor = '#DC2626';
+                el.style.boxShadow = '0 0 0 3px rgba(220,38,38,0.2)';
+                setTimeout(() => {
+                    el.style.borderColor = '';
+                    el.style.boxShadow = '';
+                }, 3000);
+            }
+        }
+    }
+
+    return camposFaltantes;
+}
+
+function generateCotizacionPdfAndSend() {
+    // ============================================================
+    // 🔽 PRIMERO: VALIDAR CAMPOS OBLIGATORIOS
+    // ============================================================
+    
+    // Verificar que hay productos en la cotización
+    if (quoteProducts.length === 0) {
+        showToast('⚠️ Agrega al menos un producto a la cotización', 'warning');
+        return;
+    }
+    
+    // Verificar que hay un cliente seleccionado
+    const ruc = document.getElementById('fRuc')?.value?.trim() || '';
+    if (!ruc) {
+        showToast('⚠️ Primero busca un cliente por RUC', 'warning');
+        return;
+    }
+    
+    // ============================================================
+    // 🔽 VALIDAR CAMPOS OBLIGATORIOS ANTES DEL MODAL
+    // ============================================================
+    const condicionPagoSelect = document.getElementById('fCondicion')?.value || '';
+    const condicionCustom = document.getElementById('fCondicionCustom')?.value?.trim() || '';
+    const tiempoEntregaSelect = document.getElementById('fTiempo')?.value || '';
+    const tiempoCustom = document.getElementById('fTiempoCustom')?.value?.trim() || '';
+
+    const camposFaltantes = [];
+
+    // 1. Validar RUC
+    if (!ruc || ruc.length < 11) {
+        camposFaltantes.push('RUC (11 dígitos)');
+        const el = document.getElementById('fRuc');
+        if (el) {
+            el.style.borderColor = '#DC2626';
+            el.style.boxShadow = '0 0 0 3px rgba(220,38,38,0.2)';
+            setTimeout(() => {
+                el.style.borderColor = '';
+                el.style.boxShadow = '';
+            }, 3000);
+        }
+    }
+
+    // 2. Validar Condición de Pago
+    let condicionFinal = '';
+    if (condicionPagoSelect === 'Personalizado') {
+        condicionFinal = condicionCustom;
+        if (!condicionFinal) {
+            camposFaltantes.push('Condición de Pago (escribe un valor personalizado)');
+            const el = document.getElementById('fCondicionCustom');
+            if (el) {
+                el.style.borderColor = '#DC2626';
+                el.style.boxShadow = '0 0 0 3px rgba(220,38,38,0.2)';
+                setTimeout(() => {
+                    el.style.borderColor = '';
+                    el.style.boxShadow = '';
+                }, 3000);
+            }
+        }
+    } else {
+        condicionFinal = condicionPagoSelect;
+        if (!condicionFinal || condicionFinal === 'Personalizado') {
+            camposFaltantes.push('Condición de Pago');
+            const el = document.getElementById('fCondicion');
+            if (el) {
+                el.style.borderColor = '#DC2626';
+                el.style.boxShadow = '0 0 0 3px rgba(220,38,38,0.2)';
+                setTimeout(() => {
+                    el.style.borderColor = '';
+                    el.style.boxShadow = '';
+                }, 3000);
+            }
+        }
+    }
+
+    // 3. Validar Tiempo de Entrega
+    let tiempoFinal = '';
+    if (tiempoEntregaSelect === 'Personalizado') {
+        tiempoFinal = tiempoCustom;
+        if (!tiempoFinal) {
+            camposFaltantes.push('Tiempo de Entrega (escribe un valor personalizado)');
+            const el = document.getElementById('fTiempoCustom');
+            if (el) {
+                el.style.borderColor = '#DC2626';
+                el.style.boxShadow = '0 0 0 3px rgba(220,38,38,0.2)';
+                setTimeout(() => {
+                    el.style.borderColor = '';
+                    el.style.boxShadow = '';
+                }, 3000);
+            }
+        }
+    } else {
+        tiempoFinal = tiempoEntregaSelect;
+        if (!tiempoFinal || tiempoFinal === 'Personalizado') {
+            camposFaltantes.push('Tiempo de Entrega');
+            const el = document.getElementById('fTiempo');
+            if (el) {
+                el.style.borderColor = '#DC2626';
+                el.style.boxShadow = '0 0 0 3px rgba(220,38,38,0.2)';
+                setTimeout(() => {
+                    el.style.borderColor = '';
+                    el.style.boxShadow = '';
+                }, 3000);
+            }
+        }
+    }
+
+    // ============================================================
+    // 🔽 SI HAY CAMPOS FALTANTES, MOSTRAR MODAL Y DETENER
+    // ============================================================
+    if (camposFaltantes.length > 0) {
+        showValidationWarningModal(camposFaltantes);
+        return; // ⚠️ IMPORTANTE: Detener la ejecución aquí
+    }
+
+    // ============================================================
+    // 🔽 TODOS LOS CAMPOS ESTÁN COMPLETOS - MOSTRAR MODAL DE CONFIRMACIÓN
+    // ============================================================
     showConfirmModal(
         '¿Estás seguro de generar esta cotización oficial?',
         'Esta acción convertirá la cotización a estado "Generada" y no podrá revertirse. Se enviará al cliente y quedará registrada como documento oficial.',
