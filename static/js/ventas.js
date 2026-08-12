@@ -9692,11 +9692,11 @@ function renderCotizacionFormContent(isEdit) {
                         <option value="1 día hábil">1 día hábil</option>
                         <option value="2 días hábiles">2 días hábiles</option>
                         <option value="3 días hábiles">3 días hábiles</option>
-                        <option value="5 días hábiles" selected>5 días hábiles</option>
+                        <option value="5 días hábiles" >5 días hábiles</option>
                         <option value="7 días hábiles">7 días hábiles</option>
                         <option value="10 días hábiles">10 días hábiles</option>
                         <option value="15 días hábiles">15 días hábiles</option>
-                        <option value="Personalizado">✏️ Personalizado...</option>
+                        <option value="Personalizado"selected>✏️ Personalizado...</option>
                     </select>
                     <input id="fTiempoCustom" placeholder="Ej: 10 días" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;border-left:3px solid #DC2626;">
                 </div>
