@@ -186,21 +186,19 @@
                             </div>
                             
                            <!-- Monto PC - OBLIGATORIO - CON CUADRITO DE DIFERENCIA SIMÉTRICO -->
-<div class="form-field" style="display: flex; align-items: flex-end; gap: 8px;">
-    
-    <!-- CAMPO: Monto PC -->
-    <div style="flex: 1;">
-        <label class="obligatorio-label" style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:2px; text-transform:uppercase;">Monto PC</label>
-        <input id="pcMontoPC" type="number" step="0.01" placeholder="0.00" class="campo-obligatorio-pc" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; font-weight:800; font-size:10px;" oninput="actualizarResumenDesdeMontoPC(this)">
-    </div>
-
-    <!-- CUADRITO: Diferencia sin IGV -->
-    <div style="display: flex; flex-direction: column; width: 110px;">
-        <span style="font-size:7.5px; font-weight:900; color:#64748B; text-transform:uppercase; margin-bottom:2px; text-align:center;">Diferencia s/IGV</span>
-        <div id="pcDiferenciaSinIgv" style="border:1px solid #CBD5E1; background:#f8f9fa; padding:4px 6px; border-radius:5px; font-size:11px; font-weight:800; color:#DC2626; text-align:center; height:24px; display:flex; align-items:center; justify-content:center; white-space:nowrap;">
-            S/ 0.00
-        </div>
-    </div>
+                            <div class="form-field" style="display: flex; align-items: flex-end; gap: 8px;">
+                                <div style="flex: 1;">
+                                    <label class="obligatorio-label" style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:2px; text-transform:uppercase;">Monto PC</label>
+                                    <input id="pcMontoPC" type="number" step="0.01" placeholder="0.00" class="campo-obligatorio-pc" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; font-weight:800; font-size:10px;" oninput="actualizarResumenDesdeMontoPC(this)">
+                                </div>
+                                <div style="display: flex; flex-direction: column; width: 110px;">
+                                    <span style="font-size:7.5px; font-weight:900; color:#64748B; text-transform:uppercase; margin-bottom:2px; text-align:center;">Diferencia s/IGV</span>
+                                    <div id="pcDiferenciaSinIgv" style="border:1px solid #CBD5E1; background:#f8f9fa; padding:4px 6px; border-radius:5px; font-size:11px; font-weight:800; color:#DC2626; text-align:center; height:24px; display:flex; align-items:center; justify-content:center; white-space:nowrap;">
+                                        S/ 0.00
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         
                         <div style="display:grid; grid-template-columns:2fr 1fr; gap:4px; margin-top:6px;">
                             <!-- Lugar entrega -->
@@ -220,7 +218,7 @@
                         </div>
                     </div>
 
-                </div> <!-- FIN COLUMNA IZQUIERDA (bloque 1 + bloque 2) -->
+                </div> <!-- 🔴 CIERRE CORRECTO DE LA COLUMNA IZQUIERDA (bloque 1 + bloque 2) -->
 
                 <!-- RESUMEN PC (columna derecha) -->
                 <div style="display:flex; flex-direction:column; gap:8px;">

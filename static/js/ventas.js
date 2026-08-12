@@ -65,23 +65,46 @@ let editingId = null;
 let quoteProducts = [];
 let PRODUCTOS_MAESTROS = [];
 let CLIENTES_MAESTROS = [];
-let ultimoRegistroCreado = {
-    cotizaciones: null,
-    pedido_compra: null,
-    despachar: null,
-    guias: null,
-    comprobantes: null,
-    notas_credito: null,
-    devoluciones: null
-};
+
 
 // ============================================================
 // UTILIDADES
 // ============================================================
 
+// ============================================================
+// BADGE "NUEVO" CON EXPIRACIÓN DE 24 HORAS (persistido en localStorage)
+// ============================================================
+const NUEVO_BADGE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 horas
+
+function setUltimoRegistroCreado(modulo, valor) {
+    if (valor === null || valor === undefined) return;
+    try {
+        localStorage.setItem(`ventas_nuevo_${modulo}`, JSON.stringify({ valor, ts: Date.now() }));
+    } catch (e) {
+        console.warn('⚠️ No se pudo guardar el badge "Nuevo" en localStorage:', e);
+    }
+}
+
+function getUltimoRegistroCreado(modulo) {
+    try {
+        const raw = localStorage.getItem(`ventas_nuevo_${modulo}`);
+        if (!raw) return null;
+        const { valor, ts } = JSON.parse(raw);
+        if (Date.now() - ts > NUEVO_BADGE_DURATION_MS) {
+            localStorage.removeItem(`ventas_nuevo_${modulo}`);
+            return null;
+        }
+        return valor;
+    } catch (e) {
+        return null;
+    }
+}
+
+
+
 // Genera el badge "Nuevo" si el registro coincide con el último creado (por id o por número)
 function badgeNuevo(modulo, row) {
-    const marcado = ultimoRegistroCreado[modulo];
+    const marcado = getUltimoRegistroCreado(modulo);
     if (marcado === null || marcado === undefined) return '';
     const coincideId = row.id !== undefined && row.id === marcado;
     const coincideNumero = row.numero !== undefined && row.numero === marcado;
@@ -2938,7 +2961,7 @@ async function saveDespacho(estado) {
         if (response.success) {
 
             if (!editingId) {
-                ultimoRegistroCreado.despachar = response.data?.id ?? data.numero ?? null;
+                setUltimoRegistroCreado('despachar', response.data?.id ?? data.numero ?? null);
             }
 
             showToast(`Despacho guardado como: ${estado}`, 'success');
@@ -3005,7 +3028,7 @@ async function saveGuia(estado) {
         if (response.success) {
 
             if (!editingId) {
-                ultimoRegistroCreado.guias = result.numero_guia ?? null;
+                setUltimoRegistroCreado('guias', response.data?.id ?? response.data?.numero ?? null);
             }
 
             showToast(`✅ Guía guardada como: ${estado}`, 'success');
@@ -3061,7 +3084,7 @@ async function saveComprobante(estado) {
         if (response.success) {
 
             if (!editingId) {
-                ultimoRegistroCreado.comprobantes = response.data?.id ?? data.numero ?? null;
+                setUltimoRegistroCreado('comprobantes', response.data?.id ?? data.numero ?? null);
             }
 
             showToast(`✅ Comprobante guardado como: ${estado}`, 'success');
@@ -3101,7 +3124,7 @@ async function saveNotaCredito(estado) {
         if (response.success) {
 
             if (!editingId) {
-                ultimoRegistroCreado.notas_credito = response.data?.id ?? data.numero ?? null;
+                setUltimoRegistroCreado('notas_credito', response.data?.id ?? data.numero ?? null);
             }
 
             showToast(`Nota de crédito guardada como: ${estado}`, 'success');
@@ -3138,7 +3161,7 @@ async function saveDevolucion(estado) {
         if (response.success) {
 
             if (!editingId) {
-                ultimoRegistroCreado.devoluciones = response.data?.id ?? data.numero ?? null;
+                setUltimoRegistroCreado('devoluciones', response.data?.id ?? data.numero ?? null);
             }
 
             showToast(`Devolución guardada como: ${estado}`, 'success');
@@ -11562,7 +11585,7 @@ async function savePedidoCompraSAP(force) {
         if (result.success) {
 
             if (!editingId) {
-                ultimoRegistroCreado.pedido_compra = result.data?.id ?? numeroPC ?? null;
+                setUltimoRegistroCreado('pedido_compra', result.data?.id ?? numeroPC ?? null);
             }
 
             let mensaje = `✅ PC guardado como: ${estado}`;
@@ -12747,6 +12770,8 @@ window.deleteComprobante = deleteComprobante;
 window.deleteNota = deleteNota;
 window.getDescripcionPrincipal = getDescripcionPrincipal;
 window.badgeNuevo = badgeNuevo;
+window.setUltimoRegistroCreado = setUltimoRegistroCreado;
+window.getUltimoRegistroCreado = getUltimoRegistroCreado;
 // ============================================================
 // 14. FUNCIONES DE FORMATO
 // ============================================================

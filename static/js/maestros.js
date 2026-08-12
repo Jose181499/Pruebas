@@ -130,7 +130,7 @@ const sheetMode = {};
 let currentModule = 'clientes';
 let clientEditId = null;
 let ultimoClienteCreadoId = null;
-let ultimoRegistroCreado = {};
+
 let contactCtr = 0;
 let pointCtr = 0;
 let provEditId = null;
@@ -138,6 +138,37 @@ let almEditId = null;
 let catEditId = null;
 let marcaEditId = null;
 let umEditId = null;
+
+
+
+// ============================================================
+// BADGE "NUEVO" CON EXPIRACIÓN DE 24 HORAS (persistido en localStorage)
+// ============================================================
+const NUEVO_BADGE_DURATION_MS_MAESTROS = 24 * 60 * 60 * 1000; // 24 horas
+
+function setUltimoRegistroCreadoMaestros(modulo, valor) {
+    if (valor === null || valor === undefined) return;
+    try {
+        localStorage.setItem(`maestros_nuevo_${modulo}`, JSON.stringify({ valor, ts: Date.now() }));
+    } catch (e) {
+        console.warn('⚠️ No se pudo guardar el badge "Nuevo" en localStorage:', e);
+    }
+}
+
+function getUltimoRegistroCreadoMaestros(modulo) {
+    try {
+        const raw = localStorage.getItem(`maestros_nuevo_${modulo}`);
+        if (!raw) return null;
+        const { valor, ts } = JSON.parse(raw);
+        if (Date.now() - ts > NUEVO_BADGE_DURATION_MS_MAESTROS) {
+            localStorage.removeItem(`maestros_nuevo_${modulo}`);
+            return null;
+        }
+        return valor;
+    } catch (e) {
+        return null;
+    }
+}
 
 // ============================================================
 // FUNCIONES API
@@ -562,7 +593,7 @@ function renderTable(m, list) {
                 cells += `<td>${email ? `<a href="mailto:${esc(email)}" style="color:#3B82F6;text-decoration:none;">${esc(email)}</a>` : '-'}</td>`;
             } else if (f === 'uso') {
                 cells += `<td style="text-align:center;">${r[f] || 0}</td>`;
-            } else if (f === config.codeField && r.id === ultimoRegistroCreado[m]) {
+            } else if (f === config.codeField && r.id === getUltimoRegistroCreadoMaestros(m)) {
                 cells += `<td class="left">${sd(r[f])} <span style="display:inline-block;background:#F7FEE7;color:#3F6212;border:1px solid #A3E635;border-radius:20px;padding:1px 9px;font-size:10px;font-weight:800;margin-left:6px;vertical-align:middle;">Nuevo</span></td>`;
             } else {
                 cells += `<td class="left">${sd(r[f])}</td>`;
@@ -1249,7 +1280,7 @@ async function saveClient() {
             );
 
             if (!clientEditId) {
-                ultimoRegistroCreado.clientes = result.data?.id ?? null;
+                setUltimoRegistroCreadoMaestros('clientes', result.data?.id ?? null);
             }
 
             closeClientModal();
@@ -1443,7 +1474,7 @@ async function saveProveedor() {
         if (result.success) {
             
             if (!provEditId) {
-                ultimoRegistroCreado.proveedores = result.data?.id ?? null;
+                setUltimoRegistroCreadoMaestros('proveedores', result.data?.id ?? null);
             }
 
             showToast(result.message || '✅ Proveedor guardado correctamente', 'success');
@@ -1608,7 +1639,7 @@ async function saveAlmacen() {
         if (result.success) {
 
             if (!almEditId) {
-                ultimoRegistroCreado.almacenes = result.data?.id ?? null;
+                setUltimoRegistroCreadoMaestros('almacenes', result.data?.id ?? null);
             }
 
             showToast(result.message || '✅ Almacén guardado correctamente', 'success');
@@ -1734,7 +1765,7 @@ async function saveCategoria() {
         if (result.success) {
 
             if (!catEditId) {
-                ultimoRegistroCreado.categorias = result.data?.id ?? null;
+                setUltimoRegistroCreadoMaestros('categorias', result.data?.id ?? null);
             }
 
             showToast(result.message || '✅ Categoría guardada correctamente', 'success');
