@@ -106,15 +106,16 @@
                         </div>
                     </div>
 
-
-                    <!-- BLOQUE 2: Datos del Pedido de Compra -->
+                                            <!-- BLOQUE 2: Datos del Pedido de Compra -->
                     <div class="form-section" style="padding:4px 10px; margin-bottom:4px; border-radius:6px; border:1px solid #E2E8F0;">
                         <div class="section-title" style="font-size:10px; font-weight:900; color:#7F1D1D; margin-bottom:2px;">
                             2. Datos PC Pedido Compra
                             <span style="font-weight:400; font-size:7px; color:#DC2626;">* Campos obligatorios</span>
                         </div>
                         
-                        <div style="display:grid; grid-template-columns:1.2fr 1.2fr 1fr 1fr 0.8fr 1fr; gap:4px; margin-bottom:3px;">
+                        <!-- Grid ajustado: 1ra col (Fecha), 2da (PC), 3ra (Comprador), 4ta (Cond Pago reducida), 5ta (Moneda reducida), 6ta (Monto PC + Diferencia expandida) -->
+                        <div style="display:grid; grid-template-columns:1fr 1.4fr 1.2fr 0.9fr 0.7fr 1.3fr; gap:4px; margin-bottom:3px;">
+                            
                             <!-- Fecha recepción -->
                             <div class="form-field">
                                 <label class="obligatorio-label" style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Fecha recepción</label>
@@ -133,10 +134,10 @@
                                 <input id="pcContacto" placeholder="Nombre" class="campo-obligatorio-pc" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; font-size:10px;">
                             </div>
                             
-                            <!-- Cond. pago -->
-                            <div class="form-field">
+                            <!-- Cond. pago (Reducida) -->
+                            <div class="form-field" style="min-width:0;">
                                 <label class="obligatorio-label" style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Cond. pago</label>
-                                <select id="pcCondicion" class="campo-obligatorio-pc" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 4px; font-size:10px; font-weight:800;" onchange="toggleCustomPcCondicion(); togglePagoCampos()">
+                                <select id="pcCondicion" class="campo-obligatorio-pc" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 2px; font-size:9px; font-weight:800; overflow:hidden; text-overflow:ellipsis;" onchange="toggleCustomPcCondicion(); togglePagoCampos()">
                                     <option value="Contado">Contado</option>
                                     <option value="Crédito 15 días">Crédito 15 días</option>
                                     <option value="Crédito 30 días">Crédito 30 días</option>
@@ -147,55 +148,55 @@
                                     <option value="Personalizado">✏️ Personalizado...</option>
                                 </select>
                                 <input id="pcCondicionCustom" placeholder="Ej: Crédito 75 días" 
-                                       style="display:none; width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; font-size:10px; margin-top:3px; background:#FFFFFF; color:#0F172A;"
+                                       style="display:none; width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 4px; font-size:9px; margin-top:3px; background:#FFFFFF; color:#0F172A;"
                                        onfocus="this.select()">
                             </div>
                             
-                            <!-- CAMPOS DE PAGO - SOLO PARA CONTADO -->
-                            <div id="pagoCamposContainer" style="display: none; grid-column: span 6; margin-top: 4px;">
-                                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; padding:6px 10px; background:#F0FDF4; border-radius:6px; border:1px solid #86EFAC;">
-                                    <div class="form-field">
-                                        <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">N° Operación</label>
-                                        <input id="pcNumOperacion" placeholder="N° operación bancaria" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; font-size:10px;">
-                                    </div>
-                                    <div class="form-field">
-                                        <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Banco</label>
-                                        <select id="pcBanco" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 4px; font-size:10px; font-weight:800;">
-                                            <option value="">Seleccione</option>
-                                            <option value="BCP">BCP</option>
-                                            <option value="BBVA">BBVA</option>
-                                            <option value="Interbank">Interbank</option>
-                                            <option value="Scotiabank">Scotiabank</option>
-                                            <option value="Banco de la Nación">Banco de la Nación</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-field">
-                                        <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Cuenta OCCI</label>
-                                        <input id="pcCuentaOCCI" placeholder="Cuenta interbancaria" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; font-size:10px;">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Moneda -->
-                            <div class="form-field">
+                            <!-- Moneda (Reducida) -->
+                            <div class="form-field" style="min-width:0;">
                                 <label class="obligatorio-label" style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Moneda</label>
-                                <select id="pcMoneda" class="campo-obligatorio-pc" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 4px; font-size:10px; font-weight:800;" onchange="actualizarResumenPC()">
+                                <select id="pcMoneda" class="campo-obligatorio-pc" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 2px; font-size:9px; font-weight:800;" onchange="actualizarResumenPC()">
                                     <option value="Soles (S/)" selected>Soles (S/)</option>
                                     <option value="Dólares ($)">Dólares ($)</option>
                                 </select>
                             </div>
                             
-                           <!-- Monto PC - OBLIGATORIO - CON CUADRITO DE DIFERENCIA SIMÉTRICO -->
-                            <div class="form-field" style="display: flex; align-items: flex-end; gap: 8px;">
-                                <div style="flex: 1;">
-                                    <label class="obligatorio-label" style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:2px; text-transform:uppercase;">Monto PC</label>
-                                    <input id="pcMontoPC" type="number" step="0.01" placeholder="0.00" class="campo-obligatorio-pc" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; font-weight:800; font-size:10px;" oninput="actualizarResumenDesdeMontoPC(this)">
+                            <!-- Monto PC + CUADRITO DE DIFERENCIA (Expandida y ajustada para que quepa) -->
+                            <div class="form-field" style="display: flex; align-items: flex-end; gap: 4px; padding-right: 0;">
+                                <div style="flex: 1; min-width: 0;">
+                                    <label class="obligatorio-label" style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase; white-space:nowrap;">Monto PC</label>
+                                    <input id="pcMontoPC" type="number" step="0.01" placeholder="0.00" class="campo-obligatorio-pc" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 4px; font-weight:800; font-size:10px;" oninput="actualizarResumenDesdeMontoPC(this)">
                                 </div>
-                                <div style="display: flex; flex-direction: column; width: 110px;">
-                                    <span style="font-size:7.5px; font-weight:900; color:#64748B; text-transform:uppercase; margin-bottom:2px; text-align:center;">Diferencia s/IGV</span>
-                                    <div id="pcDiferenciaSinIgv" style="border:1px solid #CBD5E1; background:#f8f9fa; padding:4px 6px; border-radius:5px; font-size:11px; font-weight:800; color:#DC2626; text-align:center; height:24px; display:flex; align-items:center; justify-content:center; white-space:nowrap;">
+                                <div style="display: flex; flex-direction: column; min-width: 80px; max-width: 85px; flex-shrink: 0;">
+                                    <span style="font-size:7px; font-weight:900; color:#64748B; text-transform:uppercase; margin-bottom:1px; text-align:center; line-height:1;">Diferencia<br>s/IGV</span>
+                                    <div id="pcDiferenciaSinIgv" style="border:1px solid #CBD5E1; background:#f8f9fa; padding:0 4px; border-radius:5px; font-size:9px; font-weight:800; color:#DC2626; text-align:center; height:24px; display:flex; align-items:center; justify-content:center; white-space:nowrap; width:100%;">
                                         S/ 0.00
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- CAMPOS DE PAGO - SOLO PARA CONTADO (Se mantiene igual) -->
+                        <div id="pagoCamposContainer" style="display: none; grid-column: span 6; margin-top: 4px;">
+                            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; padding:6px 10px; background:#F0FDF4; border-radius:6px; border:1px solid #86EFAC;">
+                                <div class="form-field">
+                                    <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">N° Operación</label>
+                                    <input id="pcNumOperacion" placeholder="N° operación bancaria" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; font-size:10px;">
+                                </div>
+                                <div class="form-field">
+                                    <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Banco</label>
+                                    <select id="pcBanco" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 4px; font-size:10px; font-weight:800;">
+                                        <option value="">Seleccione</option>
+                                        <option value="BCP">BCP</option>
+                                        <option value="BBVA">BBVA</option>
+                                        <option value="Interbank">Interbank</option>
+                                        <option value="Scotiabank">Scotiabank</option>
+                                        <option value="Banco de la Nación">Banco de la Nación</option>
+                                    </select>
+                                </div>
+                                <div class="form-field">
+                                    <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Cuenta OCCI</label>
+                                    <input id="pcCuentaOCCI" placeholder="Cuenta interbancaria" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 6px; font-size:10px;">
                                 </div>
                             </div>
                         </div>
@@ -217,7 +218,6 @@
                             </div>
                         </div>
                     </div>
-
                 </div> <!-- 🔴 CIERRE CORRECTO DE LA COLUMNA IZQUIERDA (bloque 1 + bloque 2) -->
 
                 <!-- RESUMEN PC (columna derecha) -->
