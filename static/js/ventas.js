@@ -589,6 +589,7 @@ window.initVentas = async function(tab) {
             await loadComprobantes();
             break;
         case 'notas_credito':
+            await loadComprobantes();
             await loadNotas();
             break;
         case 'devoluciones':
@@ -3783,6 +3784,7 @@ function switchTab(tabId) {
                 await loadComprobantes();
                 break;
             case 'notas_credito':
+                await loadComprobantes();
                 await loadNotas();
                 break;
             case 'devoluciones':
