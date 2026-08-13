@@ -3076,9 +3076,10 @@ async function saveNotaCredito(estado) {
             estado: estado || 'Borrador',
             serie: document.getElementById('notaSerie')?.value || 'FC01',
             numero: document.getElementById('notaNumero')?.value || '',
-            comprobante: document.getElementById('notaComprobante')?.value || '',
-            cliente: document.getElementById('notaCliente')?.value || '',
-            ruc: document.getElementById('notaRuc')?.value || '',
+            comprobante_asociado: document.getElementById('notaComprobante')?.value || '',   // 🔧 antes: comprobante
+            cliente_nombre: document.getElementById('notaCliente')?.value || '',             // 🔧 antes: cliente
+            cliente_numero_doc: document.getElementById('notaRuc')?.value || '',             // 🔧 antes: ruc
+            cliente_tipo_doc: 'RUC',                                                          // 🔧 NUEVO
             monto: parseFloat(document.getElementById('notaMonto')?.value || 0),
             motivo: document.getElementById('notaMotivo')?.value || '',
             observaciones: document.getElementById('notaObs')?.value || ''
@@ -3090,8 +3091,6 @@ async function saveNotaCredito(estado) {
         });
         
         if (response.success) {
-
-           
             showToast(`Nota de crédito guardada como: ${estado}`, 'success');
             closeModal('notaCreditoModal');
             await loadNotas();
@@ -8776,13 +8775,13 @@ function cargarDatosComprobanteAfectado(valorSeleccionado) {
         if (el) el.value = value ?? '';
     };
 
-    setValue('notaCliente', comp.cliente_nombre);
-    setValue('notaRuc', comp.cliente_numero_doc);
-    setValue('notaMonto', comp.total);
+    setValue('notaCliente', comp.cliente);      // 🔧 antes: comp.cliente_nombre
+    setValue('notaRuc', comp.ruc);              // 🔧 antes: comp.cliente_numero_doc
+    setValue('notaMonto', comp.monto);          // 🔧 antes: comp.total
 
     showToast(`✅ Datos de ${comp.serie}-${comp.numero} cargados`, 'success');
 }
-window.cargarDatosComprobanteAfectado = cargarDatosComprobanteAfectado;
+
 
 
 // ============================================================
@@ -12579,6 +12578,7 @@ window.openGuiaModal = openGuiaModal;
 window.openComprobanteModal = openComprobanteModal;
 window.openNotaCreditoModal = openNotaCreditoModal;
 window.openDevolucionModal = openDevolucionModal;
+window.cargarDatosComprobanteAfectado = cargarDatosComprobanteAfectado;
 
 // ============================================================
 // 6. FUNCIONES DE COTIZACIÓN
