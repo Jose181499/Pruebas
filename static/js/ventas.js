@@ -6301,6 +6301,9 @@ async function enviarGuiaSunat() {
     }
 }
 
+
+
+/* posible error completo de guias
 // Sobrescribir la función saveGuia existente para usar la nueva lógica
 const _originalSaveGuia = window.saveGuia;
 window.saveGuia = function(estado) {
@@ -6390,7 +6393,7 @@ window.openGuiaModal = function(id = null) {
         setTimeout(() => cargarGuiaParaEditar(id), 200);
     }
 };
-
+ eliminar si funciona completamente */ 
 
 async function cargarGuiaParaEditar(id) {
     try {
