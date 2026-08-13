@@ -3799,96 +3799,43 @@ function switchTab(tabId) {
 // FUNCIÓN PARA ABRIR MODAL DE GUÍA CON DATOS PRECARGADOS
 // ============================================================
 function openGuiaModalWithData(id, cotizacion) {
-    editingId = id;
-    const isEdit = id !== null;
-    const title = isEdit ? 'Editar guía' : 'Nueva guía - desde cotización';
-    document.getElementById('guiaModalTitle').textContent = title;
-    
-    const formContainer = document.getElementById('guiaForm');
-    if (!formContainer) return;
-    
-    // Construir opciones de cotizaciones
-    const cotOptions = cotizacionesData.map(q => 
-        `<option value="${q.numero}" ${q.numero === cotizacion.numero_cotizacion ? 'selected' : ''}>${q.numero} - ${q.razon || 'Sin cliente'}</option>`
-    ).join('');
-    
-    // Extraer productos de la cotización
-    const productos = cotizacion.productos || [];
-    const productosHtml = productos.length > 0 ? productTableHtml(productos) : 
-        '<div style="padding:20px;text-align:center;color:#94A3B8;">No hay productos en esta cotización.</div>';
-    
-    formContainer.innerHTML = `
-        <div class="ficha-section">
-            <div class="ficha-section-title">📦 Datos de la guía <small>Precargado desde cotización ${cotizacion.numero_cotizacion}</small></div>
-            <div class="ficha-grid">
-                <div class="form-field col-4">
-                    <label>Cotización vinculada</label>
-                    <select id="guiaCotizacion" onchange="loadGuiaFromCotizacion(this.value)">
-                        ${cotOptions}
-                    </select>
-                </div>
-                <div class="form-field col-4">
-                    <label>Serie</label>
-                    <input id="guiaSerie" value="T001">
-                </div>
-                <div class="form-field col-4">
-                    <label>Número</label>
-                    <input id="guiaNumero" value="${String(Date.now()).slice(-8)}">
-                </div>
-                <div class="form-field col-4">
-                    <label>Estado</label>
-                    <select id="guiaEstado">
-                        ${options(ESTADOS_GUIA, 'Borrador')}
-                    </select>
-                </div>
-                <div class="form-field col-4">
-                    <label>Cliente</label>
-                    <input id="guiaCliente" value="${esc(cotizacion.cliente_razon_social || '')}">
-                </div>
-                <div class="form-field col-4">
-                    <label>RUC</label>
-                    <input id="guiaRuc" value="${esc(cotizacion.cliente_ruc || '')}">
-                </div>
-                <div class="form-field col-4">
-                    <label>Origen</label>
-                    <select id="guiaOrigen">
-                        <option>ALM-SMP</option>
-                        <option>OF-BRE</option>
-                        <option>Almacén Central</option>
-                    </select>
-                </div>
-                <div class="form-field col-4">
-                    <label>Destino</label>
-                    <input id="guiaDestino" value="${esc(cotizacion.direccion_entrega || cotizacion.cliente_direccion || '')}">
-                </div>
-                <div class="form-field col-4">
-                    <label>Motivo traslado</label>
-                    <select id="guiaMotivo">
-                        <option>Venta</option>
-                        <option>Compra</option>
-                        <option>Traslado interno</option>
-                        <option>Devolución</option>
-                    </select>
-                </div>
-                <div class="form-field col-12">
-                    <label>Observaciones</label>
-                    <textarea id="guiaObs" placeholder="Observaciones de la guía">Generado desde cotización ${cotizacion.numero_cotizacion}</textarea>
-                </div>
-            </div>
-        </div>
-        <div class="ficha-section">
-            <div class="ficha-section-title">📦 Productos a trasladar</div>
-            <div id="guiaProducts">
-                ${productosHtml}
-            </div>
-        </div>
-    `;
-    
-    // Guardar referencia de los productos para el guardado
-    window._guiaProductos = productos;
-    
-    // Mostrar el modal
-    document.getElementById('guiaModal').classList.add('show');
+    // 1. Construye el formulario completo y estandarizado (mismos ids que recolectarDatosGuia espera)
+    openGuiaModal(id);
+
+    // 2. Precargar datos de la cotización, un momento después de que el formulario exista
+    setTimeout(() => {
+        const cotSel = document.getElementById('guiaCotizacion');
+        if (cotSel) cotSel.value = cotizacion.numero_cotizacion || '';
+
+        const cliente = document.getElementById('guiaCliente');
+        if (cliente) cliente.value = cotizacion.cliente_razon_social || '';
+
+        const ruc = document.getElementById('guiaRuc');
+        if (ruc) ruc.value = cotizacion.cliente_ruc || '';
+
+        const destino = document.getElementById('guiaDestino');
+        if (destino) destino.value = cotizacion.direccion_entrega || cotizacion.cliente_direccion || '';
+
+        const obs = document.getElementById('guiaObservaciones');
+        if (obs) obs.value = `Generado desde cotización ${cotizacion.numero_cotizacion}`;
+
+        // Precargar productos de la cotización en la tabla de items (mismo id que usa recolectarDatosGuia: #guiaProductosBody)
+        const productos = cotizacion.productos || [];
+        window._guiaProductos = productos;
+        const body = document.getElementById('guiaProductosBody');
+        if (body && productos.length > 0) {
+            body.innerHTML = '';
+            productos.forEach(p => {
+                agregarFilaProductoGuia(); // agrega una fila vacía
+                const lastRow = body.lastElementChild;
+                if (lastRow) {
+                    lastRow.querySelector('.guia-producto-codigo').value = p.codigo || '';
+                    lastRow.querySelector('.guia-producto-desc').value = p.descripcion || p.producto || '';
+                    lastRow.querySelector('.guia-producto-cant').value = p.cantidad || 0;
+                }
+            });
+        }
+    }, 250);
 }
 
 // ============================================================
