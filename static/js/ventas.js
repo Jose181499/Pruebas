@@ -3799,10 +3799,10 @@ function switchTab(tabId) {
 // FUNCIÓN PARA ABRIR MODAL DE GUÍA CON DATOS PRECARGADOS
 // ============================================================
 function openGuiaModalWithData(id, cotizacion) {
-    // 1. Construye el formulario completo y estandarizado (mismos ids que recolectarDatosGuia espera)
-    openGuiaModal(id);
+    // 1. Abre el modal real (mismo HTML de guia_modal.html, no lo destruye)
+    window.openGuiaModal(id);
 
-    // 2. Precargar datos de la cotización, un momento después de que el formulario exista
+    // 2. Esperar a que el modal esté listo (ids, ubigeos, etc.) y precargar datos
     setTimeout(() => {
         const cotSel = document.getElementById('guiaCotizacion');
         if (cotSel) cotSel.value = cotizacion.numero_cotizacion || '';
@@ -3819,23 +3819,29 @@ function openGuiaModalWithData(id, cotizacion) {
         const obs = document.getElementById('guiaObservaciones');
         if (obs) obs.value = `Generado desde cotización ${cotizacion.numero_cotizacion}`;
 
-        // Precargar productos de la cotización en la tabla de items (mismo id que usa recolectarDatosGuia: #guiaProductosBody)
+        // Precargar productos de la cotización en la tabla real (#guiaProductosBody)
         const productos = cotizacion.productos || [];
         window._guiaProductos = productos;
         const body = document.getElementById('guiaProductosBody');
         if (body && productos.length > 0) {
             body.innerHTML = '';
             productos.forEach(p => {
-                agregarFilaProductoGuia(); // agrega una fila vacía
+                agregarFilaProductoGuia(); // ya llama actualizarPesoTotalGuia() y actualizarContadorProductosGuia()
                 const lastRow = body.lastElementChild;
                 if (lastRow) {
-                    lastRow.querySelector('.guia-producto-codigo').value = p.codigo || '';
-                    lastRow.querySelector('.guia-producto-desc').value = p.descripcion || p.producto || '';
-                    lastRow.querySelector('.guia-producto-cant').value = p.cantidad || 0;
+                    const codigoInput = lastRow.querySelector('.guia-producto-codigo');
+                    const descInput = lastRow.querySelector('.guia-producto-desc');
+                    const cantInput = lastRow.querySelector('.guia-producto-cant');
+                    if (codigoInput) codigoInput.value = p.codigo || '';
+                    if (descInput) descInput.value = p.descripcion || p.producto || '';
+                    if (cantInput) cantInput.value = p.cantidad || 1;
                 }
             });
+            // Recalcular peso/contador ahora que ya se llenaron los valores reales
+            actualizarPesoTotalGuia();
+            actualizarContadorProductosGuia();
         }
-    }, 250);
+    }, 350);
 }
 
 // ============================================================
