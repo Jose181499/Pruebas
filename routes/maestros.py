@@ -1025,7 +1025,7 @@ def api_almacenes_listar():
     try:
         query = """
             SELECT id, codigo, nombre, tipo, responsable, telefono,
-                   direccion, activo
+                   direccion, activo, created_at
             FROM almacenes
             WHERE activo = true
             ORDER BY nombre
@@ -1270,7 +1270,7 @@ def api_categorias_listar():
     """Listar categorías"""
     try:
         query = """
-            SELECT id, codigo, nombre, tipo, activo
+            SELECT id, codigo, nombre, tipo, activo, created_at
             FROM categorias
             WHERE activo = true
             ORDER BY tipo, nombre
@@ -1501,7 +1501,7 @@ def api_marcas_listar():
     """Listar marcas"""
     try:
         query = """
-            SELECT id, codigo, nombre, tipo, activo
+            SELECT id, codigo, nombre, tipo, activo, created_at
             FROM marcas
             WHERE activo = true
             ORDER BY nombre
@@ -1731,7 +1731,7 @@ def api_um_listar():
     try:
         query = """
             SELECT id, codigo, nombre, abreviatura, tipo,
-                   decimales, activo, ambito
+                   decimales, activo, ambito, created_at
             FROM um
             WHERE activo = true
             ORDER BY ambito, codigo
