@@ -1273,7 +1273,7 @@ def api_categorias_listar():
             SELECT id, codigo, nombre, tipo, activo, created_at
             FROM categorias
             WHERE activo = true
-            ORDER BY tipo, nombre
+            ORDER BY id DESC
         """
         result = db_query(query)
         return jsonify({"success": True, "data": result or []})
@@ -1504,7 +1504,7 @@ def api_marcas_listar():
             SELECT id, codigo, nombre, tipo, activo, created_at
             FROM marcas
             WHERE activo = true
-            ORDER BY nombre
+            ORDER BY id DESC
         """
         result = db_query(query)
         return jsonify({"success": True, "data": result or []})
