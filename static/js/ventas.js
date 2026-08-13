@@ -559,48 +559,7 @@ async function loadCotizaciones() {
 }
 
 
-window.initVentas = async function(tab) {
-    console.log(`🚀 Inicializando ventas con tab: ${tab}`);
-    currentModule = tab || 'cotizaciones';
-    
-    // Cargar datos maestros
-    await Promise.all([
-        cargarProductosMaestros(),
-        cargarClientesMaestros()
-    ]);
-    
-    // Cargar datos según el módulo activo
-    switch(currentModule) {
-        case 'cotizaciones':
-            await loadCotizaciones();
-            break;
-        case 'pedido_compra':
-            // 🔽 IMPORTANTE: Cargar cotizaciones también para PC
-            await loadCotizaciones(); // Carga cotizaciones para el buscador
-            await loadPedidos();
-            break;
-        case 'despachar':
-            await loadDespachos();
-            break;
-        case 'guias':
-            await loadGuias();
-            break;
-        case 'comprobantes':
-            await loadComprobantes();
-            break;
-        case 'notas_credito':
-            await loadComprobantes();
-            await loadNotas();
-            break;
-        case 'devoluciones':
-            await loadDevoluciones();
-            break;
-        default:
-            await loadCotizaciones();
-    }
-    
-    console.log('✅ Módulo Ventas inicializado correctamente');
-};
+
 
 
 async function loadPedidos() {
@@ -12340,6 +12299,7 @@ window.initVentas = async function(tab) {
             await loadComprobantes();
             break;
         case 'notas_credito':
+            await loadComprobantes();
             await loadNotas();
             break;
         case 'devoluciones':
