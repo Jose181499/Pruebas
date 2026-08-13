@@ -1734,7 +1734,7 @@ def api_um_listar():
                    decimales, activo, ambito, created_at
             FROM um
             WHERE activo = true
-            ORDER BY ambito, codigo
+            ORDER BY id DESC
         """
         result = db_query(query)
         return jsonify({"success": True, "data": result or []})
