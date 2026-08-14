@@ -6263,97 +6263,7 @@ async function enviarGuiaSunat() {
 
 
 
-/* posible error completo de guias
-// Sobrescribir la función saveGuia existente para usar la nueva lógica
-const _originalSaveGuia = window.saveGuia;
-window.saveGuia = function(estado) {
-    const data = recolectarDatosGuia();
-    if (!validarGuia(data)) return;
-    
-    showToast('⏳ Guardando borrador...', 'info');
-    fetch('/guias/api/guardar-borrador', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    })
-    .then(r => r.json())
-    .then(result => {
-        if (result.success) {
-            showToast(`✅ Borrador guardado: ${result.numero_guia}`, 'success');
-            closeModal('guiaModal');
-            if (typeof loadGuias === 'function') loadGuias();
-        } else {
-            showToast('❌ Error: ' + (result.error || 'No se pudo guardar'), 'error');
-        }
-    })
-    .catch(error => {
-        showToast('❌ Error de conexión', 'error');
-    });
-};
 
-// ============================================================
-// INICIALIZAR MODAL DE GUÍA
-// ============================================================
-
-// Sobrescribir openGuiaModal
-const _originalOpenGuiaModal = window.openGuiaModal;
-window.openGuiaModal = function(id = null) {
-    editingId = id;
-    const isEdit = id !== null;
-    document.getElementById('guiaModalTitle').textContent = isEdit ? '📦 Editar Guía de Remisión' : '📦 Nueva Guía de Remisión';
-    
-    // Inicializar fechas
-    const hoy = new Date().toISOString().split('T')[0];
-    document.getElementById('guiaFechaEmision').value = hoy;
-    document.getElementById('guiaFechaInicio').value = hoy;
-    
-    // Inicializar ubigeos
-    llenarDepartamentosGuia('guiaDeptoOrigen');
-    llenarDepartamentosGuia('guiaDeptoDestino');
-    configurarUbigeoGuia('Origen');
-    configurarUbigeoGuia('Destino');
-    
-    // Preseleccionar Lima - Lima - San Martin de Porres
-    setTimeout(() => {
-        const depto = document.getElementById('guiaDeptoOrigen');
-        if (depto) {
-            depto.value = 'LIMA';
-            depto.dispatchEvent(new Event('change'));
-            setTimeout(() => {
-                const prov = document.getElementById('guiaProvOrigen');
-                if (prov) {
-                    prov.value = 'LIMA';
-                    prov.dispatchEvent(new Event('change'));
-                    setTimeout(() => {
-                        const dist = document.getElementById('guiaDistOrigen');
-                        if (dist) {
-                            dist.value = 'SAN MARTIN DE PORRES';
-                            dist.dispatchEvent(new Event('change'));
-                        }
-                    }, 50);
-                }
-            }, 50);
-        }
-    }, 100);
-    
-    // Limpiar productos
-    document.getElementById('guiaProductosBody').innerHTML = '';
-    // Agregar un producto por defecto
-    agregarFilaProductoGuia();
-    
-    // Cargar conductores
-    cargarConductoresGuia();
-    toggleTransportistaGuia();
-    
-    // Mostrar modal
-    document.getElementById('guiaModal').classList.add('show');
-    
-    // Si es edición, cargar datos
-    if (isEdit) {
-        setTimeout(() => cargarGuiaParaEditar(id), 200);
-    }
-};
- eliminar si funciona completamente */ 
 
 async function cargarGuiaParaEditar(id) {
     try {
@@ -6411,7 +6321,7 @@ async function cargarGuiaParaEditar(id) {
         setSelectValue('guiaEstado', g.estado_sunat || g.estado);
         setValue('guiaCliente', g.destinatario_nombre);
         setValue('guiaRuc', g.ruc_destinatario);
-        setSelectValue('guiaOrigen', ORIGEN_FIJO.direccion);
+        setValue('guiaOrigen', ORIGEN_FIJO.direccion);
         setValue('guiaDestino', g.destinatario_direccion);
         setSelectValue('guiaMotivo', g.motivo_traslado);
         setValue('guiaObs', g.observaciones);
@@ -8400,7 +8310,7 @@ async function cargarGuiaParaEditar(id) {
         setSelectValue('guiaEstado', g.estado_sunat || g.estado);
         setValue('guiaCliente', g.destinatario_nombre);
         setValue('guiaRuc', g.ruc_destinatario);
-        setSelectValue('guiaOrigen', g.remitente_direccion);
+        setValue('guiaOrigen', g.remitente_direccion);
         setValue('guiaDestino', g.destinatario_direccion);
         setSelectValue('guiaMotivo', g.motivo_traslado);
         setValue('guiaObs', g.observaciones);

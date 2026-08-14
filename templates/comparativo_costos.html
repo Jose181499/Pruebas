@@ -518,12 +518,12 @@
   window.ccMostrarDatosProducto = function (idx) {
   const p = ccProveedores[idx];
   if (!p) return;
-  document.getElementById('ccInfoCodigo').textContent = p.codigo || '—';
-  document.getElementById('ccInfoDesc').innerHTML = p.desc || '—';
-  document.getElementById('ccInfoModelo').textContent = p.modelo || '—';
-  document.getElementById('ccInfoMarca').textContent = p.marca || '—';
-  document.getElementById('ccInfoCategoria').textContent = p.categoria || '—';
-  document.getElementById('ccInfoTransporte').textContent = p.tipo || '—';
+  document.getElementById('ccInfoCodigo').textContent = p.codigo || '';
+  document.getElementById('ccInfoDesc').innerHTML = p.desc || '';
+  document.getElementById('ccInfoModelo').textContent = p.modelo || '';
+  document.getElementById('ccInfoMarca').textContent = p.marca || '';
+  document.getElementById('ccInfoCategoria').textContent = p.categoria || '';
+  document.getElementById('ccInfoTransporte').textContent = p.tipo || '';
   document.getElementById('ccInfoPrecio').textContent = ccSoles(p.venta);
   };
 
