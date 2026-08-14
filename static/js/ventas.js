@@ -6264,179 +6264,6 @@ async function enviarGuiaSunat() {
 
 
 
-
-async function cargarGuiaParaEditar(id) {
-    try {
-        console.log('📥 Cargando guía para editar ID:', id);
-        showToast('⏳ Cargando datos de la guía...', 'info');
-
-        const response = await apiFetch(`/ventas/api/guias/${id}`);
-        if (!response.success) {
-            showToast('Error al cargar guía: ' + (response.error || 'Desconocido'), 'error');
-            return;
-        }
-
-        const g = response.data;
-        console.log('📦 Datos de guía cargados:', g);
-
-        // ============================================================
-        // ORIGEN FIJO - SIEMPRE SOBREESCRIBIR
-        // ============================================================
-        const ORIGEN_FIJO = {
-            ruc: '20602095704',
-            nombre: 'KCF CORPORACION SAC',
-            direccion: 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES',
-            ubigeo: '150139',
-            departamento: 'LIMA',
-            provincia: 'LIMA',
-            distrito: 'SAN MARTIN DE PORRES'
-        };
-
-        // Helper para setear <select>
-        const setSelectValue = (id, value) => {
-            const el = document.getElementById(id);
-            if (!el || value === undefined || value === null) return;
-            const val = String(value).trim();
-            let found = false;
-            for (const opt of el.options) {
-                if (opt.value === val) { opt.selected = true; found = true; break; }
-            }
-            if (!found) {
-                for (const opt of el.options) {
-                    if (opt.value.toLowerCase() === val.toLowerCase()) { opt.selected = true; found = true; break; }
-                }
-            }
-        };
-
-        const setValue = (id, value) => {
-            const el = document.getElementById(id);
-            if (el) el.value = value ?? '';
-        };
-
-        // ============================================================
-        // CAMPOS BÁSICOS
-        // ============================================================
-        setValue('guiaSerie', g.serie);
-        setValue('guiaNumero', g.numero);
-        setSelectValue('guiaEstado', g.estado_sunat || g.estado);
-        setValue('guiaCliente', g.destinatario_nombre);
-        setValue('guiaRuc', g.ruc_destinatario);
-        setValue('guiaOrigen', ORIGEN_FIJO.direccion);
-        setValue('guiaDestino', g.destinatario_direccion);
-        setSelectValue('guiaMotivo', g.motivo_traslado);
-        setValue('guiaObs', g.observaciones);
-
-        // ============================================================
-        // SOBREESCRIBIR ORIGEN CON DATOS FIJOS
-        // ============================================================
-        const origenInput = document.getElementById('guiaOrigen');
-        if (origenInput) {
-            origenInput.value = ORIGEN_FIJO.direccion;
-            origenInput.readOnly = true;
-            origenInput.style.background = '#F1F5F9';
-            origenInput.style.color = '#64748B';
-            origenInput.style.cursor = 'not-allowed';
-        }
-
-        // RUC Remitente
-        const rucRemitente = document.getElementById('guiaRucRemitente');
-        if (rucRemitente) {
-            rucRemitente.value = ORIGEN_FIJO.ruc;
-            rucRemitente.readOnly = true;
-            rucRemitente.style.background = '#F1F5F9';
-            rucRemitente.style.color = '#64748B';
-        }
-
-        // Nombre Remitente
-        const nombreRemitente = document.getElementById('guiaRemitenteNombre');
-        if (nombreRemitente) {
-            nombreRemitente.value = ORIGEN_FIJO.nombre;
-            nombreRemitente.readOnly = true;
-            nombreRemitente.style.background = '#F1F5F9';
-            nombreRemitente.style.color = '#64748B';
-        }
-
-        // Ubigeo Origen
-        const deptoOrigen = document.getElementById('guiaDeptoOrigen');
-        if (deptoOrigen) {
-            deptoOrigen.value = ORIGEN_FIJO.departamento;
-            deptoOrigen.disabled = true;
-            deptoOrigen.style.background = '#F1F5F9';
-            deptoOrigen.style.cursor = 'not-allowed';
-        }
-
-        const provOrigen = document.getElementById('guiaProvOrigen');
-        if (provOrigen) {
-            provOrigen.value = ORIGEN_FIJO.provincia;
-            provOrigen.disabled = true;
-            provOrigen.style.background = '#F1F5F9';
-            provOrigen.style.cursor = 'not-allowed';
-        }
-
-        const distOrigen = document.getElementById('guiaDistOrigen');
-        if (distOrigen) {
-            distOrigen.value = ORIGEN_FIJO.distrito;
-            distOrigen.disabled = true;
-            distOrigen.style.background = '#F1F5F9';
-            distOrigen.style.cursor = 'not-allowed';
-        }
-
-        const ubigeoHidden = document.getElementById('guiaUbigeoOrigen');
-        if (ubigeoHidden) {
-            ubigeoHidden.value = ORIGEN_FIJO.ubigeo;
-        }
-
-        const ubigeoTexto = document.getElementById('guiaUbigeoOrigenTexto');
-        if (ubigeoTexto) {
-            ubigeoTexto.textContent = `${ORIGEN_FIJO.departamento} - ${ORIGEN_FIJO.provincia} - ${ORIGEN_FIJO.distrito}`;
-        }
-
-        // Cotización vinculada
-        if (g.documento_asociado) {
-            setSelectValue('guiaCotizacion', g.documento_asociado);
-        }
-
-        // ============================================================
-        // PRODUCTOS (items_json)
-        // ============================================================
-        let items = [];
-        try {
-            if (g.items_json) {
-                items = typeof g.items_json === 'string' ? JSON.parse(g.items_json) : g.items_json;
-            }
-        } catch (e) {
-            console.warn('⚠️ Error parseando items_json de la guía:', e);
-            items = [];
-        }
-
-        const productosNormalizados = (items || []).map(it => ({
-            codigo: it.codigo || '',
-            producto: it.producto || it.descripcion || '',
-            marca: it.marca || '',
-            modelo: it.modelo || '',
-            um: it.um || 'NIU',
-            cantidad: it.cantidad || 1,
-            stock: it.stock || 0
-        }));
-
-        const productsContainer = document.getElementById('guiaProducts');
-        if (productsContainer) {
-            productsContainer.innerHTML = productosNormalizados.length > 0
-                ? productTableHtml(productosNormalizados)
-                : '<div style="padding:20px;text-align:center;color:#94A3B8;">No hay productos registrados en esta guía.</div>';
-        }
-
-        window._guiaProductos = productosNormalizados;
-
-        showToast('✅ Guía cargada correctamente', 'success');
-
-    } catch (error) {
-        console.error('❌ Error cargando guía para editar:', error);
-        showToast('Error al cargar la guía: ' + error.message, 'error');
-    }
-}
-
-
 // ============================================================
 // VALIDACIÓN PC VS COTIZACIÓN - FUNCIÓN COMPLETA Y CORREGIDA
 // ============================================================
@@ -8281,10 +8108,35 @@ async function cargarGuiaParaEditar(id) {
         const g = response.data;
         console.log('📦 Datos de guía cargados:', g);
 
-        // Helper para setear <select> intentando coincidencia exacta o insensible a mayúsculas
+        // ============================================================
+        // ORIGEN FIJO - SIEMPRE SOBREESCRIBIR
+        // ============================================================
+        const ORIGEN_FIJO = {
+            ruc: '20602095704',
+            nombre: 'KCF CORPORACION SAC',
+            direccion: 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES',
+            ubigeo: '150139',
+            departamento: 'LIMA',
+            provincia: 'LIMA',
+            distrito: 'SAN MARTIN DE PORRES'
+        };
+
+        // ============================================================
+        // 🔒 setSelectValue BLINDADO
+        // Funciona tanto para <select> como para <input>.
+        // Si el elemento no es <select>, actúa como setValue.
+        // Así este error NO vuelve a ocurrir sin importar el id que se le pase.
+        // ============================================================
         const setSelectValue = (id, value) => {
             const el = document.getElementById(id);
             if (!el || value === undefined || value === null) return;
+
+            // Si no es un <select>, tratarlo como input normal
+            if (el.tagName !== 'SELECT') {
+                el.value = value;
+                return;
+            }
+
             const val = String(value).trim();
             let found = false;
             for (const opt of el.options) {
@@ -8310,12 +8162,77 @@ async function cargarGuiaParaEditar(id) {
         setSelectValue('guiaEstado', g.estado_sunat || g.estado);
         setValue('guiaCliente', g.destinatario_nombre);
         setValue('guiaRuc', g.ruc_destinatario);
-        setValue('guiaOrigen', g.remitente_direccion);
+        setSelectValue('guiaOrigen', ORIGEN_FIJO.direccion);
         setValue('guiaDestino', g.destinatario_direccion);
         setSelectValue('guiaMotivo', g.motivo_traslado);
         setValue('guiaObs', g.observaciones);
 
-        // Cotización vinculada (documento_asociado guarda el número de cotización)
+        // ============================================================
+        // SOBREESCRIBIR ORIGEN CON DATOS FIJOS
+        // ============================================================
+        const origenInput = document.getElementById('guiaOrigen');
+        if (origenInput) {
+            origenInput.value = ORIGEN_FIJO.direccion;
+            origenInput.readOnly = true;
+            origenInput.style.background = '#F1F5F9';
+            origenInput.style.color = '#64748B';
+            origenInput.style.cursor = 'not-allowed';
+        }
+
+        // RUC Remitente
+        const rucRemitente = document.getElementById('guiaRucRemitente');
+        if (rucRemitente) {
+            rucRemitente.value = ORIGEN_FIJO.ruc;
+            rucRemitente.readOnly = true;
+            rucRemitente.style.background = '#F1F5F9';
+            rucRemitente.style.color = '#64748B';
+        }
+
+        // Nombre Remitente
+        const nombreRemitente = document.getElementById('guiaRemitenteNombre');
+        if (nombreRemitente) {
+            nombreRemitente.value = ORIGEN_FIJO.nombre;
+            nombreRemitente.readOnly = true;
+            nombreRemitente.style.background = '#F1F5F9';
+            nombreRemitente.style.color = '#64748B';
+        }
+
+        // Ubigeo Origen
+        const deptoOrigen = document.getElementById('guiaDeptoOrigen');
+        if (deptoOrigen) {
+            deptoOrigen.value = ORIGEN_FIJO.departamento;
+            deptoOrigen.disabled = true;
+            deptoOrigen.style.background = '#F1F5F9';
+            deptoOrigen.style.cursor = 'not-allowed';
+        }
+
+        const provOrigen = document.getElementById('guiaProvOrigen');
+        if (provOrigen) {
+            provOrigen.value = ORIGEN_FIJO.provincia;
+            provOrigen.disabled = true;
+            provOrigen.style.background = '#F1F5F9';
+            provOrigen.style.cursor = 'not-allowed';
+        }
+
+        const distOrigen = document.getElementById('guiaDistOrigen');
+        if (distOrigen) {
+            distOrigen.value = ORIGEN_FIJO.distrito;
+            distOrigen.disabled = true;
+            distOrigen.style.background = '#F1F5F9';
+            distOrigen.style.cursor = 'not-allowed';
+        }
+
+        const ubigeoHidden = document.getElementById('guiaUbigeoOrigen');
+        if (ubigeoHidden) {
+            ubigeoHidden.value = ORIGEN_FIJO.ubigeo;
+        }
+
+        const ubigeoTexto = document.getElementById('guiaUbigeoOrigenTexto');
+        if (ubigeoTexto) {
+            ubigeoTexto.textContent = `${ORIGEN_FIJO.departamento} - ${ORIGEN_FIJO.provincia} - ${ORIGEN_FIJO.distrito}`;
+        }
+
+        // Cotización vinculada
         if (g.documento_asociado) {
             setSelectValue('guiaCotizacion', g.documento_asociado);
         }
@@ -8333,7 +8250,6 @@ async function cargarGuiaParaEditar(id) {
             items = [];
         }
 
-        // Normalizar para productTableHtml (espera: codigo, producto/descripcion, marca, um, cantidad, stock)
         const productosNormalizados = (items || []).map(it => ({
             codigo: it.codigo || '',
             producto: it.producto || it.descripcion || '',
@@ -8351,7 +8267,6 @@ async function cargarGuiaParaEditar(id) {
                 : '<div style="padding:20px;text-align:center;color:#94A3B8;">No hay productos registrados en esta guía.</div>';
         }
 
-        // Guardar referencia para que saveGuia() los use al actualizar
         window._guiaProductos = productosNormalizados;
 
         showToast('✅ Guía cargada correctamente', 'success');
