@@ -93,7 +93,8 @@ def api_clientes_listar():
                            responsable as contacto, principal, activo,
                            condicion_pago, tiempo_credito,
                            instrucciones,
-                           google_maps  -- ✅ AGREGADO
+                           google_maps as "googleMaps",
+                           horario
                     FROM clientes_puntos_entrega
                     WHERE cliente_id = %s AND activo = true
                     ORDER BY principal DESC, nombre_punto
@@ -233,7 +234,7 @@ def api_clientes_guardar():
                 INSERT INTO clientes_puntos_entrega (
                     cliente_id, nombre_punto, direccion, telefono_contacto,
                     responsable, principal, instrucciones,
-                    google_maps
+                    google_maps, horario
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 cliente_id, 
@@ -243,7 +244,8 @@ def api_clientes_guardar():
                 p.get('contacto', ''),
                 bool(p.get('principal', False)), 
                 p.get('instrucciones', ''),
-                p.get('googleMaps', '')  # ✅ google_maps
+                p.get('googleMaps', ''),  # ✅ google_maps
+                p.get('horario', '')
             ))
 
         conn.commit()
@@ -315,7 +317,9 @@ def api_clientes_obtener(id):
             query_puntos = """
                 SELECT id, nombre_punto as punto, direccion, telefono_contacto as telefono,
                        responsable as contacto, principal, activo,
-                       condicion_pago, tiempo_credito, instrucciones
+                       condicion_pago, tiempo_credito, instrucciones,
+                       google_maps as "googleMaps,
+                       horario
                 FROM clientes_puntos_entrega
                 WHERE cliente_id = %s AND activo = true
                 ORDER BY principal DESC, nombre_punto

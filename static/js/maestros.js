@@ -1023,31 +1023,38 @@ function fillClientForm(data) {
 
 
 
-function openClientModal(editId = null) {
+async function openClientModal(editId = null) {
   clientEditId = editId;
   contactCtr = 0;
   pointCtr = 0;
-  
-  if (editId) {
-    fetch(`/maestros/api/clientes/${editId}`)
-      .then(r => r.json())
-      .then(data => {
-        if (data.success) {
-          fillClientForm(data.data);
-        }
-      })
-      .catch(err => {
-        console.error('Error cargando cliente:', err);
-        showToast('Error al cargar datos del cliente', 'error');
-      });
-  } else {
-    clearClientForm();
-  }
-  
+
   document.getElementById('cmTitle').textContent = editId ? 'Editar cliente' : 'Crear cliente';
   document.getElementById('cmHint').textContent = editId ? `Editando ID ${editId}` : 'Modo: creación';
-  document.getElementById('clientModal').classList.add('show');
-  document.querySelector('#clientModal .cm-body').scrollTop = 0;
+
+  if (editId) {
+    // Mostrar el modal con un loading state, SIN datos viejos
+    document.getElementById('cliContacts').innerHTML = '<div style="padding:12px;color:#94A3B8;">Cargando...</div>';
+    document.getElementById('cliPoints').innerHTML = '<div style="padding:12px;color:#94A3B8;">Cargando...</div>';
+    document.getElementById('clientModal').classList.add('show');
+    document.querySelector('#clientModal .cm-body').scrollTop = 0;
+
+    try {
+      const r = await fetch(`/maestros/api/clientes/${editId}`);
+      const data = await r.json();
+      if (data.success) {
+        fillClientForm(data.data);
+      } else {
+        showToast('Error al cargar datos del cliente', 'error');
+      }
+    } catch (err) {
+      console.error('Error cargando cliente:', err);
+      showToast('Error al cargar datos del cliente', 'error');
+    }
+  } else {
+    clearClientForm();
+    document.getElementById('clientModal').classList.add('show');
+    document.querySelector('#clientModal .cm-body').scrollTop = 0;
+  }
 }
 
 function closeClientModal() {
