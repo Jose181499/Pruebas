@@ -724,7 +724,7 @@
         precioHist: Number(prod.precio_unitario) || 0,
         fechaPrecio: '—',
         venta: Number(prod.precio_unitario) || 0,
-        tiempo: Number(prod.tiempo_entrega) || 0,
+        tiempo: parseInt(String(prod.tiempo_entrega || '').match(/\d+/)?.[0]) || 0,
         tipo: prod.transporte || '—',
         lugar: '—',
         transporte: 0,
