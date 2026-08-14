@@ -318,7 +318,7 @@ def api_clientes_obtener(id):
                 SELECT id, nombre_punto as punto, direccion, telefono_contacto as telefono,
                        responsable as contacto, principal, activo,
                        condicion_pago, tiempo_credito, instrucciones,
-                       google_maps as "googleMaps,
+                       google_maps as "googleMaps",
                        horario
                 FROM clientes_puntos_entrega
                 WHERE cliente_id = %s AND activo = true
