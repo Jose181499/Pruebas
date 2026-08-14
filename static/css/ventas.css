@@ -2872,7 +2872,7 @@ body.kcf-theme {
 /* ============================================================ */
 #pedidoCompraModal .table-scroll {
     height: 42vh !important;
-    min-height: 320px !important;
+    min-height: 220px !important;
     max-height: 420px !important;
     overflow: auto !important;
     padding: 0 !important;
