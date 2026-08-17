@@ -1606,11 +1606,21 @@ def api_guias_listar():
                     items = json.loads(row.get('items_json'))
             except:
                 pass
+            
+            # 🔽 OBTENER FECHA COMO STRING SIN MODIFICAR ZONA HORARIA
+            fecha_emision = row.get('fecha_emision')
+            if fecha_emision:
+                # Si es datetime, convertir a string ISO sin zona horaria
+                if isinstance(fecha_emision, datetime):
+                    fecha_emision = fecha_emision.strftime('%Y-%m-%d %H:%M:%S')
+                elif isinstance(fecha_emision, date):
+                    fecha_emision = fecha_emision.strftime('%Y-%m-%d')
+            
             formatted_data.append({
                 'id': row.get('id'),
                 'serie': row.get('serie'),
                 'numero': row.get('numero'),
-                'fecha': row.get('fecha_emision'),
+                'fecha': fecha_emision,  # ← ENVIAR COMO STRING SIN ZONA
                 'fecha_traslado': row.get('fecha_traslado'),
                 'estado': row.get('estado_sunat') or row.get('estado'),
                 'ruc': row.get('ruc_destinatario'),
@@ -1629,6 +1639,7 @@ def api_guias_listar():
         return jsonify({'success': True, 'data': formatted_data})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @ventas_bp.route('/ventas/api/guias/guardar', methods=['POST'])
 @login_required

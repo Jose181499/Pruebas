@@ -1517,71 +1517,52 @@ function formatearFechaDespacho(fechaStr) {
 // FUNCIÓN PARA FORMATEAR FECHA DE GUÍA (CON HORA)
 // ============================================================
 
-
 function formatearFechaGuia(fechaStr) {
     if (!fechaStr) return '-';
     
     try {
-        let fecha;
-        
-        // Si es un objeto Date o string
-        if (fechaStr instanceof Date) {
-            fecha = fechaStr;
-        } else if (typeof fechaStr === 'string') {
-            // Si viene en formato "YYYY-MM-DD HH:MM:SS" (PostgreSQL timestamp)
-            if (fechaStr.includes(' ') && fechaStr.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/)) {
-                const partes = fechaStr.split(' ');
-                const fechaPartes = partes[0].split('-');
-                const horaPartes = partes[1].split(':');
-                fecha = new Date(
-                    parseInt(fechaPartes[0]),
-                    parseInt(fechaPartes[1]) - 1,
-                    parseInt(fechaPartes[2]),
-                    parseInt(horaPartes[0]),
-                    parseInt(horaPartes[1]),
-                    parseInt(horaPartes[2])
-                );
-            }
-            // Si viene en formato ISO con T
-            else if (fechaStr.includes('T')) {
-                fecha = new Date(fechaStr);
-            }
-            // Si viene en formato YYYY-MM-DD (sin hora)
-            else if (fechaStr.includes('-') && fechaStr.length === 10) {
-                fecha = new Date(fechaStr + 'T00:00:00');
-            }
-            // Si viene en formato DD/MM/YYYY
-            else if (fechaStr.includes('/')) {
-                const partes = fechaStr.split('/');
-                if (partes.length === 3) {
-                    fecha = new Date(partes[2], partes[1] - 1, partes[0]);
-                } else {
-                    fecha = new Date(fechaStr);
-                }
-            }
-            else {
-                fecha = new Date(fechaStr);
-            }
-        } else {
-            fecha = new Date(fechaStr);
+        // Si es un string con formato "YYYY-MM-DD HH:MM:SS"
+        if (typeof fechaStr === 'string' && fechaStr.includes(' ') && fechaStr.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/)) {
+            // Extraer directamente fecha y hora sin conversión de zona horaria
+            const partes = fechaStr.split(' ');
+            const fechaPartes = partes[0].split('-');
+            const horaPartes = partes[1].split(':');
+            
+            const dia = fechaPartes[2];
+            const mes = fechaPartes[1];
+            const anio = fechaPartes[0];
+            const horas = horaPartes[0];
+            const minutos = horaPartes[1];
+            
+            return `${dia}/${mes}/${anio} ${horas}:${minutos}`;
         }
         
-        // Verificar si la fecha es válida
+        // Si es "YYYY-MM-DD" (solo fecha)
+        if (typeof fechaStr === 'string' && fechaStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            const partes = fechaStr.split('-');
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+        
+        // Para otros formatos, usar Date pero sin convertir zona horaria
+        let fecha = new Date(fechaStr);
         if (isNaN(fecha.getTime())) {
             return String(fechaStr);
         }
         
-        // Formatear: 17/08/2026 08:10
+        // Si la hora es 00:00, mostrar solo fecha
+        if (fecha.getHours() === 0 && fecha.getMinutes() === 0) {
+            const dia = String(fecha.getDate()).padStart(2, '0');
+            const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+            const anio = fecha.getFullYear();
+            return `${dia}/${mes}/${anio}`;
+        }
+        
+        // Para fechas con hora, mostrar fecha y hora
         const dia = String(fecha.getDate()).padStart(2, '0');
         const mes = String(fecha.getMonth() + 1).padStart(2, '0');
         const anio = fecha.getFullYear();
         const horas = String(fecha.getHours()).padStart(2, '0');
         const minutos = String(fecha.getMinutes()).padStart(2, '0');
-        
-        // Si la hora es 00:00, mostrar solo la fecha (para guías antiguas)
-        if (horas === '00' && minutos === '00') {
-            return `${dia}/${mes}/${anio}`;
-        }
         
         return `${dia}/${mes}/${anio} ${horas}:${minutos}`;
         
