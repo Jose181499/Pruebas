@@ -2271,22 +2271,24 @@ def api_pedido_compra_guardar():
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
 @ventas_bp.route('/ventas/api/despachos/listar', methods=['GET'])
 @login_required
 def api_despachos_listar():
     try:
+        print("🚚 API DESPACHOS LISTAR - INICIO")
+        
         query = """
             SELECT 
-                id, numero, fecha, fecha_despacho, estado,
-                pc_id, pc_numero, cotizacion_id, cotizacion_numero,
-                cliente, ruc, comprobante, guia, origen, destino,
-                transportista, observaciones, responsable,
-                created_at, updated_at
-            FROM despachos
-            ORDER BY id DESC
+                d.id, d.numero, d.fecha, d.fecha_despacho, d.estado,
+                d.pc_id, d.pc_numero, d.cotizacion_id, d.cotizacion_numero,
+                d.cliente, d.ruc, d.comprobante, d.guia, d.origen, d.destino,
+                d.transportista, d.observaciones, d.responsable,
+                d.items_json, d.created_at, d.updated_at
+            FROM despachos d
+            ORDER BY d.id DESC
         """
         data = db_query(query)
+        print(f"📊 Despachos encontrados: {len(data) if data else 0}")
 
         # ============================================================
         # 🔽 BUSCAR GUÍAS Y FACTURAS VINCULADAS POR "cotizacion_numero"
@@ -2337,85 +2339,110 @@ def api_despachos_listar():
         # ============================================================
         formatted_data = []
         for row in data:
-            # Formatear fecha_despacho
-            fecha_despacho = row.get('fecha_despacho')
-            fecha_despacho_formateada = None
+            try:
+                # Formatear fecha_despacho
+                fecha_despacho = row.get('fecha_despacho')
+                fecha_despacho_formateada = None
 
-            if fecha_despacho:
-                try:
-                    from datetime import datetime
+                if fecha_despacho:
+                    try:
+                        from datetime import datetime
 
-                    if isinstance(fecha_despacho, str):
-                        if 'T' in fecha_despacho:
-                            dt = datetime.fromisoformat(fecha_despacho.replace('Z', '+00:00'))
-                            fecha_despacho_formateada = dt.strftime('%d/%m/%Y %H:%M')
-                        elif '-' in fecha_despacho and len(fecha_despacho) == 10:
-                            dt = datetime.strptime(fecha_despacho, '%Y-%m-%d')
-                            fecha_despacho_formateada = dt.strftime('%d/%m/%Y')
-                        elif '/' in fecha_despacho:
-                            fecha_despacho_formateada = fecha_despacho
+                        if isinstance(fecha_despacho, str):
+                            if 'T' in fecha_despacho:
+                                dt = datetime.fromisoformat(fecha_despacho.replace('Z', '+00:00'))
+                                fecha_despacho_formateada = dt.strftime('%d/%m/%Y %H:%M')
+                            elif '-' in fecha_despacho and len(fecha_despacho) == 10:
+                                dt = datetime.strptime(fecha_despacho, '%Y-%m-%d')
+                                fecha_despacho_formateada = dt.strftime('%d/%m/%Y')
+                            elif '/' in fecha_despacho:
+                                fecha_despacho_formateada = fecha_despacho
+                            else:
+                                fecha_despacho_formateada = fecha_despacho
+                        elif isinstance(fecha_despacho, datetime):
+                            fecha_despacho_formateada = fecha_despacho.strftime('%d/%m/%Y %H:%M')
                         else:
-                            fecha_despacho_formateada = fecha_despacho
-                    elif isinstance(fecha_despacho, datetime):
-                        fecha_despacho_formateada = fecha_despacho.strftime('%d/%m/%Y %H:%M')
-                    else:
+                            fecha_despacho_formateada = str(fecha_despacho)
+                    except Exception as e:
+                        print(f"⚠️ Error formateando fecha: {e}")
                         fecha_despacho_formateada = str(fecha_despacho)
-                except Exception as e:
-                    print(f"⚠️ Error formateando fecha: {e}")
-                    fecha_despacho_formateada = str(fecha_despacho)
 
-            created_at = row.get('created_at')
-            created_at_formateada = None
-            if created_at:
-                try:
-                    from datetime import datetime
-                    if isinstance(created_at, str) and 'T' in created_at:
-                        dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
-                        created_at_formateada = dt.strftime('%d/%m/%Y %H:%M')
-                    else:
+                created_at = row.get('created_at')
+                created_at_formateada = None
+                if created_at:
+                    try:
+                        from datetime import datetime
+                        if isinstance(created_at, str) and 'T' in created_at:
+                            dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                            created_at_formateada = dt.strftime('%d/%m/%Y %H:%M')
+                        else:
+                            created_at_formateada = str(created_at)
+                    except:
                         created_at_formateada = str(created_at)
-                except:
-                    created_at_formateada = str(created_at)
 
-            # 🔽 Resolver guía(s) y comprobante(s) vinculados por cotizacion_numero
-            cot_num = row.get('cotizacion_numero')
-            guias_vinculadas = guias_por_cotizacion.get(cot_num, [])
-            comprobantes_vinculados = comprobantes_por_cotizacion.get(cot_num, [])
+                # 🔽 Resolver guía(s) y comprobante(s) vinculados por cotizacion_numero
+                cot_num = row.get('cotizacion_numero')
+                guias_vinculadas = guias_por_cotizacion.get(cot_num, [])
+                comprobantes_vinculados = comprobantes_por_cotizacion.get(cot_num, [])
 
-            guia_display = ', '.join(guias_vinculadas) if guias_vinculadas else row.get('guia')
-            comprobante_display = ', '.join(comprobantes_vinculados) if comprobantes_vinculados else row.get('comprobante')
+                guia_display = ', '.join(guias_vinculadas) if guias_vinculadas else row.get('guia')
+                comprobante_display = ', '.join(comprobantes_vinculados) if comprobantes_vinculados else row.get('comprobante')
 
-            formatted_data.append({
-                'id': row.get('id'),
-                'numero': row.get('numero'),
-                'fecha': row.get('fecha'),
-                'fecha_despacho': fecha_despacho_formateada or row.get('fecha_despacho'),
-                'estado': row.get('estado'),
-                'pc_id': row.get('pc_id'),
-                'pc_numero': row.get('pc_numero'),
-                'cotizacion_id': row.get('cotizacion_id'),
-                'cotizacion_numero': row.get('cotizacion_numero'),
-                'cliente': row.get('cliente'),
-                'ruc': row.get('ruc'),
-                'comprobante': comprobante_display,
-                'guia': guia_display,
-                'origen': row.get('origen'),
-                'destino': row.get('destino'),
-                'transportista': row.get('transportista'),
-                'observaciones': row.get('observaciones'),
-                'responsable': row.get('responsable'),
-                'created_at': created_at_formateada,
-                'updated_at': row.get('updated_at')
-            })
+                # 🔽 Manejar items_json de forma segura
+                items = []
+                items_json_raw = row.get('items_json')
+                if items_json_raw:
+                    try:
+                        if isinstance(items_json_raw, str):
+                            items = json.loads(items_json_raw)
+                        elif isinstance(items_json_raw, (list, dict)):
+                            items = items_json_raw
+                        else:
+                            items = []
+                    except Exception as e:
+                        print(f"⚠️ Error parseando items_json: {e}")
+                        items = []
 
+                formatted_data.append({
+                    'id': row.get('id'),
+                    'numero': row.get('numero'),
+                    'fecha': row.get('fecha'),
+                    'fecha_despacho': fecha_despacho_formateada or row.get('fecha_despacho'),
+                    'estado': row.get('estado'),
+                    'pc_id': row.get('pc_id'),
+                    'pc_numero': row.get('pc_numero'),
+                    'cotizacion_id': row.get('cotizacion_id'),
+                    'cotizacion_numero': row.get('cotizacion_numero'),
+                    'cliente': row.get('cliente'),
+                    'ruc': row.get('ruc'),
+                    'comprobante': comprobante_display,
+                    'guia': guia_display,
+                    'origen': row.get('origen'),
+                    'destino': row.get('destino'),
+                    'transportista': row.get('transportista'),
+                    'observaciones': row.get('observaciones'),
+                    'responsable': row.get('responsable'),
+                    'items': items,  # ← Agregar items al objeto
+                    'created_at': created_at_formateada,
+                    'updated_at': row.get('updated_at')
+                })
+            except Exception as e:
+                print(f"❌ Error procesando fila de despacho: {e}")
+                import traceback
+                traceback.print_exc()
+                # Continuar con la siguiente fila en lugar de fallar todo
+                continue
+
+        print(f"✅ Despachos formateados: {len(formatted_data)}")
         return jsonify({'success': True, 'data': formatted_data})
+        
     except Exception as e:
         print(f"❌ Error en api_despachos_listar: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
+    
 @ventas_bp.route('/ventas/api/despachos/guardar', methods=['POST'])
 @login_required
 def api_despachos_guardar():
