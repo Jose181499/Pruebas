@@ -2775,7 +2775,7 @@ function toggleAllProductCheckboxesPc(checked) {
 // FUNCIONES DE GUARDADO PARA PC, DESPACHO, GUÍAS, ETC.
 // ============================================================
 
-async function savePedidoCompra(estado) {
+async function _savePedidoCompra(estado) {
     try {
         console.log('🔄 Guardando PC Pedido Compras...', { estado });
         
@@ -2859,7 +2859,24 @@ async function savePedidoCompra(estado) {
     }
 }
 
-async function saveDespacho(estado) {
+// Nueva función pública con confirmación - MISMO NOMBRE que usa el botón
+function savePedidoCompra(estado) {
+    const numero = document.getElementById('pcNumero')?.value || 'nuevo PC';
+    const cliente = document.getElementById('pcCliente')?.value || 'el cliente';
+    const estadoLabel = estado || 'PC conforme';
+
+    showConfirmModal(
+        '💾 ¿Guardar Pedido de Compra?',
+        `Vas a guardar el PC <b>${numero}</b> de <b>${cliente}</b> como <b>"${estadoLabel}"</b>.`,
+        '⚠️ Verifica que los datos y validaciones estén correctos antes de continuar.',
+        async function() {
+            await _savePedidoCompra(estado);
+        },
+        '💾 Sí, guardar'
+    );
+}
+
+async function _saveDespacho(estado) {
     try {
         const data = {
             id: editingId,
@@ -2896,8 +2913,24 @@ async function saveDespacho(estado) {
     }
 }
 
+function saveDespacho(estado) {
+    const numero = document.getElementById('despachoNumero')?.value || 'nuevo despacho';
+    const cliente = document.getElementById('despachoCliente')?.value || 'el cliente';
+    const estadoLabel = estado || 'Pendiente despacho';
+
+    showConfirmModal(
+        '🚚 ¿Guardar despacho?',
+        `Vas a guardar el despacho <b>${numero}</b> de <b>${cliente}</b> como <b>"${estadoLabel}"</b>.`,
+        '⚠️ Verifica destino, transportista y observaciones antes de continuar.',
+        async function() {
+            await _saveDespacho(estado);
+        },
+        '💾 Sí, guardar'
+    );
+}
+
 // Reemplazar la función saveGuia en ventas.js
-async function saveGuia(estado) {
+async function _saveGuia(estado) {
     try {
         console.log('🔄 Guardando guía...', { estado });
         
@@ -2963,9 +2996,25 @@ async function saveGuia(estado) {
     }
 }
 
+function saveGuia(estado) {
+    const numero = document.getElementById('guiaNumero')?.value || 'nueva guía';
+    const cliente = document.getElementById('guiaCliente')?.value || 'el cliente';
+    const estadoLabel = estado || 'Borrador';
+
+    showConfirmModal(
+        '📦 ¿Guardar guía de remisión?',
+        `Vas a guardar la guía <b>${numero}</b> de <b>${cliente}</b> como <b>"${estadoLabel}"</b>.`,
+        '⚠️ Revisa el destinatario, vehículo y productos antes de continuar.',
+        async function() {
+            await _saveGuia(estado);
+        },
+        '💾 Sí, guardar'
+    );
+}
+
 
 // Reemplazar la función saveComprobante en ventas.js
-async function saveComprobante(estado) {
+async function _saveComprobante(estado) {
     try {
         console.log('🔄 Guardando comprobante...', { estado });
         
@@ -3018,8 +3067,25 @@ async function saveComprobante(estado) {
     }
 }
 
+function saveComprobante(estado) {
+    const tipo = document.getElementById('compTipo')?.value || 'Comprobante';
+    const numero = document.getElementById('compNumero')?.value || 'nuevo';
+    const cliente = document.getElementById('compCliente')?.value || 'el cliente';
+    const estadoLabel = estado || 'Borrador';
 
-async function saveNotaCredito(estado) {
+    showConfirmModal(
+        `🧾 ¿Guardar ${tipo.toLowerCase()}?`,
+        `Vas a guardar el ${tipo.toLowerCase()} <b>${numero}</b> de <b>${cliente}</b> como <b>"${estadoLabel}"</b>.`,
+        '⚠️ Verifica el monto y la condición de pago antes de continuar.',
+        async function() {
+            await _saveComprobante(estado);
+        },
+        '💾 Sí, guardar'
+    );
+}
+
+
+async function _saveNotaCredito(estado) {
     try {
         const data = {
             id: editingId,
@@ -3053,7 +3119,23 @@ async function saveNotaCredito(estado) {
     }
 }
 
-async function saveDevolucion(estado) {
+function saveNotaCredito(estado) {
+    const numero = document.getElementById('notaNumero')?.value || 'nueva nota';
+    const cliente = document.getElementById('notaCliente')?.value || 'el cliente';
+    const estadoLabel = estado || 'Borrador';
+
+    showConfirmModal(
+        '📝 ¿Guardar nota de crédito?',
+        `Vas a guardar la nota de crédito <b>${numero}</b> de <b>${cliente}</b> como <b>"${estadoLabel}"</b>.`,
+        '⚠️ Verifica el comprobante asociado y el motivo antes de continuar.',
+        async function() {
+            await _saveNotaCredito(estado);
+        },
+        '💾 Sí, guardar'
+    );
+}
+
+async function _saveDevolucion(estado) {
     try {
         const data = {
             id: editingId,
@@ -3086,6 +3168,22 @@ async function saveDevolucion(estado) {
         console.error('❌ Error guardando devolución:', error);
         showToast('Error al guardar la devolución', 'error');
     }
+}
+
+function saveDevolucion(estado) {
+    const numero = document.getElementById('devNumero')?.value || 'nueva devolución';
+    const cliente = document.getElementById('devCliente')?.value || 'el cliente';
+    const estadoLabel = estado || 'Pendiente';
+
+    showConfirmModal(
+        '🔄 ¿Guardar devolución?',
+        `Vas a guardar la devolución <b>${numero}</b> de <b>${cliente}</b> como <b>"${estadoLabel}"</b>.`,
+        '⚠️ Verifica el motivo y el monto antes de continuar.',
+        async function() {
+            await _saveDevolucion(estado);
+        },
+        '💾 Sí, guardar'
+    );
 }
 
 // ============================================================
@@ -11386,6 +11484,18 @@ async function savePedidoCompraSAP(force) {
         };
         
         console.log('📦 Datos a enviar a la API:', pcData);
+
+        // 🔽 CONFIRMACIÓN ANTES DE ENVIAR
+        const confirmado = await new Promise(resolve => {
+            showConfirmModal(
+                '💾 ¿Guardar Pedido de Compra?',
+                `Vas a guardar el PC <b>${pcData.numero}</b> de <b>${pcData.cliente || 'el cliente'}</b> como <b>"${pcData.estado}"</b>.`,
+                '⚠️ Esta acción registrará el PC con las validaciones actuales.',
+                () => resolve(true),
+                '💾 Sí, guardar'
+            );
+        });
+        if (!confirmado) return;
         
         // ENVIAR A LA API
         showToast('⏳ Guardando PC...', 'info');
