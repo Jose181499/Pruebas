@@ -3825,73 +3825,91 @@ function openComprobanteModalWithData(id, cotizacion) {
         '<div style="padding:20px;text-align:center;color:#94A3B8;">No hay productos en esta cotización.</div>';
     
     formContainer.innerHTML = `
-        <div class="ficha-section">
-            <div class="ficha-section-title">🧾 Datos del comprobante <small>Precargado desde cotización ${cotizacion.numero_cotizacion}</small></div>
-            <div class="ficha-grid">
-                <div class="form-field col-4">
-                    <label>Cotización vinculada</label>
-                    <select id="compCotizacion">
-                        ${cotOptions}
-                    </select>
-                </div>
-                <div class="form-field col-3">
-                    <label>Tipo</label>
-                    <select id="compTipo">
-                        <option>Factura</option>
-                        <option>Boleta</option>
-                    </select>
-                </div>
-                <div class="form-field col-3">
-                    <label>Serie</label>
-                    <input id="compSerie" value="F001">
-                </div>
-                <div class="form-field col-3">
-                    <label>Número</label>
-                    <input id="compNumero" value="${String(Date.now()).slice(-8)}">
-                </div>
-                <div class="form-field col-3">
-                    <label>Estado</label>
-                    <select id="compEstado">
-                        ${options(ESTADOS_COMPROBANTE, 'Borrador')}
-                    </select>
-                </div>
-                <div class="form-field col-4">
-                    <label>Cliente</label>
-                    <input id="compCliente" value="${esc(cotizacion.cliente_razon_social || '')}">
-                </div>
-                <div class="form-field col-4">
-                    <label>RUC</label>
-                    <input id="compRuc" value="${esc(cotizacion.cliente_ruc || '')}">
-                </div>
-                <div class="form-field col-4">
-                    <label>Monto</label>
-                    <input id="compMonto" type="number" value="${cotizacion.total || 0}" step="0.01">
-                </div>
-                <div class="form-field col-4">
-                    <label>Condición de pago</label>
-                    <select id="compCondicion">
-                        <option ${cotizacion.condicion_pago === 'Contado' ? 'selected' : ''}>Contado</option>
-                        <option ${cotizacion.condicion_pago === 'Crédito 7 días' ? 'selected' : ''}>Crédito 7 días</option>
-                        <option ${cotizacion.condicion_pago === 'Crédito 15 días' ? 'selected' : ''}>Crédito 15 días</option>
-                        <option ${cotizacion.condicion_pago === 'Crédito 30 días' ? 'selected' : ''}>Crédito 30 días</option>
-                        <option ${cotizacion.condicion_pago === 'Crédito 45 días' ? 'selected' : ''}>Crédito 45 días</option>
-                        <option ${cotizacion.condicion_pago === 'Crédito 60 días' ? 'selected' : ''}>Crédito 60 días</option>
-                        <option ${cotizacion.condicion_pago === 'Crédito 90 días' ? 'selected' : ''}>Crédito 90 días</option>
-                    </select>
-                </div>
-                <div class="form-field col-12">
-                    <label>Observaciones</label>
-                    <textarea id="compObs" placeholder="Observaciones del comprobante">Generado desde cotización ${cotizacion.numero_cotizacion}</textarea>
-                </div>
+    <div class="ficha-section">
+        <div class="ficha-section-title">🧾 Documentos vinculados <small>Precargado desde cotización ${cotizacion.numero_cotizacion}</small></div>
+        <div class="ficha-grid">
+            <div class="form-field col-4">
+                <label>Cotización vinculada</label>
+                <select id="compCotizacion">
+                    ${cotOptions}
+                </select>
+            </div>
+            <div class="form-field col-4">
+                <label>Guía de Remisión vinculada</label>
+                <select id="compGuia" onchange="loadComprobanteFromGuia(this.value)">
+                    <option value="">-- Ninguna --</option>
+                    ${(guiasData || []).map(g => `<option value="${g.serie}-${g.numero}">${g.serie}-${g.numero} - ${g.cliente || 'Sin cliente'}</option>`).join('')}
+                </select>
+            </div>
+            <div class="form-field col-4">
+                <label>PC vinculado</label>
+                <select id="compPC" onchange="loadComprobanteFromPC(this.value)">
+                    <option value="">-- Ninguno --</option>
+                    ${(pedidosData || []).map(p => `<option value="${p.numero}">${p.numero} - ${p.cliente || 'Sin cliente'}</option>`).join('')}
+                </select>
             </div>
         </div>
-        <div class="ficha-section">
-            <div class="ficha-section-title">🧾 Productos</div>
-            <div id="compProducts">
-                ${productosHtml}
+    </div>
+    <div class="ficha-section">
+        <div class="ficha-grid">
+            <div class="form-field col-3">
+                <label>Tipo</label>
+                <select id="compTipo">
+                    <option>Factura</option>
+                    <option>Boleta</option>
+                </select>
+            </div>
+            <div class="form-field col-3">
+                <label>Serie</label>
+                <input id="compSerie" value="F001">
+            </div>
+            <div class="form-field col-3">
+                <label>Número</label>
+                <input id="compNumero" value="${String(Date.now()).slice(-8)}">
+            </div>
+            <div class="form-field col-3">
+                <label>Estado</label>
+                <select id="compEstado">
+                    ${options(ESTADOS_COMPROBANTE, 'Borrador')}
+                </select>
+            </div>
+            <div class="form-field col-4">
+                <label>Cliente</label>
+                <input id="compCliente" value="${esc(cotizacion.cliente_razon_social || '')}">
+            </div>
+            <div class="form-field col-4">
+                <label>RUC</label>
+                <input id="compRuc" value="${esc(cotizacion.cliente_ruc || '')}">
+            </div>
+            <div class="form-field col-4">
+                <label>Monto</label>
+                <input id="compMonto" type="number" value="${cotizacion.total || 0}" step="0.01">
+            </div>
+            <div class="form-field col-4">
+                <label>Condición de pago</label>
+                <select id="compCondicion">
+                    <option ${cotizacion.condicion_pago === 'Contado' ? 'selected' : ''}>Contado</option>
+                    <option ${cotizacion.condicion_pago === 'Crédito 7 días' ? 'selected' : ''}>Crédito 7 días</option>
+                    <option ${cotizacion.condicion_pago === 'Crédito 15 días' ? 'selected' : ''}>Crédito 15 días</option>
+                    <option ${cotizacion.condicion_pago === 'Crédito 30 días' ? 'selected' : ''}>Crédito 30 días</option>
+                    <option ${cotizacion.condicion_pago === 'Crédito 45 días' ? 'selected' : ''}>Crédito 45 días</option>
+                    <option ${cotizacion.condicion_pago === 'Crédito 60 días' ? 'selected' : ''}>Crédito 60 días</option>
+                    <option ${cotizacion.condicion_pago === 'Crédito 90 días' ? 'selected' : ''}>Crédito 90 días</option>
+                </select>
+            </div>
+            <div class="form-field col-12">
+                <label>Observaciones</label>
+                <textarea id="compObs" placeholder="Observaciones del comprobante">Generado desde cotización ${cotizacion.numero_cotizacion}</textarea>
             </div>
         </div>
-    `;
+    </div>
+    <div class="ficha-section">
+        <div class="ficha-section-title">🧾 Productos</div>
+        <div id="compProducts">
+            ${productosHtml}
+        </div>
+    </div>
+`;
     
     window._compProductos = productos;
     document.getElementById('comprobanteModal').classList.add('show');
@@ -4221,7 +4239,7 @@ window.loadComprobanteFromCotizacion = function(numeroCotizacion) {
                 document.getElementById('compCliente').value = data.cliente_razon_social || '';
                 document.getElementById('compRuc').value = data.cliente_ruc || '';
                 document.getElementById('compMonto').value = data.total || 0;
-                document.getElementById('compObs').value = `Generado desde cotización ${numeroCotizacion}`;
+                actualizarObservacionesComprobante();
 
                 // Condición de pago
                 const condSelect = document.getElementById('compCondicion');
@@ -4248,6 +4266,74 @@ window.loadComprobanteFromCotizacion = function(numeroCotizacion) {
             console.error('Error cargando cotización:', error);
             showToast('❌ Error al cargar datos de la cotización', 'error');
         });
+};
+
+// ============================================================
+// CONSTRUIR OBSERVACIONES A PARTIR DE LOS 3 DOCUMENTOS VINCULADOS
+// ============================================================
+function actualizarObservacionesComprobante() {
+    const cot = document.getElementById('compCotizacion')?.value || '';
+    const guia = document.getElementById('compGuia')?.value || '';
+    const pc = document.getElementById('compPC')?.value || '';
+
+    const partes = [];
+    if (cot) partes.push(`cotización ${cot}`);
+    if (guia) partes.push(`guía ${guia}`);
+    if (pc) partes.push(`PC ${pc}`);
+
+    const obsEl = document.getElementById('compObs');
+    if (obsEl && partes.length > 0) {
+        obsEl.value = `Generado desde ${partes.join(', ')}`;
+    }
+}
+
+// ============================================================
+// CARGAR DATOS DEL COMPROBANTE DESDE UNA GUÍA SELECCIONADA
+// ============================================================
+window.loadComprobanteFromGuia = function(valorSeleccionado) {
+    if (!valorSeleccionado) {
+        actualizarObservacionesComprobante();
+        return;
+    }
+
+    const guia = guiasData.find(g => `${g.serie}-${g.numero}` === valorSeleccionado);
+    if (!guia) {
+        showToast('⚠️ Guía no encontrada', 'warning');
+        return;
+    }
+
+    // Autocompletar cliente/RUC solo si están vacíos (para no pisar datos ya cargados)
+    const compCliente = document.getElementById('compCliente');
+    const compRuc = document.getElementById('compRuc');
+    if (compCliente && !compCliente.value.trim()) compCliente.value = guia.cliente || '';
+    if (compRuc && !compRuc.value.trim()) compRuc.value = guia.ruc || '';
+
+    actualizarObservacionesComprobante();
+    showToast(`✅ Guía ${guia.serie}-${guia.numero} vinculada`, 'success');
+};
+
+// ============================================================
+// CARGAR DATOS DEL COMPROBANTE DESDE UN PC SELECCIONADO
+// ============================================================
+window.loadComprobanteFromPC = function(numeroPC) {
+    if (!numeroPC) {
+        actualizarObservacionesComprobante();
+        return;
+    }
+
+    const pc = pedidosData.find(p => p.numero === numeroPC);
+    if (!pc) {
+        showToast('⚠️ PC no encontrado', 'warning');
+        return;
+    }
+
+    const compCliente = document.getElementById('compCliente');
+    const compRuc = document.getElementById('compRuc');
+    if (compCliente && !compCliente.value.trim()) compCliente.value = pc.cliente || '';
+    if (compRuc && !compRuc.value.trim()) compRuc.value = pc.ruc || '';
+
+    actualizarObservacionesComprobante();
+    showToast(`✅ PC ${pc.numero} vinculado`, 'success');
 };
 
 function validatePedidoCompra(id) {
@@ -7846,7 +7932,7 @@ function productTableHtml(productos) {
             <table class="master-table">
                 <thead><tr>
                     <th>Item</th><th>Código</th><th>Producto</th><th>Marca</th><th>UM SUNAT</th>
-                    <th>Cant.</th><th>Stock</th><th>Validación</th>
+                    <th>Cant.</th><th>Stock</th>
                 </tr></thead>
                 <tbody>
                     ${productos.map((p, i) => `
@@ -7858,7 +7944,6 @@ function productTableHtml(productos) {
                             <td>${p.um || 'NIU'}</td>
                             <td>${p.cantidad || 1}</td>
                             <td>${p.stock || 0}</td>
-                            <td>${(p.stock || 0) >= (p.cantidad || 1) ? '✅ OK stock' : '⚠️ Revisar stock'}</td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -8290,15 +8375,47 @@ function openComprobanteModal(id = null) {
     const cotOptions = cotizacionesData.map(q => 
         `<option value="${q.numero}">${q.numero} - ${q.razon || 'Sin cliente'}</option>`
     ).join('');
+
+    // 🔽 NUEVO: opciones de guías y PC disponibles
+    const guiaOptions = (guiasData || []).map(g => 
+        `<option value="${g.serie}-${g.numero}">${g.serie}-${g.numero} - ${g.cliente || 'Sin cliente'}</option>`
+    ).join('');
+
+    const pcOptions = (pedidosData || []).map(p => 
+        `<option value="${p.numero}">${p.numero} - ${p.cliente || 'Sin cliente'}</option>`
+    ).join('');
     
     formContainer.innerHTML = `
         <div class="ficha-section">
-            <div class="ficha-section-title">🧾 Datos del comprobante</div>
+            <div class="ficha-section-title">🧾 Documentos vinculados</div>
             <div class="ficha-grid">
                 <div class="form-field col-4">
                     <label>Cotización vinculada</label>
-                    <select id="compCotizacion" onchange="loadComprobanteFromCotizacion(this.value)" >${cotOptions || '<option value="">Sin cotización</option>'}</select>
+                    <select id="compCotizacion" onchange="loadComprobanteFromCotizacion(this.value)">
+                        <option value="">-- Ninguna --</option>
+                        ${cotOptions}
+                    </select>
                 </div>
+                <div class="form-field col-4">
+                    <label>Guía de Remisión vinculada</label>
+                    <select id="compGuia" onchange="loadComprobanteFromGuia(this.value)">
+                        <option value="">-- Ninguna --</option>
+                        ${guiaOptions || '<option value="" disabled>Sin guías disponibles</option>'}
+                    </select>
+                </div>
+                <div class="form-field col-4">
+                    <label>PC vinculado</label>
+                    <select id="compPC" onchange="loadComprobanteFromPC(this.value)">
+                        <option value="">-- Ninguno --</option>
+                        ${pcOptions || '<option value="" disabled>Sin PC disponibles</option>'}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="ficha-section">
+            <div class="ficha-section-title">🧾 Datos del comprobante</div>
+            <div class="ficha-grid">
                 <div class="form-field col-3">
                     <label>Tipo</label>
                     <select id="compTipo">
@@ -8357,33 +8474,6 @@ function openComprobanteModal(id = null) {
             </div>
         </div>
     `;
-    /* funcion rota - se deja por si se necesita luego
-    document.getElementById('compCotizacion')?.addEventListener('change', function() {
-        const num = this.value;
-        const q = cotizacionesData.find(x => x.numero === num);
-        if (q && q.productos && q.productos.length > 0) {
-            document.getElementById('compProducts').innerHTML = productTableHtml(q.productos);
-            document.getElementById('compCliente').value = q.razon || '';
-            document.getElementById('compRuc').value = q.ruc || '';
-            document.getElementById('compMonto').value = q.monto || 0;
-
-            // 🔧 NUEVO: condición de pago desde la cotización
-            const condSelect = document.getElementById('compCondicion');
-            const condicionCotizacion = q.condicion || q.condicion_pago || q.forma_pago;
-            if (condSelect && condicionCotizacion) {
-                const opciones = Array.from(condSelect.options).map(o => o.value);
-                if (opciones.includes(condicionCotizacion)) {
-                    condSelect.value = condicionCotizacion;
-                }
-            }
-        } else {
-            document.getElementById('compProducts').innerHTML = `
-                <div style="padding:20px;text-align:center;color:#94A3B8;">No hay productos en esta cotización.</div>
-            `;
-        }
-    });
-
-    */ 
     
     document.getElementById('comprobanteModal').classList.add('show');
     if (isEdit) {
@@ -12366,6 +12456,8 @@ window.openComprobanteModal = openComprobanteModal;
 window.openNotaCreditoModal = openNotaCreditoModal;
 window.openDevolucionModal = openDevolucionModal;
 window.cargarDatosComprobanteAfectado = cargarDatosComprobanteAfectado;
+window.loadComprobanteFromGuia = loadComprobanteFromGuia;
+window.loadComprobanteFromPC = loadComprobanteFromPC;
 
 // ============================================================
 // 6. FUNCIONES DE COTIZACIÓN
