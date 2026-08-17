@@ -2441,7 +2441,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    if (provSave) provSave.addEventListener('click', saveProveedor);
+    if (provSave) provSave.addEventListener('click', function() {
+    showConfirmModalMaestro('este proveedor', saveProveedor);
+    });
     if (provSunat) {
         provSunat.addEventListener('click', function() {
             const ruc = document.getElementById('prov_ruc').value.trim();
@@ -2476,7 +2478,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    if (almSave) almSave.addEventListener('click', saveAlmacen);
+    if (almSave) almSave.addEventListener('click', function() {
+    showConfirmModalMaestro('este almacén', saveAlmacen);
+    });
     if (almEstado) almEstado.addEventListener('change', syncAlmState);
 
     // 4. EVENTOS DEL MODAL GENÉRICO (masterModal)
@@ -2544,11 +2548,11 @@ document.addEventListener('DOMContentLoaded', function() {
         mmSave.addEventListener('click', function() {
             const title = document.getElementById('mmTitle')?.textContent || '';
             if (title.includes('categoría')) {
-                saveCategoria();
+                showConfirmModalMaestro('esta categoría', saveCategoria);
             } else if (title.includes('marca')) {
-                saveMarca();
+                showConfirmModalMaestro('esta marca', saveMarca);
             } else if (title.includes('unidad')) {
-                saveUm();
+                showConfirmModalMaestro('esta unidad de medida', saveUm);
             } else {
                 showToast('⚠️ No se pudo determinar el tipo de registro', 'warning');
             }

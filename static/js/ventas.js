@@ -3317,10 +3317,22 @@ async function marcarDespachado(id) {
                 // ============================================================
                 // CREAR GUÍA DE REMISIÓN CON LOS ITEMS
                 // ============================================================
+                // 🔽 CORRECCIÓN: Obtener fecha con hora ACTUAL correcta
                 const ahora = new Date();
+                
+                // Formatear fecha con hora para el campo fecha_emision
                 const year = ahora.getFullYear();
                 const month = String(ahora.getMonth() + 1).padStart(2, '0');
                 const day = String(ahora.getDate()).padStart(2, '0');
+                const hours = String(ahora.getHours()).padStart(2, '0');
+                const minutes = String(ahora.getMinutes()).padStart(2, '0');
+                const seconds = String(ahora.getSeconds()).padStart(2, '0');
+                
+                // Formato ISO completo con hora: 2026-08-17T14:30:00
+                const fechaHoraISO = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+                
+                // Solo fecha para fecha_traslado (mantener consistencia)
+                const fechaSolo = `${year}-${month}-${day}`;
                 
                 const numeroGuia = `G-${year}${month}${day}-${String(ahora.getTime()).slice(-4)}`;
                 
@@ -3335,7 +3347,9 @@ async function marcarDespachado(id) {
                     destino: despacho.destino || '',
                     motivo_traslado: 'VENTA',
                     observaciones: `Guía generada automáticamente desde despacho ${despacho.numero}`,
-                    fecha_traslado: `${year}-${month}-${day}`,
+                    // 🔽 CAMBIO PRINCIPAL: fecha con hora actual
+                    fecha_emision: fechaHoraISO,
+                    fecha_traslado: fechaSolo,  // Solo fecha para el traslado
                     // 🔽 USAR LOS ITEMS DEL DESPACHO
                     items: items.map(item => ({
                         codigo: item.codigo || '',
@@ -3348,7 +3362,8 @@ async function marcarDespachado(id) {
                     }))
                 };
                 
-                console.log('📦 Creando guía con items:', guiaData);
+                console.log('📦 Creando guía con fecha/hora:', guiaData.fecha_emision);
+                console.log('📦 Datos completos guía:', guiaData);
                 
                 const guiaResponse = await fetch('/ventas/api/guias/guardar', {
                     method: 'POST',
