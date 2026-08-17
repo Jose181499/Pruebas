@@ -1517,6 +1517,7 @@ function formatearFechaDespacho(fechaStr) {
 // FUNCIÓN PARA FORMATEAR FECHA DE GUÍA (CON HORA)
 // ============================================================
 
+
 function formatearFechaGuia(fechaStr) {
     if (!fechaStr) return '-';
     
@@ -1527,15 +1528,15 @@ function formatearFechaGuia(fechaStr) {
         if (fechaStr instanceof Date) {
             fecha = fechaStr;
         } else if (typeof fechaStr === 'string') {
-            // Si viene en formato RFC (Mon, 20 Jul 2026 00:00:00 GMT)
+            // Si viene en formato RFC (Fri, 12 Jun 2026 00:00:00 GMT)
             if (fechaStr.includes('GMT') || fechaStr.includes('UTC')) {
                 fecha = new Date(fechaStr);
             }
-            // Si viene en formato ISO
+            // Si viene en formato ISO (con T)
             else if (fechaStr.includes('T')) {
                 fecha = new Date(fechaStr);
             }
-            // Si viene en formato YYYY-MM-DD
+            // Si viene en formato YYYY-MM-DD (sin hora)
             else if (fechaStr.includes('-') && fechaStr.length === 10) {
                 fecha = new Date(fechaStr + 'T00:00:00');
             }
@@ -1547,10 +1548,6 @@ function formatearFechaGuia(fechaStr) {
                 } else {
                     fecha = new Date(fechaStr);
                 }
-            }
-            // Si viene con formato "Mon, 20 Jul 2026 00:00:00 GMT"
-            else if (fechaStr.match(/^[A-Za-z]{3}, \d{2} [A-Za-z]{3} \d{4}/)) {
-                fecha = new Date(fechaStr);
             }
             else {
                 fecha = new Date(fechaStr);
@@ -1571,7 +1568,7 @@ function formatearFechaGuia(fechaStr) {
         const horas = String(fecha.getHours()).padStart(2, '0');
         const minutos = String(fecha.getMinutes()).padStart(2, '0');
         
-        // Si la hora es 00:00, mostrar solo la fecha
+        // Si la hora es 00:00, mostrar solo la fecha (para evitar mostrar 19:00)
         if (horas === '00' && minutos === '00') {
             return `${dia}/${mes}/${anio}`;
         }

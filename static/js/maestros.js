@@ -2095,6 +2095,108 @@ function syncMasterState() {
 }
 
 // ============================================================
+// MODAL DE CONFIRMACIÓN GENÉRICO PARA MAESTROS (SIN "IRREVERSIBLE")
+// ============================================================
+function showConfirmModalMaestro(entidad, onConfirm) {
+    // Remover modales existentes
+    document.querySelectorAll('.confirm-modal-maestro-overlay').forEach(el => el.remove());
+
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-modal-maestro-overlay';
+    overlay.style.cssText = `
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        backdrop-filter: blur(6px);
+        z-index: 999999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeInMaestro 0.25s ease;
+    `;
+
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        background: #FFFFFF;
+        border-radius: 18px;
+        max-width: 440px;
+        width: 92%;
+        padding: 28px 26px 22px;
+        box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+        animation: modalSlideUpMaestro 0.25s ease;
+        text-align: center;
+    `;
+
+    modal.innerHTML = `
+        <div style="font-size: 42px; margin-bottom: 10px;">❓</div>
+        <h2 style="font-size: 19px; font-weight: 900; color: #0F172A; margin-bottom: 6px;">
+            ¿Estás seguro de guardar ${entidad}?
+        </h2>
+        <p style="font-size: 13.5px; color: #64748B; line-height: 1.4; margin-bottom: 22px;">
+            Revisa que los datos ingresados sean correctos antes de continuar.
+        </p>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <button class="cmm-cancel-btn" style="
+                padding: 10px 26px;
+                border-radius: 10px;
+                border: 1px solid #E5E7EB;
+                background: #FFFFFF;
+                color: #0F172A;
+                font-weight: 800;
+                font-size: 13px;
+                cursor: pointer;
+                transition: all 0.2s;
+            ">Cancelar</button>
+            <button class="cmm-accept-btn" style="
+                padding: 10px 26px;
+                border-radius: 10px;
+                border: none;
+                background: #16A34A;
+                color: #FFFFFF;
+                font-weight: 800;
+                font-size: 13px;
+                cursor: pointer;
+                transition: all 0.2s;
+                box-shadow: 0 4px 14px rgba(22,163,74,0.35);
+            ">✅ Sí, guardar</button>
+        </div>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    // Animaciones (solo se agregan una vez)
+    if (!document.getElementById('confirmModalMaestroStyles')) {
+        const style = document.createElement('style');
+        style.id = 'confirmModalMaestroStyles';
+        style.textContent = `
+            @keyframes fadeInMaestro {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes modalSlideUpMaestro {
+                from { opacity: 0; transform: translateY(20px) scale(0.96); }
+                to { opacity: 1; transform: translateY(0) scale(1); }
+            }
+            .cmm-cancel-btn:hover { background: #F1F5F9; }
+            .cmm-accept-btn:hover { background: #15803D; transform: translateY(-1px); }
+        `;
+        document.head.appendChild(style);
+    }
+
+    modal.querySelector('.cmm-cancel-btn').addEventListener('click', () => overlay.remove());
+
+    modal.querySelector('.cmm-accept-btn').addEventListener('click', () => {
+        overlay.remove();
+        if (typeof onConfirm === 'function') onConfirm();
+    });
+
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.remove();
+    });
+}
+
+// ============================================================
 // VER DETALLE (GENERICO)
 // ============================================================
 function openViewModal(modulo, id) {
@@ -2304,7 +2406,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    if (saveBtn) saveBtn.addEventListener('click', saveClient);
+    if (saveBtn) saveBtn.addEventListener('click', function() {
+    showConfirmModalMaestro('este cliente', saveClient);
+    });
     if (sunatBtn) sunatBtn.addEventListener('click', consultarSunat);
     if (addContactBtn) {
         addContactBtn.addEventListener('click', () => {

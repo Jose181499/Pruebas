@@ -1635,6 +1635,29 @@ def api_guias_guardar():
         }
         
         # ============================================================
+        # FUNCIÓN PARA COMBINAR FECHA CON HORA ACTUAL
+        # ============================================================
+        def combinar_fecha_hora(fecha_str):
+            """Combina una fecha YYYY-MM-DD con la hora actual"""
+            if not fecha_str:
+                return datetime.now().isoformat()
+            try:
+                # Si ya tiene hora (contiene T o espacio), devolverlo tal cual
+                if 'T' in fecha_str or ' ' in fecha_str:
+                    return fecha_str
+                # Si es solo fecha (YYYY-MM-DD), combinar con hora actual
+                ahora = datetime.now()
+                fecha = datetime.strptime(fecha_str, '%Y-%m-%d')
+                return fecha.replace(
+                    hour=ahora.hour, 
+                    minute=ahora.minute, 
+                    second=ahora.second,
+                    microsecond=ahora.microsecond
+                ).isoformat()
+            except:
+                return datetime.now().isoformat()
+        
+        # ============================================================
         # VALIDAR DATOS OBLIGATORIOS
         # ============================================================
         if not data:
@@ -1653,13 +1676,26 @@ def api_guias_guardar():
         print(f"📦 Items: {len(items_json)} productos")
         
         # ============================================================
+        # FECHAS CON HORA ACTUAL - AQUÍ ESTÁ EL CAMBIO PRINCIPAL
+        # ============================================================
+        ahora = datetime.now()
+        fecha_emision = ahora.isoformat()  # Guarda fecha con hora actual
+        
+        # Fecha de traslado: si viene del frontend, combinar con hora actual
+        fecha_traslado_raw = data.get('fecha_traslado') or date.today().isoformat()
+        fecha_traslado = combinar_fecha_hora(fecha_traslado_raw)
+        
+        print(f"📅 Fecha emisión: {fecha_emision}")
+        print(f"📅 Fecha traslado: {fecha_traslado}")
+        
+        # ============================================================
         # DATOS PARA LA GUÍA - CON ORIGEN FIJO
         # ============================================================
         guia_data = {
             'serie': data.get('serie', 'T001'),
             'numero': numero,
-            'fecha_emision': date.today().isoformat(),
-            'fecha_traslado': data.get('fecha_traslado') or date.today().isoformat(),
+            'fecha_emision': fecha_emision,  # ← AHORA CON HORA
+            'fecha_traslado': fecha_traslado,  # ← AHORA CON HORA
             # 🔽 ORIGEN FIJO
             'ruc_remitente': ORIGEN_FIJO['ruc'],
             'remitente_nombre': ORIGEN_FIJO['nombre'],
@@ -1762,6 +1798,7 @@ def api_guias_guardar():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @ventas_bp.route('/ventas/api/guias/<int:id>', methods=['GET'])
 @login_required
