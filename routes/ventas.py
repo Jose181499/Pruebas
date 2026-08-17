@@ -334,8 +334,27 @@ def obtener_guia_por_id_db(guia_id):
         return None
 
 def guardar_guia_db(data):
-    """Guarda una nueva guía"""
+    """Guarda una nueva guía con fecha y hora correcta"""
     try:
+        from datetime import datetime
+        
+        # Asegurar que fecha_emision tenga hora correcta
+        fecha_emision = data.get('fecha_emision')
+        if fecha_emision:
+            # Si viene sin hora (solo fecha), agregar hora actual
+            if isinstance(fecha_emision, str) and 'T' not in fecha_emision and ' ' not in fecha_emision:
+                ahora = datetime.now()
+                fecha_emision = f"{fecha_emision}T{ahora.strftime('%H:%M:%S')}"
+        else:
+            # Si no viene, usar ahora mismo
+            fecha_emision = datetime.now().isoformat()
+        
+        # Fecha traslado (puede ser solo fecha)
+        fecha_traslado = data.get('fecha_traslado') or datetime.now().date().isoformat()
+        
+        print(f"📅 Fecha emisión guardando: {fecha_emision}")
+        print(f"📅 Fecha traslado guardando: {fecha_traslado}")
+        
         query = """
             INSERT INTO guias_remision (
                 serie, numero, fecha_emision, fecha_traslado,
@@ -356,8 +375,8 @@ def guardar_guia_db(data):
         params = (
             data.get('serie', 'T001'),
             data.get('numero'),
-            data.get('fecha_emision') or datetime.now().date().isoformat(),
-            data.get('fecha_traslado'),
+            fecha_emision,  # ← CON HORA CORRECTA
+            fecha_traslado,
             data.get('ruc_remitente'),
             data.get('remitente_nombre'),
             data.get('remitente_direccion'),
@@ -386,6 +405,8 @@ def guardar_guia_db(data):
     except Exception as e:
         print(f"❌ Error en guardar_guia_db: {e}")
         raise
+
+
 
 def actualizar_guia_db(guia_id, data):
     """Actualiza una guía existente"""
@@ -1622,7 +1643,7 @@ def api_guias_guardar():
         print(f"  - Usuario ID: {usuario_id}")
         print("=" * 80)
         
-        from datetime import datetime, date
+        from datetime import datetime
         
         # ============================================================
         # ORIGEN FIJO - DATOS DEL REMITENTE
@@ -1635,40 +1656,37 @@ def api_guias_guardar():
         }
         
         # ============================================================
-        # FUNCIÓN PARA COMBINAR FECHA CON HORA ACTUAL
+        # OBTENER FECHA CON HORA CORRECTA
         # ============================================================
-        def combinar_fecha_hora(fecha_str):
-            """Combina una fecha YYYY-MM-DD con la hora actual"""
-            if not fecha_str:
-                return datetime.now().isoformat()
-            try:
-                # Si ya tiene hora (contiene T o espacio), devolverlo tal cual
-                if 'T' in fecha_str or ' ' in fecha_str:
-                    return fecha_str
-                # Si es solo fecha (YYYY-MM-DD), combinar con hora actual
-                ahora = datetime.now()
-                fecha = datetime.strptime(fecha_str, '%Y-%m-%d')
-                return fecha.replace(
-                    hour=ahora.hour, 
-                    minute=ahora.minute, 
-                    second=ahora.second,
-                    microsecond=ahora.microsecond
-                ).isoformat()
-            except:
-                return datetime.now().isoformat()
+        ahora = datetime.now()
+        
+        # Fecha de emisión: usar la que viene del frontend o la actual con hora
+        fecha_emision_raw = data.get('fecha_emision')
+        if fecha_emision_raw:
+            # Si viene sin hora (YYYY-MM-DD), agregar hora actual
+            if isinstance(fecha_emision_raw, str) and 'T' not in fecha_emision_raw and ' ' not in fecha_emision_raw:
+                fecha_emision = f"{fecha_emision_raw}T{ahora.strftime('%H:%M:%S')}"
+            else:
+                fecha_emision = fecha_emision_raw
+        else:
+            fecha_emision = ahora.isoformat()
+        
+        # Fecha de traslado: usar la que viene o la fecha actual
+        fecha_traslado = data.get('fecha_traslado') or ahora.date().isoformat()
+        
+        print(f"📅 Fecha emisión FINAL: {fecha_emision}")
+        print(f"📅 Fecha traslado FINAL: {fecha_traslado}")
         
         # ============================================================
         # VALIDAR DATOS OBLIGATORIOS
         # ============================================================
         if not data:
-            print("❌ No se recibieron datos")
             return jsonify({'success': False, 'error': 'No se recibieron datos'}), 400
         
         # Obtener número
         numero = data.get('numero')
         if not numero:
-            now = datetime.now()
-            numero = f"G-{now.strftime('%Y%m%d')}-{str(now.timestamp()).split('.')[0][-4:]}"
+            numero = f"G-{ahora.strftime('%Y%m%d')}-{str(ahora.timestamp()).split('.')[0][-4:]}"
             print(f"📋 Número generado: {numero}")
         
         # Obtener items
@@ -1676,32 +1694,17 @@ def api_guias_guardar():
         print(f"📦 Items: {len(items_json)} productos")
         
         # ============================================================
-        # FECHAS CON HORA ACTUAL - AQUÍ ESTÁ EL CAMBIO PRINCIPAL
-        # ============================================================
-        ahora = datetime.now()
-        fecha_emision = ahora.isoformat()  # Guarda fecha con hora actual
-        
-        # Fecha de traslado: si viene del frontend, combinar con hora actual
-        fecha_traslado_raw = data.get('fecha_traslado') or date.today().isoformat()
-        fecha_traslado = combinar_fecha_hora(fecha_traslado_raw)
-        
-        print(f"📅 Fecha emisión: {fecha_emision}")
-        print(f"📅 Fecha traslado: {fecha_traslado}")
-        
-        # ============================================================
-        # DATOS PARA LA GUÍA - CON ORIGEN FIJO
+        # DATOS PARA LA GUÍA
         # ============================================================
         guia_data = {
             'serie': data.get('serie', 'T001'),
             'numero': numero,
-            'fecha_emision': fecha_emision,  # ← AHORA CON HORA
-            'fecha_traslado': fecha_traslado,  # ← AHORA CON HORA
-            # 🔽 ORIGEN FIJO
+            'fecha_emision': fecha_emision,  # ← CON HORA
+            'fecha_traslado': fecha_traslado,
             'ruc_remitente': ORIGEN_FIJO['ruc'],
             'remitente_nombre': ORIGEN_FIJO['nombre'],
             'remitente_direccion': ORIGEN_FIJO['direccion'],
             'remitente_ubigeo': ORIGEN_FIJO['ubigeo'],
-            # 🔽 DESTINATARIO (del cliente)
             'ruc_destinatario': data.get('ruc') or data.get('ruc_destinatario') or '',
             'destinatario_nombre': data.get('cliente') or data.get('destinatario_nombre') or '',
             'destinatario_direccion': data.get('destino') or data.get('destinatario_direccion') or '',
@@ -1722,72 +1725,18 @@ def api_guias_guardar():
             'creado_por': usuario_id
         }
         
-        print(f"📦 Datos a guardar:")
-        for key, value in guia_data.items():
-            print(f"  - {key}: {value}")
-        
         # ============================================================
-        # INSERTAR GUÍA
+        # GUARDAR USANDO LA FUNCIÓN CORRECTA
         # ============================================================
-        query = """
-            INSERT INTO guias_remision (
-                serie, numero, fecha_emision, fecha_traslado,
-                ruc_remitente, remitente_nombre, remitente_direccion,
-                remitente_ubigeo, ruc_destinatario, destinatario_nombre,
-                destinatario_direccion, destinatario_ubigeo,
-                modalidad_transporte, placa_vehiculo, conductor_dni,
-                conductor_nombre, licencia_conductor, transportista_ruc,
-                transportista_nombre, motivo_traslado, documento_asociado,
-                peso_total, items_json, observaciones, estado_sunat,
-                creado_por
-            ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-            ) RETURNING id, numero
-        """
-        
-        params = (
-            guia_data['serie'],
-            guia_data['numero'],
-            guia_data['fecha_emision'],
-            guia_data['fecha_traslado'],
-            guia_data['ruc_remitente'],
-            guia_data['remitente_nombre'],
-            guia_data['remitente_direccion'],
-            guia_data['remitente_ubigeo'],
-            guia_data['ruc_destinatario'],
-            guia_data['destinatario_nombre'],
-            guia_data['destinatario_direccion'],
-            guia_data['destinatario_ubigeo'],
-            guia_data['modalidad_transporte'],
-            guia_data['placa_vehiculo'],
-            guia_data['conductor_dni'],
-            guia_data['conductor_nombre'],
-            guia_data['licencia_conductor'],
-            guia_data['transportista_ruc'],
-            guia_data['transportista_nombre'],
-            guia_data['motivo_traslado'],
-            guia_data['documento_asociado'],
-            guia_data['peso_total'],
-            guia_data['items_json'],
-            guia_data['observaciones'],
-            guia_data['estado_sunat'],
-            guia_data['creado_por']
-        )
-        
-        print(f"📝 Query: {query}")
-        print(f"📝 Parámetros: {params}")
-        
-        result = db_query(query, params)
-        print(f"✅ Resultado: {result}")
+        result = guardar_guia_db(guia_data)
         
         if result:
             return jsonify({
                 'success': True, 
                 'message': 'Guía creada correctamente', 
                 'data': {
-                    'id': result[0]['id'],
-                    'numero': result[0]['numero']
+                    'id': result['id'],
+                    'numero': result['numero']
                 }
             })
         
@@ -1798,7 +1747,6 @@ def api_guias_guardar():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 @ventas_bp.route('/ventas/api/guias/<int:id>', methods=['GET'])
 @login_required
