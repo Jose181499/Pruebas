@@ -1528,8 +1528,22 @@ function formatearFechaGuia(fechaStr) {
         if (fechaStr instanceof Date) {
             fecha = fechaStr;
         } else if (typeof fechaStr === 'string') {
+            // Si viene en formato "YYYY-MM-DD HH:MM:SS" (PostgreSQL timestamp)
+            if (fechaStr.includes(' ') && fechaStr.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/)) {
+                const partes = fechaStr.split(' ');
+                const fechaPartes = partes[0].split('-');
+                const horaPartes = partes[1].split(':');
+                fecha = new Date(
+                    parseInt(fechaPartes[0]),
+                    parseInt(fechaPartes[1]) - 1,
+                    parseInt(fechaPartes[2]),
+                    parseInt(horaPartes[0]),
+                    parseInt(horaPartes[1]),
+                    parseInt(horaPartes[2])
+                );
+            }
             // Si viene en formato ISO con T
-            if (fechaStr.includes('T')) {
+            else if (fechaStr.includes('T')) {
                 fecha = new Date(fechaStr);
             }
             // Si viene en formato YYYY-MM-DD (sin hora)
@@ -1545,10 +1559,6 @@ function formatearFechaGuia(fechaStr) {
                     fecha = new Date(fechaStr);
                 }
             }
-            // Si viene en formato "Mon, 20 Jul 2026 00:00:00 GMT"
-            else if (fechaStr.match(/^[A-Za-z]{3}, \d{2} [A-Za-z]{3} \d{4}/)) {
-                fecha = new Date(fechaStr);
-            }
             else {
                 fecha = new Date(fechaStr);
             }
@@ -1561,14 +1571,14 @@ function formatearFechaGuia(fechaStr) {
             return String(fechaStr);
         }
         
-        // Formatear: 20/07/2026 14:30
+        // Formatear: 17/08/2026 08:10
         const dia = String(fecha.getDate()).padStart(2, '0');
         const mes = String(fecha.getMonth() + 1).padStart(2, '0');
         const anio = fecha.getFullYear();
         const horas = String(fecha.getHours()).padStart(2, '0');
         const minutos = String(fecha.getMinutes()).padStart(2, '0');
         
-        // Si la hora es 00:00, mostrar solo la fecha
+        // Si la hora es 00:00, mostrar solo la fecha (para guías antiguas)
         if (horas === '00' && minutos === '00') {
             return `${dia}/${mes}/${anio}`;
         }
