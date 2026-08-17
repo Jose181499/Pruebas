@@ -2993,12 +2993,14 @@ async function saveComprobante(estado) {
             serie: document.getElementById('compSerie')?.value || 'F001',
             numero: document.getElementById('compNumero')?.value || String(Date.now()).slice(-8),
             cotizacion: document.getElementById('compCotizacion')?.value || '',
+            guia: document.getElementById('compGuia')?.value || '',        // 🆕
+            pc: document.getElementById('compPC')?.value || '',            // 🆕
             cliente: document.getElementById('compCliente')?.value || '',
             ruc: document.getElementById('compRuc')?.value || '',
             monto: montoTotal,
-            total: montoTotal,          // 🔧 NUEVO — esto es lo que lee el backend
-            subtotal: subtotalCalc,     // 🔧 NUEVO
-            igv: igvCalc,               // 🔧 NUEVO
+            total: montoTotal,
+            subtotal: subtotalCalc,
+            igv: igvCalc,
             condicion: document.getElementById('compCondicion')?.value || 'Contado',
             observaciones: document.getElementById('compObs')?.value || '',
             items: productos
@@ -3807,7 +3809,7 @@ function openGuiaModalWithData(id, cotizacion) {
 // ============================================================
 // FUNCIÓN PARA ABRIR MODAL DE COMPROBANTE CON DATOS PRECARGADOS
 // ============================================================
-function openComprobanteModalWithData(id, cotizacion) {
+async function openComprobanteModalWithData(id, cotizacion) {
     editingId = id;
     const isEdit = id !== null;
     const title = isEdit ? 'Editar comprobante' : 'Nuevo comprobante - desde cotización';
@@ -3815,10 +3817,19 @@ function openComprobanteModalWithData(id, cotizacion) {
     
     const formContainer = document.getElementById('comprobanteForm');
     if (!formContainer) return;
+
+    
+    if (!guiasData || guiasData.length === 0) {
+        await loadGuias();
+    }
+    if (!pedidosData || pedidosData.length === 0) {
+        await loadPedidos();
+    }
     
     const cotOptions = cotizacionesData.map(q => 
         `<option value="${q.numero}" ${q.numero === cotizacion.numero_cotizacion ? 'selected' : ''}>${q.numero} - ${q.razon || 'Sin cliente'}</option>`
     ).join('');
+    
     
     const productos = cotizacion.productos || [];
     const productosHtml = productos.length > 0 ? productTableHtml(productos) : 
@@ -8363,7 +8374,7 @@ async function cargarGuiaParaEditar(id) {
 }
 
 
-function openComprobanteModal(id = null) {
+async function openComprobanteModal(id = null) {
     editingId = id;
     const isEdit = id !== null;
     const title = isEdit ? 'Editar comprobante' : 'Nuevo comprobante';
@@ -8371,12 +8382,19 @@ function openComprobanteModal(id = null) {
     
     const formContainer = document.getElementById('comprobanteForm');
     if (!formContainer) return;
+
+    // 🆕 Asegurar que guías y PC estén cargados, sin importar desde qué pestaña vengas
+    if (!guiasData || guiasData.length === 0) {
+        await loadGuias();
+    }
+    if (!pedidosData || pedidosData.length === 0) {
+        await loadPedidos();
+    }
     
     const cotOptions = cotizacionesData.map(q => 
         `<option value="${q.numero}">${q.numero} - ${q.razon || 'Sin cliente'}</option>`
     ).join('');
 
-    // 🔽 NUEVO: opciones de guías y PC disponibles
     const guiaOptions = (guiasData || []).map(g => 
         `<option value="${g.serie}-${g.numero}">${g.serie}-${g.numero} - ${g.cliente || 'Sin cliente'}</option>`
     ).join('');
@@ -8384,6 +8402,7 @@ function openComprobanteModal(id = null) {
     const pcOptions = (pedidosData || []).map(p => 
         `<option value="${p.numero}">${p.numero} - ${p.cliente || 'Sin cliente'}</option>`
     ).join('');
+    
     
     formContainer.innerHTML = `
         <div class="ficha-section">
@@ -8520,6 +8539,9 @@ async function cargarComprobanteParaEditar(id) {
         };
 
         setSelectValue('compTipo', c.tipo_comprobante);
+        setSelectValue('compCotizacion', c.documento_asociado);   // 🆕
+        setSelectValue('compGuia', c.guia_vinculada);              // 🆕
+        setSelectValue('compPC', c.pc_vinculado);                  // 🆕
         setValue('compSerie', c.serie);
         setValue('compNumero', c.numero);
         setSelectValue('compEstado', c.estado_sunat);

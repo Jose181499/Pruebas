@@ -473,10 +473,11 @@ def guardar_comprobante_db(data):
                 cliente_nombre, cliente_direccion, cliente_email,
                 cliente_telefono, subtotal, igv, total,
                 items_json, observaciones, estado_sunat,
-                condicion_pago, documento_asociado, creado_por
+                condicion_pago, documento_asociado, guia_vinculada,
+                pc_vinculado, creado_por
             ) VALUES (
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s, %s, %s, %s, %s
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
             )
             RETURNING id, serie, numero
         """
@@ -500,6 +501,8 @@ def guardar_comprobante_db(data):
             data.get('estado_sunat', 'BORRADOR'),
             data.get('condicion_pago', 'Contado'),
             data.get('documento_asociado'),
+            data.get('guia_vinculada'),      # 🆕
+            data.get('pc_vinculado'),        # 🆕
             data.get('creado_por')
         )
         result = db_query(query, params)
@@ -535,7 +538,8 @@ def api_comprobantes_obtener(id):
                 cliente_nombre, cliente_direccion, cliente_email,
                 cliente_telefono, subtotal, igv, total,
                 items_json, observaciones, estado_sunat,
-                condicion_pago, sunat_response, cdr_response, creado_por,
+                condicion_pago, documento_asociado, guia_vinculada,
+                pc_vinculado, sunat_response, cdr_response, creado_por,
                 created_at, updated_at
             FROM comprobantes
             WHERE id = %s
@@ -1886,9 +1890,11 @@ def api_comprobantes_guardar():
             'observaciones': data.get('observaciones', ''),
             'estado_sunat': data.get('estado', 'BORRADOR'),
             'documento_asociado': data.get('cotizacion') or data.get('cotizacion_numero') or '',
+            'guia_vinculada': data.get('guia') or '',      # 🆕
+            'pc_vinculado': data.get('pc') or '',          # 🆕
             'creado_por': usuario_id
         }
-        
+
         if data.get('id'):
             # Actualizar
             query = """
@@ -1900,7 +1906,8 @@ def api_comprobantes_guardar():
                     cliente_email = %s, cliente_telefono = %s,
                     subtotal = %s, igv = %s, total = %s,
                     items_json = %s, observaciones = %s,
-                    estado_sunat = %s, documento_asociado = %s, updated_at = NOW()
+                    estado_sunat = %s, documento_asociado = %s,
+                    guia_vinculada = %s, pc_vinculado = %s, updated_at = NOW()
                 WHERE id = %s
                 RETURNING id, serie, numero
             """
@@ -1923,9 +1930,12 @@ def api_comprobantes_guardar():
                 comprobante_data['observaciones'],
                 comprobante_data['estado_sunat'],
                 comprobante_data['documento_asociado'],
+                comprobante_data['guia_vinculada'],     # 🆕
+                comprobante_data['pc_vinculado'],       # 🆕
                 data['id']
             )
             result = db_query(query, params)
+    
             if result:
                 return jsonify({'success': True, 'message': 'Comprobante actualizado', 'data': result[0]})
             return jsonify({'success': False, 'error': 'No se pudo actualizar'}), 400
