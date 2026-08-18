@@ -8510,32 +8510,47 @@ async function openComprobanteModal(id = null) {
     editingId = id;
     const isEdit = id !== null;
     const title = isEdit ? 'Editar comprobante' : 'Nuevo comprobante';
-    document.getElementById('comprobanteModalTitle').textContent = title;
+    
+    const titleEl = document.getElementById('comprobanteModalTitle');
+    if (titleEl) titleEl.textContent = title;
     
     const formContainer = document.getElementById('comprobanteForm');
-    if (!formContainer) return;
-
-    // 🆕 Asegurar que guías y PC estén cargados, sin importar desde qué pestaña vengas
-    if (!guiasData || guiasData.length === 0) {
-        await loadGuias();
-    }
-    if (!pedidosData || pedidosData.length === 0) {
-        await loadPedidos();
+    if (!formContainer) {
+        console.error('❌ #comprobanteForm no encontrado');
+        showToast('Error: Formulario de comprobante no disponible', 'error');
+        return;
     }
     
-    const cotOptions = cotizacionesData.map(q => 
+    // 🆕 Cargar datos necesarios con manejo de errores
+    try {
+        // Cargar guías y pedidos si no están cargados
+        if (!guiasData || guiasData.length === 0) {
+            console.log('🔄 Cargando guías para comprobante...');
+            await loadGuias();
+        }
+        if (!pedidosData || pedidosData.length === 0) {
+            console.log('🔄 Cargando pedidos para comprobante...');
+            await loadPedidos();
+        }
+    } catch (error) {
+        console.warn('⚠️ Error cargando datos para comprobante:', error);
+        // Continuar con datos vacíos
+    }
+    
+    // Opciones de cotizaciones
+    const cotOptions = (cotizacionesData || []).map(q => 
         `<option value="${q.numero}">${q.numero} - ${q.razon || 'Sin cliente'}</option>`
     ).join('');
-
+    
     const guiaOptions = (guiasData || []).map(g => 
         `<option value="${g.serie}-${g.numero}">${g.serie}-${g.numero} - ${g.cliente || 'Sin cliente'}</option>`
     ).join('');
-
+    
     const pcOptions = (pedidosData || []).map(p => 
         `<option value="${p.numero}">${p.numero} - ${p.cliente || 'Sin cliente'}</option>`
     ).join('');
     
-    
+    // Renderizar el formulario
     formContainer.innerHTML = `
         <div class="ficha-section">
             <div class="ficha-section-title">🧾 Documentos vinculados</div>
@@ -8544,7 +8559,7 @@ async function openComprobanteModal(id = null) {
                     <label>Cotización vinculada</label>
                     <select id="compCotizacion" onchange="loadComprobanteFromCotizacion(this.value)">
                         <option value="">-- Ninguna --</option>
-                        ${cotOptions}
+                        ${cotOptions || '<option value="" disabled>Sin cotizaciones</option>'}
                     </select>
                 </div>
                 <div class="form-field col-4">
@@ -8626,9 +8641,19 @@ async function openComprobanteModal(id = null) {
         </div>
     `;
     
-    document.getElementById('comprobanteModal').classList.add('show');
+    // Mostrar el modal
+    const modal = document.getElementById('comprobanteModal');
+    if (modal) {
+        modal.classList.add('show');
+    } else {
+        console.error('❌ #comprobanteModal no encontrado');
+        showToast('Error: Modal de comprobante no disponible', 'error');
+        return;
+    }
+    
+    // Si es edición, cargar datos
     if (isEdit) {
-        setTimeout(() => cargarComprobanteParaEditar(id), 50);
+        setTimeout(() => cargarComprobanteParaEditar(id), 100);
     }
 }
 
