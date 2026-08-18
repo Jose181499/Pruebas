@@ -12789,4 +12789,180 @@ window.options = options;
 window.today = today;
 window.now = now;
 
+
+// ============================================================
+// FIX: SOBRESCRIBIR openComprobanteModal para asegurar que funcione
+// ============================================================
+window.openComprobanteModal = function(id = null) {
+    console.log('📋 Abriendo modal de comprobante/factura', { id });
+    editingId = id;
+    const isEdit = id !== null;
+    
+    // Establecer título
+    const titleEl = document.getElementById('comprobanteModalTitle');
+    if (titleEl) {
+        titleEl.textContent = isEdit ? '✏️ Editar comprobante' : '🧾 Nueva factura / boleta';
+    }
+    
+    // Verificar que el modal existe
+    const modal = document.getElementById('comprobanteModal');
+    if (!modal) {
+        console.error('❌ #comprobanteModal no encontrado');
+        showToast('Error: Modal de comprobante no disponible', 'error');
+        return;
+    }
+    
+    // Verificar que el formulario existe
+    const formContainer = document.getElementById('comprobanteForm');
+    if (!formContainer) {
+        console.error('❌ #comprobanteForm no encontrado');
+        showToast('Error: Formulario de comprobante no disponible', 'error');
+        return;
+    }
+    
+    // ============================================================
+    // CARGAR DATOS NECESARIOS
+    // ============================================================
+    Promise.all([
+        cotizacionesData.length === 0 ? loadCotizaciones() : Promise.resolve(),
+        guiasData.length === 0 ? loadGuias() : Promise.resolve(),
+        pedidosData.length === 0 ? loadPedidos() : Promise.resolve()
+    ]).then(() => {
+        // ============================================================
+        // GENERAR OPCIONES PARA SELECTS
+        // ============================================================
+        const cotOptions = (cotizacionesData || []).map(q => 
+            `<option value="${q.numero}">${q.numero} - ${q.razon || 'Sin cliente'}</option>`
+        ).join('');
+        
+        const guiaOptions = (guiasData || []).map(g => {
+            const valor = `${g.serie}-${g.numero}`;
+            return `<option value="${valor}">${valor} - ${g.cliente || 'Sin cliente'}</option>`;
+        }).join('');
+        
+        const pcOptions = (pedidosData || []).map(p => 
+            `<option value="${p.numero}">${p.numero} - ${p.cliente || 'Sin cliente'}</option>`
+        ).join('');
+        
+        // ============================================================
+        // RENDERIZAR FORMULARIO
+        // ============================================================
+        formContainer.innerHTML = `
+            <div class="ficha-section">
+                <div class="ficha-section-title">🧾 Documentos vinculados</div>
+                <div class="ficha-grid">
+                    <div class="form-field col-4">
+                        <label>Cotización vinculada</label>
+                        <select id="compCotizacion" onchange="actualizarObservacionesComprobante()">
+                            <option value="">-- Ninguna --</option>
+                            ${cotOptions}
+                        </select>
+                    </div>
+                    <div class="form-field col-4">
+                        <label>Guía de Remisión vinculada</label>
+                        <select id="compGuia" onchange="loadComprobanteFromGuia(this.value)">
+                            <option value="">-- Ninguna --</option>
+                            ${guiaOptions}
+                        </select>
+                    </div>
+                    <div class="form-field col-4">
+                        <label>PC vinculado</label>
+                        <select id="compPC" onchange="loadComprobanteFromPC(this.value)">
+                            <option value="">-- Ninguno --</option>
+                            ${pcOptions}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="ficha-section">
+                <div class="ficha-grid">
+                    <div class="form-field col-3">
+                        <label>Tipo <span style="color:#DC2626;">*</span></label>
+                        <select id="compTipo">
+                            <option value="Factura" selected>Factura</option>
+                            <option value="Boleta">Boleta</option>
+                        </select>
+                    </div>
+                    <div class="form-field col-3">
+                        <label>Serie <span style="color:#DC2626;">*</span></label>
+                        <input id="compSerie" value="F001" style="border-left:3px solid #DC2626;">
+                    </div>
+                    <div class="form-field col-3">
+                        <label>Número <span style="color:#DC2626;">*</span></label>
+                        <input id="compNumero" value="${String(Date.now()).slice(-8)}" style="border-left:3px solid #DC2626;">
+                    </div>
+                    <div class="form-field col-3">
+                        <label>Estado</label>
+                        <select id="compEstado">
+                            ${ESTADOS_COMPROBANTE.map(e => `<option value="${e}" ${e === 'Borrador' ? 'selected' : ''}>${e}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="form-field col-4">
+                        <label>Cliente <span style="color:#DC2626;">*</span></label>
+                        <input id="compCliente" placeholder="Razón social" style="border-left:3px solid #DC2626;">
+                    </div>
+                    <div class="form-field col-4">
+                        <label>RUC <span style="color:#DC2626;">*</span></label>
+                        <input id="compRuc" placeholder="12345678901" style="border-left:3px solid #DC2626;">
+                    </div>
+                    <div class="form-field col-4">
+                        <label>Monto <span style="color:#DC2626;">*</span></label>
+                        <input id="compMonto" type="number" value="0" step="0.01" style="border-left:3px solid #DC2626;">
+                    </div>
+                    <div class="form-field col-4">
+                        <label>Condición de pago</label>
+                        <select id="compCondicion">
+                            <option value="Contado" selected>Contado</option>
+                            <option value="Crédito 7 días">Crédito 7 días</option>
+                            <option value="Crédito 15 días">Crédito 15 días</option>
+                            <option value="Crédito 30 días">Crédito 30 días</option>
+                            <option value="Crédito 45 días">Crédito 45 días</option>
+                            <option value="Crédito 60 días">Crédito 60 días</option>
+                            <option value="Crédito 90 días">Crédito 90 días</option>
+                            <option value="Crédito 120 días">Crédito 120 días</option>
+                        </select>
+                    </div>
+                    <div class="form-field col-12">
+                        <label>Observaciones</label>
+                        <textarea id="compObs" placeholder="Observaciones del comprobante" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="ficha-section">
+                <div class="ficha-section-title">📦 Productos</div>
+                <div id="compProducts">
+                    <div style="padding:20px;text-align:center;color:#94A3B8;">
+                        Seleccione una cotización para cargar los productos.
+                    </div>
+                </div>
+                <div style="padding:10px;text-align:right;">
+                    <button class="btn btn-soft" onclick="showToast('📋 Abriendo selector de productos...', 'info')" style="height:28px;padding:0 14px;font-size:11px;border-radius:6px;background:#F1F5F9;color:#0F172A;border:1px solid #E5E7EB;font-weight:800;cursor:pointer;">
+                        📋 Agregar productos
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // ============================================================
+        // SI ES EDICIÓN, CARGAR DATOS
+        // ============================================================
+        if (isEdit) {
+            setTimeout(() => cargarComprobanteParaEditar(id), 200);
+        }
+        
+        // ============================================================
+        // MOSTRAR MODAL
+        // ============================================================
+        modal.classList.add('show');
+        console.log('✅ Modal de comprobante abierto correctamente');
+        showToast('📋 Complete los datos del comprobante', 'info');
+        
+    }).catch(error => {
+        console.error('❌ Error cargando datos:', error);
+        showToast('❌ Error al cargar datos: ' + error.message, 'error');
+    });
+};
+
 console.log('✅ Todas las funciones exportadas al window correctamente');
