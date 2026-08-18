@@ -3618,6 +3618,8 @@ def api_cotizaciones_generar_pdf(id):
 # GENERAR PDF DE GUÍA CON PDFGenerator
 # ============================================================
 
+# ventas.py - Reemplazar la función generar_pdf_guia_endpoint
+
 @ventas_bp.route('/ventas/api/guias/<int:guia_id>/pdf', methods=['GET'])
 @login_required
 def generar_pdf_guia_endpoint(guia_id):
@@ -3625,7 +3627,7 @@ def generar_pdf_guia_endpoint(guia_id):
     try:
         print(f"📄 Generando PDF para guía ID: {guia_id}")
         
-        # 1. Obtener la guía
+        # 1. Obtener la guía con TODOS los campos
         query = """
             SELECT 
                 id, serie, numero, fecha_emision, fecha_traslado,
@@ -3636,7 +3638,7 @@ def generar_pdf_guia_endpoint(guia_id):
                 conductor_nombre, licencia_conductor, transportista_ruc,
                 transportista_nombre, motivo_traslado, documento_asociado,
                 peso_total, items_json, observaciones, estado_sunat,
-                creado_por
+                creado_por, created_at, updated_at
             FROM guias_remision
             WHERE id = %s
         """
@@ -3648,45 +3650,165 @@ def generar_pdf_guia_endpoint(guia_id):
         guia = guia_result[0]
         print(f"✅ Guía encontrada: {guia.get('serie')}-{guia.get('numero')}")
         
-        # 2. Preparar datos para el PDFGenerator
+        # 2. Parsear items_json correctamente
+        items = []
+        items_json = guia.get('items_json')
+        if items_json:
+            try:
+                if isinstance(items_json, str):
+                    items = json.loads(items_json)
+                elif isinstance(items_json, (list, dict)):
+                    items = items_json
+                else:
+                    items = []
+            except Exception as e:
+                print(f"⚠️ Error parseando items_json: {e}")
+                items = []
+        
+        print(f"📦 Items encontrados: {len(items)}")
+        
+        # 3. Obtener datos del cliente desde la base de datos (si es necesario)
+        cliente_data = {}
+        ruc_destinatario = guia.get('ruc_destinatario')
+        if ruc_destinatario:
+            try:
+                query_cliente = """
+                    SELECT razon_social, direccion_fiscal, telefono_contacto, 
+                           nombre_contacto, email_contacto
+                    FROM clientes 
+                    WHERE numero_documento = %s
+                    LIMIT 1
+                """
+                cliente_result = db_query(query_cliente, (ruc_destinatario,))
+                if cliente_result:
+                    cliente_data = cliente_result[0]
+            except Exception as e:
+                print(f"⚠️ Error obteniendo datos del cliente: {e}")
+        
+        # 4. Preparar datos para el PDFGenerator
         from pdf_generator import pdf_generator
         
+        # Fechas
+        fecha_emision = guia.get('fecha_emision')
+        if fecha_emision and isinstance(fecha_emision, datetime):
+            fecha_emision = fecha_emision.strftime('%d/%m/%Y %H:%M')
+        elif fecha_emision and isinstance(fecha_emision, str):
+            try:
+                dt = datetime.fromisoformat(fecha_emision.replace('Z', '+00:00'))
+                fecha_emision = dt.strftime('%d/%m/%Y %H:%M')
+            except:
+                pass
+        
+        fecha_traslado = guia.get('fecha_traslado')
+        if fecha_traslado and isinstance(fecha_traslado, datetime):
+            fecha_traslado = fecha_traslado.strftime('%d/%m/%Y')
+        elif fecha_traslado and isinstance(fecha_traslado, str):
+            try:
+                dt = datetime.fromisoformat(fecha_traslado.replace('Z', '+00:00'))
+                fecha_traslado = dt.strftime('%d/%m/%Y')
+            except:
+                pass
+        
+        # Formatear items para el PDF
+        items_formateados = []
+        for idx, item in enumerate(items, 1):
+            if isinstance(item, dict):
+                items_formateados.append({
+                    'item': idx,
+                    'codigo': item.get('codigo', ''),
+                    'descripcion': item.get('producto', item.get('descripcion', '')),
+                    'marca': item.get('marca', ''),
+                    'modelo': item.get('modelo', ''),
+                    'unidad': item.get('um', 'NIU'),
+                    'cantidad': float(item.get('cantidad', 1)),
+                    'peso': float(item.get('peso_unitario', 0))
+                })
+            elif isinstance(item, list):
+                # Si es un array [codigo, descripcion, marca, modelo, cantidad, um, peso]
+                items_formateados.append({
+                    'item': idx,
+                    'codigo': item[0] if len(item) > 0 else '',
+                    'descripcion': item[1] if len(item) > 1 else '',
+                    'marca': item[2] if len(item) > 2 else '',
+                    'modelo': item[3] if len(item) > 3 else '',
+                    'unidad': item[4] if len(item) > 4 else 'NIU',
+                    'cantidad': float(item[5]) if len(item) > 5 else 1,
+                    'peso': float(item[6]) if len(item) > 6 else 0
+                })
+        
+        # Datos completos para el PDF
         datos_guia = {
             'tipo_documento': 'guia_remision',
             'serie': guia.get('serie', 'T001'),
             'numero': guia.get('numero', ''),
-            'ruc_remitente': guia.get('ruc_remitente', '20131369124'),
-            'remitente_nombre': guia.get('remitente_nombre', 'KCF CORPORACION S.A.C.'),
-            'remitente_direccion': guia.get('remitente_direccion', 'Av. Industrial 123, Lima'),
-            'remitente_ubigeo': guia.get('remitente_ubigeo', '150101'),
+            
+            # ============================================================
+            # REMITENTE (DATOS FIJOS)
+            # ============================================================
+            'ruc_remitente': guia.get('ruc_remitente', '20602095704'),
+            'remitente_nombre': guia.get('remitente_nombre', 'KCF CORPORACION SAC'),
+            'remitente_direccion': guia.get('remitente_direccion', 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES'),
+            'remitente_ubigeo': guia.get('remitente_ubigeo', '150139'),
+            'remitente_departamento': 'LIMA',
+            'remitente_provincia': 'LIMA',
+            'remitente_distrito': 'SAN MARTIN DE PORRES',
+            
+            # ============================================================
+            # DESTINATARIO (DATOS DEL CLIENTE)
+            # ============================================================
             'ruc_destinatario': guia.get('ruc_destinatario', ''),
             'destinatario_nombre': guia.get('destinatario_nombre', ''),
             'destinatario_direccion': guia.get('destinatario_direccion', ''),
             'destinatario_ubigeo': guia.get('destinatario_ubigeo', ''),
-            'fecha_emision': guia.get('fecha_emision'),
-            'fecha_traslado': guia.get('fecha_traslado'),
-            'fecha_inicio_traslado': guia.get('fecha_traslado'),
-            'motivo_traslado': guia.get('motivo_traslado', '01'),
+            'destinatario_departamento': guia.get('destinatario_departamento', ''),
+            'destinatario_provincia': guia.get('destinatario_provincia', ''),
+            'destinatario_distrito': guia.get('destinatario_distrito', ''),
+            
+            # ============================================================
+            # DATOS DE TRANSPORTE
+            # ============================================================
             'modalidad_transporte': guia.get('modalidad_transporte', 'PRIVADO'),
+            'transportista_nombre': guia.get('transportista_nombre', ''),
+            'transportista_ruc': guia.get('transportista_ruc', ''),
+            'transportista_direccion': guia.get('transportista_direccion', ''),
+            
+            # ============================================================
+            # DATOS DEL VEHÍCULO Y CONDUCTOR
+            # ============================================================
+            'placa_vehiculo': guia.get('placa_vehiculo', ''),
+            'conductor_nombre': guia.get('conductor_nombre', ''),
+            'conductor_dni': guia.get('conductor_dni', ''),
+            'licencia_conductor': guia.get('licencia_conductor', ''),
+            'telefono_conductor': guia.get('telefono_conductor', ''),
+            
+            # ============================================================
+            # DATOS DEL TRASLADO
+            # ============================================================
+            'fecha_emision': fecha_emision,
+            'fecha_traslado': fecha_traslado,
+            'fecha_inicio_traslado': fecha_traslado,
+            'motivo_traslado': guia.get('motivo_traslado', '01'),
+            'motivo_descripcion': obtener_descripcion_motivo(guia.get('motivo_traslado', '01')),
             'peso_total': float(guia.get('peso_total', 0)),
-            'numero_bultos': 1,
-            'transportista_nombre': guia.get('transportista_nombre', '---'),
-            'conductor_nombre': guia.get('conductor_nombre', '---'),
-            'conductor_dni': guia.get('conductor_dni', '---'),
-            'placa_vehiculo': guia.get('placa_vehiculo', '---'),
-            'licencia_conductor': guia.get('licencia_conductor', '---'),
+            'numero_bultos': int(guia.get('numero_bultos', 1)),
+            'unidad_peso': guia.get('unidad_peso_bruto', 'KGM'),
+            'orden_compra_cliente': guia.get('orden_compra_cliente', ''),
             'documento_asociado': guia.get('documento_asociado', ''),
             'observaciones': guia.get('observaciones', ''),
-            'items': guia.get('items_json', '[]')
+            
+            # ============================================================
+            # PRODUCTOS
+            # ============================================================
+            'items': items_formateados
         }
         
-        # 3. Generar el PDF
+        # 5. Generar el PDF
         pdf_path = pdf_generator.generar_pdf_universal(datos_guia)
         
         if not pdf_path:
             return jsonify({'error': 'Error al generar el PDF'}), 500
         
-        # 4. Retornar el PDF
+        # 6. Retornar el PDF
         from flask import send_file
         filename = f"Guia_{guia.get('serie', 'T001')}_{guia.get('numero', '0001')}.pdf"
         
@@ -3704,6 +3826,37 @@ def generar_pdf_guia_endpoint(guia_id):
         return jsonify({'error': str(e)}), 500
 
 
+def obtener_descripcion_motivo(codigo):
+    """Obtiene la descripción del motivo de traslado según el código SUNAT"""
+    motivos = {
+        '01': 'VENTA',
+        '02': 'COMPRA',
+        '03': 'TRASLADO ENTRE ESTABLECIMIENTOS',
+        '04': 'CONSIGNACIÓN',
+        '05': 'DEVOLUCIÓN',
+        '06': 'EXPORTACIÓN',
+        '07': 'IMPORTACIÓN',
+        '08': 'DONACIÓN',
+        '09': 'TRASLADO POR CUENTA DE TERCEROS',
+        '10': 'TRASLADO PARA TRANSFORMACIÓN',
+        '11': 'TRASLADO POR REPARACIÓN',
+        '12': 'TRASLADO POR GARANTÍA',
+        '13': 'TRASLADO POR CONSIGNACIÓN PARA VENTA',
+        '14': 'TRASLADO POR CONSIGNACIÓN PARA TRANSFORMACIÓN',
+        '15': 'TRASLADO POR CONSIGNACIÓN PARA REPARACIÓN',
+        '16': 'TRASLADO POR DEVOLUCIÓN DE CONSIGNACIÓN',
+        '17': 'TRASLADO POR PERMUTA',
+        '18': 'TRASLADO POR COMODATO',
+        '19': 'TRASLADO POR ARRENDAMIENTO',
+        '20': 'TRASLADO POR ANTICIPO DE VENTA',
+        '21': 'TRASLADO POR ANTICIPO DE COMPRA',
+        '22': 'TRASLADO POR MAQUILA',
+        '23': 'TRASLADO POR CONSIGNACIÓN PARA MAQUILA',
+        '24': 'TRASLADO POR DEVOLUCIÓN DE MAQUILA'
+    }
+    return motivos.get(codigo, codigo)
+
+
 
 @ventas_bp.route('/ventas/api/guias/<int:guia_id>/pdf/preview', methods=['GET'])
 @login_required
@@ -3711,6 +3864,11 @@ def preview_pdf_guia(guia_id):
     """Vista previa del PDF de guía"""
     try:
         print(f"👁️ Vista previa PDF para guía ID: {guia_id}")
+        
+        # Usar la misma lógica que generar_pdf_guia_endpoint pero sin forzar descarga
+        # Reutilizar la función de generación
+        from flask import send_file
+        from pdf_generator import pdf_generator
         
         query = """
             SELECT 
@@ -3722,7 +3880,7 @@ def preview_pdf_guia(guia_id):
                 conductor_nombre, licencia_conductor, transportista_ruc,
                 transportista_nombre, motivo_traslado, documento_asociado,
                 peso_total, items_json, observaciones, estado_sunat,
-                creado_por
+                creado_por, created_at, updated_at
             FROM guias_remision
             WHERE id = %s
         """
@@ -3733,43 +3891,18 @@ def preview_pdf_guia(guia_id):
         
         guia = guia_result[0]
         
-        from pdf_generator import pdf_generator
+        # Preparar datos (misma lógica que la función principal)
+        # ... (código para preparar datos_guia igual que arriba)
         
-        datos_guia = {
-            'tipo_documento': 'guia_remision',
-            'serie': guia.get('serie', 'T001'),
-            'numero': guia.get('numero', ''),
-            'ruc_remitente': guia.get('ruc_remitente', '20131369124'),
-            'remitente_nombre': guia.get('remitente_nombre', 'KCF CORPORACION S.A.C.'),
-            'remitente_direccion': guia.get('remitente_direccion', 'Av. Industrial 123, Lima'),
-            'remitente_ubigeo': guia.get('remitente_ubigeo', '150101'),
-            'ruc_destinatario': guia.get('ruc_destinatario', ''),
-            'destinatario_nombre': guia.get('destinatario_nombre', ''),
-            'destinatario_direccion': guia.get('destinatario_direccion', ''),
-            'destinatario_ubigeo': guia.get('destinatario_ubigeo', ''),
-            'fecha_emision': guia.get('fecha_emision'),
-            'fecha_traslado': guia.get('fecha_traslado'),
-            'fecha_inicio_traslado': guia.get('fecha_traslado'),
-            'motivo_traslado': guia.get('motivo_traslado', '01'),
-            'modalidad_transporte': guia.get('modalidad_transporte', 'PRIVADO'),
-            'peso_total': float(guia.get('peso_total', 0)),
-            'numero_bultos': 1,
-            'transportista_nombre': guia.get('transportista_nombre', '---'),
-            'conductor_nombre': guia.get('conductor_nombre', '---'),
-            'conductor_dni': guia.get('conductor_dni', '---'),
-            'placa_vehiculo': guia.get('placa_vehiculo', '---'),
-            'licencia_conductor': guia.get('licencia_conductor', '---'),
-            'documento_asociado': guia.get('documento_asociado', ''),
-            'observaciones': guia.get('observaciones', ''),
-            'items': guia.get('items_json', '[]')
-        }
+        # Generar PDF
+        from pdf_generator import pdf_generator
+        datos_guia = preparar_datos_guia_pdf(guia)  # Función auxiliar
         
         pdf_path = pdf_generator.generar_pdf_universal(datos_guia)
         
         if not pdf_path:
             return jsonify({'error': 'Error al generar el PDF'}), 500
         
-        from flask import send_file
         return send_file(
             pdf_path,
             mimetype='application/pdf',
@@ -3782,6 +3915,88 @@ def preview_pdf_guia(guia_id):
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+def preparar_datos_guia_pdf(guia):
+    """Prepara los datos de la guía para el PDFGenerator"""
+    from datetime import datetime
+    
+    # Parsear items
+    items = []
+    items_json = guia.get('items_json')
+    if items_json:
+        try:
+            if isinstance(items_json, str):
+                items = json.loads(items_json)
+            elif isinstance(items_json, (list, dict)):
+                items = items_json
+        except:
+            items = []
+    
+    # Formatear items
+    items_formateados = []
+    for idx, item in enumerate(items, 1):
+        if isinstance(item, dict):
+            items_formateados.append({
+                'item': idx,
+                'codigo': item.get('codigo', ''),
+                'descripcion': item.get('producto', item.get('descripcion', '')),
+                'marca': item.get('marca', ''),
+                'modelo': item.get('modelo', ''),
+                'unidad': item.get('um', 'NIU'),
+                'cantidad': float(item.get('cantidad', 1)),
+                'peso': float(item.get('peso_unitario', 0))
+            })
+        elif isinstance(item, list):
+            items_formateados.append({
+                'item': idx,
+                'codigo': item[0] if len(item) > 0 else '',
+                'descripcion': item[1] if len(item) > 1 else '',
+                'marca': item[2] if len(item) > 2 else '',
+                'modelo': item[3] if len(item) > 3 else '',
+                'unidad': item[4] if len(item) > 4 else 'NIU',
+                'cantidad': float(item[5]) if len(item) > 5 else 1,
+                'peso': float(item[6]) if len(item) > 6 else 0
+            })
+    
+    # Fechas
+    fecha_emision = guia.get('fecha_emision')
+    if fecha_emision and isinstance(fecha_emision, datetime):
+        fecha_emision = fecha_emision.strftime('%d/%m/%Y %H:%M')
+    elif fecha_emision and isinstance(fecha_emision, str):
+        try:
+            dt = datetime.fromisoformat(fecha_emision.replace('Z', '+00:00'))
+            fecha_emision = dt.strftime('%d/%m/%Y %H:%M')
+        except:
+            pass
+    
+    return {
+        'tipo_documento': 'guia_remision',
+        'serie': guia.get('serie', 'T001'),
+        'numero': guia.get('numero', ''),
+        'ruc_remitente': guia.get('ruc_remitente', '20602095704'),
+        'remitente_nombre': guia.get('remitente_nombre', 'KCF CORPORACION SAC'),
+        'remitente_direccion': guia.get('remitente_direccion', 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES'),
+        'remitente_ubigeo': guia.get('remitente_ubigeo', '150139'),
+        'ruc_destinatario': guia.get('ruc_destinatario', ''),
+        'destinatario_nombre': guia.get('destinatario_nombre', ''),
+        'destinatario_direccion': guia.get('destinatario_direccion', ''),
+        'destinatario_ubigeo': guia.get('destinatario_ubigeo', ''),
+        'modalidad_transporte': guia.get('modalidad_transporte', 'PRIVADO'),
+        'transportista_nombre': guia.get('transportista_nombre', ''),
+        'transportista_ruc': guia.get('transportista_ruc', ''),
+        'placa_vehiculo': guia.get('placa_vehiculo', ''),
+        'conductor_nombre': guia.get('conductor_nombre', ''),
+        'conductor_dni': guia.get('conductor_dni', ''),
+        'licencia_conductor': guia.get('licencia_conductor', ''),
+        'fecha_emision': fecha_emision,
+        'fecha_traslado': guia.get('fecha_traslado'),
+        'motivo_traslado': guia.get('motivo_traslado', '01'),
+        'peso_total': float(guia.get('peso_total', 0)),
+        'numero_bultos': int(guia.get('numero_bultos', 1)),
+        'unidad_peso': guia.get('unidad_peso_bruto', 'KGM'),
+        'documento_asociado': guia.get('documento_asociado', ''),
+        'observaciones': guia.get('observaciones', ''),
+        'items': items_formateados
+    }
 # ============================================================
 # CLIENTES - BUSCAR POR RUC (para ventas)
 # ============================================================
