@@ -687,7 +687,7 @@ def api_proveedores_guardar():
             numero = 1
         codigo = f"PROV-{str(numero).zfill(4)}"
 
-        # 1) INSERT en tabla principal
+        # ✅ INSERT CORREGIDO - 24 columnas, 24 placeholders
         query = """
             INSERT INTO proveedores (
                 codigo_proveedor, razon_social, ruc, razon_comercial,
@@ -706,31 +706,34 @@ def api_proveedores_guardar():
             )
             RETURNING id, codigo_proveedor
         """
+        
+        # ✅ 24 valores (los 23 campos + fecha_creacion con NOW())
         params = (
-            codigo,
-            data.get('razon_social'),
-            data.get('ruc'),
-            data.get('razon_comercial', data.get('razon_social')),
-            data.get('telefono'),
-            data.get('contacto'),
-            data.get('email'),
-            data.get('direccion'),
-            True,
-            data.get('condicion_pago', 'Contado'),
-            data.get('lineaCredito'),          # 🔧 antes leía 'tiempo_credito'
-            data.get('puntoRecojo'),            # 🔧 antes leía 'lugar_recojo'
-            data.get('banco'),
-            data.get('cuenta'),                 # 🔧 antes leía 'numero_cuenta'
-            data.get('cci'),
-            data.get('estado', 'Activo'),
-            data.get('ambito', 'COMPARTIDO'),
-            data.get('obs', ''),                # 🔧 antes leía 'observaciones'
-            data.get('tipo', 'Recurrente'),      # 🔧 NUEVO
-            data.get('tipoDoc', 'RUC'),          # 🔧 NUEVO
-            data.get('tipoCuenta', 'Cuenta corriente'),  # 🔧 NUEVO
-            data.get('moneda', 'Soles'),         # 🔧 NUEVO
-            data.get('descuento', '')            # 🔧 NUEVO
+            codigo,                                    # codigo_proveedor
+            data.get('razon_social'),                  # razon_social
+            data.get('ruc'),                           # ruc
+            data.get('razon_comercial', data.get('razon_social')),  # razon_comercial
+            data.get('telefono'),                      # telefono
+            data.get('contacto'),                      # contacto
+            data.get('email'),                         # email
+            data.get('direccion'),                     # direccion
+            True,                                      # activo
+            data.get('condicion_pago', 'Contado'),     # condicion_pago
+            data.get('lineaCredito'),                  # tiempo_credito
+            data.get('puntoRecojo'),                   # lugar_recojo
+            data.get('banco'),                         # banco
+            data.get('cuenta'),                        # numero_cuenta
+            data.get('cci'),                           # cci
+            data.get('estado', 'Activo'),              # estado
+            data.get('ambito', 'COMPARTIDO'),          # ambito
+            data.get('obs', ''),                       # observaciones
+            data.get('tipo', 'Recurrente'),            # tipo
+            data.get('tipoDoc', 'RUC'),                # tipo_doc
+            data.get('tipoCuenta', 'Cuenta corriente'),# tipo_cuenta
+            data.get('moneda', 'Soles'),               # moneda
+            data.get('descuento', '')                  # descuento
         )
+        
         cur.execute(query, params)
         result = cur.fetchone()
         proveedor_id = result[0]
@@ -745,7 +748,7 @@ def api_proveedores_guardar():
             """, (
                 proveedor_id,
                 data.get('contacto', ''),
-                data.get('cargo', ''),          # 🔧 NUEVO: ahora sí se guarda
+                data.get('cargo', ''),
                 data.get('telefono', ''),
                 data.get('email', '')
             ))
@@ -782,6 +785,7 @@ def api_proveedores_guardar():
         current_app.logger.error(f"❌ Error guardando proveedor: {e}")
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 @maestros_bp.route('/api/proveedores/<int:id>', methods=['GET'])
 @login_required
@@ -883,16 +887,31 @@ def api_proveedores_actualizar(id):
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
 
-        # 1) UPDATE tabla principal
+        # ✅ UPDATE CORREGIDO - 24 campos
         cur.execute("""
             UPDATE proveedores SET
-                razon_social = %s, ruc = %s, razon_comercial = %s,
-                telefono = %s, contacto = %s, email = %s, direccion = %s,
-                condicion_pago = %s, tiempo_credito = %s, lugar_recojo = %s,
-                banco = %s, numero_cuenta = %s, cci = %s,
-                estado = %s, ambito = %s, observaciones = %s,
-                tipo = %s, tipo_doc = %s, tipo_cuenta = %s,
-                moneda = %s, descuento = %s, activo = %s
+                razon_social = %s,
+                ruc = %s,
+                razon_comercial = %s,
+                telefono = %s,
+                contacto = %s,
+                email = %s,
+                direccion = %s,
+                condicion_pago = %s,
+                tiempo_credito = %s,
+                lugar_recojo = %s,
+                banco = %s,
+                numero_cuenta = %s,
+                cci = %s,
+                estado = %s,
+                ambito = %s,
+                observaciones = %s,
+                tipo = %s,
+                tipo_doc = %s,
+                tipo_cuenta = %s,
+                moneda = %s,
+                descuento = %s,
+                activo = %s
             WHERE id = %s
         """, (
             data.get('razon_social'),
@@ -903,24 +922,24 @@ def api_proveedores_actualizar(id):
             data.get('email'),
             data.get('direccion'),
             data.get('condicion_pago', 'Contado'),
-            data.get('lineaCredito'),           # 🔧 CAMBIO
-            data.get('puntoRecojo'),             # 🔧 CAMBIO
+            data.get('lineaCredito'),
+            data.get('puntoRecojo'),
             data.get('banco'),
-            data.get('cuenta'),                  # 🔧 CAMBIO
+            data.get('cuenta'),
             data.get('cci'),
             data.get('estado', 'Activo'),
             data.get('ambito', 'COMPARTIDO'),
-            data.get('obs', ''),                 # 🔧 CAMBIO
-            data.get('tipo', 'Recurrente'),       # 🔧 NUEVO
-            data.get('tipoDoc', 'RUC'),           # 🔧 NUEVO
-            data.get('tipoCuenta', 'Cuenta corriente'),  # 🔧 NUEVO
-            data.get('moneda', 'Soles'),          # 🔧 NUEVO
-            data.get('descuento', ''),            # 🔧 NUEVO
+            data.get('obs', ''),
+            data.get('tipo', 'Recurrente'),
+            data.get('tipoDoc', 'RUC'),
+            data.get('tipoCuenta', 'Cuenta corriente'),
+            data.get('moneda', 'Soles'),
+            data.get('descuento', ''),
             data.get('activo', True),
             id
         ))
 
-        # 2) UPSERT contacto principal (actualiza si ya existe, si no, crea)
+        # 2) UPSERT contacto principal
         cur.execute("SELECT id FROM proveedores_contactos WHERE proveedor_id = %s AND principal = TRUE LIMIT 1", (id,))
         contacto_existente = cur.fetchone()
         if contacto_existente:
@@ -935,7 +954,7 @@ def api_proveedores_actualizar(id):
                 VALUES (%s, %s, %s, %s, %s, TRUE, TRUE, NOW(), NOW())
             """, (id, data.get('contacto', ''), data.get('cargo', ''), data.get('telefono', ''), data.get('email', '')))
 
-        # 3) UPSERT punto de recojo (actualiza si ya existe, si no, crea)
+        # 3) UPSERT punto de recojo
         cur.execute("SELECT id FROM proveedores_puntos_entrega WHERE proveedor_id = %s AND principal = TRUE LIMIT 1", (id,))
         punto_existente = cur.fetchone()
         if punto_existente:
@@ -945,8 +964,12 @@ def api_proveedores_actualizar(id):
                     responsable = %s, horario_atencion = %s, instrucciones = %s, updated_at = NOW()
                 WHERE id = %s
             """, (
-                data.get('puntoRecojo', ''), data.get('direccionRecojo', ''), data.get('telefonoRecojo', ''),
-                data.get('contactoRecojo', ''), data.get('horarioRecojo', ''), data.get('instruccionesRecojo', ''),
+                data.get('puntoRecojo', ''),
+                data.get('direccionRecojo', ''),
+                data.get('telefonoRecojo', ''),
+                data.get('contactoRecojo', ''),
+                data.get('horarioRecojo', ''),
+                data.get('instruccionesRecojo', ''),
                 punto_existente[0]
             ))
         elif data.get('puntoRecojo') or data.get('direccionRecojo'):
@@ -957,8 +980,13 @@ def api_proveedores_actualizar(id):
                     principal, activo, created_at, updated_at
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s, TRUE, TRUE, NOW(), NOW())
             """, (
-                id, data.get('puntoRecojo', ''), data.get('direccionRecojo', ''), data.get('telefonoRecojo', ''),
-                data.get('contactoRecojo', ''), data.get('horarioRecojo', ''), data.get('instruccionesRecojo', '')
+                id,
+                data.get('puntoRecojo', ''),
+                data.get('direccionRecojo', ''),
+                data.get('telefonoRecojo', ''),
+                data.get('contactoRecojo', ''),
+                data.get('horarioRecojo', ''),
+                data.get('instruccionesRecojo', '')
             ))
 
         conn.commit()
@@ -971,6 +999,7 @@ def api_proveedores_actualizar(id):
         current_app.logger.error(f"❌ Error actualizando proveedor: {e}")
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 @maestros_bp.route('/api/proveedores/<int:id>/toggle', methods=['PUT'])
 @login_required

@@ -3903,6 +3903,7 @@ function openGuiaModalWithData(id, cotizacion) {
             // Recalcular peso/contador ahora que ya se llenaron los valores reales
             actualizarPesoTotalGuia();
             actualizarContadorProductosGuia();
+              cargarUnidadesDeMedidaGuia();
         }
     }, 350);
 }
@@ -8279,6 +8280,8 @@ function openGuiaModal(id = null) {
     cargarConductoresGuia();
     toggleTransportistaGuia();
     
+
+     cargarUnidadesDeMedidaGuia();
     // Mostrar modal
     document.getElementById('guiaModal').classList.add('show');
     
@@ -11552,6 +11555,55 @@ async function savePedidoCompraSAP(force) {
 
 
 
+
+function cargarUnidadesDeMedidaGuia() {
+    const selectUnidad = document.getElementById('guiaUnidadPeso');
+    if (!selectUnidad) {
+        console.warn('⚠️ Select "guiaUnidadPeso" no encontrado.');
+        return;
+    }
+
+    // Opcional: Mostrar un estado de carga
+    selectUnidad.innerHTML = '<option value="">Cargando unidades...</option>';
+
+    fetch('/maestros/api/um/listar')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data) {
+                // Limpiar el select
+                selectUnidad.innerHTML = '';
+                
+                // Agregar una opción por defecto
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = '-- Seleccionar Unidad --';
+                selectUnidad.appendChild(defaultOption);
+
+                // Agregar las unidades de la base de datos
+                data.data.forEach(um => {
+                    const option = document.createElement('option');
+                    option.value = um.codigo; // Usar 'codigo' que es el identificador SUNAT
+                    option.textContent = `${um.codigo} - ${um.nombre}`; // Ejemplo: "KGM - Kilogramo"
+                    // Podrías querer mostrar solo el código o el nombre, depende de ti.
+                    // Si quieres solo el código: option.textContent = um.codigo;
+                    selectUnidad.appendChild(option);
+                });
+
+                console.log(`✅ ${data.data.length} unidades de medida cargadas para la guía.`);
+            } else {
+                console.error('❌ Error al cargar unidades de medida:', data.error || 'Error desconocido');
+                selectUnidad.innerHTML = '<option value="">Error al cargar unidades</option>';
+                showToast('⚠️ No se pudieron cargar las unidades de medida.', 'warning');
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error de red al cargar unidades de medida:', error);
+            selectUnidad.innerHTML = '<option value="">Error de conexión</option>';
+            showToast('❌ Error al conectar con el servidor para cargar unidades.', 'error');
+        });
+}
+
+
 // ============================================================
 // MODAL DE ADVERTENCIA DE VALIDACIÓN PARA CAMPOS OBLIGATORIOS
 // ============================================================
@@ -12574,7 +12626,7 @@ window.solicitarCorreccion = solicitarCorreccion;
 window.generarOrdenCompra = generarOrdenCompra;
 window.enviarADespacho = enviarADespacho;
 
-
+window.cargarUnidadesDeMedidaGuia = cargarUnidadesDeMedidaGuia;
 
 window.clearDespachoDateFilter = clearDespachoDateFilter;
 window.clearGuiaDateFilter = clearGuiaDateFilter;

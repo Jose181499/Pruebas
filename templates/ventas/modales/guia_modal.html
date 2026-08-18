@@ -290,22 +290,13 @@
                         </div>
                     </div>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-top:2px;">
-                        <div class="form-field">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Unidad Peso Bruto <span class="text-danger">*</span></label>
-                            <select id="guiaUnidadPeso" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;">
-                                <option value="">-- Seleccionar --</option>
-                                <option value="KGM">KGM - Kilogramo</option>
-                                <option value="TNE">TNE - Tonelada</option>
-                                <option value="LBR">LBR - Libra</option>
-                                <option value="GRM">GRM - Gramo</option>
-                                <option value="ONZ">ONZ - Onza</option>
-                            </select>
-                        </div>
-                        <div class="form-field">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Peso Bruto Total <span class="text-danger">*</span></label>
-                            <input id="guiaPeso" type="number" step="0.01" value="0.00" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
-                        </div>
-                    </div>
+    <div class="form-field">
+        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Unidad Peso Bruto <span class="text-danger">*</span></label>
+        <!-- Este es el select que vamos a llenar dinámicamente -->
+        <select id="guiaUnidadPeso" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;">
+            <option value="">Cargando...</option>
+        </select>
+    </div>
                     <div class="form-field" style="margin-top:4px;">
                         <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Observaciones</label>
                         <textarea id="guiaObservaciones" rows="1" placeholder="Notas adicionales..." style="width:100%; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:4px 6px; resize:vertical; min-height:24px;"></textarea>
