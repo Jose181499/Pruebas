@@ -8926,13 +8926,48 @@ async function openComprobanteModal(id = null) {
         setTimeout(() => cargarComprobanteParaEditar(id), 100);
     }
     
-    // 8. Mostrar modal
+    // 8. Mostrar modal - FORZADO CON CSS INLINE
     modal.classList.add('show');
+    
+    // 🔥 FORZAR VISIBILIDAD CON CSS INLINE
+    modal.style.cssText = `
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 999999 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: rgba(15, 23, 42, 0.7) !important;
+        backdrop-filter: blur(6px) !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        padding: 20px !important;
+        overflow: auto !important;
+    `;
+    
+    // Asegurar que el modal-box sea visible
+    const box = modal.querySelector('.modal-box');
+    if (box) {
+        box.style.cssText = `
+            position: relative !important;
+            z-index: 999999 !important;
+            width: min(1100px, 96vw) !important;
+            max-height: 95vh !important;
+            background: #FFFFFF !important;
+            border-radius: 16px !important;
+            overflow: hidden !important;
+            box-shadow: 0 30px 80px rgba(15,23,42,.35) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            animation: modalIn 0.3s ease-out !important;
+        `;
+    }
+    
+    // También asegurar que el body no bloquee el modal
+    document.body.style.overflow = 'hidden';
+    
     console.log('✅ Modal de comprobante abierto correctamente');
 }
-
-openComprobanteModal = window.openComprobanteModal;
-
 
 async function cargarComprobanteParaEditar(id) {
     try {
@@ -12513,7 +12548,7 @@ function showComprobanteMenu(event, id) {
     const top = Math.min(window.innerHeight - 420, event.clientY + 8);
     pop.style.left = left + 'px';
     pop.style.top = top + 'px';
-    
+
     pop.innerHTML = `
         <button onclick="openComprobanteModal(${id});this.closest('.menu-pop').remove()">👁 Ver / Editar</button>
         <button onclick="previewComprobantePdf(${id});this.closest('.menu-pop').remove()" style="color:#8B5CF6;font-weight:900;">👁️ Vista Previa</button>
