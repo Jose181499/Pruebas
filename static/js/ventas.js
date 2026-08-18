@@ -8149,10 +8149,18 @@ function openDespachoModal(id = null) {
 function openGuiaModal(id = null) {
     editingId = id;
     const isEdit = id !== null;
-    document.getElementById('guiaModalTitle').textContent = isEdit ? '📦 Editar Guía de Remisión' : '📦 Nueva Guía de Remisión';
+    
+    const titleEl = document.getElementById('guiaModalTitle');
+    if (titleEl) {
+        titleEl.textContent = isEdit ? '📦 Editar Guía de Remisión' : '📦 Nueva Guía de Remisión';
+    }
     
     const formContainer = document.getElementById('guiaForm');
-    if (!formContainer) return;
+    if (!formContainer) {
+        console.error('❌ #guiaForm no encontrado');
+        showToast('Error: Formulario de guía no disponible', 'error');
+        return;
+    }
     
     // ============================================================
     // ORIGEN FIJO - DATOS DEL REMITENTE
@@ -8169,20 +8177,17 @@ function openGuiaModal(id = null) {
     
     // Inicializar fechas
     const hoy = new Date().toISOString().split('T')[0];
-    document.getElementById('guiaFechaEmision').value = hoy;
-    document.getElementById('guiaFechaInicio').value = hoy;
+    
+    const fechaEmision = document.getElementById('guiaFechaEmision');
+    if (fechaEmision) fechaEmision.value = hoy;
+    
+    const fechaInicio = document.getElementById('guiaFechaInicio');
+    if (fechaInicio) fechaInicio.value = hoy;
     
     // ============================================================
     // CONFIGURAR UBIGEOS DE ORIGEN (FIJOS)
     // ============================================================
-    const deptoOrigen = document.getElementById('guiaDeptoOrigen');
-    const provOrigen = document.getElementById('guiaProvOrigen');
-    const distOrigen = document.getElementById('guiaDistOrigen');
-    const ubigeoHidden = document.getElementById('guiaUbigeoOrigen');
-    const ubigeoTexto = document.getElementById('guiaUbigeoOrigenTexto');
     const origenInput = document.getElementById('guiaOrigen');
-    
-    // Establecer dirección fija
     if (origenInput) {
         origenInput.value = ORIGEN_FIJO.direccion;
         origenInput.readOnly = true;
@@ -8191,7 +8196,6 @@ function openGuiaModal(id = null) {
         origenInput.style.cursor = 'not-allowed';
     }
     
-    // Establecer RUC fijo
     const rucRemitente = document.getElementById('guiaRucRemitente');
     if (rucRemitente) {
         rucRemitente.value = ORIGEN_FIJO.ruc;
@@ -8200,7 +8204,6 @@ function openGuiaModal(id = null) {
         rucRemitente.style.color = '#64748B';
     }
     
-    // Establecer nombre remitente fijo
     const nombreRemitente = document.getElementById('guiaRemitenteNombre');
     if (nombreRemitente) {
         nombreRemitente.value = ORIGEN_FIJO.nombre;
@@ -8209,7 +8212,8 @@ function openGuiaModal(id = null) {
         nombreRemitente.style.color = '#64748B';
     }
     
-    // Ubigeo - Departamento
+    // Ubigeo Origen
+    const deptoOrigen = document.getElementById('guiaDeptoOrigen');
     if (deptoOrigen) {
         deptoOrigen.value = ORIGEN_FIJO.departamento;
         deptoOrigen.disabled = true;
@@ -8217,7 +8221,7 @@ function openGuiaModal(id = null) {
         deptoOrigen.style.cursor = 'not-allowed';
     }
     
-    // Ubigeo - Provincia
+    const provOrigen = document.getElementById('guiaProvOrigen');
     if (provOrigen) {
         provOrigen.value = ORIGEN_FIJO.provincia;
         provOrigen.disabled = true;
@@ -8225,7 +8229,7 @@ function openGuiaModal(id = null) {
         provOrigen.style.cursor = 'not-allowed';
     }
     
-    // Ubigeo - Distrito
+    const distOrigen = document.getElementById('guiaDistOrigen');
     if (distOrigen) {
         distOrigen.value = ORIGEN_FIJO.distrito;
         distOrigen.disabled = true;
@@ -8233,12 +8237,12 @@ function openGuiaModal(id = null) {
         distOrigen.style.cursor = 'not-allowed';
     }
     
-    // Ubigeo oculto
+    const ubigeoHidden = document.getElementById('guiaUbigeoOrigen');
     if (ubigeoHidden) {
         ubigeoHidden.value = ORIGEN_FIJO.ubigeo;
     }
     
-    // Texto de ubigeo
+    const ubigeoTexto = document.getElementById('guiaUbigeoOrigenTexto');
     if (ubigeoTexto) {
         ubigeoTexto.textContent = `${ORIGEN_FIJO.departamento} - ${ORIGEN_FIJO.provincia} - ${ORIGEN_FIJO.distrito}`;
     }
@@ -8272,18 +8276,42 @@ function openGuiaModal(id = null) {
         }
     }, 100);
     
-    // Limpiar productos
-    document.getElementById('guiaProductosBody').innerHTML = '';
+    // ============================================================
+    // 🔽 LIMPIAR PRODUCTOS - CON VERIFICACIÓN DE EXISTENCIA
+    // ============================================================
+    const productosBody = document.getElementById('guiaProductosBody');
+    if (productosBody) {
+        productosBody.innerHTML = '';
+    } else {
+        console.warn('⚠️ #guiaProductosBody no encontrado, creando...');
+        // Si no existe, crearlo
+        const tabla = document.querySelector('#guiaForm table tbody');
+        if (tabla) {
+            tabla.id = 'guiaProductosBody';
+        }
+    }
+    
+    // Agregar fila de producto
     agregarFilaProductoGuia();
     
     // Cargar conductores
     cargarConductoresGuia();
     toggleTransportistaGuia();
     
-
-     cargarUnidadesDeMedidaGuia();
+    // ============================================================
+    // 🔽 CARGAR UNIDADES DE MEDIDA DESDE LA BD
+    // ============================================================
+    cargarUnidadesDeMedidaGuia();
+    
     // Mostrar modal
-    document.getElementById('guiaModal').classList.add('show');
+    const modal = document.getElementById('guiaModal');
+    if (modal) {
+        modal.classList.add('show');
+    } else {
+        console.error('❌ #guiaModal no encontrado');
+        showToast('Error: Modal de guía no disponible', 'error');
+        return;
+    }
     
     // Si es edición, cargar datos
     if (isEdit) {
