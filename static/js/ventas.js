@@ -8200,9 +8200,7 @@ function openGuiaModal(id = null) {
         return;
     }
     
-    // ============================================================
     // ORIGEN FIJO - DATOS DEL REMITENTE
-    // ============================================================
     const ORIGEN_FIJO = {
         ruc: '20602095704',
         nombre: 'KCF CORPORACION SAC',
@@ -8219,9 +8217,6 @@ function openGuiaModal(id = null) {
         titleEl.textContent = isEdit ? '📦 Editar Guía de Remisión' : '📦 Nueva Guía de Remisión';
     }
     
-    // ============================================================
-    // BUSCAR EL FORMULARIO - Si no existe, mostramos error
-    // ============================================================
     const formContainer = document.getElementById('guiaForm');
     if (!formContainer) {
         console.error('❌ #guiaForm no encontrado');
@@ -8229,34 +8224,24 @@ function openGuiaModal(id = null) {
         return;
     }
     
-    // ============================================================
-    // RENDERIZAR EL CONTENIDO DEL FORMULARIO
-    // ============================================================
     // Inicializar fechas
     const hoy = new Date().toISOString().split('T')[0];
     
     // Generar opciones de motivos
-    const motivos = [
-        'VENTA', 'COMPRA', 'TRANSFERENCIA ENTRE ALMACENES', 
-        'DEVOLUCIÓN', 'CONSIGNACIÓN', 'OTRO'
-    ];
-    
+    const motivos = ['VENTA', 'COMPRA', 'TRANSFERENCIA ENTRE ALMACENES', 'DEVOLUCIÓN', 'CONSIGNACIÓN', 'OTRO'];
     const motivoOptions = motivos.map(m => 
         `<option value="${m}" ${m === 'VENTA' ? 'selected' : ''}>${m}</option>`
     ).join('');
     
-    // Generar opciones de modalidad
     const modalidadOptions = `
         <option value="PRIVADO" selected>🚛 Transporte Privado</option>
         <option value="PUBLICO">🚚 Transporte Público</option>
     `;
     
+    // ✅ RENDERIZAR EL FORMULARIO COMPLETO
     formContainer.innerHTML = `
-        <!-- ============================================================ -->
         <!-- FILA 1: REMITENTE Y DESTINATARIO -->
-        <!-- ============================================================ -->
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
-            
             <!-- REMITENTE -->
             <div class="ficha-section" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden;">
                 <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#2563EB; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
@@ -8279,10 +8264,9 @@ function openGuiaModal(id = null) {
                         <input id="guiaRemitenteNombre" value="${ORIGEN_FIJO.nombre}" readonly style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#F1F5F9; font-size:9px; padding:0 6px; color:#64748B; cursor:not-allowed;">
                     </div>
                     <div class="form-field" style="margin-bottom:2px;">
-                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Dirección de Partida <span class="text-danger">*</span></label>
+                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Dirección de Partida</label>
                         <input id="guiaOrigen" value="${ORIGEN_FIJO.direccion}" readonly style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#F1F5F9; font-size:9px; padding:0 6px; color:#64748B; cursor:not-allowed;">
                     </div>
-                    <!-- Ubigeo Remitente -->
                     <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-top:2px;">
                         <div class="form-field">
                             <label style="font-size:6.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Departamento</label>
@@ -8326,7 +8310,7 @@ function openGuiaModal(id = null) {
                     </div>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:2px;">
                         <div class="form-field">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">RUC <span class="text-danger">*</span></label>
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">RUC</label>
                             <input id="guiaRuc" placeholder="RUC" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
                         </div>
                         <div class="form-field">
@@ -8335,14 +8319,13 @@ function openGuiaModal(id = null) {
                         </div>
                     </div>
                     <div class="form-field" style="margin-bottom:2px;">
-                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Razón Social <span class="text-danger">*</span></label>
+                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Razón Social</label>
                         <input id="guiaCliente" placeholder="Razón social del cliente" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
                     </div>
                     <div class="form-field" style="margin-bottom:2px;">
-                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Dirección de Llegada <span class="text-danger">*</span></label>
+                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Dirección de Llegada</label>
                         <input id="guiaDestino" placeholder="Dirección del cliente" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
                     </div>
-                    <!-- Ubigeo Destinatario -->
                     <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-top:2px;">
                         <div class="form-field">
                             <label style="font-size:6.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Departamento</label>
@@ -8367,7 +8350,6 @@ function openGuiaModal(id = null) {
                         <i class="bi bi-geo-alt-fill" style="color:#2563EB;"></i> Ubigeo: <span id="guiaUbigeoDestinoTexto">Ninguno</span>
                         <input type="hidden" id="guiaUbigeoDestino" value="">
                     </div>
-                    <!-- Documentos asociados -->
                     <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-top:4px;">
                         <div class="form-field">
                             <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Orden Compra</label>
@@ -8386,12 +8368,8 @@ function openGuiaModal(id = null) {
             </div>
         </div>
         
-        <!-- ============================================================ -->
         <!-- FILA 2: VEHÍCULO Y TRANSPORTISTA -->
-        <!-- ============================================================ -->
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
-            
-            <!-- VEHÍCULO / CONDUCTOR -->
             <div class="ficha-section" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden;">
                 <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#EA580C; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
                     <span><i class="bi bi-truck"></i> Datos de Transporte</span>
@@ -8400,7 +8378,7 @@ function openGuiaModal(id = null) {
                 <div style="padding:6px 10px;">
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:2px;">
                         <div class="form-field">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Modalidad <span class="text-danger">*</span></label>
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Modalidad</label>
                             <select id="guiaModalidadTransporte" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:9px; padding:0 4px; background:#FFFFFF;" onchange="toggleTransportistaGuia()">
                                 ${modalidadOptions}
                             </select>
@@ -8419,7 +8397,7 @@ function openGuiaModal(id = null) {
                     </div>
                     <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:4px; margin-bottom:2px;">
                         <div class="form-field">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Placa <span class="text-danger">*</span></label>
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Placa</label>
                             <input id="guiaPlaca" placeholder="ABC-123" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px; text-transform:uppercase;">
                         </div>
                         <div class="form-field">
@@ -8427,18 +8405,17 @@ function openGuiaModal(id = null) {
                             <input id="guiaLicencia" placeholder="1234567890" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
                         </div>
                         <div class="form-field">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">DNI Conductor <span class="text-danger">*</span></label>
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">DNI Conductor</label>
                             <input id="guiaConductorDNI" placeholder="DNI" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
                         </div>
                         <div class="form-field">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Nombre Conductor <span class="text-danger">*</span></label>
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Nombre Conductor</label>
                             <input id="guiaConductorNombre" placeholder="Nombre completo" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
                         </div>
                     </div>
                 </div>
             </div>
             
-            <!-- TRANSPORTISTA (PÚBLICO) -->
             <div class="ficha-section" id="guiaTransportistaCard" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden; opacity:0.5;">
                 <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#DC2626; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
                     <span><i class="bi bi-building"></i> Datos del Transportista (Público)</span>
@@ -8467,9 +8444,7 @@ function openGuiaModal(id = null) {
             </div>
         </div>
         
-        <!-- ============================================================ -->
         <!-- FILA 3: TRASLADO -->
-        <!-- ============================================================ -->
         <div class="ficha-section" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden; margin-bottom:8px;">
             <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#7C3AED; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
                 <span><i class="bi bi-file-text"></i> Datos del Traslado</span>
@@ -8478,7 +8453,7 @@ function openGuiaModal(id = null) {
             <div style="padding:6px 10px;">
                 <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:4px; margin-bottom:2px;">
                     <div class="form-field">
-                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Motivo <span class="text-danger">*</span></label>
+                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Motivo</label>
                         <select id="guiaMotivo" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;">
                             ${motivoOptions}
                         </select>
@@ -8488,33 +8463,65 @@ function openGuiaModal(id = null) {
                         <input id="guiaFechaEmision" type="date" value="${hoy}" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
                     </div>
                     <div class="form-field">
-                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Fecha Inicio <span class="text-danger">*</span></label>
+                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Fecha Inicio</label>
                         <input id="guiaFechaInicio" type="date" value="${hoy}" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
                     </div>
                     <div class="form-field">
-                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">N° Bultos <span class="text-danger">*</span></label>
+                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">N° Bultos</label>
                         <input id="guiaBultos" type="number" value="1" min="0" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
                     </div>
                 </div>
                 
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-top:2px;">
                     <div class="form-field">
-                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Unidad Peso Bruto <span class="text-danger">*</span></label>
+                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Unidad Peso Bruto</label>
                         <select id="guiaUnidadPeso" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;">
                             <option value="">Cargando...</option>
                         </select>
                     </div>
                     <div class="form-field">
-                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Peso Bruto Total <span class="text-danger">*</span></label>
+                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Peso Bruto Total</label>
                         <input id="guiaPeso" type="number" step="0.01" value="0.00" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
                     </div>
                 </div>
                 
-                <!-- Observaciones -->
                 <div class="form-field" style="margin-top:4px;">
                     <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Observaciones</label>
                     <textarea id="guiaObservaciones" rows="1" placeholder="Notas adicionales..." style="width:100%; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:4px 6px; resize:vertical; min-height:24px;"></textarea>
                 </div>
+            </div>
+        </div>
+        
+        <!-- ✅ SECCIÓN DE PRODUCTOS - CREADA CORRECTAMENTE -->
+        <div class="ficha-section" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden; margin-bottom:8px;">
+            <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#059669; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
+                <span><i class="bi bi-box-seam"></i> Productos</span>
+                <div style="display:flex; gap:4px; align-items:center;">
+                    <button onclick="openProductSelectorGuia()" style="height:20px; padding:0 10px; font-size:8px; border-radius:4px; background:#8B5CF6; color:#fff; border:0; font-weight:800; cursor:pointer;">📋 Agregar productos</button>
+                    <button onclick="agregarFilaProductoGuia()" style="height:20px; padding:0 8px; font-size:8px; border-radius:4px; background:#2563EB; color:#fff; border:0; font-weight:800; cursor:pointer;">+ Agregar fila</button>
+                </div>
+            </div>
+            <div style="overflow-x:auto; padding:4px 6px;">
+                <table style="width:100%; border-collapse:collapse; font-size:9px; min-width:650px;">
+                    <thead>
+                        <tr>
+                            <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:35px;">#</th>
+                            <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:80px;">Código</th>
+                            <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Descripción</th>
+                            <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:70px;">Unidad</th>
+                            <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:60px;">Cantidad</th>
+                            <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:70px;">Peso U.</th>
+                            <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:35px;">✕</th>
+                        </tr>
+                    </thead>
+                    <tbody id="guiaProductosBody">
+                        <!-- Productos se agregan aquí -->
+                    </tbody>
+                </table>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 10px; background:#F8FAFC; border-top:1px solid #E2E8F0; font-size:9px; font-weight:800; color:#475569;">
+                <span id="guiaProductosCount">0 productos</span>
+                <span>Peso total: <span id="guiaPesoTotalDisplay">0.00</span> kg</span>
             </div>
         </div>
     `;
@@ -8525,7 +8532,7 @@ function openGuiaModal(id = null) {
     llenarDepartamentosGuia('guiaDeptoDestino');
     configurarUbigeoGuia('Destino');
     
-    // Preseleccionar Lima para destino también
+    // Preseleccionar Lima para destino
     setTimeout(() => {
         const deptoDestino = document.getElementById('guiaDeptoDestino');
         if (deptoDestino) {
@@ -8562,58 +8569,8 @@ function openGuiaModal(id = null) {
     // ============================================================
     // AGREGAR FILA DE PRODUCTO
     // ============================================================
-    // Verificar si existe el body de productos
-    let productosBody = document.getElementById('guiaProductosBody');
-    if (!productosBody) {
-        // Si no existe, crear la tabla de productos en el DOM
-        const formContainer2 = document.getElementById('guiaForm');
-        if (formContainer2) {
-            // Crear la sección de productos
-            const productSection = document.createElement('div');
-            productSection.className = 'ficha-section';
-            productSection.style.cssText = 'border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden; margin-bottom:8px;';
-            productSection.innerHTML = `
-                <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#059669; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
-                    <span><i class="bi bi-box-seam"></i> Productos</span>
-                    <div style="display:flex; gap:4px; align-items:center;">
-                        <button onclick="openProductSelectorGuia()" style="height:20px; padding:0 10px; font-size:8px; border-radius:4px; background:#8B5CF6; color:#fff; border:0; font-weight:800; cursor:pointer;">📋 Agregar productos</button>
-                        <button onclick="agregarFilaProductoGuia()" style="height:20px; padding:0 8px; font-size:8px; border-radius:4px; background:#2563EB; color:#fff; border:0; font-weight:800; cursor:pointer;">+ Agregar fila</button>
-                    </div>
-                </div>
-                <div style="overflow-x:auto; padding:4px 6px;">
-                    <table style="width:100%; border-collapse:collapse; font-size:9px; min-width:650px;">
-                        <thead>
-                            <tr>
-                                <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:35px;">#</th>
-                                <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:80px;">Código</th>
-                                <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Descripción</th>
-                                <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:70px;">Unidad</th>
-                                <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:60px;">Cantidad</th>
-                                <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:70px;">Peso U.</th>
-                                <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:35px;">✕</th>
-                            </tr>
-                        </thead>
-                        <tbody id="guiaProductosBody">
-                            <!-- Productos se agregan aquí -->
-                        </tbody>
-                    </table>
-                </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 10px; background:#F8FAFC; border-top:1px solid #E2E8F0; font-size:9px; font-weight:800; color:#475569;">
-                    <span id="guiaProductosCount">0 productos</span>
-                    <span>Peso total: <span id="guiaPesoTotalDisplay">0.00</span> kg</span>
-                </div>
-            `;
-            formContainer2.appendChild(productSection);
-            productosBody = document.getElementById('guiaProductosBody');
-        }
-    }
-    
-    // Agregar fila de producto
-    if (productosBody) {
-        agregarFilaProductoGuia();
-    } else {
-        console.warn('⚠️ No se pudo crear la tabla de productos');
-    }
+    // ✅ AHORA guiaProductosBody EXISTE EN EL DOM
+    agregarFilaProductoGuia();
     
     // ============================================================
     // MOSTRAR MODAL
