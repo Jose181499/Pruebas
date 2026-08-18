@@ -8147,18 +8147,15 @@ function openDespachoModal(id = null) {
 }
 
 function openGuiaModal(id = null) {
+    console.log('📦 Abriendo modal de guía', { id });
     editingId = id;
     const isEdit = id !== null;
     
-    const titleEl = document.getElementById('guiaModalTitle');
-    if (titleEl) {
-        titleEl.textContent = isEdit ? '📦 Editar Guía de Remisión' : '📦 Nueva Guía de Remisión';
-    }
-    
-    const formContainer = document.getElementById('guiaForm');
-    if (!formContainer) {
-        console.error('❌ #guiaForm no encontrado');
-        showToast('Error: Formulario de guía no disponible', 'error');
+    // Verificar que el modal existe
+    const modal = document.getElementById('guiaModal');
+    if (!modal) {
+        console.error('❌ #guiaModal no encontrado');
+        showToast('Error: Modal de guía no disponible', 'error');
         return;
     }
     
@@ -8175,80 +8172,314 @@ function openGuiaModal(id = null) {
         distrito: 'SAN MARTIN DE PORRES'
     };
     
+    // Establecer título
+    const titleEl = document.getElementById('guiaModalTitle');
+    if (titleEl) {
+        titleEl.textContent = isEdit ? '📦 Editar Guía de Remisión' : '📦 Nueva Guía de Remisión';
+    }
+    
+    // ============================================================
+    // BUSCAR EL FORMULARIO - Si no existe, mostramos error
+    // ============================================================
+    const formContainer = document.getElementById('guiaForm');
+    if (!formContainer) {
+        console.error('❌ #guiaForm no encontrado');
+        showToast('Error: Formulario de guía no disponible', 'error');
+        return;
+    }
+    
+    // ============================================================
+    // RENDERIZAR EL CONTENIDO DEL FORMULARIO
+    // ============================================================
     // Inicializar fechas
     const hoy = new Date().toISOString().split('T')[0];
     
-    const fechaEmision = document.getElementById('guiaFechaEmision');
-    if (fechaEmision) fechaEmision.value = hoy;
+    // Generar opciones de motivos
+    const motivos = [
+        'VENTA', 'COMPRA', 'TRANSFERENCIA ENTRE ALMACENES', 
+        'DEVOLUCIÓN', 'CONSIGNACIÓN', 'OTRO'
+    ];
     
-    const fechaInicio = document.getElementById('guiaFechaInicio');
-    if (fechaInicio) fechaInicio.value = hoy;
+    const motivoOptions = motivos.map(m => 
+        `<option value="${m}" ${m === 'VENTA' ? 'selected' : ''}>${m}</option>`
+    ).join('');
+    
+    // Generar opciones de modalidad
+    const modalidadOptions = `
+        <option value="PRIVADO" selected>🚛 Transporte Privado</option>
+        <option value="PUBLICO">🚚 Transporte Público</option>
+    `;
+    
+    formContainer.innerHTML = `
+        <!-- ============================================================ -->
+        <!-- FILA 1: REMITENTE Y DESTINATARIO -->
+        <!-- ============================================================ -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+            
+            <!-- REMITENTE -->
+            <div class="ficha-section" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden;">
+                <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#2563EB; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
+                    <span><i class="bi bi-building"></i> Remitente (Origen)</span>
+                    <small style="color:#64748B; font-weight:700; font-size:8px;">🔒 Fijo</small>
+                </div>
+                <div style="padding:6px 10px;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:2px;">
+                        <div class="form-field">
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">RUC</label>
+                            <input id="guiaRucRemitente" value="${ORIGEN_FIJO.ruc}" readonly style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#F1F5F9; font-size:9px; padding:0 6px; color:#64748B; cursor:not-allowed;">
+                        </div>
+                        <div class="form-field">
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Cód. Anexo</label>
+                            <input id="guiaRemitenteAnexo" value="0001" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
+                        </div>
+                    </div>
+                    <div class="form-field" style="margin-bottom:2px;">
+                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Razón Social</label>
+                        <input id="guiaRemitenteNombre" value="${ORIGEN_FIJO.nombre}" readonly style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#F1F5F9; font-size:9px; padding:0 6px; color:#64748B; cursor:not-allowed;">
+                    </div>
+                    <div class="form-field" style="margin-bottom:2px;">
+                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Dirección de Partida <span class="text-danger">*</span></label>
+                        <input id="guiaOrigen" value="${ORIGEN_FIJO.direccion}" readonly style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#F1F5F9; font-size:9px; padding:0 6px; color:#64748B; cursor:not-allowed;">
+                    </div>
+                    <!-- Ubigeo Remitente -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-top:2px;">
+                        <div class="form-field">
+                            <label style="font-size:6.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Departamento</label>
+                            <select id="guiaDeptoOrigen" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#F1F5F9; cursor:not-allowed;">
+                                <option value="${ORIGEN_FIJO.departamento}" selected>${ORIGEN_FIJO.departamento}</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label style="font-size:6.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Provincia</label>
+                            <select id="guiaProvOrigen" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#F1F5F9; cursor:not-allowed;">
+                                <option value="${ORIGEN_FIJO.provincia}" selected>${ORIGEN_FIJO.provincia}</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label style="font-size:6.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Distrito</label>
+                            <select id="guiaDistOrigen" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#F1F5F9; cursor:not-allowed;">
+                                <option value="${ORIGEN_FIJO.distrito}" selected>${ORIGEN_FIJO.distrito}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="font-size:7px; color:#64748B; margin-top:2px;">
+                        <i class="bi bi-geo-alt-fill" style="color:#2563EB;"></i> Ubigeo: <span id="guiaUbigeoOrigenTexto">${ORIGEN_FIJO.departamento} - ${ORIGEN_FIJO.provincia} - ${ORIGEN_FIJO.distrito}</span>
+                        <input type="hidden" id="guiaUbigeoOrigen" value="${ORIGEN_FIJO.ubigeo}">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- DESTINATARIO -->
+            <div class="ficha-section" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden;">
+                <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#059669; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
+                    <span><i class="bi bi-people-fill"></i> Destinatario (Cliente)</span>
+                    <small style="color:#64748B; font-weight:700; font-size:8px;">Buscar por RUC</small>
+                </div>
+                <div style="padding:6px 10px;">
+                    <div style="display:grid; grid-template-columns:1fr 60px; gap:4px; margin-bottom:2px;">
+                        <div class="form-field">
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Buscar Cliente</label>
+                            <input id="guiaBuscarCliente" placeholder="Ingresa RUC" maxlength="11" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;" onkeydown="if(event.key==='Enter'){buscarClienteParaGuia();}">
+                        </div>
+                        <button onclick="buscarClienteParaGuia()" style="height:20px; border-radius:4px; font-size:8px; padding:0 6px; background:#2563EB; color:#fff; border:0; font-weight:900; cursor:pointer;">🔍</button>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:2px;">
+                        <div class="form-field">
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">RUC <span class="text-danger">*</span></label>
+                            <input id="guiaRuc" placeholder="RUC" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
+                        </div>
+                        <div class="form-field">
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Cód. Anexo</label>
+                            <input id="guiaDestAnexo" placeholder="0001" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
+                        </div>
+                    </div>
+                    <div class="form-field" style="margin-bottom:2px;">
+                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Razón Social <span class="text-danger">*</span></label>
+                        <input id="guiaCliente" placeholder="Razón social del cliente" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
+                    </div>
+                    <div class="form-field" style="margin-bottom:2px;">
+                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Dirección de Llegada <span class="text-danger">*</span></label>
+                        <input id="guiaDestino" placeholder="Dirección del cliente" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
+                    </div>
+                    <!-- Ubigeo Destinatario -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-top:2px;">
+                        <div class="form-field">
+                            <label style="font-size:6.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Departamento</label>
+                            <select id="guiaDeptoDestino" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;">
+                                <option value="">Seleccione</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label style="font-size:6.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Provincia</label>
+                            <select id="guiaProvDestino" disabled style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;">
+                                <option value="">Primero Departamento</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label style="font-size:6.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Distrito</label>
+                            <select id="guiaDistDestino" disabled style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;">
+                                <option value="">Primero Provincia</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="font-size:7px; color:#64748B; margin-top:2px;">
+                        <i class="bi bi-geo-alt-fill" style="color:#2563EB;"></i> Ubigeo: <span id="guiaUbigeoDestinoTexto">Ninguno</span>
+                        <input type="hidden" id="guiaUbigeoDestino" value="">
+                    </div>
+                    <!-- Documentos asociados -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-top:4px;">
+                        <div class="form-field">
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Orden Compra</label>
+                            <input id="guiaOrdenCompra" placeholder="OC-04705" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:8px; padding:0 6px;">
+                        </div>
+                        <div class="form-field">
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Cotización</label>
+                            <input id="guiaCotizacion" placeholder="COT-2026-0001" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:8px; padding:0 6px;">
+                        </div>
+                        <div class="form-field">
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Factura</label>
+                            <input id="guiaFactura" placeholder="F001-123" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:8px; padding:0 6px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ============================================================ -->
+        <!-- FILA 2: VEHÍCULO Y TRANSPORTISTA -->
+        <!-- ============================================================ -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+            
+            <!-- VEHÍCULO / CONDUCTOR -->
+            <div class="ficha-section" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden;">
+                <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#EA580C; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
+                    <span><i class="bi bi-truck"></i> Datos de Transporte</span>
+                    <small style="color:#64748B; font-weight:700; font-size:8px;">Obligatorio</small>
+                </div>
+                <div style="padding:6px 10px;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:2px;">
+                        <div class="form-field">
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Modalidad <span class="text-danger">*</span></label>
+                            <select id="guiaModalidadTransporte" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:9px; padding:0 4px; background:#FFFFFF;" onchange="toggleTransportistaGuia()">
+                                ${modalidadOptions}
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Seleccionar Conductor</label>
+                            <div style="display:flex; gap:4px; align-items:center;">
+                                <select id="guiaSelectConductor" style="flex:1; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;" onchange="cargarConductorGuia(this.value)">
+                                    <option value="">-- Seleccione --</option>
+                                    <option value="personalizar" style="font-weight:600;color:#2563EB;">✏️ Personalizar</option>
+                                </select>
+                                <button onclick="limpiarConductorGuia()" style="height:20px; border-radius:4px; font-size:8px; padding:0 6px; background:#EF4444; color:#fff; border:0; font-weight:900; cursor:pointer; white-space:nowrap;" title="Limpiar campos del conductor">✕</button>
+                                <button onclick="openNuevoConductorGuia()" style="height:20px; border-radius:4px; font-size:8px; padding:0 8px; background:#2563EB; color:#fff; border:0; font-weight:900; cursor:pointer; white-space:nowrap;">➕ Nuevo</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:4px; margin-bottom:2px;">
+                        <div class="form-field">
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Placa <span class="text-danger">*</span></label>
+                            <input id="guiaPlaca" placeholder="ABC-123" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px; text-transform:uppercase;">
+                        </div>
+                        <div class="form-field">
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Licencia</label>
+                            <input id="guiaLicencia" placeholder="1234567890" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
+                        </div>
+                        <div class="form-field">
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">DNI Conductor <span class="text-danger">*</span></label>
+                            <input id="guiaConductorDNI" placeholder="DNI" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
+                        </div>
+                        <div class="form-field">
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Nombre Conductor <span class="text-danger">*</span></label>
+                            <input id="guiaConductorNombre" placeholder="Nombre completo" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- TRANSPORTISTA (PÚBLICO) -->
+            <div class="ficha-section" id="guiaTransportistaCard" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden; opacity:0.5;">
+                <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#DC2626; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
+                    <span><i class="bi bi-building"></i> Datos del Transportista (Público)</span>
+                    <small style="color:#64748B; font-weight:700; font-size:8px;">Solo para Público</small>
+                </div>
+                <div style="padding:6px 10px;">
+                    <div style="display:grid; grid-template-columns:1fr 60px; gap:4px; margin-bottom:2px;">
+                        <div class="form-field">
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">RUC Transportista</label>
+                            <input id="guiaTransportistaRUC" placeholder="RUC empresa" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
+                        </div>
+                        <button onclick="buscarTransportistaGuia()" style="height:20px; border-radius:4px; font-size:8px; padding:0 6px; background:#2563EB; color:#fff; border:0; font-weight:900; cursor:pointer;">🔍</button>
+                    </div>
+                    <div class="form-field" style="margin-bottom:2px;">
+                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Razón Social</label>
+                        <input id="guiaTransportistaNombre" readonly style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#F1F5F9; font-size:9px; padding:0 6px; color:#64748B; cursor:not-allowed;">
+                    </div>
+                    <div class="form-field">
+                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Dirección</label>
+                        <input id="guiaTransportistaDireccion" placeholder="Dirección del transportista" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
+                    </div>
+                    <div id="guiaMsgTransportePrivado" style="display:none; margin-top:4px; padding:4px 8px; background:#FFF7ED; border:1px solid #FDBA74; border-radius:4px; font-size:8px; color:#9A3412;">
+                        <i class="bi bi-info-circle"></i> En transporte privado no se requiere transportista.
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ============================================================ -->
+        <!-- FILA 3: TRASLADO -->
+        <!-- ============================================================ -->
+        <div class="ficha-section" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden; margin-bottom:8px;">
+            <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#7C3AED; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
+                <span><i class="bi bi-file-text"></i> Datos del Traslado</span>
+                <small style="color:#64748B; font-weight:700; font-size:8px;">Campos SUNAT</small>
+            </div>
+            <div style="padding:6px 10px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:4px; margin-bottom:2px;">
+                    <div class="form-field">
+                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Motivo <span class="text-danger">*</span></label>
+                        <select id="guiaMotivo" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;">
+                            ${motivoOptions}
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Fecha Emisión</label>
+                        <input id="guiaFechaEmision" type="date" value="${hoy}" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
+                    </div>
+                    <div class="form-field">
+                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Fecha Inicio <span class="text-danger">*</span></label>
+                        <input id="guiaFechaInicio" type="date" value="${hoy}" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
+                    </div>
+                    <div class="form-field">
+                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">N° Bultos <span class="text-danger">*</span></label>
+                        <input id="guiaBultos" type="number" value="1" min="0" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
+                    </div>
+                </div>
+                
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-top:2px;">
+                    <div class="form-field">
+                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Unidad Peso Bruto <span class="text-danger">*</span></label>
+                        <select id="guiaUnidadPeso" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;">
+                            <option value="">Cargando...</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Peso Bruto Total <span class="text-danger">*</span></label>
+                        <input id="guiaPeso" type="number" step="0.01" value="0.00" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
+                    </div>
+                </div>
+                
+                <!-- Observaciones -->
+                <div class="form-field" style="margin-top:4px;">
+                    <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Observaciones</label>
+                    <textarea id="guiaObservaciones" rows="1" placeholder="Notas adicionales..." style="width:100%; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:4px 6px; resize:vertical; min-height:24px;"></textarea>
+                </div>
+            </div>
+        </div>
+    `;
     
     // ============================================================
-    // CONFIGURAR UBIGEOS DE ORIGEN (FIJOS)
-    // ============================================================
-    const origenInput = document.getElementById('guiaOrigen');
-    if (origenInput) {
-        origenInput.value = ORIGEN_FIJO.direccion;
-        origenInput.readOnly = true;
-        origenInput.style.background = '#F1F5F9';
-        origenInput.style.color = '#64748B';
-        origenInput.style.cursor = 'not-allowed';
-    }
-    
-    const rucRemitente = document.getElementById('guiaRucRemitente');
-    if (rucRemitente) {
-        rucRemitente.value = ORIGEN_FIJO.ruc;
-        rucRemitente.readOnly = true;
-        rucRemitente.style.background = '#F1F5F9';
-        rucRemitente.style.color = '#64748B';
-    }
-    
-    const nombreRemitente = document.getElementById('guiaRemitenteNombre');
-    if (nombreRemitente) {
-        nombreRemitente.value = ORIGEN_FIJO.nombre;
-        nombreRemitente.readOnly = true;
-        nombreRemitente.style.background = '#F1F5F9';
-        nombreRemitente.style.color = '#64748B';
-    }
-    
-    // Ubigeo Origen
-    const deptoOrigen = document.getElementById('guiaDeptoOrigen');
-    if (deptoOrigen) {
-        deptoOrigen.value = ORIGEN_FIJO.departamento;
-        deptoOrigen.disabled = true;
-        deptoOrigen.style.background = '#F1F5F9';
-        deptoOrigen.style.cursor = 'not-allowed';
-    }
-    
-    const provOrigen = document.getElementById('guiaProvOrigen');
-    if (provOrigen) {
-        provOrigen.value = ORIGEN_FIJO.provincia;
-        provOrigen.disabled = true;
-        provOrigen.style.background = '#F1F5F9';
-        provOrigen.style.cursor = 'not-allowed';
-    }
-    
-    const distOrigen = document.getElementById('guiaDistOrigen');
-    if (distOrigen) {
-        distOrigen.value = ORIGEN_FIJO.distrito;
-        distOrigen.disabled = true;
-        distOrigen.style.background = '#F1F5F9';
-        distOrigen.style.cursor = 'not-allowed';
-    }
-    
-    const ubigeoHidden = document.getElementById('guiaUbigeoOrigen');
-    if (ubigeoHidden) {
-        ubigeoHidden.value = ORIGEN_FIJO.ubigeo;
-    }
-    
-    const ubigeoTexto = document.getElementById('guiaUbigeoOrigenTexto');
-    if (ubigeoTexto) {
-        ubigeoTexto.textContent = `${ORIGEN_FIJO.departamento} - ${ORIGEN_FIJO.provincia} - ${ORIGEN_FIJO.distrito}`;
-    }
-    
-    // ============================================================
-    // CONFIGURAR UBIGEOS DE DESTINO (EDITABLES)
+    // CONFIGURAR UBIGEOS DE DESTINO
     // ============================================================
     llenarDepartamentosGuia('guiaDeptoDestino');
     configurarUbigeoGuia('Destino');
@@ -8277,47 +8508,85 @@ function openGuiaModal(id = null) {
     }, 100);
     
     // ============================================================
-    // 🔽 LIMPIAR PRODUCTOS - CON VERIFICACIÓN DE EXISTENCIA
+    // CARGAR UNIDADES DE MEDIDA
     // ============================================================
-    const productosBody = document.getElementById('guiaProductosBody');
-    if (productosBody) {
-        productosBody.innerHTML = '';
-    } else {
-        console.warn('⚠️ #guiaProductosBody no encontrado, creando...');
-        // Si no existe, crearlo
-        const tabla = document.querySelector('#guiaForm table tbody');
-        if (tabla) {
-            tabla.id = 'guiaProductosBody';
-        }
-    }
+    cargarUnidadesDeMedidaGuia();
     
-    // Agregar fila de producto
-    agregarFilaProductoGuia();
-    
-    // Cargar conductores
+    // ============================================================
+    // CARGAR CONDUCTORES
+    // ============================================================
     cargarConductoresGuia();
     toggleTransportistaGuia();
     
     // ============================================================
-    // 🔽 CARGAR UNIDADES DE MEDIDA DESDE LA BD
+    // AGREGAR FILA DE PRODUCTO
     // ============================================================
-    cargarUnidadesDeMedidaGuia();
-    
-    // Mostrar modal
-    const modal = document.getElementById('guiaModal');
-    if (modal) {
-        modal.classList.add('show');
-    } else {
-        console.error('❌ #guiaModal no encontrado');
-        showToast('Error: Modal de guía no disponible', 'error');
-        return;
+    // Verificar si existe el body de productos
+    let productosBody = document.getElementById('guiaProductosBody');
+    if (!productosBody) {
+        // Si no existe, crear la tabla de productos en el DOM
+        const formContainer2 = document.getElementById('guiaForm');
+        if (formContainer2) {
+            // Crear la sección de productos
+            const productSection = document.createElement('div');
+            productSection.className = 'ficha-section';
+            productSection.style.cssText = 'border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden; margin-bottom:8px;';
+            productSection.innerHTML = `
+                <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#059669; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
+                    <span><i class="bi bi-box-seam"></i> Productos</span>
+                    <div style="display:flex; gap:4px; align-items:center;">
+                        <button onclick="openProductSelectorGuia()" style="height:20px; padding:0 10px; font-size:8px; border-radius:4px; background:#8B5CF6; color:#fff; border:0; font-weight:800; cursor:pointer;">📋 Agregar productos</button>
+                        <button onclick="agregarFilaProductoGuia()" style="height:20px; padding:0 8px; font-size:8px; border-radius:4px; background:#2563EB; color:#fff; border:0; font-weight:800; cursor:pointer;">+ Agregar fila</button>
+                    </div>
+                </div>
+                <div style="overflow-x:auto; padding:4px 6px;">
+                    <table style="width:100%; border-collapse:collapse; font-size:9px; min-width:650px;">
+                        <thead>
+                            <tr>
+                                <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:35px;">#</th>
+                                <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:80px;">Código</th>
+                                <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Descripción</th>
+                                <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:70px;">Unidad</th>
+                                <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:60px;">Cantidad</th>
+                                <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:70px;">Peso U.</th>
+                                <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:35px;">✕</th>
+                            </tr>
+                        </thead>
+                        <tbody id="guiaProductosBody">
+                            <!-- Productos se agregan aquí -->
+                        </tbody>
+                    </table>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 10px; background:#F8FAFC; border-top:1px solid #E2E8F0; font-size:9px; font-weight:800; color:#475569;">
+                    <span id="guiaProductosCount">0 productos</span>
+                    <span>Peso total: <span id="guiaPesoTotalDisplay">0.00</span> kg</span>
+                </div>
+            `;
+            formContainer2.appendChild(productSection);
+            productosBody = document.getElementById('guiaProductosBody');
+        }
     }
+    
+    // Agregar fila de producto
+    if (productosBody) {
+        agregarFilaProductoGuia();
+    } else {
+        console.warn('⚠️ No se pudo crear la tabla de productos');
+    }
+    
+    // ============================================================
+    // MOSTRAR MODAL
+    // ============================================================
+    modal.classList.add('show');
     
     // Si es edición, cargar datos
     if (isEdit) {
-        setTimeout(() => cargarGuiaParaEditar(id), 200);
+        setTimeout(() => cargarGuiaParaEditar(id), 300);
     }
+    
+    console.log('✅ Modal de guía abierto correctamente');
 }
+
 
 // ============================================================
 // CARGAR GUÍA EXISTENTE PARA EDICIÓN
