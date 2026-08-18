@@ -2931,6 +2931,8 @@ function saveDespacho(estado) {
 
 // ventas.js - Reemplazar la función _saveGuia
 
+// ventas.js - Reemplazar la función _saveGuia (versión simplificada)
+
 async function _saveGuia(estado) {
     try {
         console.log('🔄 Guardando guía...', { estado });
@@ -2955,8 +2957,6 @@ async function _saveGuia(estado) {
                         codigo: codigoInput?.value?.trim() || '',
                         producto: descInput?.value?.trim() || '',
                         descripcion: descInput?.value?.trim() || '',
-                        marca: '', // Si tienes campo de marca
-                        modelo: '', // Si tienes campo de modelo
                         um: unidadSelect?.value || 'NIU',
                         cantidad: parseFloat(cantInput?.value) || 1,
                         peso_unitario: parseFloat(pesoInput?.value) || 0
@@ -2968,131 +2968,59 @@ async function _saveGuia(estado) {
         console.log(`📦 ${productos.length} productos encontrados`);
         
         // ============================================================
-        // 2. OBTENER TODOS LOS CAMPOS DEL FORMULARIO
-        // ============================================================
-        
-        // Fechas
-        const fechaEmision = document.getElementById('guiaFechaEmision')?.value || '';
-        const fechaInicio = document.getElementById('guiaFechaInicio')?.value || '';
-        
-        // Destinatario
-        const rucDestinatario = document.getElementById('guiaRuc')?.value?.trim() || '';
-        const destinatarioNombre = document.getElementById('guiaCliente')?.value?.trim() || '';
-        const destinatarioDireccion = document.getElementById('guiaDestino')?.value?.trim() || '';
-        
-        // Ubigeo Destinatario
-        const deptoDestino = document.getElementById('guiaDeptoDestino')?.value || '';
-        const provDestino = document.getElementById('guiaProvDestino')?.value || '';
-        const distDestino = document.getElementById('guiaDistDestino')?.value || '';
-        const ubigeoDestino = document.getElementById('guiaUbigeoDestino')?.value || '';
-        
-        // Datos de Transporte
-        const modalidadTransporte = document.getElementById('guiaModalidadTransporte')?.value || 'PRIVADO';
-        const placaVehiculo = document.getElementById('guiaPlaca')?.value?.trim()?.toUpperCase() || '';
-        const conductorDNI = document.getElementById('guiaConductorDNI')?.value?.trim() || '';
-        const conductorNombre = document.getElementById('guiaConductorNombre')?.value?.trim() || '';
-        const licenciaConductor = document.getElementById('guiaLicencia')?.value?.trim() || '';
-        
-        // Transportista (si es Público)
-        const transportistaRUC = document.getElementById('guiaTransportistaRUC')?.value?.trim() || '';
-        const transportistaNombre = document.getElementById('guiaTransportistaNombre')?.value?.trim() || '';
-        const transportistaDireccion = document.getElementById('guiaTransportistaDireccion')?.value?.trim() || '';
-        
-        // Datos del Traslado
-        const motivoTraslado = document.getElementById('guiaMotivo')?.value || '01';
-        const bultos = parseInt(document.getElementById('guiaBultos')?.value) || 1;
-        const unidadPeso = document.getElementById('guiaUnidadPeso')?.value || 'KGM';
-        const pesoTotal = parseFloat(document.getElementById('guiaPeso')?.value) || 0;
-        
-        // Documentos asociados
-        const ordenCompra = document.getElementById('guiaOrdenCompra')?.value?.trim() || '';
-        const cotizacion = document.getElementById('guiaCotizacion')?.value?.trim() || '';
-        const factura = document.getElementById('guiaFactura')?.value?.trim() || '';
-        const observaciones = document.getElementById('guiaObservaciones')?.value?.trim() || '';
-        
-        // ============================================================
-        // 3. CALCULAR PESO TOTAL DESDE PRODUCTOS
-        // ============================================================
-        let pesoCalculado = 0;
-        productos.forEach(p => {
-            pesoCalculado += (p.cantidad || 0) * (p.peso_unitario || 0);
-        });
-        
-        // Usar el peso calculado o el manual
-        const pesoFinal = pesoTotal > 0 ? pesoTotal : pesoCalculado;
-        
-        // ============================================================
-        // 4. PREPARAR DATOS PARA ENVIAR
+        // 2. OBTENER DATOS DEL FORMULARIO
         // ============================================================
         const data = {
             id: editingId,
             estado: estado || 'Borrador',
             
-            // ============================================================
-            // DATOS DEL REMITENTE (FIJOS)
-            // ============================================================
+            // Serie y Número
+            serie: document.getElementById('guiaSerie')?.value || 'T001',
+            numero: document.getElementById('guiaNumero')?.value || String(Date.now()).slice(-8),
+            
+            // Fechas
+            fecha_emision: document.getElementById('guiaFechaEmision')?.value || '',
+            fecha_traslado: document.getElementById('guiaFechaEmision')?.value || '',
+            
+            // REMITENTE (Fijo)
             ruc_remitente: '20602095704',
             remitente_nombre: 'KCF CORPORACION SAC',
             remitente_direccion: 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES',
             remitente_ubigeo: '150139',
-            remitente_departamento: 'LIMA',
-            remitente_provincia: 'LIMA',
-            remitente_distrito: 'SAN MARTIN DE PORRES',
             
-            // ============================================================
-            // DATOS DEL DESTINATARIO
-            // ============================================================
-            ruc_destinatario: rucDestinatario,
-            destinatario_nombre: destinatarioNombre,
-            destinatario_direccion: destinatarioDireccion,
-            destinatario_ubigeo: ubigeoDestino,
-            destinatario_departamento: deptoDestino,
-            destinatario_provincia: provDestino,
-            destinatario_distrito: distDestino,
+            // DESTINATARIO
+            ruc_destinatario: document.getElementById('guiaRuc')?.value?.trim() || '',
+            destinatario_nombre: document.getElementById('guiaCliente')?.value?.trim() || '',
+            destinatario_direccion: document.getElementById('guiaDestino')?.value?.trim() || '',
+            destinatario_ubigeo: document.getElementById('guiaUbigeoDestino')?.value || '',
             
-            // ============================================================
-            // DATOS DE TRANSPORTE
-            // ============================================================
-            modalidad_transporte: modalidadTransporte,
-            placa_vehiculo: placaVehiculo,
-            conductor_dni: conductorDNI,
-            conductor_nombre: conductorNombre,
-            licencia_conductor: licenciaConductor,
-            transportista_ruc: transportistaRUC,
-            transportista_nombre: transportistaNombre,
-            transportista_direccion: transportistaDireccion,
+            // TRANSPORTE
+            modalidad_transporte: document.getElementById('guiaModalidadTransporte')?.value || 'PRIVADO',
+            placa_vehiculo: document.getElementById('guiaPlaca')?.value?.trim()?.toUpperCase() || '',
+            conductor_dni: document.getElementById('guiaConductorDNI')?.value?.trim() || '',
+            conductor_nombre: document.getElementById('guiaConductorNombre')?.value?.trim() || '',
+            licencia_conductor: document.getElementById('guiaLicencia')?.value?.trim() || '',
+            transportista_ruc: document.getElementById('guiaTransportistaRUC')?.value?.trim() || '',
+            transportista_nombre: document.getElementById('guiaTransportistaNombre')?.value?.trim() || '',
             
-            // ============================================================
-            // DATOS DEL TRASLADO
-            // ============================================================
-            fecha_emision: fechaEmision,
-            fecha_traslado: fechaEmision, // Usar misma fecha
-            fecha_inicio_traslado: fechaInicio,
-            motivo_traslado: motivoTraslado,
-            numero_bultos: bultos,
-            unidad_peso_bruto: unidadPeso,
-            peso_total: pesoFinal,
+            // TRASLADO
+            motivo_traslado: document.getElementById('guiaMotivo')?.value || '01',
+            peso_total: parseFloat(document.getElementById('guiaPeso')?.value) || 0,
             
-            // ============================================================
             // DOCUMENTOS ASOCIADOS
-            // ============================================================
-            serie: document.getElementById('guiaSerie')?.value || 'T001',
-            numero: document.getElementById('guiaNumero')?.value || String(Date.now()).slice(-8),
-            orden_compra_cliente: ordenCompra,
-            documento_asociado: cotizacion,
-            factura_vinculada: factura,
-            observaciones: observaciones,
+            documento_asociado: document.getElementById('guiaCotizacion')?.value?.trim() || '',
             
-            // ============================================================
+            // OBSERVACIONES
+            observaciones: document.getElementById('guiaObservaciones')?.value?.trim() || '',
+            
             // PRODUCTOS
-            // ============================================================
             items: productos
         };
         
         console.log('📦 Datos a guardar:', data);
         
         // ============================================================
-        // 5. ENVIAR A LA API
+        // 3. ENVIAR A LA API
         // ============================================================
         const response = await apiFetch('/ventas/api/guias/guardar', {
             method: 'POST',
@@ -3103,7 +3031,6 @@ async function _saveGuia(estado) {
             showToast(`✅ Guía guardada como: ${estado}`, 'success');
             closeModal('guiaModal');
             await loadGuias();
-            // Limpiar datos temporales
             window._guiaProductos = null;
         } else {
             showToast('❌ Error: ' + (response.error || 'No se pudo guardar'), 'error');
@@ -3113,6 +3040,8 @@ async function _saveGuia(estado) {
         showToast('❌ Error al guardar la guía: ' + error.message, 'error');
     }
 }
+
+
 
 function saveGuia(estado) {
     const numero = document.getElementById('guiaNumero')?.value || 'nueva guía';

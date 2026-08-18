@@ -1640,7 +1640,6 @@ def api_guias_listar():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
 @ventas_bp.route('/ventas/api/guias/guardar', methods=['POST'])
 @login_required
 def api_guias_guardar():
@@ -1683,10 +1682,9 @@ def api_guias_guardar():
         
         # Fecha de traslado
         fecha_traslado = data.get('fecha_traslado') or data.get('fecha_emision') or ahora.date().isoformat()
-        fecha_inicio = data.get('fecha_inicio_traslado') or fecha_traslado
         
         # ============================================================
-        # GUARDAR EN LA BASE DE DATOS
+        # CONSULTA CON SOLO LAS COLUMNAS QUE EXISTEN EN LA TABLA
         # ============================================================
         query = """
             INSERT INTO guias_remision (
@@ -1698,53 +1696,53 @@ def api_guias_guardar():
                 conductor_nombre, licencia_conductor, transportista_ruc,
                 transportista_nombre, motivo_traslado, documento_asociado,
                 peso_total, items_json, observaciones, estado_sunat,
-                creado_por, fecha_inicio_traslado, numero_bultos,
-                unidad_peso_bruto, transportista_direccion,
-                orden_compra_cliente, factura_vinculada
+                creado_por, created_at
             ) VALUES (
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s, %s, %s, %s
+                %s, NOW()
             )
             RETURNING id, numero
         """
         
         items_json = json.dumps(data.get('items', []))
         
+        # ============================================================
+        # 27 VALORES QUE COINCIDEN CON LOS 27 PLACEHOLDERS
+        # ============================================================
         params = (
-            data.get('serie', 'T001'),
-            data.get('numero'),
-            fecha_emision,
-            fecha_traslado,
-            data.get('ruc_remitente') or ORIGEN_FIJO['ruc'],
-            data.get('remitente_nombre') or ORIGEN_FIJO['nombre'],
-            data.get('remitente_direccion') or ORIGEN_FIJO['direccion'],
-            data.get('remitente_ubigeo') or ORIGEN_FIJO['ubigeo'],
-            data.get('ruc_destinatario', ''),
-            data.get('destinatario_nombre', ''),
-            data.get('destinatario_direccion', ''),
-            data.get('destinatario_ubigeo', ''),
-            data.get('modalidad_transporte', 'PRIVADO'),
-            data.get('placa_vehiculo', ''),
-            data.get('conductor_dni', ''),
-            data.get('conductor_nombre', ''),
-            data.get('licencia_conductor', ''),
-            data.get('transportista_ruc', ''),
-            data.get('transportista_nombre', ''),
-            data.get('motivo_traslado', '01'),
-            data.get('documento_asociado', ''),
-            float(data.get('peso_total', 0)),
-            items_json,
-            data.get('observaciones', ''),
-            data.get('estado', 'BORRADOR'),
-            usuario_id,
-            fecha_inicio,
-            int(data.get('numero_bultos', 1)),
-            data.get('unidad_peso_bruto', 'KGM'),
-            data.get('transportista_direccion', ''),
-            data.get('orden_compra_cliente', ''),
-            data.get('factura_vinculada', '')
+            data.get('serie', 'T001'),                              # 1
+            data.get('numero'),                                     # 2
+            fecha_emision,                                          # 3
+            fecha_traslado,                                         # 4
+            data.get('ruc_remitente') or ORIGEN_FIJO['ruc'],       # 5
+            data.get('remitente_nombre') or ORIGEN_FIJO['nombre'], # 6
+            data.get('remitente_direccion') or ORIGEN_FIJO['direccion'], # 7
+            data.get('remitente_ubigeo') or ORIGEN_FIJO['ubigeo'], # 8
+            data.get('ruc_destinatario', ''),                      # 9
+            data.get('destinatario_nombre', ''),                   # 10
+            data.get('destinatario_direccion', ''),                # 11
+            data.get('destinatario_ubigeo', ''),                   # 12
+            data.get('modalidad_transporte', 'PRIVADO'),           # 13
+            data.get('placa_vehiculo', ''),                        # 14
+            data.get('conductor_dni', ''),                         # 15
+            data.get('conductor_nombre', ''),                      # 16
+            data.get('licencia_conductor', ''),                    # 17
+            data.get('transportista_ruc', ''),                     # 18
+            data.get('transportista_nombre', ''),                  # 19
+            data.get('motivo_traslado', '01'),                     # 20
+            data.get('documento_asociado', ''),                    # 21
+            float(data.get('peso_total', 0)),                      # 22
+            items_json,                                            # 23
+            data.get('observaciones', ''),                         # 24
+            data.get('estado', 'BORRADOR'),                        # 25
+            usuario_id                                             # 26
+            # NOW() es el placeholder #27 (se pasa automáticamente en la consulta)
         )
+        
+        # Verificar que el número de parámetros sea correcto
+        print(f"📊 Número de parámetros: {len(params)}")
+        print(f"📊 Items: {len(data.get('items', []))} productos")
         
         result = db_query(query, params)
         
@@ -1765,7 +1763,6 @@ def api_guias_guardar():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 @ventas_bp.route('/ventas/api/guias/<int:id>', methods=['GET'])
 @login_required
