@@ -12791,91 +12791,46 @@ window.now = now;
 
 
 // ============================================================
-// FIX: SOBRESCRIBIR openComprobanteModal para asegurar que funcione
+// FUNCIÓN PARA ABRIR MODAL DE COMPROBANTE - VERSIÓN CORREGIDA
 // ============================================================
+
 window.openComprobanteModal = function(id = null) {
-    console.log('📋 Abriendo modal de comprobante/factura', { id });
-    editingId = id;
-    const isEdit = id !== null;
+    console.log('🔴 openComprobanteModal LLAMADA!', { id });
     
-    // Establecer título
-    const titleEl = document.getElementById('comprobanteModalTitle');
-    if (titleEl) {
-        titleEl.textContent = isEdit ? '✏️ Editar comprobante' : '🧾 Nueva factura / boleta';
-    }
-    
-    // Verificar que el modal existe
-    const modal = document.getElementById('comprobanteModal');
-    if (!modal) {
-        console.error('❌ #comprobanteModal no encontrado');
-        showToast('Error: Modal de comprobante no disponible', 'error');
-        return;
-    }
-    
-    // Verificar que el formulario existe
-    const formContainer = document.getElementById('comprobanteForm');
-    if (!formContainer) {
-        console.error('❌ #comprobanteForm no encontrado');
-        showToast('Error: Formulario de comprobante no disponible', 'error');
-        return;
-    }
-    
-    // ============================================================
-    // CARGAR DATOS NECESARIOS
-    // ============================================================
-    Promise.all([
-        cotizacionesData.length === 0 ? loadCotizaciones() : Promise.resolve(),
-        guiasData.length === 0 ? loadGuias() : Promise.resolve(),
-        pedidosData.length === 0 ? loadPedidos() : Promise.resolve()
-    ]).then(() => {
-        // ============================================================
-        // GENERAR OPCIONES PARA SELECTS
-        // ============================================================
-        const cotOptions = (cotizacionesData || []).map(q => 
-            `<option value="${q.numero}">${q.numero} - ${q.razon || 'Sin cliente'}</option>`
-        ).join('');
+    try {
+        editingId = id;
+        const isEdit = id !== null;
         
-        const guiaOptions = (guiasData || []).map(g => {
-            const valor = `${g.serie}-${g.numero}`;
-            return `<option value="${valor}">${valor} - ${g.cliente || 'Sin cliente'}</option>`;
-        }).join('');
+        // Establecer título
+        const titleEl = document.getElementById('comprobanteModalTitle');
+        if (titleEl) {
+            titleEl.textContent = isEdit ? '✏️ Editar comprobante' : '🧾 Nueva factura / boleta';
+        }
         
-        const pcOptions = (pedidosData || []).map(p => 
-            `<option value="${p.numero}">${p.numero} - ${p.cliente || 'Sin cliente'}</option>`
-        ).join('');
+        // Verificar que el modal existe
+        const modal = document.getElementById('comprobanteModal');
+        if (!modal) {
+            console.error('❌ #comprobanteModal no encontrado');
+            showToast('Error: Modal de comprobante no disponible', 'error');
+            return;
+        }
+        
+        // Verificar que el formulario existe
+        const formContainer = document.getElementById('comprobanteForm');
+        if (!formContainer) {
+            console.error('❌ #comprobanteForm no encontrado');
+            showToast('Error: Formulario de comprobante no disponible', 'error');
+            return;
+        }
         
         // ============================================================
-        // RENDERIZAR FORMULARIO
+        // GENERAR HTML DEL FORMULARIO - DIRECTO, SIN ESPERAR DATOS
         // ============================================================
+        console.log('🔄 Generando HTML del formulario...');
+        
         formContainer.innerHTML = `
             <div class="ficha-section">
-                <div class="ficha-section-title">🧾 Documentos vinculados</div>
-                <div class="ficha-grid">
-                    <div class="form-field col-4">
-                        <label>Cotización vinculada</label>
-                        <select id="compCotizacion" onchange="actualizarObservacionesComprobante()">
-                            <option value="">-- Ninguna --</option>
-                            ${cotOptions}
-                        </select>
-                    </div>
-                    <div class="form-field col-4">
-                        <label>Guía de Remisión vinculada</label>
-                        <select id="compGuia" onchange="loadComprobanteFromGuia(this.value)">
-                            <option value="">-- Ninguna --</option>
-                            ${guiaOptions}
-                        </select>
-                    </div>
-                    <div class="form-field col-4">
-                        <label>PC vinculado</label>
-                        <select id="compPC" onchange="loadComprobanteFromPC(this.value)">
-                            <option value="">-- Ninguno --</option>
-                            ${pcOptions}
-                        </select>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="ficha-section">
+                <div class="ficha-section-title">🧾 Datos del comprobante</div>
                 <div class="ficha-grid">
                     <div class="form-field col-3">
                         <label>Tipo <span style="color:#DC2626;">*</span></label>
@@ -12895,7 +12850,11 @@ window.openComprobanteModal = function(id = null) {
                     <div class="form-field col-3">
                         <label>Estado</label>
                         <select id="compEstado">
-                            ${ESTADOS_COMPROBANTE.map(e => `<option value="${e}" ${e === 'Borrador' ? 'selected' : ''}>${e}</option>`).join('')}
+                            <option value="Borrador" selected>Borrador</option>
+                            <option value="Emitido">Emitido</option>
+                            <option value="Enviado">Enviado</option>
+                            <option value="Pagado">Pagado</option>
+                            <option value="Anulado">Anulado</option>
                         </select>
                     </div>
                     <div class="form-field col-4">
@@ -12934,23 +12893,11 @@ window.openComprobanteModal = function(id = null) {
                 <div class="ficha-section-title">📦 Productos</div>
                 <div id="compProducts">
                     <div style="padding:20px;text-align:center;color:#94A3B8;">
-                        Seleccione una cotización para cargar los productos.
+                        📭 No hay productos. Seleccione una cotización o agregue manualmente.
                     </div>
-                </div>
-                <div style="padding:10px;text-align:right;">
-                    <button class="btn btn-soft" onclick="showToast('📋 Abriendo selector de productos...', 'info')" style="height:28px;padding:0 14px;font-size:11px;border-radius:6px;background:#F1F5F9;color:#0F172A;border:1px solid #E5E7EB;font-weight:800;cursor:pointer;">
-                        📋 Agregar productos
-                    </button>
                 </div>
             </div>
         `;
-        
-        // ============================================================
-        // SI ES EDICIÓN, CARGAR DATOS
-        // ============================================================
-        if (isEdit) {
-            setTimeout(() => cargarComprobanteParaEditar(id), 200);
-        }
         
         // ============================================================
         // MOSTRAR MODAL
@@ -12959,10 +12906,10 @@ window.openComprobanteModal = function(id = null) {
         console.log('✅ Modal de comprobante abierto correctamente');
         showToast('📋 Complete los datos del comprobante', 'info');
         
-    }).catch(error => {
-        console.error('❌ Error cargando datos:', error);
-        showToast('❌ Error al cargar datos: ' + error.message, 'error');
-    });
+    } catch (error) {
+        console.error('❌ Error en openComprobanteModal:', error);
+        showToast('❌ Error al abrir el modal: ' + error.message, 'error');
+    }
 };
 
 console.log('✅ Todas las funciones exportadas al window correctamente');
