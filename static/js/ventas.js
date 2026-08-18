@@ -6277,15 +6277,26 @@ function toggleTransportistaGuia() {
 
 function agregarFilaProductoGuia() {
     const tbody = document.getElementById('guiaProductosBody');
-    if (!tbody) return;
+    if (!tbody) {
+        console.warn('⚠️ guiaProductosBody no encontrado, no se puede agregar fila');
+        return;
+    }
+    
     const count = tbody.children.length + 1;
     const tr = document.createElement('tr');
     tr.innerHTML = `
-        <td style="padding:2px 4px; text-align:center; font-weight:800; background:#F8FAFC;">${count}</td>
-        <td style="padding:2px 4px;"><input class="guia-producto-codigo" placeholder="Código" style="width:100%; border:1px solid #E5E7EB; border-radius:3px; font-size:8px; padding:2px 4px;"></td>
-        <td style="padding:2px 4px;"><input class="guia-producto-desc" placeholder="Descripción" style="width:100%; border:1px solid #E5E7EB; border-radius:3px; font-size:8px; padding:2px 4px;" onchange="actualizarPesoTotalGuia()"></td>
+        <td style="padding:2px 4px; text-align:center; font-weight:800; background:#F8FAFC; font-size:9px;">${count}</td>
         <td style="padding:2px 4px;">
-            <select class="guia-producto-unidad" style="width:100%; border:1px solid #E5E7EB; border-radius:3px; font-size:8px; padding:2px 4px;">
+            <input class="guia-producto-codigo" placeholder="Código" 
+                   style="width:100%; border:1px solid #E5E7EB; border-radius:3px; font-size:8px; padding:2px 4px; background:#FFFFFF;">
+        </td>
+        <td style="padding:2px 4px;">
+            <input class="guia-producto-desc" placeholder="Descripción" 
+                   style="width:100%; border:1px solid #E5E7EB; border-radius:3px; font-size:8px; padding:2px 4px; background:#FFFFFF;" 
+                   onchange="actualizarPesoTotalGuia()">
+        </td>
+        <td style="padding:2px 4px;">
+            <select class="guia-producto-unidad" style="width:100%; border:1px solid #E5E7EB; border-radius:3px; font-size:8px; padding:2px 4px; background:#FFFFFF;">
                 <option value="NIU">NIU</option>
                 <option value="KGM">KGM</option>
                 <option value="LTR">LTR</option>
@@ -6293,21 +6304,39 @@ function agregarFilaProductoGuia() {
                 <option value="ZZ">ZZ</option>
             </select>
         </td>
-        <td style="padding:2px 4px;"><input class="guia-producto-cant" type="number" value="1" min="0.01" step="0.01" style="width:100%; border:1px solid #E5E7EB; border-radius:3px; font-size:8px; padding:2px 4px; text-align:center;" onchange="actualizarPesoTotalGuia()"></td>
-        <td style="padding:2px 4px;"><input class="guia-producto-peso" type="number" value="0.50" step="0.01" style="width:100%; border:1px solid #E5E7EB; border-radius:3px; font-size:8px; padding:2px 4px; text-align:center;" onchange="actualizarPesoTotalGuia()"></td>
+        <td style="padding:2px 4px;">
+            <input class="guia-producto-cant" type="number" value="1" min="0.01" step="0.01" 
+                   style="width:100%; border:1px solid #E5E7EB; border-radius:3px; font-size:8px; padding:2px 4px; text-align:center; font-weight:900; background:#FFFFFF;" 
+                   onchange="actualizarPesoTotalGuia()">
+        </td>
+        <td style="padding:2px 4px;">
+            <input class="guia-producto-peso" type="number" value="0.50" step="0.01" 
+                   style="width:100%; border:1px solid #E5E7EB; border-radius:3px; font-size:8px; padding:2px 4px; text-align:center; background:#FFFFFF;" 
+                   onchange="actualizarPesoTotalGuia()">
+        </td>
         <td style="padding:2px 4px; text-align:center;">
-            <button onclick="this.closest('tr').remove(); actualizarPesoTotalGuia();" style="background:transparent; border:none; color:#DC2626; cursor:pointer; font-size:10px;">✕</button>
+            <button onclick="this.closest('tr').remove(); actualizarPesoTotalGuia(); actualizarContadorProductosGuia();" 
+                    style="background:transparent; border:none; color:#DC2626; cursor:pointer; font-size:10px; font-weight:900; padding:0 4px;">✕</button>
         </td>
     `;
     tbody.appendChild(tr);
-    actualizarPesoTotalGuia();
+    
+    // Actualizar contadores
     actualizarContadorProductosGuia();
+    actualizarPesoTotalGuia();
 }
 
 function actualizarPesoTotalGuia() {
     let total = 0;
     let count = 0;
-    document.querySelectorAll('#guiaProductosBody tr').forEach(row => {
+    
+    const tbody = document.getElementById('guiaProductosBody');
+    if (!tbody) {
+        console.warn('⚠️ guiaProductosBody no encontrado');
+        return;
+    }
+    
+    tbody.querySelectorAll('tr').forEach(row => {
         const cant = parseFloat(row.querySelector('.guia-producto-cant')?.value || 0);
         const peso = parseFloat(row.querySelector('.guia-producto-peso')?.value || 0);
         if (cant > 0 && peso > 0) {
@@ -6315,17 +6344,29 @@ function actualizarPesoTotalGuia() {
             count++;
         }
     });
-    document.getElementById('guiaPesoTotalDisplay').textContent = total.toFixed(2);
-    document.getElementById('guiaProductosCount').textContent = count + ' productos';
-    document.getElementById('guiaTotalProductosCount').textContent = count;
-    // Actualizar campo de peso
-    document.getElementById('guiaPeso').value = total.toFixed(2);
+    
+    // Actualizar elementos de forma segura
+    const pesoDisplay = document.getElementById('guiaPesoTotalDisplay');
+    if (pesoDisplay) pesoDisplay.textContent = total.toFixed(2);
+    
+    const productosCount = document.getElementById('guiaProductosCount');
+    if (productosCount) productosCount.textContent = count + ' productos';
+    
+    const totalProductosCount = document.getElementById('guiaTotalProductosCount');
+    if (totalProductosCount) totalProductosCount.textContent = count;
+    
+    const pesoField = document.getElementById('guiaPeso');
+    if (pesoField) pesoField.value = total.toFixed(2);
 }
-
 function actualizarContadorProductosGuia() {
-    const count = document.querySelectorAll('#guiaProductosBody tr').length;
-    document.getElementById('guiaProductosCount').textContent = count + ' productos';
-    document.getElementById('guiaTotalProductosCount').textContent = count;
+    const tbody = document.getElementById('guiaProductosBody');
+    const count = tbody ? tbody.querySelectorAll('tr').length : 0;
+    
+    const productosCount = document.getElementById('guiaProductosCount');
+    if (productosCount) productosCount.textContent = count + ' productos';
+    
+    const totalProductosCount = document.getElementById('guiaTotalProductosCount');
+    if (totalProductosCount) totalProductosCount.textContent = count;
 }
 
 // ============================================================
