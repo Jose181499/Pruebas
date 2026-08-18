@@ -8238,7 +8238,7 @@ function openGuiaModal(id = null) {
         <option value="PUBLICO">🚚 Transporte Público</option>
     `;
     
-    // ✅ RENDERIZAR EL FORMULARIO COMPLETO
+    // ✅ RENDERIZAR EL FORMULARIO COMPLETO - SOLO GUÍA, NO FACTURAS
     formContainer.innerHTML = `
         <!-- FILA 1: REMITENTE Y DESTINATARIO -->
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
@@ -8492,7 +8492,7 @@ function openGuiaModal(id = null) {
             </div>
         </div>
         
-        <!-- ✅ SECCIÓN DE PRODUCTOS - CREADA CORRECTAMENTE -->
+        <!-- ✅ SECCIÓN DE PRODUCTOS - SOLO GUÍA -->
         <div class="ficha-section" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden; margin-bottom:8px;">
             <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#059669; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
                 <span><i class="bi bi-box-seam"></i> Productos</span>
@@ -8573,9 +8573,42 @@ function openGuiaModal(id = null) {
     agregarFilaProductoGuia();
     
     // ============================================================
-    // MOSTRAR MODAL
+    // MOSTRAR MODAL - SOLO GUÍA
     // ============================================================
+    // 🔥 FORZAR VISIBILIDAD DEL MODAL DE GUÍA
     modal.classList.add('show');
+    modal.style.cssText = `
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 99999 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: rgba(15, 23, 42, 0.7) !important;
+        backdrop-filter: blur(6px) !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        padding: 20px !important;
+        overflow: auto !important;
+    `;
+    
+    // Asegurar que el modal-box sea visible
+    const box = modal.querySelector('.modal-box');
+    if (box) {
+        box.style.cssText = `
+            position: relative !important;
+            z-index: 99999 !important;
+            width: min(1400px, 98vw) !important;
+            max-height: 95vh !important;
+            background: #FFFFFF !important;
+            border-radius: 16px !important;
+            overflow: hidden !important;
+            box-shadow: 0 30px 80px rgba(15,23,42,.35) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            animation: modalIn 0.3s ease-out !important;
+        `;
+    }
     
     // Si es edición, cargar datos
     if (isEdit) {
@@ -8584,7 +8617,6 @@ function openGuiaModal(id = null) {
     
     console.log('✅ Modal de guía abierto correctamente');
 }
-
 
 // ============================================================
 // CARGAR GUÍA EXISTENTE PARA EDICIÓN
