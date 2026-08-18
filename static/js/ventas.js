@@ -3903,6 +3903,7 @@ function openGuiaModalWithData(id, cotizacion) {
             // Recalcular peso/contador ahora que ya se llenaron los valores reales
             actualizarPesoTotalGuia();
             actualizarContadorProductosGuia();
+              cargarUnidadesDeMedidaGuia();
         }
     }, 350);
 }
@@ -8148,10 +8149,18 @@ function openDespachoModal(id = null) {
 function openGuiaModal(id = null) {
     editingId = id;
     const isEdit = id !== null;
-    document.getElementById('guiaModalTitle').textContent = isEdit ? '📦 Editar Guía de Remisión' : '📦 Nueva Guía de Remisión';
+    
+    const titleEl = document.getElementById('guiaModalTitle');
+    if (titleEl) {
+        titleEl.textContent = isEdit ? '📦 Editar Guía de Remisión' : '📦 Nueva Guía de Remisión';
+    }
     
     const formContainer = document.getElementById('guiaForm');
-    if (!formContainer) return;
+    if (!formContainer) {
+        console.error('❌ #guiaForm no encontrado');
+        showToast('Error: Formulario de guía no disponible', 'error');
+        return;
+    }
     
     // ============================================================
     // ORIGEN FIJO - DATOS DEL REMITENTE
@@ -8168,20 +8177,17 @@ function openGuiaModal(id = null) {
     
     // Inicializar fechas
     const hoy = new Date().toISOString().split('T')[0];
-    document.getElementById('guiaFechaEmision').value = hoy;
-    document.getElementById('guiaFechaInicio').value = hoy;
+    
+    const fechaEmision = document.getElementById('guiaFechaEmision');
+    if (fechaEmision) fechaEmision.value = hoy;
+    
+    const fechaInicio = document.getElementById('guiaFechaInicio');
+    if (fechaInicio) fechaInicio.value = hoy;
     
     // ============================================================
     // CONFIGURAR UBIGEOS DE ORIGEN (FIJOS)
     // ============================================================
-    const deptoOrigen = document.getElementById('guiaDeptoOrigen');
-    const provOrigen = document.getElementById('guiaProvOrigen');
-    const distOrigen = document.getElementById('guiaDistOrigen');
-    const ubigeoHidden = document.getElementById('guiaUbigeoOrigen');
-    const ubigeoTexto = document.getElementById('guiaUbigeoOrigenTexto');
     const origenInput = document.getElementById('guiaOrigen');
-    
-    // Establecer dirección fija
     if (origenInput) {
         origenInput.value = ORIGEN_FIJO.direccion;
         origenInput.readOnly = true;
@@ -8190,7 +8196,6 @@ function openGuiaModal(id = null) {
         origenInput.style.cursor = 'not-allowed';
     }
     
-    // Establecer RUC fijo
     const rucRemitente = document.getElementById('guiaRucRemitente');
     if (rucRemitente) {
         rucRemitente.value = ORIGEN_FIJO.ruc;
@@ -8199,7 +8204,6 @@ function openGuiaModal(id = null) {
         rucRemitente.style.color = '#64748B';
     }
     
-    // Establecer nombre remitente fijo
     const nombreRemitente = document.getElementById('guiaRemitenteNombre');
     if (nombreRemitente) {
         nombreRemitente.value = ORIGEN_FIJO.nombre;
@@ -8208,7 +8212,8 @@ function openGuiaModal(id = null) {
         nombreRemitente.style.color = '#64748B';
     }
     
-    // Ubigeo - Departamento
+    // Ubigeo Origen
+    const deptoOrigen = document.getElementById('guiaDeptoOrigen');
     if (deptoOrigen) {
         deptoOrigen.value = ORIGEN_FIJO.departamento;
         deptoOrigen.disabled = true;
@@ -8216,7 +8221,7 @@ function openGuiaModal(id = null) {
         deptoOrigen.style.cursor = 'not-allowed';
     }
     
-    // Ubigeo - Provincia
+    const provOrigen = document.getElementById('guiaProvOrigen');
     if (provOrigen) {
         provOrigen.value = ORIGEN_FIJO.provincia;
         provOrigen.disabled = true;
@@ -8224,7 +8229,7 @@ function openGuiaModal(id = null) {
         provOrigen.style.cursor = 'not-allowed';
     }
     
-    // Ubigeo - Distrito
+    const distOrigen = document.getElementById('guiaDistOrigen');
     if (distOrigen) {
         distOrigen.value = ORIGEN_FIJO.distrito;
         distOrigen.disabled = true;
@@ -8232,12 +8237,12 @@ function openGuiaModal(id = null) {
         distOrigen.style.cursor = 'not-allowed';
     }
     
-    // Ubigeo oculto
+    const ubigeoHidden = document.getElementById('guiaUbigeoOrigen');
     if (ubigeoHidden) {
         ubigeoHidden.value = ORIGEN_FIJO.ubigeo;
     }
     
-    // Texto de ubigeo
+    const ubigeoTexto = document.getElementById('guiaUbigeoOrigenTexto');
     if (ubigeoTexto) {
         ubigeoTexto.textContent = `${ORIGEN_FIJO.departamento} - ${ORIGEN_FIJO.provincia} - ${ORIGEN_FIJO.distrito}`;
     }
@@ -8271,16 +8276,42 @@ function openGuiaModal(id = null) {
         }
     }, 100);
     
-    // Limpiar productos
-    document.getElementById('guiaProductosBody').innerHTML = '';
+    // ============================================================
+    // 🔽 LIMPIAR PRODUCTOS - CON VERIFICACIÓN DE EXISTENCIA
+    // ============================================================
+    const productosBody = document.getElementById('guiaProductosBody');
+    if (productosBody) {
+        productosBody.innerHTML = '';
+    } else {
+        console.warn('⚠️ #guiaProductosBody no encontrado, creando...');
+        // Si no existe, crearlo
+        const tabla = document.querySelector('#guiaForm table tbody');
+        if (tabla) {
+            tabla.id = 'guiaProductosBody';
+        }
+    }
+    
+    // Agregar fila de producto
     agregarFilaProductoGuia();
     
     // Cargar conductores
     cargarConductoresGuia();
     toggleTransportistaGuia();
     
+    // ============================================================
+    // 🔽 CARGAR UNIDADES DE MEDIDA DESDE LA BD
+    // ============================================================
+    cargarUnidadesDeMedidaGuia();
+    
     // Mostrar modal
-    document.getElementById('guiaModal').classList.add('show');
+    const modal = document.getElementById('guiaModal');
+    if (modal) {
+        modal.classList.add('show');
+    } else {
+        console.error('❌ #guiaModal no encontrado');
+        showToast('Error: Modal de guía no disponible', 'error');
+        return;
+    }
     
     // Si es edición, cargar datos
     if (isEdit) {
@@ -8478,137 +8509,135 @@ async function cargarGuiaParaEditar(id) {
 async function openComprobanteModal(id = null) {
     editingId = id;
     const isEdit = id !== null;
-    const title = isEdit ? 'Editar comprobante' : 'Nuevo comprobante';
-    document.getElementById('comprobanteModalTitle').textContent = title;
     
-    const formContainer = document.getElementById('comprobanteForm');
-    if (!formContainer) return;
-
-    // 🆕 Asegurar que guías y PC estén cargados, sin importar desde qué pestaña vengas
-    if (!guiasData || guiasData.length === 0) {
-        await loadGuias();
-    }
-    if (!pedidosData || pedidosData.length === 0) {
-        await loadPedidos();
+    // Establecer título
+    const titleEl = document.getElementById('comprobanteModalTitle');
+    if (titleEl) {
+        titleEl.textContent = isEdit ? '✏️ Editar comprobante' : '🧾 Nuevo comprobante';
     }
     
-    const cotOptions = cotizacionesData.map(q => 
-        `<option value="${q.numero}">${q.numero} - ${q.razon || 'Sin cliente'}</option>`
-    ).join('');
-
-    const guiaOptions = (guiasData || []).map(g => 
-        `<option value="${g.serie}-${g.numero}">${g.serie}-${g.numero} - ${g.cliente || 'Sin cliente'}</option>`
-    ).join('');
-
-    const pcOptions = (pedidosData || []).map(p => 
-        `<option value="${p.numero}">${p.numero} - ${p.cliente || 'Sin cliente'}</option>`
-    ).join('');
+    // Verificar que el modal existe
+    const modal = document.getElementById('comprobanteModal');
+    if (!modal) {
+        console.error('❌ #comprobanteModal no encontrado');
+        showToast('Error: Modal de comprobante no disponible', 'error');
+        return;
+    }
     
+    // ============================================================
+    // CARGAR DATOS NECESARIOS
+    // ============================================================
+    try {
+        if (!guiasData || guiasData.length === 0) {
+            console.log('🔄 Cargando guías...');
+            await loadGuias();
+        }
+        if (!pedidosData || pedidosData.length === 0) {
+            console.log('🔄 Cargando pedidos...');
+            await loadPedidos();
+        }
+    } catch (error) {
+        console.warn('⚠️ Error cargando datos:', error);
+    }
     
-    formContainer.innerHTML = `
-        <div class="ficha-section">
-            <div class="ficha-section-title">🧾 Documentos vinculados</div>
-            <div class="ficha-grid">
-                <div class="form-field col-4">
-                    <label>Cotización vinculada</label>
-                    <select id="compCotizacion" onchange="loadComprobanteFromCotizacion(this.value)">
-                        <option value="">-- Ninguna --</option>
-                        ${cotOptions}
-                    </select>
-                </div>
-                <div class="form-field col-4">
-                    <label>Guía de Remisión vinculada</label>
-                    <select id="compGuia" onchange="loadComprobanteFromGuia(this.value)">
-                        <option value="">-- Ninguna --</option>
-                        ${guiaOptions || '<option value="" disabled>Sin guías disponibles</option>'}
-                    </select>
-                </div>
-                <div class="form-field col-4">
-                    <label>PC vinculado</label>
-                    <select id="compPC" onchange="loadComprobanteFromPC(this.value)">
-                        <option value="">-- Ninguno --</option>
-                        ${pcOptions || '<option value="" disabled>Sin PC disponibles</option>'}
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <div class="ficha-section">
-            <div class="ficha-section-title">🧾 Datos del comprobante</div>
-            <div class="ficha-grid">
-                <div class="form-field col-3">
-                    <label>Tipo</label>
-                    <select id="compTipo">
-                        <option>Factura</option>
-                        <option>Boleta</option>
-                    </select>
-                </div>
-                <div class="form-field col-3">
-                    <label>Serie</label>
-                    <input id="compSerie" value="F001">
-                </div>
-                <div class="form-field col-3">
-                    <label>Número</label>
-                    <input id="compNumero" value="${String(Date.now()).slice(-8)}">
-                </div>
-                <div class="form-field col-3">
-                    <label>Estado</label>
-                    <select id="compEstado">
-                        ${options(ESTADOS_COMPROBANTE, 'Borrador')}
-                    </select>
-                </div>
-                <div class="form-field col-4">
-                    <label>Cliente</label>
-                    <input id="compCliente" placeholder="Razón social">
-                </div>
-                <div class="form-field col-4">
-                    <label>RUC</label>
-                    <input id="compRuc" placeholder="12345678901">
-                </div>
-                <div class="form-field col-4">
-                    <label>Monto</label>
-                    <input id="compMonto" type="number" value="0" step="0.01">
-                </div>
-                <div class="form-field col-4">
-                    <label>Condición de pago</label>
-                    <select id="compCondicion">
-                        <option>Contado</option>
-                        <option>Crédito 7 días</option>
-                        <option>Crédito 15 días</option>
-                        <option>Crédito 30 días</option>
-                        <option>Crédito 45 días</option>
-                        <option>Crédito 60 días</option>
-                        <option>Crédito 90 días</option>
-                    </select>
-                </div>
-                <div class="form-field col-12">
-                    <label>Observaciones</label>
-                    <textarea id="compObs" placeholder="Observaciones del comprobante"></textarea>
-                </div>
-            </div>
-        </div>
-        <div class="ficha-section">
-            <div class="ficha-section-title">🧾 Productos</div>
-            <div id="compProducts">
-                <div style="padding:20px;text-align:center;color:#94A3B8;">Seleccione una cotización para ver los productos.</div>
-            </div>
-        </div>
-    `;
+    // ============================================================
+    // LLENAR SELECTS CON DATOS
+    // ============================================================
+    const cotSelect = document.getElementById('compCotizacion');
+    const guiaSelect = document.getElementById('compGuia');
+    const pcSelect = document.getElementById('compPC');
     
-    document.getElementById('comprobanteModal').classList.add('show');
+    if (cotSelect) {
+        const currentValue = cotSelect.value;
+        cotSelect.innerHTML = '<option value="">-- Ninguna --</option>';
+        (cotizacionesData || []).forEach(q => {
+            const opt = document.createElement('option');
+            opt.value = q.numero;
+            opt.textContent = `${q.numero} - ${q.razon || 'Sin cliente'}`;
+            cotSelect.appendChild(opt);
+        });
+        if (currentValue) cotSelect.value = currentValue;
+    }
+    
+    if (guiaSelect) {
+        const currentValue = guiaSelect.value;
+        guiaSelect.innerHTML = '<option value="">-- Ninguna --</option>';
+        (guiasData || []).forEach(g => {
+            const opt = document.createElement('option');
+            const valor = `${g.serie}-${g.numero}`;
+            opt.value = valor;
+            opt.textContent = `${valor} - ${g.cliente || 'Sin cliente'}`;
+            guiaSelect.appendChild(opt);
+        });
+        if (currentValue) guiaSelect.value = currentValue;
+    }
+    
+    if (pcSelect) {
+        const currentValue = pcSelect.value;
+        pcSelect.innerHTML = '<option value="">-- Ninguno --</option>';
+        (pedidosData || []).forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.numero;
+            opt.textContent = `${p.numero} - ${p.cliente || 'Sin cliente'}`;
+            pcSelect.appendChild(opt);
+        });
+        if (currentValue) pcSelect.value = currentValue;
+    }
+    
+    // ============================================================
+    // LIMPIAR CAMPOS PARA NUEVO COMPROBANTE
+    // ============================================================
+    if (!isEdit) {
+        const campos = [
+            'compSerie', 'compNumero', 'compCliente', 'compRuc',
+            'compMonto', 'compObs'
+        ];
+        campos.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                if (id === 'compSerie') el.value = 'F001';
+                else if (id === 'compNumero') el.value = String(Date.now()).slice(-8);
+                else if (id === 'compMonto') el.value = '0';
+                else if (id === 'compObs') el.value = '';
+                else el.value = '';
+            }
+        });
+        
+        const estadoSelect = document.getElementById('compEstado');
+        if (estadoSelect) estadoSelect.value = 'Borrador';
+        
+        const tipoSelect = document.getElementById('compTipo');
+        if (tipoSelect) tipoSelect.value = 'Factura';
+        
+        const condSelect = document.getElementById('compCondicion');
+        if (condSelect) condSelect.value = 'Contado';
+        
+        // Limpiar productos
+        const productsContainer = document.getElementById('compProducts');
+        if (productsContainer) {
+            productsContainer.innerHTML = `
+                <div style="padding:20px;text-align:center;color:#94A3B8;">
+                    Seleccione una cotización para ver los productos.
+                </div>
+            `;
+        }
+    }
+    
+    // ============================================================
+    // MOSTRAR MODAL
+    // ============================================================
+    modal.classList.add('show');
+    
+    // Si es edición, cargar datos
     if (isEdit) {
-        setTimeout(() => cargarComprobanteParaEditar(id), 50);
+        setTimeout(() => cargarComprobanteParaEditar(id), 100);
     }
 }
 
-
-// ============================================================
-// CARGAR COMPROBANTE EXISTENTE PARA EDICIÓN
-// ============================================================
 async function cargarComprobanteParaEditar(id) {
     try {
         console.log('📥 Cargando comprobante para editar ID:', id);
-        showToast('⏳ Cargando datos del comprobante...', 'info');
+        showToast('⏳ Cargando datos...', 'info');
 
         const response = await apiFetch(`/ventas/api/comprobantes/${id}`);
         if (!response.success) {
@@ -8617,65 +8646,60 @@ async function cargarComprobanteParaEditar(id) {
         }
 
         const c = response.data;
-        console.log('📦 Datos de comprobante cargados:', c);
+        console.log('📦 Datos cargados:', c);
 
-        const setSelectValue = (id, value) => {
+        // Función para setear valor en input/select
+        const setVal = (id, value) => {
             const el = document.getElementById(id);
-            if (!el || value === undefined || value === null) return;
-            const val = String(value).trim();
-            let found = false;
-            for (const opt of el.options) {
-                if (opt.value === val) { opt.selected = true; found = true; break; }
-            }
-            if (!found) {
-                for (const opt of el.options) {
-                    if (opt.value.toLowerCase() === val.toLowerCase()) { opt.selected = true; found = true; break; }
+            if (el) {
+                if (el.tagName === 'SELECT') {
+                    // Buscar opción con ese valor
+                    for (let opt of el.options) {
+                        if (opt.value === value) {
+                            opt.selected = true;
+                            return;
+                        }
+                    }
+                } else {
+                    el.value = value ?? '';
                 }
             }
         };
 
-        const setValue = (id, value) => {
-            const el = document.getElementById(id);
-            if (el) el.value = value ?? '';
-        };
+        // Llenar campos
+        setVal('compTipo', c.tipo_comprobante);
+        setVal('compSerie', c.serie);
+        setVal('compNumero', c.numero);
+        setVal('compEstado', c.estado_sunat);
+        setVal('compCliente', c.cliente_nombre);
+        setVal('compRuc', c.cliente_numero_doc);
+        setVal('compMonto', c.total);
+        setVal('compObs', c.observaciones);
+        setVal('compCondicion', c.condicion_pago || 'Contado');
+        setVal('compCotizacion', c.documento_asociado);
+        setVal('compGuia', c.guia_vinculada);
+        setVal('compPC', c.pc_vinculado);
 
-        setSelectValue('compTipo', c.tipo_comprobante);
-        setSelectValue('compCotizacion', c.documento_asociado);   // 🆕
-        setSelectValue('compGuia', c.guia_vinculada);              // 🆕
-        setSelectValue('compPC', c.pc_vinculado);                  // 🆕
-        setValue('compSerie', c.serie);
-        setValue('compNumero', c.numero);
-        setSelectValue('compEstado', c.estado_sunat);
-        setValue('compCliente', c.cliente_nombre);
-        setValue('compRuc', c.cliente_numero_doc);
-        setValue('compMonto', c.total);
-        setValue('compObs', c.observaciones);
-
-        // Productos (items_json)
+        // Cargar productos
         const items = Array.isArray(c.items_json) ? c.items_json : [];
-        const productosNormalizados = items.map(it => ({
-            codigo: it.codigo || '',
-            producto: it.producto || it.descripcion || '',
-            marca: it.marca || '',
-            modelo: it.modelo || '',
-            um: it.um || 'NIU',
-            cantidad: it.cantidad || 1,
-            stock: it.stock || 0
-        }));
-
         const productsContainer = document.getElementById('compProducts');
         if (productsContainer) {
-            productsContainer.innerHTML = productosNormalizados.length > 0
-                ? productTableHtml(productosNormalizados)
-                : '<div style="padding:20px;text-align:center;color:#94A3B8;">No hay productos registrados en este comprobante.</div>';
+            if (items.length > 0) {
+                productsContainer.innerHTML = productTableHtml(items);
+            } else {
+                productsContainer.innerHTML = `
+                    <div style="padding:20px;text-align:center;color:#94A3B8;">
+                        No hay productos en este comprobante.
+                    </div>
+                `;
+            }
         }
 
-        window._comprobanteProductos = productosNormalizados;
-
+        window._compProductos = items;
         showToast('✅ Comprobante cargado correctamente', 'success');
 
     } catch (error) {
-        console.error('❌ Error cargando comprobante para editar:', error);
+        console.error('❌ Error cargando comprobante:', error);
         showToast('Error al cargar el comprobante: ' + error.message, 'error');
     }
 }
@@ -11552,6 +11576,55 @@ async function savePedidoCompraSAP(force) {
 
 
 
+
+function cargarUnidadesDeMedidaGuia() {
+    const selectUnidad = document.getElementById('guiaUnidadPeso');
+    if (!selectUnidad) {
+        console.warn('⚠️ Select "guiaUnidadPeso" no encontrado.');
+        return;
+    }
+
+    // Opcional: Mostrar un estado de carga
+    selectUnidad.innerHTML = '<option value="">Cargando unidades...</option>';
+
+    fetch('/maestros/api/um/listar')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data) {
+                // Limpiar el select
+                selectUnidad.innerHTML = '';
+                
+                // Agregar una opción por defecto
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = '-- Seleccionar Unidad --';
+                selectUnidad.appendChild(defaultOption);
+
+                // Agregar las unidades de la base de datos
+                data.data.forEach(um => {
+                    const option = document.createElement('option');
+                    option.value = um.codigo; // Usar 'codigo' que es el identificador SUNAT
+                    option.textContent = `${um.codigo} - ${um.nombre}`; // Ejemplo: "KGM - Kilogramo"
+                    // Podrías querer mostrar solo el código o el nombre, depende de ti.
+                    // Si quieres solo el código: option.textContent = um.codigo;
+                    selectUnidad.appendChild(option);
+                });
+
+                console.log(`✅ ${data.data.length} unidades de medida cargadas para la guía.`);
+            } else {
+                console.error('❌ Error al cargar unidades de medida:', data.error || 'Error desconocido');
+                selectUnidad.innerHTML = '<option value="">Error al cargar unidades</option>';
+                showToast('⚠️ No se pudieron cargar las unidades de medida.', 'warning');
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error de red al cargar unidades de medida:', error);
+            selectUnidad.innerHTML = '<option value="">Error de conexión</option>';
+            showToast('❌ Error al conectar con el servidor para cargar unidades.', 'error');
+        });
+}
+
+
 // ============================================================
 // MODAL DE ADVERTENCIA DE VALIDACIÓN PARA CAMPOS OBLIGATORIOS
 // ============================================================
@@ -12574,7 +12647,7 @@ window.solicitarCorreccion = solicitarCorreccion;
 window.generarOrdenCompra = generarOrdenCompra;
 window.enviarADespacho = enviarADespacho;
 
-
+window.cargarUnidadesDeMedidaGuia = cargarUnidadesDeMedidaGuia;
 
 window.clearDespachoDateFilter = clearDespachoDateFilter;
 window.clearGuiaDateFilter = clearGuiaDateFilter;
