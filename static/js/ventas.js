@@ -8943,6 +8943,8 @@ async function openComprobanteModal(id = null) {
         setTimeout(() => cargarComprobanteParaEditar(id), 100);
     }
 }
+openComprobanteModal = window.openComprobanteModal;
+
 
 async function cargarComprobanteParaEditar(id) {
     try {
@@ -13098,6 +13100,6 @@ window.sd = sd;
 window.options = options;
 window.today = today;
 window.now = now;
-openComprobanteModal = window.openComprobanteModal;
+
 
 console.log('✅ Todas las funciones exportadas al window correctamente');
