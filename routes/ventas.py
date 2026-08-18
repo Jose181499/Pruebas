@@ -1671,10 +1671,9 @@ def api_guias_guardar():
         # ============================================================
         ahora = datetime.now()
         
-        # Fecha de emisión: usar la que viene del frontend o la actual con hora
+        # Fecha de emisión
         fecha_emision_raw = data.get('fecha_emision')
         if fecha_emision_raw:
-            # Si viene sin hora (YYYY-MM-DD), agregar hora actual
             if isinstance(fecha_emision_raw, str) and 'T' not in fecha_emision_raw and ' ' not in fecha_emision_raw:
                 fecha_emision = f"{fecha_emision_raw}T{ahora.strftime('%H:%M:%S')}"
             else:
@@ -1682,69 +1681,77 @@ def api_guias_guardar():
         else:
             fecha_emision = ahora.isoformat()
         
-        # Fecha de traslado: usar la que viene o la fecha actual
-        fecha_traslado = data.get('fecha_traslado') or ahora.date().isoformat()
-        
-        print(f"📅 Fecha emisión FINAL: {fecha_emision}")
-        print(f"📅 Fecha traslado FINAL: {fecha_traslado}")
+        # Fecha de traslado
+        fecha_traslado = data.get('fecha_traslado') or data.get('fecha_emision') or ahora.date().isoformat()
+        fecha_inicio = data.get('fecha_inicio_traslado') or fecha_traslado
         
         # ============================================================
-        # VALIDAR DATOS OBLIGATORIOS
+        # GUARDAR EN LA BASE DE DATOS
         # ============================================================
-        if not data:
-            return jsonify({'success': False, 'error': 'No se recibieron datos'}), 400
+        query = """
+            INSERT INTO guias_remision (
+                serie, numero, fecha_emision, fecha_traslado,
+                ruc_remitente, remitente_nombre, remitente_direccion,
+                remitente_ubigeo, ruc_destinatario, destinatario_nombre,
+                destinatario_direccion, destinatario_ubigeo,
+                modalidad_transporte, placa_vehiculo, conductor_dni,
+                conductor_nombre, licencia_conductor, transportista_ruc,
+                transportista_nombre, motivo_traslado, documento_asociado,
+                peso_total, items_json, observaciones, estado_sunat,
+                creado_por, fecha_inicio_traslado, numero_bultos,
+                unidad_peso_bruto, transportista_direccion,
+                orden_compra_cliente, factura_vinculada
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s, %s, %s
+            )
+            RETURNING id, numero
+        """
         
-        # Obtener número
-        numero = data.get('numero')
-        if not numero:
-            numero = f"G-{ahora.strftime('%Y%m%d')}-{str(ahora.timestamp()).split('.')[0][-4:]}"
-            print(f"📋 Número generado: {numero}")
+        items_json = json.dumps(data.get('items', []))
         
-        # Obtener items
-        items_json = data.get('items', [])
-        print(f"📦 Items: {len(items_json)} productos")
+        params = (
+            data.get('serie', 'T001'),
+            data.get('numero'),
+            fecha_emision,
+            fecha_traslado,
+            data.get('ruc_remitente') or ORIGEN_FIJO['ruc'],
+            data.get('remitente_nombre') or ORIGEN_FIJO['nombre'],
+            data.get('remitente_direccion') or ORIGEN_FIJO['direccion'],
+            data.get('remitente_ubigeo') or ORIGEN_FIJO['ubigeo'],
+            data.get('ruc_destinatario', ''),
+            data.get('destinatario_nombre', ''),
+            data.get('destinatario_direccion', ''),
+            data.get('destinatario_ubigeo', ''),
+            data.get('modalidad_transporte', 'PRIVADO'),
+            data.get('placa_vehiculo', ''),
+            data.get('conductor_dni', ''),
+            data.get('conductor_nombre', ''),
+            data.get('licencia_conductor', ''),
+            data.get('transportista_ruc', ''),
+            data.get('transportista_nombre', ''),
+            data.get('motivo_traslado', '01'),
+            data.get('documento_asociado', ''),
+            float(data.get('peso_total', 0)),
+            items_json,
+            data.get('observaciones', ''),
+            data.get('estado', 'BORRADOR'),
+            usuario_id,
+            fecha_inicio,
+            int(data.get('numero_bultos', 1)),
+            data.get('unidad_peso_bruto', 'KGM'),
+            data.get('transportista_direccion', ''),
+            data.get('orden_compra_cliente', ''),
+            data.get('factura_vinculada', '')
+        )
         
-        # ============================================================
-        # DATOS PARA LA GUÍA
-        # ============================================================
-        guia_data = {
-            'serie': data.get('serie', 'T001'),
-            'numero': numero,
-            'fecha_emision': fecha_emision,  # ← CON HORA
-            'fecha_traslado': fecha_traslado,
-            'ruc_remitente': ORIGEN_FIJO['ruc'],
-            'remitente_nombre': ORIGEN_FIJO['nombre'],
-            'remitente_direccion': ORIGEN_FIJO['direccion'],
-            'remitente_ubigeo': ORIGEN_FIJO['ubigeo'],
-            'ruc_destinatario': data.get('ruc') or data.get('ruc_destinatario') or '',
-            'destinatario_nombre': data.get('cliente') or data.get('destinatario_nombre') or '',
-            'destinatario_direccion': data.get('destino') or data.get('destinatario_direccion') or '',
-            'destinatario_ubigeo': data.get('destinatario_ubigeo') or '',
-            'modalidad_transporte': data.get('modalidad_transporte', 'PRIVADO'),
-            'placa_vehiculo': data.get('placa_vehiculo') or '',
-            'conductor_dni': data.get('conductor_dni') or '',
-            'conductor_nombre': data.get('conductor_nombre') or '',
-            'licencia_conductor': data.get('licencia_conductor') or '',
-            'transportista_ruc': data.get('transportista_ruc') or '',
-            'transportista_nombre': data.get('transportista_nombre') or '',
-            'motivo_traslado': data.get('motivo_traslado', 'VENTA'),
-            'documento_asociado': data.get('cotizacion_numero') or data.get('cotizacion') or data.get('documento_asociado') or '',
-            'peso_total': float(data.get('peso_total', 0)),
-            'items_json': json.dumps(items_json) if items_json else '[]',
-            'observaciones': data.get('observaciones', ''),
-            'estado_sunat': data.get('estado', 'BORRADOR'),
-            'creado_por': usuario_id
-        }
-        
-        # ============================================================
-        # GUARDAR USANDO LA FUNCIÓN CORRECTA
-        # ============================================================
-        result = guardar_guia_db(guia_data)
+        result = db_query(query, params)
         
         if result:
             return jsonify({
-                'success': True, 
-                'message': 'Guía creada correctamente', 
+                'success': True,
+                'message': 'Guía creada correctamente',
                 'data': {
                     'id': result['id'],
                     'numero': result['numero']
@@ -1758,6 +1765,7 @@ def api_guias_guardar():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @ventas_bp.route('/ventas/api/guias/<int:id>', methods=['GET'])
 @login_required
