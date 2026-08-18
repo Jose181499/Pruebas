@@ -6325,14 +6325,14 @@ function toggleTransportistaGuia() {
 function agregarFilaProductoGuia() {
     const tbody = document.getElementById('guiaProductosBody');
     if (!tbody) {
-        console.warn('⚠️ #guiaProductosBody no encontrado en agregarFilaProductoGuia');
+        console.error('❌ #guiaProductosBody no encontrado en agregarFilaProductoGuia');
         return;
     }
     
     const count = tbody.children.length + 1;
     const tr = document.createElement('tr');
     tr.innerHTML = `
-        <td style="padding:2px 4px; text-align:center; font-weight:800; background:#F8FAFC;">${count}</td>
+        <td style="padding:2px 4px; text-align:center; font-weight:800; background:#F8FAFC; font-size:9px;">${count}</td>
         <td style="padding:2px 4px;"><input class="guia-producto-codigo" placeholder="Código" style="width:100%; border:1px solid #E5E7EB; border-radius:3px; font-size:8px; padding:2px 4px;"></td>
         <td style="padding:2px 4px;"><input class="guia-producto-desc" placeholder="Descripción" style="width:100%; border:1px solid #E5E7EB; border-radius:3px; font-size:8px; padding:2px 4px;" onchange="actualizarPesoTotalGuia()"></td>
         <td style="padding:2px 4px;">
@@ -6354,7 +6354,6 @@ function agregarFilaProductoGuia() {
     actualizarPesoTotalGuia();
     actualizarContadorProductosGuia();
 }
-
 function actualizarPesoTotalGuia() {
     let total = 0;
     let count = 0;
@@ -8201,6 +8200,7 @@ function openGuiaModal(id = null) {
     editingId = id;
     const isEdit = id !== null;
     
+    // Establecer título
     const titleEl = document.getElementById('guiaModalTitle');
     if (titleEl) {
         titleEl.textContent = isEdit ? '📦 Editar Guía de Remisión' : '📦 Nueva Guía de Remisión';
@@ -8228,7 +8228,6 @@ function openGuiaModal(id = null) {
     
     // Inicializar fechas
     const hoy = new Date().toISOString().split('T')[0];
-    
     const fechaEmision = document.getElementById('guiaFechaEmision');
     if (fechaEmision) fechaEmision.value = hoy;
     
@@ -8304,7 +8303,7 @@ function openGuiaModal(id = null) {
     llenarDepartamentosGuia('guiaDeptoDestino');
     configurarUbigeoGuia('Destino');
     
-    // Preseleccionar Lima para destino también
+    // Preseleccionar Lima para destino
     setTimeout(() => {
         const deptoDestino = document.getElementById('guiaDeptoDestino');
         if (deptoDestino) {
@@ -8328,30 +8327,24 @@ function openGuiaModal(id = null) {
     }, 100);
     
     // ============================================================
-    // 🔽 LIMPIAR PRODUCTOS - CON VERIFICACIÓN DE EXISTENCIA
+    // LIMPIAR PRODUCTOS - VERIFICAR QUE EXISTA
     // ============================================================
     const productosBody = document.getElementById('guiaProductosBody');
     if (productosBody) {
         productosBody.innerHTML = '';
+        // Agregar fila de producto
+        agregarFilaProductoGuia();
     } else {
-        console.warn('⚠️ #guiaProductosBody no encontrado, creando...');
-        // Si no existe, crearlo
-        const tabla = document.querySelector('#guiaForm table tbody');
-        if (tabla) {
-            tabla.id = 'guiaProductosBody';
-        }
+        console.error('❌ #guiaProductosBody no encontrado en el DOM');
+        showToast('Error: No se pudo cargar la tabla de productos', 'error');
+        return;
     }
-    
-    // Agregar fila de producto
-    agregarFilaProductoGuia();
     
     // Cargar conductores
     cargarConductoresGuia();
     toggleTransportistaGuia();
     
-    // ============================================================
-    // 🔽 CARGAR UNIDADES DE MEDIDA DESDE LA BD
-    // ============================================================
+    // Cargar unidades de medida
     cargarUnidadesDeMedidaGuia();
     
     // Mostrar modal
