@@ -2929,108 +2929,63 @@ function saveDespacho(estado) {
     );
 }
 
-// ventas.js - Reemplazar la función _saveGuia
-
-// ventas.js - Reemplazar la función _saveGuia (versión simplificada)
-
+// Reemplazar la función saveGuia en ventas.js
 async function _saveGuia(estado) {
     try {
         console.log('🔄 Guardando guía...', { estado });
         
-        // ============================================================
-        // 1. OBTENER PRODUCTOS DEL DOM
-        // ============================================================
-        let productos = [];
-        const tbody = document.getElementById('guiaProductosBody');
+        // Obtener productos del DOM
+        let productos = window._guiaProductos || [];
         
-        if (tbody) {
-            const rows = tbody.querySelectorAll('tr');
-            rows.forEach(row => {
-                const codigoInput = row.querySelector('.guia-producto-codigo');
-                const descInput = row.querySelector('.guia-producto-desc');
-                const unidadSelect = row.querySelector('.guia-producto-unidad');
-                const cantInput = row.querySelector('.guia-producto-cant');
-                const pesoInput = row.querySelector('.guia-producto-peso');
-                
-                if (descInput && descInput.value.trim() !== '') {
+        // Si no hay productos guardados, intentar obtener de la tabla
+        if (productos.length === 0) {
+            const productRows = document.querySelectorAll('#guiaProducts .master-table tbody tr');
+            productRows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length >= 6) {
                     productos.push({
-                        codigo: codigoInput?.value?.trim() || '',
-                        producto: descInput?.value?.trim() || '',
-                        descripcion: descInput?.value?.trim() || '',
-                        um: unidadSelect?.value || 'NIU',
-                        cantidad: parseFloat(cantInput?.value) || 1,
-                        peso_unitario: parseFloat(pesoInput?.value) || 0
+                        codigo: cells[1]?.textContent?.trim() || '',
+                        producto: cells[2]?.textContent?.trim() || '',
+                        marca: cells[3]?.textContent?.trim() || '',
+                        um: cells[4]?.textContent?.trim() || 'NIU',
+                        cantidad: parseInt(cells[5]?.textContent?.trim()) || 1,
+                        stock: parseInt(cells[6]?.textContent?.trim()) || 0
                     });
                 }
             });
         }
         
-        console.log(`📦 ${productos.length} productos encontrados`);
-        
-        // ============================================================
-        // 2. OBTENER DATOS DEL FORMULARIO
-        // ============================================================
         const data = {
             id: editingId,
             estado: estado || 'Borrador',
-            
-            // Serie y Número
             serie: document.getElementById('guiaSerie')?.value || 'T001',
             numero: document.getElementById('guiaNumero')?.value || String(Date.now()).slice(-8),
-            
-            // Fechas
-            fecha_emision: document.getElementById('guiaFechaEmision')?.value || '',
-            fecha_traslado: document.getElementById('guiaFechaEmision')?.value || '',
-            
-            // REMITENTE (Fijo)
-            ruc_remitente: '20602095704',
-            remitente_nombre: 'KCF CORPORACION SAC',
-            remitente_direccion: 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES',
-            remitente_ubigeo: '150139',
-            
-            // DESTINATARIO
-            ruc_destinatario: document.getElementById('guiaRuc')?.value?.trim() || '',
-            destinatario_nombre: document.getElementById('guiaCliente')?.value?.trim() || '',
-            destinatario_direccion: document.getElementById('guiaDestino')?.value?.trim() || '',
-            destinatario_ubigeo: document.getElementById('guiaUbigeoDestino')?.value || '',
-            
-            // TRANSPORTE
-            modalidad_transporte: document.getElementById('guiaModalidadTransporte')?.value || 'PRIVADO',
-            placa_vehiculo: document.getElementById('guiaPlaca')?.value?.trim()?.toUpperCase() || '',
-            conductor_dni: document.getElementById('guiaConductorDNI')?.value?.trim() || '',
-            conductor_nombre: document.getElementById('guiaConductorNombre')?.value?.trim() || '',
-            licencia_conductor: document.getElementById('guiaLicencia')?.value?.trim() || '',
-            transportista_ruc: document.getElementById('guiaTransportistaRUC')?.value?.trim() || '',
-            transportista_nombre: document.getElementById('guiaTransportistaNombre')?.value?.trim() || '',
-            
-            // TRASLADO
-            motivo_traslado: document.getElementById('guiaMotivo')?.value || '01',
-            peso_total: parseFloat(document.getElementById('guiaPeso')?.value) || 0,
-            
-            // DOCUMENTOS ASOCIADOS
-            documento_asociado: document.getElementById('guiaCotizacion')?.value?.trim() || '',
-            
-            // OBSERVACIONES
-            observaciones: document.getElementById('guiaObservaciones')?.value?.trim() || '',
-            
-            // PRODUCTOS
-            items: productos
+            cotizacion_numero: document.getElementById('guiaCotizacion')?.value || '',
+            cliente: document.getElementById('guiaCliente')?.value || '',
+            ruc: document.getElementById('guiaRuc')?.value || '',
+            origen: document.getElementById('guiaOrigen')?.value || 'ALM-SMP',
+            destino: document.getElementById('guiaDestino')?.value || '',
+            motivo: document.getElementById('guiaMotivo')?.value || 'VENTA',
+            observaciones: document.getElementById('guiaObs')?.value || '',
+            items: productos,
+            peso_total: productos.reduce((sum, p) => sum + (parseFloat(p.cantidad || 0) * 0.5), 0) // Estimación
         };
         
         console.log('📦 Datos a guardar:', data);
         
-        // ============================================================
-        // 3. ENVIAR A LA API
-        // ============================================================
         const response = await apiFetch('/ventas/api/guias/guardar', {
             method: 'POST',
             body: JSON.stringify(data)
         });
         
         if (response.success) {
+
+            
+
             showToast(`✅ Guía guardada como: ${estado}`, 'success');
             closeModal('guiaModal');
             await loadGuias();
+            // Limpiar datos temporales
             window._guiaProductos = null;
         } else {
             showToast('❌ Error: ' + (response.error || 'No se pudo guardar'), 'error');
@@ -3040,8 +2995,6 @@ async function _saveGuia(estado) {
         showToast('❌ Error al guardar la guía: ' + error.message, 'error');
     }
 }
-
-
 
 function saveGuia(estado) {
     const numero = document.getElementById('guiaNumero')?.value || 'nueva guía';
@@ -6324,15 +6277,11 @@ function toggleTransportistaGuia() {
 
 function agregarFilaProductoGuia() {
     const tbody = document.getElementById('guiaProductosBody');
-    if (!tbody) {
-        console.error('❌ #guiaProductosBody no encontrado en agregarFilaProductoGuia');
-        return;
-    }
-    
+    if (!tbody) return;
     const count = tbody.children.length + 1;
     const tr = document.createElement('tr');
     tr.innerHTML = `
-        <td style="padding:2px 4px; text-align:center; font-weight:800; background:#F8FAFC; font-size:9px;">${count}</td>
+        <td style="padding:2px 4px; text-align:center; font-weight:800; background:#F8FAFC;">${count}</td>
         <td style="padding:2px 4px;"><input class="guia-producto-codigo" placeholder="Código" style="width:100%; border:1px solid #E5E7EB; border-radius:3px; font-size:8px; padding:2px 4px;"></td>
         <td style="padding:2px 4px;"><input class="guia-producto-desc" placeholder="Descripción" style="width:100%; border:1px solid #E5E7EB; border-radius:3px; font-size:8px; padding:2px 4px;" onchange="actualizarPesoTotalGuia()"></td>
         <td style="padding:2px 4px;">
@@ -6347,13 +6296,14 @@ function agregarFilaProductoGuia() {
         <td style="padding:2px 4px;"><input class="guia-producto-cant" type="number" value="1" min="0.01" step="0.01" style="width:100%; border:1px solid #E5E7EB; border-radius:3px; font-size:8px; padding:2px 4px; text-align:center;" onchange="actualizarPesoTotalGuia()"></td>
         <td style="padding:2px 4px;"><input class="guia-producto-peso" type="number" value="0.50" step="0.01" style="width:100%; border:1px solid #E5E7EB; border-radius:3px; font-size:8px; padding:2px 4px; text-align:center;" onchange="actualizarPesoTotalGuia()"></td>
         <td style="padding:2px 4px; text-align:center;">
-            <button onclick="this.closest('tr').remove(); actualizarPesoTotalGuia(); actualizarContadorProductosGuia();" style="background:transparent; border:none; color:#DC2626; cursor:pointer; font-size:10px;">✕</button>
+            <button onclick="this.closest('tr').remove(); actualizarPesoTotalGuia();" style="background:transparent; border:none; color:#DC2626; cursor:pointer; font-size:10px;">✕</button>
         </td>
     `;
     tbody.appendChild(tr);
     actualizarPesoTotalGuia();
     actualizarContadorProductosGuia();
 }
+
 function actualizarPesoTotalGuia() {
     let total = 0;
     let count = 0;
@@ -8199,19 +8149,10 @@ function openDespachoModal(id = null) {
 function openGuiaModal(id = null) {
     editingId = id;
     const isEdit = id !== null;
-    
-    // Establecer título
-    const titleEl = document.getElementById('guiaModalTitle');
-    if (titleEl) {
-        titleEl.textContent = isEdit ? '📦 Editar Guía de Remisión' : '📦 Nueva Guía de Remisión';
-    }
+    document.getElementById('guiaModalTitle').textContent = isEdit ? '📦 Editar Guía de Remisión' : '📦 Nueva Guía de Remisión';
     
     const formContainer = document.getElementById('guiaForm');
-    if (!formContainer) {
-        console.error('❌ #guiaForm no encontrado');
-        showToast('Error: Formulario de guía no disponible', 'error');
-        return;
-    }
+    if (!formContainer) return;
     
     // ============================================================
     // ORIGEN FIJO - DATOS DEL REMITENTE
@@ -8228,16 +8169,20 @@ function openGuiaModal(id = null) {
     
     // Inicializar fechas
     const hoy = new Date().toISOString().split('T')[0];
-    const fechaEmision = document.getElementById('guiaFechaEmision');
-    if (fechaEmision) fechaEmision.value = hoy;
-    
-    const fechaInicio = document.getElementById('guiaFechaInicio');
-    if (fechaInicio) fechaInicio.value = hoy;
+    document.getElementById('guiaFechaEmision').value = hoy;
+    document.getElementById('guiaFechaInicio').value = hoy;
     
     // ============================================================
     // CONFIGURAR UBIGEOS DE ORIGEN (FIJOS)
     // ============================================================
+    const deptoOrigen = document.getElementById('guiaDeptoOrigen');
+    const provOrigen = document.getElementById('guiaProvOrigen');
+    const distOrigen = document.getElementById('guiaDistOrigen');
+    const ubigeoHidden = document.getElementById('guiaUbigeoOrigen');
+    const ubigeoTexto = document.getElementById('guiaUbigeoOrigenTexto');
     const origenInput = document.getElementById('guiaOrigen');
+    
+    // Establecer dirección fija
     if (origenInput) {
         origenInput.value = ORIGEN_FIJO.direccion;
         origenInput.readOnly = true;
@@ -8246,6 +8191,7 @@ function openGuiaModal(id = null) {
         origenInput.style.cursor = 'not-allowed';
     }
     
+    // Establecer RUC fijo
     const rucRemitente = document.getElementById('guiaRucRemitente');
     if (rucRemitente) {
         rucRemitente.value = ORIGEN_FIJO.ruc;
@@ -8254,6 +8200,7 @@ function openGuiaModal(id = null) {
         rucRemitente.style.color = '#64748B';
     }
     
+    // Establecer nombre remitente fijo
     const nombreRemitente = document.getElementById('guiaRemitenteNombre');
     if (nombreRemitente) {
         nombreRemitente.value = ORIGEN_FIJO.nombre;
@@ -8262,8 +8209,7 @@ function openGuiaModal(id = null) {
         nombreRemitente.style.color = '#64748B';
     }
     
-    // Ubigeo Origen
-    const deptoOrigen = document.getElementById('guiaDeptoOrigen');
+    // Ubigeo - Departamento
     if (deptoOrigen) {
         deptoOrigen.value = ORIGEN_FIJO.departamento;
         deptoOrigen.disabled = true;
@@ -8271,7 +8217,7 @@ function openGuiaModal(id = null) {
         deptoOrigen.style.cursor = 'not-allowed';
     }
     
-    const provOrigen = document.getElementById('guiaProvOrigen');
+    // Ubigeo - Provincia
     if (provOrigen) {
         provOrigen.value = ORIGEN_FIJO.provincia;
         provOrigen.disabled = true;
@@ -8279,7 +8225,7 @@ function openGuiaModal(id = null) {
         provOrigen.style.cursor = 'not-allowed';
     }
     
-    const distOrigen = document.getElementById('guiaDistOrigen');
+    // Ubigeo - Distrito
     if (distOrigen) {
         distOrigen.value = ORIGEN_FIJO.distrito;
         distOrigen.disabled = true;
@@ -8287,12 +8233,12 @@ function openGuiaModal(id = null) {
         distOrigen.style.cursor = 'not-allowed';
     }
     
-    const ubigeoHidden = document.getElementById('guiaUbigeoOrigen');
+    // Ubigeo oculto
     if (ubigeoHidden) {
         ubigeoHidden.value = ORIGEN_FIJO.ubigeo;
     }
     
-    const ubigeoTexto = document.getElementById('guiaUbigeoOrigenTexto');
+    // Texto de ubigeo
     if (ubigeoTexto) {
         ubigeoTexto.textContent = `${ORIGEN_FIJO.departamento} - ${ORIGEN_FIJO.provincia} - ${ORIGEN_FIJO.distrito}`;
     }
@@ -8303,7 +8249,7 @@ function openGuiaModal(id = null) {
     llenarDepartamentosGuia('guiaDeptoDestino');
     configurarUbigeoGuia('Destino');
     
-    // Preseleccionar Lima para destino
+    // Preseleccionar Lima para destino también
     setTimeout(() => {
         const deptoDestino = document.getElementById('guiaDeptoDestino');
         if (deptoDestino) {
@@ -8326,36 +8272,18 @@ function openGuiaModal(id = null) {
         }
     }, 100);
     
-    // ============================================================
-    // LIMPIAR PRODUCTOS - VERIFICAR QUE EXISTA
-    // ============================================================
-    const productosBody = document.getElementById('guiaProductosBody');
-    if (productosBody) {
-        productosBody.innerHTML = '';
-        // Agregar fila de producto
-        agregarFilaProductoGuia();
-    } else {
-        console.error('❌ #guiaProductosBody no encontrado en el DOM');
-        showToast('Error: No se pudo cargar la tabla de productos', 'error');
-        return;
-    }
+    // Limpiar productos
+    document.getElementById('guiaProductosBody').innerHTML = '';
+    agregarFilaProductoGuia();
     
     // Cargar conductores
     cargarConductoresGuia();
     toggleTransportistaGuia();
     
-    // Cargar unidades de medida
-    cargarUnidadesDeMedidaGuia();
-    
+
+     cargarUnidadesDeMedidaGuia();
     // Mostrar modal
-    const modal = document.getElementById('guiaModal');
-    if (modal) {
-        modal.classList.add('show');
-    } else {
-        console.error('❌ #guiaModal no encontrado');
-        showToast('Error: Modal de guía no disponible', 'error');
-        return;
-    }
+    document.getElementById('guiaModal').classList.add('show');
     
     // Si es edición, cargar datos
     if (isEdit) {
