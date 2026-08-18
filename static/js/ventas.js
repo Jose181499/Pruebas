@@ -8774,16 +8774,11 @@ async function cargarGuiaParaEditar(id) {
 
 
 async function openComprobanteModal(id = null) {
+    console.log('🧾 Abriendo modal de comprobante', { id });
     editingId = id;
     const isEdit = id !== null;
     
-    // Establecer título
-    const titleEl = document.getElementById('comprobanteModalTitle');
-    if (titleEl) {
-        titleEl.textContent = isEdit ? '✏️ Editar comprobante' : '🧾 Nuevo comprobante';
-    }
-    
-    // Verificar que el modal existe
+    // 1. Verificar que el modal existe
     const modal = document.getElementById('comprobanteModal');
     if (!modal) {
         console.error('❌ #comprobanteModal no encontrado');
@@ -8791,9 +8786,21 @@ async function openComprobanteModal(id = null) {
         return;
     }
     
-    // ============================================================
-    // CARGAR DATOS NECESARIOS
-    // ============================================================
+    // 2. Establecer título
+    const titleEl = document.getElementById('comprobanteModalTitle');
+    if (titleEl) {
+        titleEl.textContent = isEdit ? '✏️ Editar comprobante' : '🧾 Nuevo comprobante';
+    }
+    
+    // 3. Verificar que el formulario existe
+    const formContainer = document.getElementById('comprobanteForm');
+    if (!formContainer) {
+        console.error('❌ #comprobanteForm no encontrado');
+        showToast('Error: Formulario de comprobante no disponible', 'error');
+        return;
+    }
+    
+    // 4. Cargar datos necesarios
     try {
         if (!guiasData || guiasData.length === 0) {
             console.log('🔄 Cargando guías...');
@@ -8807,99 +8814,123 @@ async function openComprobanteModal(id = null) {
         console.warn('⚠️ Error cargando datos:', error);
     }
     
-    // ============================================================
-    // LLENAR SELECTS CON DATOS
-    // ============================================================
-    const cotSelect = document.getElementById('compCotizacion');
-    const guiaSelect = document.getElementById('compGuia');
-    const pcSelect = document.getElementById('compPC');
+    // 5. Generar opciones para selects
+    const cotOptions = (cotizacionesData || []).map(q => 
+        `<option value="${q.numero}">${q.numero} - ${q.razon || 'Sin cliente'}</option>`
+    ).join('');
     
-    if (cotSelect) {
-        const currentValue = cotSelect.value;
-        cotSelect.innerHTML = '<option value="">-- Ninguna --</option>';
-        (cotizacionesData || []).forEach(q => {
-            const opt = document.createElement('option');
-            opt.value = q.numero;
-            opt.textContent = `${q.numero} - ${q.razon || 'Sin cliente'}`;
-            cotSelect.appendChild(opt);
-        });
-        if (currentValue) cotSelect.value = currentValue;
-    }
+    const guiaOptions = (guiasData || []).map(g => {
+        const valor = `${g.serie}-${g.numero}`;
+        return `<option value="${valor}">${valor} - ${g.cliente || 'Sin cliente'}</option>`;
+    }).join('');
     
-    if (guiaSelect) {
-        const currentValue = guiaSelect.value;
-        guiaSelect.innerHTML = '<option value="">-- Ninguna --</option>';
-        (guiasData || []).forEach(g => {
-            const opt = document.createElement('option');
-            const valor = `${g.serie}-${g.numero}`;
-            opt.value = valor;
-            opt.textContent = `${valor} - ${g.cliente || 'Sin cliente'}`;
-            guiaSelect.appendChild(opt);
-        });
-        if (currentValue) guiaSelect.value = currentValue;
-    }
+    const pcOptions = (pedidosData || []).map(p => 
+        `<option value="${p.numero}">${p.numero} - ${p.cliente || 'Sin cliente'}</option>`
+    ).join('');
     
-    if (pcSelect) {
-        const currentValue = pcSelect.value;
-        pcSelect.innerHTML = '<option value="">-- Ninguno --</option>';
-        (pedidosData || []).forEach(p => {
-            const opt = document.createElement('option');
-            opt.value = p.numero;
-            opt.textContent = `${p.numero} - ${p.cliente || 'Sin cliente'}`;
-            pcSelect.appendChild(opt);
-        });
-        if (currentValue) pcSelect.value = currentValue;
-    }
-    
-    // ============================================================
-    // LIMPIAR CAMPOS PARA NUEVO COMPROBANTE
-    // ============================================================
-    if (!isEdit) {
-        const campos = [
-            'compSerie', 'compNumero', 'compCliente', 'compRuc',
-            'compMonto', 'compObs'
-        ];
-        campos.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                if (id === 'compSerie') el.value = 'F001';
-                else if (id === 'compNumero') el.value = String(Date.now()).slice(-8);
-                else if (id === 'compMonto') el.value = '0';
-                else if (id === 'compObs') el.value = '';
-                else el.value = '';
-            }
-        });
+    // 6. Renderizar el formulario
+    formContainer.innerHTML = `
+        <div class="ficha-section">
+            <div class="ficha-section-title">🧾 Documentos vinculados</div>
+            <div class="ficha-grid">
+                <div class="form-field col-4">
+                    <label>Cotización vinculada</label>
+                    <select id="compCotizacion" onchange="actualizarObservacionesComprobante()">
+                        <option value="">-- Ninguna --</option>
+                        ${cotOptions || '<option value="" disabled>Sin cotizaciones</option>'}
+                    </select>
+                </div>
+                <div class="form-field col-4">
+                    <label>Guía de Remisión vinculada</label>
+                    <select id="compGuia" onchange="loadComprobanteFromGuia(this.value); actualizarObservacionesComprobante()">
+                        <option value="">-- Ninguna --</option>
+                        ${guiaOptions || '<option value="" disabled>Sin guías</option>'}
+                    </select>
+                </div>
+                <div class="form-field col-4">
+                    <label>PC vinculado</label>
+                    <select id="compPC" onchange="loadComprobanteFromPC(this.value); actualizarObservacionesComprobante()">
+                        <option value="">-- Ninguno --</option>
+                        ${pcOptions || '<option value="" disabled>Sin PCs</option>'}
+                    </select>
+                </div>
+            </div>
+        </div>
         
-        const estadoSelect = document.getElementById('compEstado');
-        if (estadoSelect) estadoSelect.value = 'Borrador';
+        <div class="ficha-section">
+            <div class="ficha-grid">
+                <div class="form-field col-3">
+                    <label>Tipo</label>
+                    <select id="compTipo">
+                        <option value="Factura">Factura</option>
+                        <option value="Boleta">Boleta</option>
+                    </select>
+                </div>
+                <div class="form-field col-3">
+                    <label>Serie</label>
+                    <input id="compSerie" value="F001">
+                </div>
+                <div class="form-field col-3">
+                    <label>Número</label>
+                    <input id="compNumero" value="${String(Date.now()).slice(-8)}">
+                </div>
+                <div class="form-field col-3">
+                    <label>Estado</label>
+                    <select id="compEstado">
+                        ${['Borrador','Emitido','Enviado','Pagado','Anulado'].map(s => `<option value="${s}" ${s === 'Borrador' ? 'selected' : ''}>${s}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="form-field col-4">
+                    <label>Cliente</label>
+                    <input id="compCliente" placeholder="Razón social">
+                </div>
+                <div class="form-field col-4">
+                    <label>RUC</label>
+                    <input id="compRuc" placeholder="12345678901">
+                </div>
+                <div class="form-field col-4">
+                    <label>Monto</label>
+                    <input id="compMonto" type="number" value="0" step="0.01">
+                </div>
+                <div class="form-field col-4">
+                    <label>Condición de pago</label>
+                    <select id="compCondicion">
+                        <option value="Contado">Contado</option>
+                        <option value="Crédito 7 días">Crédito 7 días</option>
+                        <option value="Crédito 15 días">Crédito 15 días</option>
+                        <option value="Crédito 30 días">Crédito 30 días</option>
+                        <option value="Crédito 45 días">Crédito 45 días</option>
+                        <option value="Crédito 60 días">Crédito 60 días</option>
+                        <option value="Crédito 90 días">Crédito 90 días</option>
+                    </select>
+                </div>
+                <div class="form-field col-12">
+                    <label>Observaciones</label>
+                    <textarea id="compObs" placeholder="Observaciones del comprobante"></textarea>
+                </div>
+            </div>
+        </div>
         
-        const tipoSelect = document.getElementById('compTipo');
-        if (tipoSelect) tipoSelect.value = 'Factura';
-        
-        const condSelect = document.getElementById('compCondicion');
-        if (condSelect) condSelect.value = 'Contado';
-        
-        // Limpiar productos
-        const productsContainer = document.getElementById('compProducts');
-        if (productsContainer) {
-            productsContainer.innerHTML = `
+        <div class="ficha-section">
+            <div class="ficha-section-title">🧾 Productos</div>
+            <div id="compProducts">
                 <div style="padding:20px;text-align:center;color:#94A3B8;">
                     Seleccione una cotización para ver los productos.
                 </div>
-            `;
-        }
-    }
+            </div>
+        </div>
+    `;
     
-    // ============================================================
-    // MOSTRAR MODAL
-    // ============================================================
-    modal.classList.add('show');
-    
-    // Si es edición, cargar datos
+    // 7. Si es edición, cargar datos
     if (isEdit) {
         setTimeout(() => cargarComprobanteParaEditar(id), 100);
     }
+    
+    // 8. Mostrar modal
+    modal.classList.add('show');
+    console.log('✅ Modal de comprobante abierto correctamente');
 }
+
 openComprobanteModal = window.openComprobanteModal;
 
 
