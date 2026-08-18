@@ -8187,7 +8187,17 @@ function openDespachoModal(id = null) {
     document.getElementById('despachoModal').classList.add('show');
 }
 
+
 function openGuiaModal(id = null) {
+    // ✅ CERRAR CUALQUIER OTRO MODAL ANTES DE ABRIR GUÍA
+    const otrosModales = document.querySelectorAll('.modal-bg.show');
+    otrosModales.forEach(m => {
+        if (m.id !== 'guiaModal') {
+            m.classList.remove('show');
+            m.style.display = 'none';
+        }
+    });
+    
     console.log('📦 Abriendo modal de guía', { id });
     editingId = id;
     const isEdit = id !== null;
@@ -8238,7 +8248,7 @@ function openGuiaModal(id = null) {
         <option value="PUBLICO">🚚 Transporte Público</option>
     `;
     
-    // ✅ RENDERIZAR EL FORMULARIO COMPLETO - SOLO GUÍA, NO FACTURAS
+    // RENDERIZAR EL FORMULARIO DE GUÍA (sin productos inicialmente)
     formContainer.innerHTML = `
         <!-- FILA 1: REMITENTE Y DESTINATARIO -->
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
@@ -8569,13 +8579,11 @@ function openGuiaModal(id = null) {
     // ============================================================
     // AGREGAR FILA DE PRODUCTO
     // ============================================================
-    // ✅ AHORA guiaProductosBody EXISTE EN EL DOM
     agregarFilaProductoGuia();
     
     // ============================================================
     // MOSTRAR MODAL - SOLO GUÍA
     // ============================================================
-    // 🔥 FORZAR VISIBILIDAD DEL MODAL DE GUÍA
     modal.classList.add('show');
     modal.style.cssText = `
         position: fixed !important;
@@ -8592,7 +8600,6 @@ function openGuiaModal(id = null) {
         overflow: auto !important;
     `;
     
-    // Asegurar que el modal-box sea visible
     const box = modal.querySelector('.modal-box');
     if (box) {
         box.style.cssText = `
@@ -8610,7 +8617,6 @@ function openGuiaModal(id = null) {
         `;
     }
     
-    // Si es edición, cargar datos
     if (isEdit) {
         setTimeout(() => cargarGuiaParaEditar(id), 300);
     }

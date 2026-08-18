@@ -3003,7 +3003,7 @@
                     <option value="Anulada">Anulada</option>
                 </select>
                 <button class="btn btn-secondary" onclick="exportData('guias')">📥 Exportar</button>
-                <button class="btn btn-primary btn-create" onclick="openGuiaModal()">+ Nueva guía</button>
+                <button class="btn btn-primary btn-create" onclick="event.stopPropagation(); openGuiaModal();">+ Nueva guía</button>
             </div>
         </div>
         <div class="table-scroll">
