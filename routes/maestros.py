@@ -152,7 +152,6 @@ def api_clientes_test():
         }), 500
 
 
-
 @maestros_bp.route('/api/clientes/guardar', methods=['POST'])
 @login_required
 def api_clientes_guardar():
@@ -226,7 +225,7 @@ def api_clientes_guardar():
                 c.get('telefono', ''), c.get('email', ''), bool(c.get('principal', False))
             ))
 
-        # ✅ Guardar puntos de entrega CON google_maps
+        # ✅ GUARDAR PUNTOS DE ENTREGA - CORREGIDO (9 placeholders para 9 columnas)
         for p in data.get('puntos_entrega', []):
             if not (p.get('punto') or p.get('direccion') or p.get('instrucciones')):
                 continue
@@ -235,7 +234,7 @@ def api_clientes_guardar():
                     cliente_id, nombre_punto, direccion, telefono_contacto,
                     responsable, principal, instrucciones,
                     google_maps, horario
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 cliente_id, 
                 p.get('punto', ''), 
@@ -244,7 +243,7 @@ def api_clientes_guardar():
                 p.get('contacto', ''),
                 bool(p.get('principal', False)), 
                 p.get('instrucciones', ''),
-                p.get('googleMaps', ''),  # ✅ google_maps
+                p.get('googleMaps', ''),
                 p.get('horario', '')
             ))
 
@@ -272,7 +271,6 @@ def api_clientes_guardar():
         current_app.logger.error(f"❌ Error guardando cliente: {e}")
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
-
 
 @maestros_bp.route('/api/clientes/<int:id>', methods=['GET'])
 @login_required
@@ -347,7 +345,6 @@ def api_clientes_obtener(id):
         import traceback
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
-
 
 
 @maestros_bp.route('/api/clientes/<int:id>', methods=['PUT'])
@@ -436,7 +433,7 @@ def api_clientes_actualizar(id):
                 bool(c.get('principal', False))
             ))
 
-        # 3. Reemplazar puntos de entrega CON google_maps
+        # 3. Reemplazar puntos de entrega - CORREGIDO (9 placeholders)
         cur.execute("DELETE FROM clientes_puntos_entrega WHERE cliente_id = %s", (id,))
         for p in data.get('puntos_entrega', []):
             if not (p.get('punto') or p.get('direccion') or p.get('instrucciones')):
@@ -455,8 +452,8 @@ def api_clientes_actualizar(id):
                 p.get('contacto', ''),
                 bool(p.get('principal', False)),
                 p.get('instrucciones', ''),
-                p.get('googleMaps', ''),  # ✅ google_maps
-                p.get('horario', '')      # ✅ horario (opcional)
+                p.get('googleMaps', ''),
+                p.get('horario', '')
             ))
 
         conn.commit()
@@ -482,7 +479,6 @@ def api_clientes_actualizar(id):
         current_app.logger.error(f"❌ Error actualizando cliente: {e}")
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
-
 
 @maestros_bp.route('/api/clientes/<int:id>', methods=['DELETE'])
 @login_required
