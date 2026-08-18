@@ -1649,7 +1649,6 @@ def api_guias_guardar():
         
         print("=" * 80)
         print("📦 API GUIAS GUARDAR - INICIO")
-        print(f"  - Datos recibidos: {data}")
         print(f"  - Usuario ID: {usuario_id}")
         print("=" * 80)
         
@@ -1711,50 +1710,65 @@ def api_guias_guardar():
         # 27 VALORES QUE COINCIDEN CON LOS 27 PLACEHOLDERS
         # ============================================================
         params = (
-            data.get('serie', 'T001'),                              # 1
-            data.get('numero'),                                     # 2
-            fecha_emision,                                          # 3
-            fecha_traslado,                                         # 4
-            data.get('ruc_remitente') or ORIGEN_FIJO['ruc'],       # 5
-            data.get('remitente_nombre') or ORIGEN_FIJO['nombre'], # 6
-            data.get('remitente_direccion') or ORIGEN_FIJO['direccion'], # 7
-            data.get('remitente_ubigeo') or ORIGEN_FIJO['ubigeo'], # 8
-            data.get('ruc_destinatario', ''),                      # 9
-            data.get('destinatario_nombre', ''),                   # 10
-            data.get('destinatario_direccion', ''),                # 11
-            data.get('destinatario_ubigeo', ''),                   # 12
-            data.get('modalidad_transporte', 'PRIVADO'),           # 13
-            data.get('placa_vehiculo', ''),                        # 14
-            data.get('conductor_dni', ''),                         # 15
-            data.get('conductor_nombre', ''),                      # 16
-            data.get('licencia_conductor', ''),                    # 17
-            data.get('transportista_ruc', ''),                     # 18
-            data.get('transportista_nombre', ''),                  # 19
-            data.get('motivo_traslado', '01'),                     # 20
-            data.get('documento_asociado', ''),                    # 21
-            float(data.get('peso_total', 0)),                      # 22
-            items_json,                                            # 23
-            data.get('observaciones', ''),                         # 24
-            data.get('estado', 'BORRADOR'),                        # 25
-            usuario_id                                             # 26
-            # NOW() es el placeholder #27 (se pasa automáticamente en la consulta)
+            data.get('serie', 'T001'),
+            data.get('numero'),
+            fecha_emision,
+            fecha_traslado,
+            data.get('ruc_remitente') or ORIGEN_FIJO['ruc'],
+            data.get('remitente_nombre') or ORIGEN_FIJO['nombre'],
+            data.get('remitente_direccion') or ORIGEN_FIJO['direccion'],
+            data.get('remitente_ubigeo') or ORIGEN_FIJO['ubigeo'],
+            data.get('ruc_destinatario', ''),
+            data.get('destinatario_nombre', ''),
+            data.get('destinatario_direccion', ''),
+            data.get('destinatario_ubigeo', ''),
+            data.get('modalidad_transporte', 'PRIVADO'),
+            data.get('placa_vehiculo', ''),
+            data.get('conductor_dni', ''),
+            data.get('conductor_nombre', ''),
+            data.get('licencia_conductor', ''),
+            data.get('transportista_ruc', ''),
+            data.get('transportista_nombre', ''),
+            data.get('motivo_traslado', '01'),
+            data.get('documento_asociado', ''),
+            float(data.get('peso_total', 0)),
+            items_json,
+            data.get('observaciones', ''),
+            data.get('estado', 'BORRADOR'),
+            usuario_id
         )
         
-        # Verificar que el número de parámetros sea correcto
         print(f"📊 Número de parámetros: {len(params)}")
         print(f"📊 Items: {len(data.get('items', []))} productos")
         
+        # ============================================================
+        # 🔽 CORRECCIÓN: db_query devuelve una lista de tuplas/diccionarios
+        # ============================================================
         result = db_query(query, params)
         
-        if result:
-            return jsonify({
-                'success': True,
-                'message': 'Guía creada correctamente',
-                'data': {
-                    'id': result['id'],
-                    'numero': result['numero']
-                }
-            })
+        # Verificar que result no esté vacío
+        if result and len(result) > 0:
+            # result[0] es el primer registro (diccionario o tupla)
+            row = result[0]
+            
+            # Si es un diccionario, acceder por clave
+            if isinstance(row, dict):
+                guia_id = row.get('id')
+                guia_numero = row.get('numero')
+            else:
+                # Si es una tupla, acceder por índice
+                guia_id = row[0] if len(row) > 0 else None
+                guia_numero = row[1] if len(row) > 1 else None
+            
+            if guia_id:
+                return jsonify({
+                    'success': True,
+                    'message': 'Guía creada correctamente',
+                    'data': {
+                        'id': guia_id,
+                        'numero': guia_numero
+                    }
+                })
         
         return jsonify({'success': False, 'error': 'No se pudo crear la guía'}), 400
             
@@ -1763,6 +1777,7 @@ def api_guias_guardar():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @ventas_bp.route('/ventas/api/guias/<int:id>', methods=['GET'])
 @login_required
