@@ -12788,5 +12788,6 @@ window.sd = sd;
 window.options = options;
 window.today = today;
 window.now = now;
+openComprobanteModal = window.openComprobanteModal;
 
 console.log('✅ Todas las funciones exportadas al window correctamente');
