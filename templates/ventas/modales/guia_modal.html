@@ -233,115 +233,60 @@
             </div>
             
             <!-- ============================================================ -->
-            <!-- FILA 3: TRASLADO -->
-            <!-- ============================================================ -->
-            <div class="ficha-section" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden; margin-bottom:8px;">
-                <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#7C3AED; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
-                    <span><i class="bi bi-file-text"></i> Datos del Traslado</span>
-                    <small style="color:#64748B; font-weight:700; font-size:8px;">Campos SUNAT</small>
-                </div>
-                <div style="padding:6px 10px;">
-                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:4px; margin-bottom:2px;">
-                        <div class="form-field">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Motivo <span class="text-danger">*</span></label>
-                            <select id="guiaMotivo" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;">
-                                <option value="">-- Seleccione --</option>
-                                <option value="01">01 - Venta</option>
-                                <option value="02">02 - Compra</option>
-                                <option value="03">03 - Traslado entre establecimientos</option>
-                                <option value="04">04 - Consignación</option>
-                                <option value="05">05 - Devolución</option>
-                                <option value="06">06 - Exportación</option>
-                                <option value="07">07 - Importación</option>
-                                <option value="08">08 - Donación</option>
-                                <option value="09">09 - Traslado por cuenta de terceros</option>
-                                <option value="10">10 - Traslado para transformación</option>
-                                <option value="11">11 - Traslado por reparación</option>
-                                <option value="12">12 - Traslado por garantía</option>
-                                <option value="13">13 - Traslado por consignación para venta</option>
-                                <option value="14">14 - Traslado por consignación para transformación</option>
-                                <option value="15">15 - Traslado por consignación para reparación</option>
-                                <option value="16">16 - Traslado por devolución de consignación</option>
-                                <option value="17">17 - Traslado por permuta</option>
-                                <option value="18">18 - Traslado por comodato</option>
-                                <option value="19">19 - Traslado por arrendamiento</option>
-                                <option value="20">20 - Traslado por anticipo de venta</option>
-                                <option value="21">21 - Traslado por anticipo de compra</option>
-                                <option value="22">22 - Traslado por maquila</option>
-                                <option value="23">23 - Traslado por consignación para maquila</option>
-                                <option value="24">24 - Traslado por devolución de maquila</option>
-                                <option value="25">25 - Traslado por consignación para venta a plazo</option>
-                                <option value="26">26 - Traslado por consignación para venta al contado</option>
-                                <option value="27">27 - Traslado por consignación para venta con anticipo</option>
-                                <option value="28">28 - Traslado por consignación para venta con reserva de dominio</option>
-                            </select>
-                        </div>
-                        <div class="form-field">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Fecha Emisión</label>
-                            <input id="guiaFechaEmision" type="date" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
-                        </div>
-                        <div class="form-field">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Fecha Inicio <span class="text-danger">*</span></label>
-                            <input id="guiaFechaInicio" type="date" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
-                        </div>
-                        <div class="form-field">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">N° Bultos <span class="text-danger">*</span></label>
-                            <input id="guiaBultos" type="number" value="1" min="0" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
-                        </div>
-                    </div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-top:2px;">
-    <div class="form-field">
-        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Unidad Peso Bruto <span class="text-danger">*</span></label>
-        <!-- Este es el select que vamos a llenar dinámicamente -->
-        <select id="guiaUnidadPeso" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;">
-            <option value="">Cargando...</option>
-        </select>
+<!-- FILA 3: TRASLADO -->
+<!-- ============================================================ -->
+<div class="ficha-section" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden; margin-bottom:8px;">
+    <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#7C3AED; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
+        <span><i class="bi bi-file-text"></i> Datos del Traslado</span>
+        <small style="color:#64748B; font-weight:700; font-size:8px;">Campos SUNAT</small>
     </div>
-                    <div class="form-field" style="margin-top:4px;">
-                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Observaciones</label>
-                        <textarea id="guiaObservaciones" rows="1" placeholder="Notas adicionales..." style="width:100%; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:4px 6px; resize:vertical; min-height:24px;"></textarea>
-                    </div>
-                </div>
+    <div style="padding:6px 10px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:4px; margin-bottom:2px;">
+            <!-- Motivo, Fecha Emisión, Fecha Inicio, N° Bultos -->
+            <div class="form-field">
+                <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Motivo <span class="text-danger">*</span></label>
+                <select id="guiaMotivo" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;">
+                    <!-- opciones... -->
+                </select>
             </div>
-            
-            <!-- ============================================================ -->
-            <!-- TABLA DE PRODUCTOS -->
-            <!-- ============================================================ -->
-            <div class="ficha-section" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden;">
-                <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#0D9488; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
-                    <span><i class="bi bi-box-seam-fill"></i> Productos a Trasladar</span>
-                    <div style="display:flex; gap:4px; align-items:center;">
-                        <span id="guiaProductosCount" style="font-size:8px; color:#64748B; font-weight:700;">0 productos</span>
-                        <button onclick="openProductSelectorGuia()" style="height:20px; border-radius:4px; font-size:8px; padding:0 10px; background:#8B5CF6; color:#fff; border:0; font-weight:900; cursor:pointer;">📋 Seleccionar Productos</button>
-                        <button onclick="agregarFilaProductoGuia()" style="height:20px; border-radius:4px; font-size:8px; padding:0 8px; background:#0D9488; color:#fff; border:0; font-weight:900; cursor:pointer;">+ Manual</button>
-                    </div>
-                </div>
-                <div style="padding:0; overflow:auto; max-height:180px;">
-                    <table style="width:100%; border-collapse:collapse; font-size:8px;">
-                        <thead>
-                            <tr>
-                                <th style="padding:3px 4px; background:#F1F5F9; border:1px solid #E2E8F0; text-align:center; font-weight:900; width:30px;">Item</th>
-                                <th style="padding:3px 4px; background:#F1F5F9; border:1px solid #E2E8F0; text-align:center; font-weight:900; width:80px;">Código</th>
-                                <th style="padding:3px 4px; background:#F1F5F9; border:1px solid #E2E8F0; text-align:center; font-weight:900;">Descripción</th>
-                                <th style="padding:3px 4px; background:#F1F5F9; border:1px solid #E2E8F0; text-align:center; font-weight:900; width:70px;">Unidad</th>
-                                <th style="padding:3px 4px; background:#F1F5F9; border:1px solid #E2E8F0; text-align:center; font-weight:900; width:60px;">Cantidad</th>
-                                <th style="padding:3px 4px; background:#F1F5F9; border:1px solid #E2E8F0; text-align:center; font-weight:900; width:60px;">Peso Unit.</th>
-                                <th style="padding:3px 4px; background:#F1F5F9; border:1px solid #E2E8F0; text-align:center; font-weight:900; width:30px;">Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody id="guiaProductosBody">
-                            <!-- Productos se agregan dinámicamente -->
-                        </tbody>
-                    </table>
-                </div>
-                <div style="padding:3px 8px; background:#FAFBFC; border-top:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size:7px; color:#64748B;">Total productos: <span id="guiaTotalProductosCount">0</span></span>
-                    <span style="font-size:7px; color:#64748B;">Peso total: <span id="guiaPesoTotalDisplay">0.00</span> kg</span>
-                </div>
+            <div class="form-field">
+                <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Fecha Emisión</label>
+                <input id="guiaFechaEmision" type="date" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
             </div>
-            
+            <div class="form-field">
+                <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Fecha Inicio <span class="text-danger">*</span></label>
+                <input id="guiaFechaInicio" type="date" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
+            </div>
+            <div class="form-field">
+                <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">N° Bultos <span class="text-danger">*</span></label>
+                <input id="guiaBultos" type="number" value="1" min="0" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
+            </div>
         </div>
         
+        <!-- 🔽 AQUÍ ESTÁ EL PROBLEMA - AGREGAR EL CAMPO guiaPeso -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-top:2px;">
+            <!-- UNIDAD PESO BRUTO (select) -->
+            <div class="form-field">
+                <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Unidad Peso Bruto <span class="text-danger">*</span></label>
+                <select id="guiaUnidadPeso" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;">
+                    <option value="">Cargando...</option>
+                </select>
+            </div>
+            
+            <!-- 🔽 AGREGAR ESTE CAMPO - PESO BRUTO TOTAL -->
+            <div class="form-field">
+                <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Peso Bruto Total <span class="text-danger">*</span></label>
+                <input id="guiaPeso" type="number" step="0.01" value="0.00" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
+            </div>
+        </div>
+        
+        <!-- OBSERVACIONES -->
+        <div class="form-field" style="margin-top:4px;">
+            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Observaciones</label>
+            <textarea id="guiaObservaciones" rows="1" placeholder="Notas adicionales..." style="width:100%; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:4px 6px; resize:vertical; min-height:24px;"></textarea>
+        </div>
+    </div>
+</div>
         <!-- FOOTER -->
         <div class="modal-foot" id="guiaModalFooter" style="padding:6px 14px; gap:6px; display:flex; align-items:center; justify-content:flex-end; flex-shrink:0; background:#FFFFFF; border-top:1px solid #E5E7EB; flex-wrap:wrap;">
             <button class="btn btn-secondary" onclick="closeModal('guiaModal')" style="height:28px; padding:0 14px; font-size:11px; border-radius:6px; background:#94A3B8; color:#fff; border:1px solid #CBD5E1; font-weight:700; cursor:pointer;">Cancelar</button>
