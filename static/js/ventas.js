@@ -2933,63 +2933,108 @@ function saveDespacho(estado) {
     );
 }
 
-// Reemplazar la función saveGuia en ventas.js
-async function _saveGuia(estado) {
+// ============================================================
+// FUNCIÓN saveGuia CORREGIDA - reemplaza TODAS las versiones
+// anteriores de saveGuia y _saveGuia en ventas.js
+// ============================================================
+async function saveGuia(estado) {
     try {
         console.log('🔄 Guardando guía...', { estado });
-        
-        // Obtener productos del DOM
+
+        // ============================================================
+        // 1. RECOLECTAR PRODUCTOS
+        // ============================================================
         let productos = window._guiaProductos || [];
-        
-        // Si no hay productos guardados, intentar obtener de la tabla
+
         if (productos.length === 0) {
-            const productRows = document.querySelectorAll('#guiaProducts .master-table tbody tr');
-            productRows.forEach(row => {
-                const cells = row.querySelectorAll('td');
-                if (cells.length >= 6) {
-                    productos.push({
-                        codigo: cells[1]?.textContent?.trim() || '',
-                        producto: cells[2]?.textContent?.trim() || '',
-                        marca: cells[3]?.textContent?.trim() || '',
-                        um: cells[4]?.textContent?.trim() || 'NIU',
-                        cantidad: parseInt(cells[5]?.textContent?.trim()) || 1,
-                        stock: parseInt(cells[6]?.textContent?.trim()) || 0
-                    });
+            document.querySelectorAll('#guiaProductosBody tr').forEach(row => {
+                const codigo = row.querySelector('.guia-producto-codigo')?.value || '';
+                const descripcion = row.querySelector('.guia-producto-desc')?.value || '';
+                const um = row.querySelector('.guia-producto-unidad')?.value || 'NIU';
+                const cantidad = parseFloat(row.querySelector('.guia-producto-cant')?.value || 0);
+                if (descripcion && cantidad > 0) {
+                    productos.push({ codigo, producto: descripcion, um, cantidad });
                 }
             });
         }
-        
+
+        if (productos.length === 0) {
+            showToast('⚠️ Agrega al menos un producto a la guía', 'warning');
+            return;
+        }
+
+        // ============================================================
+        // 2. VALIDAR CAMPOS MÍNIMOS DEL CONDUCTOR/VEHÍCULO
+        // ============================================================
+        const placa = document.getElementById('guiaPlaca')?.value?.trim() || '';
+        const conductorDni = document.getElementById('guiaConductorDNI')?.value?.trim() || '';
+        const conductorNombre = document.getElementById('guiaConductorNombre')?.value?.trim() || '';
+        const licencia = document.getElementById('guiaLicencia')?.value?.trim() || '';
+        const modalidad = document.getElementById('guiaModalidadTransporte')?.value || 'PRIVADO';
+
+        if (!placa || !conductorDni || !conductorNombre) {
+            showToast('⚠️ Completa Placa, DNI y Nombre del conductor', 'warning');
+            return;
+        }
+
+        // ============================================================
+        // 3. ARMAR PAYLOAD CON LOS NOMBRES QUE ESPERA EL BACKEND
+        //    (api_guias_guardar en ventas.py)
+        // ============================================================
         const data = {
             id: editingId,
             estado: estado || 'Borrador',
             serie: document.getElementById('guiaSerie')?.value || 'T001',
             numero: document.getElementById('guiaNumero')?.value || String(Date.now()).slice(-8),
-            cotizacion_numero: document.getElementById('guiaCotizacion')?.value || '',
-            cliente: document.getElementById('guiaCliente')?.value || '',
-            ruc: document.getElementById('guiaRuc')?.value || '',
-            origen: document.getElementById('guiaOrigen')?.value || 'ALM-SMP',
-            destino: document.getElementById('guiaDestino')?.value || '',
-            motivo: document.getElementById('guiaMotivo')?.value || 'VENTA',
-            observaciones: document.getElementById('guiaObs')?.value || '',
-            items: productos,
-            peso_total: productos.reduce((sum, p) => sum + (parseFloat(p.cantidad || 0) * 0.5), 0) // Estimación
+
+            fecha_emision: document.getElementById('guiaFechaEmision')?.value || new Date().toISOString(),
+            fecha_traslado: document.getElementById('guiaFechaInicio')?.value
+                || document.getElementById('guiaFechaEmision')?.value
+                || new Date().toISOString().slice(0, 10),
+
+            // ---- REMITENTE (fijo) ----
+            ruc_remitente: document.getElementById('guiaRucRemitente')?.value || '20602095704',
+            remitente_nombre: document.getElementById('guiaRemitenteNombre')?.value || 'KCF CORPORACION SAC',
+            remitente_direccion: document.getElementById('guiaOrigen')?.value || '',
+            remitente_ubigeo: document.getElementById('guiaUbigeoOrigen')?.value || '150139',
+
+            // ---- DESTINATARIO ----
+            ruc_destinatario: document.getElementById('guiaRuc')?.value || '',
+            destinatario_nombre: document.getElementById('guiaCliente')?.value || '',
+            destinatario_direccion: document.getElementById('guiaDestino')?.value || '',
+            destinatario_ubigeo: document.getElementById('guiaUbigeoDestino')?.value || '',
+
+            // ---- TRANSPORTE / VEHÍCULO / CONDUCTOR (esto era lo que faltaba) ----
+            modalidad_transporte: modalidad,
+            placa_vehiculo: placa,
+            conductor_dni: conductorDni,
+            conductor_nombre: conductorNombre,
+            licencia_conductor: licencia,
+
+            // ---- TRANSPORTISTA (solo si modalidad = público) ----
+            transportista_ruc: modalidad === 'PUBLICO'
+                ? (document.getElementById('guiaTransportistaRUC')?.value || '') : '',
+            transportista_nombre: modalidad === 'PUBLICO'
+                ? (document.getElementById('guiaTransportistaNombre')?.value || '') : '',
+
+            motivo_traslado: document.getElementById('guiaMotivo')?.value || 'VENTA',
+            documento_asociado: document.getElementById('guiaCotizacion')?.value || '',
+            peso_total: parseFloat(document.getElementById('guiaPeso')?.value || 0),
+            observaciones: document.getElementById('guiaObservaciones')?.value || '',
+            items: productos
         };
-        
-        console.log('📦 Datos a guardar:', data);
-        
+
+        console.log('📦 Datos a guardar (guía):', data);
+
         const response = await apiFetch('/ventas/api/guias/guardar', {
             method: 'POST',
             body: JSON.stringify(data)
         });
-        
+
         if (response.success) {
-
-            
-
             showToast(`✅ Guía guardada como: ${estado}`, 'success');
             closeModal('guiaModal');
             await loadGuias();
-            // Limpiar datos temporales
             window._guiaProductos = null;
         } else {
             showToast('❌ Error: ' + (response.error || 'No se pudo guardar'), 'error');
@@ -2999,22 +3044,7 @@ async function _saveGuia(estado) {
         showToast('❌ Error al guardar la guía: ' + error.message, 'error');
     }
 }
-
-function saveGuia(estado) {
-    const numero = document.getElementById('guiaNumero')?.value || 'nueva guía';
-    const cliente = document.getElementById('guiaCliente')?.value || 'el cliente';
-    const estadoLabel = estado || 'Borrador';
-
-    showConfirmModal(
-        '📦 ¿Guardar guía de remisión?',
-        `Vas a guardar la guía <b>${numero}</b> de <b>${cliente}</b> como <b>"${estadoLabel}"</b>.`,
-        '⚠️ Revisa el destinatario, vehículo y productos antes de continuar.',
-        async function() {
-            await _saveGuia(estado);
-        },
-        '💾 Sí, guardar'
-    );
-}
+window.saveGuia = saveGuia;
 
 
 // Reemplazar la función saveComprobante en ventas.js
@@ -4132,70 +4162,7 @@ function closeDespachoModal() {
     closeModal('despachoModal');
 }
 
-// ============================================================
-// FUNCIÓN PARA GUARDAR GUÍA (MEJORADA)
-// ============================================================
-async function saveGuia(estado) {
-    try {
-        console.log('🔄 Guardando guía...', { estado });
-        
-        // Obtener productos del DOM o de la variable global
-        let productos = window._guiaProductos || [];
-        
-        // Si no hay productos guardados, intentar obtener de la tabla
-        if (productos.length === 0) {
-            const productRows = document.querySelectorAll('#guiaProducts .master-table tbody tr');
-            productRows.forEach(row => {
-                const cells = row.querySelectorAll('td');
-                if (cells.length >= 6) {
-                    productos.push({
-                        codigo: cells[1]?.textContent?.trim() || '',
-                        producto: cells[2]?.textContent?.trim() || '',
-                        marca: cells[3]?.textContent?.trim() || '',
-                        um: cells[4]?.textContent?.trim() || 'NIU',
-                        cantidad: parseInt(cells[5]?.textContent?.trim()) || 1,
-                        stock: parseInt(cells[6]?.textContent?.trim()) || 0
-                    });
-                }
-            });
-        }
-        
-        const data = {
-            id: editingId,
-            estado: estado || 'Borrador',
-            serie: document.getElementById('guiaSerie')?.value || 'T001',
-            numero: document.getElementById('guiaNumero')?.value || String(Date.now()).slice(-8),
-            cotizacion_numero: document.getElementById('guiaCotizacion')?.value || '',
-            cliente: document.getElementById('guiaCliente')?.value || '',
-            ruc: document.getElementById('guiaRuc')?.value || '',
-            origen: document.getElementById('guiaOrigen')?.value || 'ALM-SMP',
-            destino: document.getElementById('guiaDestino')?.value || '',
-            motivo: document.getElementById('guiaMotivo')?.value || 'VENTA',
-            observaciones: document.getElementById('guiaObs')?.value || '',
-            items: productos,
-            peso_total: productos.reduce((sum, p) => sum + (parseFloat(p.cantidad || 0) * 0.5), 0)
-        };
-        
-        console.log('📦 Datos a guardar:', data);
-        
-        const response = await apiFetch('/ventas/api/guias/guardar', {
-            method: 'POST',
-            body: JSON.stringify(data)
-        });
-        
-        if (response.success) {
-            showToast(`✅ Guía guardada como: ${estado}`, 'success');
-            closeModal('guiaModal');
-            await loadGuias();
-            window._guiaProductos = null;
-        } else {
-            showToast('❌ Error: ' + (response.error || 'No se pudo guardar'), 'error');
-        }
-    } catch (error) {
-        console.error('❌ Error guardando guía:', error);
-        showToast('❌ Error al guardar la guía: ' + error.message, 'error');
-    }
-}
+
 
 
 
