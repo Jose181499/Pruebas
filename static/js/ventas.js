@@ -8906,7 +8906,7 @@ async function openComprobanteModal(id = null) {
             <div class="ficha-grid">
                 <div class="form-field col-4">
                     <label>Cotización vinculada</label>
-                    <select id="compCotizacion" onchange="actualizarObservacionesComprobante()">
+                    <select id="compCotizacion" onchange="cargarProductosComprobanteDesdeCotizacion(this.value)">
                         <option value="">-- Ninguna --</option>
                         ${cotOptions || '<option value="" disabled>Sin cotizaciones</option>'}
                     </select>
@@ -9043,7 +9043,282 @@ async function openComprobanteModal(id = null) {
     console.log('✅ Modal de comprobante abierto correctamente');
 }
 
+/**
+ * Carga los productos de una cotización en el comprobante
+ */
+async function cargarProductosComprobanteDesdeCotizacion(numeroCotizacion) {
+    if (!numeroCotizacion) {
+        document.getElementById('compProducts').innerHTML = `
+            <div style="padding:20px;text-align:center;color:#94A3B8;">
+                Seleccione una cotización para ver los productos.
+            </div>
+        `;
+        return;
+    }
+    
+    console.log('🔄 Cargando productos de cotización:', numeroCotizacion);
+    showToast('⏳ Cargando productos...', 'info');
+    
+    try {
+        // Buscar la cotización en los datos cargados
+        const cotizacion = cotizacionesData.find(c => c.numero === numeroCotizacion);
+        if (!cotizacion) {
+            showToast('⚠️ Cotización no encontrada', 'warning');
+            return;
+        }
+        
+        // Cargar datos completos de la cotización (con productos)
+        const response = await apiFetch(`/ventas/api/cotizaciones/${cotizacion.id}/completa`);
+        if (!response.success) {
+            showToast('❌ Error al cargar productos: ' + (response.error || 'Desconocido'), 'error');
+            return;
+        }
+        
+        const data = response.data;
+        const productos = data.productos || [];
+        
+        console.log(`📦 ${productos.length} productos encontrados`);
+        
+        // Actualizar cliente y RUC automáticamente
+        document.getElementById('compCliente').value = data.cliente_razon_social || '';
+        document.getElementById('compRuc').value = data.cliente_ruc || '';
+        
+        // Calcular monto total
+        const total = productos.reduce((sum, p) => sum + (Number(p.cantidad || 0) * Number(p.valorVenta || 0) * 1.18), 0);
+        document.getElementById('compMonto').value = total.toFixed(2);
+        
+        // Renderizar productos
+        if (productos.length === 0) {
+            document.getElementById('compProducts').innerHTML = `
+                <div style="padding:20px;text-align:center;color:#94A3B8;">
+                    📭 Esta cotización no tiene productos.
+                </div>
+            `;
+            showToast('⚠️ Esta cotización no tiene productos', 'warning');
+            return;
+        }
+        
+        // Guardar productos en variable global
+        window._compProductos = productos;
+        
+        // Renderizar tabla de productos
+        document.getElementById('compProducts').innerHTML = `
+            <div class="table-scroll">
+                <table class="master-table" style="font-size:11px;">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Código</th>
+                            <th>Producto</th>
+                            <th>Marca</th>
+                            <th>Modelo</th>
+                            <th>Unidad</th>
+                            <th>Cant.</th>
+                            <th>Precio Unit.</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${productos.map((p, i) => {
+                            const subtotal = Number(p.cantidad || 0) * Number(p.valorVenta || 0);
+                            return `
+                            <tr>
+                                <td>${i + 1}</td>
+                                <td>${p.codigo || '-'}</td>
+                                <td class="left">${p.producto || p.descripcion || 'Sin nombre'}</td>
+                                <td>${p.marca || '-'}</td>
+                                <td>${p.modelo || '-'}</td>
+                                <td>${p.um || 'NIU'}</td>
+                                <td>${p.cantidad || 1}</td>
+                                <td>S/ ${Number(p.valorVenta || 0).toFixed(2)}</td>
+                                <td style="font-weight:900; color:#059669;">S/ ${subtotal.toFixed(2)}</td>
+                            </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="7" style="text-align:right; font-weight:900; background:#F8FAFC;">TOTAL</td>
+                            <td colspan="2" style="font-weight:900; font-size:14px; color:#EF233C; background:#FFF1F2;">
+                                S/ ${total.toFixed(2)}
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        `;
+        
+        // Actualizar observaciones
+        actualizarObservacionesComprobante();
+        
+        showToast(`✅ ${productos.length} productos cargados desde ${data.numero_cotizacion}`, 'success');
+        
+    } catch (error) {
+        console.error('❌ Error cargando productos:', error);
+        showToast('❌ Error al cargar productos: ' + error.message, 'error');
+    }
+}
 
+/**
+ * Carga productos desde una guía seleccionada
+ */
+window.loadComprobanteFromGuia = function(valorSeleccionado) {
+    if (!valorSeleccionado) {
+        actualizarObservacionesComprobante();
+        return;
+    }
+
+    const guia = guiasData.find(g => `${g.serie}-${g.numero}` === valorSeleccionado);
+    if (!guia) {
+        showToast('⚠️ Guía no encontrada', 'warning');
+        return;
+    }
+
+    // Autocompletar cliente/RUC
+    const compCliente = document.getElementById('compCliente');
+    const compRuc = document.getElementById('compRuc');
+    if (compCliente && !compCliente.value.trim()) compCliente.value = guia.cliente || '';
+    if (compRuc && !compRuc.value.trim()) compRuc.value = guia.ruc || '';
+
+    // Si la guía tiene productos, cargarlos
+    if (guia.items && guia.items.length > 0) {
+        const productos = guia.items.map(item => ({
+            codigo: item.codigo || '',
+            producto: item.producto || item.descripcion || 'Sin nombre',
+            marca: item.marca || '',
+            modelo: item.modelo || '',
+            um: item.um || 'NIU',
+            cantidad: item.cantidad || 1,
+            valorVenta: item.valorVenta || 0
+        }));
+        window._compProductos = productos;
+        renderProductosComprobante(productos);
+        showToast(`✅ ${productos.length} productos cargados desde guía`, 'success');
+    }
+
+    actualizarObservacionesComprobante();
+    showToast(`✅ Guía ${guia.serie}-${guia.numero} vinculada`, 'success');
+};
+
+/**
+ * Carga productos desde un PC seleccionado
+ */
+window.loadComprobanteFromPC = function(numeroPC) {
+    if (!numeroPC) {
+        actualizarObservacionesComprobante();
+        return;
+    }
+
+    const pc = pedidosData.find(p => p.numero === numeroPC);
+    if (!pc) {
+        showToast('⚠️ PC no encontrado', 'warning');
+        return;
+    }
+
+    const compCliente = document.getElementById('compCliente');
+    const compRuc = document.getElementById('compRuc');
+    if (compCliente && !compCliente.value.trim()) compCliente.value = pc.cliente || '';
+    if (compRuc && !compRuc.value.trim()) compRuc.value = pc.ruc || '';
+
+    // Si el PC tiene productos, cargarlos
+    if (pc.items && pc.items.length > 0) {
+        const productos = pc.items.map(item => {
+            // Normalizar item (puede ser objeto o array)
+            if (typeof item === 'object' && !Array.isArray(item)) {
+                return {
+                    codigo: item.codigo || '',
+                    producto: item.producto || item.descripcion || 'Sin nombre',
+                    marca: item.marca || '',
+                    modelo: item.modelo || '',
+                    um: item.um || 'NIU',
+                    cantidad: item.cantidad_pc || item.cantidad || 1,
+                    valorVenta: item.precio_pc || item.precio || 0
+                };
+            }
+            if (Array.isArray(item)) {
+                return {
+                    codigo: item[0] || '',
+                    producto: item[1] || 'Sin nombre',
+                    marca: item[2] || '',
+                    modelo: item[3] || '',
+                    um: 'NIU',
+                    cantidad: item[5] || 1,
+                    valorVenta: item[7] || 0
+                };
+            }
+            return null;
+        }).filter(p => p !== null);
+        
+        window._compProductos = productos;
+        renderProductosComprobante(productos);
+        showToast(`✅ ${productos.length} productos cargados desde PC`, 'success');
+    }
+
+    actualizarObservacionesComprobante();
+    showToast(`✅ PC ${pc.numero} vinculado`, 'success');
+};
+
+/**
+ * Renderiza los productos en el comprobante
+ */
+function renderProductosComprobante(productos) {
+    if (!productos || productos.length === 0) {
+        document.getElementById('compProducts').innerHTML = `
+            <div style="padding:20px;text-align:center;color:#94A3B8;">
+                📭 No hay productos disponibles.
+            </div>
+        `;
+        return;
+    }
+    
+    const total = productos.reduce((sum, p) => sum + (Number(p.cantidad || 0) * Number(p.valorVenta || 0) * 1.18), 0);
+    
+    document.getElementById('compProducts').innerHTML = `
+        <div class="table-scroll">
+            <table class="master-table" style="font-size:11px;">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Código</th>
+                        <th>Producto</th>
+                        <th>Marca</th>
+                        <th>Modelo</th>
+                        <th>Unidad</th>
+                        <th>Cant.</th>
+                        <th>Precio Unit.</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${productos.map((p, i) => {
+                        const subtotal = Number(p.cantidad || 0) * Number(p.valorVenta || 0);
+                        return `
+                        <tr>
+                            <td>${i + 1}</td>
+                            <td>${p.codigo || '-'}</td>
+                            <td class="left">${p.producto || 'Sin nombre'}</td>
+                            <td>${p.marca || '-'}</td>
+                            <td>${p.modelo || '-'}</td>
+                            <td>${p.um || 'NIU'}</td>
+                            <td>${p.cantidad || 1}</td>
+                            <td>S/ ${Number(p.valorVenta || 0).toFixed(2)}</td>
+                            <td style="font-weight:900; color:#059669;">S/ ${subtotal.toFixed(2)}</td>
+                        </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="7" style="text-align:right; font-weight:900; background:#F8FAFC;">TOTAL</td>
+                        <td colspan="2" style="font-weight:900; font-size:14px; color:#EF233C; background:#FFF1F2;">
+                            S/ ${total.toFixed(2)}
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    `;
+}
 
 
 
