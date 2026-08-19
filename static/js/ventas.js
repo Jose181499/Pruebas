@@ -200,7 +200,11 @@ function options(arr, selected = '') {
 
 function closeModal(modalId) {
     const modal = document.getElementById(modalId);
-    if (modal) modal.classList.remove('show');
+    if (!modal) return;
+    modal.classList.remove('show');
+    // Limpiar el inline style que algunas modales fuerzan al abrir
+    modal.removeAttribute('style');
+    document.body.style.overflow = '';
 }
 
 function empresa() {
