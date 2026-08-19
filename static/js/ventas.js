@@ -8485,6 +8485,76 @@ function openGuiaModal(id = null) {
             animation: modalIn 0.3s ease-out !important;
         `;
     }
+    modal.classList.add('show');
+    modal.style.cssText = `
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 99999 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: rgba(15, 23, 42, 0.7) !important;
+        backdrop-filter: blur(6px) !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        padding: 20px !important;
+        overflow: auto !important;
+    `;
+    
+    const box = modal.querySelector('.modal-box');
+    if (box) {
+        box.style.cssText = `
+            position: relative !important;
+            z-index: 99999 !important;
+            width: min(1400px, 98vw) !important;
+            max-height: 95vh !important;
+            background: #FFFFFF !important;
+            border-radius: 16px !important;
+            overflow: hidden !important;
+            box-shadow: 0 30px 80px rgba(15,23,42,.35) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            animation: modalIn 0.3s ease-out !important;
+        `;
+    }
+    
+    // ============================================================
+    // 🔽 ESTO ES LO QUE FALTABA: forzar que head/body/foot respeten
+    //    el layout flex y que el footer NUNCA se recorte
+    // ============================================================
+    const guiaHead = modal.querySelector('.modal-head');
+    const guiaBody = document.getElementById('guiaForm');
+    const guiaFoot = document.getElementById('guiaModalFooter');
+    
+    if (guiaHead) {
+        guiaHead.style.flexShrink = '0';
+    }
+    
+    if (guiaBody) {
+        // Reemplaza el max-height fijo (calc(100vh - 180px)) que causaba
+        // que el contenido empujara al footer fuera del área visible.
+        guiaBody.style.cssText = `
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+            padding: 10px 14px;
+            background: #F8FAFC;
+        `;
+    }
+    
+    if (guiaFoot) {
+        guiaFoot.style.cssText = `
+            flex-shrink: 0 !important;
+            display: flex !important;
+            padding: 6px 14px !important;
+            gap: 6px !important;
+            align-items: center !important;
+            justify-content: flex-end !important;
+            background: #FFFFFF !important;
+            border-top: 1px solid #E5E7EB !important;
+            flex-wrap: wrap !important;
+        `;
+    }
     
     if (isEdit) {
         setTimeout(() => cargarGuiaParaEditar(id), 300);
@@ -8612,6 +8682,84 @@ async function cargarGuiaParaEditar(id) {
         setValue('guiaDestino', g.destinatario_direccion);
         setSelectValue('guiaMotivo', g.motivo_traslado);
         setValue('guiaObs', g.observaciones);
+
+
+        // ============================================================
+        // PARCHE PARA cargarGuiaParaEditar(id)
+        // Agregar este bloque DESPUÉS de la línea:
+        //
+        //     setValue('guiaObs', g.observaciones);
+        //
+        // y ANTES de la sección "SOBREESCRIBIR ORIGEN CON DATOS FIJOS"
+        // ============================================================
+
+        // ---- MODALIDAD DE TRANSPORTE (activa/desactiva el bloque transportista) ----
+        setSelectValue('guiaModalidadTransporte', g.modalidad_transporte || 'PRIVADO');
+        if (typeof toggleTransportistaGuia === 'function') {
+            setTimeout(() => toggleTransportistaGuia(), 50);
+        }
+
+        // ---- VEHÍCULO Y CONDUCTOR (esto era lo que faltaba) ----
+        setValue('guiaPlaca', g.placa_vehiculo);
+        setValue('guiaConductorDNI', g.conductor_dni);
+        setValue('guiaConductorNombre', g.conductor_nombre);
+        setValue('guiaLicencia', g.licencia_conductor);
+
+        // ---- TRANSPORTISTA (solo aplica si modalidad = PUBLICO) ----
+        setValue('guiaTransportistaRUC', g.transportista_ruc);
+        setValue('guiaTransportistaNombre', g.transportista_nombre);
+        setValue('guiaTransportistaDireccion', g.transportista_direccion);
+
+        // ---- MOTIVO DE TRASLADO ----
+        setSelectValue('guiaMotivo', g.motivo_traslado);
+
+        // ---- FECHAS ----
+        // fecha_emision y fecha_traslado suelen venir como datetime/string desde la BD;
+        // los inputs son type="date", así que hay que recortarlos a YYYY-MM-DD.
+        const normalizarFecha = (valor) => {
+            if (!valor) return '';
+            const s = String(valor);
+            // admite "2026-08-19T00:00:00" o "2026-08-19 00:00:00" o "2026-08-19"
+            return s.slice(0, 10);
+        };
+        setValue('guiaFechaEmision', normalizarFecha(g.fecha_emision));
+        setValue('guiaFechaInicio', normalizarFecha(g.fecha_traslado));
+
+        // ---- PESO Y BULTOS ----
+        setValue('guiaPeso', g.peso_total);
+        setValue('guiaBultos', g.numero_bultos || 1);
+        setSelectValue('guiaUnidadPeso', g.unidad_peso_bruto || 'KGM');
+
+        // ---- DOCUMENTOS ADICIONALES ----
+        setValue('guiaOrdenCompra', g.orden_compra_cliente);
+        setValue('guiaFactura', g.factura);
+
+        // ---- DESTINATARIO: UBIGEO (departamento/provincia/distrito) ----
+        // Estos selects se llenan dinámicamente, así que hay que esperar a que
+        // las opciones existan antes de asignar el valor.
+        if (g.destinatario_departamento) {
+            setTimeout(() => {
+                const deptoSel = document.getElementById('guiaDeptoDestino');
+                if (deptoSel) {
+                    deptoSel.value = g.destinatario_departamento;
+                    deptoSel.dispatchEvent(new Event('change'));
+                    setTimeout(() => {
+                        const provSel = document.getElementById('guiaProvDestino');
+                        if (provSel && g.destinatario_provincia) {
+                            provSel.value = g.destinatario_provincia;
+                            provSel.dispatchEvent(new Event('change'));
+                            setTimeout(() => {
+                                const distSel = document.getElementById('guiaDistDestino');
+                                if (distSel && g.destinatario_distrito) {
+                                    distSel.value = g.destinatario_distrito;
+                                    distSel.dispatchEvent(new Event('change'));
+                                }
+                            }, 80);
+                        }
+                    }, 80);
+                }
+            }, 150);
+        }
 
         // ============================================================
         // SOBREESCRIBIR ORIGEN CON DATOS FIJOS
