@@ -8598,6 +8598,50 @@ function openGuiaModal(id = null) {
 }
 
 // ============================================================
+// CERRAR MENÚS AL HACER CLIC EN CUALQUIER PARTE DE LA PANTALLA
+// ============================================================
+
+(function() {
+    'use strict';
+    
+    // Cerrar todos los menús al hacer clic en cualquier parte
+    document.addEventListener('click', function(e) {
+        // Si el clic fue en un botón kebab, NO cerrar (el menú se abrirá)
+        if (e.target.closest('.kebab')) {
+            return;
+        }
+        
+        // Si el clic fue dentro de un menú, NO cerrar
+        if (e.target.closest('.menu-pop')) {
+            return;
+        }
+        
+        // Cerrar todos los menús
+        document.querySelectorAll('.menu-pop').forEach(el => {
+            el.remove();
+        });
+    });
+    
+    // También cerrar con Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.menu-pop').forEach(el => {
+                el.remove();
+            });
+        }
+    });
+    
+    // También cerrar al hacer scroll
+    document.addEventListener('scroll', function() {
+        document.querySelectorAll('.menu-pop').forEach(el => {
+            el.remove();
+        });
+    });
+    
+    console.log('✅ Evento global para cerrar menús activado');
+})();
+
+// ============================================================
 // CARGAR GUÍA EXISTENTE PARA EDICIÓN
 // ============================================================
 async function cargarGuiaParaEditar(id) {
@@ -12817,6 +12861,9 @@ function showSuccessModal() {
 // FUNCIÓN AUXILIAR PARA MENÚS CON CIERRE AUTOMÁTICO
 // ============================================================
 
+/**
+ * Crea un menú emergente con cierre automático al hacer clic fuera
+ */
 function createMenuWithClose(event, htmlContent) {
     // Remover menús existentes
     document.querySelectorAll('.menu-pop').forEach(el => el.remove());
@@ -12830,25 +12877,48 @@ function createMenuWithClose(event, htmlContent) {
     pop.innerHTML = htmlContent;
     document.body.appendChild(pop);
     
-    // Cerrar al hacer clic fuera (con delay para evitar cierre inmediato)
+    // 🔽 FUNCIÓN PARA CERRAR EL MENÚ 🔽
+    const closeMenu = function(e) {
+        // Si el clic NO fue dentro del menú, cerrarlo
+        if (!pop.contains(e.target)) {
+            pop.remove();
+            // Remover los event listeners
+            document.removeEventListener('click', closeMenu);
+            document.removeEventListener('contextmenu', closeMenu);
+            document.removeEventListener('scroll', closeMenu);
+        }
+    };
+    
+    // 🔽 CERRAR AL HACER CLIC EN CUALQUIER PARTE (con delay para evitar cierre inmediato) 🔽
     setTimeout(() => {
-        const closeMenu = function(e) {
-            if (!pop.contains(e.target)) {
-                pop.remove();
-                document.removeEventListener('click', closeMenu);
-                document.removeEventListener('contextmenu', closeMenu);
-            }
-        };
         document.addEventListener('click', closeMenu);
         document.addEventListener('contextmenu', closeMenu);
+        // También cerrar al hacer scroll
+        document.addEventListener('scroll', closeMenu);
     }, 10);
     
+    // 🔽 CERRAR CON TECLA ESC 🔽
+    const closeOnEsc = function(e) {
+        if (e.key === 'Escape') {
+            pop.remove();
+            document.removeEventListener('keydown', closeOnEsc);
+            document.removeEventListener('click', closeMenu);
+            document.removeEventListener('contextmenu', closeMenu);
+            document.removeEventListener('scroll', closeMenu);
+        }
+    };
+    document.addEventListener('keydown', closeOnEsc);
+    
+    // Retornar el pop para uso posterior
     return pop;
 }
 
 
 function showCotizacionMenu(event, id) {
     event.stopPropagation();
+    
+    // Remover menús existentes
+    document.querySelectorAll('.menu-pop').forEach(el => el.remove());
     
     const cotizacion = cotizacionesData.find(c => c.id === id);
     const estado = cotizacion?.estado || '';
@@ -12859,24 +12929,19 @@ function showCotizacionMenu(event, id) {
         <button class="menu-edit" onclick="openCotizacionModal(${id});this.closest('.menu-pop').remove()">👁 Ver / Editar</button>
         <button class="menu-duplicate" onclick="duplicateCotizacion(${id});this.closest('.menu-pop').remove()">⧉ Duplicar</button>
         <button class="menu-email" onclick="sendCotizacionEmail(${id});this.closest('.menu-pop').remove()">✉ Email</button>
-        
-        <!-- 🔽 NUEVO: Vista Previa (no descarga) -->
         <button class="menu-preview" onclick="previewCotizacionPdf(${id});this.closest('.menu-pop').remove()" style="color:#8B5CF6;font-weight:900;">
             👁️ Vista Previa
         </button>
-        
         <button class="menu-pdf" onclick="generateCotizacionPdf(${id});this.closest('.menu-pop').remove()">📄 Descargar PDF</button>
         <div class="menu-divider"></div>
     `;
     
-    // ✅ Aceptada por Cliente - SOLO cuando está GENERADA
     if (isGenerated && !isAccepted) {
         menuHtml += `
             <button class="menu-accepted" onclick="marcarCotizacionAccepted(${id});this.closest('.menu-pop').remove()">✅ Aceptada por Cliente</button>
         `;
     }
     
-    // 🚚 Crear guía - solo si está aceptada
     if (isAccepted) {
         menuHtml += `
             <button class="menu-guia" onclick="createDocFromCotizacion(${id},'guia');this.closest('.menu-pop').remove()">🚚 Crear guía</button>
@@ -12884,14 +12949,29 @@ function showCotizacionMenu(event, id) {
         `;
     }
     
-    // 🚚 Crear despacho - siempre visible
     menuHtml += `
         <button class="menu-despacho" onclick="createDocFromCotizacion(${id},'despacho');this.closest('.menu-pop').remove()">🚚 Crear despacho</button>
         <div class="menu-divider"></div>
         <button class="danger" onclick="deleteCotizacion(${id});this.closest('.menu-pop').remove()">🗑 Eliminar</button>
     `;
     
-    createMenuWithClose(event, menuHtml);
+    // Crear el menú con la función mejorada
+    const pop = createMenuWithClose(event, menuHtml);
+    
+    // 🔽 AGREGAR: Cerrar el menú al hacer clic en cualquier parte de la pantalla 🔽
+    const closeGlobalMenu = function(e) {
+        if (pop && !pop.contains(e.target)) {
+            pop.remove();
+            document.removeEventListener('click', closeGlobalMenu);
+            document.removeEventListener('contextmenu', closeGlobalMenu);
+        }
+    };
+    
+    // Delay para evitar que el clic que abrió el menú lo cierre inmediatamente
+    setTimeout(() => {
+        document.addEventListener('click', closeGlobalMenu);
+        document.addEventListener('contextmenu', closeGlobalMenu);
+    }, 50);
 }
 
 function showPedidoMenu(event, id) {
