@@ -3077,15 +3077,21 @@ function saveComprobante(estado) {
     const cliente = document.getElementById('compCliente')?.value || 'el cliente';
     const estadoLabel = estado || 'Borrador';
 
-    showConfirmModal(
-        `🧾 ¿Guardar ${tipo.toLowerCase()}?`,
-        `Vas a guardar el ${tipo.toLowerCase()} <b>${numero}</b> de <b>${cliente}</b> como <b>"${estadoLabel}"</b>.`,
-        '⚠️ Verifica el monto y la condición de pago antes de continuar.',
-        async function() {
-            await _saveComprobante(estado);
-        },
-        '💾 Sí, guardar'
-    );
+    // 🔽 CERRAR EL MODAL DE COMPROBANTES PRIMERO 🔽
+    closeModal('comprobanteModal');
+    
+    // Pequeño delay para que el modal de comprobantes se cierre antes de mostrar la confirmación
+    setTimeout(() => {
+        showConfirmModal(
+            `🧾 ¿Guardar ${tipo.toLowerCase()}?`,
+            `Vas a guardar el ${tipo.toLowerCase()} <b>${numero}</b> de <b>${cliente}</b> como <b>"${estadoLabel}"</b>.`,
+            '⚠️ Verifica el monto y la condición de pago antes de continuar.',
+            async function() {
+                await _saveComprobante(estado);
+            },
+            '💾 Sí, guardar'
+        );
+    }, 300);
 }
 
 
@@ -4191,83 +4197,6 @@ async function saveGuia(estado) {
     }
 }
 
-/* funcion rota 
-// ============================================================
-// FUNCIÓN PARA GUARDAR COMPROBANTE (MEJORADA)
-// ============================================================
-async function saveComprobante(estado) {
-    try {
-        console.log('🔄 Guardando comprobante...', { estado });
-        
-        let productos = window._compProductos || [];
-        
-       const data = {
-    id: editingId,
-    estado: estado || 'Borrador',
-    cliente_id: clienteId,
-    ruc: ruc,
-    razon: document.getElementById('fRazon')?.value?.trim() || '',
-    razon_comercial: document.getElementById('fComercial')?.value?.trim() || '',
-    direccion: document.getElementById('fDireccion')?.value?.trim() || '',
-    contacto: document.getElementById('fContacto')?.value?.trim() || '',
-    telefono: document.getElementById('fTelefono')?.value?.trim() || '',
-    email: document.getElementById('fCorreo')?.value?.trim() || '',
-    vendedor: document.getElementById('fVendedor')?.value || 'Helen Blas Príncipe',
-    condicion_pago: getFieldValue('fCondicion', 'fCondicionCustom') || 'Contado',
-    tiempo_entrega: getFieldValue('fTiempo', 'fTiempoCustom') || '5 días hábiles',
-    validez: getFieldValue('fValidez', 'fValidezCustom') || '15 días',
-    direccion_entrega: getFieldValue('fDireccionEntrega', 'fDireccionEntregaCustom') || '',
-    descuento_valor: descuentoValor,
-    descuento_tipo: descuentoTipo,
-    subtotal: subtotal,
-    descuento_monto: descuento,
-    igv: igv,
-    total: total,
-    // ============================================================
-    // 🔽 INFORMACIÓN ADICIONAL - Campos agregados
-    // ============================================================
-    seguimiento: document.getElementById('fSeguimiento')?.value || 'Asesor',
-    motivo: document.getElementById('fMotivo')?.value || 'Proyecto nuevo',
-    transporte: document.getElementById('fTransporte')?.value || 'Seleccione',
-    parihuela: document.getElementById('fParihuela')?.value || 'Seleccione',
-    nota_interna: document.getElementById('fNotaInterna')?.value?.trim() || '',
-    requerimiento: document.getElementById('fReq')?.value?.trim() || '',
-    fuente: document.getElementById('fFuente')?.value || 'Correo',
-    // ============================================================
-    productos: quoteProducts.map(p => ({
-        codigo: p.codigo,
-        producto: p.producto || p.descripcion,
-        descripcion: p.descripcion || '',
-        modelo: p.modelo || '',
-        marca: p.marca || '',
-        um: p.um || 'NIU',
-        cantidad: p.cantidad || 1,
-        valorVenta: p.valorVenta || 0,
-        stock: p.stock || 0
-    }))
-};
-        console.log('📦 Datos a guardar:', data);
-        
-        const response = await apiFetch('/ventas/api/comprobantes/guardar', {
-            method: 'POST',
-            body: JSON.stringify(data)
-        });
-        
-        if (response.success) {
-            showToast(`✅ Comprobante guardado como: ${estado}`, 'success');
-            closeModal('comprobanteModal');
-            await loadComprobantes();
-            window._compProductos = null;
-        } else {
-            showToast('❌ Error: ' + (response.error || 'No se pudo guardar'), 'error');
-        }
-    } catch (error) {
-        console.error('❌ Error guardando comprobante:', error);
-        showToast('❌ Error al guardar el comprobante', 'error');
-    }
-}
-*/
-// funcion totalmente rota
 
 
 // ============================================================
